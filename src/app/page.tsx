@@ -19,6 +19,7 @@ import { useUser } from '@/firebase';
 import * as XLSX from 'xlsx';
 import { DnD5eCharacter, DarkHeresyCharacter } from '@/lib/types';
 import Link from 'next/link';
+
 export default function DashboardPage() {
   const { characters, isLoaded, isCompactView } = useCharacterContext();
   const { t } = useTranslation();
@@ -100,6 +101,15 @@ export default function DashboardPage() {
               <FileSpreadsheet className="mr-2 h-4 w-4" />
               {t('exportCharacters')}
             </Button>
+
+            {isGoogleUser && (
+              <MigrateCharacterDialog>
+                <Button variant="outline" size="sm" className="shrink-0 border-primary/50 text-primary hover:bg-primary/5">
+                  <RefreshCcw className="mr-2 h-4 w-4" />
+                  {t('migrateButton')}
+                </Button>
+              </MigrateCharacterDialog>
+            )}
           </div>
         </div>
         
@@ -145,4 +155,7 @@ export default function DashboardPage() {
   );
 }
 
-
+// Minimal migration dialog stub to prevent build errors if referenced elsewhere
+function MigrateCharacterDialog({ children }: { children: React.ReactNode }) {
+    return <>{children}</>;
+}

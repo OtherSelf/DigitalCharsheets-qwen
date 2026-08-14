@@ -13,15 +13,15 @@ import { useToast } from '@/hooks/use-toast';
 import {
   useCollection,
   useFirestore,
-  //useMemoFirebase,
+  useMemoFirebase,
   useUser,
 } from '@/firebase';
-//import { collection, doc, DocumentReference } from 'firebase/firestore';
-/*import {
+import { collection, doc, DocumentReference } from 'firebase/firestore';
+import {
   addDocumentNonBlocking,
   deleteDocumentNonBlocking,
   updateDocumentNonBlocking,
-} from '@/firebase/non-blocking-updates';*/
+} from '@/firebase/non-blocking-updates';
 import { MOCK_CHARACTERS } from '@/lib/mock-data';
 
 interface CharacterContextType {
@@ -78,10 +78,10 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
     setUserPrefersCompact((prev) => !prev);
   };
 
-  /*const characterCollectionQuery = useMemoFirebase(() => {
+  const characterCollectionQuery = useMemoFirebase(() => {
     if (!user) return null;
     return collection(firestore, 'users', user.uid, 'characterSheets');
-  }, [firestore, user]);*/
+  }, [firestore, user]);
 
   const { data: firestoreCharacters, isLoading: areCharactersLoading } =
     useCollection<Character>(characterCollectionQuery);
