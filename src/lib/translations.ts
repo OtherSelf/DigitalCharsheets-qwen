@@ -147,6 +147,7 @@ export const translations: Record<string, Record<string, string>> = {
     importing: "Importing...",
     importSuccess: "Characters successfully copied!",
     importFailed: "Failed to verify legacy account. Please check your credentials.",
+    characterClass: "Character Class"
   },
   ru: {
     dashboard: "Панель управления",
@@ -296,5 +297,6 @@ export const translations: Record<string, Record<string, string>> = {
     importing: "Импорт...",
     importSuccess: "Персонажи успешно скопированы!",
     importFailed: "Не удалось войти в старый аккаунт. Проверьте логин и пароль.",
+    characterClass: "Класс персонажа"
   }
 };

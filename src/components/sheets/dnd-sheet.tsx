@@ -42,7 +42,7 @@ import { useTranslation } from '@/context/language-context';
 import { useToast } from '@/hooks/use-toast';
 
 const DND_CLASSES = [
-  "Artificer", "Barbarian", "Bard", "Cleric", "Druid", "Fighter", "Monk", 
+  "Artificer", "Barbarian", "Bard", "Cleric", "Druid", "Fighter", "Monk",
   "Paladin", "Ranger", "Rogue", "Sorcerer", "Warlock", "Wizard"
 ] as const;
 
@@ -104,7 +104,7 @@ const StatBox = ({ label, value, editing, onChange, isCompactView, notes, onNote
       )}
       <div className={cn("text-[10px] text-muted-foreground uppercase tracking-wider font-bold", isCompactView && "text-[8px]")}>{label}</div>
       <div className="mt-1">
-        {editing ? ( <Input type="number" min={1} max={30} value={value} onChange={onChange} className={cn("text-base font-bold h-7 w-24 text-center", isCompactView && "text-sm h-6 w-16")} /> ) : ( <div className={cn("text-base font-bold text-muted-foreground", isCompactView && "text-sm")}>{value}</div> )}
+        {editing ? (<Input type="number" min={1} max={30} value={value} onChange={onChange} className={cn("text-base font-bold h-7 w-24 text-center", isCompactView && "text-sm h-6 w-16")} />) : (<div className={cn("text-base font-bold text-muted-foreground", isCompactView && "text-sm")}>{value}</div>)}
       </div>
       <div className="mt-2 w-full">
         <div className="text-[8px] text-muted-foreground uppercase font-bold mb-0.5">Mod</div>
@@ -121,7 +121,7 @@ const EditSaveButton = ({ editing, onEdit, onSave }: { editing: boolean, onEdit:
 const DetailField = ({ label, value, editing, onChange }: { label: string, value: string | number, editing: boolean, onChange: (val: string) => void }) => (
   <div className="flex flex-col gap-1">
     <Label className="text-[10px] text-muted-foreground uppercase font-bold">{label}</Label>
-    {editing ? ( <Input value={value} onChange={(e) => onChange(e.target.value)} className="h-7 text-xs p-1" /> ) : ( <span className="text-sm font-semibold truncate">{value || '-'}</span> )}
+    {editing ? (<Input value={value} onChange={(e) => onChange(e.target.value)} className="h-7 text-xs p-1" />) : (<span className="text-sm font-semibold truncate">{value || '-'}</span>)}
   </div>
 );
 
