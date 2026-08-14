@@ -1,0 +1,130 @@
+/**
+ * [REDEPLOY] This comment is added to trigger a redeployment of backend services.
+ *
+ * Core Philosophy:
+ * This ruleset enforces a strict user-ownership model where all data is private
+ * and accessible only by the user who created it. The security model relies on
+ * the user's authenticated UID to grant access, ensuring that users cannot read,
+ * write, or even know about the existence of data belonging to others.
+ *
+ * Data Structure:
+ * The data is organized hierarchically. All user-specific data, including
+ * character sheets, is nested within a top-level `/users/{userId}` document.
+ * This structure inherently scopes all data to a specific user, simplifying
+ * security and query logic.
+ *
+ * Key Security Decisions:
+ * - User Isolation: A user can only access documents under their own path
+ *   (e.g., /users/ THEIR_OWN_UID /...).
+ * - No Public Data: There are no public or globally readable collections.
+ * - User Listing Disabled: Listing the top-level `/users` collection is
+ *   explicitly disallowed to prevent user enumeration and protect privacy.
+ * - Relational Integrity: On creation, we ensure that internal ID fields (like
+ *   `userId` on a character sheet) match the document's path, creating a strong,
+ *   immutable link to the owner.
+ *
+ * Denormalization for Authorization:
+ * To ensure fast and simple authorization checks, ownership information is
+ * denormalized. For example, each `characterSheet` document contains a `userId`
+ * field. This allows a security rule to validate ownership by looking directly
+ * at the document being accessed, avoiding slow and costly `get()` calls to
+ * parent documents.
+ *
+ * Structural Segregation:
+ * The data model naturally segregates each user's data into their own
+ * document tree. This makes list operations (`query`) on subcollections like
+ * `characterSheets` inherently secure, as the rules can simply verify that
+ * the user is accessing a collection under their own `/users/{userId}` path.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions for reusable logic
+    // ===================================
+
+    /**
+     * Checks if a user is authenticated.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * Checks if the currently authenticated user's UID matches the provided userId.
+     * This is the primary function for enforcing data ownership.
+     */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /**
+     * Checks for ownership on an existing document. Used for safe updates and deletes.
+     * Prevents operations on documents that do not exist.
+     */
+    function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
+    }
+
+    /**
+     * Prototyping Validation: Validates only the fields essential for establishing
+     * the ownership relationship when creating a UserProfile. The `id` field within
+     * the document must match the document's ID in the path.
+     */
+    function hasValidUserProfileDataForCreate(userId) {
+      return request.resource.data.id == userId;
+    }
+
+    /**
+     * Prototyping Validation: Ensures critical relational fields in a UserProfile
+     * cannot be changed after creation. The internal `id` is immutable.
+     */
+    function hasValidUserProfileDataForUpdate() {
+      return !('id' in request.resource.data) || request.resource.data.id == resource.data.id;
+    }
+
+    /**
+     * Prototyping Validation: Validates only the fields essential for establishing
+     * the ownership relationship when creating a CharacterSheet. The `userId` field
+     * within the document must match the `userId` from the path.
+     */
+    function hasValidCharacterSheetDataForCreate(userId) {
+      return request.resource.data.userId == userId;
+    }
+
+    // Collection Rules
+    // ================
+
+    /**
+     * @description Manages user profile documents. Only the owner can access their profile.
+     * @path /users/{userId}
+     * @allow (get) An authenticated user reads their own profile: `get /users/user123` (auth.uid == 'user123').
+     * @deny (get) An authenticated user tries to read another user's profile: `get /users/user456` (auth.uid == 'user123').
+     * @deny (list) No user can list all profiles in the database: `list /users`.
+     * @principle Restricts access to a user's own data tree and prevents user enumeration.
+     */
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if false;
+      allow create: if isOwner(userId) && hasValidUserProfileDataForCreate(userId);
+      allow update: if isExistingOwner(userId) && hasValidUserProfileDataForUpdate();
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Manages character sheets owned by a specific user.
+     * @path /users/{userId}/characterSheets/{characterSheetId}
+     * @allow (create) An authenticated user creates a character sheet for themself: `create /users/user123/characterSheets/charABC` (auth.uid == 'user123').
+     * @allow (list) An authenticated user lists their own character sheets: `list /users/user123/characterSheets` (auth.uid == 'user123').
+     * @deny (update) A user tries to modify another user's character sheet: `update /users/user456/characterSheets/charXYZ` (auth.uid == 'user123').
+     * @principle Enforces document ownership within a user-specific subcollection and validates relational integrity.
+     */
+    match /users/{userId}/characterSheets/{characterSheetId} {
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId) && hasValidCharacterSheetDataForCreate(userId);
+      allow update: if isOwner(userId);
+      allow delete: if isExistingOwner(userId);
+    }
+  }
+}
