@@ -119,6 +119,12 @@ export const translations: Record<string, Record<string, string>> = {
     otherProficienciesAndLanguages: "Other Proficiencies & Languages",
     exhaustion: "Exhaustion",
     deathSavesAndExhaustion: "Death Saves & Exhaustion",
+    deathSaves: 'Death Saves',
+    successes: 'Successes',
+    failures: 'Failures',
+    hitDice: 'Hit Dice',
+    longRest: 'Long Rest',
+    total: 'Total',
     companion: "Companion",
     companions: "Companions",
     attunement: "Attunement",
@@ -147,7 +153,9 @@ export const translations: Record<string, Record<string, string>> = {
     importing: "Importing...",
     importSuccess: "Characters successfully copied!",
     importFailed: "Failed to verify legacy account. Please check your credentials.",
-    characterClass: "Character Class"
+    characterClass: "Character Class",
+    spellcastingStats: "Spellcasting Stats",
+    spellSaveDC: "Spell Save DC"
   },
   ru: {
     dashboard: "Панель управления",
@@ -269,6 +277,12 @@ export const translations: Record<string, Record<string, string>> = {
     otherProficienciesAndLanguages: "Прочие владения и языки",
     exhaustion: "Истощение",
     deathSavesAndExhaustion: "Спасброски от смерти и Истощение",
+    deathSaves: 'Спасброски от смерти',
+    successes: 'Успехи',
+    failures: 'Провалы',
+    hitDice: 'Кости хитов',
+    longRest: 'Долгий отдых',
+    total: 'Всего',
     companion: "Спутник",
     companions: "Спутники",
     attunement: "Настройка",
@@ -297,6 +311,8 @@ export const translations: Record<string, Record<string, string>> = {
     importing: "Импорт...",
     importSuccess: "Персонажи успешно скопированы!",
     importFailed: "Не удалось войти в старый аккаунт. Проверьте логин и пароль.",
-    characterClass: "Класс персонажа"
+    characterClass: "Класс персонажа",
+    spellcastingStats: "Заклинательные характеристики",
+    spellSaveDC: "Сложность спасброска заклинаний",
   }
 };
