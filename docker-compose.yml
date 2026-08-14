@@ -1,0 +1,8 @@
+services:
+  nextjs-app:
+    image: nextjs-app
+    ports:
+      - "3000:3000"
+    container_name: DigitalCharsheets-qwen
+    volumes:
+      - ./data:/app/data

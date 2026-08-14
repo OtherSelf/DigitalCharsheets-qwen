@@ -12,6 +12,19 @@ interface LocalAuthContextType {
 
 const LocalAuthContext = createContext<LocalAuthContextType | undefined>(undefined);
 
+// Generate a consistent ID based on email (same email = same ID every time)
+function generateUserIdFromEmail(email: string): string {
+  // Simple hash function to create a consistent ID from email
+  let hash = 0;
+  const normalizedEmail = email.toLowerCase().trim();
+  for (let i = 0; i < normalizedEmail.length; i++) {
+    const char = normalizedEmail.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32-bit integer
+  }
+  return 'user-' + Math.abs(hash).toString(36);
+}
+
 export function LocalAuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<LocalUser | null>(null);
   const [isUserLoading, setIsUserLoading] = useState(true);
@@ -23,11 +36,16 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = (email: string, displayName?: string) => {
+    // Generate a CONSISTENT ID based on the email
+    // Same email will ALWAYS produce the same ID
+    const userId = generateUserIdFromEmail(email);
+    
     const newUser: LocalUser = {
-      uid: 'local-' + Date.now(),
-      email,
+      uid: userId,
+      email: email.toLowerCase().trim(),
       displayName: displayName || email.split('@')[0],
     };
+    
     setLocalUser(newUser);
     setUser(newUser);
   };
