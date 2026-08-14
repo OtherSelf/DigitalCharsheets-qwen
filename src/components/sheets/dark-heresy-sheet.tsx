@@ -40,14 +40,14 @@ import { WORLD_VARIANTS_BY_HOMEWORLD, WORLD_VARIANT_LABELS } from '@/lib/dark-he
 import { useTranslation } from '@/context/language-context';
 
 const DetailField = ({label, value, editing, type = "text", onChange, onBlur, isCompactView}: {label:string, value:string|number, editing:boolean, type?:string, onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void, onBlur?: (e: React.FocusEvent<HTMLInputElement>) => void, isCompactView: boolean}) => (
-    <div className="space-y-1">
-        <Label className={cn("text-xs text-muted-foreground", isCompactView && "text-[10px]")}>{label}</Label>
-        {editing ? (
-            <Input defaultValue={value} type={type} onChange={onChange} onBlur={onBlur} className="h-8"/>
-        ) : (
-            <p className={cn("text-sm font-medium break-words", isCompactView && "text-xs")}>{value || '-'}</p>
-        )}
-    </div>
+  <div className="space-y-1">
+    <Label className={cn("text-xs text-muted-foreground", isCompactView && "text-[10px]")}>{label}</Label>
+    {editing ? (
+      <Input defaultValue={value} type={type} onChange={onChange} onBlur={onBlur} className="h-8"/>
+    ) : (
+      <p className={cn("text-sm font-medium break-words", isCompactView && "text-xs")}>{value || '-'}</p>
+    )}
+  </div>
 );
 
 const CharacteristicStat = ({
@@ -133,25 +133,25 @@ const EditSaveButton = ({ editing, onEdit, onSave }: { editing: boolean, onEdit:
     );
 };
 
-const MetricBox = ({ 
-  title, 
-  notes, 
-  onNoteChange, 
-  isCompactView, 
-  editing, 
-  onEdit, 
-  onSave, 
+const MetricBox = ({
+  title,
+  notes,
+  onNoteChange,
+  isCompactView,
+  editing,
+  onEdit,
+  onSave,
   hideNotes,
   showEditButtons,
   children,
-}: { 
-  title: string; 
-  notes?: string; 
-  onNoteChange: (val: string) => void; 
-  isCompactView: boolean; 
-  editing: boolean; 
-  onEdit: () => void; 
-  onSave: () => void; 
+}: {
+  title: string;
+  notes?: string;
+  onNoteChange: (val: string) => void;
+  isCompactView: boolean;
+  editing: boolean;
+  onEdit: () => void;
+  onSave: () => void;
   hideNotes: boolean;
   showEditButtons: boolean;
   children: React.ReactNode;
@@ -161,15 +161,15 @@ const MetricBox = ({
       <div className="flex items-center gap-1 overflow-hidden">
         <h4 className="text-[10px] sm:text-xs font-semibold text-muted-foreground truncate uppercase">{title}</h4>
         {!hideNotes && (
-            <Popover>
-                <PopoverTrigger asChild>
-                    <Button variant={notes ? 'secondary' : 'ghost'} size="icon" className="h-6 w-6 shrink-0"><Info className="h-3 w-3" /></Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-64">
-                    <Label className="text-xs mb-2 block">Notes for {title}</Label>
-                    <Textarea defaultValue={notes || ''} onBlur={(e) => onNoteChange(e.target.value)} placeholder="Add notes..." className="min-h-[100px] text-sm" />
-                </PopoverContent>
-            </Popover>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant={notes ? 'secondary' : 'ghost'} size="icon" className="h-6 w-6 shrink-0"><Info className="h-3 w-3" /></Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-64">
+              <Label className="text-xs mb-2 block">Notes for {title}</Label>
+              <Textarea defaultValue={notes || ''} onBlur={(e) => onNoteChange(e.target.value)} placeholder="Add notes..." className="min-h-[100px] text-sm" />
+            </PopoverContent>
+          </Popover>
         )}
       </div>
       <div className="shrink-0 ml-1">
@@ -177,7 +177,7 @@ const MetricBox = ({
       </div>
     </div>
     <div className={cn(
-      "flex items-center justify-center rounded-lg border bg-background overflow-hidden", 
+      "flex items-center justify-center rounded-lg border bg-background overflow-hidden",
       isCompactView ? "h-14" : "h-20"
     )}>
       {children}
@@ -309,9 +309,8 @@ export const DarkHeresySheet = React.forwardRef<any, { character: DarkHeresyChar
     const handleSaveWealth = React.useCallback(() => { updateCharacter(character.id, { wealth: editableWealth }); setIsWealthEditing(false); }, [character.id, editableWealth, updateCharacter]);
     const handleSaveMovement = React.useCallback(() => { updateCharacter(character.id, { movement: editableMovement }); setIsMovementEditing(false); }, [character.id, editableMovement, updateCharacter]);
     const handleSaveArmor = React.useCallback(() => { updateCharacter(character.id, { equipment: {...editableEquipment, armor: editableEquipment.armor} }); setIsArmorEditing(false); }, [character.id, editableEquipment, updateCharacter]);
-    const handleSaveMeleeWeapons = React.useCallback(() => { updateCharacter(character.id, { equipment: {...character.equipment, weapons: {...character.equipment.weapons, melee: editableEquipment.weapons.melee}} }); setIsMeleeWeaponsEditing(false); }, [character.id, character.equipment, editableEquipment.weapons.melee, updateCharacter]);
-    const handleSaveRangedWeapons = React.useCallback(() => { updateCharacter(character.id, { equipment: {...character.equipment, weapons: {...character.equipment.weapons, ranged: editableEquipment.weapons.ranged}} }); setIsRangedWeaponsEditing(false); }, [character.id, character.equipment, editableEquipment.weapons.ranged, updateCharacter]);
-    const handleSaveInventory = React.useCallback(() => { updateCharacter(character.id, { inventory: editableInventory }); setIsInventoryEditing(false); }, [character.id, editableInventory, updateCharacter]);
+    const handleSaveMeleeWeapons = React.useCallback(() => { updateCharacter(character.id, { equipment: editableEquipment }); setIsMeleeWeaponsEditing(false); }, [character.id, editableEquipment, updateCharacter]);
+    const handleSaveRangedWeapons = React.useCallback(() => { updateCharacter(character.id, { equipment: editableEquipment }); setIsRangedWeaponsEditing(false); }, [character.id, editableEquipment, updateCharacter]);    const handleSaveInventory = React.useCallback(() => { updateCharacter(character.id, { inventory: editableInventory }); setIsInventoryEditing(false); }, [character.id, editableInventory, updateCharacter]);
     const handleSavePoints = React.useCallback(() => { updateCharacter(character.id, { wounds: editablePoints.wounds, fatePoints: editablePoints.fatePoints, insanityPoints: editablePoints.insanityPoints, corruptionPoints: editablePoints.corruptionPoints }); setIsPointsEditing(false); }, [character.id, editablePoints, updateCharacter]);
 
     const handleSaveAll = React.useCallback(() => {
@@ -599,10 +598,11 @@ export const DarkHeresySheet = React.forwardRef<any, { character: DarkHeresyChar
                                         <div className="space-y-1"><Label className={cn("text-xs text-muted-foreground", isCompactView && "text-[10px]")}>{t('homeWorld')}</Label><p className={cn("text-sm font-medium break-words", isCompactView && "text-xs")}>{character.homeWorld || '-'}</p></div>
                                         <div className="space-y-1"><Label className={cn("text-xs text-muted-foreground", isCompactView && "text-[10px]")}>{worldVariantLabel}</Label>{isInfoProgressionEditing ? ( <Select defaultValue={character.worldVariant} onValueChange={(value) => updateCharacter(character.id, { worldVariant: value })}><SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Select variant..." /></SelectTrigger><SelectContent>{(character.homeWorld ? WORLD_VARIANTS_BY_HOMEWORLD[character.homeWorld] || [] : []).map(v => ( <SelectItem key={v} value={v}>{v}</SelectItem> ))}</SelectContent></Select> ) : ( <p className={cn("text-sm font-medium break-words", isCompactView && "text-xs")}>{character.worldVariant || '-'}</p> )}</div>
                                         <div className="space-y-1"><Label className={cn("text-xs text-muted-foreground", isCompactView && "text-[10px]")}>{t('careerPath')}</Label><p className={cn("text-sm font-medium break-words", isCompactView && "text-xs")}>{character.careerPath || '-'}</p></div>
+                                        <div className="space-y-1"><Label className={cn("text-xs text-muted-foreground", isCompactView && "text-[10px]")}>{t('characterClass')}</Label><p className={cn("text-sm font-medium break-words", isCompactView && "text-xs")}>{character.characterClass || '-'}</p></div>
                                         <div className="space-y-1"><Label className={cn("text-xs text-muted-foreground", isCompactView && "text-[10px]")}>{t('rank')}</Label><div className="flex items-center gap-2"><p className={cn("text-sm font-medium break-words", isCompactView && "text-xs")}>{currentRankName}</p>{editableTotalExpSpent >= advancedPathThreshold && !(editableAdvancedPath ?? character.advancedPath) && ( <Button size="sm" variant="outline" onClick={() => setIsAdvancedPathModalOpen(true)}>Select Path</Button> )}{canChooseAlternateRank && ( <Button size="sm" variant="outline" onClick={() => setIsAlternateRankModalOpen(true)}>Select Rank</Button> )}</div></div>
                                         <DetailField label={t('divination')} value={character.divination} editing={isInfoProgressionEditing} onBlur={(e) => updateCharacter(character.id, { divination: e.target.value })} isCompactView={isCompactView} />
                                         <DetailField label={t('divinationEffect')} value={character.divinationEffect} editing={false} isCompactView={isCompactView} />
-                                        <div className="space-y-1"><Label className={cn("text-xs text-muted-foreground", isCompactView && "text-[10px]")}>{t('quirk')}</Label><p className={cn("text-sm font-medium break-words", isCompactView && "text-xs")}>{character.quirk || '-'}</p></div>
+                                        <DetailField label={t('quirk')} value={character.quirk} editing={isInfoProgressionEditing} onBlur={(e) => updateCharacter(character.id, { quirk: e.target.value })} isCompactView={isCompactView} />
                                         <DetailField label={t('height')} value={character.height} editing={isInfoProgressionEditing} onBlur={(e) => updateCharacter(character.id, { height: e.target.value })} isCompactView={isCompactView} />
                                         <DetailField label={t('weight')} value={character.weight} editing={isInfoProgressionEditing} onBlur={(e) => updateCharacter(character.id, { weight: e.target.value })} isCompactView={isCompactView} />
                                         <DetailField label={t('age')} value={character.age} editing={isInfoProgressionEditing} onBlur={(e) => updateCharacter(character.id, { age: e.target.value })} isCompactView={isCompactView} />
@@ -610,8 +610,9 @@ export const DarkHeresySheet = React.forwardRef<any, { character: DarkHeresyChar
                                         <DetailField label={t('hairColor')} value={character.hairColor} editing={isInfoProgressionEditing} onBlur={(e) => updateCharacter(character.id, { hairColor: e.target.value })} isCompactView={isCompactView} />
                                         <DetailField label={t('eyeColor')} value={character.eyeColor} editing={isInfoProgressionEditing} onBlur={(e) => updateCharacter(character.id, { eyeColor: e.target.value })} isCompactView={isCompactView} />
                                     </div>
-                                    <Accordion type="single" collapsible className="w-full mt-4 -mx-6 px-6 border-t pt-4">
+                                    <Accordion type="multiple" className="w-full mt-4 -mx-6 px-6 border-t pt-4">
                                         <AccordionItem value="backstory" className="border-b-0"><AccordionPrimitive.Trigger className="py-2 hover:no-underline font-semibold flex flex-1 items-center justify-between"><span>{t('backstory')}</span><ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" /></AccordionPrimitive.Trigger><AccordionContent className="pt-2">{isInfoProgressionEditing ? ( <Textarea defaultValue={character.backstory} onBlur={(e) => updateCharacter(character.id, { backstory: e.target.value })} className={cn("min-h-[150px]", isCompactView ? "text-xs" : "text-sm")} /> ) : (<p className={cn("whitespace-pre-wrap", isCompactView ? "text-xs" : "text-sm text-muted-foreground")}>{character.backstory}</p>)}</AccordionContent></AccordionItem>
+                                        <AccordionItem value="notes" className="border-b-0"><AccordionPrimitive.Trigger className="py-2 hover:no-underline font-semibold flex flex-1 items-center justify-between"><span>{t('notes')}</span><ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" /></AccordionPrimitive.Trigger><AccordionContent className="pt-2">{isInfoProgressionEditing ? ( <Textarea defaultValue={character.notes} onBlur={(e) => updateCharacter(character.id, { notes: e.target.value })} placeholder="General notes about this character..." className={cn("min-h-[100px]", isCompactView ? "text-xs" : "text-sm")} /> ) : (<p className={cn("whitespace-pre-wrap", isCompactView ? "text-xs" : "text-sm text-muted-foreground")}>{character.notes || '-'}</p>)}</AccordionContent></AccordionItem>
                                     </Accordion>
                                 </AccordionContent>
                             </AccordionItem>

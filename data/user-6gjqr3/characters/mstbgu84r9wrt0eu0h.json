@@ -17,8 +17,8 @@
   "skinColor": "",
   "hairColor": "",
   "eyeColor": "",
-  "experience": 0,
-  "totalExpSpent": 0,
+  "experience": 10,
+  "totalExpSpent": 1,
   "alternatePath": null,
   "advancedPath": null,
   "notes": "",
@@ -37,8 +37,8 @@
   },
   "statUpgrades": {
     "weaponSkill": [
-      false,
-      false,
+      true,
+      true,
       false,
       false
     ],
@@ -97,10 +97,13 @@
       false
     ]
   },
-  "statNotes": {},
+  "statNotes": {
+    "weaponSkill": ""
+  },
   "wounds": {
-    "current": 10,
-    "max": 10
+    "current": 9,
+    "max": 10,
+    "notes": ""
   },
   "fatePoints": {
     "current": 1,
@@ -126,21 +129,95 @@
   },
   "equipment": {
     "armor": {
-      "Head": null,
-      "Body": null,
-      "Left arm": null,
-      "Right arm": null,
+      "Head": {
+        "ap": 2,
+        "type": "Advanced",
+        "mods": "",
+        "quality": "Common"
+      },
+      "Body": {
+        "ap": 0,
+        "type": "Mesh",
+        "mods": "",
+        "quality": "Common"
+      },
+      "Left arm": {
+        "ap": 4,
+        "type": "Carapace",
+        "mods": "",
+        "quality": "Common"
+      },
+      "Right arm": {
+        "ap": 2,
+        "type": "Flack",
+        "mods": "",
+        "quality": "Common"
+      },
       "Left leg": null,
       "Right leg": null
     },
     "weapons": {
-      "melee": [],
+      "melee": [
+        {
+          "id": "melee-1786736717018",
+          "name": "New Melee Weapon",
+          "type": "про",
+          "range": "",
+          "penetration": "",
+          "damage": "",
+          "traits": "",
+          "notes": "",
+          "equipped": true
+        }
+      ],
       "ranged": []
     }
   },
-  "inventory": [],
-  "skills": [],
-  "talents": [],
+  "inventory": [
+    {
+      "id": "new-inv-1786736734554",
+      "name": "пнгоепнгеп7нг8апе",
+      "status": "default",
+      "notes": ""
+    },
+    {
+      "id": "new-inv-1786736737039",
+      "name": "инргопнгшщдпнгшщдп",
+      "status": "default",
+      "notes": ""
+    }
+  ],
+  "skills": [
+    {
+      "id": "new-skill-1786736663948",
+      "name": "ролрол",
+      "notes": "",
+      "type": "advanced",
+      "training": {
+        "skilled": true,
+        "plus10": false,
+        "plus20": false
+      }
+    },
+    {
+      "id": "new-skill-1786736709389",
+      "name": "ролролдшж",
+      "notes": "",
+      "type": "basic",
+      "training": {
+        "skilled": true,
+        "plus10": true,
+        "plus20": false
+      }
+    }
+  ],
+  "talents": [
+    {
+      "id": "new-talent-1786736698827",
+      "name": "ролргшжлщо",
+      "notes": ""
+    }
+  ],
   "userId": "user-6gjqr3",
   "id": "mstbgu84r9wrt0eu0h"
 }
