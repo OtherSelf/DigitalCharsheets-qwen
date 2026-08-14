@@ -1,0 +1,28 @@
+{
+  "placeholderImages": [
+    {
+      "id": "dnd-cleric-avatar",
+      "description": "A stoic female cleric in plate armor, holding a holy symbol.",
+      "imageUrl": "https://images.unsplash.com/photo-1572337382669-5896358c14fe?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxmYW50YXN5JTIwY2xlcmljfGVufDB8fHx8MTc3MTQyNTY5MXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "fantasy cleric"
+    },
+    {
+      "id": "dh-acolyte-avatar",
+      "description": "A grim-faced acolyte in dark robes, clutching a battered laspistol.",
+      "imageUrl": "https://images.unsplash.com/photo-1699862160391-1aa177a3baff?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxzY2ktZmklMjBhY29seXRlfGVufDB8fHx8MTc3MTQ0NTUxMXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "sci-fi acolyte"
+    },
+    {
+      "id": "dnd-rogue-avatar",
+      "description": "A nimble elf rogue with a sly grin, daggers at the ready.",
+      "imageUrl": "https://picsum.photos/seed/dndrogue/400/400",
+      "imageHint": "fantasy rogue"
+    },
+    {
+      "id": "user-avatar",
+      "description": "A placeholder avatar for the logged-in user.",
+      "imageUrl": "https://images.unsplash.com/photo-1651534400411-eaf227f82ee4?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxwb3J0cmFpdCUyMHBlcnNvbnxlbnwwfHx8fDE3NzE0MDM5NjF8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "portrait person"
+    }
+  ]
+}
