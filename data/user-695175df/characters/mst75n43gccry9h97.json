@@ -1,0 +1,262 @@
+{
+  "id": "mst75n43gccry9h97",
+  "userId": "user-695175df",
+  "gameSystem": "Dungeons & Dragons",
+  "name": "Level 1 Rogue (Acolyte)",
+  "avatar": "dnd-cleric-avatar",
+  "characterClass": "Rogue",
+  "background": "Acolyte",
+  "alignment": "Neutral",
+  "level": 1,
+  "inspiration": "1",
+  "backstory": "",
+  "age": "",
+  "height": "",
+  "weight": "",
+  "eyes": "",
+  "hair": "",
+  "stats": {
+    "strength": 10,
+    "dexterity": 10,
+    "constitution": 10,
+    "intelligence": 10,
+    "wisdom": 10,
+    "charisma": 10
+  },
+  "armorClass": 10,
+  "hitPoints": {
+    "max": 8,
+    "current": 8
+  },
+  "hitDice": "1d8",
+  "hitDiceUsed": 0,
+  "speed": "30ft",
+  "proficiencyBonus": 2,
+  "initiative": 0,
+  "experience": 0,
+  "skills": [],
+  "attacks": [],
+  "equipment": [],
+  "inventory": [],
+  "currency": {
+    "cp": 0,
+    "ep": 0,
+    "pp": 5,
+    "gp": 150,
+    "sp": 0
+  },
+  "featuresAndTraits": [],
+  "companions": [
+    {
+      "id": "companion-1777248046345",
+      "initiative": 0,
+      "skills": [
+        {
+          "name": "acrobatics",
+          "proficient": false,
+          "value": 0,
+          "label": "Acrobatics (Dex)",
+          "expertise": false
+        },
+        {
+          "value": 0,
+          "name": "animalHandling",
+          "expertise": false,
+          "proficient": false,
+          "label": "Animal Handling (Wis)"
+        },
+        {
+          "name": "arcana",
+          "label": "Arcana (Int)",
+          "expertise": false,
+          "proficient": false,
+          "value": 0
+        },
+        {
+          "proficient": false,
+          "name": "athletics",
+          "label": "Athletics (Str)",
+          "value": 0,
+          "expertise": false
+        },
+        {
+          "expertise": false,
+          "value": 0,
+          "label": "Deception (Cha)",
+          "proficient": false,
+          "name": "deception"
+        },
+        {
+          "label": "History (Int)",
+          "proficient": false,
+          "expertise": false,
+          "name": "history",
+          "value": 0
+        },
+        {
+          "expertise": false,
+          "value": 0,
+          "proficient": false,
+          "label": "Insight (Wis)",
+          "name": "insight"
+        },
+        {
+          "label": "Intimidation (Cha)",
+          "expertise": false,
+          "name": "intimidation",
+          "proficient": false,
+          "value": 0
+        },
+        {
+          "label": "Investigation (Int)",
+          "proficient": false,
+          "name": "investigation",
+          "expertise": false,
+          "value": 0
+        },
+        {
+          "label": "Medicine (Wis)",
+          "expertise": false,
+          "name": "medicine",
+          "proficient": false,
+          "value": 0
+        },
+        {
+          "name": "nature",
+          "expertise": false,
+          "label": "Nature (Int)",
+          "proficient": false,
+          "value": 0
+        },
+        {
+          "label": "Perception (Wis)",
+          "name": "perception",
+          "value": 0,
+          "expertise": false,
+          "proficient": false
+        },
+        {
+          "value": 0,
+          "proficient": false,
+          "name": "performance",
+          "expertise": false,
+          "label": "Performance (Cha)"
+        },
+        {
+          "proficient": false,
+          "name": "persuasion",
+          "value": 0,
+          "expertise": false,
+          "label": "Persuasion (Cha)"
+        },
+        {
+          "expertise": false,
+          "label": "Religion (Int)",
+          "value": 0,
+          "name": "religion",
+          "proficient": false
+        },
+        {
+          "expertise": false,
+          "value": 0,
+          "name": "sleightOfHand",
+          "label": "Sleight of Hand (Dex)",
+          "proficient": false
+        },
+        {
+          "value": 0,
+          "label": "Stealth (Dex)",
+          "name": "stealth",
+          "expertise": false,
+          "proficient": false
+        },
+        {
+          "expertise": false,
+          "value": 0,
+          "name": "survival",
+          "label": "Survival (Wis)",
+          "proficient": false
+        }
+      ],
+      "name": "New Companion",
+      "type": "",
+      "features": [
+        {
+          "id": "feat-1777248199560",
+          "name": "dqdqdq",
+          "notes": ""
+        }
+      ],
+      "armorClass": 10,
+      "size": "",
+      "stats": {
+        "constitution": 10,
+        "strength": 10,
+        "wisdom": 10,
+        "intelligence": 10,
+        "dexterity": 10,
+        "charisma": 10
+      },
+      "proficiencyBonus": "0",
+      "speed": "30ft",
+      "hitPoints": {
+        "current": 10,
+        "max": 10
+      },
+      "actions": [
+        {
+          "name": "qdqdqd",
+          "notes": "",
+          "id": "act-1777248157219"
+        }
+      ]
+    }
+  ],
+  "combatResources": [
+    {
+      "id": "res-1777247743672",
+      "max": 99,
+      "current": 1,
+      "description": "New Resource"
+    }
+  ],
+  "attunementItems": [
+    {
+      "id": "att-1777253167346",
+      "description": "New Attunement",
+      "attuned": true
+    },
+    {
+      "id": "att-1777253168516",
+      "description": "New Attunement",
+      "attuned": true
+    },
+    {
+      "attuned": true,
+      "description": "New Attunement",
+      "id": "att-1777253171139"
+    },
+    {
+      "description": "New Attunement",
+      "attuned": false,
+      "id": "att-1777253172375"
+    },
+    {
+      "attuned": false,
+      "description": "New Attunement",
+      "id": "att-1777253173871"
+    }
+  ],
+  "bonds": [],
+  "ideals": [],
+  "flaws": [
+    "p["
+  ],
+  "deathSaves": {
+    "failures": 0,
+    "successes": 0
+  },
+  "hpTracking": "",
+  "isMulticlass": true,
+  "spells": {}
+}

@@ -1,0 +1,231 @@
+{
+  "id": "mst75n5yd6t5daroncf",
+  "userId": "user-5aee02b5",
+  "gameSystem": "Dungeons & Dragons",
+  "name": "Level 20 Rogue (Outlander)",
+  "avatar": "dnd-cleric-avatar",
+  "characterClass": "Rogue",
+  "background": "Outlander",
+  "alignment": "Neutral",
+  "level": 20,
+  "inspiration": "0",
+  "backstory": "",
+  "age": "",
+  "height": "",
+  "weight": "",
+  "eyes": "",
+  "hair": "",
+  "stats": {
+    "strength": 10,
+    "dexterity": 10,
+    "constitution": 10,
+    "intelligence": 10,
+    "wisdom": 10,
+    "charisma": 10
+  },
+  "armorClass": 10,
+  "hitPoints": {
+    "current": 82,
+    "max": 82
+  },
+  "hitDice": "1d8",
+  "hitDiceUsed": 0,
+  "speed": "30ft",
+  "proficiencyBonus": 2,
+  "initiative": 0,
+  "experience": 611110,
+  "skills": [],
+  "attacks": [],
+  "equipment": [
+    {
+      "notes": "",
+      "name": "gggg",
+      "status": "default",
+      "id": "eq-1775011470547"
+    }
+  ],
+  "inventory": [],
+  "currency": {
+    "cp": 0,
+    "pp": 5,
+    "ep": 0,
+    "gp": 150,
+    "sp": 0
+  },
+  "featuresAndTraits": [
+    "ggggg"
+  ],
+  "companions": [
+    {
+      "skills": [
+        {
+          "label": "Acrobatics (Dex)",
+          "expertise": false,
+          "proficient": false,
+          "value": 0,
+          "name": "acrobatics"
+        },
+        {
+          "label": "Animal Handling (Wis)",
+          "proficient": false,
+          "expertise": false,
+          "value": 0,
+          "name": "animalHandling"
+        },
+        {
+          "label": "Arcana (Int)",
+          "expertise": false,
+          "proficient": false,
+          "name": "arcana",
+          "value": 0
+        },
+        {
+          "label": "Athletics (Str)",
+          "expertise": false,
+          "proficient": false,
+          "value": 0,
+          "name": "athletics"
+        },
+        {
+          "expertise": false,
+          "label": "Deception (Cha)",
+          "proficient": false,
+          "name": "deception",
+          "value": 0
+        },
+        {
+          "name": "history",
+          "value": 0,
+          "expertise": false,
+          "proficient": false,
+          "label": "History (Int)"
+        },
+        {
+          "name": "insight",
+          "proficient": false,
+          "label": "Insight (Wis)",
+          "value": 0,
+          "expertise": false
+        },
+        {
+          "expertise": false,
+          "name": "intimidation",
+          "proficient": false,
+          "label": "Intimidation (Cha)",
+          "value": 0
+        },
+        {
+          "expertise": false,
+          "value": 0,
+          "label": "Investigation (Int)",
+          "name": "investigation",
+          "proficient": false
+        },
+        {
+          "expertise": false,
+          "name": "medicine",
+          "label": "Medicine (Wis)",
+          "value": 0,
+          "proficient": false
+        },
+        {
+          "proficient": false,
+          "name": "nature",
+          "value": 0,
+          "label": "Nature (Int)",
+          "expertise": false
+        },
+        {
+          "value": 0,
+          "expertise": false,
+          "name": "perception",
+          "proficient": false,
+          "label": "Perception (Wis)"
+        },
+        {
+          "proficient": false,
+          "value": 0,
+          "expertise": false,
+          "label": "Performance (Cha)",
+          "name": "performance"
+        },
+        {
+          "label": "Persuasion (Cha)",
+          "proficient": false,
+          "name": "persuasion",
+          "expertise": false,
+          "value": 0
+        },
+        {
+          "expertise": false,
+          "value": 0,
+          "label": "Religion (Int)",
+          "name": "religion",
+          "proficient": false
+        },
+        {
+          "proficient": false,
+          "expertise": false,
+          "label": "Sleight of Hand (Dex)",
+          "name": "sleightOfHand",
+          "value": 0
+        },
+        {
+          "proficient": false,
+          "name": "stealth",
+          "label": "Stealth (Dex)",
+          "expertise": false,
+          "value": 0
+        },
+        {
+          "label": "Survival (Wis)",
+          "proficient": false,
+          "name": "survival",
+          "value": 0,
+          "expertise": false
+        }
+      ],
+      "name": "New Companion",
+      "id": "companion-1776115821354",
+      "type": "",
+      "hitPoints": {
+        "current": 10,
+        "max": 10
+      },
+      "proficiencyBonus": "0",
+      "armorClass": 10,
+      "initiative": 0,
+      "stats": {
+        "strength": 10,
+        "dexterity": 10,
+        "intelligence": 10,
+        "charisma": 10,
+        "constitution": 10,
+        "wisdom": 10
+      },
+      "size": "",
+      "actions": [],
+      "speed": "30ft",
+      "features": []
+    }
+  ],
+  "combatResources": [],
+  "attunementItems": [
+    {
+      "id": "att-1775011449245",
+      "notes": "",
+      "attuned": true,
+      "description": "loneliness"
+    }
+  ],
+  "bonds": [],
+  "ideals": [],
+  "flaws": [],
+  "deathSaves": {
+    "successes": 0,
+    "failures": 0
+  },
+  "hpTracking": "",
+  "isMulticlass": true,
+  "spells": {}
+}

@@ -7,12 +7,11 @@ import {
   CardContent,
   CardDescription,
   CardFooter,
-  CardHeader,
   CardTitle,
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Trash2 } from 'lucide-react';
+import { Trash2, FileDown } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,8 +22,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
+} from "@/components/ui/alert-dialog";
 import { useCharacterContext } from '@/context/character-context';
+import { useLocalAuth } from '@/context/local-auth-context';
 
 type CharacterCardProps = {
   character: Character;
@@ -32,11 +32,36 @@ type CharacterCardProps = {
 
 export function CharacterCard({ character }: CharacterCardProps) {
   const { deleteCharacter, isCompactView } = useCharacterContext();
+  const { user } = useLocalAuth();
+
   const badgeVariant =
     character.gameSystem === 'Dungeons & Dragons' ? 'default' : 'secondary';
-    
+
   const handleDelete = () => {
     deleteCharacter(character.id);
+  };
+
+  const handleExport = async () => {
+    if (!user) return;
+    try {
+      // Fetch the single character from our API
+      const res = await fetch(`/api/export?userId=${user.uid}&characterId=${character.id}`);
+      const data = await res.json();
+      
+      // Create a downloadable JSON file
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      // Clean the character name for the filename
+      a.download = `${character.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Export failed:", error);
+    }
   };
 
   if (isCompactView) {
@@ -61,6 +86,12 @@ export function CharacterCard({ character }: CharacterCardProps) {
           <Button asChild size="sm">
             <Link href={`/${character.id}`}>View</Link>
           </Button>
+          
+          {/* EXPORT BUTTON (COMPACT VIEW) */}
+          <Button variant="outline" size="icon" className="h-9 w-9" onClick={handleExport} title="Export JSON">
+            <FileDown className="h-4 w-4" />
+          </Button>
+
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button variant="destructive" size="icon" className="h-9 w-9">
@@ -105,6 +136,12 @@ export function CharacterCard({ character }: CharacterCardProps) {
         <Button asChild className="w-full">
           <Link href={`/${character.id}`}>View Sheet</Link>
         </Button>
+        
+        {/* EXPORT BUTTON (NORMAL VIEW) */}
+        <Button variant="outline" size="icon" onClick={handleExport} title="Export JSON">
+          <FileDown className="h-4 w-4" />
+        </Button>
+
         <AlertDialog>
           <AlertDialogTrigger asChild>
             <Button variant="destructive" size="icon">

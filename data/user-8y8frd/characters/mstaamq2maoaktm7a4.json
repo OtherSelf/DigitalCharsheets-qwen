@@ -1,0 +1,146 @@
+{
+  "name": "qwqwqq",
+  "characterClass": "Assassin",
+  "gameSystem": "Dark Heresy",
+  "avatar": "dh-acolyte-avatar",
+  "backstory": "",
+  "homeWorld": "Imperial World",
+  "worldVariant": "Feudal World",
+  "careerPath": "Assassin",
+  "rank": "Sell-Steel",
+  "divination": "Innocence is an illusion.",
+  "divinationEffect": "+1 Insanity Point, +1 Corruption Point.",
+  "quirk": "",
+  "height": "",
+  "weight": "",
+  "age": "",
+  "skinColor": "",
+  "hairColor": "",
+  "eyeColor": "",
+  "experience": 0,
+  "totalExpSpent": 0,
+  "alternatePath": null,
+  "advancedPath": null,
+  "notes": "",
+  "questLog": [],
+  "stats": {
+    "weaponSkill": 30,
+    "ballisticSkill": 30,
+    "strength": 30,
+    "toughness": 30,
+    "agility": 30,
+    "intelligence": 30,
+    "perception": 30,
+    "willpower": 30,
+    "fellowship": 30,
+    "influence": 30
+  },
+  "statUpgrades": {
+    "weaponSkill": [
+      false,
+      false,
+      false,
+      false
+    ],
+    "ballisticSkill": [
+      false,
+      false,
+      false,
+      false
+    ],
+    "strength": [
+      false,
+      false,
+      false,
+      false
+    ],
+    "toughness": [
+      false,
+      false,
+      false,
+      false
+    ],
+    "agility": [
+      false,
+      false,
+      false,
+      false
+    ],
+    "intelligence": [
+      false,
+      false,
+      false,
+      false
+    ],
+    "perception": [
+      false,
+      false,
+      false,
+      false
+    ],
+    "willpower": [
+      false,
+      false,
+      false,
+      false
+    ],
+    "fellowship": [
+      false,
+      false,
+      false,
+      false
+    ],
+    "influence": [
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "statNotes": {},
+  "wounds": {
+    "current": 10,
+    "max": 10
+  },
+  "fatePoints": {
+    "current": 1,
+    "max": 1
+  },
+  "insanityPoints": {
+    "total": 0,
+    "notes": ""
+  },
+  "corruptionPoints": {
+    "total": 0,
+    "notes": ""
+  },
+  "wealth": {
+    "throneGelt": 0,
+    "monthlyIncome": 0
+  },
+  "movement": {
+    "walkHalf": 3,
+    "walkFull": 6,
+    "charge": 9,
+    "run": 18
+  },
+  "equipment": {
+    "armor": {
+      "Head": null,
+      "Body": null,
+      "Left arm": null,
+      "Right arm": null,
+      "Left leg": null,
+      "Right leg": null
+    },
+    "weapons": {
+      "melee": [],
+      "ranged": []
+    }
+  },
+  "inventory": [],
+  "skills": [],
+  "talents": [],
+  "userId": "user-8y8frd",
+  "id": "mstaamq2maoaktm7a4"
+}

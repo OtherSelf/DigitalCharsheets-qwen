@@ -1,0 +1,188 @@
+{
+  "id": "mst75n600bnd9aux4ajk",
+  "userId": "user-5aee02b5",
+  "gameSystem": "Dark Heresy",
+  "name": "Assassin (Imperial World)",
+  "avatar": "dh-acolyte-avatar",
+  "careerPath": "Assassin",
+  "characterClass": "Assassin",
+  "homeWorld": "Imperial World",
+  "rank": "Acolyte",
+  "advancedPath": null,
+  "alternatePath": null,
+  "divination": "Die if you must, but not with your spirit broken.",
+  "divinationEffect": "+3 Willpower.",
+  "backstory": "Родился в религиозной семье, но слишком много думавший о \"что, если?.. и размышлявших о путях Императора, за что был нелюбим семьёй несмотря на однозначную и чистую веру в Императора. Ушёл из дома с момента как научился достаточно крепко держать нож чтобы и кошелёк срезать, и в бочину ткнуть. Выживал на улицах за счёт мелких краж, затем перешёл к провоцированным убийствам в качестве самозащиты, а затем и вовсе стал брать заказы на убийства, для чего предварительно собирал информацию как о заказчике, так и о цели. В результате сделал себе какое-никакое имя в местном подполье, получил заказ на некоего Франсуа Фердиандо, устранил его пока он ехал по людной улице у всех на глазах, при этом оставшись неизвестным, но был слит конкурентами из подполья местным властям и посажен в тюрьму. Франсуа оказался одним из высокопоставленных членов еретического культа, и культ, восприняв это как то, что их раскрыли, решил бить первым, развязав короткую, но жёсткую гражданскую войну планетарного масштаба на всей планете, окончившаяся истреблением еретиков. Оказавшись невольным катализатором войны, которая привела планету к зачистке от еретиков, был выставлен козлом отпущения чтобы перенаправить гнев и ненависть жителей планеты, чьи родные и близкие были убиты или казнены во время войны, с местных органов власти. Новости о произошедшем дошли до Инквизиции, которая и забрала меня из тюрьмы для выяснения обстоятельств и последующей вербовки в качестве аколита-наёмника.",
+  "age": "35",
+  "height": "175",
+  "weight": "",
+  "hairColor": "White",
+  "eyeColor": "Grey",
+  "skinColor": "",
+  "quirk": "",
+  "worldVariant": "",
+  "stats": {
+    "weaponSkill": 30,
+    "ballisticSkill": 30,
+    "strength": 30,
+    "toughness": 30,
+    "agility": 30,
+    "intelligence": 30,
+    "perception": 30,
+    "willpower": 30,
+    "fellowship": 30,
+    "influence": 0
+  },
+  "statUpgrades": {},
+  "statNotes": {},
+  "skills": [],
+  "talents": [],
+  "movement": {
+    "walkHalf": 0,
+    "walkFull": 0,
+    "charge": 0,
+    "run": 0
+  },
+  "wounds": {
+    "current": 0,
+    "max": 0,
+    "notes": ""
+  },
+  "fatePoints": {
+    "notes": "+1 за пролог",
+    "max": 2,
+    "current": 0
+  },
+  "insanityPoints": {
+    "notes": "",
+    "total": 0
+  },
+  "corruptionPoints": {
+    "notes": "",
+    "total": 3
+  },
+  "experience": 400,
+  "totalExpSpent": 400,
+  "equipment": {
+    "armor": {
+      "Head": {
+        "mods": "",
+        "quality": "Common",
+        "type": "Flack",
+        "ap": 4
+      },
+      "Right arm": {
+        "ap": 4,
+        "mods": "",
+        "type": "Flack",
+        "quality": "Common"
+      },
+      "Body": {
+        "ap": 4,
+        "quality": "Common",
+        "mods": "",
+        "type": "Flack"
+      },
+      "Left arm": {
+        "quality": "Common",
+        "type": "Flack",
+        "mods": "",
+        "ap": 4
+      },
+      "Right leg": {
+        "type": "Flack",
+        "quality": "Common",
+        "ap": 4,
+        "mods": ""
+      },
+      "Left leg": {
+        "mods": "",
+        "quality": "Common",
+        "ap": 4,
+        "type": "Flack"
+      }
+    },
+    "weapons": {
+      "melee": [
+        {
+          "equipped": true,
+          "id": "melee-1772477738771",
+          "penetration": "0",
+          "traits": "",
+          "name": "Knife",
+          "range": "",
+          "type": "",
+          "notes": "",
+          "damage": "1d5"
+        },
+        {
+          "equipped": true,
+          "notes": "",
+          "penetration": "2",
+          "range": "",
+          "type": "",
+          "name": "Knife",
+          "id": "melee-1772479108579",
+          "damage": "1d5",
+          "traits": "Mono"
+        },
+        {
+          "notes": "",
+          "name": "Sword",
+          "range": "",
+          "type": "",
+          "id": "melee-1773689851119",
+          "penetration": "2",
+          "damage": "1d10R",
+          "equipped": true,
+          "traits": "Mono, balanced (+10 parry)"
+        },
+        {
+          "notes": "",
+          "penetration": "4",
+          "range": "",
+          "type": "Power",
+          "name": "Power Sword",
+          "equipped": false,
+          "damage": "1d10",
+          "id": "melee-1773690692059",
+          "traits": "balanced, 75% chance to break enemy weapon"
+        }
+      ],
+      "ranged": [
+        {
+          "name": "Hunting Rifle",
+          "type": "",
+          "traits": "+10 optic, +1d5 bayonet (mono knife)",
+          "rof": "",
+          "id": "ranged-1772477781128",
+          "damage": "1d10+4",
+          "notes": "",
+          "reload": "FA",
+          "equipped": true,
+          "clipSize": 50,
+          "clip": 5,
+          "range": "160"
+        }
+      ]
+    }
+  },
+  "inventory": [
+    {
+      "name": "Throwing Knife 1pcs 1d5 5m",
+      "id": "new-inv-1772487655790",
+      "status": "default",
+      "notes": ""
+    },
+    {
+      "id": "new-inv-1772487667175",
+      "status": "default",
+      "name": "Кронциркуль х2",
+      "notes": ""
+    }
+  ],
+  "wealth": {
+    "throneGelt": 0,
+    "monthlyIncome": 0
+  }
+}

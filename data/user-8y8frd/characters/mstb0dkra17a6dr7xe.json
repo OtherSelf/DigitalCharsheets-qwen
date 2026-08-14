@@ -1,0 +1,235 @@
+{
+  "name": "qeq",
+  "characterClass": "Barbarian",
+  "race": "Human",
+  "background": "Acolyte",
+  "alignment": "Neutral",
+  "experiencePoints": 0,
+  "age": "",
+  "eyes": "",
+  "skin": "",
+  "height": "",
+  "weight": "",
+  "hair": "",
+  "inspiration": "",
+  "proficiencyBonus": 2,
+  "level": 1,
+  "gameSystem": "Dungeons & Dragons",
+  "avatar": "dnd-cleric-avatar",
+  "backstory": "",
+  "notes": "",
+  "questLog": [],
+  "divineBoons": [],
+  "stats": {
+    "strength": 10,
+    "dexterity": 10,
+    "constitution": 10,
+    "intelligence": 10,
+    "wisdom": 10,
+    "charisma": 10
+  },
+  "savingThrows": [
+    {
+      "name": "Strength",
+      "proficient": false,
+      "value": 0
+    },
+    {
+      "name": "Dexterity",
+      "proficient": false,
+      "value": 0
+    },
+    {
+      "name": "Constitution",
+      "proficient": false,
+      "value": 0
+    },
+    {
+      "name": "Intelligence",
+      "proficient": false,
+      "value": 0
+    },
+    {
+      "name": "Wisdom",
+      "proficient": false,
+      "value": 0
+    },
+    {
+      "name": "Charisma",
+      "proficient": false,
+      "value": 0
+    }
+  ],
+  "skills": [
+    {
+      "name": "acrobatics",
+      "label": "Acrobatics (Dex)",
+      "proficient": false,
+      "expertise": false,
+      "value": 0
+    },
+    {
+      "name": "animalHandling",
+      "label": "Animal Handling (Wis)",
+      "proficient": false,
+      "expertise": false,
+      "value": 0
+    },
+    {
+      "name": "arcana",
+      "label": "Arcana (Int)",
+      "proficient": false,
+      "expertise": false,
+      "value": 0
+    },
+    {
+      "name": "athletics",
+      "label": "Athletics (Str)",
+      "proficient": false,
+      "expertise": false,
+      "value": 0
+    },
+    {
+      "name": "deception",
+      "label": "Deception (Cha)",
+      "proficient": false,
+      "expertise": false,
+      "value": 0
+    },
+    {
+      "name": "history",
+      "label": "History (Int)",
+      "proficient": false,
+      "expertise": false,
+      "value": 0
+    },
+    {
+      "name": "insight",
+      "label": "Insight (Wis)",
+      "proficient": false,
+      "expertise": false,
+      "value": 0
+    },
+    {
+      "name": "intimidation",
+      "label": "Intimidation (Cha)",
+      "proficient": false,
+      "expertise": false,
+      "value": 0
+    },
+    {
+      "name": "investigation",
+      "label": "Investigation (Int)",
+      "proficient": false,
+      "expertise": false,
+      "value": 0
+    },
+    {
+      "name": "medicine",
+      "label": "Medicine (Wis)",
+      "proficient": false,
+      "expertise": false,
+      "value": 0
+    },
+    {
+      "name": "nature",
+      "label": "Nature (Int)",
+      "proficient": false,
+      "expertise": false,
+      "value": 0
+    },
+    {
+      "name": "perception",
+      "label": "Perception (Wis)",
+      "proficient": false,
+      "expertise": false,
+      "value": 0
+    },
+    {
+      "name": "performance",
+      "label": "Performance (Cha)",
+      "proficient": false,
+      "expertise": false,
+      "value": 0
+    },
+    {
+      "name": "persuasion",
+      "label": "Persuasion (Cha)",
+      "proficient": false,
+      "expertise": false,
+      "value": 0
+    },
+    {
+      "name": "religion",
+      "label": "Religion (Int)",
+      "proficient": false,
+      "expertise": false,
+      "value": 0
+    },
+    {
+      "name": "sleightOfHand",
+      "label": "Sleight of Hand (Dex)",
+      "proficient": false,
+      "expertise": false,
+      "value": 0
+    },
+    {
+      "name": "stealth",
+      "label": "Stealth (Dex)",
+      "proficient": false,
+      "expertise": false,
+      "value": 0
+    },
+    {
+      "name": "survival",
+      "label": "Survival (Wis)",
+      "proficient": false,
+      "expertise": false,
+      "value": 0
+    }
+  ],
+  "armorClass": 10,
+  "speed": 30,
+  "hitPoints": {
+    "current": 8,
+    "max": 8
+  },
+  "temporaryHitPoints": 0,
+  "hitDice": "1d8",
+  "deathSaves": {
+    "successes": 0,
+    "failures": 0
+  },
+  "exhaustion": 0,
+  "otherProficienciesAndLanguages": [],
+  "attacks": [],
+  "spellcastingAbility": "none",
+  "spellAttackBonus": "",
+  "spellSaveDifficulty": 8,
+  "spellcastingEntries": [
+    {
+      "id": "primary",
+      "ability": "none",
+      "attackBonus": "",
+      "saveDC": 8
+    }
+  ],
+  "personalityTraits": [],
+  "ideals": [],
+  "bonds": [],
+  "flaws": [],
+  "featuresAndTraits": [],
+  "equipment": [],
+  "attunementItems": [],
+  "currency": {
+    "cp": 0,
+    "sp": 0,
+    "ep": 0,
+    "gp": 150,
+    "pp": 5
+  },
+  "inventory": [],
+  "spells": [],
+  "userId": "user-8y8frd",
+  "id": "mstb0dkra17a6dr7xe"
+}

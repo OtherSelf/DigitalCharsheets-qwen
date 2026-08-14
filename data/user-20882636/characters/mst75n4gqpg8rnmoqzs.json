@@ -1,0 +1,205 @@
+{
+  "id": "mst75n4gqpg8rnmoqzs",
+  "userId": "user-20882636",
+  "gameSystem": "Dark Heresy",
+  "name": "Assassin (Imperial World)",
+  "avatar": "dh-acolyte-avatar",
+  "careerPath": "Assassin",
+  "characterClass": "Assassin",
+  "homeWorld": "Imperial World",
+  "rank": "Acolyte",
+  "advancedPath": "Death Adept",
+  "alternatePath": null,
+  "divination": "Die if you must, but not with your spirit broken.",
+  "divinationEffect": "+3 Willpower.",
+  "backstory": "Родился в религиозной семье, но слишком много думавший о \"что, если?.. и размышлявших о путях Императора, за что был нелюбим семьёй несмотря на однозначную и чистую веру в Императора. Ушёл из дома с момента как научился достаточно крепко держать нож чтобы и кошелёк срезать, и в бочину ткнуть. Выживал на улицах за счёт мелких краж, затем перешёл к провоцированным убийствам в качестве самозащиты, а затем и вовсе стал брать заказы на убийства, для чего предварительно собирал информацию как о заказчике, так и о цели. В результате сделал себе какое-никакое имя в местном подполье, получил заказ на некоего Франсуа Фердиандо, устранил его пока он ехал по людной улице у всех на глазах, при этом оставшись неизвестным, но был слит конкурентами из подполья местным властям и посажен в тюрьму. Франсуа оказался одним из высокопоставленных членов еретического культа, и культ, восприняв это как то, что их раскрыли, решил бить первым, развязав короткую, но жёсткую гражданскую войну планетарного масштаба на всей планете, окончившаяся истреблением еретиков. Оказавшись невольным катализатором войны, которая привела планету к зачистке от еретиков, был выставлен козлом отпущения чтобы перенаправить гнев и ненависть жителей планеты, чьи родные и близкие были убиты или казнены во время войны, с местных органов власти. Новости о произошедшем дошли до Инквизиции, которая и забрала меня из тюрьмы для выяснения обстоятельств и последующей вербовки в качестве аколита-наёмника.",
+  "age": "35",
+  "height": "175",
+  "weight": "",
+  "hairColor": "White",
+  "eyeColor": "Grey",
+  "skinColor": "",
+  "quirk": "",
+  "worldVariant": "",
+  "stats": {
+    "weaponSkill": 30,
+    "ballisticSkill": 30,
+    "strength": 30,
+    "toughness": 30,
+    "agility": 30,
+    "intelligence": 30,
+    "perception": 30,
+    "willpower": 30,
+    "fellowship": 30,
+    "influence": 0
+  },
+  "statUpgrades": {},
+  "statNotes": {},
+  "skills": [],
+  "talents": [],
+  "movement": {
+    "walkHalf": 0,
+    "walkFull": 0,
+    "charge": 0,
+    "run": 0
+  },
+  "wounds": {
+    "current": 0,
+    "max": 0,
+    "notes": ""
+  },
+  "fatePoints": {
+    "notes": "+1 за пролог",
+    "max": 2,
+    "current": 2
+  },
+  "insanityPoints": {
+    "notes": "",
+    "total": 0
+  },
+  "corruptionPoints": {
+    "notes": "",
+    "total": 2
+  },
+  "experience": 300,
+  "totalExpSpent": 300,
+  "equipment": {
+    "armor": {
+      "Head": {
+        "mods": "",
+        "quality": "Common",
+        "type": "Flack",
+        "ap": 4
+      },
+      "Right arm": {
+        "type": "Flack",
+        "quality": "Common",
+        "ap": 4,
+        "mods": ""
+      },
+      "Body": {
+        "type": "Flack",
+        "quality": "Common",
+        "mods": "Bionic stomach AP+2, body stun ignore",
+        "ap": 6
+      },
+      "Left arm": {
+        "mods": "",
+        "quality": "Common",
+        "ap": 4,
+        "type": "Flack"
+      },
+      "Right leg": {
+        "quality": "Common",
+        "ap": 4,
+        "type": "Flack",
+        "mods": ""
+      },
+      "Left leg": {
+        "ap": 4,
+        "mods": "",
+        "quality": "Common",
+        "type": "Flack"
+      }
+    },
+    "weapons": {
+      "melee": [
+        {
+          "traits": "Custom Grip (+5 accuracy)",
+          "id": "melee-1772477738771",
+          "penetration": "1",
+          "damage": "1d5+1",
+          "range": "-",
+          "equipped": true,
+          "name": "Kraken Tooth Dagger x2",
+          "notes": "",
+          "type": "Primitive"
+        },
+        {
+          "id": "melee-1773689851119",
+          "name": "Sword",
+          "type": "Primitive",
+          "traits": "Mono, balanced (+10 parry), Custom Grip (+5 accuracy)",
+          "damage": "1d10R",
+          "notes": "",
+          "equipped": false,
+          "range": "",
+          "penetration": "2"
+        },
+        {
+          "traits": "Balanced (+10 Parry), Tearing (Roll 2d, choose highest), Custom Grip (+5 WS)",
+          "type": "Chain",
+          "damage": "1d10+2R",
+          "name": "Chaisword",
+          "id": "melee-1783968464447",
+          "equipped": true,
+          "notes": "",
+          "range": "-",
+          "penetration": "5"
+        }
+      ],
+      "ranged": [
+        {
+          "type": "",
+          "notes": "",
+          "clipSize": 99,
+          "name": "Hunting Rifle",
+          "damage": "1d10+4",
+          "rof": "",
+          "equipped": true,
+          "range": "160",
+          "traits": "+10 optic, +1d5 bayonet (mono knife), Extended Magazine (8 clip), Fire Selector, Accurate (+10 aim, 1-2d10 for 1-2 deg.suc.)",
+          "clip": 8,
+          "id": "ranged-1772477781128",
+          "reload": "FA"
+        },
+        {
+          "clip": 1,
+          "equipped": false,
+          "range": "40",
+          "reload": "HA",
+          "clipSize": 13,
+          "notes": "",
+          "damage": "1d10+2R",
+          "rof": "1",
+          "traits": "Accurate, Custom Grip (+5 accuracy)",
+          "type": "Primitive",
+          "id": "ranged-1776599566655",
+          "name": "Composite Bow"
+        },
+        {
+          "notes": "",
+          "id": "ranged-1781550128897",
+          "name": "Hunting Rifle Generic",
+          "equipped": false,
+          "type": "Primitive",
+          "rof": "",
+          "range": "",
+          "reload": "HA",
+          "clipSize": 10,
+          "damage": "1d10+4",
+          "clip": 5,
+          "traits": "Accurate"
+        }
+      ]
+    }
+  },
+  "inventory": [
+    {
+      "name": "Throwing Knife 1pcs 1d5 5m",
+      "notes": "",
+      "status": "default",
+      "id": "new-inv-1772487655790"
+    },
+    {
+      "status": "default",
+      "name": "Кронциркуль х2",
+      "id": "new-inv-1772487667175",
+      "notes": ""
+    }
+  ],
+  "wealth": {
+    "throneGelt": 0,
+    "monthlyIncome": 0
+  }
+}

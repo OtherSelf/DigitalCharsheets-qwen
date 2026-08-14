@@ -1,0 +1,136 @@
+{
+  "id": "mst75n592qo43mb89nh",
+  "userId": "user-1efd17e3",
+  "gameSystem": "Dark Heresy",
+  "name": "Adept (Feral World)",
+  "avatar": "dh-acolyte-avatar",
+  "careerPath": "Adept",
+  "characterClass": "Adept",
+  "homeWorld": "Feral World",
+  "rank": "Acolyte",
+  "advancedPath": null,
+  "alternatePath": "Chirurgeon",
+  "divination": "Only the insane have strength enough to prosper. Only those who prosper may judge what is sane.",
+  "divinationEffect": "+2 Insanity Points.",
+  "backstory": "fgfdgfgsdfgsdfds",
+  "age": "",
+  "height": "",
+  "weight": "",
+  "hairColor": "",
+  "eyeColor": "",
+  "skinColor": "",
+  "quirk": "",
+  "worldVariant": "",
+  "stats": {
+    "weaponSkill": 30,
+    "ballisticSkill": 30,
+    "strength": 30,
+    "toughness": 30,
+    "agility": 30,
+    "intelligence": 30,
+    "perception": 30,
+    "willpower": 30,
+    "fellowship": 30,
+    "influence": 0
+  },
+  "statUpgrades": {},
+  "statNotes": {},
+  "skills": [],
+  "talents": [],
+  "movement": {
+    "walkHalf": 0,
+    "walkFull": 0,
+    "charge": 0,
+    "run": 0
+  },
+  "wounds": {
+    "current": 0,
+    "max": 0,
+    "notes": ""
+  },
+  "fatePoints": {
+    "max": 1,
+    "current": 1
+  },
+  "insanityPoints": {
+    "total": 0,
+    "notes": ""
+  },
+  "corruptionPoints": {
+    "total": 0,
+    "notes": ""
+  },
+  "experience": 108901,
+  "totalExpSpent": 108901,
+  "equipment": {
+    "armor": {
+      "Head": null,
+      "Right arm": null,
+      "Body": null,
+      "Left arm": null,
+      "Right leg": null,
+      "Left leg": null
+    },
+    "weapons": {
+      "melee": [
+        {
+          "traits": "",
+          "penetration": "",
+          "type": "",
+          "equipped": true,
+          "name": "New Melee Weapon",
+          "damage": "",
+          "notes": "",
+          "range": "",
+          "id": "melee-1775354515145"
+        }
+      ],
+      "ranged": [
+        {
+          "notes": "",
+          "damage": "",
+          "equipped": false,
+          "id": "ranged-1776202464271",
+          "range": "",
+          "name": "New Ranged Weapon",
+          "clipSize": 0,
+          "traits": "",
+          "type": "",
+          "clip": 0,
+          "rof": "",
+          "reload": ""
+        }
+      ]
+    }
+  },
+  "inventory": [
+    {
+      "name": "fdsfsdfds",
+      "notes": "",
+      "id": "new-inv-1773881029381",
+      "status": "default"
+    },
+    {
+      "id": "new-inv-1773881031038",
+      "name": "fdsfdsfsdf",
+      "notes": "",
+      "status": "default"
+    },
+    {
+      "status": "default",
+      "name": "fdsfdsfdfs",
+      "notes": "",
+      "id": "new-inv-1773881032555"
+    },
+    {
+      "name": "fdsfsdfsd",
+      "notes": "",
+      "id": "new-inv-1773881033949",
+      "status": "default"
+    }
+  ],
+  "wealth": {
+    "throneGelt": 0,
+    "monthlyIncome": 0
+  }
+}

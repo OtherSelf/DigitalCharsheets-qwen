@@ -1,0 +1,146 @@
+{
+  "id": "mst75n4noycop9owcbh",
+  "userId": "user-20882636",
+  "gameSystem": "Dark Heresy",
+  "name": "Adept (Hive World)",
+  "avatar": "dh-acolyte-avatar",
+  "careerPath": "Adept",
+  "characterClass": "Adept",
+  "homeWorld": "Hive World",
+  "rank": "Acolyte",
+  "advancedPath": null,
+  "alternatePath": null,
+  "divination": "The wise man learns from the deaths of others.",
+  "divinationEffect": "+3 Intelligence.",
+  "backstory": "Born in the underhive of Scintilla, Jax was recruited into the Inquisition after his latent psyker abilities manifested during a gang war. He now serves a radical Inquisitor, his loyalty tested daily by the horrors he must confront.",
+  "age": "24",
+  "height": "1.8m",
+  "weight": "",
+  "hairColor": "Black",
+  "eyeColor": "Grey",
+  "skinColor": "",
+  "quirk": "",
+  "worldVariant": "",
+  "stats": {
+    "weaponSkill": 30,
+    "ballisticSkill": 30,
+    "strength": 30,
+    "toughness": 30,
+    "agility": 30,
+    "intelligence": 30,
+    "perception": 30,
+    "willpower": 30,
+    "fellowship": 30,
+    "influence": 0
+  },
+  "statUpgrades": {},
+  "statNotes": {},
+  "skills": [],
+  "talents": [],
+  "movement": {
+    "walkHalf": 0,
+    "walkFull": 0,
+    "charge": 0,
+    "run": 0
+  },
+  "wounds": {
+    "current": 0,
+    "max": 0,
+    "notes": ""
+  },
+  "fatePoints": {
+    "max": 2,
+    "current": 2
+  },
+  "insanityPoints": {
+    "total": 3,
+    "notes": ""
+  },
+  "corruptionPoints": {
+    "total": 1,
+    "notes": ""
+  },
+  "experience": 150,
+  "totalExpSpent": 150,
+  "equipment": {
+    "armor": {
+      "Head": {
+        "ap": 2,
+        "mods": "-",
+        "type": "Flak",
+        "quality": "Common"
+      },
+      "Right arm": {
+        "ap": 4,
+        "type": "Flak",
+        "mods": "-",
+        "quality": "Common"
+      },
+      "Body": {
+        "type": "Flak",
+        "mods": "-",
+        "ap": 4,
+        "quality": "Common"
+      },
+      "Left arm": {
+        "ap": 4,
+        "quality": "Common",
+        "type": "Flak",
+        "mods": "-"
+      },
+      "Right leg": {
+        "mods": "-",
+        "ap": 2,
+        "quality": "Common",
+        "type": "Flak"
+      },
+      "Left leg": {
+        "ap": 2,
+        "type": "Flak",
+        "quality": "Common",
+        "mods": "-"
+      }
+    },
+    "weapons": {
+      "melee": [
+        {
+          "notes": "",
+          "name": "Knife",
+          "type": "Low-Tech",
+          "damage": "1d5 R",
+          "penetration": "0",
+          "range": "-",
+          "id": "w-melee-1",
+          "traits": "Primitive"
+        }
+      ],
+      "ranged": [
+        {
+          "range": "30m",
+          "id": "w-ranged-1",
+          "clip": 30,
+          "reload": "Half",
+          "notes": "",
+          "damage": "1d10+2 E",
+          "traits": "Reliable",
+          "rof": "S/2/-",
+          "name": "Laspistol",
+          "clipSize": 30,
+          "type": "Las"
+        }
+      ]
+    }
+  },
+  "inventory": [
+    {
+      "notes": "Cracked screen",
+      "status": "lost",
+      "name": "Data-slate",
+      "id": "item-8"
+    }
+  ],
+  "wealth": {
+    "throneGelt": 0,
+    "monthlyIncome": 0
+  }
+}

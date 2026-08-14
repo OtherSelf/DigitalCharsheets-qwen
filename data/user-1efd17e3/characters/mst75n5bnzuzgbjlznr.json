@@ -1,0 +1,162 @@
+{
+  "id": "mst75n5bnzuzgbjlznr",
+  "userId": "user-1efd17e3",
+  "gameSystem": "Dark Heresy",
+  "name": "Assassin (Imperial World)",
+  "avatar": "dh-acolyte-avatar",
+  "careerPath": "Assassin",
+  "characterClass": "Assassin",
+  "homeWorld": "Imperial World",
+  "rank": "Acolyte",
+  "advancedPath": null,
+  "alternatePath": null,
+  "divination": "Sins hidden in the heart turn all to decay.",
+  "divinationEffect": "+3 Corruption Points.",
+  "backstory": "qdqdqwdqwdqwdq",
+  "age": "18",
+  "height": "123",
+  "weight": "",
+  "hairColor": "qdqdq",
+  "eyeColor": "qdqdqd",
+  "skinColor": "",
+  "quirk": "",
+  "worldVariant": "",
+  "stats": {
+    "weaponSkill": 30,
+    "ballisticSkill": 30,
+    "strength": 30,
+    "toughness": 30,
+    "agility": 30,
+    "intelligence": 30,
+    "perception": 30,
+    "willpower": 30,
+    "fellowship": 30,
+    "influence": 0
+  },
+  "statUpgrades": {},
+  "statNotes": {},
+  "skills": [],
+  "talents": [],
+  "movement": {
+    "walkHalf": 0,
+    "walkFull": 0,
+    "charge": 0,
+    "run": 0
+  },
+  "wounds": {
+    "current": 0,
+    "max": 0,
+    "notes": ""
+  },
+  "fatePoints": {
+    "current": 1,
+    "max": 1
+  },
+  "insanityPoints": {
+    "total": 2,
+    "notes": ""
+  },
+  "corruptionPoints": {
+    "total": 2,
+    "notes": ""
+  },
+  "experience": 10560,
+  "totalExpSpent": 10560,
+  "equipment": {
+    "armor": {
+      "Head": {
+        "quality": "Common",
+        "mods": "",
+        "ap": 1,
+        "type": "Force"
+      },
+      "Right arm": {
+        "type": "Power",
+        "ap": 1,
+        "quality": "Common",
+        "mods": ""
+      },
+      "Body": {
+        "type": "Mesh",
+        "mods": "",
+        "quality": "Common",
+        "ap": 1
+      },
+      "Left arm": {
+        "type": "Carapace",
+        "ap": 1,
+        "quality": "Common",
+        "mods": ""
+      },
+      "Right leg": {
+        "ap": 2,
+        "type": "Flack",
+        "quality": "Common",
+        "mods": ""
+      },
+      "Left leg": {
+        "type": "Advanced",
+        "quality": "Common",
+        "ap": 2,
+        "mods": ""
+      }
+    },
+    "weapons": {
+      "melee": [
+        {
+          "damage": "2",
+          "equipped": true,
+          "penetration": "2",
+          "range": "2",
+          "notes": "",
+          "traits": "2111",
+          "type": "q",
+          "id": "melee-1773795188865",
+          "name": "New Melee Weapon"
+        },
+        {
+          "equipped": false,
+          "type": "w",
+          "name": "New Melee Weapon",
+          "id": "melee-1773795201040",
+          "traits": "1112",
+          "notes": "",
+          "range": "1",
+          "penetration": "1",
+          "damage": "1"
+        }
+      ],
+      "ranged": []
+    }
+  },
+  "inventory": [
+    {
+      "notes": "",
+      "name": "qdqdqdq",
+      "id": "new-inv-1773795243967",
+      "status": "default"
+    },
+    {
+      "id": "new-inv-1773795245529",
+      "status": "default",
+      "notes": "",
+      "name": "dqdqdqqd"
+    },
+    {
+      "name": "dqdqdq",
+      "id": "new-inv-1773795247134",
+      "status": "default",
+      "notes": ""
+    },
+    {
+      "status": "default",
+      "id": "new-inv-1773795248691",
+      "notes": "",
+      "name": "dqdqdq"
+    }
+  ],
+  "wealth": {
+    "throneGelt": 0,
+    "monthlyIncome": 0
+  }
+}

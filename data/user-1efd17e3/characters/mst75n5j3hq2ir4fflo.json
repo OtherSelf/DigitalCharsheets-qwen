@@ -1,0 +1,303 @@
+{
+  "id": "mst75n5j3hq2ir4fflo",
+  "userId": "user-1efd17e3",
+  "gameSystem": "Dungeons & Dragons",
+  "name": "Level 16 Rogue (Outlander)",
+  "avatar": "dnd-cleric-avatar",
+  "characterClass": "Rogue",
+  "background": "Outlander",
+  "alignment": "",
+  "level": 16,
+  "inspiration": "1",
+  "backstory": "вфывыфвыфв ы ы",
+  "age": "",
+  "height": "",
+  "weight": "",
+  "eyes": "",
+  "hair": "",
+  "stats": {
+    "strength": 10,
+    "dexterity": 10,
+    "constitution": 10,
+    "intelligence": 10,
+    "wisdom": 10,
+    "charisma": 10
+  },
+  "armorClass": 18,
+  "hitPoints": {
+    "current": 146,
+    "max": 146
+  },
+  "hitDice": "",
+  "hitDiceUsed": {
+    "d8": 0,
+    "d6": 0
+  },
+  "speed": "30ft",
+  "proficiencyBonus": 2,
+  "initiative": 0,
+  "experience": 192018,
+  "skills": [],
+  "attacks": [
+    {
+      "name": "spellcasting",
+      "atkBonus": "+7",
+      "damageType": "1d6+1d10+20",
+      "id": "atk-1774754060040"
+    }
+  ],
+  "equipment": [
+    {
+      "id": "new-eq-1774754194173",
+      "name": "qwe",
+      "status": "default",
+      "notes": ""
+    },
+    {
+      "id": "new-eq-1774788175336",
+      "status": "default",
+      "notes": "",
+      "name": "фывфыв"
+    },
+    {
+      "name": "выфвыфвыфв",
+      "id": "new-eq-1774788176875",
+      "status": "lost",
+      "notes": ""
+    }
+  ],
+  "inventory": [
+    {
+      "id": "in-1776165664195",
+      "name": "фвыфв",
+      "status": "default"
+    }
+  ],
+  "currency": {
+    "gp": 0,
+    "sp": 0,
+    "cp": 0,
+    "ep": 0,
+    "pp": 0
+  },
+  "featuresAndTraits": [
+    "выфв"
+  ],
+  "companions": [
+    {
+      "stats": {
+        "wisdom": 10,
+        "charisma": 10,
+        "dexterity": 10,
+        "strength": 10,
+        "intelligence": 10,
+        "constitution": 10
+      },
+      "actions": [
+        {
+          "id": "act-1776202387979",
+          "name": "dq",
+          "notes": ""
+        }
+      ],
+      "hitPoints": {
+        "max": 10,
+        "current": 10
+      },
+      "armorClass": 10,
+      "id": "companion-1776202370205",
+      "proficiencyBonus": "0",
+      "initiative": 0,
+      "skills": [
+        {
+          "expertise": false,
+          "label": "Acrobatics (Dex)",
+          "proficient": false,
+          "value": 0,
+          "name": "acrobatics"
+        },
+        {
+          "name": "animalHandling",
+          "label": "Animal Handling (Wis)",
+          "expertise": false,
+          "proficient": false,
+          "value": 0
+        },
+        {
+          "name": "arcana",
+          "label": "Arcana (Int)",
+          "expertise": false,
+          "value": 0,
+          "proficient": false
+        },
+        {
+          "label": "Athletics (Str)",
+          "expertise": false,
+          "proficient": false,
+          "name": "athletics",
+          "value": 0
+        },
+        {
+          "expertise": false,
+          "proficient": false,
+          "value": 0,
+          "label": "Deception (Cha)",
+          "name": "deception"
+        },
+        {
+          "value": 0,
+          "name": "history",
+          "proficient": false,
+          "expertise": false,
+          "label": "History (Int)"
+        },
+        {
+          "label": "Insight (Wis)",
+          "expertise": false,
+          "name": "insight",
+          "proficient": false,
+          "value": 0
+        },
+        {
+          "expertise": false,
+          "value": 0,
+          "name": "intimidation",
+          "label": "Intimidation (Cha)",
+          "proficient": false
+        },
+        {
+          "proficient": false,
+          "name": "investigation",
+          "label": "Investigation (Int)",
+          "value": 0,
+          "expertise": false
+        },
+        {
+          "expertise": false,
+          "value": 0,
+          "label": "Medicine (Wis)",
+          "name": "medicine",
+          "proficient": false
+        },
+        {
+          "value": 0,
+          "name": "nature",
+          "expertise": false,
+          "proficient": false,
+          "label": "Nature (Int)"
+        },
+        {
+          "proficient": false,
+          "label": "Perception (Wis)",
+          "value": 0,
+          "name": "perception",
+          "expertise": false
+        },
+        {
+          "proficient": false,
+          "expertise": false,
+          "value": 0,
+          "label": "Performance (Cha)",
+          "name": "performance"
+        },
+        {
+          "label": "Persuasion (Cha)",
+          "proficient": false,
+          "name": "persuasion",
+          "expertise": false,
+          "value": 0
+        },
+        {
+          "name": "religion",
+          "expertise": false,
+          "label": "Religion (Int)",
+          "proficient": false,
+          "value": 0
+        },
+        {
+          "proficient": false,
+          "name": "sleightOfHand",
+          "label": "Sleight of Hand (Dex)",
+          "value": 0,
+          "expertise": false
+        },
+        {
+          "name": "stealth",
+          "proficient": false,
+          "label": "Stealth (Dex)",
+          "value": 0,
+          "expertise": false
+        },
+        {
+          "proficient": false,
+          "value": 0,
+          "label": "Survival (Wis)",
+          "name": "survival",
+          "expertise": false
+        }
+      ],
+      "features": [],
+      "size": "",
+      "speed": "30ft",
+      "type": "",
+      "name": "New Companion"
+    }
+  ],
+  "combatResources": [
+    {
+      "current": 0,
+      "description": "ускорение",
+      "max": 10,
+      "id": "res-1774791310738"
+    },
+    {
+      "max": 99,
+      "id": "res-1774791586425",
+      "current": 99,
+      "description": "йц"
+    }
+  ],
+  "attunementItems": [
+    {
+      "description": "ожирение",
+      "id": "att-1774754686267",
+      "attuned": true
+    },
+    {
+      "description": "усталость от одиночества",
+      "attuned": true,
+      "id": "att-1774754696624"
+    },
+    {
+      "id": "att-1774754706603",
+      "attuned": true,
+      "description": "суицидальные мысли"
+    },
+    {
+      "id": "att-1774754714036",
+      "description": "любящая девушка",
+      "attuned": false
+    },
+    {
+      "id": "att-1776184962190",
+      "attuned": false,
+      "description": "фыв"
+    }
+  ],
+  "bonds": [
+    "вй"
+  ],
+  "ideals": [
+    "вйвй"
+  ],
+  "flaws": [
+    "выфвыфв"
+  ],
+  "deathSaves": {
+    "failures": 0,
+    "successes": 0
+  },
+  "hpTracking": "",
+  "isMulticlass": true,
+  "spells": {}
+}

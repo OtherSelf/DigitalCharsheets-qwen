@@ -1,0 +1,250 @@
+{
+  "id": "mst75n3wor42mcyboi",
+  "userId": "user-0542edaf",
+  "gameSystem": "Dark Heresy",
+  "name": "Scum (Hive World)",
+  "avatar": "dh-acolyte-avatar",
+  "careerPath": "Scum",
+  "characterClass": "Scum",
+  "homeWorld": "Hive World",
+  "rank": "Acolyte",
+  "advancedPath": "Cutter",
+  "alternatePath": null,
+  "divination": "If a job is worth doing it is worth dying for.",
+  "divinationEffect": "\"Frenzy\" talent.",
+  "backstory": "Вырос в канализации, с детства очень жестокий",
+  "age": "27",
+  "height": "175",
+  "weight": "",
+  "hairColor": "Серые",
+  "eyeColor": "Серые",
+  "skinColor": "",
+  "quirk": "",
+  "worldVariant": "",
+  "stats": {
+    "weaponSkill": 30,
+    "ballisticSkill": 30,
+    "strength": 30,
+    "toughness": 30,
+    "agility": 30,
+    "intelligence": 30,
+    "perception": 30,
+    "willpower": 30,
+    "fellowship": 30,
+    "influence": 0
+  },
+  "statUpgrades": {},
+  "statNotes": {},
+  "skills": [],
+  "talents": [],
+  "movement": {
+    "walkHalf": 0,
+    "walkFull": 0,
+    "charge": 0,
+    "run": 0
+  },
+  "wounds": {
+    "current": 0,
+    "max": 0,
+    "notes": ""
+  },
+  "fatePoints": {
+    "current": 2,
+    "notes": "+ рерол",
+    "max": 3
+  },
+  "insanityPoints": {
+    "notes": "",
+    "total": 2
+  },
+  "corruptionPoints": {
+    "notes": "",
+    "total": 9
+  },
+  "experience": 950,
+  "totalExpSpent": 950,
+  "equipment": {
+    "armor": {
+      "Head": {
+        "ap": 4,
+        "type": "Flack",
+        "mods": "",
+        "quality": "Инквизиторская"
+      },
+      "Right arm": {
+        "type": "Flack",
+        "ap": 4,
+        "quality": "Инквизиторская",
+        "mods": ""
+      },
+      "Body": {
+        "quality": "Инквизиторская",
+        "type": "Flack",
+        "ap": 4,
+        "mods": ""
+      },
+      "Left arm": {
+        "type": "Flack",
+        "quality": "Инквизиторская",
+        "ap": 4,
+        "mods": ""
+      },
+      "Right leg": {
+        "mods": "",
+        "quality": "Инквизиторская",
+        "ap": 4,
+        "type": "Flack"
+      },
+      "Left leg": {
+        "type": "Flack",
+        "quality": "Инквизиторская",
+        "mods": "",
+        "ap": 4
+      }
+    },
+    "weapons": {
+      "melee": [
+        {
+          "id": "melee-1782755865371",
+          "notes": "",
+          "range": "-",
+          "name": "Меч",
+          "type": "Примит",
+          "damage": "1d10",
+          "equipped": true,
+          "penetration": "2",
+          "traits": "Balanced"
+        },
+        {
+          "traits": "75% сломать оружие, балансовое",
+          "equipped": true,
+          "damage": "1d10+5э",
+          "penetration": "6",
+          "type": "Power",
+          "name": "Power Sword",
+          "range": "-",
+          "notes": "",
+          "id": "melee-1783968599477"
+        }
+      ],
+      "ranged": [
+        {
+          "id": "ranged-1772476350924",
+          "range": "30",
+          "rof": "0/-/-",
+          "notes": "",
+          "reload": "2 раунда",
+          "clip": 5,
+          "damage": "1d10+3",
+          "equipped": true,
+          "name": "Stub revolver",
+          "type": "",
+          "traits": "Надежное, лазерный прицел",
+          "clipSize": 6
+        },
+        {
+          "traits": "Надежное, лазерный прицел",
+          "name": "Stub revolver",
+          "type": "",
+          "damage": "1d10+3",
+          "id": "ranged-1776594974644",
+          "clipSize": 6,
+          "clip": 4,
+          "notes": "",
+          "reload": "2 раунда",
+          "equipped": false,
+          "range": "30",
+          "rof": "0/-/-"
+        },
+        {
+          "clipSize": 8,
+          "traits": "Pen 4",
+          "type": "Болтерное",
+          "damage": "1d10+5взрыв",
+          "equipped": true,
+          "name": "Болт-пистолет",
+          "id": "ranged-1783969182015",
+          "clip": 7,
+          "rof": "0/2/-",
+          "notes": "",
+          "reload": "Full",
+          "range": "30"
+        },
+        {
+          "equipped": false,
+          "range": "30",
+          "notes": "",
+          "reload": "1 раунд",
+          "clip": 6,
+          "rof": "1/-/-",
+          "id": "ranged-1785779244865",
+          "clipSize": 6,
+          "name": "Игольный пистолет",
+          "damage": "1д10р",
+          "type": "Экзотическое",
+          "traits": "Гуд квалити, с гравировкой с моим именем, токсичное, точное"
+        }
+      ]
+    }
+  },
+  "inventory": [
+    {
+      "status": "default",
+      "id": "new-inv-1773162694449",
+      "name": "Молоток и долото",
+      "notes": ""
+    },
+    {
+      "status": "default",
+      "notes": "+10 к инте",
+      "name": "Аптечка",
+      "id": "new-inv-1773689447260"
+    },
+    {
+      "status": "default",
+      "notes": "",
+      "id": "new-inv-1774292725957",
+      "name": "Автоперо"
+    },
+    {
+      "id": "new-inv-1774891955613",
+      "notes": "",
+      "status": "default",
+      "name": "Лазерный резак"
+    },
+    {
+      "name": "Золотая статуэтка спейсмарина на байке",
+      "notes": "",
+      "status": "default",
+      "id": "new-inv-1774891987883"
+    },
+    {
+      "status": "default",
+      "notes": "",
+      "name": "54 патрон для револьвера",
+      "id": "new-inv-1776595229568"
+    },
+    {
+      "name": "Золотой амулет",
+      "notes": "",
+      "status": "default",
+      "id": "new-inv-1782751566989"
+    },
+    {
+      "status": "default",
+      "notes": "",
+      "name": "Баба Зина серветор",
+      "id": "new-inv-1785779001489"
+    },
+    {
+      "name": "Рад пакет 15 штук",
+      "notes": "",
+      "status": "default",
+      "id": "new-inv-1785784494588"
+    }
+  ],
+  "wealth": {
+    "throneGelt": 0,
+    "monthlyIncome": 0
+  }
+}

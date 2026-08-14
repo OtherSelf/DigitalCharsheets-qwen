@@ -6,24 +6,11 @@ import { LocalUser, getLocalUser, setLocalUser, clearLocalUser } from '@/lib/loc
 interface LocalAuthContextType {
   user: LocalUser | null;
   isUserLoading: boolean;
-  login: (email: string, displayName?: string) => void;
+  login: (email: string, password: string, displayName?: string) => Promise<{ success: boolean; error?: string; isNewUser?: boolean }>;
   logout: () => void;
 }
 
 const LocalAuthContext = createContext<LocalAuthContextType | undefined>(undefined);
-
-// Generate a consistent ID based on email (same email = same ID every time)
-function generateUserIdFromEmail(email: string): string {
-  // Simple hash function to create a consistent ID from email
-  let hash = 0;
-  const normalizedEmail = email.toLowerCase().trim();
-  for (let i = 0; i < normalizedEmail.length; i++) {
-    const char = normalizedEmail.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash; // Convert to 32-bit integer
-  }
-  return 'user-' + Math.abs(hash).toString(36);
-}
 
 export function LocalAuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<LocalUser | null>(null);
@@ -35,19 +22,26 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
     setIsUserLoading(false);
   }, []);
 
-  const login = (email: string, displayName?: string) => {
-    // Generate a CONSISTENT ID based on the email
-    // Same email will ALWAYS produce the same ID
-    const userId = generateUserIdFromEmail(email);
-    
-    const newUser: LocalUser = {
-      uid: userId,
-      email: email.toLowerCase().trim(),
-      displayName: displayName || email.split('@')[0],
-    };
-    
-    setLocalUser(newUser);
-    setUser(newUser);
+  const login = async (email: string, password: string, displayName?: string) => {
+    try {
+      const res = await fetch('/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, displayName }),
+      });
+      
+      const data = await res.json();
+      
+      if (data.success && data.user) {
+        setLocalUser(data.user);
+        setUser(data.user);
+        return { success: true, isNewUser: data.isNewUser };
+      }
+      
+      return { success: false, error: data.error || 'Login failed.' };
+    } catch (error) {
+      return { success: false, error: 'Failed to connect to server.' };
+    }
   };
 
   const logout = () => {
