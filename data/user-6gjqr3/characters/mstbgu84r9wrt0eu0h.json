@@ -170,7 +170,22 @@
           "equipped": true
         }
       ],
-      "ranged": []
+      "ranged": [
+        {
+          "id": "ranged-1786748628365",
+          "name": "New Ranged Weapon",
+          "type": "",
+          "range": "",
+          "rof": "",
+          "damage": "",
+          "clip": 0,
+          "clipSize": 0,
+          "reload": "",
+          "traits": "",
+          "notes": "",
+          "equipped": false
+        }
+      ]
     }
   },
   "inventory": [
