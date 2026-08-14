@@ -1,0 +1,62 @@
+{
+  "id": "mst75n5pj14vicniuy9",
+  "userId": "user-303a5992",
+  "gameSystem": "Dungeons & Dragons",
+  "name": "Level 1 Barbarian (Acolyte)",
+  "avatar": "dnd-cleric-avatar",
+  "characterClass": "Barbarian",
+  "background": "Acolyte",
+  "alignment": "Neutral",
+  "level": 1,
+  "inspiration": "0",
+  "backstory": "",
+  "age": "",
+  "height": "",
+  "weight": "",
+  "eyes": "",
+  "hair": "",
+  "stats": {
+    "strength": 10,
+    "dexterity": 10,
+    "constitution": 10,
+    "intelligence": 10,
+    "wisdom": 10,
+    "charisma": 10
+  },
+  "armorClass": 10,
+  "hitPoints": {
+    "current": 8,
+    "max": 8
+  },
+  "hitDice": "1d8",
+  "hitDiceUsed": 0,
+  "speed": "30ft",
+  "proficiencyBonus": 2,
+  "initiative": 0,
+  "experience": 0,
+  "skills": [],
+  "attacks": [],
+  "equipment": [],
+  "inventory": [],
+  "currency": {
+    "gp": 150,
+    "sp": 0,
+    "ep": 0,
+    "pp": 5,
+    "cp": 0
+  },
+  "featuresAndTraits": [],
+  "companions": [],
+  "combatResources": [],
+  "attunementItems": [],
+  "bonds": [],
+  "ideals": [],
+  "flaws": [],
+  "deathSaves": {
+    "failures": 0,
+    "successes": 0
+  },
+  "hpTracking": "",
+  "isMulticlass": false,
+  "spells": {}
+}

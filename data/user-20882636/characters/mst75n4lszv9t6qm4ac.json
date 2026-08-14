@@ -1,0 +1,258 @@
+{
+  "id": "mst75n4lszv9t6qm4ac",
+  "userId": "user-20882636",
+  "gameSystem": "Dungeons & Dragons",
+  "name": "Level 5 Rogue (Criminal)",
+  "avatar": "dnd-rogue-avatar",
+  "characterClass": "Rogue",
+  "background": "Criminal",
+  "alignment": "Chaotic Neutral",
+  "level": 5,
+  "inspiration": "0",
+  "backstory": "Lyra grew up in a quiet elven village, but found its pace too slow for her tastes. She left for the bustling cities of humans, where her quick fingers and quicker wit have earned her a reputation as a master thief and information broker. She has a soft spot for sweet rolls and a strong dislike for authority.",
+  "age": "112",
+  "height": "1.6m",
+  "weight": "",
+  "eyes": "Green",
+  "hair": "Silver",
+  "stats": {
+    "strength": 10,
+    "dexterity": 10,
+    "constitution": 10,
+    "intelligence": 10,
+    "wisdom": 10,
+    "charisma": 10
+  },
+  "armorClass": 16,
+  "hitPoints": {
+    "current": 31,
+    "max": 31
+  },
+  "hitDice": "5d8",
+  "hitDiceUsed": 0,
+  "speed": "30ft",
+  "proficiencyBonus": 2,
+  "initiative": 0,
+  "experience": 6500,
+  "skills": [],
+  "attacks": [
+    {
+      "atkBonus": "+7",
+      "name": "Rapier",
+      "id": "atk-2",
+      "damageType": "1d8+5 P"
+    }
+  ],
+  "equipment": [
+    {
+      "status": "default",
+      "notes": "",
+      "name": "Studded Leather",
+      "id": "equip-9"
+    },
+    {
+      "name": "Rapier",
+      "notes": "",
+      "status": "default",
+      "id": "equip-10"
+    },
+    {
+      "id": "equip-11",
+      "name": "Shortbow",
+      "notes": "",
+      "status": "default"
+    }
+  ],
+  "inventory": [
+    {
+      "name": "Thieves' Tools",
+      "id": "item-12",
+      "status": "default",
+      "notes": ""
+    }
+  ],
+  "currency": {
+    "cp": 50,
+    "pp": 0,
+    "ep": 0,
+    "gp": 25,
+    "sp": 10
+  },
+  "featuresAndTraits": [
+    "Sneak Attack",
+    "Cunning Action"
+  ],
+  "companions": [
+    {
+      "features": [],
+      "size": "",
+      "name": "New Companion",
+      "proficiencyBonus": "0",
+      "type": "",
+      "speed": "30ft",
+      "id": "companion-1776274388843",
+      "initiative": 0,
+      "hitPoints": {
+        "current": 10,
+        "max": 10
+      },
+      "actions": [],
+      "stats": {
+        "charisma": 10,
+        "dexterity": 10,
+        "constitution": 10,
+        "wisdom": 10,
+        "intelligence": 10,
+        "strength": 10
+      },
+      "skills": [
+        {
+          "value": 0,
+          "proficient": false,
+          "name": "acrobatics",
+          "expertise": false,
+          "label": "Acrobatics (Dex)"
+        },
+        {
+          "proficient": false,
+          "name": "animalHandling",
+          "label": "Animal Handling (Wis)",
+          "expertise": false,
+          "value": 0
+        },
+        {
+          "expertise": false,
+          "name": "arcana",
+          "value": 0,
+          "label": "Arcana (Int)",
+          "proficient": false
+        },
+        {
+          "value": 0,
+          "name": "athletics",
+          "label": "Athletics (Str)",
+          "proficient": false,
+          "expertise": false
+        },
+        {
+          "value": 0,
+          "name": "deception",
+          "expertise": false,
+          "label": "Deception (Cha)",
+          "proficient": false
+        },
+        {
+          "expertise": false,
+          "value": 0,
+          "proficient": false,
+          "label": "History (Int)",
+          "name": "history"
+        },
+        {
+          "value": 0,
+          "label": "Insight (Wis)",
+          "proficient": false,
+          "expertise": false,
+          "name": "insight"
+        },
+        {
+          "proficient": false,
+          "name": "intimidation",
+          "expertise": false,
+          "label": "Intimidation (Cha)",
+          "value": 0
+        },
+        {
+          "name": "investigation",
+          "value": 0,
+          "proficient": false,
+          "expertise": false,
+          "label": "Investigation (Int)"
+        },
+        {
+          "value": 0,
+          "expertise": false,
+          "name": "medicine",
+          "proficient": false,
+          "label": "Medicine (Wis)"
+        },
+        {
+          "label": "Nature (Int)",
+          "expertise": false,
+          "proficient": false,
+          "value": 0,
+          "name": "nature"
+        },
+        {
+          "name": "perception",
+          "value": 0,
+          "expertise": false,
+          "proficient": false,
+          "label": "Perception (Wis)"
+        },
+        {
+          "name": "performance",
+          "expertise": false,
+          "label": "Performance (Cha)",
+          "proficient": false,
+          "value": 0
+        },
+        {
+          "name": "persuasion",
+          "expertise": false,
+          "value": 0,
+          "proficient": false,
+          "label": "Persuasion (Cha)"
+        },
+        {
+          "proficient": false,
+          "value": 0,
+          "label": "Religion (Int)",
+          "name": "religion",
+          "expertise": false
+        },
+        {
+          "name": "sleightOfHand",
+          "label": "Sleight of Hand (Dex)",
+          "expertise": false,
+          "proficient": false,
+          "value": 0
+        },
+        {
+          "label": "Stealth (Dex)",
+          "expertise": false,
+          "proficient": false,
+          "value": 0,
+          "name": "stealth"
+        },
+        {
+          "proficient": false,
+          "expertise": false,
+          "value": 0,
+          "label": "Survival (Wis)",
+          "name": "survival"
+        }
+      ],
+      "armorClass": 10
+    }
+  ],
+  "combatResources": [
+    {
+      "max": 1,
+      "description": "Sneak Attack",
+      "id": "res-2",
+      "current": 1
+    }
+  ],
+  "attunementItems": [],
+  "bonds": [],
+  "ideals": [],
+  "flaws": [],
+  "deathSaves": {
+    "successes": 0,
+    "failures": 0
+  },
+  "hpTracking": "",
+  "isMulticlass": false,
+  "spells": {}
+}

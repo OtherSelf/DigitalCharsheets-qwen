@@ -12,17 +12,18 @@ import {
 import { Button } from '@/components/ui/button';
 import { useCharacterContext } from '@/context/character-context';
 import { cn } from '@/lib/utils';
-import { PlusCircle, RefreshCcw, FileSpreadsheet } from 'lucide-react';
+import { PlusCircle, FileSpreadsheet, FileDown, Settings2 } from 'lucide-react';
 import Loading from './loading';
 import { useTranslation } from '@/context/language-context';
 import * as XLSX from 'xlsx';
 import { DnD5eCharacter, DarkHeresyCharacter } from '@/lib/types';
 import Link from 'next/link';
+import { useLocalAuth } from '@/context/local-auth-context';
 
 export default function DashboardPage() {
   const { characters, isLoaded, isCompactView } = useCharacterContext();
+  const { user } = useLocalAuth(); // MOVED: Hooks must be at the top!
   const { t } = useTranslation();
-
 
   const handleExportXlsx = () => {
     if (characters.length === 0) return;
@@ -32,7 +33,7 @@ export default function DashboardPage() {
         Name: char.name,
         System: char.gameSystem,
         Class: char.characterClass,
-        Notes: char.notes || '',
+        Notes: (char as any).notes || '',
         Backstory: char.backstory || ''
       };
       
@@ -44,21 +45,21 @@ export default function DashboardPage() {
           Background: dnd.background || '',
           Alignment: dnd.alignment || '',
           Level: dnd.level,
-          HP: `${dnd.hitPoints.current}/${dnd.hitPoints.max}`,
+          HP: `${dnd.hitPoints?.current || 0}/${dnd.hitPoints?.max || 0}`,
           AC: dnd.armorClass,
           Speed: dnd.speed,
-          Stats: `S:${dnd.stats.strength} D:${dnd.stats.dexterity} C:${dnd.stats.constitution} I:${dnd.stats.intelligence} W:${dnd.stats.wisdom} Ch:${dnd.stats.charisma}`
+          Stats: `S:${dnd.stats?.strength} D:${dnd.stats?.dexterity} C:${dnd.stats?.constitution} I:${dnd.stats?.intelligence} W:${dnd.stats?.wisdom} Ch:${dnd.stats?.charisma}`
         };
       } else {
         const dh = char as DarkHeresyCharacter;
         return {
           ...base,
           Rank: dh.rank,
-          Wounds: `${dh.wounds.current}/${dh.wounds.max}`,
-          Fate: `${dh.fatePoints.current}/${dh.fatePoints.max}`,
-          Insanity: dh.insanityPoints.total,
-          Corruption: dh.corruptionPoints.total,
-          Stats: `WS:${dh.stats.weaponSkill} BS:${dh.stats.ballisticSkill} S:${dh.stats.strength} T:${dh.stats.toughness} Ag:${dh.stats.agility} Int:${dh.stats.intelligence} Per:${dh.stats.perception} WP:${dh.stats.willpower} Fel:${dh.stats.fellowship} Inf:${dh.stats.influence}`
+          Wounds: `${dh.wounds?.current || 0}/${dh.wounds?.max || 0}`,
+          Fate: `${dh.fatePoints?.current || 0}/${dh.fatePoints?.max || 0}`,
+          Insanity: dh.insanityPoints?.total || 0,
+          Corruption: dh.corruptionPoints?.total || 0,
+          Stats: `WS:${dh.stats?.weaponSkill} BS:${dh.stats?.ballisticSkill} S:${dh.stats?.strength} T:${dh.stats?.toughness} Ag:${dh.stats?.agility} Int:${dh.stats?.intelligence} Per:${dh.stats?.perception} WP:${dh.stats?.willpower} Fel:${dh.stats?.fellowship} Inf:${dh.stats?.influence}`
         };
       }
     });
@@ -87,7 +88,28 @@ export default function DashboardPage() {
             </p>
           </div>
           
+          {/* ALL BUTTONS GROUPED TOGETHER HERE */}
           <div className="flex flex-wrap gap-2">
+            <Button variant="outline" size="sm" asChild>
+              <Link href="/stats-editor">
+                <Settings2 className="mr-2 h-4 w-4" />
+                Stats Editor
+              </Link>
+            </Button>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={async () => {
+                const res = await fetch(`/api/export?userId=${user.uid}`);
+                const data = await res.json();
+                downloadJSON(data, `characters-backup-${new Date().toISOString().split('T')[0]}.json`);
+              }}
+            >
+              <FileDown className="mr-2 h-4 w-4" />
+              Backup All
+            </Button>
+
             <Button 
               variant="outline" 
               size="sm" 
@@ -141,6 +163,18 @@ export default function DashboardPage() {
       </main>
     </div>
   );
+}
+
+function downloadJSON(data: any, filename: string) {
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 // Minimal migration dialog stub to prevent build errors if referenced elsewhere
