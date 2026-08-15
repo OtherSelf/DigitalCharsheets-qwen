@@ -42,6 +42,8 @@ import {
 import { useCharacterContext } from '@/context/character-context';
 import { useTranslation } from '@/context/language-context';
 import { useToast } from '@/hooks/use-toast';
+import { DndCompanionsSection } from './dnd-sections/companions-section';
+import { DndSpellsSection } from './dnd-sections/spells-section';
 
 const DND_CLASSES = [
   "Artificer", "Barbarian", "Bard", "Cleric", "Druid", "Fighter", "Monk",
@@ -192,7 +194,6 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
     const [isFlawEditing, setIsFlawEditing] = React.useState(false);
     const [isFeaturesEditing, setIsFeaturesEditing] = React.useState(false);
     const [isOtherProficienciesEditing, setIsOtherProficienciesEditing] = React.useState(false);
-    const [editingLevel, setEditingLevel] = React.useState<number | null>(null);
 
     // Data States
     const [name, setName] = React.useState(character.name);
@@ -213,11 +214,8 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
     const [equipment, setEquipment] = React.useState<InventoryItem[]>(character.equipment ?? []);
     const [inventoryItems, setInventoryItems] = React.useState<InventoryItem[]>(character.inventory ?? []);
     const [currency, setCurrency] = React.useState(character.currency || { cp: 0, sp: 0, ep: 0, gp: 150, pp: 5 });
-    const [spells, setSpells] = React.useState(character.spells || []);
-    const [spellSlots, setSpellSlots] = React.useState(character.spellSlots || { 1: { max: 0, current: 0 }, 2: { max: 0, current: 0 }, 3: { max: 0, current: 0 }, 4: { max: 0, current: 0 }, 5: { max: 0, current: 0 }, 6: { max: 0, current: 0 }, 7: { max: 0, current: 0 }, 8: { max: 0, current: 0 }, 9: { max: 0, current: 0 } });
 
     // New Items States
-    const [newSpellName, setNewSpellName] = React.useState('');
     const [newEquipmentItem, setNewEquipmentItem] = React.useState('');
     const [newInventoryItem, setNewInventoryItem] = React.useState('');
     const [newFeatureItem, setNewFeatureItem] = React.useState('');
@@ -324,17 +322,7 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
 
     React.useImperativeHandle(ref, () => ({ saveAll: handleSaveAll }));
 
-    const handleAddCompanion = () => {
-      const n = [...companions, {
-        id: `comp-${Date.now()}`, name: 'New Companion', type: '', size: '', armorClass: 10,
-        initiative: 0, speed: '30ft', proficiencyBonus: '0',
-        stats: { strength: 10, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 10, charisma: 10 },
-        skills: [], hitPoints: { current: 10, max: 10 }, actions: [], features: []
-      }];
-      setCompanions(n); updateCharacter(character.id, { companions: n });
-    };
-
-    const handleHpMath = (op: 'sub' | 'rec') => {
+      const handleHpMath = (op: 'sub' | 'rec') => {
       const d = parseInt(hpDelta) || 0; if (d === 0) return;
       const n = { ...combatStats.hitPoints, current: op === 'sub' ? Math.max(0, combatStats.hitPoints.current - d) : Math.min(combatStats.hitPoints.max, combatStats.hitPoints.current + d) };
       setCombatStats({ ...combatStats, hitPoints: n }); setHpDelta('');
@@ -434,73 +422,6 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
       updateCharacter(character.id, { hitDiceUsed: next });
     };
 
-    const renderSpellBox = (level: number, title: string) => {
-      const levelSpells = spells.filter(s => s.level === level);
-      const slots = spellSlots[level] || { max: 0, current: 0 };
-      const isEditing = editingLevel === level;
-      return (
-        <Card key={level} className="flex flex-col border-2 overflow-hidden h-full">
-          <CardHeader className="flex flex-col px-4 pt-2 pb-2 border-b bg-muted/10">
-            <div className="flex flex-row items-center justify-between w-full mb-1">
-              <CardTitle className="text-[10px] font-bold uppercase text-muted-foreground tracking-tight">{title}</CardTitle>
-              {level > 0 && (
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] uppercase font-bold text-muted-foreground">{t('slots')}</span>
-                  <div className="flex items-center gap-1">
-                    <Button size="icon" variant="outline" className="h-5 w-5" onClick={() => { const n = { ...spellSlots, [level]: { ...slots, max: Math.max(0, slots.max - 1) } }; setSpellSlots(n); updateCharacter(character.id, { spellSlots: n }); }}><Minus className="h-2 w-2" /></Button>
-                    <span className="text-xs font-black w-4 text-center">{slots.max}</span>
-                    <Button size="icon" variant="outline" className="h-5 w-5" onClick={() => { const n = { ...spellSlots, [level]: { ...slots, max: slots.max + 1 } }; setSpellSlots(n); updateCharacter(character.id, { spellSlots: n }); }}><Plus className="h-2 w-2" /></Button>
-                  </div>
-                </div>
-              )}
-              {(showEditButtons || isEditing) && <EditSaveButton editing={isEditing} onEdit={() => setEditingLevel(level)} onSave={() => { updateCharacter(character.id, { spells, spellSlots }); setEditingLevel(null); }} />}
-            </div>
-            {level > 0 && slots.max > 0 && (
-              <div className="flex flex-wrap gap-1 mt-1">
-                {Array.from({ length: slots.max }).map((_, i) => (
-                  <Checkbox key={i} checked={slots.current > i} onCheckedChange={() => { const nextCurrent = slots.current === i + 1 ? i : i + 1; const n = { ...spellSlots, [level]: { ...slots, current: nextCurrent } }; setSpellSlots(n); updateCharacter(character.id, { spellSlots: n }); }} className="h-3 w-3" />
-                ))}
-              </div>
-            )}
-          </CardHeader>
-          <CardContent className="p-3 flex-1 space-y-4">
-            <ul className="space-y-1">
-              {levelSpells.map(spell => (
-                <li key={spell.id} className="group relative flex items-center gap-1">
-                  {!hideNotes && (
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button variant={spell.notes ? 'secondary' : 'ghost'} size="icon" className="h-5 w-5 shrink-0"><Info className="h-3 w-3" /></Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-64">
-                        <Label className="text-xs mb-2 block">Notes for {spell.name}</Label>
-                        <Textarea defaultValue={spell.notes || ''} onBlur={(e) => setSpells(spells.map(s => s.id === spell.id ? { ...s, notes: e.target.value } : s))} placeholder="Add notes..." className="mt-2 min-h-[100px] text-sm" />
-                      </PopoverContent>
-                    </Popover>
-                  )}
-                  {isEditing ? (
-                    <div className="flex gap-1 items-start bg-muted/30 p-1 rounded flex-1">
-                      <Input value={spell.name} onChange={e => setSpells(spells.map(s => s.id === spell.id ? { ...s, name: e.target.value } : s))} className="h-7 text-xs flex-1" />
-                      <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => setSpells(spells.filter(s => s.id !== spell.id))}><Trash2 className="h-3 w-3" /></Button>
-                    </div>
-                  ) : (
-                    <div className="text-xs font-medium py-1 border-b border-muted/50 last:border-0 hover:bg-muted/20 transition-colors cursor-default flex-1">&bull; {spell.name}</div>
-                  )}
-                </li>
-              ))}
-            </ul>
-            {isEditing && (
-              <div className="pt-2 border-t space-y-2">
-                <Input placeholder="Spell Name" value={newSpellName} onChange={e => setNewSpellName(e.target.value)} className="h-7 text-xs" />
-                <Button size="sm" className="w-full h-7 text-[10px]" onClick={() => { if (newSpellName.trim()) { setSpells([...spells, { id: `spell-${Date.now()}`, name: newSpellName, level, notes: '' }]); setNewSpellName(''); } }}>
-                  <Plus className="mr-1 h-3 w-3" /> {t('add')}
-                </Button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      );
-    };
     return (
       <div className="space-y-8 pb-12">
         {/* Compact View Sticky Stats Bar */}
@@ -1017,208 +938,22 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
         </div>
 
         {/* Spells */}
-        <div className={cn("space-y-6", isCompactView && activeCompactSection !== 'spells-section' && "hidden")}>
-          {/* SPELLCASTING STATS */}
-          <Card className="mb-6">
-            <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2">
-              <CardTitle className="text-[10px] font-bold uppercase text-muted-foreground tracking-tight">{t('spellcastingStats')}</CardTitle>
-              {(showEditButtons || isSpellcastingEditing) && <EditSaveButton editing={isSpellcastingEditing} onEdit={() => setIsSpellcastingEditing(true)} onSave={handleSaveSpellcasting} />}
-            </CardHeader>
-            <CardContent className="p-4 pt-0">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="flex flex-col gap-1">
-                  <Label className="text-[10px] text-muted-foreground uppercase font-bold">{t('spellcastingAbility')}</Label>
-                  {isSpellcastingEditing ? (
-                    <Select value={spellcastingData.spellcastingAbility} onValueChange={v => setSpellcastingData({ ...spellcastingData, spellcastingAbility: v })}>
-                      <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">{t('none')}</SelectItem>
-                        <SelectItem value="strength">{t('strength')}</SelectItem>
-                        <SelectItem value="dexterity">{t('dexterity')}</SelectItem>
-                        <SelectItem value="constitution">{t('constitution')}</SelectItem>
-                        <SelectItem value="intelligence">{t('intelligence')}</SelectItem>
-                        <SelectItem value="wisdom">{t('wisdom')}</SelectItem>
-                        <SelectItem value="charisma">{t('charisma')}</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  ) : (
-                    <span className="text-sm font-bold capitalize">{spellcastingData.spellcastingAbility === 'none' ? '-' : spellcastingData.spellcastingAbility}</span>
-                  )}
-                </div>
-                <div className="flex flex-col gap-1">
-                  <Label className="text-[10px] text-muted-foreground uppercase font-bold">{t('spellAttackBonus')}</Label>
-                  {isSpellcastingEditing ? (
-                    <Input value={spellcastingData.spellAttackBonus} onChange={e => setSpellcastingData({ ...spellcastingData, spellAttackBonus: e.target.value })} className="h-8 text-xs" placeholder="+5" />
-                  ) : (
-                    <span className="text-sm font-bold">{spellcastingData.spellAttackBonus || '-'}</span>
-                  )}
-                </div>
-                <div className="flex flex-col gap-1">
-                  <Label className="text-[10px] text-muted-foreground uppercase font-bold">{t('spellSaveDC')}</Label>
-                  {isSpellcastingEditing ? (
-                    <Input type="number" value={spellcastingData.spellSaveDifficulty} onChange={e => setSpellcastingData({ ...spellcastingData, spellSaveDifficulty: parseInt(e.target.value) || 0 })} className="h-8 text-xs" min={0} />
-                  ) : (
-                    <span className="text-sm font-bold">{spellcastingData.spellSaveDifficulty || '-'}</span>
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <h2 className="text-2xl font-headline font-bold text-center mb-4">{t('spellList')}</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-            {renderSpellBox(0, t('cantrips'))}
-            {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(lvl => renderSpellBox(lvl, `${t('level')} ${lvl}`))}
-          </div>
-        </div>
+        <DndSpellsSection
+          characterId={character.id}
+          initialSpells={character.spells || []}
+          initialSpellSlots={character.spellSlots}
+         isCompactView={isCompactView}
+          activeCompactSection={activeCompactSection}
+        />
 
         {/* Companions */}
-        <div className={cn("space-y-6", isCompactView && activeCompactSection !== 'companion-section' && "hidden")}>
-          <div className="flex justify-between items-center mb-4"><h2 className="text-2xl font-headline font-bold">{t('companions')}</h2>{showEditButtons && <Button size="sm" variant="outline" onClick={handleAddCompanion}><Plus className="h-4 w-4 mr-2" /> Add</Button>}</div>
-          {companions.map(comp => (
-            <Card key={comp.id} className="p-4 border-2">
-              <CardHeader className="flex flex-row items-center justify-between p-0 mb-4">
-                {showEditButtons ? (
-                  <Input value={comp.name} onChange={e => { const n = companions.map(c => c.id === comp.id ? { ...c, name: e.target.value } : c); setCompanions(n); updateCharacter(character.id, { companions: n }); }} className="h-8 text-lg font-bold w-full mr-2" />
-                ) : (
-                  <CardTitle className="text-lg font-bold">{comp.name}</CardTitle>
-                )}
-                <Button variant="ghost" size="icon" className="text-destructive" onClick={() => { const n = companions.filter(c => c.id !== comp.id); setCompanions(n); updateCharacter(character.id, { companions: n }); }}><Trash2 className="h-4 w-4" /></Button>
-              </CardHeader>
-              <CardContent className="p-0 space-y-4">
-                
-                {/* Basic Info Row 1 */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <DetailField label="Type" value={comp.type} editing={showEditButtons} onChange={v => { const n = companions.map(c => c.id === comp.id ? { ...c, type: v } : c); setCompanions(n); updateCharacter(character.id, { companions: n }); }} />
-                  <DetailField label="Size" value={comp.size} editing={showEditButtons} onChange={v => { const n = companions.map(c => c.id === comp.id ? { ...c, size: v } : c); setCompanions(n); updateCharacter(character.id, { companions: n }); }} />
-                  <DetailField label="Armor Class" value={comp.armorClass} editing={showEditButtons} onChange={v => { const n = companions.map(c => c.id === comp.id ? { ...c, armorClass: parseInt(v) || 10 } : c); setCompanions(n); updateCharacter(character.id, { companions: n }); }} />
-                  <DetailField label="Speed" value={comp.speed} editing={showEditButtons} onChange={v => { const n = companions.map(c => c.id === comp.id ? { ...c, speed: v } : c); setCompanions(n); updateCharacter(character.id, { companions: n }); }} />
-                </div>
-                
-               {/* Basic Info Row 2 + HP */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 items-center">
-                  <DetailField label="Initiative" value={comp.initiative} editing={showEditButtons} onChange={v => { const n = companions.map(c => c.id === comp.id ? { ...c, initiative: parseInt(v) || 0 } : c); setCompanions(n); updateCharacter(character.id, { companions: n }); }} />
-                  <DetailField label="Prof Bonus" value={comp.proficiencyBonus} editing={showEditButtons} onChange={v => { const n = companions.map(c => c.id === comp.id ? { ...c, proficiencyBonus: v } : c); setCompanions(n); updateCharacter(character.id, { companions: n }); }} />
-                  <div className="col-span-2 p-2 border rounded bg-muted/5 text-center">
-                    <Label className="text-[10px] uppercase font-bold">HP</Label>
-                    <div className="flex justify-center items-center gap-2">
-                      {showEditButtons ? (
-                        <>
-                          <Input type="number" value={comp.hitPoints.current} onChange={e => { const n = companions.map(c => c.id === comp.id ? { ...c, hitPoints: {...c.hitPoints, current: parseInt(e.target.value) || 0} } : c); setCompanions(n); updateCharacter(character.id, { companions: n }); }} className="h-7 w-12 text-center" />
-                          <span>/</span>
-                          <Input type="number" value={comp.hitPoints.max} onChange={e => { const n = companions.map(c => c.id === comp.id ? { ...c, hitPoints: {...c.hitPoints, max: parseInt(e.target.value) || 0} } : c); setCompanions(n); updateCharacter(character.id, { companions: n }); }} className="h-7 w-12 text-center" />
-                        </>
-                      ) : (<span className="text-lg font-bold">{comp.hitPoints.current} / {comp.hitPoints.max}</span>)}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Ability Scores */}
-                <div className="pt-2 border-t">
-                  <Label className="text-[10px] uppercase font-bold mb-2 block">Ability Scores</Label>
-                  <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
-                    {(['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma'] as const).map(stat => {
-                      const val = comp.stats[stat];
-                      const mod = Math.floor((val - 10) / 2);
-                      const displayMod = mod >= 0 ? `+${mod}` : mod.toString();
-                      return (
-                        <div key={stat} className="flex flex-col items-center justify-center rounded-lg bg-background text-center border p-2">
-                          <span className="text-[9px] font-bold text-muted-foreground uppercase">{stat.slice(0,3)}</span>
-                          {showEditButtons ? (
-                            <Input type="number" value={val} onChange={e => {
-                              const newVal = parseInt(e.target.value) || 0;
-                              const n = companions.map(c => c.id === comp.id ? { ...c, stats: { ...c.stats, [stat]: newVal } } : c);
-                              setCompanions(n); updateCharacter(character.id, { companions: n });
-                            }} className="h-7 w-12 text-center text-sm font-bold" />
-                          ) : (
-                            <span className="text-sm font-bold text-muted-foreground">{val}</span>
-                          )}
-                          <div className="text-[8px] text-muted-foreground uppercase font-bold mt-1">Mod</div>
-                          <div className="text-sm font-bold">{displayMod}</div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Skills, Actions, Features */}
-                <Accordion type="multiple" className="w-full pt-2 border-t">
-                  <AccordionItem value="skills" className="border-b-0">
-                    <AccordionTrigger className="text-sm font-semibold hover:no-underline py-2">{t('skills')} ({comp.skills.length})</AccordionTrigger>
-                    <AccordionContent>
-                      <div className="space-y-1">
-                        {comp.skills.length > 0 ? comp.skills.map((sk, i) => (
-                          <div key={i} className="flex items-center gap-2 text-xs">
-                            <Checkbox checked={sk.proficient} disabled={!showEditButtons} onCheckedChange={v => {
-                              const n = companions.map(c => c.id === comp.id ? { ...c, skills: c.skills.map((s, idx) => idx === i ? { ...s, proficient: !!v } : s) } : c);
-                              setCompanions(n); updateCharacter(character.id, { companions: n });
-                            }} className="h-3 w-3" />
-                           <span className="font-black w-6 text-center">{sk.value >= 0 ? '+' : ''}{sk.value}</span>
-                            <span className="flex-1">{sk.label}</span>
-                          </div>
-                        )) : <p className="text-xs text-muted-foreground italic">No skills.</p>}
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                  <AccordionItem value="actions" className="border-b-0">
-                    <AccordionTrigger className="text-sm font-semibold hover:no-underline py-2">Actions ({comp.actions.length})</AccordionTrigger>
-                    <AccordionContent>
-                      <div className="space-y-2">
-                        {comp.actions.map((act, i) => (
-                          <div key={i} className="text-xs p-2 bg-muted/10 rounded border flex justify-between items-center">
-                            {showEditButtons ? (
-                              <Input value={act.name} onChange={e => {
-                                const n = companions.map(c => c.id === comp.id ? { ...c, actions: c.actions.map((a, idx) => idx === i ? { ...a, name: e.target.value } : a) } : c);
-                                setCompanions(n); updateCharacter(character.id, { companions: n });
-                              }} className="h-6 text-xs flex-1 mr-2" />
-                            ) : (
-                              <span className="font-semibold flex-1">&bull; {act.name}</span>
-                            )}
-                            {showEditButtons && <Button variant="ghost" size="icon" className="h-5 w-5 text-destructive" onClick={() => {
-                              const n = companions.map(c => c.id === comp.id ? { ...c, actions: c.actions.filter((_, idx) => idx !== i) } : c);
-                              setCompanions(n); updateCharacter(character.id, { companions: n });
-                            }}><Trash2 className="h-3 w-3" /></Button>}
-                          </div>
-                        ))}
-                        {showEditButtons && <Button size="sm" variant="outline" className="w-full h-7 text-[10px]" onClick={() => {
-                          const n = companions.map(c => c.id === comp.id ? { ...c, actions: [...c.actions, { id: `act-${Date.now()}`, name: 'New Action', notes: '' }] } : c);
-                          setCompanions(n); updateCharacter(character.id, { companions: n });
-                        }}><Plus className="h-3 w-3 mr-1" /> Add Action</Button>}
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                  <AccordionItem value="features" className="border-b-0">
-                    <AccordionTrigger className="text-sm font-semibold hover:no-underline py-2">Features ({comp.features.length})</AccordionTrigger>
-                    <AccordionContent>
-                      <div className="space-y-2">
-                        {comp.features.map((feat, i) => (
-                          <div key={i} className="text-xs p-2 bg-muted/10 rounded border flex justify-between items-center">
-                            {showEditButtons ? (
-                              <Input value={feat.name} onChange={e => {
-                                const n = companions.map(c => c.id === comp.id ? { ...c, features: c.features.map((f, idx) => idx === i ? { ...f, name: e.target.value } : f) } : c);
-                                setCompanions(n); updateCharacter(character.id, { companions: n });
-                              }} className="h-6 text-xs flex-1 mr-2" />
-                            ) : (
-                              <span className="font-semibold flex-1">&bull; {feat.name}</span>
-                            )}
-                            {showEditButtons && <Button variant="ghost" size="icon" className="h-5 w-5 text-destructive" onClick={() => {
-                              const n = companions.map(c => c.id === comp.id ? { ...c, features: c.features.filter((_, idx) => idx !== i) } : c);
-                              setCompanions(n); updateCharacter(character.id, { companions: n });
-                            }}><Trash2 className="h-3 w-3" /></Button>}
-                          </div>
-                        ))}
-                        {showEditButtons && <Button size="sm" variant="outline" className="w-full h-7 text-[10px]" onClick={() => {
-                          const n = companions.map(c => c.id === comp.id ? { ...c, features: [...c.features, { id: `feat-${Date.now()}`, name: 'New Feature', notes: '' }] } : c);
-                          setCompanions(n); updateCharacter(character.id, { companions: n });
-                        }}><Plus className="h-3 w-3 mr-1" /> Add Feature</Button>}
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                </Accordion>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <DndCompanionsSection
+          characterId={character.id}
+          companions={companions}
+          setCompanions={setCompanions}
+          isCompactView={isCompactView}
+          activeCompactSection={activeCompactSection}
+        />
       </div>
     );
   }
