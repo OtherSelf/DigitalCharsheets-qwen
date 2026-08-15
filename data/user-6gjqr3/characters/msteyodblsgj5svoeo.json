@@ -302,12 +302,17 @@
     {
       "id": "att-1786744860301",
       "description": "цйццй",
-      "attuned": true
+      "attuned": false
     },
     {
       "id": "att-1786744864411",
       "description": "цйцйцй",
       "attuned": false
+    },
+    {
+      "id": "att-1786819227806",
+      "description": "dqdqdq",
+      "attuned": true
     }
   ],
   "currency": {
@@ -354,7 +359,7 @@
   "multiclasses": [
     {
       "class": "Bard",
-      "level": 16
+      "level": 37
     }
   ],
   "spellSlots": {

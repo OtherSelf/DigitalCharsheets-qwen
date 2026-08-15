@@ -7,8 +7,6 @@ import {
   DnDSavingThrow,
   DnDSkill,
   DnDAttack,
-  Spell,
-  AttunementItem,
   DnDCompanion,
   CombatResource,
 } from '@/lib/types';
@@ -45,6 +43,7 @@ import { useToast } from '@/hooks/use-toast';
 import { DndCompanionsSection } from './dnd-sections/companions-section';
 import { DndSpellsSection } from './dnd-sections/spells-section';
 import { DndNarrativeSection } from './dnd-sections/narrative-section';
+import { DndAttunementSection } from './dnd-sections/attunement-section';
 
 const DND_CLASSES = [
   "Artificer", "Barbarian", "Bard", "Cleric", "Druid", "Fighter", "Monk",
@@ -176,6 +175,7 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
     const { t } = useTranslation();
     const { toast } = useToast();
     const narrativeRef = React.useRef<{ saveAll: () => void }>(null);
+    const attunementRef = React.useRef<{ saveAll: () => void }>(null);
 
     // UI States
     const [isHeaderEditing, setIsHeaderEditing] = React.useState(false);
@@ -186,7 +186,6 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
     const [isHpEditing, setIsHpEditing] = React.useState(false);
     const [isCombatStatsEditing, setIsCombatStatsEditing] = React.useState(false);
     const [isAttacksEditing, setIsAttacksEditing] = React.useState(false);
-    const [isAttunementEditing, setIsAttunementEditing] = React.useState(false);
     const [isItemsEditing, setIsItemsEditing] = React.useState(false);
     const [isInventoryEditing, setIsInventoryEditing] = React.useState(false);
     const [isMoneyEditing, setIsMoneyEditing] = React.useState(false);
@@ -206,7 +205,6 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
     const [hitDiceUsed, setHitDiceUsed] = React.useState<Record<string, number>>(character.hitDiceUsed || {});
     const [otherProficienciesAndLanguages, setOtherProficienciesAndLanguages] = React.useState<string[]>(character.otherProficienciesAndLanguages || []);
     const [attacks, setAttacks] = React.useState<DnDAttack[]>(character.attacks || []);
-    const [attunementItems, setAttunementItems] = React.useState<AttunementItem[]>(character.attunementItems || []);
     const [equipment, setEquipment] = React.useState<InventoryItem[]>(character.equipment ?? []);
     const [inventoryItems, setInventoryItems] = React.useState<InventoryItem[]>(character.inventory ?? []);
     const [currency, setCurrency] = React.useState(character.currency || { cp: 0, sp: 0, ep: 0, gp: 150, pp: 5 });
@@ -215,12 +213,11 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
     const [newEquipmentItem, setNewEquipmentItem] = React.useState('');
     const [newInventoryItem, setNewInventoryItem] = React.useState('');
     const [newProfItem, setNewProfItem] = React.useState('');
-    const [newAttunementItem, setNewAttunementItem] = React.useState('');
     const [companions, setCompanions] = React.useState<DnDCompanion[]>(character.companions || []);
     const [spellcastingData, setSpellcastingData] = React.useState({
-    spellcastingAbility: character.spellcastingAbility || 'none',
-    spellAttackBonus: character.spellAttackBonus || '',
-    spellSaveDifficulty: character.spellSaveDifficulty || 0,
+      spellcastingAbility: character.spellcastingAbility || 'none',
+      spellAttackBonus: character.spellAttackBonus || '',
+      spellSaveDifficulty: character.spellSaveDifficulty || 0,
     });
     const [isSpellcastingEditing, setIsSpellcastingEditing] = React.useState(false);
     const [combatResources, setCombatResources] = React.useState<CombatResource[]>(character.combatResources || []);
@@ -278,7 +275,6 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
     const handleSaveCombatStats = React.useCallback(() => { updateCharacter(character.id, { armorClass: combatStats.armorClass, speed: combatStats.speed }); setIsCombatStatsEditing(false); }, [character.id, combatStats.armorClass, combatStats.speed, updateCharacter]);
     const handleSaveHp = React.useCallback(() => { updateCharacter(character.id, { hitPoints: combatStats.hitPoints, temporaryHitPoints: combatStats.temporaryHitPoints }); setIsHpEditing(false); }, [character.id, combatStats.hitPoints, combatStats.temporaryHitPoints, updateCharacter]);
     const handleSaveAttacks = React.useCallback(() => { updateCharacter(character.id, { attacks }); setIsAttacksEditing(false); }, [character.id, attacks, updateCharacter]);
-    const handleSaveAttunement = React.useCallback(() => { updateCharacter(character.id, { attunementItems }); setIsAttunementEditing(false); }, [character.id, attunementItems, updateCharacter]);
     const handleSaveItems = React.useCallback(() => { updateCharacter(character.id, { equipment }); setIsItemsEditing(false); }, [character.id, equipment, updateCharacter]);
     const handleSaveInventory = React.useCallback(() => { updateCharacter(character.id, { inventory: inventoryItems }); setIsInventoryEditing(false); }, [character.id, inventoryItems, updateCharacter]);
     const handleSaveMoney = React.useCallback(() => { updateCharacter(character.id, { currency }); setIsMoneyEditing(false); }, [character.id, currency, updateCharacter]);
@@ -298,33 +294,20 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
     const handleSaveAll = React.useCallback(() => {
       if (isHeaderEditing) handleSaveHeader(); if (isProgressionEditing) handleSaveProgression(); if (isStatsEditing) handleSaveStats();
       if (isSavesEditing) handleSaveSaves(); if (isSkillsEditing) handleSaveSkills(); if (isCombatStatsEditing) handleSaveCombatStats();
-      if (isHpEditing) handleSaveHp(); if (isAttacksEditing) handleSaveAttacks(); if (isAttunementEditing) handleSaveAttunement(); if (isItemsEditing) handleSaveItems();
+      if (isHpEditing) handleSaveHp(); if (isAttacksEditing) handleSaveAttacks(); if (isItemsEditing) handleSaveItems();
       if (isInventoryEditing) handleSaveInventory(); if (isMoneyEditing) handleSaveMoney(); if (isOtherProficienciesEditing) handleSaveOtherProf();
-       narrativeRef.current?.saveAll();
-    }, [isHeaderEditing, isProgressionEditing, isStatsEditing, isSavesEditing, isSkillsEditing, isCombatStatsEditing, isHpEditing, isAttacksEditing, isAttunementEditing, isItemsEditing, isInventoryEditing, isMoneyEditing, isOtherProficienciesEditing, handleSaveHeader, handleSaveProgression, handleSaveStats, handleSaveSaves, handleSaveSkills, handleSaveCombatStats, handleSaveHp, handleSaveAttacks, handleSaveAttunement, handleSaveItems, handleSaveInventory, handleSaveMoney, handleSaveOtherProf]);
-    React.useImperativeHandle(ref, () => ({ saveAll: handleSaveAll }));
+      narrativeRef.current?.saveAll();
+      attunementRef.current?.saveAll();
+    }, [isHeaderEditing, isProgressionEditing, isStatsEditing, isSavesEditing, isSkillsEditing, isCombatStatsEditing, isHpEditing, isAttacksEditing, isItemsEditing, isInventoryEditing, isMoneyEditing, isOtherProficienciesEditing, handleSaveHeader, handleSaveProgression, handleSaveStats, handleSaveSaves, handleSaveSkills, handleSaveCombatStats, handleSaveHp, handleSaveAttacks, handleSaveItems, handleSaveInventory, handleSaveMoney, handleSaveOtherProf]);
 
-      const handleHpMath = (op: 'sub' | 'rec') => {
+    const handleHpMath = (op: 'sub' | 'rec') => {
       const d = parseInt(hpDelta) || 0; if (d === 0) return;
       const n = { ...combatStats.hitPoints, current: op === 'sub' ? Math.max(0, combatStats.hitPoints.current - d) : Math.min(combatStats.hitPoints.max, combatStats.hitPoints.current + d) };
       setCombatStats({ ...combatStats, hitPoints: n }); setHpDelta('');
       if (!isHpEditing) updateCharacter(character.id, { hitPoints: n });
     };
 
-    const handleAttunedChange = (id: string, attuned: boolean) => {
-      if (attuned) {
-        const count = attunementItems.filter(i => i.attuned).length;
-        if (count >= 3) {
-          toast({ variant: 'destructive', title: 'Limit Reached', description: 'You can only attune up to 3 items.' });
-          return;
-        }
-      }
-      const next = attunementItems.map(i => i.id === id ? { ...i, attuned } : i);
-      setAttunementItems(next);
-      if (!isAttunementEditing) updateCharacter(character.id, { attunementItems: next });
-    };
-    
-    // Combat Resources handlers
+        // Combat Resources handlers
     const handleResourceCurrentChange = (id: string, delta: number) => {
       const next = combatResources.map(r =>
         r.id === id ? { ...r, current: Math.max(0, Math.min(r.max, r.current + delta)) } : r
@@ -364,7 +347,7 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
     };
 
 
-    
+
     // Death Saves handlers
     const handleDeathSaveChange = (type: 'successes' | 'failures', value: number) => {
       const clamped = Math.max(0, Math.min(3, value));
@@ -517,7 +500,7 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
                           <AccordionTrigger className="py-2 hover:no-underline font-semibold">{t('backstory')}</AccordionTrigger>
                           <AccordionContent className="pt-2">
                             {isHeaderEditing ? (
-                              <Textarea value={headerData.backstory} onChange={e => setHeaderData({...headerData, backstory: e.target.value})} placeholder="Your character's backstory..." className="min-h-[150px] text-sm" />
+                              <Textarea value={headerData.backstory} onChange={e => setHeaderData({ ...headerData, backstory: e.target.value })} placeholder="Your character's backstory..." className="min-h-[150px] text-sm" />
                             ) : (
                               <p className="whitespace-pre-wrap text-sm text-muted-foreground">{headerData.backstory || '-'}</p>
                             )}
@@ -527,7 +510,7 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
                           <AccordionTrigger className="py-2 hover:no-underline font-semibold">{t('notes')}</AccordionTrigger>
                           <AccordionContent className="pt-2">
                             {isHeaderEditing ? (
-                              <Textarea value={headerData.notes} onChange={e => setHeaderData({...headerData, notes: e.target.value})} placeholder="General notes about this character..." className="min-h-[100px] text-sm" />
+                              <Textarea value={headerData.notes} onChange={e => setHeaderData({ ...headerData, notes: e.target.value })} placeholder="General notes about this character..." className="min-h-[100px] text-sm" />
                             ) : (
                               <p className="whitespace-pre-wrap text-sm text-muted-foreground">{headerData.notes || '-'}</p>
                             )}
@@ -820,25 +803,11 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
                 featuresAndTraits: character.featuresAndTraits || []
               }}
             />
-            <Card id="attunement-card">
-              <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2"><CardTitle className="text-[10px] font-bold uppercase text-muted-foreground tracking-tight">{t('attunement')}</CardTitle>{(showEditButtons || isAttunementEditing) && <EditSaveButton editing={isAttunementEditing} onEdit={() => setIsAttunementEditing(true)} onSave={handleSaveAttunement} />}</CardHeader>
-              <CardContent className="p-4 pt-0 space-y-2">
-                {attunementItems.map((it, i) => (
-                  <div key={it.id} className="text-[10px] p-1.5 rounded bg-muted/10 flex items-center justify-between group">
-                    <div className="flex items-center gap-2 flex-1">
-                      <Checkbox checked={it.attuned} onCheckedChange={v => handleAttunedChange(it.id, !!v)} />
-                      {isAttunementEditing ? (
-                        <Input value={it.description} onChange={e => setAttunementItems(attunementItems.map(item => item.id === it.id ? { ...item, description: e.target.value } : item))} className="h-6 text-[10px] flex-1" />
-                      ) : (
-                        <span className={cn("font-medium", !it.attuned && "opacity-50")}>{it.description} {it.attuned && <span className="text-[8px] font-black uppercase text-primary ml-1">(Attuned)</span>}</span>
-                      )}
-                      {isAttunementEditing && (<Button variant="ghost" size="icon" className="h-5 w-5 text-destructive ml-2" onClick={() => setAttunementItems(attunementItems.filter(item => item.id !== it.id))}><Trash2 className="h-3 w-3" /></Button>)}
-                    </div>
-                  </div>
-                ))}
-                {isAttunementEditing && (<div className="flex gap-2 pt-2 border-t"><Input placeholder="New..." value={newAttunementItem} onChange={e => setNewAttunementItem(e.target.value)} className="h-7 text-[10px]" /><Button size="sm" className="h-7" onClick={() => { if (newAttunementItem.trim()) { setAttunementItems([...attunementItems, { id: `att-${Date.now()}`, description: newAttunementItem.trim(), attuned: false }]); setNewAttunementItem(''); } }}><Plus className="h-3 w-3" /></Button></div>)}
-              </CardContent>
-            </Card>
+            <DndAttunementSection
+              ref={attunementRef}
+              characterId={character.id}
+              initialItems={character.attunementItems || []}
+            />
             <Card id="inventory-box">
               <CardHeader className="px-4 pt-2 pb-2"><CardTitle className="text-[10px] font-bold uppercase text-muted-foreground tracking-tight">{t('inventory')}</CardTitle></CardHeader>
               <CardContent className="p-4 pt-0 space-y-6">
@@ -880,7 +849,7 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
           characterId={character.id}
           initialSpells={character.spells || []}
           initialSpellSlots={character.spellSlots}
-         isCompactView={isCompactView}
+          isCompactView={isCompactView}
           activeCompactSection={activeCompactSection}
         />
 
