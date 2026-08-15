@@ -44,11 +44,11 @@ import { DndCompanionsSection } from './dnd-sections/companions-section';
 import { DndSpellsSection } from './dnd-sections/spells-section';
 import { DndNarrativeSection } from './dnd-sections/narrative-section';
 import { DndAttunementSection } from './dnd-sections/attunement-section';
-
-const DND_CLASSES = [
-  "Artificer", "Barbarian", "Bard", "Cleric", "Druid", "Fighter", "Monk",
-  "Paladin", "Ranger", "Rogue", "Sorcerer", "Warlock", "Wizard"
-] as const;
+import { DndInventorySection } from './dnd-sections/inventory-section';
+import { DndStatsSection } from './dnd-sections/stats-section';
+import { DndSavesSkillsSection } from './dnd-sections/saves-skills-section';
+import { DndProgressionSection } from './dnd-sections/progression-section';
+import { DndCharacterInfoSection } from './dnd-sections/character-info-section';
 
 type DndSheetProps = {
   character: DnD5eCharacter;
@@ -101,72 +101,12 @@ const EXHAUSTION_EFFECTS = [
   'Death',
 ];
 
-const calculateLevelFromExp = (exp: number): number => {
-  if (exp >= 355000) return 20; if (exp >= 305000) return 19; if (exp >= 265000) return 18;
-  if (exp >= 225000) return 17; if (exp >= 195000) return 16; if (exp >= 165000) return 15;
-  if (exp >= 140000) return 14; if (exp >= 120000) return 13; if (exp >= 100000) return 12;
-  if (exp >= 85000) return 11; if (exp >= 64000) return 10; if (exp >= 48000) return 9;
-  if (exp >= 34000) return 8; if (exp >= 23000) return 7; if (exp >= 14000) return 6;
-  if (exp >= 6500) return 5; if (exp >= 2700) return 4; if (exp >= 900) return 3;
-  if (exp >= 300) return 2; return 1;
-};
-
-const StatBox = ({ label, value, editing, onChange, isCompactView, notes, onNoteChange, hideNotes }: {
-  label: string; value: number; editing: boolean;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  isCompactView: boolean; notes?: string;
-  onNoteChange: (val: string) => void; hideNotes: boolean;
-}) => {
-  const modifier = Math.floor((value - 10) / 2);
-  const displayModifier = modifier >= 0 ? `+${modifier}` : modifier.toString();
-  return (
-    <div className={cn("flex flex-col items-center justify-center rounded-lg bg-background text-center border relative", isCompactView ? "p-1" : "p-4")}>
-      {!hideNotes && (
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button variant={notes ? 'secondary' : 'ghost'} size="icon" className="h-5 w-5 absolute top-1 right-1">
-              <Info className="h-3 w-3" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-64">
-            <Label className="text-xs mb-2 block">Notes for {label}</Label>
-            <Textarea defaultValue={notes || ''} onBlur={(e) => onNoteChange(e.target.value)} placeholder="Add notes..." className="min-h-[100px] text-sm" />
-          </PopoverContent>
-        </Popover>
-      )}
-      <div className={cn("text-[10px] text-muted-foreground uppercase tracking-wider font-bold", isCompactView && "text-[8px]")}>{label}</div>
-      <div className="mt-1">
-        {editing ? (
-          <Input type="number" min={1} max={30} value={value} onChange={onChange} className={cn("text-base font-bold h-7 w-24 text-center", isCompactView && "text-sm h-6 w-16")} />
-        ) : (
-          <div className={cn("text-base font-bold text-muted-foreground", isCompactView && "text-sm")}>{value}</div>
-        )}
-      </div>
-      <div className="mt-2 w-full">
-        <div className="text-[8px] text-muted-foreground uppercase font-bold mb-0.5">Mod</div>
-        <div className={cn("text-base font-bold py-1 rounded border shadow-inner bg-background text-foreground border-border", isCompactView && "text-sm py-0.5")}>{displayModifier}</div>
-      </div>
-    </div>
-  );
-};
-
 const EditSaveButton = ({ editing, onEdit, onSave }: { editing: boolean; onEdit: () => void; onSave: () => void }) => (
   editing ? (
     <Button size="icon" variant="ghost" onClick={onSave} className="h-7 w-7"><Save className="h-4 w-4" /></Button>
   ) : (
     <Button size="icon" variant="outline" onClick={onEdit} className="h-7 w-7"><Edit className="h-4 w-4" /></Button>
   )
-);
-
-const DetailField = ({ label, value, editing, onChange }: { label: string; value: string | number; editing: boolean; onChange: (val: string) => void }) => (
-  <div className="flex flex-col gap-1">
-    <Label className="text-[10px] text-muted-foreground uppercase font-bold">{label}</Label>
-    {editing ? (
-      <Input value={value} onChange={(e) => onChange(e.target.value)} className="h-7 text-xs p-1" />
-    ) : (
-      <span className="text-sm font-semibold truncate">{value || '-'}</span>
-    )}
-  </div>
 );
 
 export const DndSheet = React.forwardRef<any, DndSheetProps>(
@@ -176,9 +116,10 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
     const { toast } = useToast();
     const narrativeRef = React.useRef<{ saveAll: () => void }>(null);
     const attunementRef = React.useRef<{ saveAll: () => void }>(null);
+    const inventoryRef = React.useRef<{ saveAll: () => void }>(null);
+    const characterInfoRef = React.useRef<{ saveAll: () => void }>(null);
 
     // UI States
-    const [isHeaderEditing, setIsHeaderEditing] = React.useState(false);
     const [isProgressionEditing, setIsProgressionEditing] = React.useState(false);
     const [isStatsEditing, setIsStatsEditing] = React.useState(false);
     const [isSavesEditing, setIsSavesEditing] = React.useState(false);
@@ -186,14 +127,9 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
     const [isHpEditing, setIsHpEditing] = React.useState(false);
     const [isCombatStatsEditing, setIsCombatStatsEditing] = React.useState(false);
     const [isAttacksEditing, setIsAttacksEditing] = React.useState(false);
-    const [isItemsEditing, setIsItemsEditing] = React.useState(false);
-    const [isInventoryEditing, setIsInventoryEditing] = React.useState(false);
-    const [isMoneyEditing, setIsMoneyEditing] = React.useState(false);
     const [isOtherProficienciesEditing, setIsOtherProficienciesEditing] = React.useState(false);
 
     // Data States
-    const [name, setName] = React.useState(character.name);
-    const [headerData, setHeaderData] = React.useState({ background: character.background, race: character.race, alignment: character.alignment || '', age: character.age || '', eyes: character.eyes || '', skin: character.skin || '', height: character.height || '', weight: character.weight || '', hair: character.hair || '', backstory: character.backstory || '', notes: character.notes || '' });
     const [progressionData, setProgressionData] = React.useState({ characterClass: character.characterClass, level: character.level, experiencePoints: character.experiencePoints || 0, isMulticlass: character.isMulticlass || false, multiclasses: character.multiclasses || [] });
     const [expToCount, setExpToCount] = React.useState(0);
     const [stats, setStats] = React.useState(character.stats);
@@ -205,13 +141,9 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
     const [hitDiceUsed, setHitDiceUsed] = React.useState<Record<string, number>>(character.hitDiceUsed || {});
     const [otherProficienciesAndLanguages, setOtherProficienciesAndLanguages] = React.useState<string[]>(character.otherProficienciesAndLanguages || []);
     const [attacks, setAttacks] = React.useState<DnDAttack[]>(character.attacks || []);
-    const [equipment, setEquipment] = React.useState<InventoryItem[]>(character.equipment ?? []);
-    const [inventoryItems, setInventoryItems] = React.useState<InventoryItem[]>(character.inventory ?? []);
-    const [currency, setCurrency] = React.useState(character.currency || { cp: 0, sp: 0, ep: 0, gp: 150, pp: 5 });
 
     // New Items States
     const [newEquipmentItem, setNewEquipmentItem] = React.useState('');
-    const [newInventoryItem, setNewInventoryItem] = React.useState('');
     const [newProfItem, setNewProfItem] = React.useState('');
     const [companions, setCompanions] = React.useState<DnDCompanion[]>(character.companions || []);
     const [spellcastingData, setSpellcastingData] = React.useState({
@@ -267,7 +199,6 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
     }, [progressionData, primaryClassLevel, primaryDieSize]);
 
     // Save Handlers
-    const handleSaveHeader = React.useCallback(() => { updateCharacter(character.id, { name, ...headerData }); setIsHeaderEditing(false); }, [character.id, name, headerData, updateCharacter]);
     const handleSaveProgression = React.useCallback(() => { updateCharacter(character.id, { ...progressionData }); setIsProgressionEditing(false); }, [character.id, progressionData, updateCharacter]);
     const handleSaveStats = React.useCallback(() => { updateCharacter(character.id, { stats }); setIsStatsEditing(false); }, [character.id, stats, updateCharacter]);
     const handleSaveSaves = React.useCallback(() => { updateCharacter(character.id, { savingThrows: calculatedSavingThrows }); setIsSavesEditing(false); }, [character.id, calculatedSavingThrows, updateCharacter]);
@@ -275,9 +206,6 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
     const handleSaveCombatStats = React.useCallback(() => { updateCharacter(character.id, { armorClass: combatStats.armorClass, speed: combatStats.speed }); setIsCombatStatsEditing(false); }, [character.id, combatStats.armorClass, combatStats.speed, updateCharacter]);
     const handleSaveHp = React.useCallback(() => { updateCharacter(character.id, { hitPoints: combatStats.hitPoints, temporaryHitPoints: combatStats.temporaryHitPoints }); setIsHpEditing(false); }, [character.id, combatStats.hitPoints, combatStats.temporaryHitPoints, updateCharacter]);
     const handleSaveAttacks = React.useCallback(() => { updateCharacter(character.id, { attacks }); setIsAttacksEditing(false); }, [character.id, attacks, updateCharacter]);
-    const handleSaveItems = React.useCallback(() => { updateCharacter(character.id, { equipment }); setIsItemsEditing(false); }, [character.id, equipment, updateCharacter]);
-    const handleSaveInventory = React.useCallback(() => { updateCharacter(character.id, { inventory: inventoryItems }); setIsInventoryEditing(false); }, [character.id, inventoryItems, updateCharacter]);
-    const handleSaveMoney = React.useCallback(() => { updateCharacter(character.id, { currency }); setIsMoneyEditing(false); }, [character.id, currency, updateCharacter]);
     const handleSaveOtherProf = React.useCallback(() => { updateCharacter(character.id, { otherProficienciesAndLanguages: otherProficienciesAndLanguages }); setIsOtherProficienciesEditing(false); }, [character.id, otherProficienciesAndLanguages, updateCharacter]);
     const handleSaveResources = React.useCallback(() => {
       updateCharacter(character.id, { combatResources });
@@ -291,23 +219,26 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
       });
       setIsSpellcastingEditing(false);
     }, [character.id, spellcastingData, updateCharacter]);
+
     const handleSaveAll = React.useCallback(() => {
-      if (isHeaderEditing) handleSaveHeader(); if (isProgressionEditing) handleSaveProgression(); if (isStatsEditing) handleSaveStats();
+      if (isProgressionEditing) handleSaveProgression(); if (isStatsEditing) handleSaveStats();
       if (isSavesEditing) handleSaveSaves(); if (isSkillsEditing) handleSaveSkills(); if (isCombatStatsEditing) handleSaveCombatStats();
-      if (isHpEditing) handleSaveHp(); if (isAttacksEditing) handleSaveAttacks(); if (isItemsEditing) handleSaveItems();
-      if (isInventoryEditing) handleSaveInventory(); if (isMoneyEditing) handleSaveMoney(); if (isOtherProficienciesEditing) handleSaveOtherProf();
+      if (isHpEditing) handleSaveHp(); if (isAttacksEditing) handleSaveAttacks();
+      if (isOtherProficienciesEditing) handleSaveOtherProf();
+      characterInfoRef.current?.saveAll();
       narrativeRef.current?.saveAll();
       attunementRef.current?.saveAll();
-    }, [isHeaderEditing, isProgressionEditing, isStatsEditing, isSavesEditing, isSkillsEditing, isCombatStatsEditing, isHpEditing, isAttacksEditing, isItemsEditing, isInventoryEditing, isMoneyEditing, isOtherProficienciesEditing, handleSaveHeader, handleSaveProgression, handleSaveStats, handleSaveSaves, handleSaveSkills, handleSaveCombatStats, handleSaveHp, handleSaveAttacks, handleSaveItems, handleSaveInventory, handleSaveMoney, handleSaveOtherProf]);
-
+      inventoryRef.current?.saveAll();
+    }, [isProgressionEditing, isStatsEditing, isSavesEditing, isSkillsEditing, isCombatStatsEditing, isHpEditing, isAttacksEditing, isOtherProficienciesEditing, handleSaveProgression, handleSaveStats, handleSaveSaves, handleSaveSkills, handleSaveCombatStats, handleSaveHp, handleSaveAttacks, handleSaveOtherProf]);
+    React.useImperativeHandle(ref, () => ({ saveAll: handleSaveAll }));
+    
     const handleHpMath = (op: 'sub' | 'rec') => {
-      const d = parseInt(hpDelta) || 0; if (d === 0) return;
-      const n = { ...combatStats.hitPoints, current: op === 'sub' ? Math.max(0, combatStats.hitPoints.current - d) : Math.min(combatStats.hitPoints.max, combatStats.hitPoints.current + d) };
+    const d = parseInt(hpDelta) || 0; if (d === 0) return;
+    const n = { ...combatStats.hitPoints, current: op === 'sub' ? Math.max(0, combatStats.hitPoints.current - d) : Math.min(combatStats.hitPoints.max, combatStats.hitPoints.current + d) };
       setCombatStats({ ...combatStats, hitPoints: n }); setHpDelta('');
       if (!isHpEditing) updateCharacter(character.id, { hitPoints: n });
     };
-
-        // Combat Resources handlers
+     // Combat Resources handlers
     const handleResourceCurrentChange = (id: string, delta: number) => {
       const next = combatResources.map(r =>
         r.id === id ? { ...r, current: Math.max(0, Math.min(r.max, r.current + delta)) } : r
@@ -411,183 +342,68 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
 
         {/* Progression & Character Info */}
         <div className={cn("flex flex-col md:flex-row gap-6 items-stretch", isCompactView && activeCompactSection !== 'info-section' && "hidden")}>
-          <Accordion type="single" collapsible defaultValue="expanded" className="w-full md:max-w-xl">
-            <AccordionItem value="expanded" className="border-0">
-              <Card className="flex flex-col border-2 overflow-hidden shrink-0 h-full">
-                <CardHeader className="px-4 pt-2 pb-2 flex flex-row items-center justify-between bg-muted/5">
-                  <AccordionTrigger className="flex flex-1 items-center justify-between hover:no-underline py-0"><Label className="text-[10px] font-bold uppercase text-muted-foreground tracking-tight">{t('progression')}</Label></AccordionTrigger>
-                  {(showEditButtons || isProgressionEditing) && <EditSaveButton editing={isProgressionEditing} onEdit={() => setIsProgressionEditing(true)} onSave={handleSaveProgression} />}
-                </CardHeader>
-                <AccordionContent>
-                  <CardContent className="p-4 space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="flex flex-col gap-1">
-                        <Label className="text-[10px] text-muted-foreground uppercase font-bold">{t('class')}</Label>
-                        {isProgressionEditing ? (
-                          <Select value={progressionData.characterClass} onValueChange={v => setProgressionData({ ...progressionData, characterClass: v })}>
-                            <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
-                            <SelectContent>{DND_CLASSES.map(c => (<SelectItem key={c} value={c} disabled={progressionData.multiclasses.some(m => m.class === c)}>{c}</SelectItem>))}</SelectContent>
-                          </Select>
-                        ) : (<span className="text-base font-bold truncate">{progressionData.characterClass}</span>)}
-                      </div>
-                      <div className="flex flex-col gap-1"><Label className="text-[10px] text-muted-foreground uppercase font-bold">Total Lvl</Label><span className="text-base font-bold truncate">{progressionData.level}</span></div>
-                    </div>
-                    <div className="pt-2 border-t space-y-4">
-                      <div className="flex items-center justify-between">
-                        <Label className="text-[10px] font-bold uppercase">Multiclass</Label>
-                        {isProgressionEditing && <Checkbox checked={progressionData.isMulticlass} onCheckedChange={v => setProgressionData({ ...progressionData, isMulticlass: !!v })} />}
-                      </div>
-                      {progressionData.isMulticlass && (
-                        <div className="space-y-2">
-                          {progressionData.multiclasses.map((mc, idx) => (
-                            <div key={idx} className="flex gap-2 items-center">
-                              {isProgressionEditing ? (
-                                <>
-                                  <Select value={mc.class} onValueChange={v => { const n = [...progressionData.multiclasses]; n[idx].class = v; setProgressionData({ ...progressionData, multiclasses: n }); }}>
-                                    <SelectTrigger className="h-8 text-xs flex-1"><SelectValue /></SelectTrigger>
-                                    <SelectContent>{DND_CLASSES.map(c => (<SelectItem key={c} value={c} disabled={progressionData.characterClass === c || progressionData.multiclasses.some((m, i) => m.class === c && i !== idx)}>{c}</SelectItem>))}</SelectContent>
-                                  </Select>
-                                  <Input type="number" value={mc.level} onChange={e => { const n = [...progressionData.multiclasses]; n[idx].level = parseInt(e.target.value) || 1; setProgressionData({ ...progressionData, multiclasses: n }); }} className="h-8 w-12 text-center" />
-                                  <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => setProgressionData({ ...progressionData, multiclasses: progressionData.multiclasses.filter((_, i) => i !== idx) })}><Trash2 className="h-4 w-4" /></Button>
-                                </>
-                              ) : (<span className="text-xs font-semibold">{mc.class} (Lvl {mc.level})</span>)}
-                            </div>
-                          ))}
-                          {isProgressionEditing && (
-                            <Button variant="outline" size="sm" className="w-full h-7 text-[10px]" onClick={() => { const used = [progressionData.characterClass, ...progressionData.multiclasses.map(m => m.class)]; const avail = DND_CLASSES.filter(c => !used.includes(c)); if (avail.length > 0) setProgressionData({ ...progressionData, multiclasses: [...progressionData.multiclasses, { class: avail[0], level: 1 }] }); }}>
-                              <Plus className="h-3 w-3 mr-1" /> Add Class
-                            </Button>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                    <div className="pt-2 border-t space-y-4">
-                      <DetailField label={t('experiencePoints')} value={progressionData.experiencePoints} editing={isProgressionEditing} onChange={v => { const n = parseInt(v) || 0; setProgressionData({ ...progressionData, experiencePoints: n, level: calculateLevelFromExp(n) }); }} />
-                      <div className="flex flex-col gap-2">
-                        <Label className="text-[10px] text-muted-foreground uppercase font-bold">{t('expToCount')}</Label>
-                        <div className="flex gap-2">
-                          <Input type="number" value={expToCount} onChange={e => setExpToCount(parseInt(e.target.value) || 0)} className="h-8 text-xs" />
-                          <Button size="sm" onClick={() => { const next = (progressionData.experiencePoints || 0) + expToCount; setProgressionData({ ...progressionData, experiencePoints: next, level: calculateLevelFromExp(next) }); setExpToCount(0); }} className="h-8 px-3 text-xs">{t('add')}</Button>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </AccordionContent>
-              </Card>
-            </AccordionItem>
-          </Accordion>
-          <Accordion type="single" collapsible defaultValue="expanded" className="flex-1">
-            <AccordionItem value="expanded" className="border-0">
-              <Card className="flex flex-col border-2 overflow-hidden h-full">
-                <CardHeader className="px-4 pt-2 pb-2 bg-muted/5 flex flex-row items-center justify-between">
-                  <AccordionTrigger className="flex flex-1 items-center justify-between hover:no-underline py-0"><Label className="text-[10px] font-bold uppercase text-muted-foreground tracking-tight">{t('characterInfo')}</Label></AccordionTrigger>
-                  {(showEditButtons || isHeaderEditing) && <EditSaveButton editing={isHeaderEditing} onEdit={() => setIsHeaderEditing(true)} onSave={handleSaveHeader} />}
-                </CardHeader>
-                <AccordionContent>
-                  <CardContent className="p-4 grid grid-cols-2 md:grid-cols-3 gap-4">
-                    <DetailField label={t('race')} value={headerData.race} editing={isHeaderEditing} onChange={v => setHeaderData({ ...headerData, race: v })} />
-                    <DetailField label={t('background')} value={headerData.background} editing={isHeaderEditing} onChange={v => setHeaderData({ ...headerData, background: v })} />
-                    <DetailField label={t('alignment')} value={headerData.alignment} editing={isHeaderEditing} onChange={v => setHeaderData({ ...headerData, alignment: v })} />
-                    <DetailField label={t('age')} value={headerData.age} editing={isHeaderEditing} onChange={v => setHeaderData({ ...headerData, age: v })} />
-                    <DetailField label={t('eyes')} value={headerData.eyes} editing={isHeaderEditing} onChange={v => setHeaderData({ ...headerData, eyes: v })} />
-                    <DetailField label={t('skin')} value={headerData.skin} editing={isHeaderEditing} onChange={v => setHeaderData({ ...headerData, skin: v })} />
-                    <DetailField label={t('height')} value={headerData.height} editing={isHeaderEditing} onChange={v => setHeaderData({ ...headerData, height: v })} />
-                    <DetailField label={t('weight')} value={headerData.weight} editing={isHeaderEditing} onChange={v => setHeaderData({ ...headerData, weight: v })} />
-                    <DetailField label={t('hairFur')} value={headerData.hair} editing={isHeaderEditing} onChange={v => setHeaderData({ ...headerData, hair: v })} />
-                    <div className="col-span-2 md:col-span-3 mt-2 border-t pt-4">
-                      <Accordion type="multiple" className="w-full">
-                        <AccordionItem value="backstory" className="border-b-0">
-                          <AccordionTrigger className="py-2 hover:no-underline font-semibold">{t('backstory')}</AccordionTrigger>
-                          <AccordionContent className="pt-2">
-                            {isHeaderEditing ? (
-                              <Textarea value={headerData.backstory} onChange={e => setHeaderData({ ...headerData, backstory: e.target.value })} placeholder="Your character's backstory..." className="min-h-[150px] text-sm" />
-                            ) : (
-                              <p className="whitespace-pre-wrap text-sm text-muted-foreground">{headerData.backstory || '-'}</p>
-                            )}
-                          </AccordionContent>
-                        </AccordionItem>
-                        <AccordionItem value="notes" className="border-b-0">
-                          <AccordionTrigger className="py-2 hover:no-underline font-semibold">{t('notes')}</AccordionTrigger>
-                          <AccordionContent className="pt-2">
-                            {isHeaderEditing ? (
-                              <Textarea value={headerData.notes} onChange={e => setHeaderData({ ...headerData, notes: e.target.value })} placeholder="General notes about this character..." className="min-h-[100px] text-sm" />
-                            ) : (
-                              <p className="whitespace-pre-wrap text-sm text-muted-foreground">{headerData.notes || '-'}</p>
-                            )}
-                          </AccordionContent>
-                        </AccordionItem>
-                      </Accordion>
-                    </div>
-                  </CardContent>
-                </AccordionContent>
-              </Card>
-            </AccordionItem>
-          </Accordion>
+        <DndProgressionSection
+          progressionData={progressionData}
+          setProgressionData={setProgressionData}
+          expToCount={expToCount}
+          setExpToCount={setExpToCount}
+          isProgressionEditing={isProgressionEditing}
+          setIsProgressionEditing={setIsProgressionEditing}
+          handleSaveProgression={handleSaveProgression}
+        />
+          <DndCharacterInfoSection
+            ref={characterInfoRef}
+            characterId={character.id}
+            initialName={character.name}
+            initialHeaderData={{
+              background: character.background,
+              race: character.race,
+              alignment: character.alignment || '',
+              age: character.age || '',
+              eyes: character.eyes || '',
+              skin: character.skin || '',
+              height: character.height || '',
+              weight: character.weight || '',
+              hair: character.hair || '',
+              backstory: character.backstory || '',
+              notes: character.notes || ''
+            }}
+          />
         </div>
 
         {/* Stats, Saves, Skills, Combat */}
         <div className={cn("grid grid-cols-1 md:grid-cols-12 gap-6 items-start", isCompactView && activeCompactSection !== 'stats-section' && "hidden")}>
-          <div className="md:col-span-2 space-y-4">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2"><CardTitle className="text-[10px] font-bold uppercase text-muted-foreground tracking-tight">{t('characteristics')}</CardTitle>{(showEditButtons || isStatsEditing) && <EditSaveButton editing={isStatsEditing} onEdit={() => setIsStatsEditing(true)} onSave={handleSaveStats} />}</CardHeader>
-              <CardContent className="space-y-3 p-4 pt-0">
-                {['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma'].map(key => (
-                  <StatBox key={key} label={key} value={stats[key as keyof typeof stats]} editing={isStatsEditing} onChange={e => setStats({ ...stats, [key]: parseInt(e.target.value) || 1 })} isCompactView={isCompactView} notes={character.statNotes?.[key as keyof typeof stats]} onNoteChange={v => updateCharacter(character.id, { statNotes: { ...(character.statNotes || {}), [key]: v } })} hideNotes={hideNotes} />
-                ))}
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2"><CardTitle className="text-[10px] font-bold uppercase text-muted-foreground tracking-tight">{t('otherProficienciesAndLanguages')}</CardTitle>{(showEditButtons || isOtherProficienciesEditing) && <EditSaveButton editing={isOtherProficienciesEditing} onEdit={() => setIsOtherProficienciesEditing(true)} onSave={handleSaveOtherProf} />}</CardHeader>
-              <CardContent className="p-4 pt-0 space-y-2">
-                {otherProficienciesAndLanguages.map((it, i) => (
-                  <div key={i} className="text-[10px] p-1.5 rounded bg-muted/10 flex justify-between">
-                    {isOtherProficienciesEditing ? (
-                      <Input value={it} onChange={e => { const n = [...otherProficienciesAndLanguages]; n[i] = e.target.value; setOtherProficienciesAndLanguages(n); }} className="h-6 text-[10px] flex-1 mr-2" />
-                    ) : (<span className="break-words font-medium">&bull; {it}</span>)}
-                    {isOtherProficienciesEditing && (<Button variant="ghost" size="icon" className="h-5 w-5 text-destructive" onClick={() => setOtherProficienciesAndLanguages(otherProficienciesAndLanguages.filter((_, idx) => idx !== i))}><Trash2 className="h-3 w-3" /></Button>)}
-                  </div>
-                ))}
-                {isOtherProficienciesEditing && (
-                  <div className="flex gap-2 pt-2 border-t">
-                    <Input placeholder="New..." value={newProfItem} onChange={e => setNewProfItem(e.target.value)} className="h-7 text-[10px]" />
-                    <Button size="sm" className="h-7" onClick={() => { if (newProfItem.trim()) { setOtherProficienciesAndLanguages([...otherProficienciesAndLanguages, newProfItem.trim()]); setNewProfItem(''); } }}><Plus className="h-3 w-3" /></Button>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="md:col-span-3 space-y-4">
-            <Card id="saving-throws-card">
-              <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2"><CardTitle className="text-[10px] font-bold uppercase text-muted-foreground tracking-tight">{t('savingThrows')}</CardTitle>{(showEditButtons || isSavesEditing) && <EditSaveButton editing={isSavesEditing} onEdit={() => setIsSavesEditing(true)} onSave={handleSaveSaves} />}</CardHeader>
-              <CardContent className="p-4 pt-0 space-y-1">
-                {calculatedSavingThrows.map((st, i) => (
-                  <div key={st.name} className="flex items-center gap-2 py-1 border-b last:border-0 border-muted">
-                    <Checkbox checked={st.proficient} disabled={!isSavesEditing} onCheckedChange={v => setSavingThrows(savingThrows.map((s, idx) => idx === i ? { ...s, proficient: !!v } : s))} />
-                    <span className="font-bold text-sm w-8">{st.value >= 0 ? '+' : ''}{st.value}</span>
-                    <span className="text-[10px] font-bold uppercase flex-1">{st.name}</span>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-            <Card id="skills-card">
-              <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2"><CardTitle className="text-[10px] font-bold uppercase text-muted-foreground tracking-tight">{t('skills')}</CardTitle>{(showEditButtons || isSkillsEditing) && <EditSaveButton editing={isSkillsEditing} onEdit={() => setIsSkillsEditing(true)} onSave={handleSaveSkills} />}</CardHeader>
-              <CardContent className="p-4 pt-0 space-y-1">
-                {calculatedSkills.map((sk, i) => (
-                  <div key={sk.name} className="flex items-center gap-2 py-1 border-b last:border-0 border-muted">
-                    <Checkbox checked={sk.proficient} disabled={!isSkillsEditing} onCheckedChange={v => setSkills(skills.map((s, idx) => idx === i ? { ...s, proficient: !!v } : s))} />
-                    <div className="w-8 text-center">
-                      {isSkillsEditing ? (
-                        <Input type="number" value={sk.value} onChange={e => { const n = [...skills]; n[i] = { ...sk, value: parseInt(e.target.value) || 0 }; setSkills(n); }} className="h-6 w-8 text-[10px] p-0 text-center font-bold" />
-                      ) : (<span className="font-black text-sm">{sk.value >= 0 ? '+' : ''}{sk.value}</span>)}
-                    </div>
-                    <span className="text-xs font-semibold flex-1">{sk.label}</span>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-          </div>
-
+          <DndStatsSection
+            characterId={character.id}
+            stats={stats}
+            setStats={setStats}
+            isStatsEditing={isStatsEditing}
+            setIsStatsEditing={setIsStatsEditing}
+            handleSaveStats={handleSaveStats}
+            statNotes={character.statNotes}
+            otherProficienciesAndLanguages={otherProficienciesAndLanguages}
+            setOtherProficienciesAndLanguages={setOtherProficienciesAndLanguages}
+            isOtherProficienciesEditing={isOtherProficienciesEditing}
+            setIsOtherProficienciesEditing={setIsOtherProficienciesEditing}
+            newProfItem={newProfItem}
+            setNewProfItem={setNewProfItem}
+            handleSaveOtherProf={handleSaveOtherProf}
+            isCompactView={isCompactView}
+          />
+          <DndSavesSkillsSection
+            savingThrows={savingThrows}
+            setSavingThrows={setSavingThrows}
+            isSavesEditing={isSavesEditing}
+            setIsSavesEditing={setIsSavesEditing}
+            handleSaveSaves={handleSaveSaves}
+            calculatedSavingThrows={calculatedSavingThrows}
+            skills={skills}
+            setSkills={setSkills}
+            isSkillsEditing={isSkillsEditing}
+            setIsSkillsEditing={setIsSkillsEditing}
+            handleSaveSkills={handleSaveSkills}
+            calculatedSkills={calculatedSkills}
+          />
           <div className="md:col-span-4 space-y-6">
             <Card id="combat-stats-card">
               <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2"><CardTitle className="text-[10px] font-bold uppercase text-muted-foreground tracking-tight">{t('combatStats')}</CardTitle>{(showEditButtons || isCombatStatsEditing) && <EditSaveButton editing={isCombatStatsEditing} onEdit={() => setIsCombatStatsEditing(true)} onSave={handleSaveCombatStats} />}</CardHeader>
@@ -808,39 +624,12 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
               characterId={character.id}
               initialItems={character.attunementItems || []}
             />
-            <Card id="inventory-box">
-              <CardHeader className="px-4 pt-2 pb-2"><CardTitle className="text-[10px] font-bold uppercase text-muted-foreground tracking-tight">{t('inventory')}</CardTitle></CardHeader>
-              <CardContent className="p-4 pt-0 space-y-6">
-                <div className="border rounded-lg p-3 bg-muted/30">
-                  <div className="flex items-center justify-between mb-3 border-b pb-1"><Label className="text-[10px] uppercase font-bold">{t('money')}</Label>{(showEditButtons || isMoneyEditing) && <EditSaveButton editing={isMoneyEditing} onEdit={() => setIsMoneyEditing(true)} onSave={handleSaveMoney} />}</div>
-                  <div className="grid grid-cols-5 gap-2">
-                    {['cp', 'sp', 'ep', 'gp', 'pp'].map(c => (
-                      <div key={c} className="flex flex-col items-center">
-                        <span className="text-[8px] font-bold uppercase">{c}</span>
-                        {isMoneyEditing ? (<Input type="number" value={currency[c as keyof typeof currency]} onChange={e => setCurrency({ ...currency, [c]: parseInt(e.target.value) || 0 })} className="h-6 p-0 text-center text-[10px]" />) : (<div className="text-sm font-bold">{currency[c as keyof typeof currency]}</div>)}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between"><Label className="text-[10px] uppercase font-bold">{t('items')}</Label>{(showEditButtons || isItemsEditing) && <EditSaveButton editing={isItemsEditing} onEdit={() => setIsItemsEditing(true)} onSave={handleSaveItems} />}</div>
-                  <ul className="space-y-1 text-xs">
-                    {equipment.map(it => (
-                      <li key={it.id} className="flex items-center justify-between group">
-                        {isItemsEditing ? (
-                          <div className="flex items-center gap-2 flex-1">
-                            <Checkbox checked={it.status === 'lost'} onCheckedChange={v => setEquipment(equipment.map(i => i.id === it.id ? { ...i, status: v ? 'lost' : 'default' } : i))} />
-                            <Input value={it.name} onChange={e => setEquipment(equipment.map(i => i.id === it.id ? { ...i, name: e.target.value } : i))} className="h-7 text-xs flex-1" />
-                            <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={() => setEquipment(equipment.filter(i => i.id !== it.id))}><Trash2 className="h-3 w-3" /></Button>
-                          </div>
-                        ) : (<span className={cn(it.status === 'lost' && "line-through")}>&bull; {it.name}</span>)}
-                      </li>
-                    ))}
-                    {isItemsEditing && (<div className="flex gap-2 pt-2 border-t"><Input placeholder="New..." value={newEquipmentItem} onChange={e => setNewEquipmentItem(e.target.value)} className="h-8 text-xs" /><Button size="sm" onClick={() => { if (newEquipmentItem.trim()) { setEquipment([...equipment, { id: `eq-${Date.now()}`, name: newEquipmentItem.trim(), status: 'default' }]); setNewEquipmentItem(''); } }}><Plus className="h-4 w-4" /></Button></div>)}
-                  </ul>
-                </div>
-              </CardContent>
-            </Card>
+           <DndInventorySection
+              ref={inventoryRef}
+              characterId={character.id}
+              initialCurrency={character.currency || { cp: 0, sp: 0, ep: 0, gp: 150, pp: 5 }}
+              initialEquipment={character.equipment ?? []}
+            />
           </div>
         </div>
 

@@ -4,7 +4,7 @@
   "race": "Tabaxi",
   "background": "Outlander",
   "alignment": "Neutral",
-  "experiencePoints": 123123,
+  "experiencePoints": 3001123,
   "age": "",
   "eyes": "",
   "skin": "",
@@ -13,7 +13,7 @@
   "hair": "",
   "inspiration": "",
   "proficiencyBonus": 2,
-  "level": 13,
+  "level": 20,
   "gameSystem": "Dungeons & Dragons",
   "backstory": "",
   "notes": "",
@@ -64,10 +64,10 @@
   "divineBoons": [],
   "stats": {
     "strength": 10,
-    "dexterity": 14,
+    "dexterity": 20,
     "constitution": 10,
     "intelligence": 30,
-    "wisdom": 10,
+    "wisdom": 20,
     "charisma": 10
   },
   "savingThrows": [
@@ -79,7 +79,7 @@
     {
       "name": "Dexterity",
       "proficient": false,
-      "value": 0
+      "value": 5
     },
     {
       "name": "Constitution",
@@ -89,12 +89,12 @@
     {
       "name": "Intelligence",
       "proficient": false,
-      "value": 0
+      "value": 10
     },
     {
       "name": "Wisdom",
       "proficient": false,
-      "value": 0
+      "value": 5
     },
     {
       "name": "Charisma",
@@ -108,7 +108,7 @@
       "label": "Acrobatics (Dex)",
       "proficient": true,
       "expertise": false,
-      "value": 0
+      "value": 7
     },
     {
       "name": "animalHandling",
@@ -183,7 +183,7 @@
     {
       "name": "perception",
       "label": "Perception (Wis)",
-      "proficient": false,
+      "proficient": true,
       "expertise": false,
       "value": 0
     },
@@ -285,6 +285,11 @@
     {
       "id": "eq-1786744895571",
       "name": "фййцйцйцйц",
+      "status": "lost"
+    },
+    {
+      "id": "eq-1786826858738",
+      "name": "dqdqdq",
       "status": "default"
     }
   ],
@@ -352,16 +357,10 @@
   "userId": "user-6gjqr3",
   "id": "msteyodblsgj5svoeo",
   "hitDiceUsed": {
-    "Rogue": 0,
-    "Bard": 0
+    "Rogue": 0
   },
-  "isMulticlass": true,
-  "multiclasses": [
-    {
-      "class": "Bard",
-      "level": 37
-    }
-  ],
+  "isMulticlass": false,
+  "multiclasses": [],
   "spellSlots": {
     "1": {
       "max": 12,
