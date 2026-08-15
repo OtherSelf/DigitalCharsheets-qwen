@@ -145,7 +145,6 @@ export function DarkHeresyCharacterForm() {
         name: values.name,
         characterClass: values.careerPath,
         gameSystem: 'Dark Heresy',
-        avatar: 'dh-acolyte-avatar', // default avatar
         backstory: values.backstory || '',
         homeWorld: values.homeWorld,
         worldVariant: values.worldVariant || '',

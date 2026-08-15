@@ -196,7 +196,7 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
 
     // Data States
     const [name, setName] = React.useState(character.name);
-    const [headerData, setHeaderData] = React.useState({ background: character.background, race: character.race, alignment: character.alignment || '', age: character.age || '', eyes: character.eyes || '', skin: character.skin || '', height: character.height || '', weight: character.weight || '', hair: character.hair || '' });
+    const [headerData, setHeaderData] = React.useState({ background: character.background, race: character.race, alignment: character.alignment || '', age: character.age || '', eyes: character.eyes || '', skin: character.skin || '', height: character.height || '', weight: character.weight || '', hair: character.hair || '', backstory: character.backstory || '', notes: character.notes || '' });
     const [progressionData, setProgressionData] = React.useState({ characterClass: character.characterClass, level: character.level, experiencePoints: character.experiencePoints || 0, isMulticlass: character.isMulticlass || false, multiclasses: character.multiclasses || [] });
     const [expToCount, setExpToCount] = React.useState(0);
     const [stats, setStats] = React.useState(character.stats);
@@ -608,6 +608,30 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
                     <DetailField label={t('height')} value={headerData.height} editing={isHeaderEditing} onChange={v => setHeaderData({ ...headerData, height: v })} />
                     <DetailField label={t('weight')} value={headerData.weight} editing={isHeaderEditing} onChange={v => setHeaderData({ ...headerData, weight: v })} />
                     <DetailField label={t('hairFur')} value={headerData.hair} editing={isHeaderEditing} onChange={v => setHeaderData({ ...headerData, hair: v })} />
+                    <div className="col-span-2 md:col-span-3 mt-2 border-t pt-4">
+                      <Accordion type="multiple" className="w-full">
+                        <AccordionItem value="backstory" className="border-b-0">
+                          <AccordionTrigger className="py-2 hover:no-underline font-semibold">{t('backstory')}</AccordionTrigger>
+                          <AccordionContent className="pt-2">
+                            {isHeaderEditing ? (
+                              <Textarea value={headerData.backstory} onChange={e => setHeaderData({...headerData, backstory: e.target.value})} placeholder="Your character's backstory..." className="min-h-[150px] text-sm" />
+                            ) : (
+                              <p className="whitespace-pre-wrap text-sm text-muted-foreground">{headerData.backstory || '-'}</p>
+                            )}
+                          </AccordionContent>
+                        </AccordionItem>
+                        <AccordionItem value="notes" className="border-b-0">
+                          <AccordionTrigger className="py-2 hover:no-underline font-semibold">{t('notes')}</AccordionTrigger>
+                          <AccordionContent className="pt-2">
+                            {isHeaderEditing ? (
+                              <Textarea value={headerData.notes} onChange={e => setHeaderData({...headerData, notes: e.target.value})} placeholder="General notes about this character..." className="min-h-[100px] text-sm" />
+                            ) : (
+                              <p className="whitespace-pre-wrap text-sm text-muted-foreground">{headerData.notes || '-'}</p>
+                            )}
+                          </AccordionContent>
+                        </AccordionItem>
+                      </Accordion>
+                    </div>
                   </CardContent>
                 </AccordionContent>
               </Card>

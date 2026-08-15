@@ -1,14 +1,14 @@
 {
-  "name": "qwqw",
+  "name": "aazaa",
   "characterClass": "Assassin",
   "gameSystem": "Dark Heresy",
   "backstory": "",
   "homeWorld": "Hive World",
-  "worldVariant": "Dross Hound",
+  "worldVariant": "Factory Dregs",
   "careerPath": "Assassin",
   "rank": "Sell-Steel",
-  "divination": "Sins hidden in the heart turn all to decay.",
-  "divinationEffect": "+3 Corruption Points.",
+  "divination": "",
+  "divinationEffect": "",
   "quirk": "",
   "height": "",
   "weight": "",
@@ -23,7 +23,7 @@
   "notes": "",
   "questLog": [],
   "stats": {
-    "weaponSkill": 34,
+    "weaponSkill": 30,
     "ballisticSkill": 30,
     "strength": 30,
     "toughness": 30,
@@ -140,6 +140,6 @@
   "inventory": [],
   "skills": [],
   "talents": [],
-  "userId": "user-8y8frd",
-  "id": "msta98054qgpk4qknmh"
+  "userId": "user-6gjqr3",
+  "id": "mstlwej21r1jxmy7cyt"
 }

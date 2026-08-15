@@ -1,14 +1,14 @@
 {
-  "name": "qwqw",
-  "characterClass": "Assassin",
+  "name": "aaasdsadsada",
+  "characterClass": "Cleric",
   "gameSystem": "Dark Heresy",
   "backstory": "",
-  "homeWorld": "Hive World",
-  "worldVariant": "Dross Hound",
-  "careerPath": "Assassin",
-  "rank": "Sell-Steel",
-  "divination": "Sins hidden in the heart turn all to decay.",
-  "divinationEffect": "+3 Corruption Points.",
+  "homeWorld": "Imperial World",
+  "worldVariant": "War Zone",
+  "careerPath": "Cleric",
+  "rank": "Novice",
+  "divination": "Dark dreams lie upon the heart.",
+  "divinationEffect": "+2 Corruption Points.",
   "quirk": "",
   "height": "",
   "weight": "",
@@ -23,7 +23,7 @@
   "notes": "",
   "questLog": [],
   "stats": {
-    "weaponSkill": 34,
+    "weaponSkill": 30,
     "ballisticSkill": 30,
     "strength": 30,
     "toughness": 30,
@@ -140,6 +140,6 @@
   "inventory": [],
   "skills": [],
   "talents": [],
-  "userId": "user-8y8frd",
-  "id": "msta98054qgpk4qknmh"
+  "userId": "user-6gjqr3",
+  "id": "mstmixe9wzfalxtr9xn"
 }

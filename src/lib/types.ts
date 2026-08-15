@@ -164,6 +164,12 @@ export interface DarkHeresyEquipment {
     weapons: DarkHeresyWeapons;
 }
 
+export interface QuestObjective {
+  id: string;
+  text: string;
+  completed: boolean;
+}
+
 export interface Quest {
   id: string;
   title: string;
@@ -171,6 +177,13 @@ export interface Quest {
   description: string;
   createdAt: string;
   updatedAt: string;
+  // New UX fields (optional for backward compatibility)
+  priority?: 'main' | 'side' | 'personal';
+  notes?: string;
+  rewards?: string;
+  npcs?: string;
+  locations?: string;
+  objectives?: QuestObjective[];
 }
 
 export interface CharacterBase {
@@ -178,7 +191,6 @@ export interface CharacterBase {
   name: string;
   characterClass: string;
   gameSystem: GameSystem;
-  avatar: string;
   backstory: string;
   notes: string;
   questLog: Quest[];
