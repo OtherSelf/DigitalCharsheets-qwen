@@ -97,7 +97,6 @@ export function ConceptGenerator() {
             background: 'Acolyte', // Default
             level: 1,
             gameSystem: 'Dungeons & Dragons',
-            avatar: 'dnd-rogue-avatar',
             backstory: generationResult.backstory,
             stats: { strength: 10, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 10, charisma: 10 },
             armorClass: 10,
@@ -116,7 +115,6 @@ export function ConceptGenerator() {
             name: 'New Acolyte', // Placeholder
             characterClass: 'Adept', // Placeholder
             gameSystem: 'Dark Heresy',
-            avatar: 'dh-acolyte-avatar',
             backstory: generationResult.backstory,
             homeWorld: '',
             worldVariant: '',

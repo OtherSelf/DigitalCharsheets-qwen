@@ -233,7 +233,6 @@ export function DndCharacterForm() {
       proficiencyBonus: profBonus,
       level: values.level,
       gameSystem: 'Dungeons & Dragons',
-      avatar: 'dnd-cleric-avatar', // a default avatar
       backstory: values.backstory || '',
       notes: '',
       questLog: [],
