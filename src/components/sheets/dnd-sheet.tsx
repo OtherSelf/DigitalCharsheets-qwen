@@ -44,6 +44,7 @@ import { useTranslation } from '@/context/language-context';
 import { useToast } from '@/hooks/use-toast';
 import { DndCompanionsSection } from './dnd-sections/companions-section';
 import { DndSpellsSection } from './dnd-sections/spells-section';
+import { DndNarrativeSection } from './dnd-sections/narrative-section';
 
 const DND_CLASSES = [
   "Artificer", "Barbarian", "Bard", "Cleric", "Druid", "Fighter", "Monk",
@@ -174,6 +175,7 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
     const { updateCharacter, setHasUnsavedChanges, showEditButtons, hideNotes } = useCharacterContext();
     const { t } = useTranslation();
     const { toast } = useToast();
+    const narrativeRef = React.useRef<{ saveAll: () => void }>(null);
 
     // UI States
     const [isHeaderEditing, setIsHeaderEditing] = React.useState(false);
@@ -188,11 +190,6 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
     const [isItemsEditing, setIsItemsEditing] = React.useState(false);
     const [isInventoryEditing, setIsInventoryEditing] = React.useState(false);
     const [isMoneyEditing, setIsMoneyEditing] = React.useState(false);
-    const [isTraitEditing, setIsTraitEditing] = React.useState(false);
-    const [isIdealEditing, setIsIdealEditing] = React.useState(false);
-    const [isBondEditing, setIsBondEditing] = React.useState(false);
-    const [isFlawEditing, setIsFlawEditing] = React.useState(false);
-    const [isFeaturesEditing, setIsFeaturesEditing] = React.useState(false);
     const [isOtherProficienciesEditing, setIsOtherProficienciesEditing] = React.useState(false);
 
     // Data States
@@ -210,7 +207,6 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
     const [otherProficienciesAndLanguages, setOtherProficienciesAndLanguages] = React.useState<string[]>(character.otherProficienciesAndLanguages || []);
     const [attacks, setAttacks] = React.useState<DnDAttack[]>(character.attacks || []);
     const [attunementItems, setAttunementItems] = React.useState<AttunementItem[]>(character.attunementItems || []);
-    const [narrativeData, setNarrativeData] = React.useState({ personalityTraits: character.personalityTraits || [], ideals: character.ideals || [], bonds: character.bonds || [], flaws: character.flaws || [], featuresAndTraits: character.featuresAndTraits || [] });
     const [equipment, setEquipment] = React.useState<InventoryItem[]>(character.equipment ?? []);
     const [inventoryItems, setInventoryItems] = React.useState<InventoryItem[]>(character.inventory ?? []);
     const [currency, setCurrency] = React.useState(character.currency || { cp: 0, sp: 0, ep: 0, gp: 150, pp: 5 });
@@ -218,11 +214,6 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
     // New Items States
     const [newEquipmentItem, setNewEquipmentItem] = React.useState('');
     const [newInventoryItem, setNewInventoryItem] = React.useState('');
-    const [newFeatureItem, setNewFeatureItem] = React.useState('');
-    const [newTraitItem, setNewTraitItem] = React.useState('');
-    const [newIdealItem, setNewIdealItem] = React.useState('');
-    const [newBondItem, setNewBondItem] = React.useState('');
-    const [newFlawItem, setNewFlawItem] = React.useState('');
     const [newProfItem, setNewProfItem] = React.useState('');
     const [newAttunementItem, setNewAttunementItem] = React.useState('');
     const [companions, setCompanions] = React.useState<DnDCompanion[]>(character.companions || []);
@@ -291,11 +282,6 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
     const handleSaveItems = React.useCallback(() => { updateCharacter(character.id, { equipment }); setIsItemsEditing(false); }, [character.id, equipment, updateCharacter]);
     const handleSaveInventory = React.useCallback(() => { updateCharacter(character.id, { inventory: inventoryItems }); setIsInventoryEditing(false); }, [character.id, inventoryItems, updateCharacter]);
     const handleSaveMoney = React.useCallback(() => { updateCharacter(character.id, { currency }); setIsMoneyEditing(false); }, [character.id, currency, updateCharacter]);
-    const handleSaveTraits = React.useCallback(() => { updateCharacter(character.id, { personalityTraits: narrativeData.personalityTraits }); setIsTraitEditing(false); }, [character.id, narrativeData.personalityTraits, updateCharacter]);
-    const handleSaveIdeals = React.useCallback(() => { updateCharacter(character.id, { ideals: narrativeData.ideals }); setIsIdealEditing(false); }, [character.id, narrativeData.ideals, updateCharacter]);
-    const handleSaveBonds = React.useCallback(() => { updateCharacter(character.id, { bonds: narrativeData.bonds }); setIsBondEditing(false); }, [character.id, narrativeData.bonds, updateCharacter]);
-    const handleSaveFlaws = React.useCallback(() => { updateCharacter(character.id, { flaws: narrativeData.flaws }); setIsFlawEditing(false); }, [character.id, narrativeData.flaws, updateCharacter]);
-    const handleSaveFeatures = React.useCallback(() => { updateCharacter(character.id, { featuresAndTraits: narrativeData.featuresAndTraits }); setIsFeaturesEditing(false); }, [character.id, narrativeData.featuresAndTraits, updateCharacter]);
     const handleSaveOtherProf = React.useCallback(() => { updateCharacter(character.id, { otherProficienciesAndLanguages: otherProficienciesAndLanguages }); setIsOtherProficienciesEditing(false); }, [character.id, otherProficienciesAndLanguages, updateCharacter]);
     const handleSaveResources = React.useCallback(() => {
       updateCharacter(character.id, { combatResources });
@@ -313,13 +299,9 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
       if (isHeaderEditing) handleSaveHeader(); if (isProgressionEditing) handleSaveProgression(); if (isStatsEditing) handleSaveStats();
       if (isSavesEditing) handleSaveSaves(); if (isSkillsEditing) handleSaveSkills(); if (isCombatStatsEditing) handleSaveCombatStats();
       if (isHpEditing) handleSaveHp(); if (isAttacksEditing) handleSaveAttacks(); if (isAttunementEditing) handleSaveAttunement(); if (isItemsEditing) handleSaveItems();
-      if (isInventoryEditing) handleSaveInventory(); if (isMoneyEditing) handleSaveMoney(); if (isTraitEditing) handleSaveTraits();
-      if (isIdealEditing) handleSaveIdeals(); if (isBondEditing) handleSaveBonds(); if (isFlawEditing) handleSaveFlaws();
-      if (isFeaturesEditing) handleSaveFeatures(); if (isOtherProficienciesEditing) handleSaveOtherProf();
-      if (isResourcesEditing) handleSaveResources();
-      if (isSpellcastingEditing) handleSaveSpellcasting();
-    }, [isHeaderEditing, isProgressionEditing, isStatsEditing, isSavesEditing, isSkillsEditing, isCombatStatsEditing, isHpEditing, isAttacksEditing, isAttunementEditing, isItemsEditing, isInventoryEditing, isMoneyEditing, isTraitEditing, isIdealEditing, isBondEditing, isFlawEditing, isFeaturesEditing, isOtherProficienciesEditing, isResourcesEditing, handleSaveResources, isSpellcastingEditing, handleSaveSpellcasting, handleSaveHeader, handleSaveProgression, handleSaveStats, handleSaveSaves, handleSaveSkills, handleSaveCombatStats, handleSaveHp, handleSaveAttacks, handleSaveAttunement, handleSaveItems, handleSaveInventory, handleSaveMoney, handleSaveTraits, handleSaveIdeals, handleSaveBonds, handleSaveFlaws, handleSaveFeatures, handleSaveOtherProf]);
-
+      if (isInventoryEditing) handleSaveInventory(); if (isMoneyEditing) handleSaveMoney(); if (isOtherProficienciesEditing) handleSaveOtherProf();
+       narrativeRef.current?.saveAll();
+    }, [isHeaderEditing, isProgressionEditing, isStatsEditing, isSavesEditing, isSkillsEditing, isCombatStatsEditing, isHpEditing, isAttacksEditing, isAttunementEditing, isItemsEditing, isInventoryEditing, isMoneyEditing, isOtherProficienciesEditing, handleSaveHeader, handleSaveProgression, handleSaveStats, handleSaveSaves, handleSaveSkills, handleSaveCombatStats, handleSaveHp, handleSaveAttacks, handleSaveAttunement, handleSaveItems, handleSaveInventory, handleSaveMoney, handleSaveOtherProf]);
     React.useImperativeHandle(ref, () => ({ saveAll: handleSaveAll }));
 
       const handleHpMath = (op: 'sub' | 'rec') => {
@@ -827,61 +809,17 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
           </div>
 
           <div className="md:col-span-3 space-y-6">
-            <Card><CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2"><CardTitle className="text-[10px] font-bold uppercase text-muted-foreground">{t('personalityTraits')}</CardTitle>{(showEditButtons || isTraitEditing) && <EditSaveButton editing={isTraitEditing} onEdit={() => setIsTraitEditing(true)} onSave={handleSaveTraits} />}</CardHeader>
-              <CardContent className="p-4 pt-0 space-y-2">
-                {narrativeData.personalityTraits.map((it, i) => (
-                  <div key={i} className="text-[10px] p-1.5 rounded bg-muted/10 flex justify-between">
-                    {isTraitEditing ? (<Input value={it} onChange={e => { const n = [...narrativeData.personalityTraits]; n[i] = e.target.value; setNarrativeData({ ...narrativeData, personalityTraits: n }); }} className="h-6 text-[10px] flex-1 mr-2" />) : (<span className="break-words font-medium">&bull; {it}</span>)}
-                    {isTraitEditing && (<Button variant="ghost" size="icon" className="h-5 w-5 text-destructive" onClick={() => setNarrativeData({ ...narrativeData, personalityTraits: narrativeData.personalityTraits.filter((_, idx) => idx !== i) })}><Trash2 className="h-3 w-3" /></Button>)}
-                  </div>
-                ))}
-                {isTraitEditing && (<div className="flex gap-2 pt-2 border-t"><Input placeholder="New..." value={newTraitItem} onChange={e => setNewTraitItem(e.target.value)} className="h-7 text-[10px]" /><Button size="sm" className="h-7" onClick={() => { if (newTraitItem.trim()) { setNarrativeData({ ...narrativeData, personalityTraits: [...narrativeData.personalityTraits, newTraitItem.trim()] }); setNewTraitItem(''); } }}><Plus className="h-3 w-3" /></Button></div>)}
-              </CardContent>
-            </Card>
-            <Card><CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2"><CardTitle className="text-[10px] font-bold uppercase text-muted-foreground">{t('ideals')}</CardTitle>{(showEditButtons || isIdealEditing) && <EditSaveButton editing={isIdealEditing} onEdit={() => setIsIdealEditing(true)} onSave={handleSaveIdeals} />}</CardHeader>
-              <CardContent className="p-4 pt-0 space-y-2">
-                {narrativeData.ideals.map((it, i) => (
-                  <div key={i} className="text-[10px] p-1.5 rounded bg-muted/10 flex justify-between">
-                    {isIdealEditing ? (<Input value={it} onChange={e => { const n = [...narrativeData.ideals]; n[i] = e.target.value; setNarrativeData({ ...narrativeData, ideals: n }); }} className="h-6 text-[10px] flex-1 mr-2" />) : (<span className="break-words font-medium">&bull; {it}</span>)}
-                    {isIdealEditing && (<Button variant="ghost" size="icon" className="h-5 w-5 text-destructive" onClick={() => setNarrativeData({ ...narrativeData, ideals: narrativeData.ideals.filter((_, idx) => idx !== i) })}><Trash2 className="h-3 w-3" /></Button>)}
-                  </div>
-                ))}
-                {isIdealEditing && (<div className="flex gap-2 pt-2 border-t"><Input placeholder="New..." value={newIdealItem} onChange={e => setNewIdealItem(e.target.value)} className="h-7 text-[10px]" /><Button size="sm" className="h-7" onClick={() => { if (newIdealItem.trim()) { setNarrativeData({ ...narrativeData, ideals: [...narrativeData.ideals, newIdealItem.trim()] }); setNewIdealItem(''); } }}><Plus className="h-3 w-3" /></Button></div>)}
-              </CardContent>
-            </Card>
-            <Card><CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2"><CardTitle className="text-[10px] font-bold uppercase text-muted-foreground">{t('bonds')}</CardTitle>{(showEditButtons || isBondEditing) && <EditSaveButton editing={isBondEditing} onEdit={() => setIsBondEditing(true)} onSave={handleSaveBonds} />}</CardHeader>
-              <CardContent className="p-4 pt-0 space-y-2">
-                {narrativeData.bonds.map((it, i) => (
-                  <div key={i} className="text-[10px] p-1.5 rounded bg-muted/10 flex justify-between">
-                    {isBondEditing ? (<Input value={it} onChange={e => { const n = [...narrativeData.bonds]; n[i] = e.target.value; setNarrativeData({ ...narrativeData, bonds: n }); }} className="h-6 text-[10px] flex-1 mr-2" />) : (<span className="break-words font-medium">&bull; {it}</span>)}
-                    {isBondEditing && (<Button variant="ghost" size="icon" className="h-5 w-5 text-destructive" onClick={() => setNarrativeData({ ...narrativeData, bonds: narrativeData.bonds.filter((_, idx) => idx !== i) })}><Trash2 className="h-3 w-3" /></Button>)}
-                  </div>
-                ))}
-                {isBondEditing && (<div className="flex gap-2 pt-2 border-t"><Input placeholder="New..." value={newBondItem} onChange={e => setNewBondItem(e.target.value)} className="h-7 text-[10px]" /><Button size="sm" className="h-7" onClick={() => { if (newBondItem.trim()) { setNarrativeData({ ...narrativeData, bonds: [...narrativeData.bonds, newBondItem.trim()] }); setNewBondItem(''); } }}><Plus className="h-3 w-3" /></Button></div>)}
-              </CardContent>
-            </Card>
-            <Card><CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2"><CardTitle className="text-[10px] font-bold uppercase text-muted-foreground">{t('flaws')}</CardTitle>{(showEditButtons || isFlawEditing) && <EditSaveButton editing={isFlawEditing} onEdit={() => setIsFlawEditing(true)} onSave={handleSaveFlaws} />}</CardHeader>
-              <CardContent className="p-4 pt-0 space-y-2">
-                {narrativeData.flaws.map((it, i) => (
-                  <div key={i} className="text-[10px] p-1.5 rounded bg-muted/10 flex justify-between">
-                    {isFlawEditing ? (<Input value={it} onChange={e => { const n = [...narrativeData.flaws]; n[i] = e.target.value; setNarrativeData({ ...narrativeData, flaws: n }); }} className="h-6 text-[10px] flex-1 mr-2" />) : (<span className="break-words font-medium">&bull; {it}</span>)}
-                    {isFlawEditing && (<Button variant="ghost" size="icon" className="h-5 w-5 text-destructive" onClick={() => setNarrativeData({ ...narrativeData, flaws: narrativeData.flaws.filter((_, idx) => idx !== i) })}><Trash2 className="h-3 w-3" /></Button>)}
-                  </div>
-                ))}
-                {isFlawEditing && (<div className="flex gap-2 pt-2 border-t"><Input placeholder="New..." value={newFlawItem} onChange={e => setNewFlawItem(e.target.value)} className="h-7 text-[10px]" /><Button size="sm" className="h-7" onClick={() => { if (newFlawItem.trim()) { setNarrativeData({ ...narrativeData, flaws: [...narrativeData.flaws, newFlawItem.trim()] }); setNewFlawItem(''); } }}><Plus className="h-3 w-3" /></Button></div>)}
-              </CardContent>
-            </Card>
-            <Card><CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2"><CardTitle className="text-[10px] font-bold uppercase text-muted-foreground">{t('featuresAndTraits')}</CardTitle>{(showEditButtons || isFeaturesEditing) && <EditSaveButton editing={isFeaturesEditing} onEdit={() => setIsFeaturesEditing(true)} onSave={handleSaveFeatures} />}</CardHeader>
-              <CardContent className="p-4 pt-0 space-y-2">
-                {narrativeData.featuresAndTraits.map((it, i) => (
-                  <div key={i} className="text-[10px] p-1.5 rounded bg-muted/10 flex justify-between">
-                    {isFeaturesEditing ? (<Input value={it} onChange={e => { const n = [...narrativeData.featuresAndTraits]; n[i] = e.target.value; setNarrativeData({ ...narrativeData, featuresAndTraits: n }); }} className="h-6 text-[10px] flex-1 mr-2" />) : (<span className="break-words font-medium">&bull; {it}</span>)}
-                    {isFeaturesEditing && (<Button variant="ghost" size="icon" className="h-5 w-5 text-destructive" onClick={() => setNarrativeData({ ...narrativeData, featuresAndTraits: narrativeData.featuresAndTraits.filter((_, idx) => idx !== i) })}><Trash2 className="h-3 w-3" /></Button>)}
-                  </div>
-                ))}
-                {isFeaturesEditing && (<div className="flex gap-2 pt-2 border-t"><Input placeholder="New..." value={newFeatureItem} onChange={e => setNewFeatureItem(e.target.value)} className="h-7 text-[10px]" /><Button size="sm" className="h-7" onClick={() => { if (newFeatureItem.trim()) { setNarrativeData({ ...narrativeData, featuresAndTraits: [...narrativeData.featuresAndTraits, newFeatureItem.trim()] }); setNewFeatureItem(''); } }}><Plus className="h-3 w-3" /></Button></div>)}
-              </CardContent>
-            </Card>
+            <DndNarrativeSection
+              ref={narrativeRef}
+              characterId={character.id}
+              initialData={{
+                personalityTraits: character.personalityTraits || [],
+                ideals: character.ideals || [],
+                bonds: character.bonds || [],
+                flaws: character.flaws || [],
+                featuresAndTraits: character.featuresAndTraits || []
+              }}
+            />
             <Card id="attunement-card">
               <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2"><CardTitle className="text-[10px] font-bold uppercase text-muted-foreground tracking-tight">{t('attunement')}</CardTitle>{(showEditButtons || isAttunementEditing) && <EditSaveButton editing={isAttunementEditing} onEdit={() => setIsAttunementEditing(true)} onSave={handleSaveAttunement} />}</CardHeader>
               <CardContent className="p-4 pt-0 space-y-2">
