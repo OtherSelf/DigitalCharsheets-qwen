@@ -40,6 +40,7 @@ export const InfoProgressionSection = ({ character, isCompactView }: InfoProgres
     const { t } = useTranslation();
 
     const [isInfoProgressionEditing, setIsInfoProgressionEditing] = React.useState(false);
+    React.useEffect(() => { onEditingChange?.(isInfoProgressionEditing); }, [isInfoProgressionEditing, onEditingChange]);
     const [editableExperience, setEditableExperience] = React.useState(character.experience ?? 0);
     const [editableTotalExpSpent, setEditableTotalExpSpent] = React.useState(character.totalExpSpent ?? 0);
     const [editableAdvancedPath, setEditableAdvancedPath] = React.useState(character.advancedPath ?? null);
