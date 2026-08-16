@@ -28,7 +28,18 @@ import { useTranslation } from '@/context/language-context';
 import { WORLD_VARIANTS_BY_HOMEWORLD, WORLD_VARIANT_LABELS } from '@/lib/dark-heresy-data';
 import { ADVANCED_RANK_THRESHOLD, RanksByCareer, AdvancedPathsByCareer, type AdvancedPath, calculateRank } from '@/lib/dark-heresy-ranks';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { DetailField, EditSaveButton } from './dh-ui-helpers';
+import { EditSaveButton } from './dh-ui-helpers';
+
+const DetailField = ({label, value, editing, type = "text", onChange, onBlur, isCompactView}: {label:string, value:string|number, editing:boolean, type?:string, onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void, onBlur?: (e: React.FocusEvent<HTMLInputElement>) => void, isCompactView: boolean}) => (
+  <div className="space-y-1">
+    <Label className={cn("text-xs text-muted-foreground", isCompactView && "text-[10px]")}>{label}</Label>
+    {editing ? (
+      <Input defaultValue={value} type={type} onChange={onChange} onBlur={onBlur} className="h-8"/>
+    ) : (
+      <p className={cn("text-sm font-medium break-words", isCompactView && "text-xs")}>{value || '-'}</p>
+    )}
+  </div>
+);
 
 interface InfoProgressionSectionProps {
     character: DarkHeresyCharacter;
