@@ -99,11 +99,13 @@
   "statNotes": {},
   "wounds": {
     "current": 10,
-    "max": 10
+    "max": 10,
+    "notes": ""
   },
   "fatePoints": {
     "current": 1,
-    "max": 1
+    "max": 1,
+    "notes": ""
   },
   "insanityPoints": {
     "total": 0,
@@ -138,8 +140,58 @@
     }
   },
   "inventory": [],
-  "skills": [],
-  "talents": [],
+  "skills": [
+    {
+      "id": "new-skill-1786910296934",
+      "name": "qwqw",
+      "notes": "",
+      "type": "basic",
+      "training": {
+        "skilled": true,
+        "plus10": true,
+        "plus20": true
+      }
+    },
+    {
+      "id": "new-skill-1786910300280",
+      "name": "qwwqwq",
+      "notes": "",
+      "type": "basic",
+      "training": {
+        "skilled": false,
+        "plus10": false,
+        "plus20": false
+      }
+    },
+    {
+      "id": "new-skill-1786910302764",
+      "name": "qwwqqwqw",
+      "notes": "",
+      "type": "advanced",
+      "training": {
+        "skilled": true,
+        "plus10": false,
+        "plus20": false
+      }
+    }
+  ],
+  "talents": [
+    {
+      "id": "new-talent-1786910310448",
+      "name": "vgbfgfggffg",
+      "notes": "rwerwwerwerq4w"
+    },
+    {
+      "id": "new-talent-1786910312262",
+      "name": "ggggggggg",
+      "notes": ""
+    },
+    {
+      "id": "new-talent-1786910313994",
+      "name": "ggggg",
+      "notes": "qwqqwqw"
+    }
+  ],
   "userId": "user-6gjqr3",
   "id": "mstlwej21r1jxmy7cyt"
 }

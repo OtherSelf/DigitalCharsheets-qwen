@@ -243,7 +243,9 @@
     "failures": 0
   },
   "exhaustion": 0,
-  "otherProficienciesAndLanguages": [],
+  "otherProficienciesAndLanguages": [
+    "dsadsadas"
+  ],
   "attacks": [
     {
       "id": "atk-1786742225746",
