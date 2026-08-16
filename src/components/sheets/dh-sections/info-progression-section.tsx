@@ -33,9 +33,10 @@ import { DetailField, EditSaveButton } from './dh-ui-helpers';
 interface InfoProgressionSectionProps {
     character: DarkHeresyCharacter;
     isCompactView: boolean;
+    onEditingChange?: (val: boolean) => void;
 }
 
-export const InfoProgressionSection = ({ character, isCompactView }: InfoProgressionSectionProps) => {
+export const InfoProgressionSection = ({ character, isCompactView, onEditingChange }: InfoProgressionSectionProps) => {
     const { updateCharacter } = useCharacterContext();
     const { t } = useTranslation();
 
