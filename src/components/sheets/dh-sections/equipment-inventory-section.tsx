@@ -206,7 +206,12 @@ export const EquipmentInventorySection = React.forwardRef<{ saveAll: () => void 
                                 </div>
                                 <Accordion type="single" collapsible className="w-full">
                                     <AccordionItem value="unequipped-melee" className="border-b-0">
-                                        <AccordionPrimitive.Trigger className="flex flex-1 items-center justify-between py-2 text-sm font-medium"><span>{t('notEquipped')}</span><ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" /></AccordionPrimitive.Trigger>
+                                        <AccordionPrimitive.Header className="flex w-full">
+                                            <AccordionPrimitive.Trigger className="flex flex-1 items-center justify-between py-2 text-sm font-medium">
+                                                <span>{t('notEquipped')}</span>
+                                                <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
+                                            </AccordionPrimitive.Trigger>
+                                        </AccordionPrimitive.Header>
                                         <AccordionContent>
                                             <div className="space-y-2">
                                                 {unequippedMeleeWeapons.map(weapon => (
@@ -286,7 +291,12 @@ export const EquipmentInventorySection = React.forwardRef<{ saveAll: () => void 
                                 </div>
                                 <Accordion type="single" collapsible className="w-full">
                                     <AccordionItem value="unequipped-ranged" className="border-b-0">
-                                        <AccordionPrimitive.Trigger className="flex flex-1 items-center justify-between py-2 text-sm font-medium"><span>{t('notEquipped')}</span><ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" /></AccordionPrimitive.Trigger>
+                                        <AccordionPrimitive.Header className="flex w-full">
+                                            <AccordionPrimitive.Trigger className="flex flex-1 items-center justify-between py-2 text-sm font-medium">
+                                                <span>{t('notEquipped')}</span>
+                                                <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
+                                            </AccordionPrimitive.Trigger>
+                                        </AccordionPrimitive.Header>
                                         <AccordionContent>
                                             <div className="space-y-2">
                                                 {unequippedRangedWeapons.map(weapon => (

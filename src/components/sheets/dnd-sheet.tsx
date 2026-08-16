@@ -187,7 +187,7 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
         </div>
 
         {/* Stats, Saves, Skills, Combat */}
-        <div className={cn("grid grid-cols-1 md:grid-cols-12 gap-6 items-start", isCompactView && activeCompactSection !== 'stats-section' && "hidden")}>
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
           <DndStatsSection
             characterId={character.id}
             stats={stats}
@@ -204,6 +204,7 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
             setNewProfItem={setNewProfItem}
             handleSaveOtherProf={handleSaveOtherProf}
             isCompactView={isCompactView}
+            activeCompactSection={activeCompactSection}
           />
           <DndSavesSkillsSection
             savingThrows={savingThrows}
@@ -218,6 +219,8 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
             setIsSkillsEditing={setIsSkillsEditing}
             handleSaveSkills={handleSaveSkills}
             calculatedSkills={calculatedSkills}
+            isCompactView={isCompactView}
+            activeCompactSection={activeCompactSection}
           />
           <DndCombatSection
             ref={combatRef}
@@ -229,9 +232,11 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
             initialCombatResources={character.combatResources || []}
             dexterity={stats.dexterity}
             progressionData={progressionData}
+            isCompactView={isCompactView}
+            activeCompactSection={activeCompactSection}
           />
 
-          <div className="md:col-span-3 space-y-6">
+          <div className={cn("md:col-span-3 space-y-6", isCompactView && activeCompactSection !== 'inventory-section' && "hidden")}>
             <DndNarrativeSection
               ref={narrativeRef}
               characterId={character.id}

@@ -50,10 +50,12 @@ interface CombatSectionProps {
   initialCombatResources: CombatResource[];
   dexterity: number;
   progressionData: { characterClass: string; level: number; isMulticlass: boolean; multiclasses: { class: string; level: number }[] };
+  isCompactView: boolean;
+  activeCompactSection: string;
 }
 
 export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, CombatSectionProps>(
-  ({ characterId, initialCombatStats, initialExhaustion, initialHitDiceUsed, initialAttacks, initialCombatResources, dexterity, progressionData }, ref) => {
+  ({ characterId, initialCombatStats, initialExhaustion, initialHitDiceUsed, initialAttacks, initialCombatResources, dexterity, progressionData, isCompactView, activeCompactSection }, ref) => {
     const { updateCharacter, showEditButtons, hideNotes } = useCharacterContext();
     const { t } = useTranslation();
 
@@ -183,7 +185,7 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
     };
 
     return (
-      <div className="md:col-span-4 space-y-6">
+      <div className={cn("md:col-span-4 space-y-6", isCompactView && activeCompactSection !== 'combat-section' && "hidden")}>
         <Card id="combat-stats-card">
           <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2"><CardTitle className="text-[10px] font-bold uppercase text-muted-foreground tracking-tight">{t('combatStats')}</CardTitle>{(showEditButtons || isCombatStatsEditing) && <EditSaveButton editing={isCombatStatsEditing} onEdit={() => setIsCombatStatsEditing(true)} onSave={handleSaveCombatStats} />}</CardHeader>
           <CardContent className="grid grid-cols-3 gap-4 p-4 pt-0 text-center">
