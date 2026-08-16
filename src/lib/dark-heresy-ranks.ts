@@ -259,11 +259,16 @@ export const AdvancedPathsByCareer: Partial<Record<DarkHeresyCareerPath, Record<
 
 
 export function calculateRank(
-  careerProgression: CareerProgression,
+  careerProgression: CareerProgression | undefined | null,
   totalExpSpent: number,
   advancedPath: AdvancedPath | null,
   alternatePath: string | null
 ): string {
+  // If no career progression data exists, return early
+  if (!careerProgression || !careerProgression.standard) {
+    return 'Unknown Rank';
+  }
+
   // Priority 1: Advanced Path
   if (advancedPath) {
     const currentAdvancedRank = [...advancedPath.ranks]
@@ -283,9 +288,6 @@ export function calculateRank(
         .find(rank => totalExpSpent >= rank.expThreshold);
       
       if (currentAlternateRank) {
-        // Check if the character's EXP is still within the bounds of this alternate path.
-        // An alternate path is "active" as long as the current EXP is less than the EXP
-        // threshold of the *next* standard rank that this path does NOT replace.
         const alternateRankThresholds = path.ranks.map(r => r.expThreshold);
         const replacedStandardRanks = careerProgression.standard.filter(sr => 
           alternateRankThresholds.includes(sr.expThreshold)
