@@ -74,18 +74,19 @@ interface StatsSectionProps {
   setNewProfItem: React.Dispatch<React.SetStateAction<string>>;
   handleSaveOtherProf: () => void;
   isCompactView: boolean;
+  activeCompactSection: string;
 }
 
 export function DndStatsSection({
   characterId, stats, setStats, isStatsEditing, setIsStatsEditing, handleSaveStats, statNotes,
   otherProficienciesAndLanguages, setOtherProficienciesAndLanguages, isOtherProficienciesEditing,
-  setIsOtherProficienciesEditing, newProfItem, setNewProfItem, handleSaveOtherProf, isCompactView
+  setIsOtherProficienciesEditing, newProfItem, setNewProfItem, handleSaveOtherProf, isCompactView, activeCompactSection
 }: StatsSectionProps) {
   const { updateCharacter, showEditButtons, hideNotes } = useCharacterContext();
   const { t } = useTranslation();
 
   return (
-    <div className="md:col-span-2 space-y-4">
+    <div className={cn("md:col-span-2 space-y-4", isCompactView && activeCompactSection !== 'stats-section' && "hidden")}>
       <Card>
         <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2"><CardTitle className="text-[10px] font-bold uppercase text-muted-foreground tracking-tight">{t('characteristics')}</CardTitle>{(showEditButtons || isStatsEditing) && <EditSaveButton editing={isStatsEditing} onEdit={() => setIsStatsEditing(true)} onSave={handleSaveStats} />}</CardHeader>
         <CardContent className="space-y-3 p-4 pt-0">

@@ -27,17 +27,19 @@ interface SavesSkillsSectionProps {
   setIsSkillsEditing: React.Dispatch<React.SetStateAction<boolean>>;
   handleSaveSkills: () => void;
   calculatedSkills: DnDSkill[];
+  isCompactView: boolean;
+  activeCompactSection: string;
 }
 
 export function DndSavesSkillsSection({
   savingThrows, setSavingThrows, isSavesEditing, setIsSavesEditing, handleSaveSaves, calculatedSavingThrows,
-  skills, setSkills, isSkillsEditing, setIsSkillsEditing, handleSaveSkills, calculatedSkills
+  skills, setSkills, isSkillsEditing, setIsSkillsEditing, handleSaveSkills, calculatedSkills, isCompactView, activeCompactSection
 }: SavesSkillsSectionProps) {
   const { showEditButtons } = useCharacterContext();
   const { t } = useTranslation();
 
   return (
-    <div className="md:col-span-3 space-y-4">
+    <div className={cn("md:col-span-3 space-y-4", isCompactView && activeCompactSection !== 'stats-section' && "hidden")}>
       <Card id="saving-throws-card">
         <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2"><CardTitle className="text-[10px] font-bold uppercase text-muted-foreground tracking-tight">{t('savingThrows')}</CardTitle>{(showEditButtons || isSavesEditing) && <EditSaveButton editing={isSavesEditing} onEdit={() => setIsSavesEditing(true)} onSave={handleSaveSaves} />}</CardHeader>
         <CardContent className="p-4 pt-0 space-y-1">
