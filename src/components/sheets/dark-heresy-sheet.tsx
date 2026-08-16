@@ -118,6 +118,13 @@ export const DarkHeresySheet = React.forwardRef<any, { character: DarkHeresyChar
     const [isPointsEditing, setIsPointsEditing] = React.useState(false);
     const [isSkillsPanelCollapsed, setIsSkillsPanelCollapsed] = React.useState(false);
     const [isEquipmentPanelCollapsed, setIsEquipmentPanelCollapsed] = React.useState(false);
+    const characteristicsRef = React.useRef<{ saveAll: () => void }>(null);
+    const skillsTalentsRef = React.useRef<{ saveAll: () => void }>(null);
+    const equipmentInventoryRef = React.useRef<{ saveAll: () => void }>(null);
+    const [sectionEditing, setSectionEditing] = React.useState<Record<string, boolean>>({});
+    const reportSectionEditing = React.useCallback((key: string, val: boolean) => {
+        setSectionEditing(prev => (prev[key] === val ? prev : { ...prev, [key]: val }));
+    }, []);
 
     const getPointsObject = (p: any) => {
         if (typeof p === 'object' && p !== null && 'max' in p && 'current' in p) return { current: p.current, max: p.max, notes: p.notes || '' };
@@ -135,7 +142,7 @@ export const DarkHeresySheet = React.forwardRef<any, { character: DarkHeresyChar
         corruptionPoints: getSimplePointsObject(character.corruptionPoints),
     });
 
-    const isAnyEditing = isPointsEditing;
+    const isAnyEditing = isPointsEditing || Object.values(sectionEditing).some(Boolean);
 
     React.useEffect(() => { setHasUnsavedChanges(isAnyEditing); }, [isAnyEditing, setHasUnsavedChanges]);
 
@@ -143,6 +150,9 @@ export const DarkHeresySheet = React.forwardRef<any, { character: DarkHeresyChar
 
     const handleSaveAll = React.useCallback(() => {
       if (isPointsEditing) handleSavePoints();
+      characteristicsRef.current?.saveAll();
+      skillsTalentsRef.current?.saveAll();
+      equipmentInventoryRef.current?.saveAll();
     }, [isPointsEditing, handleSavePoints]);
     React.useImperativeHandle(ref, () => ({ saveAll: handleSaveAll }));
 
@@ -256,7 +266,7 @@ export const DarkHeresySheet = React.forwardRef<any, { character: DarkHeresyChar
                         <Card>
                             <CardHeader className="flex-row items-center justify-between px-6 pt-3 pb-6"><CardTitle className="font-headline">{t('skills')}, {t('talentsAndTraits')}, {t('wounds')} &amp; {t('fate')}</CardTitle><Button variant="ghost" size="icon" onClick={() => setIsSkillsPanelCollapsed(true)} aria-label="Collapse Panel" className={cn(isCompactView && 'hidden')}><ChevronLeft className="h-5 w-5" /></Button></CardHeader>
                             <CardContent className="pt-0 space-y-8">
-                                <SkillsTalentsSection character={character} isCompactView={isCompactView} activeCompactSection={activeCompactSection} />
+                                <SkillsTalentsSection ref={skillsTalentsRef} onEditingChange={(v) => reportSectionEditing('skills', v)} character={character} isCompactView={isCompactView} activeCompactSection={activeCompactSection} />
                                 {!isCompactView && ( <div className="grid grid-cols-2 gap-4">
                                       <MetricBox title={t('wounds')} notes={getPointsObject(character.wounds).notes} onNoteChange={(val) => updateCharacter(character.id, { wounds: { ...getPointsObject(character.wounds), notes: val } })} editing={isPointsEditing} onEdit={() => setIsPointsEditing(true)} onSave={handleSavePoints} isCompactView={isCompactView} hideNotes={hideNotes} showEditButtons={showEditButtons}><div className="text-center flex flex-col justify-center items-center h-full">{isPointsEditing ? ( <div className="flex items-center justify-center gap-2"><Input type="number" value={editablePoints.wounds.current} onChange={e => handleNestedPointsChange('wounds', 'current', e.target.value)} className="text-lg font-bold h-8 w-16 text-center"/><span className="text-muted-foreground">/</span><Input type="number" value={editablePoints.wounds.max} onChange={e => handleNestedPointsChange('wounds', 'max', e.target.value)} className="text-lg font-bold h-8 w-16 text-center"/></div> ) : ( <div className="flex items-center justify-center gap-2"><Button size="icon" variant="outline" className="h-6 w-6" onClick={() => handlePointChange('wounds', -1)}><Minus className="h-4 w-4" /></Button><p className="text-2xl font-bold text-primary w-12 text-center">{getPointsObject(character.wounds).current}</p><Button size="icon" variant="outline" className="h-6 w-6" onClick={() => handlePointChange('wounds', 1)}><Plus className="h-4 w-4" /></Button><p className="text-xl font-medium text-muted-foreground ml-2">/ {getPointsObject(character.wounds).max}</p></div> )}</div></MetricBox>
                                       <MetricBox title={t('fate')} notes={getPointsObject(character.fatePoints).notes} onNoteChange={(val) => updateCharacter(character.id, { fatePoints: { ...getPointsObject(character.fatePoints), notes: val } })} editing={isPointsEditing} onEdit={() => setIsPointsEditing(true)} onSave={handleSavePoints} isCompactView={isCompactView} hideNotes={hideNotes} showEditButtons={showEditButtons}><div className="text-center flex flex-col justify-center items-center h-full">{isPointsEditing ? ( <div className="flex items-center justify-center gap-2"><Input type="number" value={editablePoints.fatePoints.current} onChange={e => handleNestedPointsChange('fatePoints', 'current', e.target.value)} className="text-lg font-bold h-8 w-16 text-center"/><span className="text-muted-foreground">/</span><Input type="number" value={editablePoints.fatePoints.max} onChange={e => handleNestedPointsChange('fatePoints', 'max', e.target.value)} className="text-lg font-bold h-8 w-16 text-center"/></div> ) : ( <div className="flex items-center justify-center gap-2"><Button size="icon" variant="outline" className="h-6 w-6" onClick={() => handlePointChange('fatePoints', -1)}><Minus className="h-4 w-4" /></Button><p className="text-2xl font-bold text-primary w-12 text-center">{getPointsObject(character.fatePoints).current}</p><Button size="icon" variant="outline" className="h-6 w-6" onClick={() => handlePointChange('fatePoints', 1)}><Plus className="h-4 w-4" /></Button><p className="text-xl font-medium text-muted-foreground ml-2">/ {getPointsObject(character.fatePoints).max}</p></div> )}</div></MetricBox>
@@ -268,7 +278,7 @@ export const DarkHeresySheet = React.forwardRef<any, { character: DarkHeresyChar
 
                 {!isCompactView && (
                 <div className={cn("transition-all duration-300 ease-in-out flex-shrink-0", (isSkillsPanelCollapsed && isEquipmentPanelCollapsed) ? "flex-1" : "w-auto")}>
-                    <CharacteristicsSection character={character} isCompactView={isCompactView} isSkillsPanelCollapsed={isSkillsPanelCollapsed} isEquipmentPanelCollapsed={isEquipmentPanelCollapsed} />
+                    <CharacteristicsSection ref={characteristicsRef} onEditingChange={(v) => reportSectionEditing('characteristics', v)} character={character} isCompactView={isCompactView} isSkillsPanelCollapsed={isSkillsPanelCollapsed} isEquipmentPanelCollapsed={isEquipmentPanelCollapsed} />
                 </div>
                 )}
                 
@@ -277,7 +287,7 @@ export const DarkHeresySheet = React.forwardRef<any, { character: DarkHeresyChar
                         <Card>
                             <CardHeader className={cn("flex-row items-center justify-between px-6 pt-3 pb-6", isCompactView && "hidden")}><CardTitle className="font-headline">{t('equipment')}, {t('inventory')} &amp; {t('corruption')}</CardTitle><Button variant="ghost" size="icon" onClick={() => setIsEquipmentPanelCollapsed(true)} aria-label="Collapse Panel"><ChevronRight className="h-5 w-5" /></Button></CardHeader>
                                 <CardContent className="pt-0 space-y-8">
-                                    <EquipmentInventorySection character={character} isCompactView={isCompactView} activeCompactSection={activeCompactSection} />
+                                    <EquipmentInventorySection ref={equipmentInventoryRef} onEditingChange={(v) => reportSectionEditing('equipment', v)} character={character} isCompactView={isCompactView} activeCompactSection={activeCompactSection} />
                                         {!isCompactView && ( <div className="grid grid-cols-2 gap-4">
                                             <MetricBox title={t('insanity')} notes={getSimplePointsObject(character.insanityPoints).notes} onNoteChange={(val) => updateCharacter(character.id, { insanityPoints: { ...getSimplePointsObject(character.insanityPoints), notes: val } })} editing={isPointsEditing} onEdit={() => setIsPointsEditing(true)} onSave={handleSavePoints} isCompactView={isCompactView} hideNotes={hideNotes} showEditButtons={showEditButtons}><div className="text-center flex flex-col justify-center items-center h-full">{isPointsEditing ? ( <Input type="number" value={editablePoints.insanityPoints.total} onChange={e => handleSimplePointsChange('insanityPoints', 'total', e.target.value)} className="text-lg font-bold h-8 w-16 text-center mx-auto"/> ) : ( <div className="flex items-center justify-center gap-2"><Button size="icon" variant="outline" className="h-6 w-6" onClick={() => handlePointChange('insanityPoints', -1)}><Minus className="h-4 w-4" /></Button><p className="text-2xl font-bold text-primary w-12 text-center">{getSimplePointsObject(character.insanityPoints).total}</p><Button size="icon" variant="outline" className="h-6 w-6" onClick={() => handlePointChange('insanityPoints', 1)}><Plus className="h-4 w-4" /></Button></div> )}</div></MetricBox>
                                             <MetricBox title={t('corruption')} notes={getSimplePointsObject(character.corruptionPoints).notes} onNoteChange={(val) => updateCharacter(character.id, { corruptionPoints: { ...getSimplePointsObject(character.corruptionPoints), notes: val } })} editing={isPointsEditing} onEdit={() => setIsPointsEditing(true)} onSave={handleSavePoints} isCompactView={isCompactView} hideNotes={hideNotes} showEditButtons={showEditButtons}><div className="text-center flex flex-col justify-center items-center h-full">{isPointsEditing ? ( <Input type="number" value={editablePoints.corruptionPoints.total} onChange={e => handleSimplePointsChange('corruptionPoints', 'total', e.target.value)} className="text-lg font-bold h-8 w-16 text-center mx-auto"/> ) : ( <div className="flex items-center justify-center gap-2"><Button size="icon" variant="outline" className="h-6 w-6" onClick={() => handlePointChange('corruptionPoints', -1)}><Minus className="h-4 w-4" /></Button><p className="text-2xl font-bold text-primary w-12 text-center">{getSimplePointsObject(character.corruptionPoints).total}</p><Button size="icon" variant="outline" className="h-6 w-6" onClick={() => handlePointChange('corruptionPoints', 1)}><Plus className="h-4 w-4" /></Button></div> )}</div></MetricBox>
