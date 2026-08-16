@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Input } from '../ui/input';
 import { Textarea } from '../ui/textarea';
 import { Button } from '../ui/button';
-import { Plus, Edit, Save, Info, Minus, ChevronRight, ChevronLeft } from 'lucide-react';
+import { Plus, Minus, ChevronRight, ChevronLeft } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { useCharacterContext } from '@/context/character-context';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -15,67 +15,10 @@ import { InfoProgressionSection } from './dh-sections/info-progression-section';
 import { CharacteristicsSection } from './dh-sections/characteristics-section';
 import { SkillsTalentsSection } from './dh-sections/skills-talents-section';
 import { EquipmentInventorySection } from './dh-sections/equipment-inventory-section';
+import { EditSaveButton, MetricBox } from './dh-sections/dh-ui-helpers';
 
 
-const EditSaveButton = ({ editing, onEdit, onSave }: { editing: boolean, onEdit: () => void, onSave: () => void }) => {
-    return editing ? (
-        <Button size="icon" onClick={onSave} className="h-7 w-7"><Save className="h-3.5 w-3.5" /></Button>
-    ) : (
-        <Button size="icon" variant="outline" onClick={onEdit} className="h-7 w-7"><Edit className="h-3.5 w-3.5" /></Button>
-    );
-};
 
-const MetricBox = ({
-  title,
-  notes,
-  onNoteChange,
-  isCompactView,
-  editing,
-  onEdit,
-  onSave,
-  hideNotes,
-  showEditButtons,
-  children,
-}: {
-  title: string;
-  notes?: string;
-  onNoteChange: (val: string) => void;
-  isCompactView: boolean;
-  editing: boolean;
-  onEdit: () => void;
-  onSave: () => void;
-  hideNotes: boolean;
-  showEditButtons: boolean;
-  children: React.ReactNode;
-}) => (
-  <div className="flex flex-col h-full">
-    <div className="flex items-center justify-between h-9 px-1 shrink-0">
-      <div className="flex items-center gap-1 overflow-hidden">
-        <h4 className="text-[10px] sm:text-xs font-semibold text-muted-foreground truncate uppercase">{title}</h4>
-        {!hideNotes && (
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant={notes ? 'secondary' : 'ghost'} size="icon" className="h-6 w-6 shrink-0"><Info className="h-3 w-3" /></Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-64">
-              <Label className="text-xs mb-2 block">Notes for {title}</Label>
-              <Textarea defaultValue={notes || ''} onBlur={(e) => onNoteChange(e.target.value)} placeholder="Add notes..." className="min-h-[100px] text-sm" />
-            </PopoverContent>
-          </Popover>
-        )}
-      </div>
-      <div className="shrink-0 ml-1">
-        {(showEditButtons || editing) && <EditSaveButton editing={editing} onEdit={onEdit} onSave={onSave} />}
-      </div>
-    </div>
-    <div className={cn(
-      "flex items-center justify-center rounded-lg border bg-background overflow-hidden",
-      isCompactView ? "h-14" : "h-20"
-    )}>
-      {children}
-    </div>
-  </div>
-);
 
 const defaultArmor = { 'Head': null, 'Right arm': null, 'Body': null, 'Left arm': null, 'Right leg': null, 'Left leg': null };
 const ArmorDisplay = ({ character, isCompactView }: { character: DarkHeresyCharacter; isCompactView: boolean; }) => {
@@ -256,7 +199,7 @@ export const DarkHeresySheet = React.forwardRef<any, { character: DarkHeresyChar
                 </div>
             )}
             <div className={cn("grid grid-cols-1 lg:grid-cols-12 gap-6", isCompactView && !['info-section', 'progression-section'].includes(activeCompactSection) && 'hidden')}>
-                <InfoProgressionSection character={character} isCompactView={isCompactView} />
+                <InfoProgressionSection onEditingChange={(v) => reportSectionEditing('info', v)} character={character} isCompactView={isCompactView} />
                 {!isCompactView && ( <div className="hidden lg:block lg:col-span-3 overflow-hidden"><ArmorDisplay character={character} isCompactView={isCompactView} /></div> )}
             </div>
       
