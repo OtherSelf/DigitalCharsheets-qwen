@@ -48,7 +48,7 @@ interface InfoProgressionSectionProps {
 }
 
 export const InfoProgressionSection = ({ character, isCompactView, onEditingChange }: InfoProgressionSectionProps) => {
-    const { updateCharacter } = useCharacterContext();
+    const { updateCharacter, showEditButtons } = useCharacterContext();
     const { t } = useTranslation();
 
     const [isInfoProgressionEditing, setIsInfoProgressionEditing] = React.useState(false);
@@ -127,7 +127,7 @@ export const InfoProgressionSection = ({ character, isCompactView, onEditingChan
                     <Card id="info-section">
                         <CardHeader className={cn("flex flex-row items-center justify-between px-6 pt-3 pb-6", isCompactView && "px-4 pt-2 pb-4")}>
                             <CardTitle className={cn("font-headline", isCompactView ? "text-lg" : "text-2xl")}>{t('characterInfo')}</CardTitle>
-                            {(isInfoProgressionEditing || true) && <EditSaveButton editing={isInfoProgressionEditing} onEdit={() => setIsInfoProgressionEditing(true)} onSave={() => setIsInfoProgressionEditing(false)} />}
+                            {(showEditButtons || isInfoProgressionEditing) && <EditSaveButton editing={isInfoProgressionEditing} onEdit={() => setIsInfoProgressionEditing(true)} onSave={() => setIsInfoProgressionEditing(false)} />}
                         </CardHeader>
                         <CardContent className="pt-0">
                             <Accordion type="single" collapsible className="w-full" defaultValue="info">
@@ -195,10 +195,12 @@ export const InfoProgressionSection = ({ character, isCompactView, onEditingChan
                                     </AccordionContent>
                                 </AccordionItem>
                                 <AccordionItem value="progression" className="border-b-0">
-                                    <AccordionPrimitive.Trigger className={cn("hover:no-underline flex flex-1 items-center justify-between pb-4", isCompactView ? "px-0 pt-2" : "px-0 pt-3")}>
-                                        <CardTitle className={cn("font-headline", isCompactView ? "text-lg" : "text-2xl")}>{t('progression')}</CardTitle>
-                                        <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
-                                    </AccordionPrimitive.Trigger>
+                                    <AccordionPrimitive.Header className={cn("flex w-full items-center justify-between pb-4", isCompactView ? "px-0 pt-2" : "px-0 pt-3")}>
+                                        <AccordionPrimitive.Trigger className="flex flex-1 items-center justify-between font-medium transition-all hover:no-underline [&[data-state=open]>svg]:rotate-180">
+                                            <CardTitle className={cn("font-headline", isCompactView ? "text-lg" : "text-2xl")}>{t('progression')}</CardTitle>
+                                            <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
+                                        </AccordionPrimitive.Trigger>
+                                    </AccordionPrimitive.Header>
                                     <AccordionContent className={cn("pt-0", isCompactView ? "px-0 pb-4" : "px-0 pb-6")}>
                                         <div className="flex flex-col space-y-4">
                                             <div className="space-y-1">
