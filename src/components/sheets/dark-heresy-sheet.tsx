@@ -16,6 +16,8 @@ import { CharacteristicsSection } from './dh-sections/characteristics-section';
 import { SkillsTalentsSection } from './dh-sections/skills-talents-section';
 import { EquipmentInventorySection } from './dh-sections/equipment-inventory-section';
 import { EditSaveButton, MetricBox } from './dh-sections/dh-ui-helpers';
+import { Info } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
 
 
 
@@ -134,7 +136,81 @@ export const DarkHeresySheet = React.forwardRef<any, { character: DarkHeresyChar
                                 <div className="flex-1 justify-start p-0 h-auto hover:bg-transparent flex items-center"><CardTitle className="font-headline text-base">{t('characteristics')}</CardTitle></div>
                             </div>
                             <div className="grid grid-cols-5 gap-0.5 mt-2">
-                                {/* Compact characteristics will be restored in the next refactoring step */}
+                                {[
+                                    { key: 'weaponSkill', label: 'WS' },
+                                    { key: 'ballisticSkill', label: 'BS' },
+                                    { key: 'strength', label: 'S' },
+                                    { key: 'toughness', label: 'T' },
+                                    { key: 'agility', label: 'AG' },
+                                    { key: 'intelligence', label: 'INT' },
+                                    { key: 'perception', label: 'PER' },
+                                    { key: 'willpower', label: 'WP' },
+                                    { key: 'fellowship', label: 'FEL' },
+                                    { key: 'influence', label: 'INF' },
+                                ].map((char, idx) => {
+                                    const stats = character.stats as Record<string, number>;
+                                    const statUpgrades = character.statUpgrades as Record<string, boolean[]> | undefined;
+                                    const statNotes = character.statNotes as Record<string, string> | undefined;
+                                    const val = stats?.[char.key] || 0;
+                                    const upgrades = (statUpgrades?.[char.key] || [false, false, false, false]) as boolean[];
+                                    const bonus = upgrades.filter(Boolean).length * 5;
+                                    const notes = statNotes?.[char.key] || '';
+    
+                                    return (
+                                        <div key={char.key} className="relative bg-background border rounded-md text-center py-1 px-0.5 flex flex-col justify-between min-h-[60px]">
+                                            {/* Info/Notes Button */}
+                                            <Popover>
+                                               <PopoverTrigger asChild>
+                                                    <Button variant={notes ? 'secondary' : 'ghost'} size="icon" className="h-4 w-4 absolute top-0.5 right-0.5">
+                                                        <Info className="h-2.5 w-2.5" />
+                                                    </Button>
+                                                </PopoverTrigger>
+                                                <PopoverContent className="w-64 p-3" side="top" align="center">
+                                                    <Label className="text-xs mb-2 block font-semibold">{char.label} - Notes</Label>
+                                                    <Textarea 
+                                                        defaultValue={notes} 
+                                                        onBlur={(e) => {
+                                                            const nextNotes = { ...(character.statNotes || {}), [char.key]: e.target.value };
+                                                            updateCharacter(character.id, { statNotes: nextNotes });
+                                                        }} 
+                                                        placeholder="Add notes about this characteristic..." 
+                                                        className="min-h-[80px] text-xs" 
+                                                    />
+                                                </PopoverContent>
+                                            </Popover>
+            
+                                            {/* Stat Label */}
+                                            <div className="text-[8px] font-semibold text-muted-foreground uppercase mt-1">{char.label}</div>
+            
+                                            {/* Value and Checkboxes (Flex Row) */}
+                                            <div className="flex items-center justify-center gap-1 mt-1 mb-1">
+                                                <div className="text-sm font-bold text-primary leading-tight">{val + bonus}</div>
+                                                <div className="flex flex-col gap-[1px] items-center">
+                                                    {upgrades.map((checked, upgradeIdx) => (
+                                                        <Checkbox 
+                                                            key={upgradeIdx} 
+                                                            checked={checked} 
+                                                            disabled={!checked && upgradeIdx > 0 && !upgrades[upgradeIdx - 1]}
+                                                            onCheckedChange={(c) => {
+                                                                const nextUpgrades = { ...character.statUpgrades };
+                                                                const specific = [...(nextUpgrades[char.key] || [false, false, false, false])];
+                                                                specific[upgradeIdx] = !!c;
+                                                                if (!c) {
+                                                                    for (let i = upgradeIdx + 1; i < specific.length; i++) {
+                                                                        specific[i] = false;
+                                                                    }
+                                                                }
+                                                                nextUpgrades[char.key] = specific as [boolean, boolean, boolean, boolean];
+                                                                updateCharacter(character.id, { statUpgrades: nextUpgrades });
+                                                            }}
+                                                            className="h-2.5 w-2.5 data-[state=checked]:bg-primary" 
+                                                        />
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
                             </div>
                         </div>
                         <div className="md:col-span-2 grid grid-cols-2 gap-1 px-1 mt-1">
@@ -199,7 +275,12 @@ export const DarkHeresySheet = React.forwardRef<any, { character: DarkHeresyChar
                 </div>
             )}
             <div className={cn("grid grid-cols-1 lg:grid-cols-12 gap-6", isCompactView && !['info-section', 'progression-section'].includes(activeCompactSection) && 'hidden')}>
-                <InfoProgressionSection onEditingChange={(v) => reportSectionEditing('info', v)} character={character} isCompactView={isCompactView} />
+                <InfoProgressionSection 
+                  onEditingChange={(v) => reportSectionEditing('info', v)} 
+                  character={character} 
+                  isCompactView={isCompactView} 
+                  activeCompactSection={activeCompactSection} 
+                />
                 {!isCompactView && ( <div className="hidden lg:block lg:col-span-3 overflow-hidden"><ArmorDisplay character={character} isCompactView={isCompactView} /></div> )}
             </div>
       

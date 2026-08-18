@@ -16,10 +16,10 @@
   "skinColor": "",
   "hairColor": "",
   "eyeColor": "",
-  "experience": 10,
-  "totalExpSpent": 1,
+  "experience": 50,
+  "totalExpSpent": 6049,
   "alternatePath": null,
-  "advancedPath": null,
+  "advancedPath": "Exorcist",
   "notes": "",
   "questLog": [],
   "stats": {
@@ -97,7 +97,7 @@
     ]
   },
   "statNotes": {
-    "weaponSkill": ""
+    "weaponSkill": "+543\n"
   },
   "wounds": {
     "current": 9,
