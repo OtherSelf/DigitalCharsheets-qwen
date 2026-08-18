@@ -38,8 +38,8 @@
     "weaponSkill": [
       true,
       true,
-      false,
-      false
+      true,
+      true
     ],
     "ballisticSkill": [
       false,
@@ -118,7 +118,8 @@
   },
   "wealth": {
     "throneGelt": 0,
-    "monthlyIncome": 0
+    "monthlyIncome": 0,
+    "notes": ""
   },
   "movement": {
     "walkHalf": 3,
