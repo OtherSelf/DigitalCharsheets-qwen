@@ -97,12 +97,13 @@
     ]
   },
   "statNotes": {
-    "weaponSkill": "+543\n"
+    "weaponSkill": "+543\n",
+    "agility": "dsadsa"
   },
   "wounds": {
     "current": 9,
     "max": 10,
-    "notes": ""
+    "notes": "zxcxzcxzcxz"
   },
   "fatePoints": {
     "current": 1,
@@ -166,7 +167,7 @@
           "penetration": "",
           "damage": "",
           "traits": "",
-          "notes": "",
+          "notes": "qweq123213",
           "equipped": true
         }
       ],
@@ -217,7 +218,7 @@
     {
       "id": "new-skill-1786736709389",
       "name": "ролролдшж",
-      "notes": "",
+      "notes": "dsadsadsadsadsa",
       "type": "basic",
       "training": {
         "skilled": true,

@@ -20,6 +20,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useTranslation } from '@/context/language-context';
+import { cn } from '@/lib/utils';
 
 export default function CharacterPage() {
   const params = useParams<{ id: string }>();

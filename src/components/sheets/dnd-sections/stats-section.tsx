@@ -82,21 +82,62 @@ export function DndStatsSection({
   otherProficienciesAndLanguages, setOtherProficienciesAndLanguages, isOtherProficienciesEditing,
   setIsOtherProficienciesEditing, newProfItem, setNewProfItem, handleSaveOtherProf, isCompactView, activeCompactSection
 }: StatsSectionProps) {
-  const { updateCharacter, showEditButtons, hideNotes } = useCharacterContext();
+  const { updateCharacter, showEditButtons, hideNotes, getCharacter } = useCharacterContext();
   const { t } = useTranslation();
+
+    // Calculate Passive Perception
+  const currentChar = getCharacter(characterId);
+  const wisdomMod = Math.floor((stats.wisdom - 10) / 2);
+  const perceptionSkill = currentChar?.gameSystem === 'Dungeons & Dragons' 
+    ? (currentChar as any).skills?.find((s: any) => s.name === 'Perception' || s.label === 'Perception')
+    : null;
+  const profBonus = currentChar?.gameSystem === 'Dungeons & Dragons' 
+    ? (currentChar as any).proficiencyBonus || 0 
+    : 0;
+  const perceptionBonus = perceptionSkill 
+    ? (perceptionSkill.proficient ? profBonus : 0) + (perceptionSkill.expertise ? profBonus : 0)
+    : 0;
+  const passivePerception = 10 + wisdomMod + perceptionBonus;
 
   return (
     <div className={cn("md:col-span-2 space-y-4", isCompactView && activeCompactSection !== 'stats-section' && "hidden")}>
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2"><CardTitle className="text-[10px] font-bold uppercase text-muted-foreground tracking-tight">{t('characteristics')}</CardTitle>{(showEditButtons || isStatsEditing) && <EditSaveButton editing={isStatsEditing} onEdit={() => setIsStatsEditing(true)} onSave={handleSaveStats} />}</CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2">
+          <CardTitle className="text-[10px] font-bold uppercase text-muted-foreground tracking-tight">{t('characteristics')}</CardTitle>
+          {(showEditButtons || isStatsEditing) && <EditSaveButton editing={isStatsEditing} onEdit={() => setIsStatsEditing(true)} onSave={handleSaveStats} />}
+        </CardHeader>
         <CardContent className="space-y-3 p-4 pt-0">
           {['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma'].map(key => (
-            <StatBox key={key} label={key} value={stats[key as keyof DnDStats]} editing={isStatsEditing} onChange={e => setStats({ ...stats, [key]: parseInt(e.target.value) || 1 })} isCompactView={isCompactView} notes={statNotes?.[key as keyof DnDStatNotes]} onNoteChange={v => updateCharacter(characterId, { statNotes: { ...(statNotes || {}), [key]: v } })} hideNotes={hideNotes} />
+            <StatBox 
+              key={key} 
+              label={key} 
+              value={stats[key as keyof DnDStats]} 
+              editing={isStatsEditing} 
+              onChange={e => setStats({ ...stats, [key]: parseInt(e.target.value) || 1 })} 
+              isCompactView={isCompactView} 
+              notes={statNotes?.[key as keyof DnDStatNotes]} 
+              onNoteChange={v => updateCharacter(characterId, { statNotes: { ...(statNotes || {}), [key]: v } })} 
+              hideNotes={hideNotes} 
+            />
           ))}
+          
+          {/* Passive Perception Display */}
+          <div className="pt-3 mt-3 border-t">
+            <div className="flex items-center justify-between p-3 rounded-lg bg-primary/5 border border-primary/20">
+              <div className="flex flex-col">
+                <Label className="text-[10px] text-muted-foreground uppercase font-bold">{t('passivePerception')}</Label>
+                <span className="text-[10px] text-muted-foreground">10 + Wisdom Mod {perceptionBonus > 0 ? `+ ${perceptionBonus}` : ''}</span>
+              </div>
+              <div className="text-2xl font-black text-primary">{passivePerception}</div>
+            </div>
+          </div>
         </CardContent>
       </Card>
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2"><CardTitle className="text-[10px] font-bold uppercase text-muted-foreground tracking-tight">{t('otherProficienciesAndLanguages')}</CardTitle>{(showEditButtons || isOtherProficienciesEditing) && <EditSaveButton editing={isOtherProficienciesEditing} onEdit={() => setIsOtherProficienciesEditing(true)} onSave={handleSaveOtherProf} />}</CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2">
+          <CardTitle className="text-[10px] font-bold uppercase text-muted-foreground tracking-tight">{t('otherProficienciesAndLanguages')}</CardTitle>
+          {(showEditButtons || isOtherProficienciesEditing) && <EditSaveButton editing={isOtherProficienciesEditing} onEdit={() => setIsOtherProficienciesEditing(true)} onSave={handleSaveOtherProf} />}
+        </CardHeader>
         <CardContent className="p-4 pt-0 space-y-2">
           {otherProficienciesAndLanguages.map((it, i) => (
             <div key={i} className="text-[10px] p-1.5 rounded bg-muted/10 flex justify-between">
