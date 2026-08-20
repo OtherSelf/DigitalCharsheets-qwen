@@ -54,16 +54,43 @@ export function DndSavesSkillsSection({
         </CardContent>
       </Card>
       <Card id="skills-card">
-        <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2"><CardTitle className="text-[10px] font-bold uppercase text-muted-foreground tracking-tight">{t('skills')}</CardTitle>{(showEditButtons || isSkillsEditing) && <EditSaveButton editing={isSkillsEditing} onEdit={() => setIsSkillsEditing(true)} onSave={handleSaveSkills} />}</CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2">
+          <CardTitle className="text-[10px] font-bold uppercase text-muted-foreground tracking-tight">{t('skills')}</CardTitle>
+          {(showEditButtons || isSkillsEditing) && <EditSaveButton editing={isSkillsEditing} onEdit={() => setIsSkillsEditing(true)} onSave={handleSaveSkills} />}
+        </CardHeader>
         <CardContent className="p-4 pt-0 space-y-1">
           {calculatedSkills.map((sk, i) => (
-            <div key={sk.name} className="flex items-center gap-2 py-1 border-b last:border-0 border-muted">
-              <Checkbox checked={sk.proficient} disabled={!isSkillsEditing} onCheckedChange={v => setSkills(skills.map((s, idx) => idx === i ? { ...s, proficient: !!v } : s))} />
+            <div key={sk.name} className="flex items-center gap-1.5 py-1 border-b last:border-0 border-muted">
+              {/* Proficient Checkbox */}
+              <Checkbox 
+                checked={sk.proficient} 
+                disabled={!isSkillsEditing} 
+                onCheckedChange={v => setSkills(skills.map((s, idx) => idx === i ? { ...s, proficient: !!v } : s))} 
+              />
+              
+              {/* Expertise Checkbox (Added) */}
+              <Checkbox 
+                checked={sk.expertise || false} 
+                disabled={!isSkillsEditing || !sk.proficient} 
+                onCheckedChange={v => setSkills(skills.map((s, idx) => idx === i ? { ...s, expertise: !!v } : s))}
+                className="border-primary/50 data-[state=checked]:bg-accent"
+              />
+              
+              {/* Value Display/Input */}
               <div className="w-8 text-center">
                 {isSkillsEditing ? (
-                  <Input type="number" value={sk.value} onChange={e => { const n = [...skills]; n[i] = { ...sk, value: parseInt(e.target.value) || 0 }; setSkills(n); }} className="h-6 w-8 text-[10px] p-0 text-center font-bold" />
-                ) : (<span className="font-black text-sm">{sk.value >= 0 ? '+' : ''}{sk.value}</span>)}
+                  <Input 
+                    type="number" 
+                    value={sk.value} 
+                    onChange={e => { const n = [...skills]; n[i] = { ...sk, value: parseInt(e.target.value) || 0 }; setSkills(n); }} 
+                    className="h-6 w-8 text-[10px] p-0 text-center font-bold" 
+                  />
+                ) : (
+                  <span className="font-black text-sm">{sk.value >= 0 ? '+' : ''}{sk.value}</span>
+                )}
               </div>
+              
+              {/* Skill Label */}
               <span className="text-xs font-semibold flex-1">{sk.label}</span>
             </div>
           ))}
