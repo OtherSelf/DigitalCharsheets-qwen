@@ -85,18 +85,26 @@ export function DndStatsSection({
   const { updateCharacter, showEditButtons, hideNotes, getCharacter } = useCharacterContext();
   const { t } = useTranslation();
 
-    // Calculate Passive Perception
+   // Calculate Passive Perception
   const currentChar = getCharacter(characterId);
   const wisdomMod = Math.floor((stats.wisdom - 10) / 2);
+  
+  // Robustly find the Perception skill
   const perceptionSkill = currentChar?.gameSystem === 'Dungeons & Dragons' 
-    ? (currentChar as any).skills?.find((s: any) => s.name === 'Perception' || s.label === 'Perception')
+    ? (currentChar as any).skills?.find((s: any) => 
+        s.label?.toLowerCase().includes('perception') || s.name?.toLowerCase().includes('perception')
+      )
     : null;
+    
   const profBonus = currentChar?.gameSystem === 'Dungeons & Dragons' 
     ? (currentChar as any).proficiencyBonus || 0 
     : 0;
+    
+  // Formula: 10 + WisMod + (ProfBonus if proficient) + (ProfBonus if expertise)
   const perceptionBonus = perceptionSkill 
     ? (perceptionSkill.proficient ? profBonus : 0) + (perceptionSkill.expertise ? profBonus : 0)
     : 0;
+    
   const passivePerception = 10 + wisdomMod + perceptionBonus;
 
   return (
@@ -126,7 +134,9 @@ export function DndStatsSection({
             <div className="flex items-center justify-between p-3 rounded-lg bg-primary/5 border border-primary/20">
               <div className="flex flex-col">
                 <Label className="text-[10px] text-muted-foreground uppercase font-bold">{t('passivePerception')}</Label>
-                <span className="text-[10px] text-muted-foreground">10 + Wisdom Mod {perceptionBonus > 0 ? `+ ${perceptionBonus}` : ''}</span>
+                <span className="text-[10px] text-muted-foreground">
+                  10 + Wisdom Mod {perceptionBonus > 0 ? `+ ${perceptionBonus}` : ''}
+                </span>
               </div>
               <div className="text-2xl font-black text-primary">{passivePerception}</div>
             </div>

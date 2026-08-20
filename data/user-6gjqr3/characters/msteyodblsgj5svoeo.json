@@ -67,7 +67,7 @@
     "dexterity": 20,
     "constitution": 10,
     "intelligence": 30,
-    "wisdom": 20,
+    "wisdom": 30,
     "charisma": 10
   },
   "savingThrows": [
@@ -177,14 +177,14 @@
       "name": "nature",
       "label": "Nature (Int)",
       "proficient": false,
-      "expertise": false,
+      "expertise": true,
       "value": 0
     },
     {
       "name": "perception",
       "label": "Perception (Wis)",
       "proficient": true,
-      "expertise": false,
+      "expertise": true,
       "value": 0
     },
     {
