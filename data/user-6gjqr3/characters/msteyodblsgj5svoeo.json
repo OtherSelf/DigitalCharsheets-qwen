@@ -107,7 +107,7 @@
       "name": "acrobatics",
       "label": "Acrobatics (Dex)",
       "proficient": true,
-      "expertise": false,
+      "expertise": true,
       "value": 7
     },
     {

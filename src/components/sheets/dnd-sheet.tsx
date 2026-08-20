@@ -207,6 +207,7 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
             activeCompactSection={activeCompactSection}
           />
           <DndSavesSkillsSection
+            characterId={character.id}
             savingThrows={savingThrows}
             setSavingThrows={setSavingThrows}
             isSavesEditing={isSavesEditing}
