@@ -270,7 +270,37 @@ export const DarkHeresySheet = React.forwardRef<any, { character: DarkHeresyChar
                                 )}
                               </div>
                             </MetricBox>
-                        </div>
+                          </div>
+                          {/* Compact Movement Display - FIXED */}
+                          <div className="grid grid-cols-4 gap-1 mt-2 px-1 md:col-span-2">
+                              {(() => {
+                                  const agUpgrades = (character.statUpgrades?.agility || [false, false, false, false]) as boolean[];
+                                  const agBonus = agUpgrades.filter(Boolean).length * 5;
+                                  const effectiveAg = character.stats.agility + agBonus;
+                                  const agMod = Math.floor(effectiveAg / 10);
+        
+                                  return (
+                                      <>
+                                          <div className="p-1 rounded bg-background/50 border text-center">
+                                              <div className="text-[8px] text-muted-foreground uppercase">½ Move</div>
+                                              <div className="text-xs font-bold">{agMod}</div>
+                                          </div>
+                                          <div className="p-1 rounded bg-background/50 border text-center">
+                                              <div className="text-[8px] text-muted-foreground uppercase">Move</div>
+                                              <div className="text-xs font-bold">{agMod * 2}</div>
+                                          </div>
+                                          <div className="p-1 rounded bg-background/50 border text-center">
+                                              <div className="text-[8px] text-muted-foreground uppercase">Charge</div>
+                                              <div className="text-xs font-bold">{agMod * 3}</div>
+                                          </div>
+                                         <div className="p-1 rounded bg-background/50 border text-center">
+                                              <div className="text-[8px] text-muted-foreground uppercase">Run</div>
+                                              <div className="text-xs font-bold">{agMod * 6}</div>
+                                          </div>
+                                      </>
+                                  );
+                              })()}
+                          </div>
                     </div>
                 </div>
             )}

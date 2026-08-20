@@ -167,7 +167,41 @@ export const CharacteristicsSection = React.forwardRef<{ saveAll: () => void }, 
                         hideNotes={hideNotes}
                     />
                 ))}
-             </CardContent>
+             </CardContent> 
+             {/* Desktop Movement Display - FIXED */}
+             {!isCompactView && (
+               <CardContent className="pt-0">
+                 <div className="grid grid-cols-4 gap-2">
+                   {(() => {
+                     const agUpgrades = (character.statUpgrades?.agility || [false, false, false, false]) as boolean[];
+                     const agBonus = agUpgrades.filter(Boolean).length * 5;
+                     const effectiveAg = character.stats.agility + agBonus;
+                     const agMod = Math.floor(effectiveAg / 10);
+        
+                     return (
+                       <>
+                         <div className="p-2 rounded-lg bg-background border text-center">
+                           <Label className="text-[10px] text-muted-foreground uppercase font-bold">½ Move</Label>
+                           <div className="text-lg font-bold text-primary">{agMod}</div>
+                         </div>
+                         <div className="p-2 rounded-lg bg-background border text-center">
+                           <Label className="text-[10px] text-muted-foreground uppercase font-bold">Move</Label>
+                           <div className="text-lg font-bold text-primary">{agMod * 2}</div>
+                         </div>
+                         <div className="p-2 rounded-lg bg-background border text-center">
+                           <Label className="text-[10px] text-muted-foreground uppercase font-bold">Charge</Label>
+                           <div className="text-lg font-bold text-primary">{agMod * 3}</div>
+                         </div>
+                         <div className="p-2 rounded-lg bg-background border text-center">
+                          <Label className="text-[10px] text-muted-foreground uppercase font-bold">Run</Label>
+                           <div className="text-lg font-bold text-primary">{agMod * 6}</div>
+                         </div>
+                       </>
+                     );
+                   })()}
+                 </div>
+               </CardContent>
+             )}
         </Card>
     );
 });
