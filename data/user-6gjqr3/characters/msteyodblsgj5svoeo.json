@@ -61,7 +61,11 @@
       "locations": ""
     }
   ],
-  "divineBoons": [],
+  "divineBoons": [
+    "Boon of Dimensional Travel: As an action, you can cast the Misty Step spell, without using a spell slot or any components. Once you do so, you can't use this boon again until you finish a short rest.",
+    "Boon of High Magic: You gain one 9th-level spell slot, provided that you already have one.",
+    "Boon of Dimensional Travel: As an action, you can cast the Misty Step spell, without using a spell slot or any components. Once you do so, you can't use this boon again until you finish a short rest."
+  ],
   "stats": {
     "strength": 10,
     "dexterity": 20,
