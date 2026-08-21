@@ -32,9 +32,6 @@ interface DivineBoonsSectionProps {
   activeCompactSection: string;
 }
 
-
-
-
 export const DndDivineBoonsSection = React.forwardRef<{ saveAll: () => void }, DivineBoonsSectionProps>(
   ({ characterId, initialBoons, isCompactView, activeCompactSection }, ref) => {
     const { updateCharacter, showEditButtons } = useCharacterContext();
@@ -42,7 +39,7 @@ export const DndDivineBoonsSection = React.forwardRef<{ saveAll: () => void }, D
     
     const [divineBoons, setDivineBoons] = React.useState<string[]>(initialBoons);
     const [isBoonsDialogOpen, setIsBoonsDialogOpen] = React.useState(false);
-    const [boonToDelete, setBoonToDelete] = React.useState<number | null>(null); 
+    const [boonToDelete, setBoonToDelete] = React.useState<number | null>(null);
 
     React.useEffect(() => {
       setDivineBoons(initialBoons);
@@ -55,17 +52,17 @@ export const DndDivineBoonsSection = React.forwardRef<{ saveAll: () => void }, D
       updateCharacter(characterId, { divineBoons: updated });
     };
 
-const handleDeleteBoon = (index: number) => {
-  setBoonToDelete(index);
-};
+    const handleDeleteBoon = (index: number) => {
+      setBoonToDelete(index);
+    };
 
     const confirmDeleteBoon = () => {
-        if (boonToDelete !== null) {
-            const updated = divineBoons.filter((_, idx) => idx !== boonToDelete);
-            setDivineBoons(updated);
-            updateCharacter(characterId, { divineBoons: updated });
-            setBoonToDelete(null);
-        }
+      if (boonToDelete !== null) {
+        const updated = divineBoons.filter((_, idx) => idx !== boonToDelete);
+        setDivineBoons(updated);
+        updateCharacter(characterId, { divineBoons: updated });
+        setBoonToDelete(null);
+      }
     };
 
     React.useImperativeHandle(ref, () => ({
@@ -92,14 +89,15 @@ const handleDeleteBoon = (index: number) => {
             )}
           </CardHeader>
           <CardContent className="p-4 pt-0">
-                        {divineBoons.length === 0 ? (
+            {divineBoons.length === 0 ? (
               <p className="text-xs text-muted-foreground italic text-center py-4">
                 No divine boons yet
               </p>
             ) : (
               <div className={cn(
                 "grid gap-2",
-                divineBoons.length > 4 ? "grid-cols-1 md:grid-cols-2" : "grid-cols-1"
+                divineBoons.length > 4 ? "grid-cols-1 md:grid-cols-2" : "grid-cols-1",
+                "items-start"
               )}>
                 {divineBoons.map((boon, i) => {
                   // Parse boon string: "Name: Description" or just "Name"
@@ -107,45 +105,54 @@ const handleDeleteBoon = (index: number) => {
                   const boonDesc = boonDescParts.join(': ');
                   
                   return (
-                    <Accordion 
-                      key={i} 
-                      type="single" 
-                      collapsible 
-                      className="w-full border rounded-lg"
-                    >
-                      <AccordionItem value={`boon-${i}`} className="px-3">
-                        <div className="flex items-center justify-between">
-                          <AccordionTrigger className="flex-1 text-left hover:no-underline py-2">
-                            <span className="font-semibold text-sm">{boonName}</span>
-                          </AccordionTrigger>
-                          {showEditButtons && (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-6 w-6 ml-2 text-destructive hover:text-destructive shrink-0"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDeleteBoon(i);
-                              }}
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
+                    <div key={i} className="min-h-[52px] h-auto">
+                      <Accordion 
+                        type="single" 
+                        collapsible 
+                        className="w-full border rounded-lg h-full"
+                      >
+                        <AccordionItem value={`boon-${i}`} className="px-3 h-full">
+                          <div className="flex items-center justify-between">
+                            <AccordionTrigger className="flex-1 text-left hover:no-underline py-2">
+                              <span className="font-semibold text-sm">{boonName}</span>
+                            </AccordionTrigger>
+                            {showEditButtons && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6 ml-2 text-destructive hover:text-destructive shrink-0"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteBoon(i);
+                                }}
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
+                            )}
+                          </div>
+                          {boonDesc && (
+                            <AccordionContent className="pb-3 pt-1">
+                              <p className="text-xs text-muted-foreground leading-relaxed">
+                                {boonDesc}
+                              </p>
+                            </AccordionContent>
                           )}
-                        </div>
-                        {boonDesc && (
-                          <AccordionContent className="pb-3 pt-1">
-                            <p className="text-xs text-muted-foreground leading-relaxed">
-                              {boonDesc}
-                            </p>
-                          </AccordionContent>
-                        )}
-                      </AccordionItem>
-                    </Accordion>
+                        </AccordionItem>
+                      </Accordion>
+                    </div>
                   );
                 })}
               </div>
             )}
-                        {/* Delete Confirmation Dialog */}
+            
+            {/* Divine Boons Dialog - ADDED THIS */}
+            <DivineBoonsDialog
+              open={isBoonsDialogOpen}
+              onOpenChange={setIsBoonsDialogOpen}
+              onAddBoon={handleAddBoon}
+            />
+            
+            {/* Delete Confirmation Dialog */}
             <AlertDialog open={boonToDelete !== null} onOpenChange={() => setBoonToDelete(null)}>
               <AlertDialogContent>
                 <AlertDialogHeader>

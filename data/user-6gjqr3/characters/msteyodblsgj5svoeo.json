@@ -61,7 +61,11 @@
       "locations": ""
     }
   ],
-  "divineBoons": [],
+  "divineBoons": [
+    "Boon of Dimensional Travel: ",
+    "Boon of High Magic: ",
+    "Boon of Dimensional Travel: "
+  ],
   "stats": {
     "strength": 10,
     "dexterity": 20,
