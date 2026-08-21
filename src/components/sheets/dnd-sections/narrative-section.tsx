@@ -7,6 +7,12 @@ import { Button } from '../../ui/button';
 import { Plus, Trash2, Edit, Save } from 'lucide-react';
 import { useCharacterContext } from '@/context/character-context';
 import { useTranslation } from '@/context/language-context';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
 
 const EditSaveButton = ({ editing, onEdit, onSave }: { editing: boolean; onEdit: () => void; onSave: () => void }) => (
   editing ? ( <Button size="icon" variant="ghost" onClick={onSave} className="h-7 w-7"><Save className="h-4 w-4" /></Button> ) : ( <Button size="icon" variant="outline" onClick={onEdit} className="h-7 w-7"><Edit className="h-4 w-4" /></Button> )
@@ -71,8 +77,8 @@ interface NarrativeSectionProps {
 
 export const DndNarrativeSection = React.forwardRef<{ saveAll: () => void }, NarrativeSectionProps>(
   ({ characterId, initialData }, ref) => {
-    const { updateCharacter } = useCharacterContext();
-
+    const { updateCharacter, showEditButtons } = useCharacterContext();
+    const { t } = useTranslation();
     const [narrativeData, setNarrativeData] = React.useState<NarrativeData>(initialData);
     const [isTraitEditing, setIsTraitEditing] = React.useState(false);
     const [isIdealEditing, setIsIdealEditing] = React.useState(false);
@@ -94,6 +100,7 @@ export const DndNarrativeSection = React.forwardRef<{ saveAll: () => void }, Nar
     const handleSaveBonds = React.useCallback(() => { updateCharacter(characterId, { bonds: narrativeData.bonds }); setIsBondEditing(false); }, [characterId, narrativeData.bonds, updateCharacter]);
     const handleSaveFlaws = React.useCallback(() => { updateCharacter(characterId, { flaws: narrativeData.flaws }); setIsFlawEditing(false); }, [characterId, narrativeData.flaws, updateCharacter]);
     const handleSaveFeatures = React.useCallback(() => { updateCharacter(characterId, { featuresAndTraits: narrativeData.featuresAndTraits }); setIsFeaturesEditing(false); }, [characterId, narrativeData.featuresAndTraits, updateCharacter]);
+   
 
     React.useImperativeHandle(ref, () => ({
       saveAll: () => {
@@ -104,6 +111,8 @@ export const DndNarrativeSection = React.forwardRef<{ saveAll: () => void }, Nar
         if (isFeaturesEditing) handleSaveFeatures();
       }
     }), [isTraitEditing, isIdealEditing, isBondEditing, isFlawEditing, isFeaturesEditing, handleSaveTraits, handleSaveIdeals, handleSaveBonds, handleSaveFlaws, handleSaveFeatures]);
+
+    
 
     return (
       <>
