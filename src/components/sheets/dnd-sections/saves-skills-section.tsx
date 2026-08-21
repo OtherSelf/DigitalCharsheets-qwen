@@ -61,7 +61,7 @@ export function DndSavesSkillsSection({
   savingThrows, setSavingThrows, isSavesEditing, setIsSavesEditing, handleSaveSaves, calculatedSavingThrows,
   skills, setSkills, isSkillsEditing, setIsSkillsEditing, handleSaveSkills, calculatedSkills, isCompactView, activeCompactSection
 }: SavesSkillsSectionProps) {
-  const { showEditButtons, getCharacter } = useCharacterContext();
+  const { showEditButtons, getCharacter, updateCharacter } = useCharacterContext();
   const { t } = useTranslation();
   // Get character data for auto-calculation
   const character = getCharacter(characterId) as DnD5eCharacter | undefined;
@@ -83,7 +83,14 @@ export function DndSavesSkillsSection({
         <CardContent className="p-4 pt-0 space-y-1">
           {calculatedSavingThrows.map((st, i) => (
             <div key={st.name} className="flex items-center gap-2 py-1 border-b last:border-0 border-muted">
-              <Checkbox checked={st.proficient} disabled={!isSavesEditing} onCheckedChange={v => setSavingThrows(savingThrows.map((s, idx) => idx === i ? { ...s, proficient: !!v } : s))} />
+              <Checkbox 
+                checked={st.proficient} 
+                onCheckedChange={v => {
+                  const updated = savingThrows.map((s, idx) => idx === i ? { ...s, proficient: !!v } : s);
+                  setSavingThrows(updated);
+                  updateCharacter(characterId, { savingThrows: updated });
+                }} 
+              />
               <span className="font-bold text-sm w-8">{st.value >= 0 ? '+' : ''}{st.value}</span>
               <span className="text-[10px] font-bold uppercase flex-1">{st.name}</span>
             </div>
@@ -103,15 +110,22 @@ export function DndSavesSkillsSection({
                 {/* Proficient Checkbox */}
                 <Checkbox 
                   checked={sk.proficient} 
-                  disabled={!isSkillsEditing} 
-                  onCheckedChange={v => setSkills(skills.map((s, idx) => idx === i ? { ...s, proficient: !!v } : s))} 
+                  onCheckedChange={v => {
+                    const updated = skills.map((s, idx) => idx === i ? { ...s, proficient: !!v, expertise: !!v ? s.expertise : false } : s);
+                    setSkills(updated);
+                    updateCharacter(characterId, { skills: updated });
+                  }} 
                 />
                 
                 {/* Expertise Checkbox */}
                 <Checkbox 
                   checked={sk.expertise || false} 
-                  disabled={!isSkillsEditing || !sk.proficient} 
-                  onCheckedChange={v => setSkills(skills.map((s, idx) => idx === i ? { ...s, expertise: !!v } : s))}
+                  disabled={!sk.proficient} 
+                  onCheckedChange={v => {
+                    const updated = skills.map((s, idx) => idx === i ? { ...s, expertise: !!v } : s);
+                    setSkills(updated);
+                    updateCharacter(characterId, { skills: updated });
+                  }}
                   className="border-primary/50 data-[state=checked]:bg-accent"
                 />
                 

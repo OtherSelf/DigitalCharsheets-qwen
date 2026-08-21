@@ -18,6 +18,7 @@ import {
   EyeOff,
   Pencil,
   PencilLine,
+  Wand2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -45,9 +46,10 @@ export function CompactSidebar({ gameSystem, activeSection, onSectionChange }: C
   const dndItems = [
     { label: 'info', id: 'info-section', icon: Info },
     { label: 'stats', id: 'stats-section', icon: Activity },
+    { label: 'boons', id: 'boons-section', icon: Sparkles },
     { label: 'combat', id: 'combat-section', icon: Swords },
     { label: 'inventoryAndAttunement', id: 'inventory-section', icon: Backpack },
-    { label: 'spells', id: 'spells-section', icon: Sparkles },
+    { label: 'spells', id: 'spells-section', icon: Wand2 },
     { label: 'companions', id: 'companion-section', icon: PawPrint },
   ];
 

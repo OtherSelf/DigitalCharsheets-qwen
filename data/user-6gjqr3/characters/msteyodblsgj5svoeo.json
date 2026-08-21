@@ -183,8 +183,8 @@
     {
       "name": "perception",
       "label": "Perception (Wis)",
-      "proficient": true,
-      "expertise": true,
+      "proficient": false,
+      "expertise": false,
       "value": 0
     },
     {
