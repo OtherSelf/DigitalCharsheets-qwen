@@ -11,7 +11,7 @@ import { useCharacterContext } from '@/context/character-context';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { useTranslation } from '@/context/language-context';
-import { InfoProgressionSection } from './dh-sections/info-progression-section';
+import { InfoSection, ProgressionSection } from './dh-sections/info-progression-section';
 import { CharacteristicsSection } from './dh-sections/characteristics-section';
 import { SkillsTalentsSection } from './dh-sections/skills-talents-section';
 import { EquipmentInventorySection } from './dh-sections/equipment-inventory-section';
@@ -305,13 +305,32 @@ export const DarkHeresySheet = React.forwardRef<any, { character: DarkHeresyChar
                 </div>
             )}
             <div className={cn("grid grid-cols-1 lg:grid-cols-12 gap-6", isCompactView && !['info-section', 'progression-section'].includes(activeCompactSection) && 'hidden')}>
-                <InfoProgressionSection 
-                  onEditingChange={(v) => reportSectionEditing('info', v)} 
-                  character={character} 
-                  isCompactView={isCompactView} 
-                  activeCompactSection={activeCompactSection} 
-                />
-                {!isCompactView && ( <div className="hidden lg:block lg:col-span-3 overflow-hidden"><ArmorDisplay character={character} isCompactView={isCompactView} /></div> )}
+                {/* INFO BOX: Left side (5 columns) */}
+                <div className={cn("lg:col-span-5", isCompactView && activeCompactSection !== 'info-section' && 'hidden')}>
+                    <InfoSection 
+                        character={character} 
+                        isCompactView={isCompactView} 
+                        activeCompactSection={activeCompactSection}
+                        onEditingChange={(v) => reportSectionEditing('info', v)}
+                    />
+                </div>
+
+                {/* PROGRESSION BOX: Middle (4 columns) */}
+                <div className={cn("lg:col-span-4", isCompactView && activeCompactSection !== 'progression-section' && 'hidden')}>
+                    <ProgressionSection 
+                        character={character} 
+                        isCompactView={isCompactView} 
+                        activeCompactSection={activeCompactSection}
+                        onEditingChange={(v) => reportSectionEditing('progression', v)}
+                    />
+                </div>
+
+                {/* ARMOR DIAGRAM: Right side (3 columns) */}
+                {!isCompactView && ( 
+                    <div className="hidden lg:block lg:col-span-3 overflow-hidden">
+                        <ArmorDisplay character={character} isCompactView={isCompactView} />
+                    </div> 
+                )}
             </div>
       
             <div className={cn("flex flex-row items-stretch gap-2 md:gap-6", isCompactView && !['skills-section', 'talents-section', 'equipment-section', 'inventory-section'].includes(activeCompactSection) && 'hidden' )}>

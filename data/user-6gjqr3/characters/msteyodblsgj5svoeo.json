@@ -11,7 +11,7 @@
   "height": "",
   "weight": "",
   "hair": "",
-  "inspiration": "",
+  "inspiration": "4",
   "proficiencyBonus": 2,
   "level": 20,
   "gameSystem": "Dungeons & Dragons",
@@ -62,13 +62,13 @@
     }
   ],
   "divineBoons": [
-    "Boon of Dimensional Travel: As an action, you can cast the Misty Step spell, without using a spell slot or any components. Once you do so, you can't use this boon again until you finish a short rest.",
     "Boon of High Magic: You gain one 9th-level spell slot, provided that you already have one.",
-    "Boon of Dimensional Travel: As an action, you can cast the Misty Step spell, without using a spell slot or any components. Once you do so, you can't use this boon again until you finish a short rest."
+    "Boon of Dimensional Travel: As an action, you can cast the Misty Step spell, without using a spell slot or any components. Once you do so, you can't use this boon again until you finish a short rest.",
+    "Boon of Immortality: You stop aging. You are immune to any effect that would age you, and you can't die from old age."
   ],
   "stats": {
     "strength": 10,
-    "dexterity": 20,
+    "dexterity": 1,
     "constitution": 10,
     "intelligence": 30,
     "wisdom": 30,
@@ -237,7 +237,7 @@
   "armorClass": 10,
   "speed": 30,
   "hitPoints": {
-    "current": 8,
+    "current": 0,
     "max": 8
   },
   "temporaryHitPoints": 0,
@@ -363,17 +363,22 @@
   "userId": "user-6gjqr3",
   "id": "msteyodblsgj5svoeo",
   "hitDiceUsed": {
-    "Rogue": 0
+    "Rogue": 2
   },
-  "isMulticlass": false,
-  "multiclasses": [],
+  "isMulticlass": true,
+  "multiclasses": [
+    {
+      "class": "Artificer",
+      "level": 14
+    }
+  ],
   "spellSlots": {
     "1": {
-      "max": 12,
-      "current": 3
+      "max": 8,
+      "current": 0
     },
     "2": {
-      "max": 2,
+      "max": 4,
       "current": 0
     },
     "3": {
@@ -440,5 +445,7 @@
       "actions": [],
       "features": []
     }
-  ]
+  ],
+  "allowInspirationHomeRule": false,
+  "hpTracking": ""
 }
