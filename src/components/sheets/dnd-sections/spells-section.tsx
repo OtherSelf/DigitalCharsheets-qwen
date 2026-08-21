@@ -63,7 +63,7 @@ const handleSaveSpellcasting = React.useCallback(() => {
     setSpells(initialSpells);
     setSpellSlots(initialSpellSlots || DEFAULT_SLOTS);
     setSpellcastingData(initialSpellcasting || { spellcastingAbility: 'none', spellAttackBonus: '', spellSaveDifficulty: 0 });
-  }, [characterId]);
+  }, [characterId, initialSpells, initialSpellSlots, initialSpellcasting]); 
 
   const renderSpellBox = (level: number, title: string) => {
     const levelSpells = spells.filter(s => s.level === level);
@@ -88,7 +88,28 @@ const handleSaveSpellcasting = React.useCallback(() => {
           </div>
           {level > 0 && slots.max > 0 && (
             <div className="flex flex-wrap gap-1 mt-1">
-              {Array.from({ length: slots.max }).map((_, i) => ( <Checkbox key={i} checked={slots.current > i} onCheckedChange={() => { const nextCurrent = slots.current === i + 1 ? i : i + 1; const n = { ...spellSlots, [level]: { ...slots, current: nextCurrent } }; setSpellSlots(n); updateCharacter(characterId, { spellSlots: n }); }} className="h-3 w-3" /> ))}
+              {Array.from({ length: slots.max }).map((_, i) => (
+                <Checkbox 
+                  key={i} 
+                  // Checked by default (available). Unchecking means spent.
+                  checked={i >= (slots.max - slots.current)} 
+                  onCheckedChange={(checked) => {
+                    const isChecked = checked === true;
+                    // If checking (making available), current increases. If unchecking (making spent), current decreases.
+                    const nextCurrent = isChecked ? slots.max - i : slots.max - (i + 1);
+                    const n = { 
+                      ...spellSlots, 
+                      [level]: { 
+                        ...slots, 
+                        current: Math.max(0, Math.min(slots.max, nextCurrent)) 
+                      } 
+                    }; 
+                    setSpellSlots(n); 
+                    updateCharacter(characterId, { spellSlots: n }); 
+                  }} 
+                  className="h-3 w-3" 
+                /> 
+              ))}
             </div>
           )}
         </CardHeader>

@@ -12,6 +12,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '../../ui/popover';
 import { cn } from '@/lib/utils';
 import { useCharacterContext } from '@/context/character-context';
 import { useTranslation } from '@/context/language-context';
+import { Checkbox } from '../../ui/checkbox';
+
 
 const CLASS_HIT_DICE: Record<string, number> = {
   "Artificer": 8, "Barbarian": 12, "Bard": 8, "Cleric": 8, "Druid": 8,
@@ -56,7 +58,7 @@ interface CombatSectionProps {
 
 export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, CombatSectionProps>(
   ({ characterId, initialCombatStats, initialExhaustion, initialHitDiceUsed, initialAttacks, initialCombatResources, dexterity, progressionData, isCompactView, activeCompactSection }, ref) => {
-    const { updateCharacter, showEditButtons, hideNotes } = useCharacterContext();
+    const { updateCharacter, showEditButtons, hideNotes, getCharacter } = useCharacterContext();
     const { t } = useTranslation();
 
     const [combatStats, setCombatStats] = React.useState<CombatStats>(initialCombatStats);
@@ -71,6 +73,10 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
     const [isResourcesEditing, setIsResourcesEditing] = React.useState(false);
     const [newResourceDesc, setNewResourceDesc] = React.useState('');
     const [newResourceMax, setNewResourceMax] = React.useState(1);
+    const currentChar = getCharacter(characterId);
+    const [allowInspirationHomeRule, setAllowInspirationHomeRule] = React.useState((currentChar as any)?.allowInspirationHomeRule || false);
+    const [hpTracking, setHpTracking] = React.useState((currentChar as any)?.hpTracking || '');
+
 
     React.useEffect(() => {
       setCombatStats(initialCombatStats);
@@ -78,7 +84,9 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
       setHitDiceUsed(initialHitDiceUsed);
       setAttacks(initialAttacks);
       setCombatResources(initialCombatResources);
-    }, [characterId]);
+      setAllowInspirationHomeRule((getCharacter(characterId) as any)?.allowInspirationHomeRule || false);
+      setHpTracking((getCharacter(characterId) as any)?.hpTracking || '');
+    }, [characterId, getCharacter]);
 
     const dexMod = Math.floor((dexterity - 10) / 2);
 
@@ -103,6 +111,13 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
     const handleSaveHp = React.useCallback(() => { updateCharacter(characterId, { hitPoints: combatStats.hitPoints, temporaryHitPoints: combatStats.temporaryHitPoints }); setIsHpEditing(false); }, [characterId, combatStats.hitPoints, combatStats.temporaryHitPoints, updateCharacter]);
     const handleSaveAttacks = React.useCallback(() => { updateCharacter(characterId, { attacks }); setIsAttacksEditing(false); }, [characterId, attacks, updateCharacter]);
     const handleSaveResources = React.useCallback(() => { updateCharacter(characterId, { combatResources }); setIsResourcesEditing(false); }, [characterId, combatResources, updateCharacter]);
+    const handleInspirationRuleChange = (checked: boolean | 'indeterminate') => {
+      const isChecked = checked === true;
+      setAllowInspirationHomeRule(isChecked);
+      updateCharacter(characterId, { allowInspirationHomeRule: isChecked });
+    };
+
+    const handleHpTrackingBlur = () => {updateCharacter(characterId, { hpTracking });};
 
     React.useImperativeHandle(ref, () => ({
       saveAll: () => {
@@ -195,16 +210,40 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
           </CardContent>
         </Card>
 
-        <Card id="hit-points-card">
-          <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2"><CardTitle className="text-[10px] font-bold uppercase text-muted-foreground tracking-tight">Health</CardTitle>{(showEditButtons || isHpEditing) && <EditSaveButton editing={isHpEditing} onEdit={() => setIsHpEditing(true)} onSave={handleSaveHp} />}</CardHeader>
+                <Card id="hit-points-card">
+          <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2">
+            <CardTitle className="text-[10px] font-bold uppercase text-muted-foreground tracking-tight">Health</CardTitle>
+            {(showEditButtons || isHpEditing) && <EditSaveButton editing={isHpEditing} onEdit={() => setIsHpEditing(true)} onSave={handleSaveHp} />}
+          </CardHeader>
           <CardContent className="p-4 pt-0 space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-4">
-                <div className="p-2 border rounded text-center"><Label className="text-[10px] uppercase font-bold">Max</Label>{isHpEditing ? (<Input type="number" value={combatStats.hitPoints.max} onChange={e => setCombatStats({ ...combatStats, hitPoints: { ...combatStats.hitPoints, max: parseInt(e.target.value) || 0 } })} className="h-8 text-center" />) : (<div className="text-base font-bold">{combatStats.hitPoints.max}</div>)}</div>
-                <div className="p-2 border rounded text-center"><Label className="text-[10px] uppercase font-bold">Current</Label>{isHpEditing ? (<Input type="number" value={combatStats.hitPoints.current} onChange={e => setCombatStats({ ...combatStats, hitPoints: { ...combatStats.hitPoints, current: parseInt(e.target.value) || 0 } })} className="h-8 text-center" />) : (<div className="text-base font-bold text-primary">{combatStats.hitPoints.current}</div>)}</div>
+                <div className="p-2 border rounded text-center">
+                  <Label className="text-[10px] uppercase font-bold">Max</Label>
+                  {isHpEditing ? (
+                    <Input type="number" value={combatStats.hitPoints.max} onChange={e => setCombatStats({ ...combatStats, hitPoints: { ...combatStats.hitPoints, max: parseInt(e.target.value) || 0 } })} className="h-8 text-center" />
+                  ) : (
+                    <div className="text-base font-bold">{combatStats.hitPoints.max}</div>
+                  )}
+                </div>
+                <div className="p-2 border rounded text-center">
+                  <Label className="text-[10px] uppercase font-bold">Current</Label>
+                  {isHpEditing ? (
+                    <Input type="number" value={combatStats.hitPoints.current} onChange={e => setCombatStats({ ...combatStats, hitPoints: { ...combatStats.hitPoints, current: parseInt(e.target.value) || 0 } })} className="h-8 text-center" />
+                  ) : (
+                    <div className="text-base font-bold text-primary">{combatStats.hitPoints.current}</div>
+                  )}
+                </div>
               </div>
               <div className="space-y-4">
-                <div className="p-2 border rounded text-center"><Label className="text-[10px] uppercase font-bold">Temp</Label>{isHpEditing ? (<Input type="number" value={combatStats.temporaryHitPoints} onChange={e => setCombatStats({ ...combatStats, temporaryHitPoints: parseInt(e.target.value) || 0 })} className="h-8 text-center" />) : (<div className="text-base font-bold">{combatStats.temporaryHitPoints || 0}</div>)}</div>
+                <div className="p-2 border rounded text-center">
+                  <Label className="text-[10px] uppercase font-bold">Temp</Label>
+                  {isHpEditing ? (
+                    <Input type="number" value={combatStats.temporaryHitPoints} onChange={e => setCombatStats({ ...combatStats, temporaryHitPoints: parseInt(e.target.value) || 0 })} className="h-8 text-center" />
+                  ) : (
+                    <div className="text-base font-bold">{combatStats.temporaryHitPoints || 0}</div>
+                  )}
+                </div>
                 <div className="flex flex-col gap-2">
                   <Input type="number" placeholder="+/-" value={hpDelta} onChange={e => setHpDelta(e.target.value)} className="h-8 text-center" />
                   <div className="grid grid-cols-2 gap-2">
@@ -214,6 +253,32 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
                 </div>
               </div>
             </div>
+
+            {/* NEW: HP Tracking moved INSIDE the Health box at the bottom */}
+            <div className="pt-2 border-t">
+              <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-1 block">HP Tracking</Label>
+              <Textarea 
+                value={hpTracking} 
+                onChange={(e) => setHpTracking(e.target.value)} 
+                onBlur={handleHpTrackingBlur}
+                placeholder="e.g., -5 dmg from goblin, +10 healed by potion" 
+                className="min-h-[80px] text-xs" 
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* NEW: Inspiration Home Rule Checkbox (Standalone Card below Health) */}
+        <Card id="inspiration-rule-card">
+          <CardContent className="p-4 flex items-center gap-3">
+            <Checkbox 
+              id="allowInspirationHomeRule" 
+              checked={allowInspirationHomeRule} 
+              onCheckedChange={handleInspirationRuleChange} 
+            />
+            <Label htmlFor="allowInspirationHomeRule" className="text-sm font-medium cursor-pointer select-none">
+              Allow Inspiration Homerule
+            </Label>
           </CardContent>
         </Card>
 
