@@ -79,31 +79,31 @@ const handleSaveSpellcasting = React.useCallback(() => {
                 <span className="text-[10px] uppercase font-bold text-muted-foreground">{t('slots')}</span>
                 <div className="flex items-center gap-1">
                   <Button size="icon" variant="outline" className="h-5 w-5" onClick={() => { 
-  const newMax = Math.max(0, slots.max - 1);
-  const n = { 
-    ...spellSlots, 
-    [level]: { 
-      ...slots, 
-      max: newMax, 
-      current: Math.min(slots.current, newMax) // Cap current so it never exceeds new max
-    } 
-  }; 
-  setSpellSlots(n); 
-  updateCharacter(characterId, { spellSlots: n }); 
-}}><Minus className="h-2 w-2" /></Button>
+                    const newMax = Math.max(0, slots.max - 1);
+                      const n = { 
+                        ...spellSlots, 
+                        [level]: { 
+                          ...slots, 
+                          max: newMax, 
+                          current: Math.min(slots.current, newMax) // Cap current so it never exceeds new max
+                        } 
+                      }; 
+                      setSpellSlots(n); 
+                      updateCharacter(characterId, { spellSlots: n }); 
+                    }}><Minus className="h-2 w-2" /></Button>
                   <span className="text-xs font-black w-4 text-center">{slots.max}</span>
                   <Button size="icon" variant="outline" className="h-5 w-5" onClick={() => { 
-  const n = { 
-    ...spellSlots, 
-    [level]: { 
-      ...slots, 
-      max: slots.max + 1, 
-      current: slots.current + 1 // New slot is checked (available) by default
-    } 
-  }; 
-  setSpellSlots(n); 
-  updateCharacter(characterId, { spellSlots: n }); 
-}}><Plus className="h-2 w-2" /></Button>
+                      const n = { 
+                        ...spellSlots, 
+                        [level]: { 
+                          ...slots, 
+                          max: slots.max + 1, 
+                          current: slots.current + 1 // New slot is checked (available) by default
+                        } 
+                      }; 
+                      setSpellSlots(n); 
+                      updateCharacter(characterId, { spellSlots: n }); 
+                    }}><Plus className="h-2 w-2" /></Button>
                 </div>
               </div>
             )}
