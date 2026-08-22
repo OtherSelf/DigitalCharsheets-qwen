@@ -63,10 +63,11 @@
   ],
   "divineBoons": [
     "Boon of High Magic: You gain one 9th-level spell slot, provided that you already have one.",
-    "Boon of Dimensional Travel: As an action, you can cast the Misty Step spell, without using a spell slot or any components. Once you do so, you can't use this boon again until you finish a short rest.",
     "Boon of Immortality: You stop aging. You are immune to any effect that would age you, and you can't die from old age.",
     "Boon of Fortitude: Your hit point maximum increases by 40.",
-    "Boon of Fortitude: Your hit point maximum increases by 40."
+    "Boon of Fortitude: Your hit point maximum increases by 40.",
+    "Boon of Fate: When another creature that you can see within 60 feet of you makes an ability check, an attack roll, or a saving throw, you can roll a d10 and apply the result as a bonus or penalty to the roll. Once you use this boon, you can't use it again until you finish a short rest.",
+    "Boon of the Unfettered: You have advantage on ability checks made to resist being grappled. In addition, you can use an action to automatically escape a grapple or free yourself of restraints of any kind."
   ],
   "stats": {
     "strength": 10,
