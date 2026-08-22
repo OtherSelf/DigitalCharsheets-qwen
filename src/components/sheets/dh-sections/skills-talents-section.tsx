@@ -193,49 +193,10 @@ export const SkillsTalentsSection = ({ character, isCompactView, activeCompactSe
                             )}
                             <p className="text-muted-foreground flex-grow break-words">&bull; {talent.name}</p>
                         </div>
-                    )) : <p className={cn("text-muted-foreground", isCompactView ? "text-xs" : "text-sm")}>No talents or traits.</p>}</div>
+                    )) : <p className={cn("text-muted-foreground", isCompactView ? "text-xs" : "text-sm")}>No talents or traits.</p>}
+                    </div>
                 )}
             </div>
-            <Separator className={cn(isCompactView && 'hidden')} />
-            {/* Movement Section - AUTO-CALCULATED FROM AGILITY */}
-            <div id="movement-section" className={cn(isCompactView && activeCompactSection !== 'talents-section' && 'hidden')}>
-                <div className="flex flex-row items-center justify-between mb-4">
-                    <h3 className="font-headline text-lg font-semibold">{t('movement')}</h3>
-                </div>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                    {(() => {
-                        const agUpgrades = (character.statUpgrades?.agility || [false, false, false, false]) as boolean[];
-                        const agBonus = agUpgrades.filter(Boolean).length * 5;
-                        const effectiveAg = character.stats.agility + agBonus;
-                        const agMod = Math.floor(effectiveAg / 10);
-            
-                        return (
-                            <>
-                                <div className="flex flex-col items-center p-2 rounded-lg bg-background border">
-                                    <div className="text-[10px] sm:text-xs text-muted-foreground text-center mb-1">½ Move</div>
-                                    <div className="text-xl font-bold text-primary">{agMod}m</div>
-                                </div>
-                                <div className="flex flex-col items-center p-2 rounded-lg bg-background border">
-                                    <div className="text-[10px] sm:text-xs text-muted-foreground text-center mb-1">Move</div>
-                                    <div className="text-xl font-bold text-primary">{agMod * 2}m</div>
-                                </div>
-                                <div className="flex flex-col items-center p-2 rounded-lg bg-background border">
-                                    <div className="text-[10px] sm:text-xs text-muted-foreground text-center mb-1">Charge</div>
-                                    <div className="text-xl font-bold text-primary">{agMod * 3}m</div>
-                                </div>
-                                <div className="flex flex-col items-center p-2 rounded-lg bg-background border">
-                                    <div className="text-[10px] sm:text-xs text-muted-foreground text-center mb-1">Run</div>
-                                    <div className="text-xl font-bold text-primary">{agMod * 6}m</div>
-                                </div>
-                            </>
-                        );
-                    })()}
-                </div>
-                <p className="text-xs text-muted-foreground italic mt-2 text-center">
-                    Auto-calculated from Agility ({character.stats.agility} + {((character.statUpgrades?.agility || []).filter(Boolean).length * 5)} upgrade bonus)
-                </p>
-            </div>
-            <Separator className={cn(isCompactView && 'hidden')} />
         </>
     );
 };

@@ -61,7 +61,8 @@ export function Header({ onNotesClick, onJournalClick }: HeaderProps) {
     if (character && character.gameSystem === 'Dungeons & Dragons') {
       const dnd = character as DnD5eCharacter;
       const current = parseInt(dnd.inspiration) || 0;
-      const next = Math.max(0, current + delta).toString();
+      const maxInspiration = dnd.allowInspirationHomeRule ? 999 : 1;
+      const next = Math.max(0, Math.min(maxInspiration, current + delta)).toString();
       updateCharacter(dnd.id, { inspiration: next });
     }
   };
@@ -85,7 +86,7 @@ export function Header({ onNotesClick, onJournalClick }: HeaderProps) {
             </div>
           </>
         )}
-        {character && isCompactView && character.gameSystem === 'Dungeons & Dragons' && (
+        {character && character.gameSystem === 'Dungeons & Dragons' && (
           <div className="flex items-center gap-2 ml-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20">
             <span className="text-[10px] font-bold uppercase text-primary tracking-widest hidden sm:inline">{t('inspiration')}</span>
             <div className="flex items-center gap-1.5">
@@ -97,6 +98,18 @@ export function Header({ onNotesClick, onJournalClick }: HeaderProps) {
                 <Plus className="h-3 w-3" />
               </Button>
             </div>
+            {!isCompactView && (
+              <div className="flex items-center gap-1.5 ml-2 pl-2 border-l border-primary/20">
+                <Checkbox 
+                  id="inspiration-home-rule" 
+                  checked={(character as DnD5eCharacter).allowInspirationHomeRule || false} 
+                  onCheckedChange={(checked) => updateCharacter(character.id, { allowInspirationHomeRule: !!checked })} 
+                />
+                <Label htmlFor="inspiration-home-rule" className="text-[10px] md:text-xs whitespace-nowrap cursor-pointer text-primary">
+                  Home Rule
+                </Label>
+              </div>
+            )}
           </div>
         )}
       </div>

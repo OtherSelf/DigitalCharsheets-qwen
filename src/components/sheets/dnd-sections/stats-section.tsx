@@ -109,6 +109,7 @@ export function DndStatsSection({
 
   return (
     <div className={cn("md:col-span-2 space-y-4", isCompactView && activeCompactSection !== 'stats-section' && "hidden")}>
+    {!isCompactView && (
       <Card>
         <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2">
           <CardTitle className="text-[10px] font-bold uppercase text-muted-foreground tracking-tight">{t('characteristics')}</CardTitle>
@@ -143,6 +144,7 @@ export function DndStatsSection({
           </div>
         </CardContent>
       </Card>
+    )}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2">
           <CardTitle className="text-[10px] font-bold uppercase text-muted-foreground tracking-tight">{t('otherProficienciesAndLanguages')}</CardTitle>
