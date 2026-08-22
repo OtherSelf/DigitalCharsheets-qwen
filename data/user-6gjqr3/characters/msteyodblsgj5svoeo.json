@@ -64,7 +64,9 @@
   "divineBoons": [
     "Boon of High Magic: You gain one 9th-level spell slot, provided that you already have one.",
     "Boon of Dimensional Travel: As an action, you can cast the Misty Step spell, without using a spell slot or any components. Once you do so, you can't use this boon again until you finish a short rest.",
-    "Boon of Immortality: You stop aging. You are immune to any effect that would age you, and you can't die from old age."
+    "Boon of Immortality: You stop aging. You are immune to any effect that would age you, and you can't die from old age.",
+    "Boon of Fortitude: Your hit point maximum increases by 40.",
+    "Boon of Fortitude: Your hit point maximum increases by 40."
   ],
   "stats": {
     "strength": 10,
@@ -374,40 +376,40 @@
   ],
   "spellSlots": {
     "1": {
-      "max": 8,
-      "current": 0
+      "max": 4,
+      "current": 4
     },
     "2": {
-      "max": 4,
-      "current": 0
+      "max": 3,
+      "current": 3
     },
     "3": {
-      "max": 0,
-      "current": 0
+      "max": 3,
+      "current": 3
     },
     "4": {
-      "max": 0,
-      "current": 0
+      "max": 3,
+      "current": 3
     },
     "5": {
-      "max": 0,
-      "current": 0
+      "max": 3,
+      "current": 3
     },
     "6": {
-      "max": 0,
-      "current": 0
+      "max": 2,
+      "current": 2
     },
     "7": {
-      "max": 0,
-      "current": 0
+      "max": 2,
+      "current": 2
     },
     "8": {
-      "max": 0,
-      "current": 0
+      "max": 1,
+      "current": 1
     },
     "9": {
-      "max": 0,
-      "current": 0
+      "max": 1,
+      "current": 1
     }
   },
   "combatResources": [

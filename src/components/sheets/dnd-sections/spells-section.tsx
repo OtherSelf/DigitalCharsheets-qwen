@@ -78,38 +78,88 @@ const handleSaveSpellcasting = React.useCallback(() => {
               <div className="flex items-center gap-2">
                 <span className="text-[10px] uppercase font-bold text-muted-foreground">{t('slots')}</span>
                 <div className="flex items-center gap-1">
-                  <Button size="icon" variant="outline" className="h-5 w-5" onClick={() => { const n = { ...spellSlots, [level]: { ...slots, max: Math.max(0, slots.max - 1) } }; setSpellSlots(n); updateCharacter(characterId, { spellSlots: n }); }}><Minus className="h-2 w-2" /></Button>
+                  <Button size="icon" variant="outline" className="h-5 w-5" onClick={() => { 
+  const newMax = Math.max(0, slots.max - 1);
+  const n = { 
+    ...spellSlots, 
+    [level]: { 
+      ...slots, 
+      max: newMax, 
+      current: Math.min(slots.current, newMax) // Cap current so it never exceeds new max
+    } 
+  }; 
+  setSpellSlots(n); 
+  updateCharacter(characterId, { spellSlots: n }); 
+}}><Minus className="h-2 w-2" /></Button>
                   <span className="text-xs font-black w-4 text-center">{slots.max}</span>
-                  <Button size="icon" variant="outline" className="h-5 w-5" onClick={() => { const n = { ...spellSlots, [level]: { ...slots, max: slots.max + 1 } }; setSpellSlots(n); updateCharacter(characterId, { spellSlots: n }); }}><Plus className="h-2 w-2" /></Button>
+                  <Button size="icon" variant="outline" className="h-5 w-5" onClick={() => { 
+  const n = { 
+    ...spellSlots, 
+    [level]: { 
+      ...slots, 
+      max: slots.max + 1, 
+      current: slots.current + 1 // New slot is checked (available) by default
+    } 
+  }; 
+  setSpellSlots(n); 
+  updateCharacter(characterId, { spellSlots: n }); 
+}}><Plus className="h-2 w-2" /></Button>
                 </div>
               </div>
             )}
             {(showEditButtons || isEditing) && <EditSaveButton editing={isEditing} onEdit={() => setEditingLevel(level)} onSave={() => { updateCharacter(characterId, { spells, spellSlots }); setEditingLevel(null); }} />}
           </div>
           {level > 0 && slots.max > 0 && (
-            <div className="flex flex-wrap gap-1 mt-1">
-              {Array.from({ length: slots.max }).map((_, i) => (
-                <Checkbox 
-                  key={i} 
-                  // Checked by default (available). Unchecking means spent.
-                  checked={i >= (slots.max - slots.current)} 
-                  onCheckedChange={(checked) => {
-                    const isChecked = checked === true;
-                    // If checking (making available), current increases. If unchecking (making spent), current decreases.
-                    const nextCurrent = isChecked ? slots.max - i : slots.max - (i + 1);
-                    const n = { 
-                      ...spellSlots, 
-                      [level]: { 
-                        ...slots, 
-                        current: Math.max(0, Math.min(slots.max, nextCurrent)) 
-                      } 
-                    }; 
-                    setSpellSlots(n); 
-                    updateCharacter(characterId, { spellSlots: n }); 
-                  }} 
-                  className="h-3 w-3" 
-                /> 
-              ))}
+            <div className="flex items-center justify-center gap-2 mt-1">
+              {/* Spend Button (Left) */}
+              <Button 
+                size="icon" 
+                variant="outline" 
+                className="h-6 w-6" 
+                onClick={() => {
+                  const n = { 
+                    ...spellSlots, 
+                    [level]: { ...slots, current: Math.max(0, slots.current - 1) } 
+                  };
+                  setSpellSlots(n);
+                  updateCharacter(characterId, { spellSlots: n });
+                }}
+                disabled={slots.current <= 0}
+                title="Spend a slot"
+              >
+                <Minus className="h-3 w-3" />
+              </Button>
+
+              {/* Checkboxes (Disabled but fully visible as state indicators) */}
+              <div className="flex flex-wrap gap-1">
+                {Array.from({ length: slots.max }).map((_, i) => (
+                  <Checkbox 
+                    key={i} 
+                    checked={i < slots.current} 
+                    disabled 
+                    className="h-3 w-3 disabled:opacity-100" 
+                  />
+                ))}
+              </div>
+
+              {/* Recover Button (Right) */}
+              <Button 
+                size="icon" 
+                variant="outline" 
+                className="h-6 w-6" 
+                onClick={() => {
+                  const n = { 
+                    ...spellSlots, 
+                    [level]: { ...slots, current: Math.min(slots.max, slots.current + 1) } 
+                  };
+                  setSpellSlots(n);
+                  updateCharacter(characterId, { spellSlots: n });
+                }}
+                disabled={slots.current >= slots.max}
+                title="Recover a slot"
+              >
+                <Plus className="h-3 w-3" />
+              </Button>
             </div>
           )}
         </CardHeader>
