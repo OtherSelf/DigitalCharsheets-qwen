@@ -18,6 +18,7 @@ export interface NarrativeData {
   bonds: string[];
   flaws: string[];
   featuresAndTraits: string[];
+  divineBoons: string[];
 }
 
 interface NarrativeListCardProps {

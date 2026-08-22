@@ -91,7 +91,13 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
     // New Items States
     const [newProfItem, setNewProfItem] = React.useState('');
     const [companions, setCompanions] = React.useState<DnDCompanion[]>(character.companions || []);
-    
+
+    // Sync progression level to character context in real-time so sidebar updates immediately
+    React.useEffect(() => {
+      if (character.level !== progressionData.level) {
+        updateCharacter(character.id, { level: progressionData.level });
+      }
+    }, [progressionData.level, character.id, character.level, updateCharacter]);
 
     // Derived values
     const proficiencyBonus = Math.floor((progressionData.level - 1) / 4) + 2;
@@ -166,7 +172,7 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
           </div>
         )}
 
-     {/* Progression, Divine Boons, Character Info, Narrative */}
+     {/* Progression, Character Info, Narrative (Compact Only) */}
      <div className={cn("flex flex-col gap-6 items-stretch", isCompactView && activeCompactSection !== 'info-section' && "hidden")}>
        <div className="flex flex-col md:flex-row gap-6 items-stretch">
          <DndProgressionSection
@@ -178,15 +184,7 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
            setIsProgressionEditing={setIsProgressionEditing}
            handleSaveProgression={handleSaveProgression}
          />
-         {progressionData.level >= 20 && (
-           <DndDivineBoonsSection
-             ref={boonsRef}
-             characterId={character.id}
-             initialBoons={character.divineBoons || []}
-             isCompactView={isCompactView}
-             activeCompactSection={activeCompactSection}
-           />
-         )}
+         
          <DndCharacterInfoSection
            ref={characterInfoRef}
            characterId={character.id}
@@ -205,6 +203,7 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
              notes: character.notes || ''
            }}
          />
+         
          {/* Compact View Only: Narrative Section moves to Info */}
          {isCompactView && (
            <DndNarrativeSection
@@ -222,6 +221,22 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
          )}
        </div>
      </div>
+
+     {/* Divine Boons - Independent Section (Desktop & Compact) */}
+     {progressionData.level >= 20 && (
+       <div className={cn(
+         "flex flex-col gap-6 items-stretch",
+         isCompactView && activeCompactSection !== 'boons-section' && "hidden"
+       )}>
+         <DndDivineBoonsSection
+           ref={boonsRef}
+           characterId={character.id}
+           initialBoons={character.divineBoons || []}
+           isCompactView={isCompactView}
+           activeCompactSection={activeCompactSection}
+         />
+       </div>
+     )}
 
         {/* Stats, Saves, Skills, Combat */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">

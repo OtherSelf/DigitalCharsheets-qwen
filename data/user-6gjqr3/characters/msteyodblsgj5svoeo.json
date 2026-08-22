@@ -4,7 +4,7 @@
   "race": "Tabaxi",
   "background": "Outlander",
   "alignment": "Neutral",
-  "experiencePoints": 369529,
+  "experiencePoints": 42152,
   "age": "",
   "eyes": "",
   "skin": "",
@@ -376,59 +376,22 @@
   "userId": "user-6gjqr3",
   "id": "msteyodblsgj5svoeo",
   "hitDiceUsed": {
-    "Rogue": 0
+    "Rogue": 0,
+    "Artificer": 0,
+    "Barbarian": 0,
+    "Bard": 0,
+    "Cleric": 0,
+    "Druid": 0,
+    "Fighter": 0,
+    "Monk": 0,
+    "Paladin": 0,
+    "Ranger": 0,
+    "Sorcerer": 0,
+    "Warlock": 0,
+    "Wizard": 0
   },
   "isMulticlass": true,
-  "multiclasses": [
-    {
-      "class": "Artificer",
-      "level": 1
-    },
-    {
-      "class": "Barbarian",
-      "level": 1
-    },
-    {
-      "class": "Bard",
-      "level": 1
-    },
-    {
-      "class": "Cleric",
-      "level": 1
-    },
-    {
-      "class": "Druid",
-      "level": 1
-    },
-    {
-      "class": "Fighter",
-      "level": 1
-    },
-    {
-      "class": "Monk",
-      "level": 1
-    },
-    {
-      "class": "Paladin",
-      "level": 1
-    },
-    {
-      "class": "Ranger",
-      "level": 1
-    },
-    {
-      "class": "Sorcerer",
-      "level": 1
-    },
-    {
-      "class": "Warlock",
-      "level": 2
-    },
-    {
-      "class": "Wizard",
-      "level": 7
-    }
-  ],
+  "multiclasses": [],
   "spellSlots": {
     "1": {
       "max": 4,
