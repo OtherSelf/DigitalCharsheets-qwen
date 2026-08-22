@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { type DnDAttack, type CombatResource } from '@/lib/types';
+import { type DnDAttack, type CombatResource, type SpellcastingEntry, type DnDAbility } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
 import { Input } from '../../ui/input';
 import { Textarea } from '../../ui/textarea';
@@ -9,11 +9,10 @@ import { Button } from '../../ui/button';
 import { Plus, Trash2, Edit, Save, Minus, Info } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '../../ui/popover';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/select';
 import { cn } from '@/lib/utils';
 import { useCharacterContext } from '@/context/character-context';
 import { useTranslation } from '@/context/language-context';
-import { Checkbox } from '../../ui/checkbox';
-
 
 const CLASS_HIT_DICE: Record<string, number> = {
   "Artificer": 8, "Barbarian": 12, "Bard": 8, "Cleric": 8, "Druid": 8,
@@ -22,17 +21,13 @@ const CLASS_HIT_DICE: Record<string, number> = {
 };
 
 const EXHAUSTION_EFFECTS = [
-  'No exhaustion',
-  'Disadvantage on Ability Checks',
-  'Speed halved',
-  'Disadvantage on Attack rolls and Saving Throws',
-  'Hit point maximum halved',
-  'Speed reduced to 0',
-  'Death',
+  'No exhaustion', 'Disadvantage on Ability Checks', 'Speed halved',
+  'Disadvantage on Attack rolls and Saving Throws', 'Hit point maximum halved',
+  'Speed reduced to 0', 'Death',
 ];
 
 const EditSaveButton = ({ editing, onEdit, onSave }: { editing: boolean; onEdit: () => void; onSave: () => void }) => (
-  editing ? ( <Button size="icon" variant="ghost" onClick={onSave} className="h-7 w-7"><Save className="h-4 w-4" /></Button> ) : ( <Button size="icon" variant="outline" onClick={onEdit} className="h-7 w-7"><Edit className="h-4 w-4" /></Button> )
+  editing ? <Button size="icon" variant="ghost" onClick={onSave} className="h-7 w-7"><Save className="h-4 w-4" /></Button> : <Button size="icon" variant="outline" onClick={onEdit} className="h-7 w-7"><Edit className="h-4 w-4" /></Button>
 );
 
 interface CombatStats {
@@ -50,15 +45,17 @@ interface CombatSectionProps {
   initialHitDiceUsed: Record<string, number>;
   initialAttacks: DnDAttack[];
   initialCombatResources: CombatResource[];
-  dexterity: number;
+  initialSpellcastingEntries: SpellcastingEntry[];
+  stats: Record<string, number>;
+  proficiencyBonus: number;
   progressionData: { characterClass: string; level: number; isMulticlass: boolean; multiclasses: { class: string; level: number }[] };
   isCompactView: boolean;
   activeCompactSection: string;
 }
 
 export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, CombatSectionProps>(
-  ({ characterId, initialCombatStats, initialExhaustion, initialHitDiceUsed, initialAttacks, initialCombatResources, dexterity, progressionData, isCompactView, activeCompactSection }, ref) => {
-    const { updateCharacter, showEditButtons, hideNotes, getCharacter } = useCharacterContext();
+  ({ characterId, initialCombatStats, initialExhaustion, initialHitDiceUsed, initialAttacks, initialCombatResources, initialSpellcastingEntries, stats, proficiencyBonus, progressionData, isCompactView, activeCompactSection }, ref) => {
+    const { updateCharacter, showEditButtons, hideNotes } = useCharacterContext();
     const { t } = useTranslation();
 
     const [combatStats, setCombatStats] = React.useState<CombatStats>(initialCombatStats);
@@ -73,10 +70,9 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
     const [isResourcesEditing, setIsResourcesEditing] = React.useState(false);
     const [newResourceDesc, setNewResourceDesc] = React.useState('');
     const [newResourceMax, setNewResourceMax] = React.useState(1);
-    const currentChar = getCharacter(characterId);
-    const [allowInspirationHomeRule, setAllowInspirationHomeRule] = React.useState((currentChar as any)?.allowInspirationHomeRule || false);
-    const [hpTracking, setHpTracking] = React.useState((currentChar as any)?.hpTracking || '');
-
+    
+    const [spellcastingEntries, setSpellcastingEntries] = React.useState<SpellcastingEntry[]>(initialSpellcastingEntries);
+    const [isSpellcastingEditing, setIsSpellcastingEditing] = React.useState(false);
 
     React.useEffect(() => {
       setCombatStats(initialCombatStats);
@@ -84,11 +80,10 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
       setHitDiceUsed(initialHitDiceUsed);
       setAttacks(initialAttacks);
       setCombatResources(initialCombatResources);
-      setAllowInspirationHomeRule((getCharacter(characterId) as any)?.allowInspirationHomeRule || false);
-      setHpTracking((getCharacter(characterId) as any)?.hpTracking || '');
-    }, [characterId, getCharacter]);
+      setSpellcastingEntries(initialSpellcastingEntries);
+    }, [characterId]);
 
-    const dexMod = Math.floor((dexterity - 10) / 2);
+    const dexMod = Math.floor(((stats.dexterity || 10) - 10) / 2);
 
     const primaryClassLevel = progressionData.isMulticlass
       ? Math.max(1, progressionData.level - (progressionData.multiclasses?.reduce((sum, mc) => sum + mc.level, 0) || 0))
@@ -100,8 +95,7 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
       entries.push({ className: progressionData.characterClass, level: primaryClassLevel, dieSize: primaryDieSize });
       if (progressionData.isMulticlass && progressionData.multiclasses) {
         for (const mc of progressionData.multiclasses) {
-          const dieSize = CLASS_HIT_DICE[mc.class] || 8;
-          entries.push({ className: mc.class, level: mc.level, dieSize });
+          entries.push({ className: mc.class, level: mc.level, dieSize: CLASS_HIT_DICE[mc.class] || 8 });
         }
       }
       return entries;
@@ -111,13 +105,7 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
     const handleSaveHp = React.useCallback(() => { updateCharacter(characterId, { hitPoints: combatStats.hitPoints, temporaryHitPoints: combatStats.temporaryHitPoints }); setIsHpEditing(false); }, [characterId, combatStats.hitPoints, combatStats.temporaryHitPoints, updateCharacter]);
     const handleSaveAttacks = React.useCallback(() => { updateCharacter(characterId, { attacks }); setIsAttacksEditing(false); }, [characterId, attacks, updateCharacter]);
     const handleSaveResources = React.useCallback(() => { updateCharacter(characterId, { combatResources }); setIsResourcesEditing(false); }, [characterId, combatResources, updateCharacter]);
-    const handleInspirationRuleChange = (checked: boolean | 'indeterminate') => {
-      const isChecked = checked === true;
-      setAllowInspirationHomeRule(isChecked);
-      updateCharacter(characterId, { allowInspirationHomeRule: isChecked });
-    };
-
-    const handleHpTrackingBlur = () => {updateCharacter(characterId, { hpTracking });};
+    const handleSaveSpellcasting = React.useCallback(() => { updateCharacter(characterId, { spellcastingEntries }); setIsSpellcastingEditing(false); }, [characterId, spellcastingEntries, updateCharacter]);
 
     React.useImperativeHandle(ref, () => ({
       saveAll: () => {
@@ -125,8 +113,9 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
         if (isHpEditing) handleSaveHp();
         if (isAttacksEditing) handleSaveAttacks();
         if (isResourcesEditing) handleSaveResources();
+        if (isSpellcastingEditing) handleSaveSpellcasting();
       }
-    }), [isCombatStatsEditing, isHpEditing, isAttacksEditing, isResourcesEditing, handleSaveCombatStats, handleSaveHp, handleSaveAttacks, handleSaveResources]);
+    }), [isCombatStatsEditing, isHpEditing, isAttacksEditing, isResourcesEditing, isSpellcastingEditing, handleSaveCombatStats, handleSaveHp, handleSaveAttacks, handleSaveResources, handleSaveSpellcasting]);
 
     const handleHpMath = (op: 'sub' | 'rec') => {
       const d = parseInt(hpDelta) || 0; if (d === 0) return;
@@ -199,53 +188,80 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
       updateCharacter(characterId, { hitDiceUsed: next });
     };
 
+    // Spellcasting Auto-calculation Helpers
+    const getSpellcastingMod = (ability: string) => {
+      if (ability === 'none' || !ability) return 0;
+      const statValue = stats[ability] || 10;
+      return Math.floor((statValue - 10) / 2);
+    };
+
+    const calculateSpellAttack = (ability: string) => {
+      const mod = getSpellcastingMod(ability);
+      const total = mod + proficiencyBonus;
+      return total >= 0 ? `+${total}` : `${total}`;
+    };
+
+    const calculateSpellSaveDC = (ability: string) => {
+      return 8 + proficiencyBonus + getSpellcastingMod(ability);
+    };
+
+    const handleSpellcastingFieldChange = (id: string, field: keyof SpellcastingEntry, value: string | number) => {
+      setSpellcastingEntries(prev => prev.map(entry => {
+        if (entry.id !== id) return entry;
+        const updated = { ...entry, [field]: value };
+        // Auto-calculate if ability changes
+        if (field === 'ability' && typeof value === 'string') {
+          updated.attackBonus = calculateSpellAttack(value);
+          updated.saveDC = calculateSpellSaveDC(value);
+        }
+        return updated;
+      }));
+    };
+
+    const addSpellcastingEntry = () => {
+      const newEntry: SpellcastingEntry = { id: `spellcast-${Date.now()}`, ability: 'none', attackBonus: '+0', saveDC: 10 };
+      setSpellcastingEntries([...spellcastingEntries, newEntry]);
+    };
+
+    const removeSpellcastingEntry = (id: string) => {
+      setSpellcastingEntries(spellcastingEntries.filter(e => e.id !== id));
+    };
+
     return (
       <div className={cn("md:col-span-4 space-y-6", isCompactView && activeCompactSection !== 'combat-section' && "hidden")}>
         <Card id="combat-stats-card">
           <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2"><CardTitle className="text-[10px] font-bold uppercase text-muted-foreground tracking-tight">{t('combatStats')}</CardTitle>{(showEditButtons || isCombatStatsEditing) && <EditSaveButton editing={isCombatStatsEditing} onEdit={() => setIsCombatStatsEditing(true)} onSave={handleSaveCombatStats} />}</CardHeader>
           <CardContent className="grid grid-cols-3 gap-4 p-4 pt-0 text-center">
             <div className="p-2 rounded-lg bg-background border"><Label className="text-[10px] text-muted-foreground uppercase font-bold">{t('armorClass')}</Label>{isCombatStatsEditing ? (<Input type="number" value={combatStats.armorClass} onChange={e => setCombatStats({ ...combatStats, armorClass: parseInt(e.target.value) || 10 })} className="h-9 w-full text-center" />) : (<div className="text-sm font-bold">{combatStats.armorClass}</div>)}</div>
-            <div className="p-2 rounded-lg bg-background border"><Label className="text-[10px] text-muted-foreground uppercase font-bold">{t('initiative')}</Label><div className="text-sm font-bold">+{dexMod}</div></div>
+            <div className="p-2 rounded-lg bg-background border"><Label className="text-[10px] text-muted-foreground uppercase font-bold">{t('initiative')}</Label><div className="text-sm font-bold">{dexMod >= 0 ? `+${dexMod}` : dexMod}</div></div>
             <div className="p-2 rounded-lg bg-background border"><Label className="text-[10px] text-muted-foreground uppercase font-bold">{t('speed')}</Label>{isCombatStatsEditing ? <Input type="number" value={combatStats.speed} onChange={e => setCombatStats({ ...combatStats, speed: parseInt(e.target.value) || 0 })} className="h-9 w-full text-center" /> : <div className="text-sm font-bold">{combatStats.speed}ft</div>}</div>
           </CardContent>
         </Card>
 
-                <Card id="hit-points-card">
-          <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2">
-            <CardTitle className="text-[10px] font-bold uppercase text-muted-foreground tracking-tight">Health</CardTitle>
-            {(showEditButtons || isHpEditing) && <EditSaveButton editing={isHpEditing} onEdit={() => setIsHpEditing(true)} onSave={handleSaveHp} />}
-          </CardHeader>
+        <Card id="hit-points-card">
+          <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2"><CardTitle className="text-[10px] font-bold uppercase text-muted-foreground tracking-tight">Health</CardTitle>{(showEditButtons || isHpEditing) && <EditSaveButton editing={isHpEditing} onEdit={() => setIsHpEditing(true)} onSave={handleSaveHp} />}</CardHeader>
           <CardContent className="p-4 pt-0 space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-4">
-                <div className="p-2 border rounded text-center">
-                  <Label className="text-[10px] uppercase font-bold">Max</Label>
-                  {isHpEditing ? (
-                    <Input type="number" value={combatStats.hitPoints.max} onChange={e => setCombatStats({ ...combatStats, hitPoints: { ...combatStats.hitPoints, max: parseInt(e.target.value) || 0 } })} className="h-8 text-center" />
-                  ) : (
-                    <div className="text-base font-bold">{combatStats.hitPoints.max}</div>
-                  )}
-                </div>
-                <div className="p-2 border rounded text-center">
-                  <Label className="text-[10px] uppercase font-bold">Current</Label>
-                  {isHpEditing ? (
-                    <Input type="number" value={combatStats.hitPoints.current} onChange={e => setCombatStats({ ...combatStats, hitPoints: { ...combatStats.hitPoints, current: parseInt(e.target.value) || 0 } })} className="h-8 text-center" />
-                  ) : (
-                    <div className="text-base font-bold text-primary">{combatStats.hitPoints.current}</div>
-                  )}
-                </div>
+                <div className="p-2 border rounded text-center"><Label className="text-[10px] uppercase font-bold">Max</Label>{isHpEditing ? (<Input type="number" value={combatStats.hitPoints.max} onChange={e => setCombatStats({ ...combatStats, hitPoints: { ...combatStats.hitPoints, max: parseInt(e.target.value) || 0 } })} className="h-8 text-center" />) : (<div className="text-base font-bold">{combatStats.hitPoints.max}</div>)}</div>
+                <div className="p-2 border rounded text-center"><Label className="text-[10px] uppercase font-bold">Current</Label>{isHpEditing ? (<Input type="number" value={combatStats.hitPoints.current} onChange={e => setCombatStats({ ...combatStats, hitPoints: { ...combatStats.hitPoints, current: parseInt(e.target.value) || 0 } })} className="h-8 text-center" />) : (<div className="text-base font-bold text-primary">{combatStats.hitPoints.current}</div>)}</div>
               </div>
               <div className="space-y-4">
-                <div className="p-2 border rounded text-center">
-                  <Label className="text-[10px] uppercase font-bold">Temp</Label>
-                  {isHpEditing ? (
-                    <Input type="number" value={combatStats.temporaryHitPoints} onChange={e => setCombatStats({ ...combatStats, temporaryHitPoints: parseInt(e.target.value) || 0 })} className="h-8 text-center" />
-                  ) : (
-                    <div className="text-base font-bold">{combatStats.temporaryHitPoints || 0}</div>
-                  )}
-                </div>
+                <div className="p-2 border rounded text-center"><Label className="text-[10px] uppercase font-bold">Temp</Label>{isHpEditing ? (<Input type="number" value={combatStats.temporaryHitPoints} onChange={e => setCombatStats({ ...combatStats, temporaryHitPoints: parseInt(e.target.value) || 0 })} className="h-8 text-center" />) : (<div className="text-base font-bold">{combatStats.temporaryHitPoints || 0}</div>)}</div>
                 <div className="flex flex-col gap-2">
-                  <Input type="number" placeholder="+/-" value={hpDelta} onChange={e => setHpDelta(e.target.value)} className="h-8 text-center" />
+                  <Input 
+                    type="text" 
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    placeholder="+/-" 
+                    value={hpDelta} 
+                    onChange={e => {
+                      // Instantly strips ANY character that is not a digit (0-9)
+                      const val = e.target.value.replace(/[^0-9]/g, '');
+                      setHpDelta(val);
+                    }} 
+                    className="h-8 text-center" 
+                  />
                   <div className="grid grid-cols-2 gap-2">
                     <Button size="sm" variant="outline" onClick={() => handleHpMath('sub')}>Sub</Button>
                     <Button size="sm" variant="outline" onClick={() => handleHpMath('rec')}>Heal</Button>
@@ -253,32 +269,6 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
                 </div>
               </div>
             </div>
-
-            {/* NEW: HP Tracking moved INSIDE the Health box at the bottom */}
-            <div className="pt-2 border-t">
-              <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-1 block">HP Tracking</Label>
-              <Textarea 
-                value={hpTracking} 
-                onChange={(e) => setHpTracking(e.target.value)} 
-                onBlur={handleHpTrackingBlur}
-                placeholder="e.g., -5 dmg from goblin, +10 healed by potion" 
-                className="min-h-[80px] text-xs" 
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* NEW: Inspiration Home Rule Checkbox (Standalone Card below Health) */}
-        <Card id="inspiration-rule-card">
-          <CardContent className="p-4 flex items-center gap-3">
-            <Checkbox 
-              id="allowInspirationHomeRule" 
-              checked={allowInspirationHomeRule} 
-              onCheckedChange={handleInspirationRuleChange} 
-            />
-            <Label htmlFor="allowInspirationHomeRule" className="text-sm font-medium cursor-pointer select-none">
-              Allow Inspiration Homerule
-            </Label>
           </CardContent>
         </Card>
 
@@ -293,9 +283,7 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
                 <Label className="text-[10px] uppercase font-bold text-green-600">{t('successes')}</Label>
                 <div className="flex items-center gap-2">
                   <Button size="icon" variant="outline" className="h-6 w-6" onClick={() => handleDeathSaveChange('successes', combatStats.deathSaves.successes - 1)}><Minus className="h-3 w-3" /></Button>
-                  <div className="flex gap-1">
-                    {[0, 1, 2].map(i => ( <div key={i} className={cn("w-4 h-4 rounded-full border-2", i < combatStats.deathSaves.successes ? "bg-green-500 border-green-500" : "border-muted-foreground/30")} /> ))}
-                  </div>
+                  <div className="flex gap-1">{[0, 1, 2].map(i => ( <div key={i} className={cn("w-4 h-4 rounded-full border-2", i < combatStats.deathSaves.successes ? "bg-green-500 border-green-500" : "border-muted-foreground/30")} /> ))}</div>
                   <Button size="icon" variant="outline" className="h-6 w-6" onClick={() => handleDeathSaveChange('successes', combatStats.deathSaves.successes + 1)}><Plus className="h-3 w-3" /></Button>
                 </div>
               </div>
@@ -303,9 +291,7 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
                 <Label className="text-[10px] uppercase font-bold text-red-600">{t('failures')}</Label>
                 <div className="flex items-center gap-2">
                   <Button size="icon" variant="outline" className="h-6 w-6" onClick={() => handleDeathSaveChange('failures', combatStats.deathSaves.failures - 1)}><Minus className="h-3 w-3" /></Button>
-                  <div className="flex gap-1">
-                    {[0, 1, 2].map(i => ( <div key={i} className={cn("w-4 h-4 rounded-full border-2", i < combatStats.deathSaves.failures ? "bg-red-500 border-red-500" : "border-muted-foreground/30")} /> ))}
-                  </div>
+                  <div className="flex gap-1">{[0, 1, 2].map(i => ( <div key={i} className={cn("w-4 h-4 rounded-full border-2", i < combatStats.deathSaves.failures ? "bg-red-500 border-red-500" : "border-muted-foreground/30")} /> ))}</div>
                   <Button size="icon" variant="outline" className="h-6 w-6" onClick={() => handleDeathSaveChange('failures', combatStats.deathSaves.failures + 1)}><Plus className="h-3 w-3" /></Button>
                 </div>
               </div>
@@ -319,9 +305,7 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
                   <Button size="icon" variant="outline" className="h-6 w-6" onClick={() => handleExhaustionChange(1)} disabled={exhaustion >= 6}><Plus className="h-3 w-3" /></Button>
                 </div>
               </div>
-              <p className={cn("text-[10px] mt-1 text-center", exhaustion >= 5 ? "text-red-500" : exhaustion >= 3 ? "text-orange-500" : "text-muted-foreground")}>
-                {EXHAUSTION_EFFECTS[exhaustion]}
-              </p>
+              <p className={cn("text-[10px] mt-1 text-center", exhaustion >= 5 ? "text-red-500" : exhaustion >= 3 ? "text-orange-500" : "text-muted-foreground")}>{EXHAUSTION_EFFECTS[exhaustion]}</p>
             </div>
           </CardContent>
         </Card>
@@ -352,29 +336,84 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
           </CardContent>
         </Card>
 
-        <Card id="attacks-box">
-          <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2"><CardTitle className="text-[10px] font-bold uppercase text-muted-foreground tracking-tight">{t('attacksAndSpellcasting')}</CardTitle>{(showEditButtons || isAttacksEditing) && <EditSaveButton editing={isAttacksEditing} onEdit={() => setIsAttacksEditing(true)} onSave={handleSaveAttacks} />}</CardHeader>
-          <CardContent className="p-4 pt-0 space-y-3">
-            {attacks.map(atk => (
-              <div key={atk.id} className="flex items-center justify-between p-2 bg-muted/10 rounded border border-muted/20">
-                {isAttacksEditing ? (
-                  <div className="flex flex-col gap-1 flex-1 mr-2">
-                    <Input value={atk.name} onChange={e => setAttacks(attacks.map(a => a.id === atk.id ? { ...a, name: e.target.value } : a))} className="h-7 text-xs" />
-                    <div className="flex gap-1">
-                      <Input value={atk.atkBonus} onChange={e => setAttacks(attacks.map(a => a.id === atk.id ? { ...a, atkBonus: e.target.value } : a))} className="h-7 text-[10px] w-12" placeholder="Bonus" />
-                      <Input value={atk.damageType} onChange={e => setAttacks(attacks.map(a => a.id === atk.id ? { ...a, damageType: e.target.value } : a))} className="h-7 text-[10px] flex-1" placeholder="Damage" />
-                    </div>
+        <Card id="attacks-and-spellcasting-box">
+          <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2">
+            <CardTitle className="text-[10px] font-bold uppercase text-muted-foreground tracking-tight">{t('attacksAndSpellcasting')}</CardTitle>
+            {(showEditButtons || isAttacksEditing || isSpellcastingEditing) && <EditSaveButton editing={isAttacksEditing || isSpellcastingEditing} onEdit={() => { setIsAttacksEditing(true); setIsSpellcastingEditing(true); }} onSave={() => { handleSaveAttacks(); handleSaveSpellcasting(); }} />}
+          </CardHeader>
+          <CardContent className="p-4 pt-0 space-y-4">
+              {spellcastingEntries.map((entry) => (
+                <div key={entry.id} className="grid grid-cols-12 gap-2 items-center p-2 bg-muted/10 rounded border border-muted/20">
+                  <div className="col-span-6 w-full">
+                    <Label className="text-[9px] text-muted-foreground uppercase mb-1 block">Ability</Label>
+                    {isSpellcastingEditing ? (
+                      <Select value={entry.ability} onValueChange={(v) => handleSpellcastingFieldChange(entry.id, 'ability', v)}>
+                        <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">None</SelectItem>
+                          <SelectItem value="strength">Strength</SelectItem>
+                          <SelectItem value="dexterity">Dexterity</SelectItem>
+                          <SelectItem value="constitution">Constitution</SelectItem>
+                          <SelectItem value="intelligence">Intelligence</SelectItem>
+                          <SelectItem value="wisdom">Wisdom</SelectItem>
+                          <SelectItem value="charisma">Charisma</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <span className="text-xs font-bold">
+                        {entry.ability === 'none' ? 'None' : entry.ability.charAt(0).toUpperCase() + entry.ability.slice(1)}
+                      </span>
+                    )}
                   </div>
-                ) : (
-                  <div className="flex flex-col"><span className="text-xs font-black">{atk.name}</span><span className="text-xs text-muted-foreground">{atk.damageType}</span></div>
-                )}
-                <div className="flex items-center gap-2">
-                  {!isAttacksEditing && <span className="text-sm font-black text-primary">{atk.atkBonus}</span>}
-                  {isAttacksEditing && <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={() => setAttacks(attacks.filter(a => a.id !== atk.id))}><Trash2 className="h-3 w-3" /></Button>}
+                  <div className="col-span-3 w-full">
+                    <Label className="text-[9px] text-muted-foreground uppercase mb-1 block">Atk Bonus</Label>
+                    {isSpellcastingEditing ? (
+                      <Input value={entry.attackBonus} onChange={e => handleSpellcastingFieldChange(entry.id, 'attackBonus', e.target.value)} className="h-8 text-xs text-center" />
+                    ) : (
+                      <span className="text-xs font-bold">{entry.attackBonus || '-'}</span>
+                    )}
+                  </div>
+                  <div className="col-span-2 w-full">
+                    <Label className="text-[9px] text-muted-foreground uppercase mb-1 block">Save DC</Label>
+                    {isSpellcastingEditing ? (
+                      <Input type="number" value={entry.saveDC} onChange={e => handleSpellcastingFieldChange(entry.id, 'saveDC', parseInt(e.target.value) || 0)} className="h-8 text-xs text-center" />
+                    ) : (
+                      <span className="text-xs font-bold">{entry.saveDC || '-'}</span>
+                    )}
+                  </div>
+                  <div className="col-span-1 flex justify-end">
+                    {isSpellcastingEditing && (
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive shrink-0" onClick={() => removeSpellcastingEntry(entry.id)}>
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
-            {isAttacksEditing && <Button variant="outline" size="sm" className="w-full h-8 text-[10px]" onClick={() => setAttacks([...attacks, { id: `atk-${Date.now()}`, name: 'New Attack', atkBonus: '+0', damageType: '1d6', notes: '' }])}><Plus className="mr-1 h-3 w-3" /> Add Attack</Button>}
+              ))}
+
+            <div className="border-t pt-4">
+              <Label className="text-[10px] font-bold uppercase text-muted-foreground mb-2 block">Attacks</Label>
+              {attacks.map(atk => (
+                <div key={atk.id} className="flex items-center justify-between p-2 bg-muted/10 rounded border border-muted/20 mb-2">
+                  {isAttacksEditing ? (
+                    <div className="flex flex-col gap-1 flex-1 mr-2">
+                      <Input value={atk.name} onChange={e => setAttacks(attacks.map(a => a.id === atk.id ? { ...a, name: e.target.value } : a))} className="h-7 text-xs" />
+                      <div className="flex gap-1">
+                        <Input value={atk.atkBonus} onChange={e => setAttacks(attacks.map(a => a.id === atk.id ? { ...a, atkBonus: e.target.value } : a))} className="h-7 text-[10px] w-12" placeholder="Bonus" />
+                        <Input value={atk.damageType} onChange={e => setAttacks(attacks.map(a => a.id === atk.id ? { ...a, damageType: e.target.value } : a))} className="h-7 text-[10px] flex-1" placeholder="Damage" />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col"><span className="text-xs font-black">{atk.name}</span><span className="text-xs text-muted-foreground">{atk.damageType}</span></div>
+                  )}
+                  <div className="flex items-center gap-2">
+                    {!isAttacksEditing && <span className="text-sm font-black text-primary">{atk.atkBonus}</span>}
+                    {isAttacksEditing && <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={() => setAttacks(attacks.filter(a => a.id !== atk.id))}><Trash2 className="h-3 w-3" /></Button>}
+                  </div>
+                </div>
+              ))}
+              {isAttacksEditing && <Button variant="outline" size="sm" className="w-full h-8 text-[10px]" onClick={() => setAttacks([...attacks, { id: `atk-${Date.now()}`, name: 'New Attack', atkBonus: '+0', damageType: '1d6', notes: '' }])}><Plus className="mr-1 h-3 w-3" /> Add Attack</Button>}
+            </div>
           </CardContent>
         </Card>
 

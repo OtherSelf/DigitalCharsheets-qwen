@@ -65,6 +65,33 @@ export function DndProgressionSection({ progressionData, setProgressionData, exp
   const { showEditButtons } = useCharacterContext();
   const { t } = useTranslation();
 
+  // Validate and fix multiclass levels on load (Prevents infinite loops)
+  React.useEffect(() => {
+    if (progressionData.multiclasses && progressionData.multiclasses.length > 0) {
+      const totalMcLevel = progressionData.multiclasses.reduce((sum, m) => sum + m.level, 0);
+      const maxTotalMcAllowed = Math.max(0, progressionData.level - 1);
+      
+      // If multiclass sum exceeds allowed, or total level is over 20, fix it
+      if (totalMcLevel > maxTotalMcAllowed || progressionData.level > 20) {
+        let sum = 0;
+        const fixed = progressionData.multiclasses.map(m => {
+            const remaining = Math.max(0, maxTotalMcAllowed - sum);
+            const lvl = remaining > 0 ? Math.min(m.level, remaining) : 0;
+            sum += lvl;
+            return { ...m, level: lvl };
+        }).filter(m => m.level >= 1); // Drop any class that got clamped to 0
+
+        // ONLY update if the array actually changed, preventing infinite loops
+        const isDifferent = fixed.length !== progressionData.multiclasses.length || 
+                            fixed.some((m, i) => m.level !== progressionData.multiclasses[i].level);
+                            
+        if (isDifferent) {
+            setProgressionData(prev => ({ ...prev, multiclasses: fixed }));
+        }
+      }
+    }
+  }, [progressionData.level, progressionData.multiclasses, setProgressionData]);
+
   return (
     <Accordion type="single" collapsible defaultValue="expanded" className="w-full md:max-w-xl">
       <AccordionItem value="expanded" className="border-0">
@@ -75,7 +102,7 @@ export function DndProgressionSection({ progressionData, setProgressionData, exp
           </CardHeader>
           <AccordionContent>
             <CardContent className="p-4 space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+               <div className="grid grid-cols-3 gap-4">
                 <div className="flex flex-col gap-1">
                   <Label className="text-[10px] text-muted-foreground uppercase font-bold">{t('class')}</Label>
                   {isProgressionEditing ? (
@@ -85,7 +112,18 @@ export function DndProgressionSection({ progressionData, setProgressionData, exp
                     </Select>
                   ) : (<span className="text-base font-bold truncate">{progressionData.characterClass}</span>)}
                 </div>
-                <div className="flex flex-col gap-1"><Label className="text-[10px] text-muted-foreground uppercase font-bold">Total Lvl</Label><span className="text-base font-bold truncate">{progressionData.level}</span></div>
+                <div className="flex flex-col gap-1">
+                  <Label className="text-[10px] text-muted-foreground uppercase font-bold">Class Lvl</Label>
+                  <span className="text-base font-bold truncate">
+                    {progressionData.isMulticlass 
+                      ? Math.max(1, progressionData.level - (progressionData.multiclasses?.reduce((sum, mc) => sum + mc.level, 0) || 0)) 
+                      : progressionData.level}
+                  </span>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <Label className="text-[10px] text-muted-foreground uppercase font-bold">Total Lvl</Label>
+                  <span className="text-base font-bold truncate">{progressionData.level}</span>
+                </div>
               </div>
               <div className="pt-2 border-t space-y-4">
                 <div className="flex items-center justify-between">
@@ -102,14 +140,50 @@ export function DndProgressionSection({ progressionData, setProgressionData, exp
                               <SelectTrigger className="h-8 text-xs flex-1"><SelectValue /></SelectTrigger>
                               <SelectContent>{DND_CLASSES.map(c => (<SelectItem key={c} value={c} disabled={progressionData.characterClass === c || progressionData.multiclasses.some((m, i) => m.class === c && i !== idx)}>{c}</SelectItem>))}</SelectContent>
                             </Select>
-                            <Input type="number" value={mc.level} onChange={e => { const n = [...progressionData.multiclasses]; n[idx].level = parseInt(e.target.value) || 1; setProgressionData({ ...progressionData, multiclasses: n }); }} className="h-8 w-12 text-center" />
+                            <Input 
+                              type="number" 
+                              value={mc.level} 
+                              onChange={e => { 
+                                const rawVal = parseInt(e.target.value) || 1;
+                                const n = [...progressionData.multiclasses]; 
+                                
+                                // 1. Sum of all OTHER multiclass levels
+                                const otherMcSum = progressionData.multiclasses.reduce((sum, m, i) => i === idx ? sum : sum + m.level, 0);
+                                
+                                // 2. Main Class MUST be at least level 1. 
+                                // Therefore, multiclass sum <= Total Level - 1.
+                                const maxTotalMcAllowed = Math.max(0, progressionData.level - 1);
+                                
+                                // 3. This specific multiclass can be at most whatever is left of that allowance
+                                const maxAllowed = Math.max(1, maxTotalMcAllowed - otherMcSum);
+                                
+                                // 4. Clamp the new level between 1 and maxAllowed
+                                const newMcLevel = Math.max(1, Math.min(maxAllowed, rawVal));
+                                n[idx].level = newMcLevel;
+                                
+                                setProgressionData({ ...progressionData, multiclasses: n }); 
+                              }} 
+                              className="h-8 w-16 text-center" 
+                            />
                             <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => setProgressionData({ ...progressionData, multiclasses: progressionData.multiclasses.filter((_, i) => i !== idx) })}><Trash2 className="h-4 w-4" /></Button>
                           </>
                         ) : (<span className="text-xs font-semibold">{mc.class} (Lvl {mc.level})</span>)}
                       </div>
                     ))}
                     {isProgressionEditing && (
-                      <Button variant="outline" size="sm" className="w-full h-7 text-[10px]" onClick={() => { const used = [progressionData.characterClass, ...progressionData.multiclasses.map(m => m.class)]; const avail = DND_CLASSES.filter(c => !used.includes(c)); if (avail.length > 0) setProgressionData({ ...progressionData, multiclasses: [...progressionData.multiclasses, { class: avail[0], level: 1 }] }); }}>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="w-full h-7 text-[10px]" 
+                        disabled={progressionData.level >= 20 || progressionData.multiclasses.length >= 12}
+                        onClick={() => { 
+                          const used = [progressionData.characterClass, ...progressionData.multiclasses.map(m => m.class)]; 
+                          const avail = DND_CLASSES.filter(c => !used.includes(c)); 
+                          if (avail.length > 0 && progressionData.level < 20) {
+                            setProgressionData({ ...progressionData, multiclasses: [...progressionData.multiclasses, { class: avail[0], level: 1 }] }); 
+                          }
+                        }}
+                      >
                         <Plus className="h-3 w-3 mr-1" /> Add Class
                       </Button>
                     )}
@@ -120,7 +194,15 @@ export function DndProgressionSection({ progressionData, setProgressionData, exp
                 <div className="flex flex-col gap-1">
                   <Label className="text-[10px] text-muted-foreground uppercase font-bold">{t('experiencePoints')}</Label>
                   {isProgressionEditing ? (
-                    <Input value={progressionData.experiencePoints} onChange={v => { const n = parseInt(v.target.value) || 0; setProgressionData({ ...progressionData, experiencePoints: n, level: calculateLevelFromExp(n) }); }} className="h-7 text-xs p-1" />
+                    <Input 
+                      value={progressionData.experiencePoints} 
+                      onChange={v => { 
+                        const n = parseInt(v.target.value) || 0; 
+                        const calculatedLevel = Math.min(20, calculateLevelFromExp(n));
+                        setProgressionData({ ...progressionData, experiencePoints: n, level: calculatedLevel }); 
+                      }} 
+                      className="h-7 text-xs p-1" 
+                    />
                   ) : (
                     <span className="text-sm font-semibold truncate">{progressionData.experiencePoints || '-'}</span>
                   )}

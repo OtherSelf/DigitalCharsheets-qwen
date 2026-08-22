@@ -32,6 +32,8 @@ import { useTranslation } from '@/context/language-context';
 import { LanguageToggle } from '../layout/language-toggle';
 import { type GameSystem } from '@/lib/types';
 import { useCharacterContext } from '@/context/character-context';
+import { useParams } from 'next/navigation';
+import { Scale } from 'lucide-react';
 
 interface CompactSidebarProps {
   gameSystem: GameSystem;
@@ -41,16 +43,20 @@ interface CompactSidebarProps {
 
 export function CompactSidebar({ gameSystem, activeSection, onSectionChange }: CompactSidebarProps) {
   const { t } = useTranslation();
+  const params = useParams<{ id: string }>();
+  const { getCharacter } = useCharacterContext();
+  const character = params?.id ? getCharacter(params.id) : null;
+  const isLevel20 = character?.gameSystem === 'Dungeons & Dragons' && (character as any).level === 20;
   const { hideNotes, setHideNotes, showEditButtons, setShowEditButtons } = useCharacterContext();
 
   const dndItems = [
     { label: 'info', id: 'info-section', icon: Info },
     { label: 'stats', id: 'stats-section', icon: Activity },
-    { label: 'boons', id: 'boons-section', icon: Sparkles },
     { label: 'combat', id: 'combat-section', icon: Swords },
     { label: 'inventoryAndAttunement', id: 'inventory-section', icon: Backpack },
-    { label: 'spells', id: 'spells-section', icon: Wand2 },
+    { label: 'spells', id: 'spells-section', icon: Sparkles },
     { label: 'companions', id: 'companion-section', icon: PawPrint },
+    ...(isLevel20 ? [{ label: 'divineBoons', id: 'boons-section', icon: Star }] : []),
   ];
 
   const dhItems = [
@@ -67,6 +73,7 @@ export function CompactSidebar({ gameSystem, activeSection, onSectionChange }: C
   const extraSidebarItems = [
     { label: 'notes', id: 'notes-section', icon: BookText },
     { label: 'questJournal', id: 'journal-section', icon: Scroll },
+    { label: 'houseRules', id: 'house-rules', icon: Scale },
   ];
 
   return (
@@ -96,23 +103,29 @@ export function CompactSidebar({ gameSystem, activeSection, onSectionChange }: C
           </Tooltip>
         ))}
         <Separator className="my-2" />
-        {extraSidebarItems.map((item) => (
-             <Tooltip key={item.id} delayDuration={0}>
-             <TooltipTrigger asChild>
-               <Button
-                 variant={'ghost'}
-                 onClick={() => onSectionChange(item.id)}
-                 aria-label={t(item.label)}
-                 className="w-full"
-                 size="icon"
-               >
-                 <item.icon className="h-5 w-5" />
-               </Button>
-             </TooltipTrigger>
-             <TooltipContent side="right">
-               <p>{t(item.label)}</p>
-             </TooltipContent>
-           </Tooltip>
+          {extraSidebarItems.map((item) => (
+          <Tooltip key={item.id} delayDuration={0}>
+            <TooltipTrigger asChild>
+              <Button
+                variant={item.id === 'house-rules' ? 'outline' : 'ghost'}
+                onClick={() => {
+                  if (item.id === 'house-rules') {
+                    alert('House Rules configuration panel coming soon!');
+                  } else {
+                    onSectionChange(item.id);
+                  }
+                }}
+                aria-label={t(item.label)}
+                className="w-full"
+                size="icon"
+              >
+                <item.icon className="h-5 w-5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="right">
+              <p>{t(item.label)}</p>
+            </TooltipContent>
+          </Tooltip>
         ))}
         
         <Separator className="my-2" />

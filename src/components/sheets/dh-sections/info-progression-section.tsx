@@ -205,33 +205,48 @@ export const ProgressionSection = ({ character, isCompactView, activeCompactSect
                         <Button onClick={handleSpendExp} disabled={amountToSpend <= 0 || amountToSpend > editableExperience} className="w-full">{t('spendExp')}</Button>
                         <div className="space-y-1">
                             <Label htmlFor="total-exp-edit" className="text-xs text-muted-foreground">{t('totalExpSpent')}</Label>
-                            <Input id="total-exp-edit" type="number" value={editableTotalExpSpent} onChange={handleTotalExpChange} onBlur={handleSaveTotalExp} className="h-9"/>
+                            <Input id="total-exp-edit" type="number" value={editableTotalExpSpent} onChange={handleTotalExpChange} onBlur={handleSaveTotalExp} disabled={!isProgressionEditing} className="h-9"/>
                         </div>
                         
-                        {/* Rank Display & Selection with exact label requested */}
+                        {/* Rank Display & Selection */}
                         <div className="space-y-1 pt-2 border-t">
                             <Label className="text-xs text-muted-foreground">{t('rank')}</Label>
                             <div className="flex flex-col gap-1">
                                 <div className="flex items-center gap-2 flex-wrap">
                                     <p className="text-sm font-medium break-words">{currentRankName}</p>
-                                    {(editableAdvancedPath ?? character.advancedPath) && (
-                                        <span className="text-[10px] px-2 py-0.5 rounded bg-primary/10 text-primary font-semibold border border-primary/20">
-                                            Advanced: {editableAdvancedPath ?? character.advancedPath}
-                                        </span>
+                                    
+                                    {/* Advanced Path Display & Change Button Group */}
+                                    {(editableAdvancedPath ?? character.advancedPath) ? (
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-[10px] px-2 py-0.5 rounded bg-primary/10 text-primary font-semibold border border-primary/20">
+                                                Advanced: {editableAdvancedPath ?? character.advancedPath}
+                                            </span>
+                                            {isProgressionEditing && editableTotalExpSpent >= advancedPathThreshold && ( 
+                                                <Button size="sm" variant="outline" className="h-6 text-[10px] px-2" onClick={() => setIsAdvancedPathModalOpen(true)}>
+                                                    Change Advanced Path
+                                                </Button> 
+                                            )}
+                                        </div>
+                                    ) : (
+                                        /* Fallback if no advanced path is selected yet, but threshold is met */
+                                        isProgressionEditing && editableTotalExpSpent >= advancedPathThreshold && (
+                                            <Button size="sm" variant="outline" className="h-6 text-[10px] px-2" onClick={() => setIsAdvancedPathModalOpen(true)}>
+                                                Select Advanced Path
+                                            </Button>
+                                        )
                                     )}
+
+                                    {/* Alternate Path Display */}
                                     {(editableAlternatePath ?? character.alternatePath) && (
                                         <span className="text-[10px] px-2 py-0.5 rounded bg-secondary/20 text-secondary-foreground font-semibold border border-secondary/20">
                                             Alternate: {editableAlternatePath ?? character.alternatePath}
                                         </span>
                                     )}
                                 </div>
+
+                                {/* Alternate Rank Button (also gated behind edit mode for clean UI) */}
                                 <div className="flex gap-2 mt-1">
-                                    {editableTotalExpSpent >= advancedPathThreshold && ( 
-                                        <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => setIsAdvancedPathModalOpen(true)}>
-                                            {(editableAdvancedPath ?? character.advancedPath) ? 'Change Advanced Path' : 'Select Advanced Path'}
-                                        </Button> 
-                                    )}
-                                    {canChooseAlternateRank && ( 
+                                    {isProgressionEditing && canChooseAlternateRank && ( 
                                         <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => setIsAlternateRankModalOpen(true)}>
                                             {(editableAlternatePath ?? character.alternatePath) ? 'Change Alternate Rank' : 'Select Alternate Rank'}
                                         </Button> 

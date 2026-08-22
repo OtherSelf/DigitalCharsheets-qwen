@@ -4,14 +4,14 @@
   "race": "Tabaxi",
   "background": "Outlander",
   "alignment": "Neutral",
-  "experiencePoints": 3001123,
+  "experiencePoints": 369529,
   "age": "",
   "eyes": "",
   "skin": "",
   "height": "",
   "weight": "",
   "hair": "",
-  "inspiration": "4",
+  "inspiration": "1",
   "proficiencyBonus": 2,
   "level": 20,
   "gameSystem": "Dungeons & Dragons",
@@ -67,13 +67,17 @@
     "Boon of Fortitude: Your hit point maximum increases by 40.",
     "Boon of Fortitude: Your hit point maximum increases by 40.",
     "Boon of Fate: When another creature that you can see within 60 feet of you makes an ability check, an attack roll, or a saving throw, you can roll a d10 and apply the result as a bonus or penalty to the roll. Once you use this boon, you can't use it again until you finish a short rest.",
-    "Boon of the Unfettered: You have advantage on ability checks made to resist being grappled. In addition, you can use an action to automatically escape a grapple or free yourself of restraints of any kind."
+    "Boon of the Unfettered: You have advantage on ability checks made to resist being grappled. In addition, you can use an action to automatically escape a grapple or free yourself of restraints of any kind.",
+    "Boon of High Magic: You gain one 9th-level spell slot, provided that you already have one.",
+    "Boon of High Magic: You gain one 9th-level spell slot, provided that you already have one.",
+    "Boon of High Magic: You gain one 9th-level spell slot, provided that you already have one.",
+    "Boon of High Magic: You gain one 9th-level spell slot, provided that you already have one."
   ],
   "stats": {
     "strength": 10,
-    "dexterity": 1,
+    "dexterity": 30,
     "constitution": 10,
-    "intelligence": 30,
+    "intelligence": 11,
     "wisdom": 30,
     "charisma": 10
   },
@@ -240,7 +244,7 @@
   "armorClass": 10,
   "speed": 30,
   "hitPoints": {
-    "current": 0,
+    "current": 8,
     "max": 8
   },
   "temporaryHitPoints": 0,
@@ -267,10 +271,16 @@
   "spellSaveDifficulty": 8,
   "spellcastingEntries": [
     {
-      "id": "primary",
-      "ability": "none",
-      "attackBonus": "",
-      "saveDC": 8
+      "id": "spellcast-1787423831986",
+      "ability": "intelligence",
+      "attackBonus": "+6",
+      "saveDC": 14
+    },
+    {
+      "id": "spellcast-1787423877105",
+      "ability": "wisdom",
+      "attackBonus": "+16",
+      "saveDC": 24
     }
   ],
   "personalityTraits": [
@@ -366,13 +376,57 @@
   "userId": "user-6gjqr3",
   "id": "msteyodblsgj5svoeo",
   "hitDiceUsed": {
-    "Rogue": 2
+    "Rogue": 0
   },
   "isMulticlass": true,
   "multiclasses": [
     {
       "class": "Artificer",
-      "level": 14
+      "level": 1
+    },
+    {
+      "class": "Barbarian",
+      "level": 1
+    },
+    {
+      "class": "Bard",
+      "level": 1
+    },
+    {
+      "class": "Cleric",
+      "level": 1
+    },
+    {
+      "class": "Druid",
+      "level": 1
+    },
+    {
+      "class": "Fighter",
+      "level": 1
+    },
+    {
+      "class": "Monk",
+      "level": 1
+    },
+    {
+      "class": "Paladin",
+      "level": 1
+    },
+    {
+      "class": "Ranger",
+      "level": 1
+    },
+    {
+      "class": "Sorcerer",
+      "level": 1
+    },
+    {
+      "class": "Warlock",
+      "level": 2
+    },
+    {
+      "class": "Wizard",
+      "level": 7
     }
   ],
   "spellSlots": {
