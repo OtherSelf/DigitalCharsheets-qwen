@@ -264,6 +264,13 @@
       "atkBonus": "+0",
       "damageType": "1d6",
       "notes": ""
+    },
+    {
+      "id": "atk-1787472979464",
+      "name": "New Attack",
+      "atkBonus": "+0",
+      "damageType": "1d6",
+      "notes": ""
     }
   ],
   "spellcastingAbility": "intelligence",
@@ -271,16 +278,18 @@
   "spellSaveDifficulty": 8,
   "spellcastingEntries": [
     {
-      "id": "spellcast-1787423831986",
-      "ability": "intelligence",
-      "attackBonus": "+6",
-      "saveDC": 14
-    },
-    {
       "id": "spellcast-1787423877105",
       "ability": "wisdom",
       "attackBonus": "+16",
-      "saveDC": 24
+      "saveDC": 24,
+      "notes": ""
+    },
+    {
+      "id": "spellcast-1787472088750",
+      "ability": "intelligence",
+      "attackBonus": "+6",
+      "saveDC": 14,
+      "notes": ""
     }
   ],
   "personalityTraits": [

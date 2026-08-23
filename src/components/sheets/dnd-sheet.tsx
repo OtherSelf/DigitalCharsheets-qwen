@@ -52,16 +52,6 @@ const SKILL_STAT_MAP: Record<string, keyof DnD5eCharacter['stats']> = {
   stealth: 'dexterity', survival: 'wisdom',
 };
 
-const EXHAUSTION_EFFECTS = [
-  'No exhaustion',
-  'Disadvantage on Ability Checks',
-  'Speed halved',
-  'Disadvantage on Attack rolls and Saving Throws',
-  'Hit point maximum halved',
-  'Speed reduced to 0',
-  'Death',
-];
-
 export const DndSheet = React.forwardRef<any, DndSheetProps>(
   ({ character, isCompactView, activeCompactSection }, ref) => {
     const { updateCharacter } = useCharacterContext();
@@ -73,14 +63,12 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
     const combatRef = React.useRef<{ saveAll: () => void }>(null);
     const boonsRef = React.useRef<{ saveAll: () => void }>(null);
 
-    // UI States
     const [isProgressionEditing, setIsProgressionEditing] = React.useState(false);
     const [isStatsEditing, setIsStatsEditing] = React.useState(false);
     const [isSavesEditing, setIsSavesEditing] = React.useState(false);
     const [isSkillsEditing, setIsSkillsEditing] = React.useState(false);
     const [isOtherProficienciesEditing, setIsOtherProficienciesEditing] = React.useState(false);
 
-    // Data States
     const [progressionData, setProgressionData] = React.useState({ characterClass: character.characterClass, level: character.level, experiencePoints: character.experiencePoints || 0, isMulticlass: character.isMulticlass || false, multiclasses: character.multiclasses || [] });
     const [expToCount, setExpToCount] = React.useState(0);
     const [stats, setStats] = React.useState(character.stats);
@@ -88,18 +76,15 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
     const [skills, setSkills] = React.useState((character.skills && character.skills.length > 0) ? character.skills : DEFAULT_SKILLS);
     const [otherProficienciesAndLanguages, setOtherProficienciesAndLanguages] = React.useState<string[]>(character.otherProficienciesAndLanguages || []);
 
-    // New Items States
     const [newProfItem, setNewProfItem] = React.useState('');
     const [companions, setCompanions] = React.useState<DnDCompanion[]>(character.companions || []);
 
-    // Sync progression level to character context in real-time so sidebar updates immediately
     React.useEffect(() => {
       if (character.level !== progressionData.level) {
         updateCharacter(character.id, { level: progressionData.level });
       }
     }, [progressionData.level, character.id, character.level, updateCharacter]);
 
-    // Derived values
     const proficiencyBonus = Math.floor((progressionData.level - 1) / 4) + 2;
 
     const calculatedSkills = React.useMemo(() => {
@@ -121,7 +106,6 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
       });
     }, [savingThrows, stats, proficiencyBonus]);
 
-    // Save Handlers
     const handleSaveProgression = React.useCallback(() => { updateCharacter(character.id, { ...progressionData }); setIsProgressionEditing(false); }, [character.id, progressionData, updateCharacter]);
     const handleSaveStats = React.useCallback(() => { updateCharacter(character.id, { stats }); setIsStatsEditing(false); }, [character.id, stats, updateCharacter]);
     const handleSaveSaves = React.useCallback(() => { updateCharacter(character.id, { savingThrows: calculatedSavingThrows }); setIsSavesEditing(false); }, [character.id, calculatedSavingThrows, updateCharacter]);
@@ -139,12 +123,11 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
       inventoryRef.current?.saveAll();
       boonsRef.current?.saveAll();
     }, [isProgressionEditing, isStatsEditing, isSavesEditing, isSkillsEditing, isOtherProficienciesEditing, handleSaveProgression, handleSaveStats, handleSaveSaves, handleSaveSkills, handleSaveOtherProf]);
+    
     React.useImperativeHandle(ref, () => ({ saveAll: handleSaveAll }));
-
 
     return (
       <div className="space-y-8 pb-12">
-        {/* Compact View Stats Bar - Matching Dark Heresy exactly */}
         {isCompactView && (
           <div className="bg-card px-4 py-3 border-b shadow-sm space-y-3">
             <div className="grid grid-cols-6 gap-1">
@@ -172,73 +155,64 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
           </div>
         )}
 
-     {/* Progression, Character Info, Narrative (Compact Only) */}
-     <div className={cn("flex flex-col gap-6 items-stretch", isCompactView && activeCompactSection !== 'info-section' && "hidden")}>
-       <div className="flex flex-col md:flex-row gap-6 items-stretch">
-         <DndProgressionSection
-           progressionData={progressionData}
-           setProgressionData={setProgressionData}
-           expToCount={expToCount}
-           setExpToCount={setExpToCount}
-           isProgressionEditing={isProgressionEditing}
-           setIsProgressionEditing={setIsProgressionEditing}
-           handleSaveProgression={handleSaveProgression}
-         />
-         
-         <DndCharacterInfoSection
-           ref={characterInfoRef}
-           characterId={character.id}
-           initialName={character.name}
-           initialHeaderData={{
-             background: character.background,
-             race: character.race,
-             alignment: character.alignment || '',
-             age: character.age || '',
-             eyes: character.eyes || '',
-             skin: character.skin || '',
-             height: character.height || '',
-             weight: character.weight || '',
-             hair: character.hair || '',
-             backstory: character.backstory || '',
-             notes: character.notes || ''
-           }}
-         />
-         
-         {/* Compact View Only: Narrative Section moves to Info */}
-         {isCompactView && (
-           <DndNarrativeSection
-             ref={narrativeRef}
-             characterId={character.id}
-             initialData={{
-               personalityTraits: character.personalityTraits || [],
-               ideals: character.ideals || [],
-               bonds: character.bonds || [],
-               flaws: character.flaws || [],
-               featuresAndTraits: character.featuresAndTraits || [],
-               divineBoons: character.divineBoons || []
-             }}
-           />
-         )}
-       </div>
-     </div>
+        <div className={cn("flex flex-col gap-6 items-stretch", isCompactView && activeCompactSection !== 'info-section' && "hidden")}>
+          <div className="flex flex-col md:flex-row gap-6 items-stretch">
+            <DndProgressionSection
+              progressionData={progressionData}
+              setProgressionData={setProgressionData}
+              expToCount={expToCount}
+              setExpToCount={setExpToCount}
+              isProgressionEditing={isProgressionEditing}
+              setIsProgressionEditing={setIsProgressionEditing}
+              handleSaveProgression={handleSaveProgression}
+            />
+            <DndCharacterInfoSection
+              ref={characterInfoRef}
+              characterId={character.id}
+              initialName={character.name}
+              initialHeaderData={{
+                background: character.background,
+                race: character.race,
+                alignment: character.alignment || '',
+                age: character.age || '',
+                eyes: character.eyes || '',
+                skin: character.skin || '',
+                height: character.height || '',
+                weight: character.weight || '',
+                hair: character.hair || '',
+                backstory: character.backstory || '',
+                notes: character.notes || ''
+              }}
+            />
+            {isCompactView && (
+              <DndNarrativeSection
+                ref={narrativeRef}
+                characterId={character.id}
+                initialData={{
+                  personalityTraits: character.personalityTraits || [],
+                  ideals: character.ideals || [],
+                  bonds: character.bonds || [],
+                  flaws: character.flaws || [],
+                  featuresAndTraits: character.featuresAndTraits || [],
+                  divineBoons: character.divineBoons || []
+                }}
+              />
+            )}
+          </div>
+        </div>
 
-     {/* Divine Boons - Independent Section (Desktop & Compact) */}
-     {progressionData.level >= 20 && (
-       <div className={cn(
-         "flex flex-col gap-6 items-stretch",
-         isCompactView && activeCompactSection !== 'boons-section' && "hidden"
-       )}>
-         <DndDivineBoonsSection
-           ref={boonsRef}
-           characterId={character.id}
-           initialBoons={character.divineBoons || []}
-           isCompactView={isCompactView}
-           activeCompactSection={activeCompactSection}
-         />
-       </div>
-     )}
+        {progressionData.level >= 20 && (
+          <div className={cn("flex flex-col gap-6 items-stretch", isCompactView && activeCompactSection !== 'boons-section' && "hidden")}>
+            <DndDivineBoonsSection
+              ref={boonsRef}
+              characterId={character.id}
+              initialBoons={character.divineBoons || []}
+              isCompactView={isCompactView}
+              activeCompactSection={activeCompactSection}
+            />
+          </div>
+        )}
 
-        {/* Stats, Saves, Skills, Combat */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
           <DndStatsSection
             characterId={character.id}
@@ -292,49 +266,17 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
           />
 
           <div className={cn("md:col-span-3 space-y-6", isCompactView && activeCompactSection !== 'inventory-section' && "hidden")}>
-            {/* Desktop View Only: Strict Order */}
             {!isCompactView && (
               <>
-                <DndNarrativeSection
-                  ref={narrativeRef}
-                  characterId={character.id}
-                  initialData={{
-                    personalityTraits: character.personalityTraits || [],
-                    ideals: character.ideals || [],
-                    bonds: character.bonds || [],
-                    flaws: character.flaws || [],
-                    featuresAndTraits: character.featuresAndTraits || [],
-                    divineBoons: character.divineBoons || []
-                  }}
-                />
-                <DndAttunementSection
-                  ref={attunementRef}
-                  characterId={character.id}
-                  initialItems={character.attunementItems || []}
-                />
-                <DndInventorySection
-                  ref={inventoryRef}
-                  characterId={character.id}
-                  initialCurrency={character.currency || { cp: 0, sp: 0, ep: 0, gp: 150, pp: 5 }}
-                  initialEquipment={character.equipment ?? []}
-                />
+                <DndNarrativeSection ref={narrativeRef} characterId={character.id} initialData={{ personalityTraits: character.personalityTraits || [], ideals: character.ideals || [], bonds: character.bonds || [], flaws: character.flaws || [], featuresAndTraits: character.featuresAndTraits || [], divineBoons: character.divineBoons || [] }} />
+                <DndAttunementSection ref={attunementRef} characterId={character.id} initialItems={character.attunementItems || []} />
+                <DndInventorySection ref={inventoryRef} characterId={character.id} initialCurrency={character.currency || { cp: 0, sp: 0, ep: 0, gp: 150, pp: 5 }} initialEquipment={character.equipment ?? []} />
               </>
             )}
-
-            {/* Compact View Only: Attunement and Inventory */}
             {isCompactView && (
               <>
-                <DndAttunementSection
-                  ref={attunementRef}
-                  characterId={character.id}
-                  initialItems={character.attunementItems || []}
-                />
-                <DndInventorySection
-                  ref={inventoryRef}
-                  characterId={character.id}
-                  initialCurrency={character.currency || { cp: 0, sp: 0, ep: 0, gp: 150, pp: 5 }}
-                  initialEquipment={character.equipment ?? []}
-                />
+                <DndAttunementSection ref={attunementRef} characterId={character.id} initialItems={character.attunementItems || []} />
+                <DndInventorySection ref={inventoryRef} characterId={character.id} initialCurrency={character.currency || { cp: 0, sp: 0, ep: 0, gp: 150, pp: 5 }} initialEquipment={character.equipment ?? []} />
               </>
             )}
           </div>
@@ -343,16 +285,14 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
         {/* Spells */}
         <DndSpellsSection
           characterId={character.id}
-            initialSpells={character.spells || []}
-            initialSpellSlots={character.spellSlots}
-            initialSpellcasting={{
-              spellcastingAbility: character.spellcastingAbility || 'none',
-              spellAttackBonus: character.spellAttackBonus || '',
-              spellSaveDifficulty: character.spellSaveDifficulty || 0
-            }}
-            isCompactView={isCompactView}
-            activeCompactSection={activeCompactSection}
-          />
+          initialSpells={character.spells || []}
+          initialSpellSlots={character.spellSlots}
+          initialSpellcastingEntries={character.spellcastingEntries || []}
+          stats={stats}
+          proficiencyBonus={proficiencyBonus}
+          isCompactView={isCompactView}
+          activeCompactSection={activeCompactSection}
+        />
 
         {/* Companions */}
         <DndCompanionsSection

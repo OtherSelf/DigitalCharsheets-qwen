@@ -82,6 +82,7 @@ export interface SpellcastingEntry {
   ability: DnDAbility | 'none';
   attackBonus: string;
   saveDC: number;
+  notes?: string;
 }
 
 export interface DnDActionOrFeature {
