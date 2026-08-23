@@ -72,8 +72,10 @@ export interface Talent {
 export interface DnDAttack {
   id: string;
   name: string;
-  atkBonus: string;
-  damageType: string;
+  ability: DnDAbility | 'none';
+  useProficiencyBonus: boolean;
+  damageDice: string;
+  damageModifier: string;
   notes?: string;
 }
 

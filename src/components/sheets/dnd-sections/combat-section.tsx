@@ -8,6 +8,7 @@ import { Textarea } from '../../ui/textarea';
 import { Button } from '../../ui/button';
 import { Plus, Trash2, Edit, Save, Minus, Info } from 'lucide-react';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Popover, PopoverContent, PopoverTrigger } from '../../ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/select';
 import { cn } from '@/lib/utils';
@@ -78,10 +79,67 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
       setCombatStats(initialCombatStats);
       setExhaustion(initialExhaustion);
       setHitDiceUsed(initialHitDiceUsed);
-      setAttacks(initialAttacks);
       setCombatResources(initialCombatResources);
-     setSpellcastingEntries(initialSpellcastingEntries);
-    }, [characterId]);
+      setSpellcastingEntries(initialSpellcastingEntries);
+  
+      // Migrate old attacks to new structure
+      const migratedAttacks = initialAttacks.map(atk => ({
+        ...atk,
+        ability: (atk as any).ability || 'strength',
+        useProficiencyBonus: (atk as any).useProficiencyBonus !== undefined ? (atk as any).useProficiencyBonus : true,
+        damageDice: (atk as any).damageDice || '1d6',
+        damageModifier: (atk as any).damageModifier || '+0',
+      }));
+      setAttacks(migratedAttacks);
+    }, [characterId, initialAttacks]);
+
+    // Re-sync spellcasting entries when they change in the parent (e.g., from Spells section)
+    React.useEffect(() => {
+      if (!isSpellcastingEditing) {
+        setSpellcastingEntries(initialSpellcastingEntries);
+      }
+    }, [initialSpellcastingEntries, isSpellcastingEditing]);
+
+    // Attack calculation and management helpers
+    const calculateAttackBonus = (ability: DnDAbility | 'none', useProficiency: boolean) => {
+      if (ability === 'none' || !ability) return '+0';
+      const statValue = stats[ability] || 10;
+      const mod = Math.floor((statValue - 10) / 2);
+      const total = mod + (useProficiency ? proficiencyBonus : 0);
+      return total >= 0 ? `+${total}` : `${total}`;
+    };
+
+    const handleAttackFieldChange = (id: string, field: keyof DnDAttack, value: string | number | boolean) => {
+      setAttacks(prev => {
+        const updated = prev.map(atk => {
+          if (atk.id !== id) return atk;
+          return { ...atk, [field]: value };
+        });
+        updateCharacter(characterId, { attacks: updated });
+        return updated;
+      });
+    };
+
+    const addAttack = () => {
+      const newAttack: DnDAttack = { 
+        id: `atk-${Date.now()}`, 
+        name: 'New Attack', 
+        ability: 'strength', 
+        useProficiencyBonus: true, 
+        damageDice: '1d6', 
+        damageModifier: '+0', 
+        notes: '' 
+      };
+      const updated = [...attacks, newAttack];
+      setAttacks(updated);
+      updateCharacter(characterId, { attacks: updated });
+    };
+
+    const removeAttack = (id: string) => {
+      const updated = attacks.filter(a => a.id !== id);
+      setAttacks(updated);
+      updateCharacter(characterId, { attacks: updated });
+    };
 
     // Re-sync spellcasting entries when they change in the parent (e.g., from Spells section)
     React.useEffect(() => {
@@ -439,25 +497,91 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
             <div className="border-t pt-4">
               <Label className="text-[10px] font-bold uppercase text-muted-foreground mb-2 block">Attacks</Label>
               {attacks.map(atk => (
-                <div key={atk.id} className="flex items-center justify-between p-2 bg-muted/10 rounded border border-muted/20 mb-2">
+            <div key={atk.id} className="grid grid-cols-12 gap-2 items-center p-2 bg-muted/10 rounded border border-muted/20 mb-2">
+              <div className="col-span-2 w-full">
+                <Label className="text-[9px] text-muted-foreground uppercase mb-1 block">Name</Label>
+                {isAttacksEditing ? (
+                  <Input value={atk.name} onChange={e => handleAttackFieldChange(atk.id, 'name', e.target.value)} className="h-8 text-xs" />
+                ) : (
+                  <span className="text-xs font-bold">{atk.name}</span>
+                )}
+              </div>
+              <div className="col-span-2 w-full">
+                <Label className="text-[9px] text-muted-foreground uppercase mb-1 block">Ability</Label>
+                {isAttacksEditing ? (
+                  <Select value={atk.ability || 'strength'} onValueChange={(v) => handleAttackFieldChange(atk.id, 'ability', v)}>
+                    <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">None</SelectItem>
+                      <SelectItem value="strength">Strength</SelectItem>
+                      <SelectItem value="dexterity">Dexterity</SelectItem>
+                      <SelectItem value="constitution">Constitution</SelectItem>
+                      <SelectItem value="intelligence">Intelligence</SelectItem>
+                      <SelectItem value="wisdom">Wisdom</SelectItem>
+                      <SelectItem value="charisma">Charisma</SelectItem>
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <span className="text-xs font-bold">
+                    {!atk.ability || atk.ability === 'none' ? 'None' : atk.ability.charAt(0).toUpperCase() + atk.ability.slice(1)}
+                  </span>
+                )}
+              </div>
+              <div className="col-span-1 w-full">
+                <Label className="text-[9px] text-muted-foreground uppercase mb-1 block">Prof</Label>
+                <div className="flex justify-center">
                   {isAttacksEditing ? (
-                    <div className="flex flex-col gap-1 flex-1 mr-2">
-                      <Input value={atk.name} onChange={e => setAttacks(attacks.map(a => a.id === atk.id ? { ...a, name: e.target.value } : a))} className="h-7 text-xs" />
-                      <div className="flex gap-1">
-                        <Input value={atk.atkBonus} onChange={e => setAttacks(attacks.map(a => a.id === atk.id ? { ...a, atkBonus: e.target.value } : a))} className="h-7 text-[10px] w-12" placeholder="Bonus" />
-                        <Input value={atk.damageType} onChange={e => setAttacks(attacks.map(a => a.id === atk.id ? { ...a, damageType: e.target.value } : a))} className="h-7 text-[10px] flex-1" placeholder="Damage" />
-                      </div>
-                    </div>
+                    <Checkbox 
+                      checked={atk.useProficiencyBonus} 
+                      onCheckedChange={(v) => handleAttackFieldChange(atk.id, 'useProficiencyBonus', !!v)}
+                      className="h-5 w-5"
+                    />
                   ) : (
-                    <div className="flex flex-col"><span className="text-xs font-black">{atk.name}</span><span className="text-xs text-muted-foreground">{atk.damageType}</span></div>
+                    <span className="text-xs font-bold">{atk.useProficiencyBonus ? '✓' : '-'}</span>
                   )}
-                  <div className="flex items-center gap-2">
-                    {!isAttacksEditing && <span className="text-sm font-black text-primary">{atk.atkBonus}</span>}
-                    {isAttacksEditing && <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={() => setAttacks(attacks.filter(a => a.id !== atk.id))}><Trash2 className="h-3 w-3" /></Button>}
-                  </div>
                 </div>
-              ))}
-              {isAttacksEditing && <Button variant="outline" size="sm" className="w-full h-8 text-[10px]" onClick={() => setAttacks([...attacks, { id: `atk-${Date.now()}`, name: 'New Attack', atkBonus: '+0', damageType: '1d6', notes: '' }])}><Plus className="mr-1 h-3 w-3" /> Add Attack</Button>}
+              </div>
+              <div className="col-span-2 w-full">
+                <Label className="text-[9px] text-muted-foreground uppercase mb-1 block">ATK Bonus</Label>
+                <span className="text-xs font-bold">{calculateAttackBonus(atk.ability || 'none', atk.useProficiencyBonus)}</span>
+              </div>
+              <div className="col-span-2 w-full">
+                <Label className="text-[9px] text-muted-foreground uppercase mb-1 block">Dice</Label>
+                {isAttacksEditing ? (
+                  <Select value={atk.damageDice} onValueChange={(v) => handleAttackFieldChange(atk.id, 'damageDice', v)}>
+                    <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {['1d4', '1d6', '1d8', '1d10', '1d12', '1d20', '2d6', '2d8', '2d10', '2d12', '2d20', '3d6', '4d6', '5d6', '6d6', '8d6', '10d6'].map(d => (
+                        <SelectItem key={d} value={d}>{d}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <span className="text-xs font-bold">{atk.damageDice}</span>
+                )}
+              </div>
+              <div className="col-span-2 w-full">
+                <Label className="text-[9px] text-muted-foreground uppercase mb-1 block">Mod</Label>
+                {isAttacksEditing ? (
+                  <Input value={atk.damageModifier} onChange={e => handleAttackFieldChange(atk.id, 'damageModifier', e.target.value)} className="h-8 text-xs text-center" placeholder="+0" />
+                ) : (
+                  <span className="text-xs font-bold">{atk.damageModifier || '+0'}</span>
+                )}
+              </div>
+              <div className="col-span-1 flex justify-end">
+                {isAttacksEditing && (
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive shrink-0" onClick={() => removeAttack(atk.id)}>
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                )}
+              </div>
+            </div>
+          ))}
+              {isAttacksEditing && (
+                <Button variant="outline" size="sm" className="w-full h-8 text-[10px] mt-2" onClick={addAttack}>
+                  <Plus className="mr-1 h-3 w-3" /> Add Attack
+                </Button>
+              )}
             </div>
           </CardContent>
         </Card>
