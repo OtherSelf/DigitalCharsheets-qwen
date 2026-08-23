@@ -80,8 +80,15 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
       setHitDiceUsed(initialHitDiceUsed);
       setAttacks(initialAttacks);
       setCombatResources(initialCombatResources);
-      setSpellcastingEntries(initialSpellcastingEntries);
+     setSpellcastingEntries(initialSpellcastingEntries);
     }, [characterId]);
+
+    // Re-sync spellcasting entries when they change in the parent (e.g., from Spells section)
+    React.useEffect(() => {
+      if (!isSpellcastingEditing) {
+        setSpellcastingEntries(initialSpellcastingEntries);
+      }
+    }, [initialSpellcastingEntries, isSpellcastingEditing]);
 
     const dexMod = Math.floor(((stats.dexterity || 10) - 10) / 2);
 
@@ -345,7 +352,40 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
               {spellcastingEntries.map((entry) => (
                 <div key={entry.id} className="grid grid-cols-12 gap-2 items-center p-2 bg-muted/10 rounded border border-muted/20">
                   <div className="col-span-6 w-full">
-                    <Label className="text-[9px] text-muted-foreground uppercase mb-1 block">Ability</Label>
+                    <div className="flex items-center gap-1 mb-1">
+                        {!hideNotes && (
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant={entry.notes ? 'secondary' : 'ghost'}
+                              size="icon"
+                              className="h-5 w-5 shrink-0"
+                              title="Notes"
+                            >
+                              <Info className="h-3 w-3" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-64">
+                            <Label className="text-xs mb-2 block">
+                              Notes for {entry.ability === 'none' ? 'Spellcasting' : entry.ability.charAt(0).toUpperCase() + entry.ability.slice(1)}
+                            </Label>
+                            <Textarea
+                              defaultValue={entry.notes || ''}
+                              onBlur={(e) => {
+                                const updated = spellcastingEntries.map(en =>
+                                  en.id === entry.id ? { ...en, notes: e.target.value } : en
+                                );
+                                setSpellcastingEntries(updated);
+                                updateCharacter(characterId, { spellcastingEntries: updated });
+                              }}
+                              placeholder="Add notes..."
+                              className="mt-2 min-h-[100px] text-sm"
+                            />
+                          </PopoverContent>
+                        </Popover>
+                      )}
+                      <Label className="text-[9px] text-muted-foreground uppercase">Ability</Label>
+                    </div>
                     {isSpellcastingEditing ? (
                       <Select value={entry.ability} onValueChange={(v) => handleSpellcastingFieldChange(entry.id, 'ability', v)}>
                         <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
@@ -390,6 +430,11 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
                   </div>
                 </div>
               ))}
+              {isSpellcastingEditing && (
+                <Button variant="outline" size="sm" className="w-full h-8 text-[10px] mt-2" onClick={addSpellcastingEntry}>
+                  <Plus className="mr-1 h-3 w-3" /> Add Spellcasting Entry
+                </Button>
+              )}
 
             <div className="border-t pt-4">
               <Label className="text-[10px] font-bold uppercase text-muted-foreground mb-2 block">Attacks</Label>
