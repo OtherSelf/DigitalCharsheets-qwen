@@ -11,6 +11,9 @@ import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { useCharacterContext } from '@/context/character-context';
 import { useTranslation } from '@/context/language-context';
+import { Popover, PopoverContent, PopoverTrigger } from '../../ui/popover';
+import { Info } from 'lucide-react';
+import { Textarea } from '../../ui/textarea';
 
 const EditSaveButton = ({ editing, onEdit, onSave }: { editing: boolean; onEdit: () => void; onSave: () => void }) => (
   editing ? ( <Button size="icon" variant="ghost" onClick={onSave} className="h-7 w-7"><Save className="h-4 w-4" /></Button> ) : ( <Button size="icon" variant="outline" onClick={onEdit} className="h-7 w-7"><Edit className="h-4 w-4" /></Button> )
@@ -24,7 +27,7 @@ interface InventorySectionProps {
 
 export const DndInventorySection = React.forwardRef<{ saveAll: () => void }, InventorySectionProps>(
   ({ characterId, initialCurrency, initialEquipment }, ref) => {
-    const { updateCharacter, showEditButtons } = useCharacterContext();
+    const { updateCharacter, showEditButtons, hideNotes } = useCharacterContext();
     const { t } = useTranslation();
 
     const [currency, setCurrency] = React.useState(initialCurrency);
@@ -86,18 +89,68 @@ export const DndInventorySection = React.forwardRef<{ saveAll: () => void }, Inv
             </div>
             <ul className="space-y-1 text-xs">
               {equipment.map(it => (
-                <li key={it.id} className="flex items-center justify-between group">
-                  {isItemsEditing ? (
-                    <div className="flex items-center gap-2 flex-1">
-                      <Checkbox checked={it.status === 'lost'} onCheckedChange={v => setEquipment(equipment.map(i => i.id === it.id ? {...i, status: v ? 'lost' : 'default'} : i))} />
-                      <Input value={it.name} onChange={e => setEquipment(equipment.map(i => i.id === it.id ? {...i, name: e.target.value} : i))} className="h-7 text-xs flex-1" />
-                      <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={() => setEquipment(equipment.filter(i => i.id !== it.id))}><Trash2 className="h-3 w-3" /></Button>
-                    </div>
-                  ) : (
-                    <span className={cn(it.status === 'lost' && "line-through")}>&bull; {it.name}</span>
-                  )}
-                </li>
-              ))}
+                  <li key={it.id} className="flex items-center justify-between group">
+                    {isItemsEditing ? (
+                      <div className="flex items-center gap-2 flex-1">
+                        <Checkbox checked={it.status === 'lost'} onCheckedChange={v => setEquipment(equipment.map(i => i.id === it.id ? { ...i, status: v ? 'lost' : 'default' } : i))} />
+                        <Input value={it.name} onChange={e => setEquipment(equipment.map(i => i.id === it.id ? { ...i, name: e.target.value } : i))} className="h-7 text-xs flex-1" />
+          
+                        {!hideNotes && (
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button variant={it.notes ? 'secondary' : 'ghost'} size="icon" className="h-6 w-6 shrink-0" title="Notes">
+                                <Info className="h-3 w-3" />
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-64">
+                              <Label className="text-xs mb-2 block">Notes for {it.name || 'Item'}</Label>
+                              <Textarea
+                                defaultValue={it.notes || ''}
+                                onBlur={(e) => {
+                                  const next = equipment.map(item => item.id === it.id ? { ...item, notes: e.target.value } : item);
+                                  setEquipment(next);
+                                  updateCharacter(characterId, { equipment: next });
+                                }}
+                                placeholder="Add notes..."
+                                className="mt-2 min-h-[100px] text-sm"
+                              />
+                            </PopoverContent>
+                          </Popover>
+                        )}
+
+                        <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={() => setEquipment(equipment.filter(i => i.id !== it.id))}>
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2 flex-1">
+                        {!hideNotes && (
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button variant={it.notes ? 'secondary' : 'ghost'} size="icon" className="h-5 w-5 shrink-0" title="Notes">
+                                <Info className="h-3 w-3" />
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-64">
+                              <Label className="text-xs mb-2 block">Notes for {it.name || 'Item'}</Label>
+                              <Textarea
+                                defaultValue={it.notes || ''}
+                                onBlur={(e) => {
+                                  const next = equipment.map(item => item.id === it.id ? { ...item, notes: e.target.value } : item);
+                                  setEquipment(next);
+                                  updateCharacter(characterId, { equipment: next });
+                                }}
+                                placeholder="Add notes..."
+                                className="mt-2 min-h-[100px] text-sm"
+                              />
+                            </PopoverContent>
+                          </Popover>
+                        )}
+                        <span className={cn("flex-1 truncate", it.status === 'lost' && "line-through")}>&bull; {it.name}</span>
+                      </div>
+                    )}
+                  </li>
+                ))}
               {isItemsEditing && (
                 <div className="flex gap-2 pt-2 border-t">
                   <Input placeholder="New..." value={newEquipmentItem} onChange={e => setNewEquipmentItem(e.target.value)} className="h-8 text-xs" />

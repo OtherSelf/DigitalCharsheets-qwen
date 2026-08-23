@@ -76,7 +76,7 @@
   "stats": {
     "strength": 20,
     "dexterity": 30,
-    "constitution": 10,
+    "constitution": 12,
     "intelligence": 11,
     "wisdom": 30,
     "charisma": 10
@@ -244,8 +244,8 @@
   "armorClass": 10,
   "speed": 30,
   "hitPoints": {
-    "current": 8,
-    "max": 8
+    "current": 56,
+    "max": 56
   },
   "temporaryHitPoints": 0,
   "hitDice": "1d8",
@@ -328,12 +328,14 @@
     {
       "id": "att-1786744852728",
       "description": "цйцй",
-      "attuned": true
+      "attuned": true,
+      "notes": ""
     },
     {
       "id": "att-1786744856911",
       "description": "цйцйцй",
-      "attuned": true
+      "attuned": true,
+      "notes": ""
     },
     {
       "id": "att-1786744860301",

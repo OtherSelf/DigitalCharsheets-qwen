@@ -11,6 +11,10 @@ import { cn } from '@/lib/utils';
 import { useCharacterContext } from '@/context/character-context';
 import { useTranslation } from '@/context/language-context';
 import { useToast } from '@/hooks/use-toast';
+import { Popover, PopoverContent, PopoverTrigger } from '../../ui/popover';
+import { Info } from 'lucide-react';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '../../ui/textarea';
 
 const EditSaveButton = ({ editing, onEdit, onSave }: { editing: boolean; onEdit: () => void; onSave: () => void }) => (
   editing ? ( <Button size="icon" variant="ghost" onClick={onSave} className="h-7 w-7"><Save className="h-4 w-4" /></Button> ) : ( <Button size="icon" variant="outline" onClick={onEdit} className="h-7 w-7"><Edit className="h-4 w-4" /></Button> )
@@ -23,7 +27,7 @@ interface AttunementSectionProps {
 
 export const DndAttunementSection = React.forwardRef<{ saveAll: () => void }, AttunementSectionProps>(
   ({ characterId, initialItems }, ref) => {
-    const { updateCharacter, showEditButtons } = useCharacterContext();
+    const { updateCharacter, showEditButtons, hideNotes } = useCharacterContext();
     const { t } = useTranslation();
     const { toast } = useToast();
 
@@ -70,19 +74,49 @@ export const DndAttunementSection = React.forwardRef<{ saveAll: () => void }, At
           {(showEditButtons || isAttunementEditing) && <EditSaveButton editing={isAttunementEditing} onEdit={() => setIsAttunementEditing(true)} onSave={handleSaveAttunement} />}
         </CardHeader>
         <CardContent className="p-4 pt-0 space-y-2">
-          {attunementItems.map((it, i) => (
+          {attunementItems.map((it) => (
             <div key={it.id} className="text-[10px] p-1.5 rounded bg-muted/10 flex items-center justify-between group">
-              <div className="flex items-center gap-2 flex-1">
-                <Checkbox checked={it.attuned} onCheckedChange={v => handleAttunedChange(it.id, !!v)} />
-                {isAttunementEditing ? (
-                  <Input value={it.description} onChange={e => setAttunementItems(attunementItems.map(item => item.id === it.id ? { ...item, description: e.target.value } : item))} className="h-6 text-[10px] flex-1" />
-                ) : (
-                  <span className={cn("font-medium", !it.attuned && "opacity-50")}>{it.description} {it.attuned && <span className="text-[8px] font-black uppercase text-primary ml-1">(Attuned)</span>}</span>
-                )}
-                {isAttunementEditing && ( <Button variant="ghost" size="icon" className="h-5 w-5 text-destructive ml-2" onClick={() => setAttunementItems(attunementItems.filter(item => item.id !== it.id))}><Trash2 className="h-3 w-3" /></Button> )}
+                <div className="flex items-center gap-2 flex-1">
+                  <Checkbox checked={it.attuned} onCheckedChange={v => handleAttunedChange(it.id, !!v)} />
+                  {isAttunementEditing ? (
+                    <Input value={it.description} onChange={e => setAttunementItems(attunementItems.map(item => item.id === it.id ? { ...item, description: e.target.value } : item))} className="h-6 text-[10px] flex-1" />
+                  ) : (
+                    <span className={cn("font-medium flex-1 truncate", !it.attuned && "opacity-50")}>
+                      {it.description}{it.attuned && <span className="text-[8px] font-black uppercase text-primary ml-1">(Attuned)</span>}
+                    </span>
+                  )}
+      
+                  {!hideNotes && (
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button variant={it.notes ? 'secondary' : 'ghost'} size="icon" className="h-5 w-5 shrink-0" title="Notes">
+                          <Info className="h-3 w-3" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-64">
+                        <Label className="text-xs mb-2 block">Notes for {it.description || 'Item'}</Label>
+                        <Textarea
+                          defaultValue={it.notes || ''}
+                          onBlur={(e) => {
+                            const next = attunementItems.map(item => item.id === it.id ? { ...item, notes: e.target.value } : item);
+                            setAttunementItems(next);
+                            updateCharacter(characterId, { attunementItems: next });
+                          }}
+                          placeholder="Add notes..."
+                          className="mt-2 min-h-[100px] text-sm"
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  )}
+
+                  {isAttunementEditing && (
+                    <Button variant="ghost" size="icon" className="h-5 w-5 text-destructive ml-1" onClick={() => setAttunementItems(attunementItems.filter(item => item.id !== it.id))}>
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
           {isAttunementEditing && (
             <div className="flex gap-2 pt-2 border-t">
               <Input placeholder="New..." value={newAttunementItem} onChange={e => setNewAttunementItem(e.target.value)} className="h-7 text-[10px]" />

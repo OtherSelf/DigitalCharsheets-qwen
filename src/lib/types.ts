@@ -250,6 +250,7 @@ export interface DnD5eCharacter extends CharacterBase {
     max: number;
   };
   hpTracking?: string;
+  hitPointsNotes?: string;
   temporaryHitPoints: number;
   hitDice: string;
   hitDiceUsed?: Record<string, number>;

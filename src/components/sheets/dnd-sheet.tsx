@@ -98,6 +98,14 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
 
     const passivePerception = 10 + (calculatedSkills.find(s => s.name === 'perception')?.value || 0);
 
+    // Auto-calculate Base HP (8 + Constitution Modifier) 
+    const conMod = Math.floor(((character.stats?.constitution ?? 10) - 10) / 2);
+    const baseMaxHp = 8 + conMod;
+    // Use existing HP if it's already been set (> 0), otherwise use the calculated base
+    const safeHitPoints = (character.hitPoints && character.hitPoints.max > 0) 
+      ? character.hitPoints 
+      : { current: baseMaxHp, max: baseMaxHp };
+
     const calculatedSavingThrows = React.useMemo(() => {
       return savingThrows.map(st => {
         const statKey = st.name.toLowerCase() as keyof typeof stats;
@@ -166,6 +174,16 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
               setIsProgressionEditing={setIsProgressionEditing}
               handleSaveProgression={handleSaveProgression}
             />
+            {/* Divine Boons - Between Progression and Character Info */}
+            {progressionData.level >= 20 && (
+              <DndDivineBoonsSection
+                ref={boonsRef}
+                characterId={character.id}
+                initialBoons={character.divineBoons || []}
+                isCompactView={isCompactView}
+                activeCompactSection={activeCompactSection}
+              />
+            )}
             <DndCharacterInfoSection
               ref={characterInfoRef}
               characterId={character.id}
@@ -200,18 +218,6 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
             )}
           </div>
         </div>
-
-        {progressionData.level >= 20 && (
-          <div className={cn("flex flex-col gap-6 items-stretch", isCompactView && activeCompactSection !== 'boons-section' && "hidden")}>
-            <DndDivineBoonsSection
-              ref={boonsRef}
-              characterId={character.id}
-              initialBoons={character.divineBoons || []}
-              isCompactView={isCompactView}
-              activeCompactSection={activeCompactSection}
-            />
-          </div>
-        )}
 
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
           <DndStatsSection
@@ -252,7 +258,7 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
           <DndCombatSection
             ref={combatRef}
             characterId={character.id}
-            initialCombatStats={{ armorClass: character.armorClass, speed: character.speed, hitPoints: character.hitPoints || { current: 10, max: 10 }, temporaryHitPoints: character.temporaryHitPoints || 0, deathSaves: character.deathSaves || { successes: 0, failures: 0 } }}
+            initialCombatStats={{ armorClass: character.armorClass, speed: character.speed, hitPoints: character.hitPoints || { current: baseMaxHp, max: baseMaxHp }, temporaryHitPoints: character.temporaryHitPoints || 0, deathSaves: character.deathSaves || { successes: 0, failures: 0 }, hitPointsNotes: character.hitPointsNotes || '', hpTracking: character.hpTracking || '' }}
             initialExhaustion={character.exhaustion || 0}
             initialHitDiceUsed={character.hitDiceUsed || {}}
             initialAttacks={character.attacks || []}
