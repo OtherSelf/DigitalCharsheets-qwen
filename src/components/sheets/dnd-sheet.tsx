@@ -173,9 +173,8 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
               isProgressionEditing={isProgressionEditing}
               setIsProgressionEditing={setIsProgressionEditing}
               handleSaveProgression={handleSaveProgression}
-            />
-            {/* Divine Boons - Between Progression and Character Info */}
-            {progressionData.level >= 20 && (
+            />        
+            {(progressionData.level >= 20 || character.allowDivineBoonsBeforeLevel20) && (
               <DndDivineBoonsSection
                 ref={boonsRef}
                 characterId={character.id}

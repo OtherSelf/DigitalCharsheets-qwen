@@ -10,6 +10,7 @@ import {
   FileDown,
   Minus,
   Plus,
+  Scale,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
@@ -25,6 +26,7 @@ import { ThemeToggle } from './layout/theme-toggle';
 import { useTranslation } from '@/context/language-context';
 import { LanguageToggle } from './layout/language-toggle';
 import { exportCharacterToExcel } from '@/lib/export-utils';
+import { HouseRulesDialog } from './sheets/dnd-sections/house-rules-dialog';
 
 interface HeaderProps {
     onNotesClick?: () => void;
@@ -36,7 +38,7 @@ export function Header({ onNotesClick, onJournalClick }: HeaderProps) {
     useCharacterContext();
   const { t } = useTranslation();
   const params = useParams<{ id: string }>();
-
+  const [isHouseRulesDialogOpen, setIsHouseRulesDialogOpen] = useState(false);
   const [character, setCharacter] = useState<Character | undefined>(undefined);
 
   useEffect(() => {
@@ -98,17 +100,17 @@ export function Header({ onNotesClick, onJournalClick }: HeaderProps) {
                 <Plus className="h-3 w-3" />
               </Button>
             </div>
+            
             {!isCompactView && (
-              <div className="flex items-center gap-1.5 ml-2 pl-2 border-l border-primary/20">
-                <Checkbox 
-                  id="inspiration-home-rule" 
-                  checked={(character as DnD5eCharacter).allowInspirationHomeRule || false} 
-                  onCheckedChange={(checked) => updateCharacter(character.id, { allowInspirationHomeRule: !!checked })} 
-                />
-                <Label htmlFor="inspiration-home-rule" className="text-[10px] md:text-xs whitespace-nowrap cursor-pointer text-primary">
-                  Home Rule
-                </Label>
-              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsHouseRulesDialogOpen(true)}
+                className="ml-2"
+              >
+                <Scale className="mr-2 h-4 w-4" />
+                House Rules
+              </Button>
             )}
           </div>
         )}
@@ -190,6 +192,13 @@ export function Header({ onNotesClick, onJournalClick }: HeaderProps) {
         <ThemeToggle />
         <UserNav />
       </div>
+      {character && (
+        <HouseRulesDialog 
+          open={isHouseRulesDialogOpen} 
+          onOpenChange={setIsHouseRulesDialogOpen} 
+          characterId={character.id} 
+        />
+        )}
     </header>
   );
 }

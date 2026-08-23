@@ -151,6 +151,8 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
     }, [initialSpellcastingEntries, isSpellcastingEditing]);
 
     const dexMod = Math.floor(((stats.dexterity || 10) - 10) / 2);
+    const conMod = Math.floor(((stats.constitution || 10) - 10) / 2);
+    const baseMaxHp = 8 + conMod;
 
     const primaryClassLevel = progressionData.isMulticlass
       ? Math.max(1, progressionData.level - (progressionData.multiclasses?.reduce((sum, mc) => sum + mc.level, 0) || 0))
@@ -337,7 +339,15 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
           <CardContent className="p-4 pt-0 space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-4">
-                <div className="p-2 border rounded text-center"><Label className="text-[10px] uppercase font-bold">Max</Label>{isHpEditing ? (<Input type="number" value={combatStats.hitPoints.max} onChange={e => setCombatStats({ ...combatStats, hitPoints: { ...combatStats.hitPoints, max: parseInt(e.target.value) || 0 } })} className="h-8 text-center" />) : (<div className="text-base font-bold">{combatStats.hitPoints.max}</div>)}</div>
+                <div className="p-2 border rounded text-center">
+                  <div className="text-[9px] italic text-muted-foreground mb-1">Base value: {baseMaxHp}</div>
+                  <Label className="text-[10px] uppercase font-bold">Max</Label>
+                    {isHpEditing ? (
+                      <Input type="number" value={combatStats.hitPoints.max} onChange={e => setCombatStats({ ...combatStats, hitPoints: { ...combatStats.hitPoints, max: parseInt(e.target.value) || 0 } })} className="h-8 text-center" />
+                    ) : (
+                      <div className="text-base font-bold">{combatStats.hitPoints.max}</div>
+                    )}
+                  </div>
                 <div className="p-2 border rounded text-center"><Label className="text-[10px] uppercase font-bold">Current</Label>{isHpEditing ? (<Input type="number" value={combatStats.hitPoints.current} onChange={e => setCombatStats({ ...combatStats, hitPoints: { ...combatStats.hitPoints, current: parseInt(e.target.value) || 0 } })} className="h-8 text-center" />) : (<div className="text-base font-bold text-primary">{combatStats.hitPoints.current}</div>)}</div>
               </div>
               <div className="space-y-4">

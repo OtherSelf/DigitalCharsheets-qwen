@@ -218,6 +218,7 @@ export interface DnD5eCharacter extends CharacterBase {
   divineBoons?: string[];
   inspiration: string;
   allowInspirationHomeRule?: boolean;
+  allowDivineBoonsBeforeLevel20?: boolean;
   proficiencyBonus: number;
   age?: string;
   eyes?: string;

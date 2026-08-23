@@ -4,7 +4,7 @@
   "race": "Tabaxi",
   "background": "Outlander",
   "alignment": "Neutral",
-  "experiencePoints": 42152,
+  "experiencePoints": 4215,
   "age": "",
   "eyes": "",
   "skin": "",
@@ -13,7 +13,7 @@
   "hair": "",
   "inspiration": "1",
   "proficiencyBonus": 2,
-  "level": 20,
+  "level": 4,
   "gameSystem": "Dungeons & Dragons",
   "backstory": "",
   "notes": "",
@@ -76,7 +76,7 @@
   "stats": {
     "strength": 20,
     "dexterity": 30,
-    "constitution": 12,
+    "constitution": 20,
     "intelligence": 11,
     "wisdom": 30,
     "charisma": 10
@@ -480,6 +480,7 @@
       "features": []
     }
   ],
-  "allowInspirationHomeRule": false,
-  "hpTracking": ""
+  "allowInspirationHomeRule": true,
+  "hpTracking": "",
+  "allowDivineBoonsBeforeLevel20": true
 }
