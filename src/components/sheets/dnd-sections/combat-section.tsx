@@ -35,6 +35,8 @@ interface CombatStats {
   armorClass: number;
   speed: number;
   hitPoints: { current: number; max: number };
+  hitPointsNotes?: string;
+  hpTracking?: string;
   temporaryHitPoints: number;
   deathSaves: { successes: number; failures: number };
 }
@@ -304,7 +306,34 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
         </Card>
 
         <Card id="hit-points-card">
-          <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2"><CardTitle className="text-[10px] font-bold uppercase text-muted-foreground tracking-tight">Health</CardTitle>{(showEditButtons || isHpEditing) && <EditSaveButton editing={isHpEditing} onEdit={() => setIsHpEditing(true)} onSave={handleSaveHp} />}</CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2">
+              <div className="flex items-center gap-2">
+                <CardTitle className="text-[10px] font-bold uppercase text-muted-foreground tracking-tight">Health</CardTitle>
+                {!hideNotes && (
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant={combatStats.hitPointsNotes ? 'secondary' : 'ghost'} size="icon" className="h-5 w-5 shrink-0" title="Health Notes">
+                        <Info className="h-3 w-3" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-64">
+                      <Label className="text-xs mb-2 block">Health Notes</Label>
+                      <Textarea
+                        defaultValue={combatStats.hitPointsNotes || ''}
+                        onBlur={(e) => {
+                          const next = { ...combatStats, hitPointsNotes: e.target.value };
+                          setCombatStats(next);
+                          updateCharacter(characterId, { hitPointsNotes: e.target.value });
+                        }}
+                        placeholder="Add notes..."
+                        className="mt-2 min-h-[100px] text-sm"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                )}
+              </div>
+              {(showEditButtons || isHpEditing) && <EditSaveButton editing={isHpEditing} onEdit={() => setIsHpEditing(true)} onSave={handleSaveHp} />}
+            </CardHeader>
           <CardContent className="p-4 pt-0 space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-4">
@@ -327,12 +356,27 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
                     }} 
                     className="h-8 text-center" 
                   />
-                  <div className="grid grid-cols-2 gap-2">
-                    <Button size="sm" variant="outline" onClick={() => handleHpMath('sub')}>Sub</Button>
-                    <Button size="sm" variant="outline" onClick={() => handleHpMath('rec')}>Heal</Button>
-                  </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button size="sm" variant="outline" onClick={() => handleHpMath('sub')}>Sub</Button>
+                  <Button size="sm" variant="outline" onClick={() => handleHpMath('rec')}>Heal</Button>
                 </div>
               </div>
+            </div>
+          </div>
+  
+          {/* HP Tracking */}
+          <div className="pt-4 border-t">
+            <Label className="text-[10px] uppercase font-bold mb-2 block">HP Tracking</Label>
+              <Textarea
+                value={combatStats.hpTracking || ''}
+                onChange={e => {
+                  const next = { ...combatStats, hpTracking: e.target.value };
+                  setCombatStats(next);
+                  updateCharacter(characterId, { hpTracking: e.target.value });
+                }}
+                placeholder="Track conditions, temporary effects, etc..."
+                className="min-h-[80px] text-xs resize-none"
+              />
             </div>
           </CardContent>
         </Card>
