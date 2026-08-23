@@ -74,7 +74,7 @@
     "Boon of High Magic: You gain one 9th-level spell slot, provided that you already have one."
   ],
   "stats": {
-    "strength": 10,
+    "strength": 20,
     "dexterity": 30,
     "constitution": 10,
     "intelligence": 11,
@@ -259,17 +259,21 @@
   ],
   "attacks": [
     {
-      "id": "atk-1786742225746",
-      "name": "New Attackй",
-      "atkBonus": "+0",
-      "damageType": "1d6",
+      "id": "atk-1787480747317",
+      "name": "New Attack",
+      "ability": "strength",
+      "useProficiencyBonus": true,
+      "damageDice": "1d4",
+      "damageModifier": "+2+1d4 (fire) +1d10+1d12+1d8+1d6",
       "notes": ""
     },
     {
-      "id": "atk-1787472979464",
+      "id": "atk-1787483952333",
       "name": "New Attack",
-      "atkBonus": "+0",
-      "damageType": "1d6",
+      "ability": "dexterity",
+      "useProficiencyBonus": true,
+      "damageDice": "1d6",
+      "damageModifier": "+2",
       "notes": ""
     }
   ],
@@ -278,18 +282,17 @@
   "spellSaveDifficulty": 8,
   "spellcastingEntries": [
     {
-      "id": "spellcast-1787423877105",
-      "ability": "wisdom",
-      "attackBonus": "+16",
-      "saveDC": 24,
-      "notes": ""
-    },
-    {
       "id": "spellcast-1787472088750",
       "ability": "intelligence",
       "attackBonus": "+6",
       "saveDC": 14,
       "notes": ""
+    },
+    {
+      "id": "spellcast-1787483963779",
+      "ability": "wisdom",
+      "attackBonus": "+16",
+      "saveDC": 24
     }
   ],
   "personalityTraits": [
