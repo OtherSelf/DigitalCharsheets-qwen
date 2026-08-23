@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Info,
@@ -34,6 +35,7 @@ import { type GameSystem } from '@/lib/types';
 import { useCharacterContext } from '@/context/character-context';
 import { useParams } from 'next/navigation';
 import { Scale } from 'lucide-react';
+import { HouseRulesDialog } from './dnd-sections/house-rules-dialog';
 
 interface CompactSidebarProps {
   gameSystem: GameSystem;
@@ -48,6 +50,7 @@ export function CompactSidebar({ gameSystem, activeSection, onSectionChange }: C
   const character = params?.id ? getCharacter(params.id) : null;
   const isLevel20 = character?.gameSystem === 'Dungeons & Dragons' && (character as any).level === 20;
   const { hideNotes, setHideNotes, showEditButtons, setShowEditButtons } = useCharacterContext();
+  const [isHouseRulesDialogOpen, setIsHouseRulesDialogOpen] = useState(false);
 
   const dndItems = [
     { label: 'info', id: 'info-section', icon: Info },
@@ -110,7 +113,7 @@ export function CompactSidebar({ gameSystem, activeSection, onSectionChange }: C
                 variant={item.id === 'house-rules' ? 'outline' : 'ghost'}
                 onClick={() => {
                   if (item.id === 'house-rules') {
-                    alert('House Rules configuration panel coming soon!');
+                    setIsHouseRulesDialogOpen(true); 
                   } else {
                     onSectionChange(item.id);
                   }
@@ -168,6 +171,13 @@ export function CompactSidebar({ gameSystem, activeSection, onSectionChange }: C
           <Separator className="w-full mb-2" />
           <LanguageToggle className="h-10 w-10" />
         </div>
+      {params?.id && (
+        <HouseRulesDialog 
+          open={isHouseRulesDialogOpen} 
+          onOpenChange={setIsHouseRulesDialogOpen} 
+          characterId={params.id} 
+        />
+      )}
       </nav>
     </TooltipProvider>
   );
