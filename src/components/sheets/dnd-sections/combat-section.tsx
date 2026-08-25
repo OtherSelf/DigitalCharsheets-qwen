@@ -22,9 +22,12 @@ const CLASS_HIT_DICE: Record<string, number> = {
 };
 
 const EXHAUSTION_EFFECTS = [
-  'No exhaustion', 'Disadvantage on Ability Checks', 'Speed halved',
-  'Disadvantage on Attack rolls and Saving Throws', 'Hit point maximum halved',
-  'Speed reduced to 0', 'Death',
+  'Disadvantage on ability checks',
+  'Speed halved',
+  'Disadvantage on attack rolls and saving throws',
+  'Hit point maximum halved',
+  'Speed reduced to 0',
+  'Death',
 ];
 
 const EditSaveButton = ({ editing, onEdit, onSave }: { editing: boolean; onEdit: () => void; onSave: () => void }) => (
@@ -416,7 +419,7 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
               </div>
             </div>
             <div className="pt-3 border-t">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between mb-2">
                 <Label className="text-[10px] uppercase font-bold">{t('exhaustion')}</Label>
                 <div className="flex items-center gap-2">
                   <Button size="icon" variant="outline" className="h-6 w-6" onClick={() => handleExhaustionChange(-1)} disabled={exhaustion <= 0}><Minus className="h-3 w-3" /></Button>
@@ -424,7 +427,25 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
                   <Button size="icon" variant="outline" className="h-6 w-6" onClick={() => handleExhaustionChange(1)} disabled={exhaustion >= 6}><Plus className="h-3 w-3" /></Button>
                 </div>
               </div>
-              <p className={cn("text-[10px] mt-1 text-center", exhaustion >= 5 ? "text-red-500" : exhaustion >= 3 ? "text-orange-500" : "text-muted-foreground")}>{EXHAUSTION_EFFECTS[exhaustion]}</p>
+              
+              {exhaustion === 0 ? (
+                <p className="text-[10px] text-center text-green-500 font-medium">No exhaustion effects</p>
+              ) : (
+                <ul className="space-y-1">
+                  {EXHAUSTION_EFFECTS.slice(0, exhaustion).map((effect, index) => (
+                    <li 
+                      key={index} 
+                      className={cn(
+                        "text-[10px] flex items-start gap-1.5",
+                        exhaustion >= 5 ? "text-red-500" : exhaustion >= 3 ? "text-orange-500" : "text-yellow-500"
+                      )}
+                    >
+                      <span className="font-bold min-w-[12px]">{index + 1}.</span>
+                      <span>{effect}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           </CardContent>
         </Card>
