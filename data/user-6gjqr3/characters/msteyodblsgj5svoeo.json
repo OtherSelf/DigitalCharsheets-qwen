@@ -4,7 +4,7 @@
   "race": "Tabaxi",
   "background": "Outlander",
   "alignment": "Neutral",
-  "experiencePoints": 4215,
+  "experiencePoints": 42121111,
   "age": "",
   "eyes": "",
   "skin": "",
@@ -13,7 +13,7 @@
   "hair": "",
   "inspiration": "1",
   "proficiencyBonus": 2,
-  "level": 4,
+  "level": 20,
   "gameSystem": "Dungeons & Dragons",
   "backstory": "",
   "notes": "",
@@ -406,7 +406,68 @@
     "Wizard": 0
   },
   "isMulticlass": true,
-  "multiclasses": [],
+  "multiclasses": [
+    {
+      "class": "Artificer",
+      "level": 1,
+      "isDisabled": false
+    },
+    {
+      "class": "Barbarian",
+      "level": 1,
+      "isDisabled": false
+    },
+    {
+      "class": "Bard",
+      "level": 1,
+      "isDisabled": false
+    },
+    {
+      "class": "Cleric",
+      "level": 1,
+      "isDisabled": false
+    },
+    {
+      "class": "Druid",
+      "level": 1,
+      "isDisabled": false
+    },
+    {
+      "class": "Fighter",
+      "level": 1,
+      "isDisabled": false
+    },
+    {
+      "class": "Monk",
+      "level": 1,
+      "isDisabled": false
+    },
+    {
+      "class": "Paladin",
+      "level": 1,
+      "isDisabled": false
+    },
+    {
+      "class": "Ranger",
+      "level": 1,
+      "isDisabled": false
+    },
+    {
+      "class": "Sorcerer",
+      "level": 1,
+      "isDisabled": false
+    },
+    {
+      "class": "Warlock",
+      "level": 1,
+      "isDisabled": false
+    },
+    {
+      "class": "Wizard",
+      "level": 1,
+      "isDisabled": false
+    }
+  ],
   "spellSlots": {
     "1": {
       "max": 4,

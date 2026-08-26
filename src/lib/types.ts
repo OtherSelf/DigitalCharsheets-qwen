@@ -202,6 +202,7 @@ export interface CharacterBase {
 export interface DnDMulticlass {
   class: string;
   level: number;
+  isDisabled?: boolean; // Added to preserve progress when XP is lowered
 }
 
 export type DnDAbility = 'strength' | 'dexterity' | 'constitution' | 'intelligence' | 'wisdom' | 'charisma';

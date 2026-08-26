@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader } from '../../ui/card';
 import { Input } from '../../ui/input';
 import { Button } from '../../ui/button';
 import { Checkbox } from '../../ui/checkbox';
-import { Plus, Trash2, Edit, Save } from 'lucide-react';
+import { Plus, Trash2, Edit, Save, ChevronDown, ChevronRight } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import {
   Accordion,
@@ -65,44 +65,48 @@ export function DndProgressionSection({ progressionData, setProgressionData, exp
   const { showEditButtons } = useCharacterContext();
   const { t } = useTranslation();
 
-  // Validate and fix multiclass levels on load (Prevents infinite loops)
+  // 1. STATE DECLARATION (Must be at the top level of the component)
+  const [isMulticlassOpen, setIsMulticlassOpen] = React.useState(false);
+
+  // 2. EFFECT: Validate and mark multiclasses as disabled if XP/Level drops too low
   React.useEffect(() => {
     if (progressionData.multiclasses && progressionData.multiclasses.length > 0) {
-      const totalMcLevel = progressionData.multiclasses.reduce((sum, m) => sum + m.level, 0);
       const maxTotalMcAllowed = Math.max(0, progressionData.level - 1);
+      let sum = 0;
       
-      // If multiclass sum exceeds allowed, or total level is over 20, fix it
-      if (totalMcLevel > maxTotalMcAllowed || progressionData.level > 20) {
-        let sum = 0;
-        const fixed = progressionData.multiclasses.map(m => {
-            const remaining = Math.max(0, maxTotalMcAllowed - sum);
-            const lvl = remaining > 0 ? Math.min(m.level, remaining) : 0;
-            sum += lvl;
-            return { ...m, level: lvl };
-        }).filter(m => m.level >= 1); // Drop any class that got clamped to 0
+      const updated = progressionData.multiclasses.map(m => {
+        sum += m.level;
+        const isDisabled = sum > maxTotalMcAllowed;
+        return { ...m, isDisabled };
+      });
 
-        // ONLY update if the array actually changed, preventing infinite loops
-        const isDifferent = fixed.length !== progressionData.multiclasses.length || 
-                            fixed.some((m, i) => m.level !== progressionData.multiclasses[i].level);
-                            
-        if (isDifferent) {
-            setProgressionData(prev => ({ ...prev, multiclasses: fixed }));
-        }
+      const isDifferent = updated.some((m, i) => m.isDisabled !== progressionData.multiclasses[i].isDisabled);
+      if (isDifferent) {
+        setProgressionData(prev => ({ ...prev, multiclasses: updated }));
       }
     }
   }, [progressionData.level, progressionData.multiclasses, setProgressionData]);
+
+  // 3. CALCULATIONS: Exclude disabled multiclasses from formulas
+  const activeMcLevelSum = progressionData.multiclasses?.reduce((sum, mc) => sum + (mc.isDisabled ? 0 : mc.level), 0) || 0;
+  const mainClassLevel = progressionData.isMulticlass 
+    ? Math.max(1, progressionData.level - activeMcLevelSum) 
+    : progressionData.level;
 
   return (
     <Accordion type="single" collapsible defaultValue="expanded" className="w-full md:max-w-xl">
       <AccordionItem value="expanded" className="border-0">
         <Card className="flex flex-col border-2 overflow-hidden shrink-0 h-full">
           <CardHeader className="px-4 pt-2 pb-2 flex flex-row items-center justify-between bg-muted/5">
-            <AccordionTrigger className="flex flex-1 items-center justify-between hover:no-underline py-0"><Label className="text-[10px] font-bold uppercase text-muted-foreground tracking-tight">{t('progression')}</Label></AccordionTrigger>
+            <AccordionTrigger className="flex flex-1 items-center justify-between hover:no-underline py-0">
+              <Label className="text-[10px] font-bold uppercase text-muted-foreground tracking-tight">{t('progression')}</Label>
+            </AccordionTrigger>
             {(showEditButtons || isProgressionEditing) && <EditSaveButton editing={isProgressionEditing} onEdit={() => setIsProgressionEditing(true)} onSave={handleSaveProgression} />}
           </CardHeader>
           <AccordionContent>
             <CardContent className="p-4 space-y-4">
-               <div className="grid grid-cols-3 gap-4">
+              {/* Core Stats Grid */}
+              <div className="grid grid-cols-3 gap-4">
                 <div className="flex flex-col gap-1">
                   <Label className="text-[10px] text-muted-foreground uppercase font-bold">{t('class')}</Label>
                   {isProgressionEditing ? (
@@ -114,73 +118,98 @@ export function DndProgressionSection({ progressionData, setProgressionData, exp
                 </div>
                 <div className="flex flex-col gap-1">
                   <Label className="text-[10px] text-muted-foreground uppercase font-bold">Class Lvl</Label>
-                  <span className="text-base font-bold truncate">
-                    {progressionData.isMulticlass 
-                      ? Math.max(1, progressionData.level - (progressionData.multiclasses?.reduce((sum, mc) => sum + mc.level, 0) || 0)) 
-                      : progressionData.level}
-                  </span>
+                  <span className="text-base font-bold truncate">{mainClassLevel}</span>
                 </div>
                 <div className="flex flex-col gap-1">
                   <Label className="text-[10px] text-muted-foreground uppercase font-bold">Total Lvl</Label>
                   <span className="text-base font-bold truncate">{progressionData.level}</span>
                 </div>
               </div>
+
               <div className="pt-2 border-t space-y-4">
-                <div className="flex items-center justify-between">
-                  <Label className="text-[10px] font-bold uppercase">Multiclass</Label>
-                  {isProgressionEditing && <Checkbox checked={progressionData.isMulticlass} onCheckedChange={v => setProgressionData({ ...progressionData, isMulticlass: !!v })} />}
+                {/* Unified Collapsible Multiclass Header */}
+                <div 
+                  className="flex items-center justify-between cursor-pointer hover:bg-muted/50 p-1.5 rounded-md transition-colors"
+                  onClick={() => setIsMulticlassOpen(!isMulticlassOpen)}
+                >
+                  <div className="flex items-center gap-1.5">
+                    {isMulticlassOpen ? (
+                      <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                    ) : (
+                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                    )}
+                    <Label className="text-[10px] font-bold uppercase cursor-pointer select-none">
+                      Multiclass
+                      {progressionData.isMulticlass && progressionData.multiclasses.length > 0 && (
+                        <span className="ml-1.5 text-[9px] normal-case text-muted-foreground">
+                          ({progressionData.multiclasses.filter(m => !m.isDisabled).length} active)
+                        </span>
+                      )}
+                    </Label>
+                  </div>
+                  {isProgressionEditing && (
+                    <Checkbox 
+                      checked={progressionData.isMulticlass} 
+                      onCheckedChange={v => {
+                        const isChecked = !!v;
+                        setProgressionData({ ...progressionData, isMulticlass: isChecked });
+                        if (isChecked) setIsMulticlassOpen(true); // Auto-expand when enabling
+                      }} 
+                      onClick={(e) => e.stopPropagation()} // Prevent collapsing when clicking the checkbox
+                    />
+                  )}
                 </div>
-                {progressionData.isMulticlass && (
-                  <div className="space-y-2">
-                    {progressionData.multiclasses.map((mc, idx) => (
-                      <div key={idx} className="flex gap-2 items-center">
-                        {isProgressionEditing ? (
-                          <>
-                            <Select value={mc.class} onValueChange={v => { const n = [...progressionData.multiclasses]; n[idx].class = v; setProgressionData({ ...progressionData, multiclasses: n }); }}>
-                              <SelectTrigger className="h-8 text-xs flex-1"><SelectValue /></SelectTrigger>
-                              <SelectContent>{DND_CLASSES.map(c => (<SelectItem key={c} value={c} disabled={progressionData.characterClass === c || progressionData.multiclasses.some((m, i) => m.class === c && i !== idx)}>{c}</SelectItem>))}</SelectContent>
-                            </Select>
-                            <Input 
-                              type="number" 
-                              value={mc.level} 
-                              onChange={e => { 
-                                const rawVal = parseInt(e.target.value) || 1;
-                                const n = [...progressionData.multiclasses]; 
-                                
-                                // 1. Sum of all OTHER multiclass levels
-                                const otherMcSum = progressionData.multiclasses.reduce((sum, m, i) => i === idx ? sum : sum + m.level, 0);
-                                
-                                // 2. Main Class MUST be at least level 1. 
-                                // Therefore, multiclass sum <= Total Level - 1.
-                                const maxTotalMcAllowed = Math.max(0, progressionData.level - 1);
-                                
-                                // 3. This specific multiclass can be at most whatever is left of that allowance
-                                const maxAllowed = Math.max(1, maxTotalMcAllowed - otherMcSum);
-                                
-                                // 4. Clamp the new level between 1 and maxAllowed
-                                const newMcLevel = Math.max(1, Math.min(maxAllowed, rawVal));
-                                n[idx].level = newMcLevel;
-                                
-                                setProgressionData({ ...progressionData, multiclasses: n }); 
-                              }} 
-                              className="h-8 w-16 text-center" 
-                            />
-                            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => setProgressionData({ ...progressionData, multiclasses: progressionData.multiclasses.filter((_, i) => i !== idx) })}><Trash2 className="h-4 w-4" /></Button>
-                          </>
-                        ) : (<span className="text-xs font-semibold">{mc.class} (Lvl {mc.level})</span>)}
-                      </div>
-                    ))}
+
+                {/* Collapsible Multiclass Content */}
+                {isMulticlassOpen && progressionData.isMulticlass && (
+                  <div className="space-y-2 pl-6 pt-2 border-l-2 border-muted ml-1.5">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {progressionData.multiclasses.map((mc, idx) => (
+                        <div key={idx} className={`flex gap-2 items-center p-2 rounded-md border ${mc.isDisabled ? "bg-muted/50 border-muted opacity-75" : "bg-background"}`}>
+                          {isProgressionEditing ? (
+                            <>
+                              <Select value={mc.class} onValueChange={v => { const n = [...progressionData.multiclasses]; n[idx].class = v; setProgressionData({ ...progressionData, multiclasses: n }); }}>
+                                <SelectTrigger className="h-8 text-xs flex-1"><SelectValue /></SelectTrigger>
+                                <SelectContent>{DND_CLASSES.map(c => (<SelectItem key={c} value={c} disabled={progressionData.characterClass === c || progressionData.multiclasses.some((m, i) => m.class === c && i !== idx)}>{c}</SelectItem>))}</SelectContent>
+                              </Select>
+                              <Input 
+                                type="number" 
+                                value={mc.level} 
+                                onChange={e => { 
+                                  const rawVal = parseInt(e.target.value) || 1;
+                                  const n = [...progressionData.multiclasses]; 
+                                  const otherMcSum = progressionData.multiclasses.reduce((sum, m, i) => i === idx ? sum : sum + m.level, 0);
+                                  const maxTotalMcAllowed = Math.max(0, progressionData.level - 1);
+                                  const maxAllowed = Math.max(1, maxTotalMcAllowed - otherMcSum);
+                                  const newMcLevel = Math.max(1, Math.min(maxAllowed, rawVal));
+                                  n[idx].level = newMcLevel;
+                                  setProgressionData({ ...progressionData, multiclasses: n }); 
+                                }} 
+                                className="h-8 w-16 text-center" 
+                              />
+                              <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive shrink-0" onClick={() => setProgressionData({ ...progressionData, multiclasses: progressionData.multiclasses.filter((_, i) => i !== idx) })}><Trash2 className="h-4 w-4" /></Button>
+                            </>
+                          ) : (
+                            <div className={`flex flex-1 items-center justify-between w-full ${mc.isDisabled ? "opacity-60" : ""}`}>
+                              <span className="text-xs font-semibold">{mc.class} (Lvl {mc.level})</span>
+                              {mc.isDisabled && <span className="text-[10px] px-1.5 py-0.5 rounded bg-destructive/10 text-destructive font-semibold border border-destructive/20">Disabled</span>}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
                     {isProgressionEditing && (
                       <Button 
                         variant="outline" 
                         size="sm" 
-                        className="w-full h-7 text-[10px]" 
+                        className="w-full h-7 text-[10px] mt-2" 
                         disabled={progressionData.level >= 20 || progressionData.multiclasses.length >= 12}
                         onClick={() => { 
                           const used = [progressionData.characterClass, ...progressionData.multiclasses.map(m => m.class)]; 
                           const avail = DND_CLASSES.filter(c => !used.includes(c)); 
                           if (avail.length > 0 && progressionData.level < 20) {
-                            setProgressionData({ ...progressionData, multiclasses: [...progressionData.multiclasses, { class: avail[0], level: 1 }] }); 
+                            setProgressionData({ ...progressionData, multiclasses: [...progressionData.multiclasses, { class: avail[0], level: 1, isDisabled: false }] }); 
+                            setIsMulticlassOpen(true); // Ensure it's open when adding
                           }
                         }}
                       >
@@ -190,6 +219,8 @@ export function DndProgressionSection({ progressionData, setProgressionData, exp
                   </div>
                 )}
               </div>
+
+              {/* Experience Points Section */}
               <div className="pt-2 border-t space-y-4">
                 <div className="flex flex-col gap-1">
                   <Label className="text-[10px] text-muted-foreground uppercase font-bold">{t('experiencePoints')}</Label>
