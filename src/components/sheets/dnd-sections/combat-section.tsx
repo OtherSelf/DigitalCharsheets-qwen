@@ -54,7 +54,12 @@ interface CombatSectionProps {
   initialSpellcastingEntries: SpellcastingEntry[];
   stats: Record<string, number>;
   proficiencyBonus: number;
-  progressionData: { characterClass: string; level: number; isMulticlass: boolean; multiclasses: { class: string; level: number }[] };
+  progressionData: { 
+    characterClass: string; 
+    level: number; 
+    isMulticlass: boolean; 
+    multiclasses: { class: string; level: number; isDisabled?: boolean }[]; // Added isDisabled here
+  };
   isCompactView: boolean;
   activeCompactSection: string;
 }
@@ -157,8 +162,12 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
     const conMod = Math.floor(((stats.constitution || 10) - 10) / 2);
     const baseMaxHp = 8 + conMod;
 
+    const activeMcLevelSum = progressionData.isMulticlass
+      ? (progressionData.multiclasses?.reduce((sum, mc) => sum + (mc.isDisabled ? 0 : mc.level), 0) || 0)
+      : 0;
+
     const primaryClassLevel = progressionData.isMulticlass
-      ? Math.max(1, progressionData.level - (progressionData.multiclasses?.reduce((sum, mc) => sum + mc.level, 0) || 0))
+      ? Math.max(1, progressionData.level - activeMcLevelSum)
       : progressionData.level;
     const primaryDieSize = CLASS_HIT_DICE[progressionData.characterClass] || 8;
 
@@ -167,7 +176,9 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
       entries.push({ className: progressionData.characterClass, level: primaryClassLevel, dieSize: primaryDieSize });
       if (progressionData.isMulticlass && progressionData.multiclasses) {
         for (const mc of progressionData.multiclasses) {
-          entries.push({ className: mc.class, level: mc.level, dieSize: CLASS_HIT_DICE[mc.class] || 8 });
+          if (!mc.isDisabled) { // ONLY add active multiclasses to hit dice
+            entries.push({ className: mc.class, level: mc.level, dieSize: CLASS_HIT_DICE[mc.class] || 8 });
+          }
         }
       }
       return entries;
