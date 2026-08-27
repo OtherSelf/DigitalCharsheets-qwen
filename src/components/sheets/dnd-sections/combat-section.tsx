@@ -15,6 +15,7 @@ import { cn } from '@/lib/utils';
 import { useCharacterContext } from '@/context/character-context';
 import { useTranslation } from '@/context/language-context';
 
+
 const CLASS_HIT_DICE: Record<string, number> = {
   "Artificer": 8, "Barbarian": 12, "Bard": 8, "Cleric": 8, "Druid": 8,
   "Fighter": 10, "Monk": 8, "Paladin": 10, "Ranger": 10, "Rogue": 8,
@@ -62,10 +63,12 @@ interface CombatSectionProps {
   };
   isCompactView: boolean;
   activeCompactSection: string;
+  manualHitDice?: string;
+  onManualHitDiceChange?: (value: string) => void;
 }
 
 export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, CombatSectionProps>(
-  ({ characterId, initialCombatStats, initialExhaustion, initialHitDiceUsed, initialAttacks, initialCombatResources, initialSpellcastingEntries, stats, proficiencyBonus, progressionData, isCompactView, activeCompactSection }, ref) => {
+  ({ characterId, initialCombatStats, initialExhaustion, initialHitDiceUsed, initialAttacks, initialCombatResources, initialSpellcastingEntries, stats, proficiencyBonus, progressionData, isCompactView, activeCompactSection, manualHitDice, onManualHitDiceChange }, ref) => {
     const { updateCharacter, showEditButtons, hideNotes } = useCharacterContext();
     const { t } = useTranslation();
 
@@ -81,6 +84,8 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
     const [isResourcesEditing, setIsResourcesEditing] = React.useState(false);
     const [newResourceDesc, setNewResourceDesc] = React.useState('');
     const [newResourceMax, setNewResourceMax] = React.useState(1);
+    const [isHitDiceEditing, setIsHitDiceEditing] = React.useState(false);
+    const [hitDice, setHitDice] = React.useState(/* initial value */);
     
     const [spellcastingEntries, setSpellcastingEntries] = React.useState<SpellcastingEntry[]>(initialSpellcastingEntries);
     const [isSpellcastingEditing, setIsSpellcastingEditing] = React.useState(false);
@@ -466,24 +471,49 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
             <CardTitle className="text-[10px] font-bold uppercase text-muted-foreground tracking-tight">{t('hitDice')}</CardTitle>
             <Button variant="ghost" size="sm" className="h-6 text-[10px]" onClick={resetAllHitDice}>{t('longRest')}</Button>
           </CardHeader>
-          <CardContent className="p-4 pt-0 space-y-3">
-            {hitDiceEntries.map(entry => {
-              const used = hitDiceUsed[entry.className] || 0;
-              const remaining = entry.level - used;
-              return (
-                <div key={entry.className} className="flex items-center justify-between p-2 bg-muted/10 rounded border">
-                  <div className="flex flex-col">
-                    <span className="text-xs font-bold">{entry.className}</span>
-                    <span className="text-[9px] text-muted-foreground uppercase">{entry.level}d{entry.dieSize}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button size="icon" variant="outline" className="h-6 w-6" onClick={() => handleHitDiceUse(entry.className, 1)} disabled={remaining <= 0}><Minus className="h-3 w-3" /></Button>
-                    <span className="text-sm font-black w-12 text-center">{remaining} / {entry.level}</span>
-                    <Button size="icon" variant="outline" className="h-6 w-6" onClick={() => handleHitDiceUse(entry.className, -1)} disabled={used <= 0}><Plus className="h-3 w-3" /></Button>
-                  </div>
+          <CardContent className="p-4 pt-0">
+            {manualHitDice !== undefined ? (
+              // Manual hit dice mode for companions
+              isHitDiceEditing ? (
+                <Select 
+                  value={manualHitDice || 'None'} 
+                  onValueChange={(v) => {
+                    onManualHitDiceChange?.(v === 'None' ? '' : v);
+                    setIsHitDiceEditing(false);
+                  }}
+                >
+                  <SelectTrigger className="h-10 text-lg font-bold">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {['None', '1d6', '1d8', '1d10', '1d12'].map(option => (
+                      <SelectItem key={option} value={option} className="text-lg font-bold">
+                        {option}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <div className="text-2xl font-black text-center py-2">
+                  {manualHitDice || 'None'}
                 </div>
-              );
-            })}
+              )
+            ) : (
+              // Original class-based hit dice logic for main character
+              isHitDiceEditing ? (
+                <Input
+                  type="text"
+                  value={hitDice}
+                  onChange={(e) => setHitDice(e.target.value)}
+                  className="h-10 text-lg font-bold text-center"
+                  placeholder="e.g., 2d8"
+                />
+              ) : (
+                <div className="text-2xl font-black text-center py-2">
+                  {hitDice || '-'}
+                </div>
+              )
+            )}
           </CardContent>
         </Card>
 
