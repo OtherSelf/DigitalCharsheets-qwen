@@ -287,6 +287,7 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
          calculatedSkills={calculatedSkills}
          isCompactView={isCompactView}
          activeCompactSection={activeCompactSection}
+         proficiencyBonus={proficiencyBonus}
        />
        
        {/* Other Proficiencies & Languages - Compact Only (Placed below Saves/Skills) */}

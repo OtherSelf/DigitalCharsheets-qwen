@@ -111,12 +111,77 @@ export interface DnDCompanion {
     charisma: number;
   };
   skills: DnDSkill[];
-  hitPoints: {
-    current: number;
-    max: number;
-  };
+  hitPoints: { current: number; max: number };
   actions: DnDActionOrFeature[];
   features: DnDActionOrFeature[];
+  
+  // Full NPC support
+  savingThrows?: DnDSavingThrow[];
+  hpTracking?: string;
+  hitPointsNotes?: string;
+  temporaryHitPoints?: number;
+  hitDice?: string;
+  hitDiceUsed?: Record<string, number>;
+  deathSaves?: { successes: number; failures: number };
+  exhaustion?: number;
+  otherProficienciesAndLanguages?: string[];
+  attacks?: DnDAttack[];
+  combatResources?: CombatResource[];
+  spellcastingAbility?: DnDAbility | 'none';
+  spellAttackBonus?: string;
+  spellSaveDifficulty?: number;
+  spellcastingEntries?: SpellcastingEntry[];
+  spells?: Spell[];
+  spellSlots?: Record<number, { max: number; current: number }>;
+  personalityTraits?: string[];
+  ideals?: string[];
+  bonds?: string[];
+  flaws?: string[];
+  featuresAndTraits?: string[];
+  equipment?: InventoryItem[];
+  attunementItems?: AttunementItem[];
+  currency?: { cp: number; sp: number; gp: number; pp: number; ep: number };
+  inventory?: InventoryItem[];
+  age?: string;
+  eyes?: string;
+  skin?: string;
+  height?: string;
+  weight?: string;
+  hair?: string;
+  background?: string;
+  race?: string;
+  alignment?: string;
+  backstory?: string;
+  notes?: string;
+  statNotes?: {
+    strength?: string;
+    dexterity?: string;
+    constitution?: string;
+    intelligence?: string;
+    wisdom?: string;
+    charisma?: string;
+  };
+  
+  // Progression fields
+  characterClass?: string;
+  level?: number;
+  experiencePoints?: number;
+  isMulticlass?: boolean;
+  multiclasses?: DnDMulticlass[];
+  divineBoons?: string[];
+  allowDivineBoonsBeforeLevel20?: boolean;
+  
+  // Visibility toggles
+  showStats?: boolean;
+  showCombat?: boolean;
+  showAttacks?: boolean;
+  showInventory?: boolean;
+  showSpells?: boolean;
+  showNarrative?: boolean;
+  showInfo?: boolean;
+  showProgression?: boolean;
+  showDivineBoons?: boolean;
+  showHitDice?: boolean;
 }
 
 export interface ArmorPiece {

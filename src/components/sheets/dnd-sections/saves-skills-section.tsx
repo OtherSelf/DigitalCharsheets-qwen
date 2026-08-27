@@ -54,12 +54,13 @@ interface SavesSkillsSectionProps {
   calculatedSkills: DnDSkill[];
   isCompactView: boolean;
   activeCompactSection: string;
+  proficiencyBonus: number;
 }
 
 export function DndSavesSkillsSection({
   characterId,
   savingThrows, setSavingThrows, isSavesEditing, setIsSavesEditing, handleSaveSaves, calculatedSavingThrows,
-  skills, setSkills, isSkillsEditing, setIsSkillsEditing, handleSaveSkills, calculatedSkills, isCompactView, activeCompactSection
+  skills, setSkills, isSkillsEditing, setIsSkillsEditing, handleSaveSkills, calculatedSkills, isCompactView, activeCompactSection, proficiencyBonus
 }: SavesSkillsSectionProps) {
   const { showEditButtons, getCharacter, updateCharacter } = useCharacterContext();
   const { t } = useTranslation();
@@ -78,6 +79,19 @@ export function DndSavesSkillsSection({
 
   return (
     <div className={cn("md:col-span-3 space-y-4", isCompactView && activeCompactSection !== 'stats-section' && "hidden")}>
+      {/* PROFICIENCY BONUS BOX - ADD THIS ABOVE SAVING THROWS */}
+        <Card>
+        <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2">
+          <CardTitle className="text-[10px] font-bold uppercase text-muted-foreground tracking-tight">
+            {t('proficiencyBonus')}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-4 pt-0">
+          <div className="text-2xl font-black text-center py-2">
+            +{proficiencyBonus}
+          </div>
+        </CardContent>
+      </Card>
       <Card id="saving-throws-card">
         <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2"><CardTitle className="text-[10px] font-bold uppercase text-muted-foreground tracking-tight">{t('savingThrows')}</CardTitle>{(showEditButtons || isSavesEditing) && <EditSaveButton editing={isSavesEditing} onEdit={() => setIsSavesEditing(true)} onSave={handleSaveSaves} />}</CardHeader>
         <CardContent className="p-4 pt-0 space-y-1">

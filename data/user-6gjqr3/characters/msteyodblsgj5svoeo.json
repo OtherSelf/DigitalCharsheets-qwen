@@ -517,18 +517,18 @@
   ],
   "companions": [
     {
-      "id": "comp-1786746812948",
+      "id": "comp-1787779722052",
       "name": "New Companion",
       "type": "",
       "size": "",
       "armorClass": 10,
       "initiative": 0,
       "speed": "30ft",
-      "proficiencyBonus": "0",
+      "proficiencyBonus": "+2",
       "stats": {
         "strength": 10,
-        "dexterity": 10,
-        "constitution": 12,
+        "dexterity": 20,
+        "constitution": 10,
         "intelligence": 10,
         "wisdom": 10,
         "charisma": 10
@@ -539,7 +539,42 @@
         "max": 10
       },
       "actions": [],
-      "features": []
+      "features": [],
+      "showStats": true,
+      "showCombat": true,
+      "showAttacks": true,
+      "showInventory": true,
+      "showSpells": true,
+      "showNarrative": true,
+      "attacks": [
+        {
+          "id": "atk-1787779727693",
+          "name": "New Attack",
+          "ability": "strength",
+          "useProficiencyBonus": true,
+          "damageDice": "1d6",
+          "damageModifier": "0"
+        }
+      ],
+      "spells": [
+        {
+          "id": "sp-1787779743049",
+          "name": "New Spell",
+          "level": 1,
+          "notes": ""
+        },
+        {
+          "id": "sp-1787779746270",
+          "name": "New Spell",
+          "level": 1,
+          "notes": ""
+        }
+      ],
+      "savingThrows": [],
+      "otherProficienciesAndLanguages": [],
+      "showInfo": true,
+      "showProgression": true,
+      "showDivineBoons": true
     }
   ],
   "allowInspirationHomeRule": true,
