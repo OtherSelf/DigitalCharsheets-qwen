@@ -74,7 +74,7 @@ export function DndSavesSkillsSection({
     if (!statKey || !stats) return skill.value; // fallback to stored value
     const statValue = stats[statKey];
     const modifier = Math.floor((statValue - 10) / 2);
-    return modifier + (skill.proficient ? profBonus : 0) + (skill.expertise ? profBonus : 0);
+    return modifier + (skill.proficient ? proficiencyBonus : 0) + (skill.expertise ? proficiencyBonus : 0);
   };
 
   return (

@@ -388,6 +388,8 @@ export function CompanionSheet({ companion, onUpdate, onDelete, isEditing, onTog
                 progressionData={progressionData}
                 isCompactView={false}
                 activeCompactSection=""
+                manualHitDice={companion.hitDice || 'None'} 
+                onManualHitDiceChange={(value) => onUpdate({ hitDice: value })}
               />
             )}
 
