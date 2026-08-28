@@ -431,41 +431,6 @@
       "class": "Druid",
       "level": 1,
       "isDisabled": false
-    },
-    {
-      "class": "Fighter",
-      "level": 1,
-      "isDisabled": false
-    },
-    {
-      "class": "Monk",
-      "level": 1,
-      "isDisabled": false
-    },
-    {
-      "class": "Paladin",
-      "level": 1,
-      "isDisabled": false
-    },
-    {
-      "class": "Ranger",
-      "level": 1,
-      "isDisabled": false
-    },
-    {
-      "class": "Sorcerer",
-      "level": 1,
-      "isDisabled": false
-    },
-    {
-      "class": "Warlock",
-      "level": 1,
-      "isDisabled": false
-    },
-    {
-      "class": "Wizard",
-      "level": 1,
-      "isDisabled": false
     }
   ],
   "spellSlots": {
@@ -574,7 +539,29 @@
       "otherProficienciesAndLanguages": [],
       "showInfo": true,
       "showProgression": true,
-      "showDivineBoons": true
+      "showDivineBoons": true,
+      "hitDice": "1d6",
+      "characterClass": "Druid",
+      "level": 19,
+      "experiencePoints": 321321,
+      "isMulticlass": true,
+      "multiclasses": [
+        {
+          "class": "Barbarian",
+          "level": 4,
+          "isDisabled": false
+        },
+        {
+          "class": "Bard",
+          "level": 6,
+          "isDisabled": false
+        },
+        {
+          "class": "Cleric",
+          "level": 5,
+          "isDisabled": false
+        }
+      ]
     }
   ],
   "allowInspirationHomeRule": true,
