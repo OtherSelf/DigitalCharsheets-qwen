@@ -4,7 +4,7 @@
   "race": "Tabaxi",
   "background": "Outlander",
   "alignment": "Neutral",
-  "experiencePoints": 42121111,
+  "experiencePoints": 42121132,
   "age": "",
   "eyes": "",
   "skin": "",
@@ -391,7 +391,7 @@
   "userId": "user-6gjqr3",
   "id": "msteyodblsgj5svoeo",
   "hitDiceUsed": {
-    "Rogue": 0,
+    "Rogue": 3,
     "Artificer": 0,
     "Barbarian": 0,
     "Bard": 0,
@@ -482,17 +482,17 @@
   ],
   "companions": [
     {
-      "id": "comp-1787779722052",
+      "id": "comp-1787990476829",
       "name": "New Companion",
       "type": "",
       "size": "",
       "armorClass": 10,
       "initiative": 0,
-      "speed": "30ft",
+      "speed": 30,
       "proficiencyBonus": "+2",
       "stats": {
         "strength": 10,
-        "dexterity": 20,
+        "dexterity": 10,
         "constitution": 10,
         "intelligence": 10,
         "wisdom": 10,
@@ -505,62 +505,64 @@
       },
       "actions": [],
       "features": [],
+      "characterClass": "NPC",
+      "level": 1,
+      "experiencePoints": 9,
+      "hitDice": "1d6",
       "showStats": true,
       "showCombat": true,
       "showAttacks": true,
       "showInventory": true,
       "showSpells": true,
       "showNarrative": true,
-      "attacks": [
-        {
-          "id": "atk-1787779727693",
-          "name": "New Attack",
-          "ability": "strength",
-          "useProficiencyBonus": true,
-          "damageDice": "1d6",
-          "damageModifier": "0"
-        }
-      ],
-      "spells": [
-        {
-          "id": "sp-1787779743049",
-          "name": "New Spell",
-          "level": 1,
-          "notes": ""
-        },
-        {
-          "id": "sp-1787779746270",
-          "name": "New Spell",
-          "level": 1,
-          "notes": ""
-        }
-      ],
-      "savingThrows": [],
-      "otherProficienciesAndLanguages": [],
       "showInfo": true,
       "showProgression": true,
       "showDivineBoons": true,
-      "hitDice": "1d6",
-      "characterClass": "Druid",
-      "level": 19,
-      "experiencePoints": 321321,
-      "isMulticlass": true,
-      "multiclasses": [
+      "showHitDice": true,
+      "isMulticlass": false,
+      "multiclasses": [],
+      "hitDiceUsed": {
+        "NPC": 0
+      },
+      "deathSaves": {
+        "successes": 2,
+        "failures": 1
+      },
+      "savingThrows": [
         {
-          "class": "Barbarian",
-          "level": 4,
-          "isDisabled": false
+          "name": "strength",
+          "proficient": false,
+          "value": 0
         },
         {
-          "class": "Bard",
-          "level": 6,
-          "isDisabled": false
+          "name": "dexterity",
+          "proficient": false,
+          "value": 0
         },
         {
-          "class": "Cleric",
-          "level": 5,
-          "isDisabled": false
+          "name": "constitution",
+          "proficient": false,
+          "value": 0
+        },
+        {
+          "name": "intelligence",
+          "proficient": false,
+          "value": 0
+        },
+        {
+          "name": "wisdom",
+          "proficient": false,
+          "value": 0
+        },
+        {
+          "name": "charisma",
+          "proficient": false,
+          "value": 0
         }
+      ],
+      "exhaustion": 2,
+      "divineBoons": [
+        "Boon of High Magic: You gain one 9th-level spell slot, provided that you already have one."
       ]
     }
   ],

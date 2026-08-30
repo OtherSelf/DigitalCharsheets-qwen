@@ -60,7 +60,6 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // FETCH: Load characters for the current user
   useEffect(() => {
     if (!isUserLoading && user) {
       setIsLoaded(false);
@@ -83,7 +82,6 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
   const isCompactView = isSmallScreen || userPrefersCompact;
   const toggleCompactView = () => setUserPrefersCompact((prev) => !prev);
 
-  // CREATE: Send to server API with userId
   const addCharacter = useCallback(
     async (characterData: Omit<Character, 'id' | 'userId'>) => {
       if (!user) return;
@@ -108,11 +106,46 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
     [user, toast]
   );
 
-  // UPDATE: Send to server API with userId
+  // --- UPDATED WITH COMPANION INTERCEPTOR ---
   const updateCharacter = useCallback(
     (id: string, data: Partial<Character>) => {
       if (!user) return;
       
+      // 1. INTERCEPT COMPANION UPDATES
+      if (id.startsWith('companion-')) {
+        const companionId = id.replace('companion-', '');
+        
+        setCharacters(prev => {
+          let updated = false;
+          const nextChars = prev.map(char => {
+            if (char.gameSystem === 'Dungeons & Dragons') {
+              const dndChar = char as any;
+              if (dndChar.companions && Array.isArray(dndChar.companions)) {
+                const compIndex = dndChar.companions.findIndex((c: any) => c.id === companionId);
+                if (compIndex !== -1) {
+                  updated = true;
+                  const newCompanions = [...dndChar.companions];
+                  newCompanions[compIndex] = { ...newCompanions[compIndex], ...data };
+                  
+                  // Fire API update to the parent character's ID
+                  fetch(`/api/characters/${char.id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ companions: newCompanions, userId: user.uid }),
+                  }).catch(err => console.error("Failed to update companion:", err));
+                  
+                  return { ...char, companions: newCompanions };
+                }
+              }
+            }
+            return char;
+          });
+          return updated ? nextChars : prev;
+        });
+        return; // Exit early, we handled the companion update
+      }
+
+      // 2. NORMAL CHARACTER UPDATE
       setCharacters(prev => prev.map(c => c.id === id ? { ...c, ...data } : c));
       
       fetch(`/api/characters/${id}`, {
@@ -124,7 +157,6 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
     [user]
   );
 
-  // DELETE: Send to server API with userId
   const deleteCharacter = useCallback(
     (id: string) => {
       if (!user) return;
@@ -146,8 +178,25 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
     [user, characters, toast]
   );
 
+  // --- UPDATED WITH COMPANION INTERCEPTOR ---
   const getCharacter = useCallback(
-    (id: string) => characters.find((c) => c.id === id),
+    (id: string) => {
+      // If a UI component asks for a companion, merge the companion data into the parent character object
+      // This allows components like saves-skills-section to correctly read companion stats/profBonus
+      if (id.startsWith('companion-')) {
+        const companionId = id.replace('companion-', '');
+        for (const char of characters) {
+          if (char.gameSystem === 'Dungeons & Dragons') {
+            const comp = (char as any).companions?.find((c: any) => c.id === companionId);
+            if (comp) {
+              return { ...char, ...comp } as any;
+            }
+          }
+        }
+        return undefined;
+      }
+      return characters.find((c) => c.id === id);
+    },
     [characters]
   );
 

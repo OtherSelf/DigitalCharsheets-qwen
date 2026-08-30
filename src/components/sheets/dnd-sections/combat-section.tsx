@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
 import { Input } from '../../ui/input';
 import { Textarea } from '../../ui/textarea';
 import { Button } from '../../ui/button';
-import { Plus, Trash2, Edit, Save, Minus, Info } from 'lucide-react';
+import { Plus, Trash2, Edit, Save, Minus, Info, ChevronDown } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Popover, PopoverContent, PopoverTrigger } from '../../ui/popover';
@@ -15,10 +15,11 @@ import { cn } from '@/lib/utils';
 import { useCharacterContext } from '@/context/character-context';
 import { useTranslation } from '@/context/language-context';
 
+
 const CLASS_HIT_DICE: Record<string, number> = {
   "Artificer": 8, "Barbarian": 12, "Bard": 8, "Cleric": 8, "Druid": 8,
   "Fighter": 10, "Monk": 8, "Paladin": 10, "Ranger": 10, "Rogue": 8,
-  "Sorcerer": 6, "Warlock": 8, "Wizard": 6,
+  "Sorcerer": 6, "Warlock": 8, "Wizard": 6, "NPC": 8,
 };
 
 const EXHAUSTION_EFFECTS = [
@@ -162,7 +163,15 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
     const primaryClassLevel = progressionData.isMulticlass
       ? Math.max(1, progressionData.level - activeMcLevelSum)
       : progressionData.level;
-    const primaryDieSize = CLASS_HIT_DICE[progressionData.characterClass] || 8;
+    
+    let primaryDieSize = CLASS_HIT_DICE[progressionData.characterClass] || 8;
+    // Override die size for NPC if manualHitDice is provided
+    if (progressionData.characterClass.toLowerCase() === 'npc' && manualHitDice) {
+      const match = manualHitDice.match(/1d(\d+)/i);
+      if (match) {
+        primaryDieSize = parseInt(match[1], 10);
+      }
+    }
 
     const hitDiceEntries = React.useMemo(() => {
       const entries: { className: string; level: number; dieSize: number }[] = [];
@@ -456,58 +465,45 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
             <Button variant="ghost" size="sm" className="h-6 text-[10px]" onClick={resetAllHitDice}>{t('longRest')}</Button>
           </CardHeader>
           <CardContent className="p-4 pt-0 space-y-3">
-            {manualHitDice !== undefined ? (
-              isHitDiceEditing ? (
-                <Select 
-                  value={manualHitDice || 'None'} 
-                  onValueChange={(v) => {
-                    onManualHitDiceChange?.(v === 'None' ? '' : v);
-                    setIsHitDiceEditing(false);
-                  }}
-                  open={true}
-                  onOpenChange={(isOpen) => {
-                    if (!isOpen) setIsHitDiceEditing(false);
-                  }}
-                >
-                  <SelectTrigger className="h-10 text-lg font-bold w-full">
-                    <SelectValue placeholder="Select Hit Die" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {['None', '1d6', '1d8', '1d10', '1d12'].map(option => (
-                      <SelectItem key={option} value={option} className="text-lg font-bold">
-                        {option}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              ) : (
-                <div 
-                  className="text-2xl font-black text-center py-2 cursor-pointer hover:bg-muted/50 rounded border border-transparent hover:border-border transition-colors"
-                  onClick={() => setIsHitDiceEditing(true)}
-                  title="Click to change Hit Die"
-                >
-                  {manualHitDice || 'None'}
-                </div>
-              )
-            ) : (
-              hitDiceEntries.map(entry => {
-                const used = hitDiceUsed[entry.className] || 0;
-                const remaining = entry.level - used;
-                return (
-                  <div key={entry.className} className="flex items-center justify-between p-2 bg-muted/10 rounded border">
-                    <div className="flex flex-col">
-                      <span className="text-xs font-bold">{entry.className}</span>
-                      <span className="text-[9px] text-muted-foreground uppercase">{entry.level}d{entry.dieSize}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Button size="icon" variant="outline" className="h-6 w-6" onClick={() => handleHitDiceUse(entry.className, 1)} disabled={remaining <= 0}><Minus className="h-3 w-3" /></Button>
-                      <span className="text-sm font-black w-12 text-center">{remaining} / {entry.level}</span>
-                      <Button size="icon" variant="outline" className="h-6 w-6" onClick={() => handleHitDiceUse(entry.className, -1)} disabled={used <= 0}><Plus className="h-3 w-3" /></Button>
-                    </div>
+            {hitDiceEntries.map(entry => {
+              const used = hitDiceUsed[entry.className] || 0;
+              const remaining = entry.level - used;
+              const isNpc = entry.className.toLowerCase() === 'npc';
+
+              return (
+                <div key={entry.className} className="flex items-center justify-between p-2 bg-muted/10 rounded border">
+                  <div className="flex flex-col">
+                    <span className="text-xs font-bold">{entry.className}</span>
+                    <span className="text-[9px] text-muted-foreground uppercase">
+                      {entry.level}d{entry.dieSize}
+                    </span>
                   </div>
-                );
-              })
-            )}
+                  <div className="flex items-center gap-2">
+                    {/* NPC Hit Die Type Selector (Only shows for NPC) */}
+                    {isNpc && manualHitDice !== undefined && onManualHitDiceChange && (
+                      <Select 
+                        value={`1d${entry.dieSize}`} 
+                        onValueChange={(v) => onManualHitDiceChange(v)}
+                      >
+                        <SelectTrigger className="h-8 w-20 text-xs font-bold">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {['1d6', '1d8', '1d10', '1d12'].map(option => (
+                            <SelectItem key={option} value={option} className="text-xs font-bold">{option}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                    
+                    {/* Standard Spending UI (+/- Buttons) */}
+                    <Button size="icon" variant="outline" className="h-6 w-6" onClick={() => handleHitDiceUse(entry.className, 1)} disabled={remaining <= 0}><Minus className="h-3 w-3" /></Button>
+                    <span className="text-sm font-black w-12 text-center">{remaining} / {entry.level}</span>
+                    <Button size="icon" variant="outline" className="h-6 w-6" onClick={() => handleHitDiceUse(entry.className, -1)} disabled={used <= 0}><Plus className="h-3 w-3" /></Button>
+                  </div>
+                </div>
+              );
+            })}
           </CardContent>
         </Card>
 

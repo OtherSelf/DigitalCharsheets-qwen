@@ -294,29 +294,6 @@ export function CompanionSheet({ companion, onUpdate, onDelete, isEditing, onTog
               />
             )}
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Proficiency Bonus Box */}
-            <Card>
-              <CardHeader className="px-4 pt-2 pb-2">
-                <CardTitle className="text-[10px] font-bold uppercase text-muted-foreground tracking-tight">Proficiency Bonus</CardTitle>
-              </CardHeader>
-              <CardContent className="p-4 pt-0">
-                {isEditing ? (
-                  <Input 
-                    value={companion.proficiencyBonus || '+2'} 
-                    onChange={e => onUpdate({ proficiencyBonus: e.target.value })} 
-                    className="h-10 text-2xl font-bold text-center"
-                    placeholder="+2"
-                  />
-                ) : (
-                  <div className="text-3xl font-black text-center py-2">
-                    {companion.proficiencyBonus || '+2'}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-
           {/* Stats and Skills Row */}
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
             
