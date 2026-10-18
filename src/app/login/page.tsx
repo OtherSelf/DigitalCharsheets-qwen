@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useLocalAuth } from '@/context/local-auth-context';
-import { setLocalUser } from '@/lib/local-storage';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -23,7 +22,8 @@ export default function LoginPage() {
   const [word3, setWord3] = useState('');
   const [recoveryPhraseInput, setRecoveryPhraseInput] = useState('');
 
-  const { login, setUser } = useLocalAuth();
+  // 🆕 FIXED: Changed 'setUser' to 'restoreSession' to match the context
+  const { login, restoreSession } = useLocalAuth();
   const router = useRouter();
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -37,7 +37,9 @@ export default function LoginPage() {
 
     setIsLoading(true);
     const result = await login(email, password);
+    
     if (result.success) {
+      // result.user is now safely returned by the updated login function
       if (result.isNewUser || !result.user?.hasRecoveryPhrase) {
         router.push('/?setup_phrase=true');
       } else {
@@ -52,29 +54,36 @@ export default function LoginPage() {
   const handleRecoveryVerify = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
     if (!email || !word1 || !word2 || !word3 || !recoveryPhraseInput) {
       setError('Please fill in all fields.');
       return;
     }
 
     setIsLoading(true);
+
     try {
       const res = await fetch('/api/auth/recover/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, word1, word2, word3, recoveryPhraseInput }),
       });
-      const data = await res.json();
 
-      if (data.success) {
-        setLocalUser(data.user);
-        setUser(data.user);
-        router.push('/?recovery_mode=true');
-      } else {
-        setError(data.error || 'Verification failed.');
+      // Parse defensively: a 404/500 may return HTML instead of JSON.
+      const data = await res.json().catch(() => null);
+
+      if (!res.ok || !data?.success || !data?.user) {
+        setError(data?.error || `Server returned an error (${res.status}).`);
+        return;
       }
+
+      // 🆕 FIXED: This now correctly calls restoreSession from the context
+      restoreSession(data.user);
+
+      router.push('/?recovery_mode=true');
     } catch (err) {
-      setError('Failed to connect to server.');
+      console.error('[recovery] verification failed:', err);
+      setError(err instanceof Error ? err.message : 'Failed to connect to server.');
     } finally {
       setIsLoading(false);
     }
@@ -127,7 +136,17 @@ export default function LoginPage() {
                   <Button type="button" variant="link" className="px-0 text-sm" onClick={() => { setMode('recover'); setError(''); setSuccessMessage(''); }}>Forgot password?</Button>
                 </div>
                 <Button type="submit" className="w-full h-10 mt-2" disabled={isLoading}>
-                  {isLoading ? <span className="flex items-center gap-2"><span className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />Processing...</span> : <span className="flex items-center gap-2"><LogIn className="h-4 w-4" />Sign Up / Log In</span>}
+                  {isLoading ? (
+                    <span className="flex items-center gap-2">
+                      <span className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
+                      Processing...
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-2">
+                      <LogIn className="h-4 w-4" />
+                      Sign Up / Log In
+                    </span>
+                  )}
                 </Button>
               </form>
             ) : (
@@ -153,7 +172,17 @@ export default function LoginPage() {
                 </div>
 
                 <Button type="submit" className="w-full h-10 mt-2" disabled={isLoading}>
-                  {isLoading ? <span className="flex items-center gap-2"><span className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />Verifying...</span> : <span className="flex items-center gap-2"><KeyRound className="h-4 w-4" />Verify & Continue</span>}
+                  {isLoading ? (
+                    <span className="flex items-center gap-2">
+                      <span className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
+                      Verifying...
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-2">
+                      <KeyRound className="h-4 w-4" />
+                      Verify & Continue
+                    </span>
+                  )}
                 </Button>
               </form>
             )}

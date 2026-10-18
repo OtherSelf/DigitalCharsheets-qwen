@@ -17,6 +17,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true, user: result.user });
   } catch (error) {
+    console.error('Recovery verify error:', error);
     return NextResponse.json({ success: false, error: 'An unexpected error occurred.' }, { status: 500 });
   }
 }
