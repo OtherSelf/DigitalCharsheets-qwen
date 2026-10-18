@@ -3,11 +3,19 @@
 import React, { createContext, useContext, ReactNode, useState, useEffect } from 'react';
 import { LocalUser, getLocalUser, setLocalUser, clearLocalUser } from '@/lib/local-storage';
 
+interface LoginResult {
+  success: boolean;
+  error?: string;
+  isNewUser?: boolean;
+  user?: LocalUser;
+}
+
 interface LocalAuthContextType {
   user: LocalUser | null;
   isUserLoading: boolean;
-  login: (email: string, password: string, displayName?: string) => Promise<{ success: boolean; error?: string; isNewUser?: boolean; user?: LocalUser }>;
+  login: (email: string, password: string, displayName?: string) => Promise<LoginResult>;
   logout: () => void;
+  restoreSession: (user: LocalUser) => void; // 🆕 LANDMARK: used by recovery flow
   updateUserPhrase: (hasPhrase: boolean) => void;
 }
 
@@ -23,22 +31,34 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
     setIsUserLoading(false);
   }, []);
 
-  const login = async (email: string, password: string, displayName?: string) => {
+  // 🆕 LANDMARK: single source of truth for persisting + setting the session
+  const restoreSession = (nextUser: LocalUser) => {
+    setLocalUser(nextUser);
+    setUser(nextUser);
+  };
+
+  const login = async (email: string, password: string, displayName?: string): Promise<LoginResult> => {
     try {
       const res = await fetch('/api/auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password, displayName }),
       });
-      const data = await res.json();
-      if (data.success && data.user) {
-        setLocalUser(data.user);
-        setUser(data.user);
-        return { success: true, isNewUser: data.isNewUser, user: data.user };
+
+      const data = await res.json().catch(() => null);
+
+      if (!res.ok || !data?.success || !data?.user) {
+        return {
+          success: false,
+          error: data?.error || `Server returned an error (${res.status}).`,
+        };
       }
-      return { success: false, error: data.error || 'Login failed.' };
+
+      restoreSession(data.user);
+      return { success: true, isNewUser: data.isNewUser, user: data.user };
     } catch (error) {
-      return { success: false, error: 'Failed to connect to local server.' };
+      console.error('[auth] login failed:', error);
+      return { success: false, error: 'Failed to connect to server.' };
     }
   };
 
@@ -48,15 +68,18 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
   };
 
   const updateUserPhrase = (hasPhrase: boolean) => {
-    if (user) {
-      const updatedUser = { ...user, hasRecoveryPhrase: hasPhrase };
-      setLocalUser(updatedUser);
-      setUser(updatedUser);
-    }
+    const current = user ?? getLocalUser();
+    if (!current) return;
+
+    const updated: LocalUser = { ...current, hasRecoveryPhrase: hasPhrase };
+    setLocalUser(updated);
+    setUser(updated);
   };
 
   return (
-    <LocalAuthContext.Provider value={{ user, isUserLoading, login, logout, updateUserPhrase }}>
+    <LocalAuthContext.Provider
+      value={{ user, isUserLoading, login, logout, restoreSession, updateUserPhrase }}
+    >
       {children}
     </LocalAuthContext.Provider>
   );
