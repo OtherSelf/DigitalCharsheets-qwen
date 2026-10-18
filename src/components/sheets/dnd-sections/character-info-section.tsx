@@ -77,15 +77,15 @@ export const DndCharacterInfoSection = React.forwardRef<{ saveAll: () => void },
     }), [isHeaderEditing, handleSaveHeader]);
 
     return (
-      <Accordion type="single" collapsible defaultValue="expanded" className="flex-1">
-        <AccordionItem value="expanded" className="border-0">
-          <Card className="flex flex-col border-2 overflow-hidden h-full">
-            <CardHeader className="px-4 pt-2 pb-2 bg-muted/5 flex flex-row items-center justify-between">
+    <Accordion type="single" collapsible defaultValue="expanded" className="flex-1 h-full">
+      <AccordionItem value="expanded" className="border-0 h-full flex flex-col">
+        <Card className="flex flex-col border-2 overflow-hidden h-full">
+          <CardHeader className="px-4 pt-2 pb-2 bg-muted/5 flex flex-row items-center justify-between shrink-0">
               <AccordionTrigger className="flex flex-1 items-center justify-between hover:no-underline py-0"><Label className="text-[10px] font-bold uppercase text-muted-foreground tracking-tight">{t('characterInfo')}</Label></AccordionTrigger>
               {(showEditButtons || isHeaderEditing) && <EditSaveButton editing={isHeaderEditing} onEdit={() => setIsHeaderEditing(true)} onSave={handleSaveHeader} />}
-            </CardHeader>
-            <AccordionContent>
-              <CardContent className="p-4 grid grid-cols-2 md:grid-cols-3 gap-4">
+          </CardHeader>
+          <AccordionContent className="flex-1 [&[data-state=open]]:!h-full [&[data-state=open]]:!max-h-none">
+            <CardContent className="p-4 grid grid-cols-2 md:grid-cols-3 gap-4 h-full">
                 <DetailField label={t('race')} value={headerData.race} editing={isHeaderEditing} onChange={v => setHeaderData({ ...headerData, race: v })} />
                 <DetailField label={t('background')} value={headerData.background} editing={isHeaderEditing} onChange={v => setHeaderData({ ...headerData, background: v })} />
                 <DetailField label={t('alignment')} value={headerData.alignment} editing={isHeaderEditing} onChange={v => setHeaderData({ ...headerData, alignment: v })} />
