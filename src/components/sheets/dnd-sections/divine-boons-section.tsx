@@ -72,7 +72,6 @@ export const DndDivineBoonsSection = React.forwardRef<{ saveAll: () => void }, D
       }
     }));
 
-    // FIX: Wrapped everything in a React Fragment (<> ... </>)
     return (
       <>
         <Accordion type="single" collapsible defaultValue="expanded" className="flex-1">
@@ -168,16 +167,21 @@ export const DndDivineBoonsSection = React.forwardRef<{ saveAll: () => void }, D
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Delete Divine Boon</AlertDialogTitle>
-              <AlertDialogDescription>
-                Are you sure you want to delete this boon? This action cannot be undone.
-                {boonToDelete !== null && divineBoons[boonToDelete] && (
-                  <div className="mt-2 p-2 rounded bg-muted">
-                    <p className="text-sm font-semibold">
-                      {divineBoons[boonToDelete].split(':')[0]}
-                    </p>
-                  </div>
-                )}
+              
+              {/* FIX: Added asChild and wrapped contents in a div to prevent <p> inside <p> hydration error */}
+              <AlertDialogDescription asChild>
+                <div className="text-sm text-muted-foreground">
+                  Are you sure you want to delete this boon? This action cannot be undone.
+                  {boonToDelete !== null && divineBoons[boonToDelete] && (
+                    <div className="mt-2 p-2 rounded bg-muted">
+                      <p className="text-sm font-semibold">
+                        {divineBoons[boonToDelete].split(':')[0]}
+                      </p>
+                    </div>
+                  )}
+                </div>
               </AlertDialogDescription>
+              
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>

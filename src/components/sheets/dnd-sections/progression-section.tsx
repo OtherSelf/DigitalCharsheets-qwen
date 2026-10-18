@@ -226,9 +226,10 @@ export function DndProgressionSection({ progressionData, setProgressionData, exp
                   <Label className="text-[10px] text-muted-foreground uppercase font-bold">{t('experiencePoints')}</Label>
                   {isProgressionEditing ? (
                     <Input 
-                      value={progressionData.experiencePoints} 
-                      onChange={v => { 
-                        const n = parseInt(v.target.value) || 0; 
+                      value={progressionData.experiencePoints === 0 ? '' : progressionData.experiencePoints} 
+                      onChange={e => { 
+                        const val = e.target.value;
+                        const n = val === '' ? 0 : (parseInt(val, 10) || 0); 
                         const calculatedLevel = Math.min(20, calculateLevelFromExp(n));
                         setProgressionData({ ...progressionData, experiencePoints: n, level: calculatedLevel }); 
                       }} 
@@ -241,7 +242,15 @@ export function DndProgressionSection({ progressionData, setProgressionData, exp
                 <div className="flex flex-col gap-2">
                   <Label className="text-[10px] text-muted-foreground uppercase font-bold">{t('expToCount')}</Label>
                   <div className="flex gap-2">
-                    <Input type="number" value={expToCount} onChange={e => setExpToCount(parseInt(e.target.value) || 0)} className="h-8 text-xs" />
+                    <Input 
+                      type="number" 
+                      value={expToCount === 0 ? '' : expToCount} 
+                      onChange={e => {
+                        const val = e.target.value;
+                        setExpToCount(val === '' ? 0 : (parseInt(val, 10) || 0));
+                      }} 
+                      className="h-8 text-xs" 
+                    />
                     <Button size="sm" onClick={() => { const next = (progressionData.experiencePoints || 0) + expToCount; setProgressionData({ ...progressionData, experiencePoints: next, level: calculateLevelFromExp(next) }); setExpToCount(0); }} className="h-8 px-3 text-xs">{t('add')}</Button>
                   </div>
                 </div>

@@ -41,7 +41,7 @@ const StatBox = ({ label, value, editing, onChange, isCompactView, notes, onNote
       <div className={cn("text-[10px] text-muted-foreground uppercase tracking-wider font-bold", isCompactView && "text-[8px]")}>{label}</div>
       <div className="mt-1">
         {editing ? (
-          <Input type="number" min={1} max={30} value={value} onChange={onChange} className={cn("text-base font-bold h-7 w-24 text-center", isCompactView && "text-sm h-6 w-16")} />
+          <Input type="number" min={1} max={30} value={value === 0 ? '' : value} onChange={onChange} className={cn("text-base font-bold h-7 w-24 text-center", isCompactView && "text-sm h-6 w-16")} />
         ) : (
           <div className={cn("text-base font-bold text-muted-foreground", isCompactView && "text-sm")}>{value}</div>
         )}

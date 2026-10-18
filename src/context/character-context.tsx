@@ -8,10 +8,16 @@ import {
   useState,
   useEffect,
 } from 'react';
-
 import { Character } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { useLocalAuth } from './local-auth-context';
+
+// ─── LANDMARK: SHEET_BREAKPOINTS ────────────────────────────────────
+// Mobile  : < 768px            -> compact (one section at a time)
+// Tablet  : 768px .. 1299px    -> all sections visible, reflowed grid
+// Desktop : >= 1300px          -> full 12-column sheet
+export const MOBILE_BREAKPOINT = 768;
+export const DESKTOP_BREAKPOINT = 1300;
 
 interface CharacterContextType {
   characters: Character[];
@@ -27,6 +33,7 @@ interface CharacterContextType {
   }) => void;
   isCompactView: boolean;
   isSmallScreen: boolean;
+  isTabletScreen: boolean;
   toggleCompactView: () => void;
   hasUnsavedChanges: boolean;
   setHasUnsavedChanges: (val: boolean) => void;
@@ -46,15 +53,22 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
 
   const [characters, setCharacters] = useState<Character[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
-  
+
   const [userPrefersCompact, setUserPrefersCompact] = useState(false);
   const [isSmallScreen, setIsSmallScreen] = useState(false);
+  const [isTabletScreen, setIsTabletScreen] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [hideNotes, setHideNotes] = useState(false);
   const [showEditButtons, setShowEditButtons] = useState(true);
 
   useEffect(() => {
-    const handleResize = () => setIsSmallScreen(window.innerWidth < 1300);
+    const handleResize = () => {
+      const width = window.innerWidth;
+      setIsSmallScreen(width < MOBILE_BREAKPOINT);
+      setIsTabletScreen(
+        width >= MOBILE_BREAKPOINT && width < DESKTOP_BREAKPOINT
+      );
+    };
     handleResize();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
@@ -70,7 +84,7 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
           setIsLoaded(true);
         })
         .catch(err => {
-          console.error("Failed to load characters:", err);
+          console.error('Failed to load characters:', err);
           setIsLoaded(true);
         });
     } else if (!isUserLoading && !user) {
@@ -79,13 +93,14 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
     }
   }, [user, isUserLoading]);
 
+  // Compact is automatic ONLY on real mobile, or when the user asks for it.
+  // The tablet band deliberately does NOT force compact.
   const isCompactView = isSmallScreen || userPrefersCompact;
-  const toggleCompactView = () => setUserPrefersCompact((prev) => !prev);
+  const toggleCompactView = () => setUserPrefersCompact(prev => !prev);
 
   const addCharacter = useCallback(
     async (characterData: Omit<Character, 'id' | 'userId'>) => {
       if (!user) return;
-      
       try {
         const res = await fetch('/api/characters', {
           method: 'POST',
@@ -93,14 +108,17 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
           body: JSON.stringify({ ...characterData, userId: user.uid }),
         });
         const newCharacter = await res.json();
-        
         setCharacters(prev => [...prev, newCharacter]);
         toast({
           title: 'Character Created',
           description: `${newCharacter.name} has been added to your list.`,
         });
       } catch (error) {
-        toast({ variant: 'destructive', title: 'Error', description: 'Failed to create character.' });
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Failed to create character.',
+        });
       }
     },
     [user, toast]
@@ -110,30 +128,36 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
   const updateCharacter = useCallback(
     (id: string, data: Partial<Character>) => {
       if (!user) return;
-      
+
       // 1. INTERCEPT COMPANION UPDATES
       if (id.startsWith('companion-')) {
         const companionId = id.replace('companion-', '');
-        
         setCharacters(prev => {
           let updated = false;
           const nextChars = prev.map(char => {
             if (char.gameSystem === 'Dungeons & Dragons') {
               const dndChar = char as any;
               if (dndChar.companions && Array.isArray(dndChar.companions)) {
-                const compIndex = dndChar.companions.findIndex((c: any) => c.id === companionId);
+                const compIndex = dndChar.companions.findIndex(
+                  (c: any) => c.id === companionId
+                );
                 if (compIndex !== -1) {
                   updated = true;
                   const newCompanions = [...dndChar.companions];
-                  newCompanions[compIndex] = { ...newCompanions[compIndex], ...data };
-                  
-                  // Fire API update to the parent character's ID
+                  newCompanions[compIndex] = {
+                    ...newCompanions[compIndex],
+                    ...data,
+                  };
                   fetch(`/api/characters/${char.id}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ companions: newCompanions, userId: user.uid }),
-                  }).catch(err => console.error("Failed to update companion:", err));
-                  
+                    body: JSON.stringify({
+                      companions: newCompanions,
+                      userId: user.uid,
+                    }),
+                  }).catch(err =>
+                    console.error('Failed to update companion:', err)
+                  );
                   return { ...char, companions: newCompanions };
                 }
               }
@@ -142,17 +166,20 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
           });
           return updated ? nextChars : prev;
         });
-        return; // Exit early, we handled the companion update
+        return;
       }
 
       // 2. NORMAL CHARACTER UPDATE
-      setCharacters(prev => prev.map(c => c.id === id ? { ...c, ...data } : c));
-      
+      setCharacters(prev =>
+        prev.map(c =>
+          c.id === id ? ({ ...c, ...data } as Character) : c
+        )
+      );
       fetch(`/api/characters/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...data, userId: user.uid }),
-      }).catch(err => console.error("Failed to update character:", err));
+      }).catch(err => console.error('Failed to update character:', err));
     },
     [user]
   );
@@ -160,10 +187,8 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
   const deleteCharacter = useCallback(
     (id: string) => {
       if (!user) return;
-      
       const characterToDelete = characters.find(c => c.id === id);
       setCharacters(prev => prev.filter(c => c.id !== id));
-      
       fetch(`/api/characters/${id}?userId=${user.uid}`, { method: 'DELETE' })
         .then(() => {
           if (characterToDelete) {
@@ -173,7 +198,7 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
             });
           }
         })
-        .catch(err => console.error("Failed to delete character:", err));
+        .catch(err => console.error('Failed to delete character:', err));
     },
     [user, characters, toast]
   );
@@ -181,13 +206,13 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
   // --- UPDATED WITH COMPANION INTERCEPTOR ---
   const getCharacter = useCallback(
     (id: string) => {
-      // If a UI component asks for a companion, merge the companion data into the parent character object
-      // This allows components like saves-skills-section to correctly read companion stats/profBonus
       if (id.startsWith('companion-')) {
         const companionId = id.replace('companion-', '');
         for (const char of characters) {
           if (char.gameSystem === 'Dungeons & Dragons') {
-            const comp = (char as any).companions?.find((c: any) => c.id === companionId);
+            const comp = (char as any).companions?.find(
+              (c: any) => c.id === companionId
+            );
             if (comp) {
               return { ...char, ...comp } as any;
             }
@@ -195,7 +220,7 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
         }
         return undefined;
       }
-      return characters.find((c) => c.id === id);
+      return characters.find(c => c.id === id);
     },
     [characters]
   );
@@ -210,6 +235,7 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
     toast,
     isCompactView,
     isSmallScreen,
+    isTabletScreen,
     toggleCompactView,
     hasUnsavedChanges,
     setHasUnsavedChanges,
@@ -229,7 +255,9 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
 export function useCharacterContext() {
   const context = useContext(CharacterContext);
   if (context === undefined) {
-    throw new Error('useCharacterContext must be used within a CharacterProvider');
+    throw new Error(
+      'useCharacterContext must be used within a CharacterProvider'
+    );
   }
   return context;
 }

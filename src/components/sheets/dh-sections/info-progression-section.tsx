@@ -192,21 +192,20 @@ export const ProgressionSection = ({ character, isCompactView, activeCompactSect
                     <div className="flex flex-col space-y-4">
                         <div className="space-y-1">
                             <Label htmlFor="current-exp-edit" className="text-xs text-muted-foreground">{t('currentExp')}</Label>
-                            <Input id="current-exp-edit" type="number" value={editableExperience} onChange={(e) => setEditableExperience(parseInt(e.target.value, 10) || 0)} onBlur={() => { if (editableExperience !== character.experience) updateCharacter(character.id, { experience: editableExperience }); }} className="h-9"/>
+                            <Input id="current-exp-edit" type="number" value={editableExperience === 0 ? '' : editableExperience} onChange={(e) => setEditableExperience(parseInt(e.target.value, 10) || 0)} onBlur={() => { if (editableExperience !== character.experience) updateCharacter(character.id, { experience: editableExperience }); }} className="h-9"/>
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="spend-exp-amount">{t('spendExp')}</Label>
                             <div className="flex items-center gap-2">
                                 <Button size="icon" variant="outline" className="h-9 w-9 shrink-0" onClick={() => setAmountToSpend(Math.max(0, amountToSpend - 50))}><Minus className="h-4 w-4" /></Button>
-                                <Input id="spend-exp-amount" type="number" value={amountToSpend} onChange={(e) => setAmountToSpend(Math.max(0, parseInt(e.target.value, 10) || 0))} className="h-9 text-center" />
+                                <Input id="spend-exp-amount" type="number" value={amountToSpend === 0 ? '' : amountToSpend} onChange={(e) => setAmountToSpend(Math.max(0, parseInt(e.target.value, 10) || 0))} className="h-9 text-center" />
                                 <Button size="icon" variant="outline" className="h-9 w-9 shrink-0" onClick={() => setAmountToSpend(amountToSpend + 50)}><Plus className="h-4 w-4" /></Button>
                             </div>
                         </div>
                         <Button onClick={handleSpendExp} disabled={amountToSpend <= 0 || amountToSpend > editableExperience} className="w-full">{t('spendExp')}</Button>
                         <div className="space-y-1">
                             <Label htmlFor="total-exp-edit" className="text-xs text-muted-foreground">{t('totalExpSpent')}</Label>
-                            <Input id="total-exp-edit" type="number" value={editableTotalExpSpent} onChange={handleTotalExpChange} onBlur={handleSaveTotalExp} disabled={!isProgressionEditing} className="h-9"/>
-                        </div>
+                            <Input id="total-exp-edit" type="number" value={editableTotalExpSpent === 0 ? '' : editableTotalExpSpent} onChange={handleTotalExpChange} onBlur={handleSaveTotalExp} disabled={!isProgressionEditing} className="h-9"/>                        </div>
                         
                         {/* Rank Display & Selection */}
                         <div className="space-y-1 pt-2 border-t">

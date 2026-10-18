@@ -104,7 +104,15 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
         damageModifier: (atk as any).damageModifier || '+0',
       }));
       setAttacks(migratedAttacks);
-    }, [characterId, initialAttacks]);
+    }, [
+      characterId,
+      initialCombatStats,
+      initialExhaustion,
+      initialHitDiceUsed,
+      initialAttacks,
+      initialCombatResources,
+      initialSpellcastingEntries
+    ]);
 
     React.useEffect(() => {
       if (!isSpellcastingEditing) {
@@ -313,11 +321,24 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
     return (
       <div className={cn("md:col-span-4 space-y-6", isCompactView && activeCompactSection !== 'combat-section' && "hidden")}>
         <Card id="combat-stats-card">
-          <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2"><CardTitle className="text-[10px] font-bold uppercase text-muted-foreground tracking-tight">{t('combatStats')}</CardTitle>{(showEditButtons || isCombatStatsEditing) && <EditSaveButton editing={isCombatStatsEditing} onEdit={() => setIsCombatStatsEditing(true)} onSave={handleSaveCombatStats} />}</CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2">
+            <CardTitle className="text-[10px] font-bold uppercase text-muted-foreground tracking-tight">{t('combatStats')}
+              </CardTitle>{(showEditButtons || isCombatStatsEditing) && <EditSaveButton editing={isCombatStatsEditing} onEdit={() => setIsCombatStatsEditing(true)} onSave={handleSaveCombatStats} />}
+                
+              </CardHeader>
           <CardContent className="grid grid-cols-3 gap-4 p-4 pt-0 text-center">
-            <div className="p-2 rounded-lg bg-background border"><Label className="text-[10px] text-muted-foreground uppercase font-bold">{t('armorClass')}</Label>{isCombatStatsEditing ? (<Input type="number" value={combatStats.armorClass} onChange={e => setCombatStats({ ...combatStats, armorClass: parseInt(e.target.value) || 10 })} className="h-9 w-full text-center" />) : (<div className="text-sm font-bold">{combatStats.armorClass}</div>)}</div>
-            <div className="p-2 rounded-lg bg-background border"><Label className="text-[10px] text-muted-foreground uppercase font-bold">{t('initiative')}</Label><div className="text-sm font-bold">{dexMod >= 0 ? `+${dexMod}` : dexMod}</div></div>
-            <div className="p-2 rounded-lg bg-background border"><Label className="text-[10px] text-muted-foreground uppercase font-bold">{t('speed')}</Label>{isCombatStatsEditing ? <Input type="number" value={combatStats.speed} onChange={e => setCombatStats({ ...combatStats, speed: parseInt(e.target.value) || 0 })} className="h-9 w-full text-center" /> : <div className="text-sm font-bold">{combatStats.speed}ft</div>}</div>
+            <div className="p-2 rounded-lg bg-background border">
+              <Label className="text-[10px] text-muted-foreground uppercase font-bold">{t('armorClass')}
+                </Label>{isCombatStatsEditing ? (
+                  <Input type="number" value={combatStats.armorClass === 0 ? '' : combatStats.armorClass} onChange={e => setCombatStats({ ...combatStats, armorClass: parseInt(e.target.value) || 10 })} className="h-9 w-full text-center" />) : (<div className="text-sm font-bold">{combatStats.armorClass}</div>)}
+                  </div>
+            <div className="p-2 rounded-lg bg-background border">
+              <Label className="text-[10px] text-muted-foreground uppercase font-bold">{t('initiative')}
+                </Label><div className="text-sm font-bold">{dexMod >= 0 ? `+${dexMod}` : dexMod}</div></div>
+            <div className="p-2 rounded-lg bg-background border">
+              <Label className="text-[10px] text-muted-foreground uppercase font-bold">{t('speed')}
+                </Label>{isCombatStatsEditing ? 
+                <Input type="number" value={combatStats.speed === 0 ? '' : combatStats.speed} onChange={e => setCombatStats({ ...combatStats, speed: parseInt(e.target.value) || 0 })} className="h-9 w-full text-center" /> : <div className="text-sm font-bold">{combatStats.speed}ft</div>}</div>
           </CardContent>
         </Card>
 
@@ -357,15 +378,16 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
                   <div className="text-[9px] italic text-muted-foreground mb-1">Base value: {baseMaxHp}</div>
                   <Label className="text-[10px] uppercase font-bold">Max</Label>
                     {isHpEditing ? (
-                      <Input type="number" value={combatStats.hitPoints.max} onChange={e => setCombatStats({ ...combatStats, hitPoints: { ...combatStats.hitPoints, max: parseInt(e.target.value) || 0 } })} className="h-8 text-center" />
+                      <Input type="number" value={combatStats.hitPoints.max === 0 ? '' : combatStats.hitPoints.max} onChange={e => setCombatStats({ ...combatStats, hitPoints: { ...combatStats.hitPoints, max: parseInt(e.target.value) || 0 } })} className="h-8 text-center" />
                     ) : (
                       <div className="text-base font-bold">{combatStats.hitPoints.max}</div>
                     )}
                   </div>
-                <div className="p-2 border rounded text-center"><Label className="text-[10px] uppercase font-bold">Current</Label>{isHpEditing ? (<Input type="number" value={combatStats.hitPoints.current} onChange={e => setCombatStats({ ...combatStats, hitPoints: { ...combatStats.hitPoints, current: parseInt(e.target.value) || 0 } })} className="h-8 text-center" />) : (<div className="text-base font-bold text-primary">{combatStats.hitPoints.current}</div>)}</div>
+                <div className="p-2 border rounded text-center"><Label className="text-[10px] uppercase font-bold">Current</Label>{isHpEditing ? (<Input type="number" value={combatStats.hitPoints.current === 0 ? '' : combatStats.hitPoints.current} onChange={e => setCombatStats({ ...combatStats, hitPoints: { ...combatStats.hitPoints, current: parseInt(e.target.value) || 0 } })} className="h-8 text-center" />
+                  ) : (<div className="text-base font-bold text-primary">{combatStats.hitPoints.current}</div>)}</div>
               </div>
               <div className="space-y-4">
-                <div className="p-2 border rounded text-center"><Label className="text-[10px] uppercase font-bold">Temp</Label>{isHpEditing ? (<Input type="number" value={combatStats.temporaryHitPoints} onChange={e => setCombatStats({ ...combatStats, temporaryHitPoints: parseInt(e.target.value) || 0 })} className="h-8 text-center" />) : (<div className="text-base font-bold">{combatStats.temporaryHitPoints || 0}</div>)}</div>
+                <div className="p-2 border rounded text-center"><Label className="text-[10px] uppercase font-bold">Temp</Label>{isHpEditing ? (<Input type="number" value={combatStats.temporaryHitPoints === 0 ? '' : combatStats.temporaryHitPoints} onChange={e => setCombatStats({ ...combatStats, temporaryHitPoints: parseInt(e.target.value) || 0 })} className="h-8 text-center" />) : (<div className="text-base font-bold">{combatStats.temporaryHitPoints || 0}</div>)}</div>
                 <div className="flex flex-col gap-2">
                   <Input 
                     type="text" 
@@ -580,8 +602,7 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
                   <div className="col-span-2 w-full">
                     <Label className="text-[9px] text-muted-foreground uppercase mb-1 block">Save DC</Label>
                     {isSpellcastingEditing ? (
-                      <Input type="number" value={entry.saveDC} onChange={e => handleSpellcastingFieldChange(entry.id, 'saveDC', parseInt(e.target.value) || 0)} className="h-8 text-xs text-center" />
-                    ) : (
+                      <Input type="number" value={entry.saveDC === 0 ? '' : entry.saveDC} onChange={e => handleSpellcastingFieldChange(entry.id, 'saveDC', parseInt(e.target.value) || 0)} className="h-8 text-xs text-center" />                    ) : (
                       <span className="text-xs font-bold">{entry.saveDC || '-'}</span>
                     )}
                   </div>
@@ -699,7 +720,7 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
           </CardHeader>
           <CardContent className="p-4 pt-0 space-y-2">
             {combatResources.length === 0 && !isResourcesEditing && (
-              <p className="text-xs text-muted-foreground italic text-center py-2 border border-dashed rounded-lg">{t('noResources')}</p>
+              <p className="text-xs text-muted-foreground italic text-center py-2 border border-dashed rounded-lg">{t('No Resources')}</p>
             )}
             {combatResources.map(res => (
               <div key={res.id} className="flex items-center justify-between p-2 bg-muted/10 rounded border border-muted/20">
@@ -708,7 +729,7 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
                     <Input value={res.description} onChange={e => handleResourceFieldChange(res.id, 'description', e.target.value)} className="h-7 text-xs" placeholder="Resource name..." />
                     <div className="flex gap-1 items-center">
                       <span className="text-[9px] uppercase font-bold text-muted-foreground shrink-0">{t('max')}</span>
-                      <Input type="number" value={res.max} onChange={e => handleResourceFieldChange(res.id, 'max', e.target.value)} className="h-7 text-[10px] w-16 text-center" min={0} />
+                      <Input type="number" value={res.max === 0 ? '' : res.max} onChange={e => handleResourceFieldChange(res.id, 'max', e.target.value)} className="h-7 text-[10px] w-16 text-center" min={0} />
                       {!hideNotes && (
                         <Popover>
                           <PopoverTrigger asChild><Button variant={res.notes ? 'secondary' : 'ghost'} size="icon" className="h-6 w-6 shrink-0"><Info className="h-3 w-3" /></Button></PopoverTrigger>
@@ -745,7 +766,7 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
             {isResourcesEditing && (
               <div className="flex gap-2 pt-2 border-t items-center">
                 <Input placeholder={t('newResourcePlaceholder')} value={newResourceDesc} onChange={e => setNewResourceDesc(e.target.value)} className="h-8 text-xs flex-1" />
-                <Input type="number" value={newResourceMax} onChange={e => setNewResourceMax(parseInt(e.target.value) || 1)} className="h-8 text-xs w-16 text-center" min={1} />
+                <Input type="number" value={newResourceMax === 0 ? '' : newResourceMax} onChange={e => setNewResourceMax(parseInt(e.target.value) || 1)} className="h-8 text-xs w-16 text-center" min={1} />
                 <Button size="sm" className="h-8" onClick={addResource}><Plus className="h-4 w-4" /></Button>
               </div>
             )}
