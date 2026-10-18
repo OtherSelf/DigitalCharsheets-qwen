@@ -170,6 +170,8 @@ export interface DnDCompanion {
   multiclasses?: DnDMulticlass[];
   divineBoons?: string[];
   allowDivineBoonsBeforeLevel20?: boolean;
+
+  
   
   // Visibility toggles
   showStats?: boolean;
@@ -285,6 +287,7 @@ export interface DnD5eCharacter extends CharacterBase {
   inspiration: string;
   allowInspirationHomeRule?: boolean;
   allowDivineBoonsBeforeLevel20?: boolean;
+  customHouseRules?: {name: string; description: string}[];
   proficiencyBonus: number;
   age?: string;
   eyes?: string;

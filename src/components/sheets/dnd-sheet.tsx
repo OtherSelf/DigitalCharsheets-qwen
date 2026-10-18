@@ -1,5 +1,4 @@
 'use client';
-
 import * as React from 'react';
 import { type DnD5eCharacter, type DnDSkill, type DnDCompanion } from '@/lib/types';
 import { cn } from '@/lib/utils';
@@ -20,7 +19,6 @@ import { DndProgressionSection } from './dnd-sections/progression-section';
 import { DndCharacterInfoSection } from './dnd-sections/character-info-section';
 import { DndCombatSection } from './dnd-sections/combat-section';
 import { DndDivineBoonsSection } from './dnd-sections/divine-boons-section';
-
 
 type DndSheetProps = {
   character: DnD5eCharacter;
@@ -61,6 +59,7 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
   ({ character, isCompactView, activeCompactSection }, ref) => {
     const { updateCharacter, showEditButtons } = useCharacterContext();
     const { t } = useTranslation();
+
     const narrativeRef = React.useRef<{ saveAll: () => void }>(null);
     const attunementRef = React.useRef<{ saveAll: () => void }>(null);
     const inventoryRef = React.useRef<{ saveAll: () => void }>(null);
@@ -73,6 +72,7 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
     const [isSavesEditing, setIsSavesEditing] = React.useState(false);
     const [isSkillsEditing, setIsSkillsEditing] = React.useState(false);
     const [isOtherProficienciesEditing, setIsOtherProficienciesEditing] = React.useState(false);
+
     const [progressionData, setProgressionData] = React.useState({ characterClass: character.characterClass, level: character.level, experiencePoints: character.experiencePoints || 0, isMulticlass: character.isMulticlass || false, multiclasses: character.multiclasses || [] });
     const [expToCount, setExpToCount] = React.useState(0);
     const [stats, setStats] = React.useState(character.stats);
@@ -80,7 +80,11 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
     const [skills, setSkills] = React.useState((character.skills && character.skills.length > 0) ? character.skills : DEFAULT_SKILLS);
     const [otherProficienciesAndLanguages, setOtherProficienciesAndLanguages] = React.useState<string[]>(character.otherProficienciesAndLanguages || []);
     const [newProfItem, setNewProfItem] = React.useState('');
-    const [companions, setCompanions] = React.useState<DnDCompanion[]>(character.companions || []);
+    const companions = character.companions || [];
+    const setCompanions = (newCompanions: DnDCompanion[] | ((prev: DnDCompanion[]) => DnDCompanion[])) => {
+      const resolvedCompanions = typeof newCompanions === 'function' ? newCompanions(companions) : newCompanions;
+      updateCharacter(character.id, { companions: resolvedCompanions });
+    };
 
     React.useEffect(() => {
       if (character.level !== progressionData.level) {
@@ -100,7 +104,6 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
     }, [skills, stats, proficiencyBonus, isSkillsEditing]);
 
     const passivePerception = 10 + (calculatedSkills.find(s => s.name === 'perception')?.value || 0);
-
     const conMod = Math.floor(((character.stats?.constitution ?? 10) - 10) / 2);
     const baseMaxHp = 8 + conMod;
     const safeHitPoints = (character.hitPoints && character.hitPoints.max > 0) 
@@ -120,7 +123,7 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
     const handleSaveSaves = React.useCallback(() => { updateCharacter(character.id, { savingThrows: calculatedSavingThrows }); setIsSavesEditing(false); }, [character.id, calculatedSavingThrows, updateCharacter]);
     const handleSaveSkills = React.useCallback(() => { updateCharacter(character.id, { skills: calculatedSkills }); setIsSkillsEditing(false); }, [character.id, calculatedSkills, updateCharacter]);
     const handleSaveOtherProf = React.useCallback(() => { updateCharacter(character.id, { otherProficienciesAndLanguages: otherProficienciesAndLanguages }); setIsOtherProficienciesEditing(false); }, [character.id, otherProficienciesAndLanguages, updateCharacter]);
-   
+
     const handleSaveAll = React.useCallback(() => {
       if (isProgressionEditing) handleSaveProgression(); if (isStatsEditing) handleSaveStats();
       if (isSavesEditing) handleSaveSaves(); if (isSkillsEditing) handleSaveSkills();
@@ -132,10 +135,11 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
       inventoryRef.current?.saveAll();
       boonsRef.current?.saveAll();
     }, [isProgressionEditing, isStatsEditing, isSavesEditing, isSkillsEditing, isOtherProficienciesEditing, handleSaveProgression, handleSaveStats, handleSaveSaves, handleSaveSkills, handleSaveOtherProf]);
+
     React.useImperativeHandle(ref, () => ({ saveAll: handleSaveAll }));
 
     return (
-      <div className="space-y-8 pb-12">
+      <div className={cn("dnd-sheet space-y-8 pb-12", isCompactView && "is-compact")}>
         {/* Compact View Stats Bar with Edit/Save Button */}
         {isCompactView && (
           <div className="bg-card px-4 py-3 border-b shadow-sm space-y-3 relative">
@@ -155,7 +159,6 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
                 {isStatsEditing ? <Save className="h-4 w-4" /> : <Edit className="h-4 w-4" />}
               </Button>
             </div>
-            
             <div className="grid grid-cols-6 gap-1 mt-6">
               {['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma'].map(key => {
                 const val = stats[key as keyof typeof stats]; 
@@ -193,9 +196,10 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
             </div>
           </div>
         )}
-
-        <div className={cn("flex flex-col gap-6 items-stretch", isCompactView && activeCompactSection !== 'info-section' && "hidden")}>
-          <div className="flex flex-col md:flex-row gap-6 items-stretch">
+        
+        {/* 🎯 FIXED: Added activeCompactSection && to prevent blank screen */}
+        <div className={cn("flex flex-col gap-6 items-stretch", isCompactView && activeCompactSection && activeCompactSection !== 'info-section' && "hidden")}>
+          <div className="sheet-top-row flex flex-col md:flex-row gap-6 items-stretch">
             <DndProgressionSection
               progressionData={progressionData}
               setProgressionData={setProgressionData}
@@ -205,7 +209,6 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
               setIsProgressionEditing={setIsProgressionEditing}
               handleSaveProgression={handleSaveProgression}
             />
-            
             {(progressionData.level >= 20 || character.allowDivineBoonsBeforeLevel20) && (
               <DndDivineBoonsSection
                 ref={boonsRef}
@@ -215,7 +218,6 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
                 activeCompactSection={activeCompactSection}
               />
             )}
-            
             <DndCharacterInfoSection
               ref={characterInfoRef}
               characterId={character.id}
@@ -234,7 +236,6 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
                 notes: character.notes || ''
               }}
             />
-            
             {isCompactView && (
               <DndNarrativeSection
                 ref={narrativeRef}
@@ -252,7 +253,7 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
+        <div className="sheet-main-grid grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
           <DndStatsSection
             characterId={character.id}
             stats={stats}
@@ -271,54 +272,53 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
             isCompactView={isCompactView}
             activeCompactSection={activeCompactSection}
           />
-       <DndSavesSkillsSection
-         characterId={character.id}
-         savingThrows={savingThrows}
-         setSavingThrows={setSavingThrows}
-         isSavesEditing={isSavesEditing}
-         setIsSavesEditing={setIsSavesEditing}
-         handleSaveSaves={handleSaveSaves}
-         calculatedSavingThrows={calculatedSavingThrows}
-         skills={skills}
-         setSkills={setSkills}
-         isSkillsEditing={isSkillsEditing}
-         setIsSkillsEditing={setIsSkillsEditing}
-         handleSaveSkills={handleSaveSkills}
-         calculatedSkills={calculatedSkills}
-         isCompactView={isCompactView}
-         activeCompactSection={activeCompactSection}
-         proficiencyBonus={proficiencyBonus}
-       />
-       
-       {/* Other Proficiencies & Languages - Compact Only (Placed below Saves/Skills) */}
-       {isCompactView && (
-         <Card>
-           <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2">
-             <CardTitle className="text-[10px] font-bold uppercase text-muted-foreground tracking-tight">{t('otherProficienciesAndLanguages')}</CardTitle>
-             {(showEditButtons || isOtherProficienciesEditing) && (
-               <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => { if (isOtherProficienciesEditing) { handleSaveOtherProf(); } else { setIsOtherProficienciesEditing(true); } }}>
-                 {isOtherProficienciesEditing ? <Save className="h-4 w-4" /> : <Edit className="h-4 w-4" />}
-               </Button>
-             )}
-           </CardHeader>
-           <CardContent className="p-4 pt-0 space-y-2">
-             {otherProficienciesAndLanguages.map((it, i) => (
-               <div key={i} className="text-[10px] p-1.5 rounded bg-muted/10 flex justify-between">
-                 {isOtherProficienciesEditing ? (
-                   <Input value={it} onChange={e => { const n = [...otherProficienciesAndLanguages]; n[i] = e.target.value; setOtherProficienciesAndLanguages(n); }} className="h-6 text-[10px] flex-1 mr-2" />
-                 ) : (<span className="break-words font-medium">&bull; {it}</span>)}
-                 {isOtherProficienciesEditing && (<Button variant="ghost" size="icon" className="h-5 w-5 text-destructive" onClick={() => setOtherProficienciesAndLanguages(otherProficienciesAndLanguages.filter((_, idx) => idx !== i))}><Trash2 className="h-3 w-3" /></Button>)}
-               </div>
-             ))}
-             {isOtherProficienciesEditing && (
-               <div className="flex gap-2 pt-2 border-t">
-                 <Input placeholder="New..." value={newProfItem} onChange={e => setNewProfItem(e.target.value)} className="h-7 text-[10px]" />
-                 <Button size="sm" className="h-7" onClick={() => { if (newProfItem.trim()) { setOtherProficienciesAndLanguages([...otherProficienciesAndLanguages, newProfItem.trim()]); setNewProfItem(''); } }}><Plus className="h-3 w-3" /></Button>
-               </div>
-             )}
-           </CardContent>
-         </Card>
-       )}
+          <DndSavesSkillsSection
+            characterId={character.id}
+            savingThrows={savingThrows}
+            setSavingThrows={setSavingThrows}
+            isSavesEditing={isSavesEditing}
+            setIsSavesEditing={setIsSavesEditing}
+            handleSaveSaves={handleSaveSaves}
+            calculatedSavingThrows={calculatedSavingThrows}
+            skills={skills}
+            setSkills={setSkills}
+            isSkillsEditing={isSkillsEditing}
+            setIsSkillsEditing={setIsSkillsEditing}
+            handleSaveSkills={handleSaveSkills}
+            calculatedSkills={calculatedSkills}
+            isCompactView={isCompactView}
+            activeCompactSection={activeCompactSection}
+            proficiencyBonus={proficiencyBonus}
+          />
+          {/* Other Proficiencies & Languages - Compact Only (Placed below Saves/Skills) */}
+          {isCompactView && (
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2">
+                <CardTitle className="text-[10px] font-bold uppercase text-muted-foreground tracking-tight">{t('otherProficienciesAndLanguages')}</CardTitle>
+                {(showEditButtons || isOtherProficienciesEditing) && (
+                  <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => { if (isOtherProficienciesEditing) { handleSaveOtherProf(); } else { setIsOtherProficienciesEditing(true); } }}>
+                    {isOtherProficienciesEditing ? <Save className="h-4 w-4" /> : <Edit className="h-4 w-4" />}
+                  </Button>
+                )}
+              </CardHeader>
+              <CardContent className="p-4 pt-0 space-y-2">
+                {otherProficienciesAndLanguages.map((it, i) => (
+                  <div key={i} className="text-[10px] p-1.5 rounded bg-muted/10 flex justify-between">
+                    {isOtherProficienciesEditing ? (
+                      <Input value={it} onChange={e => { const n = [...otherProficienciesAndLanguages]; n[i] = e.target.value; setOtherProficienciesAndLanguages(n); }} className="h-6 text-[10px] flex-1 mr-2" />
+                    ) : (<span className="break-words font-medium">&bull; {it}</span>)}
+                    {isOtherProficienciesEditing && (<Button variant="ghost" size="icon" className="h-5 w-5 text-destructive" onClick={() => setOtherProficienciesAndLanguages(otherProficienciesAndLanguages.filter((_, idx) => idx !== i))}><Trash2 className="h-3 w-3" /></Button>)}
+                  </div>
+                ))}
+                {isOtherProficienciesEditing && (
+                  <div className="flex gap-2 pt-2 border-t">
+                    <Input placeholder="New..." value={newProfItem} onChange={e => setNewProfItem(e.target.value)} className="h-7 text-[10px]" />
+                    <Button size="sm" className="h-7" onClick={() => { if (newProfItem.trim()) { setOtherProficienciesAndLanguages([...otherProficienciesAndLanguages, newProfItem.trim()]); setNewProfItem(''); } }}><Plus className="h-3 w-3" /></Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
           <DndCombatSection
             ref={combatRef}
             characterId={character.id}
@@ -334,8 +334,9 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
             isCompactView={isCompactView}
             activeCompactSection={activeCompactSection}
           />
-
-          <div className={cn("md:col-span-3 space-y-6", isCompactView && activeCompactSection !== 'inventory-section' && "hidden")}>
+          
+          {/* 🎯 FIXED: Added activeCompactSection && to prevent blank screen */}
+          <div className={cn("md:col-span-3 space-y-6", isCompactView && activeCompactSection && activeCompactSection !== 'inventory-section' && "hidden")}>
             {!isCompactView && (
               <>
                 <DndNarrativeSection ref={narrativeRef} characterId={character.id} initialData={{ personalityTraits: character.personalityTraits || [], ideals: character.ideals || [], bonds: character.bonds || [], flaws: character.flaws || [], featuresAndTraits: character.featuresAndTraits || [], divineBoons: character.divineBoons || [] }} />
@@ -343,7 +344,6 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
                 <DndInventorySection ref={inventoryRef} characterId={character.id} initialCurrency={character.currency || { cp: 0, sp: 0, ep: 0, gp: 150, pp: 5 }} initialEquipment={character.equipment ?? []} />
               </>
             )}
-
             {isCompactView && (
               <>
                 <DndAttunementSection ref={attunementRef} characterId={character.id} initialItems={character.attunementItems || []} />
@@ -352,7 +352,6 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
             )}
           </div>
         </div>
-
         <DndSpellsSection
           characterId={character.id}
           initialSpells={character.spells || []}
@@ -363,7 +362,6 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
           isCompactView={isCompactView}
           activeCompactSection={activeCompactSection}
         />
-
         <DndCompanionsSection
           characterId={character.id}
           companions={companions}
@@ -375,5 +373,4 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
     );
   }
 );
-
 DndSheet.displayName = 'DndSheet';

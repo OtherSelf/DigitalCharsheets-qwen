@@ -163,7 +163,21 @@ export function CompanionSheet({ companion, onUpdate, onDelete, isEditing, onTog
     hitDice: companion.showHitDice ?? true,
   };
 
-  const toggleVisibility = (key: keyof typeof show) => {
+  // Stabilize objects to prevent unnecessary re-renders and useEffect resets in DndCombatSection
+  const combatStats = React.useMemo(() => ({
+    armorClass: companion.armorClass,
+    speed: typeof companion.speed === 'string' ? parseInt(companion.speed) || 30 : companion.speed,
+    hitPoints: companion.hitPoints || { current: 10, max: 10 },
+    temporaryHitPoints: companion.temporaryHitPoints || 0,
+    deathSaves: companion.deathSaves || { successes: 0, failures: 0 },
+    hitPointsNotes: companion.hitPointsNotes || '',
+    hpTracking: companion.hpTracking || ''
+  }), [companion.armorClass, companion.speed, companion.hitPoints, companion.temporaryHitPoints, companion.deathSaves, companion.hitPointsNotes, companion.hpTracking]);
+
+  const stableEmptyArray = React.useMemo(() => [], []);
+  const stableEmptyObject = React.useMemo(() => ({}), []);
+
+    const toggleVisibility = (key: keyof typeof show) => {
     const fieldKey = `show${key.charAt(0).toUpperCase() + key.slice(1)}` as keyof DnDCompanion;
     onUpdate({ [fieldKey]: !show[key] });
   };
@@ -344,22 +358,15 @@ export function CompanionSheet({ companion, onUpdate, onDelete, isEditing, onTog
             {/* Combat Section */}
             {show.combat && (
               <DndCombatSection
+                key={`combat-${companion.id}`}
                 ref={combatRef}
                 characterId={`companion-${companion.id}`}
-                initialCombatStats={{
-                  armorClass: companion.armorClass,
-                  speed: typeof companion.speed === 'string' ? parseInt(companion.speed) || 30 : companion.speed,
-                  hitPoints: companion.hitPoints || { current: 10, max: 10 },
-                  temporaryHitPoints: companion.temporaryHitPoints || 0,
-                  deathSaves: companion.deathSaves || { successes: 0, failures: 0 },
-                  hitPointsNotes: companion.hitPointsNotes || '',
-                  hpTracking: companion.hpTracking || ''
-                }}
+                initialCombatStats={combatStats}
                 initialExhaustion={companion.exhaustion || 0}
-                initialHitDiceUsed={companion.hitDiceUsed || {}}
-                initialAttacks={companion.attacks || []}
-                initialCombatResources={companion.combatResources || []}
-                initialSpellcastingEntries={companion.spellcastingEntries || []}
+                initialHitDiceUsed={companion.hitDiceUsed ?? stableEmptyObject}
+                initialAttacks={companion.attacks ?? stableEmptyArray}
+                initialCombatResources={companion.combatResources ?? stableEmptyArray}
+                initialSpellcastingEntries={companion.spellcastingEntries ?? stableEmptyArray}
                 stats={stats}
                 proficiencyBonus={profBonus}
                 progressionData={progressionData}

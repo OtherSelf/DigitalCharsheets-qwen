@@ -82,7 +82,7 @@ const CharacteristicStat = ({
             )}
             <div className="flex items-center justify-center gap-1 mb-1">
                 {editing ? (
-                    <Input type="number" value={value} onChange={onValueChange} className="text-base font-bold h-8 w-14 text-center" />
+                    <Input type="number" value={value === 0 ? '' : value} onChange={onValueChange} className="text-base font-bold h-8 w-14 text-center" />
                 ) : (
                     <div className="text-base font-bold text-primary w-10 text-center">{displayValue}</div>
                 )}
