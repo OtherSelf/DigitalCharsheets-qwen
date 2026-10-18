@@ -8,6 +8,8 @@ import { cn } from '@/lib/utils';
 import { useCharacterContext } from '@/context/character-context';
 import { useTranslation } from '@/context/language-context';
 import { CompanionSheet } from './companion-sheet';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 
 interface CompanionsSectionProps {
   characterId: string;
@@ -20,7 +22,7 @@ interface CompanionsSectionProps {
 export function DndCompanionsSection({ characterId, companions, setCompanions, isCompactView, activeCompactSection }: CompanionsSectionProps) {
   const { updateCharacter, showEditButtons } = useCharacterContext();
   const { t } = useTranslation();
-
+  const [isCompanionsOpen, setIsCompanionsOpen] = React.useState(true);
   const [editingCompanionId, setEditingCompanionId] = React.useState<string | null>(null);
 
   const handleAddCompanion = () => {
@@ -72,36 +74,45 @@ export function DndCompanionsSection({ characterId, companions, setCompanions, i
     if (editingCompanionId === companionId) setEditingCompanionId(null);
   };
 
-  return (
-    <div className={cn("space-y-8", isCompactView && activeCompactSection !== 'companion-section' && "hidden")}>
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-3xl font-headline font-bold">{t('companions')}</h2>
-        {showEditButtons && (
-          <Button size="sm" variant="outline" onClick={handleAddCompanion}>
-            <Plus className="h-4 w-4 mr-2" /> {t('addCompanion') || 'Add Companion'}
+    return (
+    <Collapsible open={isCompanionsOpen} onOpenChange={setIsCompanionsOpen} className={cn("space-y-8", isCompactView && activeCompactSection !== 'companion-section' && "hidden")}>
+      <div className="flex items-center justify-center mb-6 relative">
+        <CollapsibleTrigger asChild>
+          <Button variant="ghost" size="sm" className="flex items-center gap-2 p-0 h-auto hover:bg-transparent">
+            <h2 className="text-2xl font-headline font-bold">{t('companions')}</h2>
+            {isCompanionsOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
           </Button>
+        </CollapsibleTrigger>
+        {showEditButtons && (
+          <div className="absolute right-0 top-1/2 -translate-y-1/2">
+            <Button size="sm" variant="outline" onClick={handleAddCompanion}>
+              <Plus className="h-4 w-4 mr-2" /> {t('Add Companion') || 'Add Companion'}
+            </Button>
+          </div>
         )}
       </div>
       
-      {companions.map(comp => (
-        <CompanionSheet
-          key={comp.id}
-          companion={comp}
-          onUpdate={(updates) => updateCompanion(comp.id, updates)}
-          onDelete={() => handleDeleteCompanion(comp.id)}
-          isEditing={editingCompanionId === comp.id && showEditButtons}
-          onToggleEdit={() => setEditingCompanionId(editingCompanionId === comp.id ? null : comp.id)}
-        />
-      ))}
-      
-      {companions.length === 0 && showEditButtons && (
-        <div className="text-center p-12 border-2 border-dashed rounded-lg bg-muted/10">
-          <p className="text-muted-foreground mb-4">No companions added yet.</p>
-          <Button size="sm" variant="outline" onClick={handleAddCompanion}>
-            <Plus className="h-4 w-4 mr-2" /> Add Your First Companion
-          </Button>
-        </div>
-      )}
-    </div>
+      <CollapsibleContent className="space-y-8">
+        {companions.map(comp => (
+          <CompanionSheet
+            key={comp.id}
+            companion={comp}
+            onUpdate={(updates) => updateCompanion(comp.id, updates)}
+            onDelete={() => handleDeleteCompanion(comp.id)}
+            isEditing={editingCompanionId === comp.id && showEditButtons}
+            onToggleEdit={() => setEditingCompanionId(editingCompanionId === comp.id ? null : comp.id)}
+          />
+        ))}
+        
+        {companions.length === 0 && showEditButtons && (
+          <div className="text-center p-12 border-2 border-dashed rounded-lg bg-muted/10">
+            <p className="text-muted-foreground mb-4">No companions added yet.</p>
+            <Button size="sm" variant="outline" onClick={handleAddCompanion}>
+              <Plus className="h-4 w-4 mr-2" /> Add Your First Companion
+            </Button>
+          </div>
+        )}
+      </CollapsibleContent>
+    </Collapsible>
   );
 }
