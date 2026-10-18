@@ -352,23 +352,26 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
             )}
           </div>
         </div>
-        <DndSpellsSection
-          characterId={character.id}
-          initialSpells={character.spells || []}
-          initialSpellSlots={character.spellSlots}
-          initialSpellcastingEntries={character.spellcastingEntries || []}
-          stats={stats}
-          proficiencyBonus={proficiencyBonus}
-          isCompactView={isCompactView}
-          activeCompactSection={activeCompactSection}
-        />
-        <DndCompanionsSection
-          characterId={character.id}
-          companions={companions}
-          setCompanions={setCompanions}
-          isCompactView={isCompactView}
-          activeCompactSection={activeCompactSection}
-        />
+        <div className="flex flex-col gap-8">
+          <DndSpellsSection
+            characterId={character.id}
+            initialSpells={character.spells || []}
+            initialSpellSlots={character.spellSlots}
+            initialSpellcastingEntries={character.spellcastingEntries || []}
+            stats={stats}
+            proficiencyBonus={proficiencyBonus}
+            isCompactView={isCompactView}
+            activeCompactSection={activeCompactSection}
+          />
+
+          <DndCompanionsSection
+            characterId={character.id}
+            companions={companions}
+            setCompanions={setCompanions}
+            isCompactView={isCompactView}
+            activeCompactSection={activeCompactSection}
+          />
+        </div>
       </div>
     );
   }

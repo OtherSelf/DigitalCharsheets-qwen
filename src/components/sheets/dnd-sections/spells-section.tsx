@@ -14,6 +14,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { cn } from '@/lib/utils';
 import { useCharacterContext } from '@/context/character-context';
 import { useTranslation } from '@/context/language-context';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 
 const EditSaveButton = ({ editing, onEdit, onSave }: { editing: boolean, onEdit: () => void, onSave: () => void }) => (
   editing ? ( <Button size="icon" variant="ghost" onClick={onSave} className="h-7 w-7"><Save className="h-4 w-4" /></Button> ) : ( <Button size="icon" variant="outline" onClick={onEdit} className="h-7 w-7"><Edit className="h-4 w-4" /></Button> )
@@ -48,7 +50,7 @@ export function DndSpellsSection({
 }: SpellsSectionProps) {
   const { updateCharacter, showEditButtons, hideNotes } = useCharacterContext();
   const { t } = useTranslation();
-
+  const [isSpellsOpen, setIsSpellsOpen] = React.useState(true);
   const [spells, setSpells] = React.useState<Spell[]>(initialSpells);
   const [spellSlots, setSpellSlots] = React.useState<Record<number, { max: number; current: number }>>(initialSpellSlots || DEFAULT_SLOTS);
   const [editingLevel, setEditingLevel] = React.useState<number | null>(null);
@@ -183,112 +185,116 @@ export function DndSpellsSection({
     );
   };
 
-  return (  
-    <div className={cn("space-y-6", isCompactView && activeCompactSection !== 'spells-section' && "hidden")}>
-      
-      {/* ONLY IN COMPACT VIEW: Spellcasting Entries Box (Duplicated from Attacks & Spellcasting) */}
-      {isCompactView && (
-        <Card className="mb-6">
-          <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2">
-            <CardTitle className="text-[10px] font-bold uppercase text-muted-foreground tracking-tight">{t('spellcastingStats')}</CardTitle>
-            {(showEditButtons || isSpellcastingEditing) && <EditSaveButton editing={isSpellcastingEditing} onEdit={() => setIsSpellcastingEditing(true)} onSave={handleSaveSpellcasting} />}
-          </CardHeader>
-          <CardContent className="p-4 pt-0 space-y-2">
-            {spellcastingEntries.map((entry) => (
-              <div key={entry.id} className="grid grid-cols-12 gap-2 items-center p-2 bg-muted/10 rounded border border-muted/20">
-                <div className="col-span-6 w-full">
-                  <div className="flex items-center gap-1 mb-1">
-                    {!hideNotes && (
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant={entry.notes ? 'secondary' : 'ghost'}
-                            size="icon"
-                            className="h-5 w-5 shrink-0"
-                            title="Notes"
-                          >
-                            <Info className="h-3 w-3" />
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-64">
-                          <Label className="text-xs mb-2 block">
-                            Notes for {entry.ability === 'none' ? 'Spellcasting' : entry.ability.charAt(0).toUpperCase() + entry.ability.slice(1)}
-                          </Label>
-                          <Textarea
-                            defaultValue={entry.notes || ''}
-                            onBlur={(e) => {
-                              const updated = spellcastingEntries.map(en =>
-                                en.id === entry.id ? { ...en, notes: e.target.value } : en
-                              );
-                              setSpellcastingEntries(updated);
-                              updateCharacter(characterId, { spellcastingEntries: updated });
-                            }}
-                            placeholder="Add notes..."
-                            className="mt-2 min-h-[100px] text-sm"
-                          />
-                        </PopoverContent>
-                      </Popover>
-                    )}
-                    <Label className="text-[9px] text-muted-foreground uppercase">Ability</Label>
-                  </div>
-                  {isSpellcastingEditing ? (
-                    <Select value={entry.ability} onValueChange={(v) => handleSpellcastingFieldChange(entry.id, 'ability', v)}>
-                      <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">None</SelectItem>
-                        <SelectItem value="strength">Strength</SelectItem>
-                        <SelectItem value="dexterity">Dexterity</SelectItem>
-                        <SelectItem value="constitution">Constitution</SelectItem>
-                        <SelectItem value="intelligence">Intelligence</SelectItem>
-                        <SelectItem value="wisdom">Wisdom</SelectItem>
-                        <SelectItem value="charisma">Charisma</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  ) : (
-                    <span className="text-xs font-bold">
-                      {entry.ability === 'none' ? 'None' : entry.ability.charAt(0).toUpperCase() + entry.ability.slice(1)}
-                    </span>
-                  )}
-                </div>
-                <div className="col-span-3 w-full">
-                  <Label className="text-[9px] text-muted-foreground uppercase mb-1 block">Atk Bonus</Label>
-                  {isSpellcastingEditing ? (
-                    <Input value={entry.attackBonus} onChange={e => handleSpellcastingFieldChange(entry.id, 'attackBonus', e.target.value)} className="h-8 text-xs text-center" />
-                  ) : (
-                    <span className="text-xs font-bold">{entry.attackBonus || '-'}</span>
-                  )}
-                </div>
-                <div className="col-span-2 w-full">
-                  <Label className="text-[9px] text-muted-foreground uppercase mb-1 block">Save DC</Label>
-                  {isSpellcastingEditing ? (
-                    <Input type="number" value={entry.saveDC} onChange={e => handleSpellcastingFieldChange(entry.id, 'saveDC', parseInt(e.target.value) || 0)} className="h-8 text-xs text-center" />
-                  ) : (
-                    <span className="text-xs font-bold">{entry.saveDC || '-'}</span>
-                  )}
-                </div>
-                <div className="col-span-1 flex justify-end">
-                  {isSpellcastingEditing && (
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive shrink-0" onClick={() => removeSpellcastingEntry(entry.id)}>
-                      <Trash2 className="h-3 w-3" />
-                    </Button>
-                  )}
-                </div>
-              </div>
-            ))}
-            {isSpellcastingEditing && (
-              <Button variant="outline" size="sm" className="w-full h-8 text-[10px] mt-2" onClick={addSpellcastingEntry}>
-                <Plus className="mr-1 h-3 w-3" /> Add Spellcasting Entry
-              </Button>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
-      <h2 className="text-2xl font-headline font-bold text-center mb-4">{t('spellList')}</h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-        {renderSpellBox(0, t('cantrips'))}
-        {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(lvl => renderSpellBox(lvl, `${t('level')} ${lvl}`))}
+    return (  
+    <Collapsible open={isSpellsOpen} onOpenChange={setIsSpellsOpen} className={cn("space-y-6", isCompactView && activeCompactSection !== 'spells-section' && "hidden")}>
+      <div className="flex items-center justify-center mb-4">
+        <CollapsibleTrigger asChild>
+          <Button variant="ghost" size="sm" className="flex items-center gap-2 p-0 h-auto hover:bg-transparent">
+            <h2 className="text-2xl font-headline font-bold">{t('spellList')}</h2>
+            {isSpellsOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+          </Button>
+        </CollapsibleTrigger>
       </div>
-    </div>
+      
+      <CollapsibleContent className="space-y-6">
+        {/* ONLY IN COMPACT VIEW: Spellcasting Entries Box (Duplicated from Attacks & Spellcasting) */}
+        {isCompactView && (
+          <Card className="mb-6">
+            <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2">
+              <CardTitle className="text-[10px] font-bold uppercase text-muted-foreground tracking-tight">{t('spellcastingStats')}</CardTitle>
+              {(showEditButtons || isSpellcastingEditing) && <EditSaveButton editing={isSpellcastingEditing} onEdit={() => setIsSpellcastingEditing(true)} onSave={handleSaveSpellcasting} />}
+            </CardHeader>
+            <CardContent className="p-4 pt-0 space-y-2">
+              {spellcastingEntries.map((entry) => (
+                <div key={entry.id} className="grid grid-cols-12 gap-2 items-center p-2 bg-muted/10 rounded border border-muted/20">
+                  <div className="col-span-6 w-full">
+                    <div className="flex items-center gap-1 mb-1">
+                      {!hideNotes && (
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button variant={entry.notes ? 'secondary' : 'ghost'} size="icon" className="h-5 w-5 shrink-0" title="Notes">
+                              <Info className="h-3 w-3" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-64">
+                            <Label className="text-xs mb-2 block">
+                              Notes for {entry.ability === 'none' ? 'Spellcasting' : entry.ability.charAt(0).toUpperCase() + entry.ability.slice(1)}
+                            </Label>
+                            <Textarea
+                              defaultValue={entry.notes || ''}
+                              onBlur={(e) => {
+                                const updated = spellcastingEntries.map(en =>
+                                  en.id === entry.id ? { ...en, notes: e.target.value } : en
+                                );
+                                setSpellcastingEntries(updated);
+                                updateCharacter(characterId, { spellcastingEntries: updated });
+                              }}
+                              placeholder="Add notes..."
+                              className="mt-2 min-h-[100px] text-sm"
+                            />
+                          </PopoverContent>
+                        </Popover>
+                      )}
+                      <Label className="text-[9px] text-muted-foreground uppercase">Ability</Label>
+                    </div>
+                    {isSpellcastingEditing ? (
+                      <Select value={entry.ability} onValueChange={(v) => handleSpellcastingFieldChange(entry.id, 'ability', v)}>
+                        <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">None</SelectItem>
+                          <SelectItem value="strength">Strength</SelectItem>
+                          <SelectItem value="dexterity">Dexterity</SelectItem>
+                          <SelectItem value="constitution">Constitution</SelectItem>
+                          <SelectItem value="intelligence">Intelligence</SelectItem>
+                          <SelectItem value="wisdom">Wisdom</SelectItem>
+                          <SelectItem value="charisma">Charisma</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <span className="text-xs font-bold">
+                        {entry.ability === 'none' ? 'None' : entry.ability.charAt(0).toUpperCase() + entry.ability.slice(1)}
+                      </span>
+                    )}
+                  </div>
+                  <div className="col-span-3 w-full">
+                    <Label className="text-[9px] text-muted-foreground uppercase mb-1 block">Atk Bonus</Label>
+                    {isSpellcastingEditing ? (
+                      <Input value={entry.attackBonus} onChange={e => handleSpellcastingFieldChange(entry.id, 'attackBonus', e.target.value)} className="h-8 text-xs text-center" />
+                    ) : (
+                      <span className="text-xs font-bold">{entry.attackBonus || '-'}</span>
+                    )}
+                  </div>
+                  <div className="col-span-2 w-full">
+                    <Label className="text-[9px] text-muted-foreground uppercase mb-1 block">Save DC</Label>
+                    {isSpellcastingEditing ? (
+                      <Input type="number" value={entry.saveDC} onChange={e => handleSpellcastingFieldChange(entry.id, 'saveDC', parseInt(e.target.value) || 0)} className="h-8 text-xs text-center" />
+                    ) : (
+                      <span className="text-xs font-bold">{entry.saveDC || '-'}</span>
+                    )}
+                  </div>
+                  <div className="col-span-1 flex justify-end">
+                    {isSpellcastingEditing && (
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive shrink-0" onClick={() => removeSpellcastingEntry(entry.id)}>
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              ))}
+              {isSpellcastingEditing && (
+                <Button variant="outline" size="sm" className="w-full h-8 text-[10px] mt-2" onClick={addSpellcastingEntry}>
+                  <Plus className="mr-1 h-3 w-3" /> Add Spellcasting Entry
+                </Button>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+          {renderSpellBox(0, t('cantrips'))}
+          {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(lvl => renderSpellBox(lvl, `${t('level')} ${lvl}`))}
+        </div>
+      </CollapsibleContent>
+    </Collapsible>
   );
 }
