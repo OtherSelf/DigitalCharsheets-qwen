@@ -74,10 +74,10 @@ export const DndDivineBoonsSection = React.forwardRef<{ saveAll: () => void }, D
 
     return (
       <>
-        <Accordion type="single" collapsible defaultValue="expanded" className="flex-1">
-          <AccordionItem value="expanded" className="border-0">
-            <Card className="flex flex-col border-2 overflow-hidden h-full">
-              <CardHeader className="px-4 pt-2 pb-2 bg-muted/5 flex flex-row items-center justify-between">
+          <Accordion type="single" collapsible defaultValue="expanded" className="flex-1 h-full">
+            <AccordionItem value="expanded" className="border-0 h-full flex flex-col">
+              <Card className="flex flex-col border-2 overflow-hidden h-full">
+                <CardHeader className="px-4 pt-2 pb-2 bg-muted/5 flex flex-row items-center justify-between shrink-0">
                 <AccordionTrigger className="flex flex-1 items-center justify-between hover:no-underline py-0">
                   <Label className="text-[10px] font-bold uppercase text-muted-foreground tracking-tight">
                     {t('divineBoons')}
@@ -96,9 +96,9 @@ export const DndDivineBoonsSection = React.forwardRef<{ saveAll: () => void }, D
                     Add
                   </Button>
                 )}
-              </CardHeader>
-              <AccordionContent>
-                <CardContent className="p-4 pt-0">
+                </CardHeader>
+                <AccordionContent className="flex-1 [&[data-state=open]]:!h-full [&[data-state=open]]:!max-h-none">
+                  <CardContent className="p-4 pt-0 h-full flex flex-col">
                   {divineBoons.length === 0 ? (
                     <p className="text-xs text-muted-foreground italic text-center py-4">
                       No divine boons yet

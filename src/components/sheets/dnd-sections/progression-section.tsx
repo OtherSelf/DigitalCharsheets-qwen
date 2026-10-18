@@ -94,17 +94,17 @@ export function DndProgressionSection({ progressionData, setProgressionData, exp
     : progressionData.level;
 
   return (
-    <Accordion type="single" collapsible defaultValue="expanded" className="w-full md:max-w-xl">
-      <AccordionItem value="expanded" className="border-0">
-        <Card className="flex flex-col border-2 overflow-hidden shrink-0 h-full">
-          <CardHeader className="px-4 pt-2 pb-2 flex flex-row items-center justify-between bg-muted/5">
+    <Accordion type="single" collapsible defaultValue="expanded" className="w-full md:max-w-xl flex-1 h-full">
+      <AccordionItem value="expanded" className="border-0 h-full flex flex-col">
+      <Card className="flex flex-col border-2 overflow-hidden h-full">
+        <CardHeader className="px-4 pt-2 pb-2 flex flex-row items-center justify-between bg-muted/5 shrink-0">
             <AccordionTrigger className="flex flex-1 items-center justify-between hover:no-underline py-0">
               <Label className="text-[10px] font-bold uppercase text-muted-foreground tracking-tight">{t('progression')}</Label>
             </AccordionTrigger>
             {(showEditButtons || isProgressionEditing) && <EditSaveButton editing={isProgressionEditing} onEdit={() => setIsProgressionEditing(true)} onSave={handleSaveProgression} />}
-          </CardHeader>
-          <AccordionContent>
-            <CardContent className="p-4 space-y-4">
+        </CardHeader>
+        <AccordionContent className="flex-1 [&[data-state=open]]:!h-full [&[data-state=open]]:!max-h-none">
+          <CardContent className="p-4 space-y-4 h-full flex flex-col">
               {/* Core Stats Grid */}
               <div className="grid grid-cols-3 gap-4">
                 <div className="flex flex-col gap-1">
