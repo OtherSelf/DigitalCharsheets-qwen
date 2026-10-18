@@ -19,6 +19,7 @@ import * as XLSX from 'xlsx';
 import { DnD5eCharacter, DarkHeresyCharacter } from '@/lib/types';
 import Link from 'next/link';
 import { useLocalAuth } from '@/context/local-auth-context';
+import { RecoveryModal } from '@/components/recovery-modal';
 
 export default function DashboardPage() {
   const { characters, isLoaded, isCompactView } = useCharacterContext();
@@ -161,6 +162,7 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
       </main>
+      <RecoveryModal />
     </div>
   );
 }
