@@ -55,7 +55,7 @@ export function CharacterCard({ character }: CharacterCardProps) {
               {character.name}
             </CardTitle>
             <CardDescription className="text-xs break-words">
-              {character.gameSystem === 'Dungeons & Dragons' && `Lvl ${character.level} `}
+              {character.gameSystem === 'Dungeons & Dragons' && `${t('lvl')} ${character.level} `}
               {character.gameSystem === 'Dark Heresy' && `${character.rank} `}
               {character.characterClass}
             </CardDescription>
@@ -66,7 +66,7 @@ export function CharacterCard({ character }: CharacterCardProps) {
         </div>
         <div className="flex items-center gap-2 p-2 ml-auto">
           <Button asChild size="sm">
-            <Link href={`/${character.id}`}>View</Link>
+            <Link href={`/${character.id}`}>{t('view')}</Link>
           </Button>
           
           {/* EXPORT BUTTON (COMPACT VIEW) */}
@@ -82,15 +82,14 @@ export function CharacterCard({ character }: CharacterCardProps) {
             </AlertDialogTrigger>
             <AlertDialogContent onClick={(e) => { e.stopPropagation(); }}>
               <AlertDialogHeader>
-                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                <AlertDialogTitle>{t('confirmDelete')}</AlertDialogTitle>
                 <AlertDialogDescription>
-                  This action cannot be undone. This will permanently delete your
-                  character sheet for {character.name}.
+                  {t('deleteWarning')} {character.name}.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+                <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDelete}>{t('delete')}</AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
@@ -109,14 +108,14 @@ export function CharacterCard({ character }: CharacterCardProps) {
           {character.name}
         </CardTitle>
         <CardDescription>
-          {character.gameSystem === 'Dungeons & Dragons' && `Lvl ${character.level} `}
+          {character.gameSystem === 'Dungeons & Dragons' && `${t('lvl')} ${character.level} `}
           {character.gameSystem === 'Dark Heresy' && `${character.rank} `}
           {character.characterClass}
         </CardDescription>
       </CardContent>
       <CardFooter className="p-4 pt-0 flex items-center justify-between gap-2">
         <Button asChild className="w-full">
-          <Link href={`/${character.id}`}>View Sheet</Link>
+          <Link href={`/${character.id}`}>{t('viewSheet')}</Link>
         </Button>
         
         {/* EXPORT BUTTON (NORMAL VIEW) */}
@@ -132,15 +131,14 @@ export function CharacterCard({ character }: CharacterCardProps) {
           </AlertDialogTrigger>
           <AlertDialogContent onClick={(e) => { e.stopPropagation(); }}>
             <AlertDialogHeader>
-              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+              <AlertDialogTitle>{t('confirmDelete')}</AlertDialogTitle>
               <AlertDialogDescription>
-                This action cannot be undone. This will permanently delete your
-                character sheet for {character.name}.
+                {t('deleteWarning')} {character.name}.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+              <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDelete}>{t('delete')}</AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
