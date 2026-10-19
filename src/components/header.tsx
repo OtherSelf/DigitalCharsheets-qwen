@@ -146,10 +146,10 @@ export function Header({ onNotesClick, onJournalClick }: HeaderProps) {
                 size="sm"
                 onClick={() => setIsHouseRulesDialogOpen(true)}
                 className="h-7 px-2 xl:ml-2"
-                aria-label="House Rules"
+                aria-label={t('houseRules')}
               >
                 <Scale className="h-4 w-4 xl:mr-2" />
-                <span className="hidden xl:inline">House Rules</span>
+                <span className="hidden xl:inline">{t('houseRules')}</span>
               </Button>
             )}
           </div>
@@ -168,8 +168,8 @@ export function Header({ onNotesClick, onJournalClick }: HeaderProps) {
             )}
             <span className="sr-only">
               {isCompactView
-                ? 'Switch to Default View'
-                : 'Switch to Compact View'}
+                ? t('switchToDefaultView')
+                : t('switchToCompactView')}
             </span>
           </Button>
         )}

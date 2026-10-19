@@ -13,9 +13,11 @@ import { Skeleton } from "../ui/skeleton";
 import Link from "next/link";
 import { useLocalAuth } from "@/context/local-auth-context";
 import { CircleUserRound, KeyRound } from "lucide-react";
+import { useTranslation } from '@/context/language-context';
 
 export function UserNav() {
   const { user, isUserLoading, logout, updateUserPhrase } = useLocalAuth();
+  const { t } = useTranslation();
   const [phraseDialogOpen, setPhraseDialogOpen] = useState(false);
   const [newPhrase, setNewPhrase] = useState('');
   const [isSaving, setIsSaving] = useState(false);
@@ -23,7 +25,7 @@ export function UserNav() {
 
   const handleSavePhrase = async () => {
     if (newPhrase.trim().length < 5) {
-      setError('Phrase must be at least 5 characters.');
+      setError(t('phraseMinLength'));
       return;
     }
     setIsSaving(true);
@@ -40,17 +42,17 @@ export function UserNav() {
         setPhraseDialogOpen(false);
         setNewPhrase('');
       } else {
-        setError(data.error || 'Failed to update phrase.');
+        setError(data.error || t('phraseUpdateFailed'));
       }
     } catch (err) {
-      setError('Failed to connect to server.');
+      setError(t('serverConnectionFailed'));
     } finally {
       setIsSaving(false);
     }
   };
 
   if (isUserLoading) return <Skeleton className="h-9 w-9 rounded-full" />;
-  if (!user) return <Button asChild><Link href="/login">Sign In</Link></Button>;
+  if (!user) return <Button asChild><Link href="/login">{t('signIn')}</Link></Button>;
 
   return (
     <>
@@ -58,41 +60,41 @@ export function UserNav() {
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full">
             <CircleUserRound className="h-6 w-6" />
-            <span className="sr-only">Open user menu</span>
+            <span className="sr-only">{t('openUserMenu')}</span>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-56" align="end" forceMount>
           <DropdownMenuLabel className="font-normal">
             <div className="flex flex-col space-y-1">
-              <p className="text-sm font-medium leading-none">{user.displayName || 'User'}</p>
+              <p className="text-sm font-medium leading-none">{user.displayName || t('user')}</p>
               <p className="text-xs text-muted-foreground">{user.email}</p>
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => setPhraseDialogOpen(true)}>
             <KeyRound className="mr-2 h-4 w-4" />
-            {user.hasRecoveryPhrase ? 'Change Recovery Phrase' : 'Add Recovery Phrase'}
+            {user.hasRecoveryPhrase ? t('changeRecoveryPhrase') : t('addRecoveryPhrase')}
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={logout}>Log out</DropdownMenuItem>
+          <DropdownMenuItem onClick={logout}>{t('logout')}</DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
 
       <Dialog open={phraseDialogOpen} onOpenChange={setPhraseDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{user.hasRecoveryPhrase ? 'Change Recovery Phrase' : 'Add Recovery Phrase'}</DialogTitle>
+            <DialogTitle>{user.hasRecoveryPhrase ? t('changeRecoveryPhrase') : t('addRecoveryPhrase')}</DialogTitle>
             <DialogDescription>
-              This phrase is used to recover your account if you forget your password. Make it memorable! (e.g., "french butter dragon")
+              {t('recoveryPhraseDesc')}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
-            <Input placeholder="Enter your recovery phrase" value={newPhrase} onChange={(e) => setNewPhrase(e.target.value)} />
+            <Input placeholder={t('enterRecoveryPhrase')} value={newPhrase} onChange={(e) => setNewPhrase(e.target.value)} />
             {error && <p className="text-sm text-destructive">{error}</p>}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setPhraseDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleSavePhrase} disabled={isSaving}>{isSaving ? 'Saving...' : 'Save Phrase'}</Button>
+            <Button variant="outline" onClick={() => setPhraseDialogOpen(false)}>{t('cancel')}</Button>
+            <Button onClick={handleSavePhrase} disabled={isSaving}>{isSaving ? t('saving') : t('savePhrase')}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -31,47 +31,46 @@ import { DIVINATIONS, QUIRKS_BY_HOMEWORLD, ALL_QUIRKS, WORLD_VARIANTS_BY_HOMEWOR
 import React from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { RanksByCareer, calculateRank } from '@/lib/dark-heresy-ranks';
-
-const formSchema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters.'),
-  homeWorld: z.enum(DarkHeresyHomeWorlds, {
-      required_error: "You must select a home world."
-  }),
-  worldVariant: z.string().optional(),
-  careerPath: z.enum(DarkHeresyCareerPaths, {
-      required_error: "You must select a career path."
-  }),
-  backstory: z.string().optional(),
-  divination: z.string({ required_error: 'Please select a divination.' }),
-  quirk: z.string().optional(),
-  height: z.string().optional(),
-  weight: z.string().optional(),
-  age: z.string().optional(),
-  skinColor: z.string().optional(),
-  hairColor: z.string().optional(),
-  eyeColor: z.string().optional(),
-  experience: z.coerce.number().int().optional(),
-  totalExpSpent: z.coerce.number().int().optional(),
-  weaponSkill: z.coerce.number().int(),
-  ballisticSkill: z.coerce.number().int(),
-  strength: z.coerce.number().int(),
-  toughness: z.coerce.number().int(),
-  agility: z.coerce.number().int(),
-  intelligence: z.coerce.number().int(),
-  perception: z.coerce.number().int(),
-  willpower: z.coerce.number().int(),
-  fellowship: z.coerce.number().int(),
-  influence: z.coerce.number().int(),
-  wounds: z.coerce.number().int(),
-  fatePoints: z.coerce.number().int(),
-});
+import { useTranslation } from '@/context/language-context';
 
 export function DarkHeresyCharacterForm() {
   const { toast } = useToast();
   const router = useRouter();
   const { addCharacter } = useCharacterContext();
+  const { t } = useTranslation();
   const [showAllQuirks, setShowAllQuirks] = React.useState(false);
   const [availableQuirks, setAvailableQuirks] = React.useState<string[]>([]);
+
+  // MOVED INSIDE COMPONENT TO ACCESS t()
+  const formSchema = z.object({
+    name: z.string().min(2, t('nameMinLength')),
+    homeWorld: z.enum(DarkHeresyHomeWorlds, { required_error: t('selectHomeWorldError') }),
+    worldVariant: z.string().optional(),
+    careerPath: z.enum(DarkHeresyCareerPaths, { required_error: t('selectCareerPathError') }),
+    backstory: z.string().optional(),
+    divination: z.string({ required_error: t('selectDivinationError') }),
+    quirk: z.string().optional(),
+    height: z.string().optional(),
+    weight: z.string().optional(),
+    age: z.string().optional(),
+    skinColor: z.string().optional(),
+    hairColor: z.string().optional(),
+    eyeColor: z.string().optional(),
+    experience: z.coerce.number().int().optional(),
+    totalExpSpent: z.coerce.number().int().optional(),
+    weaponSkill: z.coerce.number().int(),
+    ballisticSkill: z.coerce.number().int(),
+    strength: z.coerce.number().int(),
+    toughness: z.coerce.number().int(),
+    agility: z.coerce.number().int(),
+    intelligence: z.coerce.number().int(),
+    perception: z.coerce.number().int(),
+    willpower: z.coerce.number().int(),
+    fellowship: z.coerce.number().int(),
+    influence: z.coerce.number().int(),
+    wounds: z.coerce.number().int(),
+    fatePoints: z.coerce.number().int(),
+  });
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -117,8 +116,8 @@ export function DarkHeresyCharacterForm() {
 
   const worldVariantLabel = React.useMemo(() => {
     return watchedHomeWorld 
-      ? (WORLD_VARIANT_LABELS[watchedHomeWorld] || "World Variant") 
-      : "Waiting for Home World selection...";
+      ? (WORLD_VARIANT_LABELS[watchedHomeWorld] || t('worldVariant')) 
+      : t('waitingHomeWorld');
   }, [watchedHomeWorld]);
   
   React.useEffect(() => {
@@ -132,7 +131,6 @@ export function DarkHeresyCharacterForm() {
     form.setValue('quirk', '');
   }, [watchedHomeWorld, showAllQuirks, form]);
 
-  // Reset world variant when home world changes
   React.useEffect(() => {
     form.setValue('worldVariant', '');
   }, [watchedHomeWorld, form]);
@@ -227,8 +225,8 @@ export function DarkHeresyCharacterForm() {
     
     if (docRef) {
         toast({
-            title: 'Character Created!',
-            description: 'Your new Dark Heresy character has been saved.',
+            title: t('characterCreatedTitle'),
+            description: t('characterCreatedDescDH'),
         });
         router.push(`/${docRef.id}`);
     }
@@ -237,25 +235,25 @@ export function DarkHeresyCharacterForm() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Warhammer 40k: Dark Heresy Character Details</CardTitle>
+        <CardTitle>{t('dhCharacterDetails')}</CardTitle>
       </CardHeader>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>
           <CardContent className="space-y-6">
             <div className="space-y-2">
-                <h3 className="text-base font-medium">Basic Information</h3>
+                <h3 className="text-base font-medium">{t('basicInformation')}</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField control={form.control} name="name" render={({ field }) => (<FormItem><FormLabel>Character Name</FormLabel><FormControl><Input placeholder="Jax Valerius" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                <FormField control={form.control} name="name" render={({ field }) => (<FormItem><FormLabel>{t('characterName')}</FormLabel><FormControl><Input placeholder={t('placeholderJax')} {...field} /></FormControl><FormMessage /></FormItem>)} />
                 <FormField
                   control={form.control}
                   name="homeWorld"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Home World</FormLabel>
+                      <FormLabel>{t('homeWorld')}</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select a home world" />
+                            <SelectValue placeholder={t('selectHomeWorld')} />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -281,7 +279,7 @@ export function DarkHeresyCharacterForm() {
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder={watchedHomeWorld ? "Select a variant" : "Select home world first"} />
+                            <SelectValue placeholder={watchedHomeWorld ? t('selectVariant') : t('selectHomeWorldFirst')} />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -299,11 +297,11 @@ export function DarkHeresyCharacterForm() {
                   name="careerPath"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Career Path</FormLabel>
+                      <FormLabel>{t('careerPath')}</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select a career path" />
+                            <SelectValue placeholder={t('selectCareerPath')} />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -320,18 +318,18 @@ export function DarkHeresyCharacterForm() {
             </div>
 
             <div className="space-y-2">
-                <h3 className="text-base font-medium">Description</h3>
+                <h3 className="text-base font-medium">{t('description')}</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
                     name="divination"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Divination</FormLabel>
+                        <FormLabel>{t('divination')}</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Select a divination" />
+                              <SelectValue placeholder={t('selectDivination')} />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
@@ -347,11 +345,11 @@ export function DarkHeresyCharacterForm() {
                     )}
                   />
                   <FormItem>
-                    <FormLabel>Divination Effect</FormLabel>
+                    <FormLabel>{t('divinationEffect')}</FormLabel>
                     <Input
                       readOnly
                       value={divinationEffect}
-                      placeholder="Effect appears here"
+                      placeholder={t('effectAppearsHere')}
                       className="border-dashed bg-muted/50"
                     />
                   </FormItem>
@@ -360,7 +358,7 @@ export function DarkHeresyCharacterForm() {
                       name="quirk"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Quirk</FormLabel>
+                          <FormLabel>{t('quirk')}</FormLabel>
                           <Select
                             onValueChange={field.onChange}
                             value={field.value}
@@ -368,7 +366,7 @@ export function DarkHeresyCharacterForm() {
                           >
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder="Select a quirk" />
+                                <SelectValue placeholder={t('selectQuirk')} />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
@@ -391,17 +389,17 @@ export function DarkHeresyCharacterForm() {
                             htmlFor="all-quirks"
                             className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                         >
-                            Show all quirks
+                            {t('showAllQuirks')}
                         </label>
                     </div>
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4 pt-2">
-                  <FormField control={form.control} name="height" render={({ field }) => (<FormItem><FormLabel>Height</FormLabel><FormControl><Input placeholder="1.8m" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                  <FormField control={form.control} name="weight" render={({ field }) => (<FormItem><FormLabel>Weight</FormLabel><FormControl><Input placeholder="80kg" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                  <FormField control={form.control} name="age" render={({ field }) => (<FormItem><FormLabel>Age</FormLabel><FormControl><Input placeholder="25" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                  <FormField control={form.control} name="skinColor" render={({ field }) => (<FormItem><FormLabel>Skin Color</FormLabel><FormControl><Input placeholder="Pale" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                  <FormField control={form.control} name="hairColor" render={({ field }) => (<FormItem><FormLabel>Hair Color</FormLabel><FormControl><Input placeholder="Black" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                  <FormField control={form.control} name="eyeColor" render={({ field }) => (<FormItem><FormLabel>Eye Color</FormLabel><FormControl><Input placeholder="Grey" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                  <FormField control={form.control} name="height" render={({ field }) => (<FormItem><FormLabel>{t('height')}</FormLabel><FormControl><Input placeholder="1.8m" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                  <FormField control={form.control} name="weight" render={({ field }) => (<FormItem><FormLabel>{t('weight')}</FormLabel><FormControl><Input placeholder="80kg" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                  <FormField control={form.control} name="age" render={({ field }) => (<FormItem><FormLabel>{t('age')}</FormLabel><FormControl><Input placeholder="25" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                  <FormField control={form.control} name="skinColor" render={({ field }) => (<FormItem><FormLabel>{t('skinColor')}</FormLabel><FormControl><Input placeholder="Pale" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                  <FormField control={form.control} name="hairColor" render={({ field }) => (<FormItem><FormLabel>{t('hairColor')}</FormLabel><FormControl><Input placeholder="Black" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                  <FormField control={form.control} name="eyeColor" render={({ field }) => (<FormItem><FormLabel>{t('eyeColor')}</FormLabel><FormControl><Input placeholder="Grey" {...field} /></FormControl><FormMessage /></FormItem>)} />
                 </div>
             </div>
             
@@ -410,47 +408,47 @@ export function DarkHeresyCharacterForm() {
               name="backstory"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Backstory</FormLabel>
-                  <FormControl><Textarea placeholder="Born in the underhive of Scintilla..." {...field} /></FormControl>
+                  <FormLabel>{t('backstory')}</FormLabel>
+                  <FormControl><Textarea placeholder={t('placeholderUnderhive')} {...field} /></FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
             <div className="space-y-2">
-                <h3 className="text-base font-medium">Progression</h3>
+                <h3 className="text-base font-medium">{t('progression')}</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField control={form.control} name="experience" render={({ field }) => (<FormItem><FormLabel>Experience</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                    <FormField control={form.control} name="totalExpSpent" render={({ field }) => (<FormItem><FormLabel>Total EXP Spent</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                    <FormField control={form.control} name="experience" render={({ field }) => (<FormItem><FormLabel>{t('experience')}</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                    <FormField control={form.control} name="totalExpSpent" render={({ field }) => (<FormItem><FormLabel>{t('totalExpSpent')}</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>)} />
                 </div>
             </div>
 
             <div className="space-y-2">
-                <h3 className="text-base font-medium">Characteristics</h3>
+                <h3 className="text-base font-medium">{t('characteristics')}</h3>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-                    <FormField control={form.control} name="weaponSkill" render={({ field }) => (<FormItem><FormLabel>Weapon Skill</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                    <FormField control={form.control} name="ballisticSkill" render={({ field }) => (<FormItem><FormLabel>Ballistic Skill</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                    <FormField control={form.control} name="strength" render={({ field }) => (<FormItem><FormLabel>Strength</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                    <FormField control={form.control} name="toughness" render={({ field }) => (<FormItem><FormLabel>Toughness</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                    <FormField control={form.control} name="agility" render={({ field }) => (<FormItem><FormLabel>Agility</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                    <FormField control={form.control} name="intelligence" render={({ field }) => (<FormItem><FormLabel>Intelligence</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                    <FormField control={form.control} name="perception" render={({ field }) => (<FormItem><FormLabel>Perception</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                    <FormField control={form.control} name="willpower" render={({ field }) => (<FormItem><FormLabel>Willpower</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                    <FormField control={form.control} name="fellowship" render={({ field }) => (<FormItem><FormLabel>Fellowship</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                    <FormField control={form.control} name="influence" render={({ field }) => (<FormItem><FormLabel>Influence</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                    <FormField control={form.control} name="weaponSkill" render={({ field }) => (<FormItem><FormLabel>{t('weaponSkill')}</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                    <FormField control={form.control} name="ballisticSkill" render={({ field }) => (<FormItem><FormLabel>{t('ballisticSkill')}</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                    <FormField control={form.control} name="strength" render={({ field }) => (<FormItem><FormLabel>{t('strength')}</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                    <FormField control={form.control} name="toughness" render={({ field }) => (<FormItem><FormLabel>{t('toughness')}</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                    <FormField control={form.control} name="agility" render={({ field }) => (<FormItem><FormLabel>{t('agility')}</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                    <FormField control={form.control} name="intelligence" render={({ field }) => (<FormItem><FormLabel>{t('intelligence')}</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                    <FormField control={form.control} name="perception" render={({ field }) => (<FormItem><FormLabel>{t('perception')}</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                    <FormField control={form.control} name="willpower" render={({ field }) => (<FormItem><FormLabel>{t('willpower')}</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                    <FormField control={form.control} name="fellowship" render={({ field }) => (<FormItem><FormLabel>{t('fellowship')}</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                    <FormField control={form.control} name="influence" render={({ field }) => (<FormItem><FormLabel>{t('influence')}</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>)} />
                 </div>
             </div>
 
             <div className="space-y-2">
-                <h3 className="text-base font-medium">Other Stats</h3>
+                <h3 className="text-base font-medium">{t('otherStats')}</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField control={form.control} name="wounds" render={({ field }) => (<FormItem><FormLabel>Wounds</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                    <FormField control={form.control} name="fatePoints" render={({ field }) => (<FormItem><FormLabel>Fate Points</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                    <FormField control={form.control} name="wounds" render={({ field }) => (<FormItem><FormLabel>{t('wounds')}</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                    <FormField control={form.control} name="fatePoints" render={({ field }) => (<FormItem><FormLabel>{t('fatePoints')}</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>)} />
                 </div>
             </div>
           </CardContent>
            <CardFooter>
-            <Button type="submit">Create Character</Button>
+            <Button type="submit">{t('createCharacter')}</Button>
           </CardFooter>
         </form>
       </Form>

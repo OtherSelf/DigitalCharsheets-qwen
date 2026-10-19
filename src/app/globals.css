@@ -212,4 +212,10 @@ body {
   .dh-sheet.is-compact .sheet-info-grid > * {
     grid-column: 1 / -1 !important;
   }
+
+  /* Force Radix Accordion Content to stretch to fill its parent Card */
+.dnd-stretch-card [data-state="open"] {
+  height: 100% !important;
+  max-height: none !important;
+}
 }

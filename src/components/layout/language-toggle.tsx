@@ -10,14 +10,14 @@ interface LanguageToggleProps {
 
 export function LanguageToggle({ className }: LanguageToggleProps) {
   const { language, setLanguage } = useTranslation();
-
+  const { t } = useTranslation();
   return (
     <Button
       variant="outline"
       size="icon"
       className={cn("font-bold text-xs", className)}
       onClick={() => setLanguage(language === 'en' ? 'ru' : 'en')}
-      title={language === 'en' ? 'Switch to Russian' : 'Switch to English'}
+      title={language === 'en' ? t('switchToRussian') : t('switchToEnglish')}
     >
       {language === 'en' ? 'EN' : 'RU'}
     </Button>

@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus, Trash2 } from 'lucide-react';
 import { Label } from '@/components/ui/label';
+import { cn } from '@/lib/utils';
 import {
   Accordion,
   AccordionContent,
@@ -24,7 +25,6 @@ import {
 import { useCharacterContext } from '@/context/character-context';
 import { useTranslation } from '@/context/language-context';
 import { DivineBoonsDialog } from './divine-boons-dialog';
-import { cn } from '@/lib/utils';
 
 interface DivineBoonsSectionProps {
   characterId: string;
@@ -37,6 +37,9 @@ export const DndDivineBoonsSection = React.forwardRef<{ saveAll: () => void }, D
   ({ characterId, initialBoons, isCompactView, activeCompactSection }, ref) => {
     const { updateCharacter, showEditButtons } = useCharacterContext();
     const { t } = useTranslation();
+    
+    // NEW: Track open/closed state
+    const [isOpen, setIsOpen] = React.useState(true);
     
     const [divineBoons, setDivineBoons] = React.useState<string[]>(initialBoons);
     const [isBoonsDialogOpen, setIsBoonsDialogOpen] = React.useState(false);
@@ -67,17 +70,22 @@ export const DndDivineBoonsSection = React.forwardRef<{ saveAll: () => void }, D
     };
 
     React.useImperativeHandle(ref, () => ({
-      saveAll: () => {
-        // Boons are saved immediately on change
-      }
+      saveAll: () => {}
     }));
 
     return (
       <>
-          <Accordion type="single" collapsible defaultValue="expanded" className="flex-1 h-full">
-            <AccordionItem value="expanded" className="border-0 h-full flex flex-col">
-              <Card className="flex flex-col border-2 overflow-hidden h-full">
-                <CardHeader className="px-4 pt-2 pb-2 bg-muted/5 flex flex-row items-center justify-between shrink-0">
+        {/* NEW: Added onValueChange and dynamic md:self-start class */}
+        <Accordion 
+          type="single" 
+          collapsible 
+          defaultValue="expanded" 
+          onValueChange={(val) => setIsOpen(val === 'expanded')}
+          className={cn("flex-1", !isOpen && "md:self-start")}
+        >
+          <AccordionItem value="expanded" className="border-0">
+            <Card className="flex flex-col border-2 overflow-hidden h-full">
+              <CardHeader className="px-4 pt-2 pb-2 bg-muted/5 flex flex-row items-center justify-between">
                 <AccordionTrigger className="flex flex-1 items-center justify-between hover:no-underline py-0">
                   <Label className="text-[10px] font-bold uppercase text-muted-foreground tracking-tight">
                     {t('divineBoons')}
@@ -88,7 +96,7 @@ export const DndDivineBoonsSection = React.forwardRef<{ saveAll: () => void }, D
                     size="sm" 
                     variant="outline" 
                     onClick={(e) => { 
-                      e.stopPropagation(); // Prevents accordion from toggling
+                      e.stopPropagation();
                       setIsBoonsDialogOpen(true); 
                     }}
                   >
@@ -96,9 +104,9 @@ export const DndDivineBoonsSection = React.forwardRef<{ saveAll: () => void }, D
                     Add
                   </Button>
                 )}
-                </CardHeader>
-                <AccordionContent className="flex-1 [&[data-state=open]]:!h-full [&[data-state=open]]:!max-h-none">
-                  <CardContent className="p-4 pt-0 h-full flex flex-col">
+              </CardHeader>
+              <AccordionContent>
+                <CardContent className="p-4 pt-0">
                   {divineBoons.length === 0 ? (
                     <p className="text-xs text-muted-foreground italic text-center py-4">
                       No divine boons yet
@@ -157,7 +165,6 @@ export const DndDivineBoonsSection = React.forwardRef<{ saveAll: () => void }, D
           </AccordionItem>
         </Accordion>
 
-        {/* Dialogs moved OUTSIDE Accordion so they work even when collapsed */}
         <DivineBoonsDialog 
           open={isBoonsDialogOpen} 
           onOpenChange={setIsBoonsDialogOpen} 
@@ -167,21 +174,16 @@ export const DndDivineBoonsSection = React.forwardRef<{ saveAll: () => void }, D
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Delete Divine Boon</AlertDialogTitle>
-              
-              {/* FIX: Added asChild and wrapped contents in a div to prevent <p> inside <p> hydration error */}
-              <AlertDialogDescription asChild>
-                <div className="text-sm text-muted-foreground">
-                  Are you sure you want to delete this boon? This action cannot be undone.
-                  {boonToDelete !== null && divineBoons[boonToDelete] && (
-                    <div className="mt-2 p-2 rounded bg-muted">
-                      <p className="text-sm font-semibold">
-                        {divineBoons[boonToDelete].split(':')[0]}
-                      </p>
-                    </div>
-                  )}
-                </div>
+              <AlertDialogDescription>
+                Are you sure you want to delete this boon? This action cannot be undone.
+                {boonToDelete !== null && divineBoons[boonToDelete] && (
+                  <div className="mt-2 p-2 rounded bg-muted">
+                    <p className="text-sm font-semibold">
+                      {divineBoons[boonToDelete].split(':')[0]}
+                    </p>
+                  </div>
+                )}
               </AlertDialogDescription>
-              
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>

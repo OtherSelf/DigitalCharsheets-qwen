@@ -28,21 +28,11 @@ import {
 } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import React from 'react';
+import { useTranslation } from '@/context/language-context';
 
 const DND_CLASSES = [
-  "Artificer",
-  "Barbarian",
-  "Bard",
-  "Cleric",
-  "Druid",
-  "Fighter",
-  "Monk",
-  "Paladin",
-  "Ranger",
-  "Rogue",
-  "Sorcerer",
-  "Warlock",
-  "Wizard"
+  "Artificer", "Barbarian", "Bard", "Cleric", "Druid", "Fighter", "Monk", "Paladin", 
+  "Ranger", "Rogue", "Sorcerer", "Warlock", "Wizard"
 ] as const;
 
 const DND_RACES = [
@@ -126,45 +116,41 @@ const calculateLevelFromExp = (exp: number): number => {
   return 1;
 };
 
-const formSchema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters.'),
-  characterClass: z.enum(DND_CLASSES, {
-    required_error: "Please select a class.",
-  }),
-  race: z.enum(DND_RACES, {
-    required_error: "Please select a race.",
-  }),
-  background: z.enum(DND_BACKGROUNDS, {
-    required_error: "Please select a background.",
-  }),
-  alignment: z.string().optional(),
-  level: z.coerce.number().int().min(1).max(20),
-  experiencePoints: z.coerce.number().int().optional(),
-  age: z.string().optional(),
-  eyes: z.string().optional(),
-  skin: z.string().optional(),
-  height: z.string().optional(),
-  weight: z.string().optional(),
-  hair: z.string().optional(),
-  backstory: z.string().optional(),
-  strength: z.coerce.number().int().min(1).max(30),
-  dexterity: z.coerce.number().int().min(1).max(30),
-  constitution: z.coerce.number().int().min(1).max(30),
-  intelligence: z.coerce.number().int().min(1).max(30),
-  wisdom: z.coerce.number().int().min(1).max(30),
-  charisma: z.coerce.number().int().min(1).max(30),
-  armorClass: z.coerce.number().int(),
-  speed: z.coerce.number().int(),
-  max: z.coerce.number().int(), // for hitpoints
-  spellcastingAbility: z.enum(['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma', 'none']).default('none'),
-  spellAttackBonus: z.string().optional(),
-  spellSaveDifficulty: z.coerce.number().int().optional(),
-});
-
 export function DndCharacterForm() {
   const { toast } = useToast();
   const router = useRouter();
   const { addCharacter } = useCharacterContext();
+  const { t } = useTranslation();
+
+  // MOVED INSIDE COMPONENT TO ACCESS t()
+  const formSchema = z.object({
+    name: z.string().min(2, t('nameMinLength')),
+    characterClass: z.enum(DND_CLASSES, { required_error: t('selectClassError') }),
+    race: z.enum(DND_RACES, { required_error: t('selectRaceError') }),
+    background: z.enum(DND_BACKGROUNDS, { required_error: t('selectBackgroundError') }),
+    alignment: z.string().optional(),
+    level: z.coerce.number().int().min(1).max(20),
+    experiencePoints: z.coerce.number().int().optional(),
+    age: z.string().optional(),
+    eyes: z.string().optional(),
+    skin: z.string().optional(),
+    height: z.string().optional(),
+    weight: z.string().optional(),
+    hair: z.string().optional(),
+    backstory: z.string().optional(),
+    strength: z.coerce.number().int().min(1).max(30),
+    dexterity: z.coerce.number().int().min(1).max(30),
+    constitution: z.coerce.number().int().min(1).max(30),
+    intelligence: z.coerce.number().int().min(1).max(30),
+    wisdom: z.coerce.number().int().min(1).max(30),
+    charisma: z.coerce.number().int().min(1).max(30),
+    armorClass: z.coerce.number().int(),
+    speed: z.coerce.number().int(),
+    max: z.coerce.number().int(),
+    spellcastingAbility: z.enum(['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma', 'none']).default('none'),
+    spellAttackBonus: z.string().optional(),
+    spellSaveDifficulty: z.coerce.number().int().optional(),
+  });
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -189,7 +175,7 @@ export function DndCharacterForm() {
       charisma: 10,
       armorClass: 10,
       speed: 30,
-      max: 8, // Initial base value following 8 + CON mod (where mod is 0)
+      max: 8, 
       spellcastingAbility: 'none',
       spellAttackBonus: '',
       spellSaveDifficulty: 8,
@@ -205,7 +191,6 @@ export function DndCharacterForm() {
     }
   }, [watchedExp, form]);
 
-  // Apply the 8 + CON mod formula to base health if level is 1
   React.useEffect(() => {
     if (form.getValues('level') === 1) {
       const conMod = Math.floor((watchedCon - 10) / 2);
@@ -254,7 +239,7 @@ export function DndCharacterForm() {
         max: values.max,
       },
       temporaryHitPoints: 0,
-      hitDice: `${values.level}d8`, // simplified initialization
+      hitDice: `${values.level}d8`,
       deathSaves: { successes: 0, failures: 0 },
       exhaustion: 0,
       otherProficienciesAndLanguages: [],
@@ -281,8 +266,8 @@ export function DndCharacterForm() {
 
     if (docRef) {
         toast({
-          title: 'Character Created!',
-          description: 'Your new Dungeons & Dragons character has been saved.',
+          title: t('characterCreatedTitle'),
+          description: t('characterCreatedDesc'),
         });
         router.push(`/${docRef.id}`);
     }
@@ -291,21 +276,21 @@ export function DndCharacterForm() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Dungeons & Dragons Character Details</CardTitle>
+        <CardTitle>{t('dndCharacterDetails')}</CardTitle>
       </CardHeader>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>
           <CardContent className="space-y-6">
             <div className="space-y-4">
-                <h3 className="text-base font-medium">Basic Information</h3>
+                <h3 className="text-base font-medium">{t('basicInformation')}</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormField
                       control={form.control}
                       name="name"
                       render={({ field }) => (
                       <FormItem>
-                          <FormLabel>Character Name</FormLabel>
-                          <FormControl><Input placeholder="Anya Thorne" {...field} /></FormControl>
+                          <FormLabel>{t('characterName')}</FormLabel>
+                          <FormControl><Input placeholder={t('placeholderName')} {...field} /></FormControl>
                           <FormMessage />
                       </FormItem>
                       )}
@@ -315,7 +300,7 @@ export function DndCharacterForm() {
                       name="experiencePoints"
                       render={({ field }) => (
                       <FormItem>
-                          <FormLabel>Experience Points</FormLabel>
+                          <FormLabel>{t('experiencePoints')}</FormLabel>
                           <FormControl><Input type="number" placeholder="0" {...field} /></FormControl>
                           <FormMessage />
                       </FormItem>
@@ -324,7 +309,7 @@ export function DndCharacterForm() {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="flex flex-col gap-2">
-                    <Label className="text-sm font-medium">Level (Auto-calculated)</Label>
+                    <Label className="text-sm font-medium">{t('levelAutoCalculated')}</Label>
                     <div className="h-10 w-full rounded-md border border-input bg-muted px-3 py-2 text-sm font-bold flex items-center">
                       {form.getValues('level')}
                     </div>
@@ -334,11 +319,11 @@ export function DndCharacterForm() {
                       name="characterClass"
                       render={({ field }) => (
                       <FormItem>
-                          <FormLabel>Class</FormLabel>
+                          <FormLabel>{t('class')}</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder="Select a class" />
+                                <SelectValue placeholder={t('selectClass')} />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
@@ -358,11 +343,11 @@ export function DndCharacterForm() {
                       name="race"
                       render={({ field }) => (
                       <FormItem>
-                          <FormLabel>Race</FormLabel>
+                          <FormLabel>{t('race')}</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder="Select a race" />
+                                <SelectValue placeholder={t('selectRace')} />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
@@ -380,11 +365,11 @@ export function DndCharacterForm() {
                       name="background"
                       render={({ field }) => (
                       <FormItem>
-                          <FormLabel>Background</FormLabel>
+                          <FormLabel>{t('background')}</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder="Select a background" />
+                                <SelectValue placeholder={t('selectBackground')} />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent className="max-h-[300px]">
@@ -404,20 +389,20 @@ export function DndCharacterForm() {
                       name="alignment"
                       render={({ field }) => (
                       <FormItem>
-                          <FormLabel>Alignment</FormLabel>
-                          <FormControl><Input placeholder="Neutral Good" {...field} /></FormControl>
+                          <FormLabel>{t('alignment')}</FormLabel>
+                          <FormControl><Input placeholder={t('neutralGood')} {...field} /></FormControl>
                           <FormMessage />
                       </FormItem>
                       )}
                   />
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  <FormField control={form.control} name="age" render={({ field }) => (<FormItem><FormLabel>Age</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>)} />
-                  <FormField control={form.control} name="eyes" render={({ field }) => (<FormItem><FormLabel>Eyes</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>)} />
-                  <FormField control={form.control} name="skin" render={({ field }) => (<FormItem><FormLabel>Skin</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>)} />
-                  <FormField control={form.control} name="height" render={({ field }) => (<FormItem><FormLabel>Height</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>)} />
-                  <FormField control={form.control} name="weight" render={({ field }) => (<FormItem><FormLabel>Weight</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>)} />
-                  <FormField control={form.control} name="hair" render={({ field }) => (<FormItem><FormLabel>Hair/Fur</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>)} />
+                  <FormField control={form.control} name="age" render={({ field }) => (<FormItem><FormLabel>{t('age')}</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>)} />
+                  <FormField control={form.control} name="eyes" render={({ field }) => (<FormItem><FormLabel>{t('eyes')}</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>)} />
+                  <FormField control={form.control} name="skin" render={({ field }) => (<FormItem><FormLabel>{t('skin')}</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>)} />
+                  <FormField control={form.control} name="height" render={({ field }) => (<FormItem><FormLabel>{t('height')}</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>)} />
+                  <FormField control={form.control} name="weight" render={({ field }) => (<FormItem><FormLabel>{t('weight')}</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>)} />
+                  <FormField control={form.control} name="hair" render={({ field }) => (<FormItem><FormLabel>{t('hairFur')}</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>)} />
                 </div>
             </div>
             
@@ -426,31 +411,31 @@ export function DndCharacterForm() {
               name="backstory"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Backstory</FormLabel>
-                  <FormControl><Textarea placeholder="Once a city guard in Waterdeep..." {...field} /></FormControl>
+                  <FormLabel>{t('backstory')}</FormLabel>
+                  <FormControl><Textarea placeholder={t('placeholderBackstory')} {...field} /></FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
             
             <div className="space-y-2">
-                <h3 className="text-base font-medium">Ability Scores</h3>
+                <h3 className="text-base font-medium">{t('abilityScores')}</h3>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                <FormField control={form.control} name="strength" render={({ field }) => (<FormItem><FormLabel>Strength</FormLabel><FormControl><Input type="number" min={1} max={30} {...field} /></FormControl><FormMessage /></FormItem>)} />
-                <FormField control={form.control} name="dexterity" render={({ field }) => (<FormItem><FormLabel>Dexterity</FormLabel><FormControl><Input type="number" min={1} max={30} {...field} /></FormControl><FormMessage /></FormItem>)} />
-                <FormField control={form.control} name="constitution" render={({ field }) => (<FormItem><FormLabel>Constitution</FormLabel><FormControl><Input type="number" min={1} max={30} {...field} /></FormControl><FormMessage /></FormItem>)} />
-                <FormField control={form.control} name="intelligence" render={({ field }) => (<FormItem><FormLabel>Intelligence</FormLabel><FormControl><Input type="number" min={1} max={30} {...field} /></FormControl><FormMessage /></FormItem>)} />
-                <FormField control={form.control} name="wisdom" render={({ field }) => (<FormItem><FormLabel>Wisdom</FormLabel><FormControl><Input type="number" min={1} max={30} {...field} /></FormControl><FormMessage /></FormItem>)} />
-                <FormField control={form.control} name="charisma" render={({ field }) => (<FormItem><FormLabel>Charisma</FormLabel><FormControl><Input type="number" min={1} max={30} {...field} /></FormControl><FormMessage /></FormItem>)} />
+                <FormField control={form.control} name="strength" render={({ field }) => (<FormItem><FormLabel>{t('strength')}</FormLabel><FormControl><Input type="number" min={1} max={30} {...field} /></FormControl><FormMessage /></FormItem>)} />
+                <FormField control={form.control} name="dexterity" render={({ field }) => (<FormItem><FormLabel>{t('dexterity')}</FormLabel><FormControl><Input type="number" min={1} max={30} {...field} /></FormControl><FormMessage /></FormItem>)} />
+                <FormField control={form.control} name="constitution" render={({ field }) => (<FormItem><FormLabel>{t('constitution')}</FormLabel><FormControl><Input type="number" min={1} max={30} {...field} /></FormControl><FormMessage /></FormItem>)} />
+                <FormField control={form.control} name="intelligence" render={({ field }) => (<FormItem><FormLabel>{t('intelligence')}</FormLabel><FormControl><Input type="number" min={1} max={30} {...field} /></FormControl><FormMessage /></FormItem>)} />
+                <FormField control={form.control} name="wisdom" render={({ field }) => (<FormItem><FormLabel>{t('wisdom')}</FormLabel><FormControl><Input type="number" min={1} max={30} {...field} /></FormControl><FormMessage /></FormItem>)} />
+                <FormField control={form.control} name="charisma" render={({ field }) => (<FormItem><FormLabel>{t('charisma')}</FormLabel><FormControl><Input type="number" min={1} max={30} {...field} /></FormControl><FormMessage /></FormItem>)} />
                 </div>
             </div>
 
             <div className="space-y-2">
-                <h3 className="text-base font-medium">Combat & Spell Stats</h3>
+                <h3 className="text-base font-medium">{t('combatAndSpellStats')}</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <FormField control={form.control} name="armorClass" render={({ field }) => (<FormItem><FormLabel>Armor Class</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                  <FormField control={form.control} name="speed" render={({ field }) => (<FormItem><FormLabel>Speed</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                  <FormField control={form.control} name="max" render={({ field }) => (<FormItem><FormLabel>Max Hit Points</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                  <FormField control={form.control} name="armorClass" render={({ field }) => (<FormItem><FormLabel>{t('armorClass')}</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                  <FormField control={form.control} name="speed" render={({ field }) => (<FormItem><FormLabel>{t('speed')}</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                  <FormField control={form.control} name="max" render={({ field }) => (<FormItem><FormLabel>{t('maxHitPoints')}</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>)} />
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
                   <FormField
@@ -458,31 +443,31 @@ export function DndCharacterForm() {
                     name="spellcastingAbility"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Primary Spellcasting Ability</FormLabel>
+                        <FormLabel>{t('primarySpellcastingAbility')}</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Select" />
+                              <SelectValue placeholder={t('select')} />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="none">None</SelectItem>
-                            <SelectItem value="intelligence">Intelligence</SelectItem>
-                            <SelectItem value="wisdom">Wisdom</SelectItem>
-                            <SelectItem value="charisma">Charisma</SelectItem>
+                            <SelectItem value="none">{t('none')}</SelectItem>
+                            <SelectItem value="intelligence">{t('intelligence')}</SelectItem>
+                            <SelectItem value="wisdom">{t('wisdom')}</SelectItem>
+                            <SelectItem value="charisma">{t('charisma')}</SelectItem>
                           </SelectContent>
                         </Select>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                  <FormField control={form.control} name="spellAttackBonus" render={({ field }) => (<FormItem><FormLabel>Spell Attack Bonus</FormLabel><FormControl><Input placeholder="+0" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                  <FormField control={form.control} name="spellSaveDifficulty" render={({ field }) => (<FormItem><FormLabel>Spell Save DC</FormLabel><FormControl><Input type="number" placeholder="8" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                  <FormField control={form.control} name="spellAttackBonus" render={({ field }) => (<FormItem><FormLabel>{t('spellAttackBonus')}</FormLabel><FormControl><Input placeholder="+0" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                  <FormField control={form.control} name="spellSaveDifficulty" render={({ field }) => (<FormItem><FormLabel>{t('spellSaveDC')}</FormLabel><FormControl><Input type="number" placeholder="8" {...field} /></FormControl><FormMessage /></FormItem>)} />
                 </div>
             </div>
           </CardContent>
           <CardFooter>
-            <Button type="submit">Create Character</Button>
+            <Button type="submit">{t('createCharacter')}</Button>
           </CardFooter>
         </form>
       </Form>

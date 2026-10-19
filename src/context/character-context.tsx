@@ -11,6 +11,8 @@ import {
 import { Character } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { useLocalAuth } from './local-auth-context';
+// LANDMARK: ADDED TRANSLATION HOOK
+import { useTranslation } from './language-context';
 
 // ─── LANDMARK: SHEET_BREAKPOINTS ────────────────────────────────────
 // Mobile  : < 768px            -> compact (one section at a time)
@@ -22,7 +24,8 @@ export const DESKTOP_BREAKPOINT = 1300;
 interface CharacterContextType {
   characters: Character[];
   getCharacter: (id: string) => Character | undefined;
-  addCharacter: (character: Omit<Character, 'id' | 'userId'>) => Promise<void>;
+  // LANDMARK: FIXED RETURN TYPE TO CHARACTER | UNDEFINED
+  addCharacter: (character: Omit<Character, 'id' | 'userId'>) => Promise<Character | undefined>;
   updateCharacter: (id: string, data: Partial<Character>) => void;
   deleteCharacter: (id: string) => void;
   isLoaded: boolean;
@@ -50,6 +53,8 @@ const CharacterContext = createContext<CharacterContextType | undefined>(
 export function CharacterProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
   const { user, isUserLoading } = useLocalAuth();
+  // LANDMARK: INITIALIZE TRANSLATION HOOK
+  const { t } = useTranslation();
 
   const [characters, setCharacters] = useState<Character[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -100,28 +105,30 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
 
   const addCharacter = useCallback(
     async (characterData: Omit<Character, 'id' | 'userId'>) => {
-      if (!user) return;
+      if (!user) return undefined;
       try {
         const res = await fetch('/api/characters', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ ...characterData, userId: user.uid }),
         });
-        const newCharacter = await res.json();
+        const newCharacter: Character = await res.json();
         setCharacters(prev => [...prev, newCharacter]);
-        toast({
-          title: 'Character Created',
-          description: `${newCharacter.name} has been added to your list.`,
-        });
+        
+        // REMOVED DUPLICATE ENGLISH TOAST HERE. 
+        // The forms handle the success toast using your translated keys!
+        
+        return newCharacter; // LANDMARK: RETURN THE DOCUMENT SO `docRef` ISN'T VOID
       } catch (error) {
         toast({
           variant: 'destructive',
-          title: 'Error',
-          description: 'Failed to create character.',
+          title: t('error'),
+          description: t('failedToCreateCharacter'),
         });
+        return undefined;
       }
     },
-    [user, toast]
+    [user, toast, t]
   );
 
   // --- UPDATED WITH COMPANION INTERCEPTOR ---
@@ -192,15 +199,16 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
       fetch(`/api/characters/${id}?userId=${user.uid}`, { method: 'DELETE' })
         .then(() => {
           if (characterToDelete) {
+            // LANDMARK: TRANSLATED DELETE TOAST
             toast({
-              title: 'Character Deleted',
-              description: `${characterToDelete.name} has been removed from your list.`,
+              title: t('characterDeleted'),
+              description: `${characterToDelete.name} ${t('characterDeletedDesc')}`,
             });
           }
         })
         .catch(err => console.error('Failed to delete character:', err));
     },
-    [user, characters, toast]
+    [user, characters, toast, t]
   );
 
   // --- UPDATED WITH COMPANION INTERCEPTOR ---
