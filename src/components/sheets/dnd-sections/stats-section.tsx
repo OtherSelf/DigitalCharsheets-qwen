@@ -21,6 +21,7 @@ const StatBox = ({ label, value, editing, onChange, isCompactView, notes, onNote
   isCompactView: boolean; notes?: string;
   onNoteChange: (val: string) => void; hideNotes: boolean;
 }) => {
+  const { t } = useTranslation();
   const modifier = Math.floor((value - 10) / 2);
   const displayModifier = modifier >= 0 ? `+${modifier}` : modifier.toString();
   return (
@@ -33,8 +34,8 @@ const StatBox = ({ label, value, editing, onChange, isCompactView, notes, onNote
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-64">
-            <Label className="text-xs mb-2 block">Notes for {label}</Label>
-            <Textarea defaultValue={notes || ''} onBlur={(e) => onNoteChange(e.target.value)} placeholder="Add notes..." className="min-h-[100px] text-sm" />
+            <Label className="text-xs mb-2 block">{t('notesFor')} {label}</Label>
+            <Textarea defaultValue={notes || ''} onBlur={(e) => onNoteChange(e.target.value)} placeholder={`${t('addNotes')}...`} className="min-h-[100px] text-sm" />
           </PopoverContent>
         </Popover>
       )}
@@ -47,7 +48,7 @@ const StatBox = ({ label, value, editing, onChange, isCompactView, notes, onNote
         )}
       </div>
       <div className="mt-2 w-full">
-        <div className="text-[8px] text-muted-foreground uppercase font-bold mb-0.5">Mod</div>
+        <div className="text-[8px] text-muted-foreground uppercase font-bold mb-0.5">{t('mod')}</div>
         <div className={cn("text-base font-bold py-1 rounded border shadow-inner bg-background text-foreground border-border", isCompactView && "text-sm py-0.5")}>{displayModifier}</div>
       </div>
     </div>
@@ -117,7 +118,7 @@ export function DndStatsSection({
             {['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma'].map(key => (
               <StatBox 
                 key={key} 
-                label={key} 
+                label={t(key)} 
                 value={stats[key as keyof DnDStats]} 
                 editing={isStatsEditing} 
                 onChange={e => setStats({ ...stats, [key]: parseInt(e.target.value) || 1 })} 
@@ -133,7 +134,7 @@ export function DndStatsSection({
                 <div className="flex flex-col">
                   <Label className="text-[10px] text-muted-foreground uppercase font-bold">{t('passivePerception')}</Label>
                   <span className="text-[10px] text-muted-foreground">
-                    10 + Wisdom Mod {perceptionBonus > 0 ? `+ ${perceptionBonus}` : ''}
+                    10 + {t('wisdomMod')} {perceptionBonus > 0 ? `+ ${perceptionBonus}` : ''}
                   </span>
                 </div>
                 <div className="text-2xl font-black text-primary">{passivePerception}</div>

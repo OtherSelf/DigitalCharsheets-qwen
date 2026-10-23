@@ -165,7 +165,7 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
                 const mod = Math.floor((val - 10) / 2);
                 return (
                   <div key={key} className="flex flex-col items-center justify-center bg-background border rounded py-1 min-w-0">
-                    <span className="text-[8px] font-bold text-muted-foreground uppercase truncate w-full text-center px-0.5">{key.slice(0, 3)}</span>
+                    <span className="text-[8px] font-bold text-muted-foreground uppercase truncate w-full text-center px-0.5">{t(key).slice(0, 3).toUpperCase()}</span>
                     {isStatsEditing ? (
                       <Input 
                         type="number" 

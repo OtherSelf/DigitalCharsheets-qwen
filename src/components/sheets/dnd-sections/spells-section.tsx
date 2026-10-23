@@ -241,18 +241,18 @@ export function DndSpellsSection({
                       <Select value={entry.ability} onValueChange={(v) => handleSpellcastingFieldChange(entry.id, 'ability', v)}>
                         <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="none">None</SelectItem>
-                          <SelectItem value="strength">Strength</SelectItem>
-                          <SelectItem value="dexterity">Dexterity</SelectItem>
-                          <SelectItem value="constitution">Constitution</SelectItem>
-                          <SelectItem value="intelligence">Intelligence</SelectItem>
-                          <SelectItem value="wisdom">Wisdom</SelectItem>
-                          <SelectItem value="charisma">Charisma</SelectItem>
+                          <SelectItem value="none">{t('none')}</SelectItem>
+                          <SelectItem value="strength">{t('strength')}</SelectItem>
+                          <SelectItem value="dexterity">{t('dexterity')}</SelectItem>
+                          <SelectItem value="constitution">{t('constitution')}</SelectItem>
+                          <SelectItem value="intelligence">{t('intelligence')}</SelectItem>
+                          <SelectItem value="wisdom">{t('wisdom')}</SelectItem>
+                          <SelectItem value="charisma">{t('charisma')}</SelectItem>
                         </SelectContent>
                       </Select>
                     ) : (
                       <span className="text-xs font-bold">
-                        {entry.ability === 'none' ? 'None' : entry.ability.charAt(0).toUpperCase() + entry.ability.slice(1)}
+                        {entry.ability === 'none' ? t('none') : t(entry.ability)}
                       </span>
                     )}
                   </div>

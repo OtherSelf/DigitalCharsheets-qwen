@@ -21,6 +21,7 @@ import { Label } from '@/components/ui/label';
 import { useCharacterContext } from '@/context/character-context';
 import { type Character, type Quest, type QuestObjective } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
+import { useTranslation } from '@/context/language-context';
 import { PlusCircle, Trash2, ChevronUp, ChevronDown, ScrollText, CheckCircle2, Circle, Swords, Star, User, MapPin, Gift, StickyNote } from 'lucide-react';
 import { format } from 'date-fns';
 import { Badge } from '../ui/badge';
@@ -45,13 +46,13 @@ type FilterType = 'all' | 'active' | 'completed';
 export function QuestJournalSheet({ character, open, onOpenChange }: QuestJournalSheetProps) {
   const { updateCharacter } = useCharacterContext();
   const { toast } = useToast();
+  const { t } = useTranslation();
   
   const [questLog, setQuestLog] = useState<Quest[]>(character.questLog ?? []);
   const [newQuestTitle, setNewQuestTitle] = useState('');
   const [filter, setFilter] = useState<FilterType>('all');
   const [newObjectiveText, setNewObjectiveText] = useState<Record<string, string>>({});
 
-  // --- AUTO-SAVE CORE ---
   const saveLog = (newLog: Quest[]) => {
     setQuestLog(newLog);
     updateCharacter(character.id, { questLog: newLog });
@@ -64,10 +65,9 @@ export function QuestJournalSheet({ character, open, onOpenChange }: QuestJourna
     saveLog(updatedLog);
   };
 
-  // --- QUEST ACTIONS ---
   const handleAddQuest = () => {
     if (!newQuestTitle.trim()) {
-      toast({ variant: 'destructive', title: 'Title Required', description: 'Please enter a title.' });
+      toast({ variant: 'destructive', title: t('toastTitleRequired'), description: t('toastEnterTitle') });
       return;
     }
     const newQuest: Quest = {
@@ -100,7 +100,6 @@ export function QuestJournalSheet({ character, open, onOpenChange }: QuestJourna
     saveLog(newLog);
   };
 
-  // --- OBJECTIVE ACTIONS ---
   const addObjective = (questId: string) => {
     const text = newObjectiveText[questId]?.trim();
     if (!text) return;
@@ -125,7 +124,6 @@ export function QuestJournalSheet({ character, open, onOpenChange }: QuestJourna
     updateQuest(questId, { objectives: objs });
   };
 
-  // --- FILTERING & DERIVED DATA ---
   const filteredQuests = questLog.filter(q => {
     if (filter === 'active') return q.status === 'active';
     if (filter === 'completed') return q.status === 'completed';
@@ -134,9 +132,9 @@ export function QuestJournalSheet({ character, open, onOpenChange }: QuestJourna
 
   const getPriorityBadge = (priority?: string) => {
     switch (priority) {
-      case 'main': return <Badge variant="destructive" className="text-[9px] h-4 px-1.5">Main</Badge>;
-      case 'personal': return <Badge variant="secondary" className="text-[9px] h-4 px-1.5 bg-yellow-500/20 text-yellow-600 border-yellow-500/50">Personal</Badge>;
-      default: return <Badge variant="outline" className="text-[9px] h-4 px-1.5 text-blue-500 border-blue-500/50">Side</Badge>;
+      case 'main': return <Badge variant="destructive" className="text-[9px] h-4 px-1.5">{t('mainQuest')}</Badge>;
+      case 'personal': return <Badge variant="secondary" className="text-[9px] h-4 px-1.5 bg-yellow-500/20 text-yellow-600 border-yellow-500/50">{t('personalQuest')}</Badge>;
+      default: return <Badge variant="outline" className="text-[9px] h-4 px-1.5 text-blue-500 border-blue-500/50">{t('sideQuest')}</Badge>;
     }
   };
 
@@ -151,13 +149,12 @@ export function QuestJournalSheet({ character, open, onOpenChange }: QuestJourna
       <SheetContent className="sm:max-w-2xl w-full flex flex-col p-0">
         <SheetHeader className="px-6 pt-6 pb-4 border-b">
           <SheetTitle className="flex items-center gap-2">
-            <ScrollText className="h-5 w-5 text-primary" /> Quest Journal
+            <ScrollText className="h-5 w-5 text-primary" /> {t('questJournalTitle')}
           </SheetTitle>
           <SheetDescription>
-            Track your adventures. Changes save automatically.
+            {t('questJournalDesc')}
           </SheetDescription>
           
-          {/* Quick Filters */}
           <div className="flex gap-2 mt-4">
             {(['all', 'active', 'completed'] as FilterType[]).map(f => (
               <Button
@@ -167,7 +164,8 @@ export function QuestJournalSheet({ character, open, onOpenChange }: QuestJourna
                 className="flex-1 h-8 text-xs capitalize"
                 onClick={() => setFilter(f)}
               >
-                {f} {f === 'active' && `(${questLog.filter(q => q.status === 'active').length})`}
+                {f === 'all' ? t('filterAll') : f === 'active' ? t('filterActive') : t('filterCompleted')}
+                {f === 'active' && ` (${questLog.filter(q => q.status === 'active').length})`}
               </Button>
             ))}
           </div>
@@ -176,11 +174,10 @@ export function QuestJournalSheet({ character, open, onOpenChange }: QuestJourna
         <ScrollArea className="flex-grow">
           <div className="p-6 space-y-6">
             
-            {/* Add Quest Form */}
             {filter !== 'completed' && (
               <div className="flex gap-2">
                 <Input
-                  placeholder="New quest title..."
+                  placeholder={t('newQuestTitlePlaceholder')}
                   value={newQuestTitle}
                   onChange={(e) => setNewQuestTitle(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleAddQuest()}
@@ -192,7 +189,6 @@ export function QuestJournalSheet({ character, open, onOpenChange }: QuestJourna
               </div>
             )}
 
-            {/* Quest List */}
             {filteredQuests.length > 0 ? (
               <Accordion type="multiple" className="w-full space-y-2">
                 {filteredQuests.map((quest, index) => {
@@ -209,20 +205,19 @@ export function QuestJournalSheet({ character, open, onOpenChange }: QuestJourna
                             {getProgressText(quest)}
                           </div>
                           <Badge variant={isCompleted ? 'secondary' : 'default'} className="text-[9px] h-4 px-1.5 shrink-0">
-                            {isCompleted ? 'Done' : 'Active'}
+                            {isCompleted ? t('questDone') : t('questActive')}
                           </Badge>
                         </div>
                       </AccordionTrigger>
                       <AccordionContent className="px-4 pb-4 pt-2 space-y-4 border-t bg-muted/5">
                         
-                        {/* Status & Priority Controls */}
                         <div className="flex gap-2">
                           <Select value={quest.priority || 'side'} onValueChange={(v: any) => updateQuest(quest.id, { priority: v })}>
                             <SelectTrigger className="h-8 text-xs w-32"><SelectValue /></SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="main">Main Quest</SelectItem>
-                              <SelectItem value="side">Side Quest</SelectItem>
-                              <SelectItem value="personal">Personal</SelectItem>
+                              <SelectItem value="main">{t('selectMainQuest')}</SelectItem>
+                              <SelectItem value="side">{t('selectSideQuest')}</SelectItem>
+                              <SelectItem value="personal">{t('selectPersonalQuest')}</SelectItem>
                             </SelectContent>
                           </Select>
                           <Button 
@@ -231,27 +226,25 @@ export function QuestJournalSheet({ character, open, onOpenChange }: QuestJourna
                             className="h-8 text-xs flex-1"
                             onClick={() => updateQuest(quest.id, { status: isCompleted ? 'active' : 'completed' })}
                           >
-                            Mark as {isCompleted ? 'Active' : 'Completed'}
+                            {isCompleted ? t('markAsActive') : t('markAsCompleted')}
                           </Button>
                         </div>
 
-                        {/* Description */}
                         <div className="space-y-1">
                           <Label className="text-[10px] uppercase font-bold text-muted-foreground flex items-center gap-1">
-                            <ScrollText className="h-3 w-3" /> Description
+                            <ScrollText className="h-3 w-3" /> {t('questDescription')}
                           </Label>
                           <Textarea
                             defaultValue={quest.description}
                             onBlur={(e) => updateQuest(quest.id, { description: e.target.value })}
-                            placeholder="What is this quest about?"
+                            placeholder={t('questDescriptionPlaceholder')}
                             className="text-sm min-h-[60px]"
                           />
                         </div>
 
-                        {/* Objectives / Subtasks */}
                         <div className="space-y-2">
                           <Label className="text-[10px] uppercase font-bold text-muted-foreground flex items-center gap-1">
-                            <CheckCircle2 className="h-3 w-3" /> Objectives
+                            <CheckCircle2 className="h-3 w-3" /> {t('questObjectives')}
                           </Label>
                           <div className="space-y-1">
                             {(quest.objectives || []).map(obj => (
@@ -289,7 +282,7 @@ export function QuestJournalSheet({ character, open, onOpenChange }: QuestJourna
                           </div>
                           <div className="flex gap-2">
                             <Input 
-                              placeholder="Add objective..." 
+                              placeholder={t('addObjectivePlaceholder')} 
                               value={newObjectiveText[quest.id] || ''}
                               onChange={(e) => setNewObjectiveText(prev => ({ ...prev, [quest.id]: e.target.value }))}
                               onKeyDown={(e) => e.key === 'Enter' && addObjective(quest.id)}
@@ -301,60 +294,57 @@ export function QuestJournalSheet({ character, open, onOpenChange }: QuestJourna
                           </div>
                         </div>
 
-                        {/* Details Grid (Rewards, NPCs, Locations) */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                           <div className="space-y-1">
                             <Label className="text-[10px] uppercase font-bold text-muted-foreground flex items-center gap-1">
-                              <Gift className="h-3 w-3" /> Rewards
+                              <Gift className="h-3 w-3" /> {t('questRewards')}
                             </Label>
                             <Input 
                               defaultValue={quest.rewards || ''}
                               onBlur={(e) => updateQuest(quest.id, { rewards: e.target.value })}
-                              placeholder="XP, Gold, Items..."
+                              placeholder={t('questRewardsPlaceholder')}
                               className="h-7 text-xs"
                             />
                           </div>
                           <div className="space-y-1">
                             <Label className="text-[10px] uppercase font-bold text-muted-foreground flex items-center gap-1">
-                              <MapPin className="h-3 w-3" /> Locations
+                              <MapPin className="h-3 w-3" /> {t('questLocations')}
                             </Label>
                             <Input 
                               defaultValue={quest.locations || ''}
                               onBlur={(e) => updateQuest(quest.id, { locations: e.target.value })}
-                              placeholder="Where to go..."
+                              placeholder={t('questLocationsPlaceholder')}
                               className="h-7 text-xs"
                             />
                           </div>
                           <div className="space-y-1 sm:col-span-2">
                             <Label className="text-[10px] uppercase font-bold text-muted-foreground flex items-center gap-1">
-                              <User className="h-3 w-3" /> Related NPCs
+                              <User className="h-3 w-3" /> {t('questNpcs')}
                             </Label>
                             <Input 
                               defaultValue={quest.npcs || ''}
                               onBlur={(e) => updateQuest(quest.id, { npcs: e.target.value })}
-                              placeholder="Who is involved..."
+                              placeholder={t('questNpcsPlaceholder')}
                               className="h-7 text-xs"
                             />
                           </div>
                         </div>
 
-                        {/* Notes */}
                         <div className="space-y-1">
                           <Label className="text-[10px] uppercase font-bold text-muted-foreground flex items-center gap-1">
-                            <StickyNote className="h-3 w-3" /> Notes
+                            <StickyNote className="h-3 w-3" /> {t('questNotes')}
                           </Label>
                           <Textarea
                             defaultValue={quest.notes || ''}
                             onBlur={(e) => updateQuest(quest.id, { notes: e.target.value })}
-                            placeholder="Session notes, clues, GM hints..."
+                            placeholder={t('questNotesPlaceholder')}
                             className="text-xs min-h-[50px]"
                           />
                         </div>
 
-                        {/* Footer: Reorder & Delete */}
                         <div className="flex items-center justify-between pt-2 border-t">
                           <span className="text-[10px] text-muted-foreground">
-                            Updated {format(new Date(quest.updatedAt), "MMM d, yyyy")}
+                            {t('updated')} {format(new Date(quest.updatedAt), "MMM d, yyyy")}
                           </span>
                           <div className="flex gap-1">
                             <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => moveQuest(questLog.findIndex(q => q.id === quest.id), 'up')} disabled={index === 0}>
@@ -375,14 +365,13 @@ export function QuestJournalSheet({ character, open, onOpenChange }: QuestJourna
                 })}
               </Accordion>
             ) : (
-              // Empty State
               <div className="flex flex-col items-center justify-center py-12 text-center text-muted-foreground">
                 <ScrollText className="h-12 w-12 mb-4 opacity-20" />
                 <p className="text-sm font-medium">
-                  {filter === 'all' ? 'Your journal is empty.' : `No ${filter} quests.`}
+                  {filter === 'all' ? t('journalEmpty') : filter === 'active' ? t('noActiveQuests') : t('noCompletedQuests')}
                 </p>
                 <p className="text-xs mt-1">
-                  {filter === 'all' ? 'Add a new quest above to begin your adventure.' : 'Try changing the filter or add a new quest.'}
+                  {filter === 'all' ? t('journalEmptyDesc') : t('noFilteredQuestsDesc')}
                 </p>
               </div>
             )}

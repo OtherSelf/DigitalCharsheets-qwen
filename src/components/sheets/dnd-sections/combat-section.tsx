@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
 import { Input } from '../../ui/input';
 import { Textarea } from '../../ui/textarea';
 import { Button } from '../../ui/button';
-import { Plus, Trash2, Edit, Save, Minus, Info, ChevronDown } from 'lucide-react';
+import { Plus, Trash2, Edit, Save, Minus, Info } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Popover, PopoverContent, PopoverTrigger } from '../../ui/popover';
@@ -15,21 +15,11 @@ import { cn } from '@/lib/utils';
 import { useCharacterContext } from '@/context/character-context';
 import { useTranslation } from '@/context/language-context';
 
-
 const CLASS_HIT_DICE: Record<string, number> = {
   "Artificer": 8, "Barbarian": 12, "Bard": 8, "Cleric": 8, "Druid": 8,
   "Fighter": 10, "Monk": 8, "Paladin": 10, "Ranger": 10, "Rogue": 8,
   "Sorcerer": 6, "Warlock": 8, "Wizard": 6, "NPC": 8,
 };
-
-const EXHAUSTION_EFFECTS = [
-  'Disadvantage on ability checks',
-  'Speed halved',
-  'Disadvantage on attack rolls and saving throws',
-  'Hit point maximum halved',
-  'Speed reduced to 0',
-  'Death',
-];
 
 const EditSaveButton = ({ editing, onEdit, onSave }: { editing: boolean; onEdit: () => void; onSave: () => void }) => (
   editing ? <Button size="icon" variant="ghost" onClick={onSave} className="h-7 w-7"><Save className="h-4 w-4" /></Button> : <Button size="icon" variant="outline" onClick={onEdit} className="h-7 w-7"><Edit className="h-4 w-4" /></Button>
@@ -72,6 +62,16 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
     const { updateCharacter, showEditButtons, hideNotes } = useCharacterContext();
     const { t } = useTranslation();
 
+    // Dynamic exhaustion effects to support translation
+    const exhaustionEffects = [
+      t('exhaustionEffect1'),
+      t('exhaustionEffect2'),
+      t('exhaustionEffect3'),
+      t('exhaustionEffect4'),
+      t('exhaustionEffect5'),
+      t('exhaustionEffect6'),
+    ];
+
     const [combatStats, setCombatStats] = React.useState<CombatStats>(initialCombatStats);
     const [isCombatStatsEditing, setIsCombatStatsEditing] = React.useState(false);
     const [isHpEditing, setIsHpEditing] = React.useState(false);
@@ -84,7 +84,6 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
     const [isResourcesEditing, setIsResourcesEditing] = React.useState(false);
     const [newResourceDesc, setNewResourceDesc] = React.useState('');
     const [newResourceMax, setNewResourceMax] = React.useState(1);
-    const [isHitDiceEditing, setIsHitDiceEditing] = React.useState(false);
     
     const [spellcastingEntries, setSpellcastingEntries] = React.useState<SpellcastingEntry[]>(initialSpellcastingEntries);
     const [isSpellcastingEditing, setIsSpellcastingEditing] = React.useState(false);
@@ -142,7 +141,7 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
     const addAttack = () => {
       const newAttack: DnDAttack = { 
         id: `atk-${Date.now()}`, 
-        name: 'New Attack', 
+        name: t('newAttack'), 
         ability: 'strength', 
         useProficiencyBonus: true, 
         damageDice: '1d6', 
@@ -173,7 +172,6 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
       : progressionData.level;
     
     let primaryDieSize = CLASS_HIT_DICE[progressionData.characterClass] || 8;
-    // Override die size for NPC if manualHitDice is provided
     if (progressionData.characterClass.toLowerCase() === 'npc' && manualHitDice) {
       const match = manualHitDice.match(/1d(\d+)/i);
       if (match) {
@@ -322,72 +320,92 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
       <div className={cn("md:col-span-4 space-y-6", isCompactView && activeCompactSection !== 'combat-section' && "hidden")}>
         <Card id="combat-stats-card">
           <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2">
-            <CardTitle className="text-[10px] font-bold uppercase text-muted-foreground tracking-tight">{t('combatStats')}
-              </CardTitle>{(showEditButtons || isCombatStatsEditing) && <EditSaveButton editing={isCombatStatsEditing} onEdit={() => setIsCombatStatsEditing(true)} onSave={handleSaveCombatStats} />}
-                
-              </CardHeader>
+            <CardTitle className="text-[10px] font-bold uppercase text-muted-foreground tracking-tight">{t('combatStats')}</CardTitle>
+            {(showEditButtons || isCombatStatsEditing) && <EditSaveButton editing={isCombatStatsEditing} onEdit={() => setIsCombatStatsEditing(true)} onSave={handleSaveCombatStats} />}
+          </CardHeader>
           <CardContent className="grid grid-cols-3 gap-4 p-4 pt-0 text-center">
             <div className="p-2 rounded-lg bg-background border">
-              <Label className="text-[10px] text-muted-foreground uppercase font-bold">{t('armorClass')}
-                </Label>{isCombatStatsEditing ? (
-                  <Input type="number" value={combatStats.armorClass === 0 ? '' : combatStats.armorClass} onChange={e => setCombatStats({ ...combatStats, armorClass: parseInt(e.target.value) || 10 })} className="h-9 w-full text-center" />) : (<div className="text-sm font-bold">{combatStats.armorClass}</div>)}
-                  </div>
+              <Label className="text-[10px] text-muted-foreground uppercase font-bold">{t('armorClass')}</Label>
+              {isCombatStatsEditing ? (
+                <Input type="number" value={combatStats.armorClass === 0 ? '' : combatStats.armorClass} onChange={e => setCombatStats({ ...combatStats, armorClass: parseInt(e.target.value) || 10 })} className="h-9 w-full text-center" />
+              ) : (
+                <div className="text-sm font-bold">{combatStats.armorClass}</div>
+              )}
+            </div>
             <div className="p-2 rounded-lg bg-background border">
-              <Label className="text-[10px] text-muted-foreground uppercase font-bold">{t('initiative')}
-                </Label><div className="text-sm font-bold">{dexMod >= 0 ? `+${dexMod}` : dexMod}</div></div>
+              <Label className="text-[10px] text-muted-foreground uppercase font-bold">{t('initiative')}</Label>
+              <div className="text-sm font-bold">{dexMod >= 0 ? `+${dexMod}` : dexMod}</div>
+            </div>
             <div className="p-2 rounded-lg bg-background border">
-              <Label className="text-[10px] text-muted-foreground uppercase font-bold">{t('speed')}
-                </Label>{isCombatStatsEditing ? 
-                <Input type="number" value={combatStats.speed === 0 ? '' : combatStats.speed} onChange={e => setCombatStats({ ...combatStats, speed: parseInt(e.target.value) || 0 })} className="h-9 w-full text-center" /> : <div className="text-sm font-bold">{combatStats.speed}ft</div>}</div>
+              <Label className="text-[10px] text-muted-foreground uppercase font-bold">{t('speed')}</Label>
+              {isCombatStatsEditing ? (
+                <Input type="number" value={combatStats.speed === 0 ? '' : combatStats.speed} onChange={e => setCombatStats({ ...combatStats, speed: parseInt(e.target.value) || 0 })} className="h-9 w-full text-center" />
+              ) : (
+                <div className="text-sm font-bold">{combatStats.speed}ft</div>
+              )}
+            </div>
           </CardContent>
         </Card>
 
         <Card id="hit-points-card">
           <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2">
-              <div className="flex items-center gap-2">
-                <CardTitle className="text-[10px] font-bold uppercase text-muted-foreground tracking-tight">Health</CardTitle>
-                {!hideNotes && (
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button variant={combatStats.hitPointsNotes ? 'secondary' : 'ghost'} size="icon" className="h-5 w-5 shrink-0" title="Health Notes">
-                        <Info className="h-3 w-3" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-64">
-                      <Label className="text-xs mb-2 block">Health Notes</Label>
-                      <Textarea
-                        defaultValue={combatStats.hitPointsNotes || ''}
-                        onBlur={(e) => {
-                          const next = { ...combatStats, hitPointsNotes: e.target.value };
-                          setCombatStats(next);
-                          updateCharacter(characterId, { hitPointsNotes: e.target.value });
-                        }}
-                        placeholder="Add notes..."
-                        className="mt-2 min-h-[100px] text-sm"
-                      />
-                    </PopoverContent>
-                  </Popover>
-                )}
-              </div>
-              {(showEditButtons || isHpEditing) && <EditSaveButton editing={isHpEditing} onEdit={() => setIsHpEditing(true)} onSave={handleSaveHp} />}
-            </CardHeader>
+            <div className="flex items-center gap-2">
+              <CardTitle className="text-[10px] font-bold uppercase text-muted-foreground tracking-tight">{t('hitPoints')}</CardTitle>
+              {!hideNotes && (
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant={combatStats.hitPointsNotes ? 'secondary' : 'ghost'} size="icon" className="h-5 w-5 shrink-0" title={t('healthNotes')}>
+                      <Info className="h-3 w-3" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-64">
+                    <Label className="text-xs mb-2 block">{t('healthNotes')}</Label>
+                    <Textarea
+                      defaultValue={combatStats.hitPointsNotes || ''}
+                      onBlur={(e) => {
+                        const next = { ...combatStats, hitPointsNotes: e.target.value };
+                        setCombatStats(next);
+                        updateCharacter(characterId, { hitPointsNotes: e.target.value });
+                      }}
+                      placeholder={t('notes')}
+                      className="mt-2 min-h-[100px] text-sm"
+                    />
+                  </PopoverContent>
+                </Popover>
+              )}
+            </div>
+            {(showEditButtons || isHpEditing) && <EditSaveButton editing={isHpEditing} onEdit={() => setIsHpEditing(true)} onSave={handleSaveHp} />}
+          </CardHeader>
           <CardContent className="p-4 pt-0 space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-4">
                 <div className="p-2 border rounded text-center">
-                  <div className="text-[9px] italic text-muted-foreground mb-1">Base value: {baseMaxHp}</div>
-                  <Label className="text-[10px] uppercase font-bold">Max</Label>
-                    {isHpEditing ? (
-                      <Input type="number" value={combatStats.hitPoints.max === 0 ? '' : combatStats.hitPoints.max} onChange={e => setCombatStats({ ...combatStats, hitPoints: { ...combatStats.hitPoints, max: parseInt(e.target.value) || 0 } })} className="h-8 text-center" />
-                    ) : (
-                      <div className="text-base font-bold">{combatStats.hitPoints.max}</div>
-                    )}
-                  </div>
-                <div className="p-2 border rounded text-center"><Label className="text-[10px] uppercase font-bold">Current</Label>{isHpEditing ? (<Input type="number" value={combatStats.hitPoints.current === 0 ? '' : combatStats.hitPoints.current} onChange={e => setCombatStats({ ...combatStats, hitPoints: { ...combatStats.hitPoints, current: parseInt(e.target.value) || 0 } })} className="h-8 text-center" />
-                  ) : (<div className="text-base font-bold text-primary">{combatStats.hitPoints.current}</div>)}</div>
+                  <div className="text-[9px] italic text-muted-foreground mb-1">{t('baseValue')}: {baseMaxHp}</div>
+                  <Label className="text-[10px] uppercase font-bold">{t('maximum')}</Label>
+                  {isHpEditing ? (
+                    <Input type="number" value={combatStats.hitPoints.max === 0 ? '' : combatStats.hitPoints.max} onChange={e => setCombatStats({ ...combatStats, hitPoints: { ...combatStats.hitPoints, max: parseInt(e.target.value) || 0 } })} className="h-8 text-center" />
+                  ) : (
+                    <div className="text-base font-bold">{combatStats.hitPoints.max}</div>
+                  )}
+                </div>
+                <div className="p-2 border rounded text-center">
+                  <Label className="text-[10px] uppercase font-bold">{t('current')}</Label>
+                  {isHpEditing ? (
+                    <Input type="number" value={combatStats.hitPoints.current === 0 ? '' : combatStats.hitPoints.current} onChange={e => setCombatStats({ ...combatStats, hitPoints: { ...combatStats.hitPoints, current: parseInt(e.target.value) || 0 } })} className="h-8 text-center" />
+                  ) : (
+                    <div className="text-base font-bold text-primary">{combatStats.hitPoints.current}</div>
+                  )}
+                </div>
               </div>
               <div className="space-y-4">
-                <div className="p-2 border rounded text-center"><Label className="text-[10px] uppercase font-bold">Temp</Label>{isHpEditing ? (<Input type="number" value={combatStats.temporaryHitPoints === 0 ? '' : combatStats.temporaryHitPoints} onChange={e => setCombatStats({ ...combatStats, temporaryHitPoints: parseInt(e.target.value) || 0 })} className="h-8 text-center" />) : (<div className="text-base font-bold">{combatStats.temporaryHitPoints || 0}</div>)}</div>
+                <div className="p-2 border rounded text-center">
+                  <Label className="text-[10px] uppercase font-bold">{t('temp')}</Label>
+                  {isHpEditing ? (
+                    <Input type="number" value={combatStats.temporaryHitPoints === 0 ? '' : combatStats.temporaryHitPoints} onChange={e => setCombatStats({ ...combatStats, temporaryHitPoints: parseInt(e.target.value) || 0 })} className="h-8 text-center" />
+                  ) : (
+                    <div className="text-base font-bold">{combatStats.temporaryHitPoints || 0}</div>
+                  )}
+                </div>
                 <div className="flex flex-col gap-2">
                   <Input 
                     type="text" 
@@ -401,16 +419,16 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
                     }} 
                     className="h-8 text-center" 
                   />
-                <div className="grid grid-cols-2 gap-2">
-                  <Button size="sm" variant="outline" onClick={() => handleHpMath('sub')}>Sub</Button>
-                  <Button size="sm" variant="outline" onClick={() => handleHpMath('rec')}>Heal</Button>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button size="sm" variant="outline" onClick={() => handleHpMath('sub')}>{t('damage')}</Button>
+                    <Button size="sm" variant="outline" onClick={() => handleHpMath('rec')}>{t('heal')}</Button>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
   
-          <div className="pt-4 border-t">
-            <Label className="text-[10px] uppercase font-bold mb-2 block">HP Tracking</Label>
+            <div className="pt-4 border-t">
+              <Label className="text-[10px] uppercase font-bold mb-2 block">{t('hpTracking')}</Label>
               <Textarea
                 value={combatStats.hpTracking || ''}
                 onChange={e => {
@@ -418,7 +436,7 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
                   setCombatStats(next);
                   updateCharacter(characterId, { hpTracking: e.target.value });
                 }}
-                placeholder="Track conditions, temporary effects, etc..."
+                placeholder={t('trackConditions')}
                 className="min-h-[80px] text-xs resize-none"
               />
             </div>
@@ -428,7 +446,7 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
         <Card id="death-saves-exhaustion-card">
           <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2">
             <CardTitle className="text-[10px] font-bold uppercase text-muted-foreground tracking-tight">{t('deathSavesAndExhaustion')}</CardTitle>
-            <Button variant="ghost" size="sm" className="h-6 text-[10px]" onClick={resetDeathSaves}>Reset</Button>
+            <Button variant="ghost" size="sm" className="h-6 text-[10px]" onClick={resetDeathSaves}>{t('reset')}</Button>
           </CardHeader>
           <CardContent className="p-4 pt-0 space-y-4">
             <div className="grid grid-cols-2 gap-4">
@@ -460,10 +478,10 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
               </div>
               
               {exhaustion === 0 ? (
-                <p className="text-[10px] text-center text-green-500 font-medium">No exhaustion effects</p>
+                <p className="text-[10px] text-center text-green-500 font-medium">{t('noExhaustionEffects')}</p>
               ) : (
                 <ul className="space-y-1">
-                  {EXHAUSTION_EFFECTS.slice(0, exhaustion).map((effect, index) => (
+                  {exhaustionEffects.slice(0, exhaustion).map((effect, index) => (
                     <li 
                       key={index} 
                       className={cn(
@@ -501,7 +519,6 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
-                    {/* NPC Hit Die Type Selector (Only shows for NPC) */}
                     {isNpc && manualHitDice !== undefined && onManualHitDiceChange && (
                       <Select 
                         value={`1d${entry.dieSize}`} 
@@ -518,7 +535,6 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
                       </Select>
                     )}
                     
-                    {/* Standard Spending UI (+/- Buttons) */}
                     <Button size="icon" variant="outline" className="h-6 w-6" onClick={() => handleHitDiceUse(entry.className, 1)} disabled={remaining <= 0}><Minus className="h-3 w-3" /></Button>
                     <span className="text-sm font-black w-12 text-center">{remaining} / {entry.level}</span>
                     <Button size="icon" variant="outline" className="h-6 w-6" onClick={() => handleHitDiceUse(entry.className, -1)} disabled={used <= 0}><Plus className="h-3 w-3" /></Button>
@@ -546,14 +562,14 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
                               variant={entry.notes ? 'secondary' : 'ghost'}
                               size="icon"
                               className="h-5 w-5 shrink-0"
-                              title="Notes"
+                              title={t('notes')}
                             >
                               <Info className="h-3 w-3" />
                             </Button>
                           </PopoverTrigger>
                           <PopoverContent className="w-64">
                             <Label className="text-xs mb-2 block">
-                              Notes for {entry.ability === 'none' ? 'Spellcasting' : entry.ability.charAt(0).toUpperCase() + entry.ability.slice(1)}
+                              {t('notes')}: {entry.ability === 'none' ? t('spellcasting') : t(entry.ability)}
                             </Label>
                             <Textarea
                               defaultValue={entry.notes || ''}
@@ -564,35 +580,35 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
                                 setSpellcastingEntries(updated);
                                 updateCharacter(characterId, { spellcastingEntries: updated });
                               }}
-                              placeholder="Add notes..."
+                              placeholder={t('notes')}
                               className="mt-2 min-h-[100px] text-sm"
                             />
                           </PopoverContent>
                         </Popover>
                       )}
-                      <Label className="text-[9px] text-muted-foreground uppercase">Ability</Label>
+                      <Label className="text-[9px] text-muted-foreground uppercase">{t('ability')}</Label>
                     </div>
                     {isSpellcastingEditing ? (
                       <Select value={entry.ability} onValueChange={(v) => handleSpellcastingFieldChange(entry.id, 'ability', v)}>
                         <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="none">None</SelectItem>
-                          <SelectItem value="strength">Strength</SelectItem>
-                          <SelectItem value="dexterity">Dexterity</SelectItem>
-                          <SelectItem value="constitution">Constitution</SelectItem>
-                          <SelectItem value="intelligence">Intelligence</SelectItem>
-                          <SelectItem value="wisdom">Wisdom</SelectItem>
-                          <SelectItem value="charisma">Charisma</SelectItem>
-                        </SelectContent>
+                        <SelectItem value="none">{t('none')}</SelectItem>
+                        <SelectItem value="strength">{t('strength')}</SelectItem>
+                        <SelectItem value="dexterity">{t('dexterity')}</SelectItem>
+                        <SelectItem value="constitution">{t('constitution')}</SelectItem>
+                        <SelectItem value="intelligence">{t('intelligence')}</SelectItem>
+                        <SelectItem value="wisdom">{t('wisdom')}</SelectItem>
+                        <SelectItem value="charisma">{t('charisma')}</SelectItem>
+                      </SelectContent>
                       </Select>
                     ) : (
                       <span className="text-xs font-bold">
-                        {entry.ability === 'none' ? 'None' : entry.ability.charAt(0).toUpperCase() + entry.ability.slice(1)}
+                        {entry.ability === 'none' ? t('none') : t(entry.ability)}
                       </span>
                     )}
                   </div>
                   <div className="col-span-3 w-full">
-                    <Label className="text-[9px] text-muted-foreground uppercase mb-1 block">Atk Bonus</Label>
+                    <Label className="text-[9px] text-muted-foreground uppercase mb-1 block">{t('atkBonus')}</Label>
                     {isSpellcastingEditing ? (
                       <Input value={entry.attackBonus} onChange={e => handleSpellcastingFieldChange(entry.id, 'attackBonus', e.target.value)} className="h-8 text-xs text-center" />
                     ) : (
@@ -600,7 +616,7 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
                     )}
                   </div>
                   <div className="col-span-2 w-full">
-                    <Label className="text-[9px] text-muted-foreground uppercase mb-1 block">Save DC</Label>
+                    <Label className="text-[9px] text-muted-foreground uppercase mb-1 block">{t('spellSaveDC')}</Label>
                     {isSpellcastingEditing ? (
                       <Input type="number" value={entry.saveDC === 0 ? '' : entry.saveDC} onChange={e => handleSpellcastingFieldChange(entry.id, 'saveDC', parseInt(e.target.value) || 0)} className="h-8 text-xs text-center" />                    ) : (
                       <span className="text-xs font-bold">{entry.saveDC || '-'}</span>
@@ -617,16 +633,16 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
               ))}
               {isSpellcastingEditing && (
                 <Button variant="outline" size="sm" className="w-full h-8 text-[10px] mt-2" onClick={addSpellcastingEntry}>
-                  <Plus className="mr-1 h-3 w-3" /> Add Spellcasting Entry
+                  <Plus className="mr-1 h-3 w-3" /> {t('addSpellcastingEntry')}
                 </Button>
               )}
 
             <div className="border-t pt-4">
-              <Label className="text-[10px] font-bold uppercase text-muted-foreground mb-2 block">Attacks</Label>
+              <Label className="text-[10px] font-bold uppercase text-muted-foreground mb-2 block">{t('attacksAndSpellcasting')}</Label>
               {attacks.map(atk => (
             <div key={atk.id} className="grid grid-cols-12 gap-2 items-center p-2 bg-muted/10 rounded border border-muted/20 mb-2">
               <div className="col-span-2 w-full">
-                <Label className="text-[9px] text-muted-foreground uppercase mb-1 block">Name</Label>
+                <Label className="text-[9px] text-muted-foreground uppercase mb-1 block">{t('name')}</Label>
                 {isAttacksEditing ? (
                   <Input value={atk.name} onChange={e => handleAttackFieldChange(atk.id, 'name', e.target.value)} className="h-8 text-xs" />
                 ) : (
@@ -634,28 +650,28 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
                 )}
               </div>
               <div className="col-span-2 w-full">
-                <Label className="text-[9px] text-muted-foreground uppercase mb-1 block">Ability</Label>
+                <Label className="text-[9px] text-muted-foreground uppercase mb-1 block">{t('ability')}</Label>
                 {isAttacksEditing ? (
                   <Select value={atk.ability || 'strength'} onValueChange={(v) => handleAttackFieldChange(atk.id, 'ability', v)}>
                     <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">None</SelectItem>
-                      <SelectItem value="strength">Strength</SelectItem>
-                      <SelectItem value="dexterity">Dexterity</SelectItem>
-                      <SelectItem value="constitution">Constitution</SelectItem>
-                      <SelectItem value="intelligence">Intelligence</SelectItem>
-                      <SelectItem value="wisdom">Wisdom</SelectItem>
-                      <SelectItem value="charisma">Charisma</SelectItem>
-                    </SelectContent>
+                      <SelectContent>
+                        <SelectItem value="none">{t('none')}</SelectItem>
+                        <SelectItem value="strength">{t('strength')}</SelectItem>
+                        <SelectItem value="dexterity">{t('dexterity')}</SelectItem>
+                        <SelectItem value="constitution">{t('constitution')}</SelectItem>
+                        <SelectItem value="intelligence">{t('intelligence')}</SelectItem>
+                        <SelectItem value="wisdom">{t('wisdom')}</SelectItem>
+                        <SelectItem value="charisma">{t('charisma')}</SelectItem>
+                      </SelectContent>
                   </Select>
                 ) : (
                   <span className="text-xs font-bold">
-                    {!atk.ability || atk.ability === 'none' ? 'None' : atk.ability.charAt(0).toUpperCase() + atk.ability.slice(1)}
+                    {!atk.ability || atk.ability === 'none' ? t('none') : t(atk.ability)}
                   </span>
                 )}
               </div>
               <div className="col-span-1 w-full">
-                <Label className="text-[9px] text-muted-foreground uppercase mb-1 block">Prof</Label>
+                <Label className="text-[9px] text-muted-foreground uppercase mb-1 block">{t('proficiency')}</Label>
                 <div className="flex justify-center">
                   {isAttacksEditing ? (
                     <Checkbox 
@@ -669,11 +685,11 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
                 </div>
               </div>
               <div className="col-span-2 w-full">
-                <Label className="text-[9px] text-muted-foreground uppercase mb-1 block">ATK Bonus</Label>
+                <Label className="text-[9px] text-muted-foreground uppercase mb-1 block">{t('atkBonus')}</Label>
                 <span className="text-xs font-bold">{calculateAttackBonus(atk.ability || 'none', atk.useProficiencyBonus)}</span>
               </div>
               <div className="col-span-2 w-full">
-                <Label className="text-[9px] text-muted-foreground uppercase mb-1 block">Dice</Label>
+                <Label className="text-[9px] text-muted-foreground uppercase mb-1 block">{t('dice')}</Label>
                 {isAttacksEditing ? (
                   <Select value={atk.damageDice} onValueChange={(v) => handleAttackFieldChange(atk.id, 'damageDice', v)}>
                     <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
@@ -688,7 +704,7 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
                 )}
               </div>
               <div className="col-span-2 w-full">
-                <Label className="text-[9px] text-muted-foreground uppercase mb-1 block">Mod</Label>
+                <Label className="text-[9px] text-muted-foreground uppercase mb-1 block">{t('modifier')}</Label>
                 {isAttacksEditing ? (
                   <Input value={atk.damageModifier} onChange={e => handleAttackFieldChange(atk.id, 'damageModifier', e.target.value)} className="h-8 text-xs text-center" placeholder="+0" />
                 ) : (
@@ -706,7 +722,7 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
           ))}
               {isAttacksEditing && (
                 <Button variant="outline" size="sm" className="w-full h-8 text-[10px] mt-2" onClick={addAttack}>
-                  <Plus className="mr-1 h-3 w-3" /> Add Attack
+                  <Plus className="mr-1 h-3 w-3" /> {t('addAttack')}
                 </Button>
               )}
             </div>
@@ -720,22 +736,22 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
           </CardHeader>
           <CardContent className="p-4 pt-0 space-y-2">
             {combatResources.length === 0 && !isResourcesEditing && (
-              <p className="text-xs text-muted-foreground italic text-center py-2 border border-dashed rounded-lg">{t('No Resources')}</p>
+              <p className="text-xs text-muted-foreground italic text-center py-2 border border-dashed rounded-lg">{t('noResources')}</p>
             )}
             {combatResources.map(res => (
               <div key={res.id} className="flex items-center justify-between p-2 bg-muted/10 rounded border border-muted/20">
                 {isResourcesEditing ? (
                   <div className="flex flex-col gap-1 flex-1 mr-2">
-                    <Input value={res.description} onChange={e => handleResourceFieldChange(res.id, 'description', e.target.value)} className="h-7 text-xs" placeholder="Resource name..." />
+                    <Input value={res.description} onChange={e => handleResourceFieldChange(res.id, 'description', e.target.value)} className="h-7 text-xs" placeholder={t('resourceName')} />
                     <div className="flex gap-1 items-center">
-                      <span className="text-[9px] uppercase font-bold text-muted-foreground shrink-0">{t('max')}</span>
+                      <span className="text-[9px] uppercase font-bold text-muted-foreground shrink-0">{t('maximum')}</span>
                       <Input type="number" value={res.max === 0 ? '' : res.max} onChange={e => handleResourceFieldChange(res.id, 'max', e.target.value)} className="h-7 text-[10px] w-16 text-center" min={0} />
                       {!hideNotes && (
                         <Popover>
                           <PopoverTrigger asChild><Button variant={res.notes ? 'secondary' : 'ghost'} size="icon" className="h-6 w-6 shrink-0"><Info className="h-3 w-3" /></Button></PopoverTrigger>
                           <PopoverContent className="w-64">
-                            <Label className="text-xs mb-2 block">Notes for {res.description}</Label>
-                            <Textarea defaultValue={res.notes || ''} onChange={e => handleResourceFieldChange(res.id, 'notes', e.target.value)} placeholder="Add notes..." className="mt-2 min-h-[100px] text-sm" />
+                            <Label className="text-xs mb-2 block">{t('notes')}: {res.description}</Label>
+                            <Textarea defaultValue={res.notes || ''} onChange={e => handleResourceFieldChange(res.id, 'notes', e.target.value)} placeholder={t('notes')} className="mt-2 min-h-[100px] text-sm" />
                           </PopoverContent>
                         </Popover>
                       )}
@@ -747,8 +763,8 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
                       <Popover>
                         <PopoverTrigger asChild><Button variant={res.notes ? 'secondary' : 'ghost'} size="icon" className="h-5 w-5 shrink-0"><Info className="h-3 w-3" /></Button></PopoverTrigger>
                         <PopoverContent className="w-64">
-                          <Label className="text-xs mb-2 block">Notes for {res.description}</Label>
-                          <Textarea defaultValue={res.notes || ''} onBlur={e => { const next = combatResources.map(r => r.id === res.id ? { ...r, notes: e.target.value } : r); setCombatResources(next); updateCharacter(characterId, { combatResources: next }); }} placeholder="Add notes..." className="mt-2 min-h-[100px] text-sm" />
+                          <Label className="text-xs mb-2 block">{t('notes')}: {res.description}</Label>
+                          <Textarea defaultValue={res.notes || ''} onBlur={e => { const next = combatResources.map(r => r.id === res.id ? { ...r, notes: e.target.value } : r); setCombatResources(next); updateCharacter(characterId, { combatResources: next }); }} placeholder={t('notes')} className="mt-2 min-h-[100px] text-sm" />
                         </PopoverContent>
                       </Popover>
                     )}
@@ -765,7 +781,7 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
             ))}
             {isResourcesEditing && (
               <div className="flex gap-2 pt-2 border-t items-center">
-                <Input placeholder={t('newResourcePlaceholder')} value={newResourceDesc} onChange={e => setNewResourceDesc(e.target.value)} className="h-8 text-xs flex-1" />
+                <Input placeholder={t('resourceName')} value={newResourceDesc} onChange={e => setNewResourceDesc(e.target.value)} className="h-8 text-xs flex-1" />
                 <Input type="number" value={newResourceMax === 0 ? '' : newResourceMax} onChange={e => setNewResourceMax(parseInt(e.target.value) || 1)} className="h-8 text-xs w-16 text-center" min={1} />
                 <Button size="sm" className="h-8" onClick={addResource}><Plus className="h-4 w-4" /></Button>
               </div>
