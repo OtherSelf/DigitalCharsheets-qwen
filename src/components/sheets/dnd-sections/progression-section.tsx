@@ -25,10 +25,24 @@ import {
 import { useCharacterContext } from '@/context/character-context';
 import { useTranslation } from '@/context/language-context';
 
-const DND_CLASSES = [
-  "Artificer", "Barbarian", "Bard", "Cleric", "Druid", "Fighter", "Monk",
-  "Paladin", "Ranger", "Rogue", "Sorcerer", "Warlock", "Wizard"
-] as const;
+// Map internal English class names to translation keys
+const CLASS_TRANSLATION_KEYS: Record<string, string> = {
+  "Artificer": "classArtificer",
+  "Barbarian": "classBarbarian",
+  "Bard": "classBard",
+  "Cleric": "classCleric",
+  "Druid": "classDruid",
+  "Fighter": "classFighter",
+  "Monk": "classMonk",
+  "Paladin": "classPaladin",
+  "Ranger": "classRanger",
+  "Rogue": "classRogue",
+  "Sorcerer": "classSorcerer",
+  "Warlock": "classWarlock",
+  "Wizard": "classWizard",
+};
+
+const DND_CLASSES = Object.keys(CLASS_TRANSLATION_KEYS);
 
 const calculateLevelFromExp = (exp: number): number => {
   if (exp >= 355000) return 20; if (exp >= 305000) return 19; if (exp >= 265000) return 18;
@@ -66,9 +80,7 @@ export function DndProgressionSection({ progressionData, setProgressionData, exp
   const { showEditButtons } = useCharacterContext();
   const { t } = useTranslation();
   
-  // NEW: Track open/closed state
   const [isOpen, setIsOpen] = React.useState(true);
-
   const [isMulticlassOpen, setIsMulticlassOpen] = React.useState(false);
 
   React.useEffect(() => {
@@ -95,7 +107,6 @@ export function DndProgressionSection({ progressionData, setProgressionData, exp
     : progressionData.level;
 
   return (
-    // NEW: Added onValueChange and dynamic md:self-start class
     <Accordion 
       type="single" 
       collapsible 
@@ -119,16 +130,26 @@ export function DndProgressionSection({ progressionData, setProgressionData, exp
                   {isProgressionEditing ? (
                     <Select value={progressionData.characterClass} onValueChange={v => setProgressionData({ ...progressionData, characterClass: v })}>
                       <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
-                      <SelectContent>{DND_CLASSES.map(c => (<SelectItem key={c} value={c} disabled={progressionData.multiclasses.some(m => m.class === c)}>{c}</SelectItem>))}</SelectContent>
+                      <SelectContent>
+                        {DND_CLASSES.map(c => (
+                          <SelectItem key={c} value={c} disabled={progressionData.multiclasses.some(m => m.class === c)}>
+                            {t(CLASS_TRANSLATION_KEYS[c])}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
                     </Select>
-                  ) : (<span className="text-base font-bold truncate">{progressionData.characterClass}</span>)}
+                  ) : (
+                    <span className="text-base font-bold truncate">
+                      {t(CLASS_TRANSLATION_KEYS[progressionData.characterClass] || progressionData.characterClass)}
+                    </span>
+                  )}
                 </div>
                 <div className="flex flex-col gap-1">
-                  <Label className="text-[10px] text-muted-foreground uppercase font-bold">Class Lvl</Label>
+                  <Label className="text-[10px] text-muted-foreground uppercase font-bold">{t('classLevel')}</Label>
                   <span className="text-base font-bold truncate">{mainClassLevel}</span>
                 </div>
                 <div className="flex flex-col gap-1">
-                  <Label className="text-[10px] text-muted-foreground uppercase font-bold">Total Lvl</Label>
+                  <Label className="text-[10px] text-muted-foreground uppercase font-bold">{t('totalLevel')}</Label>
                   <span className="text-base font-bold truncate">{progressionData.level}</span>
                 </div>
               </div>
@@ -145,10 +166,10 @@ export function DndProgressionSection({ progressionData, setProgressionData, exp
                       <ChevronRight className="h-4 w-4 text-muted-foreground" />
                     )}
                     <Label className="text-[10px] font-bold uppercase cursor-pointer select-none">
-                      Multiclass
+                      {t('multiclass')}
                       {progressionData.isMulticlass && progressionData.multiclasses.length > 0 && (
                         <span className="ml-1.5 text-[9px] normal-case text-muted-foreground">
-                          ({progressionData.multiclasses.filter(m => !m.isDisabled).length} active)
+                          ({progressionData.multiclasses.filter(m => !m.isDisabled).length} {t('active')})
                         </span>
                       )}
                     </Label>
@@ -175,7 +196,13 @@ export function DndProgressionSection({ progressionData, setProgressionData, exp
                             <>
                               <Select value={mc.class} onValueChange={v => { const n = [...progressionData.multiclasses]; n[idx].class = v; setProgressionData({ ...progressionData, multiclasses: n }); }}>
                                 <SelectTrigger className="h-8 text-xs flex-1"><SelectValue /></SelectTrigger>
-                                <SelectContent>{DND_CLASSES.map(c => (<SelectItem key={c} value={c} disabled={progressionData.characterClass === c || progressionData.multiclasses.some((m, i) => m.class === c && i !== idx)}>{c}</SelectItem>))}</SelectContent>
+                                <SelectContent>
+                                  {DND_CLASSES.map(c => (
+                                    <SelectItem key={c} value={c} disabled={progressionData.characterClass === c || progressionData.multiclasses.some((m, i) => m.class === c && i !== idx)}>
+                                      {t(CLASS_TRANSLATION_KEYS[c])}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
                               </Select>
                               <Input 
                                 type="number" 
@@ -196,8 +223,14 @@ export function DndProgressionSection({ progressionData, setProgressionData, exp
                             </>
                           ) : (
                             <div className={`flex flex-1 items-center justify-between w-full ${mc.isDisabled ? "opacity-60" : ""}`}>
-                              <span className="text-xs font-semibold">{mc.class} (Lvl {mc.level})</span>
-                              {mc.isDisabled && <span className="text-[10px] px-1.5 py-0.5 rounded bg-destructive/10 text-destructive font-semibold border border-destructive/20">Disabled</span>}
+                              <span className="text-xs font-semibold">
+                                {t(CLASS_TRANSLATION_KEYS[mc.class] || mc.class)} ({t('lvl')} {mc.level})
+                              </span>
+                              {mc.isDisabled && (
+                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-destructive/10 text-destructive font-semibold border border-destructive/20">
+                                  {t('disabled')}
+                                </span>
+                              )}
                             </div>
                           )}
                         </div>
@@ -218,7 +251,7 @@ export function DndProgressionSection({ progressionData, setProgressionData, exp
                           }
                         }}
                       >
-                        <Plus className="h-3 w-3 mr-1" /> Add Class
+                        <Plus className="h-3 w-3 mr-1" /> {t('addClass')}
                       </Button>
                     )}
                   </div>

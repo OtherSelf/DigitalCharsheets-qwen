@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { useCharacterContext } from '@/context/character-context';
+import { useTranslation } from '@/context/language-context';
 import { type Character } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 
@@ -24,6 +25,7 @@ interface NotesDialogProps {
 export function NotesDialog({ character, open, onOpenChange }: NotesDialogProps) {
   const [notes, setNotes] = useState(character.notes ?? '');
   const { updateCharacter } = useCharacterContext();
+  const { t } = useTranslation();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -35,8 +37,8 @@ export function NotesDialog({ character, open, onOpenChange }: NotesDialogProps)
   const handleSave = () => {
     updateCharacter(character.id, { notes });
     toast({
-      title: 'Notes Saved',
-      description: 'Your notes have been updated.',
+      title: t('notesSaved'),
+      description: t('notesUpdatedDesc'),
     });
     onOpenChange(false);
   };
@@ -48,22 +50,22 @@ export function NotesDialog({ character, open, onOpenChange }: NotesDialogProps)
         onOpenAutoFocus={(e) => e.preventDefault()}
       >
         <DialogHeader>
-          <DialogTitle>Character Notes</DialogTitle>
+          <DialogTitle>{t('characterNotes')}</DialogTitle>
           <DialogDescription>
-            A place for your private thoughts, reminders, and scribbles.
+            {t('characterNotesDesc')}
           </DialogDescription>
         </DialogHeader>
         <div className="py-4">
           <Textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            placeholder="Jot down your notes here..."
+            placeholder={t('jotDownNotesPlaceholder')}
             className="min-h-[300px]"
           />
         </div>
         <DialogFooter>
           <Button type="button" onClick={handleSave}>
-            Save Changes
+            {t('saveChanges')}
           </Button>
         </DialogFooter>
       </DialogContent>

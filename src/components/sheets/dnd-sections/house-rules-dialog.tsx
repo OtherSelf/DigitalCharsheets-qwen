@@ -17,6 +17,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Trash2, Plus } from 'lucide-react';
 import { useCharacterContext } from '@/context/character-context';
+import { useTranslation } from '@/context/language-context';
 import { DnD5eCharacter } from '@/lib/types';
 
 interface HouseRulesDialogProps {
@@ -27,6 +28,7 @@ interface HouseRulesDialogProps {
 
 export function HouseRulesDialog({ open, onOpenChange, characterId }: HouseRulesDialogProps) {
   const { getCharacter, updateCharacter } = useCharacterContext();
+  const { t } = useTranslation();
   const character = getCharacter(characterId) as DnD5eCharacter | undefined;
 
   const [allowInspiration, setAllowInspiration] = React.useState(false);
@@ -87,16 +89,16 @@ export function HouseRulesDialog({ open, onOpenChange, characterId }: HouseRules
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[500px] max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>House Rules</DialogTitle>
+          <DialogTitle>{t('houseRulesTitle')}</DialogTitle>
           <DialogDescription>
-            Configure optional official house rules or add custom ones for this character sheet.
+            {t('houseRulesDesc')}
           </DialogDescription>
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'official' | 'custom')} className="mt-4">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="official">Official Rules</TabsTrigger>
-            <TabsTrigger value="custom">Custom Rules</TabsTrigger>
+            <TabsTrigger value="official">{t('officialRules')}</TabsTrigger>
+            <TabsTrigger value="custom">{t('customRules')}</TabsTrigger>
           </TabsList>
 
           {/* OFFICIAL RULES TAB */}
@@ -108,7 +110,7 @@ export function HouseRulesDialog({ open, onOpenChange, characterId }: HouseRules
                 onCheckedChange={(checked) => setAllowInspiration(checked as boolean)}
               />
               <Label htmlFor="more-than-1-inspiration" className="cursor-pointer">
-                More than 1 Inspiration
+                {t('moreThanOneInspiration')}
               </Label>
             </div>
             <div className="flex items-center space-x-2">
@@ -118,7 +120,7 @@ export function HouseRulesDialog({ open, onOpenChange, characterId }: HouseRules
                 onCheckedChange={(checked) => setAllowDivineBoonsBefore20(checked as boolean)}
               />
               <Label htmlFor="divine-boons-before-20" className="cursor-pointer">
-                Divine Boons before level 20
+                {t('divineBoonsBefore20')}
               </Label>
             </div>
           </TabsContent>
@@ -127,19 +129,19 @@ export function HouseRulesDialog({ open, onOpenChange, characterId }: HouseRules
           <TabsContent value="custom" className="space-y-4 mt-4">
             <div className="space-y-3">
               <div className="space-y-2">
-                <Label>Rule Name</Label>
+                <Label>{t('ruleName')}</Label>
                 <Input
                   value={newRuleName}
                   onChange={(e) => setNewRuleName(e.target.value)}
-                  placeholder="e.g., Critical Fumbles"
+                  placeholder={t('ruleNamePlaceholder')}
                 />
               </div>
               <div className="space-y-2">
-                <Label>Description</Label>
+                <Label>{t('ruleDescription')}</Label>
                 <Textarea
                   value={newRuleDesc}
                   onChange={(e) => setNewRuleDesc(e.target.value)}
-                  placeholder="Describe how this rule works..."
+                  placeholder={t('ruleDescriptionPlaceholder')}
                   className="min-h-[80px]"
                 />
               </div>
@@ -149,13 +151,13 @@ export function HouseRulesDialog({ open, onOpenChange, characterId }: HouseRules
                 className="w-full"
               >
                 <Plus className="h-4 w-4 mr-2" />
-                Add Custom Rule
+                {t('addCustomRule')}
               </Button>
             </div>
 
             {customRules.length > 0 && (
               <div className="space-y-2 mt-4">
-                <Label>Active Custom Rules</Label>
+                <Label>{t('activeCustomRules')}</Label>
                 <div className="space-y-2 max-h-[250px] overflow-y-auto pr-1">
                   {customRules.map((rule, index) => (
                     <div key={index} className="p-3 rounded-lg bg-muted border flex flex-col gap-1">
@@ -185,10 +187,10 @@ export function HouseRulesDialog({ open, onOpenChange, characterId }: HouseRules
 
         <DialogFooter className="mt-6">
           <Button variant="outline" onClick={handleClose}>
-            Close
+            {t('close')}
           </Button>
           <Button onClick={handleSave}>
-            Save Changes
+            {t('saveChanges')}
           </Button>
         </DialogFooter>
       </DialogContent>

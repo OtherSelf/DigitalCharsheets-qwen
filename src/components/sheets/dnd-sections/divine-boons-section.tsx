@@ -38,9 +38,7 @@ export const DndDivineBoonsSection = React.forwardRef<{ saveAll: () => void }, D
     const { updateCharacter, showEditButtons } = useCharacterContext();
     const { t } = useTranslation();
     
-    // NEW: Track open/closed state
     const [isOpen, setIsOpen] = React.useState(true);
-    
     const [divineBoons, setDivineBoons] = React.useState<string[]>(initialBoons);
     const [isBoonsDialogOpen, setIsBoonsDialogOpen] = React.useState(false);
     const [boonToDelete, setBoonToDelete] = React.useState<number | null>(null); 
@@ -75,7 +73,6 @@ export const DndDivineBoonsSection = React.forwardRef<{ saveAll: () => void }, D
 
     return (
       <>
-        {/* NEW: Added onValueChange and dynamic md:self-start class */}
         <Accordion 
           type="single" 
           collapsible 
@@ -101,7 +98,7 @@ export const DndDivineBoonsSection = React.forwardRef<{ saveAll: () => void }, D
                     }}
                   >
                     <Plus className="h-3 w-3 mr-1" />
-                    Add
+                    {t('add')}
                   </Button>
                 )}
               </CardHeader>
@@ -109,7 +106,7 @@ export const DndDivineBoonsSection = React.forwardRef<{ saveAll: () => void }, D
                 <CardContent className="p-4 pt-0">
                   {divineBoons.length === 0 ? (
                     <p className="text-xs text-muted-foreground italic text-center py-4">
-                      No divine boons yet
+                      {t('noDivineBoons')}
                     </p>
                   ) : (
                     <div className={cn(
@@ -170,12 +167,13 @@ export const DndDivineBoonsSection = React.forwardRef<{ saveAll: () => void }, D
           onOpenChange={setIsBoonsDialogOpen} 
           onAddBoon={handleAddBoon} 
         />
+        
         <AlertDialog open={boonToDelete !== null} onOpenChange={() => setBoonToDelete(null)}>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Delete Divine Boon</AlertDialogTitle>
+              <AlertDialogTitle>{t('deleteDivineBoon')}</AlertDialogTitle>
               <AlertDialogDescription>
-                Are you sure you want to delete this boon? This action cannot be undone.
+                {t('deleteBoonWarning')}
                 {boonToDelete !== null && divineBoons[boonToDelete] && (
                   <div className="mt-2 p-2 rounded bg-muted">
                     <p className="text-sm font-semibold">
@@ -186,12 +184,12 @@ export const DndDivineBoonsSection = React.forwardRef<{ saveAll: () => void }, D
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
               <AlertDialogAction
                 onClick={confirmDeleteBoon}
                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               >
-                Delete
+                {t('delete')}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

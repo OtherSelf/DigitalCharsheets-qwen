@@ -56,7 +56,7 @@ const NarrativeListCard = ({ titleKey, items, isEditing, newItem, onEdit, onSave
         ))}
         {isEditing && (
           <div className="flex gap-2 pt-2 border-t">
-            <Input placeholder="New..." value={newItem} onChange={e => onNewItemChange(e.target.value)} className="h-7 text-[10px]" />
+            <Input placeholder={t('newItemPlaceholder')} value={newItem} onChange={e => onNewItemChange(e.target.value)} className="h-7 text-[10px]" />
             <Button size="sm" className="h-7" onClick={() => { if (newItem.trim()) { onItemsChange([...items, newItem.trim()]); onNewItemChange(''); } }}><Plus className="h-3 w-3" /></Button>
           </div>
         )}
