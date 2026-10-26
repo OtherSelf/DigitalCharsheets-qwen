@@ -64,9 +64,11 @@ export const EquipmentInventorySection = React.forwardRef<{ saveAll: () => void 
     const [isInventorySectionOpen, setIsInventorySectionOpen] = React.useState(true);
     const [isArmorExpanded, setIsArmorExpanded] = React.useState(false);
 
-    const [editableWealth, setEditableWealth] = React.useState({
-        throneGelt: character.wealth?.throneGelt ?? 0, monthlyIncome: character.wealth?.monthlyIncome ?? 0,
-    });
+const [editableWealth, setEditableWealth] = React.useState({
+    throneGelt: character.wealth?.throneGelt ?? 0, 
+    monthlyIncome: character.wealth?.monthlyIncome ?? 0,
+    notes: character.wealth?.notes ?? '',
+});
     const [editableEquipment, setEditableEquipment] = React.useState(character.equipment ?? defaultEquipment);
     const [editableInventory, setEditableInventory] = React.useState(character.inventory ?? []);
     const [newInventoryItem, setNewInventoryItem] = React.useState('');
@@ -196,7 +198,7 @@ export const EquipmentInventorySection = React.forwardRef<{ saveAll: () => void 
                                         </CollapsibleTrigger>
                                         {(showEditButtons || isArmorEditing) && <EditSaveButton editing={isArmorEditing} onEdit={() => setIsArmorEditing(true)} onSave={handleSaveArmor} />}
                                     </div>
-                                    <CollapsibleContent forceMount={!isCompactView}>
+                                    <CollapsibleContent forceMount={!isCompactView ? true : undefined}>
                                         {isCompactView ? (
                                             <div className="space-y-2">{bodyParts.map(part => { 
                                                 const armorPiece = currentEquipment.armor[part]; 
