@@ -106,20 +106,13 @@ interface CharacteristicsSectionProps {
 
 export const CharacteristicsSection = React.forwardRef<{ saveAll: () => void }, CharacteristicsSectionProps>(({ character, isCompactView, isSkillsPanelCollapsed, isEquipmentPanelCollapsed, onEditingChange }, ref) => {
     const { updateCharacter, hideNotes, showEditButtons } = useCharacterContext();
-    const { t } = useTranslation();
+    
+    // LANDMARK 1: Destructure 'language' alongside 't' for layout switching
+    const { t, language } = useTranslation();
 
     const [isCharacteristicsEditing, setIsCharacteristicsEditing] = React.useState(false);
     const [editableStats, setEditableStats] = React.useState(character.stats);
     const [editableStatUpgrades, setEditableStatUpgrades] = React.useState(character.statUpgrades ?? defaultStatUpgrades);
-
-    // ─── LANDMARK: SYNC DRAFT STATE WITH GLOBAL CHARACTER ───
-    React.useEffect(() => {
-        setEditableStats(character.stats);
-    }, [character.stats]);
-
-    React.useEffect(() => {
-        setEditableStatUpgrades(character.statUpgrades ?? defaultStatUpgrades);
-    }, [character.statUpgrades]);
 
     const handleSaveCharacteristics = React.useCallback(() => {
         updateCharacter(character.id, { stats: editableStats, statUpgrades: editableStatUpgrades });
@@ -177,10 +170,11 @@ export const CharacteristicsSection = React.forwardRef<{ saveAll: () => void }, 
                     />
                 ))}
              </CardContent> 
-             {/* Desktop Movement Display - TRANSLATED */}
+             
+             {/* LANDMARK 2: Desktop Movement Display - Uses translation keys and conditional grid */}
              {!isCompactView && (
                <CardContent className="pt-0">
-                 <div className="grid grid-cols-4 gap-2">
+                 <div className={cn("grid gap-2", language === 'ru' ? "grid-cols-2" : "grid-cols-4")}>
                    {(() => {
                      const agUpgrades = (character.statUpgrades?.agility || [false, false, false, false]) as boolean[];
                      const agBonus = agUpgrades.filter(Boolean).length * 5;
@@ -190,19 +184,19 @@ export const CharacteristicsSection = React.forwardRef<{ saveAll: () => void }, 
                      return (
                        <>
                          <div className="p-2 rounded-lg bg-background border text-center">
-                           <Label className="text-[10px] text-muted-foreground uppercase font-bold">{t('movementHalfMove')}</Label>
+                           <Label className="text-[10px] text-muted-foreground uppercase font-bold">{t('halfMove')}</Label>
                            <div className="text-lg font-bold text-primary">{agMod}</div>
                          </div>
                          <div className="p-2 rounded-lg bg-background border text-center">
-                           <Label className="text-[10px] text-muted-foreground uppercase font-bold">{t('movementMove')}</Label>
+                           <Label className="text-[10px] text-muted-foreground uppercase font-bold">{t('move')}</Label>
                            <div className="text-lg font-bold text-primary">{agMod * 2}</div>
                          </div>
                          <div className="p-2 rounded-lg bg-background border text-center">
-                           <Label className="text-[10px] text-muted-foreground uppercase font-bold">{t('movementCharge')}</Label>
+                           <Label className="text-[10px] text-muted-foreground uppercase font-bold">{t('charge')}</Label>
                            <div className="text-lg font-bold text-primary">{agMod * 3}</div>
                          </div>
                          <div className="p-2 rounded-lg bg-background border text-center">
-                          <Label className="text-[10px] text-muted-foreground uppercase font-bold">{t('movementRun')}</Label>
+                          <Label className="text-[10px] text-muted-foreground uppercase font-bold">{t('run')}</Label>
                            <div className="text-lg font-bold text-primary">{agMod * 6}</div>
                          </div>
                        </>
