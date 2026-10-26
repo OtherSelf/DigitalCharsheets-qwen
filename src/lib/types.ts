@@ -432,6 +432,7 @@ export interface DarkHeresyCharacter extends CharacterBase {
   wealth: {
     throneGelt: number;
     monthlyIncome: number;
+    notes?: string;
   };
   movement: {
     walkHalf: number;
