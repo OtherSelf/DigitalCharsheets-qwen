@@ -128,6 +128,24 @@ export const ALL_QUIRKS = [
     ])
 ].sort();
 
+export const QUIRK_KEYS: Record<string, string> = {
+  "Hairy Knuckles": "quirkHairyKnuckles", "Joined Eyebrows": "quirkJoinedEyebrows", "Warpaint": "quirkWarpaint",
+  "Hands like Spatchcocks": "quirkHandsLikeSpatchcocks", "Filed Teeth": "quirkFiledTeeth", "Beetling Brows": "quirkBeetlingBrows",
+  "Musky Smell": "quirkMuskySmell", "Hairy": "quirkHairy", "Ripped Ears": "quirkRippedEars", "Long Fingernails": "quirkLongFingernails",
+  "Tribal Tattooing": "quirkTribalTattooing", "Scarring": "quirkScarring", "Piercing": "quirkPiercing", "Cat’s Eyes": "quirkCatsEyes",
+  "Small Head": "quirkSmallHead", "Thick Jaw": "quirkThickJaw", "Grimy Skin": "quirkGrimySkin", "Outrageous Hair": "quirkOutrageousHair",
+  "Rotten Teeth": "quirkRottenTeeth", "Electoo": "quirkElectoo", "Set of Piercings": "quirkSetOfPiercings", "Hacking Cough": "quirkHackingCough",
+  "Tattoos": "quirkTattoos", "Bullet Wound Scar": "quirkBulletWoundScar", "Nervous Tic": "quirkNervousTic", "Large Mole": "quirkLargeMole",
+  "Pollution Scars": "quirkPollutionScars", "Hump": "quirkHump", "Small Hands": "quirkSmallHands", "Chemical Smell": "quirkChemicalSmell",
+  "Missing Digit": "quirkMissingDigit", "Aquiline Nose": "quirkAquilineNose", "Warts": "quirkWarts", "Duelling Scar": "quirkDuellingScar",
+  "Pierced Nose": "quirkPiercedNose", "Aquila Tattoo": "quirkAquilaTattoo", "Faint Smell": "quirkFaintSmell", "Pox Marks": "quirkPoxMarks",
+  "Devotional Scar": "quirkDevotionalScar", "Quivering Fingers": "quirkQuiveringFingers", "Pierced Ears": "quirkPiercedEars", "Sinister Boil": "quirkSinisterBoil",
+  "Make-up": "quirkMakeup", "Slouched Gait": "quirkSlouchedGait", "Bald": "quirkBald", "Long Fingers": "quirkLongFingers",
+  "Tiny Ears": "quirkTinyEars", "Spindly Limbs": "quirkSpindlyLimbs", "Yellow Fingernails": "quirkYellowFingernails", "Stumpy Teeth": "quirkStumpyTeeth",
+  "Widely Spaced Eyes": "quirkWidelySpacedEyes", "Large Head": "quirkLargeHead", "Curved Spine": "quirkCurvedSpine", "Hairless": "quirkHairless",
+  "Elegant Hands": "quirkElegantHands", "Flowing Hair": "quirkFlowingHair", "Albino": "quirkAlbino", "Limping Gait": "quirkLimpingGait", "Stooped Stance": "quirkStoopedStance",
+};
+
 export const CAREER_KEYS: Record<string, string> = {
   "Adept": "careerAdept",
   "Arbitrator": "careerArbitrator",
