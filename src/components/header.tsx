@@ -67,8 +67,20 @@ export function Header({ onNotesClick, onJournalClick }: HeaderProps) {
   const getSubtitle = (char: Character) => {
     if (char.gameSystem === 'Dungeons & Dragons') {
       const dnd = char as DnD5eCharacter;
-      return `Level ${dnd.level} ${dnd.race} ${dnd.characterClass} | ${dnd.background}`;
+      
+      // Generate translation keys matching the format we used in the character form
+      const raceKey = `race${dnd.race.replace(/[^a-zA-Z]/g, '')}`;
+      const classKey = `class${dnd.characterClass}`;
+      const bgKey = `bg${dnd.background.replace(/[^a-zA-Z]/g, '')}`;
+      
+      // Fallback to the raw English value if a translation key is somehow missing
+      const translatedRace = t(raceKey) || dnd.race;
+      const translatedClass = t(classKey) || dnd.characterClass;
+      const translatedBg = t(bgKey) || dnd.background;
+      
+      return `${t('lvl')} ${dnd.level} ${translatedRace} ${translatedClass} | ${translatedBg}`;
     }
+    
     const dh = char as DarkHeresyCharacter;
     return `${dh.rank} ${dh.characterClass} | ${dh.gameSystem}`;
   };
