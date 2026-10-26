@@ -12,7 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { cn } from '@/lib/utils';
 import { useCharacterContext } from '@/context/character-context';
 import { useTranslation } from '@/context/language-context';
-import { WORLD_VARIANTS_BY_HOMEWORLD, WORLD_VARIANT_LABELS, HOME_WORLD_KEYS, VARIANT_KEYS, CAREER_KEYS, RANK_KEYS } from '@/lib/dark-heresy-data';import { ADVANCED_RANK_THRESHOLD, RanksByCareer, AdvancedPathsByCareer, type AdvancedPath, calculateRank } from '@/lib/dark-heresy-ranks';
+import { WORLD_VARIANTS_BY_HOMEWORLD, WORLD_VARIANT_LABELS, HOME_WORLD_KEYS, VARIANT_KEYS, CAREER_KEYS, RANK_KEYS, QUIRK_KEYS } from '@/lib/dark-heresy-data';
+import { ADVANCED_RANK_THRESHOLD, RanksByCareer, AdvancedPathsByCareer, type AdvancedPath, calculateRank } from '@/lib/dark-heresy-ranks';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { EditSaveButton } from './dh-ui-helpers';
 
@@ -65,9 +66,9 @@ export const InfoSection = ({ character, isCompactView, activeCompactSection, on
                     <DetailField label={t('characterName')} value={character.name} editing={isInfoEditing} onBlur={(e) => updateCharacter(character.id, { name: e.target.value })} isCompactView={isCompactView} />
                     <div className="space-y-1">
                         <Label className={cn("text-xs text-muted-foreground", isCompactView && "text-[10px]")}>{t('homeWorld')}</Label>
-                            <p className={cn("text-sm font-medium break-words", isCompactView && "text-xs")}>
-                                {character.homeWorld ? t(HOME_WORLD_KEYS[character.homeWorld] || 'homeWorld') : '-'}
-                            </p>
+                        <p className={cn("text-sm font-medium break-words", isCompactView && "text-xs")}>
+                            {character.homeWorld ? t(HOME_WORLD_KEYS[character.homeWorld] || 'homeWorld') : '-'}
+                        </p>
                     </div>
                     <div className="space-y-1">
                         <Label className={cn("text-xs text-muted-foreground", isCompactView && "text-[10px]")}>{worldVariantLabel}</Label>
@@ -89,14 +90,20 @@ export const InfoSection = ({ character, isCompactView, activeCompactSection, on
                         )}
                     </div>
                     <div className="space-y-1">
-    <Label className={cn("text-xs text-muted-foreground", isCompactView && "text-[10px]")}>{t('careerPath')}</Label>
-    <p className={cn("text-sm font-medium break-words", isCompactView && "text-xs")}>
-        {character.careerPath ? t(CAREER_KEYS[character.careerPath] || 'careerPath') : '-'}
-    </p>
-</div>                    <div className="space-y-1"><Label className={cn("text-xs text-muted-foreground", isCompactView && "text-[10px]")}>{t('characterClass')}</Label><p className={cn("text-sm font-medium break-words", isCompactView && "text-xs")}>{character.characterClass || '-'}</p></div>
+                        <Label className={cn("text-xs text-muted-foreground", isCompactView && "text-[10px]")}>{t('careerPath')}</Label>
+                        <p className={cn("text-sm font-medium break-words", isCompactView && "text-xs")}>
+                            {character.careerPath ? t(CAREER_KEYS[character.careerPath] || 'careerPath') : '-'}
+                        </p>
+                    </div>
                     <DetailField label={t('divination')} value={character.divination} editing={isInfoEditing} onBlur={(e) => updateCharacter(character.id, { divination: e.target.value })} isCompactView={isCompactView} />
                     <DetailField label={t('divinationEffect')} value={character.divinationEffect} editing={false} isCompactView={isCompactView} />
-                    <DetailField label={t('quirk')} value={character.quirk} editing={isInfoEditing} onBlur={(e) => updateCharacter(character.id, { quirk: e.target.value })} isCompactView={isCompactView} />
+                    <DetailField 
+                        label={t('quirk')} 
+                        value={character.quirk ? t(QUIRK_KEYS[character.quirk] || character.quirk) : ''} 
+                        editing={isInfoEditing} 
+                        onBlur={(e) => updateCharacter(character.id, { quirk: e.target.value })} 
+                        isCompactView={isCompactView} 
+                    />
                     <DetailField label={t('height')} value={character.height} editing={isInfoEditing} onBlur={(e) => updateCharacter(character.id, { height: e.target.value })} isCompactView={isCompactView} />
                     <DetailField label={t('weight')} value={character.weight} editing={isInfoEditing} onBlur={(e) => updateCharacter(character.id, { weight: e.target.value })} isCompactView={isCompactView} />
                     <DetailField label={t('age')} value={character.age} editing={isInfoEditing} onBlur={(e) => updateCharacter(character.id, { age: e.target.value })} isCompactView={isCompactView} />
@@ -221,91 +228,90 @@ export const ProgressionSection = ({ character, isCompactView, activeCompactSect
                         <Button onClick={handleSpendExp} disabled={amountToSpend <= 0 || amountToSpend > editableExperience} className="w-full">{t('spendExp')}</Button>
                         <div className="space-y-1">
                             <Label htmlFor="total-exp-edit" className="text-xs text-muted-foreground">{t('totalExpSpent')}</Label>
-                            <Input id="total-exp-edit" type="number" value={editableTotalExpSpent === 0 ? '' : editableTotalExpSpent} onChange={handleTotalExpChange} onBlur={handleSaveTotalExp} disabled={!isProgressionEditing} className="h-9"/>                        </div>
+                            <Input id="total-exp-edit" type="number" value={editableTotalExpSpent === 0 ? '' : editableTotalExpSpent} onChange={handleTotalExpChange} onBlur={handleSaveTotalExp} disabled={!isProgressionEditing} className="h-9"/>
+                        </div>
                         
-                        {/* Rank Display & Selection */}
+                        {/* ========== RANK DISPLAY SECTION START ========== */}
                         <div className="space-y-1 pt-2 border-t">
                             <Label className="text-xs text-muted-foreground">{t('rank')}</Label>
                             <div className="flex flex-col gap-1">
                                 <div className="flex items-center gap-2 flex-wrap">
                                     <p className="text-sm font-medium break-words">
-    {currentRankName === 'N/A' || currentRankName === 'Unknown Rank' 
-        ? t('unknownRank') 
-        : t(RANK_KEYS[currentRankName] || currentRankName)}
-</p>                                    
-                                    {/* Advanced Path Display & Change Button Group */}
+                                        {currentRankName === 'N/A' || currentRankName === 'Unknown Rank' 
+                                            ? t('unknownRank') 
+                                            : t(RANK_KEYS[currentRankName] || currentRankName)}
+                                    </p>                                    
+                                    
                                     {(editableAdvancedPath ?? character.advancedPath) ? (
                                         <div className="flex items-center gap-2">
                                             <span className="text-[10px] px-2 py-0.5 rounded bg-primary/10 text-primary font-semibold border border-primary/20">
-    {t('advancedPath')}: {t(RANK_KEYS[editableAdvancedPath ?? character.advancedPath!] || (editableAdvancedPath ?? character.advancedPath!))}
-</span>
+                                                {t('advancedPath')}: {t(RANK_KEYS[editableAdvancedPath ?? character.advancedPath!] || (editableAdvancedPath ?? character.advancedPath!))}
+                                            </span>
                                             {isProgressionEditing && editableTotalExpSpent >= advancedPathThreshold && ( 
                                                 <Button size="sm" variant="outline" className="h-6 text-[10px] px-2" onClick={() => setIsAdvancedPathModalOpen(true)}>
-                                                    Change Advanced Path
+                                                    {t('changeAdvancedPath')}
                                                 </Button> 
                                             )}
                                         </div>
                                     ) : (
-                                        /* Fallback if no advanced path is selected yet, but threshold is met */
                                         isProgressionEditing && editableTotalExpSpent >= advancedPathThreshold && (
                                             <Button size="sm" variant="outline" className="h-6 text-[10px] px-2" onClick={() => setIsAdvancedPathModalOpen(true)}>
-                                                Select Advanced Path
+                                                {t('selectAdvancedPath')}
                                             </Button>
                                         )
                                     )}
 
-                                    {/* Alternate Path Display */}
                                     {(editableAlternatePath ?? character.alternatePath) && (
-    <span className="text-[10px] px-2 py-0.5 rounded bg-secondary/20 text-secondary-foreground font-semibold border border-secondary/20">
-        {t('alternatePath')}: {t(RANK_KEYS[editableAlternatePath ?? character.alternatePath!] || (editableAlternatePath ?? character.alternatePath!))}
-    </span>
-)}
+                                        <span className="text-[10px] px-2 py-0.5 rounded bg-secondary/20 text-secondary-foreground font-semibold border border-secondary/20">
+                                            {t('alternatePath')}: {t(RANK_KEYS[editableAlternatePath ?? character.alternatePath!] || (editableAlternatePath ?? character.alternatePath!))}
+                                        </span>
+                                    )}
                                 </div>
 
-                                {/* Alternate Rank Button (also gated behind edit mode for clean UI) */}
                                 <div className="flex gap-2 mt-1">
                                     {isProgressionEditing && canChooseAlternateRank && ( 
                                         <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => setIsAlternateRankModalOpen(true)}>
-                                            {(editableAlternatePath ?? character.alternatePath) ? 'Change Alternate Rank' : 'Select Alternate Rank'}
+                                            {(editableAlternatePath ?? character.alternatePath) ? t('changeAlternateRank') : t('selectAlternateRank')}
                                         </Button> 
                                     )}
                                 </div>
                             </div>
                         </div>
+                        {/* ========== RANK DISPLAY SECTION END ========== */}
                     </div>
                 </CardContent>
             </Card>
 
             <Dialog open={isAdvancedPathModalOpen} onOpenChange={setIsAdvancedPathModalOpen}>
                 <DialogContent className="sm:max-w-md" onInteractOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
-<DialogHeader>
-    <DialogTitle>{t('selectAdvancedPathTitle')}</DialogTitle>
-    <DialogDescription>{t('selectAdvancedPathDesc')}</DialogDescription>
-</DialogHeader>
-<div className="grid grid-cols-1 gap-4 py-4">
-    {possibleAdvancedPaths && Object.values(possibleAdvancedPaths).map(path => ( 
-        <Button key={path.name} onClick={() => handleSelectAdvancedPath(path.name)} className="h-12 text-base">
-            {t('choose')} {t(RANK_KEYS[path.name] || path.name)}
-        </Button> 
-    ))}
-</div>
+                    <DialogHeader>
+                        <DialogTitle>{t('selectAdvancedPathTitle')}</DialogTitle>
+                        <DialogDescription>{t('selectAdvancedPathDesc')}</DialogDescription>
+                    </DialogHeader>
+                    <div className="grid grid-cols-1 gap-4 py-4">
+                        {possibleAdvancedPaths && Object.values(possibleAdvancedPaths).map(path => ( 
+                            <Button key={path.name} onClick={() => handleSelectAdvancedPath(path.name)} className="h-12 text-base">
+                                {t('choose')} {t(RANK_KEYS[path.name] || path.name)}
+                            </Button> 
+                        ))}
+                    </div>
                 </DialogContent>
             </Dialog>
 
             <Dialog open={isAlternateRankModalOpen} onOpenChange={setIsAlternateRankModalOpen}>
                 <DialogContent>
-<DialogHeader>
-    <DialogTitle>{t('selectAlternateRankTitle')}</DialogTitle>
-    <DialogDescription>{t('selectAlternateRankDesc')}</DialogDescription>
-</DialogHeader>
-<div className="grid grid-cols-1 gap-4 py-4">
-    <Button onClick={() => handleSelectAlternateRank(null)} className="h-12 text-base">
-        {t('choose')} {t('rankInditor')}
-    </Button>
-    <Button onClick={() => handleSelectAlternateRank('Chirurgeon')} className="h-12 text-base">
-        {t('choose')} {t('rankChirurgeon')}
-    </Button>
-</div>
+                    <DialogHeader>
+                        <DialogTitle>{t('selectAlternateRankTitle')}</DialogTitle>
+                        <DialogDescription>{t('selectAlternateRankDesc')}</DialogDescription>
+                    </DialogHeader>
+                    <div className="grid grid-cols-1 gap-4 py-4">
+                        <Button onClick={() => handleSelectAlternateRank(null)} className="h-12 text-base">
+                            {t('choose')} {t('rankInditor')}
+                        </Button>
+                        <Button onClick={() => handleSelectAlternateRank('Chirurgeon')} className="h-12 text-base">
+                            {t('choose')} {t('rankChirurgeon')}
+                        </Button>
+                    </div>
                 </DialogContent>
             </Dialog>
         </>
