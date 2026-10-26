@@ -26,6 +26,7 @@ import {
 import { useCharacterContext } from '@/context/character-context';
 import { exportCharacterToExcel } from '@/lib/export-utils';
 import { useTranslation } from '@/context/language-context';
+import { RANK_KEYS } from '@/lib/dark-heresy-data';
 
 type CharacterCardProps = {
   character: Character;
@@ -56,12 +57,12 @@ export function CharacterCard({ character }: CharacterCardProps) {
             </CardTitle>
             <CardDescription className="text-xs break-words">
               {character.gameSystem === 'Dungeons & Dragons' && `${t('lvl')} ${character.level} `}
-              {character.gameSystem === 'Dark Heresy' && `${character.rank} `}
+              {character.gameSystem === 'Dark Heresy' && `${t(RANK_KEYS[character.rank as keyof typeof RANK_KEYS] || character.rank)} `}
               {character.characterClass}
             </CardDescription>
           </div>
           <Badge variant={badgeVariant} className="mt-1 text-xs">
-            {character.gameSystem}
+            {character.gameSystem === 'Dungeons & Dragons' ? t('dungeonsAndDragons') : t('darkHeresy')}
           </Badge>
         </div>
         <div className="flex items-center gap-2 p-2 ml-auto">
@@ -102,14 +103,14 @@ export function CharacterCard({ character }: CharacterCardProps) {
     <Card className="flex flex-col overflow-hidden hover:shadow-lg hover:shadow-primary/10 transition-shadow duration-300">
       <CardContent className="p-4 flex-grow">
         <Badge variant={badgeVariant} className="mb-2">
-          {character.gameSystem}
+          {character.gameSystem === 'Dungeons & Dragons' ? t('dungeonsAndDragons') : t('darkHeresy')}
         </Badge>
         <CardTitle className="text-lg font-headline mb-1">
           {character.name}
         </CardTitle>
         <CardDescription>
           {character.gameSystem === 'Dungeons & Dragons' && `${t('lvl')} ${character.level} `}
-          {character.gameSystem === 'Dark Heresy' && `${character.rank} `}
+          {character.gameSystem === 'Dark Heresy' && `${t(RANK_KEYS[character.rank as keyof typeof RANK_KEYS] || character.rank)} `}
           {character.characterClass}
         </CardDescription>
       </CardContent>

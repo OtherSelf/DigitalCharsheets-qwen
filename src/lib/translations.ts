@@ -821,7 +821,16 @@ export const translations: Record<string, Record<string, string>> = {
     armorQualityGood: "Good",
     armorQualityBest: "Best",
     armorQualityMasterCrafted: "Master-Crafted",
-
+    // --- DASHBOARD & CREATION PAGE ADDITIONS (EN) ---
+    buildCharacterDesc: "Build your character from the ground up",
+    gameSystem: "Game System",
+    selectGameSystemDesc: "Select the game system for your new character.",
+    selectGameSystemPlaceholder: "Select a game system...",
+    dungeonsAndDragons: "Dungeons & Dragons",
+    darkHeresy: "Warhammer 40k: Dark Heresy",
+    backToDashboard: "Back to Dashboard",
+    statsEditor: "Stats Editor",
+    backupAll: "Backup All",
 
   },
   ru: {
@@ -1648,5 +1657,15 @@ export const translations: Record<string, Record<string, string>> = {
     armorQualityGood: "Хорошее",
     armorQualityBest: "Превосходное",
     armorQualityMasterCrafted: "Мастерское",
+        // --- DASHBOARD & CREATION PAGE ADDITIONS (RU) ---
+    buildCharacterDesc: "Создайте своего персонажа с нуля",
+    gameSystem: "Игровая система",
+    selectGameSystemDesc: "Выберите игровую систему для вашего нового персонажа.",
+    selectGameSystemPlaceholder: "Выберите игровую систему...",
+    dungeonsAndDragons: "Dungeons & Dragons",
+    darkHeresy: "Warhammer 40k: Dark Heresy",
+    backToDashboard: "Назад на панель управления",
+    statsEditor: "Редактор характеристик",
+    backupAll: "Резервное копирование всего",
   }
 };
