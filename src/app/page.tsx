@@ -23,7 +23,7 @@ import { RecoveryModalWrapper } from '@/components/recovery-modal-wrapper';
 
 export default function DashboardPage() {
   const { characters, isLoaded, isCompactView } = useCharacterContext();
-  const { user } = useLocalAuth(); // MOVED: Hooks must be at the top!
+  const { user } = useLocalAuth();
   const { t } = useTranslation();
 
   const handleExportXlsx = () => {
@@ -89,12 +89,11 @@ export default function DashboardPage() {
             </p>
           </div>
           
-          {/* ALL BUTTONS GROUPED TOGETHER HERE */}
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" size="sm" asChild>
               <Link href="/stats-editor">
                 <Settings2 className="mr-2 h-4 w-4" />
-                Stats Editor
+                {t('statsEditor')}
               </Link>
             </Button>
 
@@ -108,7 +107,7 @@ export default function DashboardPage() {
               }}
             >
               <FileDown className="mr-2 h-4 w-4" />
-              Backup All
+              {t('backupAll')}
             </Button>
 
             <Button 
@@ -179,7 +178,6 @@ function downloadJSON(data: any, filename: string) {
   URL.revokeObjectURL(url);
 }
 
-// Minimal migration dialog stub to prevent build errors if referenced elsewhere
 function MigrateCharacterDialog({ children }: { children: React.ReactNode }) {
     return <>{children}</>;
 }
