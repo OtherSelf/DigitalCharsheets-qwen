@@ -42,16 +42,19 @@ const characteristics = [
     { key: 'influence', label: 'Inf', fullName: 'Influence' },
 ] as const;
 
+// LANDMARK 1: Added notesForText and addNotesText to the component props
 const CharacteristicStat = ({
     label, fullName, value, upgrades, editing,
     onValueChange, onUpgradeChange, notes, onNoteChange,
-    isCompactView, hideNotes
+    isCompactView, hideNotes, notesForText, addNotesText
 }: {
     label: string; fullName: string; value: number; upgrades: boolean[];
     editing: boolean; onValueChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
     onUpgradeChange: (index: number, checked: boolean) => void;
     notes?: string; onNoteChange: (note: string) => void;
     isCompactView: boolean; hideNotes: boolean;
+    notesForText: string;
+    addNotesText: string;
 }) => {
     const currentUpgrades = (
         Array.isArray(upgrades) ? [...upgrades, ...Array(4 - upgrades.length).fill(false)] : [false, false, false, false]
@@ -75,8 +78,9 @@ const CharacteristicStat = ({
                         <Button variant={notes ? 'secondary' : 'ghost'} size="icon" className="h-5 w-5 absolute top-0.5 right-0.5"><Info className="h-3 w-3" /></Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-64">
-                        <Label className="text-xs mb-2 block">Notes for {fullName}</Label>
-                        <Textarea defaultValue={notes || ''} onBlur={(e) => onNoteChange(e.target.value)} placeholder="Add notes..." className="min-h-[100px] text-sm" />
+                        {/* LANDMARK 2: Using translated strings inside the notes popover */}
+                        <Label className="text-xs mb-2 block">{notesForText} {fullName}</Label>
+                        <Textarea defaultValue={notes || ''} onBlur={(e) => onNoteChange(e.target.value)} placeholder={addNotesText} className="min-h-[100px] text-sm" />
                     </PopoverContent>
                 </Popover>
             )}
@@ -106,8 +110,6 @@ interface CharacteristicsSectionProps {
 
 export const CharacteristicsSection = React.forwardRef<{ saveAll: () => void }, CharacteristicsSectionProps>(({ character, isCompactView, isSkillsPanelCollapsed, isEquipmentPanelCollapsed, onEditingChange }, ref) => {
     const { updateCharacter, hideNotes, showEditButtons } = useCharacterContext();
-    
-    // LANDMARK 1: Destructure 'language' alongside 't' for layout switching
     const { t, language } = useTranslation();
 
     const [isCharacteristicsEditing, setIsCharacteristicsEditing] = React.useState(false);
@@ -157,7 +159,8 @@ export const CharacteristicsSection = React.forwardRef<{ saveAll: () => void }, 
                     <CharacteristicStat
                         key={char.key}
                         label={char.label}
-                        fullName={char.fullName}
+                        // LANDMARK 3: Passing the translated full name using the char.key
+                        fullName={t(char.key)}
                         value={isCharacteristicsEditing ? editableStats[char.key] : character.stats[char.key]}
                         upgrades={isCharacteristicsEditing ? editableStatUpgrades[char.key] : (character.statUpgrades ? character.statUpgrades[char.key] : [false, false, false, false])}
                         editing={isCharacteristicsEditing}
@@ -167,11 +170,14 @@ export const CharacteristicsSection = React.forwardRef<{ saveAll: () => void }, 
                         onNoteChange={(note) => { const next = { ...(character.statNotes || {}), [char.key]: note }; updateCharacter(character.id, { statNotes: next }); }}
                         isCompactView={isCompactView}
                         hideNotes={hideNotes}
+                        // LANDMARK 4: Passing translated strings for the notes popover
+                        notesForText={t('notesFor')}
+                        addNotesText={t('addNotes')}
                     />
                 ))}
              </CardContent> 
              
-             {/* LANDMARK 2: Desktop Movement Display - Uses translation keys and conditional grid */}
+             {/* Desktop Movement Display */}
              {!isCompactView && (
                <CardContent className="pt-0">
                  <div className={cn("grid gap-2", language === 'ru' ? "grid-cols-2" : "grid-cols-4")}>

@@ -28,6 +28,14 @@ const ArmorDisplay = ({ character, isCompactView }: { character: DarkHeresyChara
     'Head': '1-10', 'Right arm': '11-20', 'Left arm': '21-30', 'Body': '31-70', 'Right leg': '71-85', 'Left leg': '86-00',
   };
 
+
+    // Helper to translate armor type for display
+  const displayArmorType = (type: string | undefined | null) => {
+    if (!type) return '—';
+    const translationKey = `armorType${type}` as any;
+    const translated = t(translationKey);
+    return translated === translationKey ? type : translated;
+  };
   const ArmorBox = ({ part, location }: { part: BodyPart, location: string }) => {
     const armorPiece = armor[part];
     const bodyPartKey: Record<BodyPart, string> = {
@@ -44,8 +52,8 @@ const ArmorDisplay = ({ character, isCompactView }: { character: DarkHeresyChara
         <h4 className={cn("font-bold text-center truncate w-full px-1", isCompactView ? "text-[10px]" : "text-xs")}>{title}</h4>
         <div className="text-[10px] text-muted-foreground mb-1">({location})</div>
         <div className={cn("space-y-0.5 w-full", isCompactView ? "text-[9px]" : "text-[10px] text-center")}>
-          <p className="truncate"><strong className="text-muted-foreground">AP:</strong> {armorPiece?.ap ?? '—'}</p>
-          <p className="truncate"><strong className="text-muted-foreground">Type:</strong> {armorPiece?.type ?? '—'}</p>
+          <p className="truncate"><strong className="text-muted-foreground">{t('armorAp')}:</strong> {armorPiece?.ap ?? '—'}</p>
+          <p className="truncate"><strong className="text-muted-foreground">{t('armorType')}:</strong> {displayArmorType(armorPiece?.type)}</p>
         </div>
       </div>
     );
