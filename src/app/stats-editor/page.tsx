@@ -4,35 +4,35 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useLocalAuth } from '@/context/local-auth-context';
 import { useCharacterContext } from '@/context/character-context';
+import { useTranslation } from '@/context/language-context';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ArrowLeft, Save, Check } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { cn } from '@/lib/utils';
 import { DarkHeresyCharacter, DnD5eCharacter } from '@/lib/types';
 
 // ─── STAT DEFINITIONS ──────────────────────────────────────────────
 const DH_STATS = [
-  { key: 'weaponSkill', label: 'WS' },
-  { key: 'ballisticSkill', label: 'BS' },
-  { key: 'strength', label: 'S' },
-  { key: 'toughness', label: 'T' },
-  { key: 'agility', label: 'Ag' },
-  { key: 'intelligence', label: 'Int' },
-  { key: 'perception', label: 'Per' },
-  { key: 'willpower', label: 'WP' },
-  { key: 'fellowship', label: 'Fel' },
-  { key: 'influence', label: 'Inf' },
+  { key: 'weaponSkill', labelKey: 'weaponSkill' },
+  { key: 'ballisticSkill', labelKey: 'ballisticSkill' },
+  { key: 'strength', labelKey: 'strength' },
+  { key: 'toughness', labelKey: 'toughness' },
+  { key: 'agility', labelKey: 'agility' },
+  { key: 'intelligence', labelKey: 'intelligence' },
+  { key: 'perception', labelKey: 'perception' },
+  { key: 'willpower', labelKey: 'willpower' },
+  { key: 'fellowship', labelKey: 'fellowship' },
+  { key: 'influence', labelKey: 'influence' },
 ];
 
 const DND_STATS = [
-  { key: 'strength', label: 'STR' },
-  { key: 'dexterity', label: 'DEX' },
-  { key: 'constitution', label: 'CON' },
-  { key: 'intelligence', label: 'INT' },
-  { key: 'wisdom', label: 'WIS' },
-  { key: 'charisma', label: 'CHA' },
+  { key: 'strength', labelKey: 'statStrAbbr' },
+  { key: 'dexterity', labelKey: 'statDexAbbr' },
+  { key: 'constitution', labelKey: 'statConAbbr' },
+  { key: 'intelligence', labelKey: 'statIntAbbr' },
+  { key: 'wisdom', labelKey: 'statWisAbbr' },
+  { key: 'charisma', labelKey: 'statChaAbbr' },
 ];
 
 // ─── EDIT STATE TYPES ──────────────────────────────────────────────
@@ -77,6 +77,7 @@ function getDndExperience(char: any): number {
 export default function StatsEditorPage() {
   const { user } = useLocalAuth();
   const { characters, updateCharacter, isLoaded } = useCharacterContext();
+  const { t } = useTranslation();
   const router = useRouter();
 
   const [activeTab, setActiveTab] = useState<TabId>('stats');
@@ -146,7 +147,7 @@ export default function StatsEditorPage() {
         },
         armorClass: dnd.armorClass ?? 10,
         proficiencyBonus: dnd.proficiencyBonus ?? 2,
-        speed: dnd.speed ?? '30ft',
+        speed: String(dnd.speed ?? '30ft'),
         experiencePoints: getDndExperience(char),
         saved: false,
       };
@@ -172,7 +173,7 @@ export default function StatsEditorPage() {
     if (!edit) return;
     updateCharacter(charId, { stats: edit.stats } as any);
     setStatsEdits(prev => prev.map(e => e.id === charId ? { ...e, saved: true } : e));
-    flashStatus(`Saved stats for "${edit.name}"`);
+    flashStatus(`${t('savedStatsFor')} "${edit.name}"`);
   };
 
   const handleSaveAllStats = () => {
@@ -180,7 +181,7 @@ export default function StatsEditorPage() {
       updateCharacter(edit.id, { stats: edit.stats } as any);
     });
     setStatsEdits(prev => prev.map(e => ({ ...e, saved: true })));
-    flashStatus('All stats saved!');
+    flashStatus(t('allStatsSaved'));
   };
 
   // ─── DH VITALS HANDLERS ──────────────────────────────────────────
@@ -209,7 +210,7 @@ export default function StatsEditorPage() {
       experience: edit.experience,
     } as any);
     setDhVitalsEdits(prev => prev.map(e => e.id === charId ? { ...e, saved: true } : e));
-    flashStatus(`Saved vitals for "${edit.name}"`);
+    flashStatus(`${t('savedVitalsFor')} "${edit.name}"`);
   };
 
   const handleSaveAllDHVitals = () => {
@@ -223,7 +224,7 @@ export default function StatsEditorPage() {
       } as any);
     });
     setDhVitalsEdits(prev => prev.map(e => ({ ...e, saved: true })));
-    flashStatus('All Dark Heresy vitals saved!');
+    flashStatus(t('allDhVitalsSaved'));
   };
 
   // ─── DND VITALS HANDLERS ─────────────────────────────────────────
@@ -255,10 +256,10 @@ export default function StatsEditorPage() {
       proficiencyBonus: edit.proficiencyBonus,
       speed: edit.speed,
       experiencePoints: edit.experiencePoints,
-      experience: edit.experiencePoints, // write to both for compatibility
+      experience: edit.experiencePoints,
     } as any);
     setDndVitalsEdits(prev => prev.map(e => e.id === charId ? { ...e, saved: true } : e));
-    flashStatus(`Saved vitals for "${edit.name}"`);
+    flashStatus(`${t('savedVitalsFor')} "${edit.name}"`);
   };
 
   const handleSaveAllDnDVitals = () => {
@@ -274,7 +275,7 @@ export default function StatsEditorPage() {
       } as any);
     });
     setDndVitalsEdits(prev => prev.map(e => ({ ...e, saved: true })));
-    flashStatus('All D&D vitals saved!');
+    flashStatus(t('allDndVitalsSaved'));
   };
 
   // ─── GUARDS ──────────────────────────────────────────────────────
@@ -286,7 +287,7 @@ export default function StatsEditorPage() {
   if (!isLoaded) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <p className="text-muted-foreground">Loading characters...</p>
+        <p className="text-muted-foreground">{t('loadingCharacters')}</p>
       </div>
     );
   }
@@ -315,9 +316,9 @@ export default function StatsEditorPage() {
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div>
-              <h1 className="text-2xl font-headline font-bold">Bulk Editor</h1>
+              <h1 className="text-2xl font-headline font-bold">{t('bulkEditor')}</h1>
               <p className="text-muted-foreground text-sm">
-                Quickly set stats and vitals for imported characters.
+                {t('bulkEditorDesc')}
               </p>
             </div>
           </div>
@@ -325,9 +326,9 @@ export default function StatsEditorPage() {
 
         {/* Tab Bar */}
         <div className="flex gap-2 flex-wrap">
-          {tabButton('stats', 'Stats')}
-          {tabButton('dh-vitals', `Dark Heresy Vitals (${dhVitalsEdits.length})`)}
-          {tabButton('dnd-vitals', `D&D Vitals (${dndVitalsEdits.length})`)}
+          {tabButton('stats', t('statsTab'))}
+          {tabButton('dh-vitals', `${t('dhVitals')} (${dhVitalsEdits.length})`)}
+          {tabButton('dnd-vitals', `${t('dndVitals')} (${dndVitalsEdits.length})`)}
         </div>
 
         {/* Save Status */}
@@ -345,21 +346,21 @@ export default function StatsEditorPage() {
           <div className="space-y-6">
             <div className="flex justify-end">
               <Button onClick={handleSaveAllStats}>
-                <Save className="mr-2 h-4 w-4" /> Save All Stats
+                <Save className="mr-2 h-4 w-4" /> {t('saveAllStats')}
               </Button>
             </div>
 
             {dhStats.length > 0 && (
               <Card>
                 <CardHeader>
-                  <CardTitle>Dark Heresy Stats ({dhStats.length})</CardTitle>
-                  <CardDescription>Default is 30. Set correct values from your sheets.</CardDescription>
+                  <CardTitle>{t('dhStats')} ({dhStats.length})</CardTitle>
+                  <CardDescription>{t('dhStatsDesc')}</CardDescription>
                 </CardHeader>
                 <CardContent className="overflow-x-auto">
                   <div className="space-y-2 min-w-[900px]">
                     <div className="grid grid-cols-[180px_repeat(10,1fr)_60px] gap-1 items-center text-xs font-semibold text-muted-foreground border-b pb-2">
-                      <span>Character</span>
-                      {DH_STATS.map(s => <span key={s.key} className="text-center">{s.label}</span>)}
+                      <span>{t('characterName')}</span>
+                      {DH_STATS.map(s => <span key={s.key} className="text-center">{t(s.labelKey)}</span>)}
                       <span></span>
                     </div>
                     {dhStats.map(char => (
@@ -388,14 +389,14 @@ export default function StatsEditorPage() {
             {dndStats.length > 0 && (
               <Card>
                 <CardHeader>
-                  <CardTitle>D&D Stats ({dndStats.length})</CardTitle>
-                  <CardDescription>Default is 10. Set correct values from your sheets.</CardDescription>
+                  <CardTitle>{t('dndStats')} ({dndStats.length})</CardTitle>
+                  <CardDescription>{t('dhStatsDesc')}</CardDescription>
                 </CardHeader>
                 <CardContent className="overflow-x-auto">
                   <div className="space-y-2 min-w-[700px]">
                     <div className="grid grid-cols-[180px_repeat(6,1fr)_60px] gap-1 items-center text-xs font-semibold text-muted-foreground border-b pb-2">
-                      <span>Character</span>
-                      {DND_STATS.map(s => <span key={s.key} className="text-center">{s.label}</span>)}
+                      <span>{t('characterName')}</span>
+                      {DND_STATS.map(s => <span key={s.key} className="text-center">{t(s.labelKey)}</span>)}
                       <span></span>
                     </div>
                     {dndStats.map(char => (
@@ -428,27 +429,25 @@ export default function StatsEditorPage() {
           <div className="space-y-6">
             <div className="flex justify-end">
               <Button onClick={handleSaveAllDHVitals}>
-                <Save className="mr-2 h-4 w-4" /> Save All DH Vitals
+                <Save className="mr-2 h-4 w-4" /> {t('saveAllDhVitals')}
               </Button>
             </div>
 
             {dhVitalsEdits.length > 0 ? (
               <Card>
                 <CardHeader>
-                  <CardTitle>Dark Heresy Vitals ({dhVitalsEdits.length})</CardTitle>
-                  <CardDescription>
-                    Setting max values. Current values are preserved. Notes are preserved.
-                  </CardDescription>
+                  <CardTitle>{t('dhVitals')} ({dhVitalsEdits.length})</CardTitle>
+                  <CardDescription>{t('dhVitalsDesc')}</CardDescription>
                 </CardHeader>
                 <CardContent className="overflow-x-auto">
                   <div className="space-y-2 min-w-[800px]">
                     <div className="grid grid-cols-[180px_repeat(5,1fr)_60px] gap-2 items-center text-xs font-semibold text-muted-foreground border-b pb-2">
-                      <span>Character</span>
-                      <span className="text-center">Wounds Max</span>
-                      <span className="text-center">Fate Max</span>
-                      <span className="text-center">Insanity</span>
-                      <span className="text-center">Corruption</span>
-                      <span className="text-center">Experience</span>
+                      <span>{t('characterName')}</span>
+                      <span className="text-center">{t('woundsMax')}</span>
+                      <span className="text-center">{t('fateMax')}</span>
+                      <span className="text-center">{t('insanity')}</span>
+                      <span className="text-center">{t('corruption')}</span>
+                      <span className="text-center">{t('experience')}</span>
                       <span></span>
                     </div>
                     {dhVitalsEdits.map(char => (
@@ -468,7 +467,7 @@ export default function StatsEditorPage() {
                 </CardContent>
               </Card>
             ) : (
-              <Card><CardContent className="py-12 text-center text-muted-foreground">No Dark Heresy characters found.</CardContent></Card>
+              <Card><CardContent className="py-12 text-center text-muted-foreground">{t('noDhCharacters')}</CardContent></Card>
             )}
           </div>
         )}
@@ -478,28 +477,26 @@ export default function StatsEditorPage() {
           <div className="space-y-6">
             <div className="flex justify-end">
               <Button onClick={handleSaveAllDnDVitals}>
-                <Save className="mr-2 h-4 w-4" /> Save All D&D Vitals
+                <Save className="mr-2 h-4 w-4" /> {t('saveAllDndVitals')}
               </Button>
             </div>
 
             {dndVitalsEdits.length > 0 ? (
               <Card>
                 <CardHeader>
-                  <CardTitle>D&D Vitals ({dndVitalsEdits.length})</CardTitle>
-                  <CardDescription>
-                    Setting max HP and core values. Current HP is preserved.
-                  </CardDescription>
+                  <CardTitle>{t('dndVitals')} ({dndVitalsEdits.length})</CardTitle>
+                  <CardDescription>{t('dndVitalsDesc')}</CardDescription>
                 </CardHeader>
                 <CardContent className="overflow-x-auto">
                   <div className="space-y-2 min-w-[850px]">
                     <div className="grid grid-cols-[180px_70px_90px_70px_70px_100px_110px_60px] gap-2 items-center text-xs font-semibold text-muted-foreground border-b pb-2">
-                      <span>Character</span>
-                      <span className="text-center">Level</span>
-                      <span className="text-center">HP Max</span>
-                      <span className="text-center">AC</span>
-                      <span className="text-center">Prof</span>
-                      <span className="text-center">Speed</span>
-                      <span className="text-center">Experience</span>
+                      <span>{t('characterName')}</span>
+                      <span className="text-center">{t('level')}</span>
+                      <span className="text-center">{t('hpMax')}</span>
+                      <span className="text-center">{t('armorClass')}</span>
+                      <span className="text-center">{t('profShort')}</span>
+                      <span className="text-center">{t('speed')}</span>
+                      <span className="text-center">{t('experience')}</span>
                       <span></span>
                     </div>
                     {dndVitalsEdits.map(char => (
@@ -520,7 +517,7 @@ export default function StatsEditorPage() {
                 </CardContent>
               </Card>
             ) : (
-              <Card><CardContent className="py-12 text-center text-muted-foreground">No D&D characters found.</CardContent></Card>
+              <Card><CardContent className="py-12 text-center text-muted-foreground">{t('noDndCharacters')}</CardContent></Card>
             )}
           </div>
         )}
@@ -529,7 +526,7 @@ export default function StatsEditorPage() {
         {characters.length === 0 && (
           <Card>
             <CardContent className="py-12 text-center text-muted-foreground">
-              No characters found. Create some characters first.
+              {t('noCharactersFound')}
             </CardContent>
           </Card>
         )}
