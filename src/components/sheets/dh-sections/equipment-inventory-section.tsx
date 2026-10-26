@@ -93,7 +93,7 @@ export const EquipmentInventorySection = React.forwardRef<{ saveAll: () => void 
     const handleArmorChange = (part: BodyPart, field: keyof ArmorPiece, value: string) => {
         setEditableEquipment(prev => {
             const newArmor = { ...prev.armor };
-            const currentPiece = newArmor[part] ? { ...newArmor[part]! } : { ap: 0, type: '', mods: '', quality: 'Common' };
+            const currentPiece = newArmor[part] ? { ...newArmor[part]! } : { ap: 0, type: '', mods: '', quality: '' };
             if (field === 'ap') currentPiece.ap = parseInt(value, 10) || 0; else (currentPiece as any)[field] = value;
             newArmor[part] = currentPiece;
             return { ...prev, armor: newArmor };
@@ -104,7 +104,7 @@ export const EquipmentInventorySection = React.forwardRef<{ saveAll: () => void 
         setEditableEquipment(prev => ({ ...prev, weapons: { ...prev.weapons, melee: (prev.weapons.melee ?? []).map(w => w.id === weaponId ? { ...w, [field]: value } : w) } }));
     };
     const addMeleeWeapon = () => {
-        const newWeapon: MeleeWeapon = { id: `melee-${Date.now()}`, name: 'New Melee Weapon', type: '', range: '', penetration: '', damage: '', traits: '', notes: '', equipped: false };
+        const newWeapon: MeleeWeapon = { id: `melee-${Date.now()}`, name: t('newMeleeWeapon'), type: '', range: '', penetration: '', damage: '', traits: '', notes: '', equipped: false };
         setEditableEquipment(prev => ({ ...prev, weapons: { ...prev.weapons, melee: [...(prev.weapons.melee ?? []), newWeapon] } }));
     };
     const removeMeleeWeapon = (weaponId: string) => {
@@ -120,7 +120,7 @@ export const EquipmentInventorySection = React.forwardRef<{ saveAll: () => void 
         })}}));
     };
     const addRangedWeapon = () => {
-        const newWeapon: RangedWeapon = { id: `ranged-${Date.now()}`, name: 'New Ranged Weapon', type: '', range: '', rof: '', damage: '', clip: 0, clipSize: 0, reload: '', traits: '', notes: '', equipped: false };
+        const newWeapon: RangedWeapon = { id: `ranged-${Date.now()}`, name: t('newRangedWeapon'), type: '', range: '', rof: '', damage: '', clip: 0, clipSize: 0, reload: '', traits: '', notes: '', equipped: false };
         setEditableEquipment(prev => ({ ...prev, weapons: { ...prev.weapons, ranged: [...(prev.weapons.ranged ?? []), newWeapon] } }));
     };
     const removeRangedWeapon = (weaponId: string) => {
@@ -131,6 +131,45 @@ export const EquipmentInventorySection = React.forwardRef<{ saveAll: () => void 
 
     const bodyParts: BodyPart[] = ['Head', 'Right arm', 'Left arm', 'Body', 'Right leg', 'Left leg'];
     const bodyPartLocations: Record<BodyPart, string> = { 'Head': '1-10', 'Right arm': '11-20', 'Left arm': '21-30', 'Body': '31-70', 'Right leg': '71-85', 'Left leg': '86-00' };
+    
+    const bodyPartTranslations: Record<BodyPart, string> = {
+        'Head': t('armorHead'),
+        'Right arm': t('armorRightArm'),
+        'Left arm': t('armorLeftArm'),
+        'Body': t('armorBody'),
+        'Right leg': t('armorRightLeg'),
+        'Left leg': t('armorLeftLeg'),
+    };
+
+    const ARMOR_TYPE_OPTIONS = ARMOR_TYPES.map(type => ({
+        value: type,
+        label: t(`armorType${type}` as any)
+    }));
+    // Helper to translate armor type for display
+    const displayArmorType = (type: string | undefined | null) => {
+        if (!type) return '-';
+        const translationKey = `armorType${type}` as any;
+        const translated = t(translationKey);
+        return translated === translationKey ? type : translated;
+    };
+
+    // Helper to translate armor quality for display
+    const displayQuality = (quality: string | undefined | null) => {
+        if (!quality || quality === 'none') return '-';
+        const translationKey = `armorQuality${quality.replace('-', '')}` as any;
+        const translated = t(translationKey);
+        return translated === translationKey ? quality : translated;
+    };
+    // LANDMARK 1: Changed 'none' value from '' to 'none' to avoid Radix Select error
+    const ARMOR_QUALITY_OPTIONS = [
+        { value: 'none', label: t('armorQualityNone') },
+        { value: 'Poor', label: t('armorQualityPoor') },
+        { value: 'Cheap', label: t('armorQualityCheap') },
+        { value: 'Common', label: t('armorQualityCommon') },
+        { value: 'Good', label: t('armorQualityGood') },
+        { value: 'Best', label: t('armorQualityBest') },
+        { value: 'Master-Crafted', label: t('armorQualityMasterCrafted') },
+    ];
 
     const currentEquipment = isArmorEditing || isMeleeWeaponsEditing || isRangedWeaponsEditing ? editableEquipment : (character.equipment ?? defaultEquipment);
     const currentInventory = isInventoryEditing ? editableInventory : (character.inventory ?? []);
@@ -159,9 +198,117 @@ export const EquipmentInventorySection = React.forwardRef<{ saveAll: () => void 
                                     </div>
                                     <CollapsibleContent forceMount={!isCompactView}>
                                         {isCompactView ? (
-                                            <div className="space-y-2">{bodyParts.map(part => { const armorPiece = currentEquipment.armor[part]; const title = part.replace(' arm', ' Arm').replace(' leg', ' Leg'); return ( <div key={part} className="border rounded-lg p-3 space-y-2 bg-background/50"><h5 className="font-semibold">{title} ({bodyPartLocations[part]})</h5><div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs">{isArmorEditing ? ( <><div className="space-y-1"><Label>AP</Label><Input type="number" className="h-7 text-xs" value={armorPiece?.ap === 0 ? '' : (armorPiece?.ap ?? '')} onChange={e => handleArmorChange(part, 'ap', e.target.value)} /></div><div className="space-y-1"><Label>Type</Label><Select value={armorPiece?.type ?? ''} onValueChange={(value) => handleArmorChange(part, 'type', value)}><SelectTrigger className="h-7 text-xs"><SelectValue placeholder="Type..." /></SelectTrigger><SelectContent>{ARMOR_TYPES.map((type) => ( <SelectItem key={type} value={type}>{type}</SelectItem> ))}</SelectContent></Select></div><div className="col-span-2 space-y-1"><Label>Mods</Label><Input className="h-7 text-xs" value={armorPiece?.mods ?? ''} onChange={e => handleArmorChange(part, 'mods', e.target.value)} /></div><div className="col-span-2 space-y-1"><Label>Quality</Label><Input className="h-7 text-xs" value={armorPiece?.quality ?? ''} onChange={e => handleArmorChange(part, 'quality', e.target.value)} /></div></> ) : ( <><div><strong className="text-muted-foreground">AP:</strong> {armorPiece?.ap ?? '-'}</div><div><strong className="text-muted-foreground">Type:</strong> {armorPiece?.type ?? '-'}</div><div className="col-span-2"><strong className="text-muted-foreground">Mods:</strong> {armorPiece?.mods ?? '-'}</div><div className="col-span-2"><strong className="text-muted-foreground">Quality:</strong> {armorPiece?.quality ?? '-'}</div></> )}</div></div> ) })}</div>
+                                            <div className="space-y-2">{bodyParts.map(part => { 
+                                                const armorPiece = currentEquipment.armor[part]; 
+                                                const translatedName = bodyPartTranslations[part];
+                                                return ( 
+                                                    <div key={part} className="border rounded-lg p-3 space-y-2 bg-background/50">
+                                                        <h5 className="font-semibold">{translatedName} ({bodyPartLocations[part]})</h5>
+                                                        <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
+                                                            {isArmorEditing ? ( 
+                                                                <>
+                                                                    <div className="space-y-1"><Label>{t('armorAp')}</Label><Input type="number" className="h-7 text-xs" value={armorPiece?.ap === 0 ? '' : (armorPiece?.ap ?? '')} onChange={e => handleArmorChange(part, 'ap', e.target.value)} /></div>
+                                                                    <div className="space-y-1">
+                                                                        <Label>{t('armorType')}</Label>
+                                                                        <Select value={armorPiece?.type ?? ''} onValueChange={(value) => handleArmorChange(part, 'type', value)}>
+                                                                            <SelectTrigger className="h-7 text-xs">
+                                                                                <SelectValue placeholder={t('armorType')} />
+                                                                            </SelectTrigger>
+                                                                            <SelectContent>
+                                                                                {ARMOR_TYPE_OPTIONS.map((option) => ( 
+                                                                                    <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem> 
+                                                                                ))}
+                                                                            </SelectContent>
+                                                                        </Select>
+                                                                    </div>
+                                                                    <div className="col-span-2 space-y-1"><Label>{t('armorMods')}</Label><Input className="h-7 text-xs" value={armorPiece?.mods ?? ''} onChange={e => handleArmorChange(part, 'mods', e.target.value)} /></div>
+                                                                    <div className="col-span-2 space-y-1">
+                                                                        <Label>{t('armorQuality')}</Label>
+                                                                        <Select value={armorPiece?.quality ?? 'none'} onValueChange={(value) => handleArmorChange(part, 'quality', value)}>
+                                                                            <SelectTrigger className="h-7 text-xs">
+                                                                                <SelectValue placeholder={t('armorQuality')} />
+                                                                            </SelectTrigger>
+                                                                            <SelectContent>
+                                                                                {ARMOR_QUALITY_OPTIONS.map((option) => ( 
+                                                                                    <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem> 
+                                                                                ))}
+                                                                            </SelectContent>
+                                                                        </Select>
+                                                                    </div>
+                                                                </> 
+                                                            ) : ( 
+                                                                <>
+                                                                    <div><strong className="text-muted-foreground">{t('armorAp')}:</strong> {armorPiece?.ap ?? '-'}</div>
+                                                                    <div><strong className="text-muted-foreground">{t('armorType')}:</strong> {displayArmorType(armorPiece?.type)}</div>
+                                                                    <div className="col-span-2"><strong className="text-muted-foreground">{t('armorMods')}:</strong> {armorPiece?.mods ?? '-'}</div>
+                                                                    <div className="col-span-2"><strong className="text-muted-foreground">{t('armorQuality')}:</strong> {displayQuality(armorPiece?.quality)}</div>
+                                                                </> 
+                                                            )}
+                                                        </div>
+                                                    </div> 
+                                                ) 
+                                            })}</div>
                                         ) : (
-                                            <div className="border rounded-lg p-2"><Table><TableHeader><TableRow><TableHead>Location</TableHead><TableHead>AP</TableHead><TableHead>Type</TableHead><TableHead>Mods</TableHead><TableHead>Quality</TableHead></TableRow></TableHeader><TableBody>{bodyParts.map(part => { const armorPiece = currentEquipment.armor[part]; return ( <TableRow key={part}><TableCell className="font-medium">{part}</TableCell>{isArmorEditing ? ( <><TableCell><Input type="number" className="h-8 w-16" value={armorPiece?.ap ?? ''} onChange={e => handleArmorChange(part, 'ap', e.target.value)}/></TableCell><TableCell><Select value={armorPiece?.type ?? ''} onValueChange={(value) => handleArmorChange(part, 'type', value)}><SelectTrigger className="h-8"><SelectValue placeholder="Select type..." /></SelectTrigger><SelectContent>{ARMOR_TYPES.map((type) => ( <SelectItem key={type} value={type}>{type}</SelectItem> ))}</SelectContent></Select></TableCell><TableCell><Input className="h-8" value={armorPiece?.mods ?? ''} onChange={e => handleArmorChange(part, 'mods', e.target.value)} /></TableCell><TableCell><Input className="h-8" value={armorPiece?.quality ?? ''} onChange={e => handleArmorChange(part, 'quality', e.target.value)}/></TableCell></> ) : ( <><TableCell>{armorPiece?.ap ?? '-'}</TableCell><TableCell>{armorPiece?.type ?? '-'}</TableCell><TableCell>{armorPiece?.mods ?? '-'}</TableCell><TableCell>{armorPiece?.quality ?? '-'}</TableCell></> )}</TableRow> ); })}</TableBody></Table></div>
+                                            <div className="border rounded-lg p-2">
+                                                <Table>
+                                                    <TableHeader>
+                                                        <TableRow>
+                                                            <TableHead>{t('armorLocation')}</TableHead>
+                                                            <TableHead>{t('armorAp')}</TableHead>
+                                                            <TableHead>{t('armorType')}</TableHead>
+                                                            <TableHead>{t('armorMods')}</TableHead>
+                                                            <TableHead>{t('armorQuality')}</TableHead>
+                                                        </TableRow>
+                                                    </TableHeader>
+                                                    <TableBody>
+                                                        {bodyParts.map(part => { 
+                                                            const armorPiece = currentEquipment.armor[part]; 
+                                                            return ( 
+                                                                <TableRow key={part}>
+                                                                    <TableCell className="font-medium">{bodyPartTranslations[part]}</TableCell>
+                                                                    {isArmorEditing ? ( 
+                                                                        <>
+                                                                            <TableCell><Input type="number" className="h-8 w-16" value={armorPiece?.ap ?? ''} onChange={e => handleArmorChange(part, 'ap', e.target.value)}/></TableCell>
+                                                                            <TableCell>
+                                                                                <Select value={armorPiece?.type ?? ''} onValueChange={(value) => handleArmorChange(part, 'type', value)}>
+                                                                                    <SelectTrigger className="h-8">
+                                                                                        <SelectValue placeholder={t('armorType')} />
+                                                                                    </SelectTrigger>
+                                                                                    <SelectContent>
+                                                                                        {ARMOR_TYPE_OPTIONS.map((option) => ( 
+                                                                                            <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem> 
+                                                                                        ))}
+                                                                                    </SelectContent>
+                                                                                </Select>
+                                                                            </TableCell>
+                                                                            <TableCell><Input className="h-8" value={armorPiece?.mods ?? ''} onChange={e => handleArmorChange(part, 'mods', e.target.value)} /></TableCell>
+                                                                            <TableCell>
+                                                                                <Select value={armorPiece?.quality ?? 'none'} onValueChange={(value) => handleArmorChange(part, 'quality', value)}>
+                                                                                    <SelectTrigger className="h-8">
+                                                                                        <SelectValue placeholder={t('armorQuality')} />
+                                                                                    </SelectTrigger>
+                                                                                    <SelectContent>
+                                                                                        {ARMOR_QUALITY_OPTIONS.map((option) => ( 
+                                                                                            <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem> 
+                                                                                        ))}
+                                                                                    </SelectContent>
+                                                                                </Select>
+                                                                            </TableCell>
+                                                                        </> 
+                                                                    ) : ( 
+                                                                        <>
+                                                                            <TableCell>{armorPiece?.ap ?? '-'}</TableCell>
+                                                                            <TableCell>{displayArmorType(armorPiece?.type)}</TableCell>
+                                                                            <TableCell>{armorPiece?.mods ?? '-'}</TableCell>
+                                                                            <TableCell>{displayQuality(armorPiece?.quality)}</TableCell>
+                                                                        </> 
+                                                                    )}
+                                                                </TableRow> 
+                                                            ); 
+                                                        })}
+                                                    </TableBody>
+                                                </Table>
+                                            </div>
                                         )}
                                     </CollapsibleContent>
                                 </Collapsible>
@@ -181,8 +328,8 @@ export const EquipmentInventorySection = React.forwardRef<{ saveAll: () => void 
                                                                     <Button variant={weapon.notes ? 'secondary' : 'ghost'} size="icon" className="h-7 w-7"><InfoIcon className="h-4 w-4" /></Button>
                                                                 </PopoverTrigger>
                                                                 <PopoverContent className="w-64">
-                                                                    <Label className="text-xs mb-2 block">Notes for {weapon.name}</Label>
-                                                                    <Textarea defaultValue={weapon.notes || ''} {...(isMeleeWeaponsEditing ? {onChange: (e) => handleMeleeWeaponChange(weapon.id, 'notes', e.target.value)} : {onBlur: (e) => updateCharacter(character.id, { equipment: {...character.equipment, weapons: {...character.equipment.weapons, melee: (character.equipment.weapons.melee ?? []).map(w => w.id === weapon.id ? {...w, notes: e.target.value} : w) } }})})} placeholder="Add notes..." className="mt-2 min-h-[100px] text-sm" />
+                                                                    <Label className="text-xs mb-2 block">{t('notesFor')} {weapon.name}</Label>
+                                                                    <Textarea defaultValue={weapon.notes || ''} {...(isMeleeWeaponsEditing ? {onChange: (e) => handleMeleeWeaponChange(weapon.id, 'notes', e.target.value)} : {onBlur: (e) => updateCharacter(character.id, { equipment: {...character.equipment, weapons: {...character.equipment.weapons, melee: (character.equipment.weapons.melee ?? []).map(w => w.id === weapon.id ? {...w, notes: e.target.value} : w) } }})})} placeholder={t('addNotesPlaceholder')} className="mt-2 min-h-[100px] text-sm" />
                                                                 </PopoverContent>
                                                             </Popover>
                                                         )}
@@ -191,9 +338,9 @@ export const EquipmentInventorySection = React.forwardRef<{ saveAll: () => void 
                                                 </div>
                                                 <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
                                                     {isMeleeWeaponsEditing ? (
-                                                        <><div className="space-y-1"> <Label>Type</Label> <Input defaultValue={weapon.type} onChange={e => handleMeleeWeaponChange(weapon.id, 'type', e.target.value)} className="h-7 text-xs"/> </div><div className="space-y-1"> <Label>Range</Label> <Input defaultValue={weapon.range} onChange={e => handleMeleeWeaponChange(weapon.id, 'range', e.target.value)} className="h-7 text-xs"/> </div><div className="space-y-1"> <Label>Damage</Label> <Input defaultValue={weapon.damage} onChange={e => handleMeleeWeaponChange(weapon.id, 'damage', e.target.value)} className="h-7 text-xs"/> </div><div className="space-y-1"> <Label>Penetration</Label> <Input defaultValue={weapon.penetration} onChange={e => handleMeleeWeaponChange(weapon.id, 'penetration', e.target.value)} className="h-7 text-xs"/> </div><div className="col-span-2 space-y-1"> <Label>Traits</Label> <Input defaultValue={weapon.traits} onChange={e => handleMeleeWeaponChange(weapon.id, 'traits', e.target.value)} className="h-7 text-xs"/> </div></>
+                                                        <><div className="space-y-1"> <Label>{t('weaponType')}</Label> <Input defaultValue={weapon.type} onChange={e => handleMeleeWeaponChange(weapon.id, 'type', e.target.value)} className="h-7 text-xs"/> </div><div className="space-y-1"> <Label>{t('weaponRange')}</Label> <Input defaultValue={weapon.range} onChange={e => handleMeleeWeaponChange(weapon.id, 'range', e.target.value)} className="h-7 text-xs"/> </div><div className="space-y-1"> <Label>{t('weaponDamage')}</Label> <Input defaultValue={weapon.damage} onChange={e => handleMeleeWeaponChange(weapon.id, 'damage', e.target.value)} className="h-7 text-xs"/> </div><div className="space-y-1"> <Label>{t('weaponPenetration')}</Label> <Input defaultValue={weapon.penetration} onChange={e => handleMeleeWeaponChange(weapon.id, 'penetration', e.target.value)} className="h-7 text-xs"/> </div><div className="col-span-2 space-y-1"> <Label>{t('weaponTraits')}</Label> <Input defaultValue={weapon.traits} onChange={e => handleMeleeWeaponChange(weapon.id, 'traits', e.target.value)} className="h-7 text-xs"/> </div></>
                                                     ) : (
-                                                        <><div><strong className="text-muted-foreground">Type:</strong> {weapon.type || '-'}</div><div><strong className="text-muted-foreground">Range:</strong> {weapon.range || '-'}</div><div><strong className="text-muted-foreground">Dmg:</strong> {weapon.damage || '-'}</div><div><strong className="text-muted-foreground">Pen:</strong> {weapon.penetration || '-'}</div><div className="col-span-2"><strong className="text-muted-foreground">Traits:</strong> <span className="break-words">{weapon.traits || '-'}</span></div></>
+                                                        <><div><strong className="text-muted-foreground">{t('weaponType')}:</strong> {weapon.type || '-'}</div><div><strong className="text-muted-foreground">{t('weaponRange')}:</strong> {weapon.range || '-'}</div><div><strong className="text-muted-foreground">{t('weaponDamage')}:</strong> {weapon.damage || '-'}</div><div><strong className="text-muted-foreground">{t('weaponPenetration')}:</strong> {weapon.penetration || '-'}</div><div className="col-span-2"><strong className="text-muted-foreground">{t('weaponTraits')}:</strong> <span className="break-words">{weapon.traits || '-'}</span></div></>
                                                     )}
                                                 </div>
                                                 <div className="flex items-center space-x-2 pt-2">
@@ -225,8 +372,8 @@ export const EquipmentInventorySection = React.forwardRef<{ saveAll: () => void 
                                                                             <Button variant={weapon.notes ? 'secondary' : 'ghost'} size="icon" className="h-7 w-7"><InfoIcon className="h-4 w-4" /></Button>
                                                                         </PopoverTrigger>
                                                                         <PopoverContent className="w-64">
-                                                                            <Label className="text-xs mb-2 block">Notes for {weapon.name}</Label>
-                                                                            <Textarea defaultValue={weapon.notes || ''} {...(isMeleeWeaponsEditing ? {onChange: (e) => handleMeleeWeaponChange(weapon.id, 'notes', e.target.value)} : {onBlur: (e) => updateCharacter(character.id, { equipment: {...character.equipment, weapons: {...character.equipment.weapons, melee: (character.equipment.weapons.melee ?? []).map(w => w.id === weapon.id ? {...w, notes: e.target.value} : w) } }})})} placeholder="Add notes..." className="mt-2 min-h-[100px] text-sm" />
+                                                                            <Label className="text-xs mb-2 block">{t('notesFor')} {weapon.name}</Label>
+                                                                            <Textarea defaultValue={weapon.notes || ''} {...(isMeleeWeaponsEditing ? {onChange: (e) => handleMeleeWeaponChange(weapon.id, 'notes', e.target.value)} : {onBlur: (e) => updateCharacter(character.id, { equipment: {...character.equipment, weapons: {...character.equipment.weapons, melee: (character.equipment.weapons.melee ?? []).map(w => w.id === weapon.id ? {...w, notes: e.target.value} : w) } }})})} placeholder={t('addNotesPlaceholder')} className="mt-2 min-h-[100px] text-sm" />
                                                                         </PopoverContent>
                                                                     </Popover>
                                                                 )}
@@ -235,9 +382,9 @@ export const EquipmentInventorySection = React.forwardRef<{ saveAll: () => void 
                                                         </div>
                                                         <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
                                                             {isMeleeWeaponsEditing ? (
-                                                                <><div className="space-y-1"> <Label>Type</Label> <Input defaultValue={weapon.type} onChange={e => handleMeleeWeaponChange(weapon.id, 'type', e.target.value)} className="h-7 text-xs"/> </div><div className="space-y-1"> <Label>Range</Label> <Input defaultValue={weapon.range} onChange={e => handleMeleeWeaponChange(weapon.id, 'range', e.target.value)} className="h-7 text-xs"/> </div><div className="space-y-1"> <Label>Damage</Label> <Input defaultValue={weapon.damage} onChange={e => handleMeleeWeaponChange(weapon.id, 'damage', e.target.value)} className="h-7 text-xs"/> </div><div className="space-y-1"> <Label>Penetration</Label> <Input defaultValue={weapon.penetration} onChange={e => handleMeleeWeaponChange(weapon.id, 'penetration', e.target.value)} className="h-7 text-xs"/> </div><div className="col-span-2 space-y-1"> <Label>Traits</Label> <Input defaultValue={weapon.traits} onChange={e => handleMeleeWeaponChange(weapon.id, 'traits', e.target.value)} className="h-7 text-xs"/> </div></>
+                                                                <><div className="space-y-1"> <Label>{t('weaponType')}</Label> <Input defaultValue={weapon.type} onChange={e => handleMeleeWeaponChange(weapon.id, 'type', e.target.value)} className="h-7 text-xs"/> </div><div className="space-y-1"> <Label>{t('weaponRange')}</Label> <Input defaultValue={weapon.range} onChange={e => handleMeleeWeaponChange(weapon.id, 'range', e.target.value)} className="h-7 text-xs"/> </div><div className="space-y-1"> <Label>{t('weaponDamage')}</Label> <Input defaultValue={weapon.damage} onChange={e => handleMeleeWeaponChange(weapon.id, 'damage', e.target.value)} className="h-7 text-xs"/> </div><div className="space-y-1"> <Label>{t('weaponPenetration')}</Label> <Input defaultValue={weapon.penetration} onChange={e => handleMeleeWeaponChange(weapon.id, 'penetration', e.target.value)} className="h-7 text-xs"/> </div><div className="col-span-2 space-y-1"> <Label>{t('weaponTraits')}</Label> <Input defaultValue={weapon.traits} onChange={e => handleMeleeWeaponChange(weapon.id, 'traits', e.target.value)} className="h-7 text-xs"/> </div></>
                                                             ) : (
-                                                                <><div><strong className="text-muted-foreground">Type:</strong> {weapon.type || '-'}</div><div><strong className="text-muted-foreground">Range:</strong> {weapon.range || '-'}</div><div><strong className="text-muted-foreground">Dmg:</strong> {weapon.damage || '-'}</div><div><strong className="text-muted-foreground">Pen:</strong> {weapon.penetration || '-'}</div><div className="col-span-2"><strong className="text-muted-foreground">Traits:</strong> <span className="break-words">{weapon.traits || '-'}</span></div></>
+                                                                <><div><strong className="text-muted-foreground">{t('weaponType')}:</strong> {weapon.type || '-'}</div><div><strong className="text-muted-foreground">{t('weaponRange')}:</strong> {weapon.range || '-'}</div><div><strong className="text-muted-foreground">{t('weaponDamage')}:</strong> {weapon.damage || '-'}</div><div><strong className="text-muted-foreground">{t('weaponPenetration')}:</strong> {weapon.penetration || '-'}</div><div className="col-span-2"><strong className="text-muted-foreground">{t('weaponTraits')}:</strong> <span className="break-words">{weapon.traits || '-'}</span></div></>
                                                             )}
                                                         </div>
                                                         <div className="flex items-center space-x-2 pt-2">
@@ -267,8 +414,8 @@ export const EquipmentInventorySection = React.forwardRef<{ saveAll: () => void 
                                                                     <Button variant={weapon.notes ? 'secondary' : 'ghost'} size="icon" className="h-7 w-7"><InfoIcon className="h-4 w-4" /></Button>
                                                                 </PopoverTrigger>
                                                                 <PopoverContent className="w-64">
-                                                                    <Label className="text-xs mb-2 block">Notes for {weapon.name}</Label>
-                                                                    <Textarea defaultValue={weapon.notes || ''} {...(isRangedWeaponsEditing ? {onChange: (e) => handleRangedWeaponChange(weapon.id, 'notes', e.target.value)} : {onBlur: (e) => updateCharacter(character.id, { equipment: {...character.equipment, weapons: {...character.equipment.weapons, ranged: (character.equipment.weapons.ranged ?? []).map(w => w.id === weapon.id ? {...w, notes: e.target.value} : w) } }})})} placeholder="Add notes..." className="mt-2 min-h-[100px] text-sm" />
+                                                                    <Label className="text-xs mb-2 block">{t('notesFor')} {weapon.name}</Label>
+                                                                    <Textarea defaultValue={weapon.notes || ''} {...(isRangedWeaponsEditing ? {onChange: (e) => handleRangedWeaponChange(weapon.id, 'notes', e.target.value)} : {onBlur: (e) => updateCharacter(character.id, { equipment: {...character.equipment, weapons: {...character.equipment.weapons, ranged: (character.equipment.weapons.ranged ?? []).map(w => w.id === weapon.id ? {...w, notes: e.target.value} : w) } }})})} placeholder={t('addNotesPlaceholder')} className="mt-2 min-h-[100px] text-sm" />
                                                                 </PopoverContent>
                                                             </Popover>
                                                         )}
@@ -277,9 +424,9 @@ export const EquipmentInventorySection = React.forwardRef<{ saveAll: () => void 
                                                 </div>
                                                 <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
                                                     {isRangedWeaponsEditing ? (
-                                                        <><div className="space-y-1"> <Label>Type</Label> <Input defaultValue={weapon.type} onChange={e => handleRangedWeaponChange(weapon.id, 'type', e.target.value)} className="h-7 text-xs"/> </div><div className="space-y-1"> <Label>Range</Label> <Input defaultValue={weapon.range} onChange={e => handleRangedWeaponChange(weapon.id, 'range', e.target.value)} className="h-7 text-xs"/> </div><div className="space-y-1"> <Label>RoF</Label> <Input defaultValue={weapon.rof} onChange={e => handleRangedWeaponChange(weapon.id, 'rof', e.target.value)} className="h-7 text-xs"/> </div><div className="space-y-1"> <Label>Damage</Label> <Input defaultValue={weapon.damage} onChange={e => handleRangedWeaponChange(weapon.id, 'damage', e.target.value)} className="h-7 text-xs"/> </div><div className="space-y-1"> <Label>Clip</Label> <Input type="number" defaultValue={weapon.clip === 0 ? '' : weapon.clip} onChange={e => handleRangedWeaponChange(weapon.id, 'clip', e.target.value)} className="h-7 text-xs"/> </div><div className="space-y-1"> <Label>Clip Size</Label> <Input type="number" defaultValue={weapon.clipSize === 0 ? '' : weapon.clipSize} onChange={e => handleRangedWeaponChange(weapon.id, 'clipSize', e.target.value)} className="h-7 text-xs"/> </div><div className="col-span-2 space-y-1"> <Label>Reload</Label> <Input defaultValue={weapon.reload} onChange={e => handleRangedWeaponChange(weapon.id, 'reload', e.target.value)} className="h-7 text-xs"/> </div><div className="col-span-2 space-y-1"> <Label>Traits</Label> <Input defaultValue={weapon.traits} onChange={e => handleRangedWeaponChange(weapon.id, 'traits', e.target.value)} className="h-7 text-xs"/> </div></>
+                                                        <><div className="space-y-1"> <Label>{t('weaponType')}</Label> <Input defaultValue={weapon.type} onChange={e => handleRangedWeaponChange(weapon.id, 'type', e.target.value)} className="h-7 text-xs"/> </div><div className="space-y-1"> <Label>{t('weaponRange')}</Label> <Input defaultValue={weapon.range} onChange={e => handleRangedWeaponChange(weapon.id, 'range', e.target.value)} className="h-7 text-xs"/> </div><div className="space-y-1"> <Label>{t('weaponRof')}</Label> <Input defaultValue={weapon.rof} onChange={e => handleRangedWeaponChange(weapon.id, 'rof', e.target.value)} className="h-7 text-xs"/> </div><div className="space-y-1"> <Label>{t('weaponDamage')}</Label> <Input defaultValue={weapon.damage} onChange={e => handleRangedWeaponChange(weapon.id, 'damage', e.target.value)} className="h-7 text-xs"/> </div><div className="space-y-1"> <Label>{t('weaponClip')}</Label> <Input type="number" defaultValue={weapon.clip === 0 ? '' : weapon.clip} onChange={e => handleRangedWeaponChange(weapon.id, 'clip', e.target.value)} className="h-7 text-xs"/> </div><div className="space-y-1"> <Label>{t('weaponClipSize')}</Label> <Input type="number" defaultValue={weapon.clipSize === 0 ? '' : weapon.clipSize} onChange={e => handleRangedWeaponChange(weapon.id, 'clipSize', e.target.value)} className="h-7 text-xs"/> </div><div className="col-span-2 space-y-1"> <Label>{t('weaponReload')}</Label> <Input defaultValue={weapon.reload} onChange={e => handleRangedWeaponChange(weapon.id, 'reload', e.target.value)} className="h-7 text-xs"/> </div><div className="col-span-2 space-y-1"> <Label>{t('weaponTraits')}</Label> <Input defaultValue={weapon.traits} onChange={e => handleRangedWeaponChange(weapon.id, 'traits', e.target.value)} className="h-7 text-xs"/> </div></>
                                                     ) : (
-                                                        <><div><strong className="text-muted-foreground">Type:</strong> {weapon.type || '-'}</div><div><strong className="text-muted-foreground">Range:</strong> {weapon.range || '-'}</div><div><strong className="text-muted-foreground">RoF:</strong> {weapon.rof || '-'}</div><div><strong className="text-muted-foreground">Dmg:</strong> {weapon.damage || '-'}</div><div><strong className="text-muted-foreground">Clip:</strong> {weapon.clip} / {weapon.clipSize}</div><div><strong className="text-muted-foreground">Reload:</strong> {weapon.reload || '-'}</div><div className="col-span-2"><strong className="text-muted-foreground">Traits:</strong> <span className="break-words">{weapon.traits || '-'}</span></div></>
+                                                        <><div><strong className="text-muted-foreground">{t('weaponType')}:</strong> {weapon.type || '-'}</div><div><strong className="text-muted-foreground">{t('weaponRange')}:</strong> {weapon.range || '-'}</div><div><strong className="text-muted-foreground">{t('weaponRof')}:</strong> {weapon.rof || '-'}</div><div><strong className="text-muted-foreground">{t('weaponDamage')}:</strong> {weapon.damage || '-'}</div><div><strong className="text-muted-foreground">{t('weaponClip')}:</strong> {weapon.clip} / {weapon.clipSize}</div><div><strong className="text-muted-foreground">{t('weaponReload')}:</strong> {weapon.reload || '-'}</div><div className="col-span-2"><strong className="text-muted-foreground">{t('weaponTraits')}:</strong> <span className="break-words">{weapon.traits || '-'}</span></div></>
                                                     )}
                                                 </div>
                                                 <div className="flex items-center space-x-2 pt-2">
@@ -310,8 +457,8 @@ export const EquipmentInventorySection = React.forwardRef<{ saveAll: () => void 
                                                                             <Button variant={weapon.notes ? 'secondary' : 'ghost'} size="icon" className="h-7 w-7"><InfoIcon className="h-4 w-4" /></Button>
                                                                         </PopoverTrigger>
                                                                         <PopoverContent className="w-64">
-                                                                            <Label className="text-xs mb-2 block">Notes for {weapon.name}</Label>
-                                                                            <Textarea defaultValue={weapon.notes || ''} {...(isRangedWeaponsEditing ? {onChange: (e) => handleRangedWeaponChange(weapon.id, 'notes', e.target.value)} : {onBlur: (e) => updateCharacter(character.id, { equipment: {...character.equipment, weapons: {...character.equipment.weapons, ranged: (character.equipment.weapons.ranged ?? []).map(w => w.id === weapon.id ? {...w, notes: e.target.value} : w) } }})})} placeholder="Add notes..." className="mt-2 min-h-[100px] text-sm" />
+                                                                            <Label className="text-xs mb-2 block">{t('notesFor')} {weapon.name}</Label>
+                                                                            <Textarea defaultValue={weapon.notes || ''} {...(isRangedWeaponsEditing ? {onChange: (e) => handleRangedWeaponChange(weapon.id, 'notes', e.target.value)} : {onBlur: (e) => updateCharacter(character.id, { equipment: {...character.equipment, weapons: {...character.equipment.weapons, ranged: (character.equipment.weapons.ranged ?? []).map(w => w.id === weapon.id ? {...w, notes: e.target.value} : w) } }})})} placeholder={t('addNotesPlaceholder')} className="mt-2 min-h-[100px] text-sm" />
                                                                         </PopoverContent>
                                                                     </Popover>
                                                                 )}
@@ -320,9 +467,9 @@ export const EquipmentInventorySection = React.forwardRef<{ saveAll: () => void 
                                                         </div>
                                                         <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
                                                             {isRangedWeaponsEditing ? (
-                                                                <><div className="space-y-1"> <Label>Type</Label> <Input defaultValue={weapon.type} onChange={e => handleRangedWeaponChange(weapon.id, 'type', e.target.value)} className="h-7 text-xs"/> </div><div className="space-y-1"> <Label>Range</Label> <Input defaultValue={weapon.range} onChange={e => handleRangedWeaponChange(weapon.id, 'range', e.target.value)} className="h-7 text-xs"/> </div><div className="space-y-1"> <Label>RoF</Label> <Input defaultValue={weapon.rof} onChange={e => handleRangedWeaponChange(weapon.id, 'rof', e.target.value)} className="h-7 text-xs"/> </div><div className="space-y-1"> <Label>Damage</Label> <Input defaultValue={weapon.damage} onChange={e => handleRangedWeaponChange(weapon.id, 'damage', e.target.value)} className="h-7 text-xs"/> </div><div className="space-y-1"> <Label>Clip</Label> <Input type="number" defaultValue={weapon.clip === 0 ? '' : weapon.clip} onChange={e => handleRangedWeaponChange(weapon.id, 'clip', e.target.value)} className="h-7 text-xs"/> </div><div className="space-y-1"> <Label>Clip Size</Label> <Input type="number" defaultValue={weapon.clipSize === 0 ? '' : weapon.clipSize} onChange={e => handleRangedWeaponChange(weapon.id, 'clipSize', e.target.value)} className="h-7 text-xs"/> </div><div className="col-span-2 space-y-1"> <Label>Reload</Label> <Input defaultValue={weapon.reload} onChange={e => handleRangedWeaponChange(weapon.id, 'reload', e.target.value)} className="h-7 text-xs"/> </div><div className="col-span-2 space-y-1"> <Label>Traits</Label> <Input defaultValue={weapon.traits} onChange={e => handleRangedWeaponChange(weapon.id, 'traits', e.target.value)} className="h-7 text-xs"/> </div></>
+                                                                <><div className="space-y-1"> <Label>{t('weaponType')}</Label> <Input defaultValue={weapon.type} onChange={e => handleRangedWeaponChange(weapon.id, 'type', e.target.value)} className="h-7 text-xs"/> </div><div className="space-y-1"> <Label>{t('weaponRange')}</Label> <Input defaultValue={weapon.range} onChange={e => handleRangedWeaponChange(weapon.id, 'range', e.target.value)} className="h-7 text-xs"/> </div><div className="space-y-1"> <Label>{t('weaponRof')}</Label> <Input defaultValue={weapon.rof} onChange={e => handleRangedWeaponChange(weapon.id, 'rof', e.target.value)} className="h-7 text-xs"/> </div><div className="space-y-1"> <Label>{t('weaponDamage')}</Label> <Input defaultValue={weapon.damage} onChange={e => handleRangedWeaponChange(weapon.id, 'damage', e.target.value)} className="h-7 text-xs"/> </div><div className="space-y-1"> <Label>{t('weaponClip')}</Label> <Input type="number" defaultValue={weapon.clip === 0 ? '' : weapon.clip} onChange={e => handleRangedWeaponChange(weapon.id, 'clip', e.target.value)} className="h-7 text-xs"/> </div><div className="space-y-1"> <Label>{t('weaponClipSize')}</Label> <Input type="number" defaultValue={weapon.clipSize === 0 ? '' : weapon.clipSize} onChange={e => handleRangedWeaponChange(weapon.id, 'clipSize', e.target.value)} className="h-7 text-xs"/> </div><div className="col-span-2 space-y-1"> <Label>{t('weaponReload')}</Label> <Input defaultValue={weapon.reload} onChange={e => handleRangedWeaponChange(weapon.id, 'reload', e.target.value)} className="h-7 text-xs"/> </div><div className="col-span-2 space-y-1"> <Label>{t('weaponTraits')}</Label> <Input defaultValue={weapon.traits} onChange={e => handleRangedWeaponChange(weapon.id, 'traits', e.target.value)} className="h-7 text-xs"/> </div></>
                                                             ) : (
-                                                                <><div><strong className="text-muted-foreground">Type:</strong> {weapon.type || '-'}</div><div><strong className="text-muted-foreground">Range:</strong> {weapon.range || '-'}</div><div><strong className="text-muted-foreground">RoF:</strong> {weapon.rof || '-'}</div><div><strong className="text-muted-foreground">Dmg:</strong> {weapon.damage || '-'}</div><div><strong className="text-muted-foreground">Clip:</strong> {weapon.clip} / {weapon.clipSize}</div><div><strong className="text-muted-foreground">Reload:</strong> {weapon.reload || '-'}</div><div className="col-span-2"><strong className="text-muted-foreground">Traits:</strong> <span className="break-words">{weapon.traits || '-'}</span></div></>
+                                                                <><div><strong className="text-muted-foreground">{t('weaponType')}:</strong> {weapon.type || '-'}</div><div><strong className="text-muted-foreground">{t('weaponRange')}:</strong> {weapon.range || '-'}</div><div><strong className="text-muted-foreground">{t('weaponRof')}:</strong> {weapon.rof || '-'}</div><div><strong className="text-muted-foreground">{t('weaponDamage')}:</strong> {weapon.damage || '-'}</div><div><strong className="text-muted-foreground">{t('weaponClip')}:</strong> {weapon.clip} / {weapon.clipSize}</div><div><strong className="text-muted-foreground">{t('weaponReload')}:</strong> {weapon.reload || '-'}</div><div className="col-span-2"><strong className="text-muted-foreground">{t('weaponTraits')}:</strong> <span className="break-words">{weapon.traits || '-'}</span></div></>
                                                             )}
                                                         </div>
                                                         <div className="flex items-center space-x-2 pt-2">
@@ -359,8 +506,8 @@ export const EquipmentInventorySection = React.forwardRef<{ saveAll: () => void 
                                                     <Button variant={character.wealth?.notes ? 'secondary' : 'ghost'} size="icon" className="h-6 w-6 shrink-0"><InfoIcon className="h-4 w-4" /></Button>
                                                 </PopoverTrigger>
                                                 <PopoverContent className="w-64">
-                                                    <Label className="text-xs mb-2 block">Wealth Notes</Label>
-                                                    <Textarea defaultValue={character.wealth?.notes || ''} onBlur={(e) => updateCharacter(character.id, { wealth: { ...editableWealth, notes: e.target.value } })} placeholder="Add notes about your wealth..." className="min-h-[100px] text-sm" />
+                                                    <Label className="text-xs mb-2 block">{t('wealthNotes')}</Label>
+                                                    <Textarea defaultValue={character.wealth?.notes || ''} onBlur={(e) => updateCharacter(character.id, { wealth: { ...editableWealth, notes: e.target.value } })} placeholder={t('wealthNotesPlaceholder')} className="min-h-[100px] text-sm" />
                                                 </PopoverContent>
                                             </Popover>
                                         )}
@@ -398,8 +545,8 @@ export const EquipmentInventorySection = React.forwardRef<{ saveAll: () => void 
                                                                 <Button variant={item.notes ? 'secondary' : 'ghost'} size="icon" className="h-9 w-9 shrink-0"><InfoIcon className="h-4 w-4" /></Button>
                                                             </PopoverTrigger>
                                                             <PopoverContent className="w-64">
-                                                                <Label className="text-xs mb-2 block">Notes for {item.name}</Label>
-                                                                <Textarea defaultValue={item.notes || ''} onBlur={(e) => setEditableInventory(editableInventory.map(i => i.id === item.id ? {...i, notes: e.target.value} : i))} placeholder="Add notes..." className="mt-2 min-h-[100px] text-sm" />
+                                                                <Label className="text-xs mb-2 block">{t('notesFor')} {item.name}</Label>
+                                                                <Textarea defaultValue={item.notes || ''} onBlur={(e) => setEditableInventory(editableInventory.map(i => i.id === item.id ? {...i, notes: e.target.value} : i))} placeholder={t('addNotesPlaceholder')} className="mt-2 min-h-[100px] text-sm" />
                                                             </PopoverContent>
                                                         </Popover>
                                                     )}
@@ -408,7 +555,7 @@ export const EquipmentInventorySection = React.forwardRef<{ saveAll: () => void 
                                             ))}
                                         </div>
                                         <div className="flex gap-2 pt-2">
-                                            <Input placeholder="New item" value={newInventoryItem} onChange={(e) => setNewInventoryItem(e.target.value)} />
+                                            <Input placeholder={t('newInventoryItem')} value={newInventoryItem} onChange={(e) => setNewInventoryItem(e.target.value)} />
                                             <Button onClick={addInventoryItem} size="sm"><Plus className="mr-2 h-4 w-4" /> {t('add')}</Button>
                                         </div>
                                     </div>
@@ -424,13 +571,13 @@ export const EquipmentInventorySection = React.forwardRef<{ saveAll: () => void 
                                                             <Button variant={item.notes ? 'secondary' : 'ghost'} size="icon" className="h-5 w-5 shrink-0 -mr-1 -mt-0.5"><InfoIcon className="h-3 w-3" /></Button>
                                                         </PopoverTrigger>
                                                         <PopoverContent className="w-64">
-                                                            <Label className="text-xs mb-2 block">Notes for {item.name}</Label>
-                                                            <Textarea defaultValue={item.notes || ''} onBlur={(e) => updateCharacter(character.id, { inventory: (character.inventory || []).map(i => i.id === item.id ? {...i, notes: e.target.value} : i)})} placeholder="Add notes..." className="mt-2 min-h-[100px] text-sm" />
+                                                            <Label className="text-xs mb-2 block">{t('notesFor')} {item.name}</Label>
+                                                            <Textarea defaultValue={item.notes || ''} onBlur={(e) => updateCharacter(character.id, { inventory: (character.inventory || []).map(i => i.id === item.id ? {...i, notes: e.target.value} : i)})} placeholder={t('addNotesPlaceholder')} className="mt-2 min-h-[100px] text-sm" />
                                                         </PopoverContent>
                                                     </Popover>
                                                 )}
                                             </div>
-                                        )) : <p className="col-span-full text-sm text-muted-foreground italic p-4 text-center border border-dashed rounded-lg">No items in your inventory.</p>}
+                                        )) : <p className="col-span-full text-sm text-muted-foreground italic p-4 text-center border border-dashed rounded-lg">{t('noInventoryItems')}</p>}
                                     </div>
                                 )}
                             </div>

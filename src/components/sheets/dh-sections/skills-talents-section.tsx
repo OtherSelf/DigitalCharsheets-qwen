@@ -57,13 +57,11 @@ export const SkillsTalentsSection = React.forwardRef<SkillsTalentsSectionHandle,
       setIsTalentsEditing(false); 
     }, [character.id, editableTalents, updateCharacter]);
 
-    // ─── LANDMARK: RESTORED UNSAVED CHANGES TRACKING ───
     const isAnyEditing = isSkillsEditing || isTalentsEditing;
     React.useEffect(() => { 
       onEditingChange?.(isAnyEditing); 
     }, [isAnyEditing, onEditingChange]);
 
-    // ─── LANDMARK: RESTORED SAVE ALL WIRING ───
     React.useImperativeHandle(ref, () => ({
       saveAll: () => {
         if (isSkillsEditing) handleSaveSkills();
@@ -140,7 +138,8 @@ export const SkillsTalentsSection = React.forwardRef<SkillsTalentsSectionHandle,
                                                             <Button variant={skill.notes ? 'secondary' : 'ghost'} size="icon" className="h-7 w-7"><InfoIcon className="h-4 w-4" /></Button>
                                                         </PopoverTrigger>
                                                         <PopoverContent className="w-64">
-                                                            <Label className="text-xs mb-2 block">Notes for {skill.name}</Label>
+                                                            {/* LANDMARK 1: Translated "Notes for" */}
+                                                            <Label className="text-xs mb-2 block">{t('notesFor')} {skill.name}</Label>
                                                             <Textarea defaultValue={skill.notes || ''} onBlur={(e) => updateCharacter(character.id, { skills: (character.skills || []).map(s => s.id === skill.id ? {...s, notes: e.target.value} : s) })} placeholder={t('addNotesPlaceholder')} className="mt-2 min-h-[100px] text-sm" />
                                                         </PopoverContent>
                                                     </Popover>
@@ -188,7 +187,8 @@ export const SkillsTalentsSection = React.forwardRef<SkillsTalentsSectionHandle,
                                                             <Button variant={skill.notes ? 'secondary' : 'ghost'} size="icon" className="h-7 w-7"><InfoIcon className="h-4 w-4" /></Button>
                                                         </PopoverTrigger>
                                                         <PopoverContent className="w-64">
-                                                            <Label className="text-xs mb-2 block">Notes for {skill.name}</Label>
+                                                            {/* LANDMARK 2: Translated "Notes for" */}
+                                                            <Label className="text-xs mb-2 block">{t('notesFor')} {skill.name}</Label>
                                                             <Textarea defaultValue={skill.notes || ''} onBlur={(e) => updateCharacter(character.id, { skills: (character.skills || []).map(s => s.id === skill.id ? {...s, notes: e.target.value} : s) })} placeholder={t('addNotesPlaceholder')} className="mt-2 min-h-[100px] text-sm" />
                                                         </PopoverContent>
                                                     </Popover>
@@ -224,7 +224,11 @@ export const SkillsTalentsSection = React.forwardRef<SkillsTalentsSectionHandle,
                                 {!hideNotes && (
                                     <Popover>
                                         <PopoverTrigger asChild><Button variant={talent.notes ? 'secondary' : 'ghost'} size="icon" className="h-9 w-9 shrink-0"><InfoIcon className="h-4 w-4" /></Button></PopoverTrigger>
-                                        <PopoverContent className="w-64"><Label className="text-xs mb-2 block">Notes for {talent.name}</Label><Textarea defaultValue={talent.notes || ''} onBlur={(e) => setEditableTalents(editableTalents.map(t => t.id === talent.id ? {...t, notes: e.target.value} : t))} placeholder={t('addNotesPlaceholder')} className="mt-2 min-h-[100px] text-sm" /></PopoverContent>
+                                        <PopoverContent className="w-64">
+                                            {/* LANDMARK 3: Translated "Notes for" */}
+                                            <Label className="text-xs mb-2 block">{t('notesFor')} {talent.name}</Label>
+                                            <Textarea defaultValue={talent.notes || ''} onBlur={(e) => setEditableTalents(editableTalents.map(t => t.id === talent.id ? {...t, notes: e.target.value} : t))} placeholder={t('addNotesPlaceholder')} className="mt-2 min-h-[100px] text-sm" />
+                                        </PopoverContent>
                                     </Popover>
                                 )}
                                 <Input defaultValue={talent.name} onChange={e => setEditableTalents(editableTalents.map(t => t.id === talent.id ? {...t, name: e.target.value} : t))} className="h-9"/>
@@ -239,7 +243,11 @@ export const SkillsTalentsSection = React.forwardRef<SkillsTalentsSectionHandle,
                             {!hideNotes && (
                                 <Popover>
                                     <PopoverTrigger asChild><Button variant={talent.notes ? 'secondary' : 'ghost'} size="icon" className="h-6 w-6 shrink-0"><InfoIcon className="h-4 w-4" /></Button></PopoverTrigger>
-                                    <PopoverContent className="w-64"><Label className="text-xs mb-2 block">Notes for {talent.name}</Label><Textarea defaultValue={talent.notes || ''} onBlur={(e) => updateCharacter(character.id, { talents: (character.talents || []).map(t => t.id === talent.id ? {...t, notes: e.target.value} : t)})} placeholder={t('addNotesPlaceholder')} className="mt-2 min-h-[100px] text-sm" /></PopoverContent>
+                                    <PopoverContent className="w-64">
+                                        {/* LANDMARK 4: Translated "Notes for" */}
+                                        <Label className="text-xs mb-2 block">{t('notesFor')} {talent.name}</Label>
+                                        <Textarea defaultValue={talent.notes || ''} onBlur={(e) => updateCharacter(character.id, { talents: (character.talents || []).map(t => t.id === talent.id ? {...t, notes: e.target.value} : t)})} placeholder={t('addNotesPlaceholder')} className="mt-2 min-h-[100px] text-sm" />
+                                    </PopoverContent>
                                 </Popover>
                             )}
                             <p className="text-muted-foreground flex-grow break-words">&bull; {talent.name}</p>
