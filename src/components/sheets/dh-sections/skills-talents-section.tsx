@@ -1,6 +1,5 @@
 // src/components/sheets/dh-sections/skills-talents-section.tsx
 'use client';
-
 import * as React from 'react';
 import { type DarkHeresyCharacter, Skill } from '@/lib/types';
 import { Input } from '@/components/ui/input';
@@ -11,12 +10,12 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@/components/ui/table";
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
@@ -25,36 +24,88 @@ import { useTranslation } from '@/context/language-context';
 import { EditSaveButton } from './dh-ui-helpers';
 
 interface SkillsTalentsSectionProps {
-    character: DarkHeresyCharacter;
-    isCompactView: boolean;
-    activeCompactSection: string;
+  character: DarkHeresyCharacter;
+  isCompactView: boolean;
+  activeCompactSection: string;
+  onEditingChange?: (val: boolean) => void;
 }
 
-export const SkillsTalentsSection = ({ character, isCompactView, activeCompactSection }: SkillsTalentsSectionProps) => {
+export type SkillsTalentsSectionHandle = {
+  saveAll: () => void;
+};
+
+export const SkillsTalentsSection = React.forwardRef<SkillsTalentsSectionHandle, SkillsTalentsSectionProps>(
+  ({ character, isCompactView, activeCompactSection, onEditingChange }, ref) => {
     const { updateCharacter, hideNotes, showEditButtons } = useCharacterContext();
     const { t } = useTranslation();
-
+    
     const [isSkillsEditing, setIsSkillsEditing] = React.useState(false);
     const [isTalentsEditing, setIsTalentsEditing] = React.useState(false);
-
     const [editableSkills, setEditableSkills] = React.useState(character.skills ?? []);
     const [newBasicSkillName, setNewBasicSkillName] = React.useState('');
     const [newAdvancedSkillName, setNewAdvancedSkillName] = React.useState('');
     const [editableTalents, setEditableTalents] = React.useState(character.talents ?? []);
     const [newTalentName, setNewTalentName] = React.useState('');
 
-    const handleSaveSkills = React.useCallback(() => { updateCharacter(character.id, { skills: editableSkills }); setIsSkillsEditing(false); }, [character.id, editableSkills, updateCharacter]);
-    const handleSaveTalents = React.useCallback(() => { updateCharacter(character.id, { talents: editableTalents }); setIsTalentsEditing(false); }, [character.id, editableTalents, updateCharacter]);
+    const handleSaveSkills = React.useCallback(() => { 
+      updateCharacter(character.id, { skills: editableSkills }); 
+      setIsSkillsEditing(false); 
+    }, [character.id, editableSkills, updateCharacter]);
+
+    const handleSaveTalents = React.useCallback(() => { 
+      updateCharacter(character.id, { talents: editableTalents }); 
+      setIsTalentsEditing(false); 
+    }, [character.id, editableTalents, updateCharacter]);
+
+    // ─── LANDMARK: RESTORED UNSAVED CHANGES TRACKING ───
+    const isAnyEditing = isSkillsEditing || isTalentsEditing;
+    React.useEffect(() => { 
+      onEditingChange?.(isAnyEditing); 
+    }, [isAnyEditing, onEditingChange]);
+
+    // ─── LANDMARK: RESTORED SAVE ALL WIRING ───
+    React.useImperativeHandle(ref, () => ({
+      saveAll: () => {
+        if (isSkillsEditing) handleSaveSkills();
+        if (isTalentsEditing) handleSaveTalents();
+      }
+    }), [isSkillsEditing, isTalentsEditing, handleSaveSkills, handleSaveTalents]);
 
     const handleSkillTrainingUpdate = (skillId: string, trainingKey: keyof Skill['training'], isChecked: boolean) => {
         const skillsToUpdate = isSkillsEditing ? editableSkills : (character.skills ?? []);
-        const nextSkills = skillsToUpdate.map(s => { if (s.id === skillId) { const next = { ...s.training, [trainingKey]: isChecked }; if (trainingKey === 'skilled' && !isChecked) { next.plus10 = false; next.plus20 = false; } if (trainingKey === 'plus10' && !isChecked) next.plus20 = false; return { ...s, training: next }; } return s; });
-        if (isSkillsEditing) setEditableSkills(nextSkills); else updateCharacter(character.id, { skills: nextSkills });
+        const nextSkills = skillsToUpdate.map(s => { 
+          if (s.id === skillId) { 
+            const next = { ...s.training, [trainingKey]: isChecked }; 
+            if (trainingKey === 'skilled' && !isChecked) { next.plus10 = false; next.plus20 = false; } 
+            if (trainingKey === 'plus10' && !isChecked) next.plus20 = false; 
+            return { ...s, training: next }; 
+          } 
+          return s; 
+        });
+        if (isSkillsEditing) setEditableSkills(nextSkills); 
+        else updateCharacter(character.id, { skills: nextSkills });
     };
 
-    const addBasicSkill = () => { if (newBasicSkillName.trim() !== '') { setEditableSkills([...editableSkills, { id: `new-skill-${Date.now()}`, name: newBasicSkillName, notes: '', type: 'basic', training: { skilled: false, plus10: false, plus20: false } }]); setNewBasicSkillName(''); } };
-    const addAdvancedSkill = () => { if (newAdvancedSkillName.trim() !== '') { setEditableSkills([...editableSkills, { id: `new-skill-${Date.now()}`, name: newAdvancedSkillName, notes: '', type: 'advanced', training: { skilled: false, plus10: false, plus20: false } }]); setNewAdvancedSkillName(''); } };
-    const addTalent = () => { if (newTalentName.trim() !== '') { setEditableTalents([...editableTalents, { id: `new-talent-${Date.now()}`, name: newTalentName, notes: '' }]); setNewTalentName(''); } };
+    const addBasicSkill = () => { 
+      if (newBasicSkillName.trim() !== '') { 
+        setEditableSkills([...editableSkills, { id: `new-skill-${Date.now()}`, name: newBasicSkillName, notes: '', type: 'basic', training: { skilled: false, plus10: false, plus20: false } }]); 
+        setNewBasicSkillName(''); 
+      } 
+    };
+
+    const addAdvancedSkill = () => { 
+      if (newAdvancedSkillName.trim() !== '') { 
+        setEditableSkills([...editableSkills, { id: `new-skill-${Date.now()}`, name: newAdvancedSkillName, notes: '', type: 'advanced', training: { skilled: false, plus10: false, plus20: false } }]); 
+        setNewAdvancedSkillName(''); 
+      } 
+    };
+
+    const addTalent = () => { 
+      if (newTalentName.trim() !== '') { 
+        setEditableTalents([...editableTalents, { id: `new-talent-${Date.now()}`, name: newTalentName, notes: '' }]); 
+        setNewTalentName(''); 
+      } 
+    };
 
     const currentSkills = isSkillsEditing ? editableSkills : (character.skills ?? []);
     const basicSkills = currentSkills.filter(s => s.type === 'basic');
@@ -90,7 +141,7 @@ export const SkillsTalentsSection = ({ character, isCompactView, activeCompactSe
                                                         </PopoverTrigger>
                                                         <PopoverContent className="w-64">
                                                             <Label className="text-xs mb-2 block">Notes for {skill.name}</Label>
-                                                            <Textarea defaultValue={skill.notes || ''} onBlur={(e) => updateCharacter(character.id, { skills: (character.skills || []).map(s => s.id === skill.id ? {...s, notes: e.target.value} : s) })} placeholder="Add notes..." className="mt-2 min-h-[100px] text-sm" />
+                                                            <Textarea defaultValue={skill.notes || ''} onBlur={(e) => updateCharacter(character.id, { skills: (character.skills || []).map(s => s.id === skill.id ? {...s, notes: e.target.value} : s) })} placeholder={t('addNotesPlaceholder')} className="mt-2 min-h-[100px] text-sm" />
                                                         </PopoverContent>
                                                     </Popover>
                                                 )}
@@ -111,7 +162,7 @@ export const SkillsTalentsSection = ({ character, isCompactView, activeCompactSe
                                 </TableBody>
                             </Table>
                         </div>
-                        {isSkillsEditing && <div className="flex gap-2 mt-4"><Input placeholder="New basic skill" value={newBasicSkillName} onChange={(e) => setNewBasicSkillName(e.target.value)} /><Button onClick={addBasicSkill} size="sm"><Plus className="mr-2 h-4 w-4" /> {t('add')}</Button></div>}
+                        {isSkillsEditing && <div className="flex gap-2 mt-4"><Input placeholder={t('newBasicSkillPlaceholder')} value={newBasicSkillName} onChange={(e) => setNewBasicSkillName(e.target.value)} /><Button onClick={addBasicSkill} size="sm"><Plus className="mr-2 h-4 w-4" /> {t('add')}</Button></div>}
                     </div>
                     <div>
                         <h4 className="font-semibold mb-2 text-muted-foreground">{t('advanced')}</h4>
@@ -138,7 +189,7 @@ export const SkillsTalentsSection = ({ character, isCompactView, activeCompactSe
                                                         </PopoverTrigger>
                                                         <PopoverContent className="w-64">
                                                             <Label className="text-xs mb-2 block">Notes for {skill.name}</Label>
-                                                            <Textarea defaultValue={skill.notes || ''} onBlur={(e) => updateCharacter(character.id, { skills: (character.skills || []).map(s => s.id === skill.id ? {...s, notes: e.target.value} : s) })} placeholder="Add notes..." className="mt-2 min-h-[100px] text-sm" />
+                                                            <Textarea defaultValue={skill.notes || ''} onBlur={(e) => updateCharacter(character.id, { skills: (character.skills || []).map(s => s.id === skill.id ? {...s, notes: e.target.value} : s) })} placeholder={t('addNotesPlaceholder')} className="mt-2 min-h-[100px] text-sm" />
                                                         </PopoverContent>
                                                     </Popover>
                                                 )}
@@ -159,7 +210,7 @@ export const SkillsTalentsSection = ({ character, isCompactView, activeCompactSe
                                 </TableBody>
                             </Table>
                         </div>
-                        {isSkillsEditing && <div className="flex gap-2 mt-4"><Input placeholder="New advanced skill" value={newAdvancedSkillName} onChange={(e) => setNewAdvancedSkillName(e.target.value)} /><Button onClick={addAdvancedSkill} size="sm"><Plus className="mr-2 h-4 w-4" /> {t('add')}</Button></div>}
+                        {isSkillsEditing && <div className="flex gap-2 mt-4"><Input placeholder={t('newAdvancedSkillPlaceholder')} value={newAdvancedSkillName} onChange={(e) => setNewAdvancedSkillName(e.target.value)} /><Button onClick={addAdvancedSkill} size="sm"><Plus className="mr-2 h-4 w-4" /> {t('add')}</Button></div>}
                     </div>
                 </div>
             </div>
@@ -173,14 +224,14 @@ export const SkillsTalentsSection = ({ character, isCompactView, activeCompactSe
                                 {!hideNotes && (
                                     <Popover>
                                         <PopoverTrigger asChild><Button variant={talent.notes ? 'secondary' : 'ghost'} size="icon" className="h-9 w-9 shrink-0"><InfoIcon className="h-4 w-4" /></Button></PopoverTrigger>
-                                        <PopoverContent className="w-64"><Label className="text-xs mb-2 block">Notes for {talent.name}</Label><Textarea defaultValue={talent.notes || ''} onBlur={(e) => setEditableTalents(editableTalents.map(t => t.id === talent.id ? {...t, notes: e.target.value} : t))} placeholder="Add notes..." className="mt-2 min-h-[100px] text-sm" /></PopoverContent>
+                                        <PopoverContent className="w-64"><Label className="text-xs mb-2 block">Notes for {talent.name}</Label><Textarea defaultValue={talent.notes || ''} onBlur={(e) => setEditableTalents(editableTalents.map(t => t.id === talent.id ? {...t, notes: e.target.value} : t))} placeholder={t('addNotesPlaceholder')} className="mt-2 min-h-[100px] text-sm" /></PopoverContent>
                                     </Popover>
                                 )}
                                 <Input defaultValue={talent.name} onChange={e => setEditableTalents(editableTalents.map(t => t.id === talent.id ? {...t, name: e.target.value} : t))} className="h-9"/>
                                 <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => setEditableTalents(editableTalents.filter((t) => t.id !== talent.id))}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                             </li>
                         ))}</ul>
-                        <div className="flex gap-2"><Input placeholder="New talent/trait" value={newTalentName} onChange={(e) => setNewTalentName(e.target.value)} /><Button onClick={addTalent}><Plus className="mr-2 h-4 w-4" /> {t('add')}</Button></div>
+                        <div className="flex gap-2"><Input placeholder={t('newTalentPlaceholder')} value={newTalentName} onChange={(e) => setNewTalentName(e.target.value)} /><Button onClick={addTalent}><Plus className="mr-2 h-4 w-4" /> {t('add')}</Button></div>
                     </div>
                 ) : (
                     <div className="space-y-2">{(character.talents ?? []).length > 0 ? character.talents.map(talent => (
@@ -188,15 +239,18 @@ export const SkillsTalentsSection = ({ character, isCompactView, activeCompactSe
                             {!hideNotes && (
                                 <Popover>
                                     <PopoverTrigger asChild><Button variant={talent.notes ? 'secondary' : 'ghost'} size="icon" className="h-6 w-6 shrink-0"><InfoIcon className="h-4 w-4" /></Button></PopoverTrigger>
-                                    <PopoverContent className="w-64"><Label className="text-xs mb-2 block">Notes for {talent.name}</Label><Textarea defaultValue={talent.notes || ''} onBlur={(e) => updateCharacter(character.id, { talents: (character.talents || []).map(t => t.id === talent.id ? {...t, notes: e.target.value} : t)})} placeholder="Add notes..." className="mt-2 min-h-[100px] text-sm" /></PopoverContent>
+                                    <PopoverContent className="w-64"><Label className="text-xs mb-2 block">Notes for {talent.name}</Label><Textarea defaultValue={talent.notes || ''} onBlur={(e) => updateCharacter(character.id, { talents: (character.talents || []).map(t => t.id === talent.id ? {...t, notes: e.target.value} : t)})} placeholder={t('addNotesPlaceholder')} className="mt-2 min-h-[100px] text-sm" /></PopoverContent>
                                 </Popover>
                             )}
                             <p className="text-muted-foreground flex-grow break-words">&bull; {talent.name}</p>
                         </div>
-                    )) : <p className={cn("text-muted-foreground", isCompactView ? "text-xs" : "text-sm")}>No talents or traits.</p>}
+                    )) : <p className={cn("text-muted-foreground", isCompactView ? "text-xs" : "text-sm")}>{t('noTalentsOrTraits')}</p>}
                     </div>
                 )}
             </div>
         </>
     );
-};
+  }
+);
+
+SkillsTalentsSection.displayName = 'SkillsTalentsSection';

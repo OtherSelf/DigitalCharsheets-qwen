@@ -112,6 +112,15 @@ export const CharacteristicsSection = React.forwardRef<{ saveAll: () => void }, 
     const [editableStats, setEditableStats] = React.useState(character.stats);
     const [editableStatUpgrades, setEditableStatUpgrades] = React.useState(character.statUpgrades ?? defaultStatUpgrades);
 
+    // ─── LANDMARK: SYNC DRAFT STATE WITH GLOBAL CHARACTER ───
+    React.useEffect(() => {
+        setEditableStats(character.stats);
+    }, [character.stats]);
+
+    React.useEffect(() => {
+        setEditableStatUpgrades(character.statUpgrades ?? defaultStatUpgrades);
+    }, [character.statUpgrades]);
+
     const handleSaveCharacteristics = React.useCallback(() => {
         updateCharacter(character.id, { stats: editableStats, statUpgrades: editableStatUpgrades });
         setIsCharacteristicsEditing(false);
@@ -168,7 +177,7 @@ export const CharacteristicsSection = React.forwardRef<{ saveAll: () => void }, 
                     />
                 ))}
              </CardContent> 
-             {/* Desktop Movement Display - FIXED */}
+             {/* Desktop Movement Display - TRANSLATED */}
              {!isCompactView && (
                <CardContent className="pt-0">
                  <div className="grid grid-cols-4 gap-2">
@@ -181,19 +190,19 @@ export const CharacteristicsSection = React.forwardRef<{ saveAll: () => void }, 
                      return (
                        <>
                          <div className="p-2 rounded-lg bg-background border text-center">
-                           <Label className="text-[10px] text-muted-foreground uppercase font-bold">½ Move</Label>
+                           <Label className="text-[10px] text-muted-foreground uppercase font-bold">{t('movementHalfMove')}</Label>
                            <div className="text-lg font-bold text-primary">{agMod}</div>
                          </div>
                          <div className="p-2 rounded-lg bg-background border text-center">
-                           <Label className="text-[10px] text-muted-foreground uppercase font-bold">Move</Label>
+                           <Label className="text-[10px] text-muted-foreground uppercase font-bold">{t('movementMove')}</Label>
                            <div className="text-lg font-bold text-primary">{agMod * 2}</div>
                          </div>
                          <div className="p-2 rounded-lg bg-background border text-center">
-                           <Label className="text-[10px] text-muted-foreground uppercase font-bold">Charge</Label>
+                           <Label className="text-[10px] text-muted-foreground uppercase font-bold">{t('movementCharge')}</Label>
                            <div className="text-lg font-bold text-primary">{agMod * 3}</div>
                          </div>
                          <div className="p-2 rounded-lg bg-background border text-center">
-                          <Label className="text-[10px] text-muted-foreground uppercase font-bold">Run</Label>
+                          <Label className="text-[10px] text-muted-foreground uppercase font-bold">{t('movementRun')}</Label>
                            <div className="text-lg font-bold text-primary">{agMod * 6}</div>
                          </div>
                        </>

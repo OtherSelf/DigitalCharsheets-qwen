@@ -82,7 +82,16 @@ export function Header({ onNotesClick, onJournalClick }: HeaderProps) {
     }
     
     const dh = char as DarkHeresyCharacter;
-    return `${dh.rank} ${dh.characterClass} | ${dh.gameSystem}`;
+    
+    // Map raw values to translation keys (fallback to raw value if key is somehow missing)
+    const rankKey = `rank${dh.rank.replace(/[^a-zA-Z]/g, '')}`;
+    const classKey = `career${dh.characterClass.replace(/[^a-zA-Z]/g, '')}`;
+    
+    const translatedRank = t(rankKey) || dh.rank;
+    const translatedClass = t(classKey) || dh.characterClass;
+    const translatedSystem = t('gameSystemDarkHeresy') || dh.gameSystem;
+    
+    return `${translatedRank} ${translatedClass} | ${translatedSystem}`;
   };
 
   const handleInspirationChange = (delta: number) => {
