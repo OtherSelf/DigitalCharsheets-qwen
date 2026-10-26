@@ -95,8 +95,23 @@ export const InfoSection = ({ character, isCompactView, activeCompactSection, on
                             {character.careerPath ? t(CAREER_KEYS[character.careerPath] || 'careerPath') : '-'}
                         </p>
                     </div>
-                    <DetailField label={t('divination')} value={character.divination} editing={isInfoEditing} onBlur={(e) => updateCharacter(character.id, { divination: e.target.value })} isCompactView={isCompactView} />
-                    <DetailField label={t('divinationEffect')} value={character.divinationEffect} editing={false} isCompactView={isCompactView} />
+                    
+                    {/* --- UPDATED DIVINATION FIELDS WITH TRANSLATION --- */}
+                    <DetailField 
+                        label={t('divination')} 
+                        value={t(character.divination || '')} 
+                        editing={isInfoEditing} 
+                        onBlur={(e) => updateCharacter(character.id, { divination: e.target.value })} 
+                        isCompactView={isCompactView} 
+                    />
+                    <DetailField 
+                        label={t('divinationEffect')} 
+                        value={t(character.divinationEffect || '')} 
+                        editing={false} 
+                        isCompactView={isCompactView} 
+                    />
+                    {/* --- END UPDATED DIVINATION FIELDS --- */}
+
                     <DetailField 
                         label={t('quirk')} 
                         value={character.quirk ? t(QUIRK_KEYS[character.quirk] || character.quirk) : ''} 
