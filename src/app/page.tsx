@@ -100,7 +100,9 @@ export default function DashboardPage() {
             <Button
               variant="outline"
               size="sm"
+              disabled={!user}
               onClick={async () => {
+                if (!user) return;
                 const res = await fetch(`/api/export?userId=${user.uid}`);
                 const data = await res.json();
                 downloadJSON(data, `characters-backup-${new Date().toISOString().split('T')[0]}.json`);
