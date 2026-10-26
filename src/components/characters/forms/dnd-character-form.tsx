@@ -30,38 +30,48 @@ import { Label } from '@/components/ui/label';
 import React from 'react';
 import { useTranslation } from '@/context/language-context';
 
+// Map internal English names to translation keys
+const RACE_TRANSLATION_KEYS: Record<string, string> = {
+  "Aarakocra": "raceAarakocra", "Aasimar": "raceAasimar", "Autognome": "raceAutognome", "Astral elf": "raceAstralelf",
+  "Bugbear": "raceBugbear", "Vedalken": "raceVedalken", "Verdan": "raceVerdan", "Simic hybrid": "raceSimichybrid",
+  "Gith": "raceGith", "Giff": "raceGiff", "Gnome": "raceGnome", "Goblin": "raceGoblin", "Goliath": "raceGoliath",
+  "Grung": "raceGrung", "Dwarf": "raceDwarf", "Genasi": "raceGenasi", "Dragonborn": "raceDragonborn", "Harengon": "raceHarengon",
+  "Kalashtar": "raceKalashtar", "Kender": "raceKender", "Kenku": "raceKenku", "Centaur": "raceCentaur", "Kobold": "raceKobold",
+  "Warforged": "raceWarforged", "Leonin": "raceLeonin", "Locathah": "raceLocathah", "Loxodon": "raceLoxodon", "Lizardfolk": "raceLizardfolk",
+  "Minotaur": "raceMinotaur", "Orc": "raceOrc", "Plasmoid": "racePlasmoid", "Half-orc": "raceHalforc", "Halfling": "raceHalfling",
+  "Half-elf": "raceHalfelf", "Satyr": "raceSatyr", "Owlin": "raceOwlin", "Tabaxi": "raceTabaxi", "Tiefling": "raceTiefling",
+  "Tortle": "raceTortle", "Thri-kreen": "raceThrikreen", "Triton": "raceTriton", "Firbolg": "raceFirbolg", "Fairy": "raceFairy",
+  "Hadozee": "raceHadozee", "Hobgoblin": "raceHobgoblin", "Changeling": "raceChangeling", "Human": "raceHuman", "Shifter": "raceShifter",
+  "Elf": "raceElf", "Yuan-ti Pureblood": "raceYuantPureblood",
+};
+
+const BG_TRANSLATION_KEYS: Record<string, string> = {
+  "Entertainer": "bgEntertainer", "Urchin": "bgUrchin", "Noble": "bgNoble", "Guild Artisan": "bgGuildArtisan",
+  "Sailor": "bgSailor", "Sage": "bgSage", "Folk Hero": "bgFolkHero", "Hermit": "bgHermit", "Outlander": "bgOutlander",
+  "Charlatan": "bgCharlatan", "Pirate": "bgPirate", "Criminal": "bgCriminal", "Acolyte": "bgAcolyte", "Soldier": "bgSoldier",
+  "Gambler": "bgGambler", "Plaintiff": "bgPlaintiff", "Failed Merchant": "bgFailedMerchant", "Celebrity Adventurers Scion": "bgCelebrityAdventurersScion",
+  "Rival Intern": "bgRivalIntern", "Giant Foundling": "bgGiantFoundling", "Rune Carver": "bgRuneCarver", "Rewarded": "bgRewarded",
+  "Ruined": "bgRuined", "House Agent": "bgHouseAgent", "Volstrucker Agent": "bgVolstruckerAgent", "Grinner": "bgGrinner",
+  "Golgari Agent": "bgGolgariAgent", "Gruul Anarch": "bgGruulAnarch", "Izzet Engineer": "bgIzzetEngineer", "Rakdos Cultist": "bgRakdosCultist",
+  "Boros Legionnaire": "bgBorosLegionnaire", "Dimir Operative": "bgDimirOperative", "Selesnya Initiate": "bgSelesnyaInitiate", "Orzhov Representative": "bgOrzhovRepresentative",
+  "Simic Scientist": "bgSimicScientist", "Azorius Functionary": "bgAzoriusFunctionary", "Athlete": "bgAthlete", "Planar Philosopher": "bgPlanarPhilosopher",
+  "Gate Warden": "bgGateWarden", "Astral Drifter": "bgAstralDrifter", "Wildspacer": "bgWildspacer", "Mercenary Veteran": "bgMercenaryVeteran",
+  "Urban Bounty Hunter": "bgUrbanBountyHunter", "City Watch": "bgCityWatch", "Far Traveler": "bgFarTraveler", "Waterdhavian Noble": "bgWaterdhavianNoble",
+  "Clan Crafter": "bgClanCrafter", "Inheritor": "bgInheritor", "Faction Agent": "bgFactionAgent", "Courtier": "bgCourtier",
+  "Knight of the Order": "bgKnightoftheOrder", "Uthgardt Tribe Member": "bgUthgardtTribeMember", "Cloistered Scholar": "bgCloisteredScholar", "Haunted One": "bgHauntedOne",
+  "Investigator": "bgInvestigator", "Faceless": "bgFaceless", "Mage of Hight Sorcery": "bgMageofHightSorcery", "Knight of Solamnia": "bgKnightofSolamnia",
+  "Smuggler": "bgSmuggler", "Shipwright": "bgShipwright", "Marine": "bgMarine", "Fisher": "bgFisher",
+  "Witherbloom Student": "bgWitherbloomStudent", "Quandrix Student": "bgQuandrixStudent", "Lorehold Student": "bgLoreholdStudent", "Prismari Student": "bgPrismariStudent",
+  "Silverquill Student": "bgSilverquillStudent", "Anthropologist": "bgAnthropologist", "Archeologist": "bgArcheologist", "Witchlight Hand": "bgWitchlightHand", "Feylost": "bgFeylost",
+};
+
 const DND_CLASSES = [
   "Artificer", "Barbarian", "Bard", "Cleric", "Druid", "Fighter", "Monk", "Paladin", 
   "Ranger", "Rogue", "Sorcerer", "Warlock", "Wizard"
 ] as const;
 
-const DND_RACES = [
-  "Aarakocra", "Aasimar", "Autognome", "Astral elf", "Bugbear", "Vedalken", "Verdan", 
-  "Simic hybrid", "Gith", "Giff", "Gnome", "Goblin", "Goliath", "Grung", "Dwarf", 
-  "Genasi", "Dragonborn", "Harengon", "Kalashtar", "Kender", "Kenku", "Centaur", 
-  "Kobold", "Warforged", "Leonin", "Locathah", "Loxodon", "Lizardfolk", "Minotaur", 
-  "Orc", "Plasmoid", "Half-orc", "Halfling", "Half-elf", "Satyr", "Owlin", "Tabaxi", 
-  "Tiefling", "Tortle", "Thri-kreen", "Triton", "Firbolg", "Fairy", "Hadozee", 
-  "Hobgoblin", "Changeling", "Human", "Shifter", "Elf", "Yuan-ti Pureblood"
-] as const;
-
-const DND_BACKGROUNDS = [
-  "Entertainer", "Urchin", "Noble", "Guild Artisan", "Sailor", "Sage", "Folk Hero", 
-  "Hermit", "Outlander", "Charlatan", "Pirate", "Criminal", "Acolyte", "Soldier", 
-  "Gambler", "Plaintiff", "Failed Merchant", "Celebrity Adventurers Scion", 
-  "Rival Intern", "Giant Foundling", "Rune Carver", "Rewarded", "Ruined", 
-  "House Agent", "Volstrucker Agent", "Grinner", "Golgari Agent", "Gruul Anarch", 
-  "Izzet Engineer", "Rakdos Cultist", "Boros Legionnaire", "Dimir Operative", 
-  "Selesnya Initiate", "Orzhov Representative", "Simic Scientist", "Azorius Functionary", 
-  "Athlete", "Planar Philosopher", "Gate Warden", "Astral Drifter", "Wildspacer", 
-  "Mercenary Veteran", "Urban Bounty Hunter", "City Watch", "Far Traveler", 
-  "Waterdhavian Noble", "Clan Crafter", "Inheritor", "Faction Agent", "Courtier", 
-  "Knight of the Order", "Uthgardt Tribe Member", "Cloistered Scholar", "Haunted One", 
-  "Investigator", "Faceless", "Mage of Hight Sorcery", "Knight of Solamnia", "Smuggler", 
-  "Shipwright", "Marine", "Fisher", "Witherbloom Student", "Quandrix Student", 
-  "Lorehold Student", "Prismari Student", "Silverquill Student", "Anthropologist", 
-  "Archeologist", "Witchlight Hand", "Feylost"
-] as const;
+const DND_RACES = Object.keys(RACE_TRANSLATION_KEYS);
+const DND_BACKGROUNDS = Object.keys(BG_TRANSLATION_KEYS);
 
 const DND_DEFAULT_SAVING_THROWS = [
   { name: 'Strength', proficient: false, value: 0 },
@@ -122,12 +132,11 @@ export function DndCharacterForm() {
   const { addCharacter } = useCharacterContext();
   const { t } = useTranslation();
 
-  // MOVED INSIDE COMPONENT TO ACCESS t()
   const formSchema = z.object({
     name: z.string().min(2, t('nameMinLength')),
-    characterClass: z.enum(DND_CLASSES, { required_error: t('selectClassError') }),
-    race: z.enum(DND_RACES, { required_error: t('selectRaceError') }),
-    background: z.enum(DND_BACKGROUNDS, { required_error: t('selectBackgroundError') }),
+    characterClass: z.enum(DND_CLASSES as unknown as [string, ...string[]], { required_error: t('selectClassError') }),
+    race: z.enum(DND_RACES as unknown as [string, ...string[]], { required_error: t('selectRaceError') }),
+    background: z.enum(DND_BACKGROUNDS as unknown as [string, ...string[]], { required_error: t('selectBackgroundError') }),
     alignment: z.string().optional(),
     level: z.coerce.number().int().min(1).max(20),
     experiencePoints: z.coerce.number().int().optional(),
@@ -328,7 +337,7 @@ export function DndCharacterForm() {
                             </FormControl>
                             <SelectContent>
                               {DND_CLASSES.map((cls) => (
-                                <SelectItem key={cls} value={cls}>{cls}</SelectItem>
+                                <SelectItem key={cls} value={cls}>{t(`class${cls}`)}</SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
@@ -352,7 +361,7 @@ export function DndCharacterForm() {
                             </FormControl>
                             <SelectContent>
                               {DND_RACES.map((race) => (
-                                <SelectItem key={race} value={race}>{race}</SelectItem>
+                                <SelectItem key={race} value={race}>{t(RACE_TRANSLATION_KEYS[race])}</SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
@@ -374,7 +383,7 @@ export function DndCharacterForm() {
                             </FormControl>
                             <SelectContent className="max-h-[300px]">
                               {DND_BACKGROUNDS.map((bg) => (
-                                <SelectItem key={bg} value={bg}>{bg}</SelectItem>
+                                <SelectItem key={bg} value={bg}>{t(BG_TRANSLATION_KEYS[bg])}</SelectItem>
                               ))}
                             </SelectContent>
                           </Select>

@@ -80,6 +80,45 @@ export const WORLD_VARIANT_LABELS: Record<string, string> = {
   "Void Born": "Ship Tradition",
 };
 
+export const HOME_WORLD_KEYS: Record<string, string> = {
+  "Feral World": "homeWorldFeral",
+  "Hive World": "homeWorldHive",
+  "Imperial World": "homeWorldImperial",
+  "Void Born": "homeWorldVoidBorn",
+};
+
+export const VARIANT_KEYS: Record<string, string> = {
+  "Agri-World": "variantAgriWorld",
+  "Backwater": "variantBackwater",
+  "Feudal World": "variantFeudalWorld",
+  "War Zone": "variantWarZone",
+  "Dead Planet": "variantDeadPlanet",
+  "Shrine World": "variantShrineWorld",
+  "Paradise World": "variantParadiseWorld",
+  "Dirt Ward": "variantDirtWard",
+  "Unlucky Colour": "variantUnluckyColour",
+  "Hunter's Oath": "variantHuntersOath",
+  "Thirsty Blade": "variantThirstyBlade",
+  "Spirit Shackle": "variantSpiritShackle",
+  "Warrior Death": "variantWarriorDeath",
+  "Power of Names": "variantPowerOfNames",
+  "Lonely Dead": "variantLonelyDead",
+  "Living Record": "variantLivingRecord",
+  "Nemesis": "variantNemesis",
+  "Dross Hound": "variantDrossHound",
+  "Ganger Scum": "variantGangerScum",
+  "Factory Dregs": "variantFactoryDregs",
+  "Middle Hive": "variantMiddleHive",
+  "Specialist": "variantSpecialist",
+  "Hive Noble": "variantHiveNoble",
+  "Space Hulk": "variantSpaceHulk",
+  "Orbital": "variantOrbital",
+  "Chartist Vessel": "variantChartistVessel",
+  "War Ship": "variantWarShip",
+  "Rogue Trader": "variantRogueTrader",
+};
+
+
 export const ALL_QUIRKS = [
     ...new Set([
         ...FERAL_WORLD_QUIRKS,
@@ -88,3 +127,36 @@ export const ALL_QUIRKS = [
         ...VOID_BORN_QUIRKS
     ])
 ].sort();
+
+export const CAREER_KEYS: Record<string, string> = {
+  "Adept": "careerAdept",
+  "Arbitrator": "careerArbitrator",
+  "Assassin": "careerAssassin",
+  "Cleric": "careerCleric",
+  "Guardsman": "careerGuardsman",
+  "Imperial Psyker": "careerImperialPsyker",
+  "Scum": "careerScum",
+  "Tech-Priest": "careerTechPriest",
+};
+
+export const RANK_KEYS: Record<string, string> = {
+  "Archivist": "rankArchivist", "Scrivener": "rankScrivener", "Scribe": "rankScribe", "Inditor": "rankInditor", "Scholar": "rankScholar",
+  "Chirurgeon": "rankChirurgeon", "Comptroller": "rankComptroller", "Logister Comptroller": "rankLogisterComptroller", "Sage Logister": "rankSageLogister",
+  "Lexographer": "rankLexographer", "Loremaster Lexographer": "rankLoremasterLexographer", "Loremaster Magister": "rankLoremasterMagister",
+  "Trooper": "rankTrooper", "Enforcer": "rankEnforcer", "Regulator": "rankRegulator", "Investigator": "rankInvestigator", "Arbitrator": "rankArbitrator",
+  "Proctor": "rankProctor", "Marshal": "rankMarshal", "Lord Marshal": "rankLordMarshal", "Intelligencer": "rankIntelligencer", "Magistrate": "rankMagistrate", "Justicar": "rankJusticar",
+  "Sell-Steel": "rankSellSteel", "Shadesman": "rankShadesman", "Nighthawk": "rankNighthawk", "Secluse": "rankSecluse", "Assassin": "rankAssassin",
+  "Death Adept": "rankDeathAdept", "Nihilator": "rankNihilator", "Imperator-Mortis": "rankImperatorMortis", "Freeblade": "rankFreeblade", "Assassin at Marque": "rankAssassinAtMarque", "Assassin Palatine": "rankAssassinPalatine",
+  "Novice": "rankNovice", "Initiate": "rankInitiate", "Priest": "rankPriest", "Preacher": "rankPreacher", "Cleric": "rankCleric",
+  "Exorcist": "rankExorcist", "Zealot": "rankZealot", "Redemptionist": "rankRedemptionist", "Confessor": "rankConfessor", "Bishop": "rankBishop", "Hierophant": "rankHierophant",
+  "Conscript": "rankConscript", "Guard": "rankGuard", "Armsman": "rankArmsman", "Sergeant": "rankSergeant", "Veteran": "rankVeteran",
+  "Assault Veteran": "rankAssaultVeteran", "Shocktrooper": "rankShocktrooper", "Stormtrooper": "rankStormtrooper", "Lieutenant": "rankLieutenant", "Captain": "rankCaptain", "Commander": "rankCommander",
+  "Scout": "rankScout", "Marksman": "rankMarksman", "Sniper": "rankSniper",
+  "Sanctionite": "rankSanctionite", "Neonate": "rankNeonate", "Aspirant": "rankAspirant",
+  "Savant Militant": "rankSavantMilitant", "Warrant-Savant": "rankWarrantSavant", "Lieutenant-Savant": "rankLieutenantSavant", "Savant Adjunct": "rankSavantAdjunct", "Savant-Preceptor": "rankSavantPreceptor",
+  "Scholar Materium": "rankScholarMaterium", "Scholar Medicae": "rankScholarMedicae", "Scholar Arcanum": "rankScholarArcanum", "Scholar Obscurus": "rankScholarObscurus", "Scholar Empyrean": "rankScholarEmpyrean",
+  "Dreg": "rankDreg", "Outcast": "rankOutcast", "Outlaw": "rankOutlaw", "Renegade": "rankRenegade", "Rogue": "rankRogue",
+  "Fixer": "rankFixer", "Shark": "rankShark", "Charlatan": "rankCharlatan", "Cutter": "rankCutter", "Stubjack": "rankStubjack", "Gang Lord": "rankGangLord",
+  "Technographer": "rankTechnographer", "Mech-Wright": "rankMechWright", "Electro-Priest": "rankElectroPriest", "Engineer": "rankEngineer", "Tech-Priest": "rankTechPriest",
+  "Technomancer": "rankTechnomancer", "Cyber-Seer": "rankCyberSeer", "Magos": "rankMagos", "Heretek": "rankHeretek", "Mech-Deacon": "rankMechDeacon", "Omniprophet": "rankOmniprophet", "Magos Errant": "rankMagosErrant",
+};
