@@ -2,8 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* FONT FIX: Explicitly map the body font to the loaded Inter variable with fallbacks */
 body {
-  font-family: var(--font-body);
+  font-family: var(--font-inter, 'Inter', sans-serif);
 }
 
 @layer base {

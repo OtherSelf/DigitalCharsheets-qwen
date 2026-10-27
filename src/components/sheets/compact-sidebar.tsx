@@ -36,6 +36,7 @@ import { useCharacterContext } from '@/context/character-context';
 import { useParams } from 'next/navigation';
 import { Scale } from 'lucide-react';
 import { HouseRulesDialog } from './dnd-sections/house-rules-dialog';
+import { DhHouseRulesDialog } from './dh-sections/dh-house-rules-dialog';
 
 interface CompactSidebarProps {
   gameSystem: GameSystem;
@@ -110,18 +111,18 @@ export function CompactSidebar({ gameSystem, activeSection, onSectionChange }: C
           <Tooltip key={item.id} delayDuration={0}>
             <TooltipTrigger asChild>
               <Button
-                variant={item.id === 'house-rules' ? 'outline' : 'ghost'}
-                onClick={() => {
-                  if (item.id === 'house-rules') {
-                    setIsHouseRulesDialogOpen(true); 
-                  } else {
-                    onSectionChange(item.id);
-                  }
-                }}
-                aria-label={t(item.label)}
-                className="w-full"
-                size="icon"
-              >
+  variant="ghost"
+  onClick={() => {
+    if (item.id === 'house-rules') {
+      setIsHouseRulesDialogOpen(true);
+    } else {
+      onSectionChange(item.id);
+    }
+  }}
+  aria-label={t(item.label)}
+  className="w-full"
+  size="icon"
+>
                 <item.icon className="h-5 w-5" />
               </Button>
             </TooltipTrigger>
@@ -134,21 +135,21 @@ export function CompactSidebar({ gameSystem, activeSection, onSectionChange }: C
         <Separator className="my-2" />
         
         <Tooltip delayDuration={0}>
-          <TooltipTrigger asChild>
-            <Button
-              variant={hideNotes ? 'secondary' : 'ghost'}
-              onClick={() => setHideNotes(!hideNotes)}
-              aria-label={t('hideNotes')}
-              className="w-full"
-              size="icon"
-            >
-              {hideNotes ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side="right">
-            <p>{t('hideNotes')}</p>
-          </TooltipContent>
-        </Tooltip>
+  <TooltipTrigger asChild>
+    <Button
+      variant={hideNotes ? 'ghost' : 'secondary'}
+      onClick={() => setHideNotes(!hideNotes)}
+      aria-label={t('hideNotes')}
+      className="w-full"
+      size="icon"
+    >
+      {hideNotes ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+    </Button>
+  </TooltipTrigger>
+  <TooltipContent side="right">
+    <p>{t('hideNotes')}</p>
+  </TooltipContent>
+</Tooltip>
 
         <Tooltip delayDuration={0}>
           <TooltipTrigger asChild>
@@ -171,13 +172,22 @@ export function CompactSidebar({ gameSystem, activeSection, onSectionChange }: C
           <Separator className="w-full mb-2" />
           <LanguageToggle className="h-10 w-10" />
         </div>
-      {params?.id && (
-        <HouseRulesDialog 
-          open={isHouseRulesDialogOpen} 
-          onOpenChange={setIsHouseRulesDialogOpen} 
-          characterId={params.id} 
-        />
-      )}
+      {/* DH-HOUSE-RULES-SIDEBAR-MOUNT-START */}
+{params?.id && gameSystem === 'Dungeons & Dragons' && (
+  <HouseRulesDialog 
+    open={isHouseRulesDialogOpen} 
+    onOpenChange={setIsHouseRulesDialogOpen} 
+    characterId={params.id} 
+  />
+)}
+{params?.id && gameSystem === 'Dark Heresy' && (
+  <DhHouseRulesDialog 
+    open={isHouseRulesDialogOpen} 
+    onOpenChange={setIsHouseRulesDialogOpen} 
+    characterId={params.id} 
+  />
+)}
+{/* DH-HOUSE-RULES-SIDEBAR-MOUNT-END */}
       </nav>
     </TooltipProvider>
   );

@@ -30,6 +30,7 @@ import { useTranslation } from '@/context/language-context';
 import { LanguageToggle } from './layout/language-toggle';
 import { exportCharacterToExcel } from '@/lib/export-utils';
 import { HouseRulesDialog } from './sheets/dnd-sections/house-rules-dialog';
+import { DhHouseRulesDialog } from './sheets/dh-sections/dh-house-rules-dialog';
 
 interface HeaderProps {
   onNotesClick?: () => void;
@@ -134,47 +135,60 @@ export function Header({ onNotesClick, onJournalClick }: HeaderProps) {
         )}
 
         {character && character.gameSystem === 'Dungeons & Dragons' && (
-          <div className="flex shrink-0 items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-2 py-1 md:ml-2 md:px-3">
-            <span className="hidden text-[10px] font-bold uppercase tracking-widest text-primary sm:inline">
-              {t('inspiration')}
-            </span>
+  <div className="flex shrink-0 items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-2 py-1 md:ml-2 md:px-3">
+    <span className="hidden text-[10px] font-bold uppercase tracking-widest text-primary sm:inline">
+      {t('inspiration')}
+    </span>
+    <div className="flex items-center gap-1">
+      <Button
+        size="icon"
+        variant="ghost"
+        className="h-6 w-6 text-primary hover:bg-primary/20"
+        onClick={() => handleInspirationChange(-1)}
+      >
+        <Minus className="h-3 w-3" />
+      </Button>
+      <span className="min-w-[1rem] text-center text-sm font-black text-primary">
+        {(character as DnD5eCharacter).inspiration || '0'}
+      </span>
+      <Button
+        size="icon"
+        variant="ghost"
+        className="h-6 w-6 text-primary hover:bg-primary/20"
+        onClick={() => handleInspirationChange(1)}
+      >
+        <Plus className="h-3 w-3" />
+      </Button>
+    </div>
+    {!isCompactView && (
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => setIsHouseRulesDialogOpen(true)}
+        className="h-7 px-2 xl:ml-2"
+        aria-label={t('houseRules')}
+      >
+        <Scale className="h-4 w-4 xl:mr-2" />
+        <span className="hidden xl:inline">{t('houseRules')}</span>
+      </Button>
+    )}
+  </div>
+)}
 
-            <div className="flex items-center gap-1">
-              <Button
-                size="icon"
-                variant="ghost"
-                className="h-6 w-6 text-primary hover:bg-primary/20"
-                onClick={() => handleInspirationChange(-1)}
-              >
-                <Minus className="h-3 w-3" />
-              </Button>
-              <span className="min-w-[1rem] text-center text-sm font-black text-primary">
-                {(character as DnD5eCharacter).inspiration || '0'}
-              </span>
-              <Button
-                size="icon"
-                variant="ghost"
-                className="h-6 w-6 text-primary hover:bg-primary/20"
-                onClick={() => handleInspirationChange(1)}
-              >
-                <Plus className="h-3 w-3" />
-              </Button>
-            </div>
-
-            {!isCompactView && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setIsHouseRulesDialogOpen(true)}
-                className="h-7 px-2 xl:ml-2"
-                aria-label={t('houseRules')}
-              >
-                <Scale className="h-4 w-4 xl:mr-2" />
-                <span className="hidden xl:inline">{t('houseRules')}</span>
-              </Button>
-            )}
-          </div>
-        )}
+{/* DH-HOUSE-RULES-HEADER-BUTTON-START */}
+{character && character.gameSystem === 'Dark Heresy' && !isCompactView && (
+  <Button
+    variant="outline"
+    size="sm"
+    onClick={() => setIsHouseRulesDialogOpen(true)}
+    className="h-7 px-2 ml-2"
+    aria-label={t('houseRules')}
+  >
+    <Scale className="h-4 w-4 xl:mr-2" />
+    <span className="hidden xl:inline">{t('houseRules')}</span>
+  </Button>
+)}
+{/* DH-HOUSE-RULES-HEADER-BUTTON-END */}
       </div>
 
       {/* ─── LANDMARK: HEADER_ACTIONS ─── */}
@@ -271,13 +285,22 @@ export function Header({ onNotesClick, onJournalClick }: HeaderProps) {
         <UserNav />
       </div>
 
-      {character && (
-        <HouseRulesDialog
-          open={isHouseRulesDialogOpen}
-          onOpenChange={setIsHouseRulesDialogOpen}
-          characterId={character.id}
-        />
-      )}
+      {/* DH-HOUSE-RULES-DIALOG-MOUNT-START */}
+{character && character.gameSystem === 'Dungeons & Dragons' && (
+  <HouseRulesDialog
+    open={isHouseRulesDialogOpen}
+    onOpenChange={setIsHouseRulesDialogOpen}
+    characterId={character.id}
+  />
+)}
+{character && character.gameSystem === 'Dark Heresy' && (
+  <DhHouseRulesDialog
+    open={isHouseRulesDialogOpen}
+    onOpenChange={setIsHouseRulesDialogOpen}
+    characterId={character.id}
+  />
+)}
+{/* DH-HOUSE-RULES-DIALOG-MOUNT-END */}
     </header>
   );
 }

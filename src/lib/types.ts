@@ -444,6 +444,7 @@ export interface DarkHeresyCharacter extends CharacterBase {
   inventory: InventoryItem[];
   skills: Skill[];
   talents: Talent[];
+  customHouseRules?: { name: string; description: string }[];
 }
 
 export type Character = DnD5eCharacter | DarkHeresyCharacter;
