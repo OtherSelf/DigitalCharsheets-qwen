@@ -872,6 +872,17 @@ export const translations: Record<string, Record<string, string>> = {
     placeholderSkinColor: "Pale",
     placeholderHairColor: "Black",
     placeholderEyeColor: "Grey",
+        // ─── DnD ALIGNMENTS (EN) ───
+    alignmentLawfulGood: "Lawful Good",
+    alignmentNeutralGood: "Neutral Good",
+    alignmentChaoticGood: "Chaotic Good",
+    alignmentLawfulNeutral: "Lawful Neutral",
+    alignmentTrueNeutral: "True Neutral",
+    alignmentChaoticNeutral: "Chaotic Neutral",
+    alignmentLawfulEvil: "Lawful Evil",
+    alignmentNeutralEvil: "Neutral Evil",
+    alignmentChaoticEvil: "Chaotic Evil",
+    selectAlignment: "Select an alignment",
 
   },
   ru: {
@@ -1749,5 +1760,17 @@ export const translations: Record<string, Record<string, string>> = {
     placeholderSkinColor: "Бледная",
     placeholderHairColor: "Черный",
     placeholderEyeColor: "Серый",
+
+        // ─── DnD ALIGNMENTS (RU) ───
+    alignmentLawfulGood: "Законопослушный добрый",
+    alignmentNeutralGood: "Нейтральный добрый",
+    alignmentChaoticGood: "Хаотичный добрый",
+    alignmentLawfulNeutral: "Законопослушный нейтральный",
+    alignmentTrueNeutral: "Истинно нейтральный",
+    alignmentChaoticNeutral: "Хаотичный нейтральный",
+    alignmentLawfulEvil: "Законопослушный злой",
+    alignmentNeutralEvil: "Нейтральный злой",
+    alignmentChaoticEvil: "Хаотичный злой",
+    selectAlignment: "Выберите мировоззрение",
   }
 };

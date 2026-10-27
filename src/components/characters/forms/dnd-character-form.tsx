@@ -72,6 +72,23 @@ const DND_CLASSES = [
 
 const DND_RACES = Object.keys(RACE_TRANSLATION_KEYS);
 const DND_BACKGROUNDS = Object.keys(BG_TRANSLATION_KEYS);
+const DND_ALIGNMENTS = [
+  "Lawful Good", "Neutral Good", "Chaotic Good",
+  "Lawful Neutral", "True Neutral", "Chaotic Neutral",
+  "Lawful Evil", "Neutral Evil", "Chaotic Evil"
+];
+
+const ALIGNMENT_TRANSLATION_KEYS: Record<string, string> = {
+  "Lawful Good": "alignmentLawfulGood",
+  "Neutral Good": "alignmentNeutralGood",
+  "Chaotic Good": "alignmentChaoticGood",
+  "Lawful Neutral": "alignmentLawfulNeutral",
+  "True Neutral": "alignmentTrueNeutral",
+  "Chaotic Neutral": "alignmentChaoticNeutral",
+  "Lawful Evil": "alignmentLawfulEvil",
+  "Neutral Evil": "alignmentNeutralEvil",
+  "Chaotic Evil": "alignmentChaoticEvil",
+};
 
 const DND_DEFAULT_SAVING_THROWS = [
   { name: 'Strength', proficient: false, value: 0 },
@@ -394,15 +411,28 @@ export function DndCharacterForm() {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormField
-                      control={form.control}
-                      name="alignment"
-                      render={({ field }) => (
+                    control={form.control}
+                    name="alignment"
+                    render={({ field }) => (
                       <FormItem>
-                          <FormLabel>{t('alignment')}</FormLabel>
-                          <FormControl><Input placeholder={t('neutralGood')} {...field} /></FormControl>
-                          <FormMessage />
+                        <FormLabel>{t('alignment')}</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder={t('selectAlignment')} />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {DND_ALIGNMENTS.map((alignment) => (
+                              <SelectItem key={alignment} value={alignment}>
+                                {t(ALIGNMENT_TRANSLATION_KEYS[alignment])}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
                       </FormItem>
-                      )}
+                    )}
                   />
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
