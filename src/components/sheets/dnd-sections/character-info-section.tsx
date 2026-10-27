@@ -17,6 +17,52 @@ import {
 import { useCharacterContext } from '@/context/character-context';
 import { useTranslation } from '@/context/language-context';
 
+const RACE_TRANSLATION_KEYS: Record<string, string> = {
+  "Aarakocra": "raceAarakocra", "Aasimar": "raceAasimar", "Autognome": "raceAutognome", "Astral elf": "raceAstralelf",
+  "Bugbear": "raceBugbear", "Vedalken": "raceVedalken", "Verdan": "raceVerdan", "Simic hybrid": "raceSimichybrid",
+  "Gith": "raceGith", "Giff": "raceGiff", "Gnome": "raceGnome", "Goblin": "raceGoblin", "Goliath": "raceGoliath",
+  "Grung": "raceGrung", "Dwarf": "raceDwarf", "Genasi": "raceGenasi", "Dragonborn": "raceDragonborn", "Harengon": "raceHarengon",
+  "Kalashtar": "raceKalashtar", "Kender": "raceKender", "Kenku": "raceKenku", "Centaur": "raceCentaur", "Kobold": "raceKobold",
+  "Warforged": "raceWarforged", "Leonin": "raceLeonin", "Locathah": "raceLocathah", "Loxodon": "raceLoxodon", "Lizardfolk": "raceLizardfolk",
+  "Minotaur": "raceMinotaur", "Orc": "raceOrc", "Plasmoid": "racePlasmoid", "Half-orc": "raceHalforc", "Halfling": "raceHalfling",
+  "Half-elf": "raceHalfelf", "Satyr": "raceSatyr", "Owlin": "raceOwlin", "Tabaxi": "raceTabaxi", "Tiefling": "raceTiefling",
+  "Tortle": "raceTortle", "Thri-kreen": "raceThrikreen", "Triton": "raceTriton", "Firbolg": "raceFirbolg", "Fairy": "raceFairy",
+  "Hadozee": "raceHadozee", "Hobgoblin": "raceHobgoblin", "Changeling": "raceChangeling", "Human": "raceHuman", "Shifter": "raceShifter",
+  "Elf": "raceElf", "Yuan-ti Pureblood": "raceYuantPureblood",
+};
+
+const BG_TRANSLATION_KEYS: Record<string, string> = {
+  "Entertainer": "bgEntertainer", "Urchin": "bgUrchin", "Noble": "bgNoble", "Guild Artisan": "bgGuildArtisan",
+  "Sailor": "bgSailor", "Sage": "bgSage", "Folk Hero": "bgFolkHero", "Hermit": "bgHermit", "Outlander": "bgOutlander",
+  "Charlatan": "bgCharlatan", "Pirate": "bgPirate", "Criminal": "bgCriminal", "Acolyte": "bgAcolyte", "Soldier": "bgSoldier",
+  "Gambler": "bgGambler", "Plaintiff": "bgPlaintiff", "Failed Merchant": "bgFailedMerchant", "Celebrity Adventurers Scion": "bgCelebrityAdventurersScion",
+  "Rival Intern": "bgRivalIntern", "Giant Foundling": "bgGiantFoundling", "Rune Carver": "bgRuneCarver", "Rewarded": "bgRewarded",
+  "Ruined": "bgRuined", "House Agent": "bgHouseAgent", "Volstrucker Agent": "bgVolstruckerAgent", "Grinner": "bgGrinner",
+  "Golgari Agent": "bgGolgariAgent", "Gruul Anarch": "bgGruulAnarch", "Izzet Engineer": "bgIzzetEngineer", "Rakdos Cultist": "bgRakdosCultist",
+  "Boros Legionnaire": "bgBorosLegionnaire", "Dimir Operative": "bgDimirOperative", "Selesnya Initiate": "bgSelesnyaInitiate", "Orzhov Representative": "bgOrzhovRepresentative",
+  "Simic Scientist": "bgSimicScientist", "Azorius Functionary": "bgAzoriusFunctionary", "Athlete": "bgAthlete", "Planar Philosopher": "bgPlanarPhilosopher",
+  "Gate Warden": "bgGateWarden", "Astral Drifter": "bgAstralDrifter", "Wildspacer": "bgWildspacer", "Mercenary Veteran": "bgMercenaryVeteran",
+  "Urban Bounty Hunter": "bgUrbanBountyHunter", "City Watch": "bgCityWatch", "Far Traveler": "bgFarTraveler", "Waterdhavian Noble": "bgWaterdhavianNoble",
+  "Clan Crafter": "bgClanCrafter", "Inheritor": "bgInheritor", "Faction Agent": "bgFactionAgent", "Courtier": "bgCourtier",
+  "Knight of the Order": "bgKnightoftheOrder", "Uthgardt Tribe Member": "bgUthgardtTribeMember", "Cloistered Scholar": "bgCloisteredScholar", "Haunted One": "bgHauntedOne",
+  "Investigator": "bgInvestigator", "Faceless": "bgFaceless", "Mage of Hight Sorcery": "bgMageofHightSorcery", "Knight of Solamnia": "bgKnightofSolamnia",
+  "Smuggler": "bgSmuggler", "Shipwright": "bgShipwright", "Marine": "bgMarine", "Fisher": "bgFisher",
+  "Witherbloom Student": "bgWitherbloomStudent", "Quandrix Student": "bgQuandrixStudent", "Lorehold Student": "bgLoreholdStudent", "Prismari Student": "bgPrismariStudent",
+  "Silverquill Student": "bgSilverquillStudent", "Anthropologist": "bgAnthropologist", "Archeologist": "bgArcheologist", "Witchlight Hand": "bgWitchlightHand", "Feylost": "bgFeylost",
+};
+
+const ALIGNMENT_TRANSLATION_KEYS: Record<string, string> = {
+  "Lawful Good": "alignmentLawfulGood",
+  "Neutral Good": "alignmentNeutralGood",
+  "Chaotic Good": "alignmentChaoticGood",
+  "Lawful Neutral": "alignmentLawfulNeutral",
+  "True Neutral": "alignmentTrueNeutral",
+  "Chaotic Neutral": "alignmentChaoticNeutral",
+  "Lawful Evil": "alignmentLawfulEvil",
+  "Neutral Evil": "alignmentNeutralEvil",
+  "Chaotic Evil": "alignmentChaoticEvil",
+};
+
 const EditSaveButton = ({ editing, onEdit, onSave }: { editing: boolean; onEdit: () => void; onSave: () => void }) => (
   editing ? ( <Button size="icon" variant="ghost" onClick={onSave} className="h-7 w-7"><Save className="h-4 w-4" /></Button> ) : ( <Button size="icon" variant="outline" onClick={onEdit} className="h-7 w-7"><Edit className="h-4 w-4" /></Button> )
 );
@@ -99,9 +145,9 @@ export const DndCharacterInfoSection = React.forwardRef<{ saveAll: () => void },
             </CardHeader>
             <AccordionContent>
               <CardContent className="p-4 grid grid-cols-2 md:grid-cols-3 gap-4">
-                <DetailField label={t('race')} value={headerData.race} editing={isHeaderEditing} onChange={v => setHeaderData({ ...headerData, race: v })} />
-                <DetailField label={t('background')} value={headerData.background} editing={isHeaderEditing} onChange={v => setHeaderData({ ...headerData, background: v })} />
-                <DetailField label={t('alignment')} value={headerData.alignment} editing={isHeaderEditing} onChange={v => setHeaderData({ ...headerData, alignment: v })} />
+                <DetailField label={t('race')} value={headerData.race ? t(RACE_TRANSLATION_KEYS[headerData.race] || headerData.race) : ''} editing={isHeaderEditing} onChange={v => setHeaderData({ ...headerData, race: v })} />
+                <DetailField label={t('background')} value={headerData.background ? t(BG_TRANSLATION_KEYS[headerData.background] || headerData.background) : ''} editing={isHeaderEditing} onChange={v => setHeaderData({ ...headerData, background: v })} />
+                <DetailField label={t('alignment')} value={headerData.alignment ? t(ALIGNMENT_TRANSLATION_KEYS[headerData.alignment] || headerData.alignment) : ''} editing={isHeaderEditing} onChange={v => setHeaderData({ ...headerData, alignment: v })} />
                 <DetailField label={t('age')} value={headerData.age} editing={isHeaderEditing} onChange={v => setHeaderData({ ...headerData, age: v })} />
                 <DetailField label={t('eyes')} value={headerData.eyes} editing={isHeaderEditing} onChange={v => setHeaderData({ ...headerData, eyes: v })} />
                 <DetailField label={t('skin')} value={headerData.skin} editing={isHeaderEditing} onChange={v => setHeaderData({ ...headerData, skin: v })} />
