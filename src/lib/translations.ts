@@ -865,6 +865,13 @@ export const translations: Record<string, Record<string, string>> = {
     statIntAbbr: "INT",
     statWisAbbr: "WIS",
     statChaAbbr: "CHA",
+        // ─── APPEARANCE PLACEHOLDERS (EN) ───
+    placeholderHeight: "1.8m",
+    placeholderWeight: "80kg",
+    placeholderAge: "25",
+    placeholderSkinColor: "Pale",
+    placeholderHairColor: "Black",
+    placeholderEyeColor: "Grey",
 
   },
   ru: {
@@ -1735,5 +1742,12 @@ export const translations: Record<string, Record<string, string>> = {
     statIntAbbr: "ИНТ",
     statWisAbbr: "МУД",
     statChaAbbr: "ХАР",
+        // ─── APPEARANCE PLACEHOLDERS (RU) ───
+    placeholderHeight: "1.8м",
+    placeholderWeight: "80кг",
+    placeholderAge: "25",
+    placeholderSkinColor: "Бледная",
+    placeholderHairColor: "Черный",
+    placeholderEyeColor: "Серый",
   }
 };

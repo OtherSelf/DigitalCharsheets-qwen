@@ -22,9 +22,11 @@ import {
 import { type GameSystem } from '@/lib/types';
 import { DndCharacterForm } from '@/components/characters/forms/dnd-character-form';
 import { DarkHeresyCharacterForm } from '@/components/characters/forms/dark-heresy-character-form';
+import { useTranslation } from '@/context/language-context';
 
 export default function ManualCharacterCreationPage() {
   const [gameSystem, setGameSystem] = useState<GameSystem | ''>('');
+  const { t } = useTranslation();
 
   return (
     <div className="flex flex-col h-screen">
@@ -32,30 +34,30 @@ export default function ManualCharacterCreationPage() {
       <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
         <div className="flex items-center justify-between mb-8">
             <div className="flex flex-col gap-1">
-                <h1 className="text-3xl font-headline font-bold tracking-tight">Create New Character</h1>
-                <p className="text-muted-foreground">Build your character from the ground up</p>
+                <h1 className="text-3xl font-headline font-bold tracking-tight">{t('createNew')}</h1>
+                <p className="text-muted-foreground">{t('buildCharacterDesc')}</p>
             </div>
             <Button variant="outline" size="sm" asChild>
               <Link href="/">
                 <ChevronLeft className="mr-2 h-4 w-4" />
-                Back to Dashboard
+                {t('backToDashboard')}
               </Link>
             </Button>
         </div>
         <div className="max-w-4xl mx-auto">
           <Card className="mb-8">
             <CardHeader>
-              <CardTitle>Game System</CardTitle>
-              <CardDescription>Select the game system for your new character.</CardDescription>
+              <CardTitle>{t('gameSystem')}</CardTitle>
+              <CardDescription>{t('selectGameSystemDesc')}</CardDescription>
             </CardHeader>
             <CardContent>
               <Select onValueChange={(value) => setGameSystem(value as GameSystem)} value={gameSystem}>
                 <SelectTrigger className="w-full md:w-[280px]">
-                  <SelectValue placeholder="Select a game system..." />
+                  <SelectValue placeholder={t('selectGameSystemPlaceholder')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Dungeons & Dragons">Dungeons & Dragons</SelectItem>
-                  <SelectItem value="Dark Heresy">Warhammer 40k: Dark Heresy</SelectItem>
+                  <SelectItem value="Dungeons & Dragons">{t('dungeonsAndDragons')}</SelectItem>
+                  <SelectItem value="Dark Heresy">{t('darkHeresy')}</SelectItem>
                 </SelectContent>
               </Select>
             </CardContent>

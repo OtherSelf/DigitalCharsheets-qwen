@@ -33,6 +33,68 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { RanksByCareer, calculateRank } from '@/lib/dark-heresy-ranks';
 import { useTranslation } from '@/context/language-context';
 
+// Map raw data strings to translation keys
+const HOME_WORLD_KEYS: Record<string, string> = {
+  "Feral World": "homeWorldFeral",
+  "Hive World": "homeWorldHive",
+  "Imperial World": "homeWorldImperial",
+  "Void Born": "homeWorldVoidBorn",
+};
+
+const CAREER_KEYS: Record<string, string> = {
+  "Adept": "careerAdept",
+  "Arbitrator": "careerArbitrator",
+  "Assassin": "careerAssassin",
+  "Cleric": "careerCleric",
+  "Guardsman": "careerGuardsman",
+  "Imperial Psyker": "careerImperialPsyker",
+  "Scum": "careerScum",
+  "Tech-Priest": "careerTechPriest",
+};
+
+const VARIANT_KEYS: Record<string, string> = {
+  "Agri-World": "variantAgriWorld",
+  "Backwater": "variantBackwater",
+  "Feudal World": "variantFeudalWorld",
+  "War Zone": "variantWarZone",
+  "Dead Planet": "variantDeadPlanet",
+  "Shrine World": "variantShrineWorld",
+  "Paradise World": "variantParadiseWorld",
+  "Dirt Ward": "variantDirtWard",
+  "Unlucky Colour": "variantUnluckyColour",
+  "Hunter's Oath": "variantHuntersOath",
+  "Thirsty Blade": "variantThirstyBlade",
+  "Spirit Shackle": "variantSpiritShackle",
+  "Warrior Death": "variantWarriorDeath",
+  "Power of Names": "variantPowerOfNames",
+  "Lonely Dead": "variantLonelyDead",
+  "Living Record": "variantLivingRecord",
+  "Nemesis": "variantNemesis",
+  "Dross Hound": "variantDrossHound",
+  "Ganger Scum": "variantGangerScum",
+  "Factory Dregs": "variantFactoryDregs",
+  "Middle Hive": "variantMiddleHive",
+  "Specialist": "variantSpecialist",
+  "Hive Noble": "variantHiveNoble",
+  "Space Hulk": "variantSpaceHulk",
+  "Orbital": "variantOrbital",
+  "Chartist Vessel": "variantChartistVessel",
+  "War Ship": "variantWarShip",
+  "Rogue Trader": "variantRogueTrader",
+};
+
+const VARIANT_LABEL_KEYS: Record<string, string> = {
+  "Feral World": "tribalTaboos",
+  "Hive World": "hiveClass",
+  "Imperial World": "birthPlanet",
+  "Void Born": "shipTradition",
+};
+
+// Helper to dynamically generate quirk translation keys (e.g., "Cat’s Eyes" -> "quirkCatsEyes")
+const getQuirkKey = (quirk: string) => {
+  return "quirk" + quirk.replace(/[^a-zA-Z]/g, "");
+};
+
 export function DarkHeresyCharacterForm() {
   const { toast } = useToast();
   const router = useRouter();
@@ -257,10 +319,12 @@ export function DarkHeresyCharacterForm() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {DarkHeresyHomeWorlds.map(world => (
-                            <SelectItem key={world} value={world}>{world}</SelectItem>
-                          ))}
-                        </SelectContent>
+                         {DarkHeresyHomeWorlds.map(world => (
+                           <SelectItem key={world} value={world}>
+                             {t(HOME_WORLD_KEYS[world] || world)}
+                           </SelectItem>
+                         ))}
+                       </SelectContent>
                       </Select>
                       <FormMessage />
                     </FormItem>
@@ -271,7 +335,9 @@ export function DarkHeresyCharacterForm() {
                   name="worldVariant"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{worldVariantLabel}</FormLabel>
+                      <FormLabel>
+                        {t(VARIANT_LABEL_KEYS[watchedHomeWorld] || 'worldVariant')}
+                      </FormLabel>
                       <Select 
                         onValueChange={field.onChange} 
                         value={field.value} 
@@ -279,12 +345,14 @@ export function DarkHeresyCharacterForm() {
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder={watchedHomeWorld ? t('selectVariant') : t('selectHomeWorldFirst')} />
+                            <SelectValue placeholder={t('selectVariant')} />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {availableWorldVariants.map(variant => (
-                            <SelectItem key={variant} value={variant}>{variant}</SelectItem>
+                          {(watchedHomeWorld ? WORLD_VARIANTS_BY_HOMEWORLD[watchedHomeWorld] || [] : []).map(v => (
+                            <SelectItem key={v} value={v}>
+                              {t(VARIANT_KEYS[v] || v)}
+                            </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
@@ -306,7 +374,9 @@ export function DarkHeresyCharacterForm() {
                         </FormControl>
                         <SelectContent>
                           {DarkHeresyCareerPaths.map(path => (
-                            <SelectItem key={path} value={path}>{path}</SelectItem>
+                            <SelectItem key={path} value={path}>
+                              {t(CAREER_KEYS[path] || path)}
+                            </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
@@ -335,7 +405,7 @@ export function DarkHeresyCharacterForm() {
                           <SelectContent>
                             {DIVINATIONS.map(({ divination }) => (
                               <SelectItem key={divination} value={divination}>
-                                {divination}
+                                {t(divination)}
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -348,7 +418,7 @@ export function DarkHeresyCharacterForm() {
                     <FormLabel>{t('divinationEffect')}</FormLabel>
                     <Input
                       readOnly
-                      value={divinationEffect}
+                      value={divinationEffect ? t(divinationEffect) : ''}
                       placeholder={t('effectAppearsHere')}
                       className="border-dashed bg-muted/50"
                     />
@@ -371,7 +441,9 @@ export function DarkHeresyCharacterForm() {
                             </FormControl>
                             <SelectContent>
                               {availableQuirks.map((quirk) => (
-                                <SelectItem key={quirk} value={quirk}>{quirk}</SelectItem>
+                                <SelectItem key={quirk} value={quirk}>
+                                  {t(getQuirkKey(quirk))}
+                                </SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
@@ -394,12 +466,12 @@ export function DarkHeresyCharacterForm() {
                     </div>
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4 pt-2">
-                  <FormField control={form.control} name="height" render={({ field }) => (<FormItem><FormLabel>{t('height')}</FormLabel><FormControl><Input placeholder="1.8m" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                  <FormField control={form.control} name="weight" render={({ field }) => (<FormItem><FormLabel>{t('weight')}</FormLabel><FormControl><Input placeholder="80kg" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                  <FormField control={form.control} name="age" render={({ field }) => (<FormItem><FormLabel>{t('age')}</FormLabel><FormControl><Input placeholder="25" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                  <FormField control={form.control} name="skinColor" render={({ field }) => (<FormItem><FormLabel>{t('skinColor')}</FormLabel><FormControl><Input placeholder="Pale" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                  <FormField control={form.control} name="hairColor" render={({ field }) => (<FormItem><FormLabel>{t('hairColor')}</FormLabel><FormControl><Input placeholder="Black" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                  <FormField control={form.control} name="eyeColor" render={({ field }) => (<FormItem><FormLabel>{t('eyeColor')}</FormLabel><FormControl><Input placeholder="Grey" {...field} /></FormControl><FormMessage /></FormItem>)} />
+<FormField control={form.control} name="height" render={({ field }) => (<FormItem><FormLabel>{t('height')}</FormLabel><FormControl><Input placeholder={t('placeholderHeight')} {...field} /></FormControl><FormMessage /></FormItem>)} />
+<FormField control={form.control} name="weight" render={({ field }) => (<FormItem><FormLabel>{t('weight')}</FormLabel><FormControl><Input placeholder={t('placeholderWeight')} {...field} /></FormControl><FormMessage /></FormItem>)} />
+<FormField control={form.control} name="age" render={({ field }) => (<FormItem><FormLabel>{t('age')}</FormLabel><FormControl><Input placeholder={t('placeholderAge')} {...field} /></FormControl><FormMessage /></FormItem>)} />
+<FormField control={form.control} name="skinColor" render={({ field }) => (<FormItem><FormLabel>{t('skinColor')}</FormLabel><FormControl><Input placeholder={t('placeholderSkinColor')} {...field} /></FormControl><FormMessage /></FormItem>)} />
+<FormField control={form.control} name="hairColor" render={({ field }) => (<FormItem><FormLabel>{t('hairColor')}</FormLabel><FormControl><Input placeholder={t('placeholderHairColor')} {...field} /></FormControl><FormMessage /></FormItem>)} />
+<FormField control={form.control} name="eyeColor" render={({ field }) => (<FormItem><FormLabel>{t('eyeColor')}</FormLabel><FormControl><Input placeholder={t('placeholderEyeColor')} {...field} /></FormControl><FormMessage /></FormItem>)} />
                 </div>
             </div>
             
