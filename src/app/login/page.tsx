@@ -22,7 +22,6 @@ export default function LoginPage() {
   const [word3, setWord3] = useState('');
   const [recoveryPhraseInput, setRecoveryPhraseInput] = useState('');
 
-  // 🆕 FIXED: Changed 'setUser' to 'restoreSession' to match the context
   const { login, restoreSession } = useLocalAuth();
   const router = useRouter();
 
@@ -39,7 +38,11 @@ export default function LoginPage() {
     const result = await login(email, password);
     
     if (result.success) {
-      // result.user is now safely returned by the updated login function
+      // LANDMARK: Early return if CharacterProvider is handling a pending character
+      if (typeof window !== 'undefined' && sessionStorage.getItem('pending_character')) {
+        return;
+      }
+      
       if (result.isNewUser || !result.user?.hasRecoveryPhrase) {
         router.push('/?setup_phrase=true');
       } else {
@@ -69,7 +72,6 @@ export default function LoginPage() {
         body: JSON.stringify({ email, word1, word2, word3, recoveryPhraseInput }),
       });
 
-      // Parse defensively: a 404/500 may return HTML instead of JSON.
       const data = await res.json().catch(() => null);
 
       if (!res.ok || !data?.success || !data?.user) {
@@ -77,9 +79,7 @@ export default function LoginPage() {
         return;
       }
 
-      // 🆕 FIXED: This now correctly calls restoreSession from the context
       restoreSession(data.user);
-
       router.push('/?recovery_mode=true');
     } catch (err) {
       console.error('[recovery] verification failed:', err);

@@ -7,13 +7,30 @@ body {
   font-family: var(--font-inter, 'Inter', sans-serif);
 }
 
+/* ==========================================================================
+   LANDMARK: DOUBLE_SCROLLBAR_FIX
+   Prevent outer page scrollbar, only allow inner content to scroll
+   ========================================================================== */
+html, body {
+  height: 100vh;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+}
+
+/* Ensure the root flex container fills viewport without overflow */
+body > div:first-child {
+  height: 100vh;
+  overflow: hidden;
+}
+
 @layer base {
   :root {
-    --background: 240 28% 91.8%; /* #e4e4f0 */
+    --background: 240 28% 91.8%;
     --foreground: 228 10% 12%;
-    --card: 264 16% 93.9%; /* #efedf2 */
+    --card: 264 16% 93.9%;
     --card-foreground: 228 10% 12%;
-    --popover: 264 16% 93.9%; /* #efedf2 */
+    --popover: 264 16% 93.9%;
     --popover-foreground: 228 10% 12%;
     --primary: 232 53% 63%;
     --primary-foreground: 0 0% 100%;
@@ -25,7 +42,7 @@ body {
     --accent-foreground: 228 10% 12%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-    --border: 232 53% 55%; /* Slightly darker primary for contrast */
+    --border: 232 53% 55%;
     --input: 210 20% 85%;
     --ring: 232 53% 63%;
     --chart-1: 12 76% 61%;
@@ -34,7 +51,7 @@ body {
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
-    --sidebar-background: 240 28% 91.8%; /* #e4e4f0 */
+    --sidebar-background: 240 28% 91.8%;
     --sidebar-foreground: 228 10% 12%;
     --sidebar-primary: 232 53% 63%;
     --sidebar-primary-foreground: 0 0% 100%;
@@ -45,11 +62,11 @@ body {
   }
 
   .warm {
-    --background: 40 64% 92%; /* #f7eedc */
+    --background: 40 64% 92%;
     --foreground: 228 10% 12%;
-    --card: 65 33% 94%; /* #f4f5e9 */
+    --card: 65 33% 94%;
     --card-foreground: 228 10% 12%;
-    --popover: 65 33% 94%; /* #f4f5e9 */
+    --popover: 65 33% 94%;
     --popover-foreground: 228 10% 12%;
     --primary: 232 53% 63%;
     --primary-foreground: 0 0% 100%;
@@ -124,16 +141,13 @@ body {
    Desktop : >= 1300px
    Tablet  : 768px .. 1299px
    Mobile  : < 768px  (handled by React compact view)
-   ================================================================ */
-
+================================================================ */
 @media (min-width: 768px) and (max-width: 1299px) {
-
   /* ---------- HEADER: identity row, then controls row ---------- */
   .app-header .header-identity {
     flex: 1 1 100%;
     min-width: 0;
   }
-
   .app-header .header-actions {
     flex: 1 1 100%;
     justify-content: flex-start;
@@ -145,19 +159,15 @@ body {
   }
 
   /* ---------- DND: main grid -> 2 columns ---------- */
-  /* First two children (Stats, Saves/Skills) share a row.
-     Everything after them (Combat, Inventory rail) goes full width. */
   .dnd-sheet .sheet-main-grid {
     display: grid !important;
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     align-items: start !important;
   }
-
   .dnd-sheet .sheet-main-grid > * {
     grid-column: 1 / -1 !important;
     min-width: 0 !important;
   }
-
   .dnd-sheet .sheet-main-grid > *:nth-child(1),
   .dnd-sheet .sheet-main-grid > *:nth-child(2) {
     grid-column: span 1 / span 1 !important;
@@ -167,7 +177,6 @@ body {
   .dnd-sheet.is-compact .sheet-main-grid {
     grid-template-columns: minmax(0, 1fr) !important;
   }
-
   .dnd-sheet.is-compact .sheet-main-grid > * {
     grid-column: 1 / -1 !important;
   }
@@ -176,7 +185,6 @@ body {
   .dh-sheet .sheet-info-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
-
   .dh-sheet .sheet-info-grid > * {
     grid-column: span 1 / span 1 !important;
     min-width: 0 !important;
@@ -188,7 +196,6 @@ body {
     flex-direction: column !important;
     align-items: stretch !important;
   }
-
   .dh-sheet .sheet-panels > * {
     flex: 0 0 auto !important;
     width: 100% !important;
@@ -199,7 +206,6 @@ body {
   .dh-sheet .sheet-panels > .w-12 {
     min-height: 3rem !important;
   }
-
   .dh-sheet .sheet-panels > .w-12 [class*="writing-mode"] {
     writing-mode: horizontal-tb !important;
     transform: none !important;
@@ -209,14 +215,38 @@ body {
   .dh-sheet.is-compact .sheet-info-grid {
     grid-template-columns: minmax(0, 1fr) !important;
   }
-
   .dh-sheet.is-compact .sheet-info-grid > * {
     grid-column: 1 / -1 !important;
   }
 
   /* Force Radix Accordion Content to stretch to fill its parent Card */
-.dnd-stretch-card [data-state="open"] {
-  height: 100% !important;
+  .dnd-stretch-card [data-state="open"] {
+    height: 100% !important;
+    max-height: none !important;
+  }
+} /* <-- THIS CLOSES THE TABLET MEDIA QUERY */
+
+/* ==========================================================================
+   LANDMARK: RADIX_SCROLL_FIX
+   FIX: Radix UI Collapsible / Accordion Scroll Layout Shift Bug
+   (Placed OUTSIDE the media query so it applies to Desktop view as well)
+   ========================================================================== */
+
+/* 
+  1. Target the exact buggy state: element is open, but animation is disabled.
+  Force it to collapse to its actual content height, ignoring the stale variable.
+  This safely overrides the .dnd-stretch-card rule above when the bug triggers.
+*/
+[data-state="open"][style*="animation-name: none"] {
+  height: auto !important;
+  min-height: 0 !important;
   max-height: none !important;
 }
+
+/* 
+  2. Prevent inner wrapper divs from inheriting stale height constraints 
+  that might cause nested empty space (common in shadcn/ui table structures).
+*/
+[data-state="open"][style*="animation-name: none"] > div {
+  height: auto !important;
 }
