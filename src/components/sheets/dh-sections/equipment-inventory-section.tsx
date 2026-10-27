@@ -183,10 +183,10 @@ const [editableWealth, setEditableWealth] = React.useState({
     return (
         <>
             <div className={cn(isCompactView && activeCompactSection !== 'equipment-section' && 'hidden')}>
-                <Collapsible id="equipment-section" open={isEquipmentSectionOpen} onOpenChange={setIsEquipmentSectionOpen} className="border rounded-lg overflow-hidden">
-                    <div className="flex items-center pr-4 border-b"><h3 className="flex-1 px-6 py-4 text-lg font-semibold leading-none tracking-tight font-headline">{t('equipment')}</h3><CollapsibleTrigger asChild><Button size="icon" variant="ghost"><ChevronRight className={cn("h-4 w-4 transition-transform", isEquipmentSectionOpen && "rotate-90")} /><span className="sr-only">Toggle Equipment</span></Button></CollapsibleTrigger></div>
-                    <CollapsibleContent>
-                        <div className="p-6 space-y-6">
+                <Collapsible id="equipment-section" open={isEquipmentSectionOpen} onOpenChange={setIsEquipmentSectionOpen} className={cn("border rounded-lg overflow-hidden", isCompactView && "bg-card")}>
+                  <div className="flex items-center pr-4 border-b"><h3 className="flex-1 px-6 py-4 text-lg font-semibold leading-none tracking-tight font-headline">{t('equipment')}</h3><CollapsibleTrigger asChild><Button size="icon" variant="ghost"><ChevronRight className={cn("h-4 w-4 transition-transform", isEquipmentSectionOpen && "rotate-90")} /><span className="sr-only">Toggle Equipment</span></Button></CollapsibleTrigger></div>
+                      <CollapsibleContent>
+                          <div className={cn("space-y-6", isCompactView ? "p-3" : "p-6")}>
                             <div>
                                 <Collapsible open={!isCompactView || isArmorExpanded} onOpenChange={setIsArmorExpanded}>
                                     <div className="flex items-center justify-between mb-2">
@@ -491,13 +491,13 @@ const [editableWealth, setEditableWealth] = React.useState({
                 </Collapsible>
             </div>
             <div className={cn(isCompactView && activeCompactSection !== 'inventory-section' && 'hidden')}>
-                <Collapsible id="inventory-section" open={isInventorySectionOpen} onOpenChange={setIsInventorySectionOpen} className="border rounded-lg overflow-hidden">
+                <Collapsible id="inventory-section" open={isInventorySectionOpen} onOpenChange={setIsInventorySectionOpen} className={cn("border rounded-lg overflow-hidden", isCompactView && "bg-card")}>
                     <div className="flex items-center pr-4 border-b">
-                        <h3 className="flex-1 px-6 py-4 text-lg font-semibold leading-none tracking-tight font-headline">{t('inventory')}</h3>
-                        <CollapsibleTrigger asChild><Button size="icon" variant="ghost"><ChevronRight className={cn("h-4 w-4 transition-transform", isInventorySectionOpen && "rotate-90")} /><span className="sr-only">Toggle Inventory</span></Button></CollapsibleTrigger>
-                    </div>
-                    <CollapsibleContent>
-                        <div className="p-6 space-y-8">
+                            <h3 className="flex-1 px-6 py-4 text-lg font-semibold leading-none tracking-tight font-headline">{t('inventory')}</h3>
+                            <CollapsibleTrigger asChild><Button size="icon" variant="ghost"><ChevronRight className={cn("h-4 w-4 transition-transform", isInventorySectionOpen && "rotate-90")} /><span className="sr-only">Toggle Inventory</span></Button></CollapsibleTrigger>
+                        </div>
+                        <CollapsibleContent>
+                            <div className={cn("space-y-8", isCompactView ? "p-3" : "p-6")}>
                             <div className="p-4 rounded-lg bg-card border shadow-sm">
                                 <div className="flex items-center justify-between mb-4">
                                     <div className="flex items-center gap-2">

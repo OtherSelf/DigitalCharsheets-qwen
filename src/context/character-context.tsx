@@ -63,7 +63,7 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
   const [isSmallScreen, setIsSmallScreen] = useState(false);
   const [isTabletScreen, setIsTabletScreen] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  const [hideNotes, setHideNotes] = useState(false);
+  const [hideNotes, setHideNotes] = useState(true);
   const [showEditButtons, setShowEditButtons] = useState(true);
 
   useEffect(() => {
