@@ -19,7 +19,7 @@ import * as XLSX from 'xlsx';
 import { DnD5eCharacter, DarkHeresyCharacter } from '@/lib/types';
 import Link from 'next/link';
 import { useLocalAuth } from '@/context/local-auth-context';
-import { RecoveryModalWrapper } from '@/components/recovery-modal-wrapper';
+// LANDMARK: Removed RecoveryModalWrapper import
 
 export default function DashboardPage() {
   const { characters, isLoaded, isCompactView } = useCharacterContext();
@@ -163,7 +163,7 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
       </main>
-      <RecoveryModalWrapper />
+      {/* LANDMARK: Removed RecoveryModalWrapper component from here */}
     </div>
   );
 }

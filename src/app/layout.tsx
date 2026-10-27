@@ -2,12 +2,12 @@ import type { Metadata } from 'next';
 import { Inter, Space_Grotesk } from 'next/font/google';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
+import { RecoveryModalWrapper } from '@/components/recovery-modal-wrapper'; // LANDMARK: Added import
 import { CharacterProvider } from '@/context/character-context';
 import { LocalAuthProvider } from '@/context/local-auth-context';
 import { ThemeProvider } from '@/components/theme-provider';
 import { LanguageProvider } from '@/context/language-context';
 
-// FONT FIX: Load and assign CSS variables for both fonts
 const inter = Inter({ 
   subsets: ['latin'],
   variable: '--font-inter',
@@ -29,7 +29,6 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    // FONT FIX: Apply the generated font variables to the html element
     <html lang="en" suppressHydrationWarning className={`${inter.variable} ${spaceGrotesk.variable} h-full`}>
       <head>
       </head>
@@ -45,6 +44,7 @@ export default function RootLayout({
             <LanguageProvider>
               <CharacterProvider>
                 {children}
+                <RecoveryModalWrapper /> {/* LANDMARK: Added wrapper here for global availability */}
                 <Toaster />
               </CharacterProvider>
             </LanguageProvider>

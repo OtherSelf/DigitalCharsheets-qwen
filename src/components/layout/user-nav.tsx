@@ -25,7 +25,7 @@ export function UserNav() {
 
   const handleSavePhrase = async () => {
     if (newPhrase.trim().length < 5) {
-      setError(t('phraseMinLength'));
+      setError(t('phraseMinLength') || 'Recovery phrase must be at least 5 characters.');
       return;
     }
     setIsSaving(true);
@@ -42,17 +42,28 @@ export function UserNav() {
         setPhraseDialogOpen(false);
         setNewPhrase('');
       } else {
-        setError(data.error || t('phraseUpdateFailed'));
+        setError(data.error || (t('phraseUpdateFailed') || 'Failed to update phrase.'));
       }
     } catch (err) {
-      setError(t('serverConnectionFailed'));
+      setError(t('serverConnectionFailed') || 'Failed to connect to server.');
     } finally {
       setIsSaving(false);
     }
   };
 
+  // LANDMARK: Changed type from React.MouseEvent to Event to match Radix UI's onSelect signature
+  const openPhraseDialog = (e: Event) => {
+    e.preventDefault();
+    
+    if (typeof document !== 'undefined' && document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+    
+    setPhraseDialogOpen(true);
+  };
+
   if (isUserLoading) return <Skeleton className="h-9 w-9 rounded-full" />;
-  if (!user) return <Button asChild><Link href="/login">{t('signIn')}</Link></Button>;
+  if (!user) return <Button asChild><Link href="/login">{t('signIn') || 'Sign In'}</Link></Button>;
 
   return (
     <>
@@ -60,41 +71,54 @@ export function UserNav() {
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full">
             <CircleUserRound className="h-6 w-6" />
-            <span className="sr-only">{t('openUserMenu')}</span>
+            <span className="sr-only">{t('openUserMenu') || 'Open user menu'}</span>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-56" align="end" forceMount>
           <DropdownMenuLabel className="font-normal">
             <div className="flex flex-col space-y-1">
-              <p className="text-sm font-medium leading-none">{user.displayName || t('user')}</p>
+              <p className="text-sm font-medium leading-none">{user.displayName || (t('user') || 'User')}</p>
               <p className="text-xs text-muted-foreground">{user.email}</p>
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => setPhraseDialogOpen(true)}>
+          
+          <DropdownMenuItem onSelect={openPhraseDialog}>
             <KeyRound className="mr-2 h-4 w-4" />
-            {user.hasRecoveryPhrase ? t('changeRecoveryPhrase') : t('addRecoveryPhrase')}
+            {user.hasRecoveryPhrase ? (t('changeRecoveryPhrase') || 'Change Recovery Phrase') : (t('addRecoveryPhrase') || 'Add Recovery Phrase')}
           </DropdownMenuItem>
+          
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={logout}>{t('logout')}</DropdownMenuItem>
+          <DropdownMenuItem onClick={logout}>{t('logout') || 'Log out'}</DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
 
       <Dialog open={phraseDialogOpen} onOpenChange={setPhraseDialogOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>{user.hasRecoveryPhrase ? t('changeRecoveryPhrase') : t('addRecoveryPhrase')}</DialogTitle>
+            <DialogTitle>{user.hasRecoveryPhrase ? (t('changeRecoveryPhrase') || 'Change Recovery Phrase') : (t('addRecoveryPhrase') || 'Add Recovery Phrase')}</DialogTitle>
             <DialogDescription>
-              {t('recoveryPhraseDesc')}
+              {t('recoveryPhraseDesc') || 'Set a memorable phrase to recover your account if you forget your password.'}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
-            <Input placeholder={t('enterRecoveryPhrase')} value={newPhrase} onChange={(e) => setNewPhrase(e.target.value)} />
+            <Input 
+              placeholder={t('enterRecoveryPhrase') || 'Enter recovery phrase'} 
+              value={newPhrase} 
+              onChange={(e) => {
+                setNewPhrase(e.target.value);
+                setError('');
+              }} 
+            />
             {error && <p className="text-sm text-destructive">{error}</p>}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setPhraseDialogOpen(false)}>{t('cancel')}</Button>
-            <Button onClick={handleSavePhrase} disabled={isSaving}>{isSaving ? t('saving') : t('savePhrase')}</Button>
+            <Button variant="outline" onClick={() => setPhraseDialogOpen(false)}>
+              {t('cancel') || 'Cancel'}
+            </Button>
+            <Button onClick={handleSavePhrase} disabled={isSaving}>
+              {isSaving ? (t('saving') || 'Saving...') : (t('savePhrase') || 'Save Phrase')}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
