@@ -135,28 +135,28 @@ export function CompactSidebar({ gameSystem, activeSection, onSectionChange }: C
         <Separator className="my-2" />
         
         <Tooltip delayDuration={0}>
-  <TooltipTrigger asChild>
-    <Button
-      variant={hideNotes ? 'ghost' : 'secondary'}
-      onClick={() => setHideNotes(!hideNotes)}
-      aria-label={t('hideNotes')}
-      className="w-full"
-      size="icon"
-    >
-      {hideNotes ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-    </Button>
-  </TooltipTrigger>
-  <TooltipContent side="right">
-    <p>{t('hideNotes')}</p>
-  </TooltipContent>
-</Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant={hideNotes ? 'ghost' : 'secondary'}
+              onClick={() => setHideNotes(!hideNotes)}
+              aria-label={hideNotes ? t('showNotes') : t('hideNotes')}
+              className="w-full"
+              size="icon"
+            >
+              {hideNotes ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="right">
+            <p>{hideNotes ? t('showNotes') : t('hideNotes')}</p>
+          </TooltipContent>
+        </Tooltip>
 
         <Tooltip delayDuration={0}>
           <TooltipTrigger asChild>
             <Button
               variant={showEditButtons ? 'secondary' : 'ghost'}
               onClick={() => setShowEditButtons(!showEditButtons)}
-              aria-label={t('showEditButtons')}
+              aria-label={showEditButtons ? t('hideEditButtons') : t('showEditButtons')}
               className="w-full"
               size="icon"
             >
@@ -164,7 +164,7 @@ export function CompactSidebar({ gameSystem, activeSection, onSectionChange }: C
             </Button>
           </TooltipTrigger>
           <TooltipContent side="right">
-            <p>{t('showEditButtons')}</p>
+            <p>{showEditButtons ? t('hideEditButtons') : t('showEditButtons')}</p>
           </TooltipContent>
         </Tooltip>
 

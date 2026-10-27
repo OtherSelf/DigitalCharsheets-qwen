@@ -221,7 +221,7 @@ export function Header({ onNotesClick, onJournalClick }: HeaderProps) {
                 htmlFor="hide-notes"
                 className="cursor-pointer whitespace-nowrap text-[10px] md:text-xs"
               >
-                {isTabletScreen ? t('notes') : t('hideNotes')}
+                {isTabletScreen ? t('notes') : (hideNotes ? t('showNotes') : t('hideNotes'))}
               </Label>
             </div>
 
@@ -235,7 +235,7 @@ export function Header({ onNotesClick, onJournalClick }: HeaderProps) {
                 htmlFor="show-edit-buttons"
                 className="cursor-pointer whitespace-nowrap text-[10px] md:text-xs"
               >
-                {isTabletScreen ? t('edit') : t('showEditButtons')}
+                {isTabletScreen ? t('edit') : (showEditButtons ? t('hideEditButtons') : t('showEditButtons'))}
               </Label>
             </div>
           </div>
