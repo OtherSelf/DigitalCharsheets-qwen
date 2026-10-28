@@ -37,7 +37,7 @@ export function RecoveryModal() {
       setError('');
       setHasShownModal(false); // Reset flag when user changes
     }
-  }, [user?.email]); // Only reset when email changes (different user)
+  }, [user?.username]); // Only reset when user changes (different user)
 
   // LANDMARK: Sync dialog state with actual user data
   useEffect(() => {
@@ -87,7 +87,7 @@ export function RecoveryModal() {
         const res = await fetch('/api/auth/phrase', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: user?.email, phrase: newRecoveryPhrase }),
+          body: JSON.stringify({ username: user?.username, phrase: newRecoveryPhrase }),
         });
         const data = await res.json();
         if (data.success) {
@@ -129,7 +129,7 @@ export function RecoveryModal() {
         const res = await fetch('/api/auth/recover/update', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: user?.email, newPassword, newRecoveryPhrase }),
+          body: JSON.stringify({ username: user?.username, newPassword, newRecoveryPhrase }),
         });
         const data = await res.json();
         if (data.success) {

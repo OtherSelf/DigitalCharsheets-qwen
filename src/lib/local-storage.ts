@@ -2,7 +2,7 @@ import { Character } from '@/lib/types';
 
 export interface LocalUser {
   uid: string;
-  email: string;
+  username: string;
   displayName: string;
   hasRecoveryPhrase: boolean; // Needed for UI to know if prompt is required
 }
@@ -19,7 +19,13 @@ function generateId(): string {
 export function getLocalUser(): LocalUser | null {
   if (typeof window === 'undefined') return null;
   const userStr = localStorage.getItem(STORAGE_KEYS.USER);
-  return userStr ? JSON.parse(userStr) : null;
+  if (!userStr) return null;
+  const user = JSON.parse(userStr);
+  // Backward compatibility: map old 'email' field to 'username'
+  if (user.email && !user.username) {
+    user.username = user.email;
+  }
+  return user;
 }
 
 export function setLocalUser(user: LocalUser): void {

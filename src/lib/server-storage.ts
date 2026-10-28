@@ -70,7 +70,11 @@ export function updateCharacterOnServer(userId: string, characterId: string, dat
   try {
     const content = fs.readFileSync(filePath, 'utf8');
     const character = JSON.parse(content) as Character;
-    const updated = { ...character, ...data };
+    
+    // 🎯 LANDMARK: Explicit cast to Character to resolve TypeScript discriminated union 
+    // inference issues when spreading Partial<Character> over a union type.
+    const updated: Character = { ...character, ...data } as Character;
+    
     fs.writeFileSync(filePath, JSON.stringify(updated, null, 2), 'utf8');
     return updated;
   } catch (e) {
@@ -101,12 +105,12 @@ export function userFolderExists(userId: string): boolean {
 }
 
 // Create a user folder with user.json
-export function createUserFolder(userId: string, email: string, displayName: string): void {
+export function createUserFolder(userId: string, username: string, displayName: string): void {
   const userDir = ensureUserDir(userId);
   const userFile = path.join(userDir, 'user.json');
   
   if (!fs.existsSync(userFile)) {
-    const userData = { email, displayName, passwordHash: '' };
+    const userData = { username, displayName, passwordHash: '' };
     fs.writeFileSync(userFile, JSON.stringify(userData, null, 2), 'utf8');
   }
 }

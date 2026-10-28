@@ -1,16 +1,16 @@
 import { NextResponse } from 'next/server';
-import { setRecoveryPhrase, generateUserIdFromEmail } from '@/lib/server-auth';
+import { setRecoveryPhrase, generateUserId } from '@/lib/server-auth';
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { email, phrase } = body;
+    const { username, phrase } = body;
 
-    if (!email || !phrase) {
-      return NextResponse.json({ success: false, error: 'Email and phrase are required.' }, { status: 400 });
+    if (!username || !phrase) {
+      return NextResponse.json({ success: false, error: 'Username and phrase are required.' }, { status: 400 });
     }
 
-    const userId = generateUserIdFromEmail(email.toLowerCase().trim());
+    const userId = generateUserId(username.toLowerCase().trim());
     const success = setRecoveryPhrase(userId, phrase);
 
     if (!success) {

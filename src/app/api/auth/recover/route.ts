@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server';
-import { recoverPasswordWithEmailAndWords } from '@/lib/server-auth';
+import { recoverPasswordWithUsernameAndWords } from '@/lib/server-auth';
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { email, word1, word2, word3, newPassword } = body;
+    const { username, word1, word2, word3, newPassword } = body;
 
-    if (!email || !word1 || !word2 || !word3 || !newPassword) {
+    if (!username || !word1 || !word2 || !word3 || !newPassword) {
       return NextResponse.json(
         { success: false, error: 'All fields are required.' },
         { status: 400 }
@@ -20,7 +20,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const result = recoverPasswordWithEmailAndWords(email, [word1, word2, word3], newPassword);
+    const result = recoverPasswordWithUsernameAndWords(username, [word1, word2, word3], newPassword);
 
     if (!result.success) {
       return NextResponse.json(
