@@ -1,3 +1,4 @@
+// src/app/[id]/page.tsx
 'use client';
 
 import { CharacterSheet } from '@/components/sheets/character-sheet';
@@ -21,6 +22,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useTranslation } from '@/context/language-context';
 import { cn } from '@/lib/utils';
+import { DynamicFavicon } from '@/components/dynamic-favicon';
+
 
 export default function CharacterPage() {
   const params = useParams<{ id: string }>();
@@ -32,7 +35,7 @@ export default function CharacterPage() {
   const [journalOpen, setJournalOpen] = useState(false);
   const [pendingSectionId, setPendingSectionId] = useState<string | null>(null);
   const sheetRef = useRef<any>(null);
-  
+
   const character = getCharacter(params.id);
 
   useEffect(() => {
@@ -40,7 +43,7 @@ export default function CharacterPage() {
       router.push('/');
     }
   }, [isLoaded, character, router]);
-  
+
   const performNavigation = (id: string) => {
     if (id === 'notes-section') {
       setNotesOpen(true);
@@ -63,11 +66,9 @@ export default function CharacterPage() {
     if (save && sheetRef.current?.saveAll) {
       sheetRef.current.saveAll();
     }
-    
     const id = pendingSectionId;
     setPendingSectionId(null);
     setHasUnsavedChanges(false);
-    
     if (id) {
       performNavigation(id);
     }
@@ -87,55 +88,66 @@ export default function CharacterPage() {
   }
 
   return (
-    <div className="flex flex-col h-full">
-      <Header onNotesClick={() => setNotesOpen(true)} onJournalClick={() => setJournalOpen(true)} />
-      <div className="flex flex-1 overflow-hidden">
-        {isCompactView && <CompactSidebar gameSystem={character.gameSystem} activeSection={activeCompactSection} onSectionChange={handleSectionChange} />}
-        <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-y-auto">
-          <CharacterSheet 
-            ref={sheetRef}
-            character={character} 
-            activeCompactSection={activeCompactSection} 
-          />
-        </main>
-      </div>
+    <>
+      {/* 🎯 LANDMARK: DYNAMIC SHEET FAVICON INJECTION */}
       
-      {character && (
-        <>
+      <DynamicFavicon gameSystem={character.gameSystem} />
+      
+      <div className="flex flex-col h-full">
+        <Header onNotesClick={() => setNotesOpen(true)} onJournalClick={() => setJournalOpen(true)} />
+        <div className="flex flex-1 overflow-hidden">
+          {isCompactView && (
+            <CompactSidebar 
+              gameSystem={character.gameSystem} 
+              activeSection={activeCompactSection} 
+              onSectionChange={handleSectionChange} 
+            />
+          )}
+          <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-y-auto">
+            <CharacterSheet
+              ref={sheetRef}
+              character={character}
+              activeCompactSection={activeCompactSection}
+            />
+          </main>
+        </div>
+        {character && (
+          <>
             <NotesDialog
-                character={character}
-                open={notesOpen}
-                onOpenChange={setNotesOpen}
+              character={character}
+              open={notesOpen}
+              onOpenChange={setNotesOpen}
             />
             <QuestJournalSheet
-                character={character}
-                open={journalOpen}
-                onOpenChange={setJournalOpen}
+              character={character}
+              open={journalOpen}
+              onOpenChange={setJournalOpen}
             />
-        </>
-      )}
-
-      <AlertDialog open={!!pendingSectionId} onOpenChange={(open) => !open && setPendingSectionId(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t('unsavedChanges')}</AlertDialogTitle>
-            <AlertDialogDescription>{t('unsavedChangesDesc')}</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setPendingSectionId(null)}>{t('stayAndEdit')}</AlertDialogCancel>
-            <AlertDialogAction 
-              variant="outline" 
-              onClick={() => confirmFailsafe(false)}
-              className="border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
-            >
-              {t('discardAndContinue')}
-            </AlertDialogAction>
-            <AlertDialogAction onClick={() => confirmFailsafe(true)}>
-              {t('saveAndContinue')}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </div>
+          </>
+        )}
+        <AlertDialog open={!!pendingSectionId} onOpenChange={(open) => !open && setPendingSectionId(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>{t('unsavedChanges')}</AlertDialogTitle>
+              <AlertDialogDescription>{t('unsavedChangesDesc')}</AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setPendingSectionId(null)}>
+                {t('stayAndEdit')}
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => confirmFailsafe(false)}
+                className="border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
+              >
+                {t('discardAndContinue')}
+              </AlertDialogAction>
+              <AlertDialogAction onClick={() => confirmFailsafe(true)}>
+                {t('saveAndContinue')}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
+    </>
   );
 }

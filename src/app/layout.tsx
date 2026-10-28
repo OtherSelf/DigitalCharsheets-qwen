@@ -1,12 +1,14 @@
+// src/app/layout.tsx
 import type { Metadata } from 'next';
 import { Inter, Space_Grotesk } from 'next/font/google';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
-import { RecoveryModalWrapper } from '@/components/recovery-modal-wrapper'; // LANDMARK: Added import
+import { RecoveryModalWrapper } from '@/components/recovery-modal-wrapper';
 import { CharacterProvider } from '@/context/character-context';
 import { LocalAuthProvider } from '@/context/local-auth-context';
 import { ThemeProvider } from '@/components/theme-provider';
 import { LanguageProvider } from '@/context/language-context';
+// 🎯 LANDMARK: REMOVED DynamicFavicon IMPORT FROM HERE
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -25,14 +27,14 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" suppressHydrationWarning className={`${inter.variable} ${spaceGrotesk.variable} h-full`}>
       <head>
+        <title>Digital Character Sheets</title>
       </head>
       <body className="h-full font-body antialiased">
+        {/* 🎯 LANDMARK: REMOVED DynamicFavicon FROM HERE */}
         <ThemeProvider
           attribute="class"
           defaultTheme="light"
@@ -44,7 +46,7 @@ export default function RootLayout({
             <LanguageProvider>
               <CharacterProvider>
                 {children}
-                <RecoveryModalWrapper /> {/* LANDMARK: Added wrapper here for global availability */}
+                <RecoveryModalWrapper />
                 <Toaster />
               </CharacterProvider>
             </LanguageProvider>
