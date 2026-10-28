@@ -86,15 +86,6 @@ lerna-debug.log*
 *.pem
 
 # ==========================================
-# Optional: Firebase (if still used)
-# ==========================================
-firebase-debug.log
-firestore-debug.log
-.database.rules.json
-firestore.rules
-firestore.indexes.json
-
-# ==========================================
 # Optional: Docker
 # ==========================================
 docker-compose.override.yml
