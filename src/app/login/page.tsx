@@ -7,10 +7,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Scroll, Lock, Mail, LogIn, KeyRound, ArrowLeft } from 'lucide-react';
+import { Scroll, Lock, User, LogIn, KeyRound, ArrowLeft } from 'lucide-react';
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
@@ -29,13 +29,13 @@ export default function LoginPage() {
     e.preventDefault();
     setError('');
     setSuccessMessage('');
-    if (!email || !password) {
-      setError('Please enter both email and password.');
+    if (!username || !password) {
+      setError('Please enter both username/email and password.');
       return;
     }
 
     setIsLoading(true);
-    const result = await login(email, password);
+    const result = await login(username, password);
     
     if (result.success) {
       // LANDMARK: Early return if CharacterProvider is handling a pending character
@@ -58,7 +58,7 @@ export default function LoginPage() {
     e.preventDefault();
     setError('');
 
-    if (!email || !word1 || !word2 || !word3 || !recoveryPhraseInput) {
+    if (!username || !word1 || !word2 || !word3 || !recoveryPhraseInput) {
       setError('Please fill in all fields.');
       return;
     }
@@ -69,7 +69,7 @@ export default function LoginPage() {
       const res = await fetch('/api/auth/recover/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, word1, word2, word3, recoveryPhraseInput }),
+        body: JSON.stringify({ username, word1, word2, word3, recoveryPhraseInput }),
       });
 
       const data = await res.json().catch(() => null);
@@ -125,8 +125,8 @@ export default function LoginPage() {
                 {successMessage && <Alert className="border-green-500/50 bg-green-500/10 text-green-600 dark:text-green-400"><AlertDescription>{successMessage}</AlertDescription></Alert>}
                 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium flex items-center gap-2"><Mail className="h-4 w-4 text-muted-foreground" />Email</label>
-                  <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="your@email.com" required className="h-10" />
+                  <label className="text-sm font-medium flex items-center gap-2"><User className="h-4 w-4 text-muted-foreground" />Username or Email</label>
+                  <Input type="text" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="e.g., your@email.com or username" required className="h-10" />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium flex items-center gap-2"><Lock className="h-4 w-4 text-muted-foreground" />Password</label>
@@ -154,8 +154,8 @@ export default function LoginPage() {
                 {error && <Alert variant="destructive"><AlertDescription>{error}</AlertDescription></Alert>}
                 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium flex items-center gap-2"><Mail className="h-4 w-4 text-muted-foreground" />Account Email</label>
-                  <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="your@email.com" required className="h-10" />
+                  <label className="text-sm font-medium flex items-center gap-2"><User className="h-4 w-4 text-muted-foreground" />Account Username or Email</label>
+                  <Input type="text" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="e.g., your@email.com or username" required className="h-10" />
                 </div>
                 
                 <div className="space-y-3">

@@ -242,7 +242,7 @@ export async function GET() {
       // Create user.json with default password
       const userFile = path.join(userDir, 'user.json');
       fs.writeFileSync(userFile, JSON.stringify({
-        email: userEmail,
+        username: userEmail,
         displayName: displayName,
         passwordHash: passwordHash,
         originalFirebaseId: firebaseUserId,
@@ -272,7 +272,7 @@ export async function GET() {
 
       results.push({
         localUserId,
-        email: userEmail,
+        username: userEmail,
         password: DEFAULT_PASSWORD,
         charactersImported: importedChars.length,
         characters: importedChars,
@@ -287,7 +287,7 @@ export async function GET() {
       message: `Import complete! ${totalImported} characters imported across ${results.length} user accounts.`,
       defaultPassword: DEFAULT_PASSWORD,
       users: results,
-      note: 'The import-source.json file has been deleted. You can now log in with the emails listed above using the default password.',
+      note: 'The import-source.json file has been deleted. You can now log in with the usernames listed above using the default password.',
     });
 
   } catch (error: any) {

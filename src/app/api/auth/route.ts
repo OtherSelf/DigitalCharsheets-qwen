@@ -4,12 +4,12 @@ import { authenticateUser } from '@/lib/server-auth';
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { email, password, displayName } = body;
+    const { username, password, displayName } = body;
     
     // Validate inputs
-    if (!email || !password) {
+    if (!username || !password) {
       return NextResponse.json(
-        { success: false, error: 'Email and password are required.' },
+        { success: false, error: 'Username/Email and password are required.' },
         { status: 400 }
       );
     }
@@ -21,7 +21,7 @@ export async function POST(request: Request) {
       );
     }
     
-    const result = authenticateUser(email, password, displayName);
+    const result = authenticateUser(username, password, displayName);
     
     if (!result.success) {
       return NextResponse.json(

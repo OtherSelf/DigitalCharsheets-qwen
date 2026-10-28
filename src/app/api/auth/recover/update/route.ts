@@ -4,9 +4,9 @@ import { updateRecoveryCredentials } from '@/lib/server-auth';
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { email, newPassword, newRecoveryPhrase } = body;
+    const { username, newPassword, newRecoveryPhrase } = body;
 
-    if (!email || !newPassword || !newRecoveryPhrase) {
+    if (!username || !newPassword || !newRecoveryPhrase) {
       return NextResponse.json({ success: false, error: 'All fields are required.' }, { status: 400 });
     }
     if (newPassword.length < 4) {
@@ -16,7 +16,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'Recovery phrase must be at least 5 characters.' }, { status: 400 });
     }
 
-    const result = updateRecoveryCredentials(email, newPassword, newRecoveryPhrase);
+    const result = updateRecoveryCredentials(username, newPassword, newRecoveryPhrase);
     if (!result.success) {
       return NextResponse.json({ success: false, error: result.error }, { status: 400 });
     }

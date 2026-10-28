@@ -34,7 +34,7 @@ export function UserNav() {
       const res = await fetch('/api/auth/phrase', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: user?.email, phrase: newPhrase }),
+        body: JSON.stringify({ username: user?.username, phrase: newPhrase }),
       });
       const data = await res.json();
       if (data.success) {
@@ -78,7 +78,7 @@ export function UserNav() {
           <DropdownMenuLabel className="font-normal">
             <div className="flex flex-col space-y-1">
               <p className="text-sm font-medium leading-none">{user.displayName || (t('user') || 'User')}</p>
-              <p className="text-xs text-muted-foreground">{user.email}</p>
+              <p className="text-xs text-muted-foreground">{user.username}</p>
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />

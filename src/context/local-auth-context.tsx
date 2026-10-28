@@ -13,7 +13,7 @@ interface LoginResult {
 interface LocalAuthContextType {
   user: LocalUser | null;
   isUserLoading: boolean;
-  login: (email: string, password: string, displayName?: string) => Promise<LoginResult>;
+  login: (username: string, password: string, displayName?: string) => Promise<LoginResult>;
   logout: () => void;
   restoreSession: (user: LocalUser) => void; // 🆕 LANDMARK: used by recovery flow
   updateUserPhrase: (hasPhrase: boolean) => void;
@@ -37,12 +37,12 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
     setUser(nextUser);
   };
 
-  const login = async (email: string, password: string, displayName?: string): Promise<LoginResult> => {
+  const login = async (username: string, password: string, displayName?: string): Promise<LoginResult> => {
     try {
       const res = await fetch('/api/auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, displayName }),
+        body: JSON.stringify({ username, password, displayName }),
       });
 
       const data = await res.json().catch(() => null);
