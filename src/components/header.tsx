@@ -31,6 +31,7 @@ import { LanguageToggle } from './layout/language-toggle';
 import { exportCharacterToExcel } from '@/lib/export-utils';
 import { HouseRulesDialog } from './sheets/dnd-sections/house-rules-dialog';
 import { DhHouseRulesDialog } from './sheets/dh-sections/dh-house-rules-dialog';
+import { ExportImportDialog } from '@/components/export-import-dialog';
 
 interface HeaderProps {
   onNotesClick?: () => void;
@@ -241,18 +242,9 @@ export function Header({ onNotesClick, onJournalClick }: HeaderProps) {
           </div>
         )}
 
-        {character && !isCompactView && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => exportCharacterToExcel(character)}
-            className="hidden h-8 sm:flex"
-            aria-label={t('exportSheet')}
-          >
-            <FileDown className="h-4 w-4 xl:mr-2" />
-            <span className="hidden xl:inline">{t('exportSheet')}</span>
-          </Button>
-        )}
+{character && !isCompactView && (
+  <ExportImportDialog character={character} />
+)}
 
         {character && !isSmallScreen && onNotesClick && onJournalClick && (
           <>

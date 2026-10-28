@@ -19,6 +19,7 @@ import * as XLSX from 'xlsx';
 import { DnD5eCharacter, DarkHeresyCharacter } from '@/lib/types';
 import Link from 'next/link';
 import { useLocalAuth } from '@/context/local-auth-context';
+import { ImportCharacterDialog } from '@/components/import-character-dialog';
 // LANDMARK: Removed RecoveryModalWrapper import
 
 export default function DashboardPage() {
@@ -159,6 +160,9 @@ export default function DashboardPage() {
                   </Link>
                 </Button>
               )}
+
+              {/* ─── LANDMARK: DASHBOARD_IMPORT_BUTTON ─── */}
+              <ImportCharacterDialog isCompactView={isCompactView} />
             </div>
           </CardContent>
         </Card>
@@ -178,8 +182,4 @@ function downloadJSON(data: any, filename: string) {
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
-}
-
-function MigrateCharacterDialog({ children }: { children: React.ReactNode }) {
-    return <>{children}</>;
 }
