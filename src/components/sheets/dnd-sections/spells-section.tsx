@@ -92,7 +92,6 @@ export function DndSpellsSection({
         }
         return newEntry;
       });
-      // Write through immediately to keep Combat section in sync
       updateCharacter(characterId, { spellcastingEntries: updated });
       return updated;
     });
@@ -112,7 +111,6 @@ export function DndSpellsSection({
   };
 
   const handleSaveSpellcasting = React.useCallback(() => {
-    // Data is already persisted via write-through, just exit edit mode
     setIsSpellcastingEditing(false);
   }, []);
 
@@ -152,7 +150,7 @@ export function DndSpellsSection({
                 const n = { ...spellSlots, [level]: { ...slots, current: Math.max(0, slots.current - 1) } };
                 setSpellSlots(n);
                 updateCharacter(characterId, { spellSlots: n });
-              }} disabled={slots.current <= 0} title="Spend a slot">
+              }} disabled={slots.current <= 0} title={t('damage')}>
                 <Minus className="h-3 w-3" />
               </Button>
               <div className="flex flex-wrap gap-1">
@@ -164,7 +162,7 @@ export function DndSpellsSection({
                 const n = { ...spellSlots, [level]: { ...slots, current: Math.min(slots.max, slots.current + 1) } };
                 setSpellSlots(n);
                 updateCharacter(characterId, { spellSlots: n });
-              }} disabled={slots.current >= slots.max} title="Recover a slot">
+              }} disabled={slots.current >= slots.max} title={t('heal')}>
                 <Plus className="h-3 w-3" />
               </Button>
             </div>
@@ -174,18 +172,18 @@ export function DndSpellsSection({
           <ul className="space-y-1">
             {levelSpells.map(spell => (
               <li key={spell.id} className="group relative flex items-center gap-1">
-                {!hideNotes && ( <Popover><PopoverTrigger asChild><Button variant={spell.notes ? 'secondary' : 'ghost'} size="icon" className="h-5 w-5 shrink-0"><Info className="h-3 w-3" /></Button></PopoverTrigger><PopoverContent className="w-64"><Label className="text-xs mb-2 block">Notes for {spell.name}</Label><Textarea defaultValue={spell.notes || ''} onBlur={(e) => setSpells(spells.map(s => s.id === spell.id ? {...s, notes: e.target.value} : s))} placeholder="Add notes..." className="mt-2 min-h-[100px] text-sm" /></PopoverContent></Popover> )}
+                {!hideNotes && ( <Popover><PopoverTrigger asChild><Button variant={spell.notes ? 'secondary' : 'ghost'} size="icon" className="h-5 w-5 shrink-0"><Info className="h-3 w-3" /></Button></PopoverTrigger><PopoverContent className="w-64"><Label className="text-xs mb-2 block">{t('notesFor')} {spell.name}</Label><Textarea defaultValue={spell.notes || ''} onBlur={(e) => setSpells(spells.map(s => s.id === spell.id ? {...s, notes: e.target.value} : s))} placeholder={t('addNotes')} className="mt-2 min-h-[100px] text-sm" /></PopoverContent></Popover> )}
                 {isEditing ? ( <div className="flex gap-1 items-start bg-muted/30 p-1 rounded flex-1"><Input value={spell.name} onChange={e => setSpells(spells.map(s => s.id === spell.id ? {...s, name: e.target.value} : s))} className="h-7 text-xs flex-1" /><Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => setSpells(spells.filter(s => s.id !== spell.id))}><Trash2 className="h-3 w-3" /></Button></div> ) : ( <div className="text-xs font-medium py-1 border-b border-muted/50 last:border-0 hover:bg-muted/20 transition-colors cursor-default flex-1">&bull; {spell.name}</div> )}
               </li>
             ))}
           </ul>
-          {isEditing && ( <div className="pt-2 border-t space-y-2"><Input placeholder="Spell Name" value={newSpellName} onChange={e => setNewSpellName(e.target.value)} className="h-7 text-xs" /><Button size="sm" className="w-full h-7 text-[10px]" onClick={() => { if (newSpellName.trim()) { setSpells([...spells, { id: `spell-${Date.now()}`, name: newSpellName, level, notes: '' }]); setNewSpellName(''); } }}><Plus className="mr-1 h-3 w-3" /> {t('add')}</Button></div> )}
+          {isEditing && ( <div className="pt-2 border-t space-y-2"><Input placeholder={t('spellNamePlaceholder')} value={newSpellName} onChange={e => setNewSpellName(e.target.value)} className="h-7 text-xs" /><Button size="sm" className="w-full h-7 text-[10px]" onClick={() => { if (newSpellName.trim()) { setSpells([...spells, { id: `spell-${Date.now()}`, name: newSpellName, level, notes: '' }]); setNewSpellName(''); } }}><Plus className="mr-1 h-3 w-3" /> {t('add')}</Button></div> )}
         </CardContent>
       </Card>
     );
   };
 
-    return (  
+  return (  
     <Collapsible open={isSpellsOpen} onOpenChange={setIsSpellsOpen} className={cn("space-y-6", isCompactView && activeCompactSection !== 'spells-section' && "hidden")}>
       <div className="flex items-center justify-center mb-4">
         <CollapsibleTrigger asChild>
@@ -197,7 +195,6 @@ export function DndSpellsSection({
       </div>
       
       <CollapsibleContent className="space-y-6">
-        {/* ONLY IN COMPACT VIEW: Spellcasting Entries Box (Duplicated from Attacks & Spellcasting) */}
         {isCompactView && (
           <Card className="mb-6">
             <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2">
@@ -212,13 +209,13 @@ export function DndSpellsSection({
                       {!hideNotes && (
                         <Popover>
                           <PopoverTrigger asChild>
-                            <Button variant={entry.notes ? 'secondary' : 'ghost'} size="icon" className="h-5 w-5 shrink-0" title="Notes">
+                            <Button variant={entry.notes ? 'secondary' : 'ghost'} size="icon" className="h-5 w-5 shrink-0" title={t('notes')}>
                               <Info className="h-3 w-3" />
                             </Button>
                           </PopoverTrigger>
                           <PopoverContent className="w-64">
                             <Label className="text-xs mb-2 block">
-                              Notes for {entry.ability === 'none' ? 'Spellcasting' : entry.ability.charAt(0).toUpperCase() + entry.ability.slice(1)}
+                              {t('notes')}: {entry.ability === 'none' ? t('spellcasting') : t(entry.ability)}
                             </Label>
                             <Textarea
                               defaultValue={entry.notes || ''}
@@ -229,13 +226,13 @@ export function DndSpellsSection({
                                 setSpellcastingEntries(updated);
                                 updateCharacter(characterId, { spellcastingEntries: updated });
                               }}
-                              placeholder="Add notes..."
+                              placeholder={t('addNotes')}
                               className="mt-2 min-h-[100px] text-sm"
                             />
                           </PopoverContent>
                         </Popover>
                       )}
-                      <Label className="text-[9px] text-muted-foreground uppercase">Ability</Label>
+                      <Label className="text-[9px] text-muted-foreground uppercase">{t('ability')}</Label>
                     </div>
                     {isSpellcastingEditing ? (
                       <Select value={entry.ability} onValueChange={(v) => handleSpellcastingFieldChange(entry.id, 'ability', v)}>
@@ -257,7 +254,7 @@ export function DndSpellsSection({
                     )}
                   </div>
                   <div className="col-span-3 w-full">
-                    <Label className="text-[9px] text-muted-foreground uppercase mb-1 block">Atk Bonus</Label>
+                    <Label className="text-[9px] text-muted-foreground uppercase mb-1 block">{t('atkBonus')}</Label>
                     {isSpellcastingEditing ? (
                       <Input value={entry.attackBonus} onChange={e => handleSpellcastingFieldChange(entry.id, 'attackBonus', e.target.value)} className="h-8 text-xs text-center" />
                     ) : (
@@ -265,7 +262,7 @@ export function DndSpellsSection({
                     )}
                   </div>
                   <div className="col-span-2 w-full">
-                    <Label className="text-[9px] text-muted-foreground uppercase mb-1 block">Save DC</Label>
+                    <Label className="text-[9px] text-muted-foreground uppercase mb-1 block">{t('spellSaveDC')}</Label>
                     {isSpellcastingEditing ? (
                       <Input type="number" value={entry.saveDC} onChange={e => handleSpellcastingFieldChange(entry.id, 'saveDC', parseInt(e.target.value) || 0)} className="h-8 text-xs text-center" />
                     ) : (
@@ -283,7 +280,7 @@ export function DndSpellsSection({
               ))}
               {isSpellcastingEditing && (
                 <Button variant="outline" size="sm" className="w-full h-8 text-[10px] mt-2" onClick={addSpellcastingEntry}>
-                  <Plus className="mr-1 h-3 w-3" /> Add Spellcasting Entry
+                  <Plus className="mr-1 h-3 w-3" /> {t('addSpellcastingEntry')}
                 </Button>
               )}
             </CardContent>

@@ -76,38 +76,23 @@ interface StatsSectionProps {
   handleSaveOtherProf: () => void;
   isCompactView: boolean;
   activeCompactSection: string;
+  proficiencyBonus: number;
+  passivePerception: number;
 }
 
 export function DndStatsSection({
   characterId, stats, setStats, isStatsEditing, setIsStatsEditing, handleSaveStats, statNotes,
   otherProficienciesAndLanguages, setOtherProficienciesAndLanguages, isOtherProficienciesEditing,
-  setIsOtherProficienciesEditing, newProfItem, setNewProfItem, handleSaveOtherProf, isCompactView, activeCompactSection
+  setIsOtherProficienciesEditing, newProfItem, setNewProfItem, handleSaveOtherProf, 
+  isCompactView, activeCompactSection, proficiencyBonus, passivePerception
 }: StatsSectionProps) {
-  const { updateCharacter, showEditButtons, hideNotes, getCharacter } = useCharacterContext();
+  const { updateCharacter, showEditButtons, hideNotes } = useCharacterContext();
   const { t } = useTranslation();
 
-  const currentChar = getCharacter(characterId);
   const wisdomMod = Math.floor((stats.wisdom - 10) / 2);
-  
-  const perceptionSkill = currentChar?.gameSystem === 'Dungeons & Dragons' 
-    ? (currentChar as any).skills?.find((s: any) => 
-        s.label?.toLowerCase().includes('perception') || s.name?.toLowerCase().includes('perception')
-      )
-    : null;
-    
-  const profBonus = currentChar?.gameSystem === 'Dungeons & Dragons' 
-    ? (currentChar as any).proficiencyBonus || 0 
-    : 0;
-    
-  const perceptionBonus = perceptionSkill 
-    ? (perceptionSkill.proficient ? profBonus : 0) + (perceptionSkill.expertise ? profBonus : 0)
-    : 0;
-    
-  const passivePerception = 10 + wisdomMod + perceptionBonus;
 
   return (
     <div className={cn("md:col-span-2 space-y-4", isCompactView && activeCompactSection !== 'stats-section' && "hidden")}>
-      {/* Characteristics (Detailed Stats) - HIDDEN in Compact View */}
       {!isCompactView && (
         <Card>
           <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2">
@@ -134,7 +119,7 @@ export function DndStatsSection({
                 <div className="flex flex-col">
                   <Label className="text-[10px] text-muted-foreground uppercase font-bold">{t('passivePerception')}</Label>
                   <span className="text-[10px] text-muted-foreground">
-                    10 + {t('wisdomMod')} {perceptionBonus > 0 ? `+ ${perceptionBonus}` : ''}
+                    10 + {t('wisdomMod')} {passivePerception > 10 + wisdomMod ? `+ ${passivePerception - (10 + wisdomMod)}` : ''}
                   </span>
                 </div>
                 <div className="text-2xl font-black text-primary">{passivePerception}</div>
@@ -144,7 +129,6 @@ export function DndStatsSection({
         </Card>
       )}
 
-     {/* Other Proficiencies & Languages - Desktop Only (Stays under Characteristics) */}
      {!isCompactView && (
        <Card>
          <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2">
@@ -162,7 +146,7 @@ export function DndStatsSection({
            ))}
            {isOtherProficienciesEditing && (
              <div className="flex gap-2 pt-2 border-t">
-               <Input placeholder="New..." value={newProfItem} onChange={e => setNewProfItem(e.target.value)} className="h-7 text-[10px]" />
+               <Input placeholder={t('newItemPlaceholder')} value={newProfItem} onChange={e => setNewProfItem(e.target.value)} className="h-7 text-[10px]" />
                <Button size="sm" className="h-7" onClick={() => { if (newProfItem.trim()) { setOtherProficienciesAndLanguages([...otherProficienciesAndLanguages, newProfItem.trim()]); setNewProfItem(''); } }}><Plus className="h-3 w-3" /></Button>
              </div>
            )}

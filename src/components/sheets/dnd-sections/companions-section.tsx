@@ -28,7 +28,7 @@ export function DndCompanionsSection({ characterId, companions, setCompanions, i
   const handleAddCompanion = () => {
     const newCompanion: DnDCompanion = {
       id: `comp-${Date.now()}`,
-      name: 'New Companion',
+      name: t('newCompanion'),
       type: '',
       size: '',
       armorClass: 10,
@@ -74,7 +74,7 @@ export function DndCompanionsSection({ characterId, companions, setCompanions, i
     if (editingCompanionId === companionId) setEditingCompanionId(null);
   };
 
-    return (
+  return (
     <Collapsible open={isCompanionsOpen} onOpenChange={setIsCompanionsOpen} className={cn("space-y-8", isCompactView && activeCompactSection !== 'companion-section' && "hidden")}>
       <div className="flex items-center justify-center mb-6 relative">
         <CollapsibleTrigger asChild>
@@ -86,7 +86,7 @@ export function DndCompanionsSection({ characterId, companions, setCompanions, i
         {showEditButtons && (
           <div className="absolute right-0 top-1/2 -translate-y-1/2">
             <Button size="sm" variant="outline" onClick={handleAddCompanion}>
-              <Plus className="h-4 w-4 mr-2" /> {t('Add Companion') || 'Add Companion'}
+              <Plus className="h-4 w-4 mr-2" /> {t('addCompanion')}
             </Button>
           </div>
         )}
@@ -106,9 +106,9 @@ export function DndCompanionsSection({ characterId, companions, setCompanions, i
         
         {companions.length === 0 && showEditButtons && (
           <div className="text-center p-12 border-2 border-dashed rounded-lg bg-muted/10">
-            <p className="text-muted-foreground mb-4">No companions added yet.</p>
+            <p className="text-muted-foreground mb-4">{t('noCompanionsAdded')}</p>
             <Button size="sm" variant="outline" onClick={handleAddCompanion}>
-              <Plus className="h-4 w-4 mr-2" /> Add Your First Companion
+              <Plus className="h-4 w-4 mr-2" /> {t('addYourFirstCompanion')}
             </Button>
           </div>
         )}

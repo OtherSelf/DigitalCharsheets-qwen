@@ -9,7 +9,7 @@ import { Checkbox } from '../../ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Edit, Save, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/select';
+import { useTranslation } from '@/context/language-context';
 import { DndStatsSection } from './stats-section';
 import { DndSavesSkillsSection } from './saves-skills-section';
 import { DndCombatSection } from './combat-section';
@@ -51,14 +51,25 @@ const DEFAULT_SAVING_THROWS: DnDSavingThrow[] = [
   { name: 'charisma', proficient: false, value: 0 },
 ];
 
-const HIT_DICE_OPTIONS = ['None', '1d6', '1d8', '1d10', '1d12'];
-
 const SKILL_STAT_MAP: Record<string, keyof DnDCompanion['stats']> = {
   acrobatics: 'dexterity', animalHandling: 'wisdom', arcana: 'intelligence', athletics: 'strength',
   deception: 'charisma', history: 'intelligence', insight: 'wisdom', intimidation: 'charisma',
   investigation: 'intelligence', medicine: 'wisdom', nature: 'intelligence', perception: 'wisdom',
   performance: 'charisma', persuasion: 'charisma', religion: 'intelligence', sleightOfHand: 'dexterity',
   stealth: 'dexterity', survival: 'wisdom',
+};
+
+const SECTION_LABELS: Record<string, string> = {
+  stats: 'characteristics',
+  combat: 'combatStats',
+  attacks: 'attacksAndSpellcasting',
+  inventory: 'inventory',
+  spells: 'spells',
+  narrative: 'narrativeSection',
+  info: 'characterInfo',
+  progression: 'progression',
+  divineBoons: 'divineBoons',
+  hitDice: 'hitDice',
 };
 
 interface CompanionSheetProps {
@@ -70,6 +81,7 @@ interface CompanionSheetProps {
 }
 
 export function CompanionSheet({ companion, onUpdate, onDelete, isEditing, onToggleEdit }: CompanionSheetProps) {
+  const { t } = useTranslation();
   const narrativeRef = React.useRef<{ saveAll: () => void }>(null);
   const attunementRef = React.useRef<{ saveAll: () => void }>(null);
   const inventoryRef = React.useRef<{ saveAll: () => void }>(null);
@@ -104,7 +116,6 @@ export function CompanionSheet({ companion, onUpdate, onDelete, isEditing, onTog
 
   const profBonus = parseInt(companion.proficiencyBonus?.replace('+', '') || '2');
 
-  // Formulas
   const calculatedSkills = React.useMemo(() => {
     return skills.map(skill => {
       const statKey = SKILL_STAT_MAP[skill.name];
@@ -149,7 +160,6 @@ export function CompanionSheet({ companion, onUpdate, onDelete, isEditing, onTog
     setIsOtherProficienciesEditing(false);
   }, [otherProficienciesAndLanguages, onUpdate]);
 
-  // Visibility state
   const show = {
     stats: companion.showStats ?? true,
     combat: companion.showCombat ?? true,
@@ -163,7 +173,6 @@ export function CompanionSheet({ companion, onUpdate, onDelete, isEditing, onTog
     hitDice: companion.showHitDice ?? true,
   };
 
-  // Stabilize objects to prevent unnecessary re-renders and useEffect resets in DndCombatSection
   const combatStats = React.useMemo(() => ({
     armorClass: companion.armorClass,
     speed: typeof companion.speed === 'string' ? parseInt(companion.speed) || 30 : companion.speed,
@@ -177,14 +186,13 @@ export function CompanionSheet({ companion, onUpdate, onDelete, isEditing, onTog
   const stableEmptyArray = React.useMemo(() => [], []);
   const stableEmptyObject = React.useMemo(() => ({}), []);
 
-    const toggleVisibility = (key: keyof typeof show) => {
+  const toggleVisibility = (key: keyof typeof show) => {
     const fieldKey = `show${key.charAt(0).toUpperCase() + key.slice(1)}` as keyof DnDCompanion;
     onUpdate({ [fieldKey]: !show[key] });
   };
 
   return (
     <Card className="p-6 border-2">
-      {/* Header */}
       <CardHeader className="flex flex-col md:flex-row md:items-center justify-between p-0 mb-6 border-b pb-4 gap-4">
         <div className="flex-1">
           {isEditing ? (
@@ -193,26 +201,26 @@ export function CompanionSheet({ companion, onUpdate, onDelete, isEditing, onTog
                 value={companion.name} 
                 onChange={e => onUpdate({ name: e.target.value })} 
                 className="h-10 text-xl font-bold w-full" 
-                placeholder="Companion Name" 
+                placeholder={t('companionNamePlaceholder')} 
               />
               <div className="flex gap-2">
                 <Input 
                   value={companion.type} 
                   onChange={e => onUpdate({ type: e.target.value })} 
                   className="h-8 text-sm flex-1" 
-                  placeholder="Type (e.g., Beast, NPC)" 
+                  placeholder={t('companionTypePlaceholder')} 
                 />
                 <Input 
                   value={companion.size} 
                   onChange={e => onUpdate({ size: e.target.value })} 
                   className="h-8 text-sm flex-1" 
-                  placeholder="Size (e.g., Medium)" 
+                  placeholder={t('companionSizePlaceholder')} 
                 />
               </div>
             </div>
           ) : (
             <div>
-              <CardTitle className="text-2xl font-bold">{companion.name || 'Unnamed Companion'}</CardTitle>
+              <CardTitle className="text-2xl font-bold">{companion.name || t('unnamedCompanion')}</CardTitle>
               {(companion.type || companion.size) && (
                 <p className="text-sm text-muted-foreground mt-1">
                   {companion.size}{companion.size && companion.type ? ', ' : ''}{companion.type}
@@ -241,19 +249,18 @@ export function CompanionSheet({ companion, onUpdate, onDelete, isEditing, onTog
         </div>
       </CardHeader>
 
-      {/* Visibility Checkboxes (Only in Edit Mode) */}
       {isEditing && (
         <div className="flex flex-wrap gap-4 p-4 bg-muted/30 rounded-lg border mb-6">
-          <Label className="text-xs font-bold uppercase w-full mb-1">Show Sections:</Label>
-          {(['stats', 'combat', 'attacks', 'inventory', 'spells', 'narrative', 'info', 'progression', 'divineBoons', 'hitDice'] as const).map(key => (
+          <Label className="text-xs font-bold uppercase w-full mb-1">{t('showSections')}</Label>
+          {(Object.keys(SECTION_LABELS) as Array<keyof typeof SECTION_LABELS>).map(key => (
             <div key={key} className="flex items-center gap-2">
               <Checkbox 
                 id={`show-${key}`} 
-                checked={show[key]} 
-                onCheckedChange={() => toggleVisibility(key)} 
+                checked={show[key as keyof typeof show]} 
+                onCheckedChange={() => toggleVisibility(key as keyof typeof show)} 
               />
               <Label htmlFor={`show-${key}`} className="text-sm capitalize cursor-pointer">
-                {key === 'divineBoons' ? 'Divine Boons' : key === 'hitDice' ? 'Hit Dice' : key}
+                {t(SECTION_LABELS[key])}
               </Label>
             </div>
           ))}
@@ -262,8 +269,6 @@ export function CompanionSheet({ companion, onUpdate, onDelete, isEditing, onTog
 
       <CardContent className="p-0">
         <div className="space-y-8">
-          
-          {/* Progression, Divine Boons, and Character Info - Horizontal Layout */}
           <div className="flex flex-col md:flex-row gap-6 items-stretch">
             {show.progression && (
               <DndProgressionSection
@@ -308,10 +313,8 @@ export function CompanionSheet({ companion, onUpdate, onDelete, isEditing, onTog
               />
             )}
           </div>
-          {/* Stats and Skills Row */}
+
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
-            
-            {/* Stats Section */}
             {show.stats && (
               <DndStatsSection
                 characterId={`companion-${companion.id}`}
@@ -330,10 +333,11 @@ export function CompanionSheet({ companion, onUpdate, onDelete, isEditing, onTog
                 handleSaveOtherProf={handleSaveOtherProf}
                 isCompactView={false}
                 activeCompactSection=""
+                proficiencyBonus={profBonus}
+                passivePerception={passivePerception}
               />
             )}
 
-            {/* Saves and Skills Section */}
             {show.stats && (
               <DndSavesSkillsSection
                 characterId={`companion-${companion.id}`}
@@ -355,7 +359,6 @@ export function CompanionSheet({ companion, onUpdate, onDelete, isEditing, onTog
               />
             )}
 
-            {/* Combat Section */}
             {show.combat && (
               <DndCombatSection
                 key={`combat-${companion.id}`}
@@ -377,7 +380,6 @@ export function CompanionSheet({ companion, onUpdate, onDelete, isEditing, onTog
               />
             )}
 
-            {/* Right Column: Narrative, Attunement, Inventory */}
             <div className="md:col-span-3 space-y-6">
               {show.narrative && (
                 <DndNarrativeSection
@@ -412,7 +414,6 @@ export function CompanionSheet({ companion, onUpdate, onDelete, isEditing, onTog
             </div>
           </div>
 
-          {/* Spells Section */}
           {show.spells && (
             <DndSpellsSection
               characterId={`companion-${companion.id}`}
@@ -425,7 +426,6 @@ export function CompanionSheet({ companion, onUpdate, onDelete, isEditing, onTog
               activeCompactSection=""
             />
           )}
-
         </div>
       </CardContent>
     </Card>

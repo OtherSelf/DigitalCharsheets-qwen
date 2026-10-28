@@ -95,13 +95,17 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
     const proficiencyBonus = Math.floor((progressionData.level - 1) / 4) + 2;
 
     const calculatedSkills = React.useMemo(() => {
-      return skills.map(skill => {
-        const statKey = SKILL_STAT_MAP[skill.name];
-        if (!statKey || isSkillsEditing) return skill;
-        const mod = Math.floor((stats[statKey] - 10) / 2);
-        return { ...skill, value: mod + (skill.proficient ? proficiencyBonus : 0) + (skill.expertise ? proficiencyBonus : 0) };
-      });
-    }, [skills, stats, proficiencyBonus, isSkillsEditing]);
+    return skills.map(skill => {
+      const statKey = SKILL_STAT_MAP[skill.name];
+      if (!statKey) return skill;
+      
+      const mod = Math.floor((stats[statKey] - 10) / 2);
+      const baseValue = mod + (skill.proficient ? proficiencyBonus : 0) + (skill.expertise ? proficiencyBonus : 0);
+      const finalValue = baseValue + (skill.manualModifier || 0);
+      
+      return { ...skill, value: finalValue };
+    });
+  }, [skills, stats, proficiencyBonus]);
 
     const passivePerception = 10 + (calculatedSkills.find(s => s.name === 'perception')?.value || 0);
     const conMod = Math.floor(((character.stats?.constitution ?? 10) - 10) / 2);
@@ -111,12 +115,15 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
       : { current: baseMaxHp, max: baseMaxHp };
 
     const calculatedSavingThrows = React.useMemo(() => {
-      return savingThrows.map(st => {
-        const statKey = st.name.toLowerCase() as keyof typeof stats;
-        const mod = Math.floor((stats[statKey] - 10) / 2);
-        return { ...st, value: mod + (st.proficient ? proficiencyBonus : 0) };
-      });
-    }, [savingThrows, stats, proficiencyBonus]);
+    return savingThrows.map(st => {
+      const statKey = st.name.toLowerCase() as keyof typeof stats;
+      const mod = Math.floor((stats[statKey] - 10) / 2);
+      const baseValue = mod + (st.proficient ? proficiencyBonus : 0);
+      const finalValue = baseValue + (st.manualModifier || 0);
+      
+      return { ...st, value: finalValue };
+    });
+  }, [savingThrows, stats, proficiencyBonus]);
 
     const handleSaveProgression = React.useCallback(() => { updateCharacter(character.id, { ...progressionData }); setIsProgressionEditing(false); }, [character.id, progressionData, updateCharacter]);
     const handleSaveStats = React.useCallback(() => { updateCharacter(character.id, { stats }); setIsStatsEditing(false); }, [character.id, stats, updateCharacter]);
@@ -271,6 +278,8 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
             handleSaveOtherProf={handleSaveOtherProf}
             isCompactView={isCompactView}
             activeCompactSection={activeCompactSection}
+            proficiencyBonus={proficiencyBonus}        
+            passivePerception={passivePerception} 
           />
           <DndSavesSkillsSection
             characterId={character.id}

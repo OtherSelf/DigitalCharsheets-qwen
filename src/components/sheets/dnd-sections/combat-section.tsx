@@ -62,7 +62,6 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
     const { updateCharacter, showEditButtons, hideNotes } = useCharacterContext();
     const { t } = useTranslation();
 
-    // Dynamic exhaustion effects to support translation
     const exhaustionEffects = [
       t('exhaustionEffect1'),
       t('exhaustionEffect2'),
@@ -128,15 +127,11 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
     };
 
     const handleAttackFieldChange = (id: string, field: keyof DnDAttack, value: string | number | boolean) => {
-      setAttacks(prev => {
-        const updated = prev.map(atk => {
-          if (atk.id !== id) return atk;
-          return { ...atk, [field]: value };
-        });
-        updateCharacter(characterId, { attacks: updated });
-        return updated;
-      });
-    };
+  setAttacks(prev => prev.map(atk => {
+    if (atk.id !== id) return atk;
+    return { ...atk, [field]: value };
+  }));
+};
 
     const addAttack = () => {
       const newAttack: DnDAttack = { 
@@ -295,6 +290,39 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
       return 8 + proficiencyBonus + getSpellcastingMod(ability);
     };
 
+ // Track which abilities are already used to prevent duplicates
+ const usedAbilities = React.useMemo(() => {
+   return new Set(spellcastingEntries.map(e => e.ability).filter(a => a !== 'none'));
+ }, [spellcastingEntries]);
+
+ // Auto-recalculate spellcasting when stats or proficiency bonus change
+ React.useEffect(() => {
+   if (isSpellcastingEditing) return;
+   
+   const updated = spellcastingEntries.map(entry => {
+     if (entry.ability === 'none' || !entry.ability) return entry;
+     
+     const newAttackBonus = calculateSpellAttack(entry.ability);
+     const newSaveDC = calculateSpellSaveDC(entry.ability);
+     
+     if (entry.attackBonus !== newAttackBonus || entry.saveDC !== newSaveDC) {
+       return { ...entry, attackBonus: newAttackBonus, saveDC: newSaveDC };
+     }
+     return entry;
+   });
+   
+   const hasChanges = updated.some((entry, i) => 
+     entry.attackBonus !== spellcastingEntries[i].attackBonus || 
+     entry.saveDC !== spellcastingEntries[i].saveDC
+   );
+   
+   if (hasChanges) {
+     setSpellcastingEntries(updated);
+     updateCharacter(characterId, { spellcastingEntries: updated });
+   }
+ }, [stats, proficiencyBonus]); // eslint-disable-line react-hooks/exhaustive-deps
+
+
     const handleSpellcastingFieldChange = (id: string, field: keyof SpellcastingEntry, value: string | number) => {
       setSpellcastingEntries(prev => prev.map(entry => {
         if (entry.id !== id) return entry;
@@ -331,6 +359,9 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
               ) : (
                 <div className="text-sm font-bold">{combatStats.armorClass}</div>
               )}
+              <div className="text-[9px] text-muted-foreground mt-1 font-medium">
+                {t('baseUnarmoredAC')} {10 + dexMod}
+              </div>
             </div>
             <div className="p-2 rounded-lg bg-background border">
               <Label className="text-[10px] text-muted-foreground uppercase font-bold">{t('initiative')}</Label>
@@ -589,18 +620,18 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
                       <Label className="text-[9px] text-muted-foreground uppercase">{t('ability')}</Label>
                     </div>
                     {isSpellcastingEditing ? (
-                      <Select value={entry.ability} onValueChange={(v) => handleSpellcastingFieldChange(entry.id, 'ability', v)}>
-                        <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                        <SelectItem value="none">{t('none')}</SelectItem>
-                        <SelectItem value="strength">{t('strength')}</SelectItem>
-                        <SelectItem value="dexterity">{t('dexterity')}</SelectItem>
-                        <SelectItem value="constitution">{t('constitution')}</SelectItem>
-                        <SelectItem value="intelligence">{t('intelligence')}</SelectItem>
-                        <SelectItem value="wisdom">{t('wisdom')}</SelectItem>
-                        <SelectItem value="charisma">{t('charisma')}</SelectItem>
-                      </SelectContent>
-                      </Select>
+                    <Select value={entry.ability} onValueChange={(v) => handleSpellcastingFieldChange(entry.id, 'ability', v)}>
+                      <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                       <SelectContent>
+                       <SelectItem value="none">{t('none')}</SelectItem>
+                       <SelectItem value="strength" disabled={usedAbilities.has('strength') && entry.ability !== 'strength'}>{t('strength')}</SelectItem>
+                       <SelectItem value="dexterity" disabled={usedAbilities.has('dexterity') && entry.ability !== 'dexterity'}>{t('dexterity')}</SelectItem>
+                       <SelectItem value="constitution" disabled={usedAbilities.has('constitution') && entry.ability !== 'constitution'}>{t('constitution')}</SelectItem>
+                       <SelectItem value="intelligence" disabled={usedAbilities.has('intelligence') && entry.ability !== 'intelligence'}>{t('intelligence')}</SelectItem>
+                       <SelectItem value="wisdom" disabled={usedAbilities.has('wisdom') && entry.ability !== 'wisdom'}>{t('wisdom')}</SelectItem>
+                       <SelectItem value="charisma" disabled={usedAbilities.has('charisma') && entry.ability !== 'charisma'}>{t('charisma')}</SelectItem>
+                     </SelectContent>
+                   </Select>
                     ) : (
                       <span className="text-xs font-bold">
                         {entry.ability === 'none' ? t('none') : t(entry.ability)}
@@ -631,11 +662,11 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
                   </div>
                 </div>
               ))}
-              {isSpellcastingEditing && (
-                <Button variant="outline" size="sm" className="w-full h-8 text-[10px] mt-2" onClick={addSpellcastingEntry}>
-                  <Plus className="mr-1 h-3 w-3" /> {t('addSpellcastingEntry')}
-                </Button>
-              )}
+            {isSpellcastingEditing && (
+              <Button variant="outline" size="sm" className="w-full h-8 text-[10px] mt-2" onClick={addSpellcastingEntry} disabled={usedAbilities.size >= 6}>
+                <Plus className="mr-1 h-3 w-3" /> {t('addSpellcastingEntry')}
+              </Button>
+            )}
 
             <div className="border-t pt-4">
               <Label className="text-[10px] font-bold uppercase text-muted-foreground mb-2 block">{t('attacksAndSpellcasting')}</Label>
