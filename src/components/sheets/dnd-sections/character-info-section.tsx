@@ -1,5 +1,4 @@
 'use client';
-
 import * as React from 'react';
 import { Card, CardContent, CardHeader } from '../../ui/card';
 import { Input } from '../../ui/input';
@@ -16,6 +15,13 @@ import {
 } from '@/components/ui/accordion';
 import { useCharacterContext } from '@/context/character-context';
 import { useTranslation } from '@/context/language-context';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 const RACE_TRANSLATION_KEYS: Record<string, string> = {
   "Aarakocra": "raceAarakocra", "Aasimar": "raceAasimar", "Autognome": "raceAutognome", "Astral elf": "raceAstralelf",
@@ -64,7 +70,15 @@ const ALIGNMENT_TRANSLATION_KEYS: Record<string, string> = {
 };
 
 const EditSaveButton = ({ editing, onEdit, onSave }: { editing: boolean; onEdit: () => void; onSave: () => void }) => (
-  editing ? ( <Button size="icon" variant="ghost" onClick={onSave} className="h-7 w-7"><Save className="h-4 w-4" /></Button> ) : ( <Button size="icon" variant="outline" onClick={onEdit} className="h-7 w-7"><Edit className="h-4 w-4" /></Button> )
+  editing ? (
+    <Button size="icon" variant="ghost" onClick={onSave} className="h-7 w-7">
+      <Save className="h-4 w-4" />
+    </Button>
+  ) : (
+    <Button size="icon" variant="outline" onClick={onEdit} className="h-7 w-7">
+      <Edit className="h-4 w-4" />
+    </Button>
+  )
 );
 
 const DetailField = ({ label, value, editing, onChange }: { label: string; value: string | number; editing: boolean; onChange: (val: string) => void }) => (
@@ -74,6 +88,47 @@ const DetailField = ({ label, value, editing, onChange }: { label: string; value
       <Input value={value} onChange={(e) => onChange(e.target.value)} className="h-7 text-xs p-1" />
     ) : (
       <span className="text-sm font-semibold truncate">{value || '-'}</span>
+    )}
+  </div>
+);
+
+// Dropdown field for select options
+const DetailSelectField = ({ 
+  label, 
+  value, 
+  editing, 
+  onChange, 
+  options,
+  translationKeys,
+  t
+}: { 
+  label: string; 
+  value: string; 
+  editing: boolean; 
+  onChange: (val: string) => void;
+  options: string[];
+  translationKeys: Record<string, string>;
+  t: (key: string) => string;
+}) => (
+  <div className="flex flex-col gap-1">
+    <Label className="text-[10px] text-muted-foreground uppercase font-bold">{label}</Label>
+    {editing ? (
+      <Select value={value} onValueChange={onChange}>
+        <SelectTrigger className="h-7 text-xs">
+          <SelectValue placeholder="-" />
+        </SelectTrigger>
+        <SelectContent className="max-h-[300px]">
+          {options.map((opt) => (
+            <SelectItem key={opt} value={opt} className="text-xs">
+              {t(translationKeys[opt] || opt)}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    ) : (
+      <span className="text-sm font-semibold truncate">
+        {value ? t(translationKeys[value] || value) : '-'}
+      </span>
     )}
   </div>
 );
@@ -102,10 +157,8 @@ export const DndCharacterInfoSection = React.forwardRef<{ saveAll: () => void },
   ({ characterId, initialName, initialHeaderData }, ref) => {
     const { updateCharacter, showEditButtons } = useCharacterContext();
     const { t } = useTranslation();
-
-    // NEW: Track open/closed state
+    
     const [isOpen, setIsOpen] = React.useState(true);
-
     const [name, setName] = React.useState(initialName);
     const [headerData, setHeaderData] = React.useState<HeaderData>(initialHeaderData);
     const [isHeaderEditing, setIsHeaderEditing] = React.useState(false);
@@ -127,7 +180,6 @@ export const DndCharacterInfoSection = React.forwardRef<{ saveAll: () => void },
     }), [isHeaderEditing, handleSaveHeader]);
 
     return (
-      // NEW: Added onValueChange and dynamic md:self-start class
       <Accordion 
         type="single" 
         collapsible 
@@ -145,9 +197,33 @@ export const DndCharacterInfoSection = React.forwardRef<{ saveAll: () => void },
             </CardHeader>
             <AccordionContent>
               <CardContent className="p-4 grid grid-cols-2 md:grid-cols-3 gap-4">
-                <DetailField label={t('race')} value={headerData.race ? t(RACE_TRANSLATION_KEYS[headerData.race] || headerData.race) : ''} editing={isHeaderEditing} onChange={v => setHeaderData({ ...headerData, race: v })} />
-                <DetailField label={t('background')} value={headerData.background ? t(BG_TRANSLATION_KEYS[headerData.background] || headerData.background) : ''} editing={isHeaderEditing} onChange={v => setHeaderData({ ...headerData, background: v })} />
-                <DetailField label={t('alignment')} value={headerData.alignment ? t(ALIGNMENT_TRANSLATION_KEYS[headerData.alignment] || headerData.alignment) : ''} editing={isHeaderEditing} onChange={v => setHeaderData({ ...headerData, alignment: v })} />
+                <DetailSelectField 
+                  label={t('race')} 
+                  value={headerData.race} 
+                  editing={isHeaderEditing} 
+                  onChange={v => setHeaderData({ ...headerData, race: v })}
+                  options={Object.keys(RACE_TRANSLATION_KEYS)}
+                  translationKeys={RACE_TRANSLATION_KEYS}
+                  t={t}
+                />
+                <DetailSelectField 
+                  label={t('background')} 
+                  value={headerData.background} 
+                  editing={isHeaderEditing} 
+                  onChange={v => setHeaderData({ ...headerData, background: v })}
+                  options={Object.keys(BG_TRANSLATION_KEYS)}
+                  translationKeys={BG_TRANSLATION_KEYS}
+                  t={t}
+                />
+                <DetailSelectField 
+                  label={t('alignment')} 
+                  value={headerData.alignment} 
+                  editing={isHeaderEditing} 
+                  onChange={v => setHeaderData({ ...headerData, alignment: v })}
+                  options={Object.keys(ALIGNMENT_TRANSLATION_KEYS)}
+                  translationKeys={ALIGNMENT_TRANSLATION_KEYS}
+                  t={t}
+                />
                 <DetailField label={t('age')} value={headerData.age} editing={isHeaderEditing} onChange={v => setHeaderData({ ...headerData, age: v })} />
                 <DetailField label={t('eyes')} value={headerData.eyes} editing={isHeaderEditing} onChange={v => setHeaderData({ ...headerData, eyes: v })} />
                 <DetailField label={t('skin')} value={headerData.skin} editing={isHeaderEditing} onChange={v => setHeaderData({ ...headerData, skin: v })} />

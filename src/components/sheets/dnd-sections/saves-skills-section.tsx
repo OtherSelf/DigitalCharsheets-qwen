@@ -5,10 +5,11 @@ import { type DnDSavingThrow, type DnDSkill } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
 import { Button } from '../../ui/button';
 import { Checkbox } from '../../ui/checkbox';
-import { Edit, Save } from 'lucide-react';
+import { Edit, Save, RefreshCw } from 'lucide-react';
 import { useCharacterContext } from '@/context/character-context';
 import { useTranslation } from '@/context/language-context';
 import { cn } from '@/lib/utils';
+import { Input } from '../../ui/input';
 
 // Helper to map skill internal names to translation keys (with abbreviations)
 const getSkillTranslationKey = (name: string): string => {
@@ -107,22 +108,68 @@ export function DndSavesSkillsSection({
             <EditSaveButton editing={isSavesEditing} onEdit={() => setIsSavesEditing(true)} onSave={handleSaveSaves} />
           )}
         </CardHeader>
-        <CardContent className="p-4 pt-0 space-y-1">
-          {calculatedSavingThrows.map((st, i) => (
+      <CardContent className="p-4 pt-0 space-y-1">
+        {calculatedSavingThrows.map((st, i) => {
+          const originalSt = savingThrows[i];
+          const hasModifier = (originalSt.manualModifier ?? 0) !== 0;
+          
+          return (
             <div key={st.name} className="flex items-center gap-2 py-1 border-b last:border-0 border-muted">
-              <Checkbox 
-                checked={st.proficient} 
+              <Checkbox
+                checked={st.proficient}
                 onCheckedChange={v => {
                   const updated = savingThrows.map((s, idx) => idx === i ? { ...s, proficient: !!v } : s);
                   setSavingThrows(updated);
                   updateCharacter(characterId, { savingThrows: updated });
-                }} 
+                }}
               />
-              <span className="font-bold text-sm w-8">{st.value >= 0 ? '+' : ''}{st.value}</span>
+              <div className="w-10 text-center">
+                {isSavesEditing ? (
+                  <div className="flex flex-col items-center gap-0.5">
+                    <Input
+                      type="number"
+                      value={originalSt.manualModifier === undefined ? '' : originalSt.manualModifier}
+                      onChange={(e) => {
+                        const rawVal = e.target.value;
+                        const val = rawVal === '' ? undefined : parseInt(rawVal, 10);
+                        const updated = savingThrows.map((s, idx) => 
+                          idx === i ? { ...s, manualModifier: val } : s
+                        );
+                        setSavingThrows(updated);
+                        updateCharacter(characterId, { savingThrows: updated });
+                      }}
+                      className="h-6 w-12 text-xs text-center p-0"
+                      placeholder="+0"
+                    />
+                    {hasModifier && (
+                      <Button 
+                        size="icon" 
+                        variant="ghost" 
+                        className="h-4 w-4 p-0 text-muted-foreground hover:text-foreground"
+                        onClick={() => {
+                          const updated = savingThrows.map((s, idx) => 
+                            idx === i ? { ...s, manualModifier: undefined } : s
+                          );
+                          setSavingThrows(updated);
+                          updateCharacter(characterId, { savingThrows: updated });
+                        }}
+                        title="Clear manual modifier"
+                      >
+                        <RefreshCw className="h-3 w-3" />
+                      </Button>
+                    )}
+                  </div>
+                ) : (
+                  <span className={cn("font-bold text-sm", hasModifier && "text-amber-600 dark:text-amber-400")}>
+                    {st.value >= 0 ? '+' : ''}{st.value}
+                  </span>
+                )}
+              </div>
               <span className="text-[10px] font-bold uppercase flex-1">{t(getSaveTranslationKey(st.name))}</span>
             </div>
-          ))}
-        </CardContent>
+          );
+        })}
+      </CardContent>
       </Card>
 
       <Card id="skills-card">
@@ -134,40 +181,81 @@ export function DndSavesSkillsSection({
             <EditSaveButton editing={isSkillsEditing} onEdit={() => setIsSkillsEditing(true)} onSave={handleSaveSkills} />
           )}
         </CardHeader>
-        <CardContent className="p-4 pt-0 space-y-1">
-          {calculatedSkills.map((sk, i) => {
-            const displayValue = sk.value;
-            return (
-              <div key={sk.name} className="flex items-center gap-1.5 py-1 border-b last:border-0 border-muted">
-                <Checkbox 
-                  checked={sk.proficient} 
-                  onCheckedChange={v => {
-                    const updated = skills.map((s, idx) => idx === i ? { ...s, proficient: !!v, expertise: !!v ? s.expertise : false } : s);
-                    setSkills(updated);
-                    updateCharacter(characterId, { skills: updated });
-                  }} 
-                />
-                
-                <Checkbox 
-                  checked={sk.expertise || false} 
-                  disabled={!sk.proficient} 
-                  onCheckedChange={v => {
-                    const updated = skills.map((s, idx) => idx === i ? { ...s, expertise: !!v } : s);
-                    setSkills(updated);
-                    updateCharacter(characterId, { skills: updated });
-                  }}
-                  className="border-primary/50 data-[state=checked]:bg-accent"
-                />
-                
-                <div className="w-8 text-center">
-                  <span className="font-black text-sm">{displayValue >= 0 ? '+' : ''}{displayValue}</span>
-                </div>
-                
-                <span className="text-xs font-semibold flex-1">{t(getSkillTranslationKey(sk.name))}</span>
+
+
+      <CardContent className="p-4 pt-0 space-y-1">
+        {calculatedSkills.map((sk, i) => {
+          const originalSk = skills[i];
+          const hasModifier = (originalSk.manualModifier ?? 0) !== 0;
+          const displayValue = sk.value;
+          
+          return (
+            <div key={sk.name} className="flex items-center gap-1.5 py-1 border-b last:border-0 border-muted">
+              <Checkbox
+                checked={sk.proficient}
+                onCheckedChange={v => {
+                  const updated = skills.map((s, idx) => idx === i ? { ...s, proficient: !!v, expertise: !!v ? s.expertise : false } : s);
+                  setSkills(updated);
+                  updateCharacter(characterId, { skills: updated });
+                }}
+              />
+              <Checkbox
+                checked={sk.expertise || false}
+                disabled={!sk.proficient}
+                onCheckedChange={v => {
+                  const updated = skills.map((s, idx) => idx === i ? { ...s, expertise: !!v } : s);
+                  setSkills(updated);
+                  updateCharacter(characterId, { skills: updated });
+                }}
+                className="border-primary/50 data-[state=checked]:bg-accent"
+              />
+              <div className="w-10 text-center">
+                {isSkillsEditing ? (
+                  <div className="flex flex-col items-center gap-0.5">
+                    <Input
+                      type="number"
+                      value={originalSk.manualModifier === undefined ? '' : originalSk.manualModifier}
+                      onChange={(e) => {
+                        const rawVal = e.target.value;
+                        const val = rawVal === '' ? undefined : parseInt(rawVal, 10);
+                        const updated = skills.map((s, idx) => 
+                          idx === i ? { ...s, manualModifier: val } : s
+                        );
+                        setSkills(updated);
+                        updateCharacter(characterId, { skills: updated });
+                      }}
+                      className="h-6 w-12 text-xs text-center p-0"
+                      placeholder="+0"
+                    />
+                    {hasModifier && (
+                      <Button 
+                        size="icon" 
+                        variant="ghost" 
+                        className="h-4 w-4 p-0 text-muted-foreground hover:text-foreground"
+                        onClick={() => {
+                          const updated = skills.map((s, idx) => 
+                            idx === i ? { ...s, manualModifier: undefined } : s
+                          );
+                          setSkills(updated);
+                          updateCharacter(characterId, { skills: updated });
+                        }}
+                        title="Clear manual modifier"
+                      >
+                        <RefreshCw className="h-3 w-3" />
+                      </Button>
+                    )}
+                  </div>
+                ) : (
+                  <span className={cn("font-black text-sm", hasModifier && "text-amber-600 dark:text-amber-400")}>
+                    {displayValue >= 0 ? '+' : ''}{displayValue}
+                  </span>
+                )}
               </div>
-            );
-          })}
-        </CardContent>
+              <span className="text-xs font-semibold flex-1">{t(getSkillTranslationKey(sk.name))}</span>
+            </div>
+          );
+        })}
+      </CardContent>
       </Card>
     </div>
   );

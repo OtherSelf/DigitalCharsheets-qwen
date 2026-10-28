@@ -39,6 +39,7 @@ export interface DnDSavingThrow {
   name: string;
   proficient: boolean;
   value: number;
+  manualModifier?: number;
   notes?: string;
 }
 
@@ -48,6 +49,7 @@ export interface DnDSkill {
   proficient: boolean;
   expertise: boolean;
   value: number;
+  manualModifier?: number;
   notes?: string;
 }
 
