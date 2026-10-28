@@ -23,7 +23,7 @@ dist/
 # Local Storage / User Data
 # ==========================================
 data/*
-!data/.gitkeep
+!data/Hello.txt
 data/import-source.json
 
 # ==========================================
