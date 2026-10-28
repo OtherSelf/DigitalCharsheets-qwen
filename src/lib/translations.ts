@@ -898,6 +898,27 @@ export const translations: Record<string, Record<string, string>> = {
     narrativeSection: "Narrative",
     spellNamePlaceholder: "Spell Name",
 
+    // ─── LANDMARK: IMPORT_EXPORT_TRANSLATIONS_EN ───
+    importExport: "Import/Export",
+    exportCharacter: "Export Character",
+    importCharacter: "Import Character",
+    exportDesc: "Select the data sections you want to include in the JSON export.",
+    importDesc: "Upload a previously exported JSON file and select what to merge.",
+    exportBasicInfo: "Basic Info",
+    exportStats: "Stats & Abilities",
+    exportCombat: "Combat & Health",
+    exportEquipment: "Equipment & Weapons",
+    exportInventory: "Inventory & Currency",
+    exportSpells: "Spells & Magic",
+    exportNarrative: "Narrative & Traits",
+    exportProgression: "Progression & XP",
+    exportCompanions: "Companions & Followers",
+    exportQuestLog: "Quest Log",
+    exportHouseRules: "House Rules",
+    downloadJson: "Download JSON",
+    readyToMerge: "File loaded. Review the selected sections above and click 'Apply Import' to merge.",
+    importDashboardDesc: "Upload a previously exported JSON file to create a new character.",
+    importSuccessDashboard: "Character created successfully! Redirecting...",
   },
   ru: {
     
@@ -1800,5 +1821,29 @@ export const translations: Record<string, Record<string, string>> = {
     showSections: "Показать разделы:",
     narrativeSection: "История",
     spellNamePlaceholder: "Название заклинания",
+
+    // ─── LANDMARK: IMPORT_EXPORT_TRANSLATIONS_RU ───
+    importExport: "Импорт/Экспорт",
+    exportCharacter: "Экспорт персонажа",
+    importCharacter: "Импорт персонажа",
+    exportDesc: "Выберите разделы данных, которые вы хотите включить в JSON-экспорт.",
+    importDesc: "Загрузите ранее экспортированный JSON-файл и выберите, что объединить.",
+    exportBasicInfo: "Основная информация",
+    exportStats: "Характеристики и способности",
+    exportCombat: "Бой и здоровье",
+    exportEquipment: "Снаряжение и оружие",
+    exportInventory: "Инвентарь и валюта",
+    exportSpells: "Заклинания и магия",
+    exportNarrative: "История и черты",
+    exportProgression: "Прогресс и опыт",
+    exportCompanions: "Спутники и последователи",
+    exportQuestLog: "Журнал заданий",
+    exportHouseRules: "Домашние правила",
+    downloadJson: "Скачать JSON",
+    applyImport: "Применить импорт",
+    readyToMerge: "Файл загружен. Проверьте выбранные разделы выше и нажмите 'Применить импорт' для объединения.",
+    importDashboardDesc: "Загрузите ранее экспортированный JSON-файл, чтобы создать нового персонажа.",
+    importSuccessDashboard: "Персонаж успешно создан! Перенаправление...",
+    
   }
 };

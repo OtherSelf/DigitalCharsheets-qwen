@@ -127,11 +127,11 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
     };
 
     const handleAttackFieldChange = (id: string, field: keyof DnDAttack, value: string | number | boolean) => {
-  setAttacks(prev => prev.map(atk => {
-    if (atk.id !== id) return atk;
-    return { ...atk, [field]: value };
-  }));
-};
+      setAttacks(prev => prev.map(atk => {
+        if (atk.id !== id) return atk;
+        return { ...atk, [field]: value };
+      }));
+    };
 
     const addAttack = () => {
       const newAttack: DnDAttack = { 
