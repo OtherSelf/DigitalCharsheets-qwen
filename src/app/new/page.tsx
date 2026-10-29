@@ -29,21 +29,22 @@ export default function ManualCharacterCreationPage() {
   const { t } = useTranslation();
 
   return (
-    <div className="flex flex-col h-screen">
+    <div className="flex flex-col h-dvh">
       <Header />
       <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
         <div className="flex items-center justify-between mb-8">
-            <div className="flex flex-col gap-1">
-                <h1 className="text-3xl font-headline font-bold tracking-tight">{t('createNew')}</h1>
-                <p className="text-muted-foreground">{t('buildCharacterDesc')}</p>
-            </div>
-            <Button variant="outline" size="sm" asChild>
-              <Link href="/">
-                <ChevronLeft className="mr-2 h-4 w-4" />
-                {t('backToDashboard')}
-              </Link>
-            </Button>
+          <div className="flex flex-col gap-1">
+            <h1 className="text-3xl font-headline font-bold tracking-tight">{t('createNew')}</h1>
+            <p className="text-muted-foreground">{t('buildCharacterDesc')}</p>
+          </div>
+          <Button variant="outline" size="sm" asChild>
+            <Link href="/">
+              <ChevronLeft className="mr-2 h-4 w-4" />
+              {t('backToDashboard')}
+            </Link>
+          </Button>
         </div>
+
         <div className="max-w-4xl mx-auto">
           <Card className="mb-8">
             <CardHeader>
