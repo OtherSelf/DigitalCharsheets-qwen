@@ -31,27 +31,42 @@ export default function ManualCharacterCreationPage() {
   return (
     <div className="flex flex-col h-dvh">
       <Header />
-      <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
-        <div className="flex items-center justify-between mb-8">
+      
+      {/* 🎯 LANDMARK: MOBILE_PADDING_FIX - Reduced padding on mobile (p-3) */}
+      <main className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6 lg:p-8 safe-area-bottom">
+        
+        {/* 🎯 LANDMARK: MOBILE_HEADER_LAYOUT - Stacked on mobile, side-by-side on desktop */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 sm:mb-8 gap-4">
           <div className="flex flex-col gap-1">
-            <h1 className="text-3xl font-headline font-bold tracking-tight">{t('createNew')}</h1>
-            <p className="text-muted-foreground">{t('buildCharacterDesc')}</p>
+            <h1 className="text-2xl sm:text-3xl font-headline font-bold tracking-tight">
+              {t('createNew')}
+            </h1>
+            <p className="text-sm sm:text-base text-muted-foreground">
+              {t('buildCharacterDesc')}
+            </p>
           </div>
-          <Button variant="outline" size="sm" asChild>
-            <Link href="/">
-              <ChevronLeft className="mr-2 h-4 w-4" />
-              {t('backToDashboard')}
-            </Link>
-          </Button>
+          
+          {/*  LANDMARK: HIDE_BACK_BUTTON_MOBILE 
+              Wrapped in a div to guarantee it hides on mobile. 
+              'asChild' sometimes swallows display classes like 'hidden'. */}
+          <div className="hidden md:block">
+            <Button variant="outline" size="sm" asChild>
+              <Link href="/">
+                <ChevronLeft className="mr-2 h-4 w-4" />
+                {t('backToDashboard')}
+              </Link>
+            </Button>
+          </div>
         </div>
 
         <div className="max-w-4xl mx-auto">
-          <Card className="mb-8">
-            <CardHeader>
-              <CardTitle>{t('gameSystem')}</CardTitle>
-              <CardDescription>{t('selectGameSystemDesc')}</CardDescription>
+          {/*  LANDMARK: MOBILE_CARD_PADDING - Reduced card padding on mobile */}
+          <Card className="mb-4 sm:mb-8">
+            <CardHeader className="p-4 sm:p-6">
+              <CardTitle className="text-lg sm:text-xl">{t('gameSystem')}</CardTitle>
+              <CardDescription className="text-xs sm:text-sm">{t('selectGameSystemDesc')}</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
               <Select onValueChange={(value) => setGameSystem(value as GameSystem)} value={gameSystem}>
                 <SelectTrigger className="w-full md:w-[280px]">
                   <SelectValue placeholder={t('selectGameSystemPlaceholder')} />
