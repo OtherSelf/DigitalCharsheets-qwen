@@ -7,10 +7,10 @@ import {
   Scroll,
   Monitor,
   Smartphone,
-  FileDown,
   Minus,
   Plus,
   Scale,
+  Menu,
 } from 'lucide-react';
 import Link from 'next/link';
 import { UserNav } from './layout/user-nav';
@@ -28,17 +28,22 @@ import { Separator } from './ui/separator';
 import { ThemeToggle } from './layout/theme-toggle';
 import { useTranslation } from '@/context/language-context';
 import { LanguageToggle } from './layout/language-toggle';
-import { exportCharacterToExcel } from '@/lib/export-utils';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { HouseRulesDialog } from './sheets/dnd-sections/house-rules-dialog';
 import { DhHouseRulesDialog } from './sheets/dh-sections/dh-house-rules-dialog';
-import { ExportImportDialog } from '@/components/export-import-dialog';
 
 interface HeaderProps {
   onNotesClick?: () => void;
   onJournalClick?: () => void;
+  mobileActions?: React.ReactNode;
 }
 
-export function Header({ onNotesClick, onJournalClick }: HeaderProps) {
+export function Header({ onNotesClick, onJournalClick, mobileActions }: HeaderProps) {
   const {
     isCompactView,
     isSmallScreen,
@@ -69,13 +74,10 @@ export function Header({ onNotesClick, onJournalClick }: HeaderProps) {
   const getSubtitle = (char: Character) => {
     if (char.gameSystem === 'Dungeons & Dragons') {
       const dnd = char as DnD5eCharacter;
-      
-      // Generate translation keys matching the format we used in the character form
       const raceKey = `race${dnd.race.replace(/[^a-zA-Z]/g, '')}`;
       const classKey = `class${dnd.characterClass}`;
       const bgKey = `bg${dnd.background.replace(/[^a-zA-Z]/g, '')}`;
       
-      // Fallback to the raw English value if a translation key is somehow missing
       const translatedRace = t(raceKey) || dnd.race;
       const translatedClass = t(classKey) || dnd.characterClass;
       const translatedBg = t(bgKey) || dnd.background;
@@ -84,8 +86,6 @@ export function Header({ onNotesClick, onJournalClick }: HeaderProps) {
     }
     
     const dh = char as DarkHeresyCharacter;
-    
-    // Map raw values to translation keys (fallback to raw value if key is somehow missing)
     const rankKey = `rank${dh.rank.replace(/[^a-zA-Z]/g, '')}`;
     const classKey = `career${dh.characterClass.replace(/[^a-zA-Z]/g, '')}`;
     
@@ -101,10 +101,7 @@ export function Header({ onNotesClick, onJournalClick }: HeaderProps) {
       const dnd = character as DnD5eCharacter;
       const current = parseInt(dnd.inspiration) || 0;
       const maxInspiration = dnd.allowInspirationHomeRule ? 999 : 1;
-      const next = Math.max(
-        0,
-        Math.min(maxInspiration, current + delta)
-      ).toString();
+      const next = Math.max(0, Math.min(maxInspiration, current + delta)).toString();
       updateCharacter(dnd.id, { inspiration: next });
     }
   };
@@ -120,10 +117,7 @@ export function Header({ onNotesClick, onJournalClick }: HeaderProps) {
 
         {character && !isCompactView && (
           <>
-            <Separator
-              orientation="vertical"
-              className="hidden h-8 shrink-0 md:block"
-            />
+            <Separator orientation="vertical" className="hidden h-8 shrink-0 md:block" />
             <div className="flex min-w-0 flex-col gap-0">
               <h2 className="truncate text-lg font-headline font-bold tracking-tight xl:text-xl">
                 {character.name}
@@ -136,163 +130,95 @@ export function Header({ onNotesClick, onJournalClick }: HeaderProps) {
         )}
 
         {character && character.gameSystem === 'Dungeons & Dragons' && (
-  <div className="flex shrink-0 items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-2 py-1 md:ml-2 md:px-3">
-    <span className="hidden text-[10px] font-bold uppercase tracking-widest text-primary sm:inline">
-      {t('inspiration')}
-    </span>
-    <div className="flex items-center gap-1">
-      <Button
-        size="icon"
-        variant="ghost"
-        className="h-6 w-6 text-primary hover:bg-primary/20"
-        onClick={() => handleInspirationChange(-1)}
-      >
-        <Minus className="h-3 w-3" />
-      </Button>
-      <span className="min-w-[1rem] text-center text-sm font-black text-primary">
-        {(character as DnD5eCharacter).inspiration || '0'}
-      </span>
-      <Button
-        size="icon"
-        variant="ghost"
-        className="h-6 w-6 text-primary hover:bg-primary/20"
-        onClick={() => handleInspirationChange(1)}
-      >
-        <Plus className="h-3 w-3" />
-      </Button>
-    </div>
-    {!isCompactView && (
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={() => setIsHouseRulesDialogOpen(true)}
-        className="h-7 px-2 xl:ml-2"
-        aria-label={t('houseRules')}
-      >
-        <Scale className="h-4 w-4 xl:mr-2" />
-        <span className="hidden xl:inline">{t('houseRules')}</span>
-      </Button>
-    )}
-  </div>
-)}
+          <div className="flex shrink-0 items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-2 py-1 md:ml-2 md:px-3">
+            <span className="hidden text-[10px] font-bold uppercase tracking-widest text-primary sm:inline">
+              {t('inspiration')}
+            </span>
+            <div className="flex items-center gap-1">
+              <Button size="icon" variant="ghost" className="h-6 w-6 text-primary hover:bg-primary/20" onClick={() => handleInspirationChange(-1)}>
+                <Minus className="h-3 w-3" />
+              </Button>
+              <span className="min-w-[1rem] text-center text-sm font-black text-primary">
+                {(character as DnD5eCharacter).inspiration || '0'}
+              </span>
+              <Button size="icon" variant="ghost" className="h-6 w-6 text-primary hover:bg-primary/20" onClick={() => handleInspirationChange(1)}>
+                <Plus className="h-3 w-3" />
+              </Button>
+            </div>
+            {!isCompactView && (
+              <Button variant="outline" size="sm" onClick={() => setIsHouseRulesDialogOpen(true)} className="h-7 px-2 xl:ml-2" aria-label={t('houseRules')}>
+                <Scale className="h-4 w-4 xl:mr-2" />
+                <span className="hidden xl:inline">{t('houseRules')}</span>
+              </Button>
+            )}
+          </div>
+        )}
 
-{/* DH-HOUSE-RULES-HEADER-BUTTON-START */}
-{character && character.gameSystem === 'Dark Heresy' && !isCompactView && (
-  <Button
-    variant="outline"
-    size="sm"
-    onClick={() => setIsHouseRulesDialogOpen(true)}
-    className="h-7 px-2 ml-2"
-    aria-label={t('houseRules')}
-  >
-    <Scale className="h-4 w-4 xl:mr-2" />
-    <span className="hidden xl:inline">{t('houseRules')}</span>
-  </Button>
-)}
-{/* DH-HOUSE-RULES-HEADER-BUTTON-END */}
+        {character && character.gameSystem === 'Dark Heresy' && !isCompactView && (
+          <Button variant="outline" size="sm" onClick={() => setIsHouseRulesDialogOpen(true)} className="h-7 px-2 ml-2" aria-label={t('houseRules')}>
+            <Scale className="h-4 w-4 xl:mr-2" />
+            <span className="hidden xl:inline">{t('houseRules')}</span>
+          </Button>
+        )}
       </div>
 
       {/* ─── LANDMARK: HEADER_ACTIONS ─── */}
       <div className="header-actions flex flex-wrap items-center justify-end gap-2">
 
+        {/* 🎯 LANDMARK: MOBILE_ACTIONS_MENU - Only visible on mobile */}
+        {mobileActions && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="icon" className="sm:hidden h-9 w-9">
+                <Menu className="h-4 w-4" />
+                <span className="sr-only">Open menu</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              {mobileActions}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
+
         {!isSmallScreen && (
           <Button variant="outline" size="icon" onClick={toggleCompactView}>
-            {isCompactView ? (
-              <Monitor className="h-4 w-4" />
-            ) : (
-              <Smartphone className="h-4 w-4" />
-            )}
-            <span className="sr-only">
-              {isCompactView
-                ? t('switchToDefaultView')
-                : t('switchToCompactView')}
-            </span>
+            {isCompactView ? <Monitor className="h-4 w-4" /> : <Smartphone className="h-4 w-4" />}
+            <span className="sr-only">{isCompactView ? t('switchToDefaultView') : t('switchToCompactView')}</span>
           </Button>
         )}
 
         {character && !isSmallScreen && (
           <div className="flex items-center gap-2 md:gap-4 md:border-l md:border-r md:px-2">
             <div className="flex items-center gap-1.5 md:gap-2">
-              <Checkbox
-                id="hide-notes"
-                checked={hideNotes}
-                onCheckedChange={checked => setHideNotes(!!checked)}
-              />
-              <Label
-                htmlFor="hide-notes"
-                className="cursor-pointer whitespace-nowrap text-[10px] md:text-xs"
-              >
+              <Checkbox id="hide-notes" checked={hideNotes} onCheckedChange={checked => setHideNotes(!!checked)} />
+              <Label htmlFor="hide-notes" className="cursor-pointer whitespace-nowrap text-[10px] md:text-xs">
                 {isTabletScreen ? t('notes') : (hideNotes ? t('showNotes') : t('hideNotes'))}
               </Label>
             </div>
-
             <div className="flex items-center gap-1.5 md:gap-2">
-              <Checkbox
-                id="show-edit-buttons"
-                checked={showEditButtons}
-                onCheckedChange={checked => setShowEditButtons(!!checked)}
-              />
-              <Label
-                htmlFor="show-edit-buttons"
-                className="cursor-pointer whitespace-nowrap text-[10px] md:text-xs"
-              >
+              <Checkbox id="show-edit-buttons" checked={showEditButtons} onCheckedChange={checked => setShowEditButtons(!!checked)} />
+              <Label htmlFor="show-edit-buttons" className="cursor-pointer whitespace-nowrap text-[10px] md:text-xs">
                 {isTabletScreen ? t('edit') : (showEditButtons ? t('hideEditButtons') : t('showEditButtons'))}
               </Label>
             </div>
           </div>
         )}
 
-{character && !isCompactView && (
-  <ExportImportDialog character={character} />
-)}
-
-        {character && !isSmallScreen && onNotesClick && onJournalClick && (
-          <>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onNotesClick}
-              className="hidden h-8 sm:flex"
-              aria-label={t('notes')}
-            >
-              <BookText className="h-4 w-4 xl:mr-2" />
-              <span className="hidden xl:inline">{t('notes')}</span>
-            </Button>
-
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onJournalClick}
-              className="hidden h-8 sm:flex"
-              aria-label={t('questJournal')}
-            >
-              <Scroll className="h-4 w-4 xl:mr-2" />
-              <span className="hidden xl:inline">{t('questJournal')}</span>
-            </Button>
-          </>
-        )}
-
-        {!isSmallScreen && <LanguageToggle />}
+        {/* 🎯 LANDMARK: SMART_LANGUAGE_TOGGLE 
+            Shows on Dashboard (!character) OR Character Sheet Default View (!isCompactView).
+            Hides on Character Sheet Compact View to prevent doubling up with the sidebar toggle. */}
+        {(!character || !isCompactView) && <LanguageToggle />}
+        
         <ThemeToggle />
         <UserNav />
       </div>
 
-      {/* DH-HOUSE-RULES-DIALOG-MOUNT-START */}
-{character && character.gameSystem === 'Dungeons & Dragons' && (
-  <HouseRulesDialog
-    open={isHouseRulesDialogOpen}
-    onOpenChange={setIsHouseRulesDialogOpen}
-    characterId={character.id}
-  />
-)}
-{character && character.gameSystem === 'Dark Heresy' && (
-  <DhHouseRulesDialog
-    open={isHouseRulesDialogOpen}
-    onOpenChange={setIsHouseRulesDialogOpen}
-    characterId={character.id}
-  />
-)}
-{/* DH-HOUSE-RULES-DIALOG-MOUNT-END */}
+      {character && character.gameSystem === 'Dungeons & Dragons' && (
+        <HouseRulesDialog open={isHouseRulesDialogOpen} onOpenChange={setIsHouseRulesDialogOpen} characterId={character.id} />
+      )}
+      {character && character.gameSystem === 'Dark Heresy' && (
+        <DhHouseRulesDialog open={isHouseRulesDialogOpen} onOpenChange={setIsHouseRulesDialogOpen} characterId={character.id} />
+      )}
     </header>
   );
 }

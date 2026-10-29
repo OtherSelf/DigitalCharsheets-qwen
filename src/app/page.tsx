@@ -11,6 +11,9 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenuItem,
+} from '@/components/ui/dropdown-menu';
 import { useCharacterContext } from '@/context/character-context';
 import { cn } from '@/lib/utils';
 import { PlusCircle, FileSpreadsheet, FileDown, Settings2 } from 'lucide-react';
@@ -21,7 +24,7 @@ import { DnD5eCharacter, DarkHeresyCharacter } from '@/lib/types';
 import Link from 'next/link';
 import { useLocalAuth } from '@/context/local-auth-context';
 import { ImportCharacterDialog } from '@/components/import-character-dialog';
-import { DynamicFavicon } from '@/components/dynamic-favicon'; // 🎯 LANDMARK: NEW IMPORT
+import { DynamicFavicon } from '@/components/dynamic-favicon';
 
 export default function DashboardPage() {
   const { characters, isLoaded, isCompactView } = useCharacterContext();
@@ -30,6 +33,7 @@ export default function DashboardPage() {
 
   const handleExportXlsx = () => {
     if (characters.length === 0) return;
+
     const exportData = characters.map(char => {
       const base = {
         Name: char.name,
@@ -38,6 +42,7 @@ export default function DashboardPage() {
         Notes: (char as any).notes || '',
         Backstory: char.backstory || ''
       };
+
       if (char.gameSystem === 'Dungeons & Dragons') {
         const dnd = char as DnD5eCharacter;
         return {
@@ -64,6 +69,7 @@ export default function DashboardPage() {
         };
       }
     });
+
     const worksheet = XLSX.utils.json_to_sheet(exportData);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Characters");
@@ -76,28 +82,64 @@ export default function DashboardPage() {
 
   return (
     <>
-      {/* 🎯 LANDMARK: DASHBOARD FAVICON INJECTION */}
       <DynamicFavicon gameSystem="default" />
-
-      <div className="flex flex-col h-screen">
-        <Header />
-        <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
-          <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
+      <div className="flex flex-col h-dvh">
+        
+        {/* 🎯 LANDMARK: HEADER_WITH_MOBILE_ACTIONS */}
+        <Header 
+          mobileActions={
+            <>
+              <DropdownMenuItem asChild>
+                <Link href="/stats-editor" className="flex items-center cursor-pointer">
+                  <Settings2 className="mr-2 h-4 w-4" />
+                  <span>{t('statsEditor')}</span>
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                className="flex items-center cursor-pointer"
+                disabled={!user}
+                onClick={async () => {
+                  if (!user) return;
+                  const res = await fetch(`/api/export?userId=${user.uid}`);
+                  const data = await res.json();
+                  downloadJSON(data, `characters-backup-${new Date().toISOString().split('T')[0]}.json`);
+                }}
+              >
+                <FileDown className="mr-2 h-4 w-4" />
+                <span>{t('backupAll')}</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                className="flex items-center cursor-pointer"
+                disabled={characters.length === 0}
+                onClick={handleExportXlsx}
+              >
+                <FileSpreadsheet className="mr-2 h-4 w-4" />
+                <span>{t('exportCharacters')}</span>
+              </DropdownMenuItem>
+            </>
+          }
+        />
+        
+        <main className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6 lg:p-8 safe-area-bottom">
+          <div className="mb-6 sm:mb-8 flex flex-col gap-4">
             <div className="flex flex-col gap-2">
-              <h1 className="text-3xl font-headline font-bold">
+              <h1 className="text-2xl sm:text-3xl font-headline font-bold">
                 {t('existingCharacters')}
               </h1>
-              <p className="text-muted-foreground max-w-2xl">
+              <p className="text-sm sm:text-base text-muted-foreground max-w-2xl">
                 {t('companionText')}
               </p>
             </div>
-            <div className="flex flex-wrap gap-2">
-              <Button variant="outline" size="sm" asChild>
+            
+            {/* 🎯 LANDMARK: DESKTOP_BUTTON_GROUP - Hidden on mobile, visible on sm+ */}
+            <div className="hidden sm:flex flex-row gap-2 w-auto">
+              <Button variant="outline" size="sm" asChild className="justify-start">
                 <Link href="/stats-editor">
-                  <Settings2 className="mr-2 h-4 w-4" />
+                  <Settings2 className="mr-2 h-4 w-4 shrink-0" />
                   {t('statsEditor')}
                 </Link>
               </Button>
+
               <Button
                 variant="outline"
                 size="sm"
@@ -108,22 +150,25 @@ export default function DashboardPage() {
                   const data = await res.json();
                   downloadJSON(data, `characters-backup-${new Date().toISOString().split('T')[0]}.json`);
                 }}
+                className="justify-start"
               >
-                <FileDown className="mr-2 h-4 w-4" />
+                <FileDown className="mr-2 h-4 w-4 shrink-0" />
                 {t('backupAll')}
               </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="shrink-0"
+
+              <Button
+                variant="outline"
+                size="sm"
+                className="justify-start"
                 onClick={handleExportXlsx}
                 disabled={characters.length === 0}
               >
-                <FileSpreadsheet className="mr-2 h-4 w-4" />
+                <FileSpreadsheet className="mr-2 h-4 w-4 shrink-0" />
                 {t('exportCharacters')}
               </Button>
             </div>
           </div>
+
           <Card>
             <CardHeader>
               <CardTitle>{t('myCharacters')}</CardTitle>
@@ -144,21 +189,20 @@ export default function DashboardPage() {
                   <CharacterCard key={character.id} character={character} />
                 ))}
                 {isCompactView ? (
-                  <Button variant="outline" asChild className="flex items-center justify-center w-full h-20 rounded-lg border-2 border-dashed border-muted-foreground/30 hover:border-accent hover:bg-accent/10 transition-colors duration-200 text-muted-foreground hover:text-accent-foreground p-0 bg-transparent">
+                  <Button variant="outline" asChild className="flex items-center justify-center w-full h-16 sm:h-20 rounded-lg border-2 border-dashed border-muted-foreground/30 hover:border-accent hover:bg-accent/10 transition-colors duration-200 text-muted-foreground hover:text-accent-foreground p-0 bg-transparent">
                     <Link href="/new/manual">
-                      <PlusCircle className="h-8 w-8 mr-4" />
-                      <span className="font-semibold">{t('createNew')}</span>
+                      <PlusCircle className="h-6 w-6 sm:h-8 sm:w-8 mr-3 sm:mr-4" />
+                      <span className="font-semibold text-sm sm:text-base">{t('createNew')}</span>
                     </Link>
                   </Button>
                 ) : (
-                  <Button variant="outline" asChild className="flex flex-col items-center justify-center w-full h-full min-h-[200px] rounded-lg border-2 border-dashed border-muted-foreground/30 hover:border-accent hover:bg-accent/10 transition-colors duration-200 text-muted-foreground hover:text-accent-foreground p-0 bg-transparent">
+                  <Button variant="outline" asChild className="flex flex-col items-center justify-center w-full h-full min-h-[180px] sm:min-h-[200px] rounded-lg border-2 border-dashed border-muted-foreground/30 hover:border-accent hover:bg-accent/10 transition-colors duration-200 text-muted-foreground hover:text-accent-foreground p-0 bg-transparent">
                     <Link href="/new/manual">
-                      <PlusCircle className="h-12 w-12 mb-2" />
-                      <span className="font-semibold">{t('createNew')}</span>
+                      <PlusCircle className="h-10 w-10 sm:h-12 sm:w-12 mb-2" />
+                      <span className="font-semibold text-sm sm:text-base">{t('createNew')}</span>
                     </Link>
                   </Button>
                 )}
-                {/* ─── LANDMARK: DASHBOARD_IMPORT_BUTTON ─── */}
                 <ImportCharacterDialog isCompactView={isCompactView} />
               </div>
             </CardContent>

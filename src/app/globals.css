@@ -8,19 +8,21 @@ body {
 }
 
 /* ==========================================================================
-   LANDMARK: DOUBLE_SCROLLBAR_FIX
-   Prevent outer page scrollbar, only allow inner content to scroll
-   LANDMARK: MOBILE_SCROLL_FIX - Updated to 100dvh to prevent mobile browser address bar clipping
+   LANDMARK: MOBILE_LAYOUT_FIX
+   Use dynamic viewport height and prevent text size adjustment
 ========================================================================== */
 html, body {
-  height: 100dvh;
+  height: 100vh;
+  height: 100dvh; /* Fallback for browsers that support it */
   overflow: hidden;
   margin: 0;
   padding: 0;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
-/* Ensure the root flex container fills viewport without overflow */
 body > div:first-child {
+  height: 100vh;
   height: 100dvh;
   overflow: hidden;
 }
@@ -137,6 +139,62 @@ body > div:first-child {
   }
 }
 
+/* ==========================================================================
+   LANDMARK: MOBILE_SAFE_AREA
+   Add safe area padding for mobile devices with notches/gesture bars
+========================================================================== */
+@layer utilities {
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 1rem);
+  }
+  
+  .safe-area-top {
+    padding-top: env(safe-area-top, 0px);
+  }
+}
+
+/* ==========================================================================
+   LANDMARK: MOBILE_CARD_FIX
+   Make character cards responsive on mobile
+========================================================================== */
+@media (max-width: 640px) {
+  /* Compact view cards on mobile - stack buttons vertically */
+  .compact-mobile-card {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+  
+  .compact-mobile-card > div:first-child {
+    margin-bottom: 0.75rem !important;
+  }
+  
+  .compact-mobile-card .actions-wrapper {
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    gap: 0.5rem !important;
+  }
+  
+  /* Make view button smaller on mobile */
+  .compact-mobile-card .view-btn-mobile {
+    min-width: auto !important;
+    padding: 0 0.75rem !important;
+    font-size: 0.875rem !important;
+  }
+  
+  /* Reduce icon button size on mobile */
+  .compact-mobile-card .icon-btn-mobile {
+    height: 2.25rem !important;
+    width: 2.25rem !important;
+  }
+  
+  /* Make badge text wrap better */
+  .compact-mobile-card .system-badge {
+    max-width: 100%;
+    white-space: normal !important;
+    word-break: break-word !important;
+  }
+}
+
 /* ================================================================
    LANDMARK: SHEET_RESPONSIVE_BANDS
    Desktop : >= 1300px
@@ -221,7 +279,6 @@ body > div:first-child {
 /* ==========================================================================
    LANDMARK: RADIX_SCROLL_FIX
    FIX: Radix UI Collapsible / Accordion Scroll Layout Shift Bug
-   (Placed OUTSIDE the media query so it applies to Desktop view as well)
 ========================================================================== */
 [data-state="open"][style*="animation-name: none"] {
   height: auto !important;
