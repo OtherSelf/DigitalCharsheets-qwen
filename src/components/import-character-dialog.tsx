@@ -43,40 +43,69 @@ export function ImportCharacterDialog({ isCompactView }: ImportCharacterDialogPr
 
     const result = await importCharacterFromJSON(file);
     
-    if (!result.success || !result.data) {
+    if (!result.success) {
       setImportError(result.error || "Unknown error");
       setIsImporting(false);
       return;
     }
 
     try {
-      const { id, gameSystem, ...characterData } = result.data.character;
-      
-      // Ensure mandatory fields have fallbacks in case they were excluded from export
-      const safeCharacterData = {
-        name: characterData.name || "Imported Character",
-        gameSystem: gameSystem || "Dungeons & Dragons",
-        characterClass: characterData.characterClass || "Unknown",
-        backstory: characterData.backstory || "",
-        notes: characterData.notes || "",
-        questLog: characterData.questLog || [],
-        ...characterData
-      };
-      
-      const newChar = await addCharacter(safeCharacterData as any);
-      
-      if (newChar) {
+      let lastCreatedCharId: string | undefined;
+      let importedCount = 0;
+
+      // [LANDMARK: BATCH IMPORT SUPPORT]
+      if (result.batchData && result.batchData.length > 0) {
+        for (const charData of result.batchData) {
+          const safeCharacterData = {
+            name: charData.name || "Imported Character",
+            gameSystem: charData.gameSystem || "Dungeons & Dragons",
+            characterClass: charData.characterClass || "Unknown",
+            backstory: charData.backstory || "",
+            notes: charData.notes || "",
+            questLog: charData.questLog || [],
+            ...charData
+          };
+          const newChar = await addCharacter(safeCharacterData as any);
+          if (newChar) {
+            lastCreatedCharId = newChar.id;
+            importedCount++;
+          }
+        }
+      } 
+      // [LANDMARK: SINGLE IMPORT FALLBACK]
+      else if (result.data) {
+        const { id, gameSystem, ...characterData } = result.data.character;
+        const safeCharacterData = {
+          name: characterData.name || "Imported Character",
+          gameSystem: gameSystem || "Dungeons & Dragons",
+          characterClass: characterData.characterClass || "Unknown",
+          backstory: characterData.backstory || "",
+          notes: characterData.notes || "",
+          questLog: characterData.questLog || [],
+          ...characterData
+        };
+        const newChar = await addCharacter(safeCharacterData as any);
+        if (newChar) {
+          lastCreatedCharId = newChar.id;
+          importedCount++;
+        }
+      }
+
+      if (importedCount > 0) {
         setImportSuccess(true);
         setTimeout(() => {
           setOpen(false);
           setImportSuccess(false);
           if (fileInputRef.current) fileInputRef.current.value = '';
-          router.push(`/${newChar.id}`);
+          if (lastCreatedCharId) {
+            router.push(`/${lastCreatedCharId}`);
+          }
         }, 1500);
       } else {
         setImportError(t('failedToCreateCharacter') || "Failed to create character");
       }
     } catch (err) {
+      console.error(err);
       setImportError(t('failedToCreateCharacter') || "Failed to create character");
     } finally {
       setIsImporting(false);
