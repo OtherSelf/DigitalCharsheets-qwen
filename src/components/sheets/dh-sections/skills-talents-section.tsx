@@ -116,11 +116,16 @@ export const SkillsTalentsSection = React.forwardRef<{ saveAll: () => void }, Sk
         }
     }), [isSkillsEditing, isTalentsEditing, handleSaveSkills, handleSaveTalents]);
 
+    // FIX: Conditionally render Skills or Talents based on activeCompactSection in compact view
+    const showSkills = !isCompactView || activeCompactSection === 'skills-section';
+    const showTalents = !isCompactView || activeCompactSection === 'talents-section';
+
     return (
         <div className="space-y-6 w-full">
             {/* Shared outline wrapper for Skills and Talents & Traits */}
             <div className={cn("border rounded-lg space-y-6 bg-card", isCompactView ? "p-3" : "p-4 md:p-6")}>
                 {/* ==================== SKILLS SECTION ==================== */}
+                {showSkills && (
                 <Collapsible 
                     open={isSkillsOpen} 
                     onOpenChange={setIsSkillsOpen}
@@ -241,10 +246,12 @@ export const SkillsTalentsSection = React.forwardRef<{ saveAll: () => void }, Sk
                         </div>
                     </CollapsibleContent>
                 </Collapsible>
+                )}
                 
-                <Separator className={cn(isCompactView && 'hidden')} />
+                {showSkills && showTalents && <Separator className={cn(isCompactView && 'hidden')} />}
                 
                 {/* ==================== TALENTS & TRAITS SECTION ==================== */}
+                {showTalents && (
                 <Collapsible 
                     open={isTalentsOpen} 
                     onOpenChange={setIsTalentsOpen}
@@ -297,6 +304,7 @@ export const SkillsTalentsSection = React.forwardRef<{ saveAll: () => void }, Sk
                         )}
                     </CollapsibleContent>
                 </Collapsible>
+                )}
             </div>
         </div>
     );

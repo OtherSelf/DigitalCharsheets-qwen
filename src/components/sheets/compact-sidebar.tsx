@@ -1,3 +1,4 @@
+// src/components/sheets/compact-sidebar.tsx
 'use client';
 
 import { useState } from 'react';
@@ -55,8 +56,8 @@ export function CompactSidebar({ gameSystem, activeSection, onSectionChange }: C
 
   const dndItems = [
     { label: 'info', id: 'info-section', icon: Info },
-    { label: 'stats', id: 'stats-section', icon: Activity },
-    { label: 'combat', id: 'combat-section', icon: Swords },
+    { label: 'abilityScores', id: 'stats-section', icon: Activity },
+    { label: 'combatStats', id: 'combat-section', icon: Swords },
     { label: 'inventoryAndAttunement', id: 'inventory-section', icon: Backpack },
     { label: 'spells', id: 'spells-section', icon: Sparkles },
     { label: 'companions', id: 'companion-section', icon: PawPrint },
@@ -111,18 +112,18 @@ export function CompactSidebar({ gameSystem, activeSection, onSectionChange }: C
           <Tooltip key={item.id} delayDuration={0}>
             <TooltipTrigger asChild>
               <Button
-  variant="ghost"
-  onClick={() => {
-    if (item.id === 'house-rules') {
-      setIsHouseRulesDialogOpen(true);
-    } else {
-      onSectionChange(item.id);
-    }
-  }}
-  aria-label={t(item.label)}
-  className="w-full"
-  size="icon"
->
+                variant="ghost"
+                onClick={() => {
+                  if (item.id === 'house-rules') {
+                    setIsHouseRulesDialogOpen(true);
+                  } else {
+                    onSectionChange(item.id);
+                  }
+                }}
+                aria-label={t(item.label)}
+                className="w-full"
+                size="icon"
+              >
                 <item.icon className="h-5 w-5" />
               </Button>
             </TooltipTrigger>
@@ -173,21 +174,21 @@ export function CompactSidebar({ gameSystem, activeSection, onSectionChange }: C
           <LanguageToggle className="h-10 w-10" />
         </div>
       {/* DH-HOUSE-RULES-SIDEBAR-MOUNT-START */}
-{params?.id && gameSystem === 'Dungeons & Dragons' && (
-  <HouseRulesDialog 
-    open={isHouseRulesDialogOpen} 
-    onOpenChange={setIsHouseRulesDialogOpen} 
-    characterId={params.id} 
-  />
-)}
-{params?.id && gameSystem === 'Dark Heresy' && (
-  <DhHouseRulesDialog 
-    open={isHouseRulesDialogOpen} 
-    onOpenChange={setIsHouseRulesDialogOpen} 
-    characterId={params.id} 
-  />
-)}
-{/* DH-HOUSE-RULES-SIDEBAR-MOUNT-END */}
+      {params?.id && gameSystem === 'Dungeons & Dragons' && (
+        <HouseRulesDialog 
+          open={isHouseRulesDialogOpen} 
+          onOpenChange={setIsHouseRulesDialogOpen} 
+          characterId={params.id} 
+        />
+      )}
+      {params?.id && gameSystem === 'Dark Heresy' && (
+        <DhHouseRulesDialog 
+          open={isHouseRulesDialogOpen} 
+          onOpenChange={setIsHouseRulesDialogOpen} 
+          characterId={params.id} 
+        />
+      )}
+      {/* DH-HOUSE-RULES-SIDEBAR-MOUNT-END */}
       </nav>
     </TooltipProvider>
   );
