@@ -69,6 +69,7 @@ export interface Talent {
     id: string;
     name: string;
     notes?: string;
+    description?: string;
 }
 
 export interface DnDAttack {

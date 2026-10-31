@@ -901,7 +901,7 @@ export const translations: Record<string, Record<string, string>> = {
     // ─── LANDMARK: IMPORT_EXPORT_TRANSLATIONS_EN ───
     importExport: "Import/Export",
     exportCharacter: "Export Character",
-    importCharacter: "Import Character",
+    importCharacter: "Import Character (JSON only)",
     exportDesc: "Select the data sections you want to include in the JSON export.",
     importDesc: "Upload a previously exported JSON file and select what to merge.",
     exportBasicInfo: "Basic Info",
@@ -919,6 +919,7 @@ export const translations: Record<string, Record<string, string>> = {
     readyToMerge: "File loaded. Review the selected sections above and click 'Apply Import' to merge.",
     importDashboardDesc: "Upload a previously exported JSON file to create a new character.",
     importSuccessDashboard: "Character created successfully! Redirecting...",
+    exportJSON: "Export JSON-file",
   },
   ru: {
     
@@ -1675,7 +1676,7 @@ export const translations: Record<string, Record<string, string>> = {
     strengthAbbr: "СЛ",
     toughnessAbbr: "СТ",
     agilityAbbr: "ЛВ",
-    intelligenceAbbr: "ИН",
+    intelligenceAbbr: "ИНТ",
     perceptionAbbr: "ВП",
     willpowerAbbr: "СВ",
     fellowshipAbbr: "ОБ",
@@ -1825,7 +1826,7 @@ export const translations: Record<string, Record<string, string>> = {
     // ─── LANDMARK: IMPORT_EXPORT_TRANSLATIONS_RU ───
     importExport: "Импорт/Экспорт",
     exportCharacter: "Экспорт персонажа",
-    importCharacter: "Импорт персонажа",
+    importCharacter: "Импорт персонажа (только JSON)",
     exportDesc: "Выберите разделы данных, которые вы хотите включить в JSON-экспорт.",
     importDesc: "Загрузите ранее экспортированный JSON-файл и выберите, что объединить.",
     exportBasicInfo: "Основная информация",
@@ -1844,6 +1845,7 @@ export const translations: Record<string, Record<string, string>> = {
     readyToMerge: "Файл загружен. Проверьте выбранные разделы выше и нажмите 'Применить импорт' для объединения.",
     importDashboardDesc: "Загрузите ранее экспортированный JSON-файл, чтобы создать нового персонажа.",
     importSuccessDashboard: "Персонаж успешно создан! Перенаправление...",
+    exportJSON: "Выгрузить JSON-файл",
     
   }
 };
