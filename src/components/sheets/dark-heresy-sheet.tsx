@@ -79,6 +79,19 @@ export const DarkHeresySheet = React.forwardRef<any, { character: DarkHeresyChar
     const [isPointsEditing, setIsPointsEditing] = React.useState(false);
     const [isSkillsPanelCollapsed, setIsSkillsPanelCollapsed] = React.useState(false);
     const [isEquipmentPanelCollapsed, setIsEquipmentPanelCollapsed] = React.useState(false);
+    const [isCharacteristicsEditing, setIsCharacteristicsEditing] = React.useState(false);
+    const [editableStats, setEditableStats] = React.useState(character.stats);
+    const [editableStatUpgrades, setEditableStatUpgrades] = React.useState(character.statUpgrades ?? {});
+
+    React.useEffect(() => {
+      setEditableStats(character.stats);
+      setEditableStatUpgrades(character.statUpgrades ?? {});
+    }, [character.stats, character.statUpgrades]);
+
+    const handleSaveCharacteristics = React.useCallback(() => {
+      updateCharacter(character.id, { stats: editableStats, statUpgrades: editableStatUpgrades });
+      setIsCharacteristicsEditing(false);
+    }, [character.id, editableStats, editableStatUpgrades, updateCharacter]);
 
     const characteristicsRef = React.useRef<{ saveAll: () => void }>(null);
     const skillsTalentsRef = React.useRef<{ saveAll: () => void }>(null);
@@ -159,84 +172,99 @@ export const DarkHeresySheet = React.forwardRef<any, { character: DarkHeresyChar
     return (
       <div className={cn("dh-sheet space-y-6", isCompactView && "is-compact")}>
         {isCompactView && (
-          <div className="bg-card px-4 py-3 border-b shadow-sm space-y-3">
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-1 items-start">
-              <div className="md:col-span-3">
-                <div className="flex-row items-center justify-between flex">
-                  <div className="flex-1 justify-start p-0 h-auto hover:bg-transparent flex items-center"><CardTitle className="font-headline text-base">{t('characteristics')}</CardTitle></div>
-                </div>
-                <div className="grid grid-cols-5 gap-0.5 mt-2">
-                  {([
-                    { key: 'weaponSkill' as const, label: t('weaponSkillAbbr') },
-                    { key: 'ballisticSkill' as const, label: t('ballisticSkillAbbr') },
-                    { key: 'strength' as const, label: t('strengthAbbr') },
-                    { key: 'toughness' as const, label: t('toughnessAbbr') },
-                    { key: 'agility' as const, label: t('agilityAbbr') },
-                    { key: 'intelligence' as const, label: t('intelligenceAbbr') },
-                    { key: 'perception' as const, label: t('perceptionAbbr') },
-                    { key: 'willpower' as const, label: t('willpowerAbbr') },
-                    { key: 'fellowship' as const, label: t('fellowshipAbbr') },
-                    { key: 'influence' as const, label: t('influenceAbbr') },
-                  ] as const).map((char, idx) => {
-                    const stats = character.stats as Record<string, number>;
-                    const statUpgrades = character.statUpgrades as Record<string, boolean[]> | undefined;
-                    const statNotes = character.statNotes as Record<string, string> | undefined;
-                    const val = stats?.[char.key] || 0;
-                    const upgrades = (statUpgrades?.[char.key] || [false, false, false, false]) as boolean[];
-                    const bonus = upgrades.filter(Boolean).length * 5;
-                    const notes = statNotes?.[char.key] || '';
-                    return (
-                      <div key={char.key} className="relative bg-background border rounded-md text-center py-1 px-0.5 flex flex-col justify-between min-h-[60px]">
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <Button variant={notes ? 'secondary' : 'ghost'} size="icon" className="h-4 w-4 absolute top-0.5 right-0.5">
-                              <Info className="h-2.5 w-2.5" />
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-64 p-3" side="top" align="center">
-                            <Label className="text-xs mb-2 block font-semibold">{char.label} - Notes</Label>
-                            <Textarea 
-                              defaultValue={notes} 
-                              onBlur={(e) => {
-                                const nextNotes = { ...(character.statNotes || {}), [char.key]: e.target.value };
-                                updateCharacter(character.id, { statNotes: nextNotes });
-                              }} 
-                              placeholder={t('addNotesCharacteristicPlaceholder')} 
-                              className="min-h-[80px] text-xs" 
-                            />
-                          </PopoverContent>
-                        </Popover>
-                        <div className="text-[8px] font-semibold text-muted-foreground uppercase mt-1">{char.label}</div>
-                        <div className="flex items-center justify-center gap-1 mt-1 mb-1">
-                          <div className="text-sm font-bold text-primary leading-tight">{val + bonus}</div>
-                          <div className="flex flex-col gap-[1px] items-center">
-                            {upgrades.map((checked, upgradeIdx) => (
-                              <Checkbox 
-                                key={upgradeIdx} 
-                                checked={checked} 
-                                disabled={!checked && upgradeIdx > 0 && !upgrades[upgradeIdx - 1]}
-                                onCheckedChange={(c) => {
-                                  const nextUpgrades = { ...character.statUpgrades };
-                                  const specific = [...(nextUpgrades[char.key] || [false, false, false, false])];
-                                  specific[upgradeIdx] = !!c;
-                                  if (!c) {
-                                    for (let i = upgradeIdx + 1; i < specific.length; i++) {
-                                      specific[i] = false;
-                                    }
-                                  }
-                                  nextUpgrades[char.key] = specific as [boolean, boolean, boolean, boolean];
-                                  updateCharacter(character.id, { statUpgrades: nextUpgrades });
-                                }}
-                                className="h-2.5 w-2.5 data-[state=checked]:bg-primary" 
+                      <div className="bg-card px-4 py-3 border-b shadow-sm space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-1 items-start">
+                <div className="md:col-span-3">
+                  <div className="flex-row items-center justify-between flex">
+                    <div className="flex-1 justify-start p-0 h-auto hover:bg-transparent flex items-center"><CardTitle className="font-headline text-base">{t('characteristics')}</CardTitle></div>
+                    <EditSaveButton editing={isCharacteristicsEditing} onEdit={() => setIsCharacteristicsEditing(true)} onSave={handleSaveCharacteristics} />
+                  </div>
+                  <div className="grid grid-cols-5 gap-0.5 mt-2">
+                    {([
+                      { key: 'weaponSkill' as const, label: t('weaponSkillAbbr') },
+                      { key: 'ballisticSkill' as const, label: t('ballisticSkillAbbr') },
+                      { key: 'strength' as const, label: t('strengthAbbr') },
+                      { key: 'toughness' as const, label: t('toughnessAbbr') },
+                      { key: 'agility' as const, label: t('agilityAbbr') },
+                      { key: 'intelligence' as const, label: t('intelligenceAbbr') },
+                      { key: 'perception' as const, label: t('perceptionAbbr') },
+                      { key: 'willpower' as const, label: t('willpowerAbbr') },
+                      { key: 'fellowship' as const, label: t('fellowshipAbbr') },
+                      { key: 'influence' as const, label: t('influenceAbbr') },
+                    ] as const).map((char, idx) => {
+                      const stats = isCharacteristicsEditing ? editableStats : character.stats;
+                      const statUpgrades = isCharacteristicsEditing ? editableStatUpgrades : (character.statUpgrades || {});
+                      const statNotes = character.statNotes as Record<string, string> | undefined;
+                      const val = stats?.[char.key] || 0;
+                      const upgrades = (statUpgrades?.[char.key] || [false, false, false, false]) as boolean[];
+                      const bonus = upgrades.filter(Boolean).length * 5;
+                      const notes = statNotes?.[char.key] || '';
+                      return (
+                        <div key={char.key} className="relative bg-background border rounded-md text-center py-1 px-0.5 flex flex-col justify-between min-h-[60px]">
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button variant={notes ? 'secondary' : 'ghost'} size="icon" className="h-4 w-4 absolute top-0.5 right-0.5">
+                                <Info className="h-2.5 w-2.5" />
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-64 p-3" side="top" align="center">
+                              <Label className="text-xs mb-2 block font-semibold">{char.label} - Notes</Label>
+                              <Textarea 
+                                defaultValue={notes} 
+                                onBlur={(e) => {
+                                  const nextNotes = { ...(character.statNotes || {}), [char.key]: e.target.value };
+                                  updateCharacter(character.id, { statNotes: nextNotes });
+                                }} 
+                                placeholder={t('addNotesCharacteristicPlaceholder')} 
+                                className="min-h-[80px] text-xs" 
                               />
-                            ))}
+                            </PopoverContent>
+                          </Popover>
+                          <div className="text-[8px] font-semibold text-muted-foreground uppercase mt-1">{char.label}</div>
+                          <div className="flex items-center justify-center gap-1 mt-1 mb-1">
+                            {isCharacteristicsEditing ? (
+                              <Input 
+                                type="number" 
+                                value={val === 0 ? '' : val} 
+                                onChange={(e) => setEditableStats(prev => ({ ...prev, [char.key]: parseInt(e.target.value, 10) || 0 }))} 
+                                className="h-6 w-10 text-xs px-1 text-center font-bold text-primary leading-tight"
+                              />
+                            ) : (
+                              <div className="text-sm font-bold text-primary leading-tight">{val + bonus}</div>
+                            )}
+                            <div className="flex flex-col gap-[1px] items-center">
+                              {upgrades.map((checked, upgradeIdx) => (
+                                <Checkbox 
+                                  key={upgradeIdx} 
+                                  checked={checked} 
+                                  disabled={!checked && upgradeIdx > 0 && !upgrades[upgradeIdx - 1]}
+                                  onCheckedChange={(c) => {
+                                    const currentUpgrades = isCharacteristicsEditing ? editableStatUpgrades : (character.statUpgrades || {});
+                                    const nextUpgrades = { ...currentUpgrades };
+                                    const specific = [...(nextUpgrades[char.key] || [false, false, false, false])];
+                                    specific[upgradeIdx] = !!c;
+                                    if (!c) {
+                                      for (let i = upgradeIdx + 1; i < specific.length; i++) {
+                                        specific[i] = false;
+                                      }
+                                    }
+                                    nextUpgrades[char.key] = specific as [boolean, boolean, boolean, boolean];
+                                    if (isCharacteristicsEditing) {
+                                      setEditableStatUpgrades(nextUpgrades);
+                                    } else {
+                                      updateCharacter(character.id, { statUpgrades: nextUpgrades });
+                                    }
+                                  }}
+                                  className="h-2.5 w-2.5 data-[state=checked]:bg-primary" 
+                                />
+                              ))}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
               <div className="md:col-span-2 grid grid-cols-2 gap-1 px-1 mt-1">
                 <MetricBox title={t('wounds')} notes={getPointsObject(character.wounds).notes} onNoteChange={(val) => updateCharacter(character.id, { wounds: { ...getPointsObject(character.wounds), notes: val } })} editing={isPointsEditing} onEdit={() => setIsPointsEditing(true)} onSave={handleSavePoints} isCompactView={isCompactView} hideNotes={hideNotes} showEditButtons={showEditButtons}>
                   <div className="flex items-center justify-center gap-1">
@@ -304,19 +332,19 @@ export const DarkHeresySheet = React.forwardRef<any, { character: DarkHeresyChar
                   return (
                     <>
                       <div className="p-1 rounded bg-background/50 border text-center">
-                        <div className="text-[8px] text-muted-foreground uppercase">{t('movementHalfMove')}</div>
+                        <div className="text-[8px] text-muted-foreground uppercase">{t('halfMove')}</div>
                         <div className="text-xs font-bold">{agMod}</div>
                       </div>
                       <div className="p-1 rounded bg-background/50 border text-center">
-                        <div className="text-[8px] text-muted-foreground uppercase">{t('movementMove')}</div>
+                        <div className="text-[8px] text-muted-foreground uppercase">{t('move')}</div>
                         <div className="text-xs font-bold">{agMod * 2}</div>
                       </div>
                       <div className="p-1 rounded bg-background/50 border text-center">
-                        <div className="text-[8px] text-muted-foreground uppercase">{t('movementCharge')}</div>
+                        <div className="text-[8px] text-muted-foreground uppercase">{t('charge')}</div>
                         <div className="text-xs font-bold">{agMod * 3}</div>
                       </div>
                       <div className="p-1 rounded bg-background/50 border text-center">
-                        <div className="text-[8px] text-muted-foreground uppercase">{t('movementRun')}</div>
+                        <div className="text-[8px] text-muted-foreground uppercase">{t('run')}</div>
                         <div className="text-xs font-bold">{agMod * 6}</div>
                       </div>
                     </>
@@ -419,83 +447,98 @@ export const DarkHeresySheet = React.forwardRef<any, { character: DarkHeresyChar
           {/* ─── LANDMARK: MIDDLE COLUMN - ORIGINAL WIDTH RESTORED ─── */}
 {!isCompactView && (
 <div className={cn("transition-all duration-300 ease-in-out flex-shrink-0", (isSkillsPanelCollapsed && isEquipmentPanelCollapsed) ? "flex-1" : "w-auto")}>
-  {isTabletScreen ? (
-    <Card>
-      <CardHeader className="flex-row items-center justify-between px-6 pt-3 pb-6">
-        <CardTitle className="font-headline">{t('characteristics')}</CardTitle>
-      </CardHeader>
-      <CardContent className="pt-0 space-y-4">
-        <div className="grid grid-cols-5 gap-1">
-          {([
-            { key: 'weaponSkill' as const, label: t('weaponSkillAbbr') },
-            { key: 'ballisticSkill' as const, label: t('ballisticSkillAbbr') },
-            { key: 'strength' as const, label: t('strengthAbbr') },
-            { key: 'toughness' as const, label: t('toughnessAbbr') },
-            { key: 'agility' as const, label: t('agilityAbbr') },
-            { key: 'intelligence' as const, label: t('intelligenceAbbr') },
-            { key: 'perception' as const, label: t('perceptionAbbr') },
-            { key: 'willpower' as const, label: t('willpowerAbbr') },
-            { key: 'fellowship' as const, label: t('fellowshipAbbr') },
-            { key: 'influence' as const, label: t('influenceAbbr') },
-          ] as const).map((char) => {
-            const stats = character.stats as Record<string, number>;
-            const statUpgrades = character.statUpgrades as Record<string, boolean[]> | undefined;
-            const statNotes = character.statNotes as Record<string, string> | undefined;
-            const val = stats?.[char.key] || 0;
-            const upgrades = (statUpgrades?.[char.key] || [false, false, false, false]) as boolean[];
-            const bonus = upgrades.filter(Boolean).length * 5;
-            const notes = statNotes?.[char.key] || '';
-            return (
-              <div key={char.key} className="relative bg-background border rounded-md text-center py-1 px-0.5 flex flex-col justify-between min-h-[60px]">
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant={notes ? 'secondary' : 'ghost'} size="icon" className="h-4 w-4 absolute top-0.5 right-0.5">
-                      <Info className="h-2.5 w-2.5" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-64 p-3" side="top" align="center">
-                    <Label className="text-xs mb-2 block font-semibold">{char.label} - Notes</Label>
-                    <Textarea 
-                      defaultValue={notes} 
-                      onBlur={(e) => {
-                        const nextNotes = { ...(character.statNotes || {}), [char.key]: e.target.value };
-                        updateCharacter(character.id, { statNotes: nextNotes });
-                      }} 
-                      placeholder={t('addNotesCharacteristicPlaceholder')} 
-                      className="min-h-[80px] text-xs" 
-                    />
-                  </PopoverContent>
-                </Popover>
-                <div className="text-[8px] font-semibold text-muted-foreground uppercase mt-1">{char.label}</div>
-                <div className="flex items-center justify-center gap-1 mt-1 mb-1">
-                  <div className="text-sm font-bold text-primary leading-tight">{val + bonus}</div>
-                  <div className="flex flex-col gap-[1px] items-center">
-                    {upgrades.map((checked, upgradeIdx) => (
-                      <Checkbox 
-                        key={upgradeIdx} 
-                        checked={checked} 
-                        disabled={!checked && upgradeIdx > 0 && !upgrades[upgradeIdx - 1]}
-                        onCheckedChange={(c) => {
-                          const nextUpgrades = { ...character.statUpgrades };
-                          const specific = [...(nextUpgrades[char.key] || [false, false, false, false])];
-                          specific[upgradeIdx] = !!c;
-                          if (!c) {
-                            for (let i = upgradeIdx + 1; i < specific.length; i++) {
-                              specific[i] = false;
-                            }
-                          }
-                          nextUpgrades[char.key] = specific as [boolean, boolean, boolean, boolean];
-                          updateCharacter(character.id, { statUpgrades: nextUpgrades });
-                        }}
-                        className="h-2.5 w-2.5 data-[state=checked]:bg-primary" 
-                      />
-                    ))}
-                  </div>
+            {isTabletScreen ? (
+            <Card>
+              <CardHeader className="flex-row items-center justify-between px-6 pt-3 pb-6">
+                <CardTitle className="font-headline">{t('characteristics')}</CardTitle>
+                <EditSaveButton editing={isCharacteristicsEditing} onEdit={() => setIsCharacteristicsEditing(true)} onSave={handleSaveCharacteristics} />
+              </CardHeader>
+              <CardContent className="pt-0 space-y-4">
+                <div className="grid grid-cols-5 gap-1">
+                  {([
+                    { key: 'weaponSkill' as const, label: t('weaponSkillAbbr') },
+                    { key: 'ballisticSkill' as const, label: t('ballisticSkillAbbr') },
+                    { key: 'strength' as const, label: t('strengthAbbr') },
+                    { key: 'toughness' as const, label: t('toughnessAbbr') },
+                    { key: 'agility' as const, label: t('agilityAbbr') },
+                    { key: 'intelligence' as const, label: t('intelligenceAbbr') },
+                    { key: 'perception' as const, label: t('perceptionAbbr') },
+                    { key: 'willpower' as const, label: t('willpowerAbbr') },
+                    { key: 'fellowship' as const, label: t('fellowshipAbbr') },
+                    { key: 'influence' as const, label: t('influenceAbbr') },
+                  ] as const).map((char) => {
+                    const stats = isCharacteristicsEditing ? editableStats : character.stats;
+                    const statUpgrades = isCharacteristicsEditing ? editableStatUpgrades : (character.statUpgrades || {});
+                    const statNotes = character.statNotes as Record<string, string> | undefined;
+                    const val = stats?.[char.key] || 0;
+                    const upgrades = (statUpgrades?.[char.key] || [false, false, false, false]) as boolean[];
+                    const bonus = upgrades.filter(Boolean).length * 5;
+                    const notes = statNotes?.[char.key] || '';
+                    return (
+                      <div key={char.key} className="relative bg-background border rounded-md text-center py-1 px-0.5 flex flex-col justify-between min-h-[60px]">
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button variant={notes ? 'secondary' : 'ghost'} size="icon" className="h-4 w-4 absolute top-0.5 right-0.5">
+                              <Info className="h-2.5 w-2.5" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-64 p-3" side="top" align="center">
+                            <Label className="text-xs mb-2 block font-semibold">{char.label} - Notes</Label>
+                            <Textarea 
+                              defaultValue={notes} 
+                              onBlur={(e) => {
+                                const nextNotes = { ...(character.statNotes || {}), [char.key]: e.target.value };
+                                updateCharacter(character.id, { statNotes: nextNotes });
+                              }} 
+                              placeholder={t('addNotesCharacteristicPlaceholder')} 
+                              className="min-h-[80px] text-xs" 
+                            />
+                          </PopoverContent>
+                        </Popover>
+                        <div className="text-[8px] font-semibold text-muted-foreground uppercase mt-1">{char.label}</div>
+                        <div className="flex items-center justify-center gap-1 mt-1 mb-1">
+                          {isCharacteristicsEditing ? (
+                            <Input 
+                              type="number" 
+                              value={val === 0 ? '' : val} 
+                              onChange={(e) => setEditableStats(prev => ({ ...prev, [char.key]: parseInt(e.target.value, 10) || 0 }))} 
+                              className="h-6 w-10 text-xs px-1 text-center font-bold text-primary leading-tight"
+                            />
+                          ) : (
+                            <div className="text-sm font-bold text-primary leading-tight">{val + bonus}</div>
+                          )}
+                          <div className="flex flex-col gap-[1px] items-center">
+                            {upgrades.map((checked, upgradeIdx) => (
+                              <Checkbox 
+                                key={upgradeIdx} 
+                                checked={checked} 
+                                disabled={!checked && upgradeIdx > 0 && !upgrades[upgradeIdx - 1]}
+                                onCheckedChange={(c) => {
+                                  const currentUpgrades = isCharacteristicsEditing ? editableStatUpgrades : (character.statUpgrades || {});
+                                  const nextUpgrades = { ...currentUpgrades };
+                                  const specific = [...(nextUpgrades[char.key] || [false, false, false, false])];
+                                  specific[upgradeIdx] = !!c;
+                                  if (!c) {
+                                    for (let i = upgradeIdx + 1; i < specific.length; i++) {
+                                      specific[i] = false;
+                                    }
+                                  }
+                                  nextUpgrades[char.key] = specific as [boolean, boolean, boolean, boolean];
+                                  if (isCharacteristicsEditing) {
+                                    setEditableStatUpgrades(nextUpgrades);
+                                  } else {
+                                    updateCharacter(character.id, { statUpgrades: nextUpgrades });
+                                  }
+                                }}
+                                className="h-2.5 w-2.5 data-[state=checked]:bg-primary" 
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
-              </div>
-            );
-          })}
-        </div>
         <div className="grid grid-cols-4 gap-1">
           {(() => {
             const agUpgrades = (character.statUpgrades?.agility || [false, false, false, false]) as boolean[];
@@ -505,19 +548,19 @@ export const DarkHeresySheet = React.forwardRef<any, { character: DarkHeresyChar
             return (
               <>
                 <div className="p-1 rounded bg-background/50 border text-center">
-                  <div className="text-[8px] text-muted-foreground uppercase">{t('movementHalfMove')}</div>
+                  <div className="text-[8px] text-muted-foreground uppercase">{t('halfMove')}</div>
                   <div className="text-xs font-bold">{agMod}</div>
                 </div>
                 <div className="p-1 rounded bg-background/50 border text-center">
-                  <div className="text-[8px] text-muted-foreground uppercase">{t('movementMove')}</div>
+                  <div className="text-[8px] text-muted-foreground uppercase">{t('move')}</div>
                   <div className="text-xs font-bold">{agMod * 2}</div>
                 </div>
                 <div className="p-1 rounded bg-background/50 border text-center">
-                  <div className="text-[8px] text-muted-foreground uppercase">{t('movementCharge')}</div>
+                  <div className="text-[8px] text-muted-foreground uppercase">{t('charge')}</div>
                   <div className="text-xs font-bold">{agMod * 3}</div>
                 </div>
                 <div className="p-1 rounded bg-background/50 border text-center">
-                  <div className="text-[8px] text-muted-foreground uppercase">{t('movementRun')}</div>
+                  <div className="text-[8px] text-muted-foreground uppercase">{t('run')}</div>
                   <div className="text-xs font-bold">{agMod * 6}</div>
                 </div>
               </>

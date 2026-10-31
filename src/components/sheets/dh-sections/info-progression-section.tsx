@@ -6,7 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { Plus, Minus } from 'lucide-react';
+import { Plus, Minus, ChevronDown, ChevronRight } from 'lucide-react';
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
@@ -39,6 +40,8 @@ export const InfoSection = ({ character, isCompactView, activeCompactSection, on
     const { updateCharacter, showEditButtons } = useCharacterContext();
     const { t } = useTranslation();
     const [isInfoEditing, setIsInfoEditing] = React.useState(false);
+    const [isBackstoryOpen, setIsBackstoryOpen] = React.useState(false);
+    const [isNotesOpen, setIsNotesOpen] = React.useState(false);
     
     React.useEffect(() => { onEditingChange?.(isInfoEditing); }, [isInfoEditing, onEditingChange]);
 
@@ -127,22 +130,37 @@ export const InfoSection = ({ character, isCompactView, activeCompactSection, on
                     <DetailField label={t('eyeColor')} value={character.eyeColor} editing={isInfoEditing} onBlur={(e) => updateCharacter(character.id, { eyeColor: e.target.value })} isCompactView={isCompactView} />
                 </div>
                 <div className="mt-4 grid grid-cols-1 gap-4">
-                    <div className="space-y-1">
-                        <Label className={cn("text-xs text-muted-foreground", isCompactView && "text-[10px]")}>{t('backstory')}</Label>
-                        {isInfoEditing ? (
-                            <Textarea defaultValue={character.backstory} className="min-h-[100px] resize-y" onBlur={(e) => updateCharacter(character.id, { backstory: e.target.value })} />
-                        ) : (
-                            <p className={cn("text-sm font-medium whitespace-pre-wrap break-words", isCompactView && "text-xs")}>{character.backstory || '-'}</p>
-                        )}
-                    </div>
-                    <div className="space-y-1">
-                        <Label className={cn("text-xs text-muted-foreground", isCompactView && "text-[10px]")}>{t('notes')}</Label>
-                        {isInfoEditing ? (
-                            <Textarea defaultValue={character.notes} className="min-h-[100px] resize-y" onBlur={(e) => updateCharacter(character.id, { notes: e.target.value })} />
-                        ) : (
-                            <p className={cn("text-sm font-medium whitespace-pre-wrap break-words", isCompactView && "text-xs")}>{character.notes || '-'}</p>
-                        )}
-                    </div>
+                    <Collapsible open={isBackstoryOpen} onOpenChange={setIsBackstoryOpen} className="w-full">
+                        <div className="flex flex-row items-center justify-between mb-2">
+                            <CollapsibleTrigger className="flex items-center gap-2 hover:bg-accent hover:text-accent-foreground rounded-md px-2 py-1 -ml-2 transition-colors focus:outline-none w-full">
+                                {isBackstoryOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                                <Label className={cn("text-xs text-muted-foreground cursor-pointer", isCompactView && "text-[10px]")}>{t('backstory')}</Label>
+                            </CollapsibleTrigger>
+                        </div>
+                        <CollapsibleContent className="w-full space-y-1">
+                            {isInfoEditing ? (
+                                <Textarea defaultValue={character.backstory} className="min-h-[100px] resize-y" onBlur={(e) => updateCharacter(character.id, { backstory: e.target.value })} />
+                            ) : (
+                                <p className={cn("text-sm font-medium whitespace-pre-wrap break-words px-2", isCompactView && "text-xs")}>{character.backstory || '-'}</p>
+                            )}
+                        </CollapsibleContent>
+                    </Collapsible>
+
+                    <Collapsible open={isNotesOpen} onOpenChange={setIsNotesOpen} className="w-full">
+                        <div className="flex flex-row items-center justify-between mb-2">
+                            <CollapsibleTrigger className="flex items-center gap-2 hover:bg-accent hover:text-accent-foreground rounded-md px-2 py-1 -ml-2 transition-colors focus:outline-none w-full">
+                                {isNotesOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                                <Label className={cn("text-xs text-muted-foreground cursor-pointer", isCompactView && "text-[10px]")}>{t('notes')}</Label>
+                            </CollapsibleTrigger>
+                        </div>
+                        <CollapsibleContent className="w-full space-y-1">
+                            {isInfoEditing ? (
+                                <Textarea defaultValue={character.notes} className="min-h-[100px] resize-y" onBlur={(e) => updateCharacter(character.id, { notes: e.target.value })} />
+                            ) : (
+                                <p className={cn("text-sm font-medium whitespace-pre-wrap break-words px-2", isCompactView && "text-xs")}>{character.notes || '-'}</p>
+                            )}
+                        </CollapsibleContent>
+                    </Collapsible>
                 </div>
             </CardContent>
         </Card>
