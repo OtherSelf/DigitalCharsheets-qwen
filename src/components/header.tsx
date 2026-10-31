@@ -1,5 +1,4 @@
 'use client';
-
 import { useCharacterContext } from '@/context/character-context';
 import {
   Home,
@@ -57,7 +56,6 @@ export function Header({ onNotesClick, onJournalClick, mobileActions }: HeaderPr
     setShowEditButtons,
     updateCharacter,
   } = useCharacterContext();
-
   const { t } = useTranslation();
   const params = useParams<{ id: string }>();
   const [isHouseRulesDialogOpen, setIsHouseRulesDialogOpen] = useState(false);
@@ -71,28 +69,38 @@ export function Header({ onNotesClick, onJournalClick, mobileActions }: HeaderPr
     }
   }, [isLoaded, params.id, getCharacter]);
 
+  // ─── LANDMARK: SAFE_GET_SUBTITLE ───
   const getSubtitle = (char: Character) => {
     if (char.gameSystem === 'Dungeons & Dragons') {
       const dnd = char as DnD5eCharacter;
-      const raceKey = `race${dnd.race.replace(/[^a-zA-Z]/g, '')}`;
-      const classKey = `class${dnd.characterClass}`;
-      const bgKey = `bg${dnd.background.replace(/[^a-zA-Z]/g, '')}`;
-      
-      const translatedRace = t(raceKey) || dnd.race;
-      const translatedClass = t(classKey) || dnd.characterClass;
-      const translatedBg = t(bgKey) || dnd.background;
-      
-      return `${t('lvl')} ${dnd.level} ${translatedRace} ${translatedClass} | ${translatedBg}`;
+
+      const race = dnd.race || "";
+      const background = dnd.background || "";
+      const charClass = dnd.characterClass || "";
+
+      const raceKey = `race${race.replace(/[^a-zA-Z]/g, '')}`;
+      const classKey = `class${charClass}`;
+      const bgKey = `bg${background.replace(/[^a-zA-Z]/g, '')}`;
+
+      const translatedRace = t(raceKey) || race;
+      const translatedClass = t(classKey) || charClass;
+      const translatedBg = t(bgKey) || background;
+
+      return `${t('lvl')} ${dnd.level || 1} ${translatedRace} ${translatedClass} | ${translatedBg}`;
     }
-    
+
     const dh = char as DarkHeresyCharacter;
-    const rankKey = `rank${dh.rank.replace(/[^a-zA-Z]/g, '')}`;
-    const classKey = `career${dh.characterClass.replace(/[^a-zA-Z]/g, '')}`;
-    
-    const translatedRank = t(rankKey) || dh.rank;
-    const translatedClass = t(classKey) || dh.characterClass;
+
+    const rank = dh.rank || "";
+    const charClass = dh.characterClass || "";
+
+    const rankKey = `rank${rank.replace(/[^a-zA-Z]/g, '')}`;
+    const classKey = `career${charClass.replace(/[^a-zA-Z]/g, '')}`;
+
+    const translatedRank = t(rankKey) || rank;
+    const translatedClass = t(classKey) || charClass;
     const translatedSystem = t('gameSystemDarkHeresy') || dh.gameSystem;
-    
+
     return `${translatedRank} ${translatedClass} | ${translatedSystem}`;
   };
 
@@ -108,13 +116,11 @@ export function Header({ onNotesClick, onJournalClick, mobileActions }: HeaderPr
 
   return (
     <header className="app-header sticky top-0 z-50 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b bg-background/95 p-3 backdrop-blur supports-[backdrop-filter]:bg-background/60 md:p-4 xl:p-6">
-
       {/* ─── LANDMARK: HEADER_IDENTITY ─── */}
       <div className="header-identity flex min-w-0 flex-1 items-center gap-2 md:gap-4">
         <Link href="/" className="flex shrink-0 items-center gap-2">
           <Home className="h-8 w-8 text-primary" />
         </Link>
-
         {character && !isCompactView && (
           <>
             <Separator orientation="vertical" className="hidden h-8 shrink-0 md:block" />
@@ -128,7 +134,6 @@ export function Header({ onNotesClick, onJournalClick, mobileActions }: HeaderPr
             </div>
           </>
         )}
-
         {character && character.gameSystem === 'Dungeons & Dragons' && (
           <div className="flex shrink-0 items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-2 py-1 md:ml-2 md:px-3">
             <span className="hidden text-[10px] font-bold uppercase tracking-widest text-primary sm:inline">
@@ -153,7 +158,6 @@ export function Header({ onNotesClick, onJournalClick, mobileActions }: HeaderPr
             )}
           </div>
         )}
-
         {character && character.gameSystem === 'Dark Heresy' && !isCompactView && (
           <Button variant="outline" size="sm" onClick={() => setIsHouseRulesDialogOpen(true)} className="h-7 px-2 ml-2" aria-label={t('houseRules')}>
             <Scale className="h-4 w-4 xl:mr-2" />
@@ -164,7 +168,6 @@ export function Header({ onNotesClick, onJournalClick, mobileActions }: HeaderPr
 
       {/* ─── LANDMARK: HEADER_ACTIONS ─── */}
       <div className="header-actions flex flex-wrap items-center justify-end gap-2">
-
         {/* 🎯 LANDMARK: MOBILE_ACTIONS_MENU - Only visible on mobile */}
         {mobileActions && (
           <DropdownMenu>
@@ -180,13 +183,30 @@ export function Header({ onNotesClick, onJournalClick, mobileActions }: HeaderPr
           </DropdownMenu>
         )}
 
+        {/* 🎯 LANDMARK: NOTES_AND_JOURNAL_BUTTONS - Visible on tablet and desktop */}
+        {character && !isSmallScreen && (
+          <div className="flex items-center gap-2">
+            {onNotesClick && (
+              <Button variant="outline" size="sm" onClick={onNotesClick} className="h-8">
+                <BookText className="h-4 w-4 mr-2" />
+                <span className="hidden sm:inline">{t('notes')}</span>
+              </Button>
+            )}
+            {onJournalClick && (
+              <Button variant="outline" size="sm" onClick={onJournalClick} className="h-8">
+                <Scroll className="h-4 w-4 mr-2" />
+                <span className="hidden sm:inline">{t('questJournalTitle')}</span>
+              </Button>
+            )}
+          </div>
+        )}
+
         {!isSmallScreen && (
           <Button variant="outline" size="icon" onClick={toggleCompactView}>
             {isCompactView ? <Monitor className="h-4 w-4" /> : <Smartphone className="h-4 w-4" />}
             <span className="sr-only">{isCompactView ? t('switchToDefaultView') : t('switchToCompactView')}</span>
           </Button>
         )}
-
         {character && !isSmallScreen && (
           <div className="flex items-center gap-2 md:gap-4 md:border-l md:border-r md:px-2">
             <div className="flex items-center gap-1.5 md:gap-2">
@@ -203,12 +223,8 @@ export function Header({ onNotesClick, onJournalClick, mobileActions }: HeaderPr
             </div>
           </div>
         )}
-
-        {/* 🎯 LANDMARK: SMART_LANGUAGE_TOGGLE 
-            Shows on Dashboard (!character) OR Character Sheet Default View (!isCompactView).
-            Hides on Character Sheet Compact View to prevent doubling up with the sidebar toggle. */}
+        {/* 🎯 LANDMARK: SMART_LANGUAGE_TOGGLE */}
         {(!character || !isCompactView) && <LanguageToggle />}
-        
         <ThemeToggle />
         <UserNav />
       </div>

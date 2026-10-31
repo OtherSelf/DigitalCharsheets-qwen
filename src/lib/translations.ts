@@ -1694,7 +1694,7 @@ export const translations: Record<string, Record<string, string>> = {
     charge: "Рывок",
     run: "Бег",
     addNotesCharacteristicPlaceholder: "Добавьте заметки об этой характеристике...",
-    gameSystemDarkHeresy: "Темное Наследие",
+    gameSystemDarkHeresy: "Dark Heresy",
     newBasicSkillPlaceholder: "Новый базовый навык...",
     newAdvancedSkillPlaceholder: "Новый продвинутый навык...",
     newTalentPlaceholder: "Новый талант...",

@@ -4,7 +4,6 @@
 import * as XLSX from 'xlsx';
 import { Character, DnD5eCharacter, DarkHeresyCharacter } from './types';
 
-// ─── LANDMARK: EXPORT_CONFIG_TYPES ───
 export interface ExportConfig {
   includeBasicInfo: boolean;
   includeStats: boolean;
@@ -45,7 +44,81 @@ export interface ExportData {
   character: Partial<Character>;
 }
 
-// ─── LANDMARK: FILTER_CHARACTER_FOR_EXPORT ───
+export const sanitizeData = (data: any): any => {
+  if (Array.isArray(data)) {
+    return data.map(sanitizeData);
+  } 
+  if (data !== null && typeof data === 'object') {
+    const sanitizedObj: any = {};
+    for (const [key, value] of Object.entries(data)) {
+      const cleanKey = key.trim();
+      if (cleanKey === 'userId' || cleanKey === 'Document ID') continue; 
+      sanitizedObj[cleanKey] = sanitizeData(value);
+    }
+    return sanitizedObj;
+  } 
+  if (typeof data === 'string') {
+    return data.trim();
+  }
+  return data;
+};
+
+const normalizeCharacter = (char: any): any => {
+  if (char.gameSystem === 'Dark Heresy') {
+    return {
+      ...char,
+      stats: char.stats || {
+        weaponSkill: 0, ballisticSkill: 0, strength: 0, toughness: 0, agility: 0,
+        intelligence: 0, perception: 0, willpower: 0, fellowship: 0, influence: 0
+      },
+      statUpgrades: char.statUpgrades || {
+        weaponSkill: [false, false, false, false], ballisticSkill: [false, false, false, false],
+        strength: [false, false, false, false], toughness: [false, false, false, false],
+        agility: [false, false, false, false], intelligence: [false, false, false, false],
+        perception: [false, false, false, false], willpower: [false, false, false, false],
+        fellowship: [false, false, false, false], influence: [false, false, false, false]
+      },
+      movement: char.movement || { walkHalf: 0, walkFull: 0, charge: 0, run: 0 },
+      wounds: char.wounds || { current: 0, max: 0, notes: "" },
+      fatePoints: char.fatePoints || { current: 0, max: 0, notes: "" },
+      insanityPoints: char.insanityPoints || { total: 0, notes: "" },
+      corruptionPoints: char.corruptionPoints || { total: 0, notes: "" },
+      wealth: char.wealth || { throneGelt: 0, monthlyIncome: 0, notes: "" },
+      equipment: char.equipment || { 
+        armor: { Head: null, Body: null, "Left arm": null, "Right arm": null, "Left leg": null, "Right leg": null }, 
+        weapons: { melee: [], ranged: [] } 
+      },
+      skills: char.skills || [],
+      talents: char.talents || [],
+    };
+  }
+  
+  if (char.gameSystem === 'Dungeons & Dragons') {
+    return {
+      ...char,
+      stats: char.stats || { strength: 10, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 10, charisma: 10 },
+      savingThrows: char.savingThrows || [],
+      skills: char.skills || [],
+      hitPoints: char.hitPoints || { current: 0, max: 0 },
+      deathSaves: char.deathSaves || { successes: 0, failures: 0 },
+      currency: char.currency || { cp: 0, sp: 0, gp: 0, pp: 0, ep: 0 },
+      equipment: char.equipment || [],
+      inventory: char.inventory || [],
+      spells: char.spells || [],
+      spellSlots: char.spellSlots || {},
+    };
+  }
+  
+  return char;
+};
+
+export type ImportResult = {
+  success: boolean;
+  data?: ExportData;
+  batchData?: Partial<Character>[];
+  error?: string;
+};
+
 export const filterCharacterForExport = (character: Character, config: ExportConfig): Partial<Character> => {
   const filtered: any = { id: character.id, gameSystem: character.gameSystem };
 
@@ -145,7 +218,6 @@ export const filterCharacterForExport = (character: Character, config: ExportCon
   return filtered;
 };
 
-// ─── LANDMARK: EXPORT_CHARACTER_TO_JSON ───
 export const exportCharacterToJSON = (character: Character, config: ExportConfig) => {
   const exportData: ExportData = {
     metadata: { appName: "DigitalCharsheets-qwen", version: "1.0", exportDate: new Date().toISOString(), config },
@@ -165,24 +237,56 @@ export const exportCharacterToJSON = (character: Character, config: ExportConfig
   URL.revokeObjectURL(url);
 };
 
-// ─── LANDMARK: IMPORT_CHARACTER_FROM_JSON ───
-export const importCharacterFromJSON = (
-  file: File
-): Promise<{ success: boolean; data?: ExportData; error?: string }> => {
+export const importCharacterFromJSON = (file: File): Promise<ImportResult> => {
   return new Promise((resolve) => {
     const reader = new FileReader();
     reader.onload = (e) => {
       try {
         const text = e.target?.result as string;
-        const parsed = JSON.parse(text) as ExportData;
+        let parsed = JSON.parse(text);
 
-        if (!parsed.metadata || parsed.metadata.appName !== "DigitalCharsheets-qwen") {
-          resolve({ success: false, error: "Invalid file format. Not a DigitalCharsheets-qwen export." });
+        parsed = sanitizeData(parsed);
+
+        if (parsed.metadata && parsed.metadata.appName === "DigitalCharsheets-qwen") {
+          resolve({ success: true, data: parsed as ExportData });
           return;
         }
-        resolve({ success: true, data: parsed });
+
+        let rawCharacters: any[] = [];
+        if (Array.isArray(parsed)) {
+          rawCharacters = parsed;
+        } else if (parsed.gameSystem) {
+          rawCharacters = [parsed];
+        } else {
+          resolve({ success: false, error: "Invalid file format: Missing 'gameSystem'." });
+          return;
+        }
+
+        if (rawCharacters.length === 0) {
+          resolve({ success: false, error: "The backup file is empty." });
+          return;
+        }
+
+        const normalizedCharacters = rawCharacters.map(normalizeCharacter);
+
+        const wrappedData: ExportData = {
+          metadata: {
+            appName: "DigitalCharsheets-qwen",
+            version: "1.0 (Backup Import)",
+            exportDate: new Date().toISOString(),
+            config: DEFAULT_EXPORT_CONFIG,
+          },
+          character: normalizedCharacters[0] as Partial<Character>,
+        };
+
+        resolve({ 
+          success: true, 
+          data: wrappedData, 
+          batchData: normalizedCharacters 
+        });
       } catch (err) {
-        resolve({ success: false, error: "Failed to parse JSON file." });
+        console.error("Import parse error:", err);
+        resolve({ success: false, error: "Failed to parse JSON file. Ensure it is a valid backup." });
       }
     };
     reader.onerror = () => resolve({ success: false, error: "Failed to read file." });
@@ -190,7 +294,6 @@ export const importCharacterFromJSON = (
   });
 };
 
-// ─── LANDMARK: MERGE_IMPORTED_DATA ───
 export const mergeImportedData = (
   targetCharacter: Character,
   importedData: ExportData,
@@ -329,7 +432,6 @@ export const mergeImportedData = (
   return merged as Character;
 };
 
-// ─── LANDMARK: LEGACY_EXCEL_EXPORT (Kept for backward compatibility) ───
 export const exportCharacterToExcel = (character: Character) => {
   const data: any[] = [];
   data.push(['DIGITAL CHARACTER SHEETS - CHARACTER SHEET']);
