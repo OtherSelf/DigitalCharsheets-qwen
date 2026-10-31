@@ -1,4 +1,5 @@
 // src/app/page.tsx
+
 'use client';
 
 import { CharacterCard } from '@/components/characters/character-card';
@@ -11,16 +12,12 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import {
-  DropdownMenuItem,
-} from '@/components/ui/dropdown-menu';
+import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { useCharacterContext } from '@/context/character-context';
 import { cn } from '@/lib/utils';
-import { PlusCircle, FileSpreadsheet, FileDown, Settings2 } from 'lucide-react';
+import { PlusCircle, FileDown, Settings2 } from 'lucide-react';
 import Loading from './loading';
 import { useTranslation } from '@/context/language-context';
-import * as XLSX from 'xlsx';
-import { DnD5eCharacter, DarkHeresyCharacter } from '@/lib/types';
 import Link from 'next/link';
 import { useLocalAuth } from '@/context/local-auth-context';
 import { ImportCharacterDialog } from '@/components/import-character-dialog';
@@ -31,51 +28,6 @@ export default function DashboardPage() {
   const { user } = useLocalAuth();
   const { t } = useTranslation();
 
-  const handleExportXlsx = () => {
-    if (characters.length === 0) return;
-
-    const exportData = characters.map(char => {
-      const base = {
-        Name: char.name,
-        System: char.gameSystem,
-        Class: char.characterClass,
-        Notes: (char as any).notes || '',
-        Backstory: char.backstory || ''
-      };
-
-      if (char.gameSystem === 'Dungeons & Dragons') {
-        const dnd = char as DnD5eCharacter;
-        return {
-          ...base,
-          Race: dnd.race || '',
-          Background: dnd.background || '',
-          Alignment: dnd.alignment || '',
-          Level: dnd.level,
-          HP: `${dnd.hitPoints?.current || 0}/${dnd.hitPoints?.max || 0}`,
-          AC: dnd.armorClass,
-          Speed: dnd.speed,
-          Stats: `S:${dnd.stats?.strength} D:${dnd.stats?.dexterity} C:${dnd.stats?.constitution} I:${dnd.stats?.intelligence} W:${dnd.stats?.wisdom} Ch:${dnd.stats?.charisma}`
-        };
-      } else {
-        const dh = char as DarkHeresyCharacter;
-        return {
-          ...base,
-          Rank: dh.rank,
-          Wounds: `${dh.wounds?.current || 0}/${dh.wounds?.max || 0}`,
-          Fate: `${dh.fatePoints?.current || 0}/${dh.fatePoints?.max || 0}`,
-          Insanity: dh.insanityPoints?.total || 0,
-          Corruption: dh.corruptionPoints?.total || 0,
-          Stats: `WS:${dh.stats?.weaponSkill} BS:${dh.stats?.ballisticSkill} S:${dh.stats?.strength} T:${dh.stats?.toughness} Ag:${dh.stats?.agility} Int:${dh.stats?.intelligence} Per:${dh.stats?.perception} WP:${dh.stats?.willpower} Fel:${dh.stats?.fellowship} Inf:${dh.stats?.influence}`
-        };
-      }
-    });
-
-    const worksheet = XLSX.utils.json_to_sheet(exportData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Characters");
-    XLSX.writeFile(workbook, "DigitalCharacterSheets_Characters.xlsx");
-  };
-
   if (!isLoaded) {
     return <Loading />;
   }
@@ -84,9 +36,8 @@ export default function DashboardPage() {
     <>
       <DynamicFavicon gameSystem="default" />
       <div className="flex flex-col h-dvh">
-        
         {/* 🎯 LANDMARK: HEADER_WITH_MOBILE_ACTIONS */}
-        <Header 
+        <Header
           mobileActions={
             <>
               <DropdownMenuItem asChild>
@@ -95,7 +46,7 @@ export default function DashboardPage() {
                   <span>{t('statsEditor')}</span>
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem 
+              <DropdownMenuItem
                 className="flex items-center cursor-pointer"
                 disabled={!user}
                 onClick={async () => {
@@ -108,18 +59,9 @@ export default function DashboardPage() {
                 <FileDown className="mr-2 h-4 w-4" />
                 <span>{t('backupAll')}</span>
               </DropdownMenuItem>
-              <DropdownMenuItem 
-                className="flex items-center cursor-pointer"
-                disabled={characters.length === 0}
-                onClick={handleExportXlsx}
-              >
-                <FileSpreadsheet className="mr-2 h-4 w-4" />
-                <span>{t('exportCharacters')}</span>
-              </DropdownMenuItem>
             </>
           }
         />
-        
         <main className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6 lg:p-8 safe-area-bottom">
           <div className="mb-6 sm:mb-8 flex flex-col gap-4">
             <div className="flex flex-col gap-2">
@@ -130,7 +72,6 @@ export default function DashboardPage() {
                 {t('companionText')}
               </p>
             </div>
-            
             {/* 🎯 LANDMARK: DESKTOP_BUTTON_GROUP - Hidden on mobile, visible on sm+ */}
             <div className="hidden sm:flex flex-row gap-2 w-auto">
               <Button variant="outline" size="sm" asChild className="justify-start">
@@ -139,7 +80,6 @@ export default function DashboardPage() {
                   {t('statsEditor')}
                 </Link>
               </Button>
-
               <Button
                 variant="outline"
                 size="sm"
@@ -154,17 +94,6 @@ export default function DashboardPage() {
               >
                 <FileDown className="mr-2 h-4 w-4 shrink-0" />
                 {t('backupAll')}
-              </Button>
-
-              <Button
-                variant="outline"
-                size="sm"
-                className="justify-start"
-                onClick={handleExportXlsx}
-                disabled={characters.length === 0}
-              >
-                <FileSpreadsheet className="mr-2 h-4 w-4 shrink-0" />
-                {t('exportCharacters')}
               </Button>
             </div>
           </div>

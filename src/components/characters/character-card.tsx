@@ -1,7 +1,11 @@
+// src/components/characters/character-card.tsx
+
 'use client';
 
 import Link from 'next/link';
+
 import { type Character } from '@/lib/types';
+
 import {
   Card,
   CardContent,
@@ -9,9 +13,13 @@ import {
   CardFooter,
   CardTitle,
 } from '@/components/ui/card';
+
 import { Badge } from '@/components/ui/badge';
+
 import { Button } from '@/components/ui/button';
-import { Trash2, FileDown } from 'lucide-react';
+
+import { Trash2, FileDown, FileJson } from 'lucide-react';
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,12 +31,16 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+
 import { useCharacterContext } from '@/context/character-context';
-import { exportCharacterToExcel } from '@/lib/export-utils';
+
+import { exportCharacterToJSON, exportCharacterToExcel, DEFAULT_EXPORT_CONFIG } from '@/lib/export-utils';
+
 import { useTranslation } from '@/context/language-context';
+
 import { RANK_KEYS } from '@/lib/dark-heresy-data';
 
-const CLASS_TRANSLATION_KEYS: Record<string, string> = {
+const CLASS_TRANSLATION_KEYS: Record<string,string> = {
   "Artificer": "classArtificer",
   "Barbarian": "classBarbarian",
   "Bard": "classBard",
@@ -44,7 +56,7 @@ const CLASS_TRANSLATION_KEYS: Record<string, string> = {
   "Wizard": "classWizard",
 };
 
-const CAREER_TRANSLATION_KEYS: Record<string, string> = {
+const CAREER_TRANSLATION_KEYS: Record<string,string> = {
   "Adept": "careerAdept",
   "Arbitrator": "careerArbitrator",
   "Assassin": "careerAssassin",
@@ -62,14 +74,18 @@ type CharacterCardProps = {
 export function CharacterCard({ character }: CharacterCardProps) {
   const { t } = useTranslation();
   const { deleteCharacter, isCompactView } = useCharacterContext();
-  
+
   const badgeVariant = character.gameSystem === 'Dungeons & Dragons' ? 'default' : 'secondary';
 
   const handleDelete = () => {
     deleteCharacter(character.id);
   };
 
-  const handleExport = () => {
+  const handleExportJSON = () => {
+    exportCharacterToJSON(character, DEFAULT_EXPORT_CONFIG);
+  };
+
+  const handleExportExcel = () => {
     exportCharacterToExcel(character);
   };
 
@@ -90,7 +106,6 @@ export function CharacterCard({ character }: CharacterCardProps) {
   if (isCompactView) {
     return (
       <Card className="compact-mobile-card flex flex-row sm:flex-row overflow-hidden hover:shadow-lg hover:shadow-primary/10 transition-shadow duration-300 items-stretch p-2">
-        {/* 🎯 LANDMARK: INFO_BLOCK - flex-1 ensures it takes half the space, min-w-0 allows text to wrap */}
         <div className="flex-1 min-w-0 px-3 sm:px-4 flex flex-col justify-center">
           <div className="flex items-baseline gap-2 flex-wrap">
             <CardTitle className="text-sm sm:text-md font-headline break-words line-clamp-1">
@@ -98,7 +113,7 @@ export function CharacterCard({ character }: CharacterCardProps) {
             </CardTitle>
           </div>
           <CardDescription className="text-xs mt-0.5 break-words line-clamp-1">
-            {character.gameSystem === 'Dungeons & Dragons' && `${t('lvl')} ${character.level} `}
+            {character.gameSystem === 'Dungeons & Dragons' && `${t('lvl')}${character.level} `}
             {character.gameSystem === 'Dark Heresy' && `${getTranslatedRank()} `}
             {getTranslatedClass()}
           </CardDescription>
@@ -106,30 +121,29 @@ export function CharacterCard({ character }: CharacterCardProps) {
             {character.gameSystem === 'Dungeons & Dragons' ? t('dungeonsAndDragons') : t('darkHeresy')}
           </Badge>
         </div>
-        
-        {/* 🎯 LANDMARK: ACTION_BLOCK - Changed shrink-0 to flex-1 justify-end so it fills the right half */}
         <div className="actions-wrapper flex items-center gap-1 sm:gap-2 p-2 flex-1 justify-end min-w-0">
           <Button asChild size="sm" className="flex-1 min-w-0 h-8 sm:h-9 px-2">
             <Link href={`/${character.id}`} className="truncate block w-full text-center">
               {t('view')}
             </Link>
           </Button>
-          
-          <Button variant="outline" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 shrink-0" onClick={handleExport} title={t('exportSheet')}>
-            <FileDown className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+          <Button variant="outline" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 shrink-0" onClick={handleExportJSON} title={t('exportJSON') || 'Export JSON'}>
+            <FileJson className="h-3.5 w-3.5 sm:h-4 sm:w-4"/>
           </Button>
-
+          <Button variant="outline" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 shrink-0" onClick={handleExportExcel} title={t('exportSheet') || 'Export Excel'}>
+            <FileDown className="h-3.5 w-3.5 sm:h-4 sm:w-4"/>
+          </Button>
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button variant="destructive" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 shrink-0">
-                <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4"/>
               </Button>
             </AlertDialogTrigger>
             <AlertDialogContent onClick={(e) => { e.stopPropagation(); }}>
               <AlertDialogHeader>
                 <AlertDialogTitle>{t('confirmDelete')}</AlertDialogTitle>
                 <AlertDialogDescription>
-                  {t('deleteWarning')} {character.name}.
+                  {t('deleteWarning')}{character.name}.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
@@ -153,7 +167,7 @@ export function CharacterCard({ character }: CharacterCardProps) {
           {character.name}
         </CardTitle>
         <CardDescription className="text-xs sm:text-sm break-words">
-          {character.gameSystem === 'Dungeons & Dragons' && `${t('lvl')} ${character.level} `}
+          {character.gameSystem === 'Dungeons & Dragons' && `${t('lvl')}${character.level} `}
           {character.gameSystem === 'Dark Heresy' && `${getTranslatedRank()} `}
           {getTranslatedClass()}
         </CardDescription>
@@ -162,22 +176,23 @@ export function CharacterCard({ character }: CharacterCardProps) {
         <Button asChild className="w-full text-xs sm:text-sm">
           <Link href={`/${character.id}`}>{t('viewSheet')}</Link>
         </Button>
-        
-        <Button variant="outline" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 shrink-0" onClick={handleExport} title={t('exportSheet')}>
-          <FileDown className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+        <Button variant="outline" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 shrink-0" onClick={handleExportJSON} title={t('exportJSON') || 'Export JSON'}>
+          <FileJson className="h-3.5 w-3.5 sm:h-4 sm:w-4"/>
         </Button>
-
+        <Button variant="outline" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 shrink-0" onClick={handleExportExcel} title={t('exportSheet') || 'Export Excel'}>
+          <FileDown className="h-3.5 w-3.5 sm:h-4 sm:w-4"/>
+        </Button>
         <AlertDialog>
           <AlertDialogTrigger asChild>
             <Button variant="destructive" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 shrink-0">
-              <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4"/>
             </Button>
           </AlertDialogTrigger>
           <AlertDialogContent onClick={(e) => { e.stopPropagation(); }}>
             <AlertDialogHeader>
               <AlertDialogTitle>{t('confirmDelete')}</AlertDialogTitle>
               <AlertDialogDescription>
-                {t('deleteWarning')} {character.name}.
+                {t('deleteWarning')}{character.name}.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
