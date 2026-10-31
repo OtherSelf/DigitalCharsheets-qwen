@@ -632,15 +632,17 @@ export const exportCharacterToExcel = (character: Character) => {
             data.push(['    Skill Name', 'Characteristic', 'Proficiency', 'Notes']);
             skills.forEach((skill: any) => {
                 if (typeof skill === 'string') {
-                    data.push(['    ' + skill]);
+                    data.push(['    ' + skill, '', '', '']);
                 } else if (skill && typeof skill === 'object') {
-                    // DH skills have proficiency checkboxes: +0, +10, +20
-                    let proficiency = '+0';
-                    if (skill.proficiency === '+10' || skill.proficiency === 10 || skill.trained) {
-                        proficiency = '+10';
-                    } else if (skill.proficiency === '+20' || skill.proficiency === 20 || skill.focused) {
+                    let proficiency = 'Untrained';
+                    if (skill.training?.plus20) {
                         proficiency = '+20';
+                    } else if (skill.training?.plus10) {
+                        proficiency = '+10';
+                    } else if (skill.training?.skilled) {
+                        proficiency = 'Skilled (+0)';
                     }
+                    
                     data.push([
                         '    ' + (skill.name || ''),
                         skill.characteristic || '',
@@ -659,14 +661,16 @@ export const exportCharacterToExcel = (character: Character) => {
         addHeader('Talents');
         const talents = dh.talents || [];
         if (talents.length > 0) {
-            data.push(['    Talent Name', 'Notes']);
+            // 🎯 FIX: Separated Description and Notes into their own columns
+            data.push(['    Talent Name', 'Description', 'Notes']);
             talents.forEach((t: any) => {
                 if (typeof t === 'string') {
-                    data.push(['    ' + t]);
+                    data.push(['    ' + t, '', '']);
                 } else if (t && typeof t === 'object') {
                     data.push([
                         '    ' + (t.name || ''),
-                        t.notes || t.description || ''
+                        t.description || '',
+                        t.notes || ''
                     ]);
                 }
             });
@@ -788,18 +792,22 @@ export const exportCharacterToExcel = (character: Character) => {
         const armor = (dh.equipment as any)?.armor || {};
         const armorEntries = Object.entries(armor).filter(([_, v]) => v !== null && v !== undefined && v !== '');
         if (armorEntries.length > 0) {
-            data.push(['    Location', 'Armor Name', 'AP', 'Penalties', 'Traits']);
+            data.push(['    Location', 'Armor Details']);
             armorEntries.forEach(([loc, item]) => {
                 if (typeof item === 'string') {
-                    data.push(['    ' + loc, item, '', '', '']);
+                    data.push(['    ' + loc, item]);
                 } else if (item && typeof item === 'object') {
-                    data.push([
-                        '    ' + loc,
-                        item.name || '',
-                        item.ap || item.armorPoints || '',
-                        item.penalties || item.penalty || '',
-                        item.traits || item.qualities || ''
-                    ]);
+                    const details: string[] = [];
+                    Object.entries(item).forEach(([key, value]) => {
+                        if (value !== null && value !== undefined && value !== '') {
+                            if (typeof value === 'object') {
+                                details.push(`${key}: ${JSON.stringify(value)}`);
+                            } else {
+                                details.push(`${key}: ${value}`);
+                            }
+                        }
+                    });
+                    data.push(['    ' + loc, details.join(' | ')]);
                 }
             });
         } else {
@@ -1020,8 +1028,8 @@ export const exportCharacterToExcel = (character: Character) => {
     const worksheet = XLSX.utils.aoa_to_sheet(data);
     worksheet['!cols'] = [
         { wch: 35 },  // Column A: Labels
-        { wch: 20 },  // Column B: Values
-        { wch: 15 },  // Column C: Additional
+        { wch: 40 },  // Column B: Values / Description
+        { wch: 40 },  // Column C: Notes / Additional
         { wch: 15 },  // Column D: Additional
         { wch: 15 },  // Column E: Additional
         { wch: 15 },  // Column F: Additional
