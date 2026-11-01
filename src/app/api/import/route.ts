@@ -2,9 +2,11 @@ import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
+import { getDataDir } from '@/lib/data-dir';
 
-const DATA_DIR = path.join(process.cwd(), 'data');
-const IMPORT_FILE = path.join(DATA_DIR, 'import-source.json');
+function importFilePath(): string {
+  return path.join(getDataDir(), 'import-source.json');
+}
 const DEFAULT_PASSWORD = '1234'; // Default password for all imported users
 
 // ─── CLEANING UTILITIES ────────────────────────────────────────────
@@ -188,6 +190,7 @@ function convertDndCharacter(raw: any, userId: string, name: string): any {
 export async function GET() {
   try {
     // Check if import file exists
+    const IMPORT_FILE = importFilePath();
     if (!fs.existsSync(IMPORT_FILE)) {
       return NextResponse.json({
         success: false,
@@ -233,7 +236,7 @@ export async function GET() {
       const displayName = `Player ${firebaseUserId.substr(0, 4)}`;
 
       // Create directories
-      const userDir = path.join(DATA_DIR, localUserId);
+      const userDir = path.join(getDataDir(), localUserId);
       const charsDir = path.join(userDir, 'characters');
       if (!fs.existsSync(charsDir)) {
         fs.mkdirSync(charsDir, { recursive: true });
