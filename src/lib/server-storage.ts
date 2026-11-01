@@ -1,12 +1,11 @@
 import fs from 'fs';
 import path from 'path';
 import { Character } from './types';
-
-const DATA_DIR = path.join(process.cwd(), 'data');
+import { getDataDir } from './data-dir';
 
 // Ensure a user's data directory exists
 function ensureUserDir(userId: string): string {
-  const userDir = path.join(DATA_DIR, userId);
+  const userDir = path.join(getDataDir(), userId);
   if (!fs.existsSync(userDir)) {
     fs.mkdirSync(userDir, { recursive: true });
   }
@@ -101,7 +100,7 @@ export function deleteCharacterFromServer(userId: string, characterId: string): 
 
 // Check if a user exists
 export function userFolderExists(userId: string): boolean {
-  return fs.existsSync(path.join(DATA_DIR, userId));
+  return fs.existsSync(path.join(getDataDir(), userId));
 }
 
 // Create a user folder with user.json

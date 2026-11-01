@@ -3,8 +3,7 @@ import path from 'path';
 import crypto from 'crypto';
 import { LocalUser } from './local-storage';
 import { getCharactersFromServer } from './server-storage';
-
-const DATA_DIR = path.join(process.cwd(), 'data');
+import { getDataDir } from './data-dir';
 
 function hashPassword(password: string): string {
   return crypto.createHash('sha256').update(password).digest('hex');
@@ -32,11 +31,11 @@ export function generateUserId(username: string): string {
 }
 
 export function userExists(userId: string): boolean {
-  return fs.existsSync(path.join(DATA_DIR, userId, 'user.json'));
+  return fs.existsSync(path.join(getDataDir(), userId, 'user.json'));
 }
 
 export function getStoredUser(userId: string): { username: string; passwordHash: string; displayName: string; recoveryPhrase?: string } | null {
-  const userFile = path.join(DATA_DIR, userId, 'user.json');
+  const userFile = path.join(getDataDir(), userId, 'user.json');
   if (!fs.existsSync(userFile)) return null;
   try {
     const data = JSON.parse(fs.readFileSync(userFile, 'utf8'));
@@ -51,7 +50,7 @@ export function getStoredUser(userId: string): { username: string; passwordHash:
 }
 
 export function saveUserData(userId: string, username: string, passwordHash: string, displayName: string, recoveryPhrase?: string): void {
-  const userDir = path.join(DATA_DIR, userId);
+  const userDir = path.join(getDataDir(), userId);
   if (!fs.existsSync(userDir)) fs.mkdirSync(userDir, { recursive: true });
   
   const userData: any = { username, passwordHash, displayName };
@@ -126,7 +125,7 @@ export function updateRecoveryCredentials(username: string, newPassword: string,
   if (!userExists(userId)) return { success: false, error: 'User not found.' };
 
   try {
-    const userFile = path.join(DATA_DIR, userId, 'user.json');
+    const userFile = path.join(getDataDir(), userId, 'user.json');
     const userData = JSON.parse(fs.readFileSync(userFile, 'utf8'));
     userData.passwordHash = hashPassword(newPassword);
     userData.recoveryPhrase = newRecoveryPhrase.toLowerCase().trim();
@@ -145,7 +144,7 @@ export function updateRecoveryCredentials(username: string, newPassword: string,
 
 export function setRecoveryPhrase(userId: string, phrase: string): boolean {
   try {
-    const userFile = path.join(DATA_DIR, userId, 'user.json');
+    const userFile = path.join(getDataDir(), userId, 'user.json');
     const userData = JSON.parse(fs.readFileSync(userFile, 'utf8'));
     userData.recoveryPhrase = phrase.toLowerCase().trim();
     fs.writeFileSync(userFile, JSON.stringify(userData, null, 2), 'utf8');
@@ -180,7 +179,7 @@ export function recoverPasswordWithUsernameAndWords(username: string, words: str
   }
 
   try {
-    const userFile = path.join(DATA_DIR, userId, 'user.json');
+    const userFile = path.join(getDataDir(), userId, 'user.json');
     const userData = JSON.parse(fs.readFileSync(userFile, 'utf8'));
     userData.passwordHash = hashPassword(newPassword);
     if (userData.email) {
