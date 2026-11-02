@@ -11,9 +11,9 @@ import { cn } from '@/lib/utils';
 
 export const EditSaveButton = ({ editing, onEdit, onSave }: { editing: boolean, onEdit: () => void, onSave: () => void }) => {
     return editing ? (
-        <Button size="icon" onClick={onSave} className="h-7 w-7"><Save className="h-3.5 w-3.5" /></Button>
+        <Button data-testid="save-button" size="icon" onClick={onSave} className="h-7 w-7"><Save className="h-3.5 w-3.5" /></Button>
     ) : (
-        <Button size="icon" variant="outline" onClick={onEdit} className="h-7 w-7"><Edit className="h-3.5 w-3.5" /></Button>
+        <Button data-testid="edit-button" size="icon" variant="outline" onClick={onEdit} className="h-7 w-7"><Edit className="h-3.5 w-3.5" /></Button>
     );
 };
 

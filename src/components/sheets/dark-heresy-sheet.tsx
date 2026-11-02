@@ -172,7 +172,7 @@ export const DarkHeresySheet = React.forwardRef<any, { character: DarkHeresyChar
     return (
       <div className={cn("dh-sheet space-y-6", isCompactView && "is-compact")}>
         {isCompactView && (
-                      <div className="bg-card px-4 py-3 border-b shadow-sm space-y-3">
+                      <div data-testid="characteristics-compact" className="bg-card px-4 py-3 border-b shadow-sm space-y-3">
               <div className="grid grid-cols-1 md:grid-cols-5 gap-1 items-start">
                 <div className="md:col-span-3">
                   <div className="flex-row items-center justify-between flex">
@@ -227,7 +227,7 @@ export const DarkHeresySheet = React.forwardRef<any, { character: DarkHeresyChar
                                 type="number" 
                                 value={val === 0 ? '' : val} 
                                 onChange={(e) => setEditableStats(prev => ({ ...prev, [char.key]: parseInt(e.target.value, 10) || 0 }))} 
-                                className="h-6 w-10 text-xs px-1 text-center font-bold text-primary leading-tight"
+                                className="h-6 w-10 text-xs px-1 text-center font-bold text-primary leading-tight [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                               />
                             ) : (
                               <div className="text-sm font-bold text-primary leading-tight">{val + bonus}</div>
@@ -411,7 +411,7 @@ export const DarkHeresySheet = React.forwardRef<any, { character: DarkHeresyChar
                 </Button>
               </Card>
             ) : (
-              <Card>
+              <Card id="skills-talents-panel">
                 <CardHeader className="flex-row items-center justify-between px-6 pt-3 pb-6">
                   <CardTitle className="font-headline">
                     {t('skills')}, {t('talentsAndTraits')}, {t('wounds')} &amp; {t('fate')}
@@ -502,7 +502,7 @@ export const DarkHeresySheet = React.forwardRef<any, { character: DarkHeresyChar
                               type="number" 
                               value={val === 0 ? '' : val} 
                               onChange={(e) => setEditableStats(prev => ({ ...prev, [char.key]: parseInt(e.target.value, 10) || 0 }))} 
-                              className="h-6 w-10 text-xs px-1 text-center font-bold text-primary leading-tight"
+                              className="h-6 w-10 text-xs px-1 text-center font-bold text-primary leading-tight [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                             />
                           ) : (
                             <div className="text-sm font-bold text-primary leading-tight">{val + bonus}</div>

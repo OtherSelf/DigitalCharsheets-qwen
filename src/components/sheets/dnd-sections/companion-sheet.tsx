@@ -231,6 +231,7 @@ export function CompanionSheet({ companion, onUpdate, onDelete, isEditing, onTog
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <Button 
+            data-testid={isEditing ? 'save-button' : 'edit-button'}
             size="icon" 
             variant={isEditing ? "default" : "outline"} 
             onClick={onToggleEdit} 
