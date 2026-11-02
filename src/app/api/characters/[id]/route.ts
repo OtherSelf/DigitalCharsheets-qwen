@@ -7,14 +7,23 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const body = await request.json();
+
+  // keepalive-запрос при уходе со страницы может прийти без тела —
+  // это не повод для 500 со стектрейсом, отвечаем понятным 400.
+  let body: Record<string, unknown>;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid or empty JSON body' }, { status: 400 });
+  }
+
   const userId = body.userId;
 
   if (!userId) {
     return NextResponse.json({ error: 'userId is required' }, { status: 400 });
   }
 
-  const updated = updateCharacterOnServer(userId, id, body);
+  const updated = updateCharacterOnServer(userId as string, id, body as any);
   if (!updated) {
     return NextResponse.json({ error: 'Character not found' }, { status: 404 });
   }

@@ -118,6 +118,26 @@ describe('/api/characters', () => {
     expect(res.status).toBe(400);
   });
 
+  it('PUT с пустым/битым телом — 400, а не 500 (keepalive при уходе со страницы)', async () => {
+    const created = await (await charactersPost(json({ ...makeDhCharacter(), userId: 'user-api' }))).json();
+
+    const empty = await characterPut(
+      new Request('http://localhost/api/test', { method: 'PUT' }),
+      params(created.id),
+    );
+    expect(empty.status).toBe(400);
+
+    const broken = await characterPut(
+      new Request('http://localhost/api/test', {
+        method: 'PUT',
+        headers: { 'content-type': 'application/json' },
+        body: '{ broken',
+      }),
+      params(created.id),
+    );
+    expect(broken.status).toBe(400);
+  });
+
   it('DELETE удаляет персонажа, повторный вызов — 404', async () => {
     const created = await (await charactersPost(json({ ...makeDhCharacter(), userId: 'user-api' }))).json();
     const url = `http://localhost/api/characters/${created.id}?userId=user-api`;

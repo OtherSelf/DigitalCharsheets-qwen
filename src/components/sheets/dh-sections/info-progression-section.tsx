@@ -219,6 +219,17 @@ export const ProgressionSection = ({ character, isCompactView, activeCompactSect
         }
     };
 
+    // ─── LANDMARK: CURRENT EXP АВТОСОХРАНЕНИЕ ───
+    // Раньше «Текущий опыт» уходил на сервер ТОЛЬКО по onBlur. Если после
+    // ввода перезагрузить страницу / закрыть вкладку / перейти по ссылке,
+    // blur не срабатывал и правка молча терялась. Теперь пишем на каждый
+    // ввод: очередь в CharacterProvider склеивает «печатание» в один PUT.
+    const handleCurrentExpChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const next = parseInt(e.target.value, 10) || 0;
+        setEditableExperience(next);
+        updateCharacter(character.id, { experience: next });
+    };
+
     const handleSelectAdvancedPath = (pathName: string) => { 
         updateCharacter(character.id, { advancedPath: pathName }); 
         setEditableAdvancedPath(pathName); 
@@ -248,7 +259,7 @@ export const ProgressionSection = ({ character, isCompactView, activeCompactSect
                     <div className="flex flex-col space-y-4">
                         <div className="space-y-1">
                             <Label htmlFor="current-exp-edit" className="text-xs text-muted-foreground">{t('currentExp')}</Label>
-                            <Input id="current-exp-edit" type="number" value={editableExperience === 0 ? '' : editableExperience} onChange={(e) => setEditableExperience(parseInt(e.target.value, 10) || 0)} onBlur={() => { if (editableExperience !== character.experience) updateCharacter(character.id, { experience: editableExperience }); }} className="h-9"/>
+                            <Input id="current-exp-edit" type="number" value={editableExperience === 0 ? '' : editableExperience} onChange={handleCurrentExpChange} className="h-9"/>
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="spend-exp-amount">{t('spendExp')}</Label>
