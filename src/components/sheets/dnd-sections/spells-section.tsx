@@ -18,7 +18,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { ChevronDown, ChevronUp } from 'lucide-react';
 
 const EditSaveButton = ({ editing, onEdit, onSave }: { editing: boolean, onEdit: () => void, onSave: () => void }) => (
-  editing ? ( <Button size="icon" variant="ghost" onClick={onSave} className="h-7 w-7"><Save className="h-4 w-4" /></Button> ) : ( <Button size="icon" variant="outline" onClick={onEdit} className="h-7 w-7"><Edit className="h-4 w-4" /></Button> )
+  editing ? ( <Button data-testid="save-button" size="icon" variant="ghost" onClick={onSave} className="h-7 w-7"><Save className="h-4 w-4" /></Button> ) : ( <Button data-testid="edit-button" size="icon" variant="outline" onClick={onEdit} className="h-7 w-7"><Edit className="h-4 w-4" /></Button> )
 );
 
 const DEFAULT_SLOTS = {
@@ -184,7 +184,7 @@ export function DndSpellsSection({
   };
 
   return (  
-    <Collapsible open={isSpellsOpen} onOpenChange={setIsSpellsOpen} className={cn("space-y-6", isCompactView && activeCompactSection !== 'spells-section' && "hidden")}>
+    <Collapsible id="spells-section" open={isSpellsOpen} onOpenChange={setIsSpellsOpen} className={cn("space-y-6", isCompactView && activeCompactSection !== 'spells-section' && "hidden")}>
       <div className="flex items-center justify-center mb-4">
         <CollapsibleTrigger asChild>
           <Button variant="ghost" size="sm" className="flex items-center gap-2 p-0 h-auto hover:bg-transparent">

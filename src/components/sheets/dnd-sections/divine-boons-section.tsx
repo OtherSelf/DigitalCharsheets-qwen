@@ -74,6 +74,7 @@ export const DndDivineBoonsSection = React.forwardRef<{ saveAll: () => void }, D
     return (
       <>
         <Accordion 
+          id="divine-boons-section"
           type="single" 
           collapsible 
           defaultValue="expanded" 
@@ -90,6 +91,7 @@ export const DndDivineBoonsSection = React.forwardRef<{ saveAll: () => void }, D
                 </AccordionTrigger>
                 {showEditButtons && (
                   <Button 
+                    data-testid="add-boon-button"
                     size="sm" 
                     variant="outline" 
                     onClick={(e) => { 

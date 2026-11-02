@@ -75,7 +75,7 @@ export function DndCompanionsSection({ characterId, companions, setCompanions, i
   };
 
   return (
-    <Collapsible open={isCompanionsOpen} onOpenChange={setIsCompanionsOpen} className={cn("space-y-8", isCompactView && activeCompactSection !== 'companion-section' && "hidden")}>
+    <Collapsible id="companions-section" open={isCompanionsOpen} onOpenChange={setIsCompanionsOpen} className={cn("space-y-8", isCompactView && activeCompactSection !== 'companion-section' && "hidden")}>
       <div className="flex items-center justify-center mb-6 relative">
         <CollapsibleTrigger asChild>
           <Button variant="ghost" size="sm" className="flex items-center gap-2 p-0 h-auto hover:bg-transparent">

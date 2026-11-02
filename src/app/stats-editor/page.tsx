@@ -75,7 +75,7 @@ function getDndExperience(char: any): number {
 }
 
 export default function StatsEditorPage() {
-  const { user } = useLocalAuth();
+  const { user, isUserLoading } = useLocalAuth();
   const { characters, updateCharacter, isLoaded } = useCharacterContext();
   const { t } = useTranslation();
   const router = useRouter();
@@ -279,12 +279,15 @@ export default function StatsEditorPage() {
   };
 
   // ─── GUARDS ──────────────────────────────────────────────────────
-  if (!user) {
+  // isUserLoading: сессия читается из localStorage в useEffect, поэтому на
+  // первом рендере user ещё null. Без этой проверки прямой заход на
+  // /stats-editor (закладка, F5) всегда выкидывал на /login.
+  if (!isUserLoading && !user) {
     router.push('/login');
     return null;
   }
 
-  if (!isLoaded) {
+  if (isUserLoading || !isLoaded) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <p className="text-muted-foreground">{t('loadingCharacters')}</p>

@@ -9,7 +9,7 @@ import { useCharacterContext } from '@/context/character-context';
 import { useTranslation } from '@/context/language-context';
 
 const EditSaveButton = ({ editing, onEdit, onSave }: { editing: boolean; onEdit: () => void; onSave: () => void }) => (
-  editing ? ( <Button size="icon" variant="ghost" onClick={onSave} className="h-7 w-7"><Save className="h-4 w-4" /></Button> ) : ( <Button size="icon" variant="outline" onClick={onEdit} className="h-7 w-7"><Edit className="h-4 w-4" /></Button> )
+  editing ? ( <Button data-testid="save-button" size="icon" variant="ghost" onClick={onSave} className="h-7 w-7"><Save className="h-4 w-4" /></Button> ) : ( <Button data-testid="edit-button" size="icon" variant="outline" onClick={onEdit} className="h-7 w-7"><Edit className="h-4 w-4" /></Button> )
 );
 
 export interface NarrativeData {
@@ -110,13 +110,13 @@ export const DndNarrativeSection = React.forwardRef<{ saveAll: () => void }, Nar
     
 
     return (
-      <>
+      <div id="narrative-section" className="space-y-6">
         <NarrativeListCard titleKey="personalityTraits" items={narrativeData.personalityTraits} isEditing={isTraitEditing} newItem={newTraitItem} onEdit={() => setIsTraitEditing(true)} onSave={handleSaveTraits} onItemsChange={(items) => setNarrativeData({ ...narrativeData, personalityTraits: items })} onNewItemChange={setNewTraitItem} />
         <NarrativeListCard titleKey="ideals" items={narrativeData.ideals} isEditing={isIdealEditing} newItem={newIdealItem} onEdit={() => setIsIdealEditing(true)} onSave={handleSaveIdeals} onItemsChange={(items) => setNarrativeData({ ...narrativeData, ideals: items })} onNewItemChange={setNewIdealItem} />
         <NarrativeListCard titleKey="bonds" items={narrativeData.bonds} isEditing={isBondEditing} newItem={newBondItem} onEdit={() => setIsBondEditing(true)} onSave={handleSaveBonds} onItemsChange={(items) => setNarrativeData({ ...narrativeData, bonds: items })} onNewItemChange={setNewBondItem} />
         <NarrativeListCard titleKey="flaws" items={narrativeData.flaws} isEditing={isFlawEditing} newItem={newFlawItem} onEdit={() => setIsFlawEditing(true)} onSave={handleSaveFlaws} onItemsChange={(items) => setNarrativeData({ ...narrativeData, flaws: items })} onNewItemChange={setNewFlawItem} />
         <NarrativeListCard titleKey="featuresAndTraits" items={narrativeData.featuresAndTraits} isEditing={isFeaturesEditing} newItem={newFeatureItem} onEdit={() => setIsFeaturesEditing(true)} onSave={handleSaveFeatures} onItemsChange={(items) => setNarrativeData({ ...narrativeData, featuresAndTraits: items })} onNewItemChange={setNewFeatureItem} />
-      </>
+      </div>
     );
   }
 );
