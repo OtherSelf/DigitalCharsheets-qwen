@@ -149,9 +149,10 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
       <div className={cn("dnd-sheet space-y-8 pb-12", isCompactView && "is-compact")}>
         {/* Compact View Stats Bar with Edit/Save Button */}
         {isCompactView && (
-          <div className="bg-card px-4 py-3 border-b shadow-sm space-y-3 relative">
+          <div data-testid="compact-stats-bar" className="bg-card px-4 py-3 border-b shadow-sm space-y-3 relative">
             <div className="absolute top-2 right-2">
               <Button 
+                data-testid="compact-stats-edit-button"
                 size="icon" 
                 variant="ghost" 
                 className="h-6 w-6"

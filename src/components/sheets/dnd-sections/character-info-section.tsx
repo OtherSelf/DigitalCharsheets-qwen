@@ -71,11 +71,11 @@ const ALIGNMENT_TRANSLATION_KEYS: Record<string, string> = {
 
 const EditSaveButton = ({ editing, onEdit, onSave }: { editing: boolean; onEdit: () => void; onSave: () => void }) => (
   editing ? (
-    <Button size="icon" variant="ghost" onClick={onSave} className="h-7 w-7">
+    <Button data-testid="save-button" size="icon" variant="ghost" onClick={onSave} className="h-7 w-7">
       <Save className="h-4 w-4" />
     </Button>
   ) : (
-    <Button size="icon" variant="outline" onClick={onEdit} className="h-7 w-7">
+    <Button data-testid="edit-button" size="icon" variant="outline" onClick={onEdit} className="h-7 w-7">
       <Edit className="h-4 w-4" />
     </Button>
   )
@@ -188,7 +188,7 @@ export const DndCharacterInfoSection = React.forwardRef<{ saveAll: () => void },
         className={cn("flex-1", !isOpen && "md:self-start")}
       >
         <AccordionItem value="expanded" className="border-0">
-          <Card className="flex flex-col border-2 overflow-hidden h-full">
+          <Card id="character-info-card" className="flex flex-col border-2 overflow-hidden h-full">
             <CardHeader className="px-4 pt-2 pb-2 bg-muted/5 flex flex-row items-center justify-between">
               <AccordionTrigger className="flex flex-1 items-center justify-between hover:no-underline py-0">
                 <Label className="text-[10px] font-bold uppercase text-muted-foreground tracking-tight">{t('characterInfo')}</Label>

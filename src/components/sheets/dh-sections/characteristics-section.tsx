@@ -86,7 +86,7 @@ const CharacteristicStat = ({
             )}
             <div className="flex items-center justify-center gap-1 mb-1">
                 {editing ? (
-                    <Input type="number" value={value === 0 ? '' : value} onChange={onValueChange} className="text-base font-bold h-8 w-14 text-center" />
+                    <Input type="number" value={value === 0 ? '' : value} onChange={onValueChange} className="text-base font-bold h-8 w-14 text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
                 ) : (
                     <div className="text-base font-bold text-primary w-10 text-center">{displayValue}</div>
                 )}
@@ -149,7 +149,7 @@ export const CharacteristicsSection = React.forwardRef<{ saveAll: () => void }, 
     };
 
     return (
-        <Card>
+        <Card id="characteristics-card">
             <CardHeader className="flex flex-row items-center justify-between px-6 pt-3 pb-6">
                 <CardTitle className="font-headline">{t('characteristics')}</CardTitle>
                 {(showEditButtons || isCharacteristicsEditing) && <EditSaveButton editing={isCharacteristicsEditing} onEdit={() => setIsCharacteristicsEditing(true)} onSave={handleSaveCharacteristics} />}

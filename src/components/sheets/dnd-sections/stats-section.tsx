@@ -56,7 +56,7 @@ const StatBox = ({ label, value, editing, onChange, isCompactView, notes, onNote
 };
 
 const EditSaveButton = ({ editing, onEdit, onSave }: { editing: boolean; onEdit: () => void; onSave: () => void }) => (
-  editing ? ( <Button size="icon" variant="ghost" onClick={onSave} className="h-7 w-7"><Save className="h-4 w-4" /></Button> ) : ( <Button size="icon" variant="outline" onClick={onEdit} className="h-7 w-7"><Edit className="h-4 w-4" /></Button> )
+  editing ? ( <Button data-testid="save-button" size="icon" variant="ghost" onClick={onSave} className="h-7 w-7"><Save className="h-4 w-4" /></Button> ) : ( <Button data-testid="edit-button" size="icon" variant="outline" onClick={onEdit} className="h-7 w-7"><Edit className="h-4 w-4" /></Button> )
 );
 
 interface StatsSectionProps {
@@ -94,7 +94,7 @@ export function DndStatsSection({
   return (
     <div className={cn("md:col-span-2 space-y-4", isCompactView && activeCompactSection !== 'stats-section' && "hidden")}>
       {!isCompactView && (
-        <Card>
+        <Card id="stats-card">
           <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2">
             <CardTitle className="text-[10px] font-bold uppercase text-muted-foreground tracking-tight">{t('characteristics')}</CardTitle>
             {(showEditButtons || isStatsEditing) && <EditSaveButton editing={isStatsEditing} onEdit={() => setIsStatsEditing(true)} onSave={handleSaveStats} />}
