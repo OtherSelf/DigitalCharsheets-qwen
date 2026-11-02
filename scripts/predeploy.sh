@@ -190,23 +190,38 @@ if [ -n "$BASE_URL" ]; then
   exit 0
 fi
 
+# ── 0. lockfile ─────────────────────────────────────────────────────────────
+# `npm ci` на сервере падает, если lock собран другим мажором npm (например,
+# локально npm 11, на сервере npm 10) — проверяем это здесь, а не на деплое.
+step "1/5 lockfile (npm ci --dry-run, npm $(npm -v))"
+NPM_CI_LOG="$(mktemp "${TMPDIR:-/tmp}/dcs-predeploy-npmci-XXXXXX")"
+[ "$KEEP" -eq 1 ] || TMP_DIRS+=("$NPM_CI_LOG")
+if ! npm ci --dry-run --no-audit --no-fund >"$NPM_CI_LOG" 2>&1; then
+  tail -n 20 "$NPM_CI_LOG"
+  die "package.json и package-lock.json рассинхронизированы (npm $(npm -v)).
+Похоже, lock собран другой мажорной версией npm. Исправление:
+  npm install --package-lock-only --no-audit --no-fund   # и закоммитить package-lock.json
+Для повторяемости зафиксируйте версию npm (packageManager или Volta/.nvmrc)."
+fi
+ok "lockfile в синхроне"
+
 # ── 1. typecheck ────────────────────────────────────────────────────────────
-step "1/4 typecheck ($TSC --noEmit)"
+step "2/5 typecheck ($TSC --noEmit)"
 "$TSC" --noEmit || die "TypeScript-ошибки. Почините их или запустите с --skip-unit? (см. вывод выше)"
 ok "типы сходятся"
 
 # ── 2. unit-тесты ───────────────────────────────────────────────────────────
 if [ "$SKIP_UNIT" -eq 0 ]; then
-  step "2/4 unit-тесты ($VITEST run)"
+  step "3/5 unit-тесты ($VITEST run)"
   "$VITEST" run || die "Юнит-тесты упали (см. вывод выше)"
   ok "юнит-тесты зелёные"
 else
-  warn "2/4 unit-тесты пропущены (--skip-unit)"
+  warn "3/5 unit-тесты пропущены (--skip-unit)"
 fi
 
 # ── 3. сборка ───────────────────────────────────────────────────────────────
 if [ "$SKIP_BUILD" -eq 0 ]; then
-  step "3/4 сборка (npm run build)"
+  step "4/5 сборка (npm run build)"
 
   BUILD_LOG="$(mktemp "${TMPDIR:-/tmp}/dcs-predeploy-build-XXXXXX")"
   [ "$KEEP" -eq 1 ] || TMP_DIRS+=("$BUILD_LOG")
@@ -235,14 +250,14 @@ if [ "$SKIP_BUILD" -eq 0 ]; then
   fi
 else
   [ -f .next/BUILD_ID ] || die "Нет .next/BUILD_ID, а сборка пропущена. Запустите npm run build или уберите --skip-build"
-  warn "3/4 сборка пропущена (--skip-build), используем .next от $(date -r .next/BUILD_ID '+%Y-%m-%d %H:%M' 2>/dev/null || echo 'неизвестно когда')"
+  warn "4/5 сборка пропущена (--skip-build), используем .next от $(date -r .next/BUILD_ID '+%Y-%m-%d %H:%M' 2>/dev/null || echo 'неизвестно когда')"
 fi
 
 # ── 4. smoke-тест на временном сервере ──────────────────────────────────────
 if [ "$SKIP_SMOKE" -eq 1 ]; then
-  warn "4/4 smoke-тест пропущен (--skip-smoke)"
+  warn "5/5 smoke-тест пропущен (--skip-smoke)"
 else
-  step "4/4 smoke: next start + HTTP-проверки"
+  step "5/5 smoke: next start + HTTP-проверки"
 
   [ -n "$PORT" ] || PORT="$(free_port)"
   [ -n "$PORT" ] || die "Не удалось выбрать свободный порт"
