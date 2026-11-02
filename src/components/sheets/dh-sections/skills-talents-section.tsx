@@ -163,7 +163,7 @@ export const SkillsTalentsSection = React.forwardRef<{ saveAll: () => void }, Sk
     const showTalents = !isCompactView || activeCompactSection === 'talents-section';
 
     return (
-        <div className="space-y-6 w-full">
+        <div id="skills-talents-content" className="space-y-6 w-full">
             {/* Shared outline wrapper for Skills and Talents & Traits */}
             <div className={cn("border rounded-lg space-y-6 bg-card", isCompactView ? "p-3" : "p-4 md:p-6")}>
                 
@@ -222,7 +222,7 @@ export const SkillsTalentsSection = React.forwardRef<{ saveAll: () => void }, Sk
                                                     </TableCell>
                                                     <TableCell className={cn(isCompactView && "p-2")}>
                                                         {isSkillsEditing ? (
-                                                            <Input defaultValue={skill.name} onChange={(e) => setEditableSkills(editableSkills.map(s => s.id === skill.id ? {...s, name: e.target.value} : s))} className="h-8 text-xs"/>
+                                                            <Input defaultValue={skill.name} onChange={(e) => setEditableSkills(editableSkills.map(s => s.id === skill.id ? {...s, name: e.target.value} : s))} className="h-8 text-xs min-w-[140px]"/>
                                                         ) : (
                                                             <p className={cn("font-medium whitespace-normal break-words", isCompactView && "text-xs")}>
                                                                 {getTranslatedSkillName(skill.name, t)}
@@ -288,7 +288,7 @@ export const SkillsTalentsSection = React.forwardRef<{ saveAll: () => void }, Sk
                                                     </TableCell>
                                                     <TableCell className={cn(isCompactView && "p-2")}>
                                                         {isSkillsEditing ? (
-                                                            <Input defaultValue={skill.name} onChange={(e) => setEditableSkills(editableSkills.map(s => s.id === skill.id ? {...s, name: e.target.value} : s))} className="h-8 text-xs"/>
+                                                            <Input defaultValue={skill.name} onChange={(e) => setEditableSkills(editableSkills.map(s => s.id === skill.id ? {...s, name: e.target.value} : s))} className="h-8 text-xs min-w-[140px]"/>
                                                         ) : (
                                                             <p className={cn("font-medium whitespace-normal break-words", isCompactView && "text-xs")}>
                                                                 {getTranslatedSkillName(skill.name, t)}

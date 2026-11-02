@@ -2,6 +2,7 @@
 # Dependencies
 # ==========================================
 node_modules/
+.npm-cache/
 .pnp
 .pnp.js
 .yarn/*
@@ -97,3 +98,12 @@ docker-compose.override.yml
 *.bak
 *.tmp
 .cache
+
+# ==========================================
+# Visual regression tests (Playwright)
+# ==========================================
+playwright-report/
+test-results/
+.visual-state.json
+.playwright-browsers/
+.chromium-deps/

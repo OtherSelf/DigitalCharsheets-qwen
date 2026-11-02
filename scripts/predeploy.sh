@@ -1,0 +1,275 @@
+#!/usr/bin/env bash
+# ============================================================================
+#  scripts/predeploy.sh — проверки перед разворачиванием DigitalCharsheets
+#
+#  Прогоняет всё, что имеет смысл проверить ДО деплоя, на этой же машине:
+#
+#    1. typecheck   — tsc --noEmit (в next.config.ts ошибки TS при сборке
+#                     игнорируются, поэтому проверяем отдельно)
+#    2. unit        — vitest: авторизация, файловое хранилище, экспорт/импорт,
+#                     API-роуты (без сети, на временном каталоге данных)
+#    3. build       — next build (NODE_ENV=production)
+#    4. smoke       — поднимает `next start` на свободном порту с ВРЕМЕННЫМ
+#                     каталогом данных (DCS_DATA_DIR), гоняет по HTTP
+#                     scripts/smoke.mjs и гасит сервер
+#
+#  Реальные ./data, запущенные серверы и открытые порты не затрагиваются.
+#
+#  Использование:
+#    ./scripts/predeploy.sh                  # полный прогон
+#    ./scripts/predeploy.sh --skip-build     # typecheck + unit + smoke на текущем .next
+#    ./scripts/predeploy.sh --skip-smoke     # typecheck + unit + build
+#    ./scripts/predeploy.sh --base-url http://localhost:3001   # только smoke по стенду
+#    ./scripts/predeploy.sh --keep           # сохранить временные данные и лог сервера
+#
+#  Код возврата: 0 — можно деплоить, 1 — есть падения.
+# ============================================================================
+
+set -Eeuo pipefail
+
+APP_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$APP_DIR"
+
+SKIP_BUILD=0
+SKIP_UNIT=0
+SKIP_SMOKE=0
+KEEP=0
+PORT=""
+BASE_URL=""
+
+# ── вывод ───────────────────────────────────────────────────────────────────
+if [ -t 1 ] && [ -z "${NO_COLOR:-}" ]; then
+  C_RESET=$'\033[0m'; C_DIM=$'\033[2m'; C_RED=$'\033[31m'
+  C_GREEN=$'\033[32m'; C_YELLOW=$'\033[33m'; C_BLUE=$'\033[36m'; C_BOLD=$'\033[1m'
+else
+  C_RESET=""; C_DIM=""; C_RED=""; C_GREEN=""; C_YELLOW=""; C_BLUE=""; C_BOLD=""
+fi
+
+step() { printf '\n%s▶%s %s\n' "$C_BLUE" "$C_RESET" "$*"; }
+ok()   { printf '%s✓%s %s\n' "$C_GREEN" "$C_RESET" "$*"; }
+warn() { printf '%s!%s %s\n' "$C_YELLOW" "$C_RESET" "$*" >&2; }
+die()  { printf '%s✗%s %s\n' "$C_RED" "$C_RESET" "$*" >&2; exit 1; }
+dim()  { printf '%s%s%s\n' "$C_DIM" "$*" "$C_RESET"; }
+
+usage() {
+  cat <<EOF
+${C_BOLD}predeploy.sh${C_RESET} — проверки перед деплоем DigitalCharsheets
+
+${C_BOLD}Использование:${C_RESET}
+  ./scripts/predeploy.sh [флаги]
+
+${C_BOLD}Флаги:${C_RESET}
+  --skip-build        не выполнять next build (нужен готовый .next/)
+  --skip-unit         не выполнять vitest
+  --skip-smoke        не поднимать сервер и не выполнять smoke-тест
+  --base-url URL      только smoke-тест против УЖЕ запущенного сервера
+  -p, --port PORT     порт для временного сервера (по умолчанию свободный)
+  --keep              сохранить временный каталог данных и лог сервера
+  -h, --help          эта справка
+
+${C_BOLD}Типичные сценарии:${C_RESET}
+  ./scripts/predeploy.sh                                   # перед прод-деплоем
+  ./scripts/predeploy.sh --skip-build                      # быстрая перепроверка
+  ./scripts/predeploy.sh --base-url http://localhost:3001  # проверить дев-стенд
+EOF
+}
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --skip-build) SKIP_BUILD=1 ;;
+    --skip-unit)  SKIP_UNIT=1 ;;
+    --skip-smoke) SKIP_SMOKE=1 ;;
+    --keep)       KEEP=1 ;;
+    --base-url)   shift; BASE_URL="${1:-}"; [ -n "$BASE_URL" ] || die "--base-url требует URL" ;;
+    -p|--port)    shift; PORT="${1:-}"; [ -n "$PORT" ] || die "-p требует номер порта" ;;
+    -h|--help)    usage; exit 0 ;;
+    *) die "Неизвестный флаг: $1 (см. --help)" ;;
+  esac
+  shift
+done
+
+# ── утилиты ─────────────────────────────────────────────────────────────────
+need() { command -v "$1" >/dev/null 2>&1 || die "Не найдено: $1. Установите: $2"; }
+have() { command -v "$1" >/dev/null 2>&1; }
+
+have node || die "Не найден node. Нужен Node.js 18.18+ (проверено на 24)."
+have npm  || die "Не найден npm."
+
+bin() {
+  # Локальный бинарник из node_modules, без npx и сетевых запросов.
+  local name="$1"
+  if [ -x "./node_modules/.bin/$name" ]; then
+    echo "./node_modules/.bin/$name"
+  else
+    echo "$name"
+  fi
+}
+
+TSC="$(bin tsc)"
+VITEST="$(bin vitest)"
+NEXT="$(bin next)"
+
+TMP_DIRS=()
+SERVER_PID=""
+SERVER_LOG=""
+
+cleanup() {
+  local code=$?
+  if [ -n "$SERVER_PID" ] && kill -0 "$SERVER_PID" 2>/dev/null; then
+    kill "$SERVER_PID" 2>/dev/null || true
+    for _ in 1 2 3 4 5 6 7 8 9 10; do
+      kill -0 "$SERVER_PID" 2>/dev/null || break
+      sleep 0.3
+    done
+    kill -9 "$SERVER_PID" 2>/dev/null || true
+  fi
+
+  if [ "$KEEP" -eq 1 ]; then
+    if [ -n "$SERVER_LOG" ] && [ -f "$SERVER_LOG" ]; then
+      warn "Лог сервера сохранён: $SERVER_LOG"
+    fi
+  else
+    for dir in "${TMP_DIRS[@]:-}"; do
+      [ -n "$dir" ] && rm -rf "$dir"
+    done
+  fi
+
+  exit "$code"
+}
+trap cleanup EXIT
+
+free_port() {
+  node -e '
+    const net = require("net");
+    const s = net.createServer();
+    s.listen(0, "127.0.0.1", () => {
+      const { port } = s.address();
+      s.close(() => process.stdout.write(String(port)));
+    });
+  '
+}
+
+wait_for_http() {
+  local url="$1" timeout="$2" waited=0
+  while [ "$waited" -lt "$timeout" ]; do
+    if have curl; then
+      if curl -fsS -o /dev/null -m 3 "$url" 2>/dev/null; then return 0; fi
+    else
+      if node -e '
+        fetch(process.argv[1], { signal: AbortSignal.timeout(3000) })
+          .then((r) => process.exit(r.ok ? 0 : 1))
+          .catch(() => process.exit(1));
+      ' "$url" 2>/dev/null; then return 0; fi
+    fi
+    if [ -n "$SERVER_PID" ] && ! kill -0 "$SERVER_PID" 2>/dev/null; then
+      return 1
+    fi
+    sleep 1
+    waited=$((waited + 1))
+  done
+  return 1
+}
+
+# ── 0. окружение ────────────────────────────────────────────────────────────
+printf '%s%s%s\n' "$C_BOLD" "DigitalCharsheets — проверки перед деплоем" "$C_RESET"
+dim "каталог проекта: $APP_DIR"
+dim "node $(node -v), npm $(npm -v)"
+
+if [ ! -d node_modules ]; then
+  die "Нет node_modules. Сначала: npm ci"
+fi
+
+if [ -n "$BASE_URL" ]; then
+  # Режим «проверить уже запущенный сервер».
+  SKIP_BUILD=1
+  SKIP_UNIT=0
+  step "smoke: $BASE_URL"
+  node scripts/smoke.mjs --base-url "$BASE_URL" || die "Smoke-тест не пройден: $BASE_URL"
+  ok "smoke-тест пройден"
+  printf '\n%s%s%s\n' "$C_GREEN" "$C_BOLD" "Сервер $BASE_URL отвечает корректно." "$C_RESET"
+  exit 0
+fi
+
+# ── 1. typecheck ────────────────────────────────────────────────────────────
+step "1/4 typecheck ($TSC --noEmit)"
+"$TSC" --noEmit || die "TypeScript-ошибки. Почините их или запустите с --skip-unit? (см. вывод выше)"
+ok "типы сходятся"
+
+# ── 2. unit-тесты ───────────────────────────────────────────────────────────
+if [ "$SKIP_UNIT" -eq 0 ]; then
+  step "2/4 unit-тесты ($VITEST run)"
+  "$VITEST" run || die "Юнит-тесты упали (см. вывод выше)"
+  ok "юнит-тесты зелёные"
+else
+  warn "2/4 unit-тесты пропущены (--skip-unit)"
+fi
+
+# ── 3. сборка ───────────────────────────────────────────────────────────────
+if [ "$SKIP_BUILD" -eq 0 ]; then
+  step "3/4 сборка (npm run build)"
+
+  BUILD_LOG="$(mktemp "${TMPDIR:-/tmp}/dcs-predeploy-build-XXXXXX")"
+  [ "$KEEP" -eq 1 ] || TMP_DIRS+=("$BUILD_LOG")
+
+  if NODE_ENV=production npm run build >"$BUILD_LOG" 2>&1; then
+    tail -n 5 "$BUILD_LOG"
+    ok "сборка прошла, .next/BUILD_ID обновлён"
+  elif grep -q "EXDEV" "$BUILD_LOG"; then
+    # overlayfs / 9p / virtiofs: rename между каталогами не поддерживается.
+    # См. scripts/fs-rename-fallback.cjs и §5.2 в RUN_INSTRUCTIONS.md.
+    warn "next build упал на EXDEV (ФС не умеет rename между каталогами) — повторяю с обходом"
+    dim "  scripts/fs-rename-fallback.cjs подменяет только rename с ошибкой EXDEV"
+    if NODE_ENV=production \
+       NODE_OPTIONS="--require $APP_DIR/scripts/fs-rename-fallback.cjs" \
+       npm run build >>"$BUILD_LOG" 2>&1; then
+      ok "сборка прошла (с обходом EXDEV — это не влияет на рантайм)"
+    else
+      printf '\n%s── последние строки сборки ──%s\n' "$C_DIM" "$C_RESET" >&2
+      tail -n 40 "$BUILD_LOG" >&2 || true
+      die "Сборка упала и с обходом EXDEV (полный лог: $BUILD_LOG)"
+    fi
+  else
+    printf '\n%s── последние строки сборки ──%s\n' "$C_DIM" "$C_RESET" >&2
+    tail -n 40 "$BUILD_LOG" >&2 || true
+    die "Сборка упала (полный лог: $BUILD_LOG). Проверьте доступ к fonts.googleapis.com (next/font) и ошибки выше"
+  fi
+else
+  [ -f .next/BUILD_ID ] || die "Нет .next/BUILD_ID, а сборка пропущена. Запустите npm run build или уберите --skip-build"
+  warn "3/4 сборка пропущена (--skip-build), используем .next от $(date -r .next/BUILD_ID '+%Y-%m-%d %H:%M' 2>/dev/null || echo 'неизвестно когда')"
+fi
+
+# ── 4. smoke-тест на временном сервере ──────────────────────────────────────
+if [ "$SKIP_SMOKE" -eq 1 ]; then
+  warn "4/4 smoke-тест пропущен (--skip-smoke)"
+else
+  step "4/4 smoke: next start + HTTP-проверки"
+
+  [ -n "$PORT" ] || PORT="$(free_port)"
+  [ -n "$PORT" ] || die "Не удалось выбрать свободный порт"
+
+  TMP_DATA="$(mktemp -d "${TMPDIR:-/tmp}/dcs-predeploy-data-XXXXXX")"
+  TMP_DIRS+=("$TMP_DATA")
+  SERVER_LOG="$(mktemp "${TMPDIR:-/tmp}/dcs-predeploy-log-XXXXXX")"
+  [ "$KEEP" -eq 1 ] || TMP_DIRS+=("$SERVER_LOG")
+
+  dim "временный каталог данных: $TMP_DATA"
+  dim "порт: $PORT, лог: $SERVER_LOG"
+
+  DCS_DATA_DIR="$TMP_DATA" PORT="$PORT" "$NEXT" start -H 127.0.0.1 -p "$PORT" >"$SERVER_LOG" 2>&1 &
+  SERVER_PID=$!
+
+  if ! wait_for_http "http://127.0.0.1:$PORT/login" 90; then
+    printf '\n%s── лог сервера ──%s\n' "$C_DIM" "$C_RESET" >&2
+    tail -n 40 "$SERVER_LOG" >&2 || true
+    die "Сервер не поднялся на порту $PORT за 90 с"
+  fi
+  ok "сервер отвечает на http://127.0.0.1:$PORT"
+
+  node scripts/smoke.mjs --base-url "http://127.0.0.1:$PORT" --data-dir "$TMP_DATA" \
+    || die "Smoke-тест не пройден (лог сервера: $SERVER_LOG)"
+
+  ok "smoke-тест пройден"
+fi
+
+printf '\n%s%s%s\n' "$C_GREEN" "$C_BOLD" "Всё зелёное — можно деплоить." "$C_RESET"
+dim "Прод-запуск: npm start (из корня проекта, каталог data/ должен быть writable)."
