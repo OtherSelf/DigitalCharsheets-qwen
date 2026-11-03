@@ -11,7 +11,14 @@ import {
   mergeImportedData,
   sanitizeData,
 } from '@/lib/export-utils';
-import { makeDhCharacter, makeDndCharacter } from '../helpers';
+import { makeDhCharacter, makeDndCharacter } from './helpers';
+
+/**
+ * Экспорт и импорт листов (src/lib/export-utils.ts).
+ *
+ * Покрыто: sanitizeData, фильтрация секций для D&D и DH, импорт нативного бэкапа
+ * и «голого» JSON, слияние при импорте, сборка настоящего .xlsx.
+ */
 
 const allOff = Object.fromEntries(
   Object.keys(DEFAULT_EXPORT_CONFIG).map((key) => [key, false]),

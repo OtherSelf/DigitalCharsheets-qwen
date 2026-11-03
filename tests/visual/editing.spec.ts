@@ -173,12 +173,14 @@ test.describe('редактирование D&D', () => {
     await screenshotPage(page, 'sheet-dnd-mobile-edit-stats-en.png');
 
     await openMobileSection(page, 'Ability Scores');
+    await discardUnsavedChanges(page);
     const skills = page.locator('#skills-card:visible').first();
     await startEditing(skills);
     await expect(skills.locator('input[type="number"]').nth(2)).toHaveValue('2');
     await screenshotPage(page, 'sheet-dnd-mobile-edit-skills-en.png');
 
     await openMobileSection(page, 'Inventory & Attunement');
+    await discardUnsavedChanges(page);
     const inventory = page.locator('#inventory-box:visible').first();
     await inventory.locator('[data-testid="edit-button"]:visible').first().click();
     await inventory.locator('[data-testid="edit-button"]:visible').first().click();
@@ -186,17 +188,20 @@ test.describe('редактирование D&D', () => {
     await screenshotPage(page, 'sheet-dnd-mobile-edit-inventory-en.png');
 
     await openMobileSection(page, 'Combat Stats');
+    await discardUnsavedChanges(page);
     const combat = page.locator('#hit-points-card:visible').first();
     await startEditing(combat);
     await expect(combat.locator('input[type="number"]').first()).toHaveValue('45');
     await screenshotPage(page, 'sheet-dnd-mobile-edit-combat-en.png');
 
     await openMobileSection(page, 'Spells', 'spells-section');
+    await discardUnsavedChanges(page);
     const spells = page.locator('#spells-section:visible').first();
     await startEditingAll(spells);
     await screenshotPage(page, 'sheet-dnd-mobile-edit-spells-en.png');
 
     await openMobileSection(page, 'Companions', 'companions-section');
+    await discardUnsavedChanges(page);
     const companions = page.locator('#companions-section:visible').first();
     await startEditing(companions);
     await screenshotPage(page, 'sheet-dnd-mobile-edit-companions-en.png');

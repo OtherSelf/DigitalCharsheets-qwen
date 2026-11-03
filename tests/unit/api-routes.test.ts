@@ -13,7 +13,19 @@ import { GET as exportGet } from '@/app/api/export/route';
 import { GET as importGet } from '@/app/api/import/route';
 import { authenticateUser, generateUserId, setRecoveryPhrase } from '@/lib/server-auth';
 import { resetWriteSeqGuard } from '@/lib/server-storage';
-import { makeDhCharacter, makeDndCharacter, readJson, removeDir, useTempDataDir, userPaths } from '../helpers';
+import { makeDhCharacter, makeDndCharacter, readJson, removeDir, useTempDataDir, userPaths } from './helpers';
+
+/**
+ * API-роуты Next: POST/GET/PUT/DELETE вызываются как обычные функции с объектом
+ * Request — HTTP-сервер не поднимается, сеть не нужна.
+ *
+ * Покрыто: /api/auth (200/401/400, битый JSON → 500), /api/characters (CRUD,
+ * 400 без userId, 404 на неизвестный id, отбрасывание запоздавшего PUT,
+ * __page/__seq не попадают в файл), /api/export, recovery-роуты, легаси /api/import.
+ *
+ * Почему так: ответ читается через res.status/res.json(), поэтому тест ловит и
+ * коды, и сериализацию; данные — во временном DCS_DATA_DIR (см. helpers.ts).
+ */
 
 const json = (body: unknown) =>
   new Request('http://localhost/api/test', {

@@ -12,7 +12,14 @@ import {
   updateCharacterOnServer,
   userFolderExists,
 } from '@/lib/server-storage';
-import { makeDndCharacter, makeDhCharacter, readJson, removeDir, useTempDataDir, userPaths } from '../helpers';
+import { makeDndCharacter, makeDhCharacter, readJson, removeDir, useTempDataDir, userPaths } from './helpers';
+
+/**
+ * Файловое хранилище листов (src/lib/server-storage.ts): чтение, запись, удаление,
+ * атомарная запись через tmp+rename и защита от запоздавших PUT.
+ *
+ * Данные: временный DCS_DATA_DIR, у каждого теста свой каталог.
+ */
 
 let dataDir: string;
 const uid = 'user-storage';
