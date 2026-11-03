@@ -50,7 +50,12 @@ function writeJsonAtomic(filePath: string, data: unknown): void {
       try { fs.closeSync(fd); } catch { /* уже закрыт */ }
     }
     try { if (fs.existsSync(tmpPath)) fs.unlinkSync(tmpPath); } catch { /* best effort */ }
-    // EXDEV: временный файл на другой ФС (overlayfs/9p) — копируем и убираем.
+    // EXDEV: временный файл лежит рядом с целевым, поэтому «честный» rename
+    // внутри одного каталога EXDEV не даёт. Ветку могут вызвать только
+    // экзотические FUSE/сетевые ФС, которые всё же отвечают EXDEV и здесь:
+    // тогда деградируем до прямой записи — атомарность теряется, но данные
+    // остаются целыми (лучше, чем 500 и потерянная правка).
+    // Покрыто тестами tests/unit/exdev-storage.test.ts.
     if ((error as NodeJS.ErrnoException)?.code === 'EXDEV') {
       fs.writeFileSync(filePath, json, 'utf8');
       try { if (fs.existsSync(tmpPath)) fs.unlinkSync(tmpPath); } catch { /* best effort */ }

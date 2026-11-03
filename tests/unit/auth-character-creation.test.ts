@@ -8,7 +8,7 @@ import { POST as phraseRoute } from '@/app/api/auth/phrase/route';
 import { GET as charactersGet, POST as charactersPost } from '@/app/api/characters/route';
 import { GET as exportGet } from '@/app/api/export/route';
 import { generateUserId } from '@/lib/server-auth';
-import { readJson, removeDir, useTempDataDir, userPaths } from '../helpers';
+import { readJson, removeDir, useTempDataDir, userPaths } from './helpers';
 
 /**
  * Сквозные сценарии «регистрация → вход → создание персонажа» для КАЖДОЙ

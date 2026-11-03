@@ -11,7 +11,14 @@ import {
   updateLocalCharacter,
   type LocalUser,
 } from '@/lib/local-storage';
-import { makeDndCharacter } from '../helpers';
+import { makeDndCharacter } from './helpers';
+
+/**
+ * Клиентская сессия и листы в localStorage (src/lib/local-storage.ts).
+ *
+ * Покрыто: SSR-заглушки без window, логин в digital_charsheets_user (с legacy
+ * email), CRUD листов. Вместо браузера — MemoryStorage, объявленный ниже.
+ */
 
 /** Минимальная замена localStorage: node-окружение его не предоставляет. */
 class MemoryStorage {

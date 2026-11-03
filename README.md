@@ -11,7 +11,7 @@ Qwen helped me finish this. All hail AI.
 ## Tests (before deploying)
 
 ```bash
-npm test            # 127 unit tests (vitest), ~15 s
+npm test            # 135 unit tests (vitest)
 npm run verify      # full pre-deploy gate: typecheck + tests + build + HTTP smoke test
 npm run test:visual # Playwright screenshot regression: desktop + mobile
 ```
@@ -25,6 +25,3 @@ files) and shuts it down. Your real `./data` is never touched.
 compares screenshots with the baselines in `tests/visual/__screenshots__/`,
 and also checks for JS errors, horizontal overflow and mobile navigation.
 Run `npx playwright install chromium` once first.
-
-Details (in Russian): `RUN_INSTRUCTIONS.md` §2.5. Smoke against a running
-server: `npm run test:smoke -- -u http://localhost:3000`.
