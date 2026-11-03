@@ -10,7 +10,7 @@ import {
   useRef,
 } from 'react';
 import { Character } from '@/lib/types';
-import { createSaveQueue, type SaveQueue } from '@/lib/save-queue';
+import { createSaveQueue, type SaveMeta, type SaveQueue } from '@/lib/save-queue';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { useLocalAuth } from './local-auth-context';
@@ -67,6 +67,24 @@ const SAVE_SETTLE_MS = 250;
 const SAVE_MAX_ATTEMPTS = 3;
 const SAVE_RETRY_DELAY_MS = 5000;
 
+/**
+ * ─── LANDMARK: SAVE ORDERING ────────────────────────────────────────────────
+ * `PAGE_ID` уникален для каждой загрузки страницы, а `seq` монотонно растёт
+ * при каждой правке. Оба поля уходят в теле PUT (`__page`/`__seq`), и сервер
+ * отбрасывает запись, если для этой же загрузки уже применена правка с
+ * большим номером. Это закрывает гонку «keepalive при уходе со страницы
+ * обогнал обычный PUT» — иначе на диске могло остаться СТАРОЕ значение.
+ */
+const PAGE_ID: string = (() => {
+  try {
+    const cryptoApi = typeof globalThis !== 'undefined' ? (globalThis.crypto as Crypto | undefined) : undefined;
+    if (cryptoApi && typeof cryptoApi.randomUUID === 'function') return cryptoApi.randomUUID();
+  } catch {
+    // игнорируем — ниже детерминированный фолбэк
+  }
+  return `page-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+})();
+
 export function CharacterProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
   const router = useRouter();
@@ -87,6 +105,7 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
   // в дочерних компонентах на каждый рендер.
   const charactersRef = useRef<Character[]>([]);
   const saveQueueRef = useRef<SaveQueue<Character> | null>(null);
+  const seqRef = useRef<Map<string, number>>(new Map());
   const userRef = useRef(user);
   const toastRef = useRef(toast);
   const tRef = useRef(t);
@@ -115,10 +134,18 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
     setCharacters(next);
   }, []);
 
+  /** Монотонный номер правки внутри этой загрузки страницы. */
+  const nextSeq = useCallback((id: string) => {
+    const next = (seqRef.current.get(id) ?? 0) + 1;
+    seqRef.current.set(id, next);
+    return next;
+  }, []);
+
   /** Один PUT. Возвращает HTTP-статус или null при сетевой ошибке. */
   const sendSave = useCallback(async (
     id: string,
-    data: Partial<Character>
+    data: Partial<Character>,
+    meta?: SaveMeta
   ): Promise<number | null> => {
     const userId = userRef.current?.uid;
     if (!userId) return null;
@@ -126,7 +153,7 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
       const res = await fetch(`/api/characters/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...data, userId }),
+        body: JSON.stringify({ ...data, userId, __page: PAGE_ID, __seq: meta?.seq }),
       });
       return res.status;
     } catch (error) {
@@ -154,43 +181,84 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
   }
 
   const enqueueSave = useCallback((id: string, data: Partial<Character>) => {
-    saveQueueRef.current?.enqueue(id, data);
-  }, []);
+    saveQueueRef.current?.enqueue(id, data, { page: PAGE_ID, seq: nextSeq(id) });
+  }, [nextSeq]);
 
-  // ─── LANDMARK: FLUSH ON UNLOAD ───
-  // Если вкладку закрывают/перезагружают с несохранёнными правками — досылаем
-  // их через keepalive (fetch без await, браузер не обрывает такой запрос).
-  useEffect(() => {
-    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
-      const queue = saveQueueRef.current;
-      const userId = userRef.current?.uid;
-      if (!queue) return;
+  /**
+   * ─── LANDMARK: FLUSH ON UNLOAD / HIDE ───
+   * Если вкладку закрывают/перезагружают/прячут с несохранёнными правками —
+   * досылаем их через keepalive (fetch без await, браузер не обрывает такой
+   * запрос). `__seq` в теле гарантирует, что сервер не применит этот снимок
+   * поверх более новой правки и сам не будет перетёрт запоздавшим PUT.
+   *
+   * `pagehide` и `visibilitychange` нужны потому, что мобильные браузеры
+   * (Safari/iOS, Chrome Android) часто НЕ вызывают `beforeunload`, а просто
+   * выбрасывают вкладку — и 250 мс ожидания очереди пропадали.
+   *
+   * `blurActiveField` — принудительный blur: часть полей (имя, описание,
+   * заметки в инвентаре/навыках) сохраняется только по onBlur. Без этого их
+   * правка не попадала ни в очередь, ни в снимок — и молча терялась при
+   * перезагрузке/закрытии страницы. blur вызывается ДО снимка, поэтому
+   * обработчик onBlur успевает положить данные в очередь.
+   */
+  const flushPending = useCallback((options: { blurActiveField?: boolean } = {}): number => {
+    const queue = saveQueueRef.current;
+    const userId = userRef.current?.uid;
+    if (!queue) return 0;
 
-      const snapshot = queue.snapshotAll();
-      if (userId) {
-        for (const { id, data } of snapshot) {
-          try {
-            fetch(`/api/characters/${id}`, {
-              method: 'PUT',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ ...data, userId }),
-              keepalive: true,
-            }).catch(() => undefined);
-          } catch {
-            // keepalive может быть недоступен — тогда сработает диалог ниже.
-          }
+    if (options.blurActiveField && typeof document !== 'undefined') {
+      const active = document.activeElement;
+      if (active instanceof HTMLElement) active.blur();
+    }
+
+    const snapshot = queue.snapshotAll();
+    if (userId) {
+      for (const { id, data, meta } of snapshot) {
+        try {
+          fetch(`/api/characters/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              ...data,
+              userId,
+              __page: PAGE_ID,
+              __seq: meta?.seq,
+            }),
+            keepalive: true,
+          }).catch(() => undefined);
+        } catch {
+          // keepalive может быть недоступен — тогда сработает диалог ниже.
         }
       }
+    }
+    return snapshot.length;
+  }, []);
 
-      if (snapshot.length > 0 || hasUnsavedChangesRef.current) {
+  useEffect(() => {
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      const pending = flushPending({ blurActiveField: true });
+      if (pending > 0 || hasUnsavedChangesRef.current) {
         event.preventDefault();
         event.returnValue = '';
       }
     };
+    // pagehide/visibilitychange — без диалога, только досылка.
+    // pagehide = вкладку реально убирают → фиксируем и поле, которое в фокусе.
+    // visibilitychange = просто переключили таб → фокус не трогаем.
+    const handleHide = () => { flushPending({ blurActiveField: true }); };
+    const handleVisibility = () => {
+      if (document.visibilityState === 'hidden') flushPending();
+    };
 
     window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, []);
+    window.addEventListener('pagehide', handleHide);
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('pagehide', handleHide);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
+  }, [flushPending]);
 
   useEffect(() => {
     if (!isUserLoading && user) {
@@ -287,7 +355,12 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
   const updateCharacter = useCallback(
     (id: string, data: Partial<Character>) => {
       const currentUser = userRef.current;
-      if (!currentUser) return;
+      if (!currentUser) {
+        // Раньше правка молча исчезала. Лист без авторизации не рендерится,
+        // так что это признак гонки при старте — фиксируем в консоли.
+        console.warn('[saves] updateCharacter без пользователя — правка не сохранена', id);
+        return;
+      }
 
       if (id.startsWith('companion-')) {
         const companionId = id.replace('companion-', '');

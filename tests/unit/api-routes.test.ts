@@ -12,6 +12,7 @@ import { DELETE as characterDelete, PUT as characterPut } from '@/app/api/charac
 import { GET as exportGet } from '@/app/api/export/route';
 import { GET as importGet } from '@/app/api/import/route';
 import { authenticateUser, generateUserId, setRecoveryPhrase } from '@/lib/server-auth';
+import { resetWriteSeqGuard } from '@/lib/server-storage';
 import { makeDhCharacter, makeDndCharacter, readJson, removeDir, useTempDataDir, userPaths } from '../helpers';
 
 const json = (body: unknown) =>
@@ -29,10 +30,12 @@ let dataDir: string;
 
 beforeEach(() => {
   dataDir = useTempDataDir();
+  resetWriteSeqGuard();
 });
 
 afterEach(() => {
   removeDir(dataDir);
+  resetWriteSeqGuard();
 });
 
 describe('POST /api/auth', () => {
@@ -116,6 +119,42 @@ describe('/api/characters', () => {
     const created = await (await charactersPost(json({ ...makeDhCharacter(), userId: 'user-api' }))).json();
     const res = await characterPut(json({ name: 'X' }), params(created.id));
     expect(res.status).toBe(400);
+  });
+
+  // ─── порядок правок: __page/__seq ────────────────────────────────────────
+  it('PUT отбрасывает запоздавшую правку (не перетирает свежий опыт)', async () => {
+    const created = await (await charactersPost(json({ ...makeDhCharacter({ experience: 0 }), userId: 'user-api' }))).json();
+
+    const fresh = await characterPut(
+      json({ userId: 'user-api', experience: 500, __page: 'page-x', __seq: 2 }),
+      params(created.id),
+    );
+    expect(fresh.status).toBe(200);
+
+    // Такой же запрос, но «старый» (он мог подвиснуть в сети/уехать с keepalive).
+    const stale = await characterPut(
+      json({ userId: 'user-api', experience: 100, __page: 'page-x', __seq: 1 }),
+      params(created.id),
+    );
+    expect(stale.status).toBe(200);
+
+    const list = await (await charactersGet(req('http://localhost/api/characters?userId=user-api'))).json();
+    expect(list.find((c: any) => c.id === created.id).experience).toBe(500);
+  });
+
+  it('служебные __page/__seq не попадают в файл листа', async () => {
+    const created = await (await charactersPost(json({ ...makeDhCharacter(), userId: 'user-api' }))).json();
+
+    await characterPut(
+      json({ userId: 'user-api', experience: 7, __page: 'page-y', __seq: 3 }),
+      params(created.id),
+    );
+
+    const list = await (await charactersGet(req('http://localhost/api/characters?userId=user-api'))).json();
+    const saved = list.find((c: any) => c.id === created.id);
+    expect(saved.experience).toBe(7);
+    expect(saved.__page).toBeUndefined();
+    expect(saved.__seq).toBeUndefined();
   });
 
   it('PUT с пустым/битым телом — 400, а не 500 (keepalive при уходе со страницы)', async () => {

@@ -179,6 +179,18 @@ export const ProgressionSection = ({ character, isCompactView, activeCompactSect
     const [editableAdvancedPath, setEditableAdvancedPath] = React.useState(character.advancedPath ?? null);
     const [editableAlternatePath, setEditableAlternatePath] = React.useState(character.alternatePath ?? null);
     const [amountToSpend, setAmountToSpend] = React.useState(0);
+    const expInputRef = React.useRef<HTMLInputElement>(null);
+
+    // ─── LANDMARK: SYNC CURRENT EXP ───
+    // Черновик «Текущего опыта» раньше инициализировался один раз при монтировании
+    // и никогда не сверялся с сохранённым значением. Если лист обновлялся извне
+    // (импорт, статистика, вторая вкладка), поле продолжало показывать старый
+    // номер, и следующая же правка записывала его обратно на сервер.
+    // Синхронизируем, только когда в поле не печатают, чтобы не затереть ввод.
+    React.useEffect(() => {
+        if (typeof document !== 'undefined' && document.activeElement === expInputRef.current) return;
+        setEditableExperience(character.experience ?? 0);
+    }, [character.experience]);
     
     const [isAdvancedPathModalOpen, setIsAdvancedPathModalOpen] = React.useState(false);
     const [isAlternateRankModalOpen, setIsAlternateRankModalOpen] = React.useState(false);
@@ -214,7 +226,7 @@ export const ProgressionSection = ({ character, isCompactView, activeCompactSect
             const newTotalExp = editableTotalExpSpent + amountToSpend;
             setEditableExperience(newCurrentExp); setEditableTotalExpSpent(newTotalExp);
             if (newTotalExp < advancedPathThreshold) setEditableAdvancedPath(null);
-            updateCharacter(character.id, { experience: newCurrentExp, totalExpSpent: newTotalExp, advancedPath: newTotalExp < advancedPathThreshold ? (editableAdvancedPath ?? null) : (character.advancedPath ?? null), alternatePath: character.alternatePath });
+            updateCharacter(character.id, { experience: newCurrentExp, totalExpSpent: newTotalExp, advancedPath: newTotalExp < advancedPathThreshold ? (editableAdvancedPath ?? null) : (editableAdvancedPath ?? character.advancedPath ?? null), alternatePath: editableAlternatePath ?? character.alternatePath ?? null });
             setAmountToSpend(0);
         }
     };
@@ -223,9 +235,10 @@ export const ProgressionSection = ({ character, isCompactView, activeCompactSect
     // Раньше «Текущий опыт» уходил на сервер ТОЛЬКО по onBlur. Если после
     // ввода перезагрузить страницу / закрыть вкладку / перейти по ссылке,
     // blur не срабатывал и правка молча терялась. Теперь пишем на каждый
-    // ввод: очередь в CharacterProvider склеивает «печатание» в один PUT.
+    // ввод: очередь в CharacterProvider склеивает «печатание» в один PUT,
+    // а `__page`/`__seq` не дают запоздавшему запросу перетереть свежий.
     const handleCurrentExpChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const next = parseInt(e.target.value, 10) || 0;
+        const next = Math.max(0, parseInt(e.target.value, 10) || 0);
         setEditableExperience(next);
         updateCharacter(character.id, { experience: next });
     };
@@ -259,7 +272,7 @@ export const ProgressionSection = ({ character, isCompactView, activeCompactSect
                     <div className="flex flex-col space-y-4">
                         <div className="space-y-1">
                             <Label htmlFor="current-exp-edit" className="text-xs text-muted-foreground">{t('currentExp')}</Label>
-                            <Input id="current-exp-edit" type="number" value={editableExperience === 0 ? '' : editableExperience} onChange={handleCurrentExpChange} className="h-9"/>
+                            <Input id="current-exp-edit" ref={expInputRef} type="number" min={0} value={editableExperience === 0 ? '' : editableExperience} onChange={handleCurrentExpChange} className="h-9"/>
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="spend-exp-amount">{t('spendExp')}</Label>

@@ -11,7 +11,7 @@ Qwen helped me finish this. All hail AI.
 ## Tests (before deploying)
 
 ```bash
-npm test            # 116 unit tests (vitest), ~14 s
+npm test            # 127 unit tests (vitest), ~15 s
 npm run verify      # full pre-deploy gate: typecheck + tests + build + HTTP smoke test
 npm run test:visual # Playwright screenshot regression: desktop + mobile
 ```
