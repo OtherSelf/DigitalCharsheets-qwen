@@ -208,4 +208,80 @@ describe('createSaveQueue', () => {
 
     expect(sent.sort()).toEqual(['sheet-1', 'sheet-2']);
   });
+
+  // ─── порядковые метки (__page/__seq) ─────────────────────────────────────
+  // Сервер по ним отбрасывает запоздавшие записи. Очередь обязана отправлять
+  // метку ВМЕСТЕ с данными батча и отдавать самую свежую в snapshotAll().
+  it('передаёт метку правки в send вместе с батчем', async () => {
+    const sent: Array<{ data: Partial<Sheet>; meta?: any }> = [];
+    const queue = createSaveQueue<Sheet>({
+      settleMs: 10,
+      send: async (_id, data, meta) => {
+        sent.push({ data, meta });
+        return 200;
+      },
+    });
+
+    queue.enqueue('sheet-1', { experiencePoints: 100 }, { page: 'p', seq: 1 });
+    queue.enqueue('sheet-1', { experiencePoints: 500 }, { page: 'p', seq: 2 });
+
+    await queue.idle();
+
+    expect(sent).toHaveLength(1);
+    // Один PUT, внутри — последнее значение и последняя метка.
+    expect(sent[0].data).toEqual({ experiencePoints: 500 });
+    expect(sent[0].meta).toEqual({ page: 'p', seq: 2 });
+  });
+
+  it('snapshotAll отдаёт метку отправляемого батча (для keepalive-досылки)', async () => {
+    let release: () => void = () => {};
+    const gate = new Promise<void>(resolve => { release = resolve; });
+    let started = false;
+
+    const queue = createSaveQueue<Sheet>({
+      settleMs: 0,
+      send: async () => {
+        started = true;
+        await gate;
+        return 200;
+      },
+    });
+
+    queue.enqueue('sheet-1', { name: 'A' }, { page: 'p', seq: 1 });
+    await until(() => started);
+    queue.enqueue('sheet-1', { level: 5 }, { page: 'p', seq: 2 });
+
+    expect(queue.snapshotAll()).toEqual([
+      { id: 'sheet-1', data: { name: 'A', level: 5 }, meta: { page: 'p', seq: 2 } },
+    ]);
+
+    release();
+    await queue.idle();
+  });
+
+  it('после ошибки метка не теряется и не откатывается назад', async () => {
+    const sent: Array<{ data: Partial<Sheet>; meta?: any }> = [];
+    let fail = true;
+    const queue = createSaveQueue<Sheet>({
+      settleMs: 0,
+      maxAttempts: 1,
+      retryDelayMs: 60_000,
+      send: async (_id, data, meta) => {
+        sent.push({ data, meta });
+        return fail ? 500 : 200;
+      },
+    });
+
+    queue.enqueue('sheet-1', { experiencePoints: 100 }, { page: 'p', seq: 1 });
+    await queue.idle();
+    expect(fail).toBe(true);
+
+    fail = false;
+    queue.enqueue('sheet-1', { experiencePoints: 900 }, { page: 'p', seq: 2 });
+    await queue.idle();
+
+    expect(sent).toHaveLength(2);
+    expect(sent[1].meta).toEqual({ page: 'p', seq: 2 });
+    expect(sent[1].data).toMatchObject({ experiencePoints: 900 });
+  });
 });
