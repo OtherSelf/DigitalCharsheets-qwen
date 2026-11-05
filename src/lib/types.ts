@@ -62,6 +62,7 @@ export interface Skill {
     skilled: boolean;
     plus10: boolean;
     plus20: boolean;
+    plus30: boolean;
   };
 }
 
