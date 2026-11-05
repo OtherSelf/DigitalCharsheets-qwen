@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Input } from '../ui/input';
 import { Textarea } from '../ui/textarea';
 import { Button } from '../ui/button';
-import { Plus, Minus, ChevronRight, ChevronLeft, Trash2 } from 'lucide-react';
+import { Plus, Minus, ChevronRight, ChevronLeft, Trash2, Info } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { useCharacterContext } from '@/context/character-context';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -16,8 +16,8 @@ import { CharacteristicsSection } from './dh-sections/characteristics-section';
 import { SkillsTalentsSection } from './dh-sections/skills-talents-section';
 import { EquipmentInventorySection } from './dh-sections/equipment-inventory-section';
 import { EditSaveButton, MetricBox } from './dh-sections/dh-ui-helpers';
-import { Info } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
+import { CustomResourceCounter } from './dh-sections/custom-resource-counter';
 
 const defaultArmor = { 'Head': null, 'Right arm': null, 'Body': null, 'Left arm': null, 'Right leg': null, 'Left leg': null };
 
@@ -40,7 +40,7 @@ const ArmorDisplay = ({ character, isCompactView }: { character: DarkHeresyChara
     };
     const title = t(bodyPartKey[part] || part);
     return (
-      <div className={cn("border bg-card text-card-foreground rounded-md shadow-md w-full min-0 flex flex-col items-center", isCompactView ? "p-1" : "p-2")}>
+      <div className={cn("border bg-card text-card-foreground rounded-md shadow-md w-full min-w-0 flex flex-col items-center", isCompactView ? "p-1" : "p-2")}>
         <h4 className={cn("font-bold text-center truncate w-full px-1", isCompactView ? "text-[10px]" : "text-xs")}>{title}</h4>
         <div className="text-[10px] text-muted-foreground mb-1">({location})</div>
         <div className={cn("space-y-0.5 w-full", isCompactView ? "text-[9px]" : "text-[10px] text-center")}>
@@ -52,12 +52,12 @@ const ArmorDisplay = ({ character, isCompactView }: { character: DarkHeresyChara
   };
   return (
     <div className="grid grid-cols-3 gap-x-2 gap-y-4 pt-8 w-full max-w-full overflow-hidden">
-      <div /> <div className="flex justify-center items-start"><ArmorBox part="Head" location={bodyPartLocations['Head']} /></div> <div />
-      <div className="flex flex-col justify-start mt-2"><ArmorBox part="Left arm" location={bodyPartLocations['Left arm']} /></div>
-      <div className="mt-8"><ArmorBox part="Body" location={bodyPartLocations['Body']} /></div>
-      <div className="flex flex-col justify-start mt-2"><ArmorBox part="Right arm" location={bodyPartLocations['Right arm']} /></div>
-      <div className="-mt-2"><ArmorBox part="Left leg" location={bodyPartLocations['Left leg']} /></div> <div />
-      <div className="-mt-2"><ArmorBox part="Right leg" location={bodyPartLocations['Right leg']} /></div>
+      <div />  <div className="flex justify-center items-start"> <ArmorBox part="Head" location={bodyPartLocations['Head']} /> </div>  <div />
+      <div className="flex flex-col justify-start mt-2"> <ArmorBox part="Left arm" location={bodyPartLocations['Left arm']} /> </div>
+      <div className="mt-8"> <ArmorBox part="Body" location={bodyPartLocations['Body']} /> </div>
+      <div className="flex flex-col justify-start mt-2"> <ArmorBox part="Right arm" location={bodyPartLocations['Right arm']} /> </div>
+      <div className="-mt-2"> <ArmorBox part="Left leg" location={bodyPartLocations['Left leg']} /> </div>  <div />
+      <div className="-mt-2"> <ArmorBox part="Right leg" location={bodyPartLocations['Right leg']} /> </div>
     </div>
   );
 };
@@ -119,13 +119,18 @@ export const DarkHeresySheet = React.forwardRef<any, { character: DarkHeresyChar
     const isAnyEditing = isPointsEditing || Object.values(sectionEditing).some(Boolean);
     React.useEffect(() => { setHasUnsavedChanges(isAnyEditing); }, [isAnyEditing, setHasUnsavedChanges]);
 
-    const handleSavePoints = React.useCallback(() => { updateCharacter(character.id, { wounds: editablePoints.wounds, fatePoints: editablePoints.fatePoints, insanityPoints: editablePoints.insanityPoints, corruptionPoints: editablePoints.corruptionPoints }); setIsPointsEditing(false); }, [character.id, editablePoints, updateCharacter]);
+    const handleSavePoints = React.useCallback(() => { 
+      updateCharacter(character.id, { wounds: editablePoints.wounds, fatePoints: editablePoints.fatePoints, insanityPoints: editablePoints.insanityPoints, corruptionPoints: editablePoints.corruptionPoints }); 
+      setIsPointsEditing(false); 
+    }, [character.id, editablePoints, updateCharacter]);
+
     const handleSaveAll = React.useCallback(() => {
       if (isPointsEditing) handleSavePoints();
       characteristicsRef.current?.saveAll();
       skillsTalentsRef.current?.saveAll();
       equipmentInventoryRef.current?.saveAll();
     }, [isPointsEditing, handleSavePoints]);
+
     React.useImperativeHandle(ref, () => ({ saveAll: handleSaveAll }));
 
     const handlePointChange = (pointType: 'wounds' | 'fatePoints' | 'insanityPoints' | 'corruptionPoints', delta: number) => {
@@ -141,7 +146,7 @@ export const DarkHeresySheet = React.forwardRef<any, { character: DarkHeresyChar
       updateCharacter(character.id, dataToUpdate);
     };
 
-    // ─── LANDMARK: FATIGUE & CRITICAL CONDITIONS LOGIC (UPDATED) ───
+    // ─── LANDMARK: FATIGUE & CRITICAL CONDITIONS LOGIC (EXISTING) ───
     const [newCriticalCondition, setNewCriticalCondition] = React.useState('');
     const getEffectiveStat = (statKey: keyof typeof character.stats) => {
       const baseStat = character.stats[statKey];
@@ -154,7 +159,6 @@ export const DarkHeresySheet = React.forwardRef<any, { character: DarkHeresyChar
     const effectiveWillpower = getEffectiveStat('willpower');
     const fatigue1stMax = Math.max(0, getStatMod(effectiveToughness));
     const fatigue2ndMax = Math.max(0, getStatMod(effectiveToughness) + getStatMod(effectiveWillpower));
-
     const handleFatigueChange = (edition: '1st' | '2nd', delta: number) => {
       const key = edition === '1st' ? 'fatigue1st' : 'fatigue2nd';
       const currentData = edition === '1st' ? character.fatigue1st : character.fatigue2nd;
@@ -163,7 +167,6 @@ export const DarkHeresySheet = React.forwardRef<any, { character: DarkHeresyChar
       const newVal = Math.max(0, Math.min(currentVal + delta, maxVal));
       updateCharacter(character.id, { [key]: { ...(currentData || {}), current: newVal } });
     };
-
     const addCriticalCondition = () => {
       if (newCriticalCondition.trim() !== '') {
         const currentConditions = character.criticalConditions || [];
@@ -173,7 +176,6 @@ export const DarkHeresySheet = React.forwardRef<any, { character: DarkHeresyChar
         setNewCriticalCondition('');
       }
     };
-
     const removeCriticalCondition = (id: string) => {
       const currentConditions = character.criticalConditions || [];
       updateCharacter(character.id, {
@@ -181,6 +183,8 @@ export const DarkHeresySheet = React.forwardRef<any, { character: DarkHeresyChar
       });
     };
     // ─── END FATIGUE & CRITICAL CONDITIONS LOGIC ───
+
+
 
     const handleNestedPointsChange = (pointType: 'wounds' | 'fatePoints', field: 'current' | 'max', value: string) => {
       setEditablePoints(prev => ({ ...prev, [pointType]: { ...prev[pointType], [field]: parseInt(value, 10) || 0 } }));
@@ -321,7 +325,6 @@ export const DarkHeresySheet = React.forwardRef<any, { character: DarkHeresyChar
                     )}
                   </div>
                 </MetricBox>
-
                 {/* ─── LANDMARK: COMPACT VIEW FATIGUE COUNTERS ─── */}
                 {(character.edition === '1st' || character.edition === 'hybrid' || !character.edition) && (
                   <MetricBox 
@@ -350,7 +353,6 @@ export const DarkHeresySheet = React.forwardRef<any, { character: DarkHeresyChar
                     </div>
                   </MetricBox>
                 )}
-
                 {(character.edition === '2nd' || character.edition === 'hybrid') && (
                   <MetricBox 
                     title="2nd Ed. Fatigue" 
@@ -379,6 +381,7 @@ export const DarkHeresySheet = React.forwardRef<any, { character: DarkHeresyChar
                   </MetricBox>
                 )}
                 {/* ─── END COMPACT VIEW FATIGUE COUNTERS ─── */}
+                <CustomResourceCounter character={character} isCompactView={true} />
 
                 <MetricBox title={t('insanity')} notes={getSimplePointsObject(character.insanityPoints).notes} onNoteChange={(val) => updateCharacter(character.id, { insanityPoints: { ...getSimplePointsObject(character.insanityPoints), notes: val } })} editing={isPointsEditing} onEdit={() => setIsPointsEditing(true)} onSave={handleSavePoints} isCompactView={isCompactView} hideNotes={hideNotes} showEditButtons={showEditButtons}>
                   <div className="flex items-center justify-center gap-1">
@@ -438,7 +441,6 @@ export const DarkHeresySheet = React.forwardRef<any, { character: DarkHeresyChar
             </div>
           </div>
         )}
-        
         <div className={cn("sheet-info-grid grid grid-cols-1 lg:grid-cols-12 gap-6", isCompactView && !['info-section', 'progression-section'].includes(activeCompactSection) && 'hidden')}>
           <div className={cn("lg:col-span-5", isCompactView && activeCompactSection && activeCompactSection !== 'info-section' && 'hidden')}>
             <InfoSection character={character} isCompactView={isCompactView} activeCompactSection={activeCompactSection} onEditingChange={(v: boolean) => reportSectionEditing('info', v)} />
@@ -452,7 +454,6 @@ export const DarkHeresySheet = React.forwardRef<any, { character: DarkHeresyChar
             </div>
           )}
         </div>
-        
         <div className={cn("sheet-panels flex flex-row items-stretch gap-2 md:gap-6", isCompactView && !['skills-section', 'talents-section', 'equipment-section', 'inventory-section'].includes(activeCompactSection) && 'hidden')}>
           {/* DH-COMPACT-SKILLS-PANEL-START */}
           <div className={cn(
@@ -491,8 +492,7 @@ export const DarkHeresySheet = React.forwardRef<any, { character: DarkHeresyChar
                     <MetricBox title={t('fate')} notes={getPointsObject(character.fatePoints).notes} onNoteChange={(val) => updateCharacter(character.id, { fatePoints: { ...getPointsObject(character.fatePoints), notes: val } })} editing={isPointsEditing} onEdit={() => setIsPointsEditing(true)} onSave={handleSavePoints} isCompactView={isCompactView} hideNotes={hideNotes} showEditButtons={showEditButtons}><div className="text-center flex flex-col justify-center items-center h-full">{isPointsEditing ? ( <div className="flex items-center justify-center gap-2"><Input type="number" value={editablePoints.fatePoints.current} onChange={e => handleNestedPointsChange('fatePoints', 'current', e.target.value)} className="text-lg font-bold h-8 w-16 text-center"/><span className="text-muted-foreground">/</span><Input type="number" value={editablePoints.fatePoints.max} onChange={e => handleNestedPointsChange('fatePoints', 'max', e.target.value)} className="text-lg font-bold h-8 w-16 text-center"/></div> ) : ( <div className="flex items-center justify-center gap-2"><Button size="icon" variant="outline" className="h-6 w-6" onClick={() => handlePointChange('fatePoints', -1)}><Minus className="h-4 w-4" /></Button><p className="text-2xl font-bold text-primary w-12 text-center">{getPointsObject(character.fatePoints).current}</p><Button size="icon" variant="outline" className="h-6 w-6" onClick={() => handlePointChange('fatePoints', 1)}><Plus className="h-4 w-4" /></Button><p className="text-xl font-medium text-muted-foreground ml-2">/ {getPointsObject(character.fatePoints).max}</p></div> )}</div></MetricBox>
                   </div> )}
                   
-                  {/* ─── LANDMARK: FATIGUE AND CRITICAL CONDITIONS BOX ─── */}
-                  {!isCompactView && (
+                                    {!isCompactView && (
                     <Card>
                       <CardHeader className="flex-row items-center justify-between px-6 pt-3 pb-2">
                         <CardTitle className="font-headline text-base">
@@ -500,9 +500,7 @@ export const DarkHeresySheet = React.forwardRef<any, { character: DarkHeresyChar
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="pt-0 space-y-4">
-                        {/* Fatigue Counters */}
                         <div className="flex flex-wrap gap-4">
-                          {/* ─── LANDMARK: 1ST ED FATIGUE (Hidden in 2nd Ed) ─── */}
                           {(character.edition === '1st' || character.edition === 'hybrid' || !character.edition) && (
                             <div className="flex-1 min-w-[140px]">
                               <MetricBox 
@@ -535,8 +533,6 @@ export const DarkHeresySheet = React.forwardRef<any, { character: DarkHeresyChar
                               </MetricBox>
                             </div>
                           )}
-
-                          {/* ─── LANDMARK: 2ND ED FATIGUE (Hidden in 1st Ed) ─── */}
                           {(character.edition === '2nd' || character.edition === 'hybrid') && (
                             <div className="flex-1 min-w-[140px]">
                               <MetricBox 
@@ -570,8 +566,7 @@ export const DarkHeresySheet = React.forwardRef<any, { character: DarkHeresyChar
                             </div>
                           )}
                         </div>
-
-                        {/* Critical Conditions List */}
+                        
                         <div className="pt-2 border-t">
                           <h4 className="font-semibold text-sm mb-2">Critical Conditions</h4>
                           <div className="space-y-2">
@@ -598,12 +593,14 @@ export const DarkHeresySheet = React.forwardRef<any, { character: DarkHeresyChar
                       </CardContent>
                     </Card>
                   )}
-                  {/* ─── END FATIGUE AND CRITICAL CONDITIONS BOX ─── */}
+
+                  <CustomResourceCounter character={character} isCompactView={false} />
+
                 </CardContent>
               </Card>
+
             )}
           </div>
-          
           {/* ─── LANDMARK: MIDDLE COLUMN - ORIGINAL WIDTH RESTORED ─── */}
           {!isCompactView && (
             <div className={cn("transition-all duration-300 ease-in-out flex-shrink-0", (isSkillsPanelCollapsed && isEquipmentPanelCollapsed) ? "flex-1" : "w-auto")}>
@@ -734,7 +731,6 @@ export const DarkHeresySheet = React.forwardRef<any, { character: DarkHeresyChar
               )}
             </div>
           )}
-
           {/* DH-COMPACT-EQUIPMENT-PANEL-START */}
           <div className={cn(
             "transition-all duration-300 ease-in-out min-w-0",

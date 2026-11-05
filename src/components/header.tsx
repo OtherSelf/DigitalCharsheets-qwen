@@ -34,6 +34,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from './ui/select';
 import { HouseRulesDialog } from './sheets/dnd-sections/house-rules-dialog';
 import { DhHouseRulesDialog } from './sheets/dh-sections/dh-house-rules-dialog';
 
@@ -163,12 +170,33 @@ export function Header({ onNotesClick, onJournalClick, mobileActions }: HeaderPr
             )}
           </div>
         )}
+
+        {/* ─── LANDMARK: DH HEADER CONTROLS (House Rules + Edition) ─── */}
         {character && character.gameSystem === 'Dark Heresy' && !isCompactView && (
-          <Button variant="outline" size="sm" onClick={() => setIsHouseRulesDialogOpen(true)} className="h-7 px-2 ml-2" aria-label={t('houseRules')}>
-            <Scale className="h-4 w-4 xl:mr-2" />
-            <span className="hidden xl:inline">{t('houseRules')}</span>
-          </Button>
+          <div className="flex shrink-0 items-center gap-2 md:gap-3 ml-2 border-l pl-2 md:pl-4">
+            <Button variant="outline" size="sm" onClick={() => setIsHouseRulesDialogOpen(true)} className="h-7 px-2" aria-label={t('houseRules')}>
+              <Scale className="h-4 w-4 xl:mr-2" />
+              <span className="hidden xl:inline">{t('houseRules')}</span>
+            </Button>
+            <div className="flex items-center gap-2">
+              <Label className="text-xs text-muted-foreground whitespace-nowrap hidden md:inline">Edition:</Label>
+              <Select
+                value={character.edition || '1st'}
+                onValueChange={(value: '1st' | '2nd' | 'hybrid') => updateCharacter(character.id, { edition: value })}
+              >
+                <SelectTrigger className="h-7 w-[110px] text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1st">1st Edition</SelectItem>
+                  <SelectItem value="2nd">2nd Edition</SelectItem>
+                  <SelectItem value="hybrid">Hybrid</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
         )}
+        {/* ─── END DH HEADER CONTROLS ─── */}
       </div>
 
       {/* ─── LANDMARK: HEADER_ACTIONS ─── */}
