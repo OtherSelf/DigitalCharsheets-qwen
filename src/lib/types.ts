@@ -361,6 +361,7 @@ export interface DnD5eCharacter extends CharacterBase {
 
 export interface DarkHeresyCharacter extends CharacterBase {
   gameSystem: 'Dark Heresy';
+  edition?: '1st' | '2nd' | 'hybrid'; // ─── LANDMARK: EDITION FIELD ───
   homeWorld: DarkHeresyHomeWorld | '';
   worldVariant: string;
   careerPath: DarkHeresyCareerPath | '';
@@ -414,54 +415,19 @@ export interface DarkHeresyCharacter extends CharacterBase {
     fellowship?: string;
     influence?: string;
   };
-  wounds: {
-    current: number;
-    max: number;
-    notes?: string;
-  };
-  fatePoints: {
-    current: number;
-    max: number;
-    notes?: string;
-  };
-  insanityPoints: {
-    total: number;
-    notes?: string;
-  };
-  corruptionPoints: {
-    total: number;
-    notes?: string;
-  };
-  wealth: {
-    throneGelt: number;
-    monthlyIncome: number;
-    notes?: string;
-  };
-  movement: {
-    walkHalf: number;
-    walkFull: number;
-    charge: number;
-    run: number;
-  };
+  wounds: { current: number; max: number; notes?: string; };
+  fatePoints: { current: number; max: number; notes?: string; };
+  insanityPoints: { total: number; notes?: string; };
+  corruptionPoints: { total: number; notes?: string; };
+  wealth: { throneGelt: number; monthlyIncome: number; notes?: string; };
+  movement: { walkHalf: number; walkFull: number; charge: number; run: number; };
   equipment: DarkHeresyEquipment;
   inventory: InventoryItem[];
   skills: Skill[];
   talents: Talent[];
-  // --- NEW FATIGUE & CRITICAL CONDITIONS FIELDS ---
-  fatigue1st: {
-    current: number;
-    notes?: string;
-  };
-  fatigue2nd: {
-    current: number;
-    notes?: string;
-  };
-  criticalConditions: {
-    id: string;
-    name: string;
-    notes?: string;
-  }[];
-  // -----------------------------------------------
+  fatigue1st: { current: number; notes?: string; };
+  fatigue2nd: { current: number; notes?: string; };
+  criticalConditions: { id: string; name: string; notes?: string; }[];
   customHouseRules?: { name: string; description: string }[];
 }
 
