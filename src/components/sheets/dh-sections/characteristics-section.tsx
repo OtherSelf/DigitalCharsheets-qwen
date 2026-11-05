@@ -1,6 +1,5 @@
 // src/components/sheets/dh-sections/characteristics-section.tsx
 'use client';
-
 import * as React from 'react';
 import { type DarkHeresyCharacter } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -29,19 +28,6 @@ const defaultStatUpgrades = {
     influence: [false, false, false, false] as [boolean, boolean, boolean, boolean],
 };
 
-const characteristics = [
-    { key: 'weaponSkill', label: 'WS', fullName: 'Weapon Skill' },
-    { key: 'ballisticSkill', label: 'BS', fullName: 'Ballistic Skill' },
-    { key: 'strength', label: 'S', fullName: 'Strength' },
-    { key: 'toughness', label: 'T', fullName: 'Toughness' },
-    { key: 'agility', label: 'Ag', fullName: 'Agility' },
-    { key: 'intelligence', label: 'Int', fullName: 'Intelligence' },
-    { key: 'perception', label: 'Per', fullName: 'Perception' },
-    { key: 'willpower', label: 'WP', fullName: 'Willpower' },
-    { key: 'fellowship', label: 'Fel', fullName: 'Fellowship' },
-    { key: 'influence', label: 'Inf', fullName: 'Influence' },
-] as const;
-
 // LANDMARK 1: Added notesForText and addNotesText to the component props
 const CharacteristicStat = ({
     label, fullName, value, upgrades, editing,
@@ -59,16 +45,13 @@ const CharacteristicStat = ({
     const currentUpgrades = (
         Array.isArray(upgrades) ? [...upgrades, ...Array(4 - upgrades.length).fill(false)] : [false, false, false, false]
     ).slice(0, 4) as [boolean, boolean, boolean, boolean];
-
     const bonus = currentUpgrades.filter(Boolean).length * 5;
     const displayValue = value + bonus;
-
     const isCheckboxDisabled = (index: number) => {
         if (editing) return true;
         if (!currentUpgrades[index] && index > 0 && !currentUpgrades[index - 1]) return true;
         return false;
     };
-
     return (
         <div className="py-1 rounded-lg bg-background border text-center relative px-0.5 h-full flex flex-col justify-between min-h-[80px]">
             <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide px-1">{isCompactView ? label : fullName}</div>
@@ -111,7 +94,6 @@ interface CharacteristicsSectionProps {
 export const CharacteristicsSection = React.forwardRef<{ saveAll: () => void }, CharacteristicsSectionProps>(({ character, isCompactView, isSkillsPanelCollapsed, isEquipmentPanelCollapsed, onEditingChange }, ref) => {
     const { updateCharacter, hideNotes, showEditButtons } = useCharacterContext();
     const { t, language } = useTranslation();
-
     const [isCharacteristicsEditing, setIsCharacteristicsEditing] = React.useState(false);
     const [editableStats, setEditableStats] = React.useState(character.stats);
     const [editableStatUpgrades, setEditableStatUpgrades] = React.useState(character.statUpgrades ?? defaultStatUpgrades);
@@ -123,11 +105,34 @@ export const CharacteristicsSection = React.forwardRef<{ saveAll: () => void }, 
     }, [character.stats, character.statUpgrades]);
     // ─── END SYNC EDITABLE STATE ───
 
+    // ─── LANDMARK: DYNAMIC CHARACTERISTICS BASED ON EDITION ───
+    const characteristics = React.useMemo(() => {
+        const base = [
+            { key: 'weaponSkill', label: 'WS', fullName: 'Weapon Skill' },
+            { key: 'ballisticSkill', label: 'BS', fullName: 'Ballistic Skill' },
+            { key: 'strength', label: 'S', fullName: 'Strength' },
+            { key: 'toughness', label: 'T', fullName: 'Toughness' },
+            { key: 'agility', label: 'Ag', fullName: 'Agility' },
+            { key: 'intelligence', label: 'Int', fullName: 'Intelligence' },
+            { key: 'perception', label: 'Per', fullName: 'Perception' },
+            { key: 'willpower', label: 'WP', fullName: 'Willpower' },
+            { key: 'fellowship', label: 'Fel', fullName: 'Fellowship' },
+            { key: 'influence', label: 'Inf', fullName: 'Influence' },
+        ] as const;
+        
+        // 1st edition (or default/undefined) hides Influence; 2nd and Hybrid show it
+        if (character.edition === '1st' || !character.edition) {
+            return base.filter(char => char.key !== 'influence');
+        }
+        return base;
+    }, [character.edition]);
+    // ─── END DYNAMIC CHARACTERISTICS ───
+
     const handleSaveCharacteristics = React.useCallback(() => {
         updateCharacter(character.id, { stats: editableStats, statUpgrades: editableStatUpgrades });
         setIsCharacteristicsEditing(false);
     }, [character.id, editableStats, editableStatUpgrades, updateCharacter]);
-    
+
     const isAnyEditing = isCharacteristicsEditing;
     React.useEffect(() => { onEditingChange?.(isAnyEditing); }, [isAnyEditing, onEditingChange]);
 
@@ -183,7 +188,6 @@ export const CharacteristicsSection = React.forwardRef<{ saveAll: () => void }, 
                     />
                 ))}
              </CardContent> 
-             
              {/* Desktop Movement Display */}
              {!isCompactView && (
                <CardContent className="pt-0">
@@ -193,7 +197,6 @@ export const CharacteristicsSection = React.forwardRef<{ saveAll: () => void }, 
                      const agBonus = agUpgrades.filter(Boolean).length * 5;
                      const effectiveAg = character.stats.agility + agBonus;
                      const agMod = Math.floor(effectiveAg / 10);
-        
                      return (
                        <>
                          <div className="p-2 rounded-lg bg-background border text-center">
@@ -221,5 +224,4 @@ export const CharacteristicsSection = React.forwardRef<{ saveAll: () => void }, 
         </Card>
     );
 });
-
 CharacteristicsSection.displayName = 'CharacteristicsSection';
