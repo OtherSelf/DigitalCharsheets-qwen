@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Input } from '../ui/input';
 import { Textarea } from '../ui/textarea';
 import { Button } from '../ui/button';
-import { Plus, Minus, ChevronRight, ChevronLeft } from 'lucide-react';
+import { Plus, Minus, ChevronRight, ChevronLeft, Trash2 } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { useCharacterContext } from '@/context/character-context';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -147,14 +147,63 @@ export const DarkHeresySheet = React.forwardRef<any, { character: DarkHeresyChar
       let dataToUpdate: Partial<DarkHeresyCharacter> = {};
       if (pointType === 'wounds' || pointType === 'fatePoints') {
         const currentPoints = getPointsObject(character[pointType]);
-        const newVal = Math.max(0, currentPoints.current + delta);
+        // Removed Math.max(0, ...) to allow negative values
+        const newVal = currentPoints.current + delta;
         dataToUpdate[pointType] = { ...currentPoints, current: Math.min(newVal, currentPoints.max) };
       } else {
         const currentPoints = getSimplePointsObject(character[pointType]);
-        dataToUpdate[pointType] = { ...currentPoints, total: Math.min(Math.max(currentPoints.total + delta, 0), 100) };
+        // Removed Math.max(..., 0) to allow negative values
+        dataToUpdate[pointType] = { ...currentPoints, total: Math.min(currentPoints.total + delta, 100) };
       }
       updateCharacter(character.id, dataToUpdate);
     };
+
+  // ─── LANDMARK: FATIGUE & CRITICAL CONDITIONS LOGIC (UPDATED) ───
+  const [newCriticalCondition, setNewCriticalCondition] = React.useState('');
+
+  // Helper to get effective stat including +5 upgrade bonuses
+  const getEffectiveStat = (statKey: keyof typeof character.stats) => {
+    const baseStat = character.stats[statKey];
+    const upgrades = character.statUpgrades?.[statKey] || [false, false, false, false];
+    const bonus = upgrades.filter(Boolean).length * 5;
+    return baseStat + bonus;
+  };
+
+  const getStatMod = (stat: number) => Math.floor(stat / 10);
+  
+  const effectiveToughness = getEffectiveStat('toughness');
+  const effectiveWillpower = getEffectiveStat('willpower');
+  
+  const fatigue1stMax = Math.max(0, getStatMod(effectiveToughness));
+  const fatigue2ndMax = Math.max(0, getStatMod(effectiveToughness) + getStatMod(effectiveWillpower));
+
+  const handleFatigueChange = (edition: '1st' | '2nd', delta: number) => {
+    const key = edition === '1st' ? 'fatigue1st' : 'fatigue2nd';
+    const currentData = edition === '1st' ? character.fatigue1st : character.fatigue2nd;
+    const currentVal = currentData?.current ?? 0;
+    const maxVal = edition === '1st' ? fatigue1stMax : fatigue2ndMax;
+    // Starting and minimal value is 0, capped at calculated max
+    const newVal = Math.max(0, Math.min(currentVal + delta, maxVal));
+    updateCharacter(character.id, { [key]: { ...(currentData || {}), current: newVal } });
+  };
+
+  const addCriticalCondition = () => {
+    if (newCriticalCondition.trim() !== '') {
+      const currentConditions = character.criticalConditions || [];
+      updateCharacter(character.id, {
+        criticalConditions: [...currentConditions, { id: `new-cc-${Date.now()}`, name: newCriticalCondition.trim(), notes: '' }]
+      });
+      setNewCriticalCondition('');
+    }
+  };
+
+  const removeCriticalCondition = (id: string) => {
+    const currentConditions = character.criticalConditions || [];
+    updateCharacter(character.id, {
+      criticalConditions: currentConditions.filter(c => c.id !== id)
+    });
+  };
+  // ─── END FATIGUE & CRITICAL CONDITIONS LOGIC ───
 
     const handleNestedPointsChange = (pointType: 'wounds' | 'fatePoints', field: 'current' | 'max', value: string) => {
       setEditablePoints(prev => ({ ...prev, [pointType]: { ...prev[pointType], [field]: parseInt(value, 10) || 0 } }));
@@ -163,7 +212,8 @@ export const DarkHeresySheet = React.forwardRef<any, { character: DarkHeresyChar
     const handleSimplePointsChange = (point: 'insanityPoints' | 'corruptionPoints', field: 'total' | 'notes', value: string) => {
       if (field === 'total') {
         const numValue = parseInt(value, 10) || 0;
-        setEditablePoints(prev => ({ ...prev, [point]: { ...prev[point], total: Math.min(Math.max(numValue, 0), 100) } }));
+        // Removed Math.max(..., 0) to allow negative values when typing directly
+        setEditablePoints(prev => ({ ...prev, [point]: { ...prev[point], total: Math.min(numValue, 100) } }));
       } else {
         setEditablePoints(prev => ({ ...prev, [point]: { ...prev[point], notes: value } }));
       }
@@ -439,6 +489,129 @@ export const DarkHeresySheet = React.forwardRef<any, { character: DarkHeresyChar
                     <MetricBox title={t('wounds')} notes={getPointsObject(character.wounds).notes} onNoteChange={(val) => updateCharacter(character.id, { wounds: { ...getPointsObject(character.wounds), notes: val } })} editing={isPointsEditing} onEdit={() => setIsPointsEditing(true)} onSave={handleSavePoints} isCompactView={isCompactView} hideNotes={hideNotes} showEditButtons={showEditButtons}><div className="text-center flex flex-col justify-center items-center h-full">{isPointsEditing ? ( <div className="flex items-center justify-center gap-2"><Input type="number" value={editablePoints.wounds.current} onChange={e => handleNestedPointsChange('wounds', 'current', e.target.value)} className="text-lg font-bold h-8 w-16 text-center"/><span className="text-muted-foreground">/</span><Input type="number" value={editablePoints.wounds.max} onChange={e => handleNestedPointsChange('wounds', 'max', e.target.value)} className="text-lg font-bold h-8 w-16 text-center"/></div> ) : ( <div className="flex items-center justify-center gap-2"><Button size="icon" variant="outline" className="h-6 w-6" onClick={() => handlePointChange('wounds', -1)}><Minus className="h-4 w-4" /></Button><p className="text-2xl font-bold text-primary w-12 text-center">{getPointsObject(character.wounds).current}</p><Button size="icon" variant="outline" className="h-6 w-6" onClick={() => handlePointChange('wounds', 1)}><Plus className="h-4 w-4" /></Button><p className="text-xl font-medium text-muted-foreground ml-2">/ {getPointsObject(character.wounds).max}</p></div> )}</div></MetricBox>
                     <MetricBox title={t('fate')} notes={getPointsObject(character.fatePoints).notes} onNoteChange={(val) => updateCharacter(character.id, { fatePoints: { ...getPointsObject(character.fatePoints), notes: val } })} editing={isPointsEditing} onEdit={() => setIsPointsEditing(true)} onSave={handleSavePoints} isCompactView={isCompactView} hideNotes={hideNotes} showEditButtons={showEditButtons}><div className="text-center flex flex-col justify-center items-center h-full">{isPointsEditing ? ( <div className="flex items-center justify-center gap-2"><Input type="number" value={editablePoints.fatePoints.current} onChange={e => handleNestedPointsChange('fatePoints', 'current', e.target.value)} className="text-lg font-bold h-8 w-16 text-center"/><span className="text-muted-foreground">/</span><Input type="number" value={editablePoints.fatePoints.max} onChange={e => handleNestedPointsChange('fatePoints', 'max', e.target.value)} className="text-lg font-bold h-8 w-16 text-center"/></div> ) : ( <div className="flex items-center justify-center gap-2"><Button size="icon" variant="outline" className="h-6 w-6" onClick={() => handlePointChange('fatePoints', -1)}><Minus className="h-4 w-4" /></Button><p className="text-2xl font-bold text-primary w-12 text-center">{getPointsObject(character.fatePoints).current}</p><Button size="icon" variant="outline" className="h-6 w-6" onClick={() => handlePointChange('fatePoints', 1)}><Plus className="h-4 w-4" /></Button><p className="text-xl font-medium text-muted-foreground ml-2">/ {getPointsObject(character.fatePoints).max}</p></div> )}</div></MetricBox>
                   </div> )}
+                          {/* ─── LANDMARK: FATIGUE AND CRITICAL CONDITIONS BOX ─── */}
+        {!isCompactView && (
+          <Card>
+            <CardHeader className="flex-row items-center justify-between px-6 pt-3 pb-2">
+              <CardTitle className="font-headline text-base">
+                Fatigue & Critical Conditions
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0 space-y-4">
+              {/* Fatigue Counters */}
+              <div className="grid grid-cols-2 gap-4">
+                <MetricBox 
+                  title="1st Ed. Fatigue" 
+                  notes={character.fatigue1st?.notes} 
+                  onNoteChange={(val) => updateCharacter(character.id, { fatigue1st: { ...(character.fatigue1st || {}), notes: val } })} 
+                  editing={isPointsEditing} 
+                  onEdit={() => setIsPointsEditing(true)} 
+                  onSave={handleSavePoints} 
+                  isCompactView={isCompactView} 
+                  hideNotes={hideNotes} 
+                  showEditButtons={showEditButtons}
+                >
+                  <div className="text-center flex flex-col justify-center items-center h-full">
+                    {isPointsEditing ? (
+                      <div className="flex items-center justify-center gap-2">
+                        <Input 
+                          type="number" 
+                          value={character.fatigue1st?.current ?? 0} 
+                          onChange={e => updateCharacter(character.id, { fatigue1st: { ...(character.fatigue1st || {}), current: Math.max(0, Math.min(parseInt(e.target.value, 10) || 0, fatigue1stMax)) } })} 
+                          className="text-lg font-bold h-8 w-16 text-center" 
+                        />
+                        <span className="text-muted-foreground">/</span>
+                        <span className="text-lg font-bold h-8 w-16 text-center flex items-center justify-center">{fatigue1stMax}</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-center gap-2">
+                        <Button size="icon" variant="outline" className="h-6 w-6" onClick={() => handleFatigueChange('1st', -1)}>
+                          <Minus className="h-4 w-4" />
+                        </Button>
+                        <p className="text-2xl font-bold text-primary w-12 text-center">{character.fatigue1st?.current ?? 0}</p>
+                        <Button size="icon" variant="outline" className="h-6 w-6" onClick={() => handleFatigueChange('1st', 1)}>
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                        <p className="text-xl font-medium text-muted-foreground ml-2">/ {fatigue1stMax}</p>
+                      </div>
+                    )}
+                  </div>
+                </MetricBox>
+
+                <MetricBox 
+                  title="2nd Ed. Fatigue" 
+                  notes={character.fatigue2nd?.notes} 
+                  onNoteChange={(val) => updateCharacter(character.id, { fatigue2nd: { ...(character.fatigue2nd || {}), notes: val } })} 
+                  editing={isPointsEditing} 
+                  onEdit={() => setIsPointsEditing(true)} 
+                  onSave={handleSavePoints} 
+                  isCompactView={isCompactView} 
+                  hideNotes={hideNotes} 
+                  showEditButtons={showEditButtons}
+                >
+                  <div className="text-center flex flex-col justify-center items-center h-full">
+                    {isPointsEditing ? (
+                      <div className="flex items-center justify-center gap-2">
+                        <Input 
+                          type="number" 
+                          value={character.fatigue2nd?.current ?? 0} 
+                          onChange={e => updateCharacter(character.id, { fatigue2nd: { ...(character.fatigue2nd || {}), current: Math.max(0, Math.min(parseInt(e.target.value, 10) || 0, fatigue2ndMax)) } })} 
+                          className="text-lg font-bold h-8 w-16 text-center" 
+                        />
+                        <span className="text-muted-foreground">/</span>
+                        <span className="text-lg font-bold h-8 w-16 text-center flex items-center justify-center">{fatigue2ndMax}</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-center gap-2">
+                        <Button size="icon" variant="outline" className="h-6 w-6" onClick={() => handleFatigueChange('2nd', -1)}>
+                          <Minus className="h-4 w-4" />
+                        </Button>
+                        <p className="text-2xl font-bold text-primary w-12 text-center">{character.fatigue2nd?.current ?? 0}</p>
+                        <Button size="icon" variant="outline" className="h-6 w-6" onClick={() => handleFatigueChange('2nd', 1)}>
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                        <p className="text-xl font-medium text-muted-foreground ml-2">/ {fatigue2ndMax}</p>
+                      </div>
+                    )}
+                  </div>
+                </MetricBox>
+              </div>
+
+              {/* Critical Conditions List */}
+              <div className="pt-2 border-t">
+                <h4 className="font-semibold text-sm mb-2">Critical Conditions</h4>
+                <div className="space-y-2">
+                  {(character.criticalConditions || []).map((condition) => (
+                    <div key={condition.id} className="flex items-center justify-between gap-2 p-2 rounded-md bg-muted/50">
+                      <span className="text-sm flex-1 break-words">{condition.name}</span>
+                      {showEditButtons && (
+                        <Button size="icon" variant="ghost" className="h-6 w-6 text-destructive hover:text-destructive" onClick={() => removeCriticalCondition(condition.id)}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                  
+                  {/* Add New Condition Input */}
+                  {showEditButtons && (
+                    <div className="flex gap-2 pt-2">
+                      <Input 
+                        placeholder="Add critical condition..." 
+                        value={newCriticalCondition} 
+                        onChange={(e) => setNewCriticalCondition(e.target.value)} 
+                        onKeyDown={(e) => e.key === 'Enter' && addCriticalCondition()}
+                      />
+                      <Button onClick={addCriticalCondition} size="sm">
+                        <Plus className="mr-2 h-4 w-4" /> Add
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+        {/* ─── END FATIGUE AND CRITICAL CONDITIONS BOX ─── */}
                 </CardContent>
               </Card>
             )}

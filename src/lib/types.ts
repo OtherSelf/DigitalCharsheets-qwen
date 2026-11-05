@@ -447,6 +447,21 @@ export interface DarkHeresyCharacter extends CharacterBase {
   inventory: InventoryItem[];
   skills: Skill[];
   talents: Talent[];
+  // --- NEW FATIGUE & CRITICAL CONDITIONS FIELDS ---
+  fatigue1st: {
+    current: number;
+    notes?: string;
+  };
+  fatigue2nd: {
+    current: number;
+    notes?: string;
+  };
+  criticalConditions: {
+    id: string;
+    name: string;
+    notes?: string;
+  }[];
+  // -----------------------------------------------
   customHouseRules?: { name: string; description: string }[];
 }
 
