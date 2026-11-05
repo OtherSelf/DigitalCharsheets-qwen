@@ -116,6 +116,13 @@ export const CharacteristicsSection = React.forwardRef<{ saveAll: () => void }, 
     const [editableStats, setEditableStats] = React.useState(character.stats);
     const [editableStatUpgrades, setEditableStatUpgrades] = React.useState(character.statUpgrades ?? defaultStatUpgrades);
 
+    // ─── LANDMARK: SYNC EDITABLE STATE WITH CHARACTER DATA ───
+    React.useEffect(() => {
+        setEditableStats(character.stats);
+        setEditableStatUpgrades(character.statUpgrades ?? defaultStatUpgrades);
+    }, [character.stats, character.statUpgrades]);
+    // ─── END SYNC EDITABLE STATE ───
+
     const handleSaveCharacteristics = React.useCallback(() => {
         updateCharacter(character.id, { stats: editableStats, statUpgrades: editableStatUpgrades });
         setIsCharacteristicsEditing(false);

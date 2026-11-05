@@ -39,7 +39,6 @@ export function getStoredUser(userId: string): { username: string; passwordHash:
   if (!fs.existsSync(userFile)) return null;
   try {
     const data = JSON.parse(fs.readFileSync(userFile, 'utf8'));
-    // Backward compatibility: if email is present but no username, use email as username
     if (data.email && !data.username) {
       data.username = data.email;
     }
@@ -103,7 +102,7 @@ export function verifyRecovery(username: string, words: string[], recoveryPhrase
   for (const word of words) {
     const cleanWord = word.toLowerCase().trim();
     if (!cleanWord) return { success: false, error: 'Please provide valid words.' };
-    const escapedWord = cleanWord.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const escapedWord = cleanWord.replace(/[.*+?^${}()|[\]]/g, '$&');
     if (!new RegExp(`\\b${escapedWord}\\b`, 'i').test(characterDataString)) {
       return { success: false, error: `The word "${word}" was not found in any of your character sheets.` };
     }
@@ -129,7 +128,6 @@ export function updateRecoveryCredentials(username: string, newPassword: string,
     const userData = JSON.parse(fs.readFileSync(userFile, 'utf8'));
     userData.passwordHash = hashPassword(newPassword);
     userData.recoveryPhrase = newRecoveryPhrase.toLowerCase().trim();
-    // Backward compat
     if (userData.email) {
        delete userData.email;
     }
@@ -172,7 +170,7 @@ export function recoverPasswordWithUsernameAndWords(username: string, words: str
   for (const word of words) {
     const cleanWord = word.toLowerCase().trim();
     if (!cleanWord) return { success: false, error: 'Please provide valid words.' };
-    const escapedWord = cleanWord.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const escapedWord = cleanWord.replace(/[.*+?^${}()|[\]]/g, '$&');
     if (!new RegExp(`\\b${escapedWord}\\b`, 'i').test(characterDataString)) {
       return { success: false, error: `The word "${word}" was not found in any of your character sheets.` };
     }
@@ -191,5 +189,114 @@ export function recoverPasswordWithUsernameAndWords(username: string, words: str
   } catch (e) {
     console.error('Error resetting password:', e);
     return { success: false, error: 'Failed to reset password.' };
+  }
+}
+
+// ... [keep all existing code above] ...
+
+// ... [keep all existing code above] ...
+
+// 🎯 LANDMARK: UPDATE_USER_PROFILE_FUNCTION (IMPROVED ERROR HANDLING)
+export function updateUserProfile(
+  currentUserId: string,
+  newUsername: string,
+  newDisplayName: string,
+  newPassword?: string,
+  newRecoveryPhrase?: string
+): { success: boolean; user?: LocalUser; error?: string } {
+  const userDir = path.join(getDataDir(), currentUserId);
+  const userFile = path.join(userDir, 'user.json');
+  
+  if (!fs.existsSync(userFile)) {
+    return { success: false, error: 'User not found.' };
+  }
+
+  try {
+    const userData = JSON.parse(fs.readFileSync(userFile, 'utf8'));
+    
+    const normalizedNewUsername = newUsername.toLowerCase().trim();
+    const newUserId = generateUserId(normalizedNewUsername);
+    
+    let finalUserId = currentUserId;
+    let finalUserDir = userDir;
+    
+    // If login changes, we need to migrate to a new directory
+    if (newUserId !== currentUserId) {
+      const newUserDir = path.join(getDataDir(), newUserId);
+      
+      // Check if new directory already exists (another user with this login)
+      if (fs.existsSync(newUserDir)) {
+        return { success: false, error: 'This login is already taken.' };
+      }
+      
+      try {
+        // Create new directory
+        fs.mkdirSync(newUserDir, { recursive: true });
+        
+        // Copy ALL files from old directory to new directory
+        const files = fs.readdirSync(userDir);
+        for (const file of files) {
+          const oldPath = path.join(userDir, file);
+          const newPath = path.join(newUserDir, file);
+          const stat = fs.statSync(oldPath);
+          
+          if (stat.isFile()) {
+            fs.copyFileSync(oldPath, newPath);
+          } else if (stat.isDirectory()) {
+            // Recursively copy directories (in case there are subdirectories)
+            fs.cpSync(oldPath, newPath, { recursive: true });
+          }
+        }
+        
+        // Delete old directory
+        fs.rmSync(userDir, { recursive: true, force: true });
+        
+        finalUserId = newUserId;
+        finalUserDir = newUserDir;
+      } catch (migrationError) {
+        console.error('Migration error:', migrationError);
+        // If migration fails, continue with the old directory
+        finalUserId = currentUserId;
+        finalUserDir = userDir;
+      }
+    }
+
+    const updatedUserFile = path.join(finalUserDir, 'user.json');
+    
+    // Use the data we already read, no need to re-read the file
+    const updatedData: any = {
+      username: normalizedNewUsername,
+      displayName: newDisplayName.trim(),
+      passwordHash: userData.passwordHash,
+    };
+    
+    if (newPassword && newPassword.trim().length > 0) {
+      updatedData.passwordHash = hashPassword(newPassword);
+    }
+    
+    if (newRecoveryPhrase !== undefined) {
+      if (newRecoveryPhrase.trim() === '') {
+        delete updatedData.recoveryPhrase;
+      } else {
+        updatedData.recoveryPhrase = newRecoveryPhrase.toLowerCase().trim();
+      }
+    } else if (userData.recoveryPhrase) {
+      updatedData.recoveryPhrase = userData.recoveryPhrase;
+    }
+
+    fs.writeFileSync(updatedUserFile, JSON.stringify(updatedData, null, 2), 'utf8');
+
+    return {
+      success: true,
+      user: {
+        uid: finalUserId,
+        username: normalizedNewUsername,
+        displayName: newDisplayName.trim(),
+        hasRecoveryPhrase: !!updatedData.recoveryPhrase
+      }
+    };
+  } catch (e) {
+    console.error('Error updating user profile:', e);
+    return { success: false, error: `Failed to update profile: ${e instanceof Error ? e.message : 'Unknown error'}` };
   }
 }
