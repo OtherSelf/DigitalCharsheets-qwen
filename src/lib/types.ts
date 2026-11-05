@@ -430,6 +430,14 @@ export interface DarkHeresyCharacter extends CharacterBase {
   fatigue2nd: { current: number; notes?: string; };
   criticalConditions: { id: string; name: string; notes?: string; }[];
   customHouseRules?: { name: string; description: string }[];
+    customResources?: {
+    id: string;
+    description: string;
+    current: number;
+    max: number;
+    notes?: string;
+  }[];
+
 }
 
 export type Character = DnD5eCharacter | DarkHeresyCharacter;
