@@ -1,8 +1,9 @@
 // src/app/settings/page.tsx
+
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,7 +12,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Separator } from '@/components/ui/separator';
 import { useLocalAuth } from '@/context/local-auth-context';
 import { useTranslation } from '@/context/language-context';
-import { Home, Save, AlertCircle, Minus, Plus, RotateCcw } from 'lucide-react';
+import { Home, Save, AlertCircle, Minus, Plus, RotateCcw, ArrowLeft } from 'lucide-react';
 import { LanguageToggle } from '@/components/layout/language-toggle';
 import { ThemeToggle } from '@/components/layout/theme-toggle';
 import { useUISettings } from '@/hooks/use-ui-settings';
@@ -20,6 +21,12 @@ export default function ProfileSettingsPage() {
   const { user, isUserLoading, restoreSession } = useLocalAuth();
   const { t } = useTranslation();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  
+  // 🎯 LANDMARK: BACK_NAVIGATION_LOGIC
+  const from = searchParams.get('from');
+  const backTarget = (from && from.startsWith('/')) ? from : '/';
+  const isFromDashboard = backTarget === '/';
 
   const {
     textScale,
@@ -98,11 +105,17 @@ export default function ProfileSettingsPage() {
     <div className="flex flex-col min-h-screen">
       <header className="sticky top-0 z-50 flex items-center justify-between gap-4 border-b bg-background/95 p-4 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" asChild>
-            <Link href="/" aria-label={t('backToDashboard') || 'Back to Dashboard'}>
-              <Home className="h-5 w-5" />
-            </Link>
+          
+          {/* 🎯 LANDMARK: SETTINGS_BACK_BUTTON */}
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={() => router.push(backTarget)}
+            aria-label={isFromDashboard ? (t('backToDashboard') || 'Back to Dashboard') : (t('back') || 'Back')}
+          >
+            {isFromDashboard ? <Home className="h-5 w-5" /> : <ArrowLeft className="h-5 w-5" />}
           </Button>
+          
           <h1 className="text-xl font-headline font-bold">{t('profileSettings') || 'Profile Settings'}</h1>
         </div>
         <div className="flex items-center gap-2">
