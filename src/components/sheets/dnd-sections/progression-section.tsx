@@ -25,6 +25,33 @@ import {
 import { useCharacterContext } from '@/context/character-context';
 import { useTranslation } from '@/context/language-context';
 
+// 🎯 MULTICLASS REQUIREMENTS LANDMARK: Define stats type and requirements
+type DnDStats = {
+  strength: number;
+  dexterity: number;
+  constitution: number;
+  intelligence: number;
+  wisdom: number;
+  charisma: number;
+};
+
+const MULTICLASS_REQUIREMENTS: Record<string, (stats: DnDStats) => boolean> = {
+  "Artificer": (s) => s.intelligence >= 13,
+  "Barbarian": (s) => s.strength >= 13,
+  "Bard": (s) => s.charisma >= 13,
+  "Cleric": (s) => s.wisdom >= 13,
+  "Druid": (s) => s.wisdom >= 13,
+  "Fighter": (s) => s.strength >= 13 || s.dexterity >= 13,
+  "Monk": (s) => s.dexterity >= 13 && s.wisdom >= 13,
+  "Paladin": (s) => s.strength >= 13 && s.charisma >= 13,
+  "Ranger": (s) => s.dexterity >= 13 && s.wisdom >= 13,
+  "Rogue": (s) => s.dexterity >= 13,
+  "Sorcerer": (s) => s.charisma >= 13,
+  "Warlock": (s) => s.charisma >= 13,
+  "Wizard": (s) => s.intelligence >= 13,
+};
+// 🎯 END MULTICLASS REQUIREMENTS LANDMARK
+
 // Map internal English class names to translation keys
 const CLASS_TRANSLATION_KEYS: Record<string, string> = {
   "Artificer": "classArtificer",
@@ -74,9 +101,19 @@ interface ProgressionSectionProps {
   isProgressionEditing: boolean;
   setIsProgressionEditing: React.Dispatch<React.SetStateAction<boolean>>;
   handleSaveProgression: () => void;
+  stats: DnDStats;
 }
 
-export function DndProgressionSection({ progressionData, setProgressionData, expToCount, setExpToCount, isProgressionEditing, setIsProgressionEditing, handleSaveProgression }: ProgressionSectionProps) {
+export function DndProgressionSection({ 
+  progressionData, 
+  setProgressionData, 
+  expToCount, 
+  setExpToCount, 
+  isProgressionEditing, 
+  setIsProgressionEditing, 
+  handleSaveProgression,
+  stats
+}: ProgressionSectionProps) {
   const { showEditButtons } = useCharacterContext();
   const { t } = useTranslation();
   
@@ -106,6 +143,36 @@ export function DndProgressionSection({ progressionData, setProgressionData, exp
     ? Math.max(1, progressionData.level - activeMcLevelSum) 
     : progressionData.level;
 
+  const renderClassSelectItems = (currentClass: string, currentIndex: number = -1) => {
+    const isMulticlassSelect = currentIndex >= 0;
+
+    return DND_CLASSES.map(c => {
+      const meetsRequirements = isMulticlassSelect ? (MULTICLASS_REQUIREMENTS[c]?.(stats) ?? true) : true;
+      
+      const isAlreadyUsed = currentIndex === -1 
+        ? progressionData.multiclasses.some(m => m.class === c)
+        : progressionData.characterClass === c || progressionData.multiclasses.some((m, i) => m.class === c && i !== currentIndex);
+      
+      return (
+        <SelectItem 
+          key={c} 
+          value={c} 
+          disabled={!meetsRequirements || isAlreadyUsed}
+          className={!meetsRequirements ? "text-muted-foreground/60 cursor-not-allowed" : ""}
+        >
+          <div className="flex items-center justify-between w-full">
+            <span>{t(CLASS_TRANSLATION_KEYS[c])}</span>
+            {!meetsRequirements && (
+              <span className="text-[10px] text-destructive font-semibold ml-2">
+                13+
+              </span>
+            )}
+          </div>
+        </SelectItem>
+      );
+    });
+  };
+
   return (
     <Accordion 
       type="single" 
@@ -131,11 +198,7 @@ export function DndProgressionSection({ progressionData, setProgressionData, exp
                     <Select value={progressionData.characterClass} onValueChange={v => setProgressionData({ ...progressionData, characterClass: v })}>
                       <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        {DND_CLASSES.map(c => (
-                          <SelectItem key={c} value={c} disabled={progressionData.multiclasses.some(m => m.class === c)}>
-                            {t(CLASS_TRANSLATION_KEYS[c])}
-                          </SelectItem>
-                        ))}
+                        {renderClassSelectItems(progressionData.characterClass)}
                       </SelectContent>
                     </Select>
                   ) : (
@@ -174,17 +237,17 @@ export function DndProgressionSection({ progressionData, setProgressionData, exp
                       )}
                     </Label>
                   </div>
-                  {isProgressionEditing && (
-                    <Checkbox 
-                      checked={progressionData.isMulticlass} 
-                      onCheckedChange={v => {
-                        const isChecked = !!v;
-                        setProgressionData({ ...progressionData, isMulticlass: isChecked });
-                        if (isChecked) setIsMulticlassOpen(true);
-                      }} 
-                      onClick={(e) => e.stopPropagation()}
-                    />
-                  )}
+                  
+                  {/* 🎯 MULTICLASS TOGGLE LANDMARK: Removed isProgressionEditing check so it's always visible and functional */}
+                  <Checkbox 
+                    checked={progressionData.isMulticlass} 
+                    onCheckedChange={v => {
+                      const isChecked = !!v;
+                      setProgressionData({ ...progressionData, isMulticlass: isChecked });
+                      if (isChecked) setIsMulticlassOpen(true);
+                    }} 
+                    onClick={(e) => e.stopPropagation()}
+                  />
                 </div>
 
                 {isMulticlassOpen && progressionData.isMulticlass && (
@@ -197,11 +260,7 @@ export function DndProgressionSection({ progressionData, setProgressionData, exp
                               <Select value={mc.class} onValueChange={v => { const n = [...progressionData.multiclasses]; n[idx].class = v; setProgressionData({ ...progressionData, multiclasses: n }); }}>
                                 <SelectTrigger className="h-8 text-xs flex-1"><SelectValue /></SelectTrigger>
                                 <SelectContent>
-                                  {DND_CLASSES.map(c => (
-                                    <SelectItem key={c} value={c} disabled={progressionData.characterClass === c || progressionData.multiclasses.some((m, i) => m.class === c && i !== idx)}>
-                                      {t(CLASS_TRANSLATION_KEYS[c])}
-                                    </SelectItem>
-                                  ))}
+                                  {renderClassSelectItems(mc.class, idx)}
                                 </SelectContent>
                               </Select>
                               <Input 
@@ -244,7 +303,7 @@ export function DndProgressionSection({ progressionData, setProgressionData, exp
                         disabled={progressionData.level >= 20 || progressionData.multiclasses.length >= 12}
                         onClick={() => { 
                           const used = [progressionData.characterClass, ...progressionData.multiclasses.map(m => m.class)]; 
-                          const avail = DND_CLASSES.filter(c => !used.includes(c)); 
+                          const avail = DND_CLASSES.filter(c => !used.includes(c) && (MULTICLASS_REQUIREMENTS[c]?.(stats) ?? true)); 
                           if (avail.length > 0 && progressionData.level < 20) {
                             setProgressionData({ ...progressionData, multiclasses: [...progressionData.multiclasses, { class: avail[0], level: 1, isDisabled: false }] }); 
                             setIsMulticlassOpen(true);
