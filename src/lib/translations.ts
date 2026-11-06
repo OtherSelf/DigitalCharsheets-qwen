@@ -1887,10 +1887,10 @@ export const translations: Record<string, Record<string, string>> = {
     displaySettings: 'Настройки отображения',
     adjustUiAppearance: 'Настройки шрифта и масштаба интерфейса',
     fontSize: 'Размер шрифта',
-    minFontSizeWarning: 'Minimum font size is 8pt (10.67px). Changes apply immediately.',
-    uiScale: 'UI Scale',
-    uiScaleWarning: 'Scale ranges from 50% to 150%. Changes apply immediately.',
-    resetToDefaults: 'Reset to Defaults',
+    minFontSizeWarning: 'Минимальный размер шрифта - 8pt (10.67px). Изменения применяются мгновенно.',
+    uiScale: 'Масштаб интерфейса',
+    uiScaleWarning: 'Масштаб варьируется от 50% до 150%. Изменения приминяются мгновенно.',
+    resetToDefaults: 'Сбросить к стандартным настройкам',
     
   }
 };
