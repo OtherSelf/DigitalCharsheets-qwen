@@ -1,3 +1,4 @@
+// src/app/settings/page.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -10,20 +11,33 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Separator } from '@/components/ui/separator';
 import { useLocalAuth } from '@/context/local-auth-context';
 import { useTranslation } from '@/context/language-context';
-import { Home, Save, AlertCircle } from 'lucide-react';
+import { Home, Save, AlertCircle, Minus, Plus, RotateCcw } from 'lucide-react';
 import { LanguageToggle } from '@/components/layout/language-toggle';
 import { ThemeToggle } from '@/components/layout/theme-toggle';
+import { useUISettings } from '@/hooks/use-ui-settings';
 
 export default function ProfileSettingsPage() {
   const { user, isUserLoading, restoreSession } = useLocalAuth();
   const { t } = useTranslation();
   const router = useRouter();
 
+  const {
+    textScale,
+    uiScale,
+    updateTextScale,
+    updateUiScale,
+    resetSettings,
+    minTextScale,
+    maxTextScale,
+    minUiScale,
+    maxUiScale,
+    isLoaded,
+  } = useUISettings();
+
   const [displayName, setDisplayName] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [recoveryPhrase, setRecoveryPhrase] = useState('');
-  
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -41,7 +55,6 @@ export default function ProfileSettingsPage() {
     e.preventDefault();
     setError('');
     setSuccess('');
-
     if (!user) return;
 
     if (password && password.length < 4) {
@@ -64,12 +77,11 @@ export default function ProfileSettingsPage() {
       });
 
       const data = await res.json();
-
       if (data.success) {
         restoreSession(data.user);
         setSuccess(t('settingsSaved') || 'Settings saved successfully!');
         setPassword('');
-        setRecoveryPhrase(''); 
+        setRecoveryPhrase('');
       } else {
         setError(data.error || (t('settingsSaveFailed') || 'Failed to save settings.'));
       }
@@ -80,16 +92,12 @@ export default function ProfileSettingsPage() {
     }
   };
 
-  if (isUserLoading || !user) {
-    return null;
-  }
+  if (isUserLoading || !user || !isLoaded) return null;
 
   return (
-    <div className="flex flex-col h-dvh">
-      {/* 🎯 LANDMARK: SETTINGS_HEADER_WITH_TOGGLES */}
+    <div className="flex flex-col min-h-screen">
       <header className="sticky top-0 z-50 flex items-center justify-between gap-4 border-b bg-background/95 p-4 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="flex items-center gap-4">
-          {/* 🎯 LANDMARK: HOME_BUTTON */}
           <Button variant="ghost" size="icon" asChild>
             <Link href="/" aria-label={t('backToDashboard') || 'Back to Dashboard'}>
               <Home className="h-5 w-5" />
@@ -97,8 +105,6 @@ export default function ProfileSettingsPage() {
           </Button>
           <h1 className="text-xl font-headline font-bold">{t('profileSettings') || 'Profile Settings'}</h1>
         </div>
-        
-        {/* 🎯 LANDMARK: HEADER_TOGGLES */}
         <div className="flex items-center gap-2">
           <LanguageToggle />
           <ThemeToggle />
@@ -128,24 +134,95 @@ export default function ProfileSettingsPage() {
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="displayName">{t('displayName') || 'Display Name'}</Label>
-                  <Input
-                    id="displayName"
-                    value={displayName}
-                    onChange={(e) => setDisplayName(e.target.value)}
-                    placeholder="e.g. DungeonMaster"
-                  />
+                  <Input id="displayName" value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="e.g. DungeonMaster" />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="username">{t('login') || 'Login (Email or Username)'}</Label>
-                  <Input
-                    id="username"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    placeholder="e.g. user@example.com"
-                  />
+                  <Input id="username" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="e.g. user@example.com" />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* 🎯 LANDMARK: DISPLAY_SETTINGS_CARD */}
+            <Card>
+              <CardHeader>
+                <CardTitle>{t('displaySettings') || 'Display Settings'}</CardTitle>
+                <CardDescription>
+                  {t('adjustUiAppearance') || 'Adjust text size and overall UI scale independently.'}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-3">
+                  <Label>{t('fontSize') || 'Text Size'}</Label>
+                  <div className="flex items-center gap-3">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={() => updateTextScale(textScale - 0.1)}
+                      disabled={textScale <= minTextScale}
+                      aria-label="Decrease text size"
+                    >
+                      <Minus className="h-4 w-4" />
+                    </Button>
+                    <div className="flex-1 text-center font-medium tabular-nums">
+                      {Math.round(textScale * 100)}% ({(12 * textScale).toFixed(1)} pt)
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={() => updateTextScale(textScale + 0.1)}
+                      disabled={textScale >= maxTextScale}
+                      aria-label="Increase text size"
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
                   <p className="text-xs text-muted-foreground">
-                    {t('loginChangeWarning') || 'Changing your login will update your account identifier. Make sure to remember it.'}
+                    {t('minFontSizeWarning') || 'Minimum 8pt. Boxes, padding and spacing stay unchanged.'}
                   </p>
+                </div>
+
+                <Separator />
+
+                <div className="space-y-3">
+                  <Label>{t('uiScale') || 'UI Scale'}</Label>
+                  <div className="flex items-center gap-3">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={() => updateUiScale(uiScale - 0.1)}
+                      disabled={uiScale <= minUiScale}
+                      aria-label="Decrease UI scale"
+                    >
+                      <Minus className="h-4 w-4" />
+                    </Button>
+                    <div className="flex-1 text-center font-medium tabular-nums">
+                      {Math.round(uiScale * 100)}%
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={() => updateUiScale(uiScale + 0.1)}
+                      disabled={uiScale >= maxUiScale}
+                      aria-label="Increase UI scale"
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {t('uiScaleWarning') || 'Range: 50% to 150%. Scales the whole interface.'}
+                  </p>
+                </div>
+
+                <div className="pt-2">
+                  <Button type="button" variant="secondary" onClick={resetSettings} className="w-full sm:w-auto">
+                    <RotateCcw className="mr-2 h-4 w-4" />
+                    {t('resetToDefaults') || 'Reset to Defaults'}
+                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -175,9 +252,6 @@ export default function ProfileSettingsPage() {
                     onChange={(e) => setRecoveryPhrase(e.target.value)}
                     placeholder={user.hasRecoveryPhrase ? (t('updateRecoveryPhrase') || 'Enter new recovery phrase') : (t('addRecoveryPhrase') || 'Add recovery phrase')}
                   />
-                  <p className="text-xs text-muted-foreground">
-                    {t('recoveryPhraseDesc') || 'Set a memorable phrase to recover your account if you forget your password. Leave blank to remove.'}
-                  </p>
                 </div>
               </CardContent>
               <CardFooter>

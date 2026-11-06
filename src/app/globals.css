@@ -289,3 +289,38 @@ body > div:first-child {
 [data-state="open"][style*="animation-name: none"] > div {
   height: auto !important;
 }
+
+/* ==========================================================================
+   LANDMARK: INDEPENDENT_TEXT_SCALING_V2
+   Text scales, layout (rem-based padding/margins/sizes) does not.
+========================================================================== */
+:root {
+  --text-scale: 1;
+  --ui-scale: 1;
+}
+
+/* Inherited text gets scaled exactly once, at the body. No compounding. */
+body {
+  font-size: calc(1rem * var(--text-scale));
+}
+
+/* Explicit Tailwind text utilities: absolute rem base * scale, so nesting is safe. */
+.text-xs   { font-size: calc(0.75rem  * var(--text-scale)) !important; line-height: calc(1rem    * var(--text-scale)) !important; }
+.text-sm   { font-size: calc(0.875rem * var(--text-scale)) !important; line-height: calc(1.25rem * var(--text-scale)) !important; }
+.text-base { font-size: calc(1rem     * var(--text-scale)) !important; line-height: calc(1.5rem  * var(--text-scale)) !important; }
+.text-lg   { font-size: calc(1.125rem * var(--text-scale)) !important; line-height: calc(1.75rem * var(--text-scale)) !important; }
+.text-xl   { font-size: calc(1.25rem  * var(--text-scale)) !important; line-height: calc(1.75rem * var(--text-scale)) !important; }
+.text-2xl  { font-size: calc(1.5rem   * var(--text-scale)) !important; line-height: calc(2rem    * var(--text-scale)) !important; }
+.text-3xl  { font-size: calc(1.875rem * var(--text-scale)) !important; line-height: calc(2.25rem * var(--text-scale)) !important; }
+.text-4xl  { font-size: calc(2.25rem  * var(--text-scale)) !important; line-height: calc(2.5rem  * var(--text-scale)) !important; }
+.text-5xl  { font-size: calc(3rem     * var(--text-scale)) !important; line-height: 1 !important; }
+.text-6xl  { font-size: calc(3.75rem  * var(--text-scale)) !important; line-height: 1 !important; }
+
+/* 🎯 LANDMARK: SCALED_PAGE_STRETCH
+   Pages use min-h-screen / h-dvh (100vh). Inside the inversely-sized scale
+   wrapper they must stretch to its full height, otherwise the bottom of the
+   screen stays empty at scales below 100%. */
+[data-ui-scale-wrapper] > *:first-child {
+  flex: 1 1 auto;
+  min-height: 0;
+}
