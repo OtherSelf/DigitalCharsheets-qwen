@@ -1,3 +1,4 @@
+// src/context/character-context.tsx
 'use client';
 
 import {
@@ -73,6 +74,8 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!isUserLoading && user) {
       const pendingCharStr = typeof window !== 'undefined' ? sessionStorage.getItem('pending_character') : null;
+      // 🎯 LANDMARK: DEMO_PENDING_UPDATE - Check for pending demo edits
+      const pendingUpdateStr = typeof window !== 'undefined' ? sessionStorage.getItem('pending_update') : null;
       
       const loadCharacters = () => {
         setIsLoaded(false);
@@ -81,6 +84,22 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
           .then(data => {
             setCharacters(data);
             setIsLoaded(true);
+            
+            // 🎯 LANDMARK: DEMO_PENDING_UPDATE - Apply any pending updates after successful login
+            if (pendingUpdateStr) {
+              try {
+                const { id, data: updateData } = JSON.parse(pendingUpdateStr);
+                setCharacters(prev => prev.map(c => c.id === id ? ({ ...c, ...updateData } as Character) : c));
+                fetch(`/api/characters/${id}`, {
+                  method: 'PUT',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ ...updateData, userId: user.uid }),
+                }).catch(err => console.error('Failed to apply pending update:', err));
+                sessionStorage.removeItem('pending_update');
+              } catch (e) {
+                console.error('Failed to parse pending update', e);
+              }
+            }
           })
           .catch(err => {
             console.error('Failed to load characters:', err);
@@ -98,11 +117,9 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
           })
           .then(res => res.json())
           .then((newCharacter: Character) => {
-             // LANDMARK: Remove from sessionStorage ONLY AFTER successful creation
              if (typeof window !== 'undefined') {
                sessionStorage.removeItem('pending_character');
              }
-             // LANDMARK: Add character to state immediately before redirecting
              setCharacters(prev => [...prev, newCharacter]);
              const needsSetup = !user.hasRecoveryPhrase ? '?setup_phrase=true' : '';
              router.push(`/${newCharacter.id}${needsSetup}`);
@@ -160,7 +177,14 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
 
   const updateCharacter = useCallback(
     (id: string, data: Partial<Character>) => {
-      if (!user) return;
+      // 🎯 LANDMARK: DEMO_UNREGISTERED_SAVE - Prompt unregistered users to create an account
+      if (!user) {
+        if (typeof window !== 'undefined') {
+          sessionStorage.setItem('pending_update', JSON.stringify({ id, data }));
+          router.push('/login');
+        }
+        return;
+      }
 
       if (id.startsWith('companion-')) {
         const companionId = id.replace('companion-', '');
