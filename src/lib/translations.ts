@@ -935,6 +935,13 @@ export const translations: Record<string, Record<string, string>> = {
     updateRecoveryPhrase: "Enter new recovery phrase",
     settingsSaved: "Settings saved successfully!",
     settingsSaveFailed: "Failed to save settings.",
+    displaySettings: 'Display Settings',
+    adjustUiAppearance: 'Adjust font size and overall UI scale.',
+    fontSize: 'Font Size',
+    minFontSizeWarning: 'Minimum font size is 8pt (10.67px). Changes apply immediately.',
+    uiScale: 'UI Scale',
+    uiScaleWarning: 'Scale ranges from 50% to 150%. Changes apply immediately.',
+    resetToDefaults: 'Reset to Defaults',
     
   },
   ru: {
@@ -1877,6 +1884,13 @@ export const translations: Record<string, Record<string, string>> = {
     updateRecoveryPhrase: "Введите новую фразу для восстановления",
     settingsSaved: "Настройки успешно сохранены!",
     settingsSaveFailed: "Не удалось сохранить настройки.",
+    displaySettings: 'Настройки отображения',
+    adjustUiAppearance: 'Настройки шрифта и масштаба интерфейса',
+    fontSize: 'Размер шрифта',
+    minFontSizeWarning: 'Minimum font size is 8pt (10.67px). Changes apply immediately.',
+    uiScale: 'UI Scale',
+    uiScaleWarning: 'Scale ranges from 50% to 150%. Changes apply immediately.',
+    resetToDefaults: 'Reset to Defaults',
     
   }
 };
