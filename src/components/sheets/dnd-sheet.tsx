@@ -1,23 +1,25 @@
 'use client';
+
 import * as React from 'react';
-import { type DnD5eCharacter, type DnDSkill, type DnDCompanion } from '@/lib/types';
-import { cn } from '@/lib/utils';
+import { DnD5eCharacter, DnDSkill, DnDCompanion } from '@/lib/types';
 import { useCharacterContext } from '@/context/character-context';
 import { useTranslation } from '@/context/language-context';
+import { cn } from '@/lib/utils';
 import { Edit, Save, Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { DndCompanionsSection } from './dnd-sections/companions-section';
-import { DndSpellsSection } from './dnd-sections/spells-section';
+
+import { DndProgressionSection } from './dnd-sections/progression-section';
+import { DndCharacterInfoSection } from './dnd-sections/character-info-section';
+import { DndStatsSection } from './dnd-sections/stats-section';
+import { DndSavesSkillsSection } from './dnd-sections/saves-skills-section';
+import { DndCombatSection } from './dnd-sections/combat-section';
 import { DndNarrativeSection } from './dnd-sections/narrative-section';
 import { DndAttunementSection } from './dnd-sections/attunement-section';
 import { DndInventorySection } from './dnd-sections/inventory-section';
-import { DndStatsSection } from './dnd-sections/stats-section';
-import { DndSavesSkillsSection } from './dnd-sections/saves-skills-section';
-import { DndProgressionSection } from './dnd-sections/progression-section';
-import { DndCharacterInfoSection } from './dnd-sections/character-info-section';
-import { DndCombatSection } from './dnd-sections/combat-section';
+import { DndSpellsSection } from './dnd-sections/spells-section';
+import { DndCompanionsSection } from './dnd-sections/companions-section';
 import { DndDivineBoonsSection } from './dnd-sections/divine-boons-section';
 
 type DndSheetProps = {
@@ -95,17 +97,17 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
     const proficiencyBonus = Math.floor((progressionData.level - 1) / 4) + 2;
 
     const calculatedSkills = React.useMemo(() => {
-    return skills.map(skill => {
-      const statKey = SKILL_STAT_MAP[skill.name];
-      if (!statKey) return skill;
-      
-      const mod = Math.floor((stats[statKey] - 10) / 2);
-      const baseValue = mod + (skill.proficient ? proficiencyBonus : 0) + (skill.expertise ? proficiencyBonus : 0);
-      const finalValue = baseValue + (skill.manualModifier || 0);
-      
-      return { ...skill, value: finalValue };
-    });
-  }, [skills, stats, proficiencyBonus]);
+      return skills.map(skill => {
+        const statKey = SKILL_STAT_MAP[skill.name];
+        if (!statKey) return skill;
+        
+        const mod = Math.floor((stats[statKey] - 10) / 2);
+        const baseValue = mod + (skill.proficient ? proficiencyBonus : 0) + (skill.expertise ? proficiencyBonus : 0);
+        const finalValue = baseValue + (skill.manualModifier || 0);
+        
+        return { ...skill, value: finalValue };
+      });
+    }, [skills, stats, proficiencyBonus]);
 
     const passivePerception = 10 + (calculatedSkills.find(s => s.name === 'perception')?.value || 0);
     const conMod = Math.floor(((character.stats?.constitution ?? 10) - 10) / 2);
@@ -115,15 +117,15 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
       : { current: baseMaxHp, max: baseMaxHp };
 
     const calculatedSavingThrows = React.useMemo(() => {
-    return savingThrows.map(st => {
-      const statKey = st.name.toLowerCase() as keyof typeof stats;
-      const mod = Math.floor((stats[statKey] - 10) / 2);
-      const baseValue = mod + (st.proficient ? proficiencyBonus : 0);
-      const finalValue = baseValue + (st.manualModifier || 0);
-      
-      return { ...st, value: finalValue };
-    });
-  }, [savingThrows, stats, proficiencyBonus]);
+      return savingThrows.map(st => {
+        const statKey = st.name.toLowerCase() as keyof typeof stats;
+        const mod = Math.floor((stats[statKey] - 10) / 2);
+        const baseValue = mod + (st.proficient ? proficiencyBonus : 0);
+        const finalValue = baseValue + (st.manualModifier || 0);
+        
+        return { ...st, value: finalValue };
+      });
+    }, [savingThrows, stats, proficiencyBonus]);
 
     const handleSaveProgression = React.useCallback(() => { updateCharacter(character.id, { ...progressionData }); setIsProgressionEditing(false); }, [character.id, progressionData, updateCharacter]);
     const handleSaveStats = React.useCallback(() => { updateCharacter(character.id, { stats }); setIsStatsEditing(false); }, [character.id, stats, updateCharacter]);
@@ -147,7 +149,6 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
 
     return (
       <div className={cn("dnd-sheet space-y-8 pb-12", isCompactView && "is-compact")}>
-        {/* Compact View Stats Bar with Edit/Save Button */}
         {isCompactView && (
           <div data-testid="compact-stats-bar" className="bg-card px-4 py-3 border-b shadow-sm space-y-3 relative">
             <div className="absolute top-2 right-2">
@@ -205,9 +206,9 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
           </div>
         )}
         
-        {/* 🎯 FIXED: Added activeCompactSection && to prevent blank screen */}
         <div className={cn("flex flex-col gap-6 items-stretch", isCompactView && activeCompactSection && activeCompactSection !== 'info-section' && "hidden")}>
           <div className="sheet-top-row flex flex-col md:flex-row gap-6 items-stretch">
+            {/* 🎯 MULTICLASS REQUIREMENTS LANDMARK: Added stats={stats} prop here */}
             <DndProgressionSection
               progressionData={progressionData}
               setProgressionData={setProgressionData}
@@ -216,6 +217,7 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
               isProgressionEditing={isProgressionEditing}
               setIsProgressionEditing={setIsProgressionEditing}
               handleSaveProgression={handleSaveProgression}
+              stats={stats}
             />
             {(progressionData.level >= 20 || character.allowDivineBoonsBeforeLevel20) && (
               <DndDivineBoonsSection
@@ -300,7 +302,6 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
             activeCompactSection={activeCompactSection}
             proficiencyBonus={proficiencyBonus}
           />
-          {/* Other Proficiencies & Languages - Compact Only (Placed below Saves/Skills) */}
           {isCompactView && (
             <Card>
               <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2">
@@ -345,7 +346,6 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
             activeCompactSection={activeCompactSection}
           />
           
-          {/* 🎯 FIXED: Added activeCompactSection && to prevent blank screen */}
           <div className={cn("md:col-span-3 space-y-6", isCompactView && activeCompactSection && activeCompactSection !== 'inventory-section' && "hidden")}>
             {!isCompactView && (
               <>
