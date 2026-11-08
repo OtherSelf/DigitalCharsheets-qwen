@@ -44,7 +44,11 @@ export function ExportImportDialog({ character }: ExportImportDialogProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleExport = () => {
-    exportCharacterToJSON(character, config);
+    const result = exportCharacterToJSON(character, config);
+    if (!result.success) {
+      setImportError(result.error || 'Export failed.');
+      return;
+    }
     setOpen(false);
   };
 
@@ -57,8 +61,19 @@ export function ExportImportDialog({ character }: ExportImportDialogProps) {
     setImportedData(null);
 
     const result = await importCharacterFromJSON(file);
-    if (!result.success || !result.data) {
+    if (!result.success) {
       setImportError(result.error || "Unknown error");
+      return;
+    }
+    if (result.kind === 'backup') {
+      setImportError(
+        `Файл содержит ${result.batchData?.length ?? 0} персонажей — это бэкап. ` +
+        `Импортируйте его через «Import» на дашборде.`,
+      );
+      return;
+    }
+    if (!result.data) {
+      setImportError('В файле нет данных персонажа.');
       return;
     }
 

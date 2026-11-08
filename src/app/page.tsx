@@ -20,6 +20,7 @@ import { useLocalAuth } from '@/context/local-auth-context';
 import { useTranslation } from '@/context/language-context';
 import { cn } from '@/lib/utils';
 import { type Character } from '@/lib/types';
+import { buildBackupExport, exportFileName } from '@/lib/export-utils';
 import { 
   PlusCircle, 
   FileDown, 
@@ -287,6 +288,24 @@ export default function DashboardPage() {
   const { user, isUserLoading } = useLocalAuth();
   const { t } = useTranslation();
 
+  // «Backup All»: сервер отдаёт листы, клиент упаковывает их в стандартный
+  // конверт и называет файл по шаблону dcs_characters_all_<логин>_<дата>.json.
+  const handleBackupAll = async () => {
+    if (!user) return;
+    try {
+      const res = await fetch('/api/export');
+      if (!res.ok) {
+        console.error('Backup export failed:', res.status, await res.text());
+        return;
+      }
+      const exported = await res.json();
+      const backup = buildBackupExport(exported as Character[], user.username);
+      downloadJSON(backup, exportFileName('backup', { login: user.username }));
+    } catch (error) {
+      console.error('Backup export failed:', error);
+    }
+  };
+
   if (!isLoaded || isUserLoading) {
     return <Loading />;
   }
@@ -313,12 +332,7 @@ export default function DashboardPage() {
               <DropdownMenuItem
                 className="flex items-center cursor-pointer"
                 disabled={!user}
-                onClick={async () => {
-                  if (!user) return;
-                  const res = await fetch('/api/export');
-                  const data = await res.json();
-                  downloadJSON(data, `characters-backup-${new Date().toISOString().split('T')[0]}.json`);
-                }}
+                onClick={handleBackupAll}
               >
                 <FileDown className="mr-2 h-4 w-4" />
                 <span>{t('backupAll')}</span>
@@ -349,12 +363,7 @@ export default function DashboardPage() {
                 variant="outline"
                 size="sm"
                 disabled={!user}
-                onClick={async () => {
-                  if (!user) return;
-                  const res = await fetch('/api/export');
-                  const data = await res.json();
-                  downloadJSON(data, `characters-backup-${new Date().toISOString().split('T')[0]}.json`);
-                }}
+                onClick={handleBackupAll}
                 className="justify-start"
               >
                 <FileDown className="mr-2 h-4 w-4 shrink-0" />

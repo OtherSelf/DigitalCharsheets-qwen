@@ -8,6 +8,32 @@ Working with Google Firebase Studio gave me a mental trauma and irreplacible bra
 
 Qwen helped me finish this. All hail AI.
 
+## Export format
+
+Both JSON exports (one character and the full backup) use the same envelope:
+
+```json
+{
+  "metadata": {
+    "appName": "DigitalCharsheets-qwen",
+    "format": "dcs-export",
+    "version": "2.0",
+    "kind": "character",
+    "exportDate": "2026-11-08T21:32:41.717Z",
+    "characterCount": 1,
+    "config": { "...": "..." }
+  },
+  "character": { "id": "…", "gameSystem": "Dungeons & Dragons", "name": "…" }
+}
+```
+
+A full backup uses `"kind": "backup"`, `"characters": [...]` and `"account": "<login>"`.
+Files are named `dcs_character_<name>_<YYYY-MM-DD>.json` and
+`dcs_characters_all_<login>_<YYYY-MM-DD>.json`. Import accepts only this format and
+validates `appName`, `format`, version, `kind`, character fields and `characterCount`;
+legacy files (a bare array, a bare character or a v1 envelope) are rejected with a
+"re-export" message.
+
 ## Tests (before deploying)
 
 ```bash
