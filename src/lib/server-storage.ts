@@ -158,6 +158,14 @@ export function updateCharacterOnServer(
   // inference issues when spreading Partial<Character> over a union type.
   const updated: Character = { ...character, ...data } as Character;
 
+  // Привязка к владельцу. Поле не входит в тип Character (это метаданные,
+  // авторизация — по каталогу и cookie), но на диске оно должно быть: так
+  // «плоский» бэкап и диагностика видят, чей это лист. Дописываем, если лист
+  // пришёл из миграции/импорта без него.
+  if (!(updated as any).userId) {
+    (updated as any).userId = userId;
+  }
+
   writeJsonAtomic(filePath, updated);
   return updated;
 }

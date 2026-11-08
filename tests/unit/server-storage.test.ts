@@ -90,6 +90,22 @@ describe('server-storage (файловое хранилище листов)', ()
     expect(onDisk?.name).toBe('Renamed');
   });
 
+  it('дописывает userId владельца, если лист пришёл без него (миграция/импорт)', () => {
+    const ownerless = makeDndCharacter({ id: 'ownerless', name: 'No Owner' });
+    delete (ownerless as any).userId;
+
+    // saveCharacterToServer пишет объект как есть, поэтому кладём файл напрямую.
+    const charsDir = userPaths(dataDir, uid).charactersDir;
+    fs.mkdirSync(charsDir, { recursive: true });
+    const file = path.join(charsDir, 'ownerless.json');
+    fs.writeFileSync(file, JSON.stringify(ownerless), 'utf8');
+    expect(readJson(file).userId).toBeUndefined();
+
+    updateCharacterOnServer(uid, 'ownerless', { name: 'Owned' });
+
+    expect(readJson(file).userId).toBe(uid);
+  });
+
   it('update несуществующего персонажа возвращает null', () => {
     expect(updateCharacterOnServer(uid, 'missing', { name: 'X' })).toBeNull();
   });
