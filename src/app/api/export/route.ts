@@ -1,8 +1,18 @@
 import { NextResponse } from 'next/server';
 import { getCharactersFromServer } from '@/lib/server-storage';
 import { getSessionUid } from '@/lib/session';
+import { toPortableCharacter } from '@/lib/character-portable';
 
-// GET: Export characters of the current user as downloadable JSON
+/**
+ * ─── LANDMARK: PORTABLE EXPORT ──────────────────────────────────────────────
+ * «Backup All» и одиночная выгрузка отдают лист в переносимом виде: без
+ * провенанса миграции (`migratedFrom/At/FromUid`), старых Firestore-полей и
+ * `userId` (владелец при импорте назначается заново). На диске эти поля
+ * остаются — чистим только на выходе.
+ *
+ * Раньше здесь возвращались сырые файлы: в бэкап попадали `migratedFromUid`
+ * (чужой идентификатор Firebase), `userId` и служебные ключи.
+ */
 export async function GET(request: Request) {
   const uid = getSessionUid(request);
   if (!uid) {
@@ -20,9 +30,11 @@ export async function GET(request: Request) {
     if (!character) {
       return NextResponse.json({ error: 'Character not found' }, { status: 404 });
     }
-    return NextResponse.json(character);
+    return NextResponse.json(toPortableCharacter(character as unknown as Record<string, unknown>));
   }
 
   // Export all characters
-  return NextResponse.json(characters);
+  return NextResponse.json(
+    characters.map(character => toPortableCharacter(character as unknown as Record<string, unknown>)),
+  );
 }
