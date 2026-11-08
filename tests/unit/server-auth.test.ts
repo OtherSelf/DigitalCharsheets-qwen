@@ -14,7 +14,15 @@ import {
   verifyRecovery,
 } from '@/lib/server-auth';
 import { saveCharacterToServer } from '@/lib/server-storage';
-import { makeDndCharacter, readJson, removeDir, useTempDataDir, userPaths } from '../helpers';
+import { makeDndCharacter, readJson, removeDir, useTempDataDir, userPaths } from './helpers';
+
+/**
+ * Авторизация и восстановление доступа (src/lib/server-auth.ts).
+ *
+ * Покрыто: generateUserId (детерминизм, регистр/пробелы, формат user-<base36>);
+ * authenticateUser (создание аккаунта при первом входе, user.json со sha256 вместо
+ * пароля, 401 на неверный пароль, legacy-поле email); recovery-фраза и сброс пароля.
+ */
 
 let dataDir: string;
 

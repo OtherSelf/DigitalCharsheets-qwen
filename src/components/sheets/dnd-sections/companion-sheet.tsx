@@ -140,6 +140,11 @@ export function CompanionSheet({ companion, onUpdate, onDelete, isEditing, onTog
     setIsProgressionEditing(false);
   }, [progressionData, onUpdate]);
 
+  // Опыт компаньона сохраняется сразу, как и у основного персонажа.
+  const handlePersistExperience = React.useCallback((experiencePoints: number, level: number) => {
+    onUpdate({ experiencePoints, level });
+  }, [onUpdate]);
+
   const handleSaveStats = React.useCallback(() => {
     onUpdate({ stats });
     setIsStatsEditing(false);
@@ -280,6 +285,8 @@ export function CompanionSheet({ companion, onUpdate, onDelete, isEditing, onTog
                 isProgressionEditing={isProgressionEditing}
                 setIsProgressionEditing={setIsProgressionEditing}
                 handleSaveProgression={handleSaveProgression}
+                stats={stats}
+                onPersistExperience={handlePersistExperience}
               />
             )}
             

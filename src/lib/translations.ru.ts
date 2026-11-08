@@ -233,6 +233,8 @@ export const ruTranslations = {
   characterCreatedDescDH: "Ваш новый персонаж Dark Heresy был сохранен.",
   error: "Ошибка",
   failedToCreateCharacter: "Не удалось создать персонажа.",
+  saveFailed: "Не удалось сохранить изменения",
+  saveFailedDesc: "Последние правки не попали на сервер. Проверьте соединение — отправка повторится автоматически.",
   characterDeleted: "Персонаж удален",
   characterDeletedDesc: "был удален из вашего списка.",
   notesFor: "Заметки для",
