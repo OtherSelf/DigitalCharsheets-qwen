@@ -6,22 +6,32 @@ import {
   createUserFolder,
   deleteCharacterFromServer,
   getCharactersFromServer,
+  resetWriteSeqGuard,
   saveCharacterToServer,
   saveCharactersToServer,
   updateCharacterOnServer,
   userFolderExists,
 } from '@/lib/server-storage';
-import { makeDndCharacter, makeDhCharacter, readJson, removeDir, useTempDataDir, userPaths } from '../helpers';
+import { makeDndCharacter, makeDhCharacter, readJson, removeDir, useTempDataDir, userPaths } from './helpers';
+
+/**
+ * Файловое хранилище листов (src/lib/server-storage.ts): чтение, запись, удаление,
+ * атомарная запись через tmp+rename и защита от запоздавших PUT.
+ *
+ * Данные: временный DCS_DATA_DIR, у каждого теста свой каталог.
+ */
 
 let dataDir: string;
 const uid = 'user-storage';
 
 beforeEach(() => {
   dataDir = useTempDataDir();
+  resetWriteSeqGuard();
 });
 
 afterEach(() => {
   removeDir(dataDir);
+  resetWriteSeqGuard();
 });
 
 describe('server-storage (файловое хранилище листов)', () => {
@@ -115,5 +125,100 @@ describe('server-storage (файловое хранилище листов)', ()
     expect(fs.existsSync(inTemp)).toBe(true);
     // в каталоге проекта ничего не появилось
     expect(fs.existsSync(path.join(process.cwd(), 'data', uid))).toBe(false);
+  });
+
+  // ─── атомарная запись ────────────────────────────────────────────────────
+  // Обрыв посреди writeFileSync раньше оставлял обрезанный JSON, и персонаж
+  // молча «исчезал» из списка (getCharactersFromServer пропускает битые файлы).
+  it('пишет через временный файл+rename и не оставляет .tmp после успеха', () => {
+    saveCharacterToServer(uid, makeDndCharacter({ id: 'atomic', userId: uid }));
+    updateCharacterOnServer(uid, 'atomic', { name: 'Atomic Renamed' });
+
+    const charsDir = userPaths(dataDir, uid).charactersDir;
+    expect(fs.readdirSync(charsDir)).toEqual(['atomic.json']);
+    expect(readJson(path.join(charsDir, 'atomic.json')).name).toBe('Atomic Renamed');
+  });
+
+  it('если rename падает — файл листа остаётся прежним (не обрезанным)', () => {
+    saveCharacterToServer(uid, makeDndCharacter({ id: 'safe', userId: uid, name: 'Before' }));
+    const charsDir = userPaths(dataDir, uid).charactersDir;
+
+    const renameSpy = vi.spyOn(fs, 'renameSync').mockImplementation(() => {
+      throw Object.assign(new Error('disk error'), { code: 'EIO' });
+    });
+    try {
+      expect(() => updateCharacterOnServer(uid, 'safe', { name: 'After' })).toThrow();
+    } finally {
+      renameSpy.mockRestore();
+    }
+
+    // Временный файл убран, оригинал не тронут.
+    expect(fs.readdirSync(charsDir)).toEqual(['safe.json']);
+    expect(readJson(path.join(charsDir, 'safe.json')).name).toBe('Before');
+  });
+
+  it('битый JSON — ошибка (500), а не молчаливая перезапись файла', () => {
+    const charsDir = userPaths(dataDir, uid).charactersDir;
+    fs.mkdirSync(charsDir, { recursive: true });
+    const file = path.join(charsDir, 'broken-update.json');
+    fs.writeFileSync(file, '{ "id": "broken-update", "name": ');
+
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    expect(() => updateCharacterOnServer(uid, 'broken-update', { name: 'X' })).toThrow();
+    errorSpy.mockRestore();
+
+    // Файл остался как был — данные можно восстановить руками.
+    expect(fs.readFileSync(file, 'utf8')).toBe('{ "id": "broken-update", "name": ');
+  });
+
+  // ─── защита от запоздавших записей (__page/__seq) ────────────────────────
+  it('отбрасывает запоздавшую запись с меньшим seq', () => {
+    saveCharacterToServer(uid, makeDndCharacter({ id: 'race', userId: uid, name: 'Start' }));
+
+    const newer = updateCharacterOnServer(
+      uid,
+      'race',
+      { name: 'Newest' },
+      { writeToken: { page: 'page-1', seq: 5 } },
+    );
+    expect(newer?.name).toBe('Newest');
+
+    // Старый PUT «прилетел» после нового — на диске должно остаться новое.
+    const stale = updateCharacterOnServer(
+      uid,
+      'race',
+      { name: 'Old' },
+      { writeToken: { page: 'page-1', seq: 4 } },
+    );
+    expect(stale?.name).toBe('Newest');
+
+    const onDisk = getCharactersFromServer(uid).find(c => c.id === 'race');
+    expect(onDisk?.name).toBe('Newest');
+  });
+
+  it('принимает повтор с тем же seq (идемпотентная досылка keepalive)', () => {
+    saveCharacterToServer(uid, makeDndCharacter({ id: 'idem', userId: uid }));
+
+    updateCharacterOnServer(uid, 'idem', { name: 'Once' }, { writeToken: { page: 'p', seq: 2 } });
+    const again = updateCharacterOnServer(
+      uid,
+      'idem',
+      { name: 'Once' },
+      { writeToken: { page: 'p', seq: 2 } },
+    );
+    expect(again?.name).toBe('Once');
+  });
+
+  it('независимые загрузки страниц не блокируют друг друга', () => {
+    saveCharacterToServer(uid, makeDndCharacter({ id: 'tabs', userId: uid }));
+
+    updateCharacterOnServer(uid, 'tabs', { name: 'TabA' }, { writeToken: { page: 'A', seq: 9 } });
+    const fromOtherTab = updateCharacterOnServer(
+      uid,
+      'tabs',
+      { name: 'TabB' },
+      { writeToken: { page: 'B', seq: 1 } },
+    );
+    expect(fromOtherTab?.name).toBe('TabB');
   });
 });

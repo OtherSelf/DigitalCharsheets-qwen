@@ -281,6 +281,9 @@ export function DarkHeresyCharacterForm() {
         inventory: [],
         skills: [],
         talents: [],
+        fatigue1st: { current: 0 },
+        fatigue2nd: { current: 0 },
+        criticalConditions: [],
     };
 
     const docRef = await addCharacter(newCharacter);

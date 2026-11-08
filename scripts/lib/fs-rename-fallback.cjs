@@ -1,6 +1,8 @@
-#!/usr/bin/env node
 // ============================================================================
-//  scripts/fs-rename-fallback.cjs — обход EXDEV при `next build`
+//  scripts/lib/fs-rename-fallback.cjs — обход EXDEV при `next build`
+//
+//  Не запускается сам по себе: это --require-патч, который грузится внутрь
+//  процесса `next build` (см. scripts/predeploy.sh, scripts/visual.sh).
 //
 //  Проблема: на overlayfs / 9p (virtiofs, WSL, Docker Desktop, некоторые
 //  sandbox-ФС) `rename()` между каталогами возвращает EXDEV, и `next build`
@@ -11,8 +13,11 @@
 //  ФС поведение не меняется (rename не бросает EXDEV — shim не срабатывает).
 //
 //  Подключается только на время сборки, ровно одним способом:
-//    NODE_OPTIONS="--require ./scripts/fs-rename-fallback.cjs" npm run build
+//    NODE_OPTIONS="--require ./scripts/lib/fs-rename-fallback.cjs" npm run build
 //  (scripts/predeploy.sh делает это автоматически при повторе после EXDEV).
+//
+//  Тесты: tests/unit/fs-rename-fallback.test.ts (ошибка инжектится фикстурой,
+//  поэтому тест не зависит от ФС).
 // ============================================================================
 
 'use strict';

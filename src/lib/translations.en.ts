@@ -233,6 +233,8 @@ export const enTranslations = {
   characterCreatedDescDH: "Your new Dark Heresy character has been saved.",
   error: "Error",
   failedToCreateCharacter: "Failed to create character.",
+  saveFailed: "Could not save changes",
+  saveFailedDesc: "The latest edits are not on the server. Check your connection — they will be resent automatically.",
   characterDeleted: "Character Deleted",
   characterDeletedDesc: "has been removed from your list.",
   notesFor: "Notes for",

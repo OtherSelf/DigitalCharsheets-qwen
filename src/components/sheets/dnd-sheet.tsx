@@ -59,7 +59,7 @@ const SKILL_STAT_MAP: Record<string, keyof DnD5eCharacter['stats']> = {
 
 export const DndSheet = React.forwardRef<any, DndSheetProps>(
   ({ character, isCompactView, activeCompactSection }, ref) => {
-    const { updateCharacter, showEditButtons } = useCharacterContext();
+    const { updateCharacter, showEditButtons, setHasUnsavedChanges } = useCharacterContext();
     const { t } = useTranslation();
 
     const narrativeRef = React.useRef<{ saveAll: () => void }>(null);
@@ -93,6 +93,19 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
         updateCharacter(character.id, { level: progressionData.level });
       }
     }, [progressionData.level, character.id, character.level, updateCharacter]);
+
+    // ─── LANDMARK: D&D DIRTY TRACKING ───
+    // Failsafe «несохранённые изменения» раньше работал только для Dark Heresy.
+    const isAnyEditing = isProgressionEditing || isStatsEditing || isSavesEditing
+      || isSkillsEditing || isOtherProficienciesEditing;
+    React.useEffect(() => {
+      setHasUnsavedChanges(isAnyEditing);
+    }, [isAnyEditing, setHasUnsavedChanges]);
+
+    // Опыт больше не ждёт кнопку Save: Add и ручной ввод пишутся сразу.
+    const handlePersistExperience = React.useCallback((experiencePoints: number, level: number) => {
+      updateCharacter(character.id, { experiencePoints, level });
+    }, [character.id, updateCharacter]);
 
     const proficiencyBonus = Math.floor((progressionData.level - 1) / 4) + 2;
 
@@ -218,6 +231,7 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
               setIsProgressionEditing={setIsProgressionEditing}
               handleSaveProgression={handleSaveProgression}
               stats={stats}
+              onPersistExperience={handlePersistExperience}
             />
             {(progressionData.level >= 20 || character.allowDivineBoonsBeforeLevel20) && (
               <DndDivineBoonsSection

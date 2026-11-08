@@ -102,6 +102,8 @@ interface ProgressionSectionProps {
   setIsProgressionEditing: React.Dispatch<React.SetStateAction<boolean>>;
   handleSaveProgression: () => void;
   stats: DnDStats;
+  /** Немедленно сохраняет опыт и уровень (кнопка Add и ввод в поле опыта). */
+  onPersistExperience: (experiencePoints: number, level: number) => void;
 }
 
 export function DndProgressionSection({ 
@@ -112,13 +114,22 @@ export function DndProgressionSection({
   isProgressionEditing, 
   setIsProgressionEditing, 
   handleSaveProgression,
-  stats
+  stats,
+  onPersistExperience
 }: ProgressionSectionProps) {
   const { showEditButtons } = useCharacterContext();
   const { t } = useTranslation();
   
   const [isOpen, setIsOpen] = React.useState(true);
   const [isMulticlassOpen, setIsMulticlassOpen] = React.useState(false);
+
+  // Локальный черновик + немедленная запись: «Add» больше не остаётся
+  // только в состоянии React и не теряется при уходе со страницы.
+  const persistExperience = React.useCallback((experiencePoints: number) => {
+    const level = Math.min(20, calculateLevelFromExp(experiencePoints));
+    setProgressionData(prev => ({ ...prev, experiencePoints, level }));
+    onPersistExperience(experiencePoints, level);
+  }, [setProgressionData, onPersistExperience]);
 
   React.useEffect(() => {
     if (progressionData.multiclasses && progressionData.multiclasses.length > 0) {
@@ -325,8 +336,9 @@ export function DndProgressionSection({
                       value={progressionData.experiencePoints} 
                       onChange={v => { 
                         const n = parseInt(v.target.value) || 0; 
-                        const calculatedLevel = Math.min(20, calculateLevelFromExp(n));
-                        setProgressionData({ ...progressionData, experiencePoints: n, level: calculatedLevel }); 
+                        // LANDMARK: опыт сохраняется сразу (очередь в контексте
+                        // склеивает «печатание» в один запрос), а не только по Save.
+                        persistExperience(n);
                       }} 
                       className="h-7 text-xs p-1" 
                     />
@@ -338,7 +350,7 @@ export function DndProgressionSection({
                   <Label className="text-[10px] text-muted-foreground uppercase font-bold">{t('expToCount')}</Label>
                   <div className="flex gap-2">
                     <Input type="number" value={expToCount} onChange={e => setExpToCount(parseInt(e.target.value) || 0)} className="h-8 text-xs" />
-                    <Button size="sm" onClick={() => { const next = (progressionData.experiencePoints || 0) + expToCount; setProgressionData({ ...progressionData, experiencePoints: next, level: calculateLevelFromExp(next) }); setExpToCount(0); }} className="h-8 px-3 text-xs">{t('add')}</Button>
+                    <Button size="sm" onClick={() => { persistExperience((progressionData.experiencePoints || 0) + expToCount); setExpToCount(0); }} className="h-8 px-3 text-xs">{t('add')}</Button>
                   </div>
                 </div>
               </div>

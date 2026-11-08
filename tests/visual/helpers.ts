@@ -34,7 +34,14 @@ export function getState(): VisualState {
   return readState();
 }
 
-/** Кладёт сессию/тему/язык в localStorage до выполнения скриптов страницы. */
+/**
+ * Кладёт сессию/тему/язык в localStorage до выполнения скриптов страницы.
+ *
+ * authenticated: false НЕ удаляет сессию на каждой навигации: init-скрипт
+ * выполняется при каждой загрузке документа, и удаление «на всякий случай»
+ * стирало бы её после реального логина через UI (см. creation.spec.ts).
+ * Гостевые тесты и так стартуют в пустом browser context.
+ */
 export async function prepare(
   context: BrowserContext,
   options: PrepareOptions = {},
@@ -43,24 +50,21 @@ export async function prepare(
   const state = getState();
 
   await context.addInitScript(
-    ({ user, theme, language, authenticated }) => {
+    ({ user, theme, language }) => {
       try {
         localStorage.setItem('theme', theme);
         localStorage.setItem('language', language);
-        if (authenticated && user) {
+        if (user) {
           localStorage.setItem('digital_charsheets_user', JSON.stringify(user));
-        } else {
-          localStorage.removeItem('digital_charsheets_user');
         }
       } catch {
         /* localStorage может быть недоступен до навигации — не критично */
       }
     },
     {
-      user: { ...state.user, hasRecoveryPhrase: true },
+      user: authenticated ? { ...state.user, hasRecoveryPhrase: true } : null,
       theme,
       language,
-      authenticated,
     },
   );
 }
@@ -225,8 +229,15 @@ export async function expectNoHorizontalOverflow(page: Page): Promise<void> {
   expect(overflow, 'появился горизонтальный скролл страницы').toBeLessThanOrEqual(1);
 }
 
-/** Логин через реальную форму (проверяет UI-путь, а не только API). */
-export async function signInViaUI(page: Page, state = getState()): Promise<void> {
+/**
+ * Логин через реальную форму (проверяет UI-путь, а не только API).
+ * По умолчанию — seeded-аккаунт визуальных тестов, но можно передать любой
+ * (см. tests/visual/creation.spec.ts, там аккаунт создаётся под тест).
+ */
+export async function signInViaUI(
+  page: Page,
+  state: Pick<VisualState, 'username' | 'password'> = getState(),
+): Promise<void> {
   await page.goto('/login', { waitUntil: 'domcontentloaded' });
   await page.getByPlaceholder('e.g., your@email.com or username').fill(state.username);
   await page.locator('input[type="password"]').fill(state.password);

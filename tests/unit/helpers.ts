@@ -1,3 +1,11 @@
+/**
+ * Общие помощники юнит-тестов: изолированный каталог данных, чтение JSON,
+ * валидные фикстуры персонажей D&D и Dark Heresy.
+ *
+ * В ./data тесты не пишут: useTempDataDir() создаёт каталог в os.tmpdir() и
+ * выставляет DCS_DATA_DIR, removeDir() удаляет его в afterEach.
+ */
+
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
