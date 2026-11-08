@@ -10,7 +10,14 @@ import {
 
 const isMobile = () => test.info().project.name === 'mobile';
 
-const PAGES = ['/', '/new', '/new/manual', '/stats-editor'] as const;
+const PAGES = [
+  '/',
+  '/new',
+  '/new/manual',
+  '/stats-editor',
+  '/demo',
+  '/settings',
+] as const;
 
 /**
  * Функционально-вёрсткие проверки (без эталонных PNG):
@@ -32,6 +39,21 @@ test.describe('адаптивность', () => {
     }
 
     expect(errors, 'uncaught JS-ошибки на страницах').toEqual([]);
+  });
+
+  test('все страницы (ru): нет JS-ошибок и горизонтального скролла', async ({
+    page,
+    context,
+  }) => {
+    await prepare(context, { language: 'ru' });
+    const errors = collectPageErrors(page);
+
+    for (const path of [...PAGES, `/${getState().dndId}`, `/${getState().dhId}`]) {
+      await openApp(page, path);
+      await expectNoHorizontalOverflow(page);
+    }
+
+    expect(errors, 'uncaught JS-ошибки на страницах (ru)').toEqual([]);
   });
 
   test('навигация дашборда: мобильная и десктопная', async ({ page, context }) => {

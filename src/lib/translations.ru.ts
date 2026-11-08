@@ -909,8 +909,7 @@ export const ruTranslations = {
   uiScaleWarning: 'Масштаб варьируется от 50% до 150%. Изменения применяются мгновенно.',
   resetToDefaults: 'Сбросить к стандартным настройкам',
   // Восстановлены после разбиения translations.ts на en/ru.
-  // TODO(translate): заглушки — заменить на русский текст.
-  back: "Back",
-  passwordMinLength: "Password must be at least 4 characters.",
+  back: "Назад",
+  passwordMinLength: "Пароль должен содержать не менее 4 символов.",
 };
 // ─── LANDMARK: TRANSLATIONS_RU_END ───

@@ -40,7 +40,9 @@ interface ParsedName {
 const PAGE_PREFIXES = [
   'stats-editor',
   'dashboard',
+  'settings',
   'login',
+  'demo',
   'new',
   'sheet',
   'dialog',
@@ -144,6 +146,11 @@ describe('визуальные тесты: имена эталонов', () => {
 const REQUIRED_LANGS: Record<string, Array<'en' | 'ru'>> = {
   login: ['en'],
   dashboard: ['en', 'ru'],
+  // /demo пока не локализован — эталон только en (ru проверяется в basic-pages).
+  demo: ['en'],
+  'demo:dnd': ['en'],
+  'demo:dh': ['en'],
+  settings: ['en', 'ru'],
   new: ['en', 'ru'],
   'new:dnd': ['en', 'ru'],
   'new:dh': ['en', 'ru'],
