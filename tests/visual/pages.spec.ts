@@ -82,6 +82,21 @@ test.describe('общие страницы', () => {
     await screenshotPage(page, 'dashboard-ru.png');
   });
 
+  test('dashboard — гостевая демо-страница (en)', async ({ page, context }) => {
+    await prepare(context, { authenticated: false });
+    await openApp(page, '/');
+
+    // Для гостя главная — это демо-лендинг (DemoLandingView в app/page.tsx).
+    await expect(
+      page.getByRole('heading', { name: 'Try Before You Commit' }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: 'Preview D&D 5e Character' }),
+    ).toBeVisible();
+
+    await screenshotPage(page, 'dashboard-guest-en.png');
+  });
+
   test('new — выбор системы (en)', async ({ page, context }) => {
     await prepare(context);
     await openApp(page, '/new');
