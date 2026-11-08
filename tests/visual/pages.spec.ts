@@ -202,3 +202,98 @@ test.describe('общие страницы', () => {
     await screenshotPage(page, 'stats-editor-dnd-vitals-en.png');
   });
 });
+
+/**
+ * Демо-лендинг и профиль пользователя.
+ *
+ * /demo пока не локализован (тексты захардкожены по-английски), поэтому
+ * снимается только en — как и у /login. Русская версия проверяется
+ * функционально в basic-pages.spec.ts (нет JS-ошибок/скролла).
+ */
+test.describe('демо и настройки профиля', () => {
+  test('demo — превью персонажей (en)', async ({ page, context }) => {
+    await prepare(context, { authenticated: false });
+    await openApp(page, '/demo');
+
+    await expect(
+      page.getByRole('heading', { name: 'Try Before You Commit' }),
+    ).toBeVisible();
+    await expect(page.getByText('Create Your Own Character')).toBeVisible();
+    await screenshotPage(page, 'demo-en.png');
+
+    await page.getByRole('button', { name: 'Preview D&D 5e Character' }).click();
+    await expect(page.getByText('Demo Mode Active')).toBeVisible();
+    await expect(page.getByText('Thorin Ironforge').first()).toBeVisible();
+    await screenshotPage(page, 'demo-dnd-en.png');
+
+    await page.getByRole('button', { name: 'Preview Dark Heresy Character' }).click();
+    await expect(page.getByText('Demo Mode Active')).toBeVisible();
+    await expect(page.getByText('Inquisitor Vane').first()).toBeVisible();
+    await screenshotPage(page, 'demo-dh-en.png');
+  });
+
+  test('settings — профиль и отображение (en)', async ({ page, context }) => {
+    await prepare(context);
+    await openApp(page, '/settings');
+
+    await expect(
+      page.getByRole('heading', { name: 'Profile Settings' }),
+    ).toBeVisible();
+    await expect(page.getByText('General Information')).toBeVisible();
+    await expect(page.getByText('Display Settings')).toBeVisible();
+    await expect(page.getByText('Security')).toBeVisible();
+    await screenshotPage(page, 'settings-en.png');
+
+    // Масштаб текста реально доезжает до документа и сбрасывается.
+    const textScale = () =>
+      page.evaluate(() =>
+        getComputedStyle(document.documentElement)
+          .getPropertyValue('--text-scale')
+          .trim(),
+      );
+
+    await expect.poll(textScale).toBe('1');
+    await page.getByRole('button', { name: 'Increase text size' }).click();
+    await expect.poll(textScale).toBe('1.1');
+    await page.getByRole('button', { name: 'Decrease text size' }).click();
+    await expect.poll(textScale).toBe('1');
+
+    // UI-масштаб ограничен сверху 150%: кнопка «+» упирается в max и гаснет.
+    const increaseScale = page.getByRole('button', { name: 'Increase UI scale' });
+    for (let i = 0; i < 10; i += 1) {
+      if (await increaseScale.isDisabled()) break;
+      await increaseScale.click();
+    }
+    const uiScale = await page.evaluate(() =>
+      getComputedStyle(document.documentElement)
+        .getPropertyValue('--ui-scale')
+        .trim(),
+    );
+    expect(uiScale).toBe('1.5');
+    await expect(
+      page.getByRole('button', { name: 'Increase UI scale' }),
+    ).toBeDisabled();
+
+    await page.getByRole('button', { name: 'Reset to Defaults' }).click();
+    await expect
+      .poll(() =>
+        page.evaluate(() =>
+          getComputedStyle(document.documentElement)
+            .getPropertyValue('--ui-scale')
+            .trim(),
+        ),
+      )
+      .toBe('1');
+  });
+
+  test('settings — профиль (ru)', async ({ page, context }) => {
+    await prepare(context, { language: 'ru' });
+    await openApp(page, '/settings');
+
+    await expect(
+      page.getByRole('heading', { name: 'Настройки профиля' }),
+    ).toBeVisible();
+    await expect(page.getByText('Настройки отображения')).toBeVisible();
+    await screenshotPage(page, 'settings-ru.png');
+  });
+});

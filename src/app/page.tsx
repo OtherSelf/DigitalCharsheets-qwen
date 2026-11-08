@@ -147,7 +147,6 @@ const demoDhCharacter: Character = {
 } as Character;
 
 // 🎯 LANDMARK: DEMO_LANDING_VIEW_COMPONENT
-// 🎯 LANDMARK: DEMO_LANDING_VIEW_COMPONENT
 function DemoLandingView() {
   const [previewSystem, setPreviewSystem] = useState<'Dungeons & Dragons' | 'Dark Heresy' | null>(null);
   const { t } = useTranslation();
