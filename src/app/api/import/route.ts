@@ -231,14 +231,15 @@ export async function GET() {
     const passwordHash = hashPassword(DEFAULT_PASSWORD);
 
     for (const [firebaseUserId, chars] of Object.entries(userGroups)) {
-      const userEmail = `imported-${firebaseUserId.substr(0, 6)}@local.charsheets`;
+      // Без домена: в локальном приложении логин — просто ключ.
+      const userLogin = `imported-${firebaseUserId.substr(0, 6)}`;
       const displayName = `Player ${firebaseUserId.substr(0, 4)}`;
 
       // Неизменяемый uid выдаётся при создании аккаунта (UUID), а не
       // вычисляется из firebase-идентификатора: логин остаётся атрибутом.
       // createImportedUser пишет user.json и запись индекса под локом.
       const importedUser = createImportedUser({
-        username: userEmail,
+        username: userLogin,
         displayName,
         passwordHash,
         originalFirebaseId: firebaseUserId,
@@ -274,7 +275,7 @@ export async function GET() {
 
       results.push({
         localUserId,
-        username: userEmail,
+        username: userLogin,
         password: DEFAULT_PASSWORD,
         charactersImported: importedChars.length,
         characters: importedChars,
