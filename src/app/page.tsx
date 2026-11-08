@@ -315,7 +315,7 @@ export default function DashboardPage() {
                 disabled={!user}
                 onClick={async () => {
                   if (!user) return;
-                  const res = await fetch(`/api/export?userId=${user.uid}`);
+                  const res = await fetch('/api/export');
                   const data = await res.json();
                   downloadJSON(data, `characters-backup-${new Date().toISOString().split('T')[0]}.json`);
                 }}
@@ -351,7 +351,7 @@ export default function DashboardPage() {
                 disabled={!user}
                 onClick={async () => {
                   if (!user) return;
-                  const res = await fetch(`/api/export?userId=${user.uid}`);
+                  const res = await fetch('/api/export');
                   const data = await res.json();
                   downloadJSON(data, `characters-backup-${new Date().toISOString().split('T')[0]}.json`);
                 }}

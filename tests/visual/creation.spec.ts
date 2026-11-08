@@ -39,17 +39,16 @@ async function registerAccount(
   expect(body.success).toBe(true);
 
   const phrase = await page.request.post('/api/auth/phrase', {
-    data: { username, phrase: RECOVERY_PHRASE },
+    data: { phrase: RECOVERY_PHRASE },
   });
   expect(phrase.status(), 'установка recovery phrase').toBe(200);
 
   return { username, password: PASSWORD, uid: body.user.uid as string };
 }
 
-async function fetchCharacters(page: Page, uid: string): Promise<any[]> {
-  const res = await page.request.get(
-    `/api/characters?userId=${encodeURIComponent(uid)}`,
-  );
+async function fetchCharacters(page: Page): Promise<any[]> {
+  // Владелец определяется сессионной cookie контекста.
+  const res = await page.request.get('/api/characters');
   expect(res.status()).toBe(200);
   return (await res.json()) as any[];
 }
@@ -143,7 +142,7 @@ test.describe('создание персонажа — D&D 5e', () => {
 
     const id = await waitForSheetRedirect(page);
 
-    const characters = await fetchCharacters(page, account.uid);
+    const characters = await fetchCharacters(page);
     expect(characters, 'ровно один лист у нового аккаунта').toHaveLength(1);
 
     const created = characters[0];
@@ -190,7 +189,7 @@ test.describe('создание персонажа — D&D 5e', () => {
       page.getByText('Name must be at least 2 characters.'),
     ).toBeVisible();
     expect(new URL(page.url()).pathname, 'остаёмся в форме').toBe('/new/manual');
-    expect(await fetchCharacters(page, account.uid), 'лист не создан').toEqual([]);
+    expect(await fetchCharacters(page), 'лист не создан').toEqual([]);
   });
 });
 
@@ -223,7 +222,7 @@ test.describe('создание персонажа — Dark Heresy', () => {
 
     const id = await waitForSheetRedirect(page);
 
-    const characters = await fetchCharacters(page, account.uid);
+    const characters = await fetchCharacters(page);
     expect(characters, 'ровно один лист у нового аккаунта').toHaveLength(1);
 
     const created = characters[0];

@@ -4,10 +4,11 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {
   authenticateUser,
-  generateUserId,
   getStoredUser,
   updateUserProfile,
 } from '@/lib/server-auth';
+import { newUid } from '@/lib/ids';
+import { resolveLogin } from '@/lib/user-index';
 import { saveCharacterToServer } from '@/lib/server-storage';
 import {
   makeDndCharacter,
@@ -20,9 +21,13 @@ import {
 /**
  * Обновление профиля (src/lib/server-auth.ts::updateUserProfile).
  *
- * Покрыто: смена displayName без потери пароля; смена логина с переносом
- * каталога персонажей; отказ при занятом логине; смена пароля;
- * установка/сброс recovery-фразы; ошибка для несуществующего пользователя.
+ * Главное отличие схемы v2: смена логина НЕ переносит каталог. uid и каталог
+ * с листами остаются прежними, меняются только `username` в user.json и
+ * запись в индексе «логин → uid».
+ *
+ * Покрыто: смена displayName без потери пароля; смена логина без переноса
+ * данных; освобождение старого логина; отказ при занятом логине; смена
+ * пароля; установка/сброс recovery-фразы; ошибка для несуществующего uid.
  */
 
 let dataDir: string;
@@ -39,9 +44,8 @@ const sha256 = (value: string) =>
   crypto.createHash('sha256').update(value).digest('hex');
 
 describe('updateUserProfile', () => {
-  it('меняет displayName, сохраняя пароль и персонажей', () => {
-    const uid = generateUserId('hero');
-    authenticateUser('hero', 'pass1234', 'Old Name');
+  it('меняет displayName, сохраняя uid, пароль и персонажей', () => {
+    const uid = authenticateUser('hero', 'pass1234', 'Old Name').user!.uid;
     saveCharacterToServer(uid, makeDndCharacter({ userId: uid }));
 
     const result = updateUserProfile(uid, 'hero', '  New Name  ');
@@ -57,41 +61,52 @@ describe('updateUserProfile', () => {
     expect(fs.existsSync(paths.charactersDir)).toBe(true);
   });
 
-  it('при смене логина переносит каталог вместе с персонажами', () => {
-    const oldUid = generateUserId('oldlogin');
-    authenticateUser('oldlogin', 'pass1234', 'Hero');
-    saveCharacterToServer(oldUid, makeDndCharacter({ userId: oldUid }));
+  it('при смене логина uid и каталог НЕ меняются, листы остаются на месте', () => {
+    const uid = authenticateUser('oldlogin', 'pass1234', 'Hero').user!.uid;
+    saveCharacterToServer(uid, makeDndCharacter({ userId: uid }));
 
-    const newUid = generateUserId('newlogin');
-    const result = updateUserProfile(oldUid, 'newlogin', 'Hero');
+    const result = updateUserProfile(uid, 'newlogin', 'Hero');
 
     expect(result.success).toBe(true);
-    expect(result.user?.uid).toBe(newUid);
+    expect(result.user?.uid).toBe(uid);
 
-    const oldPaths = userPaths(dataDir, oldUid);
-    const newPaths = userPaths(dataDir, newUid);
+    // Каталог тот же: ни переноса, ни копирования.
+    const paths = userPaths(dataDir, uid);
+    expect(fs.existsSync(paths.userFile)).toBe(true);
+    expect(readJson(paths.userFile).username).toBe('newlogin');
+    expect(fs.existsSync(paths.charactersDir)).toBe(true);
+    expect(fs.readdirSync(paths.charactersDir)).toHaveLength(1);
 
-    expect(fs.existsSync(oldPaths.userDir)).toBe(false);
-    expect(readJson(newPaths.userFile).username).toBe('newlogin');
-    expect(fs.existsSync(newPaths.charactersDir)).toBe(true);
+    // Индекс обновился: старый логин свободен, новый указывает на тот же uid.
+    expect(resolveLogin('newlogin')).toBe(uid);
+    expect(resolveLogin('oldlogin')).toBeNull();
 
     // Старый логин освобождается: вход под ним создаёт НОВЫЙ пустой аккаунт,
-    // а не открывает перенесённый.
+    // а не открывает существующий.
     const oldLogin = authenticateUser('oldlogin', 'pass1234');
     expect(oldLogin.isNewUser).toBe(true);
-    expect(oldLogin.user?.uid).not.toBe(newUid);
+    expect(oldLogin.user?.uid).not.toBe(uid);
 
+    // Вход под новым логином ведёт в тот же аккаунт.
     const relogin = authenticateUser('newlogin', 'pass1234');
     expect(relogin.success).toBe(true);
     expect(relogin.isNewUser).toBe(false);
-    expect(relogin.user?.uid).toBe(newUid);
+    expect(relogin.user?.uid).toBe(uid);
+  });
+
+  it('при смене только регистра логина каталог и индекс не переписываются зря', () => {
+    const uid = authenticateUser('hero', 'pass1234').user!.uid;
+    const result = updateUserProfile(uid, '  HERO ', 'hero');
+
+    expect(result.success).toBe(true);
+    expect(result.user?.uid).toBe(uid);
+    expect(readJson(userPaths(dataDir, uid).userFile).username).toBe('hero');
+    expect(resolveLogin('hero')).toBe(uid);
   });
 
   it('отказывает, если новый логин уже занят, и не трогает данные', () => {
-    const first = generateUserId('first');
-    const second = generateUserId('second');
-    authenticateUser('first', 'pass1');
-    authenticateUser('second', 'pass2');
+    const first = authenticateUser('first', 'pass1').user!.uid;
+    const second = authenticateUser('second', 'pass2').user!.uid;
     saveCharacterToServer(first, makeDndCharacter({ userId: first }));
 
     const result = updateUserProfile(first, 'second', 'First');
@@ -105,11 +120,11 @@ describe('updateUserProfile', () => {
     expect(fs.existsSync(paths.charactersDir)).toBe(true);
     // Второй аккаунт не перезаписан.
     expect(getStoredUser(second)?.username).toBe('second');
+    expect(resolveLogin('second')).toBe(second);
   });
 
   it('меняет пароль: старый перестаёт работать, новый — работает', () => {
-    const uid = generateUserId('pwuser');
-    authenticateUser('pwuser', 'oldpass');
+    const uid = authenticateUser('pwuser', 'oldpass').user!.uid;
 
     const result = updateUserProfile(uid, 'pwuser', 'pwuser', 'newpass');
 
@@ -122,8 +137,7 @@ describe('updateUserProfile', () => {
   });
 
   it('пустой пароль не меняет хеш', () => {
-    const uid = generateUserId('keep');
-    authenticateUser('keep', 'pass1');
+    const uid = authenticateUser('keep', 'pass1').user!.uid;
 
     updateUserProfile(uid, 'keep', 'keep', '   ');
 
@@ -133,8 +147,7 @@ describe('updateUserProfile', () => {
   });
 
   it('устанавливает recovery-фразу', () => {
-    const uid = generateUserId('recovery');
-    authenticateUser('recovery', 'pass1');
+    const uid = authenticateUser('recovery', 'pass1').user!.uid;
 
     const result = updateUserProfile(
       uid,
@@ -153,8 +166,7 @@ describe('updateUserProfile', () => {
   });
 
   it('undefined сохраняет recovery-фразу, пустая строка — сбрасывает', () => {
-    const uid = generateUserId('phrase');
-    authenticateUser('phrase', 'pass1');
+    const uid = authenticateUser('phrase', 'pass1').user!.uid;
     updateUserProfile(uid, 'phrase', 'phrase', undefined, 'one two three');
 
     updateUserProfile(uid, 'phrase', 'phrase');
@@ -170,7 +182,7 @@ describe('updateUserProfile', () => {
   });
 
   it('возвращает ошибку для несуществующего пользователя', () => {
-    const result = updateUserProfile('user-doesnotexist', 'x', 'X');
+    const result = updateUserProfile(newUid(), 'x', 'X');
 
     expect(result.success).toBe(false);
     expect(result.error).toMatch(/not found/i);

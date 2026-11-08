@@ -75,7 +75,6 @@ export default function ProfileSettingsPage() {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          currentUserId: user.uid,
           newUsername: username,
           newDisplayName: displayName,
           newPassword: password || undefined,

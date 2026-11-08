@@ -35,7 +35,7 @@ afterEach(() => {
 });
 
 describe('server-storage (файловое хранилище листов)', () => {
-  it('сохраняет персонажа в отдельный файл data/<uid>/characters/<id>.json', () => {
+  it('сохраняет персонажа в отдельный файл data/users/<uid>/characters/<id>.json', () => {
     const character = makeDndCharacter({ id: 'char-a', userId: uid });
     saveCharacterToServer(uid, character);
 
@@ -50,7 +50,7 @@ describe('server-storage (файловое хранилище листов)', ()
     const characters = getCharactersFromServer('user-new');
 
     expect(characters).toEqual([]);
-    expect(fs.existsSync(path.join(dataDir, 'user-new', 'characters'))).toBe(true);
+    expect(fs.existsSync(path.join(dataDir, 'users', 'user-new', 'characters'))).toBe(true);
   });
 
   it('читает все сохранённые листы', () => {
@@ -121,10 +121,10 @@ describe('server-storage (файловое хранилище листов)', ()
     const character = makeDndCharacter({ id: 'isolated', userId: uid });
     saveCharacterToServer(uid, character);
 
-    const inTemp = path.join(dataDir, uid, 'characters', 'isolated.json');
+    const inTemp = path.join(dataDir, 'users', uid, 'characters', 'isolated.json');
     expect(fs.existsSync(inTemp)).toBe(true);
     // в каталоге проекта ничего не появилось
-    expect(fs.existsSync(path.join(process.cwd(), 'data', uid))).toBe(false);
+    expect(fs.existsSync(path.join(process.cwd(), 'data', 'users', uid))).toBe(false);
   });
 
   // ─── атомарная запись ────────────────────────────────────────────────────

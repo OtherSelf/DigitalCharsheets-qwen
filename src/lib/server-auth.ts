@@ -1,9 +1,55 @@
 import fs from 'fs';
-import path from 'path';
 import crypto from 'crypto';
 import { LocalUser } from './local-storage';
 import { getCharactersFromServer } from './server-storage';
-import { getDataDir } from './data-dir';
+import { getUserDir, getUserFile } from './data-dir';
+import { writeJsonAtomic } from './fs-atomic';
+import { defaultDisplayName, newUid, normalizeLogin } from './ids';
+import { withDataLock } from './data-lock';
+import {
+  readLoginIndexForUpdate,
+  rebuildLoginIndex,
+  resolveLogin,
+  writeLoginIndex,
+} from './user-index';
+
+/**
+ * ─── LANDMARK: USER IDENTITY / AUTH ─────────────────────────────────────────
+ * Личность пользователя — неизменяемый `uid` (UUID), который живёт в
+ * `users/<uid>/user.json`. Логин (`username`) — изменяемый атрибут и ключ
+ * индекса `index/logins.json`.
+ *
+ * Поэтому:
+ *   • смена логина НЕ переносит каталог и не трогает листы — меняются две
+ *     строки (user.json и запись в индексе);
+ *   • регистрация идёт под файловым локом, чтобы два одновременных входа с
+ *     одним логином не создали два аккаунта;
+ *   • вход не зависит от формата логина: `Hero@Example.com` и
+ *     `  hero@example.com ` — один и тот же ключ.
+ *
+ * Пароль по-прежнему хранится как sha256-хеш (без соли) — это отдельная
+ * задача, не связанная со сменой схемы идентификаторов.
+ */
+
+export interface StoredUser {
+  schemaVersion?: number;
+  uid: string;
+  username: string;
+  displayName: string;
+  passwordHash: string;
+  recoveryPhrase?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  originalFirebaseId?: string;
+  [key: string]: unknown;
+}
+
+interface AuthResult {
+  success: boolean;
+  user?: LocalUser;
+  error?: string;
+  isNewUser?: boolean;
+}
 
 function hashPassword(password: string): string {
   return crypto.createHash('sha256').update(password).digest('hex');
@@ -19,133 +65,195 @@ function checkPhraseMatch(storedPhrase: string, inputPhrase: string): boolean {
   return inputWords.some(word => storedWords.includes(word));
 }
 
-export function generateUserId(username: string): string {
-  let hash = 0;
-  const normalizedUsername = username.toLowerCase().trim();
-  for (let i = 0; i < normalizedUsername.length; i++) {
-    const char = normalizedUsername.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash;
-  }
-  return 'user-' + Math.abs(hash).toString(36);
+function toLocalUser(user: StoredUser): LocalUser {
+  return {
+    uid: user.uid,
+    username: user.username,
+    displayName: user.displayName,
+    hasRecoveryPhrase: !!user.recoveryPhrase,
+  };
 }
 
-export function userExists(userId: string): boolean {
-  return fs.existsSync(path.join(getDataDir(), userId, 'user.json'));
+export function userExists(uid: string): boolean {
+  return fs.existsSync(getUserFile(uid));
 }
 
-export function getStoredUser(userId: string): { username: string; passwordHash: string; displayName: string; recoveryPhrase?: string } | null {
-  const userFile = path.join(getDataDir(), userId, 'user.json');
-  if (!fs.existsSync(userFile)) return null;
+/**
+ * Прочитать профиль по uid. Терпимо к старым/ручным файлам: `uid` берётся из
+ * каталога, если в JSON его нет, а `email` считается логином.
+ */
+export function getStoredUser(uid: string): StoredUser | null {
+  const file = getUserFile(uid);
+  if (!fs.existsSync(file)) return null;
   try {
-    const data = JSON.parse(fs.readFileSync(userFile, 'utf8'));
-    if (data.email && !data.username) {
-      data.username = data.email;
-    }
-    return data;
-  } catch {
+    const data = JSON.parse(fs.readFileSync(file, 'utf8')) as Record<string, unknown>;
+    if (!data.uid) data.uid = uid;
+    if (!data.username && data.email) data.username = data.email;
+    return data as unknown as StoredUser;
+  } catch (e) {
+    console.error('Failed to read user data:', e);
     return null;
   }
 }
 
-export function saveUserData(userId: string, username: string, passwordHash: string, displayName: string, recoveryPhrase?: string): void {
-  const userDir = path.join(getDataDir(), userId);
-  if (!fs.existsSync(userDir)) fs.mkdirSync(userDir, { recursive: true });
-  
-  const userData: any = { username, passwordHash, displayName };
-  if (recoveryPhrase) userData.recoveryPhrase = recoveryPhrase.toLowerCase().trim();
-  
-  fs.writeFileSync(path.join(userDir, 'user.json'), JSON.stringify(userData, null, 2), 'utf8');
+/** Записать профиль (атомарно) и вернуть его. */
+function writeStoredUser(uid: string, data: StoredUser): StoredUser {
+  fs.mkdirSync(getUserDir(uid), { recursive: true });
+  writeJsonAtomic(getUserFile(uid), data);
+  return data;
 }
 
-export function authenticateUser(username: string, password: string, displayName?: string): 
-  { success: boolean; user?: LocalUser; error?: string; isNewUser?: boolean } {
-  const normalizedUsername = username.toLowerCase().trim();
-  const userId = generateUserId(normalizedUsername);
+function authenticateExisting(uid: string, passwordHash: string): AuthResult {
+  let stored = getStoredUser(uid);
+  if (!stored) {
+    // Индекс мог устареть (например, каталог удалили руками) — пересобираем.
+    rebuildLoginIndex();
+    stored = getStoredUser(uid);
+  }
+  if (!stored) return { success: false, error: 'Failed to read user data.' };
+  if (stored.passwordHash !== passwordHash) return { success: false, error: 'Incorrect password.' };
+  return { success: true, isNewUser: false, user: toLocalUser(stored) };
+}
+
+/**
+ * Вход или регистрация. Новый аккаунт создаётся только при первом входе с
+ * этим логином; uid выдаётся здесь и больше не меняется.
+ */
+export function authenticateUser(
+  username: string,
+  password: string,
+  displayName?: string,
+): AuthResult {
+  const login = normalizeLogin(username);
   const passwordHash = hashPassword(password);
 
-  if (userExists(userId)) {
-    const storedUser = getStoredUser(userId);
-    if (!storedUser) return { success: false, error: 'Failed to read user data.' };
-    if (storedUser.passwordHash !== passwordHash) return { success: false, error: 'Incorrect password.' };
-    
-    return {
-      success: true,
-      isNewUser: false,
-      user: { uid: userId, username: storedUser.username, displayName: storedUser.displayName, hasRecoveryPhrase: !!storedUser.recoveryPhrase }
+  if (!login) return { success: false, error: 'Username/Email is required.' };
+
+  const existingUid = resolveLogin(login);
+  if (existingUid) return authenticateExisting(existingUid, passwordHash);
+
+  // Регистрация: проверка «логин свободен» и создание каталога — под локом,
+  // иначе два параллельных запроса заведут два аккаунта с одним логином.
+  return withDataLock(() => {
+    const index = readLoginIndexForUpdate();
+    const racedUid = index.logins[login];
+    if (racedUid) return authenticateExisting(racedUid, passwordHash);
+
+    const uid = newUid();
+    const now = new Date().toISOString();
+    const user: StoredUser = {
+      schemaVersion: 2,
+      uid,
+      username: login,
+      displayName: (displayName && displayName.trim()) || defaultDisplayName(login),
+      passwordHash,
+      createdAt: now,
+      updatedAt: now,
     };
-  } else {
-    const finalDisplayName = displayName || normalizedUsername.split('@')[0];
-    saveUserData(userId, normalizedUsername, passwordHash, finalDisplayName);
-    return {
-      success: true,
-      isNewUser: true,
-      user: { uid: userId, username: normalizedUsername, displayName: finalDisplayName, hasRecoveryPhrase: false }
-    };
-  }
-}
 
-export function verifyRecovery(username: string, words: string[], recoveryPhraseInput: string): 
-  { success: boolean; user?: LocalUser; error?: string } {
-  const normalizedUsername = username.toLowerCase().trim();
-  const userId = generateUserId(normalizedUsername);
+    writeStoredUser(uid, user);
 
-  if (!userExists(userId)) return { success: false, error: 'No account found with this username/email.' };
-  const storedUser = getStoredUser(userId);
-  if (!storedUser) return { success: false, error: 'Failed to read user data.' };
-  if (!storedUser.recoveryPhrase) return { success: false, error: 'No recovery phrase set for this account.' };
-
-  const characters = getCharactersFromServer(userId);
-  if (characters.length === 0) return { success: false, error: 'No character sheets found locally. Cannot verify ownership.' };
-
-  const characterDataString = JSON.stringify(characters);
-  for (const word of words) {
-    const cleanWord = word.toLowerCase().trim();
-    if (!cleanWord) return { success: false, error: 'Please provide valid words.' };
-    const escapedWord = cleanWord.replace(/[.*+?^${}()|[\]]/g, '$&');
-    if (!new RegExp(`\\b${escapedWord}\\b`, 'i').test(characterDataString)) {
-      return { success: false, error: `The word "${word}" was not found in any of your character sheets.` };
+    index.logins[login] = uid;
+    try {
+      writeLoginIndex(index);
+    } catch (e) {
+      // Источник истины — user.json; индекс пересоберётся при следующем входе.
+      console.error('Failed to update login index:', e);
     }
-  }
 
-  if (!checkPhraseMatch(storedUser.recoveryPhrase, recoveryPhraseInput)) {
-    return { success: false, error: 'Recovery phrase does not match. (At least one word must match, order does not matter).' };
-  }
-
-  return {
-    success: true,
-    user: { uid: userId, username: storedUser.username, displayName: storedUser.displayName, hasRecoveryPhrase: true }
-  };
+    return { success: true, isNewUser: true, user: toLocalUser(user) };
+  });
 }
 
-export function updateRecoveryCredentials(username: string, newPassword: string, newRecoveryPhrase: string): 
-  { success: boolean; error?: string } {
-  const userId = generateUserId(username.toLowerCase().trim());
-  if (!userExists(userId)) return { success: false, error: 'User not found.' };
+/**
+ * Обновить профиль. `currentUserId` — неизменяемый uid из сессии.
+ * Смена логина меняет только user.json и индекс; каталог с листами остаётся
+ * на месте.
+ */
+export function updateUserProfile(
+  currentUserId: string,
+  newUsername: string,
+  newDisplayName: string,
+  newPassword?: string,
+  newRecoveryPhrase?: string,
+): { success: boolean; user?: LocalUser; error?: string } {
+  const stored = getStoredUser(currentUserId);
+  if (!stored) return { success: false, error: 'User not found.' };
+
+  const newLogin = normalizeLogin(newUsername);
+  if (!newLogin) return { success: false, error: 'Username is required.' };
+
+  const oldLogin = normalizeLogin(stored.username);
+  const displayName = (newDisplayName || '').trim() || stored.displayName;
 
   try {
-    const userFile = path.join(getDataDir(), userId, 'user.json');
-    const userData = JSON.parse(fs.readFileSync(userFile, 'utf8'));
-    userData.passwordHash = hashPassword(newPassword);
-    userData.recoveryPhrase = newRecoveryPhrase.toLowerCase().trim();
-    if (userData.email) {
-       delete userData.email;
-    }
-    userData.username = username.toLowerCase().trim();
-    fs.writeFileSync(userFile, JSON.stringify(userData, null, 2), 'utf8');
-    return { success: true };
+    return withDataLock(() => {
+      const index = readLoginIndexForUpdate();
+
+      if (newLogin !== oldLogin) {
+        const owner = index.logins[newLogin];
+        if (owner && owner !== currentUserId) {
+          return { success: false, error: 'This login is already taken.' };
+        }
+      }
+
+      const updated: StoredUser = {
+        ...stored,
+        schemaVersion: 2,
+        uid: currentUserId,
+        username: newLogin,
+        displayName,
+        passwordHash:
+          newPassword && newPassword.trim().length > 0
+            ? hashPassword(newPassword)
+            : stored.passwordHash,
+        updatedAt: new Date().toISOString(),
+      };
+
+      if (newRecoveryPhrase !== undefined) {
+        if (newRecoveryPhrase.trim() === '') {
+          delete updated.recoveryPhrase;
+        } else {
+          updated.recoveryPhrase = newRecoveryPhrase.toLowerCase().trim();
+        }
+      }
+
+      // user.json первым: он источник истины. Если запись индекса не удастся,
+      // resolveLogin при промахе пересоберёт индекс из этого файла.
+      writeStoredUser(currentUserId, updated);
+
+      if (newLogin !== oldLogin) {
+        delete index.logins[oldLogin];
+        index.logins[newLogin] = currentUserId;
+        try {
+          writeLoginIndex(index);
+        } catch (e) {
+          console.error('Failed to update login index after rename:', e);
+          rebuildLoginIndex();
+        }
+      }
+
+      return { success: true, user: toLocalUser(updated) };
+    });
   } catch (e) {
-    console.error('Error updating recovery credentials:', e);
-    return { success: false, error: 'Failed to update account.' };
+    console.error('Error updating user profile:', e);
+    return {
+      success: false,
+      error: `Failed to update profile: ${e instanceof Error ? e.message : 'Unknown error'}`,
+    };
   }
 }
 
-export function setRecoveryPhrase(userId: string, phrase: string): boolean {
+export function setRecoveryPhrase(uid: string, phrase: string): boolean {
   try {
-    const userFile = path.join(getDataDir(), userId, 'user.json');
-    const userData = JSON.parse(fs.readFileSync(userFile, 'utf8'));
-    userData.recoveryPhrase = phrase.toLowerCase().trim();
-    fs.writeFileSync(userFile, JSON.stringify(userData, null, 2), 'utf8');
+    const stored = getStoredUser(uid);
+    if (!stored) {
+      console.error('Failed to set recovery phrase: user not found');
+      return false;
+    }
+    stored.recoveryPhrase = phrase.toLowerCase().trim();
+    stored.updatedAt = new Date().toISOString();
+    writeStoredUser(uid, stored);
     return true;
   } catch (e) {
     console.error('Error setting recovery phrase:', e);
@@ -153,38 +261,109 @@ export function setRecoveryPhrase(userId: string, phrase: string): boolean {
   }
 }
 
-export function recoverPasswordWithUsernameAndWords(username: string, words: string[], newPassword: string): { success: boolean; error?: string } {
-  const normalizedUsername = username.toLowerCase().trim();
-  const userId = generateUserId(normalizedUsername);
+function readByLogin(username: string):
+  | { success: false; error: string }
+  | { success: true; uid: string; user: StoredUser } {
+  const uid = resolveLogin(username);
+  if (!uid) return { success: false, error: 'No account found with this username/email.' };
+  const user = getStoredUser(uid);
+  if (!user) return { success: false, error: 'Failed to read user data.' };
+  return { success: true, uid, user };
+}
 
-  if (!userExists(userId)) return { success: false, error: 'No account found with this username/email.' };
-  
-  const storedUser = getStoredUser(userId);
-  if (!storedUser) return { success: false, error: 'Failed to read user data.' };
-  if (!storedUser.recoveryPhrase) return { success: false, error: 'No recovery phrase set for this account.' };
-
-  const characters = getCharactersFromServer(userId);
-  if (characters.length === 0) return { success: false, error: 'No character sheets found locally. Cannot verify ownership.' };
+function checkOwnershipWords(user: StoredUser, words: string[]): string | null {
+  const characters = getCharactersFromServer(user.uid);
+  if (characters.length === 0) {
+    return 'No character sheets found locally. Cannot verify ownership.';
+  }
 
   const characterDataString = JSON.stringify(characters);
   for (const word of words) {
     const cleanWord = word.toLowerCase().trim();
-    if (!cleanWord) return { success: false, error: 'Please provide valid words.' };
+    if (!cleanWord) return 'Please provide valid words.';
     const escapedWord = cleanWord.replace(/[.*+?^${}()|[\]]/g, '$&');
     if (!new RegExp(`\\b${escapedWord}\\b`, 'i').test(characterDataString)) {
-      return { success: false, error: `The word "${word}" was not found in any of your character sheets.` };
+      return `The word "${word}" was not found in any of your character sheets.`;
     }
   }
+  return null;
+}
+
+export function verifyRecovery(
+  username: string,
+  words: string[],
+  recoveryPhraseInput: string,
+): { success: boolean; user?: LocalUser; error?: string } {
+  const found = readByLogin(username);
+  if (!found.success) return { success: false, error: found.error };
+  const storedUser = found.user;
+
+  if (!storedUser.recoveryPhrase) {
+    return { success: false, error: 'No recovery phrase set for this account.' };
+  }
+
+  const wordError = checkOwnershipWords(storedUser, words);
+  if (wordError) return { success: false, error: wordError };
+
+  if (!checkPhraseMatch(storedUser.recoveryPhrase, recoveryPhraseInput)) {
+    return {
+      success: false,
+      error: 'Recovery phrase does not match. (At least one word must match, order does not matter).',
+    };
+  }
+
+  return { success: true, user: toLocalUser(storedUser) };
+}
+
+export function updateRecoveryCredentials(
+  username: string,
+  newPassword: string,
+  newRecoveryPhrase: string,
+): { success: boolean; error?: string } {
+  const found = readByLogin(username);
+  if (!found.success) return { success: false, error: 'User not found.' };
 
   try {
-    const userFile = path.join(getDataDir(), userId, 'user.json');
-    const userData = JSON.parse(fs.readFileSync(userFile, 'utf8'));
-    userData.passwordHash = hashPassword(newPassword);
-    if (userData.email) {
-       delete userData.email;
+    const storedUser = found.user;
+    storedUser.username = normalizeLogin(username);
+    storedUser.passwordHash = hashPassword(newPassword);
+    storedUser.recoveryPhrase = newRecoveryPhrase.toLowerCase().trim();
+    storedUser.updatedAt = new Date().toISOString();
+    if (storedUser.email) {
+      delete storedUser.email;
     }
-    userData.username = normalizedUsername;
-    fs.writeFileSync(userFile, JSON.stringify(userData, null, 2), 'utf8');
+    writeStoredUser(found.uid, storedUser);
+    return { success: true };
+  } catch (e) {
+    console.error('Error updating recovery credentials:', e);
+    return { success: false, error: 'Failed to update account.' };
+  }
+}
+
+export function recoverPasswordWithUsernameAndWords(
+  username: string,
+  words: string[],
+  newPassword: string,
+): { success: boolean; error?: string } {
+  const found = readByLogin(username);
+  if (!found.success) return { success: false, error: found.error };
+  const storedUser = found.user;
+
+  if (!storedUser.recoveryPhrase) {
+    return { success: false, error: 'No recovery phrase set for this account.' };
+  }
+
+  const wordError = checkOwnershipWords(storedUser, words);
+  if (wordError) return { success: false, error: wordError };
+
+  try {
+    storedUser.passwordHash = hashPassword(newPassword);
+    storedUser.updatedAt = new Date().toISOString();
+    if (storedUser.email) {
+      delete storedUser.email;
+    }
+    storedUser.username = normalizeLogin(username);
+    writeStoredUser(found.uid, storedUser);
     return { success: true };
   } catch (e) {
     console.error('Error resetting password:', e);
@@ -192,111 +371,46 @@ export function recoverPasswordWithUsernameAndWords(username: string, words: str
   }
 }
 
-// ... [keep all existing code above] ...
+/**
+ * Создать импортированный аккаунт (Firestore-экспорт) с неизменяемым uid.
+ * Вызывать под `withDataLock`: функция пишет user.json и индекс.
+ */
+export function createImportedUser(options: {
+  username: string;
+  displayName: string;
+  passwordHash: string;
+  originalFirebaseId?: string;
+}): StoredUser {
+  return withDataLock(() => {
+    const index = readLoginIndexForUpdate();
+    const login = normalizeLogin(options.username);
 
-// ... [keep all existing code above] ...
-
-// 🎯 LANDMARK: UPDATE_USER_PROFILE_FUNCTION (IMPROVED ERROR HANDLING)
-export function updateUserProfile(
-  currentUserId: string,
-  newUsername: string,
-  newDisplayName: string,
-  newPassword?: string,
-  newRecoveryPhrase?: string
-): { success: boolean; user?: LocalUser; error?: string } {
-  const userDir = path.join(getDataDir(), currentUserId);
-  const userFile = path.join(userDir, 'user.json');
-  
-  if (!fs.existsSync(userFile)) {
-    return { success: false, error: 'User not found.' };
-  }
-
-  try {
-    const userData = JSON.parse(fs.readFileSync(userFile, 'utf8'));
-    
-    const normalizedNewUsername = newUsername.toLowerCase().trim();
-    const newUserId = generateUserId(normalizedNewUsername);
-    
-    let finalUserId = currentUserId;
-    let finalUserDir = userDir;
-    
-    // If login changes, we need to migrate to a new directory
-    if (newUserId !== currentUserId) {
-      const newUserDir = path.join(getDataDir(), newUserId);
-      
-      // Check if new directory already exists (another user with this login)
-      if (fs.existsSync(newUserDir)) {
-        return { success: false, error: 'This login is already taken.' };
-      }
-      
-      try {
-        // Create new directory
-        fs.mkdirSync(newUserDir, { recursive: true });
-        
-        // Copy ALL files from old directory to new directory
-        const files = fs.readdirSync(userDir);
-        for (const file of files) {
-          const oldPath = path.join(userDir, file);
-          const newPath = path.join(newUserDir, file);
-          const stat = fs.statSync(oldPath);
-          
-          if (stat.isFile()) {
-            fs.copyFileSync(oldPath, newPath);
-          } else if (stat.isDirectory()) {
-            // Recursively copy directories (in case there are subdirectories)
-            fs.cpSync(oldPath, newPath, { recursive: true });
-          }
-        }
-        
-        // Delete old directory
-        fs.rmSync(userDir, { recursive: true, force: true });
-        
-        finalUserId = newUserId;
-        finalUserDir = newUserDir;
-      } catch (migrationError) {
-        console.error('Migration error:', migrationError);
-        // If migration fails, continue with the old directory
-        finalUserId = currentUserId;
-        finalUserDir = userDir;
-      }
+    const existing = index.logins[login];
+    if (existing) {
+      const stored = getStoredUser(existing);
+      if (stored) return stored;
     }
 
-    const updatedUserFile = path.join(finalUserDir, 'user.json');
-    
-    // Use the data we already read, no need to re-read the file
-    const updatedData: any = {
-      username: normalizedNewUsername,
-      displayName: newDisplayName.trim(),
-      passwordHash: userData.passwordHash,
+    const uid = newUid();
+    const now = new Date().toISOString();
+    const user: StoredUser = {
+      schemaVersion: 2,
+      uid,
+      username: login,
+      displayName: options.displayName,
+      passwordHash: options.passwordHash,
+      createdAt: now,
+      updatedAt: now,
+      ...(options.originalFirebaseId ? { originalFirebaseId: options.originalFirebaseId } : {}),
     };
-    
-    if (newPassword && newPassword.trim().length > 0) {
-      updatedData.passwordHash = hashPassword(newPassword);
-    }
-    
-    if (newRecoveryPhrase !== undefined) {
-      if (newRecoveryPhrase.trim() === '') {
-        delete updatedData.recoveryPhrase;
-      } else {
-        updatedData.recoveryPhrase = newRecoveryPhrase.toLowerCase().trim();
-      }
-    } else if (userData.recoveryPhrase) {
-      updatedData.recoveryPhrase = userData.recoveryPhrase;
-    }
 
-    fs.writeFileSync(updatedUserFile, JSON.stringify(updatedData, null, 2), 'utf8');
-
-    return {
-      success: true,
-      user: {
-        uid: finalUserId,
-        username: normalizedNewUsername,
-        displayName: newDisplayName.trim(),
-        hasRecoveryPhrase: !!updatedData.recoveryPhrase
-      }
-    };
-  } catch (e) {
-    console.error('Error updating user profile:', e);
-    return { success: false, error: `Failed to update profile: ${e instanceof Error ? e.message : 'Unknown error'}` };
-  }
+    writeStoredUser(uid, user);
+    index.logins[login] = uid;
+    try {
+      writeLoginIndex(index);
+    } catch (e) {
+      console.error('Failed to update login index for imported user:', e);
+    }
+    return user;
+  });
 }
