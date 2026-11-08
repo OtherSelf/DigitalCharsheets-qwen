@@ -93,7 +93,14 @@ export function CharacterCard({ character }: CharacterCardProps) {
   };
 
   const handleExportExcel = () => {
-    exportCharacterToExcel(character);
+    const result = exportCharacterToExcel(character);
+    if (!result.success) {
+      toast({
+        variant: 'destructive',
+        title: t('error'),
+        description: result.error || 'Export failed.',
+      });
+    }
   };
 
   const getTranslatedClass = () => {

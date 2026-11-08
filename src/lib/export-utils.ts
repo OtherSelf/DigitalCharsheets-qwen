@@ -213,13 +213,14 @@ export function sanitizeFilenamePart(value: string, fallback = 'character'): str
  */
 export function exportFileName(
     kind: ExportKind,
-    options: { name?: string; login?: string; date?: Date } = {},
+    options: { name?: string; login?: string; date?: Date; extension?: 'json' | 'xlsx' } = {},
 ): string {
     const date = (options.date ?? new Date()).toISOString().slice(0, 10);
+    const extension = options.extension ?? 'json';
     if (kind === 'character') {
-        return `dcs_character_${sanitizeFilenamePart(options.name || '', 'character')}_${date}.json`;
+        return `dcs_character_${sanitizeFilenamePart(options.name || '', 'character')}_${date}.${extension}`;
     }
-    return `dcs_characters_all_${sanitizeFilenamePart(options.login || '', 'account')}_${date}.json`;
+    return `dcs_characters_all_${sanitizeFilenamePart(options.login || '', 'account')}_${date}.${extension}`;
 }
 
 export function buildCharacterExport(
@@ -731,7 +732,7 @@ export const mergeImportedData = (
 };
 
 // 🎯 LANDMARK: COMPREHENSIVE_USER_FRIENDLY_EXCEL_EXPORT
-export const exportCharacterToExcel = (character: Character) => {
+function buildCharacterSheetRows(character: Character, now = new Date()): any[][] {
     const data: any[][] = [];
     const isDnD = character.gameSystem === 'Dungeons & Dragons';
     const dnd = character as DnD5eCharacter;
@@ -767,11 +768,17 @@ export const exportCharacterToExcel = (character: Character) => {
     };
 
     // ═══════════════════════════════════════════════════════════
-    // HEADER
+    // HEADER / METADATA (тот же стандарт, что у JSON-экспорта)
     // ═══════════════════════════════════════════════════════════
-    data.push([`${character.name.toUpperCase()} — CHARACTER SHEET`]);
-    data.push([`Game System: ${character.gameSystem}`]);
-    data.push([`Exported: ${new Date().toLocaleString()}`]);
+    data.push(['DIGITAL CHARACTER SHEETS — CHARACTER EXPORT']);
+    data.push(['App', EXPORT_APP_NAME]);
+    data.push(['Format', EXPORT_FORMAT]);
+    data.push(['Format version', EXPORT_FORMAT_VERSION]);
+    data.push(['Kind', 'character']);
+    data.push(['Export date', now.toISOString()]);
+    data.push(['Character ID', character.id]);
+    data.push(['Character', character.name]);
+    data.push(['Game system', character.gameSystem]);
     addEmptyRow();
 
     // ═══════════════════════════════════════════════════════════
@@ -1331,25 +1338,64 @@ export const exportCharacterToExcel = (character: Character) => {
         addEmptyRow();
     }
 
-    // ═══════════════════════════════════════════════════════════
-    // CREATE WORKSHEET
-    // ═══════════════════════════════════════════════════════════
-    const worksheet = XLSX.utils.aoa_to_sheet(data);
-    worksheet['!cols'] = [
-        { wch: 35 },  // Column A: Labels
-        { wch: 40 },  // Column B: Values / Description
-        { wch: 40 },  // Column C: Notes / Additional
-        { wch: 15 },  // Column D: Additional
-        { wch: 15 },  // Column E: Additional
-        { wch: 15 },  // Column F: Additional
-        { wch: 20 },  // Column G: Additional
-        { wch: 20 },  // Column H: Additional
-        { wch: 30 }   // Column I: Notes/Description
-    ];
+    return data;
+}
 
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Character Sheet");
-    
-    const fileName = `${character.name.replace(/\s+/g, '_')}_Complete_Character_Sheet.xlsx`;
-    XLSX.writeFile(workbook, fileName);
+/** Имя листа Excel: без `[]:*?/\\`, не длиннее 31 символа. */
+function excelSheetName(character: Character): string {
+    const cleaned = String(character.name || '')
+        .replace(/[\[\]:*?\/\\]/g, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+    return (cleaned || 'Character').slice(0, 31);
+}
+
+const EXCEL_COLUMNS = [
+    { wch: 35 },  // Column A: Labels
+    { wch: 40 },  // Column B: Values / Description
+    { wch: 40 },  // Column C: Notes / Additional
+    { wch: 15 },  // Column D: Additional
+    { wch: 15 },  // Column E: Additional
+    { wch: 15 },  // Column F: Additional
+    { wch: 20 },  // Column G: Additional
+    { wch: 20 },  // Column H: Additional
+    { wch: 30 }   // Column I: Notes/Description
+];
+
+/**
+ * xlsx-выгрузка одного листа: `dcs_character_<имя>_<YYYY-MM-DD>.xlsx`.
+ * Внутри — стандартный технический блок (appName/format/version/kind/дата),
+ * затем человекочитаемый лист по секциям. Данные проверяются так же, как при
+ * JSON-экспорте: битый лист не превращается в файл.
+ */
+export const exportCharacterToExcel = (
+    character: Character,
+    now = new Date(),
+): { success: boolean; filename?: string; error?: string } => {
+    try {
+        const errors = validateCharacterPayload(character, 0);
+        if (errors.length > 0) {
+            return { success: false, error: `Экспорт отменён: ${errors.join(' ')}` };
+        }
+
+        const worksheet = XLSX.utils.aoa_to_sheet(buildCharacterSheetRows(character, now));
+        worksheet['!cols'] = EXCEL_COLUMNS;
+
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, excelSheetName(character));
+
+        const filename = exportFileName('character', {
+            name: character.name,
+            date: now,
+            extension: 'xlsx',
+        });
+        XLSX.writeFile(workbook, filename);
+        return { success: true, filename };
+    } catch (error) {
+        console.error('Excel export failed:', error);
+        return {
+            success: false,
+            error: error instanceof Error ? error.message : 'Export failed.',
+        };
+    }
 };

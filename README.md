@@ -29,7 +29,11 @@ Both JSON exports (one character and the full backup) use the same envelope:
 
 A full backup uses `"kind": "backup"`, `"characters": [...]` and `"account": "<login>"`.
 Files are named `dcs_character_<name>_<YYYY-MM-DD>.json` and
-`dcs_characters_all_<login>_<YYYY-MM-DD>.json`. Import accepts only this format and
+`dcs_characters_all_<login>_<YYYY-MM-DD>.json`. The Excel export follows the same
+base name (`dcs_character_<name>_<YYYY-MM-DD>.xlsx`) and starts with the same
+technical block (`App`, `Format`, `Format version`, `Kind`, `Export date`,
+`Character ID`, `Character`, `Game system`) before the human-readable sections;
+the sheet is named after the character. Import accepts only this format and
 validates `appName`, `format`, version, `kind`, character fields and `characterCount`;
 legacy files (a bare array, a bare character or a v1 envelope) are rejected with a
 "re-export" message.
