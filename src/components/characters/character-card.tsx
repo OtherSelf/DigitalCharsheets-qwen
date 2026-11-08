@@ -73,7 +73,7 @@ type CharacterCardProps = {
 
 export function CharacterCard({ character }: CharacterCardProps) {
   const { t } = useTranslation();
-  const { deleteCharacter, isCompactView } = useCharacterContext();
+  const { deleteCharacter, isCompactView, toast } = useCharacterContext();
 
   const badgeVariant = character.gameSystem === 'Dungeons & Dragons' ? 'default' : 'secondary';
 
@@ -82,7 +82,14 @@ export function CharacterCard({ character }: CharacterCardProps) {
   };
 
   const handleExportJSON = () => {
-    exportCharacterToJSON(character, DEFAULT_EXPORT_CONFIG);
+    const result = exportCharacterToJSON(character, DEFAULT_EXPORT_CONFIG);
+    if (!result.success) {
+      toast({
+        variant: 'destructive',
+        title: t('error'),
+        description: result.error || 'Export failed.',
+      });
+    }
   };
 
   const handleExportExcel = () => {

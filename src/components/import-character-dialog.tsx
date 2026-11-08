@@ -49,6 +49,10 @@ export function ImportCharacterDialog({ isCompactView }: ImportCharacterDialogPr
       return;
     }
 
+    if (result.warnings && result.warnings.length > 0) {
+      console.warn('[import]', ...result.warnings);
+    }
+
     try {
       let lastCreatedCharId: string | undefined;
       let importedCount = 0;

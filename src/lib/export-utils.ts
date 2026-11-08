@@ -4,7 +4,7 @@
 
 import * as XLSX from 'xlsx';
 import { Character, DnD5eCharacter, DarkHeresyCharacter } from './types';
-import { isNonPortableField } from './character-portable';
+import { isNonPortableField, toPortableCharacter } from './character-portable';
 
 export interface ExportConfig {
     includeBasicInfo: boolean;
@@ -34,17 +34,58 @@ export const DEFAULT_EXPORT_CONFIG: ExportConfig = {
     includeCustomHouseRules: true,
 };
 
+/**
+ * ─── LANDMARK: EXPORT FORMAT ────────────────────────────────────────────────
+ * Единый конверт для одиночного листа и полного бэкапа:
+ *
+ *   {
+ *     "metadata": {
+ *       "appName": "DigitalCharsheets-qwen",
+ *       "format": "dcs-export",
+ *       "version": "2.0",              // версия ФОРМАТА, не приложения
+ *       "kind": "character" | "backup",
+ *       "exportDate": "2026-11-08T…Z",
+ *       "characterCount": 1,
+ *       "account": "petya",            // только для backup
+ *       "config": { … }                // только для character (секции)
+ *     },
+ *     "character": { … }               // kind=character
+ *     "characters": [ … ]              // kind=backup
+ *   }
+ *
+ * Формат новый и единственный: старые файлы (просто массив листов, голый лист,
+ * конверт v1 без format/kind) импорт намеренно не принимает — при попытке
+ * будет понятная ошибка «переэкспортируйте файл».
+ */
+export const EXPORT_APP_NAME = 'DigitalCharsheets-qwen';
+export const EXPORT_FORMAT = 'dcs-export';
+export const EXPORT_FORMAT_VERSION = '2.0';
+const EXPORT_FORMAT_MAJOR = 2;
+
+export type ExportKind = 'character' | 'backup';
+
 export interface ExportMetadata {
-    appName: string;
+    appName: typeof EXPORT_APP_NAME;
+    format: typeof EXPORT_FORMAT;
     version: string;
+    kind: ExportKind;
     exportDate: string;
-    config: ExportConfig;
+    characterCount: number;
+    config?: ExportConfig;
+    account?: string;
 }
 
 export interface ExportData {
     metadata: ExportMetadata;
     character: Partial<Character>;
 }
+
+export interface BackupExport {
+    metadata: ExportMetadata;
+    characters: Partial<Character>[];
+}
+
+export type StandardExport = ExportData | BackupExport;
 
 export const sanitizeData = (data: any): any => {
     if (Array.isArray(data)) {
@@ -116,10 +157,250 @@ const normalizeCharacter = (char: any): any => {
     return char;
 };
 
+const SUPPORTED_EXPORT_SYSTEMS = ['Dungeons & Dragons', 'Dark Heresy'] as const;
+
+function validateCharacterPayload(character: any, index: number): string[] {
+    const label = `Персонаж #${index + 1}`;
+    if (!character || typeof character !== 'object' || Array.isArray(character)) {
+        return [`${label}: ожидался объект.`];
+    }
+    const errors: string[] = [];
+    if (!SUPPORTED_EXPORT_SYSTEMS.includes(character.gameSystem)) {
+        errors.push(`${label}: неизвестная игровая система ${JSON.stringify(character.gameSystem)}.`);
+    }
+    if (typeof character.name !== 'string' || !character.name.trim()) {
+        errors.push(`${label}: пустое имя (name).`);
+    }
+    if (character.id !== undefined && typeof character.id !== 'string') {
+        errors.push(`${label}: id должен быть строкой.`);
+    }
+    return errors;
+}
+
+function normalizeExportConfig(raw: unknown): ExportConfig {
+    const config = { ...DEFAULT_EXPORT_CONFIG };
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return config;
+    for (const key of Object.keys(DEFAULT_EXPORT_CONFIG) as (keyof ExportConfig)[]) {
+        if (typeof (raw as any)[key] === 'boolean') config[key] = (raw as any)[key];
+    }
+    return config;
+}
+
+function assertExportable(characters: any[]): void {
+    const errors = characters.flatMap((character, index) => validateCharacterPayload(character, index));
+    if (errors.length > 0) {
+        throw new Error(`Экспорт отменён: ${errors.join(' ')}`);
+    }
+}
+
+/** Часть имени файла без символов, недопустимых в ФС; пробелы → `_`. */
+export function sanitizeFilenamePart(value: string, fallback = 'character'): string {
+    const cleaned = String(value ?? '')
+        .normalize('NFC')
+        .replace(/[\\/:*?"<>|\u0000-\u001f]/g, '')
+        .trim()
+        .replace(/\s+/g, '_')
+        .replace(/_+/g, '_')
+        .replace(/^[._]+|[._]+$/g, '');
+    const safe = (cleaned || fallback).slice(0, 80).replace(/[._]+$/g, '');
+    return safe || fallback;
+}
+
+/**
+ * Имена файлов:
+ *   dcs_character_<имя>_<YYYY-MM-DD>.json
+ *   dcs_characters_all_<логин>_<YYYY-MM-DD>.json
+ */
+export function exportFileName(
+    kind: ExportKind,
+    options: { name?: string; login?: string; date?: Date } = {},
+): string {
+    const date = (options.date ?? new Date()).toISOString().slice(0, 10);
+    if (kind === 'character') {
+        return `dcs_character_${sanitizeFilenamePart(options.name || '', 'character')}_${date}.json`;
+    }
+    return `dcs_characters_all_${sanitizeFilenamePart(options.login || '', 'account')}_${date}.json`;
+}
+
+export function buildCharacterExport(
+    character: Character,
+    config: ExportConfig,
+    now = new Date(),
+): ExportData {
+    const portable = toPortableCharacter(
+        character as unknown as Record<string, unknown>,
+    ) as unknown as Character;
+    assertExportable([portable]);
+    return {
+        metadata: {
+            appName: EXPORT_APP_NAME,
+            format: EXPORT_FORMAT,
+            version: EXPORT_FORMAT_VERSION,
+            kind: 'character',
+            exportDate: now.toISOString(),
+            characterCount: 1,
+            config,
+        },
+        character: filterCharacterForExport(portable, config),
+    };
+}
+
+export function buildBackupExport(
+    characters: Character[],
+    account?: string,
+    now = new Date(),
+): BackupExport {
+    const portable = characters.map(character =>
+        toPortableCharacter(
+            character as unknown as Record<string, unknown>,
+        ) as unknown as Character,
+    );
+    assertExportable(portable);
+    return {
+        metadata: {
+            appName: EXPORT_APP_NAME,
+            format: EXPORT_FORMAT,
+            version: EXPORT_FORMAT_VERSION,
+            kind: 'backup',
+            exportDate: now.toISOString(),
+            characterCount: portable.length,
+            ...(account ? { account } : {}),
+        },
+        characters: portable as unknown as Partial<Character>[],
+    };
+}
+
+export type ParseExportResult =
+    | {
+          ok: true;
+          kind: ExportKind;
+          metadata: ExportMetadata;
+          characters: Partial<Character>[];
+          warnings: string[];
+      }
+    | { ok: false; error: string };
+
+/**
+ * Разобрать и проверить файл экспорта. Принимает только новый формат:
+ * metadata (format/appName/version/kind) + character | characters.
+ * Всё остальное — ошибка с подсказкой, без «угадывания» старого формата.
+ */
+export function parseExportPayload(raw: unknown, now = new Date()): ParseExportResult {
+    const data = sanitizeData(raw);
+    if (!data || typeof data !== 'object' || Array.isArray(data)) {
+        return {
+            ok: false,
+            error: 'Неизвестный формат: ожидался объект экспорта DigitalCharsheets (metadata + character/characters).',
+        };
+    }
+
+    const obj = data as Record<string, any>;
+    const metadata = obj.metadata;
+    if (!metadata || typeof metadata !== 'object' || Array.isArray(metadata)) {
+        return {
+            ok: false,
+            error: 'Неизвестный формат: нет metadata. Переэкспортируйте файл текущей версией приложения.',
+        };
+    }
+    if (metadata.format !== EXPORT_FORMAT) {
+        return {
+            ok: false,
+            error: `Неизвестный формат${metadata.format ? ` «${metadata.format}»` : ''}: поддерживается только ${EXPORT_FORMAT} v${EXPORT_FORMAT_MAJOR}.`,
+        };
+    }
+    if (metadata.appName !== EXPORT_APP_NAME) {
+        return {
+            ok: false,
+            error: `Файл создан другим приложением (${metadata.appName || 'неизвестно'}), импорт отменён.`,
+        };
+    }
+
+    const version = String(metadata.version ?? '');
+    const major = Number.parseInt(version.split('.')[0], 10);
+    if (!version || !Number.isFinite(major)) {
+        return { ok: false, error: 'В metadata не указана версия формата.' };
+    }
+    if (major !== EXPORT_FORMAT_MAJOR) {
+        return {
+            ok: false,
+            error: `Неподдерживаемая версия формата ${version}: поддерживается ${EXPORT_FORMAT_MAJOR}.x.`,
+        };
+    }
+
+    const kind = metadata.kind;
+    if (kind !== 'character' && kind !== 'backup') {
+        return {
+            ok: false,
+            error: 'В metadata не указан тип экспорта (kind: character | backup).',
+        };
+    }
+
+    let rawCharacters: any[];
+    if (kind === 'character') {
+        if (!obj.character || typeof obj.character !== 'object' || Array.isArray(obj.character)) {
+            return { ok: false, error: 'Экспорт помечен как character, но поля character нет.' };
+        }
+        rawCharacters = [obj.character];
+    } else {
+        if (!Array.isArray(obj.characters)) {
+            return { ok: false, error: 'Экспорт помечен как backup, но поля characters нет.' };
+        }
+        rawCharacters = obj.characters;
+    }
+    if (rawCharacters.length === 0) {
+        return { ok: false, error: 'Файл не содержит персонажей.' };
+    }
+
+    const warnings: string[] = [];
+    if (
+        kind === 'backup' &&
+        typeof metadata.characterCount === 'number' &&
+        metadata.characterCount !== rawCharacters.length
+    ) {
+        warnings.push(
+            `В metadata указано ${metadata.characterCount} персонажей, в файле ${rawCharacters.length}.`,
+        );
+    }
+
+    const characters: Partial<Character>[] = [];
+    for (let index = 0; index < rawCharacters.length; index += 1) {
+        const normalized = normalizeCharacter(rawCharacters[index]);
+        const errors = validateCharacterPayload(normalized, index);
+        if (errors.length > 0) {
+            return { ok: false, error: errors.join(' ') };
+        }
+        characters.push(normalized as Partial<Character>);
+    }
+
+    return {
+        ok: true,
+        kind,
+        metadata: {
+            appName: EXPORT_APP_NAME,
+            format: EXPORT_FORMAT,
+            version,
+            kind,
+            exportDate:
+                typeof metadata.exportDate === 'string' ? metadata.exportDate : now.toISOString(),
+            characterCount: rawCharacters.length,
+            ...(kind === 'character'
+                ? { config: normalizeExportConfig(metadata.config) }
+                : {}),
+            ...(typeof metadata.account === 'string' && metadata.account
+                ? { account: metadata.account }
+                : {}),
+        },
+        characters,
+        warnings,
+    };
+}
+
 export type ImportResult = {
     success: boolean;
+    kind?: ExportKind;
     data?: ExportData;
     batchData?: Partial<Character>[];
+    warnings?: string[];
     error?: string;
 };
 
@@ -226,22 +507,40 @@ export const filterCharacterForExport = (character: Character, config: ExportCon
     return filtered;
 };
 
-export const exportCharacterToJSON = (character: Character, config: ExportConfig) => {
-    const exportData: ExportData = {
-        metadata: { appName: "DigitalCharsheets-qwen", version: "1.0", exportDate: new Date().toISOString(), config },
-        character: filterCharacterForExport(character, config),
-    };
-
-    const jsonString = JSON.stringify(exportData, null, 2);
+function downloadJsonFile(data: unknown, filename: string): void {
+    const jsonString = JSON.stringify(data, null, 2);
     const blob = new Blob([jsonString], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${character.name.replace(/\s+/g, '_')}_Character.json`;
+    a.download = filename;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+}
+
+/**
+ * Одиночный лист → `dcs_character_<имя>_<дата>.json`.
+ * Перед выгрузкой данные проверяются: битый лист не превращается в «тихо
+ * сломанный» файл, а возвращает ошибку (UI показывает её).
+ */
+export const exportCharacterToJSON = (
+    character: Character,
+    config: ExportConfig,
+): { success: boolean; error?: string; filename?: string } => {
+    try {
+        const payload = buildCharacterExport(character, config);
+        const filename = exportFileName('character', { name: character.name });
+        downloadJsonFile(payload, filename);
+        return { success: true, filename };
+    } catch (error) {
+        console.error('Character export failed:', error);
+        return {
+            success: false,
+            error: error instanceof Error ? error.message : 'Export failed.',
+        };
+    }
 };
 
 export const importCharacterFromJSON = (file: File): Promise<ImportResult> => {
@@ -249,55 +548,40 @@ export const importCharacterFromJSON = (file: File): Promise<ImportResult> => {
         const reader = new FileReader();
         reader.onload = (e) => {
             try {
-                const text = e.target?.result as string;
-                let parsed = JSON.parse(text);
-                parsed = sanitizeData(parsed);
+                const parsedJson = JSON.parse(String(e.target?.result ?? ''));
+                const parsed = parseExportPayload(parsedJson);
 
-                if (parsed.metadata && parsed.metadata.appName === "DigitalCharsheets-qwen") {
-                    resolve({ success: true, data: parsed as ExportData });
+                if (!parsed.ok) {
+                    resolve({ success: false, error: parsed.error });
                     return;
                 }
 
-                let rawCharacters: any[] = [];
-                if (Array.isArray(parsed)) {
-                    rawCharacters = parsed;
-                } else if (parsed.gameSystem) {
-                    rawCharacters = [parsed];
-                } else {
-                    resolve({ success: false, error: "Invalid file format: Missing 'gameSystem'." });
+                if (parsed.kind === 'backup') {
+                    resolve({
+                        success: true,
+                        kind: 'backup',
+                        batchData: parsed.characters,
+                        warnings: parsed.warnings,
+                    });
                     return;
                 }
-
-                if (rawCharacters.length === 0) {
-                    resolve({ success: false, error: "The backup file is empty." });
-                    return;
-                }
-
-                const normalizedCharacters = rawCharacters.map(normalizeCharacter);
-
-                const wrappedData: ExportData = {
-                    metadata: {
-                        appName: "DigitalCharsheets-qwen",
-                        version: "1.0 (Backup Import)",
-                        exportDate: new Date().toISOString(),
-                        config: DEFAULT_EXPORT_CONFIG,
-                    },
-                    character: normalizedCharacters[0] as Partial<Character>,
-                };
 
                 resolve({
                     success: true,
-                    data: wrappedData,
-                    batchData: normalizedCharacters
+                    kind: 'character',
+                    data: {
+                        metadata: parsed.metadata,
+                        character: parsed.characters[0],
+                    },
+                    batchData: parsed.characters,
+                    warnings: parsed.warnings,
                 });
-
             } catch (err) {
-                console.error("Import parse error:", err);
-                resolve({ success: false, error: "Failed to parse JSON file. Ensure it is a valid backup." });
+                console.error('Import parse error:', err);
+                resolve({ success: false, error: 'Failed to parse JSON file. Ensure it is a valid backup.' });
             }
         };
-
-        reader.onerror = () => resolve({ success: false, error: "Failed to read file." });
+        reader.onerror = () => resolve({ success: false, error: 'Failed to read file.' });
         reader.readAsText(file);
     });
 };

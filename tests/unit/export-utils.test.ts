@@ -5,10 +5,17 @@ import { afterAll, describe, expect, it, vi } from 'vitest';
 
 import {
   DEFAULT_EXPORT_CONFIG,
+  EXPORT_APP_NAME,
+  EXPORT_FORMAT,
+  EXPORT_FORMAT_VERSION,
+  buildBackupExport,
+  buildCharacterExport,
   exportCharacterToExcel,
+  exportFileName,
   filterCharacterForExport,
   importCharacterFromJSON,
   mergeImportedData,
+  parseExportPayload,
   sanitizeData,
 } from '@/lib/export-utils';
 import { makeDhCharacter, makeDndCharacter } from './helpers';
@@ -127,65 +134,192 @@ describe('filterCharacterForExport', () => {
   });
 });
 
-describe('importCharacterFromJSON', () => {
-  it('принимает нативный экспорт приложения (metadata.appName)', async () => {
-    const exported = {
-      metadata: {
-        appName: 'DigitalCharsheets-qwen',
-        version: '1.0',
-        exportDate: new Date().toISOString(),
-        config: DEFAULT_EXPORT_CONFIG,
-      },
-      character: { id: 'c1', gameSystem: 'Dungeons & Dragons', name: 'Ragnar', userId: 'user-x' },
-    };
+const meta = (kind: 'character' | 'backup', extra: Record<string, unknown> = {}) => ({
+  appName: EXPORT_APP_NAME,
+  format: EXPORT_FORMAT,
+  version: EXPORT_FORMAT_VERSION,
+  kind,
+  exportDate: '2026-11-08T12:00:00.000Z',
+  characterCount: kind === 'backup' ? 2 : 1,
+  ...extra,
+});
 
-    const result = await importCharacterFromJSON(fileOf(exported));
+describe('export format', () => {
+  const date = new Date('2026-11-08T12:34:56.000Z');
 
-    expect(result.success).toBe(true);
-    expect(result.data?.character).toMatchObject({ id: 'c1', name: 'Ragnar' });
-    // sanitizeData вырезал userId
-    expect((result.data?.character as any).userId).toBeUndefined();
+  it('имена файлов: dcs_character_<имя>_<дата> и dcs_characters_all_<логин>_<дата>', () => {
+    expect(exportFileName('character', { name: 'Ragnar Testborn', date })).toBe(
+      'dcs_character_Ragnar_Testborn_2026-11-08.json',
+    );
+    expect(exportFileName('backup', { login: 'petya', date })).toBe(
+      'dcs_characters_all_petya_2026-11-08.json',
+    );
   });
 
-  it('принимает одиночного «голого» персонажа и нормализует дефолты', async () => {
-    const bare = { gameSystem: 'Dungeons & Dragons', name: 'Solo' };
-    const result = await importCharacterFromJSON(fileOf(bare));
+  it('чистит недопустимые для ФС символы, кириллицу сохраняет', () => {
+    expect(exportFileName('character', { name: 'A/B: C*?<>|', date })).toBe(
+      'dcs_character_AB_C_2026-11-08.json',
+    );
+    expect(exportFileName('character', { name: 'Иван Грозный', date })).toBe(
+      'dcs_character_Иван_Грозный_2026-11-08.json',
+    );
+  });
 
-    expect(result.success).toBe(true);
-    expect(result.batchData).toHaveLength(1);
-    expect(result.batchData?.[0].name).toBe('Solo');
-    // normalizeCharacter подставил статы и хиты
-    expect((result.batchData?.[0] as any).stats).toEqual({
-      strength: 10,
-      dexterity: 10,
-      constitution: 10,
-      intelligence: 10,
-      wisdom: 10,
-      charisma: 10,
+  it('buildCharacterExport: конверт с metadata и без служебных полей', () => {
+    const payload = buildCharacterExport(makeDndCharacter() as any, DEFAULT_EXPORT_CONFIG, date);
+
+    expect(payload.metadata).toMatchObject({
+      appName: EXPORT_APP_NAME,
+      format: EXPORT_FORMAT,
+      version: EXPORT_FORMAT_VERSION,
+      kind: 'character',
+      exportDate: date.toISOString(),
+      characterCount: 1,
     });
-    expect((result.batchData?.[0] as any).hitPoints).toEqual({ current: 0, max: 0 });
+    expect(payload.metadata.config).toEqual(DEFAULT_EXPORT_CONFIG);
+    expect((payload.character as any).userId).toBeUndefined();
+    expect(payload.character.name).toBe('Ragnar Testborn');
   });
 
-  it('принимает массив персонажей как пакетный бэкап', async () => {
+  it('buildBackupExport: список целиком, account и characterCount', () => {
+    const payload = buildBackupExport(
+      [makeDndCharacter({ id: 'a' }), makeDhCharacter({ id: 'b' })] as any,
+      'petya',
+      date,
+    );
+
+    expect(payload.metadata).toMatchObject({
+      kind: 'backup',
+      characterCount: 2,
+      account: 'petya',
+      exportDate: date.toISOString(),
+    });
+    expect(payload.characters).toHaveLength(2);
+    expect((payload.characters[0] as any).userId).toBeUndefined();
+  });
+
+  it('build отказывается экспортировать лист без имени/системы', () => {
+    expect(() =>
+      buildCharacterExport(makeDndCharacter({ name: '' }) as any, DEFAULT_EXPORT_CONFIG),
+    ).toThrow(/Экспорт отменён/);
+    expect(() =>
+      buildCharacterExport({ gameSystem: 'Unknown', name: 'X' } as any, DEFAULT_EXPORT_CONFIG),
+    ).toThrow(/игровая система/);
+  });
+
+  it('round-trip: build → parse возвращает тот же набор', () => {
+    const payload = buildBackupExport([makeDndCharacter({ id: 'a' })] as any, 'petya', date);
+    const parsed = parseExportPayload(JSON.parse(JSON.stringify(payload)), date);
+
+    expect(parsed.ok).toBe(true);
+    if (!parsed.ok) return;
+    expect(parsed.kind).toBe('backup');
+    expect(parsed.characters).toHaveLength(1);
+    expect(parsed.metadata.account).toBe('petya');
+    expect(parsed.warnings).toEqual([]);
+  });
+});
+
+describe('importCharacterFromJSON (только формат dcs-export v2)', () => {
+  it('принимает одиночный конверт и вычищает служебные поля', async () => {
     const result = await importCharacterFromJSON(
-      fileOf([makeDndCharacter({ id: 'a' }), makeDhCharacter({ id: 'b' })]),
+      fileOf({
+        metadata: meta('character', { config: DEFAULT_EXPORT_CONFIG }),
+        character: { ...makeDndCharacter(), userId: 'user-x', migratedFromUid: 'fb-1' },
+      }),
     );
 
     expect(result.success).toBe(true);
+    expect(result.kind).toBe('character');
+    expect(result.data?.character.name).toBe('Ragnar Testborn');
+    expect((result.data?.character as any).userId).toBeUndefined();
+    expect((result.data?.character as any).migratedFromUid).toBeUndefined();
+  });
+
+  it('принимает бэкап нескольких персонажей', async () => {
+    const result = await importCharacterFromJSON(
+      fileOf({
+        metadata: meta('backup', { account: 'petya' }),
+        characters: [makeDndCharacter({ id: 'a' }), makeDhCharacter({ id: 'b' })],
+      }),
+    );
+
+    expect(result.success).toBe(true);
+    expect(result.kind).toBe('backup');
+    expect(result.data).toBeUndefined();
     expect(result.batchData).toHaveLength(2);
     expect(result.batchData?.map((c) => c.id)).toEqual(['a', 'b']);
   });
 
-  it('отклоняет JSON без gameSystem', async () => {
-    const result = await importCharacterFromJSON(fileOf({ hello: 'world' }));
-    expect(result.success).toBe(false);
-    expect(result.error).toContain('gameSystem');
+  it('предупреждает, если characterCount не совпадает с файлом', async () => {
+    const result = await importCharacterFromJSON(
+      fileOf({
+        metadata: meta('backup', { characterCount: 99 }),
+        characters: [makeDndCharacter({ id: 'a' })],
+      }),
+    );
+
+    expect(result.success).toBe(true);
+    expect(result.warnings?.join(' ')).toContain('99');
   });
 
-  it('отклоняет пустой массив', async () => {
-    const result = await importCharacterFromJSON(fileOf([]));
+  it('отклоняет старый конверт без format (совместимость не поддерживаем)', async () => {
+    const result = await importCharacterFromJSON(
+      fileOf({
+        metadata: { appName: EXPORT_APP_NAME, version: '1.0', exportDate: 'x', config: {} },
+        character: makeDndCharacter(),
+      }),
+    );
+
     expect(result.success).toBe(false);
-    expect(result.error).toContain('empty');
+    expect(result.error).toMatch(/формат/i);
+  });
+
+  it('отклоняет старый бэкап-массив и голый лист', async () => {
+    const array = await importCharacterFromJSON(fileOf([makeDndCharacter()]));
+    expect(array.success).toBe(false);
+    expect(array.error).toMatch(/формат/i);
+
+    const bare = await importCharacterFromJSON(fileOf(makeDndCharacter()));
+    expect(bare.success).toBe(false);
+    expect(bare.error).toMatch(/формат/i);
+  });
+
+  it('отклоняет чужое приложение и чужую версию формата', async () => {
+    const foreign = await importCharacterFromJSON(
+      fileOf({
+        metadata: { ...meta('character'), appName: 'OtherApp' },
+        character: makeDndCharacter(),
+      }),
+    );
+    expect(foreign.success).toBe(false);
+    expect(foreign.error).toMatch(/другим приложением/i);
+
+    const newer = await importCharacterFromJSON(
+      fileOf({
+        metadata: { ...meta('character'), version: '3.0' },
+        character: makeDndCharacter(),
+      }),
+    );
+    expect(newer.success).toBe(false);
+    expect(newer.error).toMatch(/версия формата/i);
+  });
+
+  it('отклоняет пустой бэкап и лист без имени', async () => {
+    const empty = await importCharacterFromJSON(
+      fileOf({ metadata: meta('backup', { characterCount: 0 }), characters: [] }),
+    );
+    expect(empty.success).toBe(false);
+    expect(empty.error).toMatch(/не содержит/i);
+
+    const nameless = await importCharacterFromJSON(
+      fileOf({
+        metadata: meta('character'),
+        character: { gameSystem: 'Dungeons & Dragons', name: '  ' },
+      }),
+    );
+    expect(nameless.success).toBe(false);
+    expect(nameless.error).toMatch(/имя/i);
   });
 
   it('отклоняет битый JSON, не падая', async () => {
