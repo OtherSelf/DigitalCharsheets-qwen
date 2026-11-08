@@ -184,7 +184,7 @@ export function Header({ onNotesClick, onJournalClick, mobileActions }: HeaderPr
                 value={character.edition || '1st'}
                 onValueChange={(value: '1st' | '2nd' | 'hybrid') => updateCharacter(character.id, { edition: value })}
               >
-                <SelectTrigger className="h-7 w-[110px] text-xs">
+                <SelectTrigger className="h-7 w-[110px] text-xs" data-testid="dh-edition-select">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

@@ -186,7 +186,7 @@ test.describe('общие страницы', () => {
     await openApp(page, '/stats-editor');
 
     await page.getByRole('button', { name: /^Dark Heresy Vitals/ }).click();
-    await expect(page.getByText('Wounds Max').first()).toBeVisible();
+    await expect(page.getByText('Max Wounds').first()).toBeVisible();
 
     await screenshotPage(page, 'stats-editor-dh-vitals-en.png');
   });
@@ -197,7 +197,7 @@ test.describe('общие страницы', () => {
     await openApp(page, '/stats-editor');
 
     await page.getByRole('button', { name: /^D&D Vitals/ }).click();
-    await expect(page.getByText('HP Max').first()).toBeVisible();
+    await expect(page.getByText('Max HP').first()).toBeVisible();
 
     await screenshotPage(page, 'stats-editor-dnd-vitals-en.png');
   });

@@ -139,17 +139,17 @@ test.describe('D&D — русская локаль', () => {
     await openApp(page, `/${getState().dndId}`);
 
     await expect(
-      page.getByRole('navigation').getByRole('button', { name: 'Инфо', exact: true }),
+      page.getByRole('navigation').getByRole('button', { name: 'Информация', exact: true }),
     ).toBeVisible();
     await screenshotPage(page, 'sheet-dnd-mobile-info-ru.png');
 
     await openMobileSection(page, 'Характеристики');
     await screenshotPage(page, 'sheet-dnd-mobile-stats-ru.png');
 
-    await openMobileSection(page, 'Боевые статы');
+    await openMobileSection(page, 'Боевые параметры');
     await screenshotPage(page, 'sheet-dnd-mobile-combat-ru.png');
 
-    await openMobileSection(page, 'Инвентарь и Настройка');
+    await openMobileSection(page, 'Инвентарь и настройка');
     await screenshotPage(page, 'sheet-dnd-mobile-inventory-ru.png');
 
     await openMobileSection(page, 'Заклинания', 'spells-section');
@@ -174,14 +174,14 @@ test.describe('D&D — русская локаль', () => {
     await startEditing(skills);
     await screenshotPage(page, 'sheet-dnd-mobile-edit-skills-ru.png');
 
-    await openMobileSection(page, 'Инвентарь и Настройка');
+    await openMobileSection(page, 'Инвентарь и настройка');
     await discardUnsavedChanges(page);
     const inventory = page.locator('#inventory-box:visible').first();
     await inventory.locator('[data-testid="edit-button"]:visible').first().click();
     await inventory.locator('[data-testid="edit-button"]:visible').first().click();
     await screenshotPage(page, 'sheet-dnd-mobile-edit-inventory-ru.png');
 
-    await openMobileSection(page, 'Боевые статы');
+    await openMobileSection(page, 'Боевые параметры');
     await discardUnsavedChanges(page);
     const combat = page.locator('#hit-points-card:visible').first();
     await startEditing(combat);
@@ -270,13 +270,13 @@ test.describe('Dark Heresy — русская локаль', () => {
     await expect(page.getByText('Характеристики', { exact: true }).first()).toBeVisible();
     await screenshotPage(page, 'sheet-dh-mobile-info-ru.png');
 
-    await openMobileSection(page, 'Прогрессия');
+    await openMobileSection(page, 'Прогресс');
     await screenshotPage(page, 'sheet-dh-mobile-progression-ru.png');
 
     await openMobileSection(page, 'Навыки');
     await screenshotPage(page, 'sheet-dh-mobile-skills-ru.png');
 
-    await openMobileSection(page, 'Таланты и Черты');
+    await openMobileSection(page, 'Таланты и черты');
     await screenshotPage(page, 'sheet-dh-mobile-talents-ru.png');
 
     await openMobileSection(page, 'Снаряжение', 'equipment-section');

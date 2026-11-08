@@ -819,6 +819,17 @@ export const ruTranslations = {
   savedVitalsFor: "Статы сохранены для",
   allDhVitalsSaved: "Все статы Dark Heresy сохранены!",
   allDndVitalsSaved: "Все статы D&D сохранены!",
+  // Аббревиатуры характеристик Dark Heresy (потеряны при разбиении файла)
+  weaponSkillAbbr: "ББ",
+  ballisticSkillAbbr: "ДБ",
+  strengthAbbr: "СЛ",
+  toughnessAbbr: "СТ",
+  agilityAbbr: "ЛВ",
+  intelligenceAbbr: "ИНТ",
+  perceptionAbbr: "ВП",
+  willpowerAbbr: "СВ",
+  fellowshipAbbr: "ОБ",
+  influenceAbbr: "ВЛ",
   statStrAbbr: "СИЛ",
   statDexAbbr: "ЛОВ",
   statConAbbr: "ТЕЛ",
@@ -897,5 +908,9 @@ export const ruTranslations = {
   uiScale: 'Масштаб интерфейса',
   uiScaleWarning: 'Масштаб варьируется от 50% до 150%. Изменения применяются мгновенно.',
   resetToDefaults: 'Сбросить к стандартным настройкам',
+  // Восстановлены после разбиения translations.ts на en/ru.
+  // TODO(translate): заглушки — заменить на русский текст.
+  back: "Back",
+  passwordMinLength: "Password must be at least 4 characters.",
 };
 // ─── LANDMARK: TRANSLATIONS_RU_END ───

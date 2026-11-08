@@ -70,8 +70,8 @@ export const enTranslations = {
   signIn: "Sign In",
   exportCharacters: "Export List (.xlsx)",
   exportSheet: "Export Sheet (.xlsx)",
-  hideNotes: "Notes",
-  showNotes: "Notes",
+  hideNotes: "Hide Notes",
+  showNotes: "Show Notes",
   showEditButtons: "Edit Buttons",
   hideEditButtons: "Edit Buttons",
   race: "Race",
@@ -820,6 +820,17 @@ export const enTranslations = {
   savedVitalsFor: "Vitals saved for",
   allDhVitalsSaved: "All Dark Heresy vitals saved!",
   allDndVitalsSaved: "All D&D vitals saved!",
+  // Аббревиатуры характеристик Dark Heresy (потеряны при разбиении файла)
+  weaponSkillAbbr: "WS",
+  ballisticSkillAbbr: "BS",
+  strengthAbbr: "S",
+  toughnessAbbr: "T",
+  agilityAbbr: "AG",
+  intelligenceAbbr: "INT",
+  perceptionAbbr: "PER",
+  willpowerAbbr: "WP",
+  fellowshipAbbr: "FEL",
+  influenceAbbr: "INF",
   statStrAbbr: "STR",
   statDexAbbr: "DEX",
   statConAbbr: "CON",
@@ -898,5 +909,8 @@ export const enTranslations = {
   uiScale: "UI Scale",
   uiScaleWarning: "Scale ranges from 50% to 150%. Changes apply instantly.",
   resetToDefaults: "Reset to defaults",
+  // Восстановлены после разбиения translations.ts на en/ru.
+  back: "Back",
+  passwordMinLength: "Password must be at least 4 characters.",
 };
 // ─── LANDMARK: TRANSLATIONS_EN_END ───
