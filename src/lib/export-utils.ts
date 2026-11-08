@@ -4,6 +4,7 @@
 
 import * as XLSX from 'xlsx';
 import { Character, DnD5eCharacter, DarkHeresyCharacter } from './types';
+import { isNonPortableField } from './character-portable';
 
 export interface ExportConfig {
     includeBasicInfo: boolean;
@@ -53,7 +54,9 @@ export const sanitizeData = (data: any): any => {
         const sanitizedObj: any = {};
         for (const [key, value] of Object.entries(data)) {
             const cleanKey = key.trim();
-            if (cleanKey === 'userId' || cleanKey === 'Document ID') continue;
+            // userId, провенанс миграции, старые Firestore-поля и служебные
+            // маркеры записи не переносятся (см. character-portable.ts).
+            if (isNonPortableField(cleanKey)) continue;
             sanitizedObj[cleanKey] = sanitizeData(value);
         }
         return sanitizedObj;
@@ -132,8 +135,10 @@ export const filterCharacterForExport = (character: Character, config: ExportCon
             filtered.race = dnd.race; filtered.background = dnd.background; filtered.alignment = dnd.alignment;
             filtered.age = dnd.age; filtered.height = dnd.height; filtered.weight = dnd.weight;
             filtered.eyes = dnd.eyes; filtered.skin = dnd.skin; filtered.hair = dnd.hair;
+            filtered.proficiencyBonus = dnd.proficiencyBonus;
         } else {
             const dh = character as DarkHeresyCharacter;
+            filtered.edition = dh.edition;
             filtered.homeWorld = dh.homeWorld; filtered.worldVariant = dh.worldVariant; filtered.careerPath = dh.careerPath;
             filtered.rank = dh.rank; filtered.divination = dh.divination; filtered.divinationEffect = dh.divinationEffect;
             filtered.quirk = dh.quirk; filtered.height = dh.height; filtered.weight = dh.weight; filtered.age = dh.age;
@@ -162,6 +167,8 @@ export const filterCharacterForExport = (character: Character, config: ExportCon
             const dh = character as DarkHeresyCharacter;
             filtered.wounds = dh.wounds; filtered.fatePoints = dh.fatePoints;
             filtered.insanityPoints = dh.insanityPoints; filtered.corruptionPoints = dh.corruptionPoints;
+            filtered.fatigue1st = dh.fatigue1st; filtered.fatigue2nd = dh.fatigue2nd;
+            filtered.criticalConditions = dh.criticalConditions; filtered.customResources = dh.customResources;
             filtered.movement = dh.movement; filtered.skills = dh.skills; filtered.talents = dh.talents;
         }
     }
@@ -316,6 +323,7 @@ export const mergeImportedData = (
             if (source.eyes !== undefined) merged.eyes = source.eyes;
             if (source.skin !== undefined) merged.skin = source.skin;
             if (source.hair !== undefined) merged.hair = source.hair;
+            if (source.proficiencyBonus !== undefined) merged.proficiencyBonus = source.proficiencyBonus;
         } else {
             if (source.homeWorld !== undefined) merged.homeWorld = source.homeWorld;
             if (source.worldVariant !== undefined) merged.worldVariant = source.worldVariant;
@@ -330,6 +338,7 @@ export const mergeImportedData = (
             if (source.skinColor !== undefined) merged.skinColor = source.skinColor;
             if (source.hairColor !== undefined) merged.hairColor = source.hairColor;
             if (source.eyeColor !== undefined) merged.eyeColor = source.eyeColor;
+            if (source.edition !== undefined) merged.edition = source.edition;
         }
     }
 
@@ -361,6 +370,10 @@ export const mergeImportedData = (
             if (source.insanityPoints) merged.insanityPoints = { ...merged.insanityPoints, ...source.insanityPoints };
             if (source.corruptionPoints) merged.corruptionPoints = { ...merged.corruptionPoints, ...source.corruptionPoints };
             if (source.movement) merged.movement = { ...merged.movement, ...source.movement };
+            if (source.fatigue1st) merged.fatigue1st = { ...merged.fatigue1st, ...source.fatigue1st };
+            if (source.fatigue2nd) merged.fatigue2nd = { ...merged.fatigue2nd, ...source.fatigue2nd };
+            if (source.criticalConditions !== undefined) merged.criticalConditions = source.criticalConditions;
+            if (source.customResources !== undefined) merged.customResources = source.customResources;
             if (source.skills) merged.skills = source.skills;
             if (source.talents) merged.talents = source.talents;
         }
@@ -499,6 +512,7 @@ export const exportCharacterToExcel = (character: Character) => {
         addRow('Proficiency Bonus', (dnd as any).proficiencyBonus);
         addRow('Inspiration', (dnd as any).inspiration);
     } else {
+        addRow('Edition', dh.edition);
         addRow('Rank', dh.rank);
         addRow('Home World', dh.homeWorld);
         addRow('World Variant', dh.worldVariant);
@@ -573,6 +587,17 @@ export const exportCharacterToExcel = (character: Character) => {
         addRow('Insanity Notes', dh.insanityPoints?.notes);
         addRow('Corruption Points', dh.corruptionPoints?.total);
         addRow('Corruption Notes', dh.corruptionPoints?.notes);
+        addRow('Fatigue (1st)', dh.fatigue1st?.current);
+        addRow('Fatigue (1st) Notes', dh.fatigue1st?.notes);
+        addRow('Fatigue (2nd)', dh.fatigue2nd?.current);
+        addRow('Fatigue (2nd) Notes', dh.fatigue2nd?.notes);
+        addRow('Critical Conditions', formatList(dh.criticalConditions || [], 'name'));
+        addRow(
+            'Custom Resources',
+            (dh.customResources || [])
+                .map(r => `${r.description}: ${r.current}/${r.max}${r.notes ? ` (${r.notes})` : ''}`)
+                .join('\n') || undefined,
+        );
         addRow('Movement - Walk (Half)', dh.movement?.walkHalf);
         addRow('Movement - Walk (Full)', dh.movement?.walkFull);
         addRow('Movement - Charge', dh.movement?.charge);

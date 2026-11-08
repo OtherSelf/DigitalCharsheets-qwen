@@ -41,10 +41,17 @@ describe('sanitizeData', () => {
     });
   });
 
-  it('выкидывает служебные поля userId и "Document ID" на любой глубине', () => {
+  it('выкидывает служебные поля (userId, провенанс миграции, Firestore) на любой глубине', () => {
     const input = {
       userId: 'user-x',
       'Document ID': 'users/x/characterSheets/y',
+      migratedFrom: 'firestore',
+      migratedAt: '2026-11-08T19:42:47Z',
+      migratedFromUid: '0bopfOtu5uV3zeC1I3rzLygaU5f1',
+      originalFirebaseId: 'fb-1',
+      _key: 'old',
+      __page: 'p',
+      __seq: 3,
       character: { userId: 'user-y', name: 'A', items: [{ userId: 'user-z', name: 'B' }] },
     };
 
@@ -75,6 +82,8 @@ describe('filterCharacterForExport', () => {
     expect(filtered.stats).toBeDefined();
     expect((filtered as any).hitPoints).toEqual({ current: 24, max: 28 });
     expect((filtered as any).armorClass).toBe(17);
+    // Бонус мастерства — часть профиля, не теряется при переносе.
+    expect((filtered as any).proficiencyBonus).toBe(2);
     // Служебные поля не экспортируются
     expect((filtered as any).userId).toBeUndefined();
   });
@@ -87,6 +96,25 @@ describe('filterCharacterForExport', () => {
     expect((filtered as any).homeWorld).toBe('Hive World');
     expect((filtered as any).wounds).toEqual({ current: 10, max: 10, notes: '' });
     expect((filtered as any).race).toBeUndefined();
+  });
+
+  it('не теряет новые поля DH: edition, fatigue, criticalConditions, customResources', () => {
+    const dh = makeDhCharacter({
+      edition: '2nd',
+      fatigue1st: { current: 2, notes: 'beaten' },
+      fatigue2nd: { current: 1, notes: '' },
+      criticalConditions: [{ id: 'c1', name: 'Broken arm', notes: 'right' }],
+      customResources: [{ id: 'r1', description: 'Ammo', current: 3, max: 10 }],
+    });
+    const filtered = filterCharacterForExport(dh as any, DEFAULT_EXPORT_CONFIG) as any;
+
+    expect(filtered.edition).toBe('2nd');
+    expect(filtered.fatigue1st).toEqual({ current: 2, notes: 'beaten' });
+    expect(filtered.fatigue2nd).toEqual({ current: 1, notes: '' });
+    expect(filtered.criticalConditions).toHaveLength(1);
+    expect(filtered.criticalConditions[0].name).toBe('Broken arm');
+    expect(filtered.customResources).toHaveLength(1);
+    expect(filtered.customResources[0].description).toBe('Ammo');
   });
 
   it('выключенные секции не попадают в результат', () => {
@@ -208,6 +236,33 @@ describe('mergeImportedData', () => {
     expect(merged.name).toBe('Imported');
     expect((merged as any).level).toBe(1);
     expect((merged as any).backstory).toBe('original');
+  });
+
+  it('восстанавливает при импорте поля DH: edition, fatigue, критические, ресурсы', () => {
+    const target = makeDhCharacter() as any;
+    const imported = {
+      metadata: {
+        appName: 'DigitalCharsheets-qwen',
+        version: '1.0',
+        exportDate: '',
+        config: DEFAULT_EXPORT_CONFIG,
+      },
+      character: {
+        edition: '2nd',
+        fatigue1st: { current: 4 },
+        fatigue2nd: { current: 2 },
+        criticalConditions: [{ id: 'c9', name: 'Concussion' }],
+        customResources: [{ id: 'r9', description: 'Grenades', current: 1, max: 3 }],
+      },
+    };
+
+    const merged = mergeImportedData(target, imported as any, DEFAULT_EXPORT_CONFIG) as any;
+
+    expect(merged.edition).toBe('2nd');
+    expect(merged.fatigue1st).toEqual({ current: 4, ...target.fatigue1st });
+    expect(merged.fatigue2nd).toEqual({ current: 2, ...target.fatigue2nd });
+    expect(merged.criticalConditions[0].name).toBe('Concussion');
+    expect(merged.customResources[0].description).toBe('Grenades');
   });
 
   it('мержит вложенные объекты (хиты) вместо замены целиком', () => {

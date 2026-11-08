@@ -335,6 +335,38 @@ describe('/api/export', () => {
     );
     expect(missing.status).toBe(404);
   });
+
+  it('не отдаёт служебные поля (migrated*, userId, Document ID), но сохраняет данные', async () => {
+    const { uid } = await loginAs('user-exp');
+    const created = await (
+      await charactersPost(json({ ...makeDndCharacter() }, sessionHeaders(uid)))
+    ).json();
+
+    // Имитируем лист, пришедший из миграции: дописываем провенанс прямо в файл.
+    const file = path.join(userPaths(dataDir, uid).charactersDir, `${created.id}.json`);
+    const raw = readJson(file);
+    raw.migratedFrom = 'firestore';
+    raw.migratedAt = '2026-11-08T19:42:47Z';
+    raw.migratedFromUid = '0bopfOtu5uV3zeC1I3rzLygaU5f1';
+    raw['Document ID'] = 'users/fb/characterSheets/x';
+    fs.writeFileSync(file, JSON.stringify(raw), 'utf8');
+
+    const res = await exportGet(req('http://localhost/api/export', 'GET', sessionHeaders(uid)));
+    expect(res.status).toBe(200);
+    const list = await res.json();
+    const item = list.find((c: any) => c.id === created.id);
+
+    expect(item).toBeDefined();
+    expect(item.name).toBe(created.name);
+    expect(item.userId).toBeUndefined();
+    expect(item.migratedFrom).toBeUndefined();
+    expect(item.migratedAt).toBeUndefined();
+    expect(item.migratedFromUid).toBeUndefined();
+    expect(item['Document ID']).toBeUndefined();
+
+    // На диске провенанс остаётся — чистим только на выходе.
+    expect(readJson(file).migratedFromUid).toBe('0bopfOtu5uV3zeC1I3rzLygaU5f1');
+  });
 });
 
 describe('recovery-роуты', () => {

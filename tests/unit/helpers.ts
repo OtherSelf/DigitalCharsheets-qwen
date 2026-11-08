@@ -71,6 +71,7 @@ export function makeDndCharacter(overrides: Record<string, any> = {}): any {
     race: 'Human',
     background: 'Soldier',
     alignment: 'Lawful Good',
+    proficiencyBonus: 2,
     stats: {
       strength: 16,
       dexterity: 12,

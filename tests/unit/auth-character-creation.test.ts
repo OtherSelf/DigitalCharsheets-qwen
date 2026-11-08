@@ -503,7 +503,10 @@ describe.each(SYSTEMS)(
         ),
       );
       expect(res.status).toBe(200);
-      expect(await res.json()).toEqual({ ...payload, id: created.id, userId: user.uid });
+      const exported = await res.json();
+      // Экспорт — переносимый: служебный userId в него не попадает.
+      expect(exported.userId).toBeUndefined();
+      expect(exported).toEqual({ ...payload, id: created.id });
     });
 
     it('лист виден после повторного входа в аккаунт', async () => {
