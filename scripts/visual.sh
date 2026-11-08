@@ -3,7 +3,8 @@
 #  scripts/visual.sh — визуальные (screenshot regression) тесты DigitalCharsheets
 #
 #  Что делает:
-#    1. при необходимости собирает приложение (next build);
+#    1. при необходимости собирает приложение (next build; при EXDEV — повтор
+#       с scripts/lib/fs-rename-fallback.cjs);
 #    2. поднимает production-сервер на свободном порту с ВРЕМЕННЫМ каталогом
 #       данных (DCS_DATA_DIR), чтобы не трогать ./data;
 #    3. наполняет его фикстурами (2 персонажа: D&D и Dark Heresy);
@@ -20,6 +21,8 @@
 #    ./scripts/visual.sh --base-url http://localhost:3000  # против живого сервера
 #
 #  Код возврата: 0 — эталоны совпали, 1 — есть отличия/падения.
+#  Флаги и проброс в Playwright: ./scripts/visual.sh --help
+#  Связано: playwright.config.ts, tests/visual/, _TESTING_VISUAL.md
 # ============================================================================
 
 set -Eeuo pipefail
@@ -193,9 +196,9 @@ else
   if [ "$BUILD" -eq 1 ]; then
     step "1/3 сборка (next build)"
     # На overlayfs/9p next build падает на EXDEV при переносе 404/500.html;
-    # scripts/fs-rename-fallback.cjs подменяет rename только при EXDEV.
+    # scripts/lib/fs-rename-fallback.cjs подменяет rename только при EXDEV.
     NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 \
-      NODE_OPTIONS="--require $APP_DIR/scripts/fs-rename-fallback.cjs ${NODE_OPTIONS:-}" \
+      NODE_OPTIONS="--require $APP_DIR/scripts/lib/fs-rename-fallback.cjs ${NODE_OPTIONS:-}" \
       ./node_modules/.bin/next build
     ok "сборка готова"
   else
