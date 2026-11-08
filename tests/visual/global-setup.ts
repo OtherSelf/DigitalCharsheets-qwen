@@ -24,7 +24,7 @@ async function requestJson<T>(
   baseURL: string,
   pathname: string,
   init?: RequestInit,
-): Promise<{ status: number; body: T }> {
+): Promise<{ status: number; body: T; headers: Headers }> {
   const response = await fetch(`${baseURL}${pathname}`, {
     ...init,
     headers: {
@@ -40,7 +40,7 @@ async function requestJson<T>(
   } catch {
     body = text;
   }
-  return { status: response.status, body: body as T };
+  return { status: response.status, body: body as T, headers: response.headers };
 }
 
 async function waitForServer(baseURL: string): Promise<void> {
@@ -90,14 +90,25 @@ export default async function globalSetup(config: FullConfig): Promise<void> {
     );
   }
 
+  // Сессия теперь cookie: сырые fetch в global-setup не хранят cookie jar,
+  // поэтому таскаем её вручную.
+  const sessionCookie = (auth.headers.get('set-cookie') || '').split(';')[0];
+  if (!sessionCookie) {
+    throw new Error('Не удалось получить сессионную cookie при входе');
+  }
+  const authed = (init: RequestInit = {}): RequestInit => ({
+    ...init,
+    headers: { ...(init.headers || {}), cookie: sessionCookie },
+  });
+
   // Recovery phrase нужен, чтобы RecoveryModal не открывался поверх страниц.
   const phrase = await requestJson<{ success: boolean; error?: string }>(
     baseURL,
     '/api/auth/phrase',
-    {
+    authed({
       method: 'POST',
-      body: JSON.stringify({ username: USERNAME, phrase: VISUAL_RECOVERY_PHRASE }),
-    },
+      body: JSON.stringify({ phrase: VISUAL_RECOVERY_PHRASE }),
+    }),
   );
   if (phrase.status !== 200 || !phrase.body.success) {
     throw new Error(
@@ -124,14 +135,16 @@ export default async function globalSetup(config: FullConfig): Promise<void> {
   // Чистим листы от предыдущего прогона, чтобы дашборд был детерминированным.
   const existing = await requestJson<Array<{ id: string }>>(
     baseURL,
-    `/api/characters?userId=${encodeURIComponent(user.uid)}`,
+    '/api/characters',
+    authed(),
   );
   if (existing.status === 200 && Array.isArray(existing.body)) {
     for (const character of existing.body) {
-      await fetch(
-        `${baseURL}/api/characters/${encodeURIComponent(character.id)}?userId=${encodeURIComponent(user.uid)}`,
-        { method: 'DELETE', signal: AbortSignal.timeout(10_000) },
-      ).catch(() => undefined);
+      await fetch(`${baseURL}/api/characters/${encodeURIComponent(character.id)}`, {
+        method: 'DELETE',
+        headers: { cookie: sessionCookie },
+        signal: AbortSignal.timeout(10_000),
+      }).catch(() => undefined);
     }
   }
 
@@ -139,10 +152,10 @@ export default async function globalSetup(config: FullConfig): Promise<void> {
     const created = await requestJson<{ id?: string; error?: string }>(
       baseURL,
       '/api/characters',
-      {
+      authed({
         method: 'POST',
-        body: JSON.stringify({ ...fixture, userId: user.uid }),
-      },
+        body: JSON.stringify(fixture),
+      }),
     );
     if (created.status !== 201 || !created.body.id) {
       throw new Error(

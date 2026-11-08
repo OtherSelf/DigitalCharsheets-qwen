@@ -1,7 +1,15 @@
 'use client';
 
-import React, { createContext, useContext, ReactNode, useState, useEffect } from 'react';
+import React, { createContext, useContext, ReactNode, useState, useEffect, useCallback } from 'react';
 import { LocalUser, getLocalUser, setLocalUser, clearLocalUser } from '@/lib/local-storage';
+
+/**
+ * ─── LANDMARK: AUTH CONTEXT (cookie-сессия) ─────────────────────────────────
+ * Источник истины сессии — подписанная httpOnly-cookie, которую ставит
+ * `/api/auth`. В localStorage остаётся только снимок профиля для UI (uid,
+ * логин, displayName, флаг recovery-фразы): он не даёт доступа к данным и
+ * при расхождении с сервером (401) сбрасывается.
+ */
 
 interface LoginResult {
   success: boolean;
@@ -32,12 +40,12 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // 🆕 LANDMARK: single source of truth for persisting + setting the session
-  const restoreSession = (nextUser: LocalUser) => {
+  const restoreSession = useCallback((nextUser: LocalUser) => {
     setLocalUser(nextUser);
     setUser(nextUser);
-  };
+  }, []);
 
-  const login = async (username: string, password: string, displayName?: string): Promise<LoginResult> => {
+  const login = useCallback(async (username: string, password: string, displayName?: string): Promise<LoginResult> => {
     try {
       const res = await fetch('/api/auth', {
         method: 'POST',
@@ -60,21 +68,27 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
       console.error('[auth] login failed:', error);
       return { success: false, error: 'Failed to connect to server.' };
     }
-  };
+  }, [restoreSession]);
 
-  const logout = () => {
+  const logout = useCallback(() => {
+    // Стираем cookie на сервере; локальный снимок — в любом случае.
+    try {
+      void fetch('/api/auth/logout', { method: 'POST' }).catch(() => undefined);
+    } catch {
+      // Сеть недоступна — cookie истечёт сама, локальный профиль уже чистим.
+    }
     clearLocalUser();
     setUser(null);
-  };
+  }, []);
 
-  const updateUserPhrase = (hasPhrase: boolean) => {
+  const updateUserPhrase = useCallback((hasPhrase: boolean) => {
     const current = user ?? getLocalUser();
     if (!current) return;
 
     const updated: LocalUser = { ...current, hasRecoveryPhrase: hasPhrase };
     setLocalUser(updated);
     setUser(updated);
-  };
+  }, [user]);
 
   return (
     <LocalAuthContext.Provider

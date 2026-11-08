@@ -127,15 +127,26 @@ function assertJson(res, context) {
 }
 
 // ── HTTP-хелперы ────────────────────────────────────────────────────────────
-async function request(pathname, { method = 'GET', body, redirect = 'manual' } = {}) {
+// Сессия — httpOnly-cookie: fetch в Node не хранит cookie jar, поэтому
+// запоминаем её из ответа /api/auth и передаём вручную.
+let sessionCookie = '';
+
+async function request(pathname, { method = 'GET', body, redirect = 'manual', auth = true } = {}) {
   const url = `${opts.baseUrl}${pathname}`;
+  const headers = {};
+  if (body !== undefined) headers['content-type'] = 'application/json';
+  if (auth && sessionCookie) headers.cookie = sessionCookie;
+
   const response = await fetch(url, {
     method,
     redirect,
-    headers: body === undefined ? undefined : { 'content-type': 'application/json' },
+    headers,
     body: body === undefined ? undefined : JSON.stringify(body),
     signal: AbortSignal.timeout(opts.timeout),
   });
+
+  const setCookie = response.headers.get('set-cookie');
+  if (setCookie) sessionCookie = setCookie.split(';')[0];
 
   const text = await response.text();
   let parsed = null;
@@ -225,7 +236,12 @@ await check('POST /api/auth → регистрация нового аккаун
   const body = assertJson(res, 'POST /api/auth');
   assert(body.success === true, `POST /api/auth: success !== true (${truncate(res.text)})`);
   assert(body.isNewUser === true, 'POST /api/auth: ожидали isNewUser === true при первом входе');
-  assert(typeof body.user?.uid === 'string' && body.user.uid.startsWith('user-'), 'POST /api/auth: нет uid вида user-<hash>');
+  assert(
+    typeof body.user?.uid === 'string' &&
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(body.user.uid),
+    'POST /api/auth: uid должен быть UUID (а не хеш логина)',
+  );
+  assert(sessionCookie.startsWith('dcs_session='), 'POST /api/auth: не выдал сессионную cookie');
   userId = body.user.uid;
   return userId;
 });
@@ -257,20 +273,20 @@ await check('POST /api/auth → 400 на пароль короче 4 симво�
 
 // 3. Лист персонажа: создание/чтение/правка/удаление
 await check('GET /api/characters → пустой список у нового аккаунта', async () => {
-  const res = await api(`/characters?userId=${encodeURIComponent(userId)}`);
+  const res = await api('/characters');
   assertStatus(res, 200, 'GET /api/characters');
   const body = assertJson(res, 'GET /api/characters');
   assert(Array.isArray(body), 'GET /api/characters: ожидали массив');
   assert(body.length === 0, `GET /api/characters: у нового аккаунта уже ${body.length} листов`);
 });
 
-await check('GET /api/characters без userId → 400', async () => {
-  const res = await api('/characters');
-  assertStatus(res, 400, 'GET /api/characters без userId');
+await check('GET /api/characters без сессии → 401', async () => {
+  const res = await api('/characters', { auth: false });
+  assertStatus(res, 401, 'GET /api/characters без сессии');
 });
 
 await check('POST /api/characters → 201 и id персонажа', async () => {
-  const res = await api('/characters', { method: 'POST', body: { ...dndCharacter, userId } });
+  const res = await api('/characters', { method: 'POST', body: dndCharacter });
   assertStatus(res, 201, 'POST /api/characters');
   const body = assertJson(res, 'POST /api/characters');
   assert(typeof body.id === 'string' && body.id.length > 0, 'POST /api/characters: нет id');
@@ -280,7 +296,7 @@ await check('POST /api/characters → 201 и id персонажа', async () =>
 });
 
 await check('GET /api/characters → созданный лист в списке', async () => {
-  const res = await api(`/characters?userId=${encodeURIComponent(userId)}`);
+  const res = await api('/characters');
   assertStatus(res, 200, 'GET /api/characters');
   const body = assertJson(res, 'GET /api/characters');
   const found = body.find((item) => item.id === characterId);
@@ -294,7 +310,7 @@ await check('GET /<id> → 200 (страница листа)', async () => {
 });
 
 await check('GET /api/export?characterId → JSON персонажа', async () => {
-  const res = await api(`/export?userId=${encodeURIComponent(userId)}&characterId=${encodeURIComponent(characterId)}`);
+  const res = await api(`/export?characterId=${encodeURIComponent(characterId)}`);
   assertStatus(res, 200, 'GET /api/export (один)');
   const body = assertJson(res, 'GET /api/export (один)');
   assert(body.id === characterId, 'GET /api/export: вернулся другой персонаж');
@@ -302,46 +318,55 @@ await check('GET /api/export?characterId → JSON персонажа', async () 
 });
 
 await check('GET /api/export?characterId=<нет такого> → 404', async () => {
-  const res = await api(`/export?userId=${encodeURIComponent(userId)}&characterId=missing-id`);
+  const res = await api('/export?characterId=missing-id');
   assertStatus(res, 404, 'GET /api/export (404)');
 });
 
 await check('PUT /api/characters/<id> → правка сохраняется', async () => {
   const res = await api(`/characters/${encodeURIComponent(characterId)}`, {
     method: 'PUT',
-    body: { userId, name: 'Smoke Tester Renamed', level: 4 },
+    body: { name: 'Smoke Tester Renamed', level: 4 },
   });
   assertStatus(res, 200, 'PUT /api/characters/<id>');
   const body = assertJson(res, 'PUT /api/characters/<id>');
   assert(body.name === 'Smoke Tester Renamed', 'PUT: имя не обновилось');
 
-  const list = await api(`/characters?userId=${encodeURIComponent(userId)}`);
+  const list = await api('/characters');
   const saved = assertJson(list, 'GET после PUT').find((item) => item.id === characterId);
   assert(saved?.name === 'Smoke Tester Renamed', 'PUT: изменение не сохранилось в файле');
 });
 
 await check('PUT /api/characters/<нет такого> → 404', async () => {
-  const res = await api('/characters/missing-id', { method: 'PUT', body: { userId, name: 'X' } });
+  const res = await api('/characters/missing-id', { method: 'PUT', body: { name: 'X' } });
   assertStatus(res, 404, 'PUT несуществующего');
 });
 
 // 4. Файлы на диске (только если знаем --data-dir)
 if (opts.dataDir) {
-  const userDir = path.join(opts.dataDir, userId);
+  const userDir = path.join(opts.dataDir, 'users', userId);
   const characterFile = path.join(userDir, 'characters', `${characterId}.json`);
 
-  await check('на диске есть data/<uid>/user.json с sha256-хешем пароля', async () => {
+  await check('на диске есть data/users/<uid>/user.json с sha256-хешем пароля', async () => {
     const userFile = path.join(userDir, 'user.json');
     assert(fs.existsSync(userFile), `нет файла ${userFile}`);
 
     const raw = fs.readFileSync(userFile, 'utf8');
     const parsed = JSON.parse(raw);
+    assert(parsed.uid === userId, `user.json: uid = ${parsed.uid}`);
+    assert(parsed.schemaVersion === 2, `user.json: schemaVersion = ${parsed.schemaVersion}`);
     assert(parsed.username === username.toLowerCase(), `user.json: username = ${parsed.username}`);
     assert(parsed.passwordHash === sha256(password), 'user.json: passwordHash не соответствует sha256(password)');
     assert(!raw.includes(password), 'user.json: пароль лежит в открытом виде!');
   });
 
-  await check('на диске есть data/<uid>/characters/<id>.json', async () => {
+  await check('индекс data/index/logins.json знает логин → uid', async () => {
+    const indexFile = path.join(opts.dataDir, 'index', 'logins.json');
+    assert(fs.existsSync(indexFile), `нет файла ${indexFile}`);
+    const index = JSON.parse(fs.readFileSync(indexFile, 'utf8'));
+    assert(index.logins?.[username.toLowerCase()] === userId, 'index: логин не указывает на uid');
+  });
+
+  await check('на диске есть data/users/<uid>/characters/<id>.json', async () => {
     assert(fs.existsSync(characterFile), `нет файла ${characterFile}`);
     const parsed = JSON.parse(fs.readFileSync(characterFile, 'utf8'));
     assert(parsed.id === characterId, 'character.json: id не совпадает');
@@ -350,14 +375,14 @@ if (opts.dataDir) {
 }
 
 await check('DELETE /api/characters/<id> → 200', async () => {
-  const res = await api(`/characters/${encodeURIComponent(characterId)}?userId=${encodeURIComponent(userId)}`, {
+  const res = await api(`/characters/${encodeURIComponent(characterId)}`, {
     method: 'DELETE',
   });
   assertStatus(res, 200, 'DELETE персонажа');
 });
 
 await check('DELETE повторно → 404 (файл действительно удалён)', async () => {
-  const res = await api(`/characters/${encodeURIComponent(characterId)}?userId=${encodeURIComponent(userId)}`, {
+  const res = await api(`/characters/${encodeURIComponent(characterId)}`, {
     method: 'DELETE',
   });
   assertStatus(res, 404, 'повторный DELETE');
@@ -365,13 +390,13 @@ await check('DELETE повторно → 404 (файл действительн�
 
 // 5. Восстановление доступа
 await check('POST /api/auth/phrase → фраза сохраняется', async () => {
-  const res = await api('/auth/phrase', { method: 'POST', body: { username, phrase: recoveryPhrase } });
+  const res = await api('/auth/phrase', { method: 'POST', body: { phrase: recoveryPhrase } });
   assertStatus(res, 200, 'POST /api/auth/phrase');
   assert(assertJson(res, 'POST /api/auth/phrase').success === true, 'phrase: success !== true');
 });
 
 await check('POST /api/auth/phrase без фразы → 400', async () => {
-  const res = await api('/auth/phrase', { method: 'POST', body: { username } });
+  const res = await api('/auth/phrase', { method: 'POST', body: {} });
   assertStatus(res, 400, 'phrase без фразы');
 });
 
@@ -390,11 +415,24 @@ await check('POST /api/auth/recover/update → 400 на короткую фра�
 
 // 6. Уборка
 if (opts.dataDir && userId) {
-  const userDir = path.join(opts.dataDir, userId);
+  const userDir = path.join(opts.dataDir, 'users', userId);
   if (opts.keepUser) {
     console.log(`\n${c.yellow}Тестовый аккаунт оставлен: ${userDir}${c.reset}`);
   } else if (fs.existsSync(userDir)) {
     fs.rmSync(userDir, { recursive: true, force: true });
+
+    // Не оставляем фантомную запись в индексе логинов.
+    const indexFile = path.join(opts.dataDir, 'index', 'logins.json');
+    try {
+      const index = JSON.parse(fs.readFileSync(indexFile, 'utf8'));
+      if (index?.logins) {
+        delete index.logins[username.toLowerCase()];
+        fs.writeFileSync(indexFile, JSON.stringify(index, null, 2) + '\n', 'utf8');
+      }
+    } catch {
+      // индекса нет/битый — приложение пересоберёт его само
+    }
+
     console.log(`\n${c.dim}Тестовый аккаунт удалён: ${userDir}${c.reset}`);
   }
 }

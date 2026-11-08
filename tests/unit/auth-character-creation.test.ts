@@ -7,8 +7,13 @@ import { POST as loginRoute } from '@/app/api/auth/route';
 import { POST as phraseRoute } from '@/app/api/auth/phrase/route';
 import { GET as charactersGet, POST as charactersPost } from '@/app/api/characters/route';
 import { GET as exportGet } from '@/app/api/export/route';
-import { generateUserId } from '@/lib/server-auth';
-import { readJson, removeDir, useTempDataDir, userPaths } from './helpers';
+import { isUid } from '@/lib/ids';
+import {
+  readJson,
+  removeDir,
+  useTempDataDir,
+  userPaths,
+} from './helpers';
 
 /**
  * Сквозные сценарии «регистрация → вход → создание персонажа» для КАЖДОЙ
@@ -31,18 +36,34 @@ const EXPORT_URL = 'http://localhost/api/export';
 
 const PASSWORD = 'secret-pass';
 
-const jsonRequest = (url: string, body: unknown) =>
+const jsonRequest = (
+  url: string,
+  body: unknown,
+  headers: Record<string, string> = {},
+) =>
   new Request(url, {
     method: 'POST',
-    headers: { 'content-type': 'application/json' },
+    headers: { 'content-type': 'application/json', ...headers },
     body: JSON.stringify(body),
   });
 
-const getRequest = (url: string) => new Request(url, { method: 'GET' });
+const getRequest = (url: string, headers: Record<string, string> = {}) =>
+  new Request(url, { method: 'GET', headers });
+
+/** Сессионные cookie по uid: запросы к API авторизуются только ими. */
+const cookiesByUid = new Map<string, string>();
+
+function cookieFor(uid: string): Record<string, string> {
+  const cookie = cookiesByUid.get(uid);
+  expect(cookie, `нет сессии для uid ${uid} — сначала register/login`).toBeTruthy();
+  return { cookie: cookie! };
+}
 
 async function login(username: string, password: string, displayName?: string) {
   const res = await loginRoute(jsonRequest(AUTH_URL, { username, password, displayName }));
   const body = await res.json();
+  const cookie = (res.headers.get('set-cookie') || '').split(';')[0];
+  if (body?.user?.uid && cookie) cookiesByUid.set(body.user.uid, cookie);
   return { status: res.status, body };
 }
 
@@ -60,15 +81,13 @@ async function register(username: string, displayName?: string) {
 }
 
 async function createCharacter(userId: string, payload: AnyCharacter) {
-  const res = await charactersPost(jsonRequest(CHARACTERS_URL, { ...payload, userId }));
+  const res = await charactersPost(jsonRequest(CHARACTERS_URL, payload, cookieFor(userId)));
   const body = await res.json();
   return { status: res.status, body };
 }
 
 async function listCharacters(userId: string) {
-  const res = await charactersGet(
-    getRequest(`${CHARACTERS_URL}?userId=${encodeURIComponent(userId)}`),
-  );
+  const res = await charactersGet(getRequest(CHARACTERS_URL, cookieFor(userId)));
   expect(res.status).toBe(200);
   return (await res.json()) as AnyCharacter[];
 }
@@ -294,7 +313,7 @@ describe('авторизация: регистрация и вход', () => {
   it('регистрирует аккаунт, пишет user.json и отдаёт uid из логина', async () => {
     const user = await register('  Auth.User  ', 'Auth Tester');
 
-    expect(user.uid).toBe(generateUserId('auth.user'));
+    expect(isUid(user.uid)).toBe(true);
     expect(user.username).toBe('auth.user');
     expect(user.displayName).toBe('Auth Tester');
     expect(user.hasRecoveryPhrase).toBe(false);
@@ -334,7 +353,7 @@ describe('авторизация: регистрация и вход', () => {
     expect(bad.body).toMatchObject({ success: false, error: 'Incorrect password.' });
 
     // Каталог пользователя ровно один, user.json не тронут.
-    expect(fs.readdirSync(dataDir)).toHaveLength(1);
+    expect(fs.readdirSync(path.join(dataDir, 'users'))).toHaveLength(1);
     expect(readJson(userPaths(dataDir, user.uid).userFile)).toEqual(before);
 
     // Пароль всё ещё работает.
@@ -353,8 +372,8 @@ describe('авторизация: регистрация и вход', () => {
     expect(shortPassword.status).toBe(400);
     expect(shortPassword.body.error).toMatch(/4 characters/i);
 
-    // Неудачные попытки не должны создавать каталоги в data/.
-    expect(fs.readdirSync(dataDir)).toEqual([]);
+    // Неудачные попытки не должны создавать аккаунты.
+    expect(fs.existsSync(path.join(dataDir, 'users'))).toBe(false);
   });
 
   it('логин регистронезависим, пробелы по краям игнорируются', async () => {
@@ -383,7 +402,7 @@ describe('авторизация: регистрация и вход', () => {
     const user = await register('phrase-user');
 
     const res = await phraseRoute(
-      jsonRequest(PHRASE_URL, { username: 'phrase-user', phrase: 'amber cobalt lantern' }),
+      jsonRequest(PHRASE_URL, { phrase: 'amber cobalt lantern' }, cookieFor(user.uid)),
     );
     expect(res.status).toBe(200);
 
@@ -479,7 +498,8 @@ describe.each(SYSTEMS)(
 
       const res = await exportGet(
         getRequest(
-          `${EXPORT_URL}?userId=${encodeURIComponent(user.uid)}&characterId=${encodeURIComponent(created.id)}`,
+          `${EXPORT_URL}?characterId=${encodeURIComponent(created.id)}`,
+          cookieFor(user.uid),
         ),
       );
       expect(res.status).toBe(200);
@@ -519,13 +539,13 @@ describe.each(SYSTEMS)(
       expect(files).toEqual([`${body.id}.json`]);
     });
 
-    it('без userId создание отклоняется (400) и ничего не пишет', async () => {
+    it('без сессии создание отклоняется (401) и ничего не пишет', async () => {
       const payload = build();
       const res = await charactersPost(jsonRequest(CHARACTERS_URL, payload));
 
-      expect(res.status).toBe(400);
-      expect((await res.json()).error).toMatch(/userId is required/i);
-      expect(fs.readdirSync(dataDir)).toEqual([]);
+      expect(res.status).toBe(401);
+      expect((await res.json()).error).toMatch(/unauthorized/i);
+      expect(fs.existsSync(path.join(dataDir, 'users'))).toBe(false);
     });
   },
 );

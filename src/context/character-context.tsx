@@ -89,7 +89,7 @@ const PAGE_ID: string = (() => {
 export function CharacterProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
   const router = useRouter();
-  const { user, isUserLoading } = useLocalAuth();
+  const { user, isUserLoading, logout } = useLocalAuth();
   const { t } = useTranslation();
 
   const [characters, setCharacters] = useState<Character[]>([]);
@@ -154,7 +154,7 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
       const res = await fetch(`/api/characters/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...data, userId, __page: PAGE_ID, __seq: meta?.seq }),
+        body: JSON.stringify({ ...data, __page: PAGE_ID, __seq: meta?.seq }),
       });
       return res.status;
     } catch (error) {
@@ -221,7 +221,6 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               ...data,
-              userId,
               __page: PAGE_ID,
               __seq: meta?.seq,
             }),
@@ -269,9 +268,18 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
 
       const loadCharacters = () => {
         setIsLoaded(false);
-        fetch(`/api/characters?userId=${user.uid}`)
-          .then(res => res.json())
+        fetch('/api/characters')
+          .then(res => {
+            if (res.status === 401) {
+              // Сессия истекла или отозвана — локальный профиль недействителен.
+              logout();
+              router.push('/login');
+              return null;
+            }
+            return res.json();
+          })
           .then(data => {
+            if (!data) { setIsLoaded(true); return; }
             applyCharacters(() => data);
             setIsLoaded(true);
             
@@ -300,7 +308,7 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
           fetch('/api/characters', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ ...pendingCharData, userId: user.uid }),
+            body: JSON.stringify(pendingCharData),
           })
           .then(res => res.json())
           .then((newCharacter: Character) => {
@@ -328,7 +336,7 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
       applyCharacters(() => []);
       setIsLoaded(true);
     }
-  }, [user, isUserLoading, applyCharacters, enqueueSave, router]);
+  }, [user, isUserLoading, applyCharacters, enqueueSave, router, logout]);
 
   const isCompactView = isSmallScreen || userPrefersCompact;
   const toggleCompactView = () => setUserPrefersCompact(prev => !prev);
@@ -346,7 +354,7 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
         const res = await fetch('/api/characters', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...characterData, userId: user.uid }),
+          body: JSON.stringify(characterData),
         });
         if (!res.ok) {
           throw new Error(`Failed to create character: HTTP ${res.status}`);
@@ -410,7 +418,7 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
       if (!user) return;
       const characterToDelete = charactersRef.current.find(c => c.id === id);
       applyCharacters(prev => prev.filter(c => c.id !== id));
-      fetch(`/api/characters/${id}?userId=${user.uid}`, { method: 'DELETE' })
+      fetch(`/api/characters/${id}`, { method: 'DELETE' })
         .then(() => {
           if (characterToDelete) {
             toast({

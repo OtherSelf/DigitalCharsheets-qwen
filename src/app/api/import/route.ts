@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
-import { getDataDir } from '@/lib/data-dir';
+import { getCharactersDir, getDataDir } from '@/lib/data-dir';
+import { createImportedUser } from '@/lib/server-auth';
 
 function importFilePath(): string {
   return path.join(getDataDir(), 'import-source.json');
@@ -230,26 +231,24 @@ export async function GET() {
     const passwordHash = hashPassword(DEFAULT_PASSWORD);
 
     for (const [firebaseUserId, chars] of Object.entries(userGroups)) {
-      // Create a deterministic local user ID
-      const localUserId = 'user-' + crypto.createHash('md5').update(firebaseUserId).digest('hex').substr(0, 8);
       const userEmail = `imported-${firebaseUserId.substr(0, 6)}@local.charsheets`;
       const displayName = `Player ${firebaseUserId.substr(0, 4)}`;
 
-      // Create directories
-      const userDir = path.join(getDataDir(), localUserId);
-      const charsDir = path.join(userDir, 'characters');
+      // Неизменяемый uid выдаётся при создании аккаунта (UUID), а не
+      // вычисляется из firebase-идентификатора: логин остаётся атрибутом.
+      // createImportedUser пишет user.json и запись индекса под локом.
+      const importedUser = createImportedUser({
+        username: userEmail,
+        displayName,
+        passwordHash,
+        originalFirebaseId: firebaseUserId,
+      });
+      const localUserId = importedUser.uid;
+
+      const charsDir = getCharactersDir(localUserId);
       if (!fs.existsSync(charsDir)) {
         fs.mkdirSync(charsDir, { recursive: true });
       }
-
-      // Create user.json with default password
-      const userFile = path.join(userDir, 'user.json');
-      fs.writeFileSync(userFile, JSON.stringify({
-        username: userEmail,
-        displayName: displayName,
-        passwordHash: passwordHash,
-        originalFirebaseId: firebaseUserId,
-      }, null, 2), 'utf8');
 
       // Process each character
       const importedChars: any[] = [];

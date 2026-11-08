@@ -49,6 +49,21 @@ export async function prepare(
   const { theme = 'light', language = 'en', authenticated = true } = options;
   const state = getState();
 
+  // Сессия теперь httpOnly-cookie: localStorage-снимка недостаточно,
+  // поэтому логинимся в cookie-jar контекста (он общий для страниц и
+  // context.request).
+  if (authenticated) {
+    const response = await context.request.post('/api/auth', {
+      data: { username: state.username, password: state.password },
+    });
+    if (!response.ok()) {
+      throw new Error(
+        `prepare(): не удалось войти аккаунтом ${state.username}: ` +
+          `HTTP ${response.status()} ${await response.text()}`,
+      );
+    }
+  }
+
   await context.addInitScript(
     ({ user, theme, language }) => {
       try {

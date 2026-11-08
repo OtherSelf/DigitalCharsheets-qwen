@@ -9,6 +9,7 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { createSession } from '@/lib/session';
 
 /**
  * Создаёт пустой временный каталог и делает его DATA_DIR для приложения
@@ -30,14 +31,32 @@ export function readJson<T = any>(filePath: string): T {
   return JSON.parse(fs.readFileSync(filePath, 'utf8')) as T;
 }
 
-/** Подпись пользователя: файловый макет каталога data/<userId>/... */
+/**
+ * Подпись пользователя: файловый макет каталога
+ * `<data-dir>/users/<uid>/{user.json,characters}` (схема v2).
+ */
 export function userPaths(dataDir: string, userId: string) {
-  const userDir = path.join(dataDir, userId);
+  const userDir = path.join(dataDir, 'users', userId);
   return {
     userDir,
     userFile: path.join(userDir, 'user.json'),
     charactersDir: path.join(userDir, 'characters'),
   };
+}
+
+/** Индекс «логин → uid»: `<data-dir>/index/logins.json`. */
+export function loginIndexPath(dataDir: string): string {
+  return path.join(dataDir, 'index', 'logins.json');
+}
+
+/** Значение cookie-сессии для uid — то, что поставил бы `/api/auth`. */
+export function sessionCookie(uid: string): string {
+  return `dcs_session=${createSession(uid).value}`;
+}
+
+/** Заголовки запроса с сессией: `headers: sessionHeaders(uid)`. */
+export function sessionHeaders(uid: string): Record<string, string> {
+  return { cookie: sessionCookie(uid) };
 }
 
 /** Незамысловатый D&D-персонаж — минимум, который принимает хранилище. */

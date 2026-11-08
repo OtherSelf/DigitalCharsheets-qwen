@@ -87,7 +87,7 @@ export function RecoveryModal() {
         const res = await fetch('/api/auth/phrase', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username: user?.username, phrase: newRecoveryPhrase }),
+          body: JSON.stringify({ phrase: newRecoveryPhrase }),
         });
         const data = await res.json();
         if (data.success) {

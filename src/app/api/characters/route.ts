@@ -1,35 +1,41 @@
 import { NextResponse } from 'next/server';
 import { getCharactersFromServer, saveCharacterToServer } from '@/lib/server-storage';
 import { Character } from '@/lib/types';
+import { getSessionUid } from '@/lib/session';
 
-// GET: Fetch all characters for a user
+/**
+ * ─── LANDMARK: CHARACTERS API (uid из сессии) ───────────────────────────────
+ * Раньше uid приходил в query/body (`?userId=user-ivpdne`), то есть любой, кто
+ * знал логин, мог прочитать чужие листы. Теперь uid берётся из подписанной
+ * cookie, а `userId` из запроса игнорируется.
+ */
+
+// GET: Fetch all characters for the current user
 export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const userId = searchParams.get('userId');
-
-  if (!userId) {
-    return NextResponse.json({ error: 'userId is required' }, { status: 400 });
+  const uid = getSessionUid(request);
+  if (!uid) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const characters = getCharactersFromServer(userId);
+  const characters = getCharactersFromServer(uid);
   return NextResponse.json(characters);
 }
 
-// POST: Create a new character
+// POST: Create a new character for the current user
 export async function POST(request: Request) {
-  const body = await request.json();
-  const userId = body.userId;
-
-  if (!userId) {
-    return NextResponse.json({ error: 'userId is required' }, { status: 400 });
+  const uid = getSessionUid(request);
+  if (!uid) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
+
+  const body = await request.json();
 
   const newCharacter: Character = {
     ...body,
     id: Date.now().toString(36) + Math.random().toString(36).substr(2),
-    userId: userId,
+    userId: uid,
   } as Character;
 
-  saveCharacterToServer(userId, newCharacter);
+  saveCharacterToServer(uid, newCharacter);
   return NextResponse.json(newCharacter, { status: 201 });
 }

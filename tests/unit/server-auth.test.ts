@@ -1,11 +1,9 @@
 import crypto from 'node:crypto';
 import fs from 'node:fs';
-import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
   authenticateUser,
-  generateUserId,
   getStoredUser,
   recoverPasswordWithUsernameAndWords,
   setRecoveryPhrase,
@@ -13,15 +11,25 @@ import {
   userExists,
   verifyRecovery,
 } from '@/lib/server-auth';
+import { isUid, newUid, normalizeLogin } from '@/lib/ids';
+import { resolveLogin } from '@/lib/user-index';
 import { saveCharacterToServer } from '@/lib/server-storage';
-import { makeDndCharacter, readJson, removeDir, useTempDataDir, userPaths } from './helpers';
+import {
+  loginIndexPath,
+  makeDndCharacter,
+  readJson,
+  removeDir,
+  useTempDataDir,
+  userPaths,
+} from './helpers';
 
 /**
  * Авторизация и восстановление доступа (src/lib/server-auth.ts).
  *
- * Покрыто: generateUserId (детерминизм, регистр/пробелы, формат user-<base36>);
- * authenticateUser (создание аккаунта при первом входе, user.json со sha256 вместо
- * пароля, 401 на неверный пароль, legacy-поле email); recovery-фраза и сброс пароля.
+ * Покрыто: normalizeLogin (регистр/пробелы); uid — случайный UUID, который
+ * не меняется при повторном входе; формат user.json (schemaVersion/uid);
+ * индекс «логин → uid»; вход по паролю; legacy-поле email; recovery-фраза и
+ * сброс пароля по словам из листов.
  */
 
 let dataDir: string;
@@ -36,45 +44,54 @@ afterEach(() => {
 
 const sha256 = (value: string) => crypto.createHash('sha256').update(value).digest('hex');
 
-describe('generateUserId', () => {
-  it('детерминирован и не зависит от регистра/пробелов', () => {
-    const a = generateUserId('Hero@Example.com');
-    expect(generateUserId('  hero@example.com ')).toBe(a);
-    expect(generateUserId('HERO@EXAMPLE.COM')).toBe(a);
+describe('normalizeLogin / uid', () => {
+  it('нормализует регистр и внешние пробелы', () => {
+    expect(normalizeLogin('  Hero@Example.com ')).toBe('hero@example.com');
+    expect(normalizeLogin('HERO@EXAMPLE.COM')).toBe('hero@example.com');
   });
 
-  it('даёт разные id разным логинам', () => {
-    expect(generateUserId('alice')).not.toBe(generateUserId('bob'));
-  });
-
-  it('имеет безопасный для каталога формат user-<base36>', () => {
-    expect(generateUserId('Тест')).toMatch(/^user-[a-z0-9]+$/);
-    expect(generateUserId('a')).toMatch(/^user-[a-z0-9]+$/);
+  it('uid — UUID, а не производная от логина', () => {
+    const a = newUid();
+    const b = newUid();
+    expect(isUid(a)).toBe(true);
+    expect(a).not.toBe(b);
+    expect(isUid('user-abc123')).toBe(false);
+    expect(isUid('../escape')).toBe(false);
   });
 });
 
 describe('authenticateUser', () => {
-  it('создаёт аккаунт при первом входе и пишет user.json', () => {
-    const uid = generateUserId('newbie');
-    const paths = userPaths(dataDir, uid);
-
+  it('создаёт аккаунт при первом входе и пишет user.json + индекс', () => {
     const result = authenticateUser('newbie', 'secret1', 'Newbie');
 
     expect(result.success).toBe(true);
     expect(result.isNewUser).toBe(true);
-    expect(result.user?.uid).toBe(uid);
+    expect(isUid(result.user?.uid)).toBe(true);
     expect(result.user?.hasRecoveryPhrase).toBe(false);
 
+    const uid = result.user!.uid;
+    const paths = userPaths(dataDir, uid);
     expect(fs.existsSync(paths.userFile)).toBe(true);
+
     const stored = readJson(paths.userFile);
-    expect(stored.username).toBe('newbie');
-    expect(stored.displayName).toBe('Newbie');
+    expect(stored).toMatchObject({
+      schemaVersion: 2,
+      uid,
+      username: 'newbie',
+      displayName: 'Newbie',
+      passwordHash: sha256('secret1'),
+    });
+    expect(stored.createdAt).toBeTruthy();
     // Пароль не хранится как есть, только sha256-хеш.
-    expect(stored.passwordHash).toBe(sha256('secret1'));
     expect(JSON.stringify(stored)).not.toContain('secret1');
+
+    // Индекс: логин указывает на этот uid.
+    const index = readJson(loginIndexPath(dataDir));
+    expect(index.logins.newbie).toBe(uid);
+    expect(resolveLogin('newbie')).toBe(uid);
   });
 
-  it('не перезаписывает существующий аккаунт и узнаёт владельца', () => {
+  it('не перезаписывает существующий аккаунт и сохраняет uid', () => {
     const first = authenticateUser('repeat', 'pass1');
     const second = authenticateUser('repeat', 'pass1');
 
@@ -109,7 +126,7 @@ describe('authenticateUser', () => {
   });
 
   it('читает legacy-поле email вместо username', () => {
-    const uid = generateUserId('legacy');
+    const uid = newUid();
     const paths = userPaths(dataDir, uid);
     fs.mkdirSync(paths.userDir, { recursive: true });
     fs.writeFileSync(
@@ -117,12 +134,16 @@ describe('authenticateUser', () => {
       JSON.stringify({ email: 'legacy', displayName: 'Old', passwordHash: sha256('pass1') }),
     );
 
-    const stored = getStoredUser(uid);
-    expect(stored?.username).toBe('legacy');
+    // uid берётся из каталога, логин — из email.
+    expect(getStoredUser(uid)?.username).toBe('legacy');
+    expect(getStoredUser(uid)?.uid).toBe(uid);
+
+    // Индекс пересобирается сканом и видит такой профиль.
+    expect(resolveLogin('legacy')).toBe(uid);
 
     const result = authenticateUser('legacy', 'pass1');
     expect(result.success).toBe(true);
-    expect(result.user?.username).toBe('legacy');
+    expect(result.user?.uid).toBe(uid);
   });
 });
 
@@ -145,7 +166,7 @@ describe('recovery / смена пароля', () => {
 
   it('setRecoveryPhrase возвращает false для несуществующего аккаунта', () => {
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    expect(setRecoveryPhrase(generateUserId('ghost'), 'alpha')).toBe(false);
+    expect(setRecoveryPhrase(newUid(), 'alpha')).toBe(false);
     errorSpy.mockRestore();
   });
 
@@ -222,7 +243,7 @@ describe('recovery / смена пароля', () => {
   });
 
   it('updateRecoveryCredentials меняет пароль и фразу и убирает legacy email', () => {
-    const uid = generateUserId('updateme');
+    const uid = newUid();
     const paths = userPaths(dataDir, uid);
     fs.mkdirSync(paths.userDir, { recursive: true });
     fs.writeFileSync(
