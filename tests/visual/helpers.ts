@@ -185,7 +185,7 @@ export async function discardUnsavedChanges(page: Page): Promise<void> {
   if (!visible) return;
 
   await dialog
-    .getByRole('button', { name: /Discard Changes|Сбросить изменения/ })
+    .getByRole('button', { name: /Discard Changes|Сбросить изменения|Отменить изменения/ })
     .click();
   await expect(dialog).not.toBeVisible();
   await waitForScrollSettled(page);

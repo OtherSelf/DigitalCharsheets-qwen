@@ -227,14 +227,29 @@ test.describe('редактирование Dark Heresy', () => {
     await startEditing(progression);
     await screenshotElement(progression, 'sheet-dh-edit-progression-en.png');
 
-    // 10 характеристик с примерными значениями (WS 34, BS 41, ...).
+    // Характеристики зависят от редакции: в 1-й (дефолт для персонажей без
+    // поля edition) Influence скрыт — 9 полей, во 2-й появляется 10-е.
     const characteristics = page.locator('#characteristics-card:visible').first();
     await startEditing(characteristics);
     const statInputs = characteristics.locator('input[type="number"]');
-    await expect(statInputs).toHaveCount(10);
+    await expect(statInputs).toHaveCount(9);
     await expect(statInputs.nth(0)).toHaveValue('34');
     await expect(statInputs.nth(5)).toHaveValue('46');
-    await screenshotElement(characteristics, 'sheet-dh-edit-characteristics-en.png');
+    await screenshotElement(characteristics, 'sheet-dh-edit-characteristics-1st-en.png');
+
+    await page.getByTestId('dh-edition-select').click();
+    await page.getByRole('option', { name: '2nd Edition' }).click();
+    await expect(statInputs).toHaveCount(10);
+    // Данные Influence не теряются при смене редакции на лету.
+    await expect(statInputs.nth(9)).toHaveValue('28');
+    await screenshotElement(characteristics, 'sheet-dh-edit-characteristics-2nd-en.png');
+
+    // Фикстура общая для всех тестов (один сервер + один набор данных),
+    // поэтому редакцию возвращаем обратно и ждём, пока уйдёт PUT.
+    await page.getByTestId('dh-edition-select').click();
+    await page.getByRole('option', { name: '1st Edition' }).click();
+    await expect(statInputs).toHaveCount(9);
+    await page.waitForTimeout(700);
   });
 
   test('desktop: навыки, снаряжение, инвентарь (en)', async ({
