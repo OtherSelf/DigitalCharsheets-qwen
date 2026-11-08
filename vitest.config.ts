@@ -12,7 +12,7 @@ export default defineConfig({
     // Юнит-тесты гоняют серверные модули (fs, crypto, next/server), поэтому node.
     environment: 'node',
     include: ['tests/**/*.test.ts'],
-    setupFiles: ['./tests/setup.ts'],
+    setupFiles: ['./tests/unit/setup.ts'],
     // Файлы изолированы (по умолчанию isolate: true), каждый тест пишет
     // в свой временный DCS_DATA_DIR — реальный ./data не трогается.
     testTimeout: 20_000,

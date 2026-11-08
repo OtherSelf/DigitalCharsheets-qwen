@@ -169,27 +169,32 @@ test.describe('D&D — русская локаль', () => {
     await screenshotPage(page, 'sheet-dnd-mobile-edit-stats-ru.png');
 
     await openMobileSection(page, 'Характеристики');
+    await discardUnsavedChanges(page);
     const skills = page.locator('#skills-card:visible').first();
     await startEditing(skills);
     await screenshotPage(page, 'sheet-dnd-mobile-edit-skills-ru.png');
 
     await openMobileSection(page, 'Инвентарь и Настройка');
+    await discardUnsavedChanges(page);
     const inventory = page.locator('#inventory-box:visible').first();
     await inventory.locator('[data-testid="edit-button"]:visible').first().click();
     await inventory.locator('[data-testid="edit-button"]:visible').first().click();
     await screenshotPage(page, 'sheet-dnd-mobile-edit-inventory-ru.png');
 
     await openMobileSection(page, 'Боевые статы');
+    await discardUnsavedChanges(page);
     const combat = page.locator('#hit-points-card:visible').first();
     await startEditing(combat);
     await screenshotPage(page, 'sheet-dnd-mobile-edit-combat-ru.png');
 
     await openMobileSection(page, 'Заклинания', 'spells-section');
+    await discardUnsavedChanges(page);
     const spells = page.locator('#spells-section:visible').first();
     await startEditingAll(spells);
     await screenshotPage(page, 'sheet-dnd-mobile-edit-spells-ru.png');
 
     await openMobileSection(page, 'Спутники', 'companions-section');
+    await discardUnsavedChanges(page);
     const companions = page.locator('#companions-section:visible').first();
     await startEditing(companions);
     await screenshotPage(page, 'sheet-dnd-mobile-edit-companions-ru.png');
