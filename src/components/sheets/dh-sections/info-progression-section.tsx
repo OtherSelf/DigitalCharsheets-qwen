@@ -488,12 +488,10 @@ export const ProgressionSection = ({
   const [isAlternateRankModalOpen, setIsAlternateRankModalOpen] =
     React.useState(false);
 
+  // Псайкер выбирает ветвь уже на 2000 ОО (стр. 100: Савант-Милитант /
+  // Схолар Материум). У остальных профессий продвинутые пути — с 6000 ОО.
   const advancedPathThreshold =
-    character.careerPath === 'Tech-Priest'
-      ? 3000
-      : character.careerPath === 'Imperial Psyker'
-        ? 2000
-        : ADVANCED_RANK_THRESHOLD;
+    character.careerPath === 'Imperial Psyker' ? 2000 : ADVANCED_RANK_THRESHOLD;
 
   const possibleAdvancedPaths =
     AdvancedPathsByCareer[

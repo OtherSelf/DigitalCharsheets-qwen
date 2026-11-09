@@ -6,6 +6,7 @@ export const DarkHeresyHomeWorlds = [
   'Hive World',
   'Imperial World',
   'Void Born',
+  'Forge World',
 ] as const;
 export type DarkHeresyHomeWorld = (typeof DarkHeresyHomeWorlds)[number];
 export const DarkHeresyCareerPaths = [

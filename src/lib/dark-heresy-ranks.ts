@@ -52,7 +52,7 @@ export const RanksByCareer: Record<DarkHeresyCareerPath, CareerProgression> = {
       { name: 'Shadesman', expThreshold: 500 },
       { name: 'Nighthawk', expThreshold: 1000 },
       { name: 'Secluse', expThreshold: 2000 },
-      { name: 'Assassin', expThreshold: 3500 },
+      { name: 'Assassin', expThreshold: 3000 },
     ],
   },
   Cleric: {
@@ -95,6 +95,7 @@ export const RanksByCareer: Record<DarkHeresyCareerPath, CareerProgression> = {
       { name: 'Mech-Wright', expThreshold: 500 },
       { name: 'Electro-Priest', expThreshold: 1000 },
       { name: 'Engineer', expThreshold: 2000 },
+      { name: 'Tech-Priest', expThreshold: 3000 },
     ],
   },
 };
@@ -244,7 +245,6 @@ export const AdvancedPathsByCareer: Partial<
     pathA: {
       name: 'Tech-Priest',
       ranks: [
-        { name: 'Tech-Priest', expThreshold: 3000 },
         { name: 'Technomancer', expThreshold: 6000 },
         { name: 'Cyber-Seer', expThreshold: 8000 },
         { name: 'Magos', expThreshold: 10000 },
@@ -253,7 +253,6 @@ export const AdvancedPathsByCareer: Partial<
     pathB: {
       name: 'Heretek',
       ranks: [
-        { name: 'Heretek', expThreshold: 3000 },
         { name: 'Mech-Deacon', expThreshold: 6000 },
         { name: 'Omniprophet', expThreshold: 8000 },
         { name: 'Magos Errant', expThreshold: 10000 },

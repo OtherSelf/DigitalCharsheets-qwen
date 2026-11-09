@@ -58,6 +58,7 @@ const HOME_WORLD_KEYS: Record<string, string> = {
   'Hive World': 'homeWorldHive',
   'Imperial World': 'homeWorldImperial',
   'Void Born': 'homeWorldVoidBorn',
+  'Forge World': 'homeWorldForge',
 };
 
 const CAREER_KEYS: Record<string, string> = {
