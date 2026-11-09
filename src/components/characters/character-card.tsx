@@ -4,21 +4,7 @@
 
 import Link from 'next/link';
 
-import { type Character } from '@/lib/types';
-
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardTitle,
-} from '@/components/ui/card';
-
-import { Badge } from '@/components/ui/badge';
-
-import { Button } from '@/components/ui/button';
-
-import { Trash2, FileDown, FileJson } from 'lucide-react';
+import { FileDown, FileJson, Trash2 } from 'lucide-react';
 
 import {
   AlertDialog,
@@ -30,41 +16,51 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-
+} from '@/components/ui/alert-dialog';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardTitle,
+} from '@/components/ui/card';
 import { useCharacterContext } from '@/context/character-context';
-
-import { exportCharacterToJSON, exportCharacterToExcel, DEFAULT_EXPORT_CONFIG } from '@/lib/export-utils';
-
 import { useTranslation } from '@/context/language-context';
-
 import { RANK_KEYS } from '@/lib/dark-heresy-data';
+import {
+  DEFAULT_EXPORT_CONFIG,
+  exportCharacterToExcel,
+  exportCharacterToJSON,
+} from '@/lib/export-utils';
+import { type Character } from '@/lib/types';
 
-const CLASS_TRANSLATION_KEYS: Record<string,string> = {
-  "Artificer": "classArtificer",
-  "Barbarian": "classBarbarian",
-  "Bard": "classBard",
-  "Cleric": "classCleric",
-  "Druid": "classDruid",
-  "Fighter": "classFighter",
-  "Monk": "classMonk",
-  "Paladin": "classPaladin",
-  "Ranger": "classRanger",
-  "Rogue": "classRogue",
-  "Sorcerer": "classSorcerer",
-  "Warlock": "classWarlock",
-  "Wizard": "classWizard",
+const CLASS_TRANSLATION_KEYS: Record<string, string> = {
+  Artificer: 'classArtificer',
+  Barbarian: 'classBarbarian',
+  Bard: 'classBard',
+  Cleric: 'classCleric',
+  Druid: 'classDruid',
+  Fighter: 'classFighter',
+  Monk: 'classMonk',
+  Paladin: 'classPaladin',
+  Ranger: 'classRanger',
+  Rogue: 'classRogue',
+  Sorcerer: 'classSorcerer',
+  Warlock: 'classWarlock',
+  Wizard: 'classWizard',
 };
 
-const CAREER_TRANSLATION_KEYS: Record<string,string> = {
-  "Adept": "careerAdept",
-  "Arbitrator": "careerArbitrator",
-  "Assassin": "careerAssassin",
-  "Cleric": "careerCleric",
-  "Guardsman": "careerGuardsman",
-  "Imperial Psyker": "careerImperialPsyker",
-  "Scum": "careerScum",
-  "Tech-Priest": "careerTechPriest",
+const CAREER_TRANSLATION_KEYS: Record<string, string> = {
+  Adept: 'careerAdept',
+  Arbitrator: 'careerArbitrator',
+  Assassin: 'careerAssassin',
+  Cleric: 'careerCleric',
+  Guardsman: 'careerGuardsman',
+  'Imperial Psyker': 'careerImperialPsyker',
+  Scum: 'careerScum',
+  'Tech-Priest': 'careerTechPriest',
 };
 
 type CharacterCardProps = {
@@ -75,7 +71,8 @@ export function CharacterCard({ character }: CharacterCardProps) {
   const { t } = useTranslation();
   const { deleteCharacter, isCompactView, toast } = useCharacterContext();
 
-  const badgeVariant = character.gameSystem === 'Dungeons & Dragons' ? 'default' : 'secondary';
+  const badgeVariant =
+    character.gameSystem === 'Dungeons & Dragons' ? 'default' : 'secondary';
 
   const handleDelete = () => {
     deleteCharacter(character.id);
@@ -105,64 +102,105 @@ export function CharacterCard({ character }: CharacterCardProps) {
 
   const getTranslatedClass = () => {
     if (character.gameSystem === 'Dungeons & Dragons') {
-      return t(CLASS_TRANSLATION_KEYS[character.characterClass] || character.characterClass);
+      return t(
+        CLASS_TRANSLATION_KEYS[character.characterClass] ||
+          character.characterClass,
+      );
     }
-    return t(CAREER_TRANSLATION_KEYS[character.characterClass] || character.characterClass);
+    return t(
+      CAREER_TRANSLATION_KEYS[character.characterClass] ||
+        character.characterClass,
+    );
   };
 
   const getTranslatedRank = () => {
     if ('rank' in character) {
-      return t(RANK_KEYS[character.rank as keyof typeof RANK_KEYS] || character.rank);
+      return t(
+        RANK_KEYS[character.rank as keyof typeof RANK_KEYS] || character.rank,
+      );
     }
     return '';
   };
 
   if (isCompactView) {
     return (
-      <Card className="compact-mobile-card flex flex-row sm:flex-row overflow-hidden hover:shadow-lg hover:shadow-primary/10 transition-shadow duration-300 items-stretch p-2">
-        <div className="flex-1 min-w-0 px-3 sm:px-4 flex flex-col justify-center">
-          <div className="flex items-baseline gap-2 flex-wrap">
-            <CardTitle className="text-sm sm:text-md font-headline break-words line-clamp-1">
+      <Card className="compact-mobile-card flex flex-row items-stretch overflow-hidden p-2 transition-shadow duration-300 hover:shadow-lg hover:shadow-primary/10 sm:flex-row">
+        <div className="flex min-w-0 flex-1 flex-col justify-center px-3 sm:px-4">
+          <div className="flex flex-wrap items-baseline gap-2">
+            <CardTitle className="sm:text-md line-clamp-1 break-words font-headline text-sm">
               {character.name}
             </CardTitle>
           </div>
-          <CardDescription className="text-xs mt-0.5 break-words line-clamp-1">
-            {character.gameSystem === 'Dungeons & Dragons' && `${t('lvl')}${character.level} `}
-            {character.gameSystem === 'Dark Heresy' && `${getTranslatedRank()} `}
+          <CardDescription className="mt-0.5 line-clamp-1 break-words text-xs">
+            {character.gameSystem === 'Dungeons & Dragons' &&
+              `${t('lvl')}${character.level} `}
+            {character.gameSystem === 'Dark Heresy' &&
+              `${getTranslatedRank()} `}
             {getTranslatedClass()}
           </CardDescription>
-          <Badge variant={badgeVariant} className="mt-2 text-xs system-badge max-w-full w-fit">
-            {character.gameSystem === 'Dungeons & Dragons' ? t('dungeonsAndDragons') : t('darkHeresy')}
+          <Badge
+            variant={badgeVariant}
+            className="system-badge mt-2 w-fit max-w-full text-xs"
+          >
+            {character.gameSystem === 'Dungeons & Dragons'
+              ? t('dungeonsAndDragons')
+              : t('darkHeresy')}
           </Badge>
         </div>
-        <div className="actions-wrapper flex items-center gap-1 sm:gap-2 p-2 flex-1 justify-end min-w-0">
-          <Button asChild size="sm" className="flex-1 min-w-0 h-8 sm:h-9 px-2">
-            <Link href={`/${character.id}`} className="truncate block w-full text-center">
+        <div className="actions-wrapper flex min-w-0 flex-1 items-center justify-end gap-1 p-2 sm:gap-2">
+          <Button asChild size="sm" className="h-8 min-w-0 flex-1 px-2 sm:h-9">
+            <Link
+              href={`/${character.id}`}
+              className="block w-full truncate text-center"
+            >
               {t('view')}
             </Link>
           </Button>
-          <Button variant="outline" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 shrink-0" onClick={handleExportJSON} title={t('exportJSON') || 'Export JSON'}>
-            <FileJson className="h-3.5 w-3.5 sm:h-4 sm:w-4"/>
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-8 w-8 shrink-0 sm:h-9 sm:w-9"
+            onClick={handleExportJSON}
+            title={t('exportJSON') || 'Export JSON'}
+          >
+            <FileJson className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
           </Button>
-          <Button variant="outline" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 shrink-0" onClick={handleExportExcel} title={t('exportSheet') || 'Export Excel'}>
-            <FileDown className="h-3.5 w-3.5 sm:h-4 sm:w-4"/>
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-8 w-8 shrink-0 sm:h-9 sm:w-9"
+            onClick={handleExportExcel}
+            title={t('exportSheet') || 'Export Excel'}
+          >
+            <FileDown className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
           </Button>
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button variant="destructive" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 shrink-0">
-                <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4"/>
+              <Button
+                variant="destructive"
+                size="icon"
+                className="h-8 w-8 shrink-0 sm:h-9 sm:w-9"
+              >
+                <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               </Button>
             </AlertDialogTrigger>
-            <AlertDialogContent onClick={(e) => { e.stopPropagation(); }}>
+            <AlertDialogContent
+              onClick={(e) => {
+                e.stopPropagation();
+              }}
+            >
               <AlertDialogHeader>
                 <AlertDialogTitle>{t('confirmDelete')}</AlertDialogTitle>
                 <AlertDialogDescription>
-                  {t('deleteWarning')}{character.name}.
+                  {t('deleteWarning')}
+                  {character.name}.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
-                <AlertDialogAction onClick={handleDelete}>{t('delete')}</AlertDialogAction>
+                <AlertDialogAction onClick={handleDelete}>
+                  {t('delete')}
+                </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
@@ -172,46 +210,72 @@ export function CharacterCard({ character }: CharacterCardProps) {
   }
 
   return (
-    <Card className="flex flex-col overflow-hidden hover:shadow-lg hover:shadow-primary/10 transition-shadow duration-300">
-      <CardContent className="p-4 flex-grow">
+    <Card className="flex flex-col overflow-hidden transition-shadow duration-300 hover:shadow-lg hover:shadow-primary/10">
+      <CardContent className="flex-grow p-4">
         <Badge variant={badgeVariant} className="mb-2 text-xs sm:text-sm">
-          {character.gameSystem === 'Dungeons & Dragons' ? t('dungeonsAndDragons') : t('darkHeresy')}
+          {character.gameSystem === 'Dungeons & Dragons'
+            ? t('dungeonsAndDragons')
+            : t('darkHeresy')}
         </Badge>
-        <CardTitle className="text-base sm:text-lg font-headline mb-1 break-words">
+        <CardTitle className="mb-1 break-words font-headline text-base sm:text-lg">
           {character.name}
         </CardTitle>
-        <CardDescription className="text-xs sm:text-sm break-words">
-          {character.gameSystem === 'Dungeons & Dragons' && `${t('lvl')}${character.level} `}
+        <CardDescription className="break-words text-xs sm:text-sm">
+          {character.gameSystem === 'Dungeons & Dragons' &&
+            `${t('lvl')}${character.level} `}
           {character.gameSystem === 'Dark Heresy' && `${getTranslatedRank()} `}
           {getTranslatedClass()}
         </CardDescription>
       </CardContent>
-      <CardFooter className="p-3 sm:p-4 pt-0 flex items-center justify-between gap-2">
+      <CardFooter className="flex items-center justify-between gap-2 p-3 pt-0 sm:p-4">
         <Button asChild className="w-full text-xs sm:text-sm">
           <Link href={`/${character.id}`}>{t('viewSheet')}</Link>
         </Button>
-        <Button variant="outline" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 shrink-0" onClick={handleExportJSON} title={t('exportJSON') || 'Export JSON'}>
-          <FileJson className="h-3.5 w-3.5 sm:h-4 sm:w-4"/>
+        <Button
+          variant="outline"
+          size="icon"
+          className="h-8 w-8 shrink-0 sm:h-9 sm:w-9"
+          onClick={handleExportJSON}
+          title={t('exportJSON') || 'Export JSON'}
+        >
+          <FileJson className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
         </Button>
-        <Button variant="outline" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 shrink-0" onClick={handleExportExcel} title={t('exportSheet') || 'Export Excel'}>
-          <FileDown className="h-3.5 w-3.5 sm:h-4 sm:w-4"/>
+        <Button
+          variant="outline"
+          size="icon"
+          className="h-8 w-8 shrink-0 sm:h-9 sm:w-9"
+          onClick={handleExportExcel}
+          title={t('exportSheet') || 'Export Excel'}
+        >
+          <FileDown className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
         </Button>
         <AlertDialog>
           <AlertDialogTrigger asChild>
-            <Button variant="destructive" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 shrink-0">
-              <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4"/>
+            <Button
+              variant="destructive"
+              size="icon"
+              className="h-8 w-8 shrink-0 sm:h-9 sm:w-9"
+            >
+              <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             </Button>
           </AlertDialogTrigger>
-          <AlertDialogContent onClick={(e) => { e.stopPropagation(); }}>
+          <AlertDialogContent
+            onClick={(e) => {
+              e.stopPropagation();
+            }}
+          >
             <AlertDialogHeader>
               <AlertDialogTitle>{t('confirmDelete')}</AlertDialogTitle>
               <AlertDialogDescription>
-                {t('deleteWarning')}{character.name}.
+                {t('deleteWarning')}
+                {character.name}.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
-              <AlertDialogAction onClick={handleDelete}>{t('delete')}</AlertDialogAction>
+              <AlertDialogAction onClick={handleDelete}>
+                {t('delete')}
+              </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>

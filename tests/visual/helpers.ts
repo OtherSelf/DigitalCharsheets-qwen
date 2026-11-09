@@ -1,4 +1,10 @@
-import { expect, type BrowserContext, type Locator, type Page } from '@playwright/test';
+import {
+  expect,
+  type BrowserContext,
+  type Locator,
+  type Page,
+} from '@playwright/test';
+
 import { readState, type VisualState } from './state';
 
 /**
@@ -200,7 +206,9 @@ export async function discardUnsavedChanges(page: Page): Promise<void> {
   if (!visible) return;
 
   await dialog
-    .getByRole('button', { name: /Discard Changes|Сбросить изменения|Отменить изменения/ })
+    .getByRole('button', {
+      name: /Discard Changes|Сбросить изменения|Отменить изменения/,
+    })
     .click();
   await expect(dialog).not.toBeVisible();
   await waitForScrollSettled(page);
@@ -241,7 +249,10 @@ export async function expectNoHorizontalOverflow(page: Page): Promise<void> {
     const body = document.body;
     return Math.max(doc.scrollWidth, body.scrollWidth) - window.innerWidth;
   });
-  expect(overflow, 'появился горизонтальный скролл страницы').toBeLessThanOrEqual(1);
+  expect(
+    overflow,
+    'появился горизонтальный скролл страницы',
+  ).toBeLessThanOrEqual(1);
 }
 
 /**
@@ -254,10 +265,14 @@ export async function signInViaUI(
   state: Pick<VisualState, 'username' | 'password'> = getState(),
 ): Promise<void> {
   await page.goto('/login', { waitUntil: 'domcontentloaded' });
-  await page.getByLabel('Username or Email', { exact: true }).fill(state.username);
+  await page
+    .getByLabel('Username or Email', { exact: true })
+    .fill(state.username);
   await page.getByLabel('Password', { exact: true }).fill(state.password);
   await page.getByRole('button', { name: 'Sign In', exact: true }).click();
-  await page.waitForURL((url) => !url.pathname.startsWith('/login'), { timeout: 30_000 });
+  await page.waitForURL((url) => !url.pathname.startsWith('/login'), {
+    timeout: 30_000,
+  });
   await page.waitForLoadState('networkidle');
 }
 
@@ -284,12 +299,20 @@ export async function registerViaUI(
   },
 ): Promise<void> {
   await openRegisterForm(page);
-  await page.getByLabel('Username or Email', { exact: true }).fill(account.username);
-  await page.getByLabel('Display Name', { exact: true }).fill(account.displayName);
+  await page
+    .getByLabel('Username or Email', { exact: true })
+    .fill(account.username);
+  await page
+    .getByLabel('Display Name', { exact: true })
+    .fill(account.displayName);
   await page.getByLabel('Password', { exact: true }).fill(account.password);
-  await page.getByLabel('Recovery Phrase', { exact: true }).fill(account.recoveryPhrase);
+  await page
+    .getByLabel('Recovery Phrase', { exact: true })
+    .fill(account.recoveryPhrase);
   await page.getByRole('button', { name: 'Create Account & Sign In' }).click();
-  await page.waitForURL((url) => !url.pathname.startsWith('/login'), { timeout: 30_000 });
+  await page.waitForURL((url) => !url.pathname.startsWith('/login'), {
+    timeout: 30_000,
+  });
   await page.waitForLoadState('networkidle');
 }
 

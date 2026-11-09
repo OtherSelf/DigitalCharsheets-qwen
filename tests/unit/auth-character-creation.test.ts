@@ -1,20 +1,20 @@
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
+
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { POST as loginRoute } from '@/app/api/auth/route';
-import { POST as registerRoute } from '@/app/api/auth/register/route';
 import { POST as phraseRoute } from '@/app/api/auth/phrase/route';
-import { GET as charactersGet, POST as charactersPost } from '@/app/api/characters/route';
+import { POST as registerRoute } from '@/app/api/auth/register/route';
+import { POST as loginRoute } from '@/app/api/auth/route';
+import {
+  GET as charactersGet,
+  POST as charactersPost,
+} from '@/app/api/characters/route';
 import { GET as exportGet } from '@/app/api/export/route';
 import { isUid } from '@/lib/ids';
-import {
-  readJson,
-  removeDir,
-  useTempDataDir,
-  userPaths,
-} from './helpers';
+
+import { readJson, removeDir, userPaths, useTempDataDir } from './helpers';
 
 /**
  * Сквозные сценарии «регистрация → вход → создание персонажа» для КАЖДОЙ
@@ -58,12 +58,17 @@ const cookiesByUid = new Map<string, string>();
 
 function cookieFor(uid: string): Record<string, string> {
   const cookie = cookiesByUid.get(uid);
-  expect(cookie, `нет сессии для uid ${uid} — сначала register/login`).toBeTruthy();
+  expect(
+    cookie,
+    `нет сессии для uid ${uid} — сначала register/login`,
+  ).toBeTruthy();
   return { cookie: cookie! };
 }
 
 async function login(username: string, password: string, displayName?: string) {
-  const res = await loginRoute(jsonRequest(AUTH_URL, { username, password, displayName }));
+  const res = await loginRoute(
+    jsonRequest(AUTH_URL, { username, password, displayName }),
+  );
   const body = await res.json();
   const cookie = (res.headers.get('set-cookie') || '').split(';')[0];
   if (body?.user?.uid && cookie) cookiesByUid.set(body.user.uid, cookie);
@@ -83,7 +88,9 @@ async function register(username: string, displayName?: string) {
   const body = await res.json();
   const cookie = (res.headers.get('set-cookie') || '').split(';')[0];
   if (body?.user?.uid && cookie) cookiesByUid.set(body.user.uid, cookie);
-  expect(res.status, `регистрация ${username}: ${JSON.stringify(body)}`).toBe(200);
+  expect(res.status, `регистрация ${username}: ${JSON.stringify(body)}`).toBe(
+    200,
+  );
   expect(body.success).toBe(true);
   return body.user as {
     uid: string;
@@ -94,18 +101,23 @@ async function register(username: string, displayName?: string) {
 }
 
 async function createCharacter(userId: string, payload: AnyCharacter) {
-  const res = await charactersPost(jsonRequest(CHARACTERS_URL, payload, cookieFor(userId)));
+  const res = await charactersPost(
+    jsonRequest(CHARACTERS_URL, payload, cookieFor(userId)),
+  );
   const body = await res.json();
   return { status: res.status, body };
 }
 
 async function listCharacters(userId: string) {
-  const res = await charactersGet(getRequest(CHARACTERS_URL, cookieFor(userId)));
+  const res = await charactersGet(
+    getRequest(CHARACTERS_URL, cookieFor(userId)),
+  );
   expect(res.status).toBe(200);
   return (await res.json()) as AnyCharacter[];
 }
 
-const sha256 = (value: string) => crypto.createHash('sha256').update(value).digest('hex');
+const sha256 = (value: string) =>
+  crypto.createHash('sha256').update(value).digest('hex');
 
 // ─── payload'ы: точная копия того, что собирает onSubmit в формах ───────────
 
@@ -150,10 +162,33 @@ function dndPayload(overrides: AnyCharacter = {}): AnyCharacter {
       { name: 'Charisma', proficient: false, value: 0 },
     ],
     skills: [
-      { name: 'arcana', label: 'Arcana (Int)', proficient: true, expertise: false, value: 7 },
-      { name: 'history', label: 'History (Int)', proficient: true, expertise: false, value: 7 },
-      { name: 'insight', label: 'Insight (Wis)', proficient: true, expertise: false, value: 4 },
-      { name: 'perception', label: 'Perception (Wis)', proficient: false, value: 1 },
+      {
+        name: 'arcana',
+        label: 'Arcana (Int)',
+        proficient: true,
+        expertise: false,
+        value: 7,
+      },
+      {
+        name: 'history',
+        label: 'History (Int)',
+        proficient: true,
+        expertise: false,
+        value: 7,
+      },
+      {
+        name: 'insight',
+        label: 'Insight (Wis)',
+        proficient: true,
+        expertise: false,
+        value: 4,
+      },
+      {
+        name: 'perception',
+        label: 'Perception (Wis)',
+        proficient: false,
+        value: 1,
+      },
     ],
     armorClass: 15,
     speed: 30,
@@ -178,17 +213,27 @@ function dndPayload(overrides: AnyCharacter = {}): AnyCharacter {
     spellAttackBonus: '+7',
     spellSaveDifficulty: 15,
     spellcastingEntries: [
-      { id: 'primary', ability: 'intelligence', attackBonus: '+7', saveDC: 15, notes: '' },
+      {
+        id: 'primary',
+        ability: 'intelligence',
+        attackBonus: '+7',
+        saveDC: 15,
+        notes: '',
+      },
     ],
     personalityTraits: ['I use polysyllabic words.'],
     ideals: ['Knowledge.'],
     bonds: ['My life is a series of tomes.'],
     flaws: ['I am easily distracted.'],
     featuresAndTraits: ['Arcane Recovery'],
-    equipment: [{ id: 'eq-1', name: 'Spellbook', status: 'default', notes: '' }],
+    equipment: [
+      { id: 'eq-1', name: 'Spellbook', status: 'default', notes: '' },
+    ],
     attunementItems: [],
     currency: { cp: 0, sp: 0, ep: 0, gp: 150, pp: 5 },
-    inventory: [{ id: 'inv-1', name: 'Potion of Healing', status: 'default', notes: '2' }],
+    inventory: [
+      { id: 'inv-1', name: 'Potion of Healing', status: 'default', notes: '2' },
+    ],
     spells: [
       { id: 'spell-1', name: 'Fireball', level: 3, notes: '8d6 fire' },
       { id: 'spell-2', name: 'Shield', level: 1, notes: '+5 AC' },
@@ -201,7 +246,12 @@ function dndPayload(overrides: AnyCharacter = {}): AnyCharacter {
 function dhPayload(overrides: AnyCharacter = {}): AnyCharacter {
   const agility = 32;
   const agiBonus = Math.floor(agility / 10);
-  const noUpgrade: [boolean, boolean, boolean, boolean] = [false, false, false, false];
+  const noUpgrade: [boolean, boolean, boolean, boolean] = [
+    false,
+    false,
+    false,
+    false,
+  ];
 
   return {
     name: 'Lucius Varn',
@@ -274,7 +324,9 @@ function dhPayload(overrides: AnyCharacter = {}): AnyCharacter {
       },
       weapons: { melee: [], ranged: [] },
     },
-    inventory: [{ id: 'inv-dh-1', name: 'Laspistol', status: 'default', notes: '' }],
+    inventory: [
+      { id: 'inv-dh-1', name: 'Laspistol', status: 'default', notes: '' },
+    ],
     skills: [
       {
         id: 'skill-1',
@@ -284,9 +336,7 @@ function dhPayload(overrides: AnyCharacter = {}): AnyCharacter {
         training: { skilled: true, plus10: false, plus20: false },
       },
     ],
-    talents: [
-      { id: 'talent-1', name: 'Literacy', notes: '', description: '' },
-    ],
+    talents: [{ id: 'talent-1', name: 'Literacy', notes: '', description: '' }],
     customHouseRules: [],
     ...overrides,
   };
@@ -364,14 +414,19 @@ describe('авторизация: регистрация и вход', () => {
 
     const bad = await login('wrong-pass-user', 'not-my-password');
     expect(bad.status).toBe(401);
-    expect(bad.body).toMatchObject({ success: false, error: 'Incorrect password.' });
+    expect(bad.body).toMatchObject({
+      success: false,
+      error: 'Incorrect password.',
+    });
 
     // Каталог пользователя ровно один, user.json не тронут.
     expect(fs.readdirSync(path.join(dataDir, 'users'))).toHaveLength(1);
     expect(readJson(userPaths(dataDir, user.uid).userFile)).toEqual(before);
 
     // Пароль всё ещё работает.
-    expect((await login('wrong-pass-user', PASSWORD)).body.isNewUser).toBe(false);
+    expect((await login('wrong-pass-user', PASSWORD)).body.isNewUser).toBe(
+      false,
+    );
   });
 
   it('валидирует пустые поля и слишком короткий пароль', async () => {
@@ -416,7 +471,11 @@ describe('авторизация: регистрация и вход', () => {
     const user = await register('phrase-user');
 
     const res = await phraseRoute(
-      jsonRequest(PHRASE_URL, { phrase: 'amber cobalt lantern' }, cookieFor(user.uid)),
+      jsonRequest(
+        PHRASE_URL,
+        { phrase: 'amber cobalt lantern' },
+        cookieFor(user.uid),
+      ),
     );
     expect(res.status).toBe(200);
 
@@ -442,7 +501,9 @@ describe('авторизация: изоляция персонажей по а�
     // Файл лежит в каталоге владельца, а не в общем.
     const alicePaths = userPaths(dataDir, alice.uid);
     expect(
-      fs.existsSync(path.join(alicePaths.charactersDir, `${created.body.id}.json`)),
+      fs.existsSync(
+        path.join(alicePaths.charactersDir, `${created.body.id}.json`),
+      ),
     ).toBe(true);
 
     // Каталог Боба (его создаёт сам GET) существует, но файлов в нём нет.
@@ -475,7 +536,11 @@ describe.each(SYSTEMS)(
         `${body.id}.json`,
       );
       expect(fs.existsSync(filePath)).toBe(true);
-      expect(readJson(filePath)).toEqual({ ...payload, id: body.id, userId: user.uid });
+      expect(readJson(filePath)).toEqual({
+        ...payload,
+        id: body.id,
+        userId: user.uid,
+      });
     });
 
     it('системные поля персонажа сохраняются в своей ветке', async () => {
@@ -484,17 +549,23 @@ describe.each(SYSTEMS)(
       const { body } = await createCharacter(user.uid, payload);
 
       const stored = readJson(
-        path.join(userPaths(dataDir, user.uid).charactersDir, `${body.id}.json`),
+        path.join(
+          userPaths(dataDir, user.uid).charactersDir,
+          `${body.id}.json`,
+        ),
       );
 
       for (const field of ownFields) {
-        expect(stored, `поле ${field} должно быть у ${name}`).toHaveProperty(field);
+        expect(stored, `поле ${field} должно быть у ${name}`).toHaveProperty(
+          field,
+        );
         expect(stored[field]).toEqual(payload[field]);
       }
       for (const field of foreignFields) {
-        expect(stored, `поле ${field} не должно попадать в ${name}`).not.toHaveProperty(
-          field,
-        );
+        expect(
+          stored,
+          `поле ${field} не должно попадать в ${name}`,
+        ).not.toHaveProperty(field);
       }
 
       // Ключевые для листа значения тоже на месте.
@@ -593,6 +664,8 @@ describe('две игровые системы в одном аккаунте', 
     // И на диске два независимых файла.
     const files = fs.readdirSync(userPaths(dataDir, user.uid).charactersDir);
     expect(files).toHaveLength(2);
-    expect(files.sort()).toEqual([`${dnd.body.id}.json`, `${dh.body.id}.json`].sort());
+    expect(files.sort()).toEqual(
+      [`${dnd.body.id}.json`, `${dh.body.id}.json`].sort(),
+    );
   });
 });

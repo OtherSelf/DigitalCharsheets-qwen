@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
+
 import { getDataDir, getSessionSecretFile } from './data-dir';
 
 /**
@@ -32,7 +33,8 @@ let cachedSecret: CachedSecret | null = null;
 
 function getSecret(): string {
   const dataDir = getDataDir();
-  if (cachedSecret && cachedSecret.dataDir === dataDir) return cachedSecret.secret;
+  if (cachedSecret && cachedSecret.dataDir === dataDir)
+    return cachedSecret.secret;
 
   const fromEnv = process.env.DCS_SESSION_SECRET;
   if (fromEnv && fromEnv.trim() !== '') {
@@ -56,7 +58,11 @@ function getSecret(): string {
   const generated = crypto.randomBytes(32).toString('hex');
   try {
     // 'wx' — не перезаписываем секрет, созданный параллельным запросом.
-    fs.writeFileSync(file, `${generated}\n`, { encoding: 'utf8', mode: 0o600, flag: 'wx' });
+    fs.writeFileSync(file, `${generated}\n`, {
+      encoding: 'utf8',
+      mode: 0o600,
+      flag: 'wx',
+    });
     cachedSecret = { dataDir, secret: generated };
     return generated;
   } catch (error) {
@@ -70,13 +76,19 @@ function getSecret(): string {
 }
 
 function sign(uid: string, exp: number): string {
-  return crypto.createHmac('sha256', getSecret()).update(`${uid}.${exp}`).digest('base64url');
+  return crypto
+    .createHmac('sha256', getSecret())
+    .update(`${uid}.${exp}`)
+    .digest('base64url');
 }
 
 /** Собрать пару «значение cookie + время жизни» для uid. */
 export function createSession(uid: string): { value: string; maxAge: number } {
   const exp = Math.floor(Date.now() / 1000) + SESSION_TTL_SECONDS;
-  return { value: `${uid}.${exp}.${sign(uid, exp)}`, maxAge: SESSION_TTL_SECONDS };
+  return {
+    value: `${uid}.${exp}.${sign(uid, exp)}`,
+    maxAge: SESSION_TTL_SECONDS,
+  };
 }
 
 /** Проверить подпись и срок; вернуть uid или null. */
@@ -99,7 +111,9 @@ export function verifySession(value: string | null | undefined): string | null {
 }
 
 /** Разобрать заголовок Cookie в словарь. */
-export function parseCookieHeader(header: string | null): Record<string, string> {
+export function parseCookieHeader(
+  header: string | null,
+): Record<string, string> {
   const result: Record<string, string> = {};
   if (!header) return result;
   for (const pair of header.split(';')) {

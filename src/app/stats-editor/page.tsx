@@ -1,15 +1,23 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useLocalAuth } from '@/context/local-auth-context';
+
+import { ArrowLeft, Check, Save } from 'lucide-react';
+
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { useCharacterContext } from '@/context/character-context';
 import { useTranslation } from '@/context/language-context';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { ArrowLeft, Save, Check } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useLocalAuth } from '@/context/local-auth-context';
 import { DarkHeresyCharacter, DnD5eCharacter } from '@/lib/types';
 
 // ─── STAT DEFINITIONS ──────────────────────────────────────────────
@@ -91,20 +99,26 @@ export default function StatsEditorPage() {
     if (!isLoaded || characters.length === 0) return;
 
     // Stats edits
-    const stats = characters.map(char => {
+    const stats = characters.map((char) => {
       const isDH = char.gameSystem === 'Dark Heresy';
       const statKeys = isDH ? DH_STATS : DND_STATS;
       const defaultStats: Record<string, number> = {};
-      statKeys.forEach(s => {
+      statKeys.forEach((s) => {
         defaultStats[s.key] = (char as any).stats?.[s.key] || (isDH ? 30 : 10);
       });
-      return { id: char.id, name: char.name || 'Unnamed', gameSystem: char.gameSystem, stats: defaultStats, saved: false };
+      return {
+        id: char.id,
+        name: char.name || 'Unnamed',
+        gameSystem: char.gameSystem,
+        stats: defaultStats,
+        saved: false,
+      };
     });
     setStatsEdits(stats);
 
     // DH Vitals edits
-    const dhChars = characters.filter(c => c.gameSystem === 'Dark Heresy');
-    const dhVitals = dhChars.map(char => {
+    const dhChars = characters.filter((c) => c.gameSystem === 'Dark Heresy');
+    const dhVitals = dhChars.map((char) => {
       const dh = char as DarkHeresyCharacter;
       return {
         id: char.id,
@@ -134,8 +148,10 @@ export default function StatsEditorPage() {
     setDhVitalsEdits(dhVitals);
 
     // DnD Vitals edits
-    const dndChars = characters.filter(c => c.gameSystem === 'Dungeons & Dragons');
-    const dndVitals = dndChars.map(char => {
+    const dndChars = characters.filter(
+      (c) => c.gameSystem === 'Dungeons & Dragons',
+    );
+    const dndVitals = dndChars.map((char) => {
       const dnd = char as DnD5eCharacter;
       return {
         id: char.id,
@@ -163,44 +179,62 @@ export default function StatsEditorPage() {
   // ─── STATS HANDLERS ──────────────────────────────────────────────
   const handleStatChange = (charId: string, statKey: string, value: string) => {
     const num = parseInt(value, 10) || 0;
-    setStatsEdits(prev => prev.map(e =>
-      e.id === charId ? { ...e, stats: { ...e.stats, [statKey]: num }, saved: false } : e
-    ));
+    setStatsEdits((prev) =>
+      prev.map((e) =>
+        e.id === charId
+          ? { ...e, stats: { ...e.stats, [statKey]: num }, saved: false }
+          : e,
+      ),
+    );
   };
 
   const handleSaveStats = (charId: string) => {
-    const edit = statsEdits.find(e => e.id === charId);
+    const edit = statsEdits.find((e) => e.id === charId);
     if (!edit) return;
     updateCharacter(charId, { stats: edit.stats } as any);
-    setStatsEdits(prev => prev.map(e => e.id === charId ? { ...e, saved: true } : e));
+    setStatsEdits((prev) =>
+      prev.map((e) => (e.id === charId ? { ...e, saved: true } : e)),
+    );
     flashStatus(`${t('savedStatsFor')} "${edit.name}"`);
   };
 
   const handleSaveAllStats = () => {
-    statsEdits.filter(e => !e.saved).forEach(edit => {
-      updateCharacter(edit.id, { stats: edit.stats } as any);
-    });
-    setStatsEdits(prev => prev.map(e => ({ ...e, saved: true })));
+    statsEdits
+      .filter((e) => !e.saved)
+      .forEach((edit) => {
+        updateCharacter(edit.id, { stats: edit.stats } as any);
+      });
+    setStatsEdits((prev) => prev.map((e) => ({ ...e, saved: true })));
     flashStatus(t('allStatsSaved'));
   };
 
   // ─── DH VITALS HANDLERS ──────────────────────────────────────────
-  const handleDHVitalChange = (charId: string, field: string, subField: string | null, value: string) => {
+  const handleDHVitalChange = (
+    charId: string,
+    field: string,
+    subField: string | null,
+    value: string,
+  ) => {
     const num = parseInt(value, 10) || 0;
-    setDhVitalsEdits(prev => prev.map(e => {
-      if (e.id !== charId) return e;
-      const updated = { ...e, saved: false };
-      if (subField) {
-        (updated as any)[field] = { ...(updated as any)[field], [subField]: num };
-      } else {
-        (updated as any)[field] = num;
-      }
-      return updated;
-    }));
+    setDhVitalsEdits((prev) =>
+      prev.map((e) => {
+        if (e.id !== charId) return e;
+        const updated = { ...e, saved: false };
+        if (subField) {
+          (updated as any)[field] = {
+            ...(updated as any)[field],
+            [subField]: num,
+          };
+        } else {
+          (updated as any)[field] = num;
+        }
+        return updated;
+      }),
+    );
   };
 
   const handleSaveDHVitals = (charId: string) => {
-    const edit = dhVitalsEdits.find(e => e.id === charId);
+    const edit = dhVitalsEdits.find((e) => e.id === charId);
     if (!edit) return;
     updateCharacter(charId, {
       wounds: edit.wounds,
@@ -209,45 +243,59 @@ export default function StatsEditorPage() {
       corruptionPoints: edit.corruptionPoints,
       experience: edit.experience,
     } as any);
-    setDhVitalsEdits(prev => prev.map(e => e.id === charId ? { ...e, saved: true } : e));
+    setDhVitalsEdits((prev) =>
+      prev.map((e) => (e.id === charId ? { ...e, saved: true } : e)),
+    );
     flashStatus(`${t('savedVitalsFor')} "${edit.name}"`);
   };
 
   const handleSaveAllDHVitals = () => {
-    dhVitalsEdits.filter(e => !e.saved).forEach(edit => {
-      updateCharacter(edit.id, {
-        wounds: edit.wounds,
-        fatePoints: edit.fatePoints,
-        insanityPoints: edit.insanityPoints,
-        corruptionPoints: edit.corruptionPoints,
-        experience: edit.experience,
-      } as any);
-    });
-    setDhVitalsEdits(prev => prev.map(e => ({ ...e, saved: true })));
+    dhVitalsEdits
+      .filter((e) => !e.saved)
+      .forEach((edit) => {
+        updateCharacter(edit.id, {
+          wounds: edit.wounds,
+          fatePoints: edit.fatePoints,
+          insanityPoints: edit.insanityPoints,
+          corruptionPoints: edit.corruptionPoints,
+          experience: edit.experience,
+        } as any);
+      });
+    setDhVitalsEdits((prev) => prev.map((e) => ({ ...e, saved: true })));
     flashStatus(t('allDhVitalsSaved'));
   };
 
   // ─── DND VITALS HANDLERS ─────────────────────────────────────────
-  const handleDnDVitalChange = (charId: string, field: string, subField: string | null, value: string) => {
-    setDndVitalsEdits(prev => prev.map(e => {
-      if (e.id !== charId) return e;
-      const updated = { ...e, saved: false };
-      if (field === 'speed') {
-        (updated as any)[field] = value;
-      } else {
-        const num = parseInt(value, 10) || 0;
-        if (subField) {
-          (updated as any)[field] = { ...(updated as any)[field], [subField]: num };
+  const handleDnDVitalChange = (
+    charId: string,
+    field: string,
+    subField: string | null,
+    value: string,
+  ) => {
+    setDndVitalsEdits((prev) =>
+      prev.map((e) => {
+        if (e.id !== charId) return e;
+        const updated = { ...e, saved: false };
+        if (field === 'speed') {
+          (updated as any)[field] = value;
         } else {
-          (updated as any)[field] = num;
+          const num = parseInt(value, 10) || 0;
+          if (subField) {
+            (updated as any)[field] = {
+              ...(updated as any)[field],
+              [subField]: num,
+            };
+          } else {
+            (updated as any)[field] = num;
+          }
         }
-      }
-      return updated;
-    }));
+        return updated;
+      }),
+    );
   };
 
   const handleSaveDnDVitals = (charId: string) => {
-    const edit = dndVitalsEdits.find(e => e.id === charId);
+    const edit = dndVitalsEdits.find((e) => e.id === charId);
     if (!edit) return;
     updateCharacter(charId, {
       level: edit.level,
@@ -258,23 +306,27 @@ export default function StatsEditorPage() {
       experiencePoints: edit.experiencePoints,
       experience: edit.experiencePoints,
     } as any);
-    setDndVitalsEdits(prev => prev.map(e => e.id === charId ? { ...e, saved: true } : e));
+    setDndVitalsEdits((prev) =>
+      prev.map((e) => (e.id === charId ? { ...e, saved: true } : e)),
+    );
     flashStatus(`${t('savedVitalsFor')} "${edit.name}"`);
   };
 
   const handleSaveAllDnDVitals = () => {
-    dndVitalsEdits.filter(e => !e.saved).forEach(edit => {
-      updateCharacter(edit.id, {
-        level: edit.level,
-        hitPoints: edit.hitPoints,
-        armorClass: edit.armorClass,
-        proficiencyBonus: edit.proficiencyBonus,
-        speed: edit.speed,
-        experiencePoints: edit.experiencePoints,
-        experience: edit.experiencePoints,
-      } as any);
-    });
-    setDndVitalsEdits(prev => prev.map(e => ({ ...e, saved: true })));
+    dndVitalsEdits
+      .filter((e) => !e.saved)
+      .forEach((edit) => {
+        updateCharacter(edit.id, {
+          level: edit.level,
+          hitPoints: edit.hitPoints,
+          armorClass: edit.armorClass,
+          proficiencyBonus: edit.proficiencyBonus,
+          speed: edit.speed,
+          experiencePoints: edit.experiencePoints,
+          experience: edit.experiencePoints,
+        } as any);
+      });
+    setDndVitalsEdits((prev) => prev.map((e) => ({ ...e, saved: true })));
     flashStatus(t('allDndVitalsSaved'));
   };
 
@@ -289,15 +341,17 @@ export default function StatsEditorPage() {
 
   if (isUserLoading || !isLoaded) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex min-h-screen items-center justify-center">
         <p className="text-muted-foreground">{t('loadingCharacters')}</p>
       </div>
     );
   }
 
   // Split stats by system for rendering
-  const dhStats = statsEdits.filter(e => e.gameSystem === 'Dark Heresy');
-  const dndStats = statsEdits.filter(e => e.gameSystem === 'Dungeons & Dragons');
+  const dhStats = statsEdits.filter((e) => e.gameSystem === 'Dark Heresy');
+  const dndStats = statsEdits.filter(
+    (e) => e.gameSystem === 'Dungeons & Dragons',
+  );
 
   const tabButton = (id: TabId, label: string) => (
     <Button
@@ -311,16 +365,22 @@ export default function StatsEditorPage() {
 
   return (
     <div className="min-h-screen p-4 md:p-6 lg:p-8">
-      <div className="max-w-7xl mx-auto space-y-6">
+      <div className="mx-auto max-w-7xl space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between flex-wrap gap-4">
+        <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => router.push('/')}>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => router.push('/')}
+            >
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div>
-              <h1 className="text-2xl font-headline font-bold">{t('bulkEditor')}</h1>
-              <p className="text-muted-foreground text-sm">
+              <h1 className="font-headline text-2xl font-bold">
+                {t('bulkEditor')}
+              </h1>
+              <p className="text-sm text-muted-foreground">
                 {t('bulkEditorDesc')}
               </p>
             </div>
@@ -328,10 +388,13 @@ export default function StatsEditorPage() {
         </div>
 
         {/* Tab Bar */}
-        <div className="flex gap-2 flex-wrap">
+        <div className="flex flex-wrap gap-2">
           {tabButton('stats', t('statsTab'))}
           {tabButton('dh-vitals', `${t('dhVitals')} (${dhVitalsEdits.length})`)}
-          {tabButton('dnd-vitals', `${t('dndVitals')} (${dndVitalsEdits.length})`)}
+          {tabButton(
+            'dnd-vitals',
+            `${t('dndVitals')} (${dndVitalsEdits.length})`,
+          )}
         </div>
 
         {/* Save Status */}
@@ -356,31 +419,57 @@ export default function StatsEditorPage() {
             {dhStats.length > 0 && (
               <Card>
                 <CardHeader>
-                  <CardTitle>{t('dhStats')} ({dhStats.length})</CardTitle>
+                  <CardTitle>
+                    {t('dhStats')} ({dhStats.length})
+                  </CardTitle>
                   <CardDescription>{t('dhStatsDesc')}</CardDescription>
                 </CardHeader>
                 <CardContent className="overflow-x-auto">
-                  <div className="space-y-2 min-w-[900px]">
-                    <div className="grid grid-cols-[180px_repeat(10,1fr)_60px] gap-1 items-center text-xs font-semibold text-muted-foreground border-b pb-2">
+                  <div className="min-w-[900px] space-y-2">
+                    <div className="grid grid-cols-[180px_repeat(10,1fr)_60px] items-center gap-1 border-b pb-2 text-xs font-semibold text-muted-foreground">
                       <span>{t('characterName')}</span>
-                      {DH_STATS.map(s => <span key={s.key} className="text-center">{t(s.labelKey)}</span>)}
+                      {DH_STATS.map((s) => (
+                        <span key={s.key} className="text-center">
+                          {t(s.labelKey)}
+                        </span>
+                      ))}
                       <span></span>
                     </div>
-                    {dhStats.map(char => (
-                      <div key={char.id} className="grid grid-cols-[180px_repeat(10,1fr)_60px] gap-1 items-center">
-                        <span className="text-sm font-medium truncate" title={char.name}>{char.name}</span>
-                        {DH_STATS.map(s => (
+                    {dhStats.map((char) => (
+                      <div
+                        key={char.id}
+                        className="grid grid-cols-[180px_repeat(10,1fr)_60px] items-center gap-1"
+                      >
+                        <span
+                          className="truncate text-sm font-medium"
+                          title={char.name}
+                        >
+                          {char.name}
+                        </span>
+                        {DH_STATS.map((s) => (
                           <Input
                             key={s.key}
                             type="number"
                             value={char.stats[s.key] || 0}
-                            onChange={(e) => handleStatChange(char.id, s.key, e.target.value)}
+                            onChange={(e) =>
+                              handleStatChange(char.id, s.key, e.target.value)
+                            }
                             className="h-8 text-center text-sm"
-                            min={0} max={100}
+                            min={0}
+                            max={100}
                           />
                         ))}
-                        <Button size="sm" variant={char.saved ? 'outline' : 'default'} onClick={() => handleSaveStats(char.id)} className="h-8">
-                          {char.saved ? <Check className="h-4 w-4" /> : <Save className="h-4 w-4" />}
+                        <Button
+                          size="sm"
+                          variant={char.saved ? 'outline' : 'default'}
+                          onClick={() => handleSaveStats(char.id)}
+                          className="h-8"
+                        >
+                          {char.saved ? (
+                            <Check className="h-4 w-4" />
+                          ) : (
+                            <Save className="h-4 w-4" />
+                          )}
                         </Button>
                       </div>
                     ))}
@@ -392,31 +481,57 @@ export default function StatsEditorPage() {
             {dndStats.length > 0 && (
               <Card>
                 <CardHeader>
-                  <CardTitle>{t('dndStats')} ({dndStats.length})</CardTitle>
+                  <CardTitle>
+                    {t('dndStats')} ({dndStats.length})
+                  </CardTitle>
                   <CardDescription>{t('dhStatsDesc')}</CardDescription>
                 </CardHeader>
                 <CardContent className="overflow-x-auto">
-                  <div className="space-y-2 min-w-[700px]">
-                    <div className="grid grid-cols-[180px_repeat(6,1fr)_60px] gap-1 items-center text-xs font-semibold text-muted-foreground border-b pb-2">
+                  <div className="min-w-[700px] space-y-2">
+                    <div className="grid grid-cols-[180px_repeat(6,1fr)_60px] items-center gap-1 border-b pb-2 text-xs font-semibold text-muted-foreground">
                       <span>{t('characterName')}</span>
-                      {DND_STATS.map(s => <span key={s.key} className="text-center">{t(s.labelKey)}</span>)}
+                      {DND_STATS.map((s) => (
+                        <span key={s.key} className="text-center">
+                          {t(s.labelKey)}
+                        </span>
+                      ))}
                       <span></span>
                     </div>
-                    {dndStats.map(char => (
-                      <div key={char.id} className="grid grid-cols-[180px_repeat(6,1fr)_60px] gap-1 items-center">
-                        <span className="text-sm font-medium truncate" title={char.name}>{char.name}</span>
-                        {DND_STATS.map(s => (
+                    {dndStats.map((char) => (
+                      <div
+                        key={char.id}
+                        className="grid grid-cols-[180px_repeat(6,1fr)_60px] items-center gap-1"
+                      >
+                        <span
+                          className="truncate text-sm font-medium"
+                          title={char.name}
+                        >
+                          {char.name}
+                        </span>
+                        {DND_STATS.map((s) => (
                           <Input
                             key={s.key}
                             type="number"
                             value={char.stats[s.key] || 0}
-                            onChange={(e) => handleStatChange(char.id, s.key, e.target.value)}
+                            onChange={(e) =>
+                              handleStatChange(char.id, s.key, e.target.value)
+                            }
                             className="h-8 text-center text-sm"
-                            min={0} max={30}
+                            min={0}
+                            max={30}
                           />
                         ))}
-                        <Button size="sm" variant={char.saved ? 'outline' : 'default'} onClick={() => handleSaveStats(char.id)} className="h-8">
-                          {char.saved ? <Check className="h-4 w-4" /> : <Save className="h-4 w-4" />}
+                        <Button
+                          size="sm"
+                          variant={char.saved ? 'outline' : 'default'}
+                          onClick={() => handleSaveStats(char.id)}
+                          className="h-8"
+                        >
+                          {char.saved ? (
+                            <Check className="h-4 w-4" />
+                          ) : (
+                            <Save className="h-4 w-4" />
+                          )}
                         </Button>
                       </div>
                     ))}
@@ -439,12 +554,14 @@ export default function StatsEditorPage() {
             {dhVitalsEdits.length > 0 ? (
               <Card>
                 <CardHeader>
-                  <CardTitle>{t('dhVitals')} ({dhVitalsEdits.length})</CardTitle>
+                  <CardTitle>
+                    {t('dhVitals')} ({dhVitalsEdits.length})
+                  </CardTitle>
                   <CardDescription>{t('dhVitalsDesc')}</CardDescription>
                 </CardHeader>
                 <CardContent className="overflow-x-auto">
-                  <div className="space-y-2 min-w-[800px]">
-                    <div className="grid grid-cols-[180px_repeat(5,1fr)_60px] gap-2 items-center text-xs font-semibold text-muted-foreground border-b pb-2">
+                  <div className="min-w-[800px] space-y-2">
+                    <div className="grid grid-cols-[180px_repeat(5,1fr)_60px] items-center gap-2 border-b pb-2 text-xs font-semibold text-muted-foreground">
                       <span>{t('characterName')}</span>
                       <span className="text-center">{t('woundsMax')}</span>
                       <span className="text-center">{t('fateMax')}</span>
@@ -453,16 +570,98 @@ export default function StatsEditorPage() {
                       <span className="text-center">{t('experience')}</span>
                       <span></span>
                     </div>
-                    {dhVitalsEdits.map(char => (
-                      <div key={char.id} className="grid grid-cols-[180px_repeat(5,1fr)_60px] gap-2 items-center">
-                        <span className="text-sm font-medium truncate" title={char.name}>{char.name}</span>
-                        <Input type="number" value={char.wounds.max} onChange={(e) => handleDHVitalChange(char.id, 'wounds', 'max', e.target.value)} className="h-8 text-center text-sm" min={0} />
-                        <Input type="number" value={char.fatePoints.max} onChange={(e) => handleDHVitalChange(char.id, 'fatePoints', 'max', e.target.value)} className="h-8 text-center text-sm" min={0} />
-                        <Input type="number" value={char.insanityPoints.total} onChange={(e) => handleDHVitalChange(char.id, 'insanityPoints', 'total', e.target.value)} className="h-8 text-center text-sm" min={0} />
-                        <Input type="number" value={char.corruptionPoints.total} onChange={(e) => handleDHVitalChange(char.id, 'corruptionPoints', 'total', e.target.value)} className="h-8 text-center text-sm" min={0} />
-                        <Input type="number" value={char.experience} onChange={(e) => handleDHVitalChange(char.id, 'experience', null, e.target.value)} className="h-8 text-center text-sm" min={0} />
-                        <Button size="sm" variant={char.saved ? 'outline' : 'default'} onClick={() => handleSaveDHVitals(char.id)} className="h-8">
-                          {char.saved ? <Check className="h-4 w-4" /> : <Save className="h-4 w-4" />}
+                    {dhVitalsEdits.map((char) => (
+                      <div
+                        key={char.id}
+                        className="grid grid-cols-[180px_repeat(5,1fr)_60px] items-center gap-2"
+                      >
+                        <span
+                          className="truncate text-sm font-medium"
+                          title={char.name}
+                        >
+                          {char.name}
+                        </span>
+                        <Input
+                          type="number"
+                          value={char.wounds.max}
+                          onChange={(e) =>
+                            handleDHVitalChange(
+                              char.id,
+                              'wounds',
+                              'max',
+                              e.target.value,
+                            )
+                          }
+                          className="h-8 text-center text-sm"
+                          min={0}
+                        />
+                        <Input
+                          type="number"
+                          value={char.fatePoints.max}
+                          onChange={(e) =>
+                            handleDHVitalChange(
+                              char.id,
+                              'fatePoints',
+                              'max',
+                              e.target.value,
+                            )
+                          }
+                          className="h-8 text-center text-sm"
+                          min={0}
+                        />
+                        <Input
+                          type="number"
+                          value={char.insanityPoints.total}
+                          onChange={(e) =>
+                            handleDHVitalChange(
+                              char.id,
+                              'insanityPoints',
+                              'total',
+                              e.target.value,
+                            )
+                          }
+                          className="h-8 text-center text-sm"
+                          min={0}
+                        />
+                        <Input
+                          type="number"
+                          value={char.corruptionPoints.total}
+                          onChange={(e) =>
+                            handleDHVitalChange(
+                              char.id,
+                              'corruptionPoints',
+                              'total',
+                              e.target.value,
+                            )
+                          }
+                          className="h-8 text-center text-sm"
+                          min={0}
+                        />
+                        <Input
+                          type="number"
+                          value={char.experience}
+                          onChange={(e) =>
+                            handleDHVitalChange(
+                              char.id,
+                              'experience',
+                              null,
+                              e.target.value,
+                            )
+                          }
+                          className="h-8 text-center text-sm"
+                          min={0}
+                        />
+                        <Button
+                          size="sm"
+                          variant={char.saved ? 'outline' : 'default'}
+                          onClick={() => handleSaveDHVitals(char.id)}
+                          className="h-8"
+                        >
+                          {char.saved ? (
+                            <Check className="h-4 w-4" />
+                          ) : (
+                            <Save className="h-4 w-4" />
+                          )}
                         </Button>
                       </div>
                     ))}
@@ -470,7 +669,11 @@ export default function StatsEditorPage() {
                 </CardContent>
               </Card>
             ) : (
-              <Card><CardContent className="py-12 text-center text-muted-foreground">{t('noDhCharacters')}</CardContent></Card>
+              <Card>
+                <CardContent className="py-12 text-center text-muted-foreground">
+                  {t('noDhCharacters')}
+                </CardContent>
+              </Card>
             )}
           </div>
         )}
@@ -487,12 +690,14 @@ export default function StatsEditorPage() {
             {dndVitalsEdits.length > 0 ? (
               <Card>
                 <CardHeader>
-                  <CardTitle>{t('dndVitals')} ({dndVitalsEdits.length})</CardTitle>
+                  <CardTitle>
+                    {t('dndVitals')} ({dndVitalsEdits.length})
+                  </CardTitle>
                   <CardDescription>{t('dndVitalsDesc')}</CardDescription>
                 </CardHeader>
                 <CardContent className="overflow-x-auto">
-                  <div className="space-y-2 min-w-[850px]">
-                    <div className="grid grid-cols-[180px_70px_90px_70px_70px_100px_110px_60px] gap-2 items-center text-xs font-semibold text-muted-foreground border-b pb-2">
+                  <div className="min-w-[850px] space-y-2">
+                    <div className="grid grid-cols-[180px_70px_90px_70px_70px_100px_110px_60px] items-center gap-2 border-b pb-2 text-xs font-semibold text-muted-foreground">
                       <span>{t('characterName')}</span>
                       <span className="text-center">{t('level')}</span>
                       <span className="text-center">{t('hpMax')}</span>
@@ -502,17 +707,112 @@ export default function StatsEditorPage() {
                       <span className="text-center">{t('experience')}</span>
                       <span></span>
                     </div>
-                    {dndVitalsEdits.map(char => (
-                      <div key={char.id} className="grid grid-cols-[180px_70px_90px_70px_70px_100px_110px_60px] gap-2 items-center">
-                        <span className="text-sm font-medium truncate" title={char.name}>{char.name}</span>
-                        <Input type="number" value={char.level} onChange={(e) => handleDnDVitalChange(char.id, 'level', null, e.target.value)} className="h-8 text-center text-sm" min={1} max={20} />
-                        <Input type="number" value={char.hitPoints.max} onChange={(e) => handleDnDVitalChange(char.id, 'hitPoints', 'max', e.target.value)} className="h-8 text-center text-sm" min={0} />
-                        <Input type="number" value={char.armorClass} onChange={(e) => handleDnDVitalChange(char.id, 'armorClass', null, e.target.value)} className="h-8 text-center text-sm" min={0} />
-                        <Input type="number" value={char.proficiencyBonus} onChange={(e) => handleDnDVitalChange(char.id, 'proficiencyBonus', null, e.target.value)} className="h-8 text-center text-sm" min={0} />
-                        <Input type="text" value={char.speed} onChange={(e) => handleDnDVitalChange(char.id, 'speed', null, e.target.value)} className="h-8 text-center text-sm" />
-                        <Input type="number" value={char.experiencePoints} onChange={(e) => handleDnDVitalChange(char.id, 'experiencePoints', null, e.target.value)} className="h-8 text-center text-sm" min={0} />
-                        <Button size="sm" variant={char.saved ? 'outline' : 'default'} onClick={() => handleSaveDnDVitals(char.id)} className="h-8">
-                          {char.saved ? <Check className="h-4 w-4" /> : <Save className="h-4 w-4" />}
+                    {dndVitalsEdits.map((char) => (
+                      <div
+                        key={char.id}
+                        className="grid grid-cols-[180px_70px_90px_70px_70px_100px_110px_60px] items-center gap-2"
+                      >
+                        <span
+                          className="truncate text-sm font-medium"
+                          title={char.name}
+                        >
+                          {char.name}
+                        </span>
+                        <Input
+                          type="number"
+                          value={char.level}
+                          onChange={(e) =>
+                            handleDnDVitalChange(
+                              char.id,
+                              'level',
+                              null,
+                              e.target.value,
+                            )
+                          }
+                          className="h-8 text-center text-sm"
+                          min={1}
+                          max={20}
+                        />
+                        <Input
+                          type="number"
+                          value={char.hitPoints.max}
+                          onChange={(e) =>
+                            handleDnDVitalChange(
+                              char.id,
+                              'hitPoints',
+                              'max',
+                              e.target.value,
+                            )
+                          }
+                          className="h-8 text-center text-sm"
+                          min={0}
+                        />
+                        <Input
+                          type="number"
+                          value={char.armorClass}
+                          onChange={(e) =>
+                            handleDnDVitalChange(
+                              char.id,
+                              'armorClass',
+                              null,
+                              e.target.value,
+                            )
+                          }
+                          className="h-8 text-center text-sm"
+                          min={0}
+                        />
+                        <Input
+                          type="number"
+                          value={char.proficiencyBonus}
+                          onChange={(e) =>
+                            handleDnDVitalChange(
+                              char.id,
+                              'proficiencyBonus',
+                              null,
+                              e.target.value,
+                            )
+                          }
+                          className="h-8 text-center text-sm"
+                          min={0}
+                        />
+                        <Input
+                          type="text"
+                          value={char.speed}
+                          onChange={(e) =>
+                            handleDnDVitalChange(
+                              char.id,
+                              'speed',
+                              null,
+                              e.target.value,
+                            )
+                          }
+                          className="h-8 text-center text-sm"
+                        />
+                        <Input
+                          type="number"
+                          value={char.experiencePoints}
+                          onChange={(e) =>
+                            handleDnDVitalChange(
+                              char.id,
+                              'experiencePoints',
+                              null,
+                              e.target.value,
+                            )
+                          }
+                          className="h-8 text-center text-sm"
+                          min={0}
+                        />
+                        <Button
+                          size="sm"
+                          variant={char.saved ? 'outline' : 'default'}
+                          onClick={() => handleSaveDnDVitals(char.id)}
+                          className="h-8"
+                        >
+                          {char.saved ? (
+                            <Check className="h-4 w-4" />
+                          ) : (
+                            <Save className="h-4 w-4" />
+                          )}
                         </Button>
                       </div>
                     ))}
@@ -520,7 +820,11 @@ export default function StatsEditorPage() {
                 </CardContent>
               </Card>
             ) : (
-              <Card><CardContent className="py-12 text-center text-muted-foreground">{t('noDndCharacters')}</CardContent></Card>
+              <Card>
+                <CardContent className="py-12 text-center text-muted-foreground">
+                  {t('noDndCharacters')}
+                </CardContent>
+              </Card>
             )}
           </div>
         )}

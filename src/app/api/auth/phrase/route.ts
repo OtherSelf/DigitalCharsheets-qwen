@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+
 import { setRecoveryPhrase } from '@/lib/server-auth';
 import { getSessionUid } from '@/lib/session';
 
@@ -13,7 +14,7 @@ export async function POST(request: Request) {
     if (!uid) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized.' },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -21,17 +22,26 @@ export async function POST(request: Request) {
     const { phrase } = body;
 
     if (!phrase) {
-      return NextResponse.json({ success: false, error: 'Phrase is required.' }, { status: 400 });
+      return NextResponse.json(
+        { success: false, error: 'Phrase is required.' },
+        { status: 400 },
+      );
     }
 
     const success = setRecoveryPhrase(uid, phrase);
 
     if (!success) {
-      return NextResponse.json({ success: false, error: 'Failed to update recovery phrase.' }, { status: 500 });
+      return NextResponse.json(
+        { success: false, error: 'Failed to update recovery phrase.' },
+        { status: 500 },
+      );
     }
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    return NextResponse.json({ success: false, error: 'An unexpected error occurred.' }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: 'An unexpected error occurred.' },
+      { status: 500 },
+    );
   }
 }

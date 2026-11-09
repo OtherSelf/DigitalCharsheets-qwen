@@ -1,7 +1,8 @@
 // src/components/ui-scale-wrapper.tsx
 'use client';
 
-import { useEffect, useRef, ReactNode } from 'react';
+import { ReactNode, useEffect, useRef } from 'react';
+
 import { useUISettings } from '@/hooks/use-ui-settings';
 
 export function UIScaleWrapper({ children }: { children: ReactNode }) {

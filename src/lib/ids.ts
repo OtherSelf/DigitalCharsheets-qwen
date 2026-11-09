@@ -32,7 +32,9 @@ export function isUid(value: unknown): value is string {
  * индекса `логин → uid`.
  */
 export function normalizeLogin(login: string): string {
-  return String(login ?? '').toLowerCase().trim();
+  return String(login ?? '')
+    .toLowerCase()
+    .trim();
 }
 
 /** Человекочитаемое имя по умолчанию: часть логина до `@`. */

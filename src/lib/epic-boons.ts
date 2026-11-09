@@ -27,4 +27,4 @@ export const EPIC_BOON_KEYS = [
   'boonUndetectability',
 ] as const;
 
-export type EpicBoonKey = typeof EPIC_BOON_KEYS[number];
+export type EpicBoonKey = (typeof EPIC_BOON_KEYS)[number];

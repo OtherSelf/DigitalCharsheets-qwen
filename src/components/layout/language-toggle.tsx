@@ -15,7 +15,7 @@ export function LanguageToggle({ className }: LanguageToggleProps) {
     <Button
       variant="outline"
       size="icon"
-      className={cn("font-bold text-xs", className)}
+      className={cn('text-xs font-bold', className)}
       onClick={() => setLanguage(language === 'en' ? 'ru' : 'en')}
       title={language === 'en' ? t('switchToRussian') : t('switchToEnglish')}
     >

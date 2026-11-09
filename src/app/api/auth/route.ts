@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+
 import { authenticateUser } from '@/lib/server-auth';
 import { sessionCookieHeader } from '@/lib/session';
 
@@ -21,14 +22,14 @@ export async function POST(request: Request) {
     if (!username || !password) {
       return NextResponse.json(
         { success: false, error: 'Username/Email and password are required.' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     if (password.length < 4) {
       return NextResponse.json(
         { success: false, error: 'Password must be at least 4 characters.' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -38,10 +39,18 @@ export async function POST(request: Request) {
 
     if (!result.success || !result.user) {
       const status =
-        result.reason === 'no_account' ? 404 : result.reason === 'invalid_input' ? 400 : 401;
+        result.reason === 'no_account'
+          ? 404
+          : result.reason === 'invalid_input'
+            ? 400
+            : 401;
       return NextResponse.json(
-        { success: false, error: result.error || 'Login failed.', reason: result.reason },
-        { status }
+        {
+          success: false,
+          error: result.error || 'Login failed.',
+          reason: result.reason,
+        },
+        { status },
       );
     }
 
@@ -53,11 +62,10 @@ export async function POST(request: Request) {
     });
     response.headers.set('Set-Cookie', sessionCookieHeader(result.user.uid));
     return response;
-
   } catch (error) {
     return NextResponse.json(
       { success: false, error: 'An unexpected error occurred.' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -1,21 +1,23 @@
 import crypto from 'node:crypto';
 import fs from 'node:fs';
+
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
+import { newUid } from '@/lib/ids';
 import {
   authenticateUser,
   getStoredUser,
   updateUserProfile,
 } from '@/lib/server-auth';
-import { newUid } from '@/lib/ids';
-import { resolveLogin } from '@/lib/user-index';
 import { saveCharacterToServer } from '@/lib/server-storage';
+import { resolveLogin } from '@/lib/user-index';
+
 import {
   makeDndCharacter,
   readJson,
   removeDir,
-  useTempDataDir,
   userPaths,
+  useTempDataDir,
 } from './helpers';
 
 /**

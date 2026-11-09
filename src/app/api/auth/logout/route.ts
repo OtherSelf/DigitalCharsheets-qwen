@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+
 import { clearSessionCookieHeader } from '@/lib/session';
 
 /**

@@ -11,6 +11,7 @@ import {
   updateLocalCharacter,
   type LocalUser,
 } from '@/lib/local-storage';
+
 import { makeDndCharacter } from './helpers';
 
 /**
@@ -89,7 +90,9 @@ describe('local-storage: пользователь', () => {
   it('сохраняет и читает пользователя', () => {
     setLocalUser(user);
     expect(getLocalUser()).toEqual(user);
-    expect((globalThis as any).localStorage.getItem('digital_charsheets_user')).toContain('user-abc');
+    expect(
+      (globalThis as any).localStorage.getItem('digital_charsheets_user'),
+    ).toContain('user-abc');
   });
 
   it('умеет чистить сессию', () => {
@@ -101,10 +104,18 @@ describe('local-storage: пользователь', () => {
   it('поддерживает legacy-поле email', () => {
     (globalThis as any).localStorage.setItem(
       'digital_charsheets_user',
-      JSON.stringify({ uid: 'user-old', email: 'old@mail', displayName: 'Old', hasRecoveryPhrase: true }),
+      JSON.stringify({
+        uid: 'user-old',
+        email: 'old@mail',
+        displayName: 'Old',
+        hasRecoveryPhrase: true,
+      }),
     );
 
-    expect(getLocalUser()).toMatchObject({ uid: 'user-old', username: 'old@mail' });
+    expect(getLocalUser()).toMatchObject({
+      uid: 'user-old',
+      username: 'old@mail',
+    });
   });
 
   it('не падает на пустом хранилище', () => {
@@ -115,7 +126,10 @@ describe('local-storage: пользователь', () => {
 
 describe('local-storage: персонажи', () => {
   it('сохраняет и читает список листов', () => {
-    const characters = [makeDndCharacter({ id: 'x1' }), makeDndCharacter({ id: 'x2' })];
+    const characters = [
+      makeDndCharacter({ id: 'x1' }),
+      makeDndCharacter({ id: 'x2' }),
+    ];
     saveLocalCharacters(characters);
     expect(getLocalCharacters().map((c) => c.id)).toEqual(['x1', 'x2']);
   });
@@ -133,7 +147,10 @@ describe('local-storage: персонажи', () => {
   });
 
   it('updateLocalCharacter меняет только нужную запись', () => {
-    saveLocalCharacters([makeDndCharacter({ id: 'a', name: 'A' }), makeDndCharacter({ id: 'b', name: 'B' })]);
+    saveLocalCharacters([
+      makeDndCharacter({ id: 'a', name: 'A' }),
+      makeDndCharacter({ id: 'b', name: 'B' }),
+    ]);
 
     updateLocalCharacter('b', { name: 'B2' });
 
@@ -149,7 +166,10 @@ describe('local-storage: персонажи', () => {
   });
 
   it('deleteLocalCharacter удаляет только совпавший id', () => {
-    saveLocalCharacters([makeDndCharacter({ id: 'a' }), makeDndCharacter({ id: 'b' })]);
+    saveLocalCharacters([
+      makeDndCharacter({ id: 'a' }),
+      makeDndCharacter({ id: 'b' }),
+    ]);
 
     deleteLocalCharacter('a');
 

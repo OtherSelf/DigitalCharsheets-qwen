@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+
 import { describe, expect, it } from 'vitest';
 
 /**
@@ -51,8 +52,9 @@ const PAGE_PREFIXES = [
 function parseName(name: string): ParsedName {
   const base = name.replace(/\.png$/, '');
   const page =
-    PAGE_PREFIXES.find((prefix) => base === prefix || base.startsWith(`${prefix}-`)) ??
-    base.split('-')[0];
+    PAGE_PREFIXES.find(
+      (prefix) => base === prefix || base.startsWith(`${prefix}-`),
+    ) ?? base.split('-')[0];
   const rest = base === page ? [] : base.slice(page.length + 1).split('-');
   const game = GAMES.has(rest[0]) ? (rest[0] as 'dnd' | 'dh') : undefined;
   const lang = rest[rest.length - 1] as 'en' | 'ru';
@@ -112,7 +114,10 @@ describe('визуальные тесты: имена эталонов', () => {
     const gamePages = new Set(['sheet', 'dialog']);
     for (const item of parsed) {
       if (gamePages.has(item.page)) {
-        expect(item.game, `${item.name}: не указана игра (dnd/dh)`).toBeTruthy();
+        expect(
+          item.game,
+          `${item.name}: не указана игра (dnd/dh)`,
+        ).toBeTruthy();
       }
       expect(LANGS.has(item.lang), `${item.name}: язык не en/ru`).toBe(true);
     }
@@ -127,7 +132,9 @@ describe('визуальные тесты: имена эталонов', () => {
   it('каждый скриншот в спеке имеет эталон', () => {
     const pngSet = new Set(pngs);
     const missing = referenced.filter((name) => !pngSet.has(name));
-    expect(missing, 'тест без эталона (запустите --update-snapshots)').toEqual([]);
+    expect(missing, 'тест без эталона (запустите --update-snapshots)').toEqual(
+      [],
+    );
   });
 
   it('нет дублей имён в одном проекте', () => {
@@ -135,7 +142,9 @@ describe('визуальные тесты: имена эталонов', () => {
       const files = walk(path.join(SHOTS_DIR, project))
         .filter((file) => file.endsWith('.png'))
         .map((file) => path.basename(file));
-      const dupes = files.filter((name, index) => files.indexOf(name) !== index);
+      const dupes = files.filter(
+        (name, index) => files.indexOf(name) !== index,
+      );
       expect(dupes, `дубли в ${project}`).toEqual([]);
     }
   });
@@ -250,7 +259,8 @@ describe('визуальные тесты: покрытие', () => {
       const items = keys.get(key) ?? [];
       for (const section of sections) {
         const hasEdit = items.some(
-          (item) => item.extras.includes('edit') && item.extraText.includes(section),
+          (item) =>
+            item.extras.includes('edit') && item.extraText.includes(section),
         );
         expect(hasEdit, `${key}: нет edit-скриншота секции "${section}"`).toBe(
           true,
@@ -286,7 +296,8 @@ describe('визуальные тесты: покрытие', () => {
       ).toBe(true);
       expect(
         items.some(
-          (item) => item.extras.includes('mobile') && item.extras.includes('edit'),
+          (item) =>
+            item.extras.includes('mobile') && item.extras.includes('edit'),
         ),
         `${key}: нет mobile-edit скриншотов`,
       ).toBe(true);

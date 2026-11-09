@@ -1,29 +1,81 @@
 'use client';
 
 import * as React from 'react';
-import { type DnDAttack, type CombatResource, type SpellcastingEntry, type DnDAbility } from '@/lib/types';
-import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
-import { Input } from '../../ui/input';
-import { Textarea } from '../../ui/textarea';
-import { Button } from '../../ui/button';
-import { Plus, Trash2, Edit, Save, Minus, Info } from 'lucide-react';
-import { Label } from '@/components/ui/label';
+
+import { Edit, Info, Minus, Plus, Save, Trash2 } from 'lucide-react';
+
 import { Checkbox } from '@/components/ui/checkbox';
-import { Popover, PopoverContent, PopoverTrigger } from '../../ui/popover';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/select';
-import { cn } from '@/lib/utils';
+import { Label } from '@/components/ui/label';
 import { useCharacterContext } from '@/context/character-context';
 import { useTranslation } from '@/context/language-context';
+import {
+  type CombatResource,
+  type DnDAbility,
+  type DnDAttack,
+  type SpellcastingEntry,
+} from '@/lib/types';
+import { cn } from '@/lib/utils';
+
+import { Button } from '../../ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
+import { Input } from '../../ui/input';
+import { Popover, PopoverContent, PopoverTrigger } from '../../ui/popover';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../../ui/select';
+import { Textarea } from '../../ui/textarea';
 
 const CLASS_HIT_DICE: Record<string, number> = {
-  "Artificer": 8, "Barbarian": 12, "Bard": 8, "Cleric": 8, "Druid": 8,
-  "Fighter": 10, "Monk": 8, "Paladin": 10, "Ranger": 10, "Rogue": 8,
-  "Sorcerer": 6, "Warlock": 8, "Wizard": 6, "NPC": 8,
+  Artificer: 8,
+  Barbarian: 12,
+  Bard: 8,
+  Cleric: 8,
+  Druid: 8,
+  Fighter: 10,
+  Monk: 8,
+  Paladin: 10,
+  Ranger: 10,
+  Rogue: 8,
+  Sorcerer: 6,
+  Warlock: 8,
+  Wizard: 6,
+  NPC: 8,
 };
 
-const EditSaveButton = ({ editing, onEdit, onSave }: { editing: boolean; onEdit: () => void; onSave: () => void }) => (
-  editing ? <Button data-testid="save-button" size="icon" variant="ghost" onClick={onSave} className="h-7 w-7"><Save className="h-4 w-4" /></Button> : <Button data-testid="edit-button" size="icon" variant="outline" onClick={onEdit} className="h-7 w-7"><Edit className="h-4 w-4" /></Button>
-);
+const EditSaveButton = ({
+  editing,
+  onEdit,
+  onSave,
+}: {
+  editing: boolean;
+  onEdit: () => void;
+  onSave: () => void;
+}) =>
+  editing ? (
+    <Button
+      data-testid="save-button"
+      size="icon"
+      variant="ghost"
+      onClick={onSave}
+      className="h-7 w-7"
+    >
+      <Save className="h-4 w-4" />
+    </Button>
+  ) : (
+    <Button
+      data-testid="edit-button"
+      size="icon"
+      variant="outline"
+      onClick={onEdit}
+      className="h-7 w-7"
+    >
+      <Edit className="h-4 w-4" />
+    </Button>
+  );
 
 interface CombatStats {
   armorClass: number;
@@ -45,10 +97,10 @@ interface CombatSectionProps {
   initialSpellcastingEntries: SpellcastingEntry[];
   stats: Record<string, number>;
   proficiencyBonus: number;
-  progressionData: { 
-    characterClass: string; 
-    level: number; 
-    isMulticlass: boolean; 
+  progressionData: {
+    characterClass: string;
+    level: number;
+    isMulticlass: boolean;
     multiclasses: { class: string; level: number; isDisabled?: boolean }[];
   };
   isCompactView: boolean;
@@ -57,9 +109,31 @@ interface CombatSectionProps {
   onManualHitDiceChange?: (value: string) => void;
 }
 
-export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, CombatSectionProps>(
-  ({ characterId, initialCombatStats, initialExhaustion, initialHitDiceUsed, initialAttacks, initialCombatResources, initialSpellcastingEntries, stats, proficiencyBonus, progressionData, isCompactView, activeCompactSection, manualHitDice, onManualHitDiceChange }, ref) => {
-    const { updateCharacter, showEditButtons, hideNotes } = useCharacterContext();
+export const DndCombatSection = React.forwardRef<
+  { saveAll: () => void },
+  CombatSectionProps
+>(
+  (
+    {
+      characterId,
+      initialCombatStats,
+      initialExhaustion,
+      initialHitDiceUsed,
+      initialAttacks,
+      initialCombatResources,
+      initialSpellcastingEntries,
+      stats,
+      proficiencyBonus,
+      progressionData,
+      isCompactView,
+      activeCompactSection,
+      manualHitDice,
+      onManualHitDiceChange,
+    },
+    ref,
+  ) => {
+    const { updateCharacter, showEditButtons, hideNotes } =
+      useCharacterContext();
     const { t } = useTranslation();
 
     const exhaustionEffects = [
@@ -71,21 +145,29 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
       t('exhaustionEffect6'),
     ];
 
-    const [combatStats, setCombatStats] = React.useState<CombatStats>(initialCombatStats);
-    const [isCombatStatsEditing, setIsCombatStatsEditing] = React.useState(false);
+    const [combatStats, setCombatStats] =
+      React.useState<CombatStats>(initialCombatStats);
+    const [isCombatStatsEditing, setIsCombatStatsEditing] =
+      React.useState(false);
     const [isHpEditing, setIsHpEditing] = React.useState(false);
     const [hpDelta, setHpDelta] = React.useState<string>('');
     const [exhaustion, setExhaustion] = React.useState(initialExhaustion);
-    const [hitDiceUsed, setHitDiceUsed] = React.useState<Record<string, number>>(initialHitDiceUsed);
+    const [hitDiceUsed, setHitDiceUsed] =
+      React.useState<Record<string, number>>(initialHitDiceUsed);
     const [attacks, setAttacks] = React.useState<DnDAttack[]>(initialAttacks);
     const [isAttacksEditing, setIsAttacksEditing] = React.useState(false);
-    const [combatResources, setCombatResources] = React.useState<CombatResource[]>(initialCombatResources);
+    const [combatResources, setCombatResources] = React.useState<
+      CombatResource[]
+    >(initialCombatResources);
     const [isResourcesEditing, setIsResourcesEditing] = React.useState(false);
     const [newResourceDesc, setNewResourceDesc] = React.useState('');
     const [newResourceMax, setNewResourceMax] = React.useState(1);
-    
-    const [spellcastingEntries, setSpellcastingEntries] = React.useState<SpellcastingEntry[]>(initialSpellcastingEntries);
-    const [isSpellcastingEditing, setIsSpellcastingEditing] = React.useState(false);
+
+    const [spellcastingEntries, setSpellcastingEntries] = React.useState<
+      SpellcastingEntry[]
+    >(initialSpellcastingEntries);
+    const [isSpellcastingEditing, setIsSpellcastingEditing] =
+      React.useState(false);
 
     React.useEffect(() => {
       setCombatStats(initialCombatStats);
@@ -93,11 +175,14 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
       setHitDiceUsed(initialHitDiceUsed);
       setCombatResources(initialCombatResources);
       setSpellcastingEntries(initialSpellcastingEntries);
-  
-      const migratedAttacks = initialAttacks.map(atk => ({
+
+      const migratedAttacks = initialAttacks.map((atk) => ({
         ...atk,
         ability: (atk as any).ability || 'strength',
-        useProficiencyBonus: (atk as any).useProficiencyBonus !== undefined ? (atk as any).useProficiencyBonus : true,
+        useProficiencyBonus:
+          (atk as any).useProficiencyBonus !== undefined
+            ? (atk as any).useProficiencyBonus
+            : true,
         damageDice: (atk as any).damageDice || '1d6',
         damageModifier: (atk as any).damageModifier || '+0',
       }));
@@ -109,7 +194,7 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
       initialHitDiceUsed,
       initialAttacks,
       initialCombatResources,
-      initialSpellcastingEntries
+      initialSpellcastingEntries,
     ]);
 
     React.useEffect(() => {
@@ -118,7 +203,10 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
       }
     }, [initialSpellcastingEntries, isSpellcastingEditing]);
 
-    const calculateAttackBonus = (ability: DnDAbility | 'none', useProficiency: boolean) => {
+    const calculateAttackBonus = (
+      ability: DnDAbility | 'none',
+      useProficiency: boolean,
+    ) => {
       if (ability === 'none' || !ability) return '+0';
       const statValue = stats[ability] || 10;
       const mod = Math.floor((statValue - 10) / 2);
@@ -126,22 +214,28 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
       return total >= 0 ? `+${total}` : `${total}`;
     };
 
-    const handleAttackFieldChange = (id: string, field: keyof DnDAttack, value: string | number | boolean) => {
-      setAttacks(prev => prev.map(atk => {
-        if (atk.id !== id) return atk;
-        return { ...atk, [field]: value };
-      }));
+    const handleAttackFieldChange = (
+      id: string,
+      field: keyof DnDAttack,
+      value: string | number | boolean,
+    ) => {
+      setAttacks((prev) =>
+        prev.map((atk) => {
+          if (atk.id !== id) return atk;
+          return { ...atk, [field]: value };
+        }),
+      );
     };
 
     const addAttack = () => {
-      const newAttack: DnDAttack = { 
-        id: `atk-${Date.now()}`, 
-        name: t('newAttack'), 
-        ability: 'strength', 
-        useProficiencyBonus: true, 
-        damageDice: '1d6', 
-        damageModifier: '+0', 
-        notes: '' 
+      const newAttack: DnDAttack = {
+        id: `atk-${Date.now()}`,
+        name: t('newAttack'),
+        ability: 'strength',
+        useProficiencyBonus: true,
+        damageDice: '1d6',
+        damageModifier: '+0',
+        notes: '',
       };
       const updated = [...attacks, newAttack];
       setAttacks(updated);
@@ -149,7 +243,7 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
     };
 
     const removeAttack = (id: string) => {
-      const updated = attacks.filter(a => a.id !== id);
+      const updated = attacks.filter((a) => a.id !== id);
       setAttacks(updated);
       updateCharacter(characterId, { attacks: updated });
     };
@@ -159,15 +253,21 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
     const baseMaxHp = 8 + conMod;
 
     const activeMcLevelSum = progressionData.isMulticlass
-      ? (progressionData.multiclasses?.reduce((sum, mc) => sum + (mc.isDisabled ? 0 : mc.level), 0) || 0)
+      ? progressionData.multiclasses?.reduce(
+          (sum, mc) => sum + (mc.isDisabled ? 0 : mc.level),
+          0,
+        ) || 0
       : 0;
 
     const primaryClassLevel = progressionData.isMulticlass
       ? Math.max(1, progressionData.level - activeMcLevelSum)
       : progressionData.level;
-    
+
     let primaryDieSize = CLASS_HIT_DICE[progressionData.characterClass] || 8;
-    if (progressionData.characterClass.toLowerCase() === 'npc' && manualHitDice) {
+    if (
+      progressionData.characterClass.toLowerCase() === 'npc' &&
+      manualHitDice
+    ) {
       const match = manualHitDice.match(/1d(\d+)/i);
       if (match) {
         primaryDieSize = parseInt(match[1], 10);
@@ -175,70 +275,160 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
     }
 
     const hitDiceEntries = React.useMemo(() => {
-      const entries: { className: string; level: number; dieSize: number }[] = [];
-      entries.push({ className: progressionData.characterClass, level: primaryClassLevel, dieSize: primaryDieSize });
+      const entries: { className: string; level: number; dieSize: number }[] =
+        [];
+      entries.push({
+        className: progressionData.characterClass,
+        level: primaryClassLevel,
+        dieSize: primaryDieSize,
+      });
       if (progressionData.isMulticlass && progressionData.multiclasses) {
         for (const mc of progressionData.multiclasses) {
           if (!mc.isDisabled) {
-            entries.push({ className: mc.class, level: mc.level, dieSize: CLASS_HIT_DICE[mc.class] || 8 });
+            entries.push({
+              className: mc.class,
+              level: mc.level,
+              dieSize: CLASS_HIT_DICE[mc.class] || 8,
+            });
           }
         }
       }
       return entries;
     }, [progressionData, primaryClassLevel, primaryDieSize]);
 
-    const handleSaveCombatStats = React.useCallback(() => { updateCharacter(characterId, { armorClass: combatStats.armorClass, speed: combatStats.speed }); setIsCombatStatsEditing(false); }, [characterId, combatStats.armorClass, combatStats.speed, updateCharacter]);
-    const handleSaveHp = React.useCallback(() => { updateCharacter(characterId, { hitPoints: combatStats.hitPoints, temporaryHitPoints: combatStats.temporaryHitPoints }); setIsHpEditing(false); }, [characterId, combatStats.hitPoints, combatStats.temporaryHitPoints, updateCharacter]);
-    const handleSaveAttacks = React.useCallback(() => { updateCharacter(characterId, { attacks }); setIsAttacksEditing(false); }, [characterId, attacks, updateCharacter]);
-    const handleSaveResources = React.useCallback(() => { updateCharacter(characterId, { combatResources }); setIsResourcesEditing(false); }, [characterId, combatResources, updateCharacter]);
-    const handleSaveSpellcasting = React.useCallback(() => { updateCharacter(characterId, { spellcastingEntries }); setIsSpellcastingEditing(false); }, [characterId, spellcastingEntries, updateCharacter]);
+    const handleSaveCombatStats = React.useCallback(() => {
+      updateCharacter(characterId, {
+        armorClass: combatStats.armorClass,
+        speed: combatStats.speed,
+      });
+      setIsCombatStatsEditing(false);
+    }, [
+      characterId,
+      combatStats.armorClass,
+      combatStats.speed,
+      updateCharacter,
+    ]);
+    const handleSaveHp = React.useCallback(() => {
+      updateCharacter(characterId, {
+        hitPoints: combatStats.hitPoints,
+        temporaryHitPoints: combatStats.temporaryHitPoints,
+      });
+      setIsHpEditing(false);
+    }, [
+      characterId,
+      combatStats.hitPoints,
+      combatStats.temporaryHitPoints,
+      updateCharacter,
+    ]);
+    const handleSaveAttacks = React.useCallback(() => {
+      updateCharacter(characterId, { attacks });
+      setIsAttacksEditing(false);
+    }, [characterId, attacks, updateCharacter]);
+    const handleSaveResources = React.useCallback(() => {
+      updateCharacter(characterId, { combatResources });
+      setIsResourcesEditing(false);
+    }, [characterId, combatResources, updateCharacter]);
+    const handleSaveSpellcasting = React.useCallback(() => {
+      updateCharacter(characterId, { spellcastingEntries });
+      setIsSpellcastingEditing(false);
+    }, [characterId, spellcastingEntries, updateCharacter]);
 
-    React.useImperativeHandle(ref, () => ({
-      saveAll: () => {
-        if (isCombatStatsEditing) handleSaveCombatStats();
-        if (isHpEditing) handleSaveHp();
-        if (isAttacksEditing) handleSaveAttacks();
-        if (isResourcesEditing) handleSaveResources();
-        if (isSpellcastingEditing) handleSaveSpellcasting();
-      }
-    }), [isCombatStatsEditing, isHpEditing, isAttacksEditing, isResourcesEditing, isSpellcastingEditing, handleSaveCombatStats, handleSaveHp, handleSaveAttacks, handleSaveResources, handleSaveSpellcasting]);
+    React.useImperativeHandle(
+      ref,
+      () => ({
+        saveAll: () => {
+          if (isCombatStatsEditing) handleSaveCombatStats();
+          if (isHpEditing) handleSaveHp();
+          if (isAttacksEditing) handleSaveAttacks();
+          if (isResourcesEditing) handleSaveResources();
+          if (isSpellcastingEditing) handleSaveSpellcasting();
+        },
+      }),
+      [
+        isCombatStatsEditing,
+        isHpEditing,
+        isAttacksEditing,
+        isResourcesEditing,
+        isSpellcastingEditing,
+        handleSaveCombatStats,
+        handleSaveHp,
+        handleSaveAttacks,
+        handleSaveResources,
+        handleSaveSpellcasting,
+      ],
+    );
 
     const handleHpMath = (op: 'sub' | 'rec') => {
-      const d = parseInt(hpDelta) || 0; if (d === 0) return;
-      const n = { ...combatStats.hitPoints, current: op === 'sub' ? Math.max(0, combatStats.hitPoints.current - d) : Math.min(combatStats.hitPoints.max, combatStats.hitPoints.current + d) };
-      setCombatStats({ ...combatStats, hitPoints: n }); setHpDelta('');
+      const d = parseInt(hpDelta) || 0;
+      if (d === 0) return;
+      const n = {
+        ...combatStats.hitPoints,
+        current:
+          op === 'sub'
+            ? Math.max(0, combatStats.hitPoints.current - d)
+            : Math.min(
+                combatStats.hitPoints.max,
+                combatStats.hitPoints.current + d,
+              ),
+      };
+      setCombatStats({ ...combatStats, hitPoints: n });
+      setHpDelta('');
       if (!isHpEditing) updateCharacter(characterId, { hitPoints: n });
     };
 
     const handleResourceCurrentChange = (id: string, delta: number) => {
-      const next = combatResources.map(r => r.id === id ? { ...r, current: Math.max(0, Math.min(r.max, r.current + delta)) } : r);
+      const next = combatResources.map((r) =>
+        r.id === id
+          ? { ...r, current: Math.max(0, Math.min(r.max, r.current + delta)) }
+          : r,
+      );
       setCombatResources(next);
       updateCharacter(characterId, { combatResources: next });
     };
 
-    const handleResourceFieldChange = (id: string, field: keyof CombatResource, value: string | number) => {
-      setCombatResources(prev => prev.map(r => {
-        if (r.id !== id) return r;
-        if (field === 'max') {
-          const newMax = Math.max(0, parseInt(String(value), 10) || 0);
-          return { ...r, max: newMax, current: Math.min(r.current, newMax) };
-        }
-        return { ...r, [field]: value };
-      }));
+    const handleResourceFieldChange = (
+      id: string,
+      field: keyof CombatResource,
+      value: string | number,
+    ) => {
+      setCombatResources((prev) =>
+        prev.map((r) => {
+          if (r.id !== id) return r;
+          if (field === 'max') {
+            const newMax = Math.max(0, parseInt(String(value), 10) || 0);
+            return { ...r, max: newMax, current: Math.min(r.current, newMax) };
+          }
+          return { ...r, [field]: value };
+        }),
+      );
     };
 
     const addResource = () => {
       if (newResourceDesc.trim()) {
-        const next = [...combatResources, { id: `res-${Date.now()}`, description: newResourceDesc.trim(), current: newResourceMax, max: newResourceMax, notes: '' }];
+        const next = [
+          ...combatResources,
+          {
+            id: `res-${Date.now()}`,
+            description: newResourceDesc.trim(),
+            current: newResourceMax,
+            max: newResourceMax,
+            notes: '',
+          },
+        ];
         setCombatResources(next);
         setNewResourceDesc('');
         setNewResourceMax(1);
       }
     };
 
-    const removeResource = (id: string) => { setCombatResources(combatResources.filter(r => r.id !== id)); };
+    const removeResource = (id: string) => {
+      setCombatResources(combatResources.filter((r) => r.id !== id));
+    };
 
-    const handleDeathSaveChange = (type: 'successes' | 'failures', value: number) => {
+    const handleDeathSaveChange = (
+      type: 'successes' | 'failures',
+      value: number,
+    ) => {
       const clamped = Math.max(0, Math.min(3, value));
       const next = { ...combatStats.deathSaves, [type]: clamped };
       setCombatStats({ ...combatStats, deathSaves: next });
@@ -258,7 +448,7 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
     };
 
     const handleHitDiceUse = (className: string, delta: number) => {
-      const entry = hitDiceEntries.find(e => e.className === className);
+      const entry = hitDiceEntries.find((e) => e.className === className);
       if (!entry) return;
       const currentUsed = hitDiceUsed[className] || 0;
       const nextUsed = Math.max(0, Math.min(entry.level, currentUsed + delta));
@@ -269,7 +459,9 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
 
     const resetAllHitDice = () => {
       const next: Record<string, number> = {};
-      hitDiceEntries.forEach(e => { next[e.className] = 0; });
+      hitDiceEntries.forEach((e) => {
+        next[e.className] = 0;
+      });
       setHitDiceUsed(next);
       updateCharacter(characterId, { hitDiceUsed: next });
     };
@@ -290,87 +482,150 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
       return 8 + proficiencyBonus + getSpellcastingMod(ability);
     };
 
- // Track which abilities are already used to prevent duplicates
- const usedAbilities = React.useMemo(() => {
-   return new Set(spellcastingEntries.map(e => e.ability).filter(a => a !== 'none'));
- }, [spellcastingEntries]);
+    // Track which abilities are already used to prevent duplicates
+    const usedAbilities = React.useMemo(() => {
+      return new Set(
+        spellcastingEntries.map((e) => e.ability).filter((a) => a !== 'none'),
+      );
+    }, [spellcastingEntries]);
 
- // Auto-recalculate spellcasting when stats or proficiency bonus change
- React.useEffect(() => {
-   if (isSpellcastingEditing) return;
-   
-   const updated = spellcastingEntries.map(entry => {
-     if (entry.ability === 'none' || !entry.ability) return entry;
-     
-     const newAttackBonus = calculateSpellAttack(entry.ability);
-     const newSaveDC = calculateSpellSaveDC(entry.ability);
-     
-     if (entry.attackBonus !== newAttackBonus || entry.saveDC !== newSaveDC) {
-       return { ...entry, attackBonus: newAttackBonus, saveDC: newSaveDC };
-     }
-     return entry;
-   });
-   
-   const hasChanges = updated.some((entry, i) => 
-     entry.attackBonus !== spellcastingEntries[i].attackBonus || 
-     entry.saveDC !== spellcastingEntries[i].saveDC
-   );
-   
-   if (hasChanges) {
-     setSpellcastingEntries(updated);
-     updateCharacter(characterId, { spellcastingEntries: updated });
-   }
- }, [stats, proficiencyBonus]); // eslint-disable-line react-hooks/exhaustive-deps
+    // Auto-recalculate spellcasting when stats or proficiency bonus change
+    React.useEffect(() => {
+      if (isSpellcastingEditing) return;
 
+      const updated = spellcastingEntries.map((entry) => {
+        if (entry.ability === 'none' || !entry.ability) return entry;
 
-    const handleSpellcastingFieldChange = (id: string, field: keyof SpellcastingEntry, value: string | number) => {
-      setSpellcastingEntries(prev => prev.map(entry => {
-        if (entry.id !== id) return entry;
-        const updated = { ...entry, [field]: value };
-        if (field === 'ability' && typeof value === 'string') {
-          updated.attackBonus = calculateSpellAttack(value);
-          updated.saveDC = calculateSpellSaveDC(value);
+        const newAttackBonus = calculateSpellAttack(entry.ability);
+        const newSaveDC = calculateSpellSaveDC(entry.ability);
+
+        if (
+          entry.attackBonus !== newAttackBonus ||
+          entry.saveDC !== newSaveDC
+        ) {
+          return { ...entry, attackBonus: newAttackBonus, saveDC: newSaveDC };
         }
-        return updated;
-      }));
+        return entry;
+      });
+
+      const hasChanges = updated.some(
+        (entry, i) =>
+          entry.attackBonus !== spellcastingEntries[i].attackBonus ||
+          entry.saveDC !== spellcastingEntries[i].saveDC,
+      );
+
+      if (hasChanges) {
+        setSpellcastingEntries(updated);
+        updateCharacter(characterId, { spellcastingEntries: updated });
+      }
+    }, [stats, proficiencyBonus]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    const handleSpellcastingFieldChange = (
+      id: string,
+      field: keyof SpellcastingEntry,
+      value: string | number,
+    ) => {
+      setSpellcastingEntries((prev) =>
+        prev.map((entry) => {
+          if (entry.id !== id) return entry;
+          const updated = { ...entry, [field]: value };
+          if (field === 'ability' && typeof value === 'string') {
+            updated.attackBonus = calculateSpellAttack(value);
+            updated.saveDC = calculateSpellSaveDC(value);
+          }
+          return updated;
+        }),
+      );
     };
 
     const addSpellcastingEntry = () => {
-      const newEntry: SpellcastingEntry = { id: `spellcast-${Date.now()}`, ability: 'none', attackBonus: '+0', saveDC: 10 };
+      const newEntry: SpellcastingEntry = {
+        id: `spellcast-${Date.now()}`,
+        ability: 'none',
+        attackBonus: '+0',
+        saveDC: 10,
+      };
       setSpellcastingEntries([...spellcastingEntries, newEntry]);
     };
 
     const removeSpellcastingEntry = (id: string) => {
-      setSpellcastingEntries(spellcastingEntries.filter(e => e.id !== id));
+      setSpellcastingEntries(spellcastingEntries.filter((e) => e.id !== id));
     };
 
     return (
-      <div className={cn("md:col-span-4 space-y-6", isCompactView && activeCompactSection !== 'combat-section' && "hidden")}>
+      <div
+        className={cn(
+          'space-y-6 md:col-span-4',
+          isCompactView &&
+            activeCompactSection !== 'combat-section' &&
+            'hidden',
+        )}
+      >
         <Card id="combat-stats-card">
-          <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2">
-            <CardTitle className="text-[10px] font-bold uppercase text-muted-foreground tracking-tight">{t('combatStats')}</CardTitle>
-            {(showEditButtons || isCombatStatsEditing) && <EditSaveButton editing={isCombatStatsEditing} onEdit={() => setIsCombatStatsEditing(true)} onSave={handleSaveCombatStats} />}
+          <CardHeader className="flex flex-row items-center justify-between px-4 pb-2 pt-2">
+            <CardTitle className="text-[10px] font-bold uppercase tracking-tight text-muted-foreground">
+              {t('combatStats')}
+            </CardTitle>
+            {(showEditButtons || isCombatStatsEditing) && (
+              <EditSaveButton
+                editing={isCombatStatsEditing}
+                onEdit={() => setIsCombatStatsEditing(true)}
+                onSave={handleSaveCombatStats}
+              />
+            )}
           </CardHeader>
           <CardContent className="grid grid-cols-3 gap-4 p-4 pt-0 text-center">
-            <div className="p-2 rounded-lg bg-background border">
-              <Label className="text-[10px] text-muted-foreground uppercase font-bold">{t('armorClass')}</Label>
+            <div className="rounded-lg border bg-background p-2">
+              <Label className="text-[10px] font-bold uppercase text-muted-foreground">
+                {t('armorClass')}
+              </Label>
               {isCombatStatsEditing ? (
-                <Input type="number" value={combatStats.armorClass === 0 ? '' : combatStats.armorClass} onChange={e => setCombatStats({ ...combatStats, armorClass: parseInt(e.target.value) || 10 })} className="h-9 w-full text-center" />
+                <Input
+                  type="number"
+                  value={
+                    combatStats.armorClass === 0 ? '' : combatStats.armorClass
+                  }
+                  onChange={(e) =>
+                    setCombatStats({
+                      ...combatStats,
+                      armorClass: parseInt(e.target.value) || 10,
+                    })
+                  }
+                  className="h-9 w-full text-center"
+                />
               ) : (
-                <div className="text-sm font-bold">{combatStats.armorClass}</div>
+                <div className="text-sm font-bold">
+                  {combatStats.armorClass}
+                </div>
               )}
-              <div className="text-[9px] text-muted-foreground mt-1 font-medium">
+              <div className="mt-1 text-[9px] font-medium text-muted-foreground">
                 {t('baseUnarmoredAC')} {10 + dexMod}
               </div>
             </div>
-            <div className="p-2 rounded-lg bg-background border">
-              <Label className="text-[10px] text-muted-foreground uppercase font-bold">{t('initiative')}</Label>
-              <div className="text-sm font-bold">{dexMod >= 0 ? `+${dexMod}` : dexMod}</div>
+            <div className="rounded-lg border bg-background p-2">
+              <Label className="text-[10px] font-bold uppercase text-muted-foreground">
+                {t('initiative')}
+              </Label>
+              <div className="text-sm font-bold">
+                {dexMod >= 0 ? `+${dexMod}` : dexMod}
+              </div>
             </div>
-            <div className="p-2 rounded-lg bg-background border">
-              <Label className="text-[10px] text-muted-foreground uppercase font-bold">{t('speed')}</Label>
+            <div className="rounded-lg border bg-background p-2">
+              <Label className="text-[10px] font-bold uppercase text-muted-foreground">
+                {t('speed')}
+              </Label>
               {isCombatStatsEditing ? (
-                <Input type="number" value={combatStats.speed === 0 ? '' : combatStats.speed} onChange={e => setCombatStats({ ...combatStats, speed: parseInt(e.target.value) || 0 })} className="h-9 w-full text-center" />
+                <Input
+                  type="number"
+                  value={combatStats.speed === 0 ? '' : combatStats.speed}
+                  onChange={(e) =>
+                    setCombatStats({
+                      ...combatStats,
+                      speed: parseInt(e.target.value) || 0,
+                    })
+                  }
+                  className="h-9 w-full text-center"
+                />
               ) : (
                 <div className="text-sm font-bold">{combatStats.speed}ft</div>
               )}
@@ -379,24 +634,40 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
         </Card>
 
         <Card id="hit-points-card">
-          <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2">
+          <CardHeader className="flex flex-row items-center justify-between px-4 pb-2 pt-2">
             <div className="flex items-center gap-2">
-              <CardTitle className="text-[10px] font-bold uppercase text-muted-foreground tracking-tight">{t('hitPoints')}</CardTitle>
+              <CardTitle className="text-[10px] font-bold uppercase tracking-tight text-muted-foreground">
+                {t('hitPoints')}
+              </CardTitle>
               {!hideNotes && (
                 <Popover>
                   <PopoverTrigger asChild>
-                    <Button variant={combatStats.hitPointsNotes ? 'secondary' : 'ghost'} size="icon" className="h-5 w-5 shrink-0" title={t('healthNotes')}>
+                    <Button
+                      variant={
+                        combatStats.hitPointsNotes ? 'secondary' : 'ghost'
+                      }
+                      size="icon"
+                      className="h-5 w-5 shrink-0"
+                      title={t('healthNotes')}
+                    >
                       <Info className="h-3 w-3" />
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-64">
-                    <Label className="text-xs mb-2 block">{t('healthNotes')}</Label>
+                    <Label className="mb-2 block text-xs">
+                      {t('healthNotes')}
+                    </Label>
                     <Textarea
                       defaultValue={combatStats.hitPointsNotes || ''}
                       onBlur={(e) => {
-                        const next = { ...combatStats, hitPointsNotes: e.target.value };
+                        const next = {
+                          ...combatStats,
+                          hitPointsNotes: e.target.value,
+                        };
                         setCombatStats(next);
-                        updateCharacter(characterId, { hitPointsNotes: e.target.value });
+                        updateCharacter(characterId, {
+                          hitPointsNotes: e.target.value,
+                        });
                       }}
                       placeholder={t('notes')}
                       className="mt-2 min-h-[100px] text-sm"
@@ -405,125 +676,333 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
                 </Popover>
               )}
             </div>
-            {(showEditButtons || isHpEditing) && <EditSaveButton editing={isHpEditing} onEdit={() => setIsHpEditing(true)} onSave={handleSaveHp} />}
+            {(showEditButtons || isHpEditing) && (
+              <EditSaveButton
+                editing={isHpEditing}
+                onEdit={() => setIsHpEditing(true)}
+                onSave={handleSaveHp}
+              />
+            )}
           </CardHeader>
-          <CardContent className="p-4 pt-0 space-y-4">
+          <CardContent className="space-y-4 p-4 pt-0">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-4">
-                <div className="p-2 border rounded text-center">
-                  <div className="text-[9px] italic text-muted-foreground mb-1">{t('baseValue')}: {baseMaxHp}</div>
-                  <Label className="text-[10px] uppercase font-bold">{t('maximum')}</Label>
+                <div className="rounded border p-2 text-center">
+                  <div className="mb-1 text-[9px] italic text-muted-foreground">
+                    {t('baseValue')}: {baseMaxHp}
+                  </div>
+                  <Label className="text-[10px] font-bold uppercase">
+                    {t('maximum')}
+                  </Label>
                   {isHpEditing ? (
-                    <Input type="number" value={combatStats.hitPoints.max === 0 ? '' : combatStats.hitPoints.max} onChange={e => setCombatStats({ ...combatStats, hitPoints: { ...combatStats.hitPoints, max: parseInt(e.target.value) || 0 } })} className="h-8 text-center" />
+                    <Input
+                      type="number"
+                      value={
+                        combatStats.hitPoints.max === 0
+                          ? ''
+                          : combatStats.hitPoints.max
+                      }
+                      onChange={(e) =>
+                        setCombatStats({
+                          ...combatStats,
+                          hitPoints: {
+                            ...combatStats.hitPoints,
+                            max: parseInt(e.target.value) || 0,
+                          },
+                        })
+                      }
+                      className="h-8 text-center"
+                    />
                   ) : (
-                    <div className="text-base font-bold">{combatStats.hitPoints.max}</div>
+                    <div className="text-base font-bold">
+                      {combatStats.hitPoints.max}
+                    </div>
                   )}
                 </div>
-                <div className="p-2 border rounded text-center">
-                  <Label className="text-[10px] uppercase font-bold">{t('current')}</Label>
+                <div className="rounded border p-2 text-center">
+                  <Label className="text-[10px] font-bold uppercase">
+                    {t('current')}
+                  </Label>
                   {isHpEditing ? (
-                    <Input type="number" value={combatStats.hitPoints.current === 0 ? '' : combatStats.hitPoints.current} onChange={e => setCombatStats({ ...combatStats, hitPoints: { ...combatStats.hitPoints, current: parseInt(e.target.value) || 0 } })} className="h-8 text-center" />
+                    <Input
+                      type="number"
+                      value={
+                        combatStats.hitPoints.current === 0
+                          ? ''
+                          : combatStats.hitPoints.current
+                      }
+                      onChange={(e) =>
+                        setCombatStats({
+                          ...combatStats,
+                          hitPoints: {
+                            ...combatStats.hitPoints,
+                            current: parseInt(e.target.value) || 0,
+                          },
+                        })
+                      }
+                      className="h-8 text-center"
+                    />
                   ) : (
-                    <div className="text-base font-bold text-primary">{combatStats.hitPoints.current}</div>
+                    <div className="text-base font-bold text-primary">
+                      {combatStats.hitPoints.current}
+                    </div>
                   )}
                 </div>
               </div>
               <div className="space-y-4">
-                <div className="p-2 border rounded text-center">
-                  <Label className="text-[10px] uppercase font-bold">{t('temp')}</Label>
+                <div className="rounded border p-2 text-center">
+                  <Label className="text-[10px] font-bold uppercase">
+                    {t('temp')}
+                  </Label>
                   {isHpEditing ? (
-                    <Input type="number" value={combatStats.temporaryHitPoints === 0 ? '' : combatStats.temporaryHitPoints} onChange={e => setCombatStats({ ...combatStats, temporaryHitPoints: parseInt(e.target.value) || 0 })} className="h-8 text-center" />
+                    <Input
+                      type="number"
+                      value={
+                        combatStats.temporaryHitPoints === 0
+                          ? ''
+                          : combatStats.temporaryHitPoints
+                      }
+                      onChange={(e) =>
+                        setCombatStats({
+                          ...combatStats,
+                          temporaryHitPoints: parseInt(e.target.value) || 0,
+                        })
+                      }
+                      className="h-8 text-center"
+                    />
                   ) : (
-                    <div className="text-base font-bold">{combatStats.temporaryHitPoints || 0}</div>
+                    <div className="text-base font-bold">
+                      {combatStats.temporaryHitPoints || 0}
+                    </div>
                   )}
                 </div>
                 <div className="flex flex-col gap-2">
-                  <Input 
-                    type="text" 
+                  <Input
+                    type="text"
                     inputMode="numeric"
                     pattern="[0-9]*"
-                    placeholder="+/-" 
-                    value={hpDelta} 
-                    onChange={e => {
+                    placeholder="+/-"
+                    value={hpDelta}
+                    onChange={(e) => {
                       const val = e.target.value.replace(/[^0-9]/g, '');
                       setHpDelta(val);
-                    }} 
-                    className="h-8 text-center" 
+                    }}
+                    className="h-8 text-center"
                   />
                   <div className="grid grid-cols-2 gap-2">
-                    <Button size="sm" variant="outline" onClick={() => handleHpMath('sub')}>{t('damage')}</Button>
-                    <Button size="sm" variant="outline" onClick={() => handleHpMath('rec')}>{t('heal')}</Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleHpMath('sub')}
+                    >
+                      {t('damage')}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleHpMath('rec')}
+                    >
+                      {t('heal')}
+                    </Button>
                   </div>
                 </div>
               </div>
             </div>
-  
-            <div className="pt-4 border-t">
-              <Label className="text-[10px] uppercase font-bold mb-2 block">{t('hpTracking')}</Label>
+
+            <div className="border-t pt-4">
+              <Label className="mb-2 block text-[10px] font-bold uppercase">
+                {t('hpTracking')}
+              </Label>
               <Textarea
                 value={combatStats.hpTracking || ''}
-                onChange={e => {
+                onChange={(e) => {
                   const next = { ...combatStats, hpTracking: e.target.value };
                   setCombatStats(next);
                   updateCharacter(characterId, { hpTracking: e.target.value });
                 }}
                 placeholder={t('trackConditions')}
-                className="min-h-[80px] text-xs resize-none"
+                className="min-h-[80px] resize-none text-xs"
               />
             </div>
           </CardContent>
         </Card>
 
         <Card id="death-saves-exhaustion-card">
-          <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2">
-            <CardTitle className="text-[10px] font-bold uppercase text-muted-foreground tracking-tight">{t('deathSavesAndExhaustion')}</CardTitle>
-            <Button variant="ghost" size="sm" className="h-6 text-[10px]" onClick={resetDeathSaves}>{t('reset')}</Button>
+          <CardHeader className="flex flex-row items-center justify-between px-4 pb-2 pt-2">
+            <CardTitle className="text-[10px] font-bold uppercase tracking-tight text-muted-foreground">
+              {t('deathSavesAndExhaustion')}
+            </CardTitle>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 text-[10px]"
+              onClick={resetDeathSaves}
+            >
+              {t('reset')}
+            </Button>
           </CardHeader>
-          <CardContent className="p-4 pt-0 space-y-4">
+          <CardContent className="space-y-4 p-4 pt-0">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label className="text-[10px] uppercase font-bold text-green-600">{t('successes')}</Label>
+                <Label className="text-[10px] font-bold uppercase text-green-600">
+                  {t('successes')}
+                </Label>
                 <div className="flex items-center gap-2">
-                  <Button size="icon" variant="outline" className="h-6 w-6" onClick={() => handleDeathSaveChange('successes', combatStats.deathSaves.successes - 1)}><Minus className="h-3 w-3" /></Button>
-                  <div className="flex gap-1">{[0, 1, 2].map(i => ( <div key={i} className={cn("w-4 h-4 rounded-full border-2", i < combatStats.deathSaves.successes ? "bg-green-500 border-green-500" : "border-muted-foreground/30")} /> ))}</div>
-                  <Button size="icon" variant="outline" className="h-6 w-6" onClick={() => handleDeathSaveChange('successes', combatStats.deathSaves.successes + 1)}><Plus className="h-3 w-3" /></Button>
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    className="h-6 w-6"
+                    onClick={() =>
+                      handleDeathSaveChange(
+                        'successes',
+                        combatStats.deathSaves.successes - 1,
+                      )
+                    }
+                  >
+                    <Minus className="h-3 w-3" />
+                  </Button>
+                  <div className="flex gap-1">
+                    {[0, 1, 2].map((i) => (
+                      <div
+                        key={i}
+                        className={cn(
+                          'h-4 w-4 rounded-full border-2',
+                          i < combatStats.deathSaves.successes
+                            ? 'border-green-500 bg-green-500'
+                            : 'border-muted-foreground/30',
+                        )}
+                      />
+                    ))}
+                  </div>
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    className="h-6 w-6"
+                    onClick={() =>
+                      handleDeathSaveChange(
+                        'successes',
+                        combatStats.deathSaves.successes + 1,
+                      )
+                    }
+                  >
+                    <Plus className="h-3 w-3" />
+                  </Button>
                 </div>
               </div>
               <div className="space-y-2">
-                <Label className="text-[10px] uppercase font-bold text-red-600">{t('failures')}</Label>
+                <Label className="text-[10px] font-bold uppercase text-red-600">
+                  {t('failures')}
+                </Label>
                 <div className="flex items-center gap-2">
-                  <Button size="icon" variant="outline" className="h-6 w-6" onClick={() => handleDeathSaveChange('failures', combatStats.deathSaves.failures - 1)}><Minus className="h-3 w-3" /></Button>
-                  <div className="flex gap-1">{[0, 1, 2].map(i => ( <div key={i} className={cn("w-4 h-4 rounded-full border-2", i < combatStats.deathSaves.failures ? "bg-red-500 border-red-500" : "border-muted-foreground/30")} /> ))}</div>
-                  <Button size="icon" variant="outline" className="h-6 w-6" onClick={() => handleDeathSaveChange('failures', combatStats.deathSaves.failures + 1)}><Plus className="h-3 w-3" /></Button>
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    className="h-6 w-6"
+                    onClick={() =>
+                      handleDeathSaveChange(
+                        'failures',
+                        combatStats.deathSaves.failures - 1,
+                      )
+                    }
+                  >
+                    <Minus className="h-3 w-3" />
+                  </Button>
+                  <div className="flex gap-1">
+                    {[0, 1, 2].map((i) => (
+                      <div
+                        key={i}
+                        className={cn(
+                          'h-4 w-4 rounded-full border-2',
+                          i < combatStats.deathSaves.failures
+                            ? 'border-red-500 bg-red-500'
+                            : 'border-muted-foreground/30',
+                        )}
+                      />
+                    ))}
+                  </div>
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    className="h-6 w-6"
+                    onClick={() =>
+                      handleDeathSaveChange(
+                        'failures',
+                        combatStats.deathSaves.failures + 1,
+                      )
+                    }
+                  >
+                    <Plus className="h-3 w-3" />
+                  </Button>
                 </div>
               </div>
             </div>
-            <div className="pt-3 border-t">
-              <div className="flex items-center justify-between mb-2">
-                <Label className="text-[10px] uppercase font-bold">{t('exhaustion')}</Label>
+            <div className="border-t pt-3">
+              <div className="mb-2 flex items-center justify-between">
+                <Label className="text-[10px] font-bold uppercase">
+                  {t('exhaustion')}
+                </Label>
                 <div className="flex items-center gap-2">
-                  <Button size="icon" variant="outline" className="h-6 w-6" onClick={() => handleExhaustionChange(-1)} disabled={exhaustion <= 0}><Minus className="h-3 w-3" /></Button>
-                  <span className={cn("text-lg font-black w-6 text-center", exhaustion >= 5 ? "text-red-500" : exhaustion >= 3 ? "text-orange-500" : exhaustion >= 1 ? "text-yellow-500" : "text-green-500")}>{exhaustion}</span>
-                  <Button size="icon" variant="outline" className="h-6 w-6" onClick={() => handleExhaustionChange(1)} disabled={exhaustion >= 6}><Plus className="h-3 w-3" /></Button>
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    className="h-6 w-6"
+                    onClick={() => handleExhaustionChange(-1)}
+                    disabled={exhaustion <= 0}
+                  >
+                    <Minus className="h-3 w-3" />
+                  </Button>
+                  <span
+                    className={cn(
+                      'w-6 text-center text-lg font-black',
+                      exhaustion >= 5
+                        ? 'text-red-500'
+                        : exhaustion >= 3
+                          ? 'text-orange-500'
+                          : exhaustion >= 1
+                            ? 'text-yellow-500'
+                            : 'text-green-500',
+                    )}
+                  >
+                    {exhaustion}
+                  </span>
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    className="h-6 w-6"
+                    onClick={() => handleExhaustionChange(1)}
+                    disabled={exhaustion >= 6}
+                  >
+                    <Plus className="h-3 w-3" />
+                  </Button>
                 </div>
               </div>
-              
+
               {exhaustion === 0 ? (
-                <p className="text-[10px] text-center text-green-500 font-medium">{t('noExhaustionEffects')}</p>
+                <p className="text-center text-[10px] font-medium text-green-500">
+                  {t('noExhaustionEffects')}
+                </p>
               ) : (
                 <ul className="space-y-1">
-                  {exhaustionEffects.slice(0, exhaustion).map((effect, index) => (
-                    <li 
-                      key={index} 
-                      className={cn(
-                        "text-[10px] flex items-start gap-1.5",
-                        exhaustion >= 5 ? "text-red-500" : exhaustion >= 3 ? "text-orange-500" : "text-yellow-500"
-                      )}
-                    >
-                      <span className="font-bold min-w-[12px]">{index + 1}.</span>
-                      <span>{effect}</span>
-                    </li>
-                  ))}
+                  {exhaustionEffects
+                    .slice(0, exhaustion)
+                    .map((effect, index) => (
+                      <li
+                        key={index}
+                        className={cn(
+                          'flex items-start gap-1.5 text-[10px]',
+                          exhaustion >= 5
+                            ? 'text-red-500'
+                            : exhaustion >= 3
+                              ? 'text-orange-500'
+                              : 'text-yellow-500',
+                        )}
+                      >
+                        <span className="min-w-[12px] font-bold">
+                          {index + 1}.
+                        </span>
+                        <span>{effect}</span>
+                      </li>
+                    ))}
                 </ul>
               )}
             </div>
@@ -531,44 +1010,82 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
         </Card>
 
         <Card id="hit-dice-card">
-          <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2">
-            <CardTitle className="text-[10px] font-bold uppercase text-muted-foreground tracking-tight">{t('hitDice')}</CardTitle>
-            <Button variant="ghost" size="sm" className="h-6 text-[10px]" onClick={resetAllHitDice}>{t('longRest')}</Button>
+          <CardHeader className="flex flex-row items-center justify-between px-4 pb-2 pt-2">
+            <CardTitle className="text-[10px] font-bold uppercase tracking-tight text-muted-foreground">
+              {t('hitDice')}
+            </CardTitle>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 text-[10px]"
+              onClick={resetAllHitDice}
+            >
+              {t('longRest')}
+            </Button>
           </CardHeader>
-          <CardContent className="p-4 pt-0 space-y-3">
-            {hitDiceEntries.map(entry => {
+          <CardContent className="space-y-3 p-4 pt-0">
+            {hitDiceEntries.map((entry) => {
               const used = hitDiceUsed[entry.className] || 0;
               const remaining = entry.level - used;
               const isNpc = entry.className.toLowerCase() === 'npc';
 
               return (
-                <div key={entry.className} className="flex items-center justify-between p-2 bg-muted/10 rounded border">
+                <div
+                  key={entry.className}
+                  className="flex items-center justify-between rounded border bg-muted/10 p-2"
+                >
                   <div className="flex flex-col">
                     <span className="text-xs font-bold">{entry.className}</span>
-                    <span className="text-[9px] text-muted-foreground uppercase">
+                    <span className="text-[9px] uppercase text-muted-foreground">
                       {entry.level}d{entry.dieSize}
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
-                    {isNpc && manualHitDice !== undefined && onManualHitDiceChange && (
-                      <Select 
-                        value={`1d${entry.dieSize}`} 
-                        onValueChange={(v) => onManualHitDiceChange(v)}
-                      >
-                        <SelectTrigger className="h-8 w-20 text-xs font-bold">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {['1d6', '1d8', '1d10', '1d12'].map(option => (
-                            <SelectItem key={option} value={option} className="text-xs font-bold">{option}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    )}
-                    
-                    <Button size="icon" variant="outline" className="h-6 w-6" onClick={() => handleHitDiceUse(entry.className, 1)} disabled={remaining <= 0}><Minus className="h-3 w-3" /></Button>
-                    <span className="text-sm font-black w-12 text-center">{remaining} / {entry.level}</span>
-                    <Button size="icon" variant="outline" className="h-6 w-6" onClick={() => handleHitDiceUse(entry.className, -1)} disabled={used <= 0}><Plus className="h-3 w-3" /></Button>
+                    {isNpc &&
+                      manualHitDice !== undefined &&
+                      onManualHitDiceChange && (
+                        <Select
+                          value={`1d${entry.dieSize}`}
+                          onValueChange={(v) => onManualHitDiceChange(v)}
+                        >
+                          <SelectTrigger className="h-8 w-20 text-xs font-bold">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {['1d6', '1d8', '1d10', '1d12'].map((option) => (
+                              <SelectItem
+                                key={option}
+                                value={option}
+                                className="text-xs font-bold"
+                              >
+                                {option}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+
+                    <Button
+                      size="icon"
+                      variant="outline"
+                      className="h-6 w-6"
+                      onClick={() => handleHitDiceUse(entry.className, 1)}
+                      disabled={remaining <= 0}
+                    >
+                      <Minus className="h-3 w-3" />
+                    </Button>
+                    <span className="w-12 text-center text-sm font-black">
+                      {remaining} / {entry.level}
+                    </span>
+                    <Button
+                      size="icon"
+                      variant="outline"
+                      className="h-6 w-6"
+                      onClick={() => handleHitDiceUse(entry.className, -1)}
+                      disabled={used <= 0}
+                    >
+                      <Plus className="h-3 w-3" />
+                    </Button>
                   </div>
                 </div>
               );
@@ -577,182 +1094,415 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
         </Card>
 
         <Card id="attacks-and-spellcasting-box">
-          <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2">
-            <CardTitle className="text-[10px] font-bold uppercase text-muted-foreground tracking-tight">{t('attacksAndSpellcasting')}</CardTitle>
-            {(showEditButtons || isAttacksEditing || isSpellcastingEditing) && <EditSaveButton editing={isAttacksEditing || isSpellcastingEditing} onEdit={() => { setIsAttacksEditing(true); setIsSpellcastingEditing(true); }} onSave={() => { handleSaveAttacks(); handleSaveSpellcasting(); }} />}
+          <CardHeader className="flex flex-row items-center justify-between px-4 pb-2 pt-2">
+            <CardTitle className="text-[10px] font-bold uppercase tracking-tight text-muted-foreground">
+              {t('attacksAndSpellcasting')}
+            </CardTitle>
+            {(showEditButtons || isAttacksEditing || isSpellcastingEditing) && (
+              <EditSaveButton
+                editing={isAttacksEditing || isSpellcastingEditing}
+                onEdit={() => {
+                  setIsAttacksEditing(true);
+                  setIsSpellcastingEditing(true);
+                }}
+                onSave={() => {
+                  handleSaveAttacks();
+                  handleSaveSpellcasting();
+                }}
+              />
+            )}
           </CardHeader>
-          <CardContent className="p-4 pt-0 space-y-4">
-              {spellcastingEntries.map((entry) => (
-                <div key={entry.id} className="grid grid-cols-12 gap-2 items-center p-2 bg-muted/10 rounded border border-muted/20">
-                  <div className="col-span-6 w-full">
-                    <div className="flex items-center gap-1 mb-1">
-                        {!hideNotes && (
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <Button
-                              variant={entry.notes ? 'secondary' : 'ghost'}
-                              size="icon"
-                              className="h-5 w-5 shrink-0"
-                              title={t('notes')}
-                            >
-                              <Info className="h-3 w-3" />
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-64">
-                            <Label className="text-xs mb-2 block">
-                              {t('notes')}: {entry.ability === 'none' ? t('spellcasting') : t(entry.ability)}
-                            </Label>
-                            <Textarea
-                              defaultValue={entry.notes || ''}
-                              onBlur={(e) => {
-                                const updated = spellcastingEntries.map(en =>
-                                  en.id === entry.id ? { ...en, notes: e.target.value } : en
-                                );
-                                setSpellcastingEntries(updated);
-                                updateCharacter(characterId, { spellcastingEntries: updated });
-                              }}
-                              placeholder={t('notes')}
-                              className="mt-2 min-h-[100px] text-sm"
-                            />
-                          </PopoverContent>
-                        </Popover>
-                      )}
-                      <Label className="text-[9px] text-muted-foreground uppercase">{t('ability')}</Label>
-                    </div>
-                    {isSpellcastingEditing ? (
-                    <Select value={entry.ability} onValueChange={(v) => handleSpellcastingFieldChange(entry.id, 'ability', v)}>
-                      <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
-                       <SelectContent>
-                       <SelectItem value="none">{t('none')}</SelectItem>
-                       <SelectItem value="strength" disabled={usedAbilities.has('strength') && entry.ability !== 'strength'}>{t('strength')}</SelectItem>
-                       <SelectItem value="dexterity" disabled={usedAbilities.has('dexterity') && entry.ability !== 'dexterity'}>{t('dexterity')}</SelectItem>
-                       <SelectItem value="constitution" disabled={usedAbilities.has('constitution') && entry.ability !== 'constitution'}>{t('constitution')}</SelectItem>
-                       <SelectItem value="intelligence" disabled={usedAbilities.has('intelligence') && entry.ability !== 'intelligence'}>{t('intelligence')}</SelectItem>
-                       <SelectItem value="wisdom" disabled={usedAbilities.has('wisdom') && entry.ability !== 'wisdom'}>{t('wisdom')}</SelectItem>
-                       <SelectItem value="charisma" disabled={usedAbilities.has('charisma') && entry.ability !== 'charisma'}>{t('charisma')}</SelectItem>
-                     </SelectContent>
-                   </Select>
-                    ) : (
-                      <span className="text-xs font-bold">
-                        {entry.ability === 'none' ? t('none') : t(entry.ability)}
-                      </span>
+          <CardContent className="space-y-4 p-4 pt-0">
+            {spellcastingEntries.map((entry) => (
+              <div
+                key={entry.id}
+                className="grid grid-cols-12 items-center gap-2 rounded border border-muted/20 bg-muted/10 p-2"
+              >
+                <div className="col-span-6 w-full">
+                  <div className="mb-1 flex items-center gap-1">
+                    {!hideNotes && (
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant={entry.notes ? 'secondary' : 'ghost'}
+                            size="icon"
+                            className="h-5 w-5 shrink-0"
+                            title={t('notes')}
+                          >
+                            <Info className="h-3 w-3" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-64">
+                          <Label className="mb-2 block text-xs">
+                            {t('notes')}:{' '}
+                            {entry.ability === 'none'
+                              ? t('spellcasting')
+                              : t(entry.ability)}
+                          </Label>
+                          <Textarea
+                            defaultValue={entry.notes || ''}
+                            onBlur={(e) => {
+                              const updated = spellcastingEntries.map((en) =>
+                                en.id === entry.id
+                                  ? { ...en, notes: e.target.value }
+                                  : en,
+                              );
+                              setSpellcastingEntries(updated);
+                              updateCharacter(characterId, {
+                                spellcastingEntries: updated,
+                              });
+                            }}
+                            placeholder={t('notes')}
+                            className="mt-2 min-h-[100px] text-sm"
+                          />
+                        </PopoverContent>
+                      </Popover>
                     )}
+                    <Label className="text-[9px] uppercase text-muted-foreground">
+                      {t('ability')}
+                    </Label>
                   </div>
-                  <div className="col-span-3 w-full">
-                    <Label className="text-[9px] text-muted-foreground uppercase mb-1 block">{t('atkBonus')}</Label>
-                    {isSpellcastingEditing ? (
-                      <Input value={entry.attackBonus} onChange={e => handleSpellcastingFieldChange(entry.id, 'attackBonus', e.target.value)} className="h-8 text-xs text-center" />
+                  {isSpellcastingEditing ? (
+                    <Select
+                      value={entry.ability}
+                      onValueChange={(v) =>
+                        handleSpellcastingFieldChange(entry.id, 'ability', v)
+                      }
+                    >
+                      <SelectTrigger className="h-8 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">{t('none')}</SelectItem>
+                        <SelectItem
+                          value="strength"
+                          disabled={
+                            usedAbilities.has('strength') &&
+                            entry.ability !== 'strength'
+                          }
+                        >
+                          {t('strength')}
+                        </SelectItem>
+                        <SelectItem
+                          value="dexterity"
+                          disabled={
+                            usedAbilities.has('dexterity') &&
+                            entry.ability !== 'dexterity'
+                          }
+                        >
+                          {t('dexterity')}
+                        </SelectItem>
+                        <SelectItem
+                          value="constitution"
+                          disabled={
+                            usedAbilities.has('constitution') &&
+                            entry.ability !== 'constitution'
+                          }
+                        >
+                          {t('constitution')}
+                        </SelectItem>
+                        <SelectItem
+                          value="intelligence"
+                          disabled={
+                            usedAbilities.has('intelligence') &&
+                            entry.ability !== 'intelligence'
+                          }
+                        >
+                          {t('intelligence')}
+                        </SelectItem>
+                        <SelectItem
+                          value="wisdom"
+                          disabled={
+                            usedAbilities.has('wisdom') &&
+                            entry.ability !== 'wisdom'
+                          }
+                        >
+                          {t('wisdom')}
+                        </SelectItem>
+                        <SelectItem
+                          value="charisma"
+                          disabled={
+                            usedAbilities.has('charisma') &&
+                            entry.ability !== 'charisma'
+                          }
+                        >
+                          {t('charisma')}
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <span className="text-xs font-bold">
+                      {entry.ability === 'none' ? t('none') : t(entry.ability)}
+                    </span>
+                  )}
+                </div>
+                <div className="col-span-3 w-full">
+                  <Label className="mb-1 block text-[9px] uppercase text-muted-foreground">
+                    {t('atkBonus')}
+                  </Label>
+                  {isSpellcastingEditing ? (
+                    <Input
+                      value={entry.attackBonus}
+                      onChange={(e) =>
+                        handleSpellcastingFieldChange(
+                          entry.id,
+                          'attackBonus',
+                          e.target.value,
+                        )
+                      }
+                      className="h-8 text-center text-xs"
+                    />
+                  ) : (
+                    <span className="text-xs font-bold">
+                      {entry.attackBonus || '-'}
+                    </span>
+                  )}
+                </div>
+                <div className="col-span-2 w-full">
+                  <Label className="mb-1 block text-[9px] uppercase text-muted-foreground">
+                    {t('spellSaveDC')}
+                  </Label>
+                  {isSpellcastingEditing ? (
+                    <Input
+                      type="number"
+                      value={entry.saveDC === 0 ? '' : entry.saveDC}
+                      onChange={(e) =>
+                        handleSpellcastingFieldChange(
+                          entry.id,
+                          'saveDC',
+                          parseInt(e.target.value) || 0,
+                        )
+                      }
+                      className="h-8 text-center text-xs"
+                    />
+                  ) : (
+                    <span className="text-xs font-bold">
+                      {entry.saveDC || '-'}
+                    </span>
+                  )}
+                </div>
+                <div className="col-span-1 flex justify-end">
+                  {isSpellcastingEditing && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 shrink-0 text-destructive"
+                      onClick={() => removeSpellcastingEntry(entry.id)}
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  )}
+                </div>
+              </div>
+            ))}
+            {isSpellcastingEditing && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-2 h-8 w-full text-[10px]"
+                onClick={addSpellcastingEntry}
+                disabled={usedAbilities.size >= 6}
+              >
+                <Plus className="mr-1 h-3 w-3" /> {t('addSpellcastingEntry')}
+              </Button>
+            )}
+
+            <div className="border-t pt-4">
+              <Label className="mb-2 block text-[10px] font-bold uppercase text-muted-foreground">
+                {t('attacksAndSpellcasting')}
+              </Label>
+              {attacks.map((atk) => (
+                <div
+                  key={atk.id}
+                  className="mb-2 grid grid-cols-12 items-center gap-2 rounded border border-muted/20 bg-muted/10 p-2"
+                >
+                  <div className="col-span-2 w-full">
+                    <Label className="mb-1 block text-[9px] uppercase text-muted-foreground">
+                      {t('name')}
+                    </Label>
+                    {isAttacksEditing ? (
+                      <Input
+                        value={atk.name}
+                        onChange={(e) =>
+                          handleAttackFieldChange(
+                            atk.id,
+                            'name',
+                            e.target.value,
+                          )
+                        }
+                        className="h-8 text-xs"
+                      />
                     ) : (
-                      <span className="text-xs font-bold">{entry.attackBonus || '-'}</span>
+                      <span className="text-xs font-bold">{atk.name}</span>
                     )}
                   </div>
                   <div className="col-span-2 w-full">
-                    <Label className="text-[9px] text-muted-foreground uppercase mb-1 block">{t('spellSaveDC')}</Label>
-                    {isSpellcastingEditing ? (
-                      <Input type="number" value={entry.saveDC === 0 ? '' : entry.saveDC} onChange={e => handleSpellcastingFieldChange(entry.id, 'saveDC', parseInt(e.target.value) || 0)} className="h-8 text-xs text-center" />                    ) : (
-                      <span className="text-xs font-bold">{entry.saveDC || '-'}</span>
+                    <Label className="mb-1 block text-[9px] uppercase text-muted-foreground">
+                      {t('ability')}
+                    </Label>
+                    {isAttacksEditing ? (
+                      <Select
+                        value={atk.ability || 'strength'}
+                        onValueChange={(v) =>
+                          handleAttackFieldChange(atk.id, 'ability', v)
+                        }
+                      >
+                        <SelectTrigger className="h-8 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">{t('none')}</SelectItem>
+                          <SelectItem value="strength">
+                            {t('strength')}
+                          </SelectItem>
+                          <SelectItem value="dexterity">
+                            {t('dexterity')}
+                          </SelectItem>
+                          <SelectItem value="constitution">
+                            {t('constitution')}
+                          </SelectItem>
+                          <SelectItem value="intelligence">
+                            {t('intelligence')}
+                          </SelectItem>
+                          <SelectItem value="wisdom">{t('wisdom')}</SelectItem>
+                          <SelectItem value="charisma">
+                            {t('charisma')}
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <span className="text-xs font-bold">
+                        {!atk.ability || atk.ability === 'none'
+                          ? t('none')
+                          : t(atk.ability)}
+                      </span>
+                    )}
+                  </div>
+                  <div className="col-span-1 w-full">
+                    <Label className="mb-1 block text-[9px] uppercase text-muted-foreground">
+                      {t('proficiency')}
+                    </Label>
+                    <div className="flex justify-center">
+                      {isAttacksEditing ? (
+                        <Checkbox
+                          checked={atk.useProficiencyBonus}
+                          onCheckedChange={(v) =>
+                            handleAttackFieldChange(
+                              atk.id,
+                              'useProficiencyBonus',
+                              !!v,
+                            )
+                          }
+                          className="h-5 w-5"
+                        />
+                      ) : (
+                        <span className="text-xs font-bold">
+                          {atk.useProficiencyBonus ? '✓' : '-'}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="col-span-2 w-full">
+                    <Label className="mb-1 block text-[9px] uppercase text-muted-foreground">
+                      {t('atkBonus')}
+                    </Label>
+                    <span className="text-xs font-bold">
+                      {calculateAttackBonus(
+                        atk.ability || 'none',
+                        atk.useProficiencyBonus,
+                      )}
+                    </span>
+                  </div>
+                  <div className="col-span-2 w-full">
+                    <Label className="mb-1 block text-[9px] uppercase text-muted-foreground">
+                      {t('dice')}
+                    </Label>
+                    {isAttacksEditing ? (
+                      <Select
+                        value={atk.damageDice}
+                        onValueChange={(v) =>
+                          handleAttackFieldChange(atk.id, 'damageDice', v)
+                        }
+                      >
+                        <SelectTrigger className="h-8 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {[
+                            '1d4',
+                            '1d6',
+                            '1d8',
+                            '1d10',
+                            '1d12',
+                            '1d20',
+                            '2d6',
+                            '2d8',
+                            '2d10',
+                            '2d12',
+                            '2d20',
+                            '3d6',
+                            '4d6',
+                            '5d6',
+                            '6d6',
+                            '8d6',
+                            '10d6',
+                          ].map((d) => (
+                            <SelectItem key={d} value={d}>
+                              {d}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <span className="text-xs font-bold">
+                        {atk.damageDice}
+                      </span>
+                    )}
+                  </div>
+                  <div className="col-span-2 w-full">
+                    <Label className="mb-1 block text-[9px] uppercase text-muted-foreground">
+                      {t('modifier')}
+                    </Label>
+                    {isAttacksEditing ? (
+                      <Input
+                        value={atk.damageModifier}
+                        onChange={(e) =>
+                          handleAttackFieldChange(
+                            atk.id,
+                            'damageModifier',
+                            e.target.value,
+                          )
+                        }
+                        className="h-8 text-center text-xs"
+                        placeholder="+0"
+                      />
+                    ) : (
+                      <span className="text-xs font-bold">
+                        {atk.damageModifier || '+0'}
+                      </span>
                     )}
                   </div>
                   <div className="col-span-1 flex justify-end">
-                    {isSpellcastingEditing && (
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive shrink-0" onClick={() => removeSpellcastingEntry(entry.id)}>
+                    {isAttacksEditing && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 shrink-0 text-destructive"
+                        onClick={() => removeAttack(atk.id)}
+                      >
                         <Trash2 className="h-3 w-3" />
                       </Button>
                     )}
                   </div>
                 </div>
               ))}
-            {isSpellcastingEditing && (
-              <Button variant="outline" size="sm" className="w-full h-8 text-[10px] mt-2" onClick={addSpellcastingEntry} disabled={usedAbilities.size >= 6}>
-                <Plus className="mr-1 h-3 w-3" /> {t('addSpellcastingEntry')}
-              </Button>
-            )}
-
-            <div className="border-t pt-4">
-              <Label className="text-[10px] font-bold uppercase text-muted-foreground mb-2 block">{t('attacksAndSpellcasting')}</Label>
-              {attacks.map(atk => (
-            <div key={atk.id} className="grid grid-cols-12 gap-2 items-center p-2 bg-muted/10 rounded border border-muted/20 mb-2">
-              <div className="col-span-2 w-full">
-                <Label className="text-[9px] text-muted-foreground uppercase mb-1 block">{t('name')}</Label>
-                {isAttacksEditing ? (
-                  <Input value={atk.name} onChange={e => handleAttackFieldChange(atk.id, 'name', e.target.value)} className="h-8 text-xs" />
-                ) : (
-                  <span className="text-xs font-bold">{atk.name}</span>
-                )}
-              </div>
-              <div className="col-span-2 w-full">
-                <Label className="text-[9px] text-muted-foreground uppercase mb-1 block">{t('ability')}</Label>
-                {isAttacksEditing ? (
-                  <Select value={atk.ability || 'strength'} onValueChange={(v) => handleAttackFieldChange(atk.id, 'ability', v)}>
-                    <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">{t('none')}</SelectItem>
-                        <SelectItem value="strength">{t('strength')}</SelectItem>
-                        <SelectItem value="dexterity">{t('dexterity')}</SelectItem>
-                        <SelectItem value="constitution">{t('constitution')}</SelectItem>
-                        <SelectItem value="intelligence">{t('intelligence')}</SelectItem>
-                        <SelectItem value="wisdom">{t('wisdom')}</SelectItem>
-                        <SelectItem value="charisma">{t('charisma')}</SelectItem>
-                      </SelectContent>
-                  </Select>
-                ) : (
-                  <span className="text-xs font-bold">
-                    {!atk.ability || atk.ability === 'none' ? t('none') : t(atk.ability)}
-                  </span>
-                )}
-              </div>
-              <div className="col-span-1 w-full">
-                <Label className="text-[9px] text-muted-foreground uppercase mb-1 block">{t('proficiency')}</Label>
-                <div className="flex justify-center">
-                  {isAttacksEditing ? (
-                    <Checkbox 
-                      checked={atk.useProficiencyBonus} 
-                      onCheckedChange={(v) => handleAttackFieldChange(atk.id, 'useProficiencyBonus', !!v)}
-                      className="h-5 w-5"
-                    />
-                  ) : (
-                    <span className="text-xs font-bold">{atk.useProficiencyBonus ? '✓' : '-'}</span>
-                  )}
-                </div>
-              </div>
-              <div className="col-span-2 w-full">
-                <Label className="text-[9px] text-muted-foreground uppercase mb-1 block">{t('atkBonus')}</Label>
-                <span className="text-xs font-bold">{calculateAttackBonus(atk.ability || 'none', atk.useProficiencyBonus)}</span>
-              </div>
-              <div className="col-span-2 w-full">
-                <Label className="text-[9px] text-muted-foreground uppercase mb-1 block">{t('dice')}</Label>
-                {isAttacksEditing ? (
-                  <Select value={atk.damageDice} onValueChange={(v) => handleAttackFieldChange(atk.id, 'damageDice', v)}>
-                    <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {['1d4', '1d6', '1d8', '1d10', '1d12', '1d20', '2d6', '2d8', '2d10', '2d12', '2d20', '3d6', '4d6', '5d6', '6d6', '8d6', '10d6'].map(d => (
-                        <SelectItem key={d} value={d}>{d}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <span className="text-xs font-bold">{atk.damageDice}</span>
-                )}
-              </div>
-              <div className="col-span-2 w-full">
-                <Label className="text-[9px] text-muted-foreground uppercase mb-1 block">{t('modifier')}</Label>
-                {isAttacksEditing ? (
-                  <Input value={atk.damageModifier} onChange={e => handleAttackFieldChange(atk.id, 'damageModifier', e.target.value)} className="h-8 text-xs text-center" placeholder="+0" />
-                ) : (
-                  <span className="text-xs font-bold">{atk.damageModifier || '+0'}</span>
-                )}
-              </div>
-              <div className="col-span-1 flex justify-end">
-                {isAttacksEditing && (
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive shrink-0" onClick={() => removeAttack(atk.id)}>
-                    <Trash2 className="h-3 w-3" />
-                  </Button>
-                )}
-              </div>
-            </div>
-          ))}
               {isAttacksEditing && (
-                <Button variant="outline" size="sm" className="w-full h-8 text-[10px] mt-2" onClick={addAttack}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mt-2 h-8 w-full text-[10px]"
+                  onClick={addAttack}
+                >
                   <Plus className="mr-1 h-3 w-3" /> {t('addAttack')}
                 </Button>
               )}
@@ -761,67 +1511,195 @@ export const DndCombatSection = React.forwardRef<{ saveAll: () => void }, Combat
         </Card>
 
         <Card id="combat-resources-card">
-          <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2">
-            <CardTitle className="text-[10px] font-bold uppercase text-muted-foreground tracking-tight">{t('combatResources')}</CardTitle>
-            {(showEditButtons || isResourcesEditing) && <EditSaveButton editing={isResourcesEditing} onEdit={() => setIsResourcesEditing(true)} onSave={handleSaveResources} />}
-          </CardHeader>
-          <CardContent className="p-4 pt-0 space-y-2">
-            {combatResources.length === 0 && !isResourcesEditing && (
-              <p className="text-xs text-muted-foreground italic text-center py-2 border border-dashed rounded-lg">{t('noResources')}</p>
+          <CardHeader className="flex flex-row items-center justify-between px-4 pb-2 pt-2">
+            <CardTitle className="text-[10px] font-bold uppercase tracking-tight text-muted-foreground">
+              {t('combatResources')}
+            </CardTitle>
+            {(showEditButtons || isResourcesEditing) && (
+              <EditSaveButton
+                editing={isResourcesEditing}
+                onEdit={() => setIsResourcesEditing(true)}
+                onSave={handleSaveResources}
+              />
             )}
-            {combatResources.map(res => (
-              <div key={res.id} className="flex items-center justify-between p-2 bg-muted/10 rounded border border-muted/20">
+          </CardHeader>
+          <CardContent className="space-y-2 p-4 pt-0">
+            {combatResources.length === 0 && !isResourcesEditing && (
+              <p className="rounded-lg border border-dashed py-2 text-center text-xs italic text-muted-foreground">
+                {t('noResources')}
+              </p>
+            )}
+            {combatResources.map((res) => (
+              <div
+                key={res.id}
+                className="flex items-center justify-between rounded border border-muted/20 bg-muted/10 p-2"
+              >
                 {isResourcesEditing ? (
-                  <div className="flex flex-col gap-1 flex-1 mr-2">
-                    <Input value={res.description} onChange={e => handleResourceFieldChange(res.id, 'description', e.target.value)} className="h-7 text-xs" placeholder={t('resourceName')} />
-                    <div className="flex gap-1 items-center">
-                      <span className="text-[9px] uppercase font-bold text-muted-foreground shrink-0">{t('maximum')}</span>
-                      <Input type="number" value={res.max === 0 ? '' : res.max} onChange={e => handleResourceFieldChange(res.id, 'max', e.target.value)} className="h-7 text-[10px] w-16 text-center" min={0} />
+                  <div className="mr-2 flex flex-1 flex-col gap-1">
+                    <Input
+                      value={res.description}
+                      onChange={(e) =>
+                        handleResourceFieldChange(
+                          res.id,
+                          'description',
+                          e.target.value,
+                        )
+                      }
+                      className="h-7 text-xs"
+                      placeholder={t('resourceName')}
+                    />
+                    <div className="flex items-center gap-1">
+                      <span className="shrink-0 text-[9px] font-bold uppercase text-muted-foreground">
+                        {t('maximum')}
+                      </span>
+                      <Input
+                        type="number"
+                        value={res.max === 0 ? '' : res.max}
+                        onChange={(e) =>
+                          handleResourceFieldChange(
+                            res.id,
+                            'max',
+                            e.target.value,
+                          )
+                        }
+                        className="h-7 w-16 text-center text-[10px]"
+                        min={0}
+                      />
                       {!hideNotes && (
                         <Popover>
-                          <PopoverTrigger asChild><Button variant={res.notes ? 'secondary' : 'ghost'} size="icon" className="h-6 w-6 shrink-0"><Info className="h-3 w-3" /></Button></PopoverTrigger>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant={res.notes ? 'secondary' : 'ghost'}
+                              size="icon"
+                              className="h-6 w-6 shrink-0"
+                            >
+                              <Info className="h-3 w-3" />
+                            </Button>
+                          </PopoverTrigger>
                           <PopoverContent className="w-64">
-                            <Label className="text-xs mb-2 block">{t('notes')}: {res.description}</Label>
-                            <Textarea defaultValue={res.notes || ''} onChange={e => handleResourceFieldChange(res.id, 'notes', e.target.value)} placeholder={t('notes')} className="mt-2 min-h-[100px] text-sm" />
+                            <Label className="mb-2 block text-xs">
+                              {t('notes')}: {res.description}
+                            </Label>
+                            <Textarea
+                              defaultValue={res.notes || ''}
+                              onChange={(e) =>
+                                handleResourceFieldChange(
+                                  res.id,
+                                  'notes',
+                                  e.target.value,
+                                )
+                              }
+                              placeholder={t('notes')}
+                              className="mt-2 min-h-[100px] text-sm"
+                            />
                           </PopoverContent>
                         </Popover>
                       )}
                     </div>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                  <div className="flex min-w-0 flex-1 items-center gap-2">
                     {!hideNotes && (
                       <Popover>
-                        <PopoverTrigger asChild><Button variant={res.notes ? 'secondary' : 'ghost'} size="icon" className="h-5 w-5 shrink-0"><Info className="h-3 w-3" /></Button></PopoverTrigger>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant={res.notes ? 'secondary' : 'ghost'}
+                            size="icon"
+                            className="h-5 w-5 shrink-0"
+                          >
+                            <Info className="h-3 w-3" />
+                          </Button>
+                        </PopoverTrigger>
                         <PopoverContent className="w-64">
-                          <Label className="text-xs mb-2 block">{t('notes')}: {res.description}</Label>
-                          <Textarea defaultValue={res.notes || ''} onBlur={e => { const next = combatResources.map(r => r.id === res.id ? { ...r, notes: e.target.value } : r); setCombatResources(next); updateCharacter(characterId, { combatResources: next }); }} placeholder={t('notes')} className="mt-2 min-h-[100px] text-sm" />
+                          <Label className="mb-2 block text-xs">
+                            {t('notes')}: {res.description}
+                          </Label>
+                          <Textarea
+                            defaultValue={res.notes || ''}
+                            onBlur={(e) => {
+                              const next = combatResources.map((r) =>
+                                r.id === res.id
+                                  ? { ...r, notes: e.target.value }
+                                  : r,
+                              );
+                              setCombatResources(next);
+                              updateCharacter(characterId, {
+                                combatResources: next,
+                              });
+                            }}
+                            placeholder={t('notes')}
+                            className="mt-2 min-h-[100px] text-sm"
+                          />
                         </PopoverContent>
                       </Popover>
                     )}
-                    <span className="text-xs font-bold break-words flex-1">{res.description}</span>
+                    <span className="flex-1 break-words text-xs font-bold">
+                      {res.description}
+                    </span>
                   </div>
                 )}
                 <div className="flex items-center gap-2">
-                  <Button size="icon" variant="outline" className="h-6 w-6" onClick={() => handleResourceCurrentChange(res.id, -1)} disabled={res.current <= 0}><Minus className="h-3 w-3" /></Button>
-                  <span className="text-sm font-black w-12 text-center">{res.current} / {res.max}</span>
-                  <Button size="icon" variant="outline" className="h-6 w-6" onClick={() => handleResourceCurrentChange(res.id, 1)} disabled={res.current >= res.max}><Plus className="h-3 w-3" /></Button>
-                  {isResourcesEditing && ( <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={() => removeResource(res.id)}><Trash2 className="h-3 w-3" /></Button> )}
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    className="h-6 w-6"
+                    onClick={() => handleResourceCurrentChange(res.id, -1)}
+                    disabled={res.current <= 0}
+                  >
+                    <Minus className="h-3 w-3" />
+                  </Button>
+                  <span className="w-12 text-center text-sm font-black">
+                    {res.current} / {res.max}
+                  </span>
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    className="h-6 w-6"
+                    onClick={() => handleResourceCurrentChange(res.id, 1)}
+                    disabled={res.current >= res.max}
+                  >
+                    <Plus className="h-3 w-3" />
+                  </Button>
+                  {isResourcesEditing && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6 text-destructive"
+                      onClick={() => removeResource(res.id)}
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  )}
                 </div>
               </div>
             ))}
             {isResourcesEditing && (
-              <div className="flex gap-2 pt-2 border-t items-center">
-                <Input placeholder={t('resourceName')} value={newResourceDesc} onChange={e => setNewResourceDesc(e.target.value)} className="h-8 text-xs flex-1" />
-                <Input type="number" value={newResourceMax === 0 ? '' : newResourceMax} onChange={e => setNewResourceMax(parseInt(e.target.value) || 1)} className="h-8 text-xs w-16 text-center" min={1} />
-                <Button size="sm" className="h-8" onClick={addResource}><Plus className="h-4 w-4" /></Button>
+              <div className="flex items-center gap-2 border-t pt-2">
+                <Input
+                  placeholder={t('resourceName')}
+                  value={newResourceDesc}
+                  onChange={(e) => setNewResourceDesc(e.target.value)}
+                  className="h-8 flex-1 text-xs"
+                />
+                <Input
+                  type="number"
+                  value={newResourceMax === 0 ? '' : newResourceMax}
+                  onChange={(e) =>
+                    setNewResourceMax(parseInt(e.target.value) || 1)
+                  }
+                  className="h-8 w-16 text-center text-xs"
+                  min={1}
+                />
+                <Button size="sm" className="h-8" onClick={addResource}>
+                  <Plus className="h-4 w-4" />
+                </Button>
               </div>
             )}
           </CardContent>
         </Card>
       </div>
     );
-  }
+  },
 );
 
 DndCombatSection.displayName = 'DndCombatSection';

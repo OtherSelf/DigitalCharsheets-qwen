@@ -1,7 +1,20 @@
 'use client';
 
-import React, { createContext, useContext, ReactNode, useState, useEffect, useCallback } from 'react';
-import { LocalUser, getLocalUser, setLocalUser, clearLocalUser } from '@/lib/local-storage';
+import React, {
+  createContext,
+  ReactNode,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from 'react';
+
+import {
+  clearLocalUser,
+  getLocalUser,
+  LocalUser,
+  setLocalUser,
+} from '@/lib/local-storage';
 
 /**
  * ─── LANDMARK: AUTH CONTEXT (cookie-сессия) ─────────────────────────────────
@@ -28,7 +41,11 @@ interface AccountExistsResult {
 interface LocalAuthContextType {
   user: LocalUser | null;
   isUserLoading: boolean;
-  login: (username: string, password: string, displayName?: string) => Promise<LoginResult>;
+  login: (
+    username: string,
+    password: string,
+    displayName?: string,
+  ) => Promise<LoginResult>;
   register: (
     username: string,
     password: string,
@@ -41,7 +58,9 @@ interface LocalAuthContextType {
   updateUserPhrase: (hasPhrase: boolean) => void;
 }
 
-const LocalAuthContext = createContext<LocalAuthContextType | undefined>(undefined);
+const LocalAuthContext = createContext<LocalAuthContextType | undefined>(
+  undefined,
+);
 
 export function LocalAuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<LocalUser | null>(null);
@@ -59,85 +78,106 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
     setUser(nextUser);
   }, []);
 
-  const login = useCallback(async (username: string, password: string, displayName?: string): Promise<LoginResult> => {
-    try {
-      const res = await fetch('/api/auth', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password, displayName }),
-      });
+  const login = useCallback(
+    async (
+      username: string,
+      password: string,
+      displayName?: string,
+    ): Promise<LoginResult> => {
+      try {
+        const res = await fetch('/api/auth', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password, displayName }),
+        });
 
-      const data = await res.json().catch(() => null);
+        const data = await res.json().catch(() => null);
 
-      if (!res.ok || !data?.success || !data?.user) {
-        return {
-          success: false,
-          error: data?.error || `Server returned an error (${res.status}).`,
-          reason: data?.reason,
-        };
+        if (!res.ok || !data?.success || !data?.user) {
+          return {
+            success: false,
+            error: data?.error || `Server returned an error (${res.status}).`,
+            reason: data?.reason,
+          };
+        }
+
+        restoreSession(data.user);
+        return { success: true, isNewUser: data.isNewUser, user: data.user };
+      } catch (error) {
+        console.error('[auth] login failed:', error);
+        return { success: false, error: 'Failed to connect to server.' };
       }
-
-      restoreSession(data.user);
-      return { success: true, isNewUser: data.isNewUser, user: data.user };
-    } catch (error) {
-      console.error('[auth] login failed:', error);
-      return { success: false, error: 'Failed to connect to server.' };
-    }
-  }, [restoreSession]);
+    },
+    [restoreSession],
+  );
 
   /**
    * Явная регистрация через /api/auth/register. В отличие от login, занятый
    * логин — ошибка (`reason: 'exists'`), а не вход в чужой аккаунт.
    */
-  const register = useCallback(async (
-    username: string,
-    password: string,
-    displayName: string,
-    recoveryPhrase: string,
-  ): Promise<LoginResult> => {
-    try {
-      const res = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password, displayName, recoveryPhrase }),
-      });
+  const register = useCallback(
+    async (
+      username: string,
+      password: string,
+      displayName: string,
+      recoveryPhrase: string,
+    ): Promise<LoginResult> => {
+      try {
+        const res = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            username,
+            password,
+            displayName,
+            recoveryPhrase,
+          }),
+        });
 
-      const data = await res.json().catch(() => null);
+        const data = await res.json().catch(() => null);
 
-      if (!res.ok || !data?.success || !data?.user) {
-        return {
-          success: false,
-          error: data?.error || `Server returned an error (${res.status}).`,
-          reason: data?.reason,
-        };
+        if (!res.ok || !data?.success || !data?.user) {
+          return {
+            success: false,
+            error: data?.error || `Server returned an error (${res.status}).`,
+            reason: data?.reason,
+          };
+        }
+
+        restoreSession(data.user);
+        return { success: true, isNewUser: true, user: data.user };
+      } catch (error) {
+        console.error('[auth] registration failed:', error);
+        return { success: false, error: 'Failed to connect to server.' };
       }
-
-      restoreSession(data.user);
-      return { success: true, isNewUser: true, user: data.user };
-    } catch (error) {
-      console.error('[auth] registration failed:', error);
-      return { success: false, error: 'Failed to connect to server.' };
-    }
-  }, [restoreSession]);
+    },
+    [restoreSession],
+  );
 
   /** Проверка существования аккаунта (для страницы /login). */
-  const accountExists = useCallback(async (username: string): Promise<AccountExistsResult> => {
-    try {
-      const res = await fetch('/api/auth/exists', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username }),
-      });
-      const data = await res.json().catch(() => null);
-      if (!res.ok || !data?.success) {
-        return { exists: false, error: data?.error || `Server returned an error (${res.status}).` };
+  const accountExists = useCallback(
+    async (username: string): Promise<AccountExistsResult> => {
+      try {
+        const res = await fetch('/api/auth/exists', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username }),
+        });
+        const data = await res.json().catch(() => null);
+        if (!res.ok || !data?.success) {
+          return {
+            exists: false,
+            error: data?.error || `Server returned an error (${res.status}).`,
+          };
+        }
+        return { exists: !!data.exists };
+      } catch (error) {
+        console.error('[auth] account check failed:', error);
+        return { exists: false, error: 'Failed to connect to server.' };
       }
-      return { exists: !!data.exists };
-    } catch (error) {
-      console.error('[auth] account check failed:', error);
-      return { exists: false, error: 'Failed to connect to server.' };
-    }
-  }, []);
+    },
+    [],
+  );
 
   const logout = useCallback(() => {
     // Стираем cookie на сервере; локальный снимок — в любом случае.
@@ -150,18 +190,30 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   }, []);
 
-  const updateUserPhrase = useCallback((hasPhrase: boolean) => {
-    const current = user ?? getLocalUser();
-    if (!current) return;
+  const updateUserPhrase = useCallback(
+    (hasPhrase: boolean) => {
+      const current = user ?? getLocalUser();
+      if (!current) return;
 
-    const updated: LocalUser = { ...current, hasRecoveryPhrase: hasPhrase };
-    setLocalUser(updated);
-    setUser(updated);
-  }, [user]);
+      const updated: LocalUser = { ...current, hasRecoveryPhrase: hasPhrase };
+      setLocalUser(updated);
+      setUser(updated);
+    },
+    [user],
+  );
 
   return (
     <LocalAuthContext.Provider
-      value={{ user, isUserLoading, login, register, accountExists, logout, restoreSession, updateUserPhrase }}
+      value={{
+        user,
+        isUserLoading,
+        login,
+        register,
+        accountExists,
+        logout,
+        restoreSession,
+        updateUserPhrase,
+      }}
     >
       {children}
     </LocalAuthContext.Provider>

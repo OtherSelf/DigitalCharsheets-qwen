@@ -8,10 +8,14 @@ interface Sheet {
   experiencePoints?: number;
 }
 
-const wait = (ms: number) => new Promise<void>(resolve => setTimeout(resolve, ms));
+const wait = (ms: number) =>
+  new Promise<void>((resolve) => setTimeout(resolve, ms));
 
 /** Дождаться выполнения условия (без фейковых таймеров). */
-async function until(predicate: () => boolean, timeoutMs = 2000): Promise<void> {
+async function until(
+  predicate: () => boolean,
+  timeoutMs = 2000,
+): Promise<void> {
   const deadline = Date.now() + timeoutMs;
   while (!predicate()) {
     if (Date.now() > deadline) throw new Error('until(): timeout');
@@ -81,7 +85,10 @@ describe('createSaveQueue', () => {
 
     await queue.idle();
 
-    expect(sent).toEqual([{ experiencePoints: 3000 }, { experiencePoints: 2500 }]);
+    expect(sent).toEqual([
+      { experiencePoints: 3000 },
+      { experiencePoints: 2500 },
+    ]);
   });
 
   it('ретраит 5xx, затем сообщает об ошибке и держит данные в очереди', async () => {
@@ -106,7 +113,9 @@ describe('createSaveQueue', () => {
     expect(errors).toHaveLength(1);
     // Правка не потеряна — её можно дослать.
     expect(queue.hasPending()).toBe(true);
-    expect(queue.snapshotAll()).toEqual([{ id: 'sheet-1', data: { name: 'A' } }]);
+    expect(queue.snapshotAll()).toEqual([
+      { id: 'sheet-1', data: { name: 'A' } },
+    ]);
   });
 
   it('после ошибки следующая правка досылает и накопленное, и новое', async () => {
@@ -167,7 +176,9 @@ describe('createSaveQueue', () => {
 
   it('snapshotAll отдаёт и то, что в полёте, и то, что ждёт (для keepalive)', async () => {
     let release: () => void = () => {};
-    const gate = new Promise<void>(resolve => { release = resolve; });
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
     let started = false;
 
     const queue = createSaveQueue<Sheet>({
@@ -183,7 +194,9 @@ describe('createSaveQueue', () => {
     await until(() => started);
     queue.enqueue('sheet-1', { level: 5 });
 
-    expect(queue.snapshotAll()).toEqual([{ id: 'sheet-1', data: { name: 'A', level: 5 } }]);
+    expect(queue.snapshotAll()).toEqual([
+      { id: 'sheet-1', data: { name: 'A', level: 5 } },
+    ]);
 
     release();
     await queue.idle();
@@ -235,7 +248,9 @@ describe('createSaveQueue', () => {
 
   it('snapshotAll отдаёт метку отправляемого батча (для keepalive-досылки)', async () => {
     let release: () => void = () => {};
-    const gate = new Promise<void>(resolve => { release = resolve; });
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
     let started = false;
 
     const queue = createSaveQueue<Sheet>({
@@ -252,7 +267,11 @@ describe('createSaveQueue', () => {
     queue.enqueue('sheet-1', { level: 5 }, { page: 'p', seq: 2 });
 
     expect(queue.snapshotAll()).toEqual([
-      { id: 'sheet-1', data: { name: 'A', level: 5 }, meta: { page: 'p', seq: 2 } },
+      {
+        id: 'sheet-1',
+        data: { name: 'A', level: 5 },
+        meta: { page: 'p', seq: 2 },
+      },
     ]);
 
     release();

@@ -2,23 +2,31 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useLocalAuth } from '@/context/local-auth-context';
-import { useTranslation } from '@/context/language-context';
-import { GuestHeader } from '@/components/layout/guest-header';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+
 import {
-  Scroll,
-  Lock,
-  User,
-  LogIn,
-  KeyRound,
   ArrowLeft,
-  UserPlus,
   AtSign,
+  KeyRound,
+  Lock,
+  LogIn,
+  Scroll,
+  User,
+  UserPlus,
 } from 'lucide-react';
+
+import { GuestHeader } from '@/components/layout/guest-header';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { useTranslation } from '@/context/language-context';
+import { useLocalAuth } from '@/context/local-auth-context';
 
 type AuthMode = 'login' | 'register' | 'recover';
 
@@ -55,9 +63,15 @@ export default function LoginPage() {
 
   const isFormLoading = isLoading;
 
-  const afterSuccessfulLogin = (result: { isNewUser?: boolean; user?: { hasRecoveryPhrase?: boolean } }) => {
+  const afterSuccessfulLogin = (result: {
+    isNewUser?: boolean;
+    user?: { hasRecoveryPhrase?: boolean };
+  }) => {
     // LANDMARK: Early return if CharacterProvider is handling a pending character
-    if (typeof window !== 'undefined' && sessionStorage.getItem('pending_character')) {
+    if (
+      typeof window !== 'undefined' &&
+      sessionStorage.getItem('pending_character')
+    ) {
       return;
     }
 
@@ -69,17 +83,26 @@ export default function LoginPage() {
   };
 
   const mapLoginError = (result: AuthFailure): string => {
-    if (result.reason === 'no_account' || /no account found/i.test(result.error || '')) {
+    if (
+      result.reason === 'no_account' ||
+      /no account found/i.test(result.error || '')
+    ) {
       return t('authNoAccountFound');
     }
-    if (result.reason === 'invalid_password' || /incorrect password/i.test(result.error || '')) {
+    if (
+      result.reason === 'invalid_password' ||
+      /incorrect password/i.test(result.error || '')
+    ) {
       return t('authIncorrectPassword');
     }
     return result.error || t('authLoginFailed');
   };
 
   const mapRegisterError = (result: AuthFailure): string => {
-    if (result.reason === 'exists' || /already registered/i.test(result.error || '')) {
+    if (
+      result.reason === 'exists' ||
+      /already registered/i.test(result.error || '')
+    ) {
       return t('authAccountExists');
     }
     if (/recovery phrase/i.test(result.error || '')) {
@@ -98,8 +121,10 @@ export default function LoginPage() {
     if (/no account found/i.test(text)) return t('authNoAccountFound');
     if (/no recovery phrase/i.test(text)) return t('authNoRecoveryPhrase');
     if (/no character sheets/i.test(text)) return t('authNoCharacterSheets');
-    if (/recovery phrase does not match/i.test(text)) return t('authPhraseMismatch');
-    if (/provide valid words|required/i.test(text)) return t('authFillAllFields');
+    if (/recovery phrase does not match/i.test(text))
+      return t('authPhraseMismatch');
+    if (/provide valid words|required/i.test(text))
+      return t('authFillAllFields');
     return text || t('authGenericError');
   };
 
@@ -156,12 +181,20 @@ export default function LoginPage() {
     }
 
     setIsLoading(true);
-    const result = await register(username, password, displayName, recoveryPhrase);
+    const result = await register(
+      username,
+      password,
+      displayName,
+      recoveryPhrase,
+    );
 
     if (result.success) {
       // Если CharacterProvider уже создаёт отложенного персонажа — не мешаем
       // ему навигацией (та же логика, что в afterSuccessfulLogin).
-      if (typeof window !== 'undefined' && sessionStorage.getItem('pending_character')) {
+      if (
+        typeof window !== 'undefined' &&
+        sessionStorage.getItem('pending_character')
+      ) {
         return;
       }
       // Фраза задана при регистрации — модалка setup_phrase не нужна.
@@ -188,7 +221,13 @@ export default function LoginPage() {
       const res = await fetch('/api/auth/recover/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, word1, word2, word3, recoveryPhraseInput }),
+        body: JSON.stringify({
+          username,
+          word1,
+          word2,
+          word3,
+          recoveryPhraseInput,
+        }),
       });
 
       const data = await res.json().catch(() => null);
@@ -226,7 +265,7 @@ export default function LoginPage() {
     <div className="flex h-dvh flex-col bg-gradient-to-br from-background via-background to-primary/5">
       <GuestHeader />
 
-      <main className="flex flex-1 items-center justify-center overflow-y-auto p-4 safe-area-bottom">
+      <main className="safe-area-bottom flex flex-1 items-center justify-center overflow-y-auto p-4">
         <div className="w-full max-w-md py-6">
           <div className="mb-6 text-center">
             <div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full border border-primary/20 bg-primary/10">
@@ -235,7 +274,9 @@ export default function LoginPage() {
             <h1 className="font-headline text-3xl font-bold tracking-tight">
               Digital Character Sheets
             </h1>
-            <p className="mt-2 text-muted-foreground">{t('authBrandTagline')}</p>
+            <p className="mt-2 text-muted-foreground">
+              {t('authBrandTagline')}
+            </p>
           </div>
 
           <Card className="border-primary/10 shadow-lg">
@@ -263,7 +304,11 @@ export default function LoginPage() {
 
             <CardContent>
               {error && (
-                <Alert variant="destructive" className="mb-4" data-testid="auth-error">
+                <Alert
+                  variant="destructive"
+                  className="mb-4"
+                  data-testid="auth-error"
+                >
                   <AlertDescription>{error}</AlertDescription>
                 </Alert>
               )}
@@ -271,7 +316,10 @@ export default function LoginPage() {
               {mode === 'login' && (
                 <form onSubmit={handleLogin} className="space-y-4">
                   <div className="space-y-2">
-                    <label htmlFor="auth-username" className="flex items-center gap-2 text-sm font-medium">
+                    <label
+                      htmlFor="auth-username"
+                      className="flex items-center gap-2 text-sm font-medium"
+                    >
                       <User className="h-4 w-4 text-muted-foreground" />
                       {t('authUsernameOrEmail')}
                     </label>
@@ -288,7 +336,10 @@ export default function LoginPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <label htmlFor="auth-password" className="flex items-center gap-2 text-sm font-medium">
+                    <label
+                      htmlFor="auth-password"
+                      className="flex items-center gap-2 text-sm font-medium"
+                    >
                       <Lock className="h-4 w-4 text-muted-foreground" />
                       {t('authPassword')}
                     </label>
@@ -315,7 +366,11 @@ export default function LoginPage() {
                     </Button>
                   </div>
 
-                  <Button type="submit" className="mt-2 h-10 w-full" disabled={isFormLoading}>
+                  <Button
+                    type="submit"
+                    className="mt-2 h-10 w-full"
+                    disabled={isFormLoading}
+                  >
                     {isFormLoading ? (
                       <span className="flex items-center gap-2">
                         <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
@@ -344,9 +399,16 @@ export default function LoginPage() {
               )}
 
               {mode === 'register' && (
-                <form onSubmit={handleRegister} className="space-y-4" data-testid="register-form">
+                <form
+                  onSubmit={handleRegister}
+                  className="space-y-4"
+                  data-testid="register-form"
+                >
                   <div className="space-y-2">
-                    <label htmlFor="register-username" className="flex items-center gap-2 text-sm font-medium">
+                    <label
+                      htmlFor="register-username"
+                      className="flex items-center gap-2 text-sm font-medium"
+                    >
                       <User className="h-4 w-4 text-muted-foreground" />
                       {t('authUsernameOrEmail')}
                     </label>
@@ -363,7 +425,10 @@ export default function LoginPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <label htmlFor="register-display-name" className="flex items-center gap-2 text-sm font-medium">
+                    <label
+                      htmlFor="register-display-name"
+                      className="flex items-center gap-2 text-sm font-medium"
+                    >
                       <AtSign className="h-4 w-4 text-muted-foreground" />
                       {t('authDisplayName')}
                     </label>
@@ -380,7 +445,10 @@ export default function LoginPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <label htmlFor="register-password" className="flex items-center gap-2 text-sm font-medium">
+                    <label
+                      htmlFor="register-password"
+                      className="flex items-center gap-2 text-sm font-medium"
+                    >
                       <Lock className="h-4 w-4 text-muted-foreground" />
                       {t('authPassword')}
                     </label>
@@ -397,7 +465,10 @@ export default function LoginPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <label htmlFor="register-recovery-phrase" className="flex items-center gap-2 text-sm font-medium">
+                    <label
+                      htmlFor="register-recovery-phrase"
+                      className="flex items-center gap-2 text-sm font-medium"
+                    >
                       <KeyRound className="h-4 w-4 text-muted-foreground" />
                       {t('authRecoveryPhraseLabel')}
                     </label>
@@ -411,10 +482,16 @@ export default function LoginPage() {
                       required
                       className="h-10"
                     />
-                    <p className="text-xs text-muted-foreground">{t('authRecoveryPhraseHint')}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {t('authRecoveryPhraseHint')}
+                    </p>
                   </div>
 
-                  <Button type="submit" className="mt-2 h-10 w-full" disabled={isFormLoading}>
+                  <Button
+                    type="submit"
+                    className="mt-2 h-10 w-full"
+                    disabled={isFormLoading}
+                  >
                     {isFormLoading ? (
                       <span className="flex items-center gap-2">
                         <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
@@ -442,7 +519,10 @@ export default function LoginPage() {
               {mode === 'recover' && (
                 <form onSubmit={handleRecoveryVerify} className="space-y-4">
                   <div className="space-y-2">
-                    <label htmlFor="recover-username" className="flex items-center gap-2 text-sm font-medium">
+                    <label
+                      htmlFor="recover-username"
+                      className="flex items-center gap-2 text-sm font-medium"
+                    >
                       <User className="h-4 w-4 text-muted-foreground" />
                       {t('authAccountUsernameOrEmail')}
                     </label>
@@ -487,7 +567,10 @@ export default function LoginPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <label htmlFor="recover-phrase" className="flex items-center gap-2 text-sm font-medium">
+                    <label
+                      htmlFor="recover-phrase"
+                      className="flex items-center gap-2 text-sm font-medium"
+                    >
                       <Lock className="h-4 w-4 text-muted-foreground" />
                       {t('authYourRecoveryPhrase')}
                     </label>
@@ -499,10 +582,16 @@ export default function LoginPage() {
                       required
                       className="h-10"
                     />
-                    <p className="text-xs text-muted-foreground">{t('authPhraseMatchHint')}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {t('authPhraseMatchHint')}
+                    </p>
                   </div>
 
-                  <Button type="submit" className="mt-2 h-10 w-full" disabled={isFormLoading}>
+                  <Button
+                    type="submit"
+                    className="mt-2 h-10 w-full"
+                    disabled={isFormLoading}
+                  >
                     {isFormLoading ? (
                       <span className="flex items-center gap-2">
                         <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />

@@ -1,8 +1,10 @@
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
+
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { isUid, newUid, normalizeLogin } from '@/lib/ids';
 import {
   accountExists,
   authenticateUser,
@@ -14,16 +16,16 @@ import {
   userExists,
   verifyRecovery,
 } from '@/lib/server-auth';
-import { isUid, newUid, normalizeLogin } from '@/lib/ids';
-import { resolveLogin } from '@/lib/user-index';
 import { saveCharacterToServer } from '@/lib/server-storage';
+import { resolveLogin } from '@/lib/user-index';
+
 import {
   loginIndexPath,
   makeDndCharacter,
   readJson,
   removeDir,
-  useTempDataDir,
   userPaths,
+  useTempDataDir,
 } from './helpers';
 
 /**
@@ -45,7 +47,8 @@ afterEach(() => {
   removeDir(dataDir);
 });
 
-const sha256 = (value: string) => crypto.createHash('sha256').update(value).digest('hex');
+const sha256 = (value: string) =>
+  crypto.createHash('sha256').update(value).digest('hex');
 
 describe('normalizeLogin / uid', () => {
   it('нормализует регистр и внешние пробелы', () => {
@@ -134,7 +137,11 @@ describe('authenticateUser', () => {
     fs.mkdirSync(paths.userDir, { recursive: true });
     fs.writeFileSync(
       paths.userFile,
-      JSON.stringify({ email: 'legacy', displayName: 'Old', passwordHash: sha256('pass1') }),
+      JSON.stringify({
+        email: 'legacy',
+        displayName: 'Old',
+        passwordHash: sha256('pass1'),
+      }),
     );
 
     // uid берётся из каталога, логин — из email.
@@ -163,8 +170,12 @@ describe('authenticateUser', () => {
 
   it('allowRegistration: false пускает существующий аккаунт и различает пароль', () => {
     const created = authenticateUser('known', 'pass1');
-    const ok = authenticateUser('known', 'pass1', undefined, { allowRegistration: false });
-    const bad = authenticateUser('known', 'wrong', undefined, { allowRegistration: false });
+    const ok = authenticateUser('known', 'pass1', undefined, {
+      allowRegistration: false,
+    });
+    const bad = authenticateUser('known', 'wrong', undefined, {
+      allowRegistration: false,
+    });
 
     expect(ok.success).toBe(true);
     expect(ok.user?.uid).toBe(created.user?.uid);
@@ -187,7 +198,12 @@ describe('accountExists / registerUser', () => {
   });
 
   it('registerUser создаёт аккаунт с паролем и recovery-фразой', () => {
-    const result = registerUser('  New.User  ', 'pass1', 'New User', '  Amber Cobalt  ');
+    const result = registerUser(
+      '  New.User  ',
+      'pass1',
+      'New User',
+      '  Amber Cobalt  ',
+    );
 
     expect(result.success).toBe(true);
     expect(result.isNewUser).toBe(true);
@@ -227,7 +243,12 @@ describe('accountExists / registerUser', () => {
   });
 
   it('registerUser валидирует пароль и фразу', () => {
-    const shortPassword = registerUser('short-pass', '123', 'Short', 'amber cobalt');
+    const shortPassword = registerUser(
+      'short-pass',
+      '123',
+      'Short',
+      'amber cobalt',
+    );
     expect(shortPassword.success).toBe(false);
     expect(shortPassword.reason).toBe('invalid_input');
 
@@ -244,10 +265,16 @@ describe('accountExists / registerUser', () => {
 });
 
 describe('recovery / смена пароля', () => {
-  function setupAccountWithCharacter(username = 'recoverer', password = 'pass1') {
+  function setupAccountWithCharacter(
+    username = 'recoverer',
+    password = 'pass1',
+  ) {
     const result = authenticateUser(username, password);
     const uid = result.user!.uid;
-    saveCharacterToServer(uid, makeDndCharacter({ userId: uid, name: 'Ragnar Testborn' }) as any);
+    saveCharacterToServer(
+      uid,
+      makeDndCharacter({ userId: uid, name: 'Ragnar Testborn' }) as any,
+    );
     return uid;
   }
 
@@ -257,7 +284,9 @@ describe('recovery / смена пароля', () => {
 
     const stored = readJson(userPaths(dataDir, uid).userFile);
     expect(stored.recoveryPhrase).toBe('alpha beta gamma');
-    expect(authenticateUser('recoverer', 'pass1').user?.hasRecoveryPhrase).toBe(true);
+    expect(authenticateUser('recoverer', 'pass1').user?.hasRecoveryPhrase).toBe(
+      true,
+    );
   });
 
   it('setRecoveryPhrase возвращает false для несуществующего аккаунта', () => {
@@ -323,7 +352,11 @@ describe('recovery / смена пароля', () => {
     const uid = setupAccountWithCharacter('resetme', 'oldpass');
     setRecoveryPhrase(uid, 'alpha beta');
 
-    const reset = recoverPasswordWithUsernameAndWords('resetme', ['ragnar'], 'newpass');
+    const reset = recoverPasswordWithUsernameAndWords(
+      'resetme',
+      ['ragnar'],
+      'newpass',
+    );
     expect(reset.success).toBe(true);
 
     expect(authenticateUser('resetme', 'newpass').success).toBe(true);
@@ -334,7 +367,11 @@ describe('recovery / смена пароля', () => {
     const uid = setupAccountWithCharacter('resetme', 'oldpass');
     setRecoveryPhrase(uid, 'alpha beta');
 
-    const reset = recoverPasswordWithUsernameAndWords('resetme', ['gnome'], 'newpass');
+    const reset = recoverPasswordWithUsernameAndWords(
+      'resetme',
+      ['gnome'],
+      'newpass',
+    );
     expect(reset.success).toBe(false);
   });
 
@@ -344,10 +381,18 @@ describe('recovery / смена пароля', () => {
     fs.mkdirSync(paths.userDir, { recursive: true });
     fs.writeFileSync(
       paths.userFile,
-      JSON.stringify({ email: 'updateme', displayName: 'U', passwordHash: sha256('old') }),
+      JSON.stringify({
+        email: 'updateme',
+        displayName: 'U',
+        passwordHash: sha256('old'),
+      }),
     );
 
-    const update = updateRecoveryCredentials('updateme', 'fresh1', 'New Phrase');
+    const update = updateRecoveryCredentials(
+      'updateme',
+      'fresh1',
+      'New Phrase',
+    );
     expect(update.success).toBe(true);
 
     const stored = readJson(paths.userFile);

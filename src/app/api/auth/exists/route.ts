@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+
 import { accountExists } from '@/lib/server-auth';
 
 /**
@@ -17,15 +18,18 @@ export async function POST(request: Request) {
     if (typeof username !== 'string' || username.trim() === '') {
       return NextResponse.json(
         { success: false, error: 'Username/Email is required.' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    return NextResponse.json({ success: true, exists: accountExists(username) });
+    return NextResponse.json({
+      success: true,
+      exists: accountExists(username),
+    });
   } catch {
     return NextResponse.json(
       { success: false, error: 'An unexpected error occurred.' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

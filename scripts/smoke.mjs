@@ -25,10 +25,9 @@
 //  Скрипт создаёт «мусорный» аккаунт `smoke-<timestamp>-<rand>` и одного
 //  персонажа; с --data-dir всё это удаляется в конце (аккаунт + лист).
 // ============================================================================
-
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
-import crypto from 'node:crypto';
 
 // ── разбор аргументов ───────────────────────────────────────────────────────
 const argv = process.argv.slice(2);
@@ -71,7 +70,13 @@ for (let i = 0; i < argv.length; i++) {
       break;
     case '-h':
     case '--help':
-      console.log(fs.readFileSync(new URL(import.meta.url), 'utf8').split('\n').slice(1, 30).join('\n'));
+      console.log(
+        fs
+          .readFileSync(new URL(import.meta.url), 'utf8')
+          .split('\n')
+          .slice(1, 30)
+          .join('\n'),
+      );
       process.exit(0);
       break;
     default:
@@ -85,7 +90,15 @@ opts.baseUrl = opts.baseUrl.replace(/\/+$/, '');
 // ── цвета/вывод ─────────────────────────────────────────────────────────────
 const useColor = process.stdout.isTTY && !process.env.NO_COLOR;
 const c = useColor
-  ? { reset: '\x1b[0m', dim: '\x1b[2m', red: '\x1b[31m', green: '\x1b[32m', yellow: '\x1b[33m', cyan: '\x1b[36m', bold: '\x1b[1m' }
+  ? {
+      reset: '\x1b[0m',
+      dim: '\x1b[2m',
+      red: '\x1b[31m',
+      green: '\x1b[32m',
+      yellow: '\x1b[33m',
+      cyan: '\x1b[36m',
+      bold: '\x1b[1m',
+    }
   : { reset: '', dim: '', red: '', green: '', yellow: '', cyan: '', bold: '' };
 
 // ── мини-фреймворк ──────────────────────────────────────────────────────────
@@ -97,11 +110,15 @@ async function check(name, fn) {
     const detail = await fn();
     const ms = Date.now() - started;
     results.push({ name, ok: true });
-    console.log(`  ${c.green}✓${c.reset} ${name}${detail ? ` ${c.dim}(${detail}, ${ms} мс)${c.reset}` : ''}`);
+    console.log(
+      `  ${c.green}✓${c.reset} ${name}${detail ? ` ${c.dim}(${detail}, ${ms} мс)${c.reset}` : ''}`,
+    );
   } catch (error) {
     results.push({ name, ok: false, error });
     console.log(`  ${c.red}✗${c.reset} ${name}`);
-    console.log(`      ${c.red}${String(error?.message || error).replace(/\n/g, '\n      ')}${c.reset}`);
+    console.log(
+      `      ${c.red}${String(error?.message || error).replace(/\n/g, '\n      ')}${c.reset}`,
+    );
   }
 }
 
@@ -122,7 +139,10 @@ function truncate(text, limit = 400) {
 }
 
 function assertJson(res, context) {
-  assert(res.json !== null && typeof res.json === 'object', `${context}: ответ не JSON (${truncate(res.text)})`);
+  assert(
+    res.json !== null && typeof res.json === 'object',
+    `${context}: ответ не JSON (${truncate(res.text)})`,
+  );
   return res.json;
 }
 
@@ -131,7 +151,10 @@ function assertJson(res, context) {
 // запоминаем её из ответа /api/auth и передаём вручную.
 let sessionCookie = '';
 
-async function request(pathname, { method = 'GET', body, redirect = 'manual', auth = true } = {}) {
+async function request(
+  pathname,
+  { method = 'GET', body, redirect = 'manual', auth = true } = {},
+) {
   const url = `${opts.baseUrl}${pathname}`;
   const headers = {};
   if (body !== undefined) headers['content-type'] = 'application/json';
@@ -156,7 +179,12 @@ async function request(pathname, { method = 'GET', body, redirect = 'manual', au
     parsed = null;
   }
 
-  return { status: response.status, text, json: parsed, headers: response.headers };
+  return {
+    status: response.status,
+    text,
+    json: parsed,
+    headers: response.headers,
+  };
 }
 
 const api = (pathname, options) => request(`/api${pathname}`, options);
@@ -175,7 +203,14 @@ const dndCharacter = {
   background: 'Soldier',
   alignment: 'Lawful Good',
   level: 3,
-  stats: { strength: 16, dexterity: 12, constitution: 14, intelligence: 10, wisdom: 11, charisma: 9 },
+  stats: {
+    strength: 16,
+    dexterity: 12,
+    constitution: 14,
+    intelligence: 10,
+    wisdom: 11,
+    charisma: 9,
+  },
   hitPoints: { current: 24, max: 28 },
   armorClass: 17,
   skills: [],
@@ -186,22 +221,32 @@ const dndCharacter = {
   customHouseRules: [],
 };
 
-const sha256 = (value) => crypto.createHash('sha256').update(value).digest('hex');
+const sha256 = (value) =>
+  crypto.createHash('sha256').update(value).digest('hex');
 
 let userId = null;
 let characterId = null;
 
 // ── прогон ──────────────────────────────────────────────────────────────────
-console.log(`${c.bold}DigitalCharsheets smoke test${c.reset} → ${c.cyan}${opts.baseUrl}${c.reset}`);
-if (opts.dataDir) console.log(`${c.dim}каталог данных: ${opts.dataDir}${c.reset}`);
+console.log(
+  `${c.bold}DigitalCharsheets smoke test${c.reset} → ${c.cyan}${opts.baseUrl}${c.reset}`,
+);
+if (opts.dataDir)
+  console.log(`${c.dim}каталог данных: ${opts.dataDir}${c.reset}`);
 console.log('');
 
 // 1. Страницы отдаются
 await check('GET /login → 200 (HTML)', async () => {
   const res = await request('/login');
   assertStatus(res, 200, 'GET /login');
-  assert(/text\/html/i.test(res.headers.get('content-type') || ''), 'GET /login: content-type не text/html');
-  assert(res.text.includes('<!DOCTYPE html>') || res.text.includes('<html'), 'GET /login: тело не похоже на HTML');
+  assert(
+    /text\/html/i.test(res.headers.get('content-type') || ''),
+    'GET /login: content-type не text/html',
+  );
+  assert(
+    res.text.includes('<!DOCTYPE html>') || res.text.includes('<html'),
+    'GET /login: тело не похоже на HTML',
+  );
   return `${Math.round(res.text.length / 1024)} КБ`;
 });
 
@@ -236,53 +281,76 @@ await check('POST /api/auth/exists → свободный логин', async () 
   assertStatus(res, 200, 'POST /api/auth/exists');
   const body = assertJson(res, 'POST /api/auth/exists');
   assert(body.success === true, 'POST /api/auth/exists: success !== true');
-  assert(body.exists === false, 'POST /api/auth/exists: свободный логин считался занятым');
+  assert(
+    body.exists === false,
+    'POST /api/auth/exists: свободный логин считался занятым',
+  );
 });
 
-await check('POST /api/auth → 404 для несуществующего аккаунта (не регистрирует)', async () => {
-  const res = await api('/auth', {
-    method: 'POST',
-    body: { username, password },
-    auth: false,
-  });
-  assertStatus(res, 404, 'вход в несуществующий аккаунт');
-  const body = assertJson(res, 'вход в несуществующий аккаунт');
-  assert(body.success === false, 'несуществующий аккаунт: success !== false');
-  assert(body.reason === 'no_account', `несуществующий аккаунт: reason = ${body.reason}`);
-  assert(!sessionCookie, 'несуществующий аккаунт: сервер не должен выдавать сессию');
-});
+await check(
+  'POST /api/auth → 404 для несуществующего аккаунта (не регистрирует)',
+  async () => {
+    const res = await api('/auth', {
+      method: 'POST',
+      body: { username, password },
+      auth: false,
+    });
+    assertStatus(res, 404, 'вход в несуществующий аккаунт');
+    const body = assertJson(res, 'вход в несуществующий аккаунт');
+    assert(body.success === false, 'несуществующий аккаунт: success !== false');
+    assert(
+      body.reason === 'no_account',
+      `несуществующий аккаунт: reason = ${body.reason}`,
+    );
+    assert(
+      !sessionCookie,
+      'несуществующий аккаунт: сервер не должен выдавать сессию',
+    );
+  },
+);
 
-await check('POST /api/auth/register → регистрация нового аккаунта', async () => {
-  const res = await api('/auth/register', {
-    method: 'POST',
-    body: {
-      username,
-      password,
-      displayName: 'Smoke Tester',
-      recoveryPhrase: 'amber cobalt lantern',
-    },
-    auth: false,
-  });
-  assertStatus(res, 200, 'POST /api/auth/register');
-  const body = assertJson(res, 'POST /api/auth/register');
-  assert(body.success === true, `POST /api/auth/register: success !== true (${truncate(res.text)})`);
-  assert(body.isNewUser === true, 'POST /api/auth/register: ожидали isNewUser === true');
-  assert(
-    typeof body.user?.uid === 'string' &&
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(body.user.uid),
-    'POST /api/auth/register: uid должен быть UUID (а не хеш логина)',
-  );
-  assert(
-    body.user.hasRecoveryPhrase === true,
-    'POST /api/auth/register: фраза должна быть установлена сразу',
-  );
-  assert(
-    sessionCookie.startsWith('dcs_session='),
-    'POST /api/auth/register: не выдал сессионную cookie',
-  );
-  userId = body.user.uid;
-  return userId;
-});
+await check(
+  'POST /api/auth/register → регистрация нового аккаунта',
+  async () => {
+    const res = await api('/auth/register', {
+      method: 'POST',
+      body: {
+        username,
+        password,
+        displayName: 'Smoke Tester',
+        recoveryPhrase: 'amber cobalt lantern',
+      },
+      auth: false,
+    });
+    assertStatus(res, 200, 'POST /api/auth/register');
+    const body = assertJson(res, 'POST /api/auth/register');
+    assert(
+      body.success === true,
+      `POST /api/auth/register: success !== true (${truncate(res.text)})`,
+    );
+    assert(
+      body.isNewUser === true,
+      'POST /api/auth/register: ожидали isNewUser === true',
+    );
+    assert(
+      typeof body.user?.uid === 'string' &&
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(
+          body.user.uid,
+        ),
+      'POST /api/auth/register: uid должен быть UUID (а не хеш логина)',
+    );
+    assert(
+      body.user.hasRecoveryPhrase === true,
+      'POST /api/auth/register: фраза должна быть установлена сразу',
+    );
+    assert(
+      sessionCookie.startsWith('dcs_session='),
+      'POST /api/auth/register: не выдал сессионную cookie',
+    );
+    userId = body.user.uid;
+    return userId;
+  },
+);
 
 await check('POST /api/auth/register → 409 на занятый логин', async () => {
   const res = await api('/auth/register', {
@@ -297,7 +365,10 @@ await check('POST /api/auth/register → 409 на занятый логин', as
   });
   assertStatus(res, 409, 'повторная регистрация');
   const body = assertJson(res, 'повторная регистрация');
-  assert(body.reason === 'exists', `повторная регистрация: reason = ${body.reason}`);
+  assert(
+    body.reason === 'exists',
+    `повторная регистрация: reason = ${body.reason}`,
+  );
 });
 
 await check('POST /api/auth/exists → логин теперь существует', async () => {
@@ -308,19 +379,38 @@ await check('POST /api/auth/exists → логин теперь существу�
   });
   assertStatus(res, 200, 'POST /api/auth/exists (занятый)');
   const body = assertJson(res, 'POST /api/auth/exists (занятый)');
-  assert(body.exists === true, 'POST /api/auth/exists: существующий логин не найден');
+  assert(
+    body.exists === true,
+    'POST /api/auth/exists: существующий логин не найден',
+  );
 });
 
-await check('POST /api/auth → повторный вход (isNewUser=false, тот же uid)', async () => {
-  const res = await api('/auth', { method: 'POST', body: { username, password }, auth: false });
-  assertStatus(res, 200, 'повторный POST /api/auth');
-  const body = assertJson(res, 'повторный POST /api/auth');
-  assert(body.isNewUser === false, 'повторный вход: ожидали isNewUser === false');
-  assert(body.user?.uid === userId, `повторный вход: uid изменился (${body.user?.uid} ≠ ${userId})`);
-});
+await check(
+  'POST /api/auth → повторный вход (isNewUser=false, тот же uid)',
+  async () => {
+    const res = await api('/auth', {
+      method: 'POST',
+      body: { username, password },
+      auth: false,
+    });
+    assertStatus(res, 200, 'повторный POST /api/auth');
+    const body = assertJson(res, 'повторный POST /api/auth');
+    assert(
+      body.isNewUser === false,
+      'повторный вход: ожидали isNewUser === false',
+    );
+    assert(
+      body.user?.uid === userId,
+      `повторный вход: uid изменился (${body.user?.uid} ≠ ${userId})`,
+    );
+  },
+);
 
 await check('POST /api/auth → 401 на неверный пароль', async () => {
-  const res = await api('/auth', { method: 'POST', body: { username, password: 'wrong-password' } });
+  const res = await api('/auth', {
+    method: 'POST',
+    body: { username, password: 'wrong-password' },
+  });
   assertStatus(res, 401, 'неверный пароль');
   const body = assertJson(res, 'неверный пароль');
   assert(body.success === false, 'неверный пароль: success !== false');
@@ -332,18 +422,27 @@ await check('POST /api/auth → 400 без пароля', async () => {
 });
 
 await check('POST /api/auth → 400 на пароль короче 4 символов', async () => {
-  const res = await api('/auth', { method: 'POST', body: { username: `${username}2`, password: '123' } });
+  const res = await api('/auth', {
+    method: 'POST',
+    body: { username: `${username}2`, password: '123' },
+  });
   assertStatus(res, 400, 'короткий пароль');
 });
 
 // 3. Лист персонажа: создание/чтение/правка/удаление
-await check('GET /api/characters → пустой список у нового аккаунта', async () => {
-  const res = await api('/characters');
-  assertStatus(res, 200, 'GET /api/characters');
-  const body = assertJson(res, 'GET /api/characters');
-  assert(Array.isArray(body), 'GET /api/characters: ожидали массив');
-  assert(body.length === 0, `GET /api/characters: у нового аккаунта уже ${body.length} листов`);
-});
+await check(
+  'GET /api/characters → пустой список у нового аккаунта',
+  async () => {
+    const res = await api('/characters');
+    assertStatus(res, 200, 'GET /api/characters');
+    const body = assertJson(res, 'GET /api/characters');
+    assert(Array.isArray(body), 'GET /api/characters: ожидали массив');
+    assert(
+      body.length === 0,
+      `GET /api/characters: у нового аккаунта уже ${body.length} листов`,
+    );
+  },
+);
 
 await check('GET /api/characters без сессии → 401', async () => {
   const res = await api('/characters', { auth: false });
@@ -354,7 +453,10 @@ await check('POST /api/characters → 201 и id персонажа', async () =>
   const res = await api('/characters', { method: 'POST', body: dndCharacter });
   assertStatus(res, 201, 'POST /api/characters');
   const body = assertJson(res, 'POST /api/characters');
-  assert(typeof body.id === 'string' && body.id.length > 0, 'POST /api/characters: нет id');
+  assert(
+    typeof body.id === 'string' && body.id.length > 0,
+    'POST /api/characters: нет id',
+  );
   assert(body.userId === userId, 'POST /api/characters: userId не сохранён');
   characterId = body.id;
   return `id=${characterId}`;
@@ -366,7 +468,10 @@ await check('GET /api/characters → созданный лист в списке
   const body = assertJson(res, 'GET /api/characters');
   const found = body.find((item) => item.id === characterId);
   assert(found, `GET /api/characters: лист ${characterId} не найден в списке`);
-  assert(found.name === dndCharacter.name, 'GET /api/characters: имя персонажа не совпадает');
+  assert(
+    found.name === dndCharacter.name,
+    'GET /api/characters: имя персонажа не совпадает',
+  );
 });
 
 await check('GET /<id> → 200 (страница листа)', async () => {
@@ -375,11 +480,16 @@ await check('GET /<id> → 200 (страница листа)', async () => {
 });
 
 await check('GET /api/export?characterId → JSON персонажа', async () => {
-  const res = await api(`/export?characterId=${encodeURIComponent(characterId)}`);
+  const res = await api(
+    `/export?characterId=${encodeURIComponent(characterId)}`,
+  );
   assertStatus(res, 200, 'GET /api/export (один)');
   const body = assertJson(res, 'GET /api/export (один)');
   assert(body.id === characterId, 'GET /api/export: вернулся другой персонаж');
-  assert(body.gameSystem === dndCharacter.gameSystem, 'GET /api/export: gameSystem потерялся');
+  assert(
+    body.gameSystem === dndCharacter.gameSystem,
+    'GET /api/export: gameSystem потерялся',
+  );
 });
 
 await check('GET /api/export?characterId=<нет такого> → 404', async () => {
@@ -397,12 +507,20 @@ await check('PUT /api/characters/<id> → правка сохраняется', 
   assert(body.name === 'Smoke Tester Renamed', 'PUT: имя не обновилось');
 
   const list = await api('/characters');
-  const saved = assertJson(list, 'GET после PUT').find((item) => item.id === characterId);
-  assert(saved?.name === 'Smoke Tester Renamed', 'PUT: изменение не сохранилось в файле');
+  const saved = assertJson(list, 'GET после PUT').find(
+    (item) => item.id === characterId,
+  );
+  assert(
+    saved?.name === 'Smoke Tester Renamed',
+    'PUT: изменение не сохранилось в файле',
+  );
 });
 
 await check('PUT /api/characters/<нет такого> → 404', async () => {
-  const res = await api('/characters/missing-id', { method: 'PUT', body: { name: 'X' } });
+  const res = await api('/characters/missing-id', {
+    method: 'PUT',
+    body: { name: 'X' },
+  });
   assertStatus(res, 404, 'PUT несуществующего');
 });
 
@@ -411,32 +529,56 @@ if (opts.dataDir) {
   const userDir = path.join(opts.dataDir, 'users', userId);
   const characterFile = path.join(userDir, 'characters', `${characterId}.json`);
 
-  await check('на диске есть data/users/<uid>/user.json с sha256-хешем пароля', async () => {
-    const userFile = path.join(userDir, 'user.json');
-    assert(fs.existsSync(userFile), `нет файла ${userFile}`);
+  await check(
+    'на диске есть data/users/<uid>/user.json с sha256-хешем пароля',
+    async () => {
+      const userFile = path.join(userDir, 'user.json');
+      assert(fs.existsSync(userFile), `нет файла ${userFile}`);
 
-    const raw = fs.readFileSync(userFile, 'utf8');
-    const parsed = JSON.parse(raw);
-    assert(parsed.uid === userId, `user.json: uid = ${parsed.uid}`);
-    assert(parsed.schemaVersion === 2, `user.json: schemaVersion = ${parsed.schemaVersion}`);
-    assert(parsed.username === username.toLowerCase(), `user.json: username = ${parsed.username}`);
-    assert(parsed.passwordHash === sha256(password), 'user.json: passwordHash не соответствует sha256(password)');
-    assert(!raw.includes(password), 'user.json: пароль лежит в открытом виде!');
-  });
+      const raw = fs.readFileSync(userFile, 'utf8');
+      const parsed = JSON.parse(raw);
+      assert(parsed.uid === userId, `user.json: uid = ${parsed.uid}`);
+      assert(
+        parsed.schemaVersion === 2,
+        `user.json: schemaVersion = ${parsed.schemaVersion}`,
+      );
+      assert(
+        parsed.username === username.toLowerCase(),
+        `user.json: username = ${parsed.username}`,
+      );
+      assert(
+        parsed.passwordHash === sha256(password),
+        'user.json: passwordHash не соответствует sha256(password)',
+      );
+      assert(
+        !raw.includes(password),
+        'user.json: пароль лежит в открытом виде!',
+      );
+    },
+  );
 
   await check('индекс data/index/logins.json знает логин → uid', async () => {
     const indexFile = path.join(opts.dataDir, 'index', 'logins.json');
     assert(fs.existsSync(indexFile), `нет файла ${indexFile}`);
     const index = JSON.parse(fs.readFileSync(indexFile, 'utf8'));
-    assert(index.logins?.[username.toLowerCase()] === userId, 'index: логин не указывает на uid');
+    assert(
+      index.logins?.[username.toLowerCase()] === userId,
+      'index: логин не указывает на uid',
+    );
   });
 
-  await check('на диске есть data/users/<uid>/characters/<id>.json', async () => {
-    assert(fs.existsSync(characterFile), `нет файла ${characterFile}`);
-    const parsed = JSON.parse(fs.readFileSync(characterFile, 'utf8'));
-    assert(parsed.id === characterId, 'character.json: id не совпадает');
-    assert(parsed.name === 'Smoke Tester Renamed', 'character.json: правка не попала на диск');
-  });
+  await check(
+    'на диске есть data/users/<uid>/characters/<id>.json',
+    async () => {
+      assert(fs.existsSync(characterFile), `нет файла ${characterFile}`);
+      const parsed = JSON.parse(fs.readFileSync(characterFile, 'utf8'));
+      assert(parsed.id === characterId, 'character.json: id не совпадает');
+      assert(
+        parsed.name === 'Smoke Tester Renamed',
+        'character.json: правка не попала на диск',
+      );
+    },
+  );
 }
 
 await check('DELETE /api/characters/<id> → 200', async () => {
@@ -455,9 +597,15 @@ await check('DELETE повторно → 404 (файл действительн�
 
 // 5. Восстановление доступа
 await check('POST /api/auth/phrase → фраза сохраняется', async () => {
-  const res = await api('/auth/phrase', { method: 'POST', body: { phrase: recoveryPhrase } });
+  const res = await api('/auth/phrase', {
+    method: 'POST',
+    body: { phrase: recoveryPhrase },
+  });
   assertStatus(res, 200, 'POST /api/auth/phrase');
-  assert(assertJson(res, 'POST /api/auth/phrase').success === true, 'phrase: success !== true');
+  assert(
+    assertJson(res, 'POST /api/auth/phrase').success === true,
+    'phrase: success !== true',
+  );
 });
 
 await check('POST /api/auth/phrase без фразы → 400', async () => {
@@ -466,17 +614,23 @@ await check('POST /api/auth/phrase без фразы → 400', async () => {
 });
 
 await check('POST /api/auth/recover/verify без полей → 400', async () => {
-  const res = await api('/auth/recover/verify', { method: 'POST', body: { username } });
+  const res = await api('/auth/recover/verify', {
+    method: 'POST',
+    body: { username },
+  });
   assertStatus(res, 400, 'recover/verify без полей');
 });
 
-await check('POST /api/auth/recover/update → 400 на короткую фразу', async () => {
-  const res = await api('/auth/recover/update', {
-    method: 'POST',
-    body: { username, newPassword: 'newpass123', newRecoveryPhrase: 'ab' },
-  });
-  assertStatus(res, 400, 'recover/update короткая фраза');
-});
+await check(
+  'POST /api/auth/recover/update → 400 на короткую фразу',
+  async () => {
+    const res = await api('/auth/recover/update', {
+      method: 'POST',
+      body: { username, newPassword: 'newpass123', newRecoveryPhrase: 'ab' },
+    });
+    assertStatus(res, 400, 'recover/update короткая фраза');
+  },
+);
 
 // 6. Уборка
 if (opts.dataDir && userId) {
@@ -492,7 +646,11 @@ if (opts.dataDir && userId) {
       const index = JSON.parse(fs.readFileSync(indexFile, 'utf8'));
       if (index?.logins) {
         delete index.logins[username.toLowerCase()];
-        fs.writeFileSync(indexFile, JSON.stringify(index, null, 2) + '\n', 'utf8');
+        fs.writeFileSync(
+          indexFile,
+          JSON.stringify(index, null, 2) + '\n',
+          'utf8',
+        );
       }
     } catch {
       // индекса нет/битый — приложение пересоберёт его само
@@ -508,11 +666,15 @@ const failed = results.length - passed;
 
 console.log('');
 if (failed === 0) {
-  console.log(`${c.green}${c.bold}Итого: ${passed}/${results.length} проверок пройдено.${c.reset}`);
+  console.log(
+    `${c.green}${c.bold}Итого: ${passed}/${results.length} проверок пройдено.${c.reset}`,
+  );
   process.exit(0);
 }
 
-console.log(`${c.red}${c.bold}Итого: пройдено ${passed}/${results.length}, провалено ${failed}.${c.reset}`);
+console.log(
+  `${c.red}${c.bold}Итого: пройдено ${passed}/${results.length}, провалено ${failed}.${c.reset}`,
+);
 for (const result of results.filter((r) => !r.ok)) {
   console.log(`${c.red}  ✗ ${result.name}${c.reset}`);
   if (opts.verbose) console.log(`      ${result.error?.stack || result.error}`);

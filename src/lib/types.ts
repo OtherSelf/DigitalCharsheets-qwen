@@ -1,10 +1,24 @@
 'use client';
 export type GameSystem = 'Dungeons & Dragons' | 'Dark Heresy';
 
-export const DarkHeresyHomeWorlds = ["Feral World", "Hive World", "Imperial World", "Void Born"] as const;
-export type DarkHeresyHomeWorld = typeof DarkHeresyHomeWorlds[number];
-export const DarkHeresyCareerPaths = ["Adept", "Arbitrator", "Assassin", "Cleric", "Guardsman", "Imperial Psyker", "Scum", "Tech-Priest"] as const;
-export type DarkHeresyCareerPath = typeof DarkHeresyCareerPaths[number];
+export const DarkHeresyHomeWorlds = [
+  'Feral World',
+  'Hive World',
+  'Imperial World',
+  'Void Born',
+] as const;
+export type DarkHeresyHomeWorld = (typeof DarkHeresyHomeWorlds)[number];
+export const DarkHeresyCareerPaths = [
+  'Adept',
+  'Arbitrator',
+  'Assassin',
+  'Cleric',
+  'Guardsman',
+  'Imperial Psyker',
+  'Scum',
+  'Tech-Priest',
+] as const;
+export type DarkHeresyCareerPath = (typeof DarkHeresyCareerPaths)[number];
 
 export interface InventoryItem {
   id: string;
@@ -54,7 +68,7 @@ export interface DnDSkill {
 }
 
 export interface Skill {
-  id:string;
+  id: string;
   name: string;
   notes: string;
   type: 'basic' | 'advanced';
@@ -67,10 +81,10 @@ export interface Skill {
 }
 
 export interface Talent {
-    id: string;
-    name: string;
-    notes?: string;
-    description?: string;
+  id: string;
+  name: string;
+  notes?: string;
+  description?: string;
 }
 
 export interface DnDAttack {
@@ -118,7 +132,7 @@ export interface DnDCompanion {
   hitPoints: { current: number; max: number };
   actions: DnDActionOrFeature[];
   features: DnDActionOrFeature[];
-  
+
   // Full NPC support
   savingThrows?: DnDSavingThrow[];
   hpTracking?: string;
@@ -165,7 +179,7 @@ export interface DnDCompanion {
     wisdom?: string;
     charisma?: string;
   };
-  
+
   // Progression fields
   characterClass?: string;
   level?: number;
@@ -175,8 +189,6 @@ export interface DnDCompanion {
   divineBoons?: string[];
   allowDivineBoonsBeforeLevel20?: boolean;
 
-  
-  
   // Visibility toggles
   showStats?: boolean;
   showCombat?: boolean;
@@ -197,7 +209,8 @@ export interface ArmorPiece {
   quality: string;
 }
 
-export type BodyPart = 'Head' | 'Right arm' | 'Body' | 'Left arm' | 'Right leg' | 'Left leg';
+export type BodyPart =
+  'Head' | 'Right arm' | 'Body' | 'Left arm' | 'Right leg' | 'Left leg';
 
 export type Armor = Record<BodyPart, ArmorPiece | null>;
 
@@ -229,13 +242,13 @@ export interface RangedWeapon {
 }
 
 export interface DarkHeresyWeapons {
-    melee: MeleeWeapon[];
-    ranged: RangedWeapon[];
+  melee: MeleeWeapon[];
+  ranged: RangedWeapon[];
 }
 
 export interface DarkHeresyEquipment {
-    armor: Armor;
-    weapons: DarkHeresyWeapons;
+  armor: Armor;
+  weapons: DarkHeresyWeapons;
 }
 
 export interface QuestObjective {
@@ -276,7 +289,13 @@ export interface DnDMulticlass {
   isDisabled?: boolean; // Added to preserve progress when XP is lowered
 }
 
-export type DnDAbility = 'strength' | 'dexterity' | 'constitution' | 'intelligence' | 'wisdom' | 'charisma';
+export type DnDAbility =
+  | 'strength'
+  | 'dexterity'
+  | 'constitution'
+  | 'intelligence'
+  | 'wisdom'
+  | 'charisma';
 
 export interface DnD5eCharacter extends CharacterBase {
   gameSystem: 'Dungeons & Dragons';
@@ -291,7 +310,7 @@ export interface DnD5eCharacter extends CharacterBase {
   inspiration: string;
   allowInspirationHomeRule?: boolean;
   allowDivineBoonsBeforeLevel20?: boolean;
-  customHouseRules?: {name: string; description: string}[];
+  customHouseRules?: { name: string; description: string }[];
   proficiencyBonus: number;
   age?: string;
   eyes?: string;
@@ -416,28 +435,27 @@ export interface DarkHeresyCharacter extends CharacterBase {
     fellowship?: string;
     influence?: string;
   };
-  wounds: { current: number; max: number; notes?: string; };
-  fatePoints: { current: number; max: number; notes?: string; };
-  insanityPoints: { total: number; notes?: string; };
-  corruptionPoints: { total: number; notes?: string; };
-  wealth: { throneGelt: number; monthlyIncome: number; notes?: string; };
-  movement: { walkHalf: number; walkFull: number; charge: number; run: number; };
+  wounds: { current: number; max: number; notes?: string };
+  fatePoints: { current: number; max: number; notes?: string };
+  insanityPoints: { total: number; notes?: string };
+  corruptionPoints: { total: number; notes?: string };
+  wealth: { throneGelt: number; monthlyIncome: number; notes?: string };
+  movement: { walkHalf: number; walkFull: number; charge: number; run: number };
   equipment: DarkHeresyEquipment;
   inventory: InventoryItem[];
   skills: Skill[];
   talents: Talent[];
-  fatigue1st: { current: number; notes?: string; };
-  fatigue2nd: { current: number; notes?: string; };
-  criticalConditions: { id: string; name: string; notes?: string; }[];
+  fatigue1st: { current: number; notes?: string };
+  fatigue2nd: { current: number; notes?: string };
+  criticalConditions: { id: string; name: string; notes?: string }[];
   customHouseRules?: { name: string; description: string }[];
-    customResources?: {
+  customResources?: {
     id: string;
     description: string;
     current: number;
     max: number;
     notes?: string;
   }[];
-
 }
 
 export type Character = DnD5eCharacter | DarkHeresyCharacter;

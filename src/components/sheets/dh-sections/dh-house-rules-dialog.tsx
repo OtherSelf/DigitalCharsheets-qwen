@@ -2,19 +2,21 @@
 'use client';
 
 import * as React from 'react';
+
+import { Plus, Trash2 } from 'lucide-react';
+
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
   DialogDescription,
   DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Plus, Trash2 } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
 import { useCharacterContext } from '@/context/character-context';
 import { useTranslation } from '@/context/language-context';
 import { type DarkHeresyCharacter } from '@/lib/types';
@@ -27,11 +29,16 @@ interface DhHouseRulesDialogProps {
 
 type DhCustomRule = { name: string; description: string };
 
-export function DhHouseRulesDialog({ open, onOpenChange, characterId }: DhHouseRulesDialogProps) {
+export function DhHouseRulesDialog({
+  open,
+  onOpenChange,
+  characterId,
+}: DhHouseRulesDialogProps) {
   const { getCharacter, updateCharacter } = useCharacterContext();
   const { t } = useTranslation();
 
-  const character = getCharacter(characterId) as DarkHeresyCharacter | undefined;
+  const character = getCharacter(characterId) as
+    DarkHeresyCharacter | undefined;
   const isDarkHeresy = character?.gameSystem === 'Dark Heresy';
 
   const [customRules, setCustomRules] = React.useState<DhCustomRule[]>([]);
@@ -49,7 +56,10 @@ export function DhHouseRulesDialog({ open, onOpenChange, characterId }: DhHouseR
 
   const handleAddCustomRule = () => {
     if (newRuleName.trim()) {
-      setCustomRules([...customRules, { name: newRuleName.trim(), description: newRuleDesc.trim() }]);
+      setCustomRules([
+        ...customRules,
+        { name: newRuleName.trim(), description: newRuleDesc.trim() },
+      ]);
       setNewRuleName('');
       setNewRuleDesc('');
     }
@@ -84,15 +94,13 @@ export function DhHouseRulesDialog({ open, onOpenChange, characterId }: DhHouseR
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[500px] max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-h-[80vh] overflow-y-auto sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>{t('houseRulesTitle')}</DialogTitle>
-          <DialogDescription>
-            {t('houseRulesDesc')}
-          </DialogDescription>
+          <DialogDescription>{t('houseRulesDesc')}</DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 mt-4">
+        <div className="mt-4 space-y-4">
           <div className="space-y-3">
             <div className="space-y-2">
               <Label>{t('ruleName')}</Label>
@@ -116,30 +124,35 @@ export function DhHouseRulesDialog({ open, onOpenChange, characterId }: DhHouseR
               disabled={!newRuleName.trim()}
               className="w-full"
             >
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="mr-2 h-4 w-4" />
               {t('addCustomRule')}
             </Button>
           </div>
 
           {customRules.length > 0 && (
-            <div className="space-y-2 mt-4">
+            <div className="mt-4 space-y-2">
               <Label>{t('activeCustomRules')}</Label>
-              <div className="space-y-2 max-h-[250px] overflow-y-auto pr-1">
+              <div className="max-h-[250px] space-y-2 overflow-y-auto pr-1">
                 {customRules.map((rule, index) => (
-                  <div key={index} className="p-3 rounded-lg bg-muted border flex flex-col gap-1">
+                  <div
+                    key={index}
+                    className="flex flex-col gap-1 rounded-lg border bg-muted p-3"
+                  >
                     <div className="flex items-start justify-between">
-                      <span className="font-semibold text-sm break-words">{rule.name}</span>
+                      <span className="break-words text-sm font-semibold">
+                        {rule.name}
+                      </span>
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-6 w-6 text-destructive hover:text-destructive shrink-0"
+                        className="h-6 w-6 shrink-0 text-destructive hover:text-destructive"
                         onClick={() => handleDeleteCustomRule(index)}
                       >
                         <Trash2 className="h-3 w-3" />
                       </Button>
                     </div>
                     {rule.description && (
-                      <p className="text-xs text-muted-foreground leading-relaxed break-words">
+                      <p className="break-words text-xs leading-relaxed text-muted-foreground">
                         {rule.description}
                       </p>
                     )}
@@ -154,9 +167,7 @@ export function DhHouseRulesDialog({ open, onOpenChange, characterId }: DhHouseR
           <Button variant="outline" onClick={handleClose}>
             {t('close')}
           </Button>
-          <Button onClick={handleSave}>
-            {t('saveChanges')}
-          </Button>
+          <Button onClick={handleSave}>{t('saveChanges')}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

@@ -49,15 +49,21 @@ export function saveLocalCharacters(characters: Character[]): void {
 
 export function addLocalCharacter(character: Omit<Character, 'id'>): Character {
   const characters = getLocalCharacters();
-  const newCharacter: Character = { ...character, id: generateId() } as Character;
+  const newCharacter: Character = {
+    ...character,
+    id: generateId(),
+  } as Character;
   characters.push(newCharacter);
   saveLocalCharacters(characters);
   return newCharacter;
 }
 
-export function updateLocalCharacter(id: string, data: Partial<Character>): void {
+export function updateLocalCharacter(
+  id: string,
+  data: Partial<Character>,
+): void {
   const characters = getLocalCharacters();
-  const index = characters.findIndex(c => c.id === id);
+  const index = characters.findIndex((c) => c.id === id);
   if (index !== -1) {
     characters[index] = { ...characters[index], ...data } as Character;
     saveLocalCharacters(characters);
@@ -66,6 +72,6 @@ export function updateLocalCharacter(id: string, data: Partial<Character>): void
 
 export function deleteLocalCharacter(id: string): void {
   const characters = getLocalCharacters();
-  const filtered = characters.filter(c => c.id !== id);
+  const filtered = characters.filter((c) => c.id !== id);
   saveLocalCharacters(filtered);
 }

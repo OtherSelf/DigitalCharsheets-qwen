@@ -1,12 +1,13 @@
 // src/app/[id]/page.tsx
 'use client';
 
-import { CharacterSheet } from '@/components/sheets/character-sheet';
+import { useEffect, useRef, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Header } from '@/components/header';
-import { useCharacterContext } from '@/context/character-context';
+
 import Loading from '@/app/loading';
-import { useEffect, useState, useRef } from 'react';
+import { DynamicFavicon } from '@/components/dynamic-favicon';
+import { Header } from '@/components/header';
+import { CharacterSheet } from '@/components/sheets/character-sheet';
 import { CompactSidebar } from '@/components/sheets/compact-sidebar';
 import { NotesDialog } from '@/components/sheets/notes-dialog';
 import { QuestJournalSheet } from '@/components/sheets/quest-journal-dialog';
@@ -19,18 +20,24 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+} from '@/components/ui/alert-dialog';
+import { useCharacterContext } from '@/context/character-context';
 import { useTranslation } from '@/context/language-context';
 import { cn } from '@/lib/utils';
-import { DynamicFavicon } from '@/components/dynamic-favicon';
-
 
 export default function CharacterPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
-  const { getCharacter, isLoaded, isCompactView, hasUnsavedChanges, setHasUnsavedChanges } = useCharacterContext();
+  const {
+    getCharacter,
+    isLoaded,
+    isCompactView,
+    hasUnsavedChanges,
+    setHasUnsavedChanges,
+  } = useCharacterContext();
   const { t } = useTranslation();
-  const [activeCompactSection, setActiveCompactSection] = useState('info-section');
+  const [activeCompactSection, setActiveCompactSection] =
+    useState('info-section');
   const [notesOpen, setNotesOpen] = useState(false);
   const [journalOpen, setJournalOpen] = useState(false);
   const [pendingSectionId, setPendingSectionId] = useState<string | null>(null);
@@ -90,20 +97,23 @@ export default function CharacterPage() {
   return (
     <>
       {/* 🎯 LANDMARK: DYNAMIC SHEET FAVICON INJECTION */}
-      
+
       <DynamicFavicon gameSystem={character.gameSystem} />
-      
-      <div className="flex flex-col h-full">
-        <Header onNotesClick={() => setNotesOpen(true)} onJournalClick={() => setJournalOpen(true)} />
+
+      <div className="flex h-full flex-col">
+        <Header
+          onNotesClick={() => setNotesOpen(true)}
+          onJournalClick={() => setJournalOpen(true)}
+        />
         <div className="flex flex-1 overflow-hidden">
           {isCompactView && (
-            <CompactSidebar 
-              gameSystem={character.gameSystem} 
-              activeSection={activeCompactSection} 
-              onSectionChange={handleSectionChange} 
+            <CompactSidebar
+              gameSystem={character.gameSystem}
+              activeSection={activeCompactSection}
+              onSectionChange={handleSectionChange}
             />
           )}
-          <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-y-auto">
+          <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
             <CharacterSheet
               ref={sheetRef}
               character={character}
@@ -125,11 +135,16 @@ export default function CharacterPage() {
             />
           </>
         )}
-        <AlertDialog open={!!pendingSectionId} onOpenChange={(open) => !open && setPendingSectionId(null)}>
+        <AlertDialog
+          open={!!pendingSectionId}
+          onOpenChange={(open) => !open && setPendingSectionId(null)}
+        >
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>{t('unsavedChanges')}</AlertDialogTitle>
-              <AlertDialogDescription>{t('unsavedChangesDesc')}</AlertDialogDescription>
+              <AlertDialogDescription>
+                {t('unsavedChangesDesc')}
+              </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel onClick={() => setPendingSectionId(null)}>

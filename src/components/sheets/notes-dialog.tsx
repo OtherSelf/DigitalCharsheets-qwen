@@ -1,20 +1,21 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
+
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { useCharacterContext } from '@/context/character-context';
 import { useTranslation } from '@/context/language-context';
-import { type Character } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
+import { type Character } from '@/lib/types';
 
 interface NotesDialogProps {
   character: Character;
@@ -22,7 +23,11 @@ interface NotesDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export function NotesDialog({ character, open, onOpenChange }: NotesDialogProps) {
+export function NotesDialog({
+  character,
+  open,
+  onOpenChange,
+}: NotesDialogProps) {
   const [notes, setNotes] = useState(character.notes ?? '');
   const { updateCharacter } = useCharacterContext();
   const { t } = useTranslation();
@@ -51,9 +56,7 @@ export function NotesDialog({ character, open, onOpenChange }: NotesDialogProps)
       >
         <DialogHeader>
           <DialogTitle>{t('characterNotes')}</DialogTitle>
-          <DialogDescription>
-            {t('characterNotesDesc')}
-          </DialogDescription>
+          <DialogDescription>{t('characterNotesDesc')}</DialogDescription>
         </DialogHeader>
         <div className="py-4">
           <Textarea

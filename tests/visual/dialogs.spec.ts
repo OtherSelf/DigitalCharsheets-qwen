@@ -1,5 +1,12 @@
 import { expect, test } from '@playwright/test';
-import { getState, openApp, openDialog, prepare, screenshotPage } from './helpers';
+
+import {
+  getState,
+  openApp,
+  openDialog,
+  prepare,
+  screenshotPage,
+} from './helpers';
 
 const isMobile = () => test.info().project.name === 'mobile';
 
@@ -33,7 +40,9 @@ test.describe('диалоги — журнал заданий', () => {
     await expect(
       dialog.getByRole('heading', { name: 'Quest Journal' }),
     ).toBeVisible();
-    await expect(dialog.getByText('The Reliquary of Saint Veren')).toBeVisible();
+    await expect(
+      dialog.getByText('The Reliquary of Saint Veren'),
+    ).toBeVisible();
 
     await screenshotPage(page, 'dialog-dh-quest-journal-en.png');
   });
@@ -55,7 +64,9 @@ test.describe('диалоги — журнал заданий', () => {
     await openApp(page, `/${getState().dhId}`);
 
     const dialog = await openDialog(page, 'Журнал заданий', false);
-    await expect(dialog.getByText('The Reliquary of Saint Veren')).toBeVisible();
+    await expect(
+      dialog.getByText('The Reliquary of Saint Veren'),
+    ).toBeVisible();
 
     await screenshotPage(page, 'dialog-dh-quest-journal-ru.png');
   });
@@ -72,7 +83,9 @@ test.describe('диалоги — домашние правила', () => {
       dialog.getByRole('heading', { name: 'House Rules' }),
     ).toBeVisible();
     await dialog.getByRole('tab', { name: 'Custom Rules' }).click();
-    await expect(dialog.getByText('Feat at level 1', { exact: true })).toBeVisible();
+    await expect(
+      dialog.getByText('Feat at level 1', { exact: true }),
+    ).toBeVisible();
 
     await screenshotPage(page, 'dialog-dnd-house-rules-en.png');
   });
@@ -95,7 +108,9 @@ test.describe('диалоги — домашние правила', () => {
 
     const dialog = await openDialog(page, 'House Rules', true);
     await dialog.getByRole('tab', { name: 'Custom Rules' }).click();
-    await expect(dialog.getByText('Feat at level 1', { exact: true })).toBeVisible();
+    await expect(
+      dialog.getByText('Feat at level 1', { exact: true }),
+    ).toBeVisible();
 
     await screenshotPage(page, 'dialog-dnd-mobile-house-rules-en.png');
   });
@@ -118,7 +133,9 @@ test.describe('диалоги — домашние правила', () => {
 
     const dialog = await openDialog(page, 'Домашние правила', false);
     await dialog.getByRole('tab', { name: 'Собственные правила' }).click();
-    await expect(dialog.getByText('Feat at level 1', { exact: true })).toBeVisible();
+    await expect(
+      dialog.getByText('Feat at level 1', { exact: true }),
+    ).toBeVisible();
 
     await screenshotPage(page, 'dialog-dnd-house-rules-ru.png');
   });

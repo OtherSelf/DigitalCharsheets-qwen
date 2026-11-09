@@ -1,6 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
+
 import type { FullConfig } from '@playwright/test';
+
 import { dhCharacter, dndCharacter, VISUAL_RECOVERY_PHRASE } from './fixtures';
 import { STATE_FILE, type VisualState, type VisualUser } from './state';
 
@@ -40,7 +42,11 @@ async function requestJson<T>(
   } catch {
     body = text;
   }
-  return { status: response.status, body: body as T, headers: response.headers };
+  return {
+    status: response.status,
+    body: body as T,
+    headers: response.headers,
+  };
 }
 
 async function waitForServer(baseURL: string): Promise<void> {
@@ -138,14 +144,14 @@ export default async function globalSetup(config: FullConfig): Promise<void> {
       );
     }
 
-    const relogin = await requestJson<{ success: boolean; user?: VisualUser; error?: string }>(
-      baseURL,
-      '/api/auth',
-      {
-        method: 'POST',
-        body: JSON.stringify({ username: USERNAME, password: PASSWORD }),
-      },
-    );
+    const relogin = await requestJson<{
+      success: boolean;
+      user?: VisualUser;
+      error?: string;
+    }>(baseURL, '/api/auth', {
+      method: 'POST',
+      body: JSON.stringify({ username: USERNAME, password: PASSWORD }),
+    });
     if (relogin.status !== 200 || !relogin.body.user) {
       throw new Error(
         `Не удалось перелогиниться: HTTP ${relogin.status} ${JSON.stringify(relogin.body)}`,
@@ -162,11 +168,14 @@ export default async function globalSetup(config: FullConfig): Promise<void> {
   );
   if (existing.status === 200 && Array.isArray(existing.body)) {
     for (const character of existing.body) {
-      await fetch(`${baseURL}/api/characters/${encodeURIComponent(character.id)}`, {
-        method: 'DELETE',
-        headers: { cookie: sessionCookie },
-        signal: AbortSignal.timeout(10_000),
-      }).catch(() => undefined);
+      await fetch(
+        `${baseURL}/api/characters/${encodeURIComponent(character.id)}`,
+        {
+          method: 'DELETE',
+          headers: { cookie: sessionCookie },
+          signal: AbortSignal.timeout(10_000),
+        },
+      ).catch(() => undefined);
     }
   }
 

@@ -22,7 +22,11 @@
 
 export interface SaveQueueOptions<T extends object> {
   /** Отправка одного батча. Возвращает HTTP-статус или null при сетевой ошибке. */
-  send: (id: string, data: Partial<T>, meta?: SaveMeta) => Promise<number | null>;
+  send: (
+    id: string,
+    data: Partial<T>,
+    meta?: SaveMeta,
+  ) => Promise<number | null>;
   /** Окончательная ошибка: все попытки исчерпаны. */
   onError?: (id: string, data: Partial<T>) => void;
   /** Пауза перед отправкой, чтобы накопить правки. По умолчанию 250 мс. */
@@ -85,7 +89,9 @@ interface QueueEntry<T extends object> {
 }
 
 /** Позже — значит новее: берём метку с наибольшим seq. */
-const newestMeta = (...metas: Array<SaveMeta | null | undefined>): SaveMeta | null => {
+const newestMeta = (
+  ...metas: Array<SaveMeta | null | undefined>
+): SaveMeta | null => {
   let newest: SaveMeta | null = null;
   for (const meta of metas) {
     if (meta && (!newest || meta.seq >= newest.seq)) newest = meta;
@@ -99,7 +105,9 @@ const isSuccessStatus = (status: number | null): boolean =>
 const isRetryableStatus = (status: number | null): boolean =>
   status === null || status >= 500 || status === 408 || status === 429;
 
-export function createSaveQueue<T extends object>(options: SaveQueueOptions<T>): SaveQueue<T> {
+export function createSaveQueue<T extends object>(
+  options: SaveQueueOptions<T>,
+): SaveQueue<T> {
   const {
     send,
     onError,
@@ -113,7 +121,10 @@ export function createSaveQueue<T extends object>(options: SaveQueueOptions<T>):
   const queues = new Map<string, QueueEntry<T>>();
   const idleWaiters: Array<() => void> = [];
 
-  const sleep = (ms: number) => new Promise<void>(resolve => { setTimeoutFn(resolve, ms); });
+  const sleep = (ms: number) =>
+    new Promise<void>((resolve) => {
+      setTimeoutFn(resolve, ms);
+    });
 
   const getEntry = (id: string): QueueEntry<T> => {
     let entry = queues.get(id);
@@ -176,8 +187,14 @@ export function createSaveQueue<T extends object>(options: SaveQueueOptions<T>):
             entry.retryTimer = setTimeoutFn(() => {
               entry.retryTimer = null;
               if (entry.failed) {
-                entry.pending = { ...entry.failed, ...(entry.pending ?? {}) } as Partial<T>;
-                entry.pendingMeta = newestMeta(entry.pendingMeta, entry.failedMeta);
+                entry.pending = {
+                  ...entry.failed,
+                  ...(entry.pending ?? {}),
+                } as Partial<T>;
+                entry.pendingMeta = newestMeta(
+                  entry.pendingMeta,
+                  entry.failedMeta,
+                );
                 entry.failed = null;
                 entry.failedMeta = null;
               }
@@ -219,20 +236,24 @@ export function createSaveQueue<T extends object>(options: SaveQueueOptions<T>):
         ...(entry.pending ?? {}),
       } as Partial<T>;
       if (Object.keys(data).length > 0) {
-        const meta = newestMeta(entry.failedMeta, entry.inFlightMeta, entry.pendingMeta);
+        const meta = newestMeta(
+          entry.failedMeta,
+          entry.inFlightMeta,
+          entry.pendingMeta,
+        );
         snapshot.push(meta ? { id, data, meta } : { id, data });
       }
     });
     return snapshot;
   };
 
-  const hasPending = (): boolean =>
-    snapshotAll().length > 0;
+  const hasPending = (): boolean => snapshotAll().length > 0;
 
-  const idle = (): Promise<void> => new Promise<void>(resolve => {
-    idleWaiters.push(resolve);
-    notifyIfIdle();
-  });
+  const idle = (): Promise<void> =>
+    new Promise<void>((resolve) => {
+      idleWaiters.push(resolve);
+      notifyIfIdle();
+    });
 
   return { enqueue, snapshotAll, hasPending, idle };
 }

@@ -1,10 +1,13 @@
 'use client';
 
 import Link from 'next/link';
+
 import { LogIn, Monitor, Shield, Smartphone } from 'lucide-react';
+
 import { Button } from '@/components/ui/button';
 import { useCharacterContext } from '@/context/character-context';
 import { useTranslation } from '@/context/language-context';
+
 import { LanguageToggle } from './language-toggle';
 import { ThemeToggle } from './theme-toggle';
 
@@ -25,7 +28,8 @@ interface GuestHeaderProps {
  * и в основной шапке, поэтому кнопка там скрыта.
  */
 export function GuestHeader({ showLoginLink = false }: GuestHeaderProps) {
-  const { isCompactView, isSmallScreen, toggleCompactView } = useCharacterContext();
+  const { isCompactView, isSmallScreen, toggleCompactView } =
+    useCharacterContext();
   const { t } = useTranslation();
 
   const compactLabel = isCompactView
@@ -68,7 +72,9 @@ export function GuestHeader({ showLoginLink = false }: GuestHeaderProps) {
             <Button variant="ghost" asChild>
               <Link href="/login" aria-label={t('authLoginRegister')}>
                 <LogIn className="h-4 w-4 sm:mr-2" />
-                <span className="hidden sm:inline">{t('authLoginRegister')}</span>
+                <span className="hidden sm:inline">
+                  {t('authLoginRegister')}
+                </span>
               </Link>
             </Button>
           )}

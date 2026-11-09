@@ -13,7 +13,8 @@ const fs = require('node:fs');
 const fsPromises = require('node:fs/promises');
 
 const code = process.env.DCS_FAKE_RENAME_CODE || 'EXDEV';
-const fail = () => Object.assign(new Error(`${code}: fake rename failure`), { code });
+const fail = () =>
+  Object.assign(new Error(`${code}: fake rename failure`), { code });
 
 // ── fs.renameSync ───────────────────────────────────────────────────────────
 fs.renameSync = function fakeRenameSync() {

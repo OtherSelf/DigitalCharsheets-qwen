@@ -1,16 +1,17 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import * as XLSX from 'xlsx';
+
 import { afterAll, describe, expect, it, vi } from 'vitest';
+import * as XLSX from 'xlsx';
 
 import {
+  buildBackupExport,
+  buildCharacterExport,
   DEFAULT_EXPORT_CONFIG,
   EXPORT_APP_NAME,
   EXPORT_FORMAT,
   EXPORT_FORMAT_VERSION,
-  buildBackupExport,
-  buildCharacterExport,
   exportCharacterToExcel,
   exportFileName,
   filterCharacterForExport,
@@ -19,6 +20,7 @@ import {
   parseExportPayload,
   sanitizeData,
 } from '@/lib/export-utils';
+
 import { makeDhCharacter, makeDndCharacter } from './helpers';
 
 /**
@@ -33,13 +35,23 @@ const allOff = Object.fromEntries(
 ) as unknown as typeof DEFAULT_EXPORT_CONFIG;
 
 const fileOf = (content: unknown, name = 'backup.json') =>
-  new File([typeof content === 'string' ? content : JSON.stringify(content)], name, {
-    type: 'application/json',
-  });
+  new File(
+    [typeof content === 'string' ? content : JSON.stringify(content)],
+    name,
+    {
+      type: 'application/json',
+    },
+  );
 
 describe('sanitizeData', () => {
   it('обрезает пробелы в строках и ключах, не трогает числа/булевы/null', () => {
-    const input = { ' name ': '  Ragnar  ', level: 3, alive: true, notes: null, nested: { ' x ': ' y ' } };
+    const input = {
+      ' name ': '  Ragnar  ',
+      level: 3,
+      alive: true,
+      notes: null,
+      nested: { ' x ': ' y ' },
+    };
     expect(sanitizeData(input)).toEqual({
       name: 'Ragnar',
       level: 3,
@@ -60,7 +72,11 @@ describe('sanitizeData', () => {
       _key: 'old',
       __page: 'p',
       __seq: 3,
-      character: { userId: 'user-y', name: 'A', items: [{ userId: 'user-z', name: 'B' }] },
+      character: {
+        userId: 'user-y',
+        name: 'A',
+        items: [{ userId: 'user-z', name: 'B' }],
+      },
     };
 
     expect(sanitizeData(input)).toEqual({
@@ -77,12 +93,18 @@ describe('sanitizeData', () => {
 
 describe('filterCharacterForExport', () => {
   it('при всех выключенных флагах оставляет только id и gameSystem', () => {
-    const filtered = filterCharacterForExport(makeDndCharacter() as any, allOff);
+    const filtered = filterCharacterForExport(
+      makeDndCharacter() as any,
+      allOff,
+    );
     expect(filtered).toEqual({ id: 'dnd-1', gameSystem: 'Dungeons & Dragons' });
   });
 
   it('базовая информация, статы и боевые поля D&D попадают в экспорт', () => {
-    const filtered = filterCharacterForExport(makeDndCharacter() as any, DEFAULT_EXPORT_CONFIG);
+    const filtered = filterCharacterForExport(
+      makeDndCharacter() as any,
+      DEFAULT_EXPORT_CONFIG,
+    );
 
     expect(filtered.name).toBe('Ragnar Testborn');
     expect(filtered.characterClass).toBe('Fighter');
@@ -97,12 +119,19 @@ describe('filterCharacterForExport', () => {
   });
 
   it('для Dark Heresy берёт поля своей системы', () => {
-    const filtered = filterCharacterForExport(makeDhCharacter() as any, DEFAULT_EXPORT_CONFIG);
+    const filtered = filterCharacterForExport(
+      makeDhCharacter() as any,
+      DEFAULT_EXPORT_CONFIG,
+    );
 
     expect(filtered.name).toBe('Acolyte Vex');
     expect((filtered as any).careerPath).toBe('Adept');
     expect((filtered as any).homeWorld).toBe('Hive World');
-    expect((filtered as any).wounds).toEqual({ current: 10, max: 10, notes: '' });
+    expect((filtered as any).wounds).toEqual({
+      current: 10,
+      max: 10,
+      notes: '',
+    });
     expect((filtered as any).race).toBeUndefined();
   });
 
@@ -114,7 +143,10 @@ describe('filterCharacterForExport', () => {
       criticalConditions: [{ id: 'c1', name: 'Broken arm', notes: 'right' }],
       customResources: [{ id: 'r1', description: 'Ammo', current: 3, max: 10 }],
     });
-    const filtered = filterCharacterForExport(dh as any, DEFAULT_EXPORT_CONFIG) as any;
+    const filtered = filterCharacterForExport(
+      dh as any,
+      DEFAULT_EXPORT_CONFIG,
+    ) as any;
 
     expect(filtered.edition).toBe('2nd');
     expect(filtered.fatigue1st).toEqual({ current: 2, notes: 'beaten' });
@@ -126,8 +158,15 @@ describe('filterCharacterForExport', () => {
   });
 
   it('выключенные секции не попадают в результат', () => {
-    const config = { ...DEFAULT_EXPORT_CONFIG, includeEquipment: false, includeNarrative: false };
-    const filtered = filterCharacterForExport(makeDndCharacter({ backstory: 'secret' }) as any, config);
+    const config = {
+      ...DEFAULT_EXPORT_CONFIG,
+      includeEquipment: false,
+      includeNarrative: false,
+    };
+    const filtered = filterCharacterForExport(
+      makeDndCharacter({ backstory: 'secret' }) as any,
+      config,
+    );
 
     expect((filtered as any).equipment).toBeUndefined();
     expect((filtered as any).backstory).toBeUndefined();
@@ -135,7 +174,10 @@ describe('filterCharacterForExport', () => {
   });
 });
 
-const meta = (kind: 'character' | 'backup', extra: Record<string, unknown> = {}) => ({
+const meta = (
+  kind: 'character' | 'backup',
+  extra: Record<string, unknown> = {},
+) => ({
   appName: EXPORT_APP_NAME,
   format: EXPORT_FORMAT,
   version: EXPORT_FORMAT_VERSION,
@@ -155,9 +197,13 @@ describe('export format', () => {
     expect(exportFileName('backup', { login: 'petya', date })).toBe(
       'dcs_characters_all_petya_2026-11-08.json',
     );
-    expect(exportFileName('character', { name: 'Ragnar Testborn', date, extension: 'xlsx' })).toBe(
-      'dcs_character_Ragnar_Testborn_2026-11-08.xlsx',
-    );
+    expect(
+      exportFileName('character', {
+        name: 'Ragnar Testborn',
+        date,
+        extension: 'xlsx',
+      }),
+    ).toBe('dcs_character_Ragnar_Testborn_2026-11-08.xlsx');
   });
 
   it('чистит недопустимые для ФС символы, кириллицу сохраняет', () => {
@@ -170,7 +216,11 @@ describe('export format', () => {
   });
 
   it('buildCharacterExport: конверт с metadata и без служебных полей', () => {
-    const payload = buildCharacterExport(makeDndCharacter() as any, DEFAULT_EXPORT_CONFIG, date);
+    const payload = buildCharacterExport(
+      makeDndCharacter() as any,
+      DEFAULT_EXPORT_CONFIG,
+      date,
+    );
 
     expect(payload.metadata).toMatchObject({
       appName: EXPORT_APP_NAME,
@@ -204,16 +254,29 @@ describe('export format', () => {
 
   it('build отказывается экспортировать лист без имени/системы', () => {
     expect(() =>
-      buildCharacterExport(makeDndCharacter({ name: '' }) as any, DEFAULT_EXPORT_CONFIG),
+      buildCharacterExport(
+        makeDndCharacter({ name: '' }) as any,
+        DEFAULT_EXPORT_CONFIG,
+      ),
     ).toThrow(/Экспорт отменён/);
     expect(() =>
-      buildCharacterExport({ gameSystem: 'Unknown', name: 'X' } as any, DEFAULT_EXPORT_CONFIG),
+      buildCharacterExport(
+        { gameSystem: 'Unknown', name: 'X' } as any,
+        DEFAULT_EXPORT_CONFIG,
+      ),
     ).toThrow(/игровая система/);
   });
 
   it('round-trip: build → parse возвращает тот же набор', () => {
-    const payload = buildBackupExport([makeDndCharacter({ id: 'a' })] as any, 'petya', date);
-    const parsed = parseExportPayload(JSON.parse(JSON.stringify(payload)), date);
+    const payload = buildBackupExport(
+      [makeDndCharacter({ id: 'a' })] as any,
+      'petya',
+      date,
+    );
+    const parsed = parseExportPayload(
+      JSON.parse(JSON.stringify(payload)),
+      date,
+    );
 
     expect(parsed.ok).toBe(true);
     if (!parsed.ok) return;
@@ -229,7 +292,11 @@ describe('importCharacterFromJSON (только формат dcs-export v2)', ()
     const result = await importCharacterFromJSON(
       fileOf({
         metadata: meta('character', { config: DEFAULT_EXPORT_CONFIG }),
-        character: { ...makeDndCharacter(), userId: 'user-x', migratedFromUid: 'fb-1' },
+        character: {
+          ...makeDndCharacter(),
+          userId: 'user-x',
+          migratedFromUid: 'fb-1',
+        },
       }),
     );
 
@@ -244,7 +311,10 @@ describe('importCharacterFromJSON (только формат dcs-export v2)', ()
     const result = await importCharacterFromJSON(
       fileOf({
         metadata: meta('backup', { account: 'petya' }),
-        characters: [makeDndCharacter({ id: 'a' }), makeDhCharacter({ id: 'b' })],
+        characters: [
+          makeDndCharacter({ id: 'a' }),
+          makeDhCharacter({ id: 'b' }),
+        ],
       }),
     );
 
@@ -270,7 +340,12 @@ describe('importCharacterFromJSON (только формат dcs-export v2)', ()
   it('отклоняет старый конверт без format (совместимость не поддерживаем)', async () => {
     const result = await importCharacterFromJSON(
       fileOf({
-        metadata: { appName: EXPORT_APP_NAME, version: '1.0', exportDate: 'x', config: {} },
+        metadata: {
+          appName: EXPORT_APP_NAME,
+          version: '1.0',
+          exportDate: 'x',
+          config: {},
+        },
         character: makeDndCharacter(),
       }),
     );
@@ -311,7 +386,10 @@ describe('importCharacterFromJSON (только формат dcs-export v2)', ()
 
   it('отклоняет пустой бэкап и лист без имени', async () => {
     const empty = await importCharacterFromJSON(
-      fileOf({ metadata: meta('backup', { characterCount: 0 }), characters: [] }),
+      fileOf({
+        metadata: meta('backup', { characterCount: 0 }),
+        characters: [],
+      }),
     );
     expect(empty.success).toBe(false);
     expect(empty.error).toMatch(/не содержит/i);
@@ -346,10 +424,18 @@ describe('mergeImportedData', () => {
         exportDate: '',
         config: DEFAULT_EXPORT_CONFIG,
       },
-      character: { name: 'New Name', level: 5, stats: { ...target.stats, strength: 20 } },
+      character: {
+        name: 'New Name',
+        level: 5,
+        stats: { ...target.stats, strength: 20 },
+      },
     };
 
-    const merged = mergeImportedData(target, imported as any, DEFAULT_EXPORT_CONFIG);
+    const merged = mergeImportedData(
+      target,
+      imported as any,
+      DEFAULT_EXPORT_CONFIG,
+    );
 
     expect(merged.name).toBe('New Name');
     expect((merged as any).level).toBe(5);
@@ -357,7 +443,11 @@ describe('mergeImportedData', () => {
   });
 
   it('не трогает выключенные секции', () => {
-    const target = makeDndCharacter({ name: 'Keep Me', level: 1, backstory: 'original' }) as any;
+    const target = makeDndCharacter({
+      name: 'Keep Me',
+      level: 1,
+      backstory: 'original',
+    }) as any;
     const imported = {
       metadata: {
         appName: 'DigitalCharsheets-qwen',
@@ -367,7 +457,11 @@ describe('mergeImportedData', () => {
       },
       character: { name: 'Imported', level: 9, backstory: 'imported story' },
     };
-    const config = { ...DEFAULT_EXPORT_CONFIG, includeProgression: false, includeNarrative: false };
+    const config = {
+      ...DEFAULT_EXPORT_CONFIG,
+      includeProgression: false,
+      includeNarrative: false,
+    };
 
     const merged = mergeImportedData(target, imported as any, config);
 
@@ -390,11 +484,17 @@ describe('mergeImportedData', () => {
         fatigue1st: { current: 4 },
         fatigue2nd: { current: 2 },
         criticalConditions: [{ id: 'c9', name: 'Concussion' }],
-        customResources: [{ id: 'r9', description: 'Grenades', current: 1, max: 3 }],
+        customResources: [
+          { id: 'r9', description: 'Grenades', current: 1, max: 3 },
+        ],
       },
     };
 
-    const merged = mergeImportedData(target, imported as any, DEFAULT_EXPORT_CONFIG) as any;
+    const merged = mergeImportedData(
+      target,
+      imported as any,
+      DEFAULT_EXPORT_CONFIG,
+    ) as any;
 
     expect(merged.edition).toBe('2nd');
     expect(merged.fatigue1st).toEqual({ current: 4, ...target.fatigue1st });
@@ -404,7 +504,9 @@ describe('mergeImportedData', () => {
   });
 
   it('мержит вложенные объекты (хиты) вместо замены целиком', () => {
-    const target = makeDndCharacter({ hitPoints: { current: 10, max: 20 } }) as any;
+    const target = makeDndCharacter({
+      hitPoints: { current: 10, max: 20 },
+    }) as any;
     const imported = {
       metadata: {
         appName: 'DigitalCharsheets-qwen',
@@ -415,7 +517,11 @@ describe('mergeImportedData', () => {
       character: { hitPoints: { current: 5 } },
     };
 
-    const merged = mergeImportedData(target, imported as any, DEFAULT_EXPORT_CONFIG);
+    const merged = mergeImportedData(
+      target,
+      imported as any,
+      DEFAULT_EXPORT_CONFIG,
+    );
 
     expect((merged as any).hitPoints).toEqual({ current: 5, max: 20 });
   });
@@ -446,7 +552,9 @@ describe('exportCharacterToExcel (xlsx)', () => {
       const result = exportCharacterToExcel(makeDndCharacter() as any, date);
 
       expect(result.success).toBe(true);
-      expect(result.filename).toBe('dcs_character_Ragnar_Testborn_2026-11-08.xlsx');
+      expect(result.filename).toBe(
+        'dcs_character_Ragnar_Testborn_2026-11-08.xlsx',
+      );
       const file = path.join(tmp, result.filename!);
       expect(fs.existsSync(file)).toBe(true);
       expect(fs.statSync(file).size).toBeGreaterThan(1000);
@@ -470,9 +578,15 @@ describe('exportCharacterToExcel (xlsx)', () => {
       expect(row(rows, 'Format')).toEqual(['Format', 'dcs-export']);
       expect(row(rows, 'Format version')).toEqual(['Format version', '2.0']);
       expect(row(rows, 'Kind')).toEqual(['Kind', 'character']);
-      expect(row(rows, 'Export date')).toEqual(['Export date', date.toISOString()]);
+      expect(row(rows, 'Export date')).toEqual([
+        'Export date',
+        date.toISOString(),
+      ]);
       expect(row(rows, 'Character')).toEqual(['Character', 'Ragnar Testborn']);
-      expect(row(rows, 'Game system')).toEqual(['Game system', 'Dungeons & Dragons']);
+      expect(row(rows, 'Game system')).toEqual([
+        'Game system',
+        'Dungeons & Dragons',
+      ]);
       expect(row(rows, 'Character ID')).toEqual(['Character ID', 'dnd-1']);
 
       // Человекочитаемые секции остались на месте.
@@ -492,7 +606,9 @@ describe('exportCharacterToExcel (xlsx)', () => {
         fatigue1st: { current: 2, notes: 'beaten' },
         fatigue2nd: { current: 1, notes: '' },
         criticalConditions: [{ id: 'c1', name: 'Broken arm', notes: '' }],
-        customResources: [{ id: 'r1', description: 'Ammo', current: 3, max: 10 }],
+        customResources: [
+          { id: 'r1', description: 'Ammo', current: 3, max: 10 },
+        ],
       });
       const result = exportCharacterToExcel(character as any, date);
       expect(result.success).toBe(true);
@@ -500,8 +616,12 @@ describe('exportCharacterToExcel (xlsx)', () => {
       const rows = readRows(result.filename!);
       expect(row(rows, 'Edition')?.[1]).toBe('2nd');
       expect(row(rows, 'Fatigue (1st)')?.[1]).toBe(2);
-      expect(String(row(rows, 'Critical Conditions')?.[1] ?? '')).toContain('Broken arm');
-      expect(String(row(rows, 'Custom Resources')?.[1] ?? '')).toContain('Ammo: 3/10');
+      expect(String(row(rows, 'Critical Conditions')?.[1] ?? '')).toContain(
+        'Broken arm',
+      );
+      expect(String(row(rows, 'Custom Resources')?.[1] ?? '')).toContain(
+        'Ammo: 3/10',
+      );
     } finally {
       process.chdir(originalCwd);
     }
@@ -510,12 +630,19 @@ describe('exportCharacterToExcel (xlsx)', () => {
   it('битый лист — ошибка, файл не создаётся', () => {
     process.chdir(tmp);
     try {
-      const before = fs.readdirSync(tmp).filter((f) => f.endsWith('.xlsx')).length;
-      const result = exportCharacterToExcel(makeDndCharacter({ name: '' }) as any, date);
+      const before = fs
+        .readdirSync(tmp)
+        .filter((f) => f.endsWith('.xlsx')).length;
+      const result = exportCharacterToExcel(
+        makeDndCharacter({ name: '' }) as any,
+        date,
+      );
 
       expect(result.success).toBe(false);
       expect(result.error).toMatch(/Экспорт отменён/);
-      const after = fs.readdirSync(tmp).filter((f) => f.endsWith('.xlsx')).length;
+      const after = fs
+        .readdirSync(tmp)
+        .filter((f) => f.endsWith('.xlsx')).length;
       expect(after).toBe(before);
     } finally {
       process.chdir(originalCwd);

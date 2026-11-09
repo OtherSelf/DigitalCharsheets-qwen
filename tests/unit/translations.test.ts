@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+
 import { describe, expect, it } from 'vitest';
 
 import { translations } from '@/lib/translations';
@@ -62,8 +63,12 @@ const ru = translations.ru;
 
 describe('переводы: целостность словарей', () => {
   it('en и ru содержат одинаковый набор ключей', () => {
-    const onlyEn = Object.keys(en).filter((key) => !(key in ru)).sort();
-    const onlyRu = Object.keys(ru).filter((key) => !(key in en)).sort();
+    const onlyEn = Object.keys(en)
+      .filter((key) => !(key in ru))
+      .sort();
+    const onlyRu = Object.keys(ru)
+      .filter((key) => !(key in en))
+      .sort();
 
     expect(onlyEn, 'ключи только в en').toEqual([]);
     expect(onlyRu, 'ключи только в ru').toEqual([]);
@@ -71,7 +76,10 @@ describe('переводы: целостность словарей', () => {
 
   it('каждый литеральный ключ t(...) есть в обоих языках', () => {
     const used = usedLiteralKeys();
-    expect(used.size, 'найдено слишком мало ключей — сломался разбор').toBeGreaterThan(100);
+    expect(
+      used.size,
+      'найдено слишком мало ключей — сломался разбор',
+    ).toBeGreaterThan(100);
 
     const missingEn: string[] = [];
     const missingRu: string[] = [];

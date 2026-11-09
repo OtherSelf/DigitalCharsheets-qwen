@@ -1,15 +1,21 @@
 'use client';
 
 import * as React from 'react';
-import { type DnDCompanion } from '@/lib/types';
-import { Button } from '../../ui/button';
-import { Plus } from 'lucide-react';
-import { cn } from '@/lib/utils';
+
+import { ChevronDown, ChevronUp, Plus } from 'lucide-react';
+
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 import { useCharacterContext } from '@/context/character-context';
 import { useTranslation } from '@/context/language-context';
+import { type DnDCompanion } from '@/lib/types';
+import { cn } from '@/lib/utils';
+
+import { Button } from '../../ui/button';
 import { CompanionSheet } from './companion-sheet';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ChevronDown, ChevronUp } from 'lucide-react';
 
 interface CompanionsSectionProps {
   characterId: string;
@@ -19,11 +25,19 @@ interface CompanionsSectionProps {
   activeCompactSection: string;
 }
 
-export function DndCompanionsSection({ characterId, companions, setCompanions, isCompactView, activeCompactSection }: CompanionsSectionProps) {
+export function DndCompanionsSection({
+  characterId,
+  companions,
+  setCompanions,
+  isCompactView,
+  activeCompactSection,
+}: CompanionsSectionProps) {
   const { updateCharacter, showEditButtons } = useCharacterContext();
   const { t } = useTranslation();
   const [isCompanionsOpen, setIsCompanionsOpen] = React.useState(true);
-  const [editingCompanionId, setEditingCompanionId] = React.useState<string | null>(null);
+  const [editingCompanionId, setEditingCompanionId] = React.useState<
+    string | null
+  >(null);
 
   const handleAddCompanion = () => {
     const newCompanion: DnDCompanion = {
@@ -35,7 +49,14 @@ export function DndCompanionsSection({ characterId, companions, setCompanions, i
       initiative: 0,
       speed: '30',
       proficiencyBonus: '+2',
-      stats: { strength: 10, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 10, charisma: 10 },
+      stats: {
+        strength: 10,
+        dexterity: 10,
+        constitution: 10,
+        intelligence: 10,
+        wisdom: 10,
+        charisma: 10,
+      },
       skills: [],
       hitPoints: { current: 10, max: 10 },
       actions: [],
@@ -53,7 +74,7 @@ export function DndCompanionsSection({ characterId, companions, setCompanions, i
       showInfo: false,
       showProgression: false,
       showDivineBoons: false,
-      showHitDice: true
+      showHitDice: true,
     };
     const n = [...companions, newCompanion];
     setCompanions(n);
@@ -61,54 +82,85 @@ export function DndCompanionsSection({ characterId, companions, setCompanions, i
     setEditingCompanionId(newCompanion.id);
   };
 
-  const updateCompanion = (companionId: string, updates: Partial<DnDCompanion>) => {
-    const n = companions.map(c => c.id === companionId ? { ...c, ...updates } : c);
+  const updateCompanion = (
+    companionId: string,
+    updates: Partial<DnDCompanion>,
+  ) => {
+    const n = companions.map((c) =>
+      c.id === companionId ? { ...c, ...updates } : c,
+    );
     setCompanions(n);
     updateCharacter(characterId, { companions: n });
   };
 
   const handleDeleteCompanion = (companionId: string) => {
-    const n = companions.filter(c => c.id !== companionId);
+    const n = companions.filter((c) => c.id !== companionId);
     setCompanions(n);
     updateCharacter(characterId, { companions: n });
     if (editingCompanionId === companionId) setEditingCompanionId(null);
   };
 
   return (
-    <Collapsible id="companions-section" open={isCompanionsOpen} onOpenChange={setIsCompanionsOpen} className={cn("space-y-8", isCompactView && activeCompactSection !== 'companion-section' && "hidden")}>
-      <div className="flex items-center justify-center mb-6 relative">
+    <Collapsible
+      id="companions-section"
+      open={isCompanionsOpen}
+      onOpenChange={setIsCompanionsOpen}
+      className={cn(
+        'space-y-8',
+        isCompactView &&
+          activeCompactSection !== 'companion-section' &&
+          'hidden',
+      )}
+    >
+      <div className="relative mb-6 flex items-center justify-center">
         <CollapsibleTrigger asChild>
-          <Button variant="ghost" size="sm" className="flex items-center gap-2 p-0 h-auto hover:bg-transparent">
-            <h2 className="text-2xl font-headline font-bold">{t('companions')}</h2>
-            {isCompanionsOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="flex h-auto items-center gap-2 p-0 hover:bg-transparent"
+          >
+            <h2 className="font-headline text-2xl font-bold">
+              {t('companions')}
+            </h2>
+            {isCompanionsOpen ? (
+              <ChevronUp className="h-5 w-5" />
+            ) : (
+              <ChevronDown className="h-5 w-5" />
+            )}
           </Button>
         </CollapsibleTrigger>
         {showEditButtons && (
           <div className="absolute right-0 top-1/2 -translate-y-1/2">
             <Button size="sm" variant="outline" onClick={handleAddCompanion}>
-              <Plus className="h-4 w-4 mr-2" /> {t('addCompanion')}
+              <Plus className="mr-2 h-4 w-4" /> {t('addCompanion')}
             </Button>
           </div>
         )}
       </div>
-      
+
       <CollapsibleContent className="space-y-8">
-        {companions.map(comp => (
+        {companions.map((comp) => (
           <CompanionSheet
             key={comp.id}
             companion={comp}
             onUpdate={(updates) => updateCompanion(comp.id, updates)}
             onDelete={() => handleDeleteCompanion(comp.id)}
             isEditing={editingCompanionId === comp.id && showEditButtons}
-            onToggleEdit={() => setEditingCompanionId(editingCompanionId === comp.id ? null : comp.id)}
+            onToggleEdit={() =>
+              setEditingCompanionId(
+                editingCompanionId === comp.id ? null : comp.id,
+              )
+            }
           />
         ))}
-        
+
         {companions.length === 0 && showEditButtons && (
-          <div className="text-center p-12 border-2 border-dashed rounded-lg bg-muted/10">
-            <p className="text-muted-foreground mb-4">{t('noCompanionsAdded')}</p>
+          <div className="rounded-lg border-2 border-dashed bg-muted/10 p-12 text-center">
+            <p className="mb-4 text-muted-foreground">
+              {t('noCompanionsAdded')}
+            </p>
             <Button size="sm" variant="outline" onClick={handleAddCompanion}>
-              <Plus className="h-4 w-4 mr-2" /> {t('addYourFirstCompanion')}
+              <Plus className="mr-2 h-4 w-4" /> {t('addYourFirstCompanion')}
             </Button>
           </div>
         )}

@@ -1,20 +1,26 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useLocalAuth } from '@/context/local-auth-context';
+
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
 import {
-  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useLocalAuth } from '@/context/local-auth-context';
 
 export function RecoveryModal() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, updateUserPhrase } = useLocalAuth();
-  
+
   const [newPassword, setNewPassword] = useState('');
   const [newRecoveryPhrase, setNewRecoveryPhrase] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -44,7 +50,7 @@ export function RecoveryModal() {
     if (isMounted && user) {
       const needsSetup = !user.hasRecoveryPhrase;
       const isSetupParam = searchParams.get('setup_phrase') === 'true';
-      
+
       // LANDMARK: Only show modal once per user session to prevent double-showing
       if ((needsSetup || isSetupParam || isRecovery) && !hasShownModal) {
         setIsOpen(true);
@@ -62,7 +68,7 @@ export function RecoveryModal() {
       setNewPassword('');
       setNewRecoveryPhrase('');
       setError('');
-      
+
       // Clean URL
       setTimeout(() => {
         router.replace(window.location.pathname, { scroll: false });
@@ -97,7 +103,7 @@ export function RecoveryModal() {
           setNewPassword('');
           setNewRecoveryPhrase('');
           setError('');
-          
+
           setTimeout(() => {
             router.replace(window.location.pathname, { scroll: false });
           }, 100);
@@ -129,7 +135,11 @@ export function RecoveryModal() {
         const res = await fetch('/api/auth/recover/update', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username: user?.username, newPassword, newRecoveryPhrase }),
+          body: JSON.stringify({
+            username: user?.username,
+            newPassword,
+            newRecoveryPhrase,
+          }),
         });
         const data = await res.json();
         if (data.success) {
@@ -139,7 +149,7 @@ export function RecoveryModal() {
           setNewPassword('');
           setNewRecoveryPhrase('');
           setError('');
-          
+
           setTimeout(() => {
             router.replace(window.location.pathname, { scroll: false });
           }, 100);
@@ -160,7 +170,9 @@ export function RecoveryModal() {
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>{isRecovery ? 'Reset Credentials' : 'Secure Your Account'}</DialogTitle>
+          <DialogTitle>
+            {isRecovery ? 'Reset Credentials' : 'Secure Your Account'}
+          </DialogTitle>
           <DialogDescription>
             {isRecovery
               ? 'You have successfully verified your identity. Please set a new password and a new recovery phrase to complete the process.'
@@ -168,24 +180,48 @@ export function RecoveryModal() {
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 py-4">
-          {error && <Alert variant="destructive"><AlertDescription>{error}</AlertDescription></Alert>}
-          
+          {error && (
+            <Alert variant="destructive">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+
           {isRecovery && (
             <div className="space-y-2">
               <label className="text-sm font-medium">New Password</label>
-              <Input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="••••••••" required />
+              <Input
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="••••••••"
+                required
+              />
             </div>
           )}
-          
+
           <div className="space-y-2">
-            <label className="text-sm font-medium">{isRecovery ? 'New Recovery Phrase' : 'Recovery Phrase'}</label>
-            <Input value={newRecoveryPhrase} onChange={(e) => setNewRecoveryPhrase(e.target.value)} placeholder="e.g., french butter dragon" required />
-            <p className="text-xs text-muted-foreground">Make it memorable! You can use the same phrase as before if you wish.</p>
+            <label className="text-sm font-medium">
+              {isRecovery ? 'New Recovery Phrase' : 'Recovery Phrase'}
+            </label>
+            <Input
+              value={newRecoveryPhrase}
+              onChange={(e) => setNewRecoveryPhrase(e.target.value)}
+              placeholder="e.g., french butter dragon"
+              required
+            />
+            <p className="text-xs text-muted-foreground">
+              Make it memorable! You can use the same phrase as before if you
+              wish.
+            </p>
           </div>
-          
+
           <DialogFooter>
             <Button type="submit" disabled={isLoading}>
-              {isLoading ? 'Saving...' : (isRecovery ? 'Save & Continue' : 'Save Phrase')}
+              {isLoading
+                ? 'Saving...'
+                : isRecovery
+                  ? 'Save & Continue'
+                  : 'Save Phrase'}
             </Button>
           </DialogFooter>
         </form>
