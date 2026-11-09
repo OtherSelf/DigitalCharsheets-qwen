@@ -57,11 +57,35 @@ test.describe('гостевая шапка (главная и /login)', () => {
       );
     }
 
-    // Язык переводит подпись кнопки входа в шапке.
+    // Кнопка входа — самый правый элемент: её ширина не должна менять
+    // положение иконок (вид, язык, тема) при смене языка.
+    const themeToggle = header.getByRole('button', {
+      name: /toggle theme|переключить тему/i,
+    });
+    const themeBoxBefore = await themeToggle.boundingBox();
+    expect(themeBoxBefore, 'кнопка темы должна быть видна').not.toBeNull();
+
+    // Язык переводит подпись кнопки входа и сам демо-лендинг.
     await header.getByRole('button', { name: 'EN', exact: true }).click();
     await expect(
       header.getByRole('link', { name: 'Вход / Регистрация' }),
     ).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: 'Попробуйте без регистрации' }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole('link', { name: 'Начать создание персонажа' }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: 'Предпросмотр персонажа D&D 5e' }),
+    ).toBeVisible();
+
+    const themeBoxAfter = await themeToggle.boundingBox();
+    expect(themeBoxAfter, 'кнопка темы должна остаться видимой').not.toBeNull();
+    expect(
+      Math.abs(themeBoxAfter!.x - themeBoxBefore!.x),
+      'иконки перед кнопкой входа не должны сдвигаться при смене языка',
+    ).toBeLessThanOrEqual(1);
 
     // Тема переключается через то же меню, что и в приложении.
     await header.getByRole('button', { name: /переключить тему/i }).click();

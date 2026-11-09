@@ -234,6 +234,26 @@ test.describe('общие страницы', () => {
     await screenshotPage(page, 'dashboard-guest-en.png');
   });
 
+  test('dashboard — гостевая демо-страница (ru)', async ({ page, context }) => {
+    await prepare(context, { authenticated: false, language: 'ru' });
+    await openApp(page, '/');
+
+    // Гостевая главная переведена: лендинг и кнопка входа по-русски.
+    await expect(
+      page.getByRole('heading', { name: 'Попробуйте без регистрации' }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: 'Предпросмотр персонажа D&D 5e' }),
+    ).toBeVisible();
+    await expect(
+      page
+        .getByTestId('guest-header')
+        .getByRole('link', { name: 'Вход / Регистрация' }),
+    ).toBeVisible();
+
+    await screenshotPage(page, 'dashboard-guest-ru.png');
+  });
+
   test('new — выбор системы (en)', async ({ page, context }) => {
     await prepare(context);
     await openApp(page, '/new');
@@ -367,9 +387,10 @@ test.describe('общие страницы', () => {
 /**
  * Демо-лендинг и профиль пользователя.
  *
- * /demo пока не локализован (тексты захардкожены по-английски), поэтому
- * снимается только en — как и у /login. Русская версия проверяется
- * функционально в basic-pages.spec.ts (нет JS-ошибок/скролла).
+ * Гостевая главная и /demo используют общий компонент DemoLanding, поэтому
+ * базовый лендинг снимается на en и ru. Превью листов внутри демо
+ * (demo-dnd, demo-dh) остаются только en: сами листы уже покрыты на обоих
+ * языках в sheet:dnd / sheet:dh.
  */
 test.describe('демо и настройки профиля', () => {
   test('demo — превью персонажей (en)', async ({ page, context }) => {
@@ -395,6 +416,17 @@ test.describe('демо и настройки профиля', () => {
     await expect(page.getByText('Demo Mode Active')).toBeVisible();
     await expect(page.getByText('Inquisitor Vane').first()).toBeVisible();
     await screenshotPage(page, 'demo-dh-en.png');
+  });
+
+  test('demo — превью персонажей (ru)', async ({ page, context }) => {
+    await prepare(context, { authenticated: false, language: 'ru' });
+    await openApp(page, '/demo');
+
+    await expect(
+      page.getByRole('heading', { name: 'Попробуйте без регистрации' }),
+    ).toBeVisible();
+    await expect(page.getByText('Создайте своего персонажа')).toBeVisible();
+    await screenshotPage(page, 'demo-ru.png');
   });
 
   test('settings — профиль и отображение (en)', async ({ page, context }) => {

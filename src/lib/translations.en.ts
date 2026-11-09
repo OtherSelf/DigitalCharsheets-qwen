@@ -1124,5 +1124,22 @@ export const enTranslations = {
   authPhraseMismatch: 'Recovery phrase does not match.',
   authWordNotFound:
     'The word "{word}" was not found in any of your character sheets.',
+  // ─── / (гость) и /demo: демо-лендинг ─────────────────────────────────────
+  demoHeroTitle: 'Try Before You Commit',
+  demoHeroSubtitle:
+    "Explore our digital character sheets for D&D 5e and Dark Heresy. Create a new character or preview a pre-made sheet. When you're ready to save your progress, simply create an account!",
+  demoCreateCardTitle: 'Create Your Own Character',
+  demoCreateCardDesc:
+    'Start building your hero from scratch. Your progress will be saved locally, and you can create an account at the end to keep it forever.',
+  demoCreateCardAction: 'Start Character Creation',
+  demoExploreCardTitle: 'Explore Pre-made Sheets',
+  demoExploreCardDesc:
+    'Interact with a fully populated demo character sheet to see how the system works. Create an account to save changes or make your own.',
+  demoPreviewDnd: 'Preview D&D 5e Character',
+  demoPreviewDh: 'Preview Dark Heresy Character',
+  demoModeActive: 'Demo Mode Active',
+  demoModeHint:
+    'You are viewing a preview of {name}. Changes made here are temporary until you create an account.',
+  demoCreateAccountToSave: 'Create Account to Save',
 };
 // ─── LANDMARK: TRANSLATIONS_EN_END ───
