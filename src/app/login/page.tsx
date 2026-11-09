@@ -27,6 +27,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { useTranslation } from '@/context/language-context';
 import { useLocalAuth } from '@/context/local-auth-context';
+import { PENDING_CHARACTER_KEY } from '@/lib/pending-draft';
 
 type AuthMode = 'login' | 'register' | 'recover';
 
@@ -67,14 +68,9 @@ export default function LoginPage() {
     isNewUser?: boolean;
     user?: { hasRecoveryPhrase?: boolean };
   }) => {
-    // LANDMARK: Early return if CharacterProvider is handling a pending character
-    if (
-      typeof window !== 'undefined' &&
-      sessionStorage.getItem('pending_character')
-    ) {
-      return;
-    }
-
+    // Вход в существующий аккаунт: гостевой черновик персонажа НЕ создаётся
+    // автоматически (CharacterProvider оставит его плашкой на дашборде),
+    // поэтому здесь обычный переход на главную.
     if (result.isNewUser || !result.user?.hasRecoveryPhrase) {
       router.push('/?setup_phrase=true');
     } else {
@@ -190,10 +186,11 @@ export default function LoginPage() {
 
     if (result.success) {
       // Если CharacterProvider уже создаёт отложенного персонажа — не мешаем
-      // ему навигацией (та же логика, что в afterSuccessfulLogin).
+      // ему навигацией: черновик гостя при регистрации превращается в лист,
+      // и открывать его должен провайдер, а не страница логина.
       if (
         typeof window !== 'undefined' &&
-        sessionStorage.getItem('pending_character')
+        sessionStorage.getItem(PENDING_CHARACTER_KEY)
       ) {
         return;
       }

@@ -4,7 +4,7 @@
 
 import Link from 'next/link';
 
-import { FileDown, PlusCircle, Settings2 } from 'lucide-react';
+import { FileDown, PlusCircle, Scroll, Settings2 } from 'lucide-react';
 
 import { CharacterCard } from '@/components/characters/character-card';
 import { DemoLanding } from '@/components/demo-landing';
@@ -12,6 +12,7 @@ import { DynamicFavicon } from '@/components/dynamic-favicon';
 import { Header } from '@/components/header';
 import { ImportCharacterDialog } from '@/components/import-character-dialog';
 import { GuestHeader } from '@/components/layout/guest-header';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -57,7 +58,14 @@ function DemoLandingView() {
 
 // 🎯 LANDMARK: MAIN_DASHBOARD_PAGE
 export default function DashboardPage() {
-  const { characters, isLoaded, isCompactView } = useCharacterContext();
+  const {
+    characters,
+    isLoaded,
+    isCompactView,
+    pendingDraft,
+    createPendingDraft,
+    discardPendingDraft,
+  } = useCharacterContext();
   const { user, isUserLoading } = useLocalAuth();
   const { t } = useTranslation();
 
@@ -118,6 +126,50 @@ export default function DashboardPage() {
         />
 
         <main className="safe-area-bottom flex-1 overflow-y-auto p-3 sm:p-4 md:p-6 lg:p-8">
+          {/* 🎯 LANDMARK: PENDING_DRAFT_BANNER
+              Персонаж, начерченный гостем до входа, не создаётся автоматически
+              в существующем аккаунте: он ждёт здесь явного решения. Иначе после
+              входа список выглядел так, будто старые листы потерялись. */}
+          {pendingDraft && (
+            <Alert
+              className="mb-6 border-primary/30 bg-primary/5"
+              data-testid="pending-draft"
+            >
+              <Scroll className="h-4 w-4 text-primary" />
+              <AlertDescription className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div className="min-w-0">
+                  <p className="font-medium text-foreground">
+                    {t('pendingDraftTitle')}
+                  </p>
+                  <p className="text-muted-foreground">
+                    {t('pendingDraftDesc').replace(
+                      '{name}',
+                      pendingDraft.name || '—',
+                    )}
+                  </p>
+                </div>
+                <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
+                  <Button
+                    size="sm"
+                    onClick={createPendingDraft}
+                    data-testid="pending-draft-create"
+                  >
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    {t('pendingDraftCreate')}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={discardPendingDraft}
+                    data-testid="pending-draft-discard"
+                  >
+                    {t('pendingDraftDiscard')}
+                  </Button>
+                </div>
+              </AlertDescription>
+            </Alert>
+          )}
+
           <div className="mb-6 flex flex-col gap-4 sm:mb-8">
             <div className="flex flex-col gap-2">
               <h1 className="font-headline text-2xl font-bold sm:text-3xl">

@@ -186,6 +186,11 @@ export const enTranslations = {
   savePhrase: 'Save Phrase',
   characterCreatedTitle: 'Character Created!',
   characterCreatedDesc: 'Your new Dungeons & Dragons character has been saved.',
+  pendingDraftTitle: 'Unfinished character draft',
+  pendingDraftDesc:
+    'The draft “{name}” was made before you signed in. It is not in this account yet.',
+  pendingDraftCreate: 'Create character',
+  pendingDraftDiscard: 'Discard draft',
   dndCharacterDetails: 'Dungeons & Dragons Character Details',
   basicInformation: 'Basic Information',
   levelAutoCalculated: 'Level (Auto-calculated)',
