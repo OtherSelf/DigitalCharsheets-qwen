@@ -75,7 +75,7 @@ interface LocalAuthContextType {
    */
   deleteAccount: (password: string) => Promise<LoginResult>;
   logout: () => void;
-  restoreSession: (user: LocalUser) => void; // 🆕 LANDMARK: used by recovery flow
+  restoreSession: (user: LocalUser) => void; // LANDMARK: used by recovery flow
   updateUserPhrase: (hasPhrase: boolean) => void;
 }
 
@@ -94,7 +94,7 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
     setIsUserLoading(false);
   }, []);
 
-  // 🆕 LANDMARK: single source of truth for persisting + setting the session
+  // LANDMARK: single source of truth for persisting + setting the session
   const restoreSession = useCallback((nextUser: LocalUser) => {
     setLocalUser(nextUser);
     setUser(nextUser);

@@ -28,7 +28,7 @@ export function UserNav() {
   const { t } = useTranslation();
   const pathname = usePathname();
 
-  // 🎯 LANDMARK: DISPLAY_SETTINGS_MODAL_STATE
+  // LANDMARK: DISPLAY_SETTINGS_MODAL_STATE
   const [isDisplaySettingsOpen, setIsDisplaySettingsOpen] = useState(false);
 
   if (isUserLoading) return <Skeleton className="h-9 w-9 rounded-full" />;
@@ -54,7 +54,7 @@ export function UserNav() {
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          {/* 🎯 LANDMARK: USER_NAV_TRIGGER_BUTTON */}
+          {/* LANDMARK: USER_NAV_TRIGGER_BUTTON */}
           <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full">
             <CircleUserRound className="h-6 w-6" />
             <span className="sr-only">
@@ -73,7 +73,7 @@ export function UserNav() {
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
 
-          {/* 🎯 LANDMARK: DISPLAY_SETTINGS_MENU_ITEM */}
+          {/* LANDMARK: DISPLAY_SETTINGS_MENU_ITEM */}
           <DropdownMenuItem
             onClick={() => {
               // FIX: Defer opening the dialog by 50ms.
@@ -90,7 +90,7 @@ export function UserNav() {
             <span>{t('displaySettings') || 'Display Settings'}</span>
           </DropdownMenuItem>
 
-          {/* 🎯 LANDMARK: SETTINGS_MENU_ITEM */}
+          {/* LANDMARK: SETTINGS_MENU_ITEM */}
           <DropdownMenuItem asChild>
             <Link
               href={settingsHref}
@@ -108,7 +108,7 @@ export function UserNav() {
         </DropdownMenuContent>
       </DropdownMenu>
 
-      {/* 🎯 LANDMARK: DISPLAY_SETTINGS_MODAL_RENDER */}
+      {/* LANDMARK: DISPLAY_SETTINGS_MODAL_RENDER */}
       <DisplaySettingsModal
         open={isDisplaySettingsOpen}
         onOpenChange={setIsDisplaySettingsOpen}

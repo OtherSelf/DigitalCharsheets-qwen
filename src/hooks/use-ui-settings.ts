@@ -3,7 +3,7 @@
 
 import { useSyncExternalStore } from 'react';
 
-// 🎯 LANDMARK: UI_SETTINGS_LIMITS
+// LANDMARK: UI_SETTINGS_LIMITS
 const MIN_TEXT_SCALE = 0.67; // 8pt floor relative to the 12pt (16px) default
 const MAX_TEXT_SCALE = 2.0;
 const MIN_UI_SCALE = 0.5;

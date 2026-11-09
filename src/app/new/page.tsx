@@ -34,9 +34,9 @@ export default function ManualCharacterCreationPage() {
     <div className="flex h-dvh flex-col">
       <Header />
 
-      {/* 🎯 LANDMARK: MOBILE_PADDING_FIX - Reduced padding on mobile (p-3) */}
+      {/* LANDMARK: MOBILE_PADDING_FIX - Reduced padding on mobile (p-3) */}
       <main className="safe-area-bottom flex-1 overflow-y-auto p-3 sm:p-4 md:p-6 lg:p-8">
-        {/* 🎯 LANDMARK: MOBILE_HEADER_LAYOUT - Stacked on mobile, side-by-side on desktop */}
+        {/* LANDMARK: MOBILE_HEADER_LAYOUT - Stacked on mobile, side-by-side on desktop */}
         <div className="mb-6 flex flex-col justify-between gap-4 sm:mb-8 sm:flex-row sm:items-center">
           <div className="flex flex-col gap-1">
             <h1 className="font-headline text-2xl font-bold tracking-tight sm:text-3xl">

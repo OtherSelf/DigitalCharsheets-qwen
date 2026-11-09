@@ -519,7 +519,7 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
 
   const updateCharacter = useCallback(
     (id: string, data: Partial<Character>) => {
-      // 🎯 LANDMARK: DEMO_UNREGISTERED_SAVE - Prompt unregistered users to create an account
+      // LANDMARK: DEMO_UNREGISTERED_SAVE - Prompt unregistered users to create an account
       if (!user) {
         if (typeof window !== 'undefined') {
           sessionStorage.setItem(

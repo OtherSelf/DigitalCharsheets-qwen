@@ -460,7 +460,7 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
           )}
         >
           <div className="sheet-top-row flex flex-col items-stretch gap-6 md:flex-row">
-            {/* 🎯 MULTICLASS REQUIREMENTS LANDMARK: Added stats={stats} prop here */}
+            {/* MULTICLASS REQUIREMENTS LANDMARK: Added stats={stats} prop here */}
             <DndProgressionSection
               progressionData={progressionData}
               setProgressionData={setProgressionData}

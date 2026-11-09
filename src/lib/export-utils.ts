@@ -911,7 +911,7 @@ export const mergeImportedData = (
   return merged as Character;
 };
 
-// 🎯 LANDMARK: COMPREHENSIVE_USER_FRIENDLY_EXCEL_EXPORT
+// LANDMARK: COMPREHENSIVE_USER_FRIENDLY_EXCEL_EXPORT
 function buildCharacterSheetRows(
   character: Character,
   now = new Date(),
@@ -1256,7 +1256,7 @@ function buildCharacterSheetRows(
     addHeader('Talents');
     const talents = dh.talents || [];
     if (talents.length > 0) {
-      // 🎯 FIX: Separated Description and Notes into their own columns
+      // FIX: Separated Description and Notes into their own columns
       data.push(['    Talent Name', 'Description', 'Notes']);
       talents.forEach((t: any) => {
         if (typeof t === 'string') {

@@ -31,7 +31,7 @@ export default function ProfileSettingsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // 🎯 LANDMARK: BACK_NAVIGATION_LOGIC
+  // LANDMARK: BACK_NAVIGATION_LOGIC
   const from = searchParams.get('from');
   const backTarget = from && from.startsWith('/') ? from : '/';
   const isFromDashboard = backTarget === '/';
@@ -176,7 +176,7 @@ export default function ProfileSettingsPage() {
               </CardContent>
             </Card>
 
-            {/* 🎯 LANDMARK: DISPLAY_SETTINGS_CARD */}
+            {/* LANDMARK: DISPLAY_SETTINGS_CARD */}
             <Card>
               <CardHeader>
                 <CardTitle>
@@ -328,7 +328,7 @@ export default function ProfileSettingsPage() {
             </Card>
           </form>
 
-          {/* 🎯 LANDMARK: DANGER_ZONE_OUTSIDE_PROFILE_FORM
+          {/* LANDMARK: DANGER_ZONE_OUTSIDE_PROFILE_FORM
               Вне <form>: у карточки свой диалог со своей формой; вложенные
               формы недопустимы и сломали бы submit профиля. */}
           <DeleteAccountCard />

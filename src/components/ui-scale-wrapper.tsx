@@ -13,7 +13,7 @@ export function UIScaleWrapper({ children }: { children: ReactNode }) {
     const el = wrapperRef.current;
     if (!el) return;
 
-    // 🎯 LANDMARK: EMPTY_SPACE_FIX
+    // LANDMARK: EMPTY_SPACE_FIX
     const inverse = 100 / uiScale;
     el.style.transformOrigin = 'top left';
     el.style.transform = `scale(${uiScale})`;

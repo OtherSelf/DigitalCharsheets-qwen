@@ -366,7 +366,7 @@ export default function StatsEditorPage() {
 
   return (
     <div className="flex h-dvh flex-col">
-      {/* 🎯 LANDMARK: STATS_EDITOR_HEADER — та же шапка, что на остальных страницах.
+      {/* LANDMARK: STATS_EDITOR_HEADER — та же шапка, что на остальных страницах.
           Стрелка «назад» не нужна: бренд-ссылка ведёт домой, а редактор
           всегда открывается с дашборда. */}
       <Header title={t('bulkEditor')} subtitle={t('bulkEditorDesc')} />

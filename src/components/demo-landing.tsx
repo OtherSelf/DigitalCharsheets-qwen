@@ -25,7 +25,7 @@ import { type Character } from '@/lib/types';
  * словарей (en/ru), а отличаются только ссылкой «Начать создание персонажа».
  */
 
-// 🎯 LANDMARK: DEMO_MOCK_DATA_DND
+// LANDMARK: DEMO_MOCK_DATA_DND
 const demoDndCharacter: Character = {
   id: 'demo-dnd-1',
   userId: 'demo',
@@ -72,7 +72,7 @@ const demoDndCharacter: Character = {
   spells: [],
 } as Character;
 
-// 🎯 LANDMARK: DEMO_MOCK_DATA_DH
+// LANDMARK: DEMO_MOCK_DATA_DH
 const demoDhCharacter: Character = {
   id: 'demo-dh-1',
   userId: 'demo',
@@ -201,7 +201,7 @@ export function DemoLanding({ createHref = '/new' }: DemoLandingProps) {
 
   return (
     <>
-      {/* 🎯 LANDMARK: DEMO_HERO */}
+      {/* LANDMARK: DEMO_HERO */}
       <div className="mb-10 space-y-4 text-center">
         <h1 className="font-headline text-4xl font-bold tracking-tight">
           {t('demoHeroTitle')}
@@ -211,7 +211,7 @@ export function DemoLanding({ createHref = '/new' }: DemoLandingProps) {
         </p>
       </div>
 
-      {/* 🎯 LANDMARK: DEMO_ACTION_CARDS */}
+      {/* LANDMARK: DEMO_ACTION_CARDS */}
       <div className="mb-12 grid gap-6 md:grid-cols-2">
         <Card className="transition-colors hover:border-primary/50">
           <CardHeader>
@@ -260,7 +260,7 @@ export function DemoLanding({ createHref = '/new' }: DemoLandingProps) {
         </Card>
       </div>
 
-      {/* 🎯 LANDMARK: DEMO_SHEET_PREVIEW */}
+      {/* LANDMARK: DEMO_SHEET_PREVIEW */}
       {activeCharacter && (
         <div className="space-y-4 duration-500 animate-in fade-in slide-in-from-bottom-4">
           <div className="flex flex-col justify-between gap-4 rounded-lg border border-primary/20 bg-primary/10 p-4 sm:flex-row sm:items-center">

@@ -96,7 +96,7 @@ export default function CharacterPage() {
 
   return (
     <>
-      {/* 🎯 LANDMARK: DYNAMIC SHEET FAVICON INJECTION */}
+      {/* LANDMARK: DYNAMIC SHEET FAVICON INJECTION */}
 
       <DynamicFavicon gameSystem={character.gameSystem} />
 
