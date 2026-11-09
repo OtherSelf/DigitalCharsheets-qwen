@@ -39,6 +39,17 @@ export function UserNav() {
       </Button>
     );
 
+  // ─── LANDMARK: SETTINGS_BACK_TARGET ───
+  // С дашборда возврат и так ведёт на «/», поэтому `from` не нужен: URL
+  // остаётся чистым (/settings). С листа персонажа параметр сохраняем, чтобы
+  // стрелка «назад» вернула именно туда. Слэш в query не кодируем — строка
+  // читается как /settings?from=/<id>, без %2F. На самой /settings повторный
+  // переход из меню не должен делать `from=/settings`.
+  const settingsHref =
+    pathname && pathname !== '/' && pathname !== '/settings'
+      ? `/settings?from=${pathname}`
+      : '/settings';
+
   return (
     <>
       <DropdownMenu>
@@ -82,7 +93,7 @@ export function UserNav() {
           {/* 🎯 LANDMARK: SETTINGS_MENU_ITEM */}
           <DropdownMenuItem asChild>
             <Link
-              href={`/settings?from=${encodeURIComponent(pathname)}`}
+              href={settingsHref}
               className="flex w-full cursor-pointer items-center"
             >
               <Settings className="mr-2 h-4 w-4" />

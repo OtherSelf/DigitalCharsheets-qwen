@@ -65,7 +65,7 @@ async function openCreationForm(
   system: 'Dungeons & Dragons' | 'Dark Heresy',
 ): Promise<void> {
   await page.getByRole('link', { name: 'Create New Character' }).click();
-  await page.waitForURL(/\/new\/manual/, { timeout: 15_000 });
+  await page.waitForURL(/\/new$/, { timeout: 15_000 });
 
   // На странице выбора системы это единственный combobox.
   await page.getByRole('combobox').first().click();
@@ -202,9 +202,7 @@ test.describe('создание персонажа — D&D 5e', () => {
     await expect(
       page.getByText('Name must be at least 2 characters.'),
     ).toBeVisible();
-    expect(new URL(page.url()).pathname, 'остаёмся в форме').toBe(
-      '/new/manual',
-    );
+    expect(new URL(page.url()).pathname, 'остаёмся в форме').toBe('/new');
     expect(await fetchCharacters(page), 'лист не создан').toEqual([]);
   });
 });

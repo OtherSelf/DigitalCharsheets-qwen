@@ -5,25 +5,27 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 
 import {
+  ArrowLeft,
   BookText,
-  Home,
+  LogIn,
   Menu,
   Minus,
   Monitor,
   Plus,
   Scale,
   Scroll,
+  Shield,
   Smartphone,
 } from 'lucide-react';
 
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useCharacterContext } from '@/context/character-context';
 import { useTranslation } from '@/context/language-context';
+import { useLocalAuth } from '@/context/local-auth-context';
 import {
   DarkHeresyCharacter,
   DnD5eCharacter,
@@ -48,16 +50,50 @@ import {
 } from './ui/select';
 import { Separator } from './ui/separator';
 
+/**
+ * ─── LANDMARK: UNIFIED_HEADER ───────────────────────────────────────────────
+ * Одна шапка на всё приложение. Раньше их было три: `Header`, `GuestHeader`
+ * и самописные шапки на /settings и /stats-editor (последняя вообще без
+ * шапки). Из-за этого на каждом экране был свой набор кнопок, иконок и
+ * отступов.
+ *
+ * Теперь шапка адаптируется по контексту:
+ *   • бренд-ссылка «Digital Character Sheets» есть всегда;
+ *   • на листе персонажа рядом с брендом — имя и система;
+ *   • на служебных страницах — заголовок через `title`/`subtitle`;
+ *   • гость видит «Вход / Регистрация» (`authAction="login"`), на самой
+ *     /login кнопка скрыта (`authAction="none"`), в остальных случаях —
+ *     `UserNav` с меню профиля;
+ *   • `backHref` добавляет стрелку «назад» слева от бренда (нужна только
+ *     когда возврат ведёт не на главную — иначе бренд-ссылка уже домой).
+ */
 interface HeaderProps {
   onNotesClick?: () => void;
   onJournalClick?: () => void;
   mobileActions?: React.ReactNode;
+  /**
+   * Действие авторизации справа:
+   *   auto  — `UserNav` (для гостя сам покажет «Войти»);
+   *   login — для гостя «Вход / Регистрация» (широкая кнопка как раньше);
+   *   none  — для гостя ничего (страница /login, где кнопка лишняя).
+   */
+  authAction?: 'auto' | 'login' | 'none';
+  /** Заголовок страницы в шапке (настройки, массовый редактор). */
+  title?: string;
+  /** Подзаголовок страницы в шапке. */
+  subtitle?: string;
+  /** Куда ведёт стрелка «назад»; без неё остаётся только бренд-ссылка домой. */
+  backHref?: string;
 }
 
 export function Header({
   onNotesClick,
   onJournalClick,
   mobileActions,
+  authAction = 'auto',
+  title,
+  subtitle,
+  backHref,
 }: HeaderProps) {
   const {
     isCompactView,
@@ -73,6 +109,7 @@ export function Header({
     updateCharacter,
   } = useCharacterContext();
   const { t } = useTranslation();
+  const { user } = useLocalAuth();
   const params = useParams<{ id: string }>();
   const [isHouseRulesDialogOpen, setIsHouseRulesDialogOpen] = useState(false);
   const [character, setCharacter] = useState<Character | undefined>(undefined);
@@ -112,7 +149,6 @@ export function Header({
 
     const rankKey = `rank${rank.replace(/[^a-zA-Z]/g, '')}`;
     const classKey = `career${charClass.replace(/[^a-zA-Z]/g, '')}`;
-
     const translatedRank = t(rankKey) || rank;
     const translatedClass = t(classKey) || charClass;
     const translatedSystem = t('gameSystemDarkHeresy') || dh.gameSystem;
@@ -133,8 +169,58 @@ export function Header({
     }
   };
 
+  // Пока сессия не прочитана на клиенте, гостем считаем любого без user:
+  // страницы приложения сами показывают Loader до окончания загрузки.
+  const isGuest = !user;
+
+  // На листе персонажа слева уже есть имя и система, поэтому бренд остаётся
+  // только иконкой — иначе на планшете/десктопе он отжимает инструменты
+  // листа. На служебных страницах (настройки, редактор) текст бренда прячем
+  // только на телефоне: там рядом стоит заголовок страницы.
+  const brandTextClass = cn(
+    'truncate font-headline font-bold leading-tight',
+    character ? 'hidden' : title ? 'hidden text-base md:inline' : 'text-lg',
+  );
+
+  const compactLabel = isCompactView
+    ? t('switchToDefaultView')
+    : t('switchToCompactView');
+
+  const authControls =
+    authAction === 'login' ? (
+      isGuest ? (
+        /*
+          ─── LANDMARK: GUEST_LOGIN_STABLE_WIDTH ───
+          «Вход / Регистрация» и «Login / Register» разной длины. Кнопка
+          прижата к правому краю шапки, поэтому без фиксированной ширины
+          смена языка сдвигала все иконки слева от неё. min-w в em держит
+          слот одинаковым в обеих локалях и масштабируется вместе с текстом
+          (--text-scale), а justify-start закрепляет иконку у левого края.
+        */
+        <Button
+          variant="ghost"
+          asChild
+          className="sm:min-w-[15em] sm:justify-start"
+        >
+          <Link href="/login" aria-label={t('authLoginRegister')}>
+            <LogIn className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">{t('authLoginRegister')}</span>
+          </Link>
+        </Button>
+      ) : (
+        <UserNav />
+      )
+    ) : authAction === 'none' ? (
+      user ? (
+        <UserNav />
+      ) : null
+    ) : (
+      <UserNav />
+    );
+
   return (
     <header
+      data-testid={isGuest ? 'guest-header' : 'app-header'}
       className={cn(
         'app-header sticky top-0 z-50 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b bg-background/95 p-3 backdrop-blur supports-[backdrop-filter]:bg-background/60 md:p-4 xl:p-6',
         params.id && 'is-character-sheet',
@@ -142,12 +228,35 @@ export function Header({
     >
       {/* ─── LANDMARK: HEADER_IDENTITY ─── */}
       <div className="header-identity flex min-w-0 flex-1 items-center gap-2 md:gap-4">
-        <Link href="/" className="flex shrink-0 items-center gap-2">
-          <Home className="h-8 w-8 text-primary" />
+        {backHref && (
+          <Button
+            variant="ghost"
+            size="icon"
+            asChild
+            className="h-9 w-9 shrink-0"
+          >
+            <Link href={backHref} aria-label={t('back') || 'Back'}>
+              <ArrowLeft className="h-5 w-5" />
+            </Link>
+          </Button>
+        )}
+
+        <Link
+          href="/"
+          className="flex min-w-0 items-center gap-2"
+          aria-label={t('backToDashboard') || 'Back to Dashboard'}
+        >
+          <Shield className="h-6 w-6 shrink-0 text-primary" />
+          {/*
+            На широких экранах бренд виден всегда; на листе персонажа текст
+            скрыт (там важнее имя), на служебных страницах — скрыт только на
+            телефоне, где рядом стоит заголовок.
+          */}
+          <span className={brandTextClass}>Digital Character Sheets</span>
         </Link>
 
         {/* ─── LANDMARK: HEADER_IDENTITY_CHARACTER_INFO (Now visible in Compact View with responsive sizing) ─── */}
-        {character && (
+        {character ? (
           <>
             <Separator
               orientation="vertical"
@@ -166,7 +275,24 @@ export function Header({
               </p>
             </div>
           </>
-        )}
+        ) : title ? (
+          <>
+            <Separator
+              orientation="vertical"
+              className="hidden h-8 shrink-0 md:block"
+            />
+            <div className="flex min-w-0 flex-col gap-0">
+              <h1 className="truncate font-headline text-lg font-bold tracking-tight xl:text-xl">
+                {title}
+              </h1>
+              {subtitle && (
+                <p className="truncate text-xs text-muted-foreground xl:text-sm">
+                  {subtitle}
+                </p>
+              )}
+            </div>
+          </>
+        ) : null}
         {/* ─── END LANDMARK: HEADER_IDENTITY_CHARACTER_INFO ─── */}
 
         {character && character.gameSystem === 'Dungeons & Dragons' && (
@@ -352,23 +478,26 @@ export function Header({
             Иконки приложения: компактный вид, язык, тема, профиль. */}
         <div className="header-view-actions flex items-center gap-2">
           {!isSmallScreen && (
-            <Button variant="outline" size="icon" onClick={toggleCompactView}>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={toggleCompactView}
+              aria-label={compactLabel}
+              title={compactLabel}
+              data-testid={isGuest ? 'guest-compact-toggle' : undefined}
+            >
               {isCompactView ? (
                 <Monitor className="h-4 w-4" />
               ) : (
                 <Smartphone className="h-4 w-4" />
               )}
-              <span className="sr-only">
-                {isCompactView
-                  ? t('switchToDefaultView')
-                  : t('switchToCompactView')}
-              </span>
+              <span className="sr-only">{compactLabel}</span>
             </Button>
           )}
           {/* 🎯 LANDMARK: SMART_LANGUAGE_TOGGLE */}
           {(!character || !isCompactView) && <LanguageToggle />}
           <ThemeToggle />
-          <UserNav />
+          {authControls}
         </div>
       </div>
 

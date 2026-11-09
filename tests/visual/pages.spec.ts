@@ -435,10 +435,7 @@ test.describe('общие страницы', () => {
     await screenshotPage(page, 'new-dh-form-ru.png');
   });
 
-  test('new/manual — параллельный маршрут создания (en)', async ({
-    page,
-    context,
-  }) => {
+  test('new/manual — алиас /new (en)', async ({ page, context }) => {
     await prepare(context);
     await openApp(page, '/new/manual');
 

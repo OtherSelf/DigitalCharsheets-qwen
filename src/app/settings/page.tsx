@@ -5,18 +5,9 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
-import {
-  AlertCircle,
-  ArrowLeft,
-  Home,
-  Minus,
-  Plus,
-  RotateCcw,
-  Save,
-} from 'lucide-react';
+import { AlertCircle, Minus, Plus, RotateCcw, Save } from 'lucide-react';
 
-import { LanguageToggle } from '@/components/layout/language-toggle';
-import { ThemeToggle } from '@/components/layout/theme-toggle';
+import { Header } from '@/components/header';
 import { DeleteAccountCard } from '@/components/settings/delete-account-card';
 import { Button } from '@/components/ui/button';
 import {
@@ -122,36 +113,17 @@ export default function ProfileSettingsPage() {
   if (isUserLoading || !user || !isLoaded) return null;
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <header className="sticky top-0 z-50 flex items-center justify-between gap-4 border-b bg-background/95 p-4 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="flex items-center gap-4">
-          {/* 🎯 LANDMARK: SETTINGS_BACK_BUTTON */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => router.push(backTarget)}
-            aria-label={
-              isFromDashboard
-                ? t('backToDashboard') || 'Back to Dashboard'
-                : t('back') || 'Back'
-            }
-          >
-            {isFromDashboard ? (
-              <Home className="h-5 w-5" />
-            ) : (
-              <ArrowLeft className="h-5 w-5" />
-            )}
-          </Button>
-
-          <h1 className="font-headline text-xl font-bold">
-            {t('profileSettings') || 'Profile Settings'}
-          </h1>
-        </div>
-        <div className="flex items-center gap-2">
-          <LanguageToggle />
-          <ThemeToggle />
-        </div>
-      </header>
+    <div className="flex h-dvh flex-col">
+      {/*
+        Единая шапка приложения. Заголовок страницы теперь в ней, а не в
+        отдельной самописной шапке. Стрелка «назад» нужна только когда
+        возврат ведёт не на главную: если мы пришли с дашборда, бренд-ссылка
+        уже ведёт домой, и дублировать её иконкой незачем.
+      */}
+      <Header
+        title={t('profileSettings') || 'Profile Settings'}
+        backHref={!isFromDashboard ? backTarget : undefined}
+      />
 
       <main className="safe-area-bottom flex-1 overflow-y-auto p-4 md:p-8">
         <div className="mx-auto max-w-2xl space-y-6">
