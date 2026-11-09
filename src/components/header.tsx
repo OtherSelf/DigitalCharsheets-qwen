@@ -11,11 +11,20 @@ import {
   Plus,
   Scale,
   Menu,
+  Eye,
+  EyeOff,
+  Pencil,
+  PencilLine,
 } from 'lucide-react';
 import Link from 'next/link';
 import { UserNav } from './layout/user-nav';
 import { Button } from './ui/button';
-import { Checkbox } from './ui/checkbox';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { Label } from './ui/label';
 import { useParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
@@ -123,151 +132,227 @@ export function Header({ onNotesClick, onJournalClick, mobileActions }: HeaderPr
   };
 
   return (
-    <header className="app-header sticky top-0 z-50 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b bg-background/95 p-3 backdrop-blur supports-[backdrop-filter]:bg-background/60 md:p-4 xl:p-6">
-      {/* ─── LANDMARK: HEADER_IDENTITY ─── */}
-      <div className="header-identity flex min-w-0 flex-1 items-center gap-2 md:gap-4">
-        <Link href="/" className="flex shrink-0 items-center gap-2">
-          <Home className="h-8 w-8 text-primary" />
-        </Link>
+    <TooltipProvider>
+      <header className="app-header sticky top-0 z-50 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b bg-background/95 p-3 backdrop-blur supports-[backdrop-filter]:bg-background/60 md:p-4 xl:p-6">
         
-        {/* ─── LANDMARK: HEADER_IDENTITY_CHARACTER_INFO (Now visible in Compact View with responsive sizing) ─── */}
-        {character && (
-          <>
-            <Separator orientation="vertical" className="hidden h-8 shrink-0 md:block" />
-            <div className="flex min-w-0 flex-col gap-0">
-              <h2 className={`truncate font-headline font-bold tracking-tight ${isCompactView ? 'text-sm md:text-base lg:text-lg' : 'text-lg xl:text-xl'}`}>
-                {character.name}
-              </h2>
-              <p className={`truncate text-muted-foreground ${isCompactView ? 'text-[10px] md:text-xs' : 'text-xs xl:text-sm'}`}>
-                {getSubtitle(character)}
-              </p>
-            </div>
-          </>
-        )}
-        {/* ─── END LANDMARK: HEADER_IDENTITY_CHARACTER_INFO ─── */}
+        {/* ─── LANDMARK: HEADER_IDENTITY ─── */}
+        <div className="header-identity flex min-w-0 flex-1 items-center gap-2 md:gap-4">
+          <Link href="/" className="flex shrink-0 items-center gap-2">
+            <Home className="h-8 w-8 text-primary" />
+          </Link>
 
-        {character && character.gameSystem === 'Dungeons & Dragons' && (
-          <div className="flex shrink-0 items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-2 py-1 md:ml-2 md:px-3">
-            <span className="hidden text-[10px] font-bold uppercase tracking-widest text-primary sm:inline">
-              {t('inspiration')}
-            </span>
-            <div className="flex items-center gap-1">
-              <Button size="icon" variant="ghost" className="h-6 w-6 text-primary hover:bg-primary/20" onClick={() => handleInspirationChange(-1)}>
-                <Minus className="h-3 w-3" />
-              </Button>
-              <span className="min-w-[1rem] text-center text-sm font-black text-primary">
-                {(character as DnD5eCharacter).inspiration || '0'}
+          {/* ─── LANDMARK: HEADER_IDENTITY_CHARACTER_INFO ─── */}
+          {character && (
+            <>
+              <Separator orientation="vertical" className="hidden h-8 shrink-0 md:block" />
+              <div className="flex min-w-0 flex-col gap-0">
+                <h2
+                  className={`truncate font-headline font-bold tracking-tight ${
+                    isCompactView ? 'text-sm md:text-base lg:text-lg' : 'text-lg xl:text-xl'
+                  }`}
+                >
+                  {character.name}
+                </h2>
+                <p
+                  className={`truncate text-muted-foreground ${
+                    isCompactView ? 'text-[10px] md:text-xs' : 'text-xs xl:text-sm'
+                  }`}
+                >
+                  {getSubtitle(character)}
+                </p>
+              </div>
+            </>
+          )}
+          {/* ─── END LANDMARK: HEADER_IDENTITY_CHARACTER_INFO ─── */}
+
+          {character && character.gameSystem === 'Dungeons & Dragons' && (
+            <div className="flex shrink-0 items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-2 py-1 md:ml-2 md:px-3">
+              <span className="hidden text-[10px] font-bold uppercase tracking-widest text-primary sm:inline">
+                {t('inspiration')}
               </span>
-              <Button size="icon" variant="ghost" className="h-6 w-6 text-primary hover:bg-primary/20" onClick={() => handleInspirationChange(1)}>
-                <Plus className="h-3 w-3" />
-              </Button>
+              <div className="flex items-center gap-1">
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-6 w-6 text-primary hover:bg-primary/20"
+                  onClick={() => handleInspirationChange(-1)}
+                >
+                  <Minus className="h-3 w-3" />
+                </Button>
+                <span className="min-w-[1rem] text-center text-sm font-black text-primary">
+                  {(character as DnD5eCharacter).inspiration || '0'}
+                </span>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-6 w-6 text-primary hover:bg-primary/20"
+                  onClick={() => handleInspirationChange(1)}
+                >
+                  <Plus className="h-3 w-3" />
+                </Button>
+              </div>
+              {!isCompactView && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsHouseRulesDialogOpen(true)}
+                  className="h-7 px-2 xl:ml-2"
+                  aria-label={t('houseRules')}
+                >
+                  <Scale className="h-4 w-4 xl:mr-2" />
+                  <span className="hidden xl:inline">{t('houseRules')}</span>
+                </Button>
+              )}
             </div>
-            {!isCompactView && (
-              <Button variant="outline" size="sm" onClick={() => setIsHouseRulesDialogOpen(true)} className="h-7 px-2 xl:ml-2" aria-label={t('houseRules')}>
+          )}
+
+          {/* ─── LANDMARK: DH HEADER CONTROLS (House Rules + Edition) ─── */}
+          {character && character.gameSystem === 'Dark Heresy' && !isCompactView && (
+            <div className="flex shrink-0 items-center gap-2 md:gap-3 ml-2 border-l pl-2 md:pl-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsHouseRulesDialogOpen(true)}
+                className="h-7 px-2"
+                aria-label={t('houseRules')}
+              >
                 <Scale className="h-4 w-4 xl:mr-2" />
                 <span className="hidden xl:inline">{t('houseRules')}</span>
               </Button>
-            )}
-          </div>
-        )}
+              <div className="flex items-center gap-2">
+                <Label className="text-xs text-muted-foreground whitespace-nowrap hidden md:inline">
+                  Edition:
+                </Label>
+                <Select
+                  value={character.edition || '1st'}
+                  onValueChange={(value: '1st' | '2nd' | 'hybrid') =>
+                    updateCharacter(character.id, { edition: value })
+                  }
+                >
+                  <SelectTrigger
+                    className="h-7 w-[110px] text-xs"
+                    data-testid="dh-edition-select"
+                  >
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1st">1st Edition</SelectItem>
+                    <SelectItem value="2nd">2nd Edition</SelectItem>
+                    <SelectItem value="hybrid">Hybrid</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
+          {/* ─── END DH HEADER CONTROLS ─── */}
+        </div>
 
-        {/* ─── LANDMARK: DH HEADER CONTROLS (House Rules + Edition) ─── */}
-        {character && character.gameSystem === 'Dark Heresy' && !isCompactView && (
-          <div className="flex shrink-0 items-center gap-2 md:gap-3 ml-2 border-l pl-2 md:pl-4">
-            <Button variant="outline" size="sm" onClick={() => setIsHouseRulesDialogOpen(true)} className="h-7 px-2" aria-label={t('houseRules')}>
-              <Scale className="h-4 w-4 xl:mr-2" />
-              <span className="hidden xl:inline">{t('houseRules')}</span>
-            </Button>
+        {/* ─── LANDMARK: HEADER_PRIMARY_ACTIONS (Notes, Journal, Compact, Toggles) ─── */}
+        <div className="header-primary-actions flex flex-wrap items-center justify-end gap-2">
+          {mobileActions && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="icon" className="sm:hidden h-9 w-9">
+                  <Menu className="h-4 w-4" />
+                  <span className="sr-only">Open menu</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                {mobileActions}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+
+          {character && !isSmallScreen && (
             <div className="flex items-center gap-2">
-              <Label className="text-xs text-muted-foreground whitespace-nowrap hidden md:inline">Edition:</Label>
-              <Select
-                value={character.edition || '1st'}
-                onValueChange={(value: '1st' | '2nd' | 'hybrid') => updateCharacter(character.id, { edition: value })}
-              >
-                <SelectTrigger className="h-7 w-[110px] text-xs" data-testid="dh-edition-select">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="1st">1st Edition</SelectItem>
-                  <SelectItem value="2nd">2nd Edition</SelectItem>
-                  <SelectItem value="hybrid">Hybrid</SelectItem>
-                </SelectContent>
-              </Select>
+              {onNotesClick && (
+                <Button variant="outline" size="sm" onClick={onNotesClick} className="h-8">
+                  <BookText className="h-4 w-4 mr-2" />
+                  <span className="hidden sm:inline">{t('notes')}</span>
+                </Button>
+              )}
+              {onJournalClick && (
+                <Button variant="outline" size="sm" onClick={onJournalClick} className="h-8">
+                  <Scroll className="h-4 w-4 mr-2" />
+                  <span className="hidden sm:inline">{t('questJournalTitle')}</span>
+                </Button>
+              )}
             </div>
-          </div>
-        )}
-        {/* ─── END DH HEADER CONTROLS ─── */}
-      </div>
+          )}
 
-      {/* ─── LANDMARK: HEADER_ACTIONS ─── */}
-      <div className="header-actions flex flex-wrap items-center justify-end gap-2">
-        {/* 🎯 LANDMARK: MOBILE_ACTIONS_MENU - Only visible on mobile */}
-        {mobileActions && (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="icon" className="sm:hidden h-9 w-9">
-                <Menu className="h-4 w-4" />
-                <span className="sr-only">Open menu</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              {mobileActions}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )}
+          {!isSmallScreen && (
+            <Button variant="outline" size="icon" onClick={toggleCompactView}>
+              {isCompactView ? <Monitor className="h-4 w-4" /> : <Smartphone className="h-4 w-4" />}
+              <span className="sr-only">
+                {isCompactView ? t('switchToDefaultView') : t('switchToCompactView')}
+              </span>
+            </Button>
+          )}
 
-        {/* 🎯 LANDMARK: NOTES_AND_JOURNAL_BUTTONS - Visible on tablet and desktop */}
-        {character && !isSmallScreen && (
-          <div className="flex items-center gap-2">
-            {onNotesClick && (
-              <Button variant="outline" size="sm" onClick={onNotesClick} className="h-8">
-                <BookText className="h-4 w-4 mr-2" />
-                <span className="hidden sm:inline">{t('notes')}</span>
-              </Button>
-            )}
-            {onJournalClick && (
-              <Button variant="outline" size="sm" onClick={onJournalClick} className="h-8">
-                <Scroll className="h-4 w-4 mr-2" />
-                <span className="hidden sm:inline">{t('questJournalTitle')}</span>
-              </Button>
-            )}
-          </div>
-        )}
+          {character && !isSmallScreen && (
+            <div className="flex items-center gap-2 md:border-l md:border-r md:px-2">
+              <Tooltip delayDuration={0}>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant={hideNotes ? 'ghost' : 'secondary'}
+                    onClick={() => setHideNotes(!hideNotes)}
+                    aria-label={hideNotes ? t('showNotes') : t('hideNotes')}
+                    size="icon"
+                    className="h-8 w-8 md:h-9 md:w-9"
+                  >
+                    {hideNotes ? <EyeOff className="h-4 w-4 md:h-5 md:w-5" /> : <Eye className="h-4 w-4 md:h-5 md:w-5" />}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">
+                  <p>{hideNotes ? t('showNotes') : t('hideNotes')}</p>
+                </TooltipContent>
+              </Tooltip>
 
-        {!isSmallScreen && (
-          <Button variant="outline" size="icon" onClick={toggleCompactView}>
-            {isCompactView ? <Monitor className="h-4 w-4" /> : <Smartphone className="h-4 w-4" />}
-            <span className="sr-only">{isCompactView ? t('switchToDefaultView') : t('switchToCompactView')}</span>
-          </Button>
-        )}
-        {character && !isSmallScreen && (
-          <div className="flex items-center gap-2 md:gap-4 md:border-l md:border-r md:px-2">
-            <div className="flex items-center gap-1.5 md:gap-2">
-              <Checkbox id="hide-notes" checked={hideNotes} onCheckedChange={checked => setHideNotes(!!checked)} />
-              <Label htmlFor="hide-notes" className="cursor-pointer whitespace-nowrap text-[10px] md:text-xs">
-                {isTabletScreen ? t('notes') : (hideNotes ? t('showNotes') : t('hideNotes'))}
-              </Label>
+              <Tooltip delayDuration={0}>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant={showEditButtons ? 'secondary' : 'ghost'}
+                    onClick={() => setShowEditButtons(!showEditButtons)}
+                    aria-label={showEditButtons ? t('hideEditButtons') : t('showEditButtons')}
+                    size="icon"
+                    className="h-8 w-8 md:h-9 md:w-9"
+                  >
+                    {showEditButtons ? <Pencil className="h-4 w-4 md:h-5 md:w-5" /> : <PencilLine className="h-4 w-4 md:h-5 md:w-5" />}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">
+                  <p>{showEditButtons ? t('hideEditButtons') : t('showEditButtons')}</p>
+                </TooltipContent>
+              </Tooltip>
             </div>
-            <div className="flex items-center gap-1.5 md:gap-2">
-              <Checkbox id="show-edit-buttons" checked={showEditButtons} onCheckedChange={checked => setShowEditButtons(!!checked)} />
-              <Label htmlFor="show-edit-buttons" className="cursor-pointer whitespace-nowrap text-[10px] md:text-xs">
-                {isTabletScreen ? t('edit') : (showEditButtons ? t('hideEditButtons') : t('showEditButtons'))}
-              </Label>
-            </div>
-          </div>
-        )}
-        {/* 🎯 LANDMARK: SMART_LANGUAGE_TOGGLE */}
-        {(!character || !isCompactView) && <LanguageToggle />}
-        <ThemeToggle />
-        <UserNav />
-      </div>
+          )}
+        </div>
+        {/* ─── END LANDMARK: HEADER_PRIMARY_ACTIONS ─── */}
 
-      {character && character.gameSystem === 'Dungeons & Dragons' && (
-        <HouseRulesDialog open={isHouseRulesDialogOpen} onOpenChange={setIsHouseRulesDialogOpen} characterId={character.id} />
-      )}
-      {character && character.gameSystem === 'Dark Heresy' && (
-        <DhHouseRulesDialog open={isHouseRulesDialogOpen} onOpenChange={setIsHouseRulesDialogOpen} characterId={character.id} />
-      )}
-    </header>
+        {/* ─── LANDMARK: HEADER_SECONDARY_ACTIONS (Language, Theme, Profile) ─── */}
+        <div className="header-secondary-actions flex items-center gap-2">
+          {(!character || !isCompactView) && <LanguageToggle />}
+          <ThemeToggle />
+          <UserNav />
+        </div>
+        {/* ─── END LANDMARK: HEADER_SECONDARY_ACTIONS ─── */}
+
+        {character && character.gameSystem === 'Dungeons & Dragons' && (
+          <HouseRulesDialog
+            open={isHouseRulesDialogOpen}
+            onOpenChange={setIsHouseRulesDialogOpen}
+            characterId={character.id}
+          />
+        )}
+
+        {character && character.gameSystem === 'Dark Heresy' && (
+          <DhHouseRulesDialog
+            open={isHouseRulesDialogOpen}
+            onOpenChange={setIsHouseRulesDialogOpen}
+            characterId={character.id}
+          />
+        )}
+      </header>
+    </TooltipProvider>
   );
 }
