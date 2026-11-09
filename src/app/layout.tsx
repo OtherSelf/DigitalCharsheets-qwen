@@ -27,12 +27,12 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" suppressHydrationWarning className={`${inter.variable} ${spaceGrotesk.variable} h-full`}>
+    <html lang="en" suppressHydrationWarning className={`${inter.variable} ${spaceGrotesk.variable} h-full overflow-hidden`}>
       <head>
         <title>Digital Character Sheets</title>
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes" />
       </head>
-      <body className="h-full font-body antialiased overflow-x-hidden">
+      <body className="h-full font-body antialiased overflow-hidden">
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} themes={['light', 'dark', 'warm']} disableTransitionOnChange>
           <LocalAuthProvider>
             <LanguageProvider>

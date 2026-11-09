@@ -8,13 +8,13 @@ body {
 }
 
 /* ==========================================================================
-   LANDMARK: MOBILE_LAYOUT_FIX
-   Use dynamic viewport height and prevent text size adjustment
+LANDMARK: MOBILE_LAYOUT_FIX
+Use dynamic viewport height and prevent text size adjustment
 ========================================================================== */
 html, body {
-  height: 100vh;
-  height: 100dvh; /* Fallback for browsers that support it */
-  overflow: hidden;
+  min-height: 100vh;
+  min-height: 100dvh; /* Fallback for browsers that support it */
+  overflow-x: hidden; /* Allow vertical scrolling, prevent horizontal */
   margin: 0;
   padding: 0;
   -webkit-text-size-adjust: 100%;
@@ -22,9 +22,9 @@ html, body {
 }
 
 body > div:first-child {
-  height: 100vh;
-  height: 100dvh;
-  overflow: hidden;
+  min-height: 100vh;
+  min-height: 100dvh;
+  /* Removed overflow: hidden to allow natural vertical page scrolling */
 }
 
 @layer base {

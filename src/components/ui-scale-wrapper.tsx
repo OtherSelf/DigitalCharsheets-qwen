@@ -24,12 +24,17 @@ export function UIScaleWrapper({ children }: { children: ReactNode }) {
     <div
       ref={wrapperRef}
       data-ui-scale-wrapper=""
-      className="flex flex-col bg-background"
+      className="flex flex-col bg-background overflow-hidden"
       style={{
         willChange: 'transform',
         transformOrigin: 'top left',
         width: '100vw',
         height: '100dvh',
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
       }}
     >
       {children}

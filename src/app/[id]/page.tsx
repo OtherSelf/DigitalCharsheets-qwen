@@ -26,6 +26,7 @@ import { DynamicFavicon } from '@/components/dynamic-favicon';
 
 
 export default function CharacterPage() {
+  
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const { getCharacter, isLoaded, isCompactView, hasUnsavedChanges, setHasUnsavedChanges } = useCharacterContext();
@@ -35,6 +36,7 @@ export default function CharacterPage() {
   const [journalOpen, setJournalOpen] = useState(false);
   const [pendingSectionId, setPendingSectionId] = useState<string | null>(null);
   const sheetRef = useRef<any>(null);
+  const mainRef = useRef<HTMLElement>(null);
 
   const character = getCharacter(params.id);
 
@@ -43,6 +45,17 @@ export default function CharacterPage() {
       router.push('/');
     }
   }, [isLoaded, character, router]);
+
+  // 🎯 LANDMARK: LOCK_BODY_SCROLL - Prevents double scrollbar issue
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
+    
+    return () => {
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+    };
+  }, []);
 
   const performNavigation = (id: string) => {
     if (id === 'notes-section') {
@@ -74,14 +87,32 @@ export default function CharacterPage() {
     }
   };
 
-  useEffect(() => {
-    if (isCompactView && activeCompactSection !== 'info-section') {
-      const element = document.getElementById(activeCompactSection);
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
+// 🎯 LANDMARK: SCROLL_RESET_FIX - Resets ALL scroll positions before scrolling to new section
+useEffect(() => {
+  if (isCompactView && activeCompactSection !== 'info-section') {
+    // 1. Force the window/body to the top to prevent empty space
+    window.scrollTo(0, 0);
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+
+    // 2. Force the main container to the top
+    if (mainRef.current) {
+      mainRef.current.scrollTop = 0;
     }
-  }, [activeCompactSection, isCompactView]);
+
+    const element = document.getElementById(activeCompactSection);
+    if (element) {
+      // 3. Defer scrollIntoView to the next animation frame so the 
+      // DOM has fully settled after the scrollTop reset.
+      requestAnimationFrame(() => {
+        // 🎯 LANDMARK: FIX_SHORT_SECTION_SCROLL - Changed 'start' to 'nearest'
+        // 'start' forces short sections to the top, creating empty space below.
+        // 'nearest' only scrolls if needed and prevents empty space.
+        element.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      });
+    }
+  }
+}, [activeCompactSection, isCompactView]);
 
   if (!isLoaded || !character) {
     return <Loading />;
@@ -103,13 +134,14 @@ export default function CharacterPage() {
               onSectionChange={handleSectionChange} 
             />
           )}
-          <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-y-auto">
-            <CharacterSheet
-              ref={sheetRef}
-              character={character}
-              activeCompactSection={activeCompactSection}
-            />
-          </main>
+        {/* 🎯 LANDMARK: MAIN_SCROLL_CONTAINER - Fixed height to prevent empty space */}
+        <main ref={mainRef} className="flex-1 min-h-0 p-4 md:p-6 lg:p-8 overflow-y-auto">
+          <CharacterSheet
+            ref={sheetRef}
+            character={character}
+            activeCompactSection={activeCompactSection}
+          />
+        </main>
         </div>
         {character && (
           <>
