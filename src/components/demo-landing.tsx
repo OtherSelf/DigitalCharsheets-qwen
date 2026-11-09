@@ -179,11 +179,11 @@ const demoDhCharacter: Character = {
 } as Character;
 
 interface DemoLandingProps {
-  /** Куда ведёт «Начать создание персонажа» (у гостевой главной и /demo разное). */
+  /** Куда ведёт «Начать создание персонажа» (по умолчанию общий маршрут /new). */
   createHref?: string;
 }
 
-export function DemoLanding({ createHref = '/new/manual' }: DemoLandingProps) {
+export function DemoLanding({ createHref = '/new' }: DemoLandingProps) {
   const { t } = useTranslation();
   const [previewSystem, setPreviewSystem] = useState<
     'Dungeons & Dragons' | 'Dark Heresy' | null

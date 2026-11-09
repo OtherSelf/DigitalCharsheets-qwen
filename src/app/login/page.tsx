@@ -14,7 +14,7 @@ import {
   UserPlus,
 } from 'lucide-react';
 
-import { GuestHeader } from '@/components/layout/guest-header';
+import { Header } from '@/components/header';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
@@ -260,7 +260,8 @@ export default function LoginPage() {
 
   return (
     <div className="flex h-dvh flex-col bg-gradient-to-br from-background via-background to-primary/5">
-      <GuestHeader />
+      {/* Единая шапка; на самой /login кнопка входа не нужна. */}
+      <Header authAction="none" />
 
       <main className="safe-area-bottom flex flex-1 items-center justify-center overflow-y-auto p-4">
         <div className="w-full max-w-md py-6">

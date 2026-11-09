@@ -7,11 +7,10 @@ import Link from 'next/link';
 import { FileDown, PlusCircle, Scroll, Settings2 } from 'lucide-react';
 
 import { CharacterCard } from '@/components/characters/character-card';
-import { DemoLanding } from '@/components/demo-landing';
+import { DemoLandingView } from '@/components/demo-landing-view';
 import { DynamicFavicon } from '@/components/dynamic-favicon';
 import { Header } from '@/components/header';
 import { ImportCharacterDialog } from '@/components/import-character-dialog';
-import { GuestHeader } from '@/components/layout/guest-header';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
@@ -30,31 +29,6 @@ import { type Character } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
 import Loading from './loading';
-
-// 🎯 LANDMARK: DEMO_LANDING_VIEW_COMPONENT
-function DemoLandingView() {
-  return (
-    <>
-      {/* 🎯 LANDMARK: DEMO_SCROLL_OVERRIDE - Override body height constraint */}
-      <style jsx global>{`
-        html,
-        body {
-          height: auto !important;
-          overflow-y: auto !important;
-        }
-      `}</style>
-
-      <div className="bg-background">
-        {/* 🎯 LANDMARK: DEMO_HEADER → общая гостевая шапка с темой/языком/видом */}
-        <GuestHeader showLoginLink />
-
-        <main className="container mx-auto max-w-6xl px-4 py-8 pb-20">
-          <DemoLanding createHref="/new/manual" />
-        </main>
-      </div>
-    </>
-  );
-}
 
 // 🎯 LANDMARK: MAIN_DASHBOARD_PAGE
 export default function DashboardPage() {
@@ -228,7 +202,7 @@ export default function DashboardPage() {
                     asChild
                     className="flex h-16 w-full items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/30 bg-transparent p-0 text-muted-foreground transition-colors duration-200 hover:border-accent hover:bg-accent/10 hover:text-accent-foreground sm:h-20"
                   >
-                    <Link href="/new/manual">
+                    <Link href="/new">
                       <PlusCircle className="mr-3 h-6 w-6 sm:mr-4 sm:h-8 sm:w-8" />
                       <span className="text-sm font-semibold sm:text-base">
                         {t('createNew')}
@@ -241,7 +215,7 @@ export default function DashboardPage() {
                     asChild
                     className="flex h-full min-h-[180px] w-full flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/30 bg-transparent p-0 text-muted-foreground transition-colors duration-200 hover:border-accent hover:bg-accent/10 hover:text-accent-foreground sm:min-h-[200px]"
                   >
-                    <Link href="/new/manual">
+                    <Link href="/new">
                       <PlusCircle className="mb-2 h-10 w-10 sm:h-12 sm:w-12" />
                       <span className="text-sm font-semibold sm:text-base">
                         {t('createNew')}

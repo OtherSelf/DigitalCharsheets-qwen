@@ -3,8 +3,9 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-import { ArrowLeft, Check, Save } from 'lucide-react';
+import { Check, Save } from 'lucide-react';
 
+import { Header } from '@/components/header';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
@@ -364,480 +365,469 @@ export default function StatsEditorPage() {
   );
 
   return (
-    <div className="min-h-screen p-4 md:p-6 lg:p-8">
-      <div className="mx-auto max-w-7xl space-y-6">
-        {/* Header */}
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => router.push('/')}
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <div>
-              <h1 className="font-headline text-2xl font-bold">
-                {t('bulkEditor')}
-              </h1>
-              <p className="text-sm text-muted-foreground">
-                {t('bulkEditorDesc')}
-              </p>
-            </div>
-          </div>
-        </div>
+    <div className="flex h-dvh flex-col">
+      {/* 🎯 LANDMARK: STATS_EDITOR_HEADER — та же шапка, что на остальных страницах.
+          Стрелка «назад» не нужна: бренд-ссылка ведёт домой, а редактор
+          всегда открывается с дашборда. */}
+      <Header title={t('bulkEditor')} subtitle={t('bulkEditorDesc')} />
 
-        {/* Tab Bar */}
-        <div className="flex flex-wrap gap-2">
-          {tabButton('stats', t('statsTab'))}
-          {tabButton('dh-vitals', `${t('dhVitals')} (${dhVitalsEdits.length})`)}
-          {tabButton(
-            'dnd-vitals',
-            `${t('dndVitals')} (${dndVitalsEdits.length})`,
+      <main className="safe-area-bottom flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
+        <div className="mx-auto max-w-7xl space-y-6">
+          {/* Tab Bar */}
+          <div className="flex flex-wrap gap-2">
+            {tabButton('stats', t('statsTab'))}
+            {tabButton(
+              'dh-vitals',
+              `${t('dhVitals')} (${dhVitalsEdits.length})`,
+            )}
+            {tabButton(
+              'dnd-vitals',
+              `${t('dndVitals')} (${dndVitalsEdits.length})`,
+            )}
+          </div>
+
+          {/* Save Status */}
+          {saveStatus && (
+            <Alert>
+              <AlertDescription className="flex items-center gap-2">
+                <Check className="h-4 w-4 text-green-500" />
+                {saveStatus}
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {/* ─── STATS TAB ─────────────────────────────────────────── */}
+          {activeTab === 'stats' && (
+            <div className="space-y-6">
+              <div className="flex justify-end">
+                <Button onClick={handleSaveAllStats}>
+                  <Save className="mr-2 h-4 w-4" /> {t('saveAllStats')}
+                </Button>
+              </div>
+
+              {dhStats.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>
+                      {t('dhStats')} ({dhStats.length})
+                    </CardTitle>
+                    <CardDescription>{t('dhStatsDesc')}</CardDescription>
+                  </CardHeader>
+                  <CardContent className="overflow-x-auto">
+                    <div className="min-w-[900px] space-y-2">
+                      <div className="grid grid-cols-[180px_repeat(10,1fr)_60px] items-center gap-1 border-b pb-2 text-xs font-semibold text-muted-foreground">
+                        <span>{t('characterName')}</span>
+                        {DH_STATS.map((s) => (
+                          <span key={s.key} className="text-center">
+                            {t(s.labelKey)}
+                          </span>
+                        ))}
+                        <span></span>
+                      </div>
+                      {dhStats.map((char) => (
+                        <div
+                          key={char.id}
+                          className="grid grid-cols-[180px_repeat(10,1fr)_60px] items-center gap-1"
+                        >
+                          <span
+                            className="truncate text-sm font-medium"
+                            title={char.name}
+                          >
+                            {char.name}
+                          </span>
+                          {DH_STATS.map((s) => (
+                            <Input
+                              key={s.key}
+                              type="number"
+                              value={char.stats[s.key] || 0}
+                              onChange={(e) =>
+                                handleStatChange(char.id, s.key, e.target.value)
+                              }
+                              className="h-8 text-center text-sm"
+                              min={0}
+                              max={100}
+                            />
+                          ))}
+                          <Button
+                            size="sm"
+                            variant={char.saved ? 'outline' : 'default'}
+                            onClick={() => handleSaveStats(char.id)}
+                            className="h-8"
+                          >
+                            {char.saved ? (
+                              <Check className="h-4 w-4" />
+                            ) : (
+                              <Save className="h-4 w-4" />
+                            )}
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {dndStats.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>
+                      {t('dndStats')} ({dndStats.length})
+                    </CardTitle>
+                    <CardDescription>{t('dhStatsDesc')}</CardDescription>
+                  </CardHeader>
+                  <CardContent className="overflow-x-auto">
+                    <div className="min-w-[700px] space-y-2">
+                      <div className="grid grid-cols-[180px_repeat(6,1fr)_60px] items-center gap-1 border-b pb-2 text-xs font-semibold text-muted-foreground">
+                        <span>{t('characterName')}</span>
+                        {DND_STATS.map((s) => (
+                          <span key={s.key} className="text-center">
+                            {t(s.labelKey)}
+                          </span>
+                        ))}
+                        <span></span>
+                      </div>
+                      {dndStats.map((char) => (
+                        <div
+                          key={char.id}
+                          className="grid grid-cols-[180px_repeat(6,1fr)_60px] items-center gap-1"
+                        >
+                          <span
+                            className="truncate text-sm font-medium"
+                            title={char.name}
+                          >
+                            {char.name}
+                          </span>
+                          {DND_STATS.map((s) => (
+                            <Input
+                              key={s.key}
+                              type="number"
+                              value={char.stats[s.key] || 0}
+                              onChange={(e) =>
+                                handleStatChange(char.id, s.key, e.target.value)
+                              }
+                              className="h-8 text-center text-sm"
+                              min={0}
+                              max={30}
+                            />
+                          ))}
+                          <Button
+                            size="sm"
+                            variant={char.saved ? 'outline' : 'default'}
+                            onClick={() => handleSaveStats(char.id)}
+                            className="h-8"
+                          >
+                            {char.saved ? (
+                              <Check className="h-4 w-4" />
+                            ) : (
+                              <Save className="h-4 w-4" />
+                            )}
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          )}
+
+          {/* ─── DH VITALS TAB ─────────────────────────────────────── */}
+          {activeTab === 'dh-vitals' && (
+            <div className="space-y-6">
+              <div className="flex justify-end">
+                <Button onClick={handleSaveAllDHVitals}>
+                  <Save className="mr-2 h-4 w-4" /> {t('saveAllDhVitals')}
+                </Button>
+              </div>
+
+              {dhVitalsEdits.length > 0 ? (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>
+                      {t('dhVitals')} ({dhVitalsEdits.length})
+                    </CardTitle>
+                    <CardDescription>{t('dhVitalsDesc')}</CardDescription>
+                  </CardHeader>
+                  <CardContent className="overflow-x-auto">
+                    <div className="min-w-[800px] space-y-2">
+                      <div className="grid grid-cols-[180px_repeat(5,1fr)_60px] items-center gap-2 border-b pb-2 text-xs font-semibold text-muted-foreground">
+                        <span>{t('characterName')}</span>
+                        <span className="text-center">{t('woundsMax')}</span>
+                        <span className="text-center">{t('fateMax')}</span>
+                        <span className="text-center">{t('insanity')}</span>
+                        <span className="text-center">{t('corruption')}</span>
+                        <span className="text-center">{t('experience')}</span>
+                        <span></span>
+                      </div>
+                      {dhVitalsEdits.map((char) => (
+                        <div
+                          key={char.id}
+                          className="grid grid-cols-[180px_repeat(5,1fr)_60px] items-center gap-2"
+                        >
+                          <span
+                            className="truncate text-sm font-medium"
+                            title={char.name}
+                          >
+                            {char.name}
+                          </span>
+                          <Input
+                            type="number"
+                            value={char.wounds.max}
+                            onChange={(e) =>
+                              handleDHVitalChange(
+                                char.id,
+                                'wounds',
+                                'max',
+                                e.target.value,
+                              )
+                            }
+                            className="h-8 text-center text-sm"
+                            min={0}
+                          />
+                          <Input
+                            type="number"
+                            value={char.fatePoints.max}
+                            onChange={(e) =>
+                              handleDHVitalChange(
+                                char.id,
+                                'fatePoints',
+                                'max',
+                                e.target.value,
+                              )
+                            }
+                            className="h-8 text-center text-sm"
+                            min={0}
+                          />
+                          <Input
+                            type="number"
+                            value={char.insanityPoints.total}
+                            onChange={(e) =>
+                              handleDHVitalChange(
+                                char.id,
+                                'insanityPoints',
+                                'total',
+                                e.target.value,
+                              )
+                            }
+                            className="h-8 text-center text-sm"
+                            min={0}
+                          />
+                          <Input
+                            type="number"
+                            value={char.corruptionPoints.total}
+                            onChange={(e) =>
+                              handleDHVitalChange(
+                                char.id,
+                                'corruptionPoints',
+                                'total',
+                                e.target.value,
+                              )
+                            }
+                            className="h-8 text-center text-sm"
+                            min={0}
+                          />
+                          <Input
+                            type="number"
+                            value={char.experience}
+                            onChange={(e) =>
+                              handleDHVitalChange(
+                                char.id,
+                                'experience',
+                                null,
+                                e.target.value,
+                              )
+                            }
+                            className="h-8 text-center text-sm"
+                            min={0}
+                          />
+                          <Button
+                            size="sm"
+                            variant={char.saved ? 'outline' : 'default'}
+                            onClick={() => handleSaveDHVitals(char.id)}
+                            className="h-8"
+                          >
+                            {char.saved ? (
+                              <Check className="h-4 w-4" />
+                            ) : (
+                              <Save className="h-4 w-4" />
+                            )}
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : (
+                <Card>
+                  <CardContent className="py-12 text-center text-muted-foreground">
+                    {t('noDhCharacters')}
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          )}
+
+          {/* ─── DND VITALS TAB ────────────────────────────────────── */}
+          {activeTab === 'dnd-vitals' && (
+            <div className="space-y-6">
+              <div className="flex justify-end">
+                <Button onClick={handleSaveAllDnDVitals}>
+                  <Save className="mr-2 h-4 w-4" /> {t('saveAllDndVitals')}
+                </Button>
+              </div>
+
+              {dndVitalsEdits.length > 0 ? (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>
+                      {t('dndVitals')} ({dndVitalsEdits.length})
+                    </CardTitle>
+                    <CardDescription>{t('dndVitalsDesc')}</CardDescription>
+                  </CardHeader>
+                  <CardContent className="overflow-x-auto">
+                    <div className="min-w-[850px] space-y-2">
+                      <div className="grid grid-cols-[180px_70px_90px_70px_70px_100px_110px_60px] items-center gap-2 border-b pb-2 text-xs font-semibold text-muted-foreground">
+                        <span>{t('characterName')}</span>
+                        <span className="text-center">{t('level')}</span>
+                        <span className="text-center">{t('hpMax')}</span>
+                        <span className="text-center">{t('armorClass')}</span>
+                        <span className="text-center">{t('profShort')}</span>
+                        <span className="text-center">{t('speed')}</span>
+                        <span className="text-center">{t('experience')}</span>
+                        <span></span>
+                      </div>
+                      {dndVitalsEdits.map((char) => (
+                        <div
+                          key={char.id}
+                          className="grid grid-cols-[180px_70px_90px_70px_70px_100px_110px_60px] items-center gap-2"
+                        >
+                          <span
+                            className="truncate text-sm font-medium"
+                            title={char.name}
+                          >
+                            {char.name}
+                          </span>
+                          <Input
+                            type="number"
+                            value={char.level}
+                            onChange={(e) =>
+                              handleDnDVitalChange(
+                                char.id,
+                                'level',
+                                null,
+                                e.target.value,
+                              )
+                            }
+                            className="h-8 text-center text-sm"
+                            min={1}
+                            max={20}
+                          />
+                          <Input
+                            type="number"
+                            value={char.hitPoints.max}
+                            onChange={(e) =>
+                              handleDnDVitalChange(
+                                char.id,
+                                'hitPoints',
+                                'max',
+                                e.target.value,
+                              )
+                            }
+                            className="h-8 text-center text-sm"
+                            min={0}
+                          />
+                          <Input
+                            type="number"
+                            value={char.armorClass}
+                            onChange={(e) =>
+                              handleDnDVitalChange(
+                                char.id,
+                                'armorClass',
+                                null,
+                                e.target.value,
+                              )
+                            }
+                            className="h-8 text-center text-sm"
+                            min={0}
+                          />
+                          <Input
+                            type="number"
+                            value={char.proficiencyBonus}
+                            onChange={(e) =>
+                              handleDnDVitalChange(
+                                char.id,
+                                'proficiencyBonus',
+                                null,
+                                e.target.value,
+                              )
+                            }
+                            className="h-8 text-center text-sm"
+                            min={0}
+                          />
+                          <Input
+                            type="text"
+                            value={char.speed}
+                            onChange={(e) =>
+                              handleDnDVitalChange(
+                                char.id,
+                                'speed',
+                                null,
+                                e.target.value,
+                              )
+                            }
+                            className="h-8 text-center text-sm"
+                          />
+                          <Input
+                            type="number"
+                            value={char.experiencePoints}
+                            onChange={(e) =>
+                              handleDnDVitalChange(
+                                char.id,
+                                'experiencePoints',
+                                null,
+                                e.target.value,
+                              )
+                            }
+                            className="h-8 text-center text-sm"
+                            min={0}
+                          />
+                          <Button
+                            size="sm"
+                            variant={char.saved ? 'outline' : 'default'}
+                            onClick={() => handleSaveDnDVitals(char.id)}
+                            className="h-8"
+                          >
+                            {char.saved ? (
+                              <Check className="h-4 w-4" />
+                            ) : (
+                              <Save className="h-4 w-4" />
+                            )}
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : (
+                <Card>
+                  <CardContent className="py-12 text-center text-muted-foreground">
+                    {t('noDndCharacters')}
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          )}
+
+          {/* Empty state */}
+          {characters.length === 0 && (
+            <Card>
+              <CardContent className="py-12 text-center text-muted-foreground">
+                {t('noCharactersFound')}
+              </CardContent>
+            </Card>
           )}
         </div>
-
-        {/* Save Status */}
-        {saveStatus && (
-          <Alert>
-            <AlertDescription className="flex items-center gap-2">
-              <Check className="h-4 w-4 text-green-500" />
-              {saveStatus}
-            </AlertDescription>
-          </Alert>
-        )}
-
-        {/* ─── STATS TAB ─────────────────────────────────────────── */}
-        {activeTab === 'stats' && (
-          <div className="space-y-6">
-            <div className="flex justify-end">
-              <Button onClick={handleSaveAllStats}>
-                <Save className="mr-2 h-4 w-4" /> {t('saveAllStats')}
-              </Button>
-            </div>
-
-            {dhStats.length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>
-                    {t('dhStats')} ({dhStats.length})
-                  </CardTitle>
-                  <CardDescription>{t('dhStatsDesc')}</CardDescription>
-                </CardHeader>
-                <CardContent className="overflow-x-auto">
-                  <div className="min-w-[900px] space-y-2">
-                    <div className="grid grid-cols-[180px_repeat(10,1fr)_60px] items-center gap-1 border-b pb-2 text-xs font-semibold text-muted-foreground">
-                      <span>{t('characterName')}</span>
-                      {DH_STATS.map((s) => (
-                        <span key={s.key} className="text-center">
-                          {t(s.labelKey)}
-                        </span>
-                      ))}
-                      <span></span>
-                    </div>
-                    {dhStats.map((char) => (
-                      <div
-                        key={char.id}
-                        className="grid grid-cols-[180px_repeat(10,1fr)_60px] items-center gap-1"
-                      >
-                        <span
-                          className="truncate text-sm font-medium"
-                          title={char.name}
-                        >
-                          {char.name}
-                        </span>
-                        {DH_STATS.map((s) => (
-                          <Input
-                            key={s.key}
-                            type="number"
-                            value={char.stats[s.key] || 0}
-                            onChange={(e) =>
-                              handleStatChange(char.id, s.key, e.target.value)
-                            }
-                            className="h-8 text-center text-sm"
-                            min={0}
-                            max={100}
-                          />
-                        ))}
-                        <Button
-                          size="sm"
-                          variant={char.saved ? 'outline' : 'default'}
-                          onClick={() => handleSaveStats(char.id)}
-                          className="h-8"
-                        >
-                          {char.saved ? (
-                            <Check className="h-4 w-4" />
-                          ) : (
-                            <Save className="h-4 w-4" />
-                          )}
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {dndStats.length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>
-                    {t('dndStats')} ({dndStats.length})
-                  </CardTitle>
-                  <CardDescription>{t('dhStatsDesc')}</CardDescription>
-                </CardHeader>
-                <CardContent className="overflow-x-auto">
-                  <div className="min-w-[700px] space-y-2">
-                    <div className="grid grid-cols-[180px_repeat(6,1fr)_60px] items-center gap-1 border-b pb-2 text-xs font-semibold text-muted-foreground">
-                      <span>{t('characterName')}</span>
-                      {DND_STATS.map((s) => (
-                        <span key={s.key} className="text-center">
-                          {t(s.labelKey)}
-                        </span>
-                      ))}
-                      <span></span>
-                    </div>
-                    {dndStats.map((char) => (
-                      <div
-                        key={char.id}
-                        className="grid grid-cols-[180px_repeat(6,1fr)_60px] items-center gap-1"
-                      >
-                        <span
-                          className="truncate text-sm font-medium"
-                          title={char.name}
-                        >
-                          {char.name}
-                        </span>
-                        {DND_STATS.map((s) => (
-                          <Input
-                            key={s.key}
-                            type="number"
-                            value={char.stats[s.key] || 0}
-                            onChange={(e) =>
-                              handleStatChange(char.id, s.key, e.target.value)
-                            }
-                            className="h-8 text-center text-sm"
-                            min={0}
-                            max={30}
-                          />
-                        ))}
-                        <Button
-                          size="sm"
-                          variant={char.saved ? 'outline' : 'default'}
-                          onClick={() => handleSaveStats(char.id)}
-                          className="h-8"
-                        >
-                          {char.saved ? (
-                            <Check className="h-4 w-4" />
-                          ) : (
-                            <Save className="h-4 w-4" />
-                          )}
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-          </div>
-        )}
-
-        {/* ─── DH VITALS TAB ─────────────────────────────────────── */}
-        {activeTab === 'dh-vitals' && (
-          <div className="space-y-6">
-            <div className="flex justify-end">
-              <Button onClick={handleSaveAllDHVitals}>
-                <Save className="mr-2 h-4 w-4" /> {t('saveAllDhVitals')}
-              </Button>
-            </div>
-
-            {dhVitalsEdits.length > 0 ? (
-              <Card>
-                <CardHeader>
-                  <CardTitle>
-                    {t('dhVitals')} ({dhVitalsEdits.length})
-                  </CardTitle>
-                  <CardDescription>{t('dhVitalsDesc')}</CardDescription>
-                </CardHeader>
-                <CardContent className="overflow-x-auto">
-                  <div className="min-w-[800px] space-y-2">
-                    <div className="grid grid-cols-[180px_repeat(5,1fr)_60px] items-center gap-2 border-b pb-2 text-xs font-semibold text-muted-foreground">
-                      <span>{t('characterName')}</span>
-                      <span className="text-center">{t('woundsMax')}</span>
-                      <span className="text-center">{t('fateMax')}</span>
-                      <span className="text-center">{t('insanity')}</span>
-                      <span className="text-center">{t('corruption')}</span>
-                      <span className="text-center">{t('experience')}</span>
-                      <span></span>
-                    </div>
-                    {dhVitalsEdits.map((char) => (
-                      <div
-                        key={char.id}
-                        className="grid grid-cols-[180px_repeat(5,1fr)_60px] items-center gap-2"
-                      >
-                        <span
-                          className="truncate text-sm font-medium"
-                          title={char.name}
-                        >
-                          {char.name}
-                        </span>
-                        <Input
-                          type="number"
-                          value={char.wounds.max}
-                          onChange={(e) =>
-                            handleDHVitalChange(
-                              char.id,
-                              'wounds',
-                              'max',
-                              e.target.value,
-                            )
-                          }
-                          className="h-8 text-center text-sm"
-                          min={0}
-                        />
-                        <Input
-                          type="number"
-                          value={char.fatePoints.max}
-                          onChange={(e) =>
-                            handleDHVitalChange(
-                              char.id,
-                              'fatePoints',
-                              'max',
-                              e.target.value,
-                            )
-                          }
-                          className="h-8 text-center text-sm"
-                          min={0}
-                        />
-                        <Input
-                          type="number"
-                          value={char.insanityPoints.total}
-                          onChange={(e) =>
-                            handleDHVitalChange(
-                              char.id,
-                              'insanityPoints',
-                              'total',
-                              e.target.value,
-                            )
-                          }
-                          className="h-8 text-center text-sm"
-                          min={0}
-                        />
-                        <Input
-                          type="number"
-                          value={char.corruptionPoints.total}
-                          onChange={(e) =>
-                            handleDHVitalChange(
-                              char.id,
-                              'corruptionPoints',
-                              'total',
-                              e.target.value,
-                            )
-                          }
-                          className="h-8 text-center text-sm"
-                          min={0}
-                        />
-                        <Input
-                          type="number"
-                          value={char.experience}
-                          onChange={(e) =>
-                            handleDHVitalChange(
-                              char.id,
-                              'experience',
-                              null,
-                              e.target.value,
-                            )
-                          }
-                          className="h-8 text-center text-sm"
-                          min={0}
-                        />
-                        <Button
-                          size="sm"
-                          variant={char.saved ? 'outline' : 'default'}
-                          onClick={() => handleSaveDHVitals(char.id)}
-                          className="h-8"
-                        >
-                          {char.saved ? (
-                            <Check className="h-4 w-4" />
-                          ) : (
-                            <Save className="h-4 w-4" />
-                          )}
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            ) : (
-              <Card>
-                <CardContent className="py-12 text-center text-muted-foreground">
-                  {t('noDhCharacters')}
-                </CardContent>
-              </Card>
-            )}
-          </div>
-        )}
-
-        {/* ─── DND VITALS TAB ────────────────────────────────────── */}
-        {activeTab === 'dnd-vitals' && (
-          <div className="space-y-6">
-            <div className="flex justify-end">
-              <Button onClick={handleSaveAllDnDVitals}>
-                <Save className="mr-2 h-4 w-4" /> {t('saveAllDndVitals')}
-              </Button>
-            </div>
-
-            {dndVitalsEdits.length > 0 ? (
-              <Card>
-                <CardHeader>
-                  <CardTitle>
-                    {t('dndVitals')} ({dndVitalsEdits.length})
-                  </CardTitle>
-                  <CardDescription>{t('dndVitalsDesc')}</CardDescription>
-                </CardHeader>
-                <CardContent className="overflow-x-auto">
-                  <div className="min-w-[850px] space-y-2">
-                    <div className="grid grid-cols-[180px_70px_90px_70px_70px_100px_110px_60px] items-center gap-2 border-b pb-2 text-xs font-semibold text-muted-foreground">
-                      <span>{t('characterName')}</span>
-                      <span className="text-center">{t('level')}</span>
-                      <span className="text-center">{t('hpMax')}</span>
-                      <span className="text-center">{t('armorClass')}</span>
-                      <span className="text-center">{t('profShort')}</span>
-                      <span className="text-center">{t('speed')}</span>
-                      <span className="text-center">{t('experience')}</span>
-                      <span></span>
-                    </div>
-                    {dndVitalsEdits.map((char) => (
-                      <div
-                        key={char.id}
-                        className="grid grid-cols-[180px_70px_90px_70px_70px_100px_110px_60px] items-center gap-2"
-                      >
-                        <span
-                          className="truncate text-sm font-medium"
-                          title={char.name}
-                        >
-                          {char.name}
-                        </span>
-                        <Input
-                          type="number"
-                          value={char.level}
-                          onChange={(e) =>
-                            handleDnDVitalChange(
-                              char.id,
-                              'level',
-                              null,
-                              e.target.value,
-                            )
-                          }
-                          className="h-8 text-center text-sm"
-                          min={1}
-                          max={20}
-                        />
-                        <Input
-                          type="number"
-                          value={char.hitPoints.max}
-                          onChange={(e) =>
-                            handleDnDVitalChange(
-                              char.id,
-                              'hitPoints',
-                              'max',
-                              e.target.value,
-                            )
-                          }
-                          className="h-8 text-center text-sm"
-                          min={0}
-                        />
-                        <Input
-                          type="number"
-                          value={char.armorClass}
-                          onChange={(e) =>
-                            handleDnDVitalChange(
-                              char.id,
-                              'armorClass',
-                              null,
-                              e.target.value,
-                            )
-                          }
-                          className="h-8 text-center text-sm"
-                          min={0}
-                        />
-                        <Input
-                          type="number"
-                          value={char.proficiencyBonus}
-                          onChange={(e) =>
-                            handleDnDVitalChange(
-                              char.id,
-                              'proficiencyBonus',
-                              null,
-                              e.target.value,
-                            )
-                          }
-                          className="h-8 text-center text-sm"
-                          min={0}
-                        />
-                        <Input
-                          type="text"
-                          value={char.speed}
-                          onChange={(e) =>
-                            handleDnDVitalChange(
-                              char.id,
-                              'speed',
-                              null,
-                              e.target.value,
-                            )
-                          }
-                          className="h-8 text-center text-sm"
-                        />
-                        <Input
-                          type="number"
-                          value={char.experiencePoints}
-                          onChange={(e) =>
-                            handleDnDVitalChange(
-                              char.id,
-                              'experiencePoints',
-                              null,
-                              e.target.value,
-                            )
-                          }
-                          className="h-8 text-center text-sm"
-                          min={0}
-                        />
-                        <Button
-                          size="sm"
-                          variant={char.saved ? 'outline' : 'default'}
-                          onClick={() => handleSaveDnDVitals(char.id)}
-                          className="h-8"
-                        >
-                          {char.saved ? (
-                            <Check className="h-4 w-4" />
-                          ) : (
-                            <Save className="h-4 w-4" />
-                          )}
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            ) : (
-              <Card>
-                <CardContent className="py-12 text-center text-muted-foreground">
-                  {t('noDndCharacters')}
-                </CardContent>
-              </Card>
-            )}
-          </div>
-        )}
-
-        {/* Empty state */}
-        {characters.length === 0 && (
-          <Card>
-            <CardContent className="py-12 text-center text-muted-foreground">
-              {t('noCharactersFound')}
-            </CardContent>
-          </Card>
-        )}
-      </div>
+      </main>
     </div>
   );
 }

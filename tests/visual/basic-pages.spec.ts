@@ -268,6 +268,33 @@ test.describe('адаптивность', () => {
     }
   });
 
+  test('единая шапка: бренд на дашборде и чистый /settings из меню', async ({
+    page,
+    context,
+  }) => {
+    await prepare(context);
+    await openApp(page, '/');
+
+    // После входа шапка не пустая: рядом с иконкой есть название приложения.
+    const header = page.getByTestId('app-header');
+    await expect(header).toBeVisible();
+    await expect(
+      header.getByRole('link', { name: 'Back to Dashboard' }),
+    ).toContainText('Digital Character Sheets');
+
+    // «Настройки» из меню профиля: возврат ведёт на дашборд, поэтому
+    // ?from=%2F не нужен — URL остаётся чистым, шапка та же.
+    await header.getByRole('button', { name: 'Open user menu' }).click();
+    await page.getByRole('menuitem', { name: 'Settings', exact: true }).click();
+    await page.waitForURL((url) => url.pathname === '/settings');
+    expect(new URL(page.url()).search, 'без ?from для возврата на /').toBe('');
+
+    await expect(page.getByTestId('app-header')).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: 'Profile Settings' }),
+    ).toBeVisible();
+  });
+
   test('шапка: на планшете инструменты листа слева, иконки справа', async ({
     page,
     context,
