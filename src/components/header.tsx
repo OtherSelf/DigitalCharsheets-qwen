@@ -29,6 +29,7 @@ import {
   DnD5eCharacter,
   type Character,
 } from '@/lib/types';
+import { cn } from '@/lib/utils';
 
 import { LanguageToggle } from './layout/language-toggle';
 import { ThemeToggle } from './layout/theme-toggle';
@@ -133,7 +134,12 @@ export function Header({
   };
 
   return (
-    <header className="app-header sticky top-0 z-50 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b bg-background/95 p-3 backdrop-blur supports-[backdrop-filter]:bg-background/60 md:p-4 xl:p-6">
+    <header
+      className={cn(
+        'app-header sticky top-0 z-50 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b bg-background/95 p-3 backdrop-blur supports-[backdrop-filter]:bg-background/60 md:p-4 xl:p-6',
+        params.id && 'is-character-sheet',
+      )}
+    >
       {/* ─── LANDMARK: HEADER_IDENTITY ─── */}
       <div className="header-identity flex min-w-0 flex-1 items-center gap-2 md:gap-4">
         <Link href="/" className="flex shrink-0 items-center gap-2">
