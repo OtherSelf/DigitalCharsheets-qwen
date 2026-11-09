@@ -518,6 +518,89 @@ test.describe('адаптивность', () => {
       expect(box!.height, 'высота тач-цели').toBeGreaterThanOrEqual(32);
     }
   });
+
+  test('масштаб интерфейса ≠ 100%: корень не прокручивается', async ({
+    page,
+    context,
+  }) => {
+    test.skip(!isMobile(), 'мобильный компактный вид');
+
+    for (const scale of ['0.8', '1.25']) {
+      await prepare(context);
+      await context.addInitScript((value) => {
+        try {
+          localStorage.setItem('ui-scale', value);
+        } catch {
+          /* storage недоступен — не критично */
+        }
+      }, scale);
+      await openApp(page, `/${getState().dhId}`);
+      await page.waitForFunction(
+        (value) =>
+          getComputedStyle(document.documentElement)
+            .getPropertyValue('--ui-scale')
+            .trim() === value,
+        scale,
+      );
+
+      const header = page.locator('header.app-header');
+      const nav = page.getByRole('navigation');
+      const before = {
+        header: (await header.boundingBox())!.y,
+        headerX: (await header.boundingBox())!.x,
+        nav: (await nav.boundingBox())!.y,
+      };
+
+      // Переход между секциями — именно он вызывал scrollIntoView по корню.
+      await nav.getByRole('button', { name: 'Inventory', exact: true }).click();
+      await page.waitForTimeout(600);
+
+      // UIScaleWrapper раскладывается в 1/scale раз больше вьюпорта,
+      // поэтому body получает «лишнюю» высоту/ширину. overflow: clip
+      // на html/body не даёт корню сдвинуться — иначе шапка и левое
+      // меню уезжали вверх/вбок (баг «меню убегает»).
+      const root = await page.evaluate(() => ({
+        top: document.documentElement.scrollTop,
+        left: document.documentElement.scrollLeft,
+        bodyTop: document.body.scrollTop,
+        bodyLeft: document.body.scrollLeft,
+      }));
+      expect(root, `масштаб ${scale}: корень остаётся на месте`).toEqual({
+        top: 0,
+        left: 0,
+        bodyTop: 0,
+        bodyLeft: 0,
+      });
+      expect(
+        Math.abs((await header.boundingBox())!.y - before.header),
+        `масштаб ${scale}: шапка на месте`,
+      ).toBeLessThanOrEqual(1);
+      expect(
+        Math.abs((await nav.boundingBox())!.y - before.nav),
+        `масштаб ${scale}: левое меню на месте`,
+      ).toBeLessThanOrEqual(1);
+
+      // `expectNoHorizontalOverflow` здесь не годится: при масштабе ≠ 100%
+      // scrollWidth body намеренно больше вьюпорта (обёртка раскладывается
+      // в 1/scale раз крупнее и масштабируется трансформом). Проверяем то,
+      // что важно: «лишним» размером нельзя уехать ни вбок, ни вниз.
+      await page.mouse.move(200, 300);
+      await page.mouse.wheel(400, 0);
+      await page.waitForTimeout(300);
+      const shifted = await page.evaluate(() => ({
+        root: document.documentElement.scrollLeft,
+        body: document.body.scrollLeft,
+      }));
+      expect(shifted, 'горизонтально корень тоже не двигается').toEqual({
+        root: 0,
+        body: 0,
+      });
+      expect(
+        Math.abs((await header.boundingBox())!.x - before.headerX),
+        `масштаб ${scale}: шапка не сдвинулась вбок`,
+      ).toBeLessThanOrEqual(1);
+    }
+  });
 });
 
 /** Пара мелких проверок содержимого, которые не сводятся к пикселям. */

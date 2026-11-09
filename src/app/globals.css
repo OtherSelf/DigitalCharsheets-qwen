@@ -16,6 +16,20 @@ body {
   height: 100vh;
   height: 100dvh; /* Fallback for browsers that support it */
   overflow: hidden;
+  /*
+    LANDMARK: ROOT_SCROLL_LOCK
+    `overflow: hidden` запрещает скролл пользователю, но НЕ запрещает
+    программный: `element.scrollIntoView()` (переход между секциями листа)
+    по-прежнему может прокрутить body. Это видно при масштабе интерфейса
+    ≠ 100%: UIScaleWrapper раскладывается в 1/scale раз больше вьюпорта,
+    body получает scrollHeight/scrollWidth больше экрана, и после смены
+    секции шапка с левым меню уезжают вверх/вбок. `overflow: clip` не
+    создаёт скролл-контейнер вовсе, поэтому корень не сдвигается.
+    Поддержка: Chrome 90+, Firefox 81+, Safari 16+; старые браузеры
+    берут строку выше.
+  */
+  overflow: clip;
+  overscroll-behavior: none;
   margin: 0;
   padding: 0;
   -webkit-text-size-adjust: 100%;
@@ -26,6 +40,7 @@ body > div:first-child {
   height: 100vh;
   height: 100dvh;
   overflow: hidden;
+  overflow: clip;
 }
 
 @layer base {
