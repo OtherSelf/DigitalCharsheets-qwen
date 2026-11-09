@@ -7,10 +7,14 @@ import { useParams } from 'next/navigation';
 import {
   ArrowLeft,
   BookText,
+  Eye,
+  EyeOff,
   LogIn,
   Menu,
   Minus,
   Monitor,
+  Pencil,
+  PencilLine,
   Plus,
   Scale,
   Scroll,
@@ -39,7 +43,6 @@ import { UserNav } from './layout/user-nav';
 import { DhHouseRulesDialog } from './sheets/dh-sections/dh-house-rules-dialog';
 import { HouseRulesDialog } from './sheets/dnd-sections/house-rules-dialog';
 import { Button } from './ui/button';
-import { Checkbox } from './ui/checkbox';
 import { Label } from './ui/label';
 import {
   Select,
@@ -49,6 +52,12 @@ import {
   SelectValue,
 } from './ui/select';
 import { Separator } from './ui/separator';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from './ui/tooltip';
 
 /**
  * ─── LANDMARK: UNIFIED_HEADER ───────────────────────────────────────────────
@@ -98,7 +107,6 @@ export function Header({
   const {
     isCompactView,
     isSmallScreen,
-    isTabletScreen,
     toggleCompactView,
     getCharacter,
     isLoaded,
@@ -219,302 +227,337 @@ export function Header({
     );
 
   return (
-    <header
-      data-testid={isGuest ? 'guest-header' : 'app-header'}
-      className={cn(
-        'app-header sticky top-0 z-50 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b bg-background/95 p-3 backdrop-blur supports-[backdrop-filter]:bg-background/60 md:p-4 xl:p-6',
-        params.id && 'is-character-sheet',
-      )}
-    >
-      {/* ─── LANDMARK: HEADER_IDENTITY ─── */}
-      <div className="header-identity flex min-w-0 flex-1 items-center gap-2 md:gap-4">
-        {backHref && (
-          <Button
-            variant="ghost"
-            size="icon"
-            asChild
-            className="h-9 w-9 shrink-0"
-          >
-            <Link href={backHref} aria-label={t('back') || 'Back'}>
-              <ArrowLeft className="h-5 w-5" />
-            </Link>
-          </Button>
+    <TooltipProvider>
+      <header
+        data-testid={isGuest ? 'guest-header' : 'app-header'}
+        className={cn(
+          'app-header sticky top-0 z-50 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b bg-background/95 p-3 backdrop-blur supports-[backdrop-filter]:bg-background/60 md:p-4 xl:p-6',
+          params.id && 'is-character-sheet',
         )}
+      >
+        {/* ─── LANDMARK: HEADER_IDENTITY ─── */}
+        <div className="header-identity flex min-w-0 flex-1 items-center gap-2 md:gap-4">
+          {backHref && (
+            <Button
+              variant="ghost"
+              size="icon"
+              asChild
+              className="h-9 w-9 shrink-0"
+            >
+              <Link href={backHref} aria-label={t('back') || 'Back'}>
+                <ArrowLeft className="h-5 w-5" />
+              </Link>
+            </Button>
+          )}
 
-        <Link
-          href="/"
-          className="flex min-w-0 items-center gap-2"
-          aria-label={t('backToDashboard') || 'Back to Dashboard'}
-        >
-          <Shield className="h-6 w-6 shrink-0 text-primary" />
-          {/*
+          <Link
+            href="/"
+            className="flex min-w-0 items-center gap-2"
+            aria-label={t('backToDashboard') || 'Back to Dashboard'}
+          >
+            <Shield className="h-6 w-6 shrink-0 text-primary" />
+            {/*
             На широких экранах бренд виден всегда; на листе персонажа текст
             скрыт (там важнее имя), на служебных страницах — скрыт только на
             телефоне, где рядом стоит заголовок.
           */}
-          <span className={brandTextClass}>Digital Character Sheets</span>
-        </Link>
+            <span className={brandTextClass}>Digital Character Sheets</span>
+          </Link>
 
-        {/* ─── LANDMARK: HEADER_IDENTITY_CHARACTER_INFO (Now visible in Compact View with responsive sizing) ─── */}
-        {character ? (
-          <>
-            <Separator
-              orientation="vertical"
-              className="hidden h-8 shrink-0 md:block"
-            />
-            <div className="flex min-w-0 flex-col gap-0">
-              <h2
-                className={`truncate font-headline font-bold tracking-tight ${isCompactView ? 'text-sm md:text-base lg:text-lg' : 'text-lg xl:text-xl'}`}
-              >
-                {character.name}
-              </h2>
-              <p
-                className={`truncate text-muted-foreground ${isCompactView ? 'text-[10px] md:text-xs' : 'text-xs xl:text-sm'}`}
-              >
-                {getSubtitle(character)}
-              </p>
-            </div>
-          </>
-        ) : title ? (
-          <>
-            <Separator
-              orientation="vertical"
-              className="hidden h-8 shrink-0 md:block"
-            />
-            <div className="flex min-w-0 flex-col gap-0">
-              <h1 className="truncate font-headline text-lg font-bold tracking-tight xl:text-xl">
-                {title}
-              </h1>
-              {subtitle && (
-                <p className="truncate text-xs text-muted-foreground xl:text-sm">
-                  {subtitle}
+          {/* ─── LANDMARK: HEADER_IDENTITY_CHARACTER_INFO (Now visible in Compact View with responsive sizing) ─── */}
+          {character ? (
+            <>
+              <Separator
+                orientation="vertical"
+                className="hidden h-8 shrink-0 md:block"
+              />
+              <div className="flex min-w-0 flex-col gap-0">
+                <h2
+                  className={`truncate font-headline font-bold tracking-tight ${isCompactView ? 'text-sm md:text-base lg:text-lg' : 'text-lg xl:text-xl'}`}
+                >
+                  {character.name}
+                </h2>
+                <p
+                  className={`truncate text-muted-foreground ${isCompactView ? 'text-[10px] md:text-xs' : 'text-xs xl:text-sm'}`}
+                >
+                  {getSubtitle(character)}
                 </p>
+              </div>
+            </>
+          ) : title ? (
+            <>
+              <Separator
+                orientation="vertical"
+                className="hidden h-8 shrink-0 md:block"
+              />
+              <div className="flex min-w-0 flex-col gap-0">
+                <h1 className="truncate font-headline text-lg font-bold tracking-tight xl:text-xl">
+                  {title}
+                </h1>
+                {subtitle && (
+                  <p className="truncate text-xs text-muted-foreground xl:text-sm">
+                    {subtitle}
+                  </p>
+                )}
+              </div>
+            </>
+          ) : null}
+          {/* ─── END LANDMARK: HEADER_IDENTITY_CHARACTER_INFO ─── */}
+
+          {character && character.gameSystem === 'Dungeons & Dragons' && (
+            <div className="flex shrink-0 items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-2 py-1 md:ml-2 md:px-3">
+              <span className="hidden text-[10px] font-bold uppercase tracking-widest text-primary sm:inline">
+                {t('inspiration')}
+              </span>
+              <div className="flex items-center gap-1">
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-6 w-6 text-primary hover:bg-primary/20"
+                  onClick={() => handleInspirationChange(-1)}
+                >
+                  <Minus className="h-3 w-3" />
+                </Button>
+                <span className="min-w-[1rem] text-center text-sm font-black text-primary">
+                  {(character as DnD5eCharacter).inspiration || '0'}
+                </span>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-6 w-6 text-primary hover:bg-primary/20"
+                  onClick={() => handleInspirationChange(1)}
+                >
+                  <Plus className="h-3 w-3" />
+                </Button>
+              </div>
+              {!isCompactView && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsHouseRulesDialogOpen(true)}
+                  className="h-7 px-2 xl:ml-2"
+                  aria-label={t('houseRules')}
+                >
+                  <Scale className="h-4 w-4 xl:mr-2" />
+                  <span className="hidden xl:inline">{t('houseRules')}</span>
+                </Button>
               )}
             </div>
-          </>
-        ) : null}
-        {/* ─── END LANDMARK: HEADER_IDENTITY_CHARACTER_INFO ─── */}
+          )}
+
+          {/* ─── LANDMARK: DH HEADER CONTROLS (House Rules + Edition) ─── */}
+          {character &&
+            character.gameSystem === 'Dark Heresy' &&
+            !isCompactView && (
+              <div className="ml-2 flex shrink-0 items-center gap-2 border-l pl-2 md:gap-3 md:pl-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsHouseRulesDialogOpen(true)}
+                  className="h-7 px-2"
+                  aria-label={t('houseRules')}
+                >
+                  <Scale className="h-4 w-4 xl:mr-2" />
+                  <span className="hidden xl:inline">{t('houseRules')}</span>
+                </Button>
+                <div className="flex items-center gap-2">
+                  <Label className="hidden whitespace-nowrap text-xs text-muted-foreground md:inline">
+                    Edition:
+                  </Label>
+                  <Select
+                    value={character.edition || '1st'}
+                    onValueChange={(value: '1st' | '2nd' | 'hybrid') =>
+                      updateCharacter(character.id, { edition: value })
+                    }
+                  >
+                    <SelectTrigger
+                      className="h-7 w-[110px] text-xs"
+                      data-testid="dh-edition-select"
+                    >
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1st">1st Edition</SelectItem>
+                      <SelectItem value="2nd">2nd Edition</SelectItem>
+                      <SelectItem value="hybrid">Hybrid</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            )}
+          {/* ─── END DH HEADER CONTROLS ─── */}
+        </div>
+
+        {/* ─── LANDMARK: HEADER_ACTIONS ─── */}
+        <div className="header-actions flex flex-wrap items-center justify-end gap-2">
+          {/* LANDMARK: MOBILE_ACTIONS_MENU - Only visible on mobile */}
+          {mobileActions && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-9 w-9 sm:hidden"
+                >
+                  <Menu className="h-4 w-4" />
+                  <span className="sr-only">Open menu</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                {mobileActions}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+
+          {/* ─── LANDMARK: HEADER_SHEET_ACTIONS ───
+            Инструменты листа: «Заметки», «Журнал заданий» и тумблеры
+            «заметки»/«правка». Показываются только иконки, подпись —
+            в подсказке при наведении (Tooltip) и в `aria-label`.
+            Доступные имена остались прежними: «Notes», «Журнал заданий»,
+            «Hide Notes», «Show Edit Buttons» — на них опираются визуальные
+            тесты (`tests/visual/helpers.ts`, `getByRole` по имени).
+            Раньше подписи занимали до 310 px, и на планшете (768–1299 px)
+            шапка переносилась на две строки. На планшете эта группа остаётся
+            слева, а иконки приложения справа. */}
+          {character && !isSmallScreen && (
+            <div className="header-sheet-actions flex flex-wrap items-center gap-2">
+              {(onNotesClick || onJournalClick) && (
+                <div className="flex items-center gap-1.5 md:gap-2">
+                  {onNotesClick && (
+                    <Tooltip delayDuration={0}>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={onNotesClick}
+                          aria-label={t('notes')}
+                          className="h-8 w-8 md:h-9 md:w-9"
+                        >
+                          <BookText className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom">
+                        <p>{t('notes')}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  )}
+                  {onJournalClick && (
+                    <Tooltip delayDuration={0}>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={onJournalClick}
+                          aria-label={t('questJournalTitle')}
+                          className="h-8 w-8 md:h-9 md:w-9"
+                        >
+                          <Scroll className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom">
+                        <p>{t('questJournalTitle')}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  )}
+                </div>
+              )}
+              <div className="flex items-center gap-1.5 md:gap-2 md:border-l md:border-r md:px-2">
+                <Tooltip delayDuration={0}>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant={hideNotes ? 'ghost' : 'secondary'}
+                      size="icon"
+                      onClick={() => setHideNotes(!hideNotes)}
+                      aria-label={hideNotes ? t('showNotes') : t('hideNotes')}
+                      aria-pressed={!hideNotes}
+                      className="h-8 w-8 md:h-9 md:w-9"
+                    >
+                      {hideNotes ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">
+                    <p>{hideNotes ? t('showNotes') : t('hideNotes')}</p>
+                  </TooltipContent>
+                </Tooltip>
+                <Tooltip delayDuration={0}>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant={showEditButtons ? 'secondary' : 'ghost'}
+                      size="icon"
+                      onClick={() => setShowEditButtons(!showEditButtons)}
+                      aria-label={
+                        showEditButtons
+                          ? t('hideEditButtons')
+                          : t('showEditButtons')
+                      }
+                      aria-pressed={showEditButtons}
+                      className="h-8 w-8 md:h-9 md:w-9"
+                    >
+                      {showEditButtons ? (
+                        <Pencil className="h-4 w-4" />
+                      ) : (
+                        <PencilLine className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">
+                    <p>
+                      {showEditButtons
+                        ? t('hideEditButtons')
+                        : t('showEditButtons')}
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+            </div>
+          )}
+
+          {/* ─── LANDMARK: HEADER_VIEW_ACTIONS ───
+            Иконки приложения: компактный вид, язык, тема, профиль. */}
+          <div className="header-view-actions flex items-center gap-2">
+            {!isSmallScreen && (
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={toggleCompactView}
+                aria-label={compactLabel}
+                title={compactLabel}
+                data-testid={isGuest ? 'guest-compact-toggle' : undefined}
+              >
+                {isCompactView ? (
+                  <Monitor className="h-4 w-4" />
+                ) : (
+                  <Smartphone className="h-4 w-4" />
+                )}
+                <span className="sr-only">{compactLabel}</span>
+              </Button>
+            )}
+            {/* LANDMARK: SMART_LANGUAGE_TOGGLE */}
+            {(!character || !isCompactView) && <LanguageToggle />}
+            <ThemeToggle />
+            {authControls}
+          </div>
+        </div>
 
         {character && character.gameSystem === 'Dungeons & Dragons' && (
-          <div className="flex shrink-0 items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-2 py-1 md:ml-2 md:px-3">
-            <span className="hidden text-[10px] font-bold uppercase tracking-widest text-primary sm:inline">
-              {t('inspiration')}
-            </span>
-            <div className="flex items-center gap-1">
-              <Button
-                size="icon"
-                variant="ghost"
-                className="h-6 w-6 text-primary hover:bg-primary/20"
-                onClick={() => handleInspirationChange(-1)}
-              >
-                <Minus className="h-3 w-3" />
-              </Button>
-              <span className="min-w-[1rem] text-center text-sm font-black text-primary">
-                {(character as DnD5eCharacter).inspiration || '0'}
-              </span>
-              <Button
-                size="icon"
-                variant="ghost"
-                className="h-6 w-6 text-primary hover:bg-primary/20"
-                onClick={() => handleInspirationChange(1)}
-              >
-                <Plus className="h-3 w-3" />
-              </Button>
-            </div>
-            {!isCompactView && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setIsHouseRulesDialogOpen(true)}
-                className="h-7 px-2 xl:ml-2"
-                aria-label={t('houseRules')}
-              >
-                <Scale className="h-4 w-4 xl:mr-2" />
-                <span className="hidden xl:inline">{t('houseRules')}</span>
-              </Button>
-            )}
-          </div>
+          <HouseRulesDialog
+            open={isHouseRulesDialogOpen}
+            onOpenChange={setIsHouseRulesDialogOpen}
+            characterId={character.id}
+          />
         )}
-
-        {/* ─── LANDMARK: DH HEADER CONTROLS (House Rules + Edition) ─── */}
-        {character &&
-          character.gameSystem === 'Dark Heresy' &&
-          !isCompactView && (
-            <div className="ml-2 flex shrink-0 items-center gap-2 border-l pl-2 md:gap-3 md:pl-4">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setIsHouseRulesDialogOpen(true)}
-                className="h-7 px-2"
-                aria-label={t('houseRules')}
-              >
-                <Scale className="h-4 w-4 xl:mr-2" />
-                <span className="hidden xl:inline">{t('houseRules')}</span>
-              </Button>
-              <div className="flex items-center gap-2">
-                <Label className="hidden whitespace-nowrap text-xs text-muted-foreground md:inline">
-                  Edition:
-                </Label>
-                <Select
-                  value={character.edition || '1st'}
-                  onValueChange={(value: '1st' | '2nd' | 'hybrid') =>
-                    updateCharacter(character.id, { edition: value })
-                  }
-                >
-                  <SelectTrigger
-                    className="h-7 w-[110px] text-xs"
-                    data-testid="dh-edition-select"
-                  >
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1st">1st Edition</SelectItem>
-                    <SelectItem value="2nd">2nd Edition</SelectItem>
-                    <SelectItem value="hybrid">Hybrid</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          )}
-        {/* ─── END DH HEADER CONTROLS ─── */}
-      </div>
-
-      {/* ─── LANDMARK: HEADER_ACTIONS ─── */}
-      <div className="header-actions flex flex-wrap items-center justify-end gap-2">
-        {/* LANDMARK: MOBILE_ACTIONS_MENU - Only visible on mobile */}
-        {mobileActions && (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-9 w-9 sm:hidden"
-              >
-                <Menu className="h-4 w-4" />
-                <span className="sr-only">Open menu</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              {mobileActions}
-            </DropdownMenuContent>
-          </DropdownMenu>
+        {character && character.gameSystem === 'Dark Heresy' && (
+          <DhHouseRulesDialog
+            open={isHouseRulesDialogOpen}
+            onOpenChange={setIsHouseRulesDialogOpen}
+            characterId={character.id}
+          />
         )}
-
-        {/* ─── LANDMARK: HEADER_SHEET_ACTIONS ───
-            Инструменты листа: «Заметки», «Журнал заданий» и чекбоксы.
-            На планшете (768–1299 px) эта группа остаётся слева, а иконки
-            приложения справа — шапка занимает всю ширину, а не липнет
-            одним блоком к правому краю. */}
-        {character && !isSmallScreen && (
-          <div className="header-sheet-actions flex flex-wrap items-center gap-2">
-            {(onNotesClick || onJournalClick) && (
-              <div className="flex items-center gap-2">
-                {onNotesClick && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={onNotesClick}
-                    className="h-8"
-                  >
-                    <BookText className="mr-2 h-4 w-4" />
-                    <span className="hidden sm:inline">{t('notes')}</span>
-                  </Button>
-                )}
-                {onJournalClick && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={onJournalClick}
-                    className="h-8"
-                  >
-                    <Scroll className="mr-2 h-4 w-4" />
-                    <span className="hidden sm:inline">
-                      {t('questJournalTitle')}
-                    </span>
-                  </Button>
-                )}
-              </div>
-            )}
-            <div className="flex items-center gap-2 md:gap-4 md:border-l md:border-r md:px-2">
-              <div className="flex items-center gap-1.5 md:gap-2">
-                <Checkbox
-                  id="hide-notes"
-                  checked={hideNotes}
-                  onCheckedChange={(checked) => setHideNotes(!!checked)}
-                />
-                <Label
-                  htmlFor="hide-notes"
-                  className="cursor-pointer whitespace-nowrap text-[10px] md:text-xs"
-                >
-                  {isTabletScreen
-                    ? t('notes')
-                    : hideNotes
-                      ? t('showNotes')
-                      : t('hideNotes')}
-                </Label>
-              </div>
-              <div className="flex items-center gap-1.5 md:gap-2">
-                <Checkbox
-                  id="show-edit-buttons"
-                  checked={showEditButtons}
-                  onCheckedChange={(checked) => setShowEditButtons(!!checked)}
-                />
-                <Label
-                  htmlFor="show-edit-buttons"
-                  className="cursor-pointer whitespace-nowrap text-[10px] md:text-xs"
-                >
-                  {isTabletScreen
-                    ? t('edit')
-                    : showEditButtons
-                      ? t('hideEditButtons')
-                      : t('showEditButtons')}
-                </Label>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ─── LANDMARK: HEADER_VIEW_ACTIONS ───
-            Иконки приложения: компактный вид, язык, тема, профиль. */}
-        <div className="header-view-actions flex items-center gap-2">
-          {!isSmallScreen && (
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={toggleCompactView}
-              aria-label={compactLabel}
-              title={compactLabel}
-              data-testid={isGuest ? 'guest-compact-toggle' : undefined}
-            >
-              {isCompactView ? (
-                <Monitor className="h-4 w-4" />
-              ) : (
-                <Smartphone className="h-4 w-4" />
-              )}
-              <span className="sr-only">{compactLabel}</span>
-            </Button>
-          )}
-          {/* LANDMARK: SMART_LANGUAGE_TOGGLE */}
-          {(!character || !isCompactView) && <LanguageToggle />}
-          <ThemeToggle />
-          {authControls}
-        </div>
-      </div>
-
-      {character && character.gameSystem === 'Dungeons & Dragons' && (
-        <HouseRulesDialog
-          open={isHouseRulesDialogOpen}
-          onOpenChange={setIsHouseRulesDialogOpen}
-          characterId={character.id}
-        />
-      )}
-      {character && character.gameSystem === 'Dark Heresy' && (
-        <DhHouseRulesDialog
-          open={isHouseRulesDialogOpen}
-          onOpenChange={setIsHouseRulesDialogOpen}
-          characterId={character.id}
-        />
-      )}
-    </header>
+      </header>
+    </TooltipProvider>
   );
 }
