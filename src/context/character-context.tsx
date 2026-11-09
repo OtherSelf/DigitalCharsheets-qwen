@@ -14,6 +14,13 @@ import { useRouter } from 'next/navigation';
 
 import { useToast } from '@/hooks/use-toast';
 import {
+  parsePendingCharacter,
+  PENDING_CHARACTER_KEY,
+  PENDING_UPDATE_KEY,
+  resolvePendingUpdate,
+  type DraftCharacter,
+} from '@/lib/pending-draft';
+import {
   createSaveQueue,
   type SaveMeta,
   type SaveQueue,
@@ -34,6 +41,14 @@ interface CharacterContextType {
   ) => Promise<Character | undefined>;
   updateCharacter: (id: string, data: Partial<Character>) => void;
   deleteCharacter: (id: string) => void;
+  /**
+   * Черновик персонажа, который гость соберёт до входа. При входе в
+   * существующий аккаунт он НЕ создаётся сам — дашборд показывает плашку,
+   * а персонаж появляется по кнопке `createPendingDraft`.
+   */
+  pendingDraft: DraftCharacter | null;
+  createPendingDraft: () => Promise<void>;
+  discardPendingDraft: () => void;
   isLoaded: boolean;
   toast: (options: {
     title: string;
@@ -100,14 +115,35 @@ const PAGE_ID: string = (() => {
   return `page-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
 })();
 
+/**
+ * sessionStorage может быть недоступен (приватный режим, SSR) — тогда
+ * черновик просто не читается и не пишется, но приложение не падает.
+ */
+function readSession(key: string): string | null {
+  try {
+    return typeof window !== 'undefined' ? sessionStorage.getItem(key) : null;
+  } catch {
+    return null;
+  }
+}
+
+function removeSession(key: string): void {
+  try {
+    if (typeof window !== 'undefined') sessionStorage.removeItem(key);
+  } catch {
+    // недоступное хранилище — нечего чистить
+  }
+}
+
 export function CharacterProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
   const router = useRouter();
-  const { user, isUserLoading, logout } = useLocalAuth();
+  const { user, isUserLoading, lastAuthKind, logout } = useLocalAuth();
   const { t } = useTranslation();
 
   const [characters, setCharacters] = useState<Character[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [pendingDraft, setPendingDraft] = useState<DraftCharacter | null>(null);
 
   const [userPrefersCompact, setUserPrefersCompact] = useState(false);
   const [isSmallScreen, setIsSmallScreen] = useState(false);
@@ -125,6 +161,9 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
   const toastRef = useRef(toast);
   const tRef = useRef(t);
   const hasUnsavedChangesRef = useRef(hasUnsavedChanges);
+  // Защита от повторного POST черновика при перезапуске эффекта
+  // (например, после установки recovery-фразы меняется объект user).
+  const creatingPendingRef = useRef(false);
 
   useEffect(() => {
     userRef.current = user;
@@ -300,98 +339,143 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
     };
   }, [flushPending]);
 
+  /**
+   * ─── LANDMARK: LOGIN BOOTSTRAP ────────────────────────────────────────────
+   * После авторизации листы аккаунта грузятся ВСЕГДА. Раньше ветка с отложенным
+   * персонажем делала `return` и не звала `loadCharacters()`, поэтому после
+   * входа в существующий аккаунт в состоянии оставался только что созданный
+   * персонаж, а остальные «исчезали» из UI до перезагрузки — выглядело как
+   * потеря данных (хотя файлы на диске были целы).
+   *
+   * Черновик гостя (`pending_character`) создаётся автоматически только при
+   * РЕГИСТРАЦИИ нового аккаунта — там ему и место. При входе в существующий он
+   * остаётся черновиком: дашборд показывает плашку, персонаж появляется по
+   * кнопке `createPendingDraft`.
+   *
+   * `pending_update` (правка демо-листа) применяется только к листу, который
+   * реально вернул сервер, и ключ снимается всегда: раньше правка могла
+   * примениться к чужому id или «всплыть» позже и уйти PUT'ом в 404.
+   */
   useEffect(() => {
-    if (!isUserLoading && user) {
-      const pendingCharStr =
-        typeof window !== 'undefined'
-          ? sessionStorage.getItem('pending_character')
-          : null;
-      // 🎯 LANDMARK: DEMO_PENDING_UPDATE - Check for pending demo edits
-      const pendingUpdateStr =
-        typeof window !== 'undefined'
-          ? sessionStorage.getItem('pending_update')
-          : null;
+    if (isUserLoading) return;
 
-      const loadCharacters = () => {
-        setIsLoaded(false);
-        fetch('/api/characters')
+    if (!user) {
+      applyCharacters(() => []);
+      setPendingDraft(null);
+      // После выхода черновик может появиться заново (новая гостевая сессия) —
+      // защита от повторного POST не должна переживать logout.
+      creatingPendingRef.current = false;
+      setIsLoaded(true);
+      return;
+    }
+
+    const pendingUpdateRaw = readSession(PENDING_UPDATE_KEY);
+    const draft = parsePendingCharacter(readSession(PENDING_CHARACTER_KEY));
+
+    /** Плашка показывается по актуальному содержимому sessionStorage. */
+    const refreshPendingDraft = () => {
+      setPendingDraft(
+        parsePendingCharacter(readSession(PENDING_CHARACTER_KEY)),
+      );
+    };
+
+    /** Правка из гостевого контекста — только поверх существующего листа. */
+    const applyPendingUpdate = (loaded: Character[]) => {
+      if (!pendingUpdateRaw) return;
+      // Снимаем ключ даже если применять некуда: иначе правка «всплывёт»
+      // на следующем входе/перезагрузке.
+      removeSession(PENDING_UPDATE_KEY);
+      const update = resolvePendingUpdate(pendingUpdateRaw, loaded);
+      if (!update) return;
+      applyCharacters((prev) =>
+        prev.map((c) =>
+          c.id === update.id ? ({ ...c, ...update.data } as Character) : c,
+        ),
+      );
+      // Через очередь, а не напрямую: сохраняется порядок __seq и ретраи.
+      enqueueSave(update.id, update.data);
+    };
+
+    const loadCharacters = () => {
+      setIsLoaded(false);
+      fetch('/api/characters')
+        .then((res) => {
+          if (res.status === 401) {
+            // Сессия истекла или отозвана — локальный профиль недействителен.
+            logout();
+            router.push('/login');
+            return null;
+          }
+          return res.json();
+        })
+        .then((data) => {
+          if (!data) {
+            setIsLoaded(true);
+            return;
+          }
+          applyCharacters(() => data);
+          setIsLoaded(true);
+          refreshPendingDraft();
+          applyPendingUpdate(data as Character[]);
+        })
+        .catch((err) => {
+          console.error('Failed to load characters:', err);
+          setIsLoaded(true);
+        });
+    };
+
+    if (draft && lastAuthKind === 'register') {
+      // Один POST на открытие страницы: эффект может перезапуститься
+      // (например, после установки recovery-фразы меняется объект user).
+      if (!creatingPendingRef.current) {
+        creatingPendingRef.current = true;
+        fetch('/api/characters', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(draft),
+        })
           .then((res) => {
-            if (res.status === 401) {
-              // Сессия истекла или отозвана — локальный профиль недействителен.
-              logout();
-              router.push('/login');
-              return null;
-            }
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
             return res.json();
           })
-          .then((data) => {
-            if (!data) {
-              setIsLoaded(true);
-              return;
-            }
-            applyCharacters(() => data);
-            setIsLoaded(true);
-
-            // 🎯 LANDMARK: DEMO_PENDING_UPDATE - Apply any pending updates after successful login
-            if (pendingUpdateStr) {
-              try {
-                const { id, data: updateData } = JSON.parse(pendingUpdateStr);
-                applyCharacters((prev) =>
-                  prev.map((c) =>
-                    c.id === id ? ({ ...c, ...updateData } as Character) : c,
-                  ),
-                );
-                // Через очередь, а не напрямую: сохраняется порядок __seq и ретраи.
-                enqueueSave(id, updateData);
-                sessionStorage.removeItem('pending_update');
-              } catch (e) {
-                console.error('Failed to parse pending update', e);
-              }
-            }
+          .then((newCharacter: Character) => {
+            removeSession(PENDING_CHARACTER_KEY);
+            refreshPendingDraft();
+            // LANDMARK: Add character to state immediately before redirecting
+            applyCharacters((prev) => [...prev, newCharacter]);
+            const needsSetup = !user.hasRecoveryPhrase
+              ? '?setup_phrase=true'
+              : '';
+            router.push(`/${newCharacter.id}${needsSetup}`);
+            // Список аккаунта всё равно грузим: дашборд не должен врать.
+            loadCharacters();
           })
           .catch((err) => {
-            console.error('Failed to load characters:', err);
-            setIsLoaded(true);
+            console.error('Failed to create pending character:', err);
+            // Черновик не теряем: он остался в sessionStorage и покажется
+            // плашкой на дашборде.
+            creatingPendingRef.current = false;
+            refreshPendingDraft();
+            loadCharacters();
           });
-      };
-
-      if (pendingCharStr) {
-        try {
-          const pendingCharData = JSON.parse(pendingCharStr);
-          fetch('/api/characters', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(pendingCharData),
-          })
-            .then((res) => res.json())
-            .then((newCharacter: Character) => {
-              if (typeof window !== 'undefined') {
-                sessionStorage.removeItem('pending_character');
-              }
-              // LANDMARK: Add character to state immediately before redirecting
-              applyCharacters((prev) => [...prev, newCharacter]);
-              const needsSetup = !user.hasRecoveryPhrase
-                ? '?setup_phrase=true'
-                : '';
-              router.push(`/${newCharacter.id}${needsSetup}`);
-            })
-            .catch((err) => {
-              console.error('Failed to create pending character:', err);
-              loadCharacters();
-            });
-        } catch (e) {
-          console.error('Failed to parse pending character', e);
-          loadCharacters();
-        }
-        return;
       }
-
-      loadCharacters();
-    } else if (!isUserLoading && !user) {
-      applyCharacters(() => []);
-      setIsLoaded(true);
+      return;
     }
-  }, [user, isUserLoading, applyCharacters, enqueueSave, router, logout]);
+
+    // Вход в существующий аккаунт (или просто открытие вкладки с сессией):
+    // черновик не создаём, только показываем плашкой.
+    if (!draft) creatingPendingRef.current = false;
+    setPendingDraft(draft);
+    loadCharacters();
+  }, [
+    user,
+    isUserLoading,
+    lastAuthKind,
+    applyCharacters,
+    enqueueSave,
+    router,
+    logout,
+  ]);
 
   const isCompactView = isSmallScreen || userPrefersCompact;
   const toggleCompactView = () => setUserPrefersCompact((prev) => !prev);
@@ -401,7 +485,7 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
       if (!user) {
         if (typeof window !== 'undefined') {
           sessionStorage.setItem(
-            'pending_character',
+            PENDING_CHARACTER_KEY,
             JSON.stringify(characterData),
           );
           router.push('/login');
@@ -439,7 +523,7 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
       if (!user) {
         if (typeof window !== 'undefined') {
           sessionStorage.setItem(
-            'pending_update',
+            PENDING_UPDATE_KEY,
             JSON.stringify({ id, data }),
           );
           router.push('/login');
@@ -475,6 +559,11 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
         return;
       }
 
+      // Листа нет в аккаунте (например, демо-лист на /demo): писать некуда.
+      // Без этой проверки PUT уходил на несуществующий id → 404 и тост
+      // «не сохранено», хотя пользователь правил демо-превью.
+      if (!charactersRef.current.some((c) => c.id === id)) return;
+
       applyCharacters((prev) =>
         prev.map((c) => (c.id === id ? ({ ...c, ...data } as Character) : c)),
       );
@@ -482,6 +571,46 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
     },
     [user, router, applyCharacters, enqueueSave],
   );
+
+  /**
+   * Создать персонажа из гостевого черновика (кнопка на плашке дашборда).
+   * Черновик при этом снимается: он превращается в обычный лист аккаунта.
+   */
+  const createPendingDraft = useCallback(async () => {
+    const draft = parsePendingCharacter(readSession(PENDING_CHARACTER_KEY));
+    if (!user || !draft) {
+      setPendingDraft(null);
+      return;
+    }
+    try {
+      const res = await fetch('/api/characters', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(draft),
+      });
+      if (!res.ok) {
+        throw new Error(`Failed to create character: HTTP ${res.status}`);
+      }
+      const newCharacter: Character = await res.json();
+      removeSession(PENDING_CHARACTER_KEY);
+      setPendingDraft(null);
+      applyCharacters((prev) => [...prev, newCharacter]);
+      const needsSetup = !user.hasRecoveryPhrase ? '?setup_phrase=true' : '';
+      router.push(`/${newCharacter.id}${needsSetup}`);
+    } catch (error) {
+      console.error('Failed to create pending character:', error);
+      toast({
+        variant: 'destructive',
+        title: t('error'),
+        description: t('failedToCreateCharacter'),
+      });
+    }
+  }, [user, applyCharacters, router, toast, t]);
+
+  const discardPendingDraft = useCallback(() => {
+    removeSession(PENDING_CHARACTER_KEY);
+    setPendingDraft(null);
+  }, []);
 
   const deleteCharacter = useCallback(
     (id: string) => {
@@ -527,6 +656,9 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
     addCharacter,
     updateCharacter,
     deleteCharacter,
+    pendingDraft,
+    createPendingDraft,
+    discardPendingDraft,
     isLoaded,
     toast,
     isCompactView,

@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type BrowserContext } from '@playwright/test';
 
 import {
   collectPageErrors,
@@ -252,6 +252,66 @@ test.describe('общие страницы', () => {
     ).toBeVisible();
 
     await screenshotPage(page, 'dashboard-guest-ru.png');
+  });
+
+  /**
+   * ─── LANDMARK: PENDING_DRAFT_ETALON ──────────────────────────────────────
+   * Дашборд с плашкой «незавершённый черновик»: персонажа начертил гость до
+   * входа, в аккаунт он НЕ попадает сам (создаётся кнопкой). Снимок стережёт
+   * именно вёрстку плашки: две кнопки не должны наезжать на текст, длинная
+   * русская фраза — обрезаться, а на mobile кнопки — уезжать за экран.
+   *
+   * Черновик кладём init-скриптом в sessionStorage до запуска приложения:
+   * так тест не зависит от многошагового гостевого сценария (он проверяется
+   * в creation.spec.ts) и остаётся детерминированным.
+   */
+  const seedGuestDraft = async (context: BrowserContext, name: string) => {
+    await context.addInitScript((draftName: string) => {
+      try {
+        sessionStorage.setItem(
+          'pending_character',
+          JSON.stringify({
+            name: draftName,
+            gameSystem: 'Dungeons & Dragons',
+            characterClass: 'Rogue',
+            race: 'Halfling',
+            background: 'Criminal',
+            level: 1,
+          }),
+        );
+      } catch {
+        /* sessionStorage может быть недоступен — снимок тогда не снять */
+      }
+    }, name);
+  };
+
+  test('dashboard — незавершённый черновик (en)', async ({ page, context }) => {
+    await prepare(context);
+    await seedGuestDraft(context, 'Thalia Nightbreeze');
+    await openApp(page, '/');
+
+    await expect(page.getByTestId('pending-draft')).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: 'Existing Characters' }),
+    ).toBeVisible();
+    // Плашка ничего не подменяет: листы аккаунта на месте.
+    await expect(page.getByText('Seraphina Vael')).toBeVisible();
+    await expect(page.getByText('Lucius Varn')).toBeVisible();
+
+    await screenshotPage(page, 'dashboard-draft-en.png');
+  });
+
+  test('dashboard — незавершённый черновик (ru)', async ({ page, context }) => {
+    await prepare(context, { language: 'ru' });
+    await seedGuestDraft(context, 'Thalia Nightbreeze');
+    await openApp(page, '/');
+
+    await expect(page.getByTestId('pending-draft')).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: 'Существующие персонажи' }),
+    ).toBeVisible();
+
+    await screenshotPage(page, 'dashboard-draft-ru.png');
   });
 
   test('new — выбор системы (en)', async ({ page, context }) => {

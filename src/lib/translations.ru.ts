@@ -185,6 +185,11 @@ export const ruTranslations = {
   savePhrase: 'Сохранить фразу',
   characterCreatedTitle: 'Персонаж создан!',
   characterCreatedDesc: 'Ваш новый персонаж Dungeons & Dragons был сохранен.',
+  pendingDraftTitle: 'Незавершённый черновик',
+  pendingDraftDesc:
+    'Черновик «{name}» создан до входа в аккаунт. В этом аккаунте его ещё нет.',
+  pendingDraftCreate: 'Создать персонажа',
+  pendingDraftDiscard: 'Удалить черновик',
   dndCharacterDetails: 'Детали персонажа Dungeons & Dragons',
   basicInformation: 'Основная информация',
   levelAutoCalculated: 'Уровень (автоматически)',

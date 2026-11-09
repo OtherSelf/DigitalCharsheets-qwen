@@ -38,9 +38,24 @@ interface AccountExistsResult {
   error?: string;
 }
 
+/**
+ * ─── LANDMARK: LAST AUTH KIND ───────────────────────────────────────────────
+ * Чем закончилась последняя авторизация в этой вкладке: `register` — создан
+ * новый аккаунт, `login` — вход в существующий, `restore` — восстановление
+ * доступа по фразе.
+ *
+ * Зачем это знать: черновик персонажа, сделанный до входа, имеет смысл
+ * создавать только в новом аккаунте. При входе в существующий он остаётся
+ * черновиком и показывается плашкой на дашборде — иначе приложение молча
+ * добавляло «нового» персонажа и выглядело так, будто список потерян.
+ */
+export type LastAuthKind = 'register' | 'login' | 'restore';
+
 interface LocalAuthContextType {
   user: LocalUser | null;
   isUserLoading: boolean;
+  /** `null` — вкладку открыли с уже сохранённой сессией, авторизации не было. */
+  lastAuthKind: LastAuthKind | null;
   login: (
     username: string,
     password: string,
@@ -65,6 +80,7 @@ const LocalAuthContext = createContext<LocalAuthContextType | undefined>(
 export function LocalAuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<LocalUser | null>(null);
   const [isUserLoading, setIsUserLoading] = useState(true);
+  const [lastAuthKind, setLastAuthKind] = useState<LastAuthKind | null>(null);
 
   useEffect(() => {
     const storedUser = getLocalUser();
@@ -76,6 +92,9 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
   const restoreSession = useCallback((nextUser: LocalUser) => {
     setLocalUser(nextUser);
     setUser(nextUser);
+    // login/register зовут restoreSession и перебивают вид своим значением
+    // в том же тике — сюда попадает только восстановление по фразе.
+    setLastAuthKind('restore');
   }, []);
 
   const login = useCallback(
@@ -102,6 +121,7 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
         }
 
         restoreSession(data.user);
+        setLastAuthKind('login');
         return { success: true, isNewUser: data.isNewUser, user: data.user };
       } catch (error) {
         console.error('[auth] login failed:', error);
@@ -145,6 +165,7 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
         }
 
         restoreSession(data.user);
+        setLastAuthKind('register');
         return { success: true, isNewUser: true, user: data.user };
       } catch (error) {
         console.error('[auth] registration failed:', error);
@@ -188,6 +209,7 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
     }
     clearLocalUser();
     setUser(null);
+    setLastAuthKind(null);
   }, []);
 
   const updateUserPhrase = useCallback(
@@ -207,6 +229,7 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
       value={{
         user,
         isUserLoading,
+        lastAuthKind,
         login,
         register,
         accountExists,
