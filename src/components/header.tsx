@@ -274,92 +274,102 @@ export function Header({
           </DropdownMenu>
         )}
 
-        {/* 🎯 LANDMARK: NOTES_AND_JOURNAL_BUTTONS - Visible on tablet and desktop */}
+        {/* ─── LANDMARK: HEADER_SHEET_ACTIONS ───
+            Инструменты листа: «Заметки», «Журнал заданий» и чекбоксы.
+            На планшете (768–1299 px) эта группа остаётся слева, а иконки
+            приложения справа — шапка занимает всю ширину, а не липнет
+            одним блоком к правому краю. */}
         {character && !isSmallScreen && (
-          <div className="flex items-center gap-2">
-            {onNotesClick && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onNotesClick}
-                className="h-8"
-              >
-                <BookText className="mr-2 h-4 w-4" />
-                <span className="hidden sm:inline">{t('notes')}</span>
-              </Button>
+          <div className="header-sheet-actions flex flex-wrap items-center gap-2">
+            {(onNotesClick || onJournalClick) && (
+              <div className="flex items-center gap-2">
+                {onNotesClick && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={onNotesClick}
+                    className="h-8"
+                  >
+                    <BookText className="mr-2 h-4 w-4" />
+                    <span className="hidden sm:inline">{t('notes')}</span>
+                  </Button>
+                )}
+                {onJournalClick && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={onJournalClick}
+                    className="h-8"
+                  >
+                    <Scroll className="mr-2 h-4 w-4" />
+                    <span className="hidden sm:inline">
+                      {t('questJournalTitle')}
+                    </span>
+                  </Button>
+                )}
+              </div>
             )}
-            {onJournalClick && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onJournalClick}
-                className="h-8"
-              >
-                <Scroll className="mr-2 h-4 w-4" />
-                <span className="hidden sm:inline">
-                  {t('questJournalTitle')}
-                </span>
-              </Button>
-            )}
+            <div className="flex items-center gap-2 md:gap-4 md:border-l md:border-r md:px-2">
+              <div className="flex items-center gap-1.5 md:gap-2">
+                <Checkbox
+                  id="hide-notes"
+                  checked={hideNotes}
+                  onCheckedChange={(checked) => setHideNotes(!!checked)}
+                />
+                <Label
+                  htmlFor="hide-notes"
+                  className="cursor-pointer whitespace-nowrap text-[10px] md:text-xs"
+                >
+                  {isTabletScreen
+                    ? t('notes')
+                    : hideNotes
+                      ? t('showNotes')
+                      : t('hideNotes')}
+                </Label>
+              </div>
+              <div className="flex items-center gap-1.5 md:gap-2">
+                <Checkbox
+                  id="show-edit-buttons"
+                  checked={showEditButtons}
+                  onCheckedChange={(checked) => setShowEditButtons(!!checked)}
+                />
+                <Label
+                  htmlFor="show-edit-buttons"
+                  className="cursor-pointer whitespace-nowrap text-[10px] md:text-xs"
+                >
+                  {isTabletScreen
+                    ? t('edit')
+                    : showEditButtons
+                      ? t('hideEditButtons')
+                      : t('showEditButtons')}
+                </Label>
+              </div>
+            </div>
           </div>
         )}
 
-        {!isSmallScreen && (
-          <Button variant="outline" size="icon" onClick={toggleCompactView}>
-            {isCompactView ? (
-              <Monitor className="h-4 w-4" />
-            ) : (
-              <Smartphone className="h-4 w-4" />
-            )}
-            <span className="sr-only">
-              {isCompactView
-                ? t('switchToDefaultView')
-                : t('switchToCompactView')}
-            </span>
-          </Button>
-        )}
-        {character && !isSmallScreen && (
-          <div className="flex items-center gap-2 md:gap-4 md:border-l md:border-r md:px-2">
-            <div className="flex items-center gap-1.5 md:gap-2">
-              <Checkbox
-                id="hide-notes"
-                checked={hideNotes}
-                onCheckedChange={(checked) => setHideNotes(!!checked)}
-              />
-              <Label
-                htmlFor="hide-notes"
-                className="cursor-pointer whitespace-nowrap text-[10px] md:text-xs"
-              >
-                {isTabletScreen
-                  ? t('notes')
-                  : hideNotes
-                    ? t('showNotes')
-                    : t('hideNotes')}
-              </Label>
-            </div>
-            <div className="flex items-center gap-1.5 md:gap-2">
-              <Checkbox
-                id="show-edit-buttons"
-                checked={showEditButtons}
-                onCheckedChange={(checked) => setShowEditButtons(!!checked)}
-              />
-              <Label
-                htmlFor="show-edit-buttons"
-                className="cursor-pointer whitespace-nowrap text-[10px] md:text-xs"
-              >
-                {isTabletScreen
-                  ? t('edit')
-                  : showEditButtons
-                    ? t('hideEditButtons')
-                    : t('showEditButtons')}
-              </Label>
-            </div>
-          </div>
-        )}
-        {/* 🎯 LANDMARK: SMART_LANGUAGE_TOGGLE */}
-        {(!character || !isCompactView) && <LanguageToggle />}
-        <ThemeToggle />
-        <UserNav />
+        {/* ─── LANDMARK: HEADER_VIEW_ACTIONS ───
+            Иконки приложения: компактный вид, язык, тема, профиль. */}
+        <div className="header-view-actions flex items-center gap-2">
+          {!isSmallScreen && (
+            <Button variant="outline" size="icon" onClick={toggleCompactView}>
+              {isCompactView ? (
+                <Monitor className="h-4 w-4" />
+              ) : (
+                <Smartphone className="h-4 w-4" />
+              )}
+              <span className="sr-only">
+                {isCompactView
+                  ? t('switchToDefaultView')
+                  : t('switchToCompactView')}
+              </span>
+            </Button>
+          )}
+          {/* 🎯 LANDMARK: SMART_LANGUAGE_TOGGLE */}
+          {(!character || !isCompactView) && <LanguageToggle />}
+          <ThemeToggle />
+          <UserNav />
+        </div>
       </div>
 
       {character && character.gameSystem === 'Dungeons & Dragons' && (

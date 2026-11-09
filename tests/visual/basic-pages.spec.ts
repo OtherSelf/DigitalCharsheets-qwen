@@ -268,7 +268,7 @@ test.describe('адаптивность', () => {
     }
   });
 
-  test('шапка: на планшете панель действий прижата вправо', async ({
+  test('шапка: на планшете инструменты листа слева, иконки справа', async ({
     page,
     context,
   }) => {
@@ -277,22 +277,37 @@ test.describe('адаптивность', () => {
     await openApp(page, `/${getState().dhId}`);
 
     const header = page.locator('header.app-header');
+    const sheetActions = header.locator('.header-sheet-actions');
+    const viewActions = header.locator('.header-view-actions');
     const account = header.getByRole('button', { name: 'Open user menu' });
-    const rightGap = async () => {
-      const [headerBox, accountBox] = await Promise.all([
+
+    const gaps = async () => {
+      const [headerBox, sheetBox, viewBox, accountBox] = await Promise.all([
         header.boundingBox(),
+        sheetActions.boundingBox(),
+        viewActions.boundingBox(),
         account.boundingBox(),
       ]);
-      return Math.round(
-        headerBox!.x + headerBox!.width - (accountBox!.x + accountBox!.width),
-      );
+      return {
+        left: Math.round(sheetBox!.x - headerBox!.x),
+        right: Math.round(
+          headerBox!.x + headerBox!.width - (accountBox!.x + accountBox!.width),
+        ),
+        separated: sheetBox!.x + sheetBox!.width < viewBox!.x,
+      };
     };
 
-    // 768..1299: панель действий занимает отдельную строку, но прижата к
-    // правому краю — иконки (вид/язык/тема/профиль) не «уезжают» влево.
+    // 768..1299: на второй строке инструменты листа («Заметки», «Журнал»,
+    // чекбоксы) стоят слева, а иконки вид/язык/тема/профиль — справа.
     for (const width of [1200, 1085, 900]) {
       await page.setViewportSize({ width, height: 900 });
-      await expect.poll(rightGap).toBeLessThanOrEqual(24);
+      await expect
+        .poll(async () => (await gaps()).left)
+        .toBeLessThanOrEqual(24);
+      await expect
+        .poll(async () => (await gaps()).right)
+        .toBeLessThanOrEqual(24);
+      await expect.poll(async () => (await gaps()).separated).toBe(true);
       await expectNoHorizontalOverflow(page);
     }
 
@@ -300,8 +315,10 @@ test.describe('адаптивность', () => {
     // иконки остаются в правом верхнем углу.
     await openApp(page, '/');
     await page.setViewportSize({ width: 1085, height: 900 });
+    const plainSheetActions = header.locator('.header-sheet-actions');
     const identity = header.locator('.header-identity');
     const actions = header.locator('.header-actions');
+    await expect(plainSheetActions).toHaveCount(0);
     const rowOffset = async () => {
       const [identityBox, actionsBox] = await Promise.all([
         identity.boundingBox(),
@@ -316,7 +333,17 @@ test.describe('адаптивность', () => {
       );
     };
     await expect.poll(rowOffset).toBeLessThanOrEqual(8);
-    await expect.poll(rightGap).toBeLessThanOrEqual(24);
+    await expect
+      .poll(async () => {
+        const [headerBox, accountBox] = await Promise.all([
+          header.boundingBox(),
+          account.boundingBox(),
+        ]);
+        return Math.round(
+          headerBox!.x + headerBox!.width - (accountBox!.x + accountBox!.width),
+        );
+      })
+      .toBeLessThanOrEqual(24);
   });
 
   test('переключение языка EN ↔ RU', async ({ page, context }) => {
