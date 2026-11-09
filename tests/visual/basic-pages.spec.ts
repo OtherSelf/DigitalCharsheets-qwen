@@ -95,6 +95,39 @@ test.describe('гостевая шапка (главная и /login)', () => {
     await expectNoHorizontalOverflow(page);
   });
 
+  test('гостевая главная и /demo: контент скроллится на мобильном', async ({
+    page,
+    context,
+  }) => {
+    test.skip(!isMobile(), 'мобильный сценарий: проверяем touch-скролл');
+
+    await prepare(context, { authenticated: false });
+    for (const path of ['/', '/demo']) {
+      await openApp(page, path);
+
+      const main = page.locator('main');
+      const metrics = await main.evaluate((el) => {
+        el.scrollTop = el.scrollHeight;
+        const style = getComputedStyle(el);
+        return {
+          top: el.scrollTop,
+          overflowY: style.overflowY,
+          scrollHeight: el.scrollHeight,
+          clientHeight: el.clientHeight,
+        };
+      });
+
+      expect(metrics.overflowY, `${path}: main — скролл-контейнер`).toMatch(
+        /auto|scroll/,
+      );
+      expect(
+        metrics.scrollHeight,
+        `${path}: контент длиннее экрана`,
+      ).toBeGreaterThan(metrics.clientHeight);
+      expect(metrics.top, `${path}: main прокручивается`).toBeGreaterThan(0);
+    }
+  });
+
   test('login: шапка с видом/темой/языком и перевод формы', async ({
     page,
     context,
@@ -219,6 +252,16 @@ test.describe('адаптивность', () => {
     ]) {
       await openApp(page, path);
       await expectNoHorizontalOverflow(page);
+
+      // Вертикальный скролл живёт на <main> (html/body в layout-е
+      // зафиксированы в 100dvh с overflow: hidden), поэтому он обязан быть
+      // скролл-контейнером на каждой странице.
+      const overflowY = await page
+        .locator('main')
+        .evaluate((el) => getComputedStyle(el).overflowY);
+      expect(overflowY, `${path}: main — скролл-контейнер`).toMatch(
+        /auto|scroll/,
+      );
     }
 
     expect(errors, 'uncaught JS-ошибки на страницах').toEqual([]);
@@ -238,6 +281,13 @@ test.describe('адаптивность', () => {
     ]) {
       await openApp(page, path);
       await expectNoHorizontalOverflow(page);
+
+      const overflowY = await page
+        .locator('main')
+        .evaluate((el) => getComputedStyle(el).overflowY);
+      expect(overflowY, `${path}: main — скролл-контейнер (ru)`).toMatch(
+        /auto|scroll/,
+      );
     }
 
     expect(errors, 'uncaught JS-ошибки на страницах (ru)').toEqual([]);
