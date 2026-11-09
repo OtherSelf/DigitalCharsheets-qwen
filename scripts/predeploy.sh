@@ -4,16 +4,20 @@
 #
 #  Прогоняет всё, что имеет смысл проверить ДО деплоя, на этой же машине:
 #
-#    1/5 lockfile  — npm ci --dry-run: package.json и package-lock.json собраны
+#    1/7 lockfile  — npm ci --dry-run: package.json и package-lock.json собраны
 #                    одной версией npm (иначе установка на сервере падает)
-#    2/5 typecheck — tsc --noEmit (next.config.ts игнорирует ошибки TS при сборке,
+#    2/7 формат    — prettier --check .: стиль и порядок импортов
+#                    (аналог `black --check` / `isort --check`)
+#    3/7 линт      — eslint .: hooks, async, React/Next-правила
+#                    (next/core-web-vitals + next/typescript)
+#    4/7 typecheck — tsc --noEmit (next.config.ts игнорирует ошибки TS при сборке,
 #                    поэтому проверяем отдельно)
-#    3/5 unit      — vitest: авторизация, файловое хранилище, экспорт/импорт,
+#    5/7 unit      — vitest: авторизация, файловое хранилище, экспорт/импорт,
 #                    API-роуты (без сети, на временном каталоге данных)
-#    4/5 build     — next build (NODE_ENV=production); при EXDEV — повтор с
+#    6/7 build     — next build (NODE_ENV=production); при EXDEV — повтор с
 #                    scripts/lib/fs-rename-fallback.cjs, затем проверка того, что
 #                    .next/server/pages/{404,500}.html на месте
-#    5/5 smoke     — поднимает `next start` на свободном порту с ВРЕМЕННЫМ
+#    7/7 smoke     — поднимает `next start` на свободном порту с ВРЕМЕННЫМ
 #                    каталогом данных (DCS_DATA_DIR), гоняет по HTTP
 #                    scripts/smoke.mjs и гасит сервер
 #
@@ -21,8 +25,8 @@
 #
 #  Использование:
 #    ./scripts/predeploy.sh                  # полный прогон
-#    ./scripts/predeploy.sh --skip-build     # без шага 4/5, использовать готовый .next
-#    ./scripts/predeploy.sh --skip-smoke     # без шага 5/5
+#    ./scripts/predeploy.sh --skip-build     # без шага 6/7, использовать готовый .next
+#    ./scripts/predeploy.sh --skip-smoke     # без шага 7/7
 #    ./scripts/predeploy.sh --base-url http://localhost:3001   # только smoke по стенду
 #    ./scripts/predeploy.sh --keep           # сохранить временные данные и лог сервера
 #
@@ -115,6 +119,8 @@ bin() {
 TSC="$(bin tsc)"
 VITEST="$(bin vitest)"
 NEXT="$(bin next)"
+PRETTIER="$(bin prettier)"
+ESLINT="$(bin eslint)"
 
 TMP_DIRS=()
 SERVER_PID=""
@@ -197,10 +203,10 @@ if [ -n "$BASE_URL" ]; then
   exit 0
 fi
 
-# ── 0. lockfile ─────────────────────────────────────────────────────────────
+# ── 1. lockfile ─────────────────────────────────────────────────────────────
 # `npm ci` на сервере падает, если lock собран другим мажором npm (например,
 # локально npm 11, на сервере npm 10) — проверяем это здесь, а не на деплое.
-step "1/5 lockfile (npm ci --dry-run, npm $(npm -v))"
+step "1/7 lockfile (npm ci --dry-run, npm $(npm -v))"
 NPM_CI_LOG="$(mktemp "${TMPDIR:-/tmp}/dcs-predeploy-npmci-XXXXXX")"
 [ "$KEEP" -eq 1 ] || TMP_DIRS+=("$NPM_CI_LOG")
 if ! npm ci --dry-run --no-audit --no-fund >"$NPM_CI_LOG" 2>&1; then
@@ -212,23 +218,39 @@ if ! npm ci --dry-run --no-audit --no-fund >"$NPM_CI_LOG" 2>&1; then
 fi
 ok "lockfile в синхроне"
 
-# ── 1. typecheck ────────────────────────────────────────────────────────────
-step "2/5 typecheck ($TSC --noEmit)"
+# ── 2. формат ───────────────────────────────────────────────────────────────
+# Аналог `black --check`: стиль и порядок импортов не должны «уплывать» между
+# прогонами. Падает быстро (< 5 c) и не требует сети.
+[ -x ./node_modules/.bin/prettier ] || die "Нет prettier в node_modules. Установите dev-зависимости: npm ci"
+step "2/7 формат (prettier --check .)"
+"$PRETTIER" --check . || die "Формат нарушен. Запустите: npm run format (или npm run format:check — посмотреть список)"
+ok "формат соблюдён"
+
+# ── 3. линт ─────────────────────────────────────────────────────────────────
+# Ошибки ESLint — блокер. Предупреждения (известные exhaustive-deps и
+# неиспользуемые переменные) печатаются, но деплой не останавливают.
+[ -x ./node_modules/.bin/eslint ] || die "Нет eslint в node_modules. Установите dev-зависимости: npm ci"
+step "3/7 линт (eslint .)"
+"$ESLINT" . || die "ESLint нашёл ошибки (см. вывод выше)"
+ok "линт без ошибок"
+
+# ── 4. typecheck ────────────────────────────────────────────────────────────
+step "4/7 typecheck ($TSC --noEmit)"
 "$TSC" --noEmit || die "TypeScript-ошибки. Почините их или запустите с --skip-unit? (см. вывод выше)"
 ok "типы сходятся"
 
-# ── 2. unit-тесты ───────────────────────────────────────────────────────────
+# ── 5. unit-тесты ───────────────────────────────────────────────────────────
 if [ "$SKIP_UNIT" -eq 0 ]; then
-  step "3/5 unit-тесты ($VITEST run)"
+  step "5/7 unit-тесты ($VITEST run)"
   "$VITEST" run || die "Юнит-тесты упали (см. вывод выше)"
   ok "юнит-тесты зелёные"
 else
-  warn "3/5 unit-тесты пропущены (--skip-unit)"
+  warn "5/7 unit-тесты пропущены (--skip-unit)"
 fi
 
-# ── 3. сборка ───────────────────────────────────────────────────────────────
+# ── 6. сборка ───────────────────────────────────────────────────────────────
 if [ "$SKIP_BUILD" -eq 0 ]; then
-  step "4/5 сборка (npm run build)"
+  step "6/7 сборка (npm run build)"
 
   BUILD_LOG="$(mktemp "${TMPDIR:-/tmp}/dcs-predeploy-build-XXXXXX")"
   [ "$KEEP" -eq 1 ] || TMP_DIRS+=("$BUILD_LOG")
@@ -255,7 +277,7 @@ if [ "$SKIP_BUILD" -eq 0 ]; then
   fi
 else
   [ -f .next/BUILD_ID ] || die "Нет .next/BUILD_ID, а сборка пропущена. Запустите npm run build или уберите --skip-build"
-  warn "4/5 сборка пропущена (--skip-build), используем .next от $(date -r .next/BUILD_ID '+%Y-%m-%d %H:%M' 2>/dev/null || echo 'неизвестно когда')"
+  warn "6/7 сборка пропущена (--skip-build), используем .next от $(date -r .next/BUILD_ID '+%Y-%m-%d %H:%M' 2>/dev/null || echo 'неизвестно когда')"
 fi
 
 # Контракт EXDEV-обхода (§5.2): next build обязан оставить страницы ошибок на
@@ -269,11 +291,11 @@ for page in 404 500; do
 done
 ok "артефакты .next/server/pages/{404,500}.html на месте"
 
-# ── 4. smoke-тест на временном сервере ──────────────────────────────────────
+# ── 7. smoke-тест на временном сервере ──────────────────────────────────────
 if [ "$SKIP_SMOKE" -eq 1 ]; then
-  warn "5/5 smoke-тест пропущен (--skip-smoke)"
+  warn "7/7 smoke-тест пропущен (--skip-smoke)"
 else
-  step "5/5 smoke: next start + HTTP-проверки"
+  step "7/7 smoke: next start + HTTP-проверки"
 
   [ -n "$PORT" ] || PORT="$(free_port)"
   [ -n "$PORT" ] || die "Не удалось выбрать свободный порт"
