@@ -9,14 +9,21 @@ import { Header } from '@/components/header';
  * же экран: общая шапка + демо-лендинг. Раньше разметка дублировалась в двух
  * страницах, а ссылка «создать персонажа» вела на разные маршруты
  * (/new/manual и /new).
+ *
+ * Высота и скролл устроены как на остальных страницах приложения: корневой
+ * layout держит html/body в 100dvh с overflow: hidden, поэтому документ сам
+ * не прокручивается. Контент лендинга скроллится внутри <main>, иначе на
+ * телефоне нижняя часть страницы оказывалась недоступной.
  */
 export function DemoLandingView() {
   return (
-    <div className="flex min-h-screen flex-col bg-background">
+    <div className="flex h-dvh flex-col bg-background">
       <Header authAction="login" />
 
-      <main className="container mx-auto max-w-6xl flex-1 px-4 py-8 pb-20">
-        <DemoLanding createHref="/new" />
+      <main className="safe-area-bottom flex-1 overflow-y-auto px-4 py-8 pb-20">
+        <div className="container mx-auto max-w-6xl">
+          <DemoLanding createHref="/new" />
+        </div>
       </main>
     </div>
   );
