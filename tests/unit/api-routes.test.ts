@@ -6,7 +6,10 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { POST as existsRoute } from '@/app/api/auth/exists/route';
 import { POST as logoutRoute } from '@/app/api/auth/logout/route';
 import { POST as phraseRoute } from '@/app/api/auth/phrase/route';
-import { PUT as profileRoute } from '@/app/api/auth/profile/route';
+import {
+  DELETE as profileDelete,
+  PUT as profileRoute,
+} from '@/app/api/auth/profile/route';
 import { POST as recoverRoute } from '@/app/api/auth/recover/route';
 import { POST as recoverUpdateRoute } from '@/app/api/auth/recover/update/route';
 import { POST as recoverVerifyRoute } from '@/app/api/auth/recover/verify/route';
@@ -322,6 +325,96 @@ describe('PUT /api/auth/profile', () => {
   });
 });
 
+describe('DELETE /api/auth/profile', () => {
+  const deleteReq = (password: unknown, headers: Record<string, string> = {}) =>
+    new Request('http://localhost/api/auth/profile', {
+      method: 'DELETE',
+      headers: { 'content-type': 'application/json', ...headers },
+      body: JSON.stringify({ password }),
+    });
+
+  it('без сессии — 401 и ничего не удаляет', async () => {
+    const res = await profileDelete(deleteReq('1234'));
+    expect(res.status).toBe(401);
+    expect((await res.json()).reason).toBe('unauthorized');
+  });
+
+  it('без пароля — 400, аккаунт остаётся на месте', async () => {
+    const { uid } = await loginAs('delete-no-pass');
+
+    const res = await profileDelete(deleteReq('', sessionHeaders(uid)));
+
+    expect(res.status).toBe(400);
+    expect((await res.json()).reason).toBe('invalid_input');
+    expect(fs.existsSync(userPaths(dataDir, uid).userFile)).toBe(true);
+  });
+
+  it('неверный пароль — 403, аккаунт и листы целы', async () => {
+    const { uid } = await loginAs('delete-wrong-pass');
+    await charactersPost(json({ ...makeDndCharacter() }, sessionHeaders(uid)));
+
+    const res = await profileDelete(
+      deleteReq('not-my-password', sessionHeaders(uid)),
+    );
+
+    expect(res.status).toBe(403);
+    expect((await res.json()).reason).toBe('invalid_password');
+    expect(fs.existsSync(userPaths(dataDir, uid).userFile)).toBe(true);
+    expect(fs.readdirSync(userPaths(dataDir, uid).charactersDir)).toHaveLength(
+      1,
+    );
+  });
+
+  it('верный пароль — 200, каталог и индекс удалены, cookie стёрта', async () => {
+    const { uid } = await loginAs('delete-me');
+    await charactersPost(json({ ...makeDndCharacter() }, sessionHeaders(uid)));
+
+    const res = await profileDelete(deleteReq('1234', sessionHeaders(uid)));
+
+    expect(res.status).toBe(200);
+    expect(await res.json()).toMatchObject({ success: true });
+    expect(res.headers.get('set-cookie')).toMatch(/dcs_session=;/);
+    expect(res.headers.get('set-cookie')).toMatch(/Max-Age=0/);
+
+    expect(fs.existsSync(userPaths(dataDir, uid).userDir)).toBe(false);
+    expect(
+      readJson(loginIndexPath(dataDir)).logins['delete-me'],
+    ).toBeUndefined();
+
+    // Вход по старому паролю больше не находит аккаунт.
+    const relogin = await loginRoute(
+      json({ username: 'delete-me', password: '1234' }),
+    );
+    expect(relogin.status).toBe(404);
+  });
+
+  it('старая cookie после удаления не работает и не воссоздаёт каталог', async () => {
+    const { uid } = await loginAs('stale-cookie');
+    expect(
+      (await profileDelete(deleteReq('1234', sessionHeaders(uid)))).status,
+    ).toBe(200);
+
+    // Подпись cookie ещё валидна (30 дней), но профиля уже нет — 401.
+    const res = await charactersGet(
+      req('http://localhost/api/characters', 'GET', sessionHeaders(uid)),
+    );
+    expect(res.status).toBe(401);
+    // Доступ «по старой сессии» не должен воскресить users/<uid>/characters.
+    expect(fs.existsSync(userPaths(dataDir, uid).userDir)).toBe(false);
+  });
+
+  it('освобождённый логин можно зарегистрировать заново с новым uid', async () => {
+    const { uid: oldUid } = await loginAs('reborn-account');
+    await profileDelete(deleteReq('1234', sessionHeaders(oldUid)));
+
+    const again = await registerAs('reborn-account', 'fresh-pass', 'Reborn');
+
+    expect(again.res.status).toBe(200);
+    expect(isUid(again.uid)).toBe(true);
+    expect(again.uid).not.toBe(oldUid);
+  });
+});
+
 describe('/api/characters', () => {
   it('GET без сессии — 401', async () => {
     const res = await charactersGet(req('http://localhost/api/characters'));
@@ -590,7 +683,7 @@ describe('recovery-роуты', () => {
   }
 
   it('/api/auth/phrase без сессии — 401', async () => {
-    const uid = createUserWithCharacter();
+    createUserWithCharacter();
     const res = await phraseRoute(json({ phrase: 'Alpha Beta' }));
     expect(res.status).toBe(401);
   });

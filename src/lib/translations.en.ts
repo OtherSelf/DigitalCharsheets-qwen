@@ -1069,6 +1069,28 @@ export const enTranslations = {
   uiScale: 'UI Scale',
   uiScaleWarning: 'Scale ranges from 50% to 150%. Changes apply instantly.',
   resetToDefaults: 'Reset to defaults',
+  // ─── /settings: удаление аккаунта (danger zone) ───────────────────────────
+  dangerZone: 'Danger Zone',
+  dangerZoneDescription:
+    'Irreversible actions. Read the warning carefully before continuing.',
+  deleteAccount: 'Delete Account',
+  deleteAccountDescription:
+    'Permanently delete your profile and all of your character sheets.',
+  deleteAccountConfirmTitle: 'Delete your account?',
+  deleteAccountIrreversible:
+    'This action cannot be undone. Your account will be permanently deleted.',
+  deleteAccountWarning:
+    'Your profile, every character sheet and the recovery phrase of this account will be erased. The login will become free again, and a new account registered under it will receive a new identifier. Deleted data cannot be restored — not even by an administrator.',
+  deleteAccountPasswordLabel: 'Confirm your password',
+  deleteAccountPasswordPlaceholder: 'Enter your current password',
+  deleteAccountPasswordHint:
+    'Enter your current password to confirm that this is your account.',
+  deleteAccountConfirmAction: 'Delete Account Permanently',
+  deleteAccountDeleting: 'Deleting...',
+  deleteAccountFailed: 'Failed to delete the account.',
+  deleteAccountIncorrectPassword:
+    'Incorrect password. The account was not deleted.',
+  deleteAccountPasswordRequired: 'Enter your password to confirm.',
   // Восстановлены после разбиения translations.ts на en/ru.
   back: 'Back',
   passwordMinLength: 'Password must be at least 4 characters.',

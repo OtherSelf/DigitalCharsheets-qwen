@@ -187,6 +187,57 @@ test.describe('login: вход, регистрация, восстановлен
     await expect(page.getByText('Lucius Varn')).toBeVisible();
     expect(errors, 'ошибки JS при входе').toEqual([]);
   });
+
+  // Сквозной путь удаления: свой новый аккаунт (чтобы не трогать seeded),
+  // неверный пароль не удаляет, верный — стирает и выводит на /login.
+  test('settings — удаление аккаунта с подтверждением паролем', async ({
+    page,
+    context,
+  }) => {
+    await prepare(context, { authenticated: false, theme: 'light' });
+    const errors = collectPageErrors(page);
+    const account = {
+      username: `ui-delete-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      password: 'visual-pass-1234',
+      displayName: 'Delete Me',
+      recoveryPhrase: 'amber cobalt lantern',
+    };
+
+    await registerViaUI(page, account);
+    await openApp(page, '/settings');
+
+    await page.getByTestId('delete-account-open').click();
+    const dialog = page.getByTestId('delete-account-dialog');
+    await expect(dialog).toBeVisible();
+
+    // Неверный пароль: аккаунт жив, ошибка локализована в диалоге.
+    await dialog
+      .getByLabel('Confirm your password', { exact: true })
+      .fill('definitely-wrong');
+    await dialog.getByTestId('delete-account-confirm').click();
+    await expect(dialog.getByTestId('delete-account-error')).toContainText(
+      'Incorrect password. The account was not deleted.',
+    );
+    expect(new URL(page.url()).pathname).toBe('/settings');
+
+    // Верный пароль: редирект на /login, старый пароль больше не работает.
+    await dialog
+      .getByLabel('Confirm your password', { exact: true })
+      .fill(account.password);
+    await dialog.getByTestId('delete-account-confirm').click();
+    await page.waitForURL((url) => url.pathname === '/login', {
+      timeout: 30_000,
+    });
+    await expect(page.getByTestId('auth-card-title')).toHaveText(
+      'Welcome Back',
+    );
+
+    const relogin = await context.request.post('/api/auth', {
+      data: { username: account.username, password: account.password },
+    });
+    expect(relogin.status(), 'удалённый аккаунт не должен входить').toBe(404);
+    expect(errors, 'ошибки JS при удалении аккаунта').toEqual([]);
+  });
 });
 
 test.describe('общие страницы', () => {
@@ -554,5 +605,60 @@ test.describe('демо и настройки профиля', () => {
     ).toBeVisible();
     await expect(page.getByText('Настройки отображения')).toBeVisible();
     await screenshotPage(page, 'settings-ru.png');
+  });
+
+  // ─── Danger Zone: удаление аккаунта ─────────────────────────────────────
+  // Диалог ничего не удаляет: проверяем предупреждение, поле пароля и то, что
+  // подтверждение заблокировано до ввода. Аккаунт остаётся жив для других тестов.
+  test('settings — удаление аккаунта, предупреждение (en)', async ({
+    page,
+    context,
+  }) => {
+    await prepare(context);
+    await openApp(page, '/settings');
+
+    await page.getByTestId('delete-account-open').click();
+    const dialog = page.getByTestId('delete-account-dialog');
+    await expect(dialog).toBeVisible();
+    await expect(
+      dialog.getByRole('heading', { name: 'Delete your account?' }),
+    ).toBeVisible();
+    await expect(
+      dialog.getByText(/This action cannot be undone/i),
+    ).toBeVisible();
+    await expect(
+      dialog.getByText(/deleted data cannot be restored/i),
+    ).toBeVisible();
+    await expect(
+      dialog.getByLabel('Confirm your password', { exact: true }),
+    ).toBeVisible();
+    await expect(dialog.getByTestId('delete-account-confirm')).toBeDisabled();
+
+    await screenshotPage(page, 'settings-delete-account-en.png');
+  });
+
+  test('settings — удаление аккаунта, предупреждение (ru)', async ({
+    page,
+    context,
+  }) => {
+    await prepare(context, { language: 'ru' });
+    await openApp(page, '/settings');
+
+    await page.getByTestId('delete-account-open').click();
+    const dialog = page.getByTestId('delete-account-dialog');
+    await expect(dialog).toBeVisible();
+    await expect(
+      dialog.getByRole('heading', { name: 'Удалить ваш аккаунт?' }),
+    ).toBeVisible();
+    await expect(dialog.getByText(/нельзя отменить/i)).toBeVisible();
+    await expect(
+      dialog.getByText(/Восстановить удалённые данные нельзя/i),
+    ).toBeVisible();
+    await expect(
+      dialog.getByLabel('Подтвердите пароль', { exact: true }),
+    ).toBeVisible();
+    await expect(dialog.getByTestId('delete-account-confirm')).toBeDisabled();
+
+    await screenshotPage(page, 'settings-delete-account-ru.png');
   });
 });

@@ -3,7 +3,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 import {
@@ -18,6 +17,7 @@ import {
 
 import { LanguageToggle } from '@/components/layout/language-toggle';
 import { ThemeToggle } from '@/components/layout/theme-toggle';
+import { DeleteAccountCard } from '@/components/settings/delete-account-card';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -355,6 +355,11 @@ export default function ProfileSettingsPage() {
               </CardFooter>
             </Card>
           </form>
+
+          {/* 🎯 LANDMARK: DANGER_ZONE_OUTSIDE_PROFILE_FORM
+              Вне <form>: у карточки свой диалог со своей формой; вложенные
+              формы недопустимы и сломали бы submit профиля. */}
+          <DeleteAccountCard />
         </div>
       </main>
     </div>

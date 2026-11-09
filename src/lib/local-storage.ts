@@ -36,6 +36,19 @@ export function clearLocalUser(): void {
   localStorage.removeItem(STORAGE_KEYS.USER);
 }
 
+/**
+ * Полная очистка локальных данных аккаунта: снимок профиля И локальные листы.
+ *
+ * Обычному выходу (`clearLocalUser`) этого не нужно — листы остаются на
+ * сервере. А после удаления аккаунта localStorage не должен хранить даже
+ * устаревший снимок: аккаунта больше нет, восстанавливать его «из кеша» нельзя.
+ */
+export function clearLocalAccountData(): void {
+  if (typeof window === 'undefined') return;
+  localStorage.removeItem(STORAGE_KEYS.USER);
+  localStorage.removeItem(STORAGE_KEYS.CHARACTERS);
+}
+
 // (Keep your existing getLocalCharacters, saveLocalCharacters, addLocalCharacter, etc. exactly as you had them)
 export function getLocalCharacters(): Character[] {
   if (typeof window === 'undefined') return [];
