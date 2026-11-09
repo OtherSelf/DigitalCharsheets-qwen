@@ -38,6 +38,22 @@ validates `appName`, `format`, version, `kind`, character fields and `characterC
 legacy files (a bare array, a bare character or a v1 envelope) are rejected with a
 "re-export" message.
 
+## Code style
+
+The Python equivalent of `isort --profile black .; black .` here is:
+
+```bash
+npm run format         # prettier --write . — import sorting + formatting
+npm run format:check   # prettier --check . — CI / pre-commit gate
+```
+
+- `prettier` — formatting (the `black` part), config in `prettier.config.mjs`.
+- `@ianvs/prettier-plugin-sort-imports` — the `isort` part: groups imports as
+  builtin → `react`/`next` → third-party → `@/…` → relative, and sorts them.
+- `prettier-plugin-tailwindcss` — sorts Tailwind classes inside `className`.
+- `.prettierignore` keeps `.next`, `node_modules`, Playwright reports, `data/`,
+  `public/` and `*.md` out of the run.
+
 ## Tests (before deploying)
 
 ```bash
