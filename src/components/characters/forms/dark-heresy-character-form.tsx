@@ -39,8 +39,11 @@ import { useTranslation } from '@/context/language-context';
 import { useToast } from '@/hooks/use-toast';
 import {
   ALL_QUIRKS,
+  CAREER_KEYS,
   DIVINATIONS,
+  HOME_WORLD_KEYS,
   QUIRKS_BY_HOMEWORLD,
+  VARIANT_KEYS,
   WORLD_VARIANT_LABELS,
   WORLD_VARIANTS_BY_HOMEWORLD,
 } from '@/lib/dark-heresy-data';
@@ -52,62 +55,12 @@ import {
   DarkHeresyHomeWorlds,
 } from '@/lib/types';
 
-// Map raw data strings to translation keys
-const HOME_WORLD_KEYS: Record<string, string> = {
-  'Feral World': 'homeWorldFeral',
-  'Hive World': 'homeWorldHive',
-  'Imperial World': 'homeWorldImperial',
-  'Void Born': 'homeWorldVoidBorn',
-  'Forge World': 'homeWorldForge',
-};
-
-const CAREER_KEYS: Record<string, string> = {
-  Adept: 'careerAdept',
-  Arbitrator: 'careerArbitrator',
-  Assassin: 'careerAssassin',
-  Cleric: 'careerCleric',
-  Guardsman: 'careerGuardsman',
-  'Imperial Psyker': 'careerImperialPsyker',
-  Scum: 'careerScum',
-  'Tech-Priest': 'careerTechPriest',
-};
-
-const VARIANT_KEYS: Record<string, string> = {
-  'Agri-World': 'variantAgriWorld',
-  Backwater: 'variantBackwater',
-  'Feudal World': 'variantFeudalWorld',
-  'War Zone': 'variantWarZone',
-  'Dead Planet': 'variantDeadPlanet',
-  'Shrine World': 'variantShrineWorld',
-  'Paradise World': 'variantParadiseWorld',
-  'Dirt Ward': 'variantDirtWard',
-  'Unlucky Colour': 'variantUnluckyColour',
-  "Hunter's Oath": 'variantHuntersOath',
-  'Thirsty Blade': 'variantThirstyBlade',
-  'Spirit Shackle': 'variantSpiritShackle',
-  'Warrior Death': 'variantWarriorDeath',
-  'Power of Names': 'variantPowerOfNames',
-  'Lonely Dead': 'variantLonelyDead',
-  'Living Record': 'variantLivingRecord',
-  Nemesis: 'variantNemesis',
-  'Dross Hound': 'variantDrossHound',
-  'Ganger Scum': 'variantGangerScum',
-  'Factory Dregs': 'variantFactoryDregs',
-  'Middle Hive': 'variantMiddleHive',
-  Specialist: 'variantSpecialist',
-  'Hive Noble': 'variantHiveNoble',
-  'Space Hulk': 'variantSpaceHulk',
-  Orbital: 'variantOrbital',
-  'Chartist Vessel': 'variantChartistVessel',
-  'War Ship': 'variantWarShip',
-  'Rogue Trader': 'variantRogueTrader',
-};
-
 const VARIANT_LABEL_KEYS: Record<string, string> = {
   'Feral World': 'tribalTaboos',
   'Hive World': 'hiveClass',
   'Imperial World': 'birthPlanet',
   'Void Born': 'shipTradition',
+  'Forge World': 'placeOfBirth',
 };
 
 // Helper to dynamically generate quirk translation keys (e.g., "Cat’s Eyes" -> "quirkCatsEyes")

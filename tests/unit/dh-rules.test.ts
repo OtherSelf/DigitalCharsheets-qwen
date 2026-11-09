@@ -24,7 +24,8 @@ import { DarkHeresyCareerPaths, DarkHeresyHomeWorlds } from '@/lib/types';
  * Источники (номера страниц — по колонцифре книги):
  *   • родные миры — Таблица 1-1, стр. 10;
  *   • приметы — Таблица 1-13, стр. 58;
- *   • «прошлое» (табу/касты/планеты/традиции) — Таблицы 1-14…1-17, стр. 58–60;
+ *   • «прошлое» (табу/касты/планеты/традиции) — Таблицы 1-14…1-17, стр. 58–60,
+ *     для Мира-кузницы — Таблица И-1-2 «Место Рождения», стр. 27;
  *   • пророчества — Таблица 1-18, стр. 60–61;
  *   • профессии — Таблица 2-1, стр. 66 (Сороритас — опциональная, вне
  *     стандартной генерации, поэтому в списке профессий её нет).
@@ -133,14 +134,21 @@ describe('Dark Heresy: справочные данные против базов
     ).toBe('+3 Fellowship.');
   });
 
-  it('варианты «прошлого» совпадают по количеству с Таблицами 1-14…1-17', () => {
+  it('варианты «прошлого» совпадают по количеству с Таблицами 1-14…1-17 и И-1-2', () => {
     // Дикий Мир — 10, Мир-улей — 6, Имперский Мир — 7, Рождённый в Пустоте — 4.
     expect(WORLD_VARIANTS_BY_HOMEWORLD['Feral World']).toHaveLength(10);
     expect(WORLD_VARIANTS_BY_HOMEWORLD['Hive World']).toHaveLength(6);
     expect(WORLD_VARIANTS_BY_HOMEWORLD['Imperial World']).toHaveLength(7);
     expect(WORLD_VARIANTS_BY_HOMEWORLD['Void Born']).toHaveLength(4);
-    // У Мира-кузницы в базовой книге таблицы «Прошлого» нет.
-    expect(WORLD_VARIANTS_BY_HOMEWORLD['Forge World']).toEqual([]);
+    // Мир-кузница — 6 мест рождения из Таблицы И-1-2 (стр. 27).
+    expect(WORLD_VARIANTS_BY_HOMEWORLD['Forge World']).toEqual([
+      'Great Forge World',
+      'Minor Forge World',
+      'Orbit',
+      'Territory',
+      'Research Outpost',
+      'Explorator Fleet',
+    ]);
   });
 
   it('у каждого варианта мира есть ключ и перевод', () => {

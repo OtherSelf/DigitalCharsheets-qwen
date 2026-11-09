@@ -223,9 +223,15 @@ export const WORLD_VARIANTS_BY_HOMEWORLD: Record<string, string[]> = {
     'Hive Noble',
   ],
   'Void Born': ['Space Hulk', 'Orbital', 'Chartist Vessel', 'Rogue Trader'],
-  // В базовой книге (табл. 1-14…1-17) таблицы «Прошлого» для Мира-кузницы нет;
-  // происхождения миров Латэ — в отдельной книге «Миры Латэ», стр. 148+.
-  'Forge World': [],
+  // Таблица И-1-2 «Место Рождения» (стр. 27).
+  'Forge World': [
+    'Great Forge World',
+    'Minor Forge World',
+    'Orbit',
+    'Territory',
+    'Research Outpost',
+    'Explorator Fleet',
+  ],
 };
 
 export const WORLD_VARIANT_LABELS: Record<string, string> = {
@@ -233,6 +239,7 @@ export const WORLD_VARIANT_LABELS: Record<string, string> = {
   'Hive World': 'Hive Class',
   'Imperial World': 'Birth Planet',
   'Void Born': 'Ship Tradition',
+  'Forge World': 'Place of Birth',
 };
 
 export const HOME_WORLD_KEYS: Record<string, string> = {
@@ -271,6 +278,12 @@ export const VARIANT_KEYS: Record<string, string> = {
   Orbital: 'variantOrbital',
   'Chartist Vessel': 'variantChartistVessel',
   'Rogue Trader': 'variantRogueTrader',
+  'Great Forge World': 'variantGreatForgeWorld',
+  'Minor Forge World': 'variantMinorForgeWorld',
+  Orbit: 'variantForgeOrbit',
+  Territory: 'variantTerritory',
+  'Research Outpost': 'variantResearchOutpost',
+  'Explorator Fleet': 'variantExploratorFleet',
 };
 
 export const ALL_QUIRKS = [

@@ -131,6 +131,7 @@ export const InfoSection = ({
     if (key === 'Hive Class') return t('hiveClass');
     if (key === 'Birth Planet') return t('birthPlanet');
     if (key === 'Ship Tradition') return t('shipTradition');
+    if (key === 'Place of Birth') return t('placeOfBirth');
     return t('worldVariant');
   }, [character.homeWorld, t]);
 
