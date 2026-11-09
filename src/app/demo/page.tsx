@@ -198,7 +198,7 @@ export default function DemoPage() {
           </h1>
           <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
             Explore our digital character sheets for D&D 5e and Dark Heresy.
-            Create a new character or preview a pre-made sheet. When you're
+            Create a new character or preview a pre-made sheet. When you&apos;re
             ready to save your progress, simply create an account!
           </p>
         </div>
