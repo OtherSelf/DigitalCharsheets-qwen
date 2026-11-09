@@ -1072,6 +1072,27 @@ export const ruTranslations = {
   uiScaleWarning:
     'Масштаб варьируется от 50% до 150%. Изменения применяются мгновенно.',
   resetToDefaults: 'Сбросить к стандартным настройкам',
+  // ─── /settings: удаление аккаунта (danger zone) ───────────────────────────
+  dangerZone: 'Опасная зона',
+  dangerZoneDescription:
+    'Необратимые действия. Перед продолжением внимательно прочитайте предупреждение.',
+  deleteAccount: 'Удалить аккаунт',
+  deleteAccountDescription:
+    'Безвозвратно удалить профиль и все листы персонажей.',
+  deleteAccountConfirmTitle: 'Удалить ваш аккаунт?',
+  deleteAccountIrreversible:
+    'Это действие нельзя отменить. Аккаунт будет удалён навсегда.',
+  deleteAccountWarning:
+    'Профиль, все листы персонажей и фраза восстановления этого аккаунта будут стёрты. Логин снова станет свободным, а новый аккаунт под ним получит новый идентификатор. Восстановить удалённые данные нельзя — даже администратору.',
+  deleteAccountPasswordLabel: 'Подтвердите пароль',
+  deleteAccountPasswordPlaceholder: 'Введите текущий пароль',
+  deleteAccountPasswordHint:
+    'Введите текущий пароль, чтобы подтвердить, что это ваш аккаунт.',
+  deleteAccountConfirmAction: 'Удалить аккаунт навсегда',
+  deleteAccountDeleting: 'Удаление...',
+  deleteAccountFailed: 'Не удалось удалить аккаунт.',
+  deleteAccountIncorrectPassword: 'Неверный пароль. Аккаунт не удалён.',
+  deleteAccountPasswordRequired: 'Введите пароль для подтверждения.',
   // Восстановлены после разбиения translations.ts на en/ru.
   back: 'Назад',
   passwordMinLength: 'Пароль должен содержать не менее 4 символов.',

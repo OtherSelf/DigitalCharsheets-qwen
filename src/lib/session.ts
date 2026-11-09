@@ -2,7 +2,7 @@ import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
 
-import { getDataDir, getSessionSecretFile } from './data-dir';
+import { getDataDir, getSessionSecretFile, getUserFile } from './data-dir';
 
 /**
  * ─── LANDMARK: SERVER-SIDE SESSION ──────────────────────────────────────────
@@ -131,10 +131,22 @@ export function parseCookieHeader(
   return result;
 }
 
-/** uid из запроса или null, если сессии нет/она просрочена/подпись не сходится. */
+/**
+ * uid из запроса или null, если сессии нет/она просрочена/подпись не сходится
+ * или профиль удалён.
+ *
+ * Проверка `user.json` нужна после удаления аккаунта: подпись cookie
+ * самодостаточна и живёт 30 дней, поэтому старая cookie на другом устройстве
+ * осталась бы «валидной». Без этой проверки `GET/POST /api/characters`
+ * воссоздал бы каталог `users/<uid>/characters` и удалённые данные могли бы
+ * вернуться. Нет профиля — нет сессии.
+ */
 export function getSessionUid(request: Request): string | null {
   const cookies = parseCookieHeader(request.headers.get('cookie'));
-  return verifySession(cookies[SESSION_COOKIE]);
+  const uid = verifySession(cookies[SESSION_COOKIE]);
+  if (!uid) return null;
+  if (!fs.existsSync(getUserFile(uid))) return null;
+  return uid;
 }
 
 /** Заголовок Set-Cookie, который ставит сессию после входа. */

@@ -10,6 +10,7 @@ import React, {
 } from 'react';
 
 import {
+  clearLocalAccountData,
   clearLocalUser,
   getLocalUser,
   LocalUser,
@@ -68,6 +69,11 @@ interface LocalAuthContextType {
     recoveryPhrase: string,
   ) => Promise<LoginResult>;
   accountExists: (username: string) => Promise<AccountExistsResult>;
+  /**
+   * Удалить СВОЙ аккаунт. Требует текущий пароль; при успехе сервер стирает
+   * каталог и cookie, а контекст — локальный снимок профиля.
+   */
+  deleteAccount: (password: string) => Promise<LoginResult>;
   logout: () => void;
   restoreSession: (user: LocalUser) => void; // 🆕 LANDMARK: used by recovery flow
   updateUserPhrase: (hasPhrase: boolean) => void;
@@ -200,6 +206,44 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
     [],
   );
 
+  /**
+   * ─── LANDMARK: DELETE ACCOUNT (client) ─────────────────────────────────────
+   * Пароль уходит на сервер для повторной аутентификации; одной cookie мало.
+   * При успехе сервер уже стёр cookie и каталог данных, поэтому здесь только
+   * чистим локальный снимок профиля (и устаревшие локальные листы) — иначе
+   * приложение продолжило бы показывать «удалённого» пользователя до reload.
+   */
+  const deleteAccount = useCallback(
+    async (password: string): Promise<LoginResult> => {
+      try {
+        const res = await fetch('/api/auth/profile', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password }),
+        });
+
+        const data = await res.json().catch(() => null);
+
+        if (!res.ok || !data?.success) {
+          return {
+            success: false,
+            error: data?.error || `Server returned an error (${res.status}).`,
+            reason: data?.reason,
+          };
+        }
+
+        clearLocalAccountData();
+        setUser(null);
+        setLastAuthKind(null);
+        return { success: true };
+      } catch (error) {
+        console.error('[auth] account deletion failed:', error);
+        return { success: false, error: 'Failed to connect to server.' };
+      }
+    },
+    [],
+  );
+
   const logout = useCallback(() => {
     // Стираем cookie на сервере; локальный снимок — в любом случае.
     try {
@@ -233,6 +277,7 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
         login,
         register,
         accountExists,
+        deleteAccount,
         logout,
         restoreSession,
         updateUserPhrase,

@@ -632,7 +632,74 @@ await check(
   },
 );
 
-// 6. Уборка
+// 6. Удаление аккаунта (danger zone на /settings)
+await check('DELETE /api/auth/profile без сессии → 401', async () => {
+  const res = await api('/auth/profile', {
+    method: 'DELETE',
+    body: { password },
+    auth: false,
+  });
+  assertStatus(res, 401, 'DELETE /api/auth/profile без сессии');
+});
+
+await check('DELETE /api/auth/profile с неверным паролем → 403', async () => {
+  const res = await api('/auth/profile', {
+    method: 'DELETE',
+    body: { password: 'definitely-wrong' },
+  });
+  assertStatus(res, 403, 'DELETE /api/auth/profile (неверный пароль)');
+  const body = assertJson(res, 'DELETE /api/auth/profile (неверный пароль)');
+  assert(
+    body.reason === 'invalid_password',
+    `DELETE: reason = ${body.reason}, ожидали invalid_password`,
+  );
+});
+
+await check('DELETE /api/auth/profile → 200 и cookie стёрта', async () => {
+  const res = await api('/auth/profile', {
+    method: 'DELETE',
+    body: { password },
+  });
+  assertStatus(res, 200, 'DELETE /api/auth/profile');
+  const body = assertJson(res, 'DELETE /api/auth/profile');
+  assert(body.success === true, 'DELETE /api/auth/profile: success !== true');
+  assert(
+    /dcs_session=;/.test(res.headers.get('set-cookie') || ''),
+    'DELETE /api/auth/profile: cookie не стёрта',
+  );
+});
+
+await check('после удаления вход старым паролем → 404', async () => {
+  const res = await api('/auth', {
+    method: 'POST',
+    body: { username, password },
+    auth: false,
+  });
+  assertStatus(res, 404, 'вход после удаления аккаунта');
+});
+
+if (opts.dataDir) {
+  await check(
+    'после удаления каталога аккаунта и записи в индексе нет',
+    async () => {
+      const userDir = path.join(opts.dataDir, 'users', userId);
+      assert(
+        !fs.existsSync(userDir),
+        `DELETE /api/auth/profile: каталог остался (${userDir})`,
+      );
+      const indexFile = path.join(opts.dataDir, 'index', 'logins.json');
+      if (fs.existsSync(indexFile)) {
+        const index = JSON.parse(fs.readFileSync(indexFile, 'utf8'));
+        assert(
+          index.logins?.[username.toLowerCase()] === undefined,
+          'DELETE /api/auth/profile: запись в индексе осталась',
+        );
+      }
+    },
+  );
+}
+
+// 7. Уборка
 if (opts.dataDir && userId) {
   const userDir = path.join(opts.dataDir, 'users', userId);
   if (opts.keepUser) {

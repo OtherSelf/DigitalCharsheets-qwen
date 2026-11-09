@@ -4,9 +4,9 @@ import fs from 'fs';
 import { getUserDir, getUserFile } from './data-dir';
 import { withDataLock } from './data-lock';
 import { writeJsonAtomic } from './fs-atomic';
-import { defaultDisplayName, newUid, normalizeLogin } from './ids';
+import { defaultDisplayName, isUid, newUid, normalizeLogin } from './ids';
 import { LocalUser } from './local-storage';
-import { getCharactersFromServer } from './server-storage';
+import { getCharactersFromServer, resetWriteSeqGuard } from './server-storage';
 import {
   readLoginIndexForUpdate,
   rebuildLoginIndex,
@@ -389,6 +389,93 @@ export function updateUserProfile(
     return {
       success: false,
       error: `Failed to update profile: ${e instanceof Error ? e.message : 'Unknown error'}`,
+    };
+  }
+}
+
+/**
+ * ─── LANDMARK: ACCOUNT DELETION ─────────────────────────────────────────────
+ * Удаление своего профиля. Необратимо: стирается каталог `users/<uid>` целиком
+ * (user.json + все листы персонажей) и запись из индекса логинов. Восстановить
+ * данные после этого нельзя — «отмена» ищет файлы, которых больше нет.
+ *
+ * Защита: uid обязан быть UUID (он приходит из подписанной cookie, но путь
+ * проверяем отдельно — `rm -rf` не должен зависеть от того, что подпись
+ * оказалась валидной), а пароль сверяется с sha256-хешем из user.json. Пароль
+ * проверяется ПОД локом, чтобы параллельная смена пароля не дала удалить
+ * аккаунт по старому значению.
+ *
+ * Порядок операций: сначала каталог, потом индекс. Если процесс упадёт между
+ * ними, в индексе останется запись на несуществующий uid — `authenticateExisting`
+ * такой случай переживает (пересобирает индекс и отвечает `no_account`).
+ */
+export interface DeleteAccountResult {
+  success: boolean;
+  error?: string;
+  reason?: 'invalid_input' | 'invalid_password' | 'not_found' | 'failed';
+}
+
+export function deleteUserAccount(
+  uid: string,
+  password: string,
+): DeleteAccountResult {
+  if (!isUid(uid)) {
+    return { success: false, error: 'User not found.', reason: 'not_found' };
+  }
+  if (typeof password !== 'string' || password.trim() === '') {
+    return {
+      success: false,
+      error: 'Password is required.',
+      reason: 'invalid_input',
+    };
+  }
+
+  try {
+    return withDataLock(() => {
+      const stored = getStoredUser(uid);
+      if (!stored) {
+        return {
+          success: false,
+          error: 'User not found.',
+          reason: 'not_found',
+        } as DeleteAccountResult;
+      }
+      if (stored.passwordHash !== hashPassword(password)) {
+        return {
+          success: false,
+          error: 'Incorrect password.',
+          reason: 'invalid_password',
+        } as DeleteAccountResult;
+      }
+
+      // Убираем из индекса все логины, указывающие на этот uid (обычно один).
+      const index = readLoginIndexForUpdate();
+      for (const [login, owner] of Object.entries(index.logins)) {
+        if (owner === uid) delete index.logins[login];
+      }
+
+      fs.rmSync(getUserDir(uid), { recursive: true, force: true });
+
+      try {
+        writeLoginIndex(index);
+      } catch (e) {
+        // Индекс производный: его можно (и нужно) пересобрать из user.json
+        // оставшихся аккаунтов, чтобы удалённый логин точно не занимал uid.
+        console.error('Failed to update login index after deletion:', e);
+        rebuildLoginIndex();
+      }
+
+      // In-memory карта порядка записей тоже не должна помнить удалённый лист.
+      resetWriteSeqGuard(uid);
+
+      return { success: true } as DeleteAccountResult;
+    });
+  } catch (e) {
+    console.error('Error deleting user account:', e);
+    return {
+      success: false,
+      error: `Failed to delete account: ${e instanceof Error ? e.message : 'Unknown error'}`,
+      reason: 'failed',
     };
   }
 }
