@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  ALL_QUIRKS,
   CAREER_KEYS,
   DIVINATIONS,
+  getQuirksForHomeWorld,
   HOME_WORLD_KEYS,
   QUIRK_KEYS,
   QUIRKS_BY_HOMEWORLD,
@@ -194,6 +196,16 @@ describe('Dark Heresy: справочные данные против базов
         expectTranslation(key, quirk);
       }
     }
+  });
+
+  it('без своей таблицы примет отдаётся общий список (Мир-кузница)', () => {
+    expect(getQuirksForHomeWorld('Forge World')).toEqual(ALL_QUIRKS);
+  });
+
+  it('хелпер примет не мутирует исходные списки', () => {
+    const before = [...QUIRKS_BY_HOMEWORLD['Feral World']];
+    expect(getQuirksForHomeWorld('Feral World')).toHaveLength(16);
+    expect(QUIRKS_BY_HOMEWORLD['Feral World']).toEqual(before);
   });
 
   it('ранг 5 Убийцы начинается с 3000 ОО (как в книге, а не с 3500)', () => {

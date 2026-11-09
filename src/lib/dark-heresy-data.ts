@@ -295,6 +295,21 @@ export const ALL_QUIRKS = [
   ]),
 ].sort();
 
+/**
+ * Приметы для родного мира (табл. 1-13).
+ *
+ * Таблица примет в книге есть только для четырёх классических миров.
+ * У Мира-кузницы (как и у остальных миров из «Книги Инквизитора») своей
+ * таблицы нет — отдаём общий список, чтобы поле «Особенность» не пустовало.
+ * Возвращается копия: `.sort()` не должен мутировать исходные константы.
+ */
+export function getQuirksForHomeWorld(homeWorld: string): string[] {
+  const specific = QUIRKS_BY_HOMEWORLD[homeWorld];
+  return specific && specific.length > 0
+    ? [...specific].sort()
+    : [...ALL_QUIRKS];
+}
+
 export const QUIRK_KEYS: Record<string, string> = {
   'Hairy Knuckles': 'quirkHairyKnuckles',
   'Joined Eyebrows': 'quirkJoinedEyebrows',
