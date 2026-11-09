@@ -266,16 +266,40 @@ export function Header({ onNotesClick, onJournalClick, mobileActions }: HeaderPr
           {character && !isSmallScreen && (
             <div className="flex items-center gap-2">
               {onNotesClick && (
-                <Button variant="outline" size="sm" onClick={onNotesClick} className="h-8">
-                  <BookText className="h-4 w-4 mr-2" />
-                  <span className="hidden sm:inline">{t('notes')}</span>
-                </Button>
+                <Tooltip delayDuration={0}>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={onNotesClick}
+                      aria-label={t('notes')}
+                      className="h-8 w-8 md:h-9 md:w-9"
+                    >
+                      <BookText className="h-4 w-4 md:h-5 md:w-5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">
+                    <p>{t('notes')}</p>
+                  </TooltipContent>
+                </Tooltip>
               )}
               {onJournalClick && (
-                <Button variant="outline" size="sm" onClick={onJournalClick} className="h-8">
-                  <Scroll className="h-4 w-4 mr-2" />
-                  <span className="hidden sm:inline">{t('questJournalTitle')}</span>
-                </Button>
+                <Tooltip delayDuration={0}>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={onJournalClick}
+                      aria-label={t('questJournalTitle')}
+                      className="h-8 w-8 md:h-9 md:w-9"
+                    >
+                      <Scroll className="h-4 w-4 md:h-5 md:w-5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">
+                    <p>{t('questJournalTitle')}</p>
+                  </TooltipContent>
+                </Tooltip>
               )}
             </div>
           )}
