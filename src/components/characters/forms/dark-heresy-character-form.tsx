@@ -41,8 +41,9 @@ import {
   ALL_QUIRKS,
   CAREER_KEYS,
   DIVINATIONS,
+  getQuirksForHomeWorld,
   HOME_WORLD_KEYS,
-  QUIRKS_BY_HOMEWORLD,
+  QUIRK_KEYS,
   VARIANT_KEYS,
   WORLD_VARIANT_LABELS,
   WORLD_VARIANTS_BY_HOMEWORLD,
@@ -61,11 +62,6 @@ const VARIANT_LABEL_KEYS: Record<string, string> = {
   'Imperial World': 'birthPlanet',
   'Void Born': 'shipTradition',
   'Forge World': 'placeOfBirth',
-};
-
-// Helper to dynamically generate quirk translation keys (e.g., "Cat’s Eyes" -> "quirkCatsEyes")
-const getQuirkKey = (quirk: string) => {
-  return 'quirk' + quirk.replace(/[^a-zA-Z]/g, '');
 };
 
 export function DarkHeresyCharacterForm() {
@@ -166,8 +162,9 @@ export function DarkHeresyCharacterForm() {
   React.useEffect(() => {
     if (showAllQuirks) {
       setAvailableQuirks(ALL_QUIRKS);
-    } else if (watchedHomeWorld && QUIRKS_BY_HOMEWORLD[watchedHomeWorld]) {
-      setAvailableQuirks(QUIRKS_BY_HOMEWORLD[watchedHomeWorld].sort());
+    } else if (watchedHomeWorld) {
+      // У Мира-кузницы своей таблицы примет нет — хелпер отдаёт общий список.
+      setAvailableQuirks(getQuirksForHomeWorld(watchedHomeWorld));
     } else {
       setAvailableQuirks([]);
     }
@@ -458,7 +455,7 @@ export function DarkHeresyCharacterForm() {
                         <SelectContent>
                           {availableQuirks.map((quirk) => (
                             <SelectItem key={quirk} value={quirk}>
-                              {t(getQuirkKey(quirk))}
+                              {t(QUIRK_KEYS[quirk] || quirk)}
                             </SelectItem>
                           ))}
                         </SelectContent>
