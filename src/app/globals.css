@@ -218,26 +218,52 @@ body > div:first-child {
    Mobile  : < 768px (handled by React compact view)
 ================================================================ */
 @media (min-width: 768px) and (max-width: 1299px) {
-  /* Только шапка листа персонажа: имя + параметры занимают первую строку,
-     а на второй инструменты листа («Заметки», «Журнал», чекбоксы) остаются
-     СЛЕВА, а иконки приложения (компактный вид, язык, тема, профиль) —
-     СПРАВА. Так шапка занимает всю ширину и иконки не «уезжают» ни влево,
-     ни в кучу к правому краю при сужении окна. На страницах без персонажа
-     (дашборд, /new, /settings) шапка остаётся одной строкой. */
+  /* LANDMARK: HEADER_SINGLE_ROW_ON_TABLET
+     Раньше шапка листа персонажа на планшете складывалась в две строки:
+     имя + параметры сверху, инструменты листа слева, иконки приложения
+     справа. После перехода инструментов листа на иконки (заметки, журнал,
+     тумблеры) группа занимает ~180px вместо 414–493px, и шапка спокойно
+     влезает в одну строку вплоть до 768px — там уже включается мобильный
+     компактный вид, где инструменты живут в сайдбаре.
+
+     `flex-wrap: nowrap` = «никогда не переносим»; `flex: 0 0 auto` у групп
+     действий не даёт им сжиматься, поэтому ужимается (truncate) имя
+     персонажа, а не раскладка. Проверено замерами: 768...1299px — одна
+     строка, горизонтального переполнения нет (тест «шапка листа: одна
+     строка»). */
+  .app-header.is-character-sheet {
+    flex-wrap: nowrap;
+  }
+
   .app-header.is-character-sheet .header-identity {
-    flex: 1 1 100%;
+    flex: 1 1 auto;
     min-width: 0;
   }
-  .app-header.is-character-sheet .header-actions {
-    flex: 1 1 100%;
-    justify-content: flex-start;
+
+  .app-header.is-character-sheet .header-actions,
+  .app-header.is-character-sheet .header-view-actions {
+    flex: 0 0 auto;
   }
-  /* Иконки приложения прижимаются к правому краю, даже если инструменты
-     листа перенесутся на отдельную строку. */
+
+  /* Иконки приложения всегда прижаты к правому краю. */
   .app-header.is-character-sheet .header-view-actions {
     margin-left: auto;
   }
+}
 
+/* LANDMARK: NARROW_TABLET_HEADER_LABELS
+   Узкий планшет (768..1023): убираем второстепенные подписи, чтобы имя
+   персонажа не сжималось до пары букв. Значения остаются на месте:
+   система видна в листе, эдишн — в селекте, вдохновение — по «+/-». */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .app-header.is-character-sheet .header-identity p,
+  .app-header.is-character-sheet .header-identity label,
+  .app-header.is-character-sheet .header-field-label {
+    display: none;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1299px) {
   .dnd-sheet .sheet-top-row {
     flex-direction: column !important;
   }
