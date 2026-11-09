@@ -286,7 +286,7 @@ export const DarkHeresySheet = React.forwardRef<
     pointType: 'wounds' | 'fatePoints' | 'insanityPoints' | 'corruptionPoints',
     delta: number,
   ) => {
-    let dataToUpdate: Partial<DarkHeresyCharacter> = {};
+    const dataToUpdate: Partial<DarkHeresyCharacter> = {};
     if (pointType === 'wounds' || pointType === 'fatePoints') {
       const currentPoints = getPointsObject(character[pointType]);
       const newVal = currentPoints.current + delta;
