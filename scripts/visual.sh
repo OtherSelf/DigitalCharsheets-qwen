@@ -18,7 +18,15 @@
 #    npm run test:visual -- --skip-build # быстрый прогон на текущем .next
 #    npm run test:visual -- --update-snapshots   # перезаписать эталоны
 #    npm run test:visual -- --grep "лист D&D"    # только часть тестов
+#    npm run test:visual -- --skip-build tests/visual/themes.spec.ts
+#                                        # один файл
+#    npm run test:visual -- --skip-build tests/visual/themes.spec.ts:70:7
+#                                        # один тест по строке
 #    ./scripts/visual.sh --base-url http://localhost:3000  # против живого сервера
+#
+#  Любой аргумент, который скрипт не знает, уходит в `playwright test` как есть
+#  (--grep, --project, --last-failed, пути спек и т.д.), поэтому набор можно
+#  запускать точечно. Подробности и подводные камни — ./scripts/visual.sh --help.
 #
 #  Код возврата: 0 — эталоны совпали, 1 — есть отличия/падения.
 #  Флаги и проброс в Playwright: ./scripts/visual.sh --help
@@ -34,6 +42,7 @@ BUILD=1
 BASE_URL=""
 PORT=""
 KEEP=0
+LIST=0
 PLAY_ARGS=()
 
 if [ -t 1 ] && [ -z "${NO_COLOR:-}" ]; then
@@ -66,9 +75,26 @@ ${C_BOLD}Флаги:${C_RESET}
 
 ${C_BOLD}Проброс в Playwright:${C_RESET}
   --update-snapshots     обновить эталоны (то же: --update)
-  --grep PATTERN         только тесты, чьё имя подходит под PATTERN
+  --grep PATTERN         только тесты, чьё имя подходит под PATTERN (то же: -g)
+  --grep-invert PATTERN  наоборот: исключить подходящие
+  --project NAME         только один проект (desktop или mobile)
+  --last-failed          только тесты, упавшие в прошлый раз
+                         (если падений не было — Playwright пишет
+                         "No tests found" и возвращает код 1;
+                         добавьте --pass-with-no-tests, если это не ошибка)
   --list                 показать список тестов и выйти
   --headed               показать браузер (нужен X-сервер)
+  прочие аргументы уходят в \`playwright test\` как есть
+
+${C_BOLD}Точечный прогон (без сборки и без запуска всего набора):${C_RESET}
+  npm run test:visual -- --skip-build tests/visual/themes.spec.ts
+  npm run test:visual -- --skip-build tests/visual/themes.spec.ts:70:7
+  npm run test:visual -- --skip-build --grep "тёмная тема" --project desktop
+
+  ВНИМАНИЕ: --grep — регулярное выражение, а не подстрока. Скобки, точки и
+  плюсы экранируются: --grep "dashboard — тёмная тема \\(en\\)". Без
+  экранирования "(en)" — группа, совпадений нет и Playwright пишет
+  "No tests found".
 
 ${C_BOLD}Примеры:${C_RESET}
   npm run test:visual
@@ -94,7 +120,7 @@ while [ $# -gt 0 ]; do
     --update)     PLAY_ARGS+=("--update-snapshots") ;;
     --update-snapshots) PLAY_ARGS+=("--update-snapshots") ;;
     --grep)       shift; [ -n "${1:-}" ] || die "--grep требует шаблон"; PLAY_ARGS+=("--grep" "$1") ;;
-    --list)       PLAY_ARGS+=("--list") ;;
+    --list)       LIST=1; PLAY_ARGS+=("--list") ;;
     --headed)     PLAY_ARGS+=("--headed") ;;
     -h|--help)    usage; exit 0 ;;
     *)            PLAY_ARGS+=("$1") ;;
@@ -234,6 +260,13 @@ set +e
 ./node_modules/.bin/playwright test ${PLAY_ARGS[@]+"${PLAY_ARGS[@]}"}
 PLAY_CODE=$?
 set -e
+
+if [ "$LIST" -eq 1 ]; then
+  # --list только печатает список: ни один тест не запускался, поэтому
+  # «эталоны совпали» здесь было бы неправдой. Код возврата — от Playwright.
+  [ "$PLAY_CODE" -eq 0 ] || warn "playwright --list завершился с кодом $PLAY_CODE"
+  exit "$PLAY_CODE"
+fi
 
 if [ "$PLAY_CODE" -ne 0 ]; then
   printf '\n%s✗ Визуальные тесты не пройдены (код %s)%s\n' "$C_RED" "$PLAY_CODE" "$C_RESET"
