@@ -5,10 +5,10 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Shield, Sword, UserPlus, LogIn, Sparkles } from 'lucide-react';
+import { Sword, UserPlus, Sparkles } from 'lucide-react';
 import { CharacterSheet } from '@/components/sheets/character-sheet';
+import { GuestHeader } from '@/components/layout/guest-header';
 import { type Character } from '@/lib/types';
-import { useTranslation } from '@/context/language-context';
 
 // 🎯 LANDMARK: DEMO_MOCK_DATA_DND
 // Customize this object to match your preferred pre-made D&D character
@@ -125,7 +125,6 @@ const demoDhCharacter: Character = {
 
 export default function DemoPage() {
   const [previewSystem, setPreviewSystem] = useState<'Dungeons & Dragons' | 'Dark Heresy' | null>(null);
-  const { t } = useTranslation();
 
   const activeCharacter = previewSystem === 'Dungeons & Dragons' 
     ? demoDndCharacter 
@@ -135,23 +134,8 @@ export default function DemoPage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
-      {/* 🎯 LANDMARK: DEMO_HEADER */}
-      <header className="border-b bg-card/50 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Shield className="h-6 w-6 text-primary" />
-            <span className="font-headline font-bold text-lg">Digital Character Sheets</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" asChild>
-              <Link href="/login">
-                <LogIn className="mr-2 h-4 w-4" />
-                {t('login') || 'Login / Register'}
-              </Link>
-            </Button>
-          </div>
-        </div>
-      </header>
+      {/* 🎯 LANDMARK: DEMO_HEADER → общая гостевая шапка с темой/языком/видом */}
+      <GuestHeader showLoginLink />
 
       <main className="flex-1 container mx-auto px-4 py-8 max-w-6xl">
         {/* 🎯 LANDMARK: DEMO_HERO */}

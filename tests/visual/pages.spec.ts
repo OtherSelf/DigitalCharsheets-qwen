@@ -3,7 +3,9 @@ import {
   collectPageErrors,
   getState,
   openApp,
+  openRegisterForm,
   prepare,
+  registerViaUI,
   screenshotPage,
   signInViaUI,
 } from './helpers';
@@ -14,13 +16,13 @@ import {
  * Каждый эталон называется по схеме
  *   <страница>-[<игра>]-[<доп. поле>]-<язык>.png
  * поэтому в имени всегда видно и язык, и игру (если экран игровой).
- * Языки приложения: en и ru; /login локализован не полностью (тексты
- * захардкожены по-английски), поэтому для него снимается только en.
+ * Языки приложения: en и ru; /login теперь полностью переведён, поэтому
+ * снимается на обоих языках — включая регистрацию и восстановление.
  */
 
 const isMobile = () => test.info().project.name === 'mobile';
 
-test.describe('общие страницы', () => {
+test.describe('login: вход, регистрация, восстановление', () => {
   test('login — гостевая страница (en)', async ({ page, context }) => {
     await prepare(context, { authenticated: false, theme: 'light' });
     await openApp(page, '/login');
@@ -28,9 +30,24 @@ test.describe('общие страницы', () => {
     await expect(
       page.getByRole('heading', { name: 'Digital Character Sheets', level: 1 }),
     ).toBeVisible();
-    await expect(page.getByText('Welcome Back')).toBeVisible();
+    await expect(page.getByTestId('auth-card-title')).toHaveText('Welcome Back');
+
+    // Шапка как на главной: бренд + компактный вид + тема + язык.
+    await expect(page.getByTestId('guest-header')).toBeVisible();
+    await expect(page.getByRole('button', { name: /toggle theme/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'EN', exact: true })).toBeVisible();
 
     await screenshotPage(page, 'login-en.png');
+  });
+
+  test('login — гостевая страница (ru)', async ({ page, context }) => {
+    await prepare(context, { authenticated: false, theme: 'light', language: 'ru' });
+    await openApp(page, '/login');
+
+    await expect(page.getByTestId('auth-card-title')).toHaveText('С возвращением');
+    await expect(page.getByRole('button', { name: 'RU', exact: true })).toBeVisible();
+
+    await screenshotPage(page, 'login-ru.png');
   });
 
   test('login — восстановление аккаунта (en)', async ({ page, context }) => {
@@ -38,10 +55,85 @@ test.describe('общие страницы', () => {
     await openApp(page, '/login');
 
     await page.getByRole('button', { name: 'Forgot password?' }).click();
-    await expect(page.getByText('Recover Account')).toBeVisible();
+    await expect(page.getByTestId('auth-card-title')).toHaveText('Recover Account');
     await expect(page.getByText('Three words from your sheets')).toBeVisible();
 
     await screenshotPage(page, 'login-recovery-en.png');
+  });
+
+  test('login — восстановление аккаунта (ru)', async ({ page, context }) => {
+    await prepare(context, { authenticated: false, theme: 'light', language: 'ru' });
+    await openApp(page, '/login');
+
+    await page.getByRole('button', { name: 'Забыли пароль?' }).click();
+    await expect(page.getByTestId('auth-card-title')).toHaveText(
+      'Восстановление аккаунта',
+    );
+    await expect(page.getByText('Три слова из ваших листов')).toBeVisible();
+
+    await screenshotPage(page, 'login-recovery-ru.png');
+  });
+
+  test('login — форма регистрации (en)', async ({ page, context }) => {
+    await prepare(context, { authenticated: false, theme: 'light' });
+    await openApp(page, '/login');
+
+    await openRegisterForm(page, { navigate: false });
+    await expect(page.getByTestId('auth-card-title')).toHaveText('Create Account');
+    await expect(page.getByLabel('Display Name', { exact: true })).toBeVisible();
+    await expect(page.getByLabel('Recovery Phrase', { exact: true })).toBeVisible();
+
+    await screenshotPage(page, 'login-register-en.png');
+  });
+
+  test('login — форма регистрации (ru)', async ({ page, context }) => {
+    await prepare(context, { authenticated: false, theme: 'light', language: 'ru' });
+    await openApp(page, '/login');
+
+    await openRegisterForm(page, { navigate: false });
+    await expect(page.getByTestId('auth-card-title')).toHaveText('Регистрация');
+    await expect(page.getByLabel('Отображаемое имя', { exact: true })).toBeVisible();
+
+    await screenshotPage(page, 'login-register-ru.png');
+  });
+
+  test('login — неизвестный аккаунт даёт понятную ошибку', async ({ page, context }) => {
+    await prepare(context, { authenticated: false, theme: 'light' });
+    await openApp(page, '/login');
+
+    await page.getByLabel('Username or Email', { exact: true }).fill('definitely-missing-account');
+    await page.getByLabel('Password', { exact: true }).fill('not-a-real-pass');
+    await page.getByRole('button', { name: 'Sign In', exact: true }).click();
+
+    await expect(page.getByTestId('auth-error')).toContainText(
+      'No account found with this login. Create an account first.',
+    );
+    expect(new URL(page.url()).pathname, 'остаёмся на /login').toBe('/login');
+  });
+
+  test('login — регистрация через UI создаёт сессию и пускает в дашборд', async ({
+    page,
+    context,
+  }) => {
+    await prepare(context, { authenticated: false, theme: 'light' });
+    const errors = collectPageErrors(page);
+    const account = {
+      username: `ui-register-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      password: 'visual-pass-1234',
+      displayName: 'UI Register',
+      recoveryPhrase: 'amber cobalt lantern',
+    };
+
+    await registerViaUI(page, account);
+
+    await expect(
+      page.getByRole('heading', { name: 'Existing Characters' }),
+    ).toBeVisible();
+    const session = await page.evaluate(() =>
+      localStorage.getItem('digital_charsheets_user'),
+    );
+    expect(session).toContain(account.username);
+    expect(errors, 'ошибки JS при регистрации').toEqual([]);
   });
 
   test('login — вход через форму', async ({ page, context }) => {
@@ -57,7 +149,9 @@ test.describe('общие страницы', () => {
     await expect(page.getByText('Lucius Varn')).toBeVisible();
     expect(errors, 'ошибки JS при входе').toEqual([]);
   });
+});
 
+test.describe('общие страницы', () => {
   test('dashboard — английский язык', async ({ page, context }) => {
     await prepare(context);
     await openApp(page, '/');
@@ -92,6 +186,9 @@ test.describe('общие страницы', () => {
     ).toBeVisible();
     await expect(
       page.getByRole('button', { name: 'Preview D&D 5e Character' }),
+    ).toBeVisible();
+    await expect(
+      page.getByTestId('guest-header').getByRole('link', { name: 'Login / Register' }),
     ).toBeVisible();
 
     await screenshotPage(page, 'dashboard-guest-en.png');

@@ -2,6 +2,16 @@ import { NextResponse } from 'next/server';
 import { authenticateUser } from '@/lib/server-auth';
 import { sessionCookieHeader } from '@/lib/session';
 
+/**
+ * ─── LANDMARK: LOGIN (только существующие аккаунты) ─────────────────────────
+ * POST /api/auth — вход. Свободный логин больше НЕ создаёт аккаунт: страница
+ * /login сначала отдельно проверяет существование
+ * (POST /api/auth/exists) и предлагает регистрацию
+ * (POST /api/auth/register). Поэтому здесь `allowRegistration: false`.
+ *
+ * Статусы: 400 — не заполнены поля/короткий пароль; 404 — аккаунт не найден;
+ * 401 — неверный пароль; 200 — сессия в httpOnly-cookie.
+ */
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -22,12 +32,16 @@ export async function POST(request: Request) {
       );
     }
 
-    const result = authenticateUser(username, password, displayName);
+    const result = authenticateUser(username, password, displayName, {
+      allowRegistration: false,
+    });
 
     if (!result.success || !result.user) {
+      const status =
+        result.reason === 'no_account' ? 404 : result.reason === 'invalid_input' ? 400 : 401;
       return NextResponse.json(
-        { success: false, error: result.error || 'Login failed.' },
-        { status: 401 }
+        { success: false, error: result.error || 'Login failed.', reason: result.reason },
+        { status }
       );
     }
 

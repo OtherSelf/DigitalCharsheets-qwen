@@ -31,17 +31,13 @@ async function registerAccount(
 ): Promise<Account> {
   const username = `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
-  const auth = await page.request.post('/api/auth', {
-    data: { username, password: PASSWORD, displayName },
+  const auth = await page.request.post('/api/auth/register', {
+    data: { username, password: PASSWORD, displayName, recoveryPhrase: RECOVERY_PHRASE },
   });
-  expect(auth.status(), 'регистрация аккаунта через /api/auth').toBe(200);
+  expect(auth.status(), 'регистрация аккаунта через /api/auth/register').toBe(200);
   const body = await auth.json();
   expect(body.success).toBe(true);
-
-  const phrase = await page.request.post('/api/auth/phrase', {
-    data: { phrase: RECOVERY_PHRASE },
-  });
-  expect(phrase.status(), 'установка recovery phrase').toBe(200);
+  expect(body.user.hasRecoveryPhrase, 'фраза задана при регистрации').toBe(true);
 
   return { username, password: PASSWORD, uid: body.user.uid as string };
 }
@@ -93,9 +89,9 @@ test.describe('авторизация через UI', () => {
     const account = await registerAccount(page, 'auth-e2e', 'Auth E2E');
 
     await page.goto('/login', { waitUntil: 'domcontentloaded' });
-    await page.getByPlaceholder('e.g., your@email.com or username').fill(account.username);
-    await page.locator('input[type="password"]').fill('definitely-wrong');
-    await page.getByRole('button', { name: /sign up \/ log in/i }).click();
+    await page.getByLabel('Username or Email', { exact: true }).fill(account.username);
+    await page.getByLabel('Password', { exact: true }).fill('definitely-wrong');
+    await page.getByRole('button', { name: 'Sign In', exact: true }).click();
 
     await expect(page.getByText('Incorrect password.')).toBeVisible();
     expect(new URL(page.url()).pathname, 'остаёмся на /login').toBe('/login');
@@ -104,8 +100,8 @@ test.describe('авторизация через UI', () => {
       'сессия не создаётся при неверном пароле',
     ).toBeNull();
 
-    await page.locator('input[type="password"]').fill(account.password);
-    await page.getByRole('button', { name: /sign up \/ log in/i }).click();
+    await page.getByLabel('Password', { exact: true }).fill(account.password);
+    await page.getByRole('button', { name: 'Sign In', exact: true }).click();
     await page.waitForURL((url) => !url.pathname.startsWith('/login'), {
       timeout: 30_000,
     });

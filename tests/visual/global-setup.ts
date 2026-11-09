@@ -70,6 +70,28 @@ export default async function globalSetup(config: FullConfig): Promise<void> {
 
   await waitForServer(baseURL);
 
+  // Регистрация теперь отдельным роутом; 409 значит, что аккаунт уже есть
+  // (прогон против постоянного --base-url) — это нормально, дальше логинимся.
+  const registration = await requestJson<{
+    success: boolean;
+    user?: VisualUser;
+    error?: string;
+  }>(baseURL, '/api/auth/register', {
+    method: 'POST',
+    body: JSON.stringify({
+      username: USERNAME,
+      password: PASSWORD,
+      displayName: DISPLAY_NAME,
+      recoveryPhrase: VISUAL_RECOVERY_PHRASE,
+    }),
+  });
+  if (registration.status !== 200 && registration.status !== 409) {
+    throw new Error(
+      `Не удалось зарегистрировать визуальный аккаунт: HTTP ${registration.status} ` +
+        JSON.stringify(registration.body),
+    );
+  }
+
   const auth = await requestJson<{
     success: boolean;
     isNewUser?: boolean;
@@ -77,11 +99,7 @@ export default async function globalSetup(config: FullConfig): Promise<void> {
     error?: string;
   }>(baseURL, '/api/auth', {
     method: 'POST',
-    body: JSON.stringify({
-      username: USERNAME,
-      password: PASSWORD,
-      displayName: DISPLAY_NAME,
-    }),
+    body: JSON.stringify({ username: USERNAME, password: PASSWORD }),
   });
 
   if (auth.status !== 200 || !auth.body.success || !auth.body.user) {
@@ -101,36 +119,40 @@ export default async function globalSetup(config: FullConfig): Promise<void> {
     headers: { ...(init.headers || {}), cookie: sessionCookie },
   });
 
-  // Recovery phrase нужен, чтобы RecoveryModal не открывался поверх страниц.
-  const phrase = await requestJson<{ success: boolean; error?: string }>(
-    baseURL,
-    '/api/auth/phrase',
-    authed({
-      method: 'POST',
-      body: JSON.stringify({ phrase: VISUAL_RECOVERY_PHRASE }),
-    }),
-  );
-  if (phrase.status !== 200 || !phrase.body.success) {
-    throw new Error(
-      `Не удалось сохранить recovery phrase: HTTP ${phrase.status} ${JSON.stringify(phrase.body)}`,
-    );
-  }
+  let user = auth.body.user;
 
-  // Повторный вход — теперь в ответе hasRecoveryPhrase: true.
-  const relogin = await requestJson<{ success: boolean; user?: VisualUser; error?: string }>(
-    baseURL,
-    '/api/auth',
-    {
-      method: 'POST',
-      body: JSON.stringify({ username: USERNAME, password: PASSWORD }),
-    },
-  );
-  if (relogin.status !== 200 || !relogin.body.user) {
-    throw new Error(
-      `Не удалось перелогиниться: HTTP ${relogin.status} ${JSON.stringify(relogin.body)}`,
+  // Recovery phrase нужен, чтобы RecoveryModal не открывался поверх страниц.
+  // Новый аккаунт получает её при регистрации; для старого — доставляем.
+  if (!user.hasRecoveryPhrase) {
+    const phrase = await requestJson<{ success: boolean; error?: string }>(
+      baseURL,
+      '/api/auth/phrase',
+      authed({
+        method: 'POST',
+        body: JSON.stringify({ phrase: VISUAL_RECOVERY_PHRASE }),
+      }),
     );
+    if (phrase.status !== 200 || !phrase.body.success) {
+      throw new Error(
+        `Не удалось сохранить recovery phrase: HTTP ${phrase.status} ${JSON.stringify(phrase.body)}`,
+      );
+    }
+
+    const relogin = await requestJson<{ success: boolean; user?: VisualUser; error?: string }>(
+      baseURL,
+      '/api/auth',
+      {
+        method: 'POST',
+        body: JSON.stringify({ username: USERNAME, password: PASSWORD }),
+      },
+    );
+    if (relogin.status !== 200 || !relogin.body.user) {
+      throw new Error(
+        `Не удалось перелогиниться: HTTP ${relogin.status} ${JSON.stringify(relogin.body)}`,
+      );
+    }
+    user = relogin.body.user;
   }
-  const user = relogin.body.user;
 
   // Чистим листы от предыдущего прогона, чтобы дашборд был детерминированным.
   const existing = await requestJson<Array<{ id: string }>>(

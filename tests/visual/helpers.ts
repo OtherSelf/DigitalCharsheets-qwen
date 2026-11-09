@@ -254,9 +254,41 @@ export async function signInViaUI(
   state: Pick<VisualState, 'username' | 'password'> = getState(),
 ): Promise<void> {
   await page.goto('/login', { waitUntil: 'domcontentloaded' });
-  await page.getByPlaceholder('e.g., your@email.com or username').fill(state.username);
-  await page.locator('input[type="password"]').fill(state.password);
-  await page.getByRole('button', { name: /sign up \/ log in/i }).click();
+  await page.getByLabel('Username or Email', { exact: true }).fill(state.username);
+  await page.getByLabel('Password', { exact: true }).fill(state.password);
+  await page.getByRole('button', { name: 'Sign In', exact: true }).click();
+  await page.waitForURL((url) => !url.pathname.startsWith('/login'), { timeout: 30_000 });
+  await page.waitForLoadState('networkidle');
+}
+
+/** Открывает на /login форму регистрации (кнопка под формой входа). */
+export async function openRegisterForm(
+  page: Page,
+  options: { navigate?: boolean } = {},
+): Promise<void> {
+  if (options.navigate !== false) {
+    await page.goto('/login', { waitUntil: 'domcontentloaded' });
+  }
+  await page.getByTestId('open-register').click();
+  await expect(page.getByTestId('register-form')).toBeVisible();
+}
+
+/** Регистрация через UI (английские подписи по умолчанию). */
+export async function registerViaUI(
+  page: Page,
+  account: {
+    username: string;
+    password: string;
+    displayName: string;
+    recoveryPhrase: string;
+  },
+): Promise<void> {
+  await openRegisterForm(page);
+  await page.getByLabel('Username or Email', { exact: true }).fill(account.username);
+  await page.getByLabel('Display Name', { exact: true }).fill(account.displayName);
+  await page.getByLabel('Password', { exact: true }).fill(account.password);
+  await page.getByLabel('Recovery Phrase', { exact: true }).fill(account.recoveryPhrase);
+  await page.getByRole('button', { name: 'Create Account & Sign In' }).click();
   await page.waitForURL((url) => !url.pathname.startsWith('/login'), { timeout: 30_000 });
   await page.waitForLoadState('networkidle');
 }
