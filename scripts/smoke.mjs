@@ -227,27 +227,92 @@ await check('GET /stats-editor → 200', async () => {
 });
 
 // 2. Аутентификация
-await check('POST /api/auth → регистрация нового аккаунта', async () => {
+await check('POST /api/auth/exists → свободный логин', async () => {
+  const res = await api('/auth/exists', {
+    method: 'POST',
+    body: { username },
+    auth: false,
+  });
+  assertStatus(res, 200, 'POST /api/auth/exists');
+  const body = assertJson(res, 'POST /api/auth/exists');
+  assert(body.success === true, 'POST /api/auth/exists: success !== true');
+  assert(body.exists === false, 'POST /api/auth/exists: свободный логин считался занятым');
+});
+
+await check('POST /api/auth → 404 для несуществующего аккаунта (не регистрирует)', async () => {
   const res = await api('/auth', {
     method: 'POST',
-    body: { username, password, displayName: 'Smoke Tester' },
+    body: { username, password },
+    auth: false,
   });
-  assertStatus(res, 200, 'POST /api/auth');
-  const body = assertJson(res, 'POST /api/auth');
-  assert(body.success === true, `POST /api/auth: success !== true (${truncate(res.text)})`);
-  assert(body.isNewUser === true, 'POST /api/auth: ожидали isNewUser === true при первом входе');
+  assertStatus(res, 404, 'вход в несуществующий аккаунт');
+  const body = assertJson(res, 'вход в несуществующий аккаунт');
+  assert(body.success === false, 'несуществующий аккаунт: success !== false');
+  assert(body.reason === 'no_account', `несуществующий аккаунт: reason = ${body.reason}`);
+  assert(!sessionCookie, 'несуществующий аккаунт: сервер не должен выдавать сессию');
+});
+
+await check('POST /api/auth/register → регистрация нового аккаунта', async () => {
+  const res = await api('/auth/register', {
+    method: 'POST',
+    body: {
+      username,
+      password,
+      displayName: 'Smoke Tester',
+      recoveryPhrase: 'amber cobalt lantern',
+    },
+    auth: false,
+  });
+  assertStatus(res, 200, 'POST /api/auth/register');
+  const body = assertJson(res, 'POST /api/auth/register');
+  assert(body.success === true, `POST /api/auth/register: success !== true (${truncate(res.text)})`);
+  assert(body.isNewUser === true, 'POST /api/auth/register: ожидали isNewUser === true');
   assert(
     typeof body.user?.uid === 'string' &&
       /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(body.user.uid),
-    'POST /api/auth: uid должен быть UUID (а не хеш логина)',
+    'POST /api/auth/register: uid должен быть UUID (а не хеш логина)',
   );
-  assert(sessionCookie.startsWith('dcs_session='), 'POST /api/auth: не выдал сессионную cookie');
+  assert(
+    body.user.hasRecoveryPhrase === true,
+    'POST /api/auth/register: фраза должна быть установлена сразу',
+  );
+  assert(
+    sessionCookie.startsWith('dcs_session='),
+    'POST /api/auth/register: не выдал сессионную cookie',
+  );
   userId = body.user.uid;
   return userId;
 });
 
+await check('POST /api/auth/register → 409 на занятый логин', async () => {
+  const res = await api('/auth/register', {
+    method: 'POST',
+    body: {
+      username,
+      password: 'another-pass',
+      displayName: 'Duplicate',
+      recoveryPhrase: 'zulu yankee',
+    },
+    auth: false,
+  });
+  assertStatus(res, 409, 'повторная регистрация');
+  const body = assertJson(res, 'повторная регистрация');
+  assert(body.reason === 'exists', `повторная регистрация: reason = ${body.reason}`);
+});
+
+await check('POST /api/auth/exists → логин теперь существует', async () => {
+  const res = await api('/auth/exists', {
+    method: 'POST',
+    body: { username: username.toUpperCase() },
+    auth: false,
+  });
+  assertStatus(res, 200, 'POST /api/auth/exists (занятый)');
+  const body = assertJson(res, 'POST /api/auth/exists (занятый)');
+  assert(body.exists === true, 'POST /api/auth/exists: существующий логин не найден');
+});
+
 await check('POST /api/auth → повторный вход (isNewUser=false, тот же uid)', async () => {
-  const res = await api('/auth', { method: 'POST', body: { username, password } });
+  const res = await api('/auth', { method: 'POST', body: { username, password }, auth: false });
   assertStatus(res, 200, 'повторный POST /api/auth');
   const body = assertJson(res, 'повторный POST /api/auth');
   assert(body.isNewUser === false, 'повторный вход: ожидали isNewUser === false');

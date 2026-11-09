@@ -25,16 +25,15 @@ import {
   PlusCircle, 
   FileDown, 
   Settings2, 
-  Shield, 
   Sword, 
   UserPlus, 
-  LogIn, 
   Sparkles 
 } from 'lucide-react';
 import Loading from './loading';
 import { ImportCharacterDialog } from '@/components/import-character-dialog';
 import { DynamicFavicon } from '@/components/dynamic-favicon';
 import { CharacterSheet } from '@/components/sheets/character-sheet';
+import { GuestHeader } from '@/components/layout/guest-header';
 
 // 🎯 LANDMARK: DEMO_MOCK_DATA_DND
 const demoDndCharacter: Character = {
@@ -150,7 +149,6 @@ const demoDhCharacter: Character = {
 // 🎯 LANDMARK: DEMO_LANDING_VIEW_COMPONENT
 function DemoLandingView() {
   const [previewSystem, setPreviewSystem] = useState<'Dungeons & Dragons' | 'Dark Heresy' | null>(null);
-  const { t } = useTranslation();
 
   const activeCharacter = previewSystem === 'Dungeons & Dragons' 
     ? demoDndCharacter 
@@ -169,23 +167,8 @@ function DemoLandingView() {
       `}</style>
       
       <div className="bg-background">
-        {/* 🎯 LANDMARK: DEMO_HEADER */}
-        <header className="border-b bg-card/50 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
-          <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Shield className="h-6 w-6 text-primary" />
-              <span className="font-headline font-bold text-lg">Digital Character Sheets</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <Button variant="ghost" asChild>
-                <Link href="/login">
-                  <LogIn className="mr-2 h-4 w-4" />
-                  {t('login') || 'Login / Register'}
-                </Link>
-              </Button>
-            </div>
-          </div>
-        </header>
+        {/* 🎯 LANDMARK: DEMO_HEADER → общая гостевая шапка с темой/языком/видом */}
+        <GuestHeader showLoginLink />
 
         <main className="container mx-auto px-4 py-8 max-w-6xl pb-20">
           {/* 🎯 LANDMARK: DEMO_HERO */}

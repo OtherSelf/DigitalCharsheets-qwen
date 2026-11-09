@@ -4,6 +4,7 @@ import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { POST as loginRoute } from '@/app/api/auth/route';
+import { POST as registerRoute } from '@/app/api/auth/register/route';
 import { POST as phraseRoute } from '@/app/api/auth/phrase/route';
 import { GET as charactersGet, POST as charactersPost } from '@/app/api/characters/route';
 import { GET as exportGet } from '@/app/api/export/route';
@@ -30,11 +31,13 @@ import {
 type AnyCharacter = Record<string, any>;
 
 const AUTH_URL = 'http://localhost/api/auth';
+const REGISTER_URL = 'http://localhost/api/auth/register';
 const PHRASE_URL = 'http://localhost/api/auth/phrase';
 const CHARACTERS_URL = 'http://localhost/api/characters';
 const EXPORT_URL = 'http://localhost/api/export';
 
 const PASSWORD = 'secret-pass';
+const RECOVERY_PHRASE = 'amber cobalt lantern';
 
 const jsonRequest = (
   url: string,
@@ -67,10 +70,20 @@ async function login(username: string, password: string, displayName?: string) {
   return { status: res.status, body };
 }
 
-/** Регистрирует (или логинит) аккаунт и возвращает пользователя из ответа. */
+/** Регистрирует аккаунт через отдельный роут (вход больше не создаёт его). */
 async function register(username: string, displayName?: string) {
-  const { status, body } = await login(username, PASSWORD, displayName);
-  expect(status, `логин ${username}: ${JSON.stringify(body)}`).toBe(200);
+  const res = await registerRoute(
+    jsonRequest(REGISTER_URL, {
+      username,
+      password: PASSWORD,
+      displayName,
+      recoveryPhrase: RECOVERY_PHRASE,
+    }),
+  );
+  const body = await res.json();
+  const cookie = (res.headers.get('set-cookie') || '').split(';')[0];
+  if (body?.user?.uid && cookie) cookiesByUid.set(body.user.uid, cookie);
+  expect(res.status, `регистрация ${username}: ${JSON.stringify(body)}`).toBe(200);
   expect(body.success).toBe(true);
   return body.user as {
     uid: string;
@@ -316,7 +329,7 @@ describe('авторизация: регистрация и вход', () => {
     expect(isUid(user.uid)).toBe(true);
     expect(user.username).toBe('auth.user');
     expect(user.displayName).toBe('Auth Tester');
-    expect(user.hasRecoveryPhrase).toBe(false);
+    expect(user.hasRecoveryPhrase).toBe(true);
 
     const paths = userPaths(dataDir, user.uid);
     expect(fs.existsSync(paths.userFile)).toBe(true);
@@ -326,6 +339,7 @@ describe('авторизация: регистрация и вход', () => {
       username: 'auth.user',
       displayName: 'Auth Tester',
       passwordHash: sha256(PASSWORD),
+      recoveryPhrase: RECOVERY_PHRASE,
     });
   });
 

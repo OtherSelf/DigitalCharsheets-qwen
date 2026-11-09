@@ -1,11 +1,14 @@
 import crypto from 'node:crypto';
 import fs from 'node:fs';
+import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
+  accountExists,
   authenticateUser,
   getStoredUser,
   recoverPasswordWithUsernameAndWords,
+  registerUser,
   setRecoveryPhrase,
   updateRecoveryCredentials,
   userExists,
@@ -144,6 +147,99 @@ describe('authenticateUser', () => {
     const result = authenticateUser('legacy', 'pass1');
     expect(result.success).toBe(true);
     expect(result.user?.uid).toBe(uid);
+  });
+
+  it('allowRegistration: false не создаёт аккаунт для свободного логина', () => {
+    const result = authenticateUser('ghost', 'pass1', undefined, {
+      allowRegistration: false,
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.reason).toBe('no_account');
+    expect(result.error).toContain('No account found');
+    expect(accountExists('ghost')).toBe(false);
+    expect(fs.existsSync(path.join(dataDir, 'users'))).toBe(false);
+  });
+
+  it('allowRegistration: false пускает существующий аккаунт и различает пароль', () => {
+    const created = authenticateUser('known', 'pass1');
+    const ok = authenticateUser('known', 'pass1', undefined, { allowRegistration: false });
+    const bad = authenticateUser('known', 'wrong', undefined, { allowRegistration: false });
+
+    expect(ok.success).toBe(true);
+    expect(ok.user?.uid).toBe(created.user?.uid);
+    expect(bad.success).toBe(false);
+    expect(bad.reason).toBe('invalid_password');
+  });
+});
+
+describe('accountExists / registerUser', () => {
+  it('accountExists нормализует логин и не создаёт аккаунт', () => {
+    const created = authenticateUser('Existing.User', 'pass1');
+
+    expect(accountExists('existing.user')).toBe(true);
+    expect(accountExists('  EXISTING.USER  ')).toBe(true);
+    expect(accountExists('missing')).toBe(false);
+    expect(accountExists('')).toBe(false);
+
+    // Проверка существования — только чтение.
+    expect(resolveLogin('existing.user')).toBe(created.user?.uid);
+  });
+
+  it('registerUser создаёт аккаунт с паролем и recovery-фразой', () => {
+    const result = registerUser('  New.User  ', 'pass1', 'New User', '  Amber Cobalt  ');
+
+    expect(result.success).toBe(true);
+    expect(result.isNewUser).toBe(true);
+    expect(result.user?.username).toBe('new.user');
+    expect(result.user?.displayName).toBe('New User');
+    expect(result.user?.hasRecoveryPhrase).toBe(true);
+
+    const uid = result.user!.uid;
+    const stored = readJson(userPaths(dataDir, uid).userFile);
+    expect(stored).toMatchObject({
+      schemaVersion: 2,
+      uid,
+      username: 'new.user',
+      displayName: 'New User',
+      passwordHash: sha256('pass1'),
+      recoveryPhrase: 'amber cobalt',
+    });
+    expect(resolveLogin('new.user')).toBe(uid);
+
+    // Пароль из регистрации работает при входе.
+    expect(authenticateUser('new.user', 'pass1').user?.uid).toBe(uid);
+    expect(authenticateUser('new.user', 'pass2').success).toBe(false);
+  });
+
+  it('registerUser отклоняет занятый логин и ничего не перезаписывает', () => {
+    const first = registerUser('taken', 'pass1', 'First', 'amber cobalt');
+    const second = registerUser('taken', 'pass2', 'Second', 'zulu yankee');
+
+    expect(second.success).toBe(false);
+    expect(second.reason).toBe('exists');
+    expect(second.error).toContain('already registered');
+
+    const stored = readJson(userPaths(dataDir, first.user!.uid).userFile);
+    expect(stored.displayName).toBe('First');
+    expect(stored.passwordHash).toBe(sha256('pass1'));
+    expect(stored.recoveryPhrase).toBe('amber cobalt');
+  });
+
+  it('registerUser валидирует пароль и фразу', () => {
+    const shortPassword = registerUser('short-pass', '123', 'Short', 'amber cobalt');
+    expect(shortPassword.success).toBe(false);
+    expect(shortPassword.reason).toBe('invalid_input');
+
+    const shortPhrase = registerUser('short-phrase', 'pass1', 'Short', 'ab');
+    expect(shortPhrase.success).toBe(false);
+    expect(shortPhrase.reason).toBe('invalid_input');
+
+    const noLogin = registerUser('   ', 'pass1', 'Nobody', 'amber cobalt');
+    expect(noLogin.success).toBe(false);
+
+    expect(accountExists('short-pass')).toBe(false);
+    expect(accountExists('short-phrase')).toBe(false);
   });
 });
 

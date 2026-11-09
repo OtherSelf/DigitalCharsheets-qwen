@@ -49,6 +49,27 @@ interface AuthResult {
   user?: LocalUser;
   error?: string;
   isNewUser?: boolean;
+  /**
+   * Машиночитаемая причина отказа (чтобы роуты выбирали HTTP-статус, а UI —
+   * локализованный текст, не разбирая английскую строку ошибки):
+   *   no_account       — логин свободен, но вход запрещён (регистрация отдельно);
+   *   invalid_password — аккаунт есть, пароль не совпал;
+   *   exists           — регистрация отклонена: логин уже занят;
+   *   invalid_input    — не прошли серверные проверки полей.
+   */
+  reason?: 'no_account' | 'invalid_password' | 'exists' | 'invalid_input';
+}
+
+export interface AuthenticateOptions {
+  /**
+   * `false` — режим «только вход»: свободный логин НЕ создаёт аккаунт, а
+   * возвращает `reason: 'no_account'`. Так работает POST /api/auth; отдельная
+   * регистрация — POST /api/auth/register.
+   *
+   * По умолчанию `true`, чтобы внутренние сценарии (миграция, тесты,
+   * скрипты) могли по-прежнему создавать аккаунт первым входом.
+   */
+  allowRegistration?: boolean;
 }
 
 function hashPassword(password: string): string {
@@ -110,27 +131,146 @@ function authenticateExisting(uid: string, passwordHash: string): AuthResult {
     rebuildLoginIndex();
     stored = getStoredUser(uid);
   }
-  if (!stored) return { success: false, error: 'Failed to read user data.' };
-  if (stored.passwordHash !== passwordHash) return { success: false, error: 'Incorrect password.' };
+  if (!stored) {
+    return { success: false, error: 'Failed to read user data.', reason: 'no_account' };
+  }
+  if (stored.passwordHash !== passwordHash) {
+    return { success: false, error: 'Incorrect password.', reason: 'invalid_password' };
+  }
   return { success: true, isNewUser: false, user: toLocalUser(stored) };
+}
+
+/** Есть ли аккаунт с таким логином (регистр/пробелы нормализуются). */
+export function accountExists(username: string): boolean {
+  return resolveLogin(username) !== null;
+}
+
+/**
+ * Создать профиль и запись в индексе. Вызывать только под `withDataLock`,
+ * после проверки, что логин свободен.
+ */
+function persistNewAccount(
+  login: string,
+  passwordHash: string,
+  displayName?: string,
+  recoveryPhrase?: string,
+): AuthResult {
+  const uid = newUid();
+  const now = new Date().toISOString();
+  const user: StoredUser = {
+    schemaVersion: 2,
+    uid,
+    username: login,
+    displayName: (displayName && displayName.trim()) || defaultDisplayName(login),
+    passwordHash,
+    createdAt: now,
+    updatedAt: now,
+  };
+
+  if (recoveryPhrase !== undefined && recoveryPhrase.trim() !== '') {
+    user.recoveryPhrase = recoveryPhrase.toLowerCase().trim();
+  }
+
+  writeStoredUser(uid, user);
+
+  const index = readLoginIndexForUpdate();
+  index.logins[login] = uid;
+  try {
+    writeLoginIndex(index);
+  } catch (e) {
+    // Источник истины — user.json; индекс пересоберётся при следующем входе.
+    console.error('Failed to update login index:', e);
+  }
+
+  return { success: true, isNewUser: true, user: toLocalUser(user) };
+}
+
+/**
+ * Регистрация нового аккаунта с явно заданной recovery-фразой.
+ *
+ * Отличие от `authenticateUser`: занятый логин — это ошибка (`reason:
+ * 'exists'`), а не вход в существующий аккаунт. Вызывается из
+ * `POST /api/auth/register`.
+ */
+export function registerUser(
+  username: string,
+  password: string,
+  displayName: string | undefined,
+  recoveryPhrase: string,
+): AuthResult {
+  const login = normalizeLogin(username);
+  if (!login) {
+    return { success: false, error: 'Username/Email is required.', reason: 'invalid_input' };
+  }
+  if (!password || password.length < 4) {
+    return {
+      success: false,
+      error: 'Password must be at least 4 characters.',
+      reason: 'invalid_input',
+    };
+  }
+  if (!recoveryPhrase || recoveryPhrase.trim().length < 5) {
+    return {
+      success: false,
+      error: 'Recovery phrase must be at least 5 characters.',
+      reason: 'invalid_input',
+    };
+  }
+
+  if (resolveLogin(login)) {
+    return {
+      success: false,
+      error: 'This login is already registered.',
+      reason: 'exists',
+    };
+  }
+
+  // Регистрация под локом: иначе два параллельных запроса заведут два
+  // аккаунта с одним логином.
+  return withDataLock(() => {
+    const index = readLoginIndexForUpdate();
+    if (index.logins[login]) {
+      return {
+        success: false,
+        error: 'This login is already registered.',
+        reason: 'exists',
+      } as AuthResult;
+    }
+    return persistNewAccount(login, hashPassword(password), displayName, recoveryPhrase);
+  });
 }
 
 /**
  * Вход или регистрация. Новый аккаунт создаётся только при первом входе с
  * этим логином; uid выдаётся здесь и больше не меняется.
+ *
+ * `options.allowRegistration: false` включает режим «только вход»: свободный
+ * логин возвращает `reason: 'no_account'` и ничего не пишет на диск. Именно
+ * так работает `POST /api/auth` — на странице /login регистрация отдельная.
  */
 export function authenticateUser(
   username: string,
   password: string,
   displayName?: string,
+  options: AuthenticateOptions = {},
 ): AuthResult {
   const login = normalizeLogin(username);
   const passwordHash = hashPassword(password);
 
-  if (!login) return { success: false, error: 'Username/Email is required.' };
+  if (!login) {
+    return { success: false, error: 'Username/Email is required.', reason: 'invalid_input' };
+  }
 
   const existingUid = resolveLogin(login);
   if (existingUid) return authenticateExisting(existingUid, passwordHash);
+
+  if (options.allowRegistration === false) {
+    return {
+      success: false,
+      error: 'No account found with this username/email. Create an account first.',
+      reason: 'no_account',
+    };
+  }
 
   // Регистрация: проверка «логин свободен» и создание каталога — под локом,
   // иначе два параллельных запроса заведут два аккаунта с одним логином.
@@ -139,29 +279,7 @@ export function authenticateUser(
     const racedUid = index.logins[login];
     if (racedUid) return authenticateExisting(racedUid, passwordHash);
 
-    const uid = newUid();
-    const now = new Date().toISOString();
-    const user: StoredUser = {
-      schemaVersion: 2,
-      uid,
-      username: login,
-      displayName: (displayName && displayName.trim()) || defaultDisplayName(login),
-      passwordHash,
-      createdAt: now,
-      updatedAt: now,
-    };
-
-    writeStoredUser(uid, user);
-
-    index.logins[login] = uid;
-    try {
-      writeLoginIndex(index);
-    } catch (e) {
-      // Источник истины — user.json; индекс пересоберётся при следующем входе.
-      console.error('Failed to update login index:', e);
-    }
-
-    return { success: true, isNewUser: true, user: toLocalUser(user) };
+    return persistNewAccount(login, passwordHash, displayName);
   });
 }
 

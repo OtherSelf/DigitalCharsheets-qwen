@@ -3,6 +3,8 @@ import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { POST as loginRoute } from '@/app/api/auth/route';
+import { POST as existsRoute } from '@/app/api/auth/exists/route';
+import { POST as registerRoute } from '@/app/api/auth/register/route';
 import { POST as logoutRoute } from '@/app/api/auth/logout/route';
 import { PUT as profileRoute } from '@/app/api/auth/profile/route';
 import { POST as phraseRoute } from '@/app/api/auth/phrase/route';
@@ -66,27 +68,132 @@ afterEach(() => {
 
 /** Войти через /api/auth и вернуть uid, cookie и тело ответа. */
 async function loginAs(username: string, password = '1234', displayName?: string) {
-  const res = await loginRoute(json({ username, password, displayName }));
+  // Большинству тестов нужен существующий аккаунт: регистрация теперь
+  // отдельным роутом, а /api/auth — только вход.
+  const registered = await registerAs(username, password, displayName);
+  expect([200, 409]).toContain(registered.res.status);
+
+  const res = await loginRoute(json({ username, password }));
   const body = await res.json();
   const setCookie = res.headers.get('set-cookie') || '';
   const cookie = setCookie.split(';')[0];
   return { res, body, uid: body?.user?.uid as string, cookie };
 }
 
-describe('POST /api/auth', () => {
-  it('регистрирует нового пользователя, выдаёт uid и сессию', async () => {
-    const { res, body, uid, cookie } = await loginAs('api-user', '1234', 'API');
+/** Зарегистрировать аккаунт через /api/auth/register. */
+async function registerAs(
+  username: string,
+  password = '1234',
+  displayName?: string,
+  recoveryPhrase = 'amber cobalt lantern',
+) {
+  const res = await registerRoute(
+    json({ username, password, displayName, recoveryPhrase }),
+  );
+  const body = await res.json();
+  const setCookie = res.headers.get('set-cookie') || '';
+  const cookie = setCookie.split(';')[0];
+  return { res, body, uid: body?.user?.uid as string, cookie };
+}
+
+describe('POST /api/auth/register', () => {
+  it('создаёт аккаунт с uid, recovery-фразой и сессией', async () => {
+    const { res, body, uid, cookie } = await registerAs('api-user', '1234', 'API');
 
     expect(res.status).toBe(200);
     expect(body).toMatchObject({ success: true, isNewUser: true });
     expect(isUid(uid)).toBe(true);
-    expect(body.user.hasRecoveryPhrase).toBe(false);
+    expect(body.user.hasRecoveryPhrase).toBe(true);
     expect(cookie).toMatch(/^dcs_session=/);
     expect(res.headers.get('set-cookie')).toMatch(/HttpOnly/);
 
     // uid не выводится из логина: user.json и индекс указывают на один uid.
-    expect(readJson(userPaths(dataDir, uid).userFile).uid).toBe(uid);
+    const stored = readJson(userPaths(dataDir, uid).userFile);
+    expect(stored.uid).toBe(uid);
+    expect(stored.recoveryPhrase).toBe('amber cobalt lantern');
     expect(readJson(loginIndexPath(dataDir)).logins['api-user']).toBe(uid);
+  });
+
+  it('возвращает 409 на занятый логин и не меняет чужой профиль', async () => {
+    const first = await registerAs('occupied', '1234', 'First');
+    const second = await registerAs('occupied', '5678', 'Second', 'zulu yankee');
+
+    expect(second.res.status).toBe(409);
+    expect(second.body).toMatchObject({ success: false, reason: 'exists' });
+    expect(readJson(userPaths(dataDir, first.uid).userFile).displayName).toBe('First');
+    expect(readJson(userPaths(dataDir, first.uid).userFile).recoveryPhrase).toBe(
+      'amber cobalt lantern',
+    );
+  });
+
+  it('валидирует обязательные поля, длину пароля и фразы', async () => {
+    const noPassword = await registerRoute(json({ username: 'x' }));
+    expect(noPassword.status).toBe(400);
+
+    const shortPassword = await registerRoute(
+      json({ username: 'x', password: '123', recoveryPhrase: 'amber cobalt' }),
+    );
+    expect(shortPassword.status).toBe(400);
+    expect((await shortPassword.json()).error).toContain('at least 4');
+
+    const shortPhrase = await registerRoute(
+      json({ username: 'x', password: '1234', recoveryPhrase: 'ab' }),
+    );
+    expect(shortPhrase.status).toBe(400);
+    expect((await shortPhrase.json()).error).toContain('Recovery phrase');
+  });
+
+  it('возвращает 500 (а не падает) на битом JSON', async () => {
+    const res = await registerRoute(
+      new Request('http://localhost/api/auth/register', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: '{ broken',
+      }),
+    );
+    expect(res.status).toBe(500);
+  });
+});
+
+describe('POST /api/auth/exists', () => {
+  it('отличает существующий логин от свободного и нормализует регистр', async () => {
+    await registerAs('Existing.User');
+
+    const found = await existsRoute(json({ username: '  EXISTING.USER  ' }));
+    expect(found.status).toBe(200);
+    expect(await found.json()).toMatchObject({ success: true, exists: true });
+
+    const missing = await existsRoute(json({ username: 'nobody' }));
+    expect(missing.status).toBe(200);
+    expect(await missing.json()).toMatchObject({ success: true, exists: false });
+  });
+
+  it('400 без логина и 500 на битом JSON', async () => {
+    const empty = await existsRoute(json({ username: '   ' }));
+    expect(empty.status).toBe(400);
+
+    const broken = await existsRoute(
+      new Request('http://localhost/api/auth/exists', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: '{ broken',
+      }),
+    );
+    expect(broken.status).toBe(500);
+  });
+});
+
+describe('POST /api/auth', () => {
+  it('не создаёт аккаунт для неизвестного логина — 404', async () => {
+    const res = await loginRoute(json({ username: 'unknown', password: '1234' }));
+
+    expect(res.status).toBe(404);
+    expect(await res.json()).toMatchObject({
+      success: false,
+      reason: 'no_account',
+    });
+    // Свободный логин больше не означает «регистрация первым входом».
+    expect(fs.existsSync(path.join(dataDir, 'users'))).toBe(false);
   });
 
   it('возвращает 401 на неверный пароль', async () => {
@@ -101,9 +208,22 @@ describe('POST /api/auth', () => {
     const noPassword = await loginRoute(json({ username: 'x' }));
     expect(noPassword.status).toBe(400);
 
+    const blankUsername = await loginRoute(json({ username: '   ', password: '1234' }));
+    expect(blankUsername.status).toBe(400);
+
     const shortPassword = await loginRoute(json({ username: 'x', password: '123' }));
     expect(shortPassword.status).toBe(400);
     expect((await shortPassword.json()).error).toContain('at least 4');
+  });
+
+  it('успешно входит в существующий аккаунт и не создаёт новый', async () => {
+    const { uid } = await registerAs('returning', '1234', 'Returning');
+    const { res, body } = await loginAs('returning', '1234');
+
+    expect(res.status).toBe(200);
+    expect(body.success).toBe(true);
+    expect(body.isNewUser).toBe(false);
+    expect(body.user.uid).toBe(uid);
   });
 
   it('возвращает 500 (а не падает) на битом JSON', async () => {

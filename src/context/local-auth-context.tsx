@@ -16,12 +16,26 @@ interface LoginResult {
   error?: string;
   isNewUser?: boolean;
   user?: LocalUser;
+  /** Причина отказа от API: no_account / invalid_password / exists / … */
+  reason?: string;
+}
+
+interface AccountExistsResult {
+  exists: boolean;
+  error?: string;
 }
 
 interface LocalAuthContextType {
   user: LocalUser | null;
   isUserLoading: boolean;
   login: (username: string, password: string, displayName?: string) => Promise<LoginResult>;
+  register: (
+    username: string,
+    password: string,
+    displayName: string,
+    recoveryPhrase: string,
+  ) => Promise<LoginResult>;
+  accountExists: (username: string) => Promise<AccountExistsResult>;
   logout: () => void;
   restoreSession: (user: LocalUser) => void; // 🆕 LANDMARK: used by recovery flow
   updateUserPhrase: (hasPhrase: boolean) => void;
@@ -59,6 +73,7 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
         return {
           success: false,
           error: data?.error || `Server returned an error (${res.status}).`,
+          reason: data?.reason,
         };
       }
 
@@ -69,6 +84,60 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
       return { success: false, error: 'Failed to connect to server.' };
     }
   }, [restoreSession]);
+
+  /**
+   * Явная регистрация через /api/auth/register. В отличие от login, занятый
+   * логин — ошибка (`reason: 'exists'`), а не вход в чужой аккаунт.
+   */
+  const register = useCallback(async (
+    username: string,
+    password: string,
+    displayName: string,
+    recoveryPhrase: string,
+  ): Promise<LoginResult> => {
+    try {
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password, displayName, recoveryPhrase }),
+      });
+
+      const data = await res.json().catch(() => null);
+
+      if (!res.ok || !data?.success || !data?.user) {
+        return {
+          success: false,
+          error: data?.error || `Server returned an error (${res.status}).`,
+          reason: data?.reason,
+        };
+      }
+
+      restoreSession(data.user);
+      return { success: true, isNewUser: true, user: data.user };
+    } catch (error) {
+      console.error('[auth] registration failed:', error);
+      return { success: false, error: 'Failed to connect to server.' };
+    }
+  }, [restoreSession]);
+
+  /** Проверка существования аккаунта (для страницы /login). */
+  const accountExists = useCallback(async (username: string): Promise<AccountExistsResult> => {
+    try {
+      const res = await fetch('/api/auth/exists', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username }),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data?.success) {
+        return { exists: false, error: data?.error || `Server returned an error (${res.status}).` };
+      }
+      return { exists: !!data.exists };
+    } catch (error) {
+      console.error('[auth] account check failed:', error);
+      return { exists: false, error: 'Failed to connect to server.' };
+    }
+  }, []);
 
   const logout = useCallback(() => {
     // Стираем cookie на сервере; локальный снимок — в любом случае.
@@ -92,7 +161,7 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <LocalAuthContext.Provider
-      value={{ user, isUserLoading, login, logout, restoreSession, updateUserPhrase }}
+      value={{ user, isUserLoading, login, register, accountExists, logout, restoreSession, updateUserPhrase }}
     >
       {children}
     </LocalAuthContext.Provider>

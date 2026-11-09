@@ -25,6 +25,124 @@ const PAGES = [
  *   - на мобильном есть компактный сайдбар и меню, на десктопе — нет;
  *   - ключевые блоки листа действительно видны.
  */
+test.describe('гостевая шапка (главная и /login)', () => {
+  test('главная до входа: мобильный вид, тема и язык', async ({ page, context }) => {
+    await prepare(context, { authenticated: false });
+    await openApp(page, '/');
+
+    const header = page.getByTestId('guest-header');
+    await expect(header).toBeVisible();
+    await expect(
+      header.getByRole('link', { name: 'Login / Register' }),
+    ).toBeVisible();
+
+    const compactToggle = header.getByTestId('guest-compact-toggle');
+    if (isMobile()) {
+      // На телефоне компактный вид включается сам — кнопки нет, как и в приложении.
+      await expect(compactToggle).toHaveCount(0);
+    } else {
+      await expect(compactToggle).toBeVisible();
+      await expect(compactToggle).toHaveAttribute(
+        'aria-label',
+        'Switch to Compact View',
+      );
+      await compactToggle.click();
+      await expect(compactToggle).toHaveAttribute(
+        'aria-label',
+        'Switch to Default View',
+      );
+    }
+
+    // Язык переводит подпись кнопки входа в шапке.
+    await header.getByRole('button', { name: 'EN', exact: true }).click();
+    await expect(
+      header.getByRole('link', { name: 'Вход / Регистрация' }),
+    ).toBeVisible();
+
+    // Тема переключается через то же меню, что и в приложении.
+    await header.getByRole('button', { name: /переключить тему/i }).click();
+    await page.getByRole('menuitem', { name: 'Темная' }).click();
+    await expect(page.locator('html')).toHaveClass(/dark/);
+
+    await expectNoHorizontalOverflow(page);
+  });
+
+  test('login: шапка с видом/темой/языком и перевод формы', async ({ page, context }) => {
+    await prepare(context, { authenticated: false });
+    await openApp(page, '/login');
+
+    const header = page.getByTestId('guest-header');
+    await expect(header).toBeVisible();
+    // На самой /login кнопка «Вход / Регистрация» не нужна (бренд-ссылка — есть).
+    await expect(
+      header.getByRole('link', { name: 'Login / Register' }),
+    ).toHaveCount(0);
+
+    const compactToggle = header.getByTestId('guest-compact-toggle');
+    if (isMobile()) {
+      await expect(compactToggle).toHaveCount(0);
+    } else {
+      await expect(compactToggle).toBeVisible();
+    }
+
+    await expect(page.getByTestId('auth-card-title')).toHaveText('Welcome Back');
+
+    // EN → RU: вся карточка входа переводится.
+    await header.getByRole('button', { name: 'EN', exact: true }).click();
+    await expect(page.getByTestId('auth-card-title')).toHaveText('С возвращением');
+    await expect(page.getByLabel('Логин или Email', { exact: true })).toBeVisible();
+
+    // RU → EN.
+    await header.getByRole('button', { name: 'RU', exact: true }).click();
+    await expect(page.getByTestId('auth-card-title')).toHaveText('Welcome Back');
+
+    // Тема.
+    await header.getByRole('button', { name: /toggle theme/i }).click();
+    await page.getByRole('menuitem', { name: 'Dark' }).click();
+    await expect(page.locator('html')).toHaveClass(/dark/);
+
+    await expectNoHorizontalOverflow(page);
+  });
+
+  test('login: кнопка регистрации открывает отдельную форму', async ({ page, context }) => {
+    await prepare(context, { authenticated: false });
+    await openApp(page, '/login');
+
+    await expect(page.getByTestId('register-form')).toHaveCount(0);
+    await page.getByTestId('open-register').click();
+
+    const form = page.getByTestId('register-form');
+    await expect(form).toBeVisible();
+    await expect(page.getByTestId('auth-card-title')).toHaveText('Create Account');
+    await expect(form.getByLabel('Username or Email', { exact: true })).toBeVisible();
+    await expect(form.getByLabel('Display Name', { exact: true })).toBeVisible();
+    await expect(form.getByLabel('Password', { exact: true })).toBeVisible();
+    await expect(form.getByLabel('Recovery Phrase', { exact: true })).toBeVisible();
+
+    // Назад ко входу — форма регистрации закрывается.
+    await form.getByRole('button', { name: 'Back to login' }).click();
+    await expect(page.getByTestId('register-form')).toHaveCount(0);
+    await expect(page.getByTestId('auth-card-title')).toHaveText('Welcome Back');
+  });
+
+  test('login: из восстановления можно вернуться ко входу', async ({ page, context }) => {
+    await prepare(context, { authenticated: false });
+    await openApp(page, '/login');
+
+    await page.getByRole('button', { name: 'Forgot password?' }).click();
+    await expect(page.getByTestId('auth-card-title')).toHaveText('Recover Account');
+
+    // Текстовая кнопка внизу формы (плюс иконка-стрелка в заголовке).
+    const back = page.getByTestId('back-to-login');
+    await expect(back).toBeVisible();
+    await expect(back).toHaveText('Back to login');
+    await back.click();
+
+    await expect(page.getByTestId('auth-card-title')).toHaveText('Welcome Back');
+    await expect(page.getByLabel('Username or Email', { exact: true })).toBeVisible();
+  });
+});
+
 test.describe('адаптивность', () => {
   test('все страницы: нет JS-ошибок и горизонтального скролла', async ({
     page,
