@@ -519,6 +519,62 @@ test.describe('адаптивность', () => {
     }
   });
 
+  test('инструменты листа: иконки с подсказками и состоянием', async ({
+    page,
+    context,
+  }) => {
+    test.skip(isMobile(), 'на телефоне инструменты листа живут в меню');
+    await prepare(context);
+    await openApp(page, `/${getState().dhId}`);
+
+    const header = page.getByTestId('app-header');
+    const notes = header.getByRole('button', { name: 'Notes', exact: true });
+    const journal = header.getByRole('button', {
+      name: 'Quest Journal',
+      exact: true,
+    });
+    const notesToggle = header.getByRole('button', {
+      name: 'Hide Notes',
+      exact: true,
+    });
+    const editToggle = header.getByRole('button', {
+      name: 'Edit Buttons',
+      exact: true,
+    });
+
+    // Кнопки остались доступными по имени, хотя видимого текста больше нет:
+    // на него опираются и openDialog(), и скриншот-тесты диалогов.
+    for (const button of [notes, journal, notesToggle, editToggle]) {
+      await expect(button).toBeVisible();
+    }
+    await expect(notes, 'у кнопки только иконка, без подписи').toHaveText('');
+
+    // Подсказка при наведении — вместо убранной подписи.
+    await notes.hover();
+    await expect(page.getByRole('tooltip')).toHaveText('Notes');
+
+    // Состояние тумблера живёт в aria-pressed, а не в видимом тексте.
+    await expect(notesToggle).toHaveAttribute('aria-pressed', 'true');
+    await notesToggle.click();
+    const showNotes = header.getByRole('button', {
+      name: 'Show Notes',
+      exact: true,
+    });
+    await expect(showNotes).toHaveAttribute('aria-pressed', 'false');
+    await showNotes.click();
+    await expect(
+      header.getByRole('button', { name: 'Hide Notes', exact: true }),
+    ).toHaveAttribute('aria-pressed', 'true');
+
+    // Иконочные кнопки не должны стать мельче тач-цели на планшете.
+    for (const button of [notes, journal, notesToggle, editToggle]) {
+      const box = await button.boundingBox();
+      expect(box, 'кнопка должна иметь размер').not.toBeNull();
+      expect(box!.width, 'ширина тач-цели').toBeGreaterThanOrEqual(32);
+      expect(box!.height, 'высота тач-цели').toBeGreaterThanOrEqual(32);
+    }
+  });
+
   test('масштаб интерфейса ≠ 100%: корень не прокручивается', async ({
     page,
     context,
