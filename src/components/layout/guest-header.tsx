@@ -68,8 +68,20 @@ export function GuestHeader({ showLoginLink = false }: GuestHeaderProps) {
           )}
           <LanguageToggle />
           <ThemeToggle />
+          {/*
+            ─── LANDMARK: GUEST_LOGIN_STABLE_WIDTH ───
+            «Вход / Регистрация» и «Login / Register» разной длины. Кнопка
+            прижата к правому краю шапки, поэтому без фиксированной ширины
+            смена языка сдвигала все иконки слева от неё. min-w в em держит
+            слот одинаковым в обеих локалях и масштабируется вместе с текстом
+            (--text-scale), а justify-start закрепляет иконку у левого края.
+          */}
           {showLoginLink && (
-            <Button variant="ghost" asChild>
+            <Button
+              variant="ghost"
+              asChild
+              className="sm:min-w-[15em] sm:justify-start"
+            >
               <Link href="/login" aria-label={t('authLoginRegister')}>
                 <LogIn className="h-4 w-4 sm:mr-2" />
                 <span className="hidden sm:inline">

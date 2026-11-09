@@ -155,8 +155,9 @@ describe('визуальные тесты: имена эталонов', () => {
 const REQUIRED_LANGS: Record<string, Array<'en' | 'ru'>> = {
   login: ['en', 'ru'],
   dashboard: ['en', 'ru'],
-  // /demo пока не локализован — эталон только en (ru проверяется в basic-pages).
-  demo: ['en'],
+  // Лендинг локализован (общий DemoLanding на / и /demo) — базовый экран en/ru.
+  demo: ['en', 'ru'],
+  // Превью листов внутри демо — только en: листы уже покрыты в sheet:*.
   'demo:dnd': ['en'],
   'demo:dh': ['en'],
   settings: ['en', 'ru'],
