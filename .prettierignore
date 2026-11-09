@@ -1,0 +1,27 @@
+# зависимости и сборка
+node_modules
+.next
+out
+build
+dist
+coverage
+
+# тестовые артефакты
+playwright-report
+test-results
+blob-report
+
+# локальные окружения и кеши
+.chromium-deps
+.playwright-browsers
+.npm-cache
+
+# артефакты и данные
+package-lock.json
+tsconfig.tsbuildinfo
+data
+public/brand
+
+# документация: не трогаем разметку отчётов и таблиц
+*.md
+docs
