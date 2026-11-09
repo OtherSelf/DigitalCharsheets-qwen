@@ -345,7 +345,7 @@ test.describe('адаптивность', () => {
     ).toBeVisible();
   });
 
-  test('шапка: на планшете инструменты листа слева, иконки справа', async ({
+  test('шапка листа: одна строка на планшете и до 768px', async ({
     page,
     context,
   }) => {
@@ -358,48 +358,74 @@ test.describe('адаптивность', () => {
     const viewActions = header.locator('.header-view-actions');
     const account = header.getByRole('button', { name: 'Open user menu' });
 
-    const gaps = async () => {
-      const [headerBox, sheetBox, viewBox, accountBox] = await Promise.all([
-        header.boundingBox(),
-        sheetActions.boundingBox(),
-        viewActions.boundingBox(),
-        account.boundingBox(),
-      ]);
-      return {
-        left: Math.round(sheetBox!.x - headerBox!.x),
-        right: Math.round(
-          headerBox!.x + headerBox!.width - (accountBox!.x + accountBox!.width),
-        ),
-        separated: sheetBox!.x + sheetBox!.width < viewBox!.x,
-      };
-    };
-
-    // 768..1299: на второй строке инструменты листа («Заметки», «Журнал»,
-    // чекбоксы) стоят слева, а иконки вид/язык/тема/профиль — справа.
-    for (const width of [1200, 1085, 900]) {
+    // После перехода инструментов листа на иконки группа занимает ~180px
+    // (было 414–493px), поэтому шапка листа укладывается в ОДНУ строку
+    // вплоть до 768px. Ниже 768px включается мобильный компактный вид,
+    // где инструменты живут в сайдбаре. Раньше на 768..1299px шапка
+    // переносилась на две строки и съедала 125–141px высоты.
+    for (const width of [768, 800, 900, 1024, 1180, 1280, 1299]) {
       await page.setViewportSize({ width, height: 900 });
+
+      // Одна строка: высота шапки без переноса (73/77/93 — зависит от
+      // вертикальных паддингов md/lg/xl, но всегда < 100).
       await expect
-        .poll(async () => (await gaps()).left)
-        .toBeLessThanOrEqual(24);
+        .poll(async () => Math.round((await header.boundingBox())!.height))
+        .toBeLessThan(100);
+
+      // Все три группы на одной линии.
       await expect
-        .poll(async () => (await gaps()).right)
+        .poll(async () => {
+          const boxes = await Promise.all([
+            header.locator('.header-identity').boundingBox(),
+            sheetActions.boundingBox(),
+            viewActions.boundingBox(),
+          ]);
+          const centers = boxes.map(
+            (box) => box!.y + Math.round(box!.height / 2),
+          );
+          return Math.max(...centers) - Math.min(...centers);
+        })
+        .toBeLessThanOrEqual(8);
+
+      // Инструменты листа и иконки приложения на месте, иконки — у правого края.
+      await expect(sheetActions).toBeVisible();
+      await expect(viewActions).toBeVisible();
+      await expect
+        .poll(async () =>
+          Math.round(
+            (await header.boundingBox())!.x +
+              (await header.boundingBox())!.width -
+              ((await account.boundingBox())!.x +
+                (await account.boundingBox())!.width),
+          ),
+        )
         .toBeLessThanOrEqual(24);
-      await expect.poll(async () => (await gaps()).separated).toBe(true);
       await expectNoHorizontalOverflow(page);
     }
 
-    // Без персонажа (дашборд) шапка не разъезжается на две строки:
-    // иконки остаются в правом верхнем углу.
+    // На 768..1023px имя персонажа ужимается, но не в точку: у него есть
+    // title с полным именем, а с 1024px оно помещается целиком.
+    await page.setViewportSize({ width: 768, height: 900 });
+    const name = header.locator('.header-identity h2');
+    await expect(name).toBeVisible();
+    await expect
+      .poll(async () => Math.round((await name.boundingBox())!.width))
+      .toBeGreaterThanOrEqual(80);
+    await expect(name).toHaveAttribute('title', 'Lucius Varn');
+    await page.setViewportSize({ width: 1024, height: 900 });
+    await expect
+      .poll(async () => Math.round((await name.boundingBox())!.width))
+      .toBeGreaterThanOrEqual(150);
+
+    // Без персонажа (дашборд) шапка тоже одной строкой: инструментов листа
+    // нет, иконки в правом верхнем углу.
     await openApp(page, '/');
     await page.setViewportSize({ width: 1085, height: 900 });
-    const plainSheetActions = header.locator('.header-sheet-actions');
-    const identity = header.locator('.header-identity');
-    const actions = header.locator('.header-actions');
-    await expect(plainSheetActions).toHaveCount(0);
+    await expect(sheetActions).toHaveCount(0);
     const rowOffset = async () => {
       const [identityBox, actionsBox] = await Promise.all([
-        identity.boundingBox(),
-        actions.boundingBox(),
+        header.locator('.header-identity').boundingBox(),
+        header.locator('.header-actions').boundingBox(),
       ]);
       return Math.round(
         Math.abs(
@@ -411,15 +437,14 @@ test.describe('адаптивность', () => {
     };
     await expect.poll(rowOffset).toBeLessThanOrEqual(8);
     await expect
-      .poll(async () => {
-        const [headerBox, accountBox] = await Promise.all([
-          header.boundingBox(),
-          account.boundingBox(),
-        ]);
-        return Math.round(
-          headerBox!.x + headerBox!.width - (accountBox!.x + accountBox!.width),
-        );
-      })
+      .poll(async () =>
+        Math.round(
+          (await header.boundingBox())!.x +
+            (await header.boundingBox())!.width -
+            ((await account.boundingBox())!.x +
+              (await account.boundingBox())!.width),
+        ),
+      )
       .toBeLessThanOrEqual(24);
   });
 

@@ -274,6 +274,7 @@ export function Header({
               <div className="flex min-w-0 flex-col gap-0">
                 <h2
                   className={`truncate font-headline font-bold tracking-tight ${isCompactView ? 'text-sm md:text-base lg:text-lg' : 'text-lg xl:text-xl'}`}
+                  title={character.name}
                 >
                   {character.name}
                 </h2>
@@ -306,7 +307,11 @@ export function Header({
 
           {character && character.gameSystem === 'Dungeons & Dragons' && (
             <div className="flex shrink-0 items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-2 py-1 md:ml-2 md:px-3">
-              <span className="hidden text-[10px] font-bold uppercase tracking-widest text-primary sm:inline">
+              {/* ─── LANDMARK: HEADER_INSPIRATION_LABEL ───
+                  На узком планшете (768..1023) подпись скрывается, чтобы
+                  имя персонажа не сжималось: смысл «+/-» остаётся понятным
+                  по иконкам, а значение всегда видно. */}
+              <span className="header-field-label hidden text-[10px] font-bold uppercase tracking-widest text-primary sm:inline">
                 {t('inspiration')}
               </span>
               <div className="flex items-center gap-1">
