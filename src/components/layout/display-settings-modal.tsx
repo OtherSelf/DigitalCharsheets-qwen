@@ -53,7 +53,7 @@ export function DisplaySettingsModal({
         </DialogHeader>
 
         <div className="space-y-6 py-4">
-          {/* 🎯 LANDMARK: MODAL_TEXT_SIZE_CONTROLS */}
+          {/* LANDMARK: MODAL_TEXT_SIZE_CONTROLS */}
           <div className="space-y-3">
             <Label>{t('fontSize') || 'Text Size'}</Label>
             <div className="flex items-center gap-3">
@@ -90,7 +90,7 @@ export function DisplaySettingsModal({
 
           <Separator />
 
-          {/* 🎯 LANDMARK: MODAL_UI_SCALE_CONTROLS */}
+          {/* LANDMARK: MODAL_UI_SCALE_CONTROLS */}
           <div className="space-y-3">
             <Label>{t('uiScale') || 'UI Scale'}</Label>
             <div className="flex items-center gap-3">

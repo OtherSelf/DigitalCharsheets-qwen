@@ -35,7 +35,7 @@ import { Card, CardContent, CardHeader } from '../../ui/card';
 import { Checkbox } from '../../ui/checkbox';
 import { Input } from '../../ui/input';
 
-// 🎯 MULTICLASS REQUIREMENTS LANDMARK: Define stats type and requirements
+// MULTICLASS REQUIREMENTS LANDMARK: Define stats type and requirements
 type DnDStats = {
   strength: number;
   dexterity: number;
@@ -60,7 +60,7 @@ const MULTICLASS_REQUIREMENTS: Record<string, (stats: DnDStats) => boolean> = {
   Warlock: (s) => s.charisma >= 13,
   Wizard: (s) => s.intelligence >= 13,
 };
-// 🎯 END MULTICLASS REQUIREMENTS LANDMARK
+// END MULTICLASS REQUIREMENTS LANDMARK
 
 // Map internal English class names to translation keys
 const CLASS_TRANSLATION_KEYS: Record<string, string> = {
@@ -366,7 +366,7 @@ export function DndProgressionSection({
                     </Label>
                   </div>
 
-                  {/* 🎯 MULTICLASS TOGGLE LANDMARK: Removed isProgressionEditing check so it's always visible and functional */}
+                  {/* MULTICLASS TOGGLE LANDMARK: Removed isProgressionEditing check so it's always visible and functional */}
                   <Checkbox
                     checked={progressionData.isMulticlass}
                     onCheckedChange={(v) => {

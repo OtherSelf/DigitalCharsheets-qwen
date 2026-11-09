@@ -381,7 +381,7 @@ export function Header({
 
       {/* ─── LANDMARK: HEADER_ACTIONS ─── */}
       <div className="header-actions flex flex-wrap items-center justify-end gap-2">
-        {/* 🎯 LANDMARK: MOBILE_ACTIONS_MENU - Only visible on mobile */}
+        {/* LANDMARK: MOBILE_ACTIONS_MENU - Only visible on mobile */}
         {mobileActions && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -494,7 +494,7 @@ export function Header({
               <span className="sr-only">{compactLabel}</span>
             </Button>
           )}
-          {/* 🎯 LANDMARK: SMART_LANGUAGE_TOGGLE */}
+          {/* LANDMARK: SMART_LANGUAGE_TOGGLE */}
           {(!character || !isCompactView) && <LanguageToggle />}
           <ThemeToggle />
           {authControls}

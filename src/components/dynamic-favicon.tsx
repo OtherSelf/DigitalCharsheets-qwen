@@ -9,7 +9,7 @@ export function DynamicFavicon({
   gameSystem?: string;
 }) {
   useEffect(() => {
-    console.log('🎯 [FAVICON] Updating for:', gameSystem);
+    console.log('[FAVICON] Updating for:', gameSystem);
 
     let iconHref = '/favicon-default.png';
     const gs = (gameSystem || '').toLowerCase();
@@ -20,7 +20,7 @@ export function DynamicFavicon({
       iconHref = '/favicon-dh.png';
     }
 
-    // 🎯 LANDMARK: AGGRESSIVE DOM UPDATE
+    // LANDMARK: AGGRESSIVE DOM UPDATE
     // 1. Remove ALL existing icon links to prevent browser caching conflicts
     const existingLinks = document.querySelectorAll("link[rel*='icon']");
     existingLinks.forEach((link) => link.remove());
@@ -29,14 +29,14 @@ export function DynamicFavicon({
     const link = document.createElement('link');
     link.rel = 'shortcut icon';
 
-    // 🎯 CRITICAL: If your files are actually .ico, change 'image/png' to 'image/x-icon'
+    // CRITICAL: If your files are actually .ico, change 'image/png' to 'image/x-icon'
     // AND change the filenames above to end in .ico
     link.type = 'image/png';
     link.href = `${iconHref}?v=${Date.now()}`;
 
     document.head.appendChild(link);
 
-    console.log('🎯 [FAVICON] Applied new href:', link.href);
+    console.log('[FAVICON] Applied new href:', link.href);
   }, [gameSystem]);
 
   return null;

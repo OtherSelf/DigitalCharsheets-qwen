@@ -30,7 +30,7 @@ import { cn } from '@/lib/utils';
 
 import Loading from './loading';
 
-// 🎯 LANDMARK: MAIN_DASHBOARD_PAGE
+// LANDMARK: MAIN_DASHBOARD_PAGE
 export default function DashboardPage() {
   const {
     characters,
@@ -65,7 +65,7 @@ export default function DashboardPage() {
     return <Loading />;
   }
 
-  // 🎯 LANDMARK: UNREGISTERED_DEMO_VIEW_REDIRECT
+  // LANDMARK: UNREGISTERED_DEMO_VIEW_REDIRECT
   if (!user) {
     return <DemoLandingView />;
   }
@@ -74,7 +74,7 @@ export default function DashboardPage() {
     <>
       <DynamicFavicon gameSystem="default" />
       <div className="flex h-dvh flex-col">
-        {/* 🎯 LANDMARK: HEADER_WITH_MOBILE_ACTIONS */}
+        {/* LANDMARK: HEADER_WITH_MOBILE_ACTIONS */}
         <Header
           mobileActions={
             <>
@@ -100,7 +100,7 @@ export default function DashboardPage() {
         />
 
         <main className="safe-area-bottom flex-1 overflow-y-auto p-3 sm:p-4 md:p-6 lg:p-8">
-          {/* 🎯 LANDMARK: PENDING_DRAFT_BANNER
+          {/* LANDMARK: PENDING_DRAFT_BANNER
               Персонаж, начерченный гостем до входа, не создаётся автоматически
               в существующем аккаунте: он ждёт здесь явного решения. Иначе после
               входа список выглядел так, будто старые листы потерялись. */}
@@ -153,7 +153,7 @@ export default function DashboardPage() {
                 {t('companionText')}
               </p>
             </div>
-            {/* 🎯 LANDMARK: DESKTOP_BUTTON_GROUP - Hidden on mobile, visible on sm+ */}
+            {/* LANDMARK: DESKTOP_BUTTON_GROUP - Hidden on mobile, visible on sm+ */}
             <div className="hidden w-auto flex-row gap-2 sm:flex">
               <Button
                 variant="outline"

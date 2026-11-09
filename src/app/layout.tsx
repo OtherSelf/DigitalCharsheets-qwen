@@ -57,7 +57,7 @@ export default function RootLayout({
           <LocalAuthProvider>
             <LanguageProvider>
               <CharacterProvider>
-                {/* 🎯 LANDMARK: UI_SCALE_WRAPPER_INTEGRATION */}
+                {/* LANDMARK: UI_SCALE_WRAPPER_INTEGRATION */}
                 <UIScaleWrapper>
                   {children}
                   <RecoveryModalWrapper />

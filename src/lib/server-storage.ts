@@ -180,7 +180,7 @@ export function updateCharacterOnServer(
     return character;
   }
 
-  // 🎯 LANDMARK: Explicit cast to Character to resolve TypeScript discriminated union
+  // LANDMARK: Explicit cast to Character to resolve TypeScript discriminated union
   // inference issues when spreading Partial<Character> over a union type.
   const updated: Character = { ...character, ...data } as Character;
 
