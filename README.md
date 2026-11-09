@@ -45,6 +45,8 @@ The Python equivalent of `isort --profile black .; black .` here is:
 ```bash
 npm run format         # prettier --write . — import sorting + formatting
 npm run format:check   # prettier --check . — CI / pre-commit gate
+npm run lint           # eslint . — hooks, async, React/Next correctness
+npm run lint:fix       # eslint . --fix — safe autofixes only
 ```
 
 - `prettier` — formatting (the `black` part), config in `prettier.config.mjs`.
@@ -53,12 +55,17 @@ npm run format:check   # prettier --check . — CI / pre-commit gate
 - `prettier-plugin-tailwindcss` — sorts Tailwind classes inside `className`.
 - `.prettierignore` keeps `.next`, `node_modules`, Playwright reports, `data/`,
   `public/` and `*.md` out of the run.
+- `eslint` (flat config, `next/core-web-vitals` + `next/typescript`) — the part
+  neither Prettier nor `tsc` covers: `react-hooks/exhaustive-deps`, async
+  handlers in `onClick`/`onSubmit`, a11y and Next-specific rules. Errors block
+  `npm run verify`, warnings (known `exhaustive-deps` and unused locals) are
+  printed but do not.
 
 ## Tests (before deploying)
 
 ```bash
 npm test            # unit tests (vitest)
-npm run verify      # full pre-deploy gate: typecheck + tests + build + HTTP smoke test
+npm run verify      # full pre-deploy gate: format + lint + typecheck + tests + build + HTTP smoke test
 npm run test:visual # Playwright screenshot regression: desktop + mobile
 ```
 
