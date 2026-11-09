@@ -203,13 +203,18 @@ body > div:first-child {
    Mobile  : < 768px (handled by React compact view)
 ================================================================ */
 @media (min-width: 768px) and (max-width: 1299px) {
-  .app-header .header-identity {
+  /* Только шапка листа персонажа: имя + параметры занимают первую строку,
+     а панель действий уходит на вторую и прижимается ВПРАВО, чтобы иконки
+     (компактный вид, язык, тема, профиль) не «уезжали» влево при сужении
+     окна. На страницах без персонажа (дашборд, /new, /settings) шапка
+     остаётся одной строкой — иконки сразу в правом верхнем углу. */
+  .app-header.is-character-sheet .header-identity {
     flex: 1 1 100%;
     min-width: 0;
   }
-  .app-header .header-actions {
+  .app-header.is-character-sheet .header-actions {
     flex: 1 1 100%;
-    justify-content: flex-start;
+    justify-content: flex-end;
   }
 
   .dnd-sheet .sheet-top-row {

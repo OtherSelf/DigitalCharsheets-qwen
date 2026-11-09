@@ -268,6 +268,57 @@ test.describe('адаптивность', () => {
     }
   });
 
+  test('шапка: на планшете панель действий прижата вправо', async ({
+    page,
+    context,
+  }) => {
+    test.skip(isMobile(), 'desktop/tablet-only сценарий');
+    await prepare(context);
+    await openApp(page, `/${getState().dhId}`);
+
+    const header = page.locator('header.app-header');
+    const account = header.getByRole('button', { name: 'Open user menu' });
+    const rightGap = async () => {
+      const [headerBox, accountBox] = await Promise.all([
+        header.boundingBox(),
+        account.boundingBox(),
+      ]);
+      return Math.round(
+        headerBox!.x + headerBox!.width - (accountBox!.x + accountBox!.width),
+      );
+    };
+
+    // 768..1299: панель действий занимает отдельную строку, но прижата к
+    // правому краю — иконки (вид/язык/тема/профиль) не «уезжают» влево.
+    for (const width of [1200, 1085, 900]) {
+      await page.setViewportSize({ width, height: 900 });
+      await expect.poll(rightGap).toBeLessThanOrEqual(24);
+      await expectNoHorizontalOverflow(page);
+    }
+
+    // Без персонажа (дашборд) шапка не разъезжается на две строки:
+    // иконки остаются в правом верхнем углу.
+    await openApp(page, '/');
+    await page.setViewportSize({ width: 1085, height: 900 });
+    const identity = header.locator('.header-identity');
+    const actions = header.locator('.header-actions');
+    const rowOffset = async () => {
+      const [identityBox, actionsBox] = await Promise.all([
+        identity.boundingBox(),
+        actions.boundingBox(),
+      ]);
+      return Math.round(
+        Math.abs(
+          identityBox!.y +
+            identityBox!.height / 2 -
+            (actionsBox!.y + actionsBox!.height / 2),
+        ),
+      );
+    };
+    await expect.poll(rowOffset).toBeLessThanOrEqual(8);
+    await expect.poll(rightGap).toBeLessThanOrEqual(24);
+  });
+
   test('переключение языка EN ↔ RU', async ({ page, context }) => {
     await prepare(context);
     await openApp(page, '/');
