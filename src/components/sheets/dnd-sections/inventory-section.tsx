@@ -1,168 +1,321 @@
 'use client';
 
 import * as React from 'react';
-import { type InventoryItem } from '@/lib/types';
-import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
-import { Input } from '../../ui/input';
-import { Button } from '../../ui/button';
-import { Checkbox } from '../../ui/checkbox';
-import { Plus, Trash2, Edit, Save } from 'lucide-react';
+
+import { Edit, Info, Plus, Save, Trash2 } from 'lucide-react';
+
 import { Label } from '@/components/ui/label';
-import { cn } from '@/lib/utils';
 import { useCharacterContext } from '@/context/character-context';
 import { useTranslation } from '@/context/language-context';
+import { type InventoryItem } from '@/lib/types';
+import { cn } from '@/lib/utils';
+
+import { Button } from '../../ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
+import { Checkbox } from '../../ui/checkbox';
+import { Input } from '../../ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '../../ui/popover';
-import { Info } from 'lucide-react';
 import { Textarea } from '../../ui/textarea';
 
-const EditSaveButton = ({ editing, onEdit, onSave }: { editing: boolean; onEdit: () => void; onSave: () => void }) => (
-  editing ? ( <Button data-testid="save-button" size="icon" variant="ghost" onClick={onSave} className="h-7 w-7"><Save className="h-4 w-4" /></Button> ) : ( <Button data-testid="edit-button" size="icon" variant="outline" onClick={onEdit} className="h-7 w-7"><Edit className="h-4 w-4" /></Button> )
-);
+const EditSaveButton = ({
+  editing,
+  onEdit,
+  onSave,
+}: {
+  editing: boolean;
+  onEdit: () => void;
+  onSave: () => void;
+}) =>
+  editing ? (
+    <Button
+      data-testid="save-button"
+      size="icon"
+      variant="ghost"
+      onClick={onSave}
+      className="h-7 w-7"
+    >
+      <Save className="h-4 w-4" />
+    </Button>
+  ) : (
+    <Button
+      data-testid="edit-button"
+      size="icon"
+      variant="outline"
+      onClick={onEdit}
+      className="h-7 w-7"
+    >
+      <Edit className="h-4 w-4" />
+    </Button>
+  );
 
 interface InventorySectionProps {
   characterId: string;
-  initialCurrency: { cp: number; sp: number; gp: number; pp: number; ep: number };
+  initialCurrency: {
+    cp: number;
+    sp: number;
+    gp: number;
+    pp: number;
+    ep: number;
+  };
   initialEquipment: InventoryItem[];
 }
 
-export const DndInventorySection = React.forwardRef<{ saveAll: () => void }, InventorySectionProps>(
-  ({ characterId, initialCurrency, initialEquipment }, ref) => {
-    const { updateCharacter, showEditButtons, hideNotes } = useCharacterContext();
-    const { t } = useTranslation();
+export const DndInventorySection = React.forwardRef<
+  { saveAll: () => void },
+  InventorySectionProps
+>(({ characterId, initialCurrency, initialEquipment }, ref) => {
+  const { updateCharacter, showEditButtons, hideNotes } = useCharacterContext();
+  const { t } = useTranslation();
 
-    const [currency, setCurrency] = React.useState(initialCurrency);
-    const [equipment, setEquipment] = React.useState<InventoryItem[]>(initialEquipment);
-    const [isMoneyEditing, setIsMoneyEditing] = React.useState(false);
-    const [isItemsEditing, setIsItemsEditing] = React.useState(false);
-    const [newEquipmentItem, setNewEquipmentItem] = React.useState('');
+  const [currency, setCurrency] = React.useState(initialCurrency);
+  const [equipment, setEquipment] =
+    React.useState<InventoryItem[]>(initialEquipment);
+  const [isMoneyEditing, setIsMoneyEditing] = React.useState(false);
+  const [isItemsEditing, setIsItemsEditing] = React.useState(false);
+  const [newEquipmentItem, setNewEquipmentItem] = React.useState('');
 
-    React.useEffect(() => {
-      setCurrency(initialCurrency);
-      setEquipment(initialEquipment);
-    }, [characterId]);
+  React.useEffect(() => {
+    setCurrency(initialCurrency);
+    setEquipment(initialEquipment);
+  }, [characterId]);
 
-    const handleSaveMoney = React.useCallback(() => {
-      updateCharacter(characterId, { currency });
-      setIsMoneyEditing(false);
-    }, [characterId, currency, updateCharacter]);
+  const handleSaveMoney = React.useCallback(() => {
+    updateCharacter(characterId, { currency });
+    setIsMoneyEditing(false);
+  }, [characterId, currency, updateCharacter]);
 
-    const handleSaveItems = React.useCallback(() => {
-      updateCharacter(characterId, { equipment });
-      setIsItemsEditing(false);
-    }, [characterId, equipment, updateCharacter]);
+  const handleSaveItems = React.useCallback(() => {
+    updateCharacter(characterId, { equipment });
+    setIsItemsEditing(false);
+  }, [characterId, equipment, updateCharacter]);
 
-    React.useImperativeHandle(ref, () => ({
+  React.useImperativeHandle(
+    ref,
+    () => ({
       saveAll: () => {
         if (isMoneyEditing) handleSaveMoney();
         if (isItemsEditing) handleSaveItems();
-      }
-    }), [isMoneyEditing, isItemsEditing, handleSaveMoney, handleSaveItems]);
+      },
+    }),
+    [isMoneyEditing, isItemsEditing, handleSaveMoney, handleSaveItems],
+  );
 
-    return (
-      <Card id="inventory-box">
-        <CardHeader className="px-4 pt-2 pb-2">
-          <CardTitle className="text-[10px] font-bold uppercase text-muted-foreground tracking-tight">{t('inventory')}</CardTitle>
-        </CardHeader>
-        <CardContent className="p-4 pt-0 space-y-6">
-          <div className="border rounded-lg p-3 bg-muted/30">
-            <div className="flex items-center justify-between mb-3 border-b pb-1">
-              <Label className="text-[10px] uppercase font-bold">{t('money')}</Label>
-              {(showEditButtons || isMoneyEditing) && <EditSaveButton editing={isMoneyEditing} onEdit={() => setIsMoneyEditing(true)} onSave={handleSaveMoney} />}
-            </div>
-            <div className="grid grid-cols-5 gap-2">
-              {['cp', 'sp', 'ep', 'gp', 'pp'].map(c => (
-                <div key={c} className="flex flex-col items-center">
-                  <span className="text-[8px] font-bold uppercase">{c}</span>
-                  {isMoneyEditing ? (
-                    <Input type="number" value={currency[c as keyof typeof currency]} onChange={e => setCurrency({...currency, [c]: parseInt(e.target.value) || 0})} className="h-6 p-0 text-center text-[10px]" />
-                  ) : (
-                    <div className="text-sm font-bold">{currency[c as keyof typeof currency]}</div>
-                  )}
-                </div>
-              ))}
-            </div>
+  return (
+    <Card id="inventory-box">
+      <CardHeader className="px-4 pb-2 pt-2">
+        <CardTitle className="text-[10px] font-bold uppercase tracking-tight text-muted-foreground">
+          {t('inventory')}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-6 p-4 pt-0">
+        <div className="rounded-lg border bg-muted/30 p-3">
+          <div className="mb-3 flex items-center justify-between border-b pb-1">
+            <Label className="text-[10px] font-bold uppercase">
+              {t('money')}
+            </Label>
+            {(showEditButtons || isMoneyEditing) && (
+              <EditSaveButton
+                editing={isMoneyEditing}
+                onEdit={() => setIsMoneyEditing(true)}
+                onSave={handleSaveMoney}
+              />
+            )}
           </div>
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label className="text-[10px] uppercase font-bold">{t('items')}</Label>
-              {(showEditButtons || isItemsEditing) && <EditSaveButton editing={isItemsEditing} onEdit={() => setIsItemsEditing(true)} onSave={handleSaveItems} />}
-            </div>
-            <ul className="space-y-1 text-xs">
-              {equipment.map(it => (
-                  <li key={it.id} className="flex items-center justify-between group">
-                    {isItemsEditing ? (
-                      <div className="flex items-center gap-2 flex-1">
-                        <Checkbox checked={it.status === 'lost'} onCheckedChange={v => setEquipment(equipment.map(i => i.id === it.id ? { ...i, status: v ? 'lost' : 'default' } : i))} />
-                        <Input value={it.name} onChange={e => setEquipment(equipment.map(i => i.id === it.id ? { ...i, name: e.target.value } : i))} className="h-7 text-xs flex-1" />
-          
-                        {!hideNotes && (
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <Button variant={it.notes ? 'secondary' : 'ghost'} size="icon" className="h-6 w-6 shrink-0" title="Notes">
-                                <Info className="h-3 w-3" />
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-64">
-                              <Label className="text-xs mb-2 block">Notes for {it.name || 'Item'}</Label>
-                              <Textarea
-                                defaultValue={it.notes || ''}
-                                onBlur={(e) => {
-                                  const next = equipment.map(item => item.id === it.id ? { ...item, notes: e.target.value } : item);
-                                  setEquipment(next);
-                                  updateCharacter(characterId, { equipment: next });
-                                }}
-                                placeholder="Add notes..."
-                                className="mt-2 min-h-[100px] text-sm"
-                              />
-                            </PopoverContent>
-                          </Popover>
-                        )}
+          <div className="grid grid-cols-5 gap-2">
+            {['cp', 'sp', 'ep', 'gp', 'pp'].map((c) => (
+              <div key={c} className="flex flex-col items-center">
+                <span className="text-[8px] font-bold uppercase">{c}</span>
+                {isMoneyEditing ? (
+                  <Input
+                    type="number"
+                    value={currency[c as keyof typeof currency]}
+                    onChange={(e) =>
+                      setCurrency({
+                        ...currency,
+                        [c]: parseInt(e.target.value) || 0,
+                      })
+                    }
+                    className="h-6 p-0 text-center text-[10px]"
+                  />
+                ) : (
+                  <div className="text-sm font-bold">
+                    {currency[c as keyof typeof currency]}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label className="text-[10px] font-bold uppercase">
+              {t('items')}
+            </Label>
+            {(showEditButtons || isItemsEditing) && (
+              <EditSaveButton
+                editing={isItemsEditing}
+                onEdit={() => setIsItemsEditing(true)}
+                onSave={handleSaveItems}
+              />
+            )}
+          </div>
+          <ul className="space-y-1 text-xs">
+            {equipment.map((it) => (
+              <li
+                key={it.id}
+                className="group flex items-center justify-between"
+              >
+                {isItemsEditing ? (
+                  <div className="flex flex-1 items-center gap-2">
+                    <Checkbox
+                      checked={it.status === 'lost'}
+                      onCheckedChange={(v) =>
+                        setEquipment(
+                          equipment.map((i) =>
+                            i.id === it.id
+                              ? { ...i, status: v ? 'lost' : 'default' }
+                              : i,
+                          ),
+                        )
+                      }
+                    />
+                    <Input
+                      value={it.name}
+                      onChange={(e) =>
+                        setEquipment(
+                          equipment.map((i) =>
+                            i.id === it.id ? { ...i, name: e.target.value } : i,
+                          ),
+                        )
+                      }
+                      className="h-7 flex-1 text-xs"
+                    />
 
-                        <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={() => setEquipment(equipment.filter(i => i.id !== it.id))}>
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-2 flex-1">
-                        {!hideNotes && (
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <Button variant={it.notes ? 'secondary' : 'ghost'} size="icon" className="h-5 w-5 shrink-0" title="Notes">
-                                <Info className="h-3 w-3" />
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-64">
-                              <Label className="text-xs mb-2 block">Notes for {it.name || 'Item'}</Label>
-                              <Textarea
-                                defaultValue={it.notes || ''}
-                                onBlur={(e) => {
-                                  const next = equipment.map(item => item.id === it.id ? { ...item, notes: e.target.value } : item);
-                                  setEquipment(next);
-                                  updateCharacter(characterId, { equipment: next });
-                                }}
-                                placeholder="Add notes..."
-                                className="mt-2 min-h-[100px] text-sm"
-                              />
-                            </PopoverContent>
-                          </Popover>
-                        )}
-                        <span className={cn("flex-1 truncate", it.status === 'lost' && "line-through")}>&bull; {it.name}</span>
-                      </div>
+                    {!hideNotes && (
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant={it.notes ? 'secondary' : 'ghost'}
+                            size="icon"
+                            className="h-6 w-6 shrink-0"
+                            title="Notes"
+                          >
+                            <Info className="h-3 w-3" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-64">
+                          <Label className="mb-2 block text-xs">
+                            Notes for {it.name || 'Item'}
+                          </Label>
+                          <Textarea
+                            defaultValue={it.notes || ''}
+                            onBlur={(e) => {
+                              const next = equipment.map((item) =>
+                                item.id === it.id
+                                  ? { ...item, notes: e.target.value }
+                                  : item,
+                              );
+                              setEquipment(next);
+                              updateCharacter(characterId, { equipment: next });
+                            }}
+                            placeholder="Add notes..."
+                            className="mt-2 min-h-[100px] text-sm"
+                          />
+                        </PopoverContent>
+                      </Popover>
                     )}
-                  </li>
-                ))}
-              {isItemsEditing && (
-                <div className="flex gap-2 pt-2 border-t">
-                  <Input placeholder="New..." value={newEquipmentItem} onChange={e => setNewEquipmentItem(e.target.value)} className="h-8 text-xs" />
-                  <Button size="sm" onClick={() => { if (newEquipmentItem.trim()) { setEquipment([...equipment, { id: `eq-${Date.now()}`, name: newEquipmentItem.trim(), status: 'default' }]); setNewEquipmentItem(''); } }}><Plus className="h-4 w-4" /></Button>
-                </div>
-              )}
-            </ul>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-);
+
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6 text-destructive"
+                      onClick={() =>
+                        setEquipment(equipment.filter((i) => i.id !== it.id))
+                      }
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex flex-1 items-center gap-2">
+                    {!hideNotes && (
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant={it.notes ? 'secondary' : 'ghost'}
+                            size="icon"
+                            className="h-5 w-5 shrink-0"
+                            title="Notes"
+                          >
+                            <Info className="h-3 w-3" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-64">
+                          <Label className="mb-2 block text-xs">
+                            Notes for {it.name || 'Item'}
+                          </Label>
+                          <Textarea
+                            defaultValue={it.notes || ''}
+                            onBlur={(e) => {
+                              const next = equipment.map((item) =>
+                                item.id === it.id
+                                  ? { ...item, notes: e.target.value }
+                                  : item,
+                              );
+                              setEquipment(next);
+                              updateCharacter(characterId, { equipment: next });
+                            }}
+                            placeholder="Add notes..."
+                            className="mt-2 min-h-[100px] text-sm"
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    )}
+                    <span
+                      className={cn(
+                        'flex-1 truncate',
+                        it.status === 'lost' && 'line-through',
+                      )}
+                    >
+                      &bull; {it.name}
+                    </span>
+                  </div>
+                )}
+              </li>
+            ))}
+            {isItemsEditing && (
+              <div className="flex gap-2 border-t pt-2">
+                <Input
+                  placeholder="New..."
+                  value={newEquipmentItem}
+                  onChange={(e) => setNewEquipmentItem(e.target.value)}
+                  className="h-8 text-xs"
+                />
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    if (newEquipmentItem.trim()) {
+                      setEquipment([
+                        ...equipment,
+                        {
+                          id: `eq-${Date.now()}`,
+                          name: newEquipmentItem.trim(),
+                          status: 'default',
+                        },
+                      ]);
+                      setNewEquipmentItem('');
+                    }
+                  }}
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+          </ul>
+        </div>
+      </CardContent>
+    </Card>
+  );
+});
 
 DndInventorySection.displayName = 'DndInventorySection';

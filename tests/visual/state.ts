@@ -22,7 +22,8 @@ export interface VisualState {
 }
 
 export const STATE_FILE =
-  process.env.DCS_VISUAL_STATE || path.resolve(process.cwd(), '.visual-state.json');
+  process.env.DCS_VISUAL_STATE ||
+  path.resolve(process.cwd(), '.visual-state.json');
 
 export function readState(): VisualState {
   if (!fs.existsSync(STATE_FILE)) {

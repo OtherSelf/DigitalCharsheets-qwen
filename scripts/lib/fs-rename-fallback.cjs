@@ -63,7 +63,10 @@ fs.renameSync = function renameSyncWithFallback(from, to) {
     return originalRenameSync.call(fs, from, to);
   } catch (error) {
     if (!isExdev(error)) throw error;
-    process.emitWarning(`EXDEV: копирую вместо rename: ${from} → ${to}`, 'FSEXDEVFIX');
+    process.emitWarning(
+      `EXDEV: копирую вместо rename: ${from} → ${to}`,
+      'FSEXDEVFIX',
+    );
     return moveSync(from, to);
   }
 };
@@ -94,12 +97,18 @@ fs.rename = function renameWithFallback(from, to, callback) {
 
 // ── fs.promises.rename ──────────────────────────────────────────────────────
 const originalRenamePromise = fsPromises.rename;
-const patchedPromiseRename = async function renamePromiseWithFallback(from, to) {
+const patchedPromiseRename = async function renamePromiseWithFallback(
+  from,
+  to,
+) {
   try {
     return await originalRenamePromise(from, to);
   } catch (error) {
     if (!isExdev(error)) throw error;
-    process.emitWarning(`EXDEV: копирую вместо rename: ${from} → ${to}`, 'FSEXDEVFIX');
+    process.emitWarning(
+      `EXDEV: копирую вместо rename: ${from} → ${to}`,
+      'FSEXDEVFIX',
+    );
     return moveAsync(from, to);
   }
 };
@@ -107,7 +116,10 @@ const patchedPromiseRename = async function renamePromiseWithFallback(from, to) 
 fsPromises.rename = patchedPromiseRename;
 // На случай, если модуль уже получил ссылку на объект promises (Node >= 14
 // отдаёт один и тот же объект, но подстрахуемся).
-if (typeof fs.promises === 'object' && fs.promises.rename !== patchedPromiseRename) {
+if (
+  typeof fs.promises === 'object' &&
+  fs.promises.rename !== patchedPromiseRename
+) {
   try {
     fs.promises.rename = patchedPromiseRename;
   } catch {

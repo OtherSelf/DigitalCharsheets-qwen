@@ -1,23 +1,31 @@
 import fs from 'node:fs';
 import path from 'node:path';
+
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { POST as loginRoute } from '@/app/api/auth/route';
 import { POST as existsRoute } from '@/app/api/auth/exists/route';
-import { POST as registerRoute } from '@/app/api/auth/register/route';
 import { POST as logoutRoute } from '@/app/api/auth/logout/route';
-import { PUT as profileRoute } from '@/app/api/auth/profile/route';
 import { POST as phraseRoute } from '@/app/api/auth/phrase/route';
+import { PUT as profileRoute } from '@/app/api/auth/profile/route';
 import { POST as recoverRoute } from '@/app/api/auth/recover/route';
-import { POST as recoverVerifyRoute } from '@/app/api/auth/recover/verify/route';
 import { POST as recoverUpdateRoute } from '@/app/api/auth/recover/update/route';
-import { GET as charactersGet, POST as charactersPost } from '@/app/api/characters/route';
-import { DELETE as characterDelete, PUT as characterPut } from '@/app/api/characters/[id]/route';
+import { POST as recoverVerifyRoute } from '@/app/api/auth/recover/verify/route';
+import { POST as registerRoute } from '@/app/api/auth/register/route';
+import { POST as loginRoute } from '@/app/api/auth/route';
+import {
+  DELETE as characterDelete,
+  PUT as characterPut,
+} from '@/app/api/characters/[id]/route';
+import {
+  GET as charactersGet,
+  POST as charactersPost,
+} from '@/app/api/characters/route';
 import { GET as exportGet } from '@/app/api/export/route';
 import { GET as importGet } from '@/app/api/import/route';
-import { authenticateUser, setRecoveryPhrase } from '@/lib/server-auth';
 import { isUid } from '@/lib/ids';
+import { authenticateUser, setRecoveryPhrase } from '@/lib/server-auth';
 import { resetWriteSeqGuard } from '@/lib/server-storage';
+
 import {
   loginIndexPath,
   makeDhCharacter,
@@ -25,8 +33,8 @@ import {
   readJson,
   removeDir,
   sessionHeaders,
-  useTempDataDir,
   userPaths,
+  useTempDataDir,
 } from './helpers';
 
 /**
@@ -49,8 +57,11 @@ const json = (body: unknown, headers: Record<string, string> = {}) =>
     body: JSON.stringify(body),
   });
 
-const req = (url: string, method = 'GET', headers: Record<string, string> = {}) =>
-  new Request(url, { method, headers });
+const req = (
+  url: string,
+  method = 'GET',
+  headers: Record<string, string> = {},
+) => new Request(url, { method, headers });
 
 const params = (id: string) => ({ params: Promise.resolve({ id }) });
 
@@ -67,7 +78,11 @@ afterEach(() => {
 });
 
 /** Войти через /api/auth и вернуть uid, cookie и тело ответа. */
-async function loginAs(username: string, password = '1234', displayName?: string) {
+async function loginAs(
+  username: string,
+  password = '1234',
+  displayName?: string,
+) {
   // Большинству тестов нужен существующий аккаунт: регистрация теперь
   // отдельным роутом, а /api/auth — только вход.
   const registered = await registerAs(username, password, displayName);
@@ -98,7 +113,11 @@ async function registerAs(
 
 describe('POST /api/auth/register', () => {
   it('создаёт аккаунт с uid, recovery-фразой и сессией', async () => {
-    const { res, body, uid, cookie } = await registerAs('api-user', '1234', 'API');
+    const { res, body, uid, cookie } = await registerAs(
+      'api-user',
+      '1234',
+      'API',
+    );
 
     expect(res.status).toBe(200);
     expect(body).toMatchObject({ success: true, isNewUser: true });
@@ -116,14 +135,21 @@ describe('POST /api/auth/register', () => {
 
   it('возвращает 409 на занятый логин и не меняет чужой профиль', async () => {
     const first = await registerAs('occupied', '1234', 'First');
-    const second = await registerAs('occupied', '5678', 'Second', 'zulu yankee');
+    const second = await registerAs(
+      'occupied',
+      '5678',
+      'Second',
+      'zulu yankee',
+    );
 
     expect(second.res.status).toBe(409);
     expect(second.body).toMatchObject({ success: false, reason: 'exists' });
-    expect(readJson(userPaths(dataDir, first.uid).userFile).displayName).toBe('First');
-    expect(readJson(userPaths(dataDir, first.uid).userFile).recoveryPhrase).toBe(
-      'amber cobalt lantern',
+    expect(readJson(userPaths(dataDir, first.uid).userFile).displayName).toBe(
+      'First',
     );
+    expect(
+      readJson(userPaths(dataDir, first.uid).userFile).recoveryPhrase,
+    ).toBe('amber cobalt lantern');
   });
 
   it('валидирует обязательные поля, длину пароля и фразы', async () => {
@@ -165,7 +191,10 @@ describe('POST /api/auth/exists', () => {
 
     const missing = await existsRoute(json({ username: 'nobody' }));
     expect(missing.status).toBe(200);
-    expect(await missing.json()).toMatchObject({ success: true, exists: false });
+    expect(await missing.json()).toMatchObject({
+      success: true,
+      exists: false,
+    });
   });
 
   it('400 без логина и 500 на битом JSON', async () => {
@@ -185,7 +214,9 @@ describe('POST /api/auth/exists', () => {
 
 describe('POST /api/auth', () => {
   it('не создаёт аккаунт для неизвестного логина — 404', async () => {
-    const res = await loginRoute(json({ username: 'unknown', password: '1234' }));
+    const res = await loginRoute(
+      json({ username: 'unknown', password: '1234' }),
+    );
 
     expect(res.status).toBe(404);
     expect(await res.json()).toMatchObject({
@@ -198,7 +229,9 @@ describe('POST /api/auth', () => {
 
   it('возвращает 401 на неверный пароль', async () => {
     await loginAs('api-user', '1234');
-    const res = await loginRoute(json({ username: 'api-user', password: 'nope' }));
+    const res = await loginRoute(
+      json({ username: 'api-user', password: 'nope' }),
+    );
 
     expect(res.status).toBe(401);
     expect((await res.json()).success).toBe(false);
@@ -208,10 +241,14 @@ describe('POST /api/auth', () => {
     const noPassword = await loginRoute(json({ username: 'x' }));
     expect(noPassword.status).toBe(400);
 
-    const blankUsername = await loginRoute(json({ username: '   ', password: '1234' }));
+    const blankUsername = await loginRoute(
+      json({ username: '   ', password: '1234' }),
+    );
     expect(blankUsername.status).toBe(400);
 
-    const shortPassword = await loginRoute(json({ username: 'x', password: '123' }));
+    const shortPassword = await loginRoute(
+      json({ username: 'x', password: '123' }),
+    );
     expect(shortPassword.status).toBe(400);
     expect((await shortPassword.json()).error).toContain('at least 4');
   });
@@ -249,7 +286,9 @@ describe('POST /api/auth/logout', () => {
 
 describe('PUT /api/auth/profile', () => {
   it('без сессии — 401', async () => {
-    const res = await profileRoute(json({ newUsername: 'x', newDisplayName: 'X' }));
+    const res = await profileRoute(
+      json({ newUsername: 'x', newDisplayName: 'X' }),
+    );
     expect(res.status).toBe(401);
   });
 
@@ -257,18 +296,25 @@ describe('PUT /api/auth/profile', () => {
     const { uid, cookie } = await loginAs('old-login', '1234', 'Name');
 
     const res = await profileRoute(
-      json({ newUsername: 'new-login', newDisplayName: 'New Name' }, sessionHeaders(uid)),
+      json(
+        { newUsername: 'new-login', newDisplayName: 'New Name' },
+        sessionHeaders(uid),
+      ),
     );
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.success).toBe(true);
     expect(body.user.uid).toBe(uid);
 
-    expect(readJson(userPaths(dataDir, uid).userFile).username).toBe('new-login');
+    expect(readJson(userPaths(dataDir, uid).userFile).username).toBe(
+      'new-login',
+    );
     expect(readJson(loginIndexPath(dataDir)).logins['new-login']).toBe(uid);
 
     // Старая cookie продолжает работать: uid не менялся.
-    const stillValid = await loginRoute(json({ username: 'new-login', password: '1234' }));
+    const stillValid = await loginRoute(
+      json({ username: 'new-login', password: '1234' }),
+    );
     expect(stillValid.status).toBe(200);
     const relogin = await stillValid.json();
     expect(relogin.user.uid).toBe(uid);
@@ -301,7 +347,9 @@ describe('/api/characters', () => {
     // userId из тела игнорируется — владелец берётся из сессии.
     expect(character.userId).toBe(uid);
 
-    const list = await charactersGet(req('http://localhost/api/characters', 'GET', sessionHeaders(uid)));
+    const list = await charactersGet(
+      req('http://localhost/api/characters', 'GET', sessionHeaders(uid)),
+    );
     expect(list.status).toBe(200);
     const characters = await list.json();
     expect(characters.map((c: any) => c.id)).toContain(character.id);
@@ -341,24 +389,34 @@ describe('/api/characters', () => {
   it('PUT отбрасывает запоздавшую правку (не перетирает свежий опыт)', async () => {
     const { uid } = await loginAs('user-api');
     const created = await (
-      await charactersPost(json({ ...makeDhCharacter({ experience: 0 }) }, sessionHeaders(uid)))
+      await charactersPost(
+        json({ ...makeDhCharacter({ experience: 0 }) }, sessionHeaders(uid)),
+      )
     ).json();
 
     const fresh = await characterPut(
-      json({ experience: 500, __page: 'page-x', __seq: 2 }, sessionHeaders(uid)),
+      json(
+        { experience: 500, __page: 'page-x', __seq: 2 },
+        sessionHeaders(uid),
+      ),
       params(created.id),
     );
     expect(fresh.status).toBe(200);
 
     // Такой же запрос, но «старый» (он мог подвиснуть в сети/уехать с keepalive).
     const stale = await characterPut(
-      json({ experience: 100, __page: 'page-x', __seq: 1 }, sessionHeaders(uid)),
+      json(
+        { experience: 100, __page: 'page-x', __seq: 1 },
+        sessionHeaders(uid),
+      ),
       params(created.id),
     );
     expect(stale.status).toBe(200);
 
     const list = await (
-      await charactersGet(req('http://localhost/api/characters', 'GET', sessionHeaders(uid)))
+      await charactersGet(
+        req('http://localhost/api/characters', 'GET', sessionHeaders(uid)),
+      )
     ).json();
     expect(list.find((c: any) => c.id === created.id).experience).toBe(500);
   });
@@ -378,7 +436,9 @@ describe('/api/characters', () => {
     );
 
     const list = await (
-      await charactersGet(req('http://localhost/api/characters', 'GET', sessionHeaders(uid)))
+      await charactersGet(
+        req('http://localhost/api/characters', 'GET', sessionHeaders(uid)),
+      )
     ).json();
     const saved = list.find((c: any) => c.id === created.id);
     expect(saved.experience).toBe(7);
@@ -394,7 +454,10 @@ describe('/api/characters', () => {
     ).json();
 
     const empty = await characterPut(
-      new Request('http://localhost/api/test', { method: 'PUT', headers: sessionHeaders(uid) }),
+      new Request('http://localhost/api/test', {
+        method: 'PUT',
+        headers: sessionHeaders(uid),
+      }),
       params(created.id),
     );
     expect(empty.status).toBe(400);
@@ -417,13 +480,22 @@ describe('/api/characters', () => {
     ).json();
     const url = `http://localhost/api/characters/${created.id}`;
 
-    const first = await characterDelete(req(url, 'DELETE', sessionHeaders(uid)), params(created.id));
+    const first = await characterDelete(
+      req(url, 'DELETE', sessionHeaders(uid)),
+      params(created.id),
+    );
     expect(first.status).toBe(200);
 
-    const second = await characterDelete(req(url, 'DELETE', sessionHeaders(uid)), params(created.id));
+    const second = await characterDelete(
+      req(url, 'DELETE', sessionHeaders(uid)),
+      params(created.id),
+    );
     expect(second.status).toBe(404);
 
-    const noSession = await characterDelete(req(url, 'DELETE'), params(created.id));
+    const noSession = await characterDelete(
+      req(url, 'DELETE'),
+      params(created.id),
+    );
     expect(noSession.status).toBe(401);
   });
 });
@@ -440,18 +512,28 @@ describe('/api/export', () => {
       await charactersPost(json({ ...makeDndCharacter() }, sessionHeaders(uid)))
     ).json();
 
-    const list = await exportGet(req('http://localhost/api/export', 'GET', sessionHeaders(uid)));
+    const list = await exportGet(
+      req('http://localhost/api/export', 'GET', sessionHeaders(uid)),
+    );
     expect(list.status).toBe(200);
     expect(Array.isArray(await list.json())).toBe(true);
 
     const single = await exportGet(
-      req(`http://localhost/api/export?characterId=${created.id}`, 'GET', sessionHeaders(uid)),
+      req(
+        `http://localhost/api/export?characterId=${created.id}`,
+        'GET',
+        sessionHeaders(uid),
+      ),
     );
     expect(single.status).toBe(200);
     expect((await single.json()).name).toBe(created.name);
 
     const missing = await exportGet(
-      req('http://localhost/api/export?characterId=nope', 'GET', sessionHeaders(uid)),
+      req(
+        'http://localhost/api/export?characterId=nope',
+        'GET',
+        sessionHeaders(uid),
+      ),
     );
     expect(missing.status).toBe(404);
   });
@@ -463,7 +545,10 @@ describe('/api/export', () => {
     ).json();
 
     // Имитируем лист, пришедший из миграции: дописываем провенанс прямо в файл.
-    const file = path.join(userPaths(dataDir, uid).charactersDir, `${created.id}.json`);
+    const file = path.join(
+      userPaths(dataDir, uid).charactersDir,
+      `${created.id}.json`,
+    );
     const raw = readJson(file);
     raw.migratedFrom = 'firestore';
     raw.migratedAt = '2026-11-08T19:42:47Z';
@@ -471,7 +556,9 @@ describe('/api/export', () => {
     raw['Document ID'] = 'users/fb/characterSheets/x';
     fs.writeFileSync(file, JSON.stringify(raw), 'utf8');
 
-    const res = await exportGet(req('http://localhost/api/export', 'GET', sessionHeaders(uid)));
+    const res = await exportGet(
+      req('http://localhost/api/export', 'GET', sessionHeaders(uid)),
+    );
     expect(res.status).toBe(200);
     const list = await res.json();
     const item = list.find((c: any) => c.id === created.id);
@@ -493,7 +580,12 @@ describe('recovery-роуты', () => {
   function createUserWithCharacter(username = 'recover-api') {
     const result = authenticateUser(username, 'pass1');
     const uid = result.user!.uid;
-    charactersPost(json({ ...makeDndCharacter({ name: 'Ragnar Testborn' }) }, sessionHeaders(uid)));
+    charactersPost(
+      json(
+        { ...makeDndCharacter({ name: 'Ragnar Testborn' }) },
+        sessionHeaders(uid),
+      ),
+    );
     return uid;
   }
 
@@ -505,11 +597,15 @@ describe('recovery-роуты', () => {
 
   it('/api/auth/phrase сохраняет фразу текущему пользователю', async () => {
     const uid = createUserWithCharacter();
-    const res = await phraseRoute(json({ phrase: 'Alpha Beta' }, sessionHeaders(uid)));
+    const res = await phraseRoute(
+      json({ phrase: 'Alpha Beta' }, sessionHeaders(uid)),
+    );
 
     expect(res.status).toBe(200);
     expect((await res.json()).success).toBe(true);
-    expect(readJson(userPaths(dataDir, uid).userFile).recoveryPhrase).toBe('alpha beta');
+    expect(readJson(userPaths(dataDir, uid).userFile).recoveryPhrase).toBe(
+      'alpha beta',
+    );
   });
 
   it('/api/auth/phrase валидирует поля', async () => {
@@ -522,24 +618,28 @@ describe('recovery-роуты', () => {
     const uid = createUserWithCharacter();
     setRecoveryPhrase(uid, 'alpha beta');
 
-    const ok = await recoverVerifyRoute(json({
-      username: 'recover-api',
-      word1: 'ragnar',
-      word2: 'testborn',
-      word3: 'fighter',
-      recoveryPhraseInput: 'beta',
-    }));
+    const ok = await recoverVerifyRoute(
+      json({
+        username: 'recover-api',
+        word1: 'ragnar',
+        word2: 'testborn',
+        word3: 'fighter',
+        recoveryPhraseInput: 'beta',
+      }),
+    );
     expect(ok.status).toBe(200);
     expect((await ok.json()).success).toBe(true);
     expect(ok.headers.get('set-cookie')).toMatch(/^dcs_session=/);
 
-    const bad = await recoverVerifyRoute(json({
-      username: 'recover-api',
-      word1: 'gnome',
-      word2: 'testborn',
-      word3: 'fighter',
-      recoveryPhraseInput: 'beta',
-    }));
+    const bad = await recoverVerifyRoute(
+      json({
+        username: 'recover-api',
+        word1: 'gnome',
+        word2: 'testborn',
+        word3: 'fighter',
+        recoveryPhraseInput: 'beta',
+      }),
+    );
     expect(bad.status).toBe(400);
   });
 
@@ -547,13 +647,15 @@ describe('recovery-роуты', () => {
     const uid = createUserWithCharacter('reset-api');
     setRecoveryPhrase(uid, 'alpha beta');
 
-    const res = await recoverRoute(json({
-      username: 'reset-api',
-      word1: 'ragnar',
-      word2: 'testborn',
-      word3: 'fighter',
-      newPassword: 'fresh-pass',
-    }));
+    const res = await recoverRoute(
+      json({
+        username: 'reset-api',
+        word1: 'ragnar',
+        word2: 'testborn',
+        word3: 'fighter',
+        newPassword: 'fresh-pass',
+      }),
+    );
     expect(res.status).toBe(200);
 
     expect(authenticateUser('reset-api', 'fresh-pass').success).toBe(true);
@@ -563,27 +665,35 @@ describe('recovery-роуты', () => {
   it('/api/auth/recover/update валидирует длину пароля и фразы', async () => {
     createUserWithCharacter('update-api');
 
-    const shortPassword = await recoverUpdateRoute(json({
-      username: 'update-api',
-      newPassword: '123',
-      newRecoveryPhrase: 'alpha beta',
-    }));
+    const shortPassword = await recoverUpdateRoute(
+      json({
+        username: 'update-api',
+        newPassword: '123',
+        newRecoveryPhrase: 'alpha beta',
+      }),
+    );
     expect(shortPassword.status).toBe(400);
 
-    const shortPhrase = await recoverUpdateRoute(json({
-      username: 'update-api',
-      newPassword: '12345',
-      newRecoveryPhrase: 'ab',
-    }));
+    const shortPhrase = await recoverUpdateRoute(
+      json({
+        username: 'update-api',
+        newPassword: '12345',
+        newRecoveryPhrase: 'ab',
+      }),
+    );
     expect(shortPhrase.status).toBe(400);
 
-    const ok = await recoverUpdateRoute(json({
-      username: 'update-api',
-      newPassword: '12345',
-      newRecoveryPhrase: 'gamma delta',
-    }));
+    const ok = await recoverUpdateRoute(
+      json({
+        username: 'update-api',
+        newPassword: '12345',
+        newRecoveryPhrase: 'gamma delta',
+      }),
+    );
     expect(ok.status).toBe(200);
-    expect(authenticateUser('update-api', '12345').user?.hasRecoveryPhrase).toBe(true);
+    expect(
+      authenticateUser('update-api', '12345').user?.hasRecoveryPhrase,
+    ).toBe(true);
   });
 });
 
@@ -609,7 +719,11 @@ describe('GET /api/import (разовый перенос из Firestore-эксп
       path.join(dataDir, 'import-source.json'),
       JSON.stringify([
         firestoreRow('fbuser1', { name: '  Ragnar  ' }),
-        firestoreRow('fbuser1', { gameSystem: 'Dark Heresy', careerPath: 'Adept', homeWorld: 'Hive World' }),
+        firestoreRow('fbuser1', {
+          gameSystem: 'Dark Heresy',
+          careerPath: 'Adept',
+          homeWorld: 'Hive World',
+        }),
         firestoreRow('fbuser2', { level: 4 }),
         firestoreRow('fbuser3', { gameSystem: 'Unknown System' }),
       ]),
@@ -626,7 +740,9 @@ describe('GET /api/import (разовый перенос из Firestore-эксп
     expect(body.defaultPassword).toBe('1234');
 
     const index = readJson(loginIndexPath(dataDir));
-    for (const user of body.users.filter((u: any) => u.charactersImported > 0)) {
+    for (const user of body.users.filter(
+      (u: any) => u.charactersImported > 0,
+    )) {
       expect(isUid(user.localUserId)).toBe(true);
       const paths = userPaths(dataDir, user.localUserId);
       expect(fs.existsSync(paths.userFile)).toBe(true);
@@ -646,7 +762,10 @@ describe('GET /api/import (разовый перенос из Firestore-эксп
 
   it('отклоняет пустой/невалидный файл', async () => {
     fs.mkdirSync(dataDir, { recursive: true });
-    fs.writeFileSync(path.join(dataDir, 'import-source.json'), JSON.stringify({ not: 'array' }));
+    fs.writeFileSync(
+      path.join(dataDir, 'import-source.json'),
+      JSON.stringify({ not: 'array' }),
+    );
 
     const res = await importGet();
     expect(res.status).toBe(400);

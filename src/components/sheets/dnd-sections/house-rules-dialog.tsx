@@ -1,21 +1,23 @@
 'use client';
 
 import * as React from 'react';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogDescription, 
-  DialogFooter 
-} from '@/components/ui/dialog';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label';
+
+import { Plus, Trash2 } from 'lucide-react';
+
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Trash2, Plus } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
 import { useCharacterContext } from '@/context/character-context';
 import { useTranslation } from '@/context/language-context';
 import { DnD5eCharacter } from '@/lib/types';
@@ -26,23 +28,34 @@ interface HouseRulesDialogProps {
   characterId: string;
 }
 
-export function HouseRulesDialog({ open, onOpenChange, characterId }: HouseRulesDialogProps) {
+export function HouseRulesDialog({
+  open,
+  onOpenChange,
+  characterId,
+}: HouseRulesDialogProps) {
   const { getCharacter, updateCharacter } = useCharacterContext();
   const { t } = useTranslation();
   const character = getCharacter(characterId) as DnD5eCharacter | undefined;
 
   const [allowInspiration, setAllowInspiration] = React.useState(false);
-  const [allowDivineBoonsBefore20, setAllowDivineBoonsBefore20] = React.useState(false);
-  const [customRules, setCustomRules] = React.useState<{ name: string; description: string }[]>([]);
-  
+  const [allowDivineBoonsBefore20, setAllowDivineBoonsBefore20] =
+    React.useState(false);
+  const [customRules, setCustomRules] = React.useState<
+    { name: string; description: string }[]
+  >([]);
+
   const [newRuleName, setNewRuleName] = React.useState('');
   const [newRuleDesc, setNewRuleDesc] = React.useState('');
-  const [activeTab, setActiveTab] = React.useState<'official' | 'custom'>('official');
+  const [activeTab, setActiveTab] = React.useState<'official' | 'custom'>(
+    'official',
+  );
 
   React.useEffect(() => {
     if (character) {
       setAllowInspiration(character.allowInspirationHomeRule || false);
-      setAllowDivineBoonsBefore20(character.allowDivineBoonsBeforeLevel20 || false);
+      setAllowDivineBoonsBefore20(
+        character.allowDivineBoonsBeforeLevel20 || false,
+      );
       setCustomRules(character.customHouseRules || []);
     }
   }, [character, open]);
@@ -61,7 +74,9 @@ export function HouseRulesDialog({ open, onOpenChange, characterId }: HouseRules
   const handleClose = () => {
     if (character) {
       setAllowInspiration(character.allowInspirationHomeRule || false);
-      setAllowDivineBoonsBefore20(character.allowDivineBoonsBeforeLevel20 || false);
+      setAllowDivineBoonsBefore20(
+        character.allowDivineBoonsBeforeLevel20 || false,
+      );
       setCustomRules(character.customHouseRules || []);
     }
     setNewRuleName('');
@@ -71,7 +86,10 @@ export function HouseRulesDialog({ open, onOpenChange, characterId }: HouseRules
 
   const handleAddCustomRule = () => {
     if (newRuleName.trim()) {
-      setCustomRules([...customRules, { name: newRuleName.trim(), description: newRuleDesc.trim() }]);
+      setCustomRules([
+        ...customRules,
+        { name: newRuleName.trim(), description: newRuleDesc.trim() },
+      ]);
       setNewRuleName('');
       setNewRuleDesc('');
     }
@@ -87,29 +105,36 @@ export function HouseRulesDialog({ open, onOpenChange, characterId }: HouseRules
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[500px] max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-h-[80vh] overflow-y-auto sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>{t('houseRulesTitle')}</DialogTitle>
-          <DialogDescription>
-            {t('houseRulesDesc')}
-          </DialogDescription>
+          <DialogDescription>{t('houseRulesDesc')}</DialogDescription>
         </DialogHeader>
 
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'official' | 'custom')} className="mt-4">
+        <Tabs
+          value={activeTab}
+          onValueChange={(v) => setActiveTab(v as 'official' | 'custom')}
+          className="mt-4"
+        >
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="official">{t('officialRules')}</TabsTrigger>
             <TabsTrigger value="custom">{t('customRules')}</TabsTrigger>
           </TabsList>
 
           {/* OFFICIAL RULES TAB */}
-          <TabsContent value="official" className="space-y-4 mt-4">
+          <TabsContent value="official" className="mt-4 space-y-4">
             <div className="flex items-center space-x-2">
               <Checkbox
                 id="more-than-1-inspiration"
                 checked={allowInspiration}
-                onCheckedChange={(checked) => setAllowInspiration(checked as boolean)}
+                onCheckedChange={(checked) =>
+                  setAllowInspiration(checked as boolean)
+                }
               />
-              <Label htmlFor="more-than-1-inspiration" className="cursor-pointer">
+              <Label
+                htmlFor="more-than-1-inspiration"
+                className="cursor-pointer"
+              >
                 {t('moreThanOneInspiration')}
               </Label>
             </div>
@@ -117,16 +142,21 @@ export function HouseRulesDialog({ open, onOpenChange, characterId }: HouseRules
               <Checkbox
                 id="divine-boons-before-20"
                 checked={allowDivineBoonsBefore20}
-                onCheckedChange={(checked) => setAllowDivineBoonsBefore20(checked as boolean)}
+                onCheckedChange={(checked) =>
+                  setAllowDivineBoonsBefore20(checked as boolean)
+                }
               />
-              <Label htmlFor="divine-boons-before-20" className="cursor-pointer">
+              <Label
+                htmlFor="divine-boons-before-20"
+                className="cursor-pointer"
+              >
                 {t('divineBoonsBefore20')}
               </Label>
             </div>
           </TabsContent>
 
           {/* CUSTOM RULES TAB */}
-          <TabsContent value="custom" className="space-y-4 mt-4">
+          <TabsContent value="custom" className="mt-4 space-y-4">
             <div className="space-y-3">
               <div className="space-y-2">
                 <Label>{t('ruleName')}</Label>
@@ -145,35 +175,40 @@ export function HouseRulesDialog({ open, onOpenChange, characterId }: HouseRules
                   className="min-h-[80px]"
                 />
               </div>
-              <Button 
-                onClick={handleAddCustomRule} 
+              <Button
+                onClick={handleAddCustomRule}
                 disabled={!newRuleName.trim()}
                 className="w-full"
               >
-                <Plus className="h-4 w-4 mr-2" />
+                <Plus className="mr-2 h-4 w-4" />
                 {t('addCustomRule')}
               </Button>
             </div>
 
             {customRules.length > 0 && (
-              <div className="space-y-2 mt-4">
+              <div className="mt-4 space-y-2">
                 <Label>{t('activeCustomRules')}</Label>
-                <div className="space-y-2 max-h-[250px] overflow-y-auto pr-1">
+                <div className="max-h-[250px] space-y-2 overflow-y-auto pr-1">
                   {customRules.map((rule, index) => (
-                    <div key={index} className="p-3 rounded-lg bg-muted border flex flex-col gap-1">
+                    <div
+                      key={index}
+                      className="flex flex-col gap-1 rounded-lg border bg-muted p-3"
+                    >
                       <div className="flex items-start justify-between">
-                        <span className="font-semibold text-sm">{rule.name}</span>
+                        <span className="text-sm font-semibold">
+                          {rule.name}
+                        </span>
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-6 w-6 text-destructive hover:text-destructive shrink-0"
+                          className="h-6 w-6 shrink-0 text-destructive hover:text-destructive"
                           onClick={() => handleDeleteCustomRule(index)}
                         >
                           <Trash2 className="h-3 w-3" />
                         </Button>
                       </div>
                       {rule.description && (
-                        <p className="text-xs text-muted-foreground leading-relaxed">
+                        <p className="text-xs leading-relaxed text-muted-foreground">
                           {rule.description}
                         </p>
                       )}
@@ -189,9 +224,7 @@ export function HouseRulesDialog({ open, onOpenChange, characterId }: HouseRules
           <Button variant="outline" onClick={handleClose}>
             {t('close')}
           </Button>
-          <Button onClick={handleSave}>
-            {t('saveChanges')}
-          </Button>
+          <Button onClick={handleSave}>{t('saveChanges')}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

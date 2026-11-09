@@ -3,19 +3,25 @@
 
 import {
   createContext,
-  useContext,
   ReactNode,
   useCallback,
-  useState,
+  useContext,
   useEffect,
   useRef,
+  useState,
 } from 'react';
-import { Character } from '@/lib/types';
-import { createSaveQueue, type SaveMeta, type SaveQueue } from '@/lib/save-queue';
-import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
-import { useLocalAuth } from './local-auth-context';
+
+import { useToast } from '@/hooks/use-toast';
+import {
+  createSaveQueue,
+  type SaveMeta,
+  type SaveQueue,
+} from '@/lib/save-queue';
+import { Character } from '@/lib/types';
+
 import { useTranslation } from './language-context';
+import { useLocalAuth } from './local-auth-context';
 
 export const MOBILE_BREAKPOINT = 768;
 export const DESKTOP_BREAKPOINT = 1300;
@@ -23,7 +29,9 @@ export const DESKTOP_BREAKPOINT = 1300;
 interface CharacterContextType {
   characters: Character[];
   getCharacter: (id: string) => Character | undefined;
-  addCharacter: (character: Omit<Character, 'id' | 'userId'>) => Promise<Character | undefined>;
+  addCharacter: (
+    character: Omit<Character, 'id' | 'userId'>,
+  ) => Promise<Character | undefined>;
   updateCharacter: (id: string, data: Partial<Character>) => void;
   deleteCharacter: (id: string) => void;
   isLoaded: boolean;
@@ -44,7 +52,9 @@ interface CharacterContextType {
   setShowEditButtons: (val: boolean) => void;
 }
 
-const CharacterContext = createContext<CharacterContextType | undefined>(undefined);
+const CharacterContext = createContext<CharacterContextType | undefined>(
+  undefined,
+);
 
 /**
  * ─── LANDMARK: SAVE PIPELINE ────────────────────────────────────────────────
@@ -78,8 +88,12 @@ const SAVE_RETRY_DELAY_MS = 5000;
  */
 const PAGE_ID: string = (() => {
   try {
-    const cryptoApi = typeof globalThis !== 'undefined' ? (globalThis.crypto as Crypto | undefined) : undefined;
-    if (cryptoApi && typeof cryptoApi.randomUUID === 'function') return cryptoApi.randomUUID();
+    const cryptoApi =
+      typeof globalThis !== 'undefined'
+        ? (globalThis.crypto as Crypto | undefined)
+        : undefined;
+    if (cryptoApi && typeof cryptoApi.randomUUID === 'function')
+      return cryptoApi.randomUUID();
   } catch {
     // игнорируем — ниже детерминированный фолбэк
   }
@@ -112,15 +126,24 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
   const tRef = useRef(t);
   const hasUnsavedChangesRef = useRef(hasUnsavedChanges);
 
-  useEffect(() => { userRef.current = user; }, [user]);
-  useEffect(() => { toastRef.current = toast; tRef.current = t; }, [toast, t]);
-  useEffect(() => { hasUnsavedChangesRef.current = hasUnsavedChanges; }, [hasUnsavedChanges]);
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
+  useEffect(() => {
+    toastRef.current = toast;
+    tRef.current = t;
+  }, [toast, t]);
+  useEffect(() => {
+    hasUnsavedChangesRef.current = hasUnsavedChanges;
+  }, [hasUnsavedChanges]);
 
   useEffect(() => {
     const handleResize = () => {
       const width = window.innerWidth;
       setIsSmallScreen(width < MOBILE_BREAKPOINT);
-      setIsTabletScreen(width >= MOBILE_BREAKPOINT && width < DESKTOP_BREAKPOINT);
+      setIsTabletScreen(
+        width >= MOBILE_BREAKPOINT && width < DESKTOP_BREAKPOINT,
+      );
     };
     handleResize();
     window.addEventListener('resize', handleResize);
@@ -129,11 +152,14 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
 
   // Единая точка изменения списка: ref обновляется синхронно, поэтому
   // следующие вызовы в том же тике видят актуальные данные.
-  const applyCharacters = useCallback((updater: (prev: Character[]) => Character[]) => {
-    const next = updater(charactersRef.current);
-    charactersRef.current = next;
-    setCharacters(next);
-  }, []);
+  const applyCharacters = useCallback(
+    (updater: (prev: Character[]) => Character[]) => {
+      const next = updater(charactersRef.current);
+      charactersRef.current = next;
+      setCharacters(next);
+    },
+    [],
+  );
 
   /** Монотонный номер правки внутри этой загрузки страницы. */
   const nextSeq = useCallback((id: string) => {
@@ -143,25 +169,28 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
   }, []);
 
   /** Один PUT. Возвращает HTTP-статус или null при сетевой ошибке. */
-  const sendSave = useCallback(async (
-    id: string,
-    data: Partial<Character>,
-    meta?: SaveMeta
-  ): Promise<number | null> => {
-    const userId = userRef.current?.uid;
-    if (!userId) return null;
-    try {
-      const res = await fetch(`/api/characters/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...data, __page: PAGE_ID, __seq: meta?.seq }),
-      });
-      return res.status;
-    } catch (error) {
-      console.error('Failed to update character:', error);
-      return null;
-    }
-  }, []);
+  const sendSave = useCallback(
+    async (
+      id: string,
+      data: Partial<Character>,
+      meta?: SaveMeta,
+    ): Promise<number | null> => {
+      const userId = userRef.current?.uid;
+      if (!userId) return null;
+      try {
+        const res = await fetch(`/api/characters/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...data, __page: PAGE_ID, __seq: meta?.seq }),
+        });
+        return res.status;
+      } catch (error) {
+        console.error('Failed to update character:', error);
+        return null;
+      }
+    },
+    [],
+  );
 
   // Очередь создаётся один раз: sendSave стабилен (useCallback с []),
   // а тост берётся через ref, чтобы не пересоздавать очередь.
@@ -181,9 +210,15 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
     });
   }
 
-  const enqueueSave = useCallback((id: string, data: Partial<Character>) => {
-    saveQueueRef.current?.enqueue(id, data, { page: PAGE_ID, seq: nextSeq(id) });
-  }, [nextSeq]);
+  const enqueueSave = useCallback(
+    (id: string, data: Partial<Character>) => {
+      saveQueueRef.current?.enqueue(id, data, {
+        page: PAGE_ID,
+        seq: nextSeq(id),
+      });
+    },
+    [nextSeq],
+  );
 
   /**
    * ─── LANDMARK: FLUSH ON UNLOAD / HIDE ───
@@ -202,37 +237,40 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
    * перезагрузке/закрытии страницы. blur вызывается ДО снимка, поэтому
    * обработчик onBlur успевает положить данные в очередь.
    */
-  const flushPending = useCallback((options: { blurActiveField?: boolean } = {}): number => {
-    const queue = saveQueueRef.current;
-    const userId = userRef.current?.uid;
-    if (!queue) return 0;
+  const flushPending = useCallback(
+    (options: { blurActiveField?: boolean } = {}): number => {
+      const queue = saveQueueRef.current;
+      const userId = userRef.current?.uid;
+      if (!queue) return 0;
 
-    if (options.blurActiveField && typeof document !== 'undefined') {
-      const active = document.activeElement;
-      if (active instanceof HTMLElement) active.blur();
-    }
+      if (options.blurActiveField && typeof document !== 'undefined') {
+        const active = document.activeElement;
+        if (active instanceof HTMLElement) active.blur();
+      }
 
-    const snapshot = queue.snapshotAll();
-    if (userId) {
-      for (const { id, data, meta } of snapshot) {
-        try {
-          fetch(`/api/characters/${id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              ...data,
-              __page: PAGE_ID,
-              __seq: meta?.seq,
-            }),
-            keepalive: true,
-          }).catch(() => undefined);
-        } catch {
-          // keepalive может быть недоступен — тогда сработает диалог ниже.
+      const snapshot = queue.snapshotAll();
+      if (userId) {
+        for (const { id, data, meta } of snapshot) {
+          try {
+            fetch(`/api/characters/${id}`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                ...data,
+                __page: PAGE_ID,
+                __seq: meta?.seq,
+              }),
+              keepalive: true,
+            }).catch(() => undefined);
+          } catch {
+            // keepalive может быть недоступен — тогда сработает диалог ниже.
+          }
         }
       }
-    }
-    return snapshot.length;
-  }, []);
+      return snapshot.length;
+    },
+    [],
+  );
 
   useEffect(() => {
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
@@ -245,7 +283,9 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
     // pagehide/visibilitychange — без диалога, только досылка.
     // pagehide = вкладку реально убирают → фиксируем и поле, которое в фокусе.
     // visibilitychange = просто переключили таб → фокус не трогаем.
-    const handleHide = () => { flushPending({ blurActiveField: true }); };
+    const handleHide = () => {
+      flushPending({ blurActiveField: true });
+    };
     const handleVisibility = () => {
       if (document.visibilityState === 'hidden') flushPending();
     };
@@ -262,14 +302,20 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!isUserLoading && user) {
-      const pendingCharStr = typeof window !== 'undefined' ? sessionStorage.getItem('pending_character') : null;
+      const pendingCharStr =
+        typeof window !== 'undefined'
+          ? sessionStorage.getItem('pending_character')
+          : null;
       // 🎯 LANDMARK: DEMO_PENDING_UPDATE - Check for pending demo edits
-      const pendingUpdateStr = typeof window !== 'undefined' ? sessionStorage.getItem('pending_update') : null;
+      const pendingUpdateStr =
+        typeof window !== 'undefined'
+          ? sessionStorage.getItem('pending_update')
+          : null;
 
       const loadCharacters = () => {
         setIsLoaded(false);
         fetch('/api/characters')
-          .then(res => {
+          .then((res) => {
             if (res.status === 401) {
               // Сессия истекла или отозвана — локальный профиль недействителен.
               logout();
@@ -278,16 +324,23 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
             }
             return res.json();
           })
-          .then(data => {
-            if (!data) { setIsLoaded(true); return; }
+          .then((data) => {
+            if (!data) {
+              setIsLoaded(true);
+              return;
+            }
             applyCharacters(() => data);
             setIsLoaded(true);
-            
+
             // 🎯 LANDMARK: DEMO_PENDING_UPDATE - Apply any pending updates after successful login
             if (pendingUpdateStr) {
               try {
                 const { id, data: updateData } = JSON.parse(pendingUpdateStr);
-                applyCharacters(prev => prev.map(c => c.id === id ? ({ ...c, ...updateData } as Character) : c));
+                applyCharacters((prev) =>
+                  prev.map((c) =>
+                    c.id === id ? ({ ...c, ...updateData } as Character) : c,
+                  ),
+                );
                 // Через очередь, а не напрямую: сохраняется порядок __seq и ретраи.
                 enqueueSave(id, updateData);
                 sessionStorage.removeItem('pending_update');
@@ -296,7 +349,7 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
               }
             }
           })
-          .catch(err => {
+          .catch((err) => {
             console.error('Failed to load characters:', err);
             setIsLoaded(true);
           });
@@ -310,20 +363,22 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(pendingCharData),
           })
-          .then(res => res.json())
-          .then((newCharacter: Character) => {
-             if (typeof window !== 'undefined') {
-               sessionStorage.removeItem('pending_character');
-             }
-             // LANDMARK: Add character to state immediately before redirecting
-             applyCharacters(prev => [...prev, newCharacter]);
-             const needsSetup = !user.hasRecoveryPhrase ? '?setup_phrase=true' : '';
-             router.push(`/${newCharacter.id}${needsSetup}`);
-          })
-          .catch(err => {
-             console.error('Failed to create pending character:', err);
-             loadCharacters();
-          });
+            .then((res) => res.json())
+            .then((newCharacter: Character) => {
+              if (typeof window !== 'undefined') {
+                sessionStorage.removeItem('pending_character');
+              }
+              // LANDMARK: Add character to state immediately before redirecting
+              applyCharacters((prev) => [...prev, newCharacter]);
+              const needsSetup = !user.hasRecoveryPhrase
+                ? '?setup_phrase=true'
+                : '';
+              router.push(`/${newCharacter.id}${needsSetup}`);
+            })
+            .catch((err) => {
+              console.error('Failed to create pending character:', err);
+              loadCharacters();
+            });
         } catch (e) {
           console.error('Failed to parse pending character', e);
           loadCharacters();
@@ -339,13 +394,16 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
   }, [user, isUserLoading, applyCharacters, enqueueSave, router, logout]);
 
   const isCompactView = isSmallScreen || userPrefersCompact;
-  const toggleCompactView = () => setUserPrefersCompact(prev => !prev);
+  const toggleCompactView = () => setUserPrefersCompact((prev) => !prev);
 
   const addCharacter = useCallback(
     async (characterData: Omit<Character, 'id' | 'userId'>) => {
       if (!user) {
         if (typeof window !== 'undefined') {
-          sessionStorage.setItem('pending_character', JSON.stringify(characterData));
+          sessionStorage.setItem(
+            'pending_character',
+            JSON.stringify(characterData),
+          );
           router.push('/login');
         }
         return undefined;
@@ -360,7 +418,7 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
           throw new Error(`Failed to create character: HTTP ${res.status}`);
         }
         const newCharacter: Character = await res.json();
-        applyCharacters(prev => [...prev, newCharacter]);
+        applyCharacters((prev) => [...prev, newCharacter]);
         return newCharacter;
       } catch (error) {
         console.error('Failed to create character:', error);
@@ -372,7 +430,7 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
         return undefined;
       }
     },
-    [user, toast, t, router, applyCharacters]
+    [user, toast, t, router, applyCharacters],
   );
 
   const updateCharacter = useCallback(
@@ -380,7 +438,10 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
       // 🎯 LANDMARK: DEMO_UNREGISTERED_SAVE - Prompt unregistered users to create an account
       if (!user) {
         if (typeof window !== 'undefined') {
-          sessionStorage.setItem('pending_update', JSON.stringify({ id, data }));
+          sessionStorage.setItem(
+            'pending_update',
+            JSON.stringify({ id, data }),
+          );
           router.push('/login');
         }
         return;
@@ -388,18 +449,25 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
 
       if (id.startsWith('companion-')) {
         const companionId = id.replace('companion-', '');
-        const owner = charactersRef.current.find(char => {
+        const owner = charactersRef.current.find((char) => {
           if (char.gameSystem !== 'Dungeons & Dragons') return false;
           const companions = (char as any).companions;
-          return Array.isArray(companions) && companions.some((c: any) => c.id === companionId);
+          return (
+            Array.isArray(companions) &&
+            companions.some((c: any) => c.id === companionId)
+          );
         });
         if (!owner) return;
 
-        const companions = ((owner as any).companions as any[]).map(c =>
-          c.id === companionId ? { ...c, ...data } : c
+        const companions = ((owner as any).companions as any[]).map((c) =>
+          c.id === companionId ? { ...c, ...data } : c,
         );
-        applyCharacters(prev =>
-          prev.map(char => char.id === owner.id ? ({ ...char, companions } as Character) : char)
+        applyCharacters((prev) =>
+          prev.map((char) =>
+            char.id === owner.id
+              ? ({ ...char, companions } as Character)
+              : char,
+          ),
         );
         // Побочный эффект вынесен из state-апдейтера: он выполняется ровно
         // один раз и не дублируется в StrictMode.
@@ -407,17 +475,19 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      applyCharacters(prev => prev.map(c => c.id === id ? ({ ...c, ...data } as Character) : c));
+      applyCharacters((prev) =>
+        prev.map((c) => (c.id === id ? ({ ...c, ...data } as Character) : c)),
+      );
       enqueueSave(id, data);
     },
-    [user, router, applyCharacters, enqueueSave]
+    [user, router, applyCharacters, enqueueSave],
   );
 
   const deleteCharacter = useCallback(
     (id: string) => {
       if (!user) return;
-      const characterToDelete = charactersRef.current.find(c => c.id === id);
-      applyCharacters(prev => prev.filter(c => c.id !== id));
+      const characterToDelete = charactersRef.current.find((c) => c.id === id);
+      applyCharacters((prev) => prev.filter((c) => c.id !== id));
       fetch(`/api/characters/${id}`, { method: 'DELETE' })
         .then(() => {
           if (characterToDelete) {
@@ -427,9 +497,9 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
             });
           }
         })
-        .catch(err => console.error('Failed to delete character:', err));
+        .catch((err) => console.error('Failed to delete character:', err));
     },
-    [user, applyCharacters, toast, t]
+    [user, applyCharacters, toast, t],
   );
 
   const getCharacter = useCallback(
@@ -438,22 +508,37 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
         const companionId = id.replace('companion-', '');
         for (const char of characters) {
           if (char.gameSystem === 'Dungeons & Dragons') {
-            const comp = (char as any).companions?.find((c: any) => c.id === companionId);
+            const comp = (char as any).companions?.find(
+              (c: any) => c.id === companionId,
+            );
             if (comp) return { ...char, ...comp } as any;
           }
         }
         return undefined;
       }
-      return characters.find(c => c.id === id);
+      return characters.find((c) => c.id === id);
     },
-    [characters]
+    [characters],
   );
 
   const value = {
-    characters, getCharacter, addCharacter, updateCharacter, deleteCharacter,
-    isLoaded, toast, isCompactView, isSmallScreen, isTabletScreen,
-    toggleCompactView, hasUnsavedChanges, setHasUnsavedChanges,
-    hideNotes, setHideNotes, showEditButtons, setShowEditButtons,
+    characters,
+    getCharacter,
+    addCharacter,
+    updateCharacter,
+    deleteCharacter,
+    isLoaded,
+    toast,
+    isCompactView,
+    isSmallScreen,
+    isTabletScreen,
+    toggleCompactView,
+    hasUnsavedChanges,
+    setHasUnsavedChanges,
+    hideNotes,
+    setHideNotes,
+    showEditButtons,
+    setShowEditButtons,
   };
 
   return (
@@ -466,7 +551,9 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
 export function useCharacterContext() {
   const context = useContext(CharacterContext);
   if (context === undefined) {
-    throw new Error('useCharacterContext must be used within a CharacterProvider');
+    throw new Error(
+      'useCharacterContext must be used within a CharacterProvider',
+    );
   }
   return context;
 }

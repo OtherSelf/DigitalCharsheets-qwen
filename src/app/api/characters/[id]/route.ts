@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
+
 import {
-  updateCharacterOnServer,
   deleteCharacterFromServer,
+  updateCharacterOnServer,
   type WriteToken,
 } from '@/lib/server-storage';
 import { getSessionUid } from '@/lib/session';
@@ -30,7 +31,7 @@ import { getSessionUid } from '@/lib/session';
  */
 export async function PUT(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
 
@@ -45,13 +46,18 @@ export async function PUT(
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ error: 'Invalid or empty JSON body' }, { status: 400 });
+    return NextResponse.json(
+      { error: 'Invalid or empty JSON body' },
+      { status: 400 },
+    );
   }
 
   const rawPage = body.__page;
   const rawSeq = body.__seq;
   const writeToken: WriteToken | undefined =
-    typeof rawPage === 'string' && rawPage.length > 0 && typeof rawSeq === 'number'
+    typeof rawPage === 'string' &&
+    rawPage.length > 0 &&
+    typeof rawSeq === 'number'
       ? { page: rawPage, seq: rawSeq }
       : undefined;
 
@@ -64,7 +70,10 @@ export async function PUT(
     updated = updateCharacterOnServer(uid, id, patch as any, { writeToken });
   } catch (error) {
     console.error(`Failed to write character ${id} for ${uid}:`, error);
-    return NextResponse.json({ error: 'Failed to write character' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to write character' },
+      { status: 500 },
+    );
   }
 
   if (!updated) {
@@ -77,7 +86,7 @@ export async function PUT(
 // DELETE: Remove a character file
 export async function DELETE(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
 

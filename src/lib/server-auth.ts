@@ -1,11 +1,12 @@
-import fs from 'fs';
 import crypto from 'crypto';
-import { LocalUser } from './local-storage';
-import { getCharactersFromServer } from './server-storage';
+import fs from 'fs';
+
 import { getUserDir, getUserFile } from './data-dir';
+import { withDataLock } from './data-lock';
 import { writeJsonAtomic } from './fs-atomic';
 import { defaultDisplayName, newUid, normalizeLogin } from './ids';
-import { withDataLock } from './data-lock';
+import { LocalUser } from './local-storage';
+import { getCharactersFromServer } from './server-storage';
 import {
   readLoginIndexForUpdate,
   rebuildLoginIndex,
@@ -77,13 +78,17 @@ function hashPassword(password: string): string {
 }
 
 function normalizePhrase(phrase: string): string[] {
-  return phrase.toLowerCase().trim().split(/\s+/).filter(w => w.length > 0);
+  return phrase
+    .toLowerCase()
+    .trim()
+    .split(/\s+/)
+    .filter((w) => w.length > 0);
 }
 
 function checkPhraseMatch(storedPhrase: string, inputPhrase: string): boolean {
   const storedWords = normalizePhrase(storedPhrase);
   const inputWords = normalizePhrase(inputPhrase);
-  return inputWords.some(word => storedWords.includes(word));
+  return inputWords.some((word) => storedWords.includes(word));
 }
 
 function toLocalUser(user: StoredUser): LocalUser {
@@ -107,7 +112,10 @@ export function getStoredUser(uid: string): StoredUser | null {
   const file = getUserFile(uid);
   if (!fs.existsSync(file)) return null;
   try {
-    const data = JSON.parse(fs.readFileSync(file, 'utf8')) as Record<string, unknown>;
+    const data = JSON.parse(fs.readFileSync(file, 'utf8')) as Record<
+      string,
+      unknown
+    >;
     if (!data.uid) data.uid = uid;
     if (!data.username && data.email) data.username = data.email;
     return data as unknown as StoredUser;
@@ -132,10 +140,18 @@ function authenticateExisting(uid: string, passwordHash: string): AuthResult {
     stored = getStoredUser(uid);
   }
   if (!stored) {
-    return { success: false, error: 'Failed to read user data.', reason: 'no_account' };
+    return {
+      success: false,
+      error: 'Failed to read user data.',
+      reason: 'no_account',
+    };
   }
   if (stored.passwordHash !== passwordHash) {
-    return { success: false, error: 'Incorrect password.', reason: 'invalid_password' };
+    return {
+      success: false,
+      error: 'Incorrect password.',
+      reason: 'invalid_password',
+    };
   }
   return { success: true, isNewUser: false, user: toLocalUser(stored) };
 }
@@ -161,7 +177,8 @@ function persistNewAccount(
     schemaVersion: 2,
     uid,
     username: login,
-    displayName: (displayName && displayName.trim()) || defaultDisplayName(login),
+    displayName:
+      (displayName && displayName.trim()) || defaultDisplayName(login),
     passwordHash,
     createdAt: now,
     updatedAt: now,
@@ -200,7 +217,11 @@ export function registerUser(
 ): AuthResult {
   const login = normalizeLogin(username);
   if (!login) {
-    return { success: false, error: 'Username/Email is required.', reason: 'invalid_input' };
+    return {
+      success: false,
+      error: 'Username/Email is required.',
+      reason: 'invalid_input',
+    };
   }
   if (!password || password.length < 4) {
     return {
@@ -236,7 +257,12 @@ export function registerUser(
         reason: 'exists',
       } as AuthResult;
     }
-    return persistNewAccount(login, hashPassword(password), displayName, recoveryPhrase);
+    return persistNewAccount(
+      login,
+      hashPassword(password),
+      displayName,
+      recoveryPhrase,
+    );
   });
 }
 
@@ -258,7 +284,11 @@ export function authenticateUser(
   const passwordHash = hashPassword(password);
 
   if (!login) {
-    return { success: false, error: 'Username/Email is required.', reason: 'invalid_input' };
+    return {
+      success: false,
+      error: 'Username/Email is required.',
+      reason: 'invalid_input',
+    };
   }
 
   const existingUid = resolveLogin(login);
@@ -267,7 +297,8 @@ export function authenticateUser(
   if (options.allowRegistration === false) {
     return {
       success: false,
-      error: 'No account found with this username/email. Create an account first.',
+      error:
+        'No account found with this username/email. Create an account first.',
       reason: 'no_account',
     };
   }
@@ -379,11 +410,17 @@ export function setRecoveryPhrase(uid: string, phrase: string): boolean {
   }
 }
 
-function readByLogin(username: string):
+function readByLogin(
+  username: string,
+):
   | { success: false; error: string }
   | { success: true; uid: string; user: StoredUser } {
   const uid = resolveLogin(username);
-  if (!uid) return { success: false, error: 'No account found with this username/email.' };
+  if (!uid)
+    return {
+      success: false,
+      error: 'No account found with this username/email.',
+    };
   const user = getStoredUser(uid);
   if (!user) return { success: false, error: 'Failed to read user data.' };
   return { success: true, uid, user };
@@ -417,7 +454,10 @@ export function verifyRecovery(
   const storedUser = found.user;
 
   if (!storedUser.recoveryPhrase) {
-    return { success: false, error: 'No recovery phrase set for this account.' };
+    return {
+      success: false,
+      error: 'No recovery phrase set for this account.',
+    };
   }
 
   const wordError = checkOwnershipWords(storedUser, words);
@@ -426,7 +466,8 @@ export function verifyRecovery(
   if (!checkPhraseMatch(storedUser.recoveryPhrase, recoveryPhraseInput)) {
     return {
       success: false,
-      error: 'Recovery phrase does not match. (At least one word must match, order does not matter).',
+      error:
+        'Recovery phrase does not match. (At least one word must match, order does not matter).',
     };
   }
 
@@ -468,7 +509,10 @@ export function recoverPasswordWithUsernameAndWords(
   const storedUser = found.user;
 
   if (!storedUser.recoveryPhrase) {
-    return { success: false, error: 'No recovery phrase set for this account.' };
+    return {
+      success: false,
+      error: 'No recovery phrase set for this account.',
+    };
   }
 
   const wordError = checkOwnershipWords(storedUser, words);
@@ -519,7 +563,9 @@ export function createImportedUser(options: {
       passwordHash: options.passwordHash,
       createdAt: now,
       updatedAt: now,
-      ...(options.originalFirebaseId ? { originalFirebaseId: options.originalFirebaseId } : {}),
+      ...(options.originalFirebaseId
+        ? { originalFirebaseId: options.originalFirebaseId }
+        : {}),
     };
 
     writeStoredUser(uid, user);

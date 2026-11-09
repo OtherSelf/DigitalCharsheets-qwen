@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+
 import { verifyRecovery } from '@/lib/server-auth';
 import { sessionCookieHeader } from '@/lib/session';
 
@@ -13,12 +14,22 @@ export async function POST(request: Request) {
     const { username, word1, word2, word3, recoveryPhraseInput } = body;
 
     if (!username || !word1 || !word2 || !word3 || !recoveryPhraseInput) {
-      return NextResponse.json({ success: false, error: 'All fields are required.' }, { status: 400 });
+      return NextResponse.json(
+        { success: false, error: 'All fields are required.' },
+        { status: 400 },
+      );
     }
 
-    const result = verifyRecovery(username, [word1, word2, word3], recoveryPhraseInput);
+    const result = verifyRecovery(
+      username,
+      [word1, word2, word3],
+      recoveryPhraseInput,
+    );
     if (!result.success || !result.user) {
-      return NextResponse.json({ success: false, error: result.error }, { status: 400 });
+      return NextResponse.json(
+        { success: false, error: result.error },
+        { status: 400 },
+      );
     }
 
     const response = NextResponse.json({ success: true, user: result.user });
@@ -26,6 +37,9 @@ export async function POST(request: Request) {
     return response;
   } catch (error) {
     console.error('Recovery verify error:', error);
-    return NextResponse.json({ success: false, error: 'An unexpected error occurred.' }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: 'An unexpected error occurred.' },
+      { status: 500 },
+    );
   }
 }

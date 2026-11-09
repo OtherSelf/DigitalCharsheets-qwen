@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+
 import {
   collectPageErrors,
   expectNoHorizontalOverflow,
@@ -26,7 +27,10 @@ const PAGES = [
  *   - ключевые блоки листа действительно видны.
  */
 test.describe('гостевая шапка (главная и /login)', () => {
-  test('главная до входа: мобильный вид, тема и язык', async ({ page, context }) => {
+  test('главная до входа: мобильный вид, тема и язык', async ({
+    page,
+    context,
+  }) => {
     await prepare(context, { authenticated: false });
     await openApp(page, '/');
 
@@ -67,7 +71,10 @@ test.describe('гостевая шапка (главная и /login)', () => {
     await expectNoHorizontalOverflow(page);
   });
 
-  test('login: шапка с видом/темой/языком и перевод формы', async ({ page, context }) => {
+  test('login: шапка с видом/темой/языком и перевод формы', async ({
+    page,
+    context,
+  }) => {
     await prepare(context, { authenticated: false });
     await openApp(page, '/login');
 
@@ -85,16 +92,24 @@ test.describe('гостевая шапка (главная и /login)', () => {
       await expect(compactToggle).toBeVisible();
     }
 
-    await expect(page.getByTestId('auth-card-title')).toHaveText('Welcome Back');
+    await expect(page.getByTestId('auth-card-title')).toHaveText(
+      'Welcome Back',
+    );
 
     // EN → RU: вся карточка входа переводится.
     await header.getByRole('button', { name: 'EN', exact: true }).click();
-    await expect(page.getByTestId('auth-card-title')).toHaveText('С возвращением');
-    await expect(page.getByLabel('Логин или Email', { exact: true })).toBeVisible();
+    await expect(page.getByTestId('auth-card-title')).toHaveText(
+      'С возвращением',
+    );
+    await expect(
+      page.getByLabel('Логин или Email', { exact: true }),
+    ).toBeVisible();
 
     // RU → EN.
     await header.getByRole('button', { name: 'RU', exact: true }).click();
-    await expect(page.getByTestId('auth-card-title')).toHaveText('Welcome Back');
+    await expect(page.getByTestId('auth-card-title')).toHaveText(
+      'Welcome Back',
+    );
 
     // Тема.
     await header.getByRole('button', { name: /toggle theme/i }).click();
@@ -104,7 +119,10 @@ test.describe('гостевая шапка (главная и /login)', () => {
     await expectNoHorizontalOverflow(page);
   });
 
-  test('login: кнопка регистрации открывает отдельную форму', async ({ page, context }) => {
+  test('login: кнопка регистрации открывает отдельную форму', async ({
+    page,
+    context,
+  }) => {
     await prepare(context, { authenticated: false });
     await openApp(page, '/login');
 
@@ -113,24 +131,39 @@ test.describe('гостевая шапка (главная и /login)', () => {
 
     const form = page.getByTestId('register-form');
     await expect(form).toBeVisible();
-    await expect(page.getByTestId('auth-card-title')).toHaveText('Create Account');
-    await expect(form.getByLabel('Username or Email', { exact: true })).toBeVisible();
-    await expect(form.getByLabel('Display Name', { exact: true })).toBeVisible();
+    await expect(page.getByTestId('auth-card-title')).toHaveText(
+      'Create Account',
+    );
+    await expect(
+      form.getByLabel('Username or Email', { exact: true }),
+    ).toBeVisible();
+    await expect(
+      form.getByLabel('Display Name', { exact: true }),
+    ).toBeVisible();
     await expect(form.getByLabel('Password', { exact: true })).toBeVisible();
-    await expect(form.getByLabel('Recovery Phrase', { exact: true })).toBeVisible();
+    await expect(
+      form.getByLabel('Recovery Phrase', { exact: true }),
+    ).toBeVisible();
 
     // Назад ко входу — форма регистрации закрывается.
     await form.getByRole('button', { name: 'Back to login' }).click();
     await expect(page.getByTestId('register-form')).toHaveCount(0);
-    await expect(page.getByTestId('auth-card-title')).toHaveText('Welcome Back');
+    await expect(page.getByTestId('auth-card-title')).toHaveText(
+      'Welcome Back',
+    );
   });
 
-  test('login: из восстановления можно вернуться ко входу', async ({ page, context }) => {
+  test('login: из восстановления можно вернуться ко входу', async ({
+    page,
+    context,
+  }) => {
     await prepare(context, { authenticated: false });
     await openApp(page, '/login');
 
     await page.getByRole('button', { name: 'Forgot password?' }).click();
-    await expect(page.getByTestId('auth-card-title')).toHaveText('Recover Account');
+    await expect(page.getByTestId('auth-card-title')).toHaveText(
+      'Recover Account',
+    );
 
     // Текстовая кнопка внизу формы (плюс иконка-стрелка в заголовке).
     const back = page.getByTestId('back-to-login');
@@ -138,8 +171,12 @@ test.describe('гостевая шапка (главная и /login)', () => {
     await expect(back).toHaveText('Back to login');
     await back.click();
 
-    await expect(page.getByTestId('auth-card-title')).toHaveText('Welcome Back');
-    await expect(page.getByLabel('Username or Email', { exact: true })).toBeVisible();
+    await expect(page.getByTestId('auth-card-title')).toHaveText(
+      'Welcome Back',
+    );
+    await expect(
+      page.getByLabel('Username or Email', { exact: true }),
+    ).toBeVisible();
   });
 });
 
@@ -151,7 +188,11 @@ test.describe('адаптивность', () => {
     await prepare(context);
     const errors = collectPageErrors(page);
 
-    for (const path of [...PAGES, `/${getState().dndId}`, `/${getState().dhId}`]) {
+    for (const path of [
+      ...PAGES,
+      `/${getState().dndId}`,
+      `/${getState().dhId}`,
+    ]) {
       await openApp(page, path);
       await expectNoHorizontalOverflow(page);
     }
@@ -166,7 +207,11 @@ test.describe('адаптивность', () => {
     await prepare(context, { language: 'ru' });
     const errors = collectPageErrors(page);
 
-    for (const path of [...PAGES, `/${getState().dndId}`, `/${getState().dhId}`]) {
+    for (const path of [
+      ...PAGES,
+      `/${getState().dndId}`,
+      `/${getState().dhId}`,
+    ]) {
       await openApp(page, path);
       await expectNoHorizontalOverflow(page);
     }
@@ -174,7 +219,10 @@ test.describe('адаптивность', () => {
     expect(errors, 'uncaught JS-ошибки на страницах (ru)').toEqual([]);
   });
 
-  test('навигация дашборда: мобильная и десктопная', async ({ page, context }) => {
+  test('навигация дашборда: мобильная и десктопная', async ({
+    page,
+    context,
+  }) => {
     await prepare(context);
     await openApp(page, '/');
 
@@ -226,7 +274,9 @@ test.describe('адаптивность', () => {
     if (isMobile()) {
       await expect(nav).toBeVisible();
       // В шапке листа на телефоне нет кнопки меню — всё в сайдбаре.
-      await expect(page.getByRole('button', { name: 'Open menu' })).toHaveCount(0);
+      await expect(page.getByRole('button', { name: 'Open menu' })).toHaveCount(
+        0,
+      );
     } else {
       await expect(nav).toHaveCount(0);
     }
@@ -251,7 +301,10 @@ test.describe('адаптивность', () => {
     }
   });
 
-  test('мобильные секции Dark Heresy: переключение', async ({ page, context }) => {
+  test('мобильные секции Dark Heresy: переключение', async ({
+    page,
+    context,
+  }) => {
     test.skip(!isMobile(), 'mobile-only сценарий');
     await prepare(context);
     await openApp(page, `/${getState().dhId}`);
@@ -296,12 +349,20 @@ test.describe('содержимое листа', () => {
 
     await expectNoHorizontalOverflow(page);
     if (!isMobile()) {
-      await expect(page.getByRole('heading', { name: 'Seraphina Vael' })).toBeVisible();
-      await expect(page.locator('#hit-points-card:visible').first()).toContainText('38');
-      await expect(page.locator('#skills-card:visible').first()).toContainText('Arcana');
+      await expect(
+        page.getByRole('heading', { name: 'Seraphina Vael' }),
+      ).toBeVisible();
+      await expect(
+        page.locator('#hit-points-card:visible').first(),
+      ).toContainText('38');
+      await expect(page.locator('#skills-card:visible').first()).toContainText(
+        'Arcana',
+      );
     } else {
       await openMobileSection(page, 'Combat Stats');
-      await expect(page.locator('#hit-points-card:visible').first()).toContainText('38');
+      await expect(
+        page.locator('#hit-points-card:visible').first(),
+      ).toContainText('38');
     }
   });
 
@@ -311,11 +372,21 @@ test.describe('содержимое листа', () => {
 
     await expectNoHorizontalOverflow(page);
     if (!isMobile()) {
-      await expect(page.getByRole('heading', { name: 'Lucius Varn' })).toBeVisible();
-      await expect(page.locator('#skills-talents-panel:visible').first()).toContainText('Scholastic Lore');
-      await expect(page.locator('#skills-talents-panel:visible').first()).toContainText('Total Recall');
-      await expect(page.locator('#equipment-section:visible').first()).toContainText('Cameleoline');
-      await expect(page.locator('#inventory-section:visible').first()).toContainText('Data-slate');
+      await expect(
+        page.getByRole('heading', { name: 'Lucius Varn' }),
+      ).toBeVisible();
+      await expect(
+        page.locator('#skills-talents-panel:visible').first(),
+      ).toContainText('Scholastic Lore');
+      await expect(
+        page.locator('#skills-talents-panel:visible').first(),
+      ).toContainText('Total Recall');
+      await expect(
+        page.locator('#equipment-section:visible').first(),
+      ).toContainText('Cameleoline');
+      await expect(
+        page.locator('#inventory-section:visible').first(),
+      ).toContainText('Data-slate');
       await expect(page.getByText('Mono-sword')).toBeVisible();
     } else {
       await openMobileSection(page, 'Talents & Traits');
@@ -329,4 +400,3 @@ test.describe('содержимое листа', () => {
     }
   });
 });
-

@@ -3,11 +3,19 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Sword, UserPlus, Sparkles } from 'lucide-react';
-import { CharacterSheet } from '@/components/sheets/character-sheet';
+
+import { Sparkles, Sword, UserPlus } from 'lucide-react';
+
 import { GuestHeader } from '@/components/layout/guest-header';
+import { CharacterSheet } from '@/components/sheets/character-sheet';
+import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { type Character } from '@/lib/types';
 
 // 🎯 LANDMARK: DEMO_MOCK_DATA_DND
@@ -18,7 +26,8 @@ const demoDndCharacter: Character = {
   name: 'Thorin Ironforge',
   characterClass: 'Fighter',
   gameSystem: 'Dungeons & Dragons',
-  backstory: 'A seasoned warrior from the northern mountains, seeking glory and gold.',
+  backstory:
+    'A seasoned warrior from the northern mountains, seeking glory and gold.',
   notes: 'Demo character for preview purposes.',
   questLog: [],
   level: 3,
@@ -28,7 +37,14 @@ const demoDndCharacter: Character = {
   experiencePoints: 900,
   inspiration: '0',
   proficiencyBonus: 2,
-  stats: { strength: 16, dexterity: 12, constitution: 15, intelligence: 10, wisdom: 13, charisma: 8 },
+  stats: {
+    strength: 16,
+    dexterity: 12,
+    constitution: 15,
+    intelligence: 10,
+    wisdom: 13,
+    charisma: 8,
+  },
   savingThrows: [],
   skills: [],
   armorClass: 18,
@@ -58,7 +74,8 @@ const demoDhCharacter: Character = {
   name: 'Inquisitor Vane',
   characterClass: 'Acolyte',
   gameSystem: 'Dark Heresy',
-  backstory: 'A dedicated servant of the Inquisition, rooting out heresy in the underhive.',
+  backstory:
+    'A dedicated servant of the Inquisition, rooting out heresy in the underhive.',
   notes: 'Demo character for preview purposes.',
   questLog: [],
   edition: '1st',
@@ -80,8 +97,16 @@ const demoDhCharacter: Character = {
   alternatePath: null,
   advancedPath: null,
   stats: {
-    weaponSkill: 35, ballisticSkill: 30, strength: 35, toughness: 40,
-    agility: 35, intelligence: 40, perception: 45, willpower: 40, fellowship: 35, influence: 30
+    weaponSkill: 35,
+    ballisticSkill: 30,
+    strength: 35,
+    toughness: 40,
+    agility: 35,
+    intelligence: 40,
+    perception: 45,
+    willpower: 40,
+    fellowship: 35,
+    influence: 30,
   },
   statUpgrades: {
     weaponSkill: [false, false, false, false],
@@ -103,17 +128,42 @@ const demoDhCharacter: Character = {
   movement: { walkHalf: 2, walkFull: 4, charge: 8, run: 12 },
   equipment: {
     armor: {
-      'Head': { ap: 3, type: 'Flak', mods: '', quality: 'Common' },
+      Head: { ap: 3, type: 'Flak', mods: '', quality: 'Common' },
       'Right arm': null,
-      'Body': { ap: 4, type: 'Flak', mods: '', quality: 'Common' },
+      Body: { ap: 4, type: 'Flak', mods: '', quality: 'Common' },
       'Left arm': null,
       'Right leg': null,
       'Left leg': null,
     },
     weapons: {
-      melee: [{ id: 'm1', name: 'Chainsword', type: 'Melee', range: '-', penetration: '2', damage: '1d10+3 R', traits: 'Tearing', equipped: true }],
-      ranged: [{ id: 'r1', name: 'Lasgun', type: 'Basic', range: '100m', rof: 'S/3/-', damage: '1d10+3 E', clip: 60, clipSize: 60, reload: 'Full', traits: '', equipped: true }],
-    }
+      melee: [
+        {
+          id: 'm1',
+          name: 'Chainsword',
+          type: 'Melee',
+          range: '-',
+          penetration: '2',
+          damage: '1d10+3 R',
+          traits: 'Tearing',
+          equipped: true,
+        },
+      ],
+      ranged: [
+        {
+          id: 'r1',
+          name: 'Lasgun',
+          type: 'Basic',
+          range: '100m',
+          rof: 'S/3/-',
+          damage: '1d10+3 E',
+          clip: 60,
+          clipSize: 60,
+          reload: 'Full',
+          traits: '',
+          equipped: true,
+        },
+      ],
+    },
   },
   inventory: [],
   skills: [],
@@ -124,41 +174,47 @@ const demoDhCharacter: Character = {
 } as Character;
 
 export default function DemoPage() {
-  const [previewSystem, setPreviewSystem] = useState<'Dungeons & Dragons' | 'Dark Heresy' | null>(null);
+  const [previewSystem, setPreviewSystem] = useState<
+    'Dungeons & Dragons' | 'Dark Heresy' | null
+  >(null);
 
-  const activeCharacter = previewSystem === 'Dungeons & Dragons' 
-    ? demoDndCharacter 
-    : previewSystem === 'Dark Heresy' 
-    ? demoDhCharacter 
-    : null;
+  const activeCharacter =
+    previewSystem === 'Dungeons & Dragons'
+      ? demoDndCharacter
+      : previewSystem === 'Dark Heresy'
+        ? demoDhCharacter
+        : null;
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
+    <div className="flex min-h-screen flex-col bg-background">
       {/* 🎯 LANDMARK: DEMO_HEADER → общая гостевая шапка с темой/языком/видом */}
       <GuestHeader showLoginLink />
 
-      <main className="flex-1 container mx-auto px-4 py-8 max-w-6xl">
+      <main className="container mx-auto max-w-6xl flex-1 px-4 py-8">
         {/* 🎯 LANDMARK: DEMO_HERO */}
-        <div className="text-center mb-10 space-y-4">
-          <h1 className="text-4xl font-headline font-bold tracking-tight">
+        <div className="mb-10 space-y-4 text-center">
+          <h1 className="font-headline text-4xl font-bold tracking-tight">
             Try Before You Commit
           </h1>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Explore our digital character sheets for D&D 5e and Dark Heresy. 
-            Create a new character or preview a pre-made sheet. When you're ready to save your progress, simply create an account!
+          <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
+            Explore our digital character sheets for D&D 5e and Dark Heresy.
+            Create a new character or preview a pre-made sheet. When you're
+            ready to save your progress, simply create an account!
           </p>
         </div>
 
         {/* 🎯 LANDMARK: DEMO_ACTION_CARDS */}
-        <div className="grid md:grid-cols-2 gap-6 mb-12">
-          <Card className="hover:border-primary/50 transition-colors">
+        <div className="mb-12 grid gap-6 md:grid-cols-2">
+          <Card className="transition-colors hover:border-primary/50">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Sparkles className="h-5 w-5 text-primary" />
                 Create Your Own Character
               </CardTitle>
               <CardDescription>
-                Start building your hero from scratch. Your progress will be saved locally, and you can create an account at the end to keep it forever.
+                Start building your hero from scratch. Your progress will be
+                saved locally, and you can create an account at the end to keep
+                it forever.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -171,26 +227,32 @@ export default function DemoPage() {
             </CardContent>
           </Card>
 
-          <Card className="hover:border-primary/50 transition-colors">
+          <Card className="transition-colors hover:border-primary/50">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Sword className="h-5 w-5 text-primary" />
                 Explore Pre-made Sheets
               </CardTitle>
               <CardDescription>
-                Interact with a fully populated demo character sheet to see how the system works. Create an account to save changes or make your own.
+                Interact with a fully populated demo character sheet to see how
+                the system works. Create an account to save changes or make your
+                own.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              <Button 
-                variant={previewSystem === 'Dungeons & Dragons' ? 'default' : 'outline'} 
+              <Button
+                variant={
+                  previewSystem === 'Dungeons & Dragons' ? 'default' : 'outline'
+                }
                 className="w-full justify-start"
                 onClick={() => setPreviewSystem('Dungeons & Dragons')}
               >
                 Preview D&D 5e Character
               </Button>
-              <Button 
-                variant={previewSystem === 'Dark Heresy' ? 'default' : 'outline'} 
+              <Button
+                variant={
+                  previewSystem === 'Dark Heresy' ? 'default' : 'outline'
+                }
                 className="w-full justify-start"
                 onClick={() => setPreviewSystem('Dark Heresy')}
               >
@@ -202,12 +264,14 @@ export default function DemoPage() {
 
         {/* 🎯 LANDMARK: DEMO_SHEET_PREVIEW */}
         {activeCharacter && (
-          <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-primary/10 border border-primary/20 rounded-lg gap-4">
+          <div className="space-y-4 duration-500 animate-in fade-in slide-in-from-bottom-4">
+            <div className="flex flex-col justify-between gap-4 rounded-lg border border-primary/20 bg-primary/10 p-4 sm:flex-row sm:items-center">
               <div>
                 <h3 className="font-semibold text-primary">Demo Mode Active</h3>
                 <p className="text-sm text-muted-foreground">
-                  You are viewing a preview of <strong>{activeCharacter.name}</strong>. Changes made here are temporary until you create an account.
+                  You are viewing a preview of{' '}
+                  <strong>{activeCharacter.name}</strong>. Changes made here are
+                  temporary until you create an account.
                 </p>
               </div>
               <Button asChild variant="default" className="shrink-0">
@@ -217,11 +281,11 @@ export default function DemoPage() {
                 </Link>
               </Button>
             </div>
-            
-            <div className="border rounded-lg bg-card p-4 md:p-6">
-              <CharacterSheet 
-                character={activeCharacter} 
-                activeCompactSection="info-section" 
+
+            <div className="rounded-lg border bg-card p-4 md:p-6">
+              <CharacterSheet
+                character={activeCharacter}
+                activeCompactSection="info-section"
               />
             </div>
           </div>

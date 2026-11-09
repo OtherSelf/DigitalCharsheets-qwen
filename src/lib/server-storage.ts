@@ -1,8 +1,9 @@
 import fs from 'fs';
 import path from 'path';
-import { Character } from './types';
+
 import { getUserDir } from './data-dir';
 import { writeJsonAtomic } from './fs-atomic';
+import { Character } from './types';
 
 // Ensure a user's data directory exists
 function ensureUserDir(userId: string): string {
@@ -46,8 +47,18 @@ export interface WriteToken {
   seq: number;
 }
 
-export function isStaleWrite(userId: string, characterId: string, token?: WriteToken): boolean {
-  if (!token || typeof token.page !== 'string' || !token.page || typeof token.seq !== 'number' || !Number.isFinite(token.seq)) {
+export function isStaleWrite(
+  userId: string,
+  characterId: string,
+  token?: WriteToken,
+): boolean {
+  if (
+    !token ||
+    typeof token.page !== 'string' ||
+    !token.page ||
+    typeof token.seq !== 'number' ||
+    !Number.isFinite(token.seq)
+  ) {
     return false;
   }
   const sheetKey = `${userId}/${characterId}`;
@@ -67,10 +78,19 @@ export function isStaleWrite(userId: string, characterId: string, token?: WriteT
 }
 
 /** Сброс кэша порядка записей. Нужен тестам и удалению листа. */
-export function resetWriteSeqGuard(userId?: string, characterId?: string): void {
-  if (!userId) { lastSeqBySheet.clear(); return; }
+export function resetWriteSeqGuard(
+  userId?: string,
+  characterId?: string,
+): void {
+  if (!userId) {
+    lastSeqBySheet.clear();
+    return;
+  }
   const key = characterId ? `${userId}/${characterId}` : null;
-  if (key) { lastSeqBySheet.delete(key); return; }
+  if (key) {
+    lastSeqBySheet.delete(key);
+    return;
+  }
   for (const existing of Array.from(lastSeqBySheet.keys())) {
     if (existing.startsWith(`${userId}/`)) lastSeqBySheet.delete(existing);
   }
@@ -82,7 +102,7 @@ export function getCharactersFromServer(userId: string): Character[] {
   const characters: Character[] = [];
 
   try {
-    const files = fs.readdirSync(charsDir).filter(f => f.endsWith('.json'));
+    const files = fs.readdirSync(charsDir).filter((f) => f.endsWith('.json'));
     for (const file of files) {
       try {
         const content = fs.readFileSync(path.join(charsDir, file), 'utf8');
@@ -100,14 +120,20 @@ export function getCharactersFromServer(userId: string): Character[] {
 }
 
 // WRITE: Save a single character to its own file
-export function saveCharacterToServer(userId: string, character: Character): void {
+export function saveCharacterToServer(
+  userId: string,
+  character: Character,
+): void {
   const charsDir = ensureCharactersDir(userId);
   const filePath = path.join(charsDir, `${character.id}.json`);
   writeJsonAtomic(filePath, character);
 }
 
 // WRITE: Save multiple characters (used during import)
-export function saveCharactersToServer(userId: string, characters: Character[]): void {
+export function saveCharactersToServer(
+  userId: string,
+  characters: Character[],
+): void {
   for (const char of characters) {
     saveCharacterToServer(userId, char);
   }
@@ -149,7 +175,7 @@ export function updateCharacterOnServer(
   if (isStaleWrite(userId, characterId, options.writeToken)) {
     console.warn(
       `Ignoring stale write for ${userId}/${characterId} ` +
-      `(page ${options.writeToken?.page}, seq ${options.writeToken?.seq})`,
+        `(page ${options.writeToken?.page}, seq ${options.writeToken?.seq})`,
     );
     return character;
   }
@@ -171,7 +197,10 @@ export function updateCharacterOnServer(
 }
 
 // DELETE: Remove a character file
-export function deleteCharacterFromServer(userId: string, characterId: string): boolean {
+export function deleteCharacterFromServer(
+  userId: string,
+  characterId: string,
+): boolean {
   const charsDir = ensureCharactersDir(userId);
   const filePath = path.join(charsDir, `${characterId}.json`);
 
@@ -193,10 +222,14 @@ export function userFolderExists(userId: string): boolean {
 }
 
 // Create a user folder with user.json
-export function createUserFolder(userId: string, username: string, displayName: string): void {
+export function createUserFolder(
+  userId: string,
+  username: string,
+  displayName: string,
+): void {
   const userDir = ensureUserDir(userId);
   const userFile = path.join(userDir, 'user.json');
-  
+
   if (!fs.existsSync(userFile)) {
     const userData = {
       schemaVersion: 2,

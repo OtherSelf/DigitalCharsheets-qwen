@@ -19,13 +19,18 @@ type UISettingsState = {
   isLoaded: boolean;
 };
 
-const SERVER_STATE: UISettingsState = { textScale: 1, uiScale: 1, isLoaded: false };
+const SERVER_STATE: UISettingsState = {
+  textScale: 1,
+  uiScale: 1,
+  isLoaded: false,
+};
 
 let state: UISettingsState = SERVER_STATE;
 let initialized = false;
 const listeners = new Set<() => void>();
 
-const clamp = (v: number, min: number, max: number) => Math.min(Math.max(v, min), max);
+const clamp = (v: number, min: number, max: number) =>
+  Math.min(Math.max(v, min), max);
 const round2 = (v: number) => Math.round(v * 100) / 100;
 
 function applyToDocument() {
@@ -77,13 +82,18 @@ function init() {
     textScale = clamp(savedText, MIN_TEXT_SCALE, MAX_TEXT_SCALE);
   } else {
     const legacyPx = readNumber(LEGACY_FONT_PX_KEY);
-    if (legacyPx !== null) textScale = clamp(legacyPx / 16, MIN_TEXT_SCALE, MAX_TEXT_SCALE);
+    if (legacyPx !== null)
+      textScale = clamp(legacyPx / 16, MIN_TEXT_SCALE, MAX_TEXT_SCALE);
   }
 
   const savedUi = readNumber(UI_KEY);
   if (savedUi !== null) uiScale = clamp(savedUi, MIN_UI_SCALE, MAX_UI_SCALE);
 
-  setState({ textScale: round2(textScale), uiScale: round2(uiScale), isLoaded: true });
+  setState({
+    textScale: round2(textScale),
+    uiScale: round2(uiScale),
+    isLoaded: true,
+  });
 }
 
 function subscribe(listener: () => void) {
@@ -115,7 +125,11 @@ export function resetSettings() {
 }
 
 export function useUISettings() {
-  const snapshot = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  const snapshot = useSyncExternalStore(
+    subscribe,
+    getSnapshot,
+    getServerSnapshot,
+  );
 
   return {
     textScale: snapshot.textScale,

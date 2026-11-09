@@ -1,4 +1,5 @@
 import fs from 'fs';
+
 import { getDataDir, getDataLockDir } from './data-dir';
 
 /**
@@ -28,7 +29,9 @@ function sleepSync(ms: number): void {
   } catch {
     // На всякий случай: без SharedArrayBuffer просто крутимся.
     const end = Date.now() + ms;
-    while (Date.now() < end) { /* busy wait */ }
+    while (Date.now() < end) {
+      /* busy wait */
+    }
   }
 }
 
@@ -58,11 +61,17 @@ export function withDataLock<T>(fn: () => T): T {
       if ((error as NodeJS.ErrnoException)?.code !== 'EEXIST') throw error;
       // Брошенный лок от упавшего процесса не должен блокировать вход навсегда.
       if (lockAgeMs(lockDir) > LOCK_STALE_MS) {
-        try { fs.rmdirSync(lockDir); } catch { /* кто-то уже снял */ }
+        try {
+          fs.rmdirSync(lockDir);
+        } catch {
+          /* кто-то уже снял */
+        }
         continue;
       }
       if (Date.now() > deadline) {
-        throw new Error('Data directory is locked by another request. Try again.');
+        throw new Error(
+          'Data directory is locked by another request. Try again.',
+        );
       }
       sleepSync(LOCK_WAIT_STEP_MS);
     }
@@ -71,6 +80,10 @@ export function withDataLock<T>(fn: () => T): T {
   try {
     return fn();
   } finally {
-    try { fs.rmdirSync(lockDir); } catch { /* best effort */ }
+    try {
+      fs.rmdirSync(lockDir);
+    } catch {
+      /* best effort */
+    }
   }
 }

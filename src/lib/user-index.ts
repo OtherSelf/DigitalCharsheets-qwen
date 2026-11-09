@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+
 import { getLoginIndexFile, getUsersDir } from './data-dir';
 import { writeJsonAtomic } from './fs-atomic';
 import { normalizeLogin } from './ids';
@@ -35,7 +36,11 @@ function readIndexFile(): LoginIndex | null {
   try {
     const parsed = JSON.parse(fs.readFileSync(getLoginIndexFile(), 'utf8'));
     if (!parsed || typeof parsed !== 'object') return null;
-    if (!parsed.logins || typeof parsed.logins !== 'object' || Array.isArray(parsed.logins)) {
+    if (
+      !parsed.logins ||
+      typeof parsed.logins !== 'object' ||
+      Array.isArray(parsed.logins)
+    ) {
       return null;
     }
     const logins: Record<string, string> = {};
@@ -71,7 +76,10 @@ export function rebuildLoginIndex(): LoginIndex {
   for (const entry of entries) {
     if (!entry.isDirectory()) continue;
     try {
-      const raw = fs.readFileSync(path.join(usersDir, entry.name, 'user.json'), 'utf8');
+      const raw = fs.readFileSync(
+        path.join(usersDir, entry.name, 'user.json'),
+        'utf8',
+      );
       const data = JSON.parse(raw) as { username?: unknown; email?: unknown };
       const login = normalizeLogin(String(data.username ?? data.email ?? ''));
       if (!login) continue;
@@ -94,7 +102,9 @@ export function rebuildLoginIndex(): LoginIndex {
  * Индекс «для чтения». Если файла нет или он битый — пересобираем.
  * `rebuildIfMissing: false` — не трогать диск (используется в тестах/диагностике).
  */
-export function readLoginIndex(options: { rebuildIfMissing?: boolean } = {}): LoginIndex {
+export function readLoginIndex(
+  options: { rebuildIfMissing?: boolean } = {},
+): LoginIndex {
   const fromDisk = readIndexFile();
   if (fromDisk) return fromDisk;
   if (options.rebuildIfMissing === false) return emptyLoginIndex();

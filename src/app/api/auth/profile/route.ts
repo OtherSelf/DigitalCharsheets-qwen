@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+
 import { updateUserProfile } from '@/lib/server-auth';
 import { getSessionUid } from '@/lib/session';
 
@@ -13,17 +14,18 @@ export async function PUT(request: Request) {
     if (!uid) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized.' },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
     const body = await request.json();
-    const { newUsername, newDisplayName, newPassword, newRecoveryPhrase } = body;
+    const { newUsername, newDisplayName, newPassword, newRecoveryPhrase } =
+      body;
 
     if (!newUsername || !newDisplayName) {
       return NextResponse.json(
         { success: false, error: 'Username and display name are required.' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -32,16 +34,22 @@ export async function PUT(request: Request) {
       newUsername,
       newDisplayName,
       newPassword,
-      newRecoveryPhrase
+      newRecoveryPhrase,
     );
 
     if (!result.success) {
-      return NextResponse.json({ success: false, error: result.error }, { status: 400 });
+      return NextResponse.json(
+        { success: false, error: result.error },
+        { status: 400 },
+      );
     }
 
     return NextResponse.json({ success: true, user: result.user });
   } catch (error) {
     console.error('Profile update error:', error);
-    return NextResponse.json({ success: false, error: 'An unexpected error occurred.' }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: 'An unexpected error occurred.' },
+      { status: 500 },
+    );
   }
 }

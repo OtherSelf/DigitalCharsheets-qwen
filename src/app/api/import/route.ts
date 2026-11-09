@@ -1,7 +1,9 @@
-import { NextResponse } from 'next/server';
+import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
-import crypto from 'crypto';
+
+import { NextResponse } from 'next/server';
+
 import { getCharactersDir, getDataDir } from '@/lib/data-dir';
 import { createImportedUser } from '@/lib/server-auth';
 
@@ -16,7 +18,7 @@ function cleanObject(obj: any): any {
   if (obj === null || obj === undefined) return obj;
   if (typeof obj === 'string') return obj.trim();
   if (typeof obj === 'number' || typeof obj === 'boolean') return obj;
-  if (Array.isArray(obj)) return obj.map(item => cleanObject(item));
+  if (Array.isArray(obj)) return obj.map((item) => cleanObject(item));
   if (typeof obj === 'object') {
     const cleaned: any = {};
     for (const [key, value] of Object.entries(obj)) {
@@ -51,7 +53,9 @@ function generateCharacterName(raw: any, index: number): string {
     const cls = (raw.characterClass || 'Unknown').trim();
     const level = raw.level || 1;
     const bg = (raw.background || '').trim();
-    return bg ? `Level ${level} ${cls} (${bg})` : `Level ${level} ${cls} #${index + 1}`;
+    return bg
+      ? `Level ${level} ${cls} (${bg})`
+      : `Level ${level} ${cls} #${index + 1}`;
   }
 
   return `Character #${index + 1}`;
@@ -59,17 +63,30 @@ function generateCharacterName(raw: any, index: number): string {
 
 // ─── DARK HERESY CONVERTER ─────────────────────────────────────────
 
-function convertDarkHeresyCharacter(raw: any, userId: string, name: string): any {
+function convertDarkHeresyCharacter(
+  raw: any,
+  userId: string,
+  name: string,
+): any {
   // Clean equipment
-  const rawEquipment = raw.equipment && raw.equipment !== 0 ? raw.equipment : {};
+  const rawEquipment =
+    raw.equipment && raw.equipment !== 0 ? raw.equipment : {};
   const armor = rawEquipment.armor || {};
   const weapons = rawEquipment.weapons || {};
 
   // Normalize armor (replace 0/null with proper null)
-  const armorParts = ['Head', 'Right arm', 'Body', 'Left arm', 'Right leg', 'Left leg'];
+  const armorParts = [
+    'Head',
+    'Right arm',
+    'Body',
+    'Left arm',
+    'Right leg',
+    'Left leg',
+  ];
   const normalizedArmor: any = {};
   for (const part of armorParts) {
-    normalizedArmor[part] = armor[part] && armor[part] !== 0 ? armor[part] : null;
+    normalizedArmor[part] =
+      armor[part] && armor[part] !== 0 ? armor[part] : null;
   }
 
   // Normalize weapons
@@ -77,10 +94,22 @@ function convertDarkHeresyCharacter(raw: any, userId: string, name: string): any
   const rangedWeapons = Array.isArray(weapons.ranged) ? weapons.ranged : [];
 
   // Normalize points
-  const wounds = (raw.wounds && raw.wounds !== 0) ? raw.wounds : { current: 0, max: 0, notes: '' };
-  const fatePoints = (raw.fatePoints && raw.fatePoints !== 0) ? raw.fatePoints : { current: 1, max: 1, notes: '' };
-  const insanityPoints = (raw.insanityPoints && raw.insanityPoints !== 0) ? raw.insanityPoints : { total: 0, notes: '' };
-  const corruptionPoints = (raw.corruptionPoints && raw.corruptionPoints !== 0) ? raw.corruptionPoints : { total: 0, notes: '' };
+  const wounds =
+    raw.wounds && raw.wounds !== 0
+      ? raw.wounds
+      : { current: 0, max: 0, notes: '' };
+  const fatePoints =
+    raw.fatePoints && raw.fatePoints !== 0
+      ? raw.fatePoints
+      : { current: 1, max: 1, notes: '' };
+  const insanityPoints =
+    raw.insanityPoints && raw.insanityPoints !== 0
+      ? raw.insanityPoints
+      : { total: 0, notes: '' };
+  const corruptionPoints =
+    raw.corruptionPoints && raw.corruptionPoints !== 0
+      ? raw.corruptionPoints
+      : { total: 0, notes: '' };
 
   // Normalize inventory
   const inventory = Array.isArray(raw.inventory) ? raw.inventory : [];
@@ -94,8 +123,14 @@ function convertDarkHeresyCharacter(raw: any, userId: string, name: string): any
     characterClass: (raw.characterClass || '').trim(),
     homeWorld: (raw.homeWorld || '').trim(),
     rank: 'Acolyte',
-    advancedPath: (raw.advancedPath && raw.advancedPath !== 0) ? String(raw.advancedPath).trim() : null,
-    alternatePath: (raw.alternatePath && raw.alternatePath !== 0) ? String(raw.alternatePath).trim() : null,
+    advancedPath:
+      raw.advancedPath && raw.advancedPath !== 0
+        ? String(raw.advancedPath).trim()
+        : null,
+    alternatePath:
+      raw.alternatePath && raw.alternatePath !== 0
+        ? String(raw.alternatePath).trim()
+        : null,
     divination: (raw.divination || '').trim(),
     divinationEffect: (raw.divinationEffect || '').trim(),
     backstory: (raw.backstory || '').trim(),
@@ -108,9 +143,16 @@ function convertDarkHeresyCharacter(raw: any, userId: string, name: string): any
     quirk: '',
     worldVariant: '',
     stats: {
-      weaponSkill: 30, ballisticSkill: 30, strength: 30, toughness: 30,
-      agility: 30, intelligence: 30, perception: 30, willpower: 30,
-      fellowship: 30, influence: 0,
+      weaponSkill: 30,
+      ballisticSkill: 30,
+      strength: 30,
+      toughness: 30,
+      agility: 30,
+      intelligence: 30,
+      perception: 30,
+      willpower: 30,
+      fellowship: 30,
+      influence: 0,
     },
     statUpgrades: {},
     statNotes: {},
@@ -135,9 +177,18 @@ function convertDarkHeresyCharacter(raw: any, userId: string, name: string): any
 // ─── DND CONVERTER ─────────────────────────────────────────────────
 
 function convertDndCharacter(raw: any, userId: string, name: string): any {
-  const hitPoints = (raw.hitPoints && raw.hitPoints !== 0) ? raw.hitPoints : { current: 0, max: 0 };
-  const currency = (raw.currency && raw.currency !== 0) ? raw.currency : { cp: 0, sp: 0, ep: 0, gp: 0, pp: 0 };
-  const deathSaves = (raw.deathSaves && raw.deathSaves !== 0) ? raw.deathSaves : { successes: 0, failures: 0 };
+  const hitPoints =
+    raw.hitPoints && raw.hitPoints !== 0
+      ? raw.hitPoints
+      : { current: 0, max: 0 };
+  const currency =
+    raw.currency && raw.currency !== 0
+      ? raw.currency
+      : { cp: 0, sp: 0, ep: 0, gp: 0, pp: 0 };
+  const deathSaves =
+    raw.deathSaves && raw.deathSaves !== 0
+      ? raw.deathSaves
+      : { successes: 0, failures: 0 };
 
   return {
     id: generateId(),
@@ -148,7 +199,12 @@ function convertDndCharacter(raw: any, userId: string, name: string): any {
     background: (raw.background || '').trim(),
     alignment: (raw.alignment || '').trim(),
     level: raw.level || 1,
-    inspiration: (raw.inspiration === 'Yes' || raw.inspiration === '1' || raw.inspiration === 1) ? '1' : '0',
+    inspiration:
+      raw.inspiration === 'Yes' ||
+      raw.inspiration === '1' ||
+      raw.inspiration === 1
+        ? '1'
+        : '0',
     backstory: (raw.backstory || '').trim(),
     age: (raw.age || '').trim(),
     height: (raw.height || '').trim(),
@@ -156,13 +212,17 @@ function convertDndCharacter(raw: any, userId: string, name: string): any {
     eyes: (raw.eyes || '').trim(),
     hair: (raw.hair || '').trim(),
     stats: {
-      strength: 10, dexterity: 10, constitution: 10,
-      intelligence: 10, wisdom: 10, charisma: 10,
+      strength: 10,
+      dexterity: 10,
+      constitution: 10,
+      intelligence: 10,
+      wisdom: 10,
+      charisma: 10,
     },
     armorClass: raw.armorClass || 10,
     hitPoints,
     hitDice: (raw.hitDice || '').trim(),
-    hitDiceUsed: (raw.hitDiceUsed && raw.hitDiceUsed !== 0) ? raw.hitDiceUsed : 0,
+    hitDiceUsed: raw.hitDiceUsed && raw.hitDiceUsed !== 0 ? raw.hitDiceUsed : 0,
     speed: '30ft',
     proficiencyBonus: 2,
     initiative: 0,
@@ -172,10 +232,16 @@ function convertDndCharacter(raw: any, userId: string, name: string): any {
     equipment: Array.isArray(raw.equipment) ? raw.equipment : [],
     inventory: Array.isArray(raw.inventory) ? raw.inventory : [],
     currency,
-    featuresAndTraits: Array.isArray(raw.featuresAndTraits) ? raw.featuresAndTraits : [],
+    featuresAndTraits: Array.isArray(raw.featuresAndTraits)
+      ? raw.featuresAndTraits
+      : [],
     companions: Array.isArray(raw.companions) ? raw.companions : [],
-    combatResources: Array.isArray(raw.combatResources) ? raw.combatResources : [],
-    attunementItems: Array.isArray(raw.attunementItems) ? raw.attunementItems : [],
+    combatResources: Array.isArray(raw.combatResources)
+      ? raw.combatResources
+      : [],
+    attunementItems: Array.isArray(raw.attunementItems)
+      ? raw.attunementItems
+      : [],
     bonds: Array.isArray(raw.bonds) ? raw.bonds : [],
     ideals: Array.isArray(raw.ideals) ? raw.ideals : [],
     flaws: Array.isArray(raw.flaws) ? raw.flaws : [],
@@ -193,10 +259,13 @@ export async function GET() {
     // Check if import file exists
     const IMPORT_FILE = importFilePath();
     if (!fs.existsSync(IMPORT_FILE)) {
-      return NextResponse.json({
-        success: false,
-        error: `Import file not found. Please save your Firestore export as "data/import-source.json" and try again.`,
-      }, { status: 404 });
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Import file not found. Please save your Firestore export as "data/import-source.json" and try again.`,
+        },
+        { status: 404 },
+      );
     }
 
     // Read the import file
@@ -204,10 +273,13 @@ export async function GET() {
     const rawData = JSON.parse(fileContent);
 
     if (!Array.isArray(rawData) || rawData.length === 0) {
-      return NextResponse.json({
-        success: false,
-        error: 'Import file is empty or not a valid array.',
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Import file is empty or not a valid array.',
+        },
+        { status: 400 },
+      );
     }
 
     // Step 1: Clean all data
@@ -269,7 +341,10 @@ export async function GET() {
         // Write individual character file
         const charFile = path.join(charsDir, `${character.id}.json`);
         fs.writeFileSync(charFile, JSON.stringify(character, null, 2), 'utf8');
-        importedChars.push({ name: character.name, system: character.gameSystem });
+        importedChars.push({
+          name: character.name,
+          system: character.gameSystem,
+        });
         totalImported++;
       });
 
@@ -292,12 +367,14 @@ export async function GET() {
       users: results,
       note: 'The import-source.json file has been deleted. You can now log in with the usernames listed above using the default password.',
     });
-
   } catch (error: any) {
     console.error('Import error:', error);
-    return NextResponse.json({
-      success: false,
-      error: `Import failed: ${error.message}`,
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        success: false,
+        error: `Import failed: ${error.message}`,
+      },
+      { status: 500 },
+    );
   }
 }

@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server';
-import { getCharactersFromServer, saveCharacterToServer } from '@/lib/server-storage';
-import { Character } from '@/lib/types';
+
+import {
+  getCharactersFromServer,
+  saveCharacterToServer,
+} from '@/lib/server-storage';
 import { getSessionUid } from '@/lib/session';
+import { Character } from '@/lib/types';
 
 /**
  * ─── LANDMARK: CHARACTERS API (uid из сессии) ───────────────────────────────

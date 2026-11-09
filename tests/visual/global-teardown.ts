@@ -1,5 +1,7 @@
 import fs from 'node:fs';
+
 import type { FullConfig } from '@playwright/test';
+
 import { readState, STATE_FILE } from './state';
 
 /**
@@ -7,7 +9,9 @@ import { readState, STATE_FILE } from './state';
  * оставляем — он переиспользуется и не мешает (в локальном прогоне
  * временный DCS_DATA_DIR и так удаляется вместе с ним).
  */
-export default async function globalTeardown(config: FullConfig): Promise<void> {
+export default async function globalTeardown(
+  config: FullConfig,
+): Promise<void> {
   if (!fs.existsSync(STATE_FILE)) return;
 
   try {
@@ -21,7 +25,10 @@ export default async function globalTeardown(config: FullConfig): Promise<void> 
     const auth = await fetch(`${baseURL}/api/auth`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ username: state.username, password: state.password }),
+      body: JSON.stringify({
+        username: state.username,
+        password: state.password,
+      }),
       signal: AbortSignal.timeout(10_000),
     });
     const sessionCookie = (auth.headers.get('set-cookie') || '').split(';')[0];

@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
+
+import { toPortableCharacter } from '@/lib/character-portable';
 import { getCharactersFromServer } from '@/lib/server-storage';
 import { getSessionUid } from '@/lib/session';
-import { toPortableCharacter } from '@/lib/character-portable';
 
 /**
  * ─── LANDMARK: PORTABLE EXPORT ──────────────────────────────────────────────
@@ -26,15 +27,22 @@ export async function GET(request: Request) {
 
   if (characterId) {
     // Export single character
-    const character = characters.find(c => c.id === characterId);
+    const character = characters.find((c) => c.id === characterId);
     if (!character) {
-      return NextResponse.json({ error: 'Character not found' }, { status: 404 });
+      return NextResponse.json(
+        { error: 'Character not found' },
+        { status: 404 },
+      );
     }
-    return NextResponse.json(toPortableCharacter(character as unknown as Record<string, unknown>));
+    return NextResponse.json(
+      toPortableCharacter(character as unknown as Record<string, unknown>),
+    );
   }
 
   // Export all characters
   return NextResponse.json(
-    characters.map(character => toPortableCharacter(character as unknown as Record<string, unknown>)),
+    characters.map((character) =>
+      toPortableCharacter(character as unknown as Record<string, unknown>),
+    ),
   );
 }

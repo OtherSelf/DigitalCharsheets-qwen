@@ -1,4 +1,5 @@
 import { expect, test, type Locator } from '@playwright/test';
+
 import {
   discardUnsavedChanges,
   getState,
@@ -46,7 +47,9 @@ async function expectInputValue(scope: Locator, value: string): Promise<void> {
         .locator('input')
         .evaluateAll(
           (inputs, expected) =>
-            inputs.some((input) => (input as HTMLInputElement).value === expected),
+            inputs.some(
+              (input) => (input as HTMLInputElement).value === expected,
+            ),
           value,
         ),
     )
@@ -91,8 +94,12 @@ test.describe('редактирование D&D', () => {
     // Навыки: поля ручных модификаторов (у Arcana +2, у History +1).
     const skills = page.locator('#skills-card:visible').first();
     await startEditing(skills);
-    await expect(skills.locator('input[type="number"]').nth(2)).toHaveValue('2');
-    await expect(skills.locator('input[type="number"]').nth(5)).toHaveValue('1');
+    await expect(skills.locator('input[type="number"]').nth(2)).toHaveValue(
+      '2',
+    );
+    await expect(skills.locator('input[type="number"]').nth(5)).toHaveValue(
+      '1',
+    );
     await screenshotElement(skills, 'sheet-dnd-edit-skills-en.png');
   });
 
@@ -107,21 +114,33 @@ test.describe('редактирование D&D', () => {
 
     const combat = page.locator('#hit-points-card:visible').first();
     await startEditing(combat);
-    await expect(combat.locator('input[type="number"]').first()).toHaveValue('45');
+    await expect(combat.locator('input[type="number"]').first()).toHaveValue(
+      '45',
+    );
     await screenshotElement(combat, 'sheet-dnd-edit-combat-en.png');
 
-    const attacks = page.locator('#attacks-and-spellcasting-box:visible').first();
+    const attacks = page
+      .locator('#attacks-and-spellcasting-box:visible')
+      .first();
     await startEditing(attacks);
     await expectInputValue(attacks, 'Fire Bolt');
     await screenshotElement(attacks, 'sheet-dnd-edit-attacks-en.png');
 
     // Инвентарь: деньги и предметы (Spellbook и т.д.).
     const inventory = page.locator('#inventory-box:visible').first();
-    await inventory.locator('[data-testid="edit-button"]:visible').first().click(); // деньги
+    await inventory
+      .locator('[data-testid="edit-button"]:visible')
+      .first()
+      .click(); // деньги
     await expect(inventory.locator('input[type="number"]')).toHaveCount(5);
-    await inventory.locator('[data-testid="edit-button"]:visible').first().click(); // предметы
+    await inventory
+      .locator('[data-testid="edit-button"]:visible')
+      .first()
+      .click(); // предметы
     await expectInputValue(inventory, 'Spellbook');
-    await expect(inventory.locator('input[type="number"]').nth(3)).toHaveValue('245');
+    await expect(inventory.locator('input[type="number"]').nth(3)).toHaveValue(
+      '245',
+    );
     await screenshotElement(inventory, 'sheet-dnd-edit-inventory-en.png');
 
     const attunement = page.locator('#attunement-card:visible').first();
@@ -176,14 +195,22 @@ test.describe('редактирование D&D', () => {
     await discardUnsavedChanges(page);
     const skills = page.locator('#skills-card:visible').first();
     await startEditing(skills);
-    await expect(skills.locator('input[type="number"]').nth(2)).toHaveValue('2');
+    await expect(skills.locator('input[type="number"]').nth(2)).toHaveValue(
+      '2',
+    );
     await screenshotPage(page, 'sheet-dnd-mobile-edit-skills-en.png');
 
     await openMobileSection(page, 'Inventory & Attunement');
     await discardUnsavedChanges(page);
     const inventory = page.locator('#inventory-box:visible').first();
-    await inventory.locator('[data-testid="edit-button"]:visible').first().click();
-    await inventory.locator('[data-testid="edit-button"]:visible').first().click();
+    await inventory
+      .locator('[data-testid="edit-button"]:visible')
+      .first()
+      .click();
+    await inventory
+      .locator('[data-testid="edit-button"]:visible')
+      .first()
+      .click();
     await expectInputValue(inventory, 'Spellbook');
     await screenshotPage(page, 'sheet-dnd-mobile-edit-inventory-en.png');
 
@@ -191,7 +218,9 @@ test.describe('редактирование D&D', () => {
     await discardUnsavedChanges(page);
     const combat = page.locator('#hit-points-card:visible').first();
     await startEditing(combat);
-    await expect(combat.locator('input[type="number"]').first()).toHaveValue('45');
+    await expect(combat.locator('input[type="number"]').first()).toHaveValue(
+      '45',
+    );
     await screenshotPage(page, 'sheet-dnd-mobile-edit-combat-en.png');
 
     await openMobileSection(page, 'Spells', 'spells-section');
@@ -229,20 +258,28 @@ test.describe('редактирование Dark Heresy', () => {
 
     // Характеристики зависят от редакции: в 1-й (дефолт для персонажей без
     // поля edition) Influence скрыт — 9 полей, во 2-й появляется 10-е.
-    const characteristics = page.locator('#characteristics-card:visible').first();
+    const characteristics = page
+      .locator('#characteristics-card:visible')
+      .first();
     await startEditing(characteristics);
     const statInputs = characteristics.locator('input[type="number"]');
     await expect(statInputs).toHaveCount(9);
     await expect(statInputs.nth(0)).toHaveValue('34');
     await expect(statInputs.nth(5)).toHaveValue('46');
-    await screenshotElement(characteristics, 'sheet-dh-edit-characteristics-1st-en.png');
+    await screenshotElement(
+      characteristics,
+      'sheet-dh-edit-characteristics-1st-en.png',
+    );
 
     await page.getByTestId('dh-edition-select').click();
     await page.getByRole('option', { name: '2nd Edition' }).click();
     await expect(statInputs).toHaveCount(10);
     // Данные Influence не теряются при смене редакции на лету.
     await expect(statInputs.nth(9)).toHaveValue('28');
-    await screenshotElement(characteristics, 'sheet-dh-edit-characteristics-2nd-en.png');
+    await screenshotElement(
+      characteristics,
+      'sheet-dh-edit-characteristics-2nd-en.png',
+    );
 
     // Фикстура общая для всех тестов (один сервер + один набор данных),
     // поэтому редакцию возвращаем обратно и ждём, пока уйдёт PUT.
@@ -270,19 +307,38 @@ test.describe('редактирование Dark Heresy', () => {
 
     // Снаряжение: броня и оружие с заполненными полями.
     const equipment = page.locator('#equipment-section:visible').first();
-    await equipment.locator('[data-testid="edit-button"]:visible').first().click(); // броня
-    await expect(equipment.locator('input[type="number"]').first()).toHaveValue('4');
+    await equipment
+      .locator('[data-testid="edit-button"]:visible')
+      .first()
+      .click(); // броня
+    await expect(equipment.locator('input[type="number"]').first()).toHaveValue(
+      '4',
+    );
     await screenshotElement(equipment, 'sheet-dh-edit-equipment-en.png');
-    await equipment.locator('[data-testid="edit-button"]:visible').first().click(); // ближний бой (броня уже Save)
+    await equipment
+      .locator('[data-testid="edit-button"]:visible')
+      .first()
+      .click(); // ближний бой (броня уже Save)
     await expectInputValue(equipment, 'Mono-sword');
-    await screenshotElement(equipment, 'sheet-dh-edit-equipment-weapons-en.png');
+    await screenshotElement(
+      equipment,
+      'sheet-dh-edit-equipment-weapons-en.png',
+    );
 
     // Инвентарь: богатство и предметы.
     const inventory = page.locator('#inventory-section:visible').first();
-    await inventory.locator('[data-testid="edit-button"]:visible').first().click(); // богатство
-    await expect(inventory.locator('input[type="number"]').first()).toHaveValue('240');
+    await inventory
+      .locator('[data-testid="edit-button"]:visible')
+      .first()
+      .click(); // богатство
+    await expect(inventory.locator('input[type="number"]').first()).toHaveValue(
+      '240',
+    );
     await screenshotElement(inventory, 'sheet-dh-edit-inventory-en.png');
-    await inventory.locator('[data-testid="edit-button"]:visible').first().click(); // предметы
+    await inventory
+      .locator('[data-testid="edit-button"]:visible')
+      .first()
+      .click(); // предметы
     await expectInputValue(inventory, 'Data-slate');
     await screenshotElement(inventory, 'sheet-dh-edit-inventory-items-en.png');
   });
@@ -297,7 +353,9 @@ test.describe('редактирование Dark Heresy', () => {
 
     const characteristics = page.getByTestId('characteristics-compact');
     await startEditing(characteristics);
-    await expect(characteristics.locator('input[type="number"]').nth(0)).toHaveValue('34');
+    await expect(
+      characteristics.locator('input[type="number"]').nth(0),
+    ).toHaveValue('34');
     await screenshotPage(page, 'sheet-dh-mobile-edit-characteristics-en.png');
 
     await openMobileSection(page, 'Skills');
@@ -309,13 +367,19 @@ test.describe('редактирование Dark Heresy', () => {
     await openMobileSection(page, 'Equipment', 'equipment-section');
     await discardUnsavedChanges(page);
     const equipment = page.locator('#equipment-section:visible').first();
-    await equipment.locator('[data-testid="edit-button"]:visible').first().click();
+    await equipment
+      .locator('[data-testid="edit-button"]:visible')
+      .first()
+      .click();
     await screenshotPage(page, 'sheet-dh-mobile-edit-equipment-en.png');
 
     await openMobileSection(page, 'Inventory', 'inventory-section');
     await discardUnsavedChanges(page);
     const inventory = page.locator('#inventory-section:visible').first();
-    await inventory.locator('[data-testid="edit-button"]:visible').first().click();
+    await inventory
+      .locator('[data-testid="edit-button"]:visible')
+      .first()
+      .click();
     await screenshotPage(page, 'sheet-dh-mobile-edit-inventory-en.png');
   });
 });

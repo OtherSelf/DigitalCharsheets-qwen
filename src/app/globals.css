@@ -11,7 +11,8 @@ body {
    LANDMARK: MOBILE_LAYOUT_FIX
    Use dynamic viewport height and prevent text size adjustment
 ========================================================================== */
-html, body {
+html,
+body {
   height: 100vh;
   height: 100dvh; /* Fallback for browsers that support it */
   overflow: hidden;
@@ -147,7 +148,7 @@ body > div:first-child {
   .safe-area-bottom {
     padding-bottom: env(safe-area-inset-bottom, 1rem);
   }
-  
+
   .safe-area-top {
     padding-top: env(safe-area-top, 0px);
   }
@@ -163,30 +164,30 @@ body > div:first-child {
     flex-direction: column !important;
     align-items: stretch !important;
   }
-  
+
   .compact-mobile-card > div:first-child {
     margin-bottom: 0.75rem !important;
   }
-  
+
   .compact-mobile-card .actions-wrapper {
     flex-direction: row !important;
     justify-content: space-between !important;
     gap: 0.5rem !important;
   }
-  
+
   /* Make view button smaller on mobile */
   .compact-mobile-card .view-btn-mobile {
     min-width: auto !important;
     padding: 0 0.75rem !important;
     font-size: 0.875rem !important;
   }
-  
+
   /* Reduce icon button size on mobile */
   .compact-mobile-card .icon-btn-mobile {
     height: 2.25rem !important;
     width: 2.25rem !important;
   }
-  
+
   /* Make badge text wrap better */
   .compact-mobile-card .system-badge {
     max-width: 100%;
@@ -258,7 +259,7 @@ body > div:first-child {
   .dh-sheet .sheet-panels > .w-12 {
     min-height: 3rem !important;
   }
-  .dh-sheet .sheet-panels > .w-12 [class*="writing-mode"] {
+  .dh-sheet .sheet-panels > .w-12 [class*='writing-mode'] {
     writing-mode: horizontal-tb !important;
     transform: none !important;
   }
@@ -270,7 +271,7 @@ body > div:first-child {
     grid-column: 1 / -1 !important;
   }
 
-  .dnd-stretch-card [data-state="open"] {
+  .dnd-stretch-card [data-state='open'] {
     height: 100% !important;
     max-height: none !important;
   }
@@ -280,13 +281,13 @@ body > div:first-child {
    LANDMARK: RADIX_SCROLL_FIX
    FIX: Radix UI Collapsible / Accordion Scroll Layout Shift Bug
 ========================================================================== */
-[data-state="open"][style*="animation-name: none"] {
+[data-state='open'][style*='animation-name: none'] {
   height: auto !important;
   min-height: 0 !important;
   max-height: none !important;
 }
 
-[data-state="open"][style*="animation-name: none"] > div {
+[data-state='open'][style*='animation-name: none'] > div {
   height: auto !important;
 }
 
@@ -305,16 +306,46 @@ body {
 }
 
 /* Explicit Tailwind text utilities: absolute rem base * scale, so nesting is safe. */
-.text-xs   { font-size: calc(0.75rem  * var(--text-scale)) !important; line-height: calc(1rem    * var(--text-scale)) !important; }
-.text-sm   { font-size: calc(0.875rem * var(--text-scale)) !important; line-height: calc(1.25rem * var(--text-scale)) !important; }
-.text-base { font-size: calc(1rem     * var(--text-scale)) !important; line-height: calc(1.5rem  * var(--text-scale)) !important; }
-.text-lg   { font-size: calc(1.125rem * var(--text-scale)) !important; line-height: calc(1.75rem * var(--text-scale)) !important; }
-.text-xl   { font-size: calc(1.25rem  * var(--text-scale)) !important; line-height: calc(1.75rem * var(--text-scale)) !important; }
-.text-2xl  { font-size: calc(1.5rem   * var(--text-scale)) !important; line-height: calc(2rem    * var(--text-scale)) !important; }
-.text-3xl  { font-size: calc(1.875rem * var(--text-scale)) !important; line-height: calc(2.25rem * var(--text-scale)) !important; }
-.text-4xl  { font-size: calc(2.25rem  * var(--text-scale)) !important; line-height: calc(2.5rem  * var(--text-scale)) !important; }
-.text-5xl  { font-size: calc(3rem     * var(--text-scale)) !important; line-height: 1 !important; }
-.text-6xl  { font-size: calc(3.75rem  * var(--text-scale)) !important; line-height: 1 !important; }
+.text-xs {
+  font-size: calc(0.75rem * var(--text-scale)) !important;
+  line-height: calc(1rem * var(--text-scale)) !important;
+}
+.text-sm {
+  font-size: calc(0.875rem * var(--text-scale)) !important;
+  line-height: calc(1.25rem * var(--text-scale)) !important;
+}
+.text-base {
+  font-size: calc(1rem * var(--text-scale)) !important;
+  line-height: calc(1.5rem * var(--text-scale)) !important;
+}
+.text-lg {
+  font-size: calc(1.125rem * var(--text-scale)) !important;
+  line-height: calc(1.75rem * var(--text-scale)) !important;
+}
+.text-xl {
+  font-size: calc(1.25rem * var(--text-scale)) !important;
+  line-height: calc(1.75rem * var(--text-scale)) !important;
+}
+.text-2xl {
+  font-size: calc(1.5rem * var(--text-scale)) !important;
+  line-height: calc(2rem * var(--text-scale)) !important;
+}
+.text-3xl {
+  font-size: calc(1.875rem * var(--text-scale)) !important;
+  line-height: calc(2.25rem * var(--text-scale)) !important;
+}
+.text-4xl {
+  font-size: calc(2.25rem * var(--text-scale)) !important;
+  line-height: calc(2.5rem * var(--text-scale)) !important;
+}
+.text-5xl {
+  font-size: calc(3rem * var(--text-scale)) !important;
+  line-height: 1 !important;
+}
+.text-6xl {
+  font-size: calc(3.75rem * var(--text-scale)) !important;
+  line-height: 1 !important;
+}
 
 /* 🎯 LANDMARK: SCALED_PAGE_STRETCH
    Pages use min-h-screen / h-dvh (100vh). Inside the inversely-sized scale

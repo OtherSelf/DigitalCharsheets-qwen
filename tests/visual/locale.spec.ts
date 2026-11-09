@@ -1,4 +1,5 @@
 import { expect, test, type Locator } from '@playwright/test';
+
 import {
   discardUnsavedChanges,
   getState,
@@ -40,7 +41,9 @@ async function expectInputValue(scope: Locator, value: string): Promise<void> {
         .locator('input')
         .evaluateAll(
           (inputs, expected) =>
-            inputs.some((input) => (input as HTMLInputElement).value === expected),
+            inputs.some(
+              (input) => (input as HTMLInputElement).value === expected,
+            ),
           value,
         ),
     )
@@ -53,8 +56,12 @@ test.describe('D&D — русская локаль', () => {
     await prepare(context, { language: 'ru' });
     await openApp(page, `/${getState().dndId}`);
 
-    await expect(page.getByText('Характеристики', { exact: true }).first()).toBeVisible();
-    await expect(page.getByText('Навыки', { exact: true }).first()).toBeVisible();
+    await expect(
+      page.getByText('Характеристики', { exact: true }).first(),
+    ).toBeVisible();
+    await expect(
+      page.getByText('Навыки', { exact: true }).first(),
+    ).toBeVisible();
     await screenshotPage(page, 'sheet-dnd-top-ru.png');
 
     for (const [name, selector] of [
@@ -71,11 +78,17 @@ test.describe('D&D — русская локаль', () => {
       ['sheet-dnd-narrative-ru.png', '#narrative-section'],
       ['sheet-dnd-divine-boons-ru.png', '#divine-boons-section'],
     ] as const) {
-      await screenshotElement(page.locator(selector + ':visible').first(), name);
+      await screenshotElement(
+        page.locator(selector + ':visible').first(),
+        name,
+      );
     }
   });
 
-  test('desktop: редактирование уникальных секций', async ({ page, context }) => {
+  test('desktop: редактирование уникальных секций', async ({
+    page,
+    context,
+  }) => {
     test.skip(isMobile(), 'desktop-only сценарий');
     await page.setViewportSize({ width: 1920, height: 1600 });
     await prepare(context, { language: 'ru' });
@@ -83,7 +96,9 @@ test.describe('D&D — русская локаль', () => {
 
     const stats = page.locator('#stats-card:visible').first();
     await startEditing(stats);
-    await expect(stats.locator('input[type="number"]').nth(3)).toHaveValue('18');
+    await expect(stats.locator('input[type="number"]').nth(3)).toHaveValue(
+      '18',
+    );
     await screenshotElement(stats, 'sheet-dnd-edit-stats-ru.png');
 
     const skills = page.locator('#skills-card:visible').first();
@@ -91,8 +106,14 @@ test.describe('D&D — русская локаль', () => {
     await screenshotElement(skills, 'sheet-dnd-edit-skills-ru.png');
 
     const inventory = page.locator('#inventory-box:visible').first();
-    await inventory.locator('[data-testid="edit-button"]:visible').first().click();
-    await inventory.locator('[data-testid="edit-button"]:visible').first().click();
+    await inventory
+      .locator('[data-testid="edit-button"]:visible')
+      .first()
+      .click();
+    await inventory
+      .locator('[data-testid="edit-button"]:visible')
+      .first()
+      .click();
     await expectInputValue(inventory, 'Spellbook');
     await screenshotElement(inventory, 'sheet-dnd-edit-inventory-ru.png');
 
@@ -124,7 +145,9 @@ test.describe('D&D — русская локаль', () => {
     await startEditing(saves);
     await screenshotElement(saves, 'sheet-dnd-edit-saves-ru.png');
 
-    const attacks = page.locator('#attacks-and-spellcasting-box:visible').first();
+    const attacks = page
+      .locator('#attacks-and-spellcasting-box:visible')
+      .first();
     await startEditing(attacks);
     await screenshotElement(attacks, 'sheet-dnd-edit-attacks-ru.png');
 
@@ -139,7 +162,9 @@ test.describe('D&D — русская локаль', () => {
     await openApp(page, `/${getState().dndId}`);
 
     await expect(
-      page.getByRole('navigation').getByRole('button', { name: 'Информация', exact: true }),
+      page
+        .getByRole('navigation')
+        .getByRole('button', { name: 'Информация', exact: true }),
     ).toBeVisible();
     await screenshotPage(page, 'sheet-dnd-mobile-info-ru.png');
 
@@ -177,8 +202,14 @@ test.describe('D&D — русская локаль', () => {
     await openMobileSection(page, 'Инвентарь и настройка');
     await discardUnsavedChanges(page);
     const inventory = page.locator('#inventory-box:visible').first();
-    await inventory.locator('[data-testid="edit-button"]:visible').first().click();
-    await inventory.locator('[data-testid="edit-button"]:visible').first().click();
+    await inventory
+      .locator('[data-testid="edit-button"]:visible')
+      .first()
+      .click();
+    await inventory
+      .locator('[data-testid="edit-button"]:visible')
+      .first()
+      .click();
     await screenshotPage(page, 'sheet-dnd-mobile-edit-inventory-ru.png');
 
     await openMobileSection(page, 'Боевые параметры');
@@ -207,8 +238,12 @@ test.describe('Dark Heresy — русская локаль', () => {
     await prepare(context, { language: 'ru' });
     await openApp(page, `/${getState().dhId}`);
 
-    await expect(page.getByText('Снаряжение', { exact: true }).first()).toBeVisible();
-    await expect(page.getByText('Характеристики', { exact: true }).first()).toBeVisible();
+    await expect(
+      page.getByText('Снаряжение', { exact: true }).first(),
+    ).toBeVisible();
+    await expect(
+      page.getByText('Характеристики', { exact: true }).first(),
+    ).toBeVisible();
     await screenshotPage(page, 'sheet-dh-top-ru.png');
 
     for (const [name, selector] of [
@@ -220,11 +255,17 @@ test.describe('Dark Heresy — русская локаль', () => {
       ['sheet-dh-equipment-ru.png', '#equipment-section'],
       ['sheet-dh-inventory-ru.png', '#inventory-section'],
     ] as const) {
-      await screenshotElement(page.locator(selector + ':visible').first(), name);
+      await screenshotElement(
+        page.locator(selector + ':visible').first(),
+        name,
+      );
     }
   });
 
-  test('desktop: редактирование уникальных секций', async ({ page, context }) => {
+  test('desktop: редактирование уникальных секций', async ({
+    page,
+    context,
+  }) => {
     test.skip(isMobile(), 'desktop-only сценарий');
     await page.setViewportSize({ width: 1920, height: 1600 });
     await prepare(context, { language: 'ru' });
@@ -238,12 +279,17 @@ test.describe('Dark Heresy — русская локаль', () => {
     await startEditing(progression);
     await screenshotElement(progression, 'sheet-dh-edit-progression-ru.png');
 
-    const characteristics = page.locator('#characteristics-card:visible').first();
+    const characteristics = page
+      .locator('#characteristics-card:visible')
+      .first();
     await startEditing(characteristics);
     await expect(
       characteristics.locator('input[type="number"]').nth(5),
     ).toHaveValue('46');
-    await screenshotElement(characteristics, 'sheet-dh-edit-characteristics-ru.png');
+    await screenshotElement(
+      characteristics,
+      'sheet-dh-edit-characteristics-ru.png',
+    );
 
     const skills = page.locator('#skills-talents-panel:visible').first();
     await startEditing(skills);
@@ -251,13 +297,24 @@ test.describe('Dark Heresy — русская локаль', () => {
     await screenshotElement(skills, 'sheet-dh-edit-skills-ru.png');
 
     const equipment = page.locator('#equipment-section:visible').first();
-    await equipment.locator('[data-testid="edit-button"]:visible').first().click();
-    await expect(equipment.locator('input[type="number"]').first()).toHaveValue('4');
+    await equipment
+      .locator('[data-testid="edit-button"]:visible')
+      .first()
+      .click();
+    await expect(equipment.locator('input[type="number"]').first()).toHaveValue(
+      '4',
+    );
     await screenshotElement(equipment, 'sheet-dh-edit-equipment-ru.png');
 
     const inventory = page.locator('#inventory-section:visible').first();
-    await inventory.locator('[data-testid="edit-button"]:visible').first().click(); // богатство
-    await inventory.locator('[data-testid="edit-button"]:visible').first().click(); // предметы
+    await inventory
+      .locator('[data-testid="edit-button"]:visible')
+      .first()
+      .click(); // богатство
+    await inventory
+      .locator('[data-testid="edit-button"]:visible')
+      .first()
+      .click(); // предметы
     await expectInputValue(inventory, 'Data-slate');
     await screenshotElement(inventory, 'sheet-dh-edit-inventory-ru.png');
   });
@@ -267,7 +324,9 @@ test.describe('Dark Heresy — русская локаль', () => {
     await prepare(context, { language: 'ru' });
     await openApp(page, `/${getState().dhId}`);
 
-    await expect(page.getByText('Характеристики', { exact: true }).first()).toBeVisible();
+    await expect(
+      page.getByText('Характеристики', { exact: true }).first(),
+    ).toBeVisible();
     await screenshotPage(page, 'sheet-dh-mobile-info-ru.png');
 
     await openMobileSection(page, 'Прогресс');
@@ -298,7 +357,9 @@ test.describe('Dark Heresy — русская локаль', () => {
 
     const characteristics = page.getByTestId('characteristics-compact');
     await startEditing(characteristics);
-    await expect(characteristics.locator('input[type="number"]').nth(0)).toHaveValue('34');
+    await expect(
+      characteristics.locator('input[type="number"]').nth(0),
+    ).toHaveValue('34');
     await screenshotPage(page, 'sheet-dh-mobile-edit-characteristics-ru.png');
 
     await openMobileSection(page, 'Навыки');
@@ -309,13 +370,19 @@ test.describe('Dark Heresy — русская локаль', () => {
     await openMobileSection(page, 'Снаряжение', 'equipment-section');
     await discardUnsavedChanges(page);
     const equipment = page.locator('#equipment-section:visible').first();
-    await equipment.locator('[data-testid="edit-button"]:visible').first().click();
+    await equipment
+      .locator('[data-testid="edit-button"]:visible')
+      .first()
+      .click();
     await screenshotPage(page, 'sheet-dh-mobile-edit-equipment-ru.png');
 
     await openMobileSection(page, 'Инвентарь', 'inventory-section');
     await discardUnsavedChanges(page);
     const inventory = page.locator('#inventory-section:visible').first();
-    await inventory.locator('[data-testid="edit-button"]:visible').first().click();
+    await inventory
+      .locator('[data-testid="edit-button"]:visible')
+      .first()
+      .click();
     await screenshotPage(page, 'sheet-dh-mobile-edit-inventory-ru.png');
   });
 });

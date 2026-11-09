@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+
 import {
   getState,
   openApp,
@@ -23,7 +24,10 @@ const isMobile = () => test.info().project.name === 'mobile';
  */
 
 test.describe('лист D&D — чтение', () => {
-  test('desktop: верх, характеристики и бой (en)', async ({ page, context }) => {
+  test('desktop: верх, характеристики и бой (en)', async ({
+    page,
+    context,
+  }) => {
     test.skip(isMobile(), 'desktop-only сценарий');
     await prepare(context);
     await openApp(page, `/${getState().dndId}`);
@@ -33,11 +37,26 @@ test.describe('лист D&D — чтение', () => {
     ).toBeVisible();
     await screenshotPage(page, 'sheet-dnd-top-en.png');
 
-    await screenshotElement(page.locator('#character-info-card:visible').first(), 'sheet-dnd-info-en.png');
-    await screenshotElement(page.locator('#stats-card:visible').first(), 'sheet-dnd-stats-en.png');
-    await screenshotElement(page.locator('#saving-throws-card:visible').first(), 'sheet-dnd-saves-en.png');
-    await screenshotElement(page.locator('#skills-card:visible').first(), 'sheet-dnd-skills-en.png');
-    await screenshotElement(page.locator('#hit-points-card:visible').first(), 'sheet-dnd-combat-en.png');
+    await screenshotElement(
+      page.locator('#character-info-card:visible').first(),
+      'sheet-dnd-info-en.png',
+    );
+    await screenshotElement(
+      page.locator('#stats-card:visible').first(),
+      'sheet-dnd-stats-en.png',
+    );
+    await screenshotElement(
+      page.locator('#saving-throws-card:visible').first(),
+      'sheet-dnd-saves-en.png',
+    );
+    await screenshotElement(
+      page.locator('#skills-card:visible').first(),
+      'sheet-dnd-skills-en.png',
+    );
+    await screenshotElement(
+      page.locator('#hit-points-card:visible').first(),
+      'sheet-dnd-combat-en.png',
+    );
     await screenshotElement(
       page.locator('#attacks-and-spellcasting-box:visible').first(),
       'sheet-dnd-attacks-en.png',
@@ -56,9 +75,18 @@ test.describe('лист D&D — чтение', () => {
     await prepare(context);
     await openApp(page, `/${getState().dndId}`);
 
-    await screenshotElement(page.locator('#inventory-box:visible').first(), 'sheet-dnd-inventory-en.png');
-    await screenshotElement(page.locator('#attunement-card:visible').first(), 'sheet-dnd-attunement-en.png');
-    await screenshotElement(page.locator('#spells-section:visible').first(), 'sheet-dnd-spells-en.png');
+    await screenshotElement(
+      page.locator('#inventory-box:visible').first(),
+      'sheet-dnd-inventory-en.png',
+    );
+    await screenshotElement(
+      page.locator('#attunement-card:visible').first(),
+      'sheet-dnd-attunement-en.png',
+    );
+    await screenshotElement(
+      page.locator('#spells-section:visible').first(),
+      'sheet-dnd-spells-en.png',
+    );
     await screenshotElement(
       page.locator('#companions-section:visible').first(),
       'sheet-dnd-companions-en.png',
@@ -72,7 +100,10 @@ test.describe('лист D&D — чтение', () => {
     await expect(page.getByText('Arcane Recovery').first()).toBeVisible();
   });
 
-  test('mobile: секции компактного сайдбара (en)', async ({ page, context }) => {
+  test('mobile: секции компактного сайдбара (en)', async ({
+    page,
+    context,
+  }) => {
     test.skip(!isMobile(), 'mobile-only сценарий');
     await prepare(context);
     await openApp(page, `/${getState().dndId}`);
@@ -80,11 +111,15 @@ test.describe('лист D&D — чтение', () => {
     await screenshotPage(page, 'sheet-dnd-mobile-info-en.png');
 
     await openMobileSection(page, 'Ability Scores');
-    await expect(page.locator('#saving-throws-card:visible').first()).toBeVisible();
+    await expect(
+      page.locator('#saving-throws-card:visible').first(),
+    ).toBeVisible();
     await screenshotPage(page, 'sheet-dnd-mobile-stats-en.png');
 
     await openMobileSection(page, 'Combat Stats');
-    await expect(page.locator('#hit-points-card:visible').first()).toBeVisible();
+    await expect(
+      page.locator('#hit-points-card:visible').first(),
+    ).toBeVisible();
     await screenshotPage(page, 'sheet-dnd-mobile-combat-en.png');
 
     await openMobileSection(page, 'Inventory & Attunement');
@@ -112,10 +147,15 @@ test.describe('лист Dark Heresy — чтение', () => {
     await prepare(context);
     await openApp(page, `/${getState().dhId}`);
 
-    await expect(page.getByRole('heading', { name: 'Lucius Varn' })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: 'Lucius Varn' }),
+    ).toBeVisible();
     await screenshotPage(page, 'sheet-dh-top-en.png');
 
-    await screenshotElement(page.locator('#info-section:visible').first(), 'sheet-dh-info-en.png');
+    await screenshotElement(
+      page.locator('#info-section:visible').first(),
+      'sheet-dh-info-en.png',
+    );
     await screenshotElement(
       page.locator('#progression-section:visible').first(),
       'sheet-dh-progression-en.png',
@@ -152,7 +192,10 @@ test.describe('лист Dark Heresy — чтение', () => {
     );
   });
 
-  test('mobile: секции компактного сайдбара (en)', async ({ page, context }) => {
+  test('mobile: секции компактного сайдбара (en)', async ({
+    page,
+    context,
+  }) => {
     test.skip(!isMobile(), 'mobile-only сценарий');
     await prepare(context);
     await openApp(page, `/${getState().dhId}`);
@@ -170,11 +213,15 @@ test.describe('лист Dark Heresy — чтение', () => {
     await screenshotPage(page, 'sheet-dh-mobile-talents-en.png');
 
     await openMobileSection(page, 'Equipment', 'equipment-section');
-    await expect(page.locator('#equipment-section:visible').first()).toBeVisible();
+    await expect(
+      page.locator('#equipment-section:visible').first(),
+    ).toBeVisible();
     await screenshotPage(page, 'sheet-dh-mobile-equipment-en.png');
 
     await openMobileSection(page, 'Inventory', 'inventory-section');
-    await expect(page.locator('#inventory-section:visible').first()).toBeVisible();
+    await expect(
+      page.locator('#inventory-section:visible').first(),
+    ).toBeVisible();
     await screenshotPage(page, 'sheet-dh-mobile-inventory-en.png');
   });
 });

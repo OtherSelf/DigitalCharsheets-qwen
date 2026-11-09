@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+
 import { prepare, signInViaUI } from './helpers';
 
 /**
@@ -32,12 +33,21 @@ async function registerAccount(
   const username = `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
   const auth = await page.request.post('/api/auth/register', {
-    data: { username, password: PASSWORD, displayName, recoveryPhrase: RECOVERY_PHRASE },
+    data: {
+      username,
+      password: PASSWORD,
+      displayName,
+      recoveryPhrase: RECOVERY_PHRASE,
+    },
   });
-  expect(auth.status(), 'регистрация аккаунта через /api/auth/register').toBe(200);
+  expect(auth.status(), 'регистрация аккаунта через /api/auth/register').toBe(
+    200,
+  );
   const body = await auth.json();
   expect(body.success).toBe(true);
-  expect(body.user.hasRecoveryPhrase, 'фраза задана при регистрации').toBe(true);
+  expect(body.user.hasRecoveryPhrase, 'фраза задана при регистрации').toBe(
+    true,
+  );
 
   return { username, password: PASSWORD, uid: body.user.uid as string };
 }
@@ -69,12 +79,16 @@ async function openCreationForm(
     })
     .click();
 
-  await expect(page.getByRole('button', { name: 'Create Character' })).toBeVisible();
+  await expect(
+    page.getByRole('button', { name: 'Create Character' }),
+  ).toBeVisible();
 }
 
 /** Дожидается редиректа на лист /<id> и возвращает id. */
 async function waitForSheetRedirect(page: Page): Promise<string> {
-  await page.waitForURL((url) => !url.pathname.startsWith('/new'), { timeout: 30_000 });
+  await page.waitForURL((url) => !url.pathname.startsWith('/new'), {
+    timeout: 30_000,
+  });
   const id = new URL(page.url()).pathname.replace(/^\//, '');
   expect(id, 'после создания открывается лист /<id>').not.toBe('');
   return id;
@@ -89,14 +103,18 @@ test.describe('авторизация через UI', () => {
     const account = await registerAccount(page, 'auth-e2e', 'Auth E2E');
 
     await page.goto('/login', { waitUntil: 'domcontentloaded' });
-    await page.getByLabel('Username or Email', { exact: true }).fill(account.username);
+    await page
+      .getByLabel('Username or Email', { exact: true })
+      .fill(account.username);
     await page.getByLabel('Password', { exact: true }).fill('definitely-wrong');
     await page.getByRole('button', { name: 'Sign In', exact: true }).click();
 
     await expect(page.getByText('Incorrect password.')).toBeVisible();
     expect(new URL(page.url()).pathname, 'остаёмся на /login').toBe('/login');
     expect(
-      await page.evaluate(() => localStorage.getItem('digital_charsheets_user')),
+      await page.evaluate(() =>
+        localStorage.getItem('digital_charsheets_user'),
+      ),
       'сессия не создаётся при неверном пароле',
     ).toBeNull();
 
@@ -184,7 +202,9 @@ test.describe('создание персонажа — D&D 5e', () => {
     await expect(
       page.getByText('Name must be at least 2 characters.'),
     ).toBeVisible();
-    expect(new URL(page.url()).pathname, 'остаёмся в форме').toBe('/new/manual');
+    expect(new URL(page.url()).pathname, 'остаёмся в форме').toBe(
+      '/new/manual',
+    );
     expect(await fetchCharacters(page), 'лист не создан').toEqual([]);
   });
 });

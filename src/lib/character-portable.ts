@@ -34,7 +34,9 @@ const NON_PORTABLE = new Set<string>(NON_PORTABLE_CHARACTER_FIELDS);
  * Копия листа без служебных полей (верхний уровень). Вложенные объекты не
  * трогаем: перечисленные ключи встречаются только в корне листа.
  */
-export function toPortableCharacter<T extends Record<string, unknown>>(character: T): T {
+export function toPortableCharacter<T extends Record<string, unknown>>(
+  character: T,
+): T {
   const result: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(character)) {
     if (NON_PORTABLE.has(key)) continue;

@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
@@ -7,7 +8,14 @@ import {
   saveCharacterToServer,
   updateCharacterOnServer,
 } from '@/lib/server-storage';
-import { makeDndCharacter, readJson, removeDir, useTempDataDir, userPaths } from './helpers';
+
+import {
+  makeDndCharacter,
+  readJson,
+  removeDir,
+  userPaths,
+  useTempDataDir,
+} from './helpers';
 
 /**
  * Фолбэк на EXDEV в writeJsonAtomic (src/lib/server-storage.ts).
@@ -21,7 +29,9 @@ const uid = 'user-exdev';
 let dataDir: string;
 
 const exdev = () =>
-  Object.assign(new Error('EXDEV: cross-device link not permitted'), { code: 'EXDEV' });
+  Object.assign(new Error('EXDEV: cross-device link not permitted'), {
+    code: 'EXDEV',
+  });
 
 beforeEach(() => {
   dataDir = useTempDataDir();
@@ -36,7 +46,10 @@ afterEach(() => {
 
 describe('writeJsonAtomic: фолбэк при EXDEV', () => {
   it('правка не теряется: данные записаны валидным JSON, .tmp удалён', () => {
-    saveCharacterToServer(uid, makeDndCharacter({ id: 'exdev-ok', userId: uid, name: 'Before' }));
+    saveCharacterToServer(
+      uid,
+      makeDndCharacter({ id: 'exdev-ok', userId: uid, name: 'Before' }),
+    );
     const charsDir = userPaths(dataDir, uid).charactersDir;
 
     const renameSpy = vi.spyOn(fs, 'renameSync').mockImplementation(() => {
@@ -59,7 +72,10 @@ describe('writeJsonAtomic: фолбэк при EXDEV', () => {
   });
 
   it('EXDEV + отказ прямой записи: ошибка наружу, оригинал цел, .tmp убран', () => {
-    saveCharacterToServer(uid, makeDndCharacter({ id: 'exdev-fail', userId: uid, name: 'Before' }));
+    saveCharacterToServer(
+      uid,
+      makeDndCharacter({ id: 'exdev-fail', userId: uid, name: 'Before' }),
+    );
     const charsDir = userPaths(dataDir, uid).charactersDir;
     const filePath = path.join(charsDir, 'exdev-fail.json');
 
@@ -69,17 +85,25 @@ describe('writeJsonAtomic: фолбэк при EXDEV', () => {
     // Временный файл пишется через дескриптор, а прямая запись — по пути:
     // роняем только её, иначе до EXDEV-ветки дело не дойдёт.
     const originalWrite = fs.writeFileSync.bind(fs);
-    const writeSpy = vi
-      .spyOn(fs, 'writeFileSync')
-      .mockImplementation(((target: unknown, ...rest: unknown[]) => {
-        if (typeof target === 'string' && !target.endsWith('.tmp')) {
-          throw Object.assign(new Error('ENOSPC: no space left on device'), { code: 'ENOSPC' });
-        }
-        return (originalWrite as (...args: unknown[]) => unknown)(target, ...rest);
-      }) as typeof fs.writeFileSync);
+    const writeSpy = vi.spyOn(fs, 'writeFileSync').mockImplementation(((
+      target: unknown,
+      ...rest: unknown[]
+    ) => {
+      if (typeof target === 'string' && !target.endsWith('.tmp')) {
+        throw Object.assign(new Error('ENOSPC: no space left on device'), {
+          code: 'ENOSPC',
+        });
+      }
+      return (originalWrite as (...args: unknown[]) => unknown)(
+        target,
+        ...rest,
+      );
+    }) as typeof fs.writeFileSync);
 
     try {
-      expect(() => updateCharacterOnServer(uid, 'exdev-fail', { name: 'After' })).toThrow(/ENOSPC/);
+      expect(() =>
+        updateCharacterOnServer(uid, 'exdev-fail', { name: 'After' }),
+      ).toThrow(/ENOSPC/);
     } finally {
       writeSpy.mockRestore();
       renameSpy.mockRestore();

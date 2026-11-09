@@ -1,17 +1,22 @@
 // src/app/layout.tsx
 import type { Metadata, Viewport } from 'next';
 import { Inter, Space_Grotesk } from 'next/font/google';
+
 import './globals.css';
-import { Toaster } from '@/components/ui/toaster';
+
 import { RecoveryModalWrapper } from '@/components/recovery-modal-wrapper';
-import { CharacterProvider } from '@/context/character-context';
-import { LocalAuthProvider } from '@/context/local-auth-context';
 import { ThemeProvider } from '@/components/theme-provider';
-import { LanguageProvider } from '@/context/language-context';
 import { UIScaleWrapper } from '@/components/ui-scale-wrapper';
+import { Toaster } from '@/components/ui/toaster';
+import { CharacterProvider } from '@/context/character-context';
+import { LanguageProvider } from '@/context/language-context';
+import { LocalAuthProvider } from '@/context/local-auth-context';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
-const spaceGrotesk = Space_Grotesk({ subsets: ['latin'], variable: '--font-space-grotesk' });
+const spaceGrotesk = Space_Grotesk({
+  subsets: ['latin'],
+  variable: '--font-space-grotesk',
+});
 
 export const metadata: Metadata = {
   title: 'Digital Character Sheets',
@@ -25,15 +30,30 @@ export const viewport: Viewport = {
   userScalable: true,
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default function RootLayout({
+  children,
+}: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" suppressHydrationWarning className={`${inter.variable} ${spaceGrotesk.variable} h-full`}>
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className={`${inter.variable} ${spaceGrotesk.variable} h-full`}
+    >
       <head>
         <title>Digital Character Sheets</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes" />
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes"
+        />
       </head>
-      <body className="h-full font-body antialiased overflow-x-hidden">
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} themes={['light', 'dark', 'warm']} disableTransitionOnChange>
+      <body className="h-full overflow-x-hidden font-body antialiased">
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="light"
+          enableSystem={false}
+          themes={['light', 'dark', 'warm']}
+          disableTransitionOnChange
+        >
           <LocalAuthProvider>
             <LanguageProvider>
               <CharacterProvider>

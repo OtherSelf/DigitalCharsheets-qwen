@@ -9,6 +9,7 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+
 import { createSession } from '@/lib/session';
 
 /**
@@ -122,7 +123,14 @@ export function makeDhCharacter(overrides: Record<string, any> = {}): any {
     experience: 0,
     totalExpSpent: 0,
     equipment: {
-      armor: { Head: null, 'Right arm': null, Body: null, 'Left arm': null, 'Right leg': null, 'Left leg': null },
+      armor: {
+        Head: null,
+        'Right arm': null,
+        Body: null,
+        'Left arm': null,
+        'Right leg': null,
+        'Left leg': null,
+      },
       weapons: { melee: [], ranged: [] },
     },
     inventory: [],

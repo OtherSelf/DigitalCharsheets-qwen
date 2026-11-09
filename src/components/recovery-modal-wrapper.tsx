@@ -1,6 +1,7 @@
 'use client';
 
 import { Suspense } from 'react';
+
 import { RecoveryModal } from './recovery-modal';
 
 export function RecoveryModalWrapper() {

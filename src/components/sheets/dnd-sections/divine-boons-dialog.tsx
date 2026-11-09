@@ -1,15 +1,16 @@
 'use client';
 
 import * as React from 'react';
+
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
   DialogDescription,
   DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -19,10 +20,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { EPIC_BOON_KEYS, type EpicBoonKey } from '@/lib/epic-boons';
+import { Textarea } from '@/components/ui/textarea';
 import { useTranslation } from '@/context/language-context';
+import { EPIC_BOON_KEYS, type EpicBoonKey } from '@/lib/epic-boons';
 
 interface DivineBoonsDialogProps {
   open: boolean;
@@ -30,12 +31,18 @@ interface DivineBoonsDialogProps {
   onAddBoon: (boon: { name: string; description: string }) => void;
 }
 
-export function DivineBoonsDialog({ open, onOpenChange, onAddBoon }: DivineBoonsDialogProps) {
+export function DivineBoonsDialog({
+  open,
+  onOpenChange,
+  onAddBoon,
+}: DivineBoonsDialogProps) {
   const { t } = useTranslation();
   const [selectedBoon, setSelectedBoon] = React.useState<EpicBoonKey | ''>('');
   const [customBoonName, setCustomBoonName] = React.useState('');
   const [customBoonDesc, setCustomBoonDesc] = React.useState('');
-  const [activeTab, setActiveTab] = React.useState<'official' | 'custom'>('official');
+  const [activeTab, setActiveTab] = React.useState<'official' | 'custom'>(
+    'official',
+  );
 
   const handleAddOfficial = () => {
     if (selectedBoon) {
@@ -69,22 +76,29 @@ export function DivineBoonsDialog({ open, onOpenChange, onAddBoon }: DivineBoons
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-h-[80vh] overflow-y-auto sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>{t('addDivineBoon')}</DialogTitle>
           <DialogDescription>{t('chooseEpicBoonDesc')}</DialogDescription>
         </DialogHeader>
 
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'official' | 'custom')} className="mt-4">
+        <Tabs
+          value={activeTab}
+          onValueChange={(v) => setActiveTab(v as 'official' | 'custom')}
+          className="mt-4"
+        >
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="official">{t('officialBoons')}</TabsTrigger>
             <TabsTrigger value="custom">{t('customBoon')}</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="official" className="space-y-4 mt-4">
+          <TabsContent value="official" className="mt-4 space-y-4">
             <div className="space-y-2">
               <Label>{t('selectEpicBoon')}</Label>
-              <Select value={selectedBoon} onValueChange={(v) => setSelectedBoon(v as EpicBoonKey)}>
+              <Select
+                value={selectedBoon}
+                onValueChange={(v) => setSelectedBoon(v as EpicBoonKey)}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder={t('chooseABoon')} />
                 </SelectTrigger>
@@ -99,14 +113,16 @@ export function DivineBoonsDialog({ open, onOpenChange, onAddBoon }: DivineBoons
             </div>
 
             {selectedBoon && (
-              <div className="p-4 rounded-lg bg-muted border">
-                <h4 className="font-semibold mb-2">{t(selectedBoon)}</h4>
-                <p className="text-sm text-muted-foreground">{t(selectedBoon + 'Desc')}</p>
+              <div className="rounded-lg border bg-muted p-4">
+                <h4 className="mb-2 font-semibold">{t(selectedBoon)}</h4>
+                <p className="text-sm text-muted-foreground">
+                  {t(selectedBoon + 'Desc')}
+                </p>
               </div>
             )}
           </TabsContent>
 
-          <TabsContent value="custom" className="space-y-4 mt-4">
+          <TabsContent value="custom" className="mt-4 space-y-4">
             <div className="space-y-2">
               <Label>{t('boonName')}</Label>
               <Input
@@ -132,8 +148,12 @@ export function DivineBoonsDialog({ open, onOpenChange, onAddBoon }: DivineBoons
             {t('cancel')}
           </Button>
           <Button
-            onClick={activeTab === 'official' ? handleAddOfficial : handleAddCustom}
-            disabled={activeTab === 'official' ? !selectedBoon : !customBoonName.trim()}
+            onClick={
+              activeTab === 'official' ? handleAddOfficial : handleAddCustom
+            }
+            disabled={
+              activeTab === 'official' ? !selectedBoon : !customBoonName.trim()
+            }
           >
             {t('addBoon')}
           </Button>

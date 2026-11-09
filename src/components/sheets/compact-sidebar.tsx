@@ -1,45 +1,59 @@
 // src/components/sheets/compact-sidebar.tsx
 'use client';
+
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
+import { useParams } from 'next/navigation';
+
 import {
-  Info,
-  TrendingUp,
-  BookOpen,
-  Star,
-  Shield,
-  Backpack,
-  Scroll,
-  BookText,
   Activity,
-  Swords,
-  Sparkles,
-  PawPrint,
+  Backpack,
+  BookOpen,
+  BookText,
   Eye,
   EyeOff,
+  Info,
+  Layers,
+  PawPrint,
   Pencil,
   PencilLine,
-  Wand2,
-  Layers,
   Scale,
+  Scroll,
+  Shield,
+  Sparkles,
+  Star,
+  Swords,
+  TrendingUp,
+  Wand2,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+
+import { Button } from '@/components/ui/button';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { Separator } from '../ui/separator';
-import { useTranslation } from '@/context/language-context';
-import { LanguageToggle } from '../layout/language-toggle';
-import { type GameSystem } from '@/lib/types';
 import { useCharacterContext } from '@/context/character-context';
-import { useParams } from 'next/navigation';
-import { HouseRulesDialog } from './dnd-sections/house-rules-dialog';
+import { useTranslation } from '@/context/language-context';
+import { type GameSystem } from '@/lib/types';
+import { cn } from '@/lib/utils';
+
+import { LanguageToggle } from '../layout/language-toggle';
+import { Separator } from '../ui/separator';
 import { DhHouseRulesDialog } from './dh-sections/dh-house-rules-dialog';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { HouseRulesDialog } from './dnd-sections/house-rules-dialog';
 
 interface CompactSidebarProps {
   gameSystem: GameSystem;
@@ -47,22 +61,41 @@ interface CompactSidebarProps {
   onSectionChange: (id: string) => void;
 }
 
-export function CompactSidebar({ gameSystem, activeSection, onSectionChange }: CompactSidebarProps) {
+export function CompactSidebar({
+  gameSystem,
+  activeSection,
+  onSectionChange,
+}: CompactSidebarProps) {
   const { t } = useTranslation();
   const params = useParams<{ id: string }>();
-  const { getCharacter, hideNotes, setHideNotes, showEditButtons, setShowEditButtons, updateCharacter } = useCharacterContext();
+  const {
+    getCharacter,
+    hideNotes,
+    setHideNotes,
+    showEditButtons,
+    setShowEditButtons,
+    updateCharacter,
+  } = useCharacterContext();
   const character = params?.id ? getCharacter(params.id) : null;
-  const isLevel20 = character?.gameSystem === 'Dungeons & Dragons' && (character as any).level === 20;
+  const isLevel20 =
+    character?.gameSystem === 'Dungeons & Dragons' &&
+    (character as any).level === 20;
   const [isHouseRulesDialogOpen, setIsHouseRulesDialogOpen] = useState(false);
 
   const dndItems = [
     { label: 'info', id: 'info-section', icon: Info },
     { label: 'abilityScores', id: 'stats-section', icon: Activity },
     { label: 'combatStats', id: 'combat-section', icon: Swords },
-    { label: 'inventoryAndAttunement', id: 'inventory-section', icon: Backpack },
+    {
+      label: 'inventoryAndAttunement',
+      id: 'inventory-section',
+      icon: Backpack,
+    },
     { label: 'spells', id: 'spells-section', icon: Sparkles },
     { label: 'companions', id: 'companion-section', icon: PawPrint },
-    ...(isLevel20 ? [{ label: 'divineBoons', id: 'boons-section', icon: Star }] : []),
+    ...(isLevel20
+      ? [{ label: 'divineBoons', id: 'boons-section', icon: Star }]
+      : []),
   ];
 
   const dhItems = [
@@ -86,8 +119,8 @@ export function CompactSidebar({ gameSystem, activeSection, onSectionChange }: C
     <TooltipProvider>
       <nav
         className={cn(
-          'bg-card border-r flex flex-col items-center p-2 gap-2 z-20',
-          'w-16'
+          'z-20 flex flex-col items-center gap-2 border-r bg-card p-2',
+          'w-16',
         )}
       >
         {sidebarItems.map((item) => (
@@ -108,9 +141,9 @@ export function CompactSidebar({ gameSystem, activeSection, onSectionChange }: C
             </TooltipContent>
           </Tooltip>
         ))}
-        
+
         <Separator className="my-2" />
-        
+
         {extraSidebarItems.map((item) => (
           <Tooltip key={item.id} delayDuration={0}>
             <TooltipTrigger asChild>
@@ -137,7 +170,7 @@ export function CompactSidebar({ gameSystem, activeSection, onSectionChange }: C
         ))}
 
         <Separator className="my-2" />
-        
+
         <Tooltip delayDuration={0}>
           <TooltipTrigger asChild>
             <Button
@@ -147,7 +180,11 @@ export function CompactSidebar({ gameSystem, activeSection, onSectionChange }: C
               className="w-full"
               size="icon"
             >
-              {hideNotes ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+              {hideNotes ? (
+                <EyeOff className="h-5 w-5" />
+              ) : (
+                <Eye className="h-5 w-5" />
+              )}
             </Button>
           </TooltipTrigger>
           <TooltipContent side="right">
@@ -160,15 +197,23 @@ export function CompactSidebar({ gameSystem, activeSection, onSectionChange }: C
             <Button
               variant={showEditButtons ? 'secondary' : 'ghost'}
               onClick={() => setShowEditButtons(!showEditButtons)}
-              aria-label={showEditButtons ? t('hideEditButtons') : t('showEditButtons')}
+              aria-label={
+                showEditButtons ? t('hideEditButtons') : t('showEditButtons')
+              }
               className="w-full"
               size="icon"
             >
-              {showEditButtons ? <Pencil className="h-5 w-5" /> : <PencilLine className="h-5 w-5" />}
+              {showEditButtons ? (
+                <Pencil className="h-5 w-5" />
+              ) : (
+                <PencilLine className="h-5 w-5" />
+              )}
             </Button>
           </TooltipTrigger>
           <TooltipContent side="right">
-            <p>{showEditButtons ? t('hideEditButtons') : t('showEditButtons')}</p>
+            <p>
+              {showEditButtons ? t('hideEditButtons') : t('showEditButtons')}
+            </p>
           </TooltipContent>
         </Tooltip>
 
@@ -187,11 +232,14 @@ export function CompactSidebar({ gameSystem, activeSection, onSectionChange }: C
             </PopoverTrigger>
             <PopoverContent side="right" align="center" className="w-40 p-2">
               <div className="space-y-2">
-                <p className="text-xs font-medium text-muted-foreground">Edition</p>
-                <Select 
-                  value={character.edition || '1st'} 
+                <p className="text-xs font-medium text-muted-foreground">
+                  Edition
+                </p>
+                <Select
+                  value={character.edition || '1st'}
                   onValueChange={(value: '1st' | '2nd' | 'hybrid') => {
-                    if (character) updateCharacter(character.id, { edition: value });
+                    if (character)
+                      updateCharacter(character.id, { edition: value });
                   }}
                 >
                   <SelectTrigger className="h-8 text-xs">
@@ -209,24 +257,24 @@ export function CompactSidebar({ gameSystem, activeSection, onSectionChange }: C
         )}
         {/* ─── END EDITION SELECTOR ─── */}
 
-        <div className="mt-auto pt-2 flex flex-col items-center gap-2">
-          <Separator className="w-full mb-2" />
+        <div className="mt-auto flex flex-col items-center gap-2 pt-2">
+          <Separator className="mb-2 w-full" />
           <LanguageToggle className="h-10 w-10" />
         </div>
 
         {/* DH-HOUSE-RULES-SIDEBAR-MOUNT-START */}
         {params?.id && gameSystem === 'Dungeons & Dragons' && (
-          <HouseRulesDialog 
-            open={isHouseRulesDialogOpen} 
-            onOpenChange={setIsHouseRulesDialogOpen} 
-            characterId={params.id} 
+          <HouseRulesDialog
+            open={isHouseRulesDialogOpen}
+            onOpenChange={setIsHouseRulesDialogOpen}
+            characterId={params.id}
           />
         )}
         {params?.id && gameSystem === 'Dark Heresy' && (
-          <DhHouseRulesDialog 
-            open={isHouseRulesDialogOpen} 
-            onOpenChange={setIsHouseRulesDialogOpen} 
-            characterId={params.id} 
+          <DhHouseRulesDialog
+            open={isHouseRulesDialogOpen}
+            onOpenChange={setIsHouseRulesDialogOpen}
+            characterId={params.id}
           />
         )}
         {/* DH-HOUSE-RULES-SIDEBAR-MOUNT-END */}
