@@ -29,7 +29,7 @@ export const DIVINATIONS = [
   },
   {
     divination: 'Dark dreams lie upon the heart.',
-    effect: '+2 Corruption Points.',
+    effect: '+2 Insanity Points.',
   },
   {
     divination: 'The pain of the bullet is ecstasy compared to damnation.',
@@ -188,6 +188,8 @@ export const QUIRKS_BY_HOMEWORLD: Record<string, string[]> = {
   'Hive World': HIVE_WORLD_QUIRKS,
   'Imperial World': IMPERIAL_WORLD_QUIRKS,
   'Void Born': VOID_BORN_QUIRKS,
+  // В базовой книге (табл. 1-13) таблицы примет для Мира-кузницы нет.
+  'Forge World': [],
 };
 
 export const WORLD_VARIANTS_BY_HOMEWORLD: Record<string, string[]> = {
@@ -220,13 +222,10 @@ export const WORLD_VARIANTS_BY_HOMEWORLD: Record<string, string[]> = {
     'Specialist',
     'Hive Noble',
   ],
-  'Void Born': [
-    'Space Hulk',
-    'Orbital',
-    'Chartist Vessel',
-    'War Ship',
-    'Rogue Trader',
-  ],
+  'Void Born': ['Space Hulk', 'Orbital', 'Chartist Vessel', 'Rogue Trader'],
+  // В базовой книге (табл. 1-14…1-17) таблицы «Прошлого» для Мира-кузницы нет;
+  // происхождения миров Латэ — в отдельной книге «Миры Латэ», стр. 148+.
+  'Forge World': [],
 };
 
 export const WORLD_VARIANT_LABELS: Record<string, string> = {
@@ -241,6 +240,7 @@ export const HOME_WORLD_KEYS: Record<string, string> = {
   'Hive World': 'homeWorldHive',
   'Imperial World': 'homeWorldImperial',
   'Void Born': 'homeWorldVoidBorn',
+  'Forge World': 'homeWorldForge',
 };
 
 export const VARIANT_KEYS: Record<string, string> = {
@@ -270,7 +270,6 @@ export const VARIANT_KEYS: Record<string, string> = {
   'Space Hulk': 'variantSpaceHulk',
   Orbital: 'variantOrbital',
   'Chartist Vessel': 'variantChartistVessel',
-  'War Ship': 'variantWarShip',
   'Rogue Trader': 'variantRogueTrader',
 };
 
@@ -300,6 +299,7 @@ export const QUIRK_KEYS: Record<string, string> = {
   'Cat’s Eyes': 'quirkCatsEyes',
   'Small Head': 'quirkSmallHead',
   'Thick Jaw': 'quirkThickJaw',
+  Pallid: 'quirkPallid',
   'Grimy Skin': 'quirkGrimySkin',
   'Outrageous Hair': 'quirkOutrageousHair',
   'Rotten Teeth': 'quirkRottenTeeth',
