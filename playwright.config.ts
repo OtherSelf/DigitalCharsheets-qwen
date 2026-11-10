@@ -68,6 +68,8 @@ export default defineConfig({
   projects: [
     {
       name: 'desktop',
+      // Планшетные эталоны снимаются только в проекте `tablet`.
+      testIgnore: /tablet\.spec\.ts/,
       use: {
         viewport: { width: 1440, height: 900 },
         deviceScaleFactor: 1,
@@ -78,10 +80,31 @@ export default defineConfig({
     {
       // Android/Chrome: настоящий мобильный вьюпорт, touch, isMobile.
       name: 'mobile',
+      testIgnore: /tablet\.spec\.ts/,
       use: {
         ...pixel7,
         // Скриншоты и так в CSS-пикселях, но DPR важен для отрисовки.
         deviceScaleFactor: 2.625,
+      },
+    },
+    {
+      /*
+        Планшетный вьюпорт (iPad-подобный 1024x768, без touch-эмуляции).
+        Нужен потому, что полоса 768..1299px не имела пиксельного покрытия,
+        а оба последних вёрстко-бага были именно там: двухрядная шапка и
+        «уезжание» шапки/левого меню при масштабе интерфейса.
+
+        `testMatch` ограничивает проект одним файлом: остальные спеки
+        снимают свои эталоны только в desktop/mobile, иначе каждая из них
+        породила бы третий набор PNG в новой ширине.
+      */
+      name: 'tablet',
+      testMatch: /tablet\.spec\.ts/,
+      use: {
+        viewport: { width: 1024, height: 768 },
+        deviceScaleFactor: 1,
+        isMobile: false,
+        hasTouch: false,
       },
     },
   ],

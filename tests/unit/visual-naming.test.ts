@@ -21,7 +21,9 @@ import { describe, expect, it } from 'vitest';
 const ROOT = process.cwd();
 const VISUAL_DIR = path.join(ROOT, 'tests', 'visual');
 const SHOTS_DIR = path.join(VISUAL_DIR, '__screenshots__');
-const PROJECTS = ['desktop', 'mobile'] as const;
+// Проекты Playwright: у каждого свой каталог эталонов. `tablet` снимает
+// только tests/visual/tablet.spec.ts (testMatch в playwright.config.ts).
+const PROJECTS = ['desktop', 'mobile', 'tablet'] as const;
 
 const NAME_RE = /^[a-z0-9]+(?:-(?:dnd|dh))?(?:-[a-z0-9]+)*-(en|ru)\.png$/;
 const GAMES = new Set(['dnd', 'dh']);
