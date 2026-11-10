@@ -33,6 +33,82 @@ const DISPLAY_NAME = 'Visual Tester';
 const CANONICAL_USERNAME = 'visual-tests';
 const MAX_SEEDED_WORKERS = 8;
 
+/**
+ * ─── LANDMARK: ADMIN VISUAL FIXTURES ────────────────────────────────────────
+ * Для снимков /admin нужен детерминированный список пользователей: в отличие
+ * от дашборда, он не изолирован по воркерам. Поэтому global-setup пишет три
+ * демо-аккаунта напрямую в data-dir временного сервера:
+ *   • фиксированные даты создания/входа;
+ *   • фиксированные роли и блокировки;
+ *   • фиксированные листы персонажей и mtime их файлов.
+ *
+ * В таблице /admin эти аккаунты отфильтрованы поиском `visual-admin-`, так
+ * что воркерские аккаунты и число воркеров на снимок не влияют. Числа в
+ * карточках статистики — глобальные, их тест маскирует.
+ */
+interface AdminDemoCharacter {
+  fixture: object;
+  id: string;
+  updatedAt: string;
+}
+
+interface AdminDemoUser {
+  username: string;
+  displayName: string;
+  role: 'admin' | 'user';
+  isBlocked: boolean;
+  createdAt: string;
+  lastLoginAt: string;
+  characters: AdminDemoCharacter[];
+}
+
+const ADMIN_DEMO_USERS: AdminDemoUser[] = [
+  {
+    username: 'visual-admin-alice',
+    displayName: 'Alice Ashford',
+    role: 'user',
+    isBlocked: false,
+    createdAt: '2025-01-10T10:00:00.000Z',
+    lastLoginAt: '2025-04-01T09:30:00.000Z',
+    characters: [
+      {
+        fixture: dndCharacter,
+        id: 'visual-admin-alice-dnd',
+        updatedAt: '2025-05-01T12:00:00.000Z',
+      },
+      {
+        fixture: dhCharacter,
+        id: 'visual-admin-alice-dh',
+        updatedAt: '2025-05-02T12:00:00.000Z',
+      },
+    ],
+  },
+  {
+    username: 'visual-admin-bob',
+    displayName: 'Bob Brannigan',
+    role: 'user',
+    isBlocked: true,
+    createdAt: '2025-02-20T11:00:00.000Z',
+    lastLoginAt: '2025-04-10T18:00:00.000Z',
+    characters: [
+      {
+        fixture: dndCharacter,
+        id: 'visual-admin-bob-dnd',
+        updatedAt: '2025-05-03T12:00:00.000Z',
+      },
+    ],
+  },
+  {
+    username: 'visual-admin-carol',
+    displayName: 'Carol Voss',
+    role: 'admin',
+    isBlocked: false,
+    createdAt: '2025-03-05T12:00:00.000Z',
+    lastLoginAt: '2025-04-20T08:15:00.000Z',
+    characters: [],
+  },
+];
+
 async function requestJson<T>(
   baseURL: string,
   pathname: string,
@@ -217,6 +293,232 @@ async function seedAccount(
   };
 }
 
+/** Логин/пароль служебного админа из `<data-dir>/.initial-admin.txt`. */
+function readInitialAdminCredentials(
+  dataDir: string,
+): { username: string; password: string } | null {
+  try {
+    const text = fs.readFileSync(
+      path.join(dataDir, '.initial-admin.txt'),
+      'utf8',
+    );
+    const username = /^Login:\s+(.+)$/m.exec(text)?.[1]?.trim();
+    const password = /^Password:\s+(.+)$/m.exec(text)?.[1]?.trim();
+    return username && password ? { username, password } : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * uid по логину — читаем каталог напрямую. Демо-аккаунты для /admin не
+ * логинятся (заблокированный bob иначе не смог бы войти), поэтому uid из
+ * индекса не годится.
+ */
+function findUidByUsername(dataDir: string, username: string): string | null {
+  const usersDir = path.join(dataDir, 'users');
+  const wanted = username.toLowerCase().trim();
+
+  let entries: fs.Dirent[] = [];
+  try {
+    entries = fs.readdirSync(usersDir, { withFileTypes: true });
+  } catch {
+    return null;
+  }
+
+  for (const entry of entries) {
+    if (!entry.isDirectory()) continue;
+    try {
+      const raw = JSON.parse(
+        fs.readFileSync(path.join(usersDir, entry.name, 'user.json'), 'utf8'),
+      ) as { username?: unknown; email?: unknown };
+      const login = String(raw.username ?? raw.email ?? '')
+        .toLowerCase()
+        .trim();
+      if (login === wanted) return entry.name;
+    } catch {
+      // Битый профиль не мешает найти остальные.
+    }
+  }
+  return null;
+}
+
+async function signIn(
+  baseURL: string,
+  username: string,
+  password: string,
+): Promise<{ user: VisualUser; cookie: string }> {
+  const res = await requestJson<{
+    success: boolean;
+    user?: VisualUser;
+    error?: string;
+  }>(baseURL, '/api/auth', {
+    method: 'POST',
+    body: JSON.stringify({ username, password }),
+  });
+  if (res.status !== 200 || !res.body.success || !res.body.user) {
+    throw new Error(
+      `Не удалось войти ${username}: HTTP ${res.status} ${JSON.stringify(res.body)}`,
+    );
+  }
+  const cookie = (res.headers.get('set-cookie') || '').split(';')[0];
+  if (!cookie) throw new Error(`Нет сессионной cookie для ${username}`);
+  return { user: res.body.user, cookie };
+}
+
+/**
+ * Демо-пользователь для /admin. Профиль и листы пишутся напрямую в data-dir:
+ * публичный API не позволяет задать createdAt/lastLoginAt, а от них зависит
+ * детерминизм снимка. Для заблокированного пользователя это ещё и
+ * единственный способ засеять листы (вход ему запрещён).
+ */
+async function ensureAdminDemoUser(
+  baseURL: string,
+  dataDir: string,
+  spec: AdminDemoUser,
+): Promise<void> {
+  let uid = findUidByUsername(dataDir, spec.username);
+  if (!uid) {
+    const registration = await requestJson<{
+      success: boolean;
+      user?: VisualUser;
+      error?: string;
+    }>(baseURL, '/api/auth/register', {
+      method: 'POST',
+      body: JSON.stringify({
+        username: spec.username,
+        password: PASSWORD,
+        displayName: spec.displayName,
+        recoveryPhrase: VISUAL_RECOVERY_PHRASE,
+      }),
+    });
+    if (registration.status === 200 && registration.body.user) {
+      uid = registration.body.user.uid;
+    }
+  }
+  if (!uid) uid = findUidByUsername(dataDir, spec.username);
+  if (!uid) {
+    throw new Error(`Не удалось завести демо-пользователя ${spec.username}`);
+  }
+
+  const profileFile = path.join(dataDir, 'users', uid, 'user.json');
+  const profile = JSON.parse(fs.readFileSync(profileFile, 'utf8')) as Record<
+    string,
+    unknown
+  >;
+  const next: Record<string, unknown> = {
+    ...profile,
+    schemaVersion: 3,
+    uid,
+    username: spec.username,
+    displayName: spec.displayName,
+    role: spec.role,
+    isBlocked: spec.isBlocked,
+    createdAt: spec.createdAt,
+    updatedAt: spec.createdAt,
+    lastLoginAt: spec.lastLoginAt,
+    recoveryPhrase: VISUAL_RECOVERY_PHRASE,
+  };
+  if (spec.isBlocked) next.blockedAt = spec.lastLoginAt;
+  else delete next.blockedAt;
+  delete next.mustChangePassword;
+  fs.writeFileSync(profileFile, JSON.stringify(next, null, 2), 'utf8');
+
+  const charactersDir = path.join(dataDir, 'users', uid, 'characters');
+  fs.rmSync(charactersDir, { recursive: true, force: true });
+  fs.mkdirSync(charactersDir, { recursive: true });
+  for (const character of spec.characters) {
+    const file = path.join(charactersDir, `${character.id}.json`);
+    fs.writeFileSync(
+      file,
+      JSON.stringify(
+        { ...character.fixture, id: character.id, userId: uid },
+        null,
+        2,
+      ),
+      'utf8',
+    );
+    // mtime задаёт колонку «Updated» в диалоге листов.
+    const date = new Date(character.updatedAt);
+    fs.utimesSync(file, date, date);
+  }
+}
+
+/**
+ * Подготовить админа и демо-аккаунты для снимков /admin. `null` — нет
+ * доступа к data-dir (запуск с --base-url или прямой `playwright test`):
+ * админские тесты в этом случае пропускаются, остальная регрессия работает.
+ */
+async function seedAdminFixtures(
+  baseURL: string,
+): Promise<VisualAccount | null> {
+  const dataDir = process.env.DCS_VISUAL_DATA_DIR;
+  if (!dataDir) {
+    console.log(
+      '[visual] /admin: DCS_VISUAL_DATA_DIR не задан — админские снимки пропущены',
+    );
+    return null;
+  }
+
+  try {
+    const credentials = readInitialAdminCredentials(dataDir);
+    if (!credentials) {
+      throw new Error(`нет файла ${path.join(dataDir, '.initial-admin.txt')}`);
+    }
+
+    for (const spec of ADMIN_DEMO_USERS) {
+      await ensureAdminDemoUser(baseURL, dataDir, spec);
+    }
+
+    const first = await signIn(
+      baseURL,
+      credentials.username,
+      credentials.password,
+    );
+    let user = first.user;
+    if (user.role !== 'admin') {
+      throw new Error(`${credentials.username} не администратор`);
+    }
+
+    // Иначе RecoveryModal откроется поверх /admin.
+    if (!user.hasRecoveryPhrase) {
+      const phrase = await requestJson<{ success: boolean; error?: string }>(
+        baseURL,
+        '/api/auth/phrase',
+        {
+          method: 'POST',
+          headers: { cookie: first.cookie },
+          body: JSON.stringify({ phrase: VISUAL_RECOVERY_PHRASE }),
+        },
+      );
+      if (phrase.status !== 200 || !phrase.body.success) {
+        throw new Error(
+          `не удалось задать recovery phrase админу: HTTP ${phrase.status}`,
+        );
+      }
+      ({ user } = await signIn(
+        baseURL,
+        credentials.username,
+        credentials.password,
+      ));
+    }
+
+    return {
+      username: credentials.username,
+      password: credentials.password,
+      user: { ...user, hasRecoveryPhrase: true },
+      dndId: '',
+      dhId: '',
+    };
+  } catch (error) {
+    console.warn(
+      '[visual] /admin: не удалось подготовить данные —',
+      error instanceof Error ? error.message : error,
+    );
+    return null;
+  }
+}
+
 export default async function globalSetup(config: FullConfig): Promise<void> {
   const baseURL =
     process.env.DCS_VISUAL_BASE_URL ||
@@ -242,7 +544,14 @@ export default async function globalSetup(config: FullConfig): Promise<void> {
     );
   }
 
-  const state: VisualStateFile = { baseURL, canonical, workers };
+  const admin = await seedAdminFixtures(baseURL);
+
+  const state: VisualStateFile = {
+    baseURL,
+    canonical,
+    workers,
+    ...(admin ? { admin } : {}),
+  };
 
   fs.mkdirSync(path.dirname(STATE_FILE), { recursive: true });
   fs.writeFileSync(STATE_FILE, JSON.stringify(state, null, 2), 'utf8');
@@ -250,6 +559,7 @@ export default async function globalSetup(config: FullConfig): Promise<void> {
   console.log(
     `[visual] baseURL=${baseURL} canonical=${canonical.user.uid} ` +
       `воркеров: ${workers.length} ` +
-      `(${workers.map((w) => `${w.username}:${w.dndId}/${w.dhId}`).join(', ')})`,
+      `(${workers.map((w) => `${w.username}:${w.dndId}/${w.dhId}`).join(', ')})` +
+      ` admin=${admin ? admin.username : '—'}`,
   );
 }

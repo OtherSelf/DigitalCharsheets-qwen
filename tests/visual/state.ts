@@ -20,6 +20,10 @@ export interface VisualUser {
   username: string;
   displayName: string;
   hasRecoveryPhrase: boolean;
+  /** Роль из /api/auth (нужна /admin). */
+  role?: 'admin' | 'user';
+  isBlocked?: boolean;
+  mustChangePassword?: boolean;
 }
 
 export interface VisualAccount {
@@ -40,6 +44,12 @@ export interface VisualStateFile {
   canonical: VisualAccount;
   /** По одному изолированному аккаунту на воркер. */
   workers: VisualAccount[];
+  /**
+   * Служебный администратор временного сервера. Появляется, только когда
+   * global-setup знает DCS_DATA_DIR (запуск через scripts/visual.sh). Без
+   * него админские снимки честно пропускаются.
+   */
+  admin?: VisualAccount;
 }
 
 export const STATE_FILE =
@@ -84,6 +94,21 @@ export function readState(workerIndex = 0): VisualState {
 export function readCanonicalState(): VisualState {
   const file = readStateFile();
   return { baseURL: file.baseURL, ...file.canonical };
+}
+
+/**
+ * Служебный администратор для снимков /admin. `null` — global-setup не смог
+ * его подготовить (например, запуск с --base-url без доступа к data-dir):
+ * админские визуальные тесты в этом случае пропускаются.
+ */
+export function readAdminState(): VisualState | null {
+  // При `playwright --list` global-setup не запускается и файла может не быть:
+  // админские тесты в этом режиме просто пропускаются, остальные спеки не
+  // должны падать на импорте.
+  if (!fs.existsSync(STATE_FILE)) return null;
+  const file = readStateFile();
+  if (!file.admin) return null;
+  return { baseURL: file.baseURL, ...file.admin };
 }
 
 export function readAllAccounts(): VisualAccount[] {
