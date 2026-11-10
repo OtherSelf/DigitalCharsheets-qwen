@@ -1180,6 +1180,108 @@ test.describe('вид листа: компактный и обычный', () =>
   });
 });
 
+test.describe('синхронизация между вкладками', () => {
+  test('дашборд: персонаж из другой вкладки появляется без перезагрузки', async ({
+    browser,
+  }) => {
+    // Отдельный аккаунт, чтобы не менять фикстуры и не влиять на эталоны
+    // дашборда (файлы спеков идут параллельно).
+    const context = await browser.newContext({
+      viewport: { width: 1440, height: 900 },
+      deviceScaleFactor: 1,
+      locale: 'en-US',
+      timezoneId: 'UTC',
+      reducedMotion: 'reduce',
+    });
+    const page = await context.newPage();
+    const username = `cross-tab-${Date.now()}`;
+    const password = 'cross-tab-password-1';
+
+    const registered = await page.request.post('/api/auth/register', {
+      data: {
+        username,
+        password,
+        displayName: 'Cross Tab',
+        recoveryPhrase: 'amber cobalt lantern',
+      },
+    });
+    expect([200, 201], 'регистрация аккаунта').toContain(registered.status());
+
+    // Приложение берёт профиль из localStorage (cookie — только для API),
+    // поэтому кладём снимок пользователя до загрузки документа.
+    const registeredBody = (await registered.json()) as {
+      user?: Record<string, unknown>;
+    };
+    expect(registeredBody.user, 'сервер вернул пользователя').toBeTruthy();
+    await context.addInitScript(
+      (user) => {
+        try {
+          localStorage.setItem(
+            'digital_charsheets_user',
+            JSON.stringify({ ...user, hasRecoveryPhrase: true }),
+          );
+        } catch {
+          /* storage может быть недоступен — не критично */
+        }
+      },
+      registeredBody.user as Record<string, unknown>,
+    );
+
+    const first = await page.request.post('/api/characters', {
+      data: { ...dhCharacter, name: 'First Tab Character' },
+    });
+    expect([200, 201], 'первый персонаж').toContain(first.status());
+    const { id: firstId } = (await first.json()) as { id: string };
+
+    await page.goto(`/${firstId}`, { waitUntil: 'domcontentloaded' });
+    await expect(
+      page.getByRole('heading', { name: 'First Tab Character' }),
+    ).toBeVisible();
+
+    // «Вторая вкладка» создаёт ещё одного персонажа — серверная запись.
+    const second = await page.request.post('/api/characters', {
+      data: { ...dhCharacter, name: 'Second Tab Character' },
+    });
+    expect([200, 201], 'персонаж из второй вкладки').toContain(second.status());
+
+    // Переход на дашборд через интерфейс — SPA-навигация без перезагрузки
+    // документа, ровно как в жизни.
+    await page
+      .getByTestId('app-header')
+      .getByRole('link', { name: 'Back to Dashboard' })
+      .click();
+    await page.waitForURL((url) => url.pathname === '/');
+    await expect(
+      page.getByText('Second Tab Character'),
+      'список обновился при возврате на дашборд',
+    ).toBeVisible({ timeout: 10_000 });
+
+    const navigations = await page.evaluate(
+      () => performance.getEntriesByType('navigation').length,
+    );
+    expect(navigations, 'переход был SPA, без перезагрузки').toBe(1);
+
+    // Второй сценарий: вкладка уже на дашборде, персонажа создали в другом
+    // окне — возврат фокуса тоже обновляет список. Ждём, чтобы выйти за
+    // антидребезг освежения (300 мс после предыдущей загрузки).
+    await page.waitForTimeout(600);
+    const third = await page.request.post('/api/characters', {
+      data: { ...dhCharacter, name: 'Focus Refreshed Character' },
+    });
+    expect([200, 201], 'персонаж для проверки фокуса').toContain(
+      third.status(),
+    );
+    await page.bringToFront();
+    await page.evaluate(() => window.dispatchEvent(new Event('focus')));
+    await expect(
+      page.getByText('Focus Refreshed Character'),
+      'список обновился по возврату фокуса',
+    ).toBeVisible({ timeout: 10_000 });
+
+    await context.close();
+  });
+});
+
 /** Пара мелких проверок содержимого, которые не сводятся к пикселям. */
 test.describe('содержимое листа', () => {
   test('D&D: ключевые значения на месте', async ({ page, context }) => {
