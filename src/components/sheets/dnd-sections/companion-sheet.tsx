@@ -512,6 +512,7 @@ export function CompanionSheet({
           <div className="grid grid-cols-1 items-start gap-6 md:grid-cols-12">
             {show.stats && (
               <DndStatsSection
+                idPrefix="companion"
                 characterId={`companion-${companion.id}`}
                 stats={stats}
                 setStats={setStats}
@@ -537,6 +538,7 @@ export function CompanionSheet({
 
             {show.stats && (
               <DndSavesSkillsSection
+                idPrefix="companion"
                 characterId={`companion-${companion.id}`}
                 savingThrows={savingThrows}
                 setSavingThrows={setSavingThrows}
@@ -558,6 +560,7 @@ export function CompanionSheet({
 
             {show.combat && (
               <DndCombatSection
+                idPrefix="companion"
                 key={`combat-${companion.id}`}
                 ref={combatRef}
                 characterId={`companion-${companion.id}`}

@@ -84,6 +84,13 @@ const EditSaveButton = ({
   );
 
 interface SavesSkillsSectionProps {
+  /**
+   * Префикс для `id` карточек. Нужен, когда секция рендерится дважды —
+   * например, в листе компаньона: без префикса на странице появляются
+   * дубли `id` (`stats-card`, `hit-points-card`, ...), а на них держатся
+   * `htmlFor`/`aria-*` и селекторы визуальных тестов.
+   */
+  idPrefix?: string;
   characterId: string;
   savingThrows: DnDSavingThrow[];
   setSavingThrows: React.Dispatch<React.SetStateAction<DnDSavingThrow[]>>;
@@ -119,7 +126,9 @@ export function DndSavesSkillsSection({
   isCompactView,
   activeCompactSection,
   proficiencyBonus,
+  idPrefix,
 }: SavesSkillsSectionProps) {
+  const idp = idPrefix ? `${idPrefix}-` : '';
   const { showEditButtons, getCharacter, updateCharacter } =
     useCharacterContext();
   const { t } = useTranslation();
@@ -148,7 +157,7 @@ export function DndSavesSkillsSection({
         </CardContent>
       </Card>
 
-      <Card id="saving-throws-card">
+      <Card id={`${idp}saving-throws-card`}>
         <CardHeader className="flex flex-row items-center justify-between px-4 pb-2 pt-2">
           <CardTitle className="text-[10px] font-bold uppercase tracking-tight text-muted-foreground">
             {t('savingThrows')}
@@ -249,7 +258,7 @@ export function DndSavesSkillsSection({
         </CardContent>
       </Card>
 
-      <Card id="skills-card">
+      <Card id={`${idp}skills-card`}>
         <CardHeader className="flex flex-row items-center justify-between px-4 pb-2 pt-2">
           <CardTitle className="text-[10px] font-bold uppercase tracking-tight text-muted-foreground">
             {t('skills')}
