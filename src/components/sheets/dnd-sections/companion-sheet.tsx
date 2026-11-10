@@ -465,6 +465,7 @@ export function CompanionSheet({
           <div className="flex flex-col items-stretch gap-6 md:flex-row">
             {show.progression && (
               <DndProgressionSection
+                idPrefix="companion"
                 progressionData={progressionData}
                 setProgressionData={setProgressionData}
                 expToCount={expToCount}
@@ -479,6 +480,7 @@ export function CompanionSheet({
 
             {show.divineBoons && (
               <DndDivineBoonsSection
+                idPrefix="companion"
                 ref={boonsRef}
                 characterId={`companion-${companion.id}`}
                 initialBoons={companion.divineBoons || []}
@@ -489,6 +491,7 @@ export function CompanionSheet({
 
             {show.info && (
               <DndCharacterInfoSection
+                idPrefix="companion"
                 ref={characterInfoRef}
                 characterId={`companion-${companion.id}`}
                 initialName={companion.name}
@@ -587,6 +590,7 @@ export function CompanionSheet({
             <div className="space-y-6 md:col-span-3">
               {show.narrative && (
                 <DndNarrativeSection
+                  idPrefix="companion"
                   ref={narrativeRef}
                   characterId={`companion-${companion.id}`}
                   initialData={{
@@ -603,11 +607,13 @@ export function CompanionSheet({
               {show.inventory && (
                 <>
                   <DndAttunementSection
+                    idPrefix="companion"
                     ref={attunementRef}
                     characterId={`companion-${companion.id}`}
                     initialItems={companion.attunementItems || []}
                   />
                   <DndInventorySection
+                    idPrefix="companion"
                     ref={inventoryRef}
                     characterId={`companion-${companion.id}`}
                     initialCurrency={
@@ -628,6 +634,7 @@ export function CompanionSheet({
 
           {show.spells && (
             <DndSpellsSection
+              idPrefix="companion"
               characterId={`companion-${companion.id}`}
               initialSpells={companion.spells || []}
               initialSpellSlots={companion.spellSlots}

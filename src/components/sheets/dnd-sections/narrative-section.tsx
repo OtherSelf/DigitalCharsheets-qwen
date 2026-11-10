@@ -145,6 +145,12 @@ const NarrativeListCard = ({
 };
 
 interface NarrativeSectionProps {
+  /**
+   * Префикс для `id`: нужен, когда секция рендерится ещё и в листе
+   * компаньона — иначе на странице появляются дубли `id`, а на них
+   * держатся `htmlFor`, `aria-*`, якоря и селекторы `#...` в тестах.
+   */
+  idPrefix?: string;
   characterId: string;
   initialData: NarrativeData;
 }
@@ -152,7 +158,8 @@ interface NarrativeSectionProps {
 export const DndNarrativeSection = React.forwardRef<
   { saveAll: () => void },
   NarrativeSectionProps
->(({ characterId, initialData }, ref) => {
+>(({ characterId, initialData, idPrefix }, ref) => {
+  const idp = idPrefix ? `${idPrefix}-` : '';
   const { updateCharacter, showEditButtons } = useCharacterContext();
   const { t } = useTranslation();
   const [narrativeData, setNarrativeData] =
@@ -223,7 +230,7 @@ export const DndNarrativeSection = React.forwardRef<
   );
 
   return (
-    <div id="narrative-section" className="space-y-6">
+    <div id={`${idp}narrative-section`} className="space-y-6">
       <NarrativeListCard
         titleKey="personalityTraits"
         items={narrativeData.personalityTraits}

@@ -85,6 +85,12 @@ const DEFAULT_SLOTS = {
 };
 
 interface SpellsSectionProps {
+  /**
+   * Префикс для `id`: нужен, когда секция рендерится ещё и в листе
+   * компаньона — иначе на странице появляются дубли `id`, а на них
+   * держатся `htmlFor`, `aria-*`, якоря и селекторы `#...` в тестах.
+   */
+  idPrefix?: string;
   characterId: string;
   initialSpells: Spell[];
   initialSpellSlots?: Record<number, { max: number; current: number }>;
@@ -104,7 +110,9 @@ export function DndSpellsSection({
   initialSpellcastingEntries,
   stats,
   proficiencyBonus,
+  idPrefix,
 }: SpellsSectionProps) {
+  const idp = idPrefix ? `${idPrefix}-` : '';
   const { updateCharacter, showEditButtons, hideNotes } = useCharacterContext();
   const { t } = useTranslation();
   const [isSpellsOpen, setIsSpellsOpen] = React.useState(true);
@@ -431,7 +439,7 @@ export function DndSpellsSection({
 
   return (
     <Collapsible
-      id="spells-section"
+      id={`${idp}spells-section`}
       open={isSpellsOpen}
       onOpenChange={setIsSpellsOpen}
       className={cn(

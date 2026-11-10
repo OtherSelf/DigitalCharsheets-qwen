@@ -144,6 +144,12 @@ export interface ProgressionData {
 }
 
 interface ProgressionSectionProps {
+  /**
+   * Префикс для `id`: нужен, когда секция рендерится ещё и в листе
+   * компаньона — иначе на странице появляются дубли `id`, а на них
+   * держатся `htmlFor`, `aria-*`, якоря и селекторы `#...` в тестах.
+   */
+  idPrefix?: string;
   progressionData: ProgressionData;
   setProgressionData: React.Dispatch<React.SetStateAction<ProgressionData>>;
   expToCount: number;
@@ -166,7 +172,9 @@ export function DndProgressionSection({
   handleSaveProgression,
   stats,
   onPersistExperience,
+  idPrefix,
 }: ProgressionSectionProps) {
+  const idp = idPrefix ? `${idPrefix}-` : '';
   const { showEditButtons } = useCharacterContext();
   const { t } = useTranslation();
 
@@ -269,7 +277,7 @@ export function DndProgressionSection({
     >
       <AccordionItem value="expanded" className="border-0">
         <Card
-          id="progression-section"
+          id={`${idp}progression-section`}
           className="flex h-full shrink-0 flex-col overflow-hidden border-2"
         >
           <CardHeader className="flex flex-row items-center justify-between bg-muted/5 px-4 pb-2 pt-2">
