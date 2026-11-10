@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -30,6 +30,11 @@ export function UserNav() {
 
   // LANDMARK: DISPLAY_SETTINGS_MODAL_STATE
   const [isDisplaySettingsOpen, setIsDisplaySettingsOpen] = useState(false);
+  // LANDMARK: DISPLAY_SETTINGS_RETURN_FOCUS
+  // Пункт меню «Display Settings» исчезает вместе с меню, поэтому Radix
+  // не может вернуть на него фокус и «уронит» его на body. Возвращаем
+  // фокус на кнопку профиля — она никуда не девается.
+  const menuTriggerRef = useRef<HTMLButtonElement>(null);
 
   if (isUserLoading) return <Skeleton className="h-9 w-9 rounded-full" />;
   if (!user)
@@ -55,7 +60,12 @@ export function UserNav() {
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           {/* LANDMARK: USER_NAV_TRIGGER_BUTTON */}
-          <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full">
+          <Button
+            ref={menuTriggerRef}
+            variant="ghost"
+            size="icon"
+            className="h-9 w-9 rounded-full"
+          >
             <CircleUserRound className="h-6 w-6" />
             <span className="sr-only">
               {t('openUserMenu') || 'Open user menu'}
@@ -112,6 +122,7 @@ export function UserNav() {
       <DisplaySettingsModal
         open={isDisplaySettingsOpen}
         onOpenChange={setIsDisplaySettingsOpen}
+        returnFocusRef={menuTriggerRef}
       />
     </>
   );

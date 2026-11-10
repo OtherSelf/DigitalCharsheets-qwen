@@ -49,6 +49,28 @@ const eslintConfig = [
     },
   },
   {
+    /*
+      a11y-правила. `next/core-web-vitals` уже включает 6 штук
+      (alt-text, aria-props, aria-proptypes, aria-unsupported-elements,
+      role-has-required-aria-props, role-supports-aria-props) — плагин
+      `eslint-plugin-jsx-a11y` подключён им, поэтому здесь только правила,
+      которых там нет. Важны именно для иконочных кнопок: имя должно быть
+      доступным, а интерактивность — на кнопках, а не на div.
+    */
+    files: ['**/*.tsx'],
+    rules: {
+      'jsx-a11y/alt-text': ['error', { elements: ['img'], img: ['Image'] }],
+      'jsx-a11y/anchor-is-valid': 'error',
+      'jsx-a11y/label-has-associated-control': ['error', { assert: 'either' }],
+      'jsx-a11y/aria-role': 'error',
+      // Настоящие подсказки-предупреждения, а не блокеры: интерактив на
+      // неинтерактивном элементе требует и role, и обработчиков клавиатуры.
+      'jsx-a11y/click-events-have-key-events': 'warn',
+      'jsx-a11y/no-static-element-interactions': 'warn',
+      'jsx-a11y/mouse-events-have-key-events': 'warn',
+    },
+  },
+  {
     // CommonJS — это не костыль, а формат: шим для EXDEV и фикстуры тестов
     // обязаны быть .cjs, а tailwind.config.ts подключает плагин через require().
     files: ['**/*.cjs', 'tailwind.config.ts'],

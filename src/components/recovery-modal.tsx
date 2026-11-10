@@ -188,8 +188,14 @@ export function RecoveryModal() {
 
           {isRecovery && (
             <div className="space-y-2">
-              <label className="text-sm font-medium">New Password</label>
+              <label
+                htmlFor="recovery-new-password"
+                className="text-sm font-medium"
+              >
+                New Password
+              </label>
               <Input
+                id="recovery-new-password"
                 type="password"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
@@ -200,10 +206,11 @@ export function RecoveryModal() {
           )}
 
           <div className="space-y-2">
-            <label className="text-sm font-medium">
+            <label htmlFor="recovery-phrase" className="text-sm font-medium">
               {isRecovery ? 'New Recovery Phrase' : 'Recovery Phrase'}
             </label>
             <Input
+              id="recovery-phrase"
               value={newRecoveryPhrase}
               onChange={(e) => setNewRecoveryPhrase(e.target.value)}
               placeholder="e.g., french butter dragon"
