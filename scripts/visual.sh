@@ -77,7 +77,7 @@ ${C_BOLD}Проброс в Playwright:${C_RESET}
   --update-snapshots     обновить эталоны (то же: --update)
   --grep PATTERN         только тесты, чьё имя подходит под PATTERN (то же: -g)
   --grep-invert PATTERN  наоборот: исключить подходящие
-  --project NAME         только один проект (desktop или mobile)
+  --project NAME         только один проект (desktop, mobile или tablet)
   --last-failed          только тесты, упавшие в прошлый раз
                          (если падений не было — Playwright пишет
                          "No tests found" и возвращает код 1;

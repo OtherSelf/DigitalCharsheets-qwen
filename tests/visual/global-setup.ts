@@ -4,23 +4,34 @@ import path from 'node:path';
 import type { FullConfig } from '@playwright/test';
 
 import { dhCharacter, dndCharacter, VISUAL_RECOVERY_PHRASE } from './fixtures';
-import { STATE_FILE, type VisualState, type VisualUser } from './state';
+import {
+  STATE_FILE,
+  type VisualAccount,
+  type VisualStateFile,
+  type VisualUser,
+} from './state';
 
 /**
  * Один раз на прогон:
  *   1. проверяет, что сервер отвечает;
- *   2. создаёт (или переиспользует) аккаунт `visual-tests`;
- *   3. выставляет recovery phrase (чтобы не всплывало модальное окно);
- *   4. удаляет старые тестовые листы и создаёт два свежих (D&D и Dark Heresy);
- *   5. пишет id и пользователя в .visual-state.json для тестов.
+ *   2. сеет аккаунты: canonical `visual-tests` (для снимков, где виден логин)
+ *      и по одному изолированному аккаунту на воркер `visual-tests-w1..wN`;
+ *   3. в каждом воркер-аккаунте удаляет старые листы и создаёт два свежих
+ *      (D&D и Dark Heresy) — данные воркеров не пересекаются, поэтому тесты
+ *      можно гонять параллельно;
+ *   4. пишет аккаунты и id персонажей в `.visual-state.json`.
  *
- * Благодаря фиксированному username uid тоже фиксированный, а значит
- * localStorage-сессия и данные совпадают от прогона к прогону.
+ * Изоляция по воркерам, а не по проектам: Playwright распределяет воркеры по
+ * файлам сам, и один и тот же аккаунт мог бы одновременно правиться из двух
+ * файлов (редактирование секций, массовый редактор) — это давало бы гонки и
+ * «мигающие» скриншоты. Фикстуры у всех аккаунтов одинаковые, поэтому
+ * картинки от изоляции не зависят.
  */
 
-const USERNAME = 'visual-tests';
 const PASSWORD = 'visual-pass-1234';
 const DISPLAY_NAME = 'Visual Tester';
+const CANONICAL_USERNAME = 'visual-tests';
+const MAX_SEEDED_WORKERS = 8;
 
 async function requestJson<T>(
   baseURL: string,
@@ -31,7 +42,7 @@ async function requestJson<T>(
     ...init,
     headers: {
       ...(init?.body ? { 'content-type': 'application/json' } : {}),
-      ...init?.headers,
+      ...(init?.headers || {}),
     },
     signal: AbortSignal.timeout(20_000),
   });
@@ -68,16 +79,29 @@ async function waitForServer(baseURL: string): Promise<void> {
   throw new Error(`Сервер ${baseURL} не отвечает: ${lastError}`);
 }
 
-export default async function globalSetup(config: FullConfig): Promise<void> {
-  const baseURL =
-    process.env.DCS_VISUAL_BASE_URL ||
-    config.projects[0]?.use?.baseURL ||
-    'http://127.0.0.1:3000';
+/** Сколько воркеров засеять: env → конфиг Playwright → 1. */
+export function resolveWorkerCount(config: FullConfig): number {
+  const raw =
+    process.env.DCS_VISUAL_WORKERS ??
+    (typeof config.workers === 'number' ? config.workers : 1);
+  const parsed = Number.parseInt(String(raw), 10);
+  const count = Number.isFinite(parsed) ? parsed : 1;
+  return Math.min(Math.max(count, 1), MAX_SEEDED_WORKERS);
+}
 
-  await waitForServer(baseURL);
+interface SeedOptions {
+  /** Создавать ли двух персонажей (canonical нужен только для /settings). */
+  withCharacters: boolean;
+}
 
-  // Регистрация теперь отдельным роутом; 409 значит, что аккаунт уже есть
-  // (прогон против постоянного --base-url) — это нормально, дальше логинимся.
+/** Регистрирует/переиспользует аккаунт и (при желании) сеет персонажей. */
+async function seedAccount(
+  baseURL: string,
+  username: string,
+  options: SeedOptions,
+): Promise<VisualAccount> {
+  // Регистрация отдельным роутом; 409 значит, что аккаунт уже есть
+  // (прогон против постоянного --base-url) — дальше просто логинимся.
   const registration = await requestJson<{
     success: boolean;
     user?: VisualUser;
@@ -85,7 +109,7 @@ export default async function globalSetup(config: FullConfig): Promise<void> {
   }>(baseURL, '/api/auth/register', {
     method: 'POST',
     body: JSON.stringify({
-      username: USERNAME,
+      username,
       password: PASSWORD,
       displayName: DISPLAY_NAME,
       recoveryPhrase: VISUAL_RECOVERY_PHRASE,
@@ -93,42 +117,41 @@ export default async function globalSetup(config: FullConfig): Promise<void> {
   });
   if (registration.status !== 200 && registration.status !== 409) {
     throw new Error(
-      `Не удалось зарегистрировать визуальный аккаунт: HTTP ${registration.status} ` +
+      `Не удалось зарегистрировать ${username}: HTTP ${registration.status} ` +
         JSON.stringify(registration.body),
     );
   }
 
-  const auth = await requestJson<{
-    success: boolean;
-    isNewUser?: boolean;
-    user?: VisualUser;
-    error?: string;
-  }>(baseURL, '/api/auth', {
-    method: 'POST',
-    body: JSON.stringify({ username: USERNAME, password: PASSWORD }),
-  });
+  const login = async () => {
+    const auth = await requestJson<{
+      success: boolean;
+      isNewUser?: boolean;
+      user?: VisualUser;
+      error?: string;
+    }>(baseURL, '/api/auth', {
+      method: 'POST',
+      body: JSON.stringify({ username, password: PASSWORD }),
+    });
+    if (auth.status !== 200 || !auth.body.success || !auth.body.user) {
+      throw new Error(
+        `Не удалось войти ${username}: HTTP ${auth.status} ${JSON.stringify(auth.body)}`,
+      );
+    }
+    // Сессия теперь cookie: сырые fetch не хранят cookie jar, таскаем вручную.
+    const sessionCookie = (auth.headers.get('set-cookie') || '').split(';')[0];
+    if (!sessionCookie) {
+      throw new Error(`Не удалось получить сессионную cookie для ${username}`);
+    }
+    return { user: auth.body.user, sessionCookie };
+  };
 
-  if (auth.status !== 200 || !auth.body.success || !auth.body.user) {
-    throw new Error(
-      `Не удалось войти визуальным аккаунтом: HTTP ${auth.status} ${JSON.stringify(auth.body)}`,
-    );
-  }
-
-  // Сессия теперь cookie: сырые fetch в global-setup не хранят cookie jar,
-  // поэтому таскаем её вручную.
-  const sessionCookie = (auth.headers.get('set-cookie') || '').split(';')[0];
-  if (!sessionCookie) {
-    throw new Error('Не удалось получить сессионную cookie при входе');
-  }
+  let { user, sessionCookie } = await login();
   const authed = (init: RequestInit = {}): RequestInit => ({
     ...init,
     headers: { ...(init.headers || {}), cookie: sessionCookie },
   });
 
-  let user = auth.body.user;
-
   // Recovery phrase нужен, чтобы RecoveryModal не открывался поверх страниц.
-  // Новый аккаунт получает её при регистрации; для старого — доставляем.
   if (!user.hasRecoveryPhrase) {
     const phrase = await requestJson<{ success: boolean; error?: string }>(
       baseURL,
@@ -140,24 +163,11 @@ export default async function globalSetup(config: FullConfig): Promise<void> {
     );
     if (phrase.status !== 200 || !phrase.body.success) {
       throw new Error(
-        `Не удалось сохранить recovery phrase: HTTP ${phrase.status} ${JSON.stringify(phrase.body)}`,
+        `Не удалось сохранить recovery phrase (${username}): HTTP ${phrase.status} ` +
+          JSON.stringify(phrase.body),
       );
     }
-
-    const relogin = await requestJson<{
-      success: boolean;
-      user?: VisualUser;
-      error?: string;
-    }>(baseURL, '/api/auth', {
-      method: 'POST',
-      body: JSON.stringify({ username: USERNAME, password: PASSWORD }),
-    });
-    if (relogin.status !== 200 || !relogin.body.user) {
-      throw new Error(
-        `Не удалось перелогиниться: HTTP ${relogin.status} ${JSON.stringify(relogin.body)}`,
-      );
-    }
-    user = relogin.body.user;
+    ({ user, sessionCookie } = await login());
   }
 
   // Чистим листы от предыдущего прогона, чтобы дашборд был детерминированным.
@@ -180,17 +190,15 @@ export default async function globalSetup(config: FullConfig): Promise<void> {
   }
 
   const create = async (fixture: object, label: string): Promise<string> => {
+    if (!options.withCharacters) return '';
     const created = await requestJson<{ id?: string; error?: string }>(
       baseURL,
       '/api/characters',
-      authed({
-        method: 'POST',
-        body: JSON.stringify(fixture),
-      }),
+      authed({ method: 'POST', body: JSON.stringify(fixture) }),
     );
     if (created.status !== 201 || !created.body.id) {
       throw new Error(
-        `Не удалось создать персонажа (${label}): HTTP ${created.status} ` +
+        `Не удалось создать персонажа (${label}, ${username}): HTTP ${created.status} ` +
           JSON.stringify(created.body),
       );
     }
@@ -200,19 +208,48 @@ export default async function globalSetup(config: FullConfig): Promise<void> {
   const dndId = await create(dndCharacter, 'D&D');
   const dhId = await create(dhCharacter, 'Dark Heresy');
 
-  const state: VisualState = {
-    baseURL,
-    username: USERNAME,
+  return {
+    username,
     password: PASSWORD,
     user: { ...user, hasRecoveryPhrase: true },
     dndId,
     dhId,
   };
+}
+
+export default async function globalSetup(config: FullConfig): Promise<void> {
+  const baseURL =
+    process.env.DCS_VISUAL_BASE_URL ||
+    config.projects[0]?.use?.baseURL ||
+    'http://127.0.0.1:3000';
+
+  await waitForServer(baseURL);
+
+  const workerCount = resolveWorkerCount(config);
+
+  // canonical — фиксированный логин `visual-tests` (виден на /settings),
+  // персонажи ему не нужны.
+  const canonical = await seedAccount(baseURL, CANONICAL_USERNAME, {
+    withCharacters: false,
+  });
+
+  const workers: VisualAccount[] = [];
+  for (let index = 0; index < workerCount; index += 1) {
+    workers.push(
+      await seedAccount(baseURL, `${CANONICAL_USERNAME}-w${index + 1}`, {
+        withCharacters: true,
+      }),
+    );
+  }
+
+  const state: VisualStateFile = { baseURL, canonical, workers };
 
   fs.mkdirSync(path.dirname(STATE_FILE), { recursive: true });
   fs.writeFileSync(STATE_FILE, JSON.stringify(state, null, 2), 'utf8');
 
   console.log(
-    `[visual] baseURL=${baseURL} user=${user.uid} dnd=${dndId} dh=${dhId}`,
+    `[visual] baseURL=${baseURL} canonical=${canonical.user.uid} ` +
+      `воркеров: ${workers.length} ` +
+      `(${workers.map((w) => `${w.username}:${w.dndId}/${w.dhId}`).join(', ')})`,
   );
 }
