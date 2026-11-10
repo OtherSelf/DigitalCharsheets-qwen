@@ -24,48 +24,49 @@ const isMobile = () => test.info().project.name === 'mobile';
  */
 
 test.describe('лист D&D — чтение', () => {
-  test('desktop: верх, характеристики и бой (en)', async ({
-    page,
-    context,
-  }) => {
-    test.skip(isMobile(), 'desktop-only сценарий');
-    await prepare(context);
-    await openApp(page, `/${getState().dndId}`);
+  test(
+    'desktop: верх, характеристики и бой (en)',
+    { tag: '@fast' },
+    async ({ page, context }) => {
+      test.skip(isMobile(), 'desktop-only сценарий');
+      await prepare(context);
+      await openApp(page, `/${getState().dndId}`);
 
-    await expect(
-      page.getByRole('heading', { name: 'Seraphina Vael' }),
-    ).toBeVisible();
-    await screenshotPage(page, 'sheet-dnd-top-en.png');
+      await expect(
+        page.getByRole('heading', { name: 'Seraphina Vael' }),
+      ).toBeVisible();
+      await screenshotPage(page, 'sheet-dnd-top-en.png');
 
-    await screenshotElement(
-      page.locator('#character-info-card:visible').first(),
-      'sheet-dnd-info-en.png',
-    );
-    await screenshotElement(
-      page.locator('#stats-card:visible').first(),
-      'sheet-dnd-stats-en.png',
-    );
-    await screenshotElement(
-      page.locator('#saving-throws-card:visible').first(),
-      'sheet-dnd-saves-en.png',
-    );
-    await screenshotElement(
-      page.locator('#skills-card:visible').first(),
-      'sheet-dnd-skills-en.png',
-    );
-    await screenshotElement(
-      page.locator('#hit-points-card:visible').first(),
-      'sheet-dnd-combat-en.png',
-    );
-    await screenshotElement(
-      page.locator('#attacks-and-spellcasting-box:visible').first(),
-      'sheet-dnd-attacks-en.png',
-    );
-    await screenshotElement(
-      page.locator('#divine-boons-section:visible').first(),
-      'sheet-dnd-divine-boons-en.png',
-    );
-  });
+      await screenshotElement(
+        page.locator('#character-info-card:visible').first(),
+        'sheet-dnd-info-en.png',
+      );
+      await screenshotElement(
+        page.locator('#stats-card:visible').first(),
+        'sheet-dnd-stats-en.png',
+      );
+      await screenshotElement(
+        page.locator('#saving-throws-card:visible').first(),
+        'sheet-dnd-saves-en.png',
+      );
+      await screenshotElement(
+        page.locator('#skills-card:visible').first(),
+        'sheet-dnd-skills-en.png',
+      );
+      await screenshotElement(
+        page.locator('#hit-points-card:visible').first(),
+        'sheet-dnd-combat-en.png',
+      );
+      await screenshotElement(
+        page.locator('#attacks-and-spellcasting-box:visible').first(),
+        'sheet-dnd-attacks-en.png',
+      );
+      await screenshotElement(
+        page.locator('#divine-boons-section:visible').first(),
+        'sheet-dnd-divine-boons-en.png',
+      );
+    },
+  );
 
   test('desktop: инвентарь, заклинания, спутники, нарратив (en)', async ({
     page,
@@ -139,32 +140,33 @@ test.describe('лист D&D — чтение', () => {
 });
 
 test.describe('лист Dark Heresy — чтение', () => {
-  test('desktop: верх, инфо, прогрессия, характеристики (en)', async ({
-    page,
-    context,
-  }) => {
-    test.skip(isMobile(), 'desktop-only сценарий');
-    await prepare(context);
-    await openApp(page, `/${getState().dhId}`);
+  test(
+    'desktop: верх, инфо, прогрессия, характеристики (en)',
+    { tag: '@fast' },
+    async ({ page, context }) => {
+      test.skip(isMobile(), 'desktop-only сценарий');
+      await prepare(context);
+      await openApp(page, `/${getState().dhId}`);
 
-    await expect(
-      page.getByRole('heading', { name: 'Lucius Varn' }),
-    ).toBeVisible();
-    await screenshotPage(page, 'sheet-dh-top-en.png');
+      await expect(
+        page.getByRole('heading', { name: 'Lucius Varn' }),
+      ).toBeVisible();
+      await screenshotPage(page, 'sheet-dh-top-en.png');
 
-    await screenshotElement(
-      page.locator('#info-section:visible').first(),
-      'sheet-dh-info-en.png',
-    );
-    await screenshotElement(
-      page.locator('#progression-section:visible').first(),
-      'sheet-dh-progression-en.png',
-    );
-    await screenshotElement(
-      page.locator('#characteristics-card:visible').first(),
-      'sheet-dh-characteristics-en.png',
-    );
-  });
+      await screenshotElement(
+        page.locator('#info-section:visible').first(),
+        'sheet-dh-info-en.png',
+      );
+      await screenshotElement(
+        page.locator('#progression-section:visible').first(),
+        'sheet-dh-progression-en.png',
+      );
+      await screenshotElement(
+        page.locator('#characteristics-card:visible').first(),
+        'sheet-dh-characteristics-en.png',
+      );
+    },
+  );
 
   test('desktop: навыки, таланты, снаряжение, инвентарь (en)', async ({
     page,
