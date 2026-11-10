@@ -88,6 +88,11 @@ interface CombatStats {
 }
 
 interface CombatSectionProps {
+  /**
+   * Префикс для `id` карточек: нужен, когда секция рендерится дважды
+   * (лист компаньона), иначе на странице появляются дубли `id`.
+   */
+  idPrefix?: string;
   characterId: string;
   initialCombatStats: CombatStats;
   initialExhaustion: number;
@@ -127,11 +132,13 @@ export const DndCombatSection = React.forwardRef<
       progressionData,
       isCompactView,
       activeCompactSection,
+      idPrefix,
       manualHitDice,
       onManualHitDiceChange,
     },
     ref,
   ) => {
+    const idp = idPrefix ? `${idPrefix}-` : '';
     const { updateCharacter, showEditButtons, hideNotes } =
       useCharacterContext();
     const { t } = useTranslation();
@@ -561,7 +568,7 @@ export const DndCombatSection = React.forwardRef<
             'hidden',
         )}
       >
-        <Card id="combat-stats-card">
+        <Card id={`${idp}combat-stats-card`}>
           <CardHeader className="flex flex-row items-center justify-between px-4 pb-2 pt-2">
             <CardTitle className="text-[10px] font-bold uppercase tracking-tight text-muted-foreground">
               {t('combatStats')}
@@ -633,7 +640,7 @@ export const DndCombatSection = React.forwardRef<
           </CardContent>
         </Card>
 
-        <Card id="hit-points-card">
+        <Card id={`${idp}hit-points-card`}>
           <CardHeader className="flex flex-row items-center justify-between px-4 pb-2 pt-2">
             <div className="flex items-center gap-2">
               <CardTitle className="text-[10px] font-bold uppercase tracking-tight text-muted-foreground">
@@ -827,7 +834,7 @@ export const DndCombatSection = React.forwardRef<
           </CardContent>
         </Card>
 
-        <Card id="death-saves-exhaustion-card">
+        <Card id={`${idp}death-saves-exhaustion-card`}>
           <CardHeader className="flex flex-row items-center justify-between px-4 pb-2 pt-2">
             <CardTitle className="text-[10px] font-bold uppercase tracking-tight text-muted-foreground">
               {t('deathSavesAndExhaustion')}
@@ -1009,7 +1016,7 @@ export const DndCombatSection = React.forwardRef<
           </CardContent>
         </Card>
 
-        <Card id="hit-dice-card">
+        <Card id={`${idp}hit-dice-card`}>
           <CardHeader className="flex flex-row items-center justify-between px-4 pb-2 pt-2">
             <CardTitle className="text-[10px] font-bold uppercase tracking-tight text-muted-foreground">
               {t('hitDice')}
@@ -1093,7 +1100,7 @@ export const DndCombatSection = React.forwardRef<
           </CardContent>
         </Card>
 
-        <Card id="attacks-and-spellcasting-box">
+        <Card id={`${idp}attacks-and-spellcasting-box`}>
           <CardHeader className="flex flex-row items-center justify-between px-4 pb-2 pt-2">
             <CardTitle className="text-[10px] font-bold uppercase tracking-tight text-muted-foreground">
               {t('attacksAndSpellcasting')}
@@ -1510,7 +1517,7 @@ export const DndCombatSection = React.forwardRef<
           </CardContent>
         </Card>
 
-        <Card id="combat-resources-card">
+        <Card id={`${idp}combat-resources-card`}>
           <CardHeader className="flex flex-row items-center justify-between px-4 pb-2 pt-2">
             <CardTitle className="text-[10px] font-bold uppercase tracking-tight text-muted-foreground">
               {t('combatResources')}

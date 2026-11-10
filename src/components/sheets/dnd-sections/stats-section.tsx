@@ -166,6 +166,13 @@ const EditSaveButton = ({
   );
 
 interface StatsSectionProps {
+  /**
+   * Префикс для `id` карточек. Нужен, когда секция рендерится дважды —
+   * например, в листе компаньона: без префикса на странице появляются
+   * дубли `id` (`stats-card`, `hit-points-card`, ...), а на них держатся
+   * `htmlFor`/`aria-*` и селекторы визуальных тестов.
+   */
+  idPrefix?: string;
   characterId: string;
   stats: DnDStats;
   setStats: React.Dispatch<React.SetStateAction<DnDStats>>;
@@ -207,7 +214,9 @@ export function DndStatsSection({
   activeCompactSection,
   proficiencyBonus,
   passivePerception,
+  idPrefix,
 }: StatsSectionProps) {
+  const idp = idPrefix ? `${idPrefix}-` : '';
   const { updateCharacter, showEditButtons, hideNotes } = useCharacterContext();
   const { t } = useTranslation();
 
@@ -221,7 +230,7 @@ export function DndStatsSection({
       )}
     >
       {!isCompactView && (
-        <Card id="stats-card">
+        <Card id={`${idp}stats-card`}>
           <CardHeader className="flex flex-row items-center justify-between px-4 pb-2 pt-2">
             <CardTitle className="text-[10px] font-bold uppercase tracking-tight text-muted-foreground">
               {t('characteristics')}
