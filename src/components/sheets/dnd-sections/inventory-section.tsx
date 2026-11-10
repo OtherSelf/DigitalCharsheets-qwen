@@ -49,6 +49,12 @@ const EditSaveButton = ({
   );
 
 interface InventorySectionProps {
+  /**
+   * Префикс для `id`: нужен, когда секция рендерится ещё и в листе
+   * компаньона — иначе на странице появляются дубли `id`, а на них
+   * держатся `htmlFor`, `aria-*`, якоря и селекторы `#...` в тестах.
+   */
+  idPrefix?: string;
   characterId: string;
   initialCurrency: {
     cp: number;
@@ -63,7 +69,8 @@ interface InventorySectionProps {
 export const DndInventorySection = React.forwardRef<
   { saveAll: () => void },
   InventorySectionProps
->(({ characterId, initialCurrency, initialEquipment }, ref) => {
+>(({ characterId, initialCurrency, initialEquipment, idPrefix }, ref) => {
+  const idp = idPrefix ? `${idPrefix}-` : '';
   const { updateCharacter, showEditButtons, hideNotes } = useCharacterContext();
   const { t } = useTranslation();
 
@@ -101,7 +108,7 @@ export const DndInventorySection = React.forwardRef<
   );
 
   return (
-    <Card id="inventory-box">
+    <Card id={`${idp}inventory-box`}>
       <CardHeader className="px-4 pb-2 pt-2">
         <CardTitle className="text-[10px] font-bold uppercase tracking-tight text-muted-foreground">
           {t('inventory')}

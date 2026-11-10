@@ -50,6 +50,12 @@ const EditSaveButton = ({
   );
 
 interface AttunementSectionProps {
+  /**
+   * Префикс для `id`: нужен, когда секция рендерится ещё и в листе
+   * компаньона — иначе на странице появляются дубли `id`, а на них
+   * держатся `htmlFor`, `aria-*`, якоря и селекторы `#...` в тестах.
+   */
+  idPrefix?: string;
   characterId: string;
   initialItems: AttunementItem[];
 }
@@ -57,7 +63,8 @@ interface AttunementSectionProps {
 export const DndAttunementSection = React.forwardRef<
   { saveAll: () => void },
   AttunementSectionProps
->(({ characterId, initialItems }, ref) => {
+>(({ characterId, initialItems, idPrefix }, ref) => {
+  const idp = idPrefix ? `${idPrefix}-` : '';
   const { updateCharacter, showEditButtons, hideNotes } = useCharacterContext();
   const { t } = useTranslation();
   const { toast } = useToast();
@@ -107,7 +114,7 @@ export const DndAttunementSection = React.forwardRef<
   };
 
   return (
-    <Card id="attunement-card">
+    <Card id={`${idp}attunement-card`}>
       <CardHeader className="flex flex-row items-center justify-between px-4 pb-2 pt-2">
         <CardTitle className="text-[10px] font-bold uppercase tracking-tight text-muted-foreground">
           {t('attunement')}

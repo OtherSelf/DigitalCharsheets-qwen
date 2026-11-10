@@ -282,6 +282,12 @@ export interface HeaderData {
 }
 
 interface CharacterInfoSectionProps {
+  /**
+   * Префикс для `id`: нужен, когда секция рендерится ещё и в листе
+   * компаньона — иначе на странице появляются дубли `id`, а на них
+   * держатся `htmlFor`, `aria-*`, якоря и селекторы `#...` в тестах.
+   */
+  idPrefix?: string;
   characterId: string;
   initialName: string;
   initialHeaderData: HeaderData;
@@ -290,7 +296,8 @@ interface CharacterInfoSectionProps {
 export const DndCharacterInfoSection = React.forwardRef<
   { saveAll: () => void },
   CharacterInfoSectionProps
->(({ characterId, initialName, initialHeaderData }, ref) => {
+>(({ characterId, initialName, initialHeaderData, idPrefix }, ref) => {
+  const idp = idPrefix ? `${idPrefix}-` : '';
   const { updateCharacter, showEditButtons } = useCharacterContext();
   const { t } = useTranslation();
 
@@ -330,7 +337,7 @@ export const DndCharacterInfoSection = React.forwardRef<
     >
       <AccordionItem value="expanded" className="border-0">
         <Card
-          id="character-info-card"
+          id={`${idp}character-info-card`}
           className="flex h-full flex-col overflow-hidden border-2"
         >
           <CardHeader className="flex flex-row items-center justify-between bg-muted/5 px-4 pb-2 pt-2">
