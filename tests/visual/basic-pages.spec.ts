@@ -606,7 +606,7 @@ test.describe('адаптивность', () => {
   }) => {
     test.skip(!isMobile(), 'мобильный компактный вид');
 
-    for (const scale of ['0.8', '1.25']) {
+    for (const scale of ['0.5', '0.8', '1.25', '1.5']) {
       await prepare(context);
       await context.addInitScript((value) => {
         try {
