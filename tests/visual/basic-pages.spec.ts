@@ -600,6 +600,100 @@ test.describe('адаптивность', () => {
     }
   });
 
+  test('Display Settings: смена UI Scale на 80% не двигает корень', async ({
+    page,
+    context,
+  }) => {
+    test.skip(!isMobile(), 'мобильный компактный вид');
+    await prepare(context);
+    await openApp(page, `/${getState().dhId}`);
+
+    // Ровно путь пользователя: профиль → Display Settings → UI Scale 80%.
+    // Пока диалог открыт, Radix ставит body.style.overflow = 'hidden'
+    // инлайном и перебивает наш `overflow: clip`; если оболочка приложения
+    // остаётся в потоке, у body появляется прокручиваемый «излишек»
+    // (125dvh при 80%) и корень можно сдвинуть — тогда «уезжают» шапка
+    // и левое меню. Оболочка вынесена из потока (position: fixed),
+    // поэтому сдвигать нечего.
+    await page.getByRole('button', { name: 'Open user menu' }).click();
+    await page.getByRole('menuitem', { name: /Display Settings/i }).click();
+    const dialog = page.getByRole('dialog');
+    await dialog.waitFor();
+
+    const decrease = dialog.getByRole('button', {
+      name: 'Decrease UI scale',
+    });
+    for (let i = 0; i < 2; i += 1) {
+      await decrease.click();
+      await page.waitForTimeout(200);
+    }
+    await expect(dialog).toContainText('80%');
+
+    // Пока диалог открыт: body реально переключён на overflow: hidden.
+    await expect
+      .poll(async () =>
+        page.evaluate(() => getComputedStyle(document.body).overflow),
+      )
+      .toBe('hidden');
+
+    await page.keyboard.press('Escape');
+    await expect(dialog).toBeHidden();
+    await page.waitForTimeout(400);
+
+    const state = async () =>
+      page.evaluate(() => {
+        const wrapper = document.querySelector(
+          '[data-ui-scale-wrapper]',
+        ) as HTMLElement;
+        return {
+          scale: getComputedStyle(document.documentElement)
+            .getPropertyValue('--ui-scale')
+            .trim(),
+          rootTop: document.documentElement.scrollTop,
+          rootLeft: document.documentElement.scrollLeft,
+          bodyTop: document.body.scrollTop,
+          bodyLeft: document.body.scrollLeft,
+          wrapperTop: Math.round(wrapper.getBoundingClientRect().top),
+          wrapperLeft: Math.round(wrapper.getBoundingClientRect().left),
+          wrapperPosition: getComputedStyle(wrapper).position,
+        };
+      });
+
+    const afterScale = await state();
+    expect(afterScale.scale, 'масштаб применён').toBe('0.8');
+    expect(afterScale.wrapperPosition, 'оболочка вне потока').toBe('fixed');
+    expect(
+      {
+        rootTop: afterScale.rootTop,
+        rootLeft: afterScale.rootLeft,
+        bodyTop: afterScale.bodyTop,
+        bodyLeft: afterScale.bodyLeft,
+      },
+      'после закрытия диалога корень на месте',
+    ).toEqual({ rootTop: 0, rootLeft: 0, bodyTop: 0, bodyLeft: 0 });
+    expect(afterScale.wrapperTop, 'оболочка не уехала вверх').toBe(0);
+    expect(afterScale.wrapperLeft, 'оболочка не уехала вбок').toBe(0);
+
+    // И переход между секциями при 80% тоже ничего не сдвигает.
+    await page
+      .getByRole('navigation')
+      .getByRole('button', { name: 'Inventory', exact: true })
+      .click();
+    await page.waitForTimeout(600);
+    const afterSection = await state();
+    expect(afterSection.scale).toBe('0.8');
+    expect(
+      {
+        rootTop: afterSection.rootTop,
+        rootLeft: afterSection.rootLeft,
+        bodyTop: afterSection.bodyTop,
+        bodyLeft: afterSection.bodyLeft,
+      },
+      'после смены секции корень на месте',
+    ).toEqual({ rootTop: 0, rootLeft: 0, bodyTop: 0, bodyLeft: 0 });
+    expect(afterSection.wrapperTop).toBe(0);
+  });
+
   test('масштаб интерфейса ≠ 100%: корень не прокручивается', async ({
     page,
     context,
