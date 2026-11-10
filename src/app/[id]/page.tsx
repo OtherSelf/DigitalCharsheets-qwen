@@ -81,13 +81,33 @@ export default function CharacterPage() {
     }
   };
 
+  /*
+    LANDMARK: SCROLL_ONLY_INSIDE_MAIN
+    Прокручиваем ТОЛЬКО контейнер контента, а не `scrollIntoView()`.
+    `scrollIntoView` двигает всех прокручиваемых предков, включая корень
+    документа; при масштабе интерфейса ≠ 100% у корня есть «излишек»
+    высоты, и он уезжал вместе с шапкой и левым меню. Здесь корень не
+    участвует вообще: считаем смещение секции внутри `<main>` и скроллим
+    его. Делим на эффективный масштаб (у оболочки `transform: scale()`),
+    потому что `getBoundingClientRect()` возвращает визуальные пиксели,
+    а `scrollTop` — layout-пиксели.
+  */
   useEffect(() => {
-    if (isCompactView && activeCompactSection !== 'info-section') {
-      const element = document.getElementById(activeCompactSection);
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
-    }
+    if (!isCompactView || activeCompactSection === 'info-section') return;
+    const element = document.getElementById(activeCompactSection);
+    const scroller = element?.closest('main');
+    if (!element || !(scroller instanceof HTMLElement)) return;
+
+    const scrollerRect = scroller.getBoundingClientRect();
+    const elementRect = element.getBoundingClientRect();
+    const scale =
+      scroller.clientHeight > 0
+        ? scrollerRect.height / scroller.clientHeight
+        : 1;
+    const top =
+      scroller.scrollTop + (elementRect.top - scrollerRect.top) / (scale || 1);
+
+    scroller.scrollTo({ top, behavior: 'smooth' });
   }, [activeCompactSection, isCompactView]);
 
   if (!isLoaded || !character) {
