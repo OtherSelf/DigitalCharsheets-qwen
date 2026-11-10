@@ -122,14 +122,14 @@ export function CustomResourceCounter({
         </div>
         <div className="space-y-2">
           {resources.length === 0 && !isEditing && (
-            <p className="rounded-lg border border-dashed py-2 text-center text-xs italic text-muted-foreground">
+            <p className="text-muted-foreground rounded-lg border border-dashed py-2 text-center text-xs italic">
               No custom resources added.
             </p>
           )}
           {resources.map((res) => (
             <div
               key={res.id}
-              className="flex items-center justify-between rounded border border-muted/20 bg-muted/10 p-2"
+              className="border-muted/20 bg-muted/10 flex items-center justify-between rounded border p-2"
             >
               {isEditing ? (
                 <div className="mr-2 flex flex-1 flex-col gap-1">
@@ -142,7 +142,7 @@ export function CustomResourceCounter({
                     placeholder="Resource Name"
                   />
                   <div className="flex items-center gap-1">
-                    <span className="shrink-0 text-[9px] font-bold uppercase text-muted-foreground">
+                    <span className="text-muted-foreground shrink-0 text-[9px] font-bold uppercase">
                       Max
                     </span>
                     <Input
@@ -218,7 +218,7 @@ export function CustomResourceCounter({
                       </PopoverContent>
                     </Popover>
                   )}
-                  <span className="flex-1 break-words text-xs font-bold">
+                  <span className="flex-1 text-xs font-bold break-words">
                     {res.description}
                   </span>
                 </div>
@@ -249,7 +249,7 @@ export function CustomResourceCounter({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-6 w-6 text-destructive"
+                    className="text-destructive h-6 w-6"
                     onClick={() => removeResource(res.id)}
                   >
                     <Trash2 className="h-3 w-3" />
@@ -288,7 +288,7 @@ export function CustomResourceCounter({
     <div className="col-span-2 mt-2">
       <Card className="mt-2">
         <CardHeader className="flex flex-row items-center justify-between px-3 py-2">
-          <CardTitle className="text-[10px] font-bold uppercase tracking-tight text-muted-foreground">
+          <CardTitle className="text-muted-foreground text-[10px] font-bold tracking-tight uppercase">
             Custom Resources
           </CardTitle>
           {(showEditButtons || isEditing) && (
@@ -301,14 +301,14 @@ export function CustomResourceCounter({
         </CardHeader>
         <CardContent className="space-y-2 p-3 pt-0">
           {resources.length === 0 && !isEditing && (
-            <p className="rounded border border-dashed py-1 text-center text-[10px] italic text-muted-foreground">
+            <p className="text-muted-foreground rounded border border-dashed py-1 text-center text-[10px] italic">
               No custom resources
             </p>
           )}
           {resources.map((res) => (
             <div
               key={res.id}
-              className="flex items-center justify-between rounded border border-muted/20 bg-muted/10 p-1.5"
+              className="border-muted/20 bg-muted/10 flex items-center justify-between rounded border p-1.5"
             >
               <div className="flex min-w-0 flex-1 items-center gap-1">
                 {!hideNotes && (
@@ -345,7 +345,7 @@ export function CustomResourceCounter({
                     </PopoverContent>
                   </Popover>
                 )}
-                <span className="flex-1 break-words text-[10px] font-bold">
+                <span className="flex-1 text-[10px] font-bold break-words">
                   {res.description}
                 </span>
               </div>
@@ -375,7 +375,7 @@ export function CustomResourceCounter({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-5 w-5 text-destructive"
+                    className="text-destructive h-5 w-5"
                     onClick={() => removeResource(res.id)}
                   >
                     <Trash2 className="h-3 w-3" />

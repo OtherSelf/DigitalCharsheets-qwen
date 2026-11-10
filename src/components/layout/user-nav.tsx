@@ -75,10 +75,10 @@ export function UserNav() {
         <DropdownMenuContent className="w-56" align="end" forceMount>
           <DropdownMenuLabel className="font-normal">
             <div className="flex flex-col space-y-1">
-              <p className="text-sm font-medium leading-none">
+              <p className="text-sm leading-none font-medium">
                 {user.displayName || t('user') || 'User'}
               </p>
-              <p className="text-xs text-muted-foreground">{user.username}</p>
+              <p className="text-muted-foreground text-xs">{user.username}</p>
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />

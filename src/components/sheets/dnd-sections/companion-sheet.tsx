@@ -396,7 +396,7 @@ export function CompanionSheet({
                 {companion.name || t('unnamedCompanion')}
               </CardTitle>
               {(companion.type || companion.size) && (
-                <p className="mt-1 text-sm text-muted-foreground">
+                <p className="text-muted-foreground mt-1 text-sm">
                   {companion.size}
                   {companion.size && companion.type ? ', ' : ''}
                   {companion.type}
@@ -425,7 +425,7 @@ export function CompanionSheet({
           <Button
             variant="ghost"
             size="icon"
-            className="h-9 w-9 text-destructive hover:bg-destructive/10"
+            className="text-destructive hover:bg-destructive/10 h-9 w-9"
             onClick={onDelete}
           >
             <Trash2 className="h-4 w-4" />
@@ -434,7 +434,7 @@ export function CompanionSheet({
       </CardHeader>
 
       {isEditing && (
-        <div className="mb-6 flex flex-wrap gap-4 rounded-lg border bg-muted/30 p-4">
+        <div className="bg-muted/30 mb-6 flex flex-wrap gap-4 rounded-lg border p-4">
           <Label className="mb-1 w-full text-xs font-bold uppercase">
             {t('showSections')}
           </Label>

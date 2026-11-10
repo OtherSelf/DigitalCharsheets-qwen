@@ -106,13 +106,13 @@ export default function DashboardPage() {
               входа список выглядел так, будто старые листы потерялись. */}
           {pendingDraft && (
             <Alert
-              className="mb-6 border-primary/30 bg-primary/5"
+              className="border-primary/30 bg-primary/5 mb-6"
               data-testid="pending-draft"
             >
-              <Scroll className="h-4 w-4 text-primary" />
+              <Scroll className="text-primary h-4 w-4" />
               <AlertDescription className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div className="min-w-0">
-                  <p className="font-medium text-foreground">
+                  <p className="text-foreground font-medium">
                     {t('pendingDraftTitle')}
                   </p>
                   <p className="text-muted-foreground">
@@ -149,7 +149,7 @@ export default function DashboardPage() {
               <h1 className="font-headline text-2xl font-bold sm:text-3xl">
                 {t('existingCharacters')}
               </h1>
-              <p className="max-w-2xl text-sm text-muted-foreground sm:text-base">
+              <p className="text-muted-foreground max-w-2xl text-sm sm:text-base">
                 {t('companionText')}
               </p>
             </div>
@@ -200,7 +200,7 @@ export default function DashboardPage() {
                   <Button
                     variant="outline"
                     asChild
-                    className="flex h-16 w-full items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/30 bg-transparent p-0 text-muted-foreground transition-colors duration-200 hover:border-accent hover:bg-accent/10 hover:text-accent-foreground sm:h-20"
+                    className="border-muted-foreground/30 text-muted-foreground hover:border-accent hover:bg-accent/10 hover:text-accent-foreground flex h-16 w-full items-center justify-center rounded-lg border-2 border-dashed bg-transparent p-0 transition-colors duration-200 sm:h-20"
                   >
                     <Link href="/new">
                       <PlusCircle className="mr-3 h-6 w-6 sm:mr-4 sm:h-8 sm:w-8" />
@@ -213,7 +213,7 @@ export default function DashboardPage() {
                   <Button
                     variant="outline"
                     asChild
-                    className="flex h-full min-h-[180px] w-full flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/30 bg-transparent p-0 text-muted-foreground transition-colors duration-200 hover:border-accent hover:bg-accent/10 hover:text-accent-foreground sm:min-h-[200px]"
+                    className="border-muted-foreground/30 text-muted-foreground hover:border-accent hover:bg-accent/10 hover:text-accent-foreground flex h-full min-h-[180px] w-full flex-col items-center justify-center rounded-lg border-2 border-dashed bg-transparent p-0 transition-colors duration-200 sm:min-h-[200px]"
                   >
                     <Link href="/new">
                       <PlusCircle className="mb-2 h-10 w-10 sm:h-12 sm:w-12" />

@@ -412,7 +412,7 @@ export const EquipmentInventorySection = React.forwardRef<
             )}
           >
             <div className="flex items-center border-b pr-4">
-              <h3 className="flex-1 px-6 py-4 font-headline text-lg font-semibold leading-none tracking-tight">
+              <h3 className="font-headline flex-1 px-6 py-4 text-lg leading-none font-semibold tracking-tight">
                 {t('equipment')}
               </h3>
               <CollapsibleTrigger asChild>
@@ -474,7 +474,7 @@ export const EquipmentInventorySection = React.forwardRef<
                             return (
                               <div
                                 key={part}
-                                className="space-y-2 rounded-lg border bg-background/50 p-3"
+                                className="bg-background/50 space-y-2 rounded-lg border p-3"
                               >
                                 <h5 className="font-semibold">
                                   {translatedName} ({bodyPartLocations[part]})
@@ -767,7 +767,7 @@ export const EquipmentInventorySection = React.forwardRef<
                       {equippedMeleeWeapons.map((weapon) => (
                         <div
                           key={weapon.id}
-                          className="space-y-2 rounded-lg border bg-background/50 p-3"
+                          className="bg-background/50 space-y-2 rounded-lg border p-3"
                         >
                           <div className="flex items-start justify-between">
                             {isMeleeWeaponsEditing ? (
@@ -783,11 +783,11 @@ export const EquipmentInventorySection = React.forwardRef<
                                 className="h-8 text-sm font-semibold"
                               />
                             ) : (
-                              <h5 className="break-words text-sm font-semibold">
+                              <h5 className="text-sm font-semibold break-words">
                                 {weapon.name}
                               </h5>
                             )}
-                            <div className="ml-2 flex flex-shrink-0 items-center gap-1">
+                            <div className="ml-2 flex shrink-0 items-center gap-1">
                               {!hideNotes && (
                                 <Popover>
                                   <PopoverTrigger asChild>
@@ -853,7 +853,7 @@ export const EquipmentInventorySection = React.forwardRef<
                                   className="h-7 w-7"
                                   onClick={() => removeMeleeWeapon(weapon.id)}
                                 >
-                                  <Trash2 className="h-4 w-4 text-destructive" />
+                                  <Trash2 className="text-destructive h-4 w-4" />
                                 </Button>
                               )}
                             </div>
@@ -1024,7 +1024,7 @@ export const EquipmentInventorySection = React.forwardRef<
                           {unequippedMeleeWeapons.map((weapon) => (
                             <div
                               key={weapon.id}
-                              className="space-y-2 rounded-lg border bg-background/50 p-3"
+                              className="bg-background/50 space-y-2 rounded-lg border p-3"
                             >
                               <div className="flex items-start justify-between">
                                 {isMeleeWeaponsEditing ? (
@@ -1040,11 +1040,11 @@ export const EquipmentInventorySection = React.forwardRef<
                                     className="h-8 text-sm font-semibold"
                                   />
                                 ) : (
-                                  <h5 className="break-words text-sm font-semibold">
+                                  <h5 className="text-sm font-semibold break-words">
                                     {weapon.name}
                                   </h5>
                                 )}
-                                <div className="ml-2 flex flex-shrink-0 items-center gap-1">
+                                <div className="ml-2 flex shrink-0 items-center gap-1">
                                   {!hideNotes && (
                                     <Popover>
                                       <PopoverTrigger asChild>
@@ -1117,7 +1117,7 @@ export const EquipmentInventorySection = React.forwardRef<
                                         removeMeleeWeapon(weapon.id)
                                       }
                                     >
-                                      <Trash2 className="h-4 w-4 text-destructive" />
+                                      <Trash2 className="text-destructive h-4 w-4" />
                                     </Button>
                                   )}
                                 </div>
@@ -1309,7 +1309,7 @@ export const EquipmentInventorySection = React.forwardRef<
                       {equippedRangedWeapons.map((weapon) => (
                         <div
                           key={weapon.id}
-                          className="space-y-2 rounded-lg border bg-background/50 p-3"
+                          className="bg-background/50 space-y-2 rounded-lg border p-3"
                         >
                           <div className="flex items-start justify-between">
                             {isRangedWeaponsEditing ? (
@@ -1325,11 +1325,11 @@ export const EquipmentInventorySection = React.forwardRef<
                                 className="h-8 text-sm font-semibold"
                               />
                             ) : (
-                              <h5 className="break-words text-sm font-semibold">
+                              <h5 className="text-sm font-semibold break-words">
                                 {weapon.name}
                               </h5>
                             )}
-                            <div className="ml-2 flex flex-shrink-0 items-center gap-1">
+                            <div className="ml-2 flex shrink-0 items-center gap-1">
                               {!hideNotes && (
                                 <Popover>
                                   <PopoverTrigger asChild>
@@ -1395,7 +1395,7 @@ export const EquipmentInventorySection = React.forwardRef<
                                   className="h-7 w-7"
                                   onClick={() => removeRangedWeapon(weapon.id)}
                                 >
-                                  <Trash2 className="h-4 w-4 text-destructive" />
+                                  <Trash2 className="text-destructive h-4 w-4" />
                                 </Button>
                               )}
                             </div>
@@ -1631,7 +1631,7 @@ export const EquipmentInventorySection = React.forwardRef<
                           {unequippedRangedWeapons.map((weapon) => (
                             <div
                               key={weapon.id}
-                              className="space-y-2 rounded-lg border bg-background/50 p-3"
+                              className="bg-background/50 space-y-2 rounded-lg border p-3"
                             >
                               <div className="flex items-start justify-between">
                                 {isRangedWeaponsEditing ? (
@@ -1647,11 +1647,11 @@ export const EquipmentInventorySection = React.forwardRef<
                                     className="h-8 text-sm font-semibold"
                                   />
                                 ) : (
-                                  <h5 className="break-words text-sm font-semibold">
+                                  <h5 className="text-sm font-semibold break-words">
                                     {weapon.name}
                                   </h5>
                                 )}
-                                <div className="ml-2 flex flex-shrink-0 items-center gap-1">
+                                <div className="ml-2 flex shrink-0 items-center gap-1">
                                   {!hideNotes && (
                                     <Popover>
                                       <PopoverTrigger asChild>
@@ -1724,7 +1724,7 @@ export const EquipmentInventorySection = React.forwardRef<
                                         removeRangedWeapon(weapon.id)
                                       }
                                     >
-                                      <Trash2 className="h-4 w-4 text-destructive" />
+                                      <Trash2 className="text-destructive h-4 w-4" />
                                     </Button>
                                   )}
                                 </div>
@@ -1982,7 +1982,7 @@ export const EquipmentInventorySection = React.forwardRef<
             )}
           >
             <div className="flex items-center border-b pr-4">
-              <h3 className="flex-1 px-6 py-4 font-headline text-lg font-semibold leading-none tracking-tight">
+              <h3 className="font-headline flex-1 px-6 py-4 text-lg leading-none font-semibold tracking-tight">
                 {t('inventory')}
               </h3>
               <CollapsibleTrigger asChild>
@@ -1999,10 +1999,10 @@ export const EquipmentInventorySection = React.forwardRef<
             </div>
             <CollapsibleContent>
               <div className={cn('space-y-8', isCompactView ? 'p-3' : 'p-6')}>
-                <div className="rounded-lg border bg-card p-4 shadow-sm">
+                <div className="bg-card rounded-lg border p-4 shadow-sm">
                   <div className="mb-4 flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <h4 className="text-lg font-semibold text-primary">
+                      <h4 className="text-primary text-lg font-semibold">
                         {t('wealth')}
                       </h4>
                       {!hideNotes && (
@@ -2086,22 +2086,22 @@ export const EquipmentInventorySection = React.forwardRef<
                     </div>
                   ) : (
                     <div className="grid grid-cols-1 gap-4 text-sm font-medium md:grid-cols-2">
-                      <div className="flex items-center justify-between rounded border bg-background p-2">
+                      <div className="bg-background flex items-center justify-between rounded border p-2">
                         <span>{t('throneGelt')}:</span>{' '}
-                        <span className="font-bold text-primary">
+                        <span className="text-primary font-bold">
                           {character.wealth?.throneGelt ?? 0}
                         </span>
                       </div>
-                      <div className="flex items-center justify-between rounded border bg-background p-2">
+                      <div className="bg-background flex items-center justify-between rounded border p-2">
                         <span>{t('monthlyIncome')}:</span>{' '}
-                        <span className="font-bold text-primary">
+                        <span className="text-primary font-bold">
                           {character.wealth?.monthlyIncome ?? 0}
                         </span>
                       </div>
                     </div>
                   )}
                 </div>
-                <div className="space-y-4 rounded-lg border bg-card p-4 shadow-sm">
+                <div className="bg-card space-y-4 rounded-lg border p-4 shadow-sm">
                   <div className="flex items-center justify-between border-b pb-2">
                     <h4 className="text-lg font-semibold">{t('items')}</h4>
                     {(showEditButtons || isInventoryEditing) && (
@@ -2177,7 +2177,7 @@ export const EquipmentInventorySection = React.forwardRef<
                                 )
                               }
                             >
-                              <Trash2 className="h-4 w-4 text-destructive" />
+                              <Trash2 className="text-destructive h-4 w-4" />
                             </Button>
                           </div>
                         ))}
@@ -2194,15 +2194,15 @@ export const EquipmentInventorySection = React.forwardRef<
                       </div>
                     </div>
                   ) : (
-                    <div className="grid grid-cols-1 gap-x-4 gap-y-1 text-sm text-muted-foreground md:grid-cols-2">
+                    <div className="text-muted-foreground grid grid-cols-1 gap-x-4 gap-y-1 text-sm md:grid-cols-2">
                       {(currentInventory ?? []).length > 0 ? (
                         currentInventory.map((item) => (
                           <div
                             key={item.id}
-                            className="flex items-start gap-2 rounded p-1.5 transition-colors hover:bg-muted/50"
+                            className="hover:bg-muted/50 flex items-start gap-2 rounded p-1.5 transition-colors"
                           >
-                            <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary"></span>
-                            <span className="flex-grow break-words font-medium text-foreground">
+                            <span className="bg-primary mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full"></span>
+                            <span className="text-foreground flex-grow font-medium break-words">
                               {item.name}
                             </span>
                             {!hideNotes && (
@@ -2211,7 +2211,7 @@ export const EquipmentInventorySection = React.forwardRef<
                                   <Button
                                     variant={item.notes ? 'secondary' : 'ghost'}
                                     size="icon"
-                                    className="-mr-1 -mt-0.5 h-5 w-5 shrink-0"
+                                    className="-mt-0.5 -mr-1 h-5 w-5 shrink-0"
                                   >
                                     <InfoIcon className="h-3 w-3" />
                                   </Button>
@@ -2242,7 +2242,7 @@ export const EquipmentInventorySection = React.forwardRef<
                           </div>
                         ))
                       ) : (
-                        <p className="col-span-full rounded-lg border border-dashed p-4 text-center text-sm italic text-muted-foreground">
+                        <p className="text-muted-foreground col-span-full rounded-lg border border-dashed p-4 text-center text-sm italic">
                           {t('noInventoryItems')}
                         </p>
                       )}

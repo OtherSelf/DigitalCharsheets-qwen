@@ -145,8 +145,8 @@ export function DndSavesSkillsSection({
     >
       {/* PROFICIENCY BONUS BOX */}
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between px-4 pb-2 pt-2">
-          <CardTitle className="text-[10px] font-bold uppercase tracking-tight text-muted-foreground">
+        <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2">
+          <CardTitle className="text-muted-foreground text-[10px] font-bold tracking-tight uppercase">
             {t('proficiencyBonus')}
           </CardTitle>
         </CardHeader>
@@ -158,8 +158,8 @@ export function DndSavesSkillsSection({
       </Card>
 
       <Card id={`${idp}saving-throws-card`}>
-        <CardHeader className="flex flex-row items-center justify-between px-4 pb-2 pt-2">
-          <CardTitle className="text-[10px] font-bold uppercase tracking-tight text-muted-foreground">
+        <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2">
+          <CardTitle className="text-muted-foreground text-[10px] font-bold tracking-tight uppercase">
             {t('savingThrows')}
           </CardTitle>
           {(showEditButtons || isSavesEditing) && (
@@ -178,7 +178,7 @@ export function DndSavesSkillsSection({
             return (
               <div
                 key={st.name}
-                className="flex items-center gap-2 border-b border-muted py-1 last:border-0"
+                className="border-muted flex items-center gap-2 border-b py-1 last:border-0"
               >
                 <Checkbox
                   checked={st.proficient}
@@ -219,7 +219,7 @@ export function DndSavesSkillsSection({
                         <Button
                           size="icon"
                           variant="ghost"
-                          className="h-4 w-4 p-0 text-muted-foreground hover:text-foreground"
+                          className="text-muted-foreground hover:text-foreground h-4 w-4 p-0"
                           onClick={() => {
                             const updated = savingThrows.map((s, idx) =>
                               idx === i
@@ -259,8 +259,8 @@ export function DndSavesSkillsSection({
       </Card>
 
       <Card id={`${idp}skills-card`}>
-        <CardHeader className="flex flex-row items-center justify-between px-4 pb-2 pt-2">
-          <CardTitle className="text-[10px] font-bold uppercase tracking-tight text-muted-foreground">
+        <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2">
+          <CardTitle className="text-muted-foreground text-[10px] font-bold tracking-tight uppercase">
             {t('skills')}
           </CardTitle>
           {(showEditButtons || isSkillsEditing) && (
@@ -281,7 +281,7 @@ export function DndSavesSkillsSection({
             return (
               <div
                 key={sk.name}
-                className="flex items-center gap-1.5 border-b border-muted py-1 last:border-0"
+                className="border-muted flex items-center gap-1.5 border-b py-1 last:border-0"
               >
                 <Checkbox
                   checked={sk.proficient}
@@ -338,7 +338,7 @@ export function DndSavesSkillsSection({
                         <Button
                           size="icon"
                           variant="ghost"
-                          className="h-4 w-4 p-0 text-muted-foreground hover:text-foreground"
+                          className="text-muted-foreground hover:text-foreground h-4 w-4 p-0"
                           onClick={() => {
                             const updated = skills.map((s, idx) =>
                               idx === i

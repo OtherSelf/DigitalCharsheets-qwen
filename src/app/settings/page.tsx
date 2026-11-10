@@ -128,7 +128,7 @@ export default function ProfileSettingsPage() {
       <main className="safe-area-bottom flex-1 overflow-y-auto p-4 md:p-8">
         <div className="mx-auto max-w-2xl space-y-6">
           {error && (
-            <div className="flex items-center gap-2 rounded-md bg-destructive/15 p-3 text-sm text-destructive">
+            <div className="bg-destructive/15 text-destructive flex items-center gap-2 rounded-md p-3 text-sm">
               <AlertCircle className="h-4 w-4" />
               <span>{error}</span>
             </div>
@@ -216,7 +216,7 @@ export default function ProfileSettingsPage() {
                       <Plus className="h-4 w-4" />
                     </Button>
                   </div>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-muted-foreground text-xs">
                     {t('minFontSizeWarning') ||
                       'Minimum 8pt. Boxes, padding and spacing stay unchanged.'}
                   </p>
@@ -251,7 +251,7 @@ export default function ProfileSettingsPage() {
                       <Plus className="h-4 w-4" />
                     </Button>
                   </div>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-muted-foreground text-xs">
                     {t('uiScaleWarning') ||
                       'Range: 50% to 150%. Scales the whole interface.'}
                   </p>

@@ -1,7 +1,6 @@
 import type { Config } from 'tailwindcss';
 
 export default {
-  darkMode: ['class'],
   content: [
     './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
     './src/components/**/*.{js,ts,jsx,tsx,mdx}',
@@ -9,9 +8,6 @@ export default {
   ],
   theme: {
     extend: {
-      screens: {
-        '3xl': '1800px',
-      },
       // FONT FIX: Reference the CSS variables instead of raw font names
       fontFamily: {
         body: ['var(--font-inter)', 'sans-serif'],
@@ -99,5 +95,4 @@ export default {
       },
     },
   },
-  plugins: [require('tailwindcss-animate')],
 } satisfies Config;

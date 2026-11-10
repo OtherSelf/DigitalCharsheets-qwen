@@ -130,7 +130,7 @@ export function ImportCharacterDialog({
         {isCompactView ? (
           <Button
             variant="outline"
-            className="flex h-20 w-full items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/30 bg-transparent p-0 text-muted-foreground transition-colors duration-200 hover:border-accent hover:bg-accent/10 hover:text-accent-foreground"
+            className="border-muted-foreground/30 text-muted-foreground hover:border-accent hover:bg-accent/10 hover:text-accent-foreground flex h-20 w-full items-center justify-center rounded-lg border-2 border-dashed bg-transparent p-0 transition-colors duration-200"
           >
             <FileUp className="mr-4 h-8 w-8" />
             <span className="font-semibold">{t('importCharacter')}</span>
@@ -138,7 +138,7 @@ export function ImportCharacterDialog({
         ) : (
           <Button
             variant="outline"
-            className="flex h-full min-h-[200px] w-full flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/30 bg-transparent p-0 text-muted-foreground transition-colors duration-200 hover:border-accent hover:bg-accent/10 hover:text-accent-foreground"
+            className="border-muted-foreground/30 text-muted-foreground hover:border-accent hover:bg-accent/10 hover:text-accent-foreground flex h-full min-h-[200px] w-full flex-col items-center justify-center rounded-lg border-2 border-dashed bg-transparent p-0 transition-colors duration-200"
           >
             <FileUp className="mb-2 h-12 w-12" />
             <span className="font-semibold">{t('importCharacter')}</span>
@@ -158,7 +158,7 @@ export function ImportCharacterDialog({
             ref={fileInputRef}
             onChange={handleFileSelect}
             disabled={isImporting}
-            className="block w-full text-sm text-gray-500 file:mr-4 file:rounded-md file:border-0 file:bg-primary file:px-4 file:py-2 file:text-sm file:font-semibold file:text-primary-foreground hover:file:bg-primary/90 disabled:opacity-50"
+            className="file:bg-primary file:text-primary-foreground hover:file:bg-primary/90 block w-full text-sm text-gray-500 file:mr-4 file:rounded-md file:border-0 file:px-4 file:py-2 file:text-sm file:font-semibold disabled:opacity-50"
           />
 
           {importError && (

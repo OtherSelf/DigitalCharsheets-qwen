@@ -96,7 +96,7 @@ export function DisplaySettingsModal({
                 <Plus className="h-4 w-4" />
               </Button>
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               {t('minFontSizeWarning') ||
                 'Minimum 8pt. Boxes, padding and spacing stay unchanged.'}
             </p>
@@ -132,7 +132,7 @@ export function DisplaySettingsModal({
                 <Plus className="h-4 w-4" />
               </Button>
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               {t('uiScaleWarning') ||
                 'Range: 50% to 150%. Scales the whole interface.'}
             </p>

@@ -89,7 +89,7 @@ const ArmorDisplay = ({
     return (
       <div
         className={cn(
-          'flex w-full min-w-0 flex-col items-center rounded-md border bg-card text-card-foreground shadow-md',
+          'bg-card text-card-foreground flex w-full min-w-0 flex-col items-center rounded-md border shadow-md',
           isCompactView ? 'p-1' : 'p-2',
         )}
       >
@@ -101,7 +101,7 @@ const ArmorDisplay = ({
         >
           {title}
         </h4>
-        <div className="mb-1 text-[10px] text-muted-foreground">
+        <div className="text-muted-foreground mb-1 text-[10px]">
           ({location})
         </div>
         <div
@@ -394,7 +394,7 @@ export const DarkHeresySheet = React.forwardRef<
       {isCompactView && (
         <div
           data-testid="characteristics-compact"
-          className="space-y-3 border-b bg-card px-4 py-3 shadow-sm"
+          className="bg-card space-y-3 border-b px-4 py-3 shadow-sm"
         >
           <div className="grid grid-cols-1 items-start gap-1 md:grid-cols-5">
             <div className="md:col-span-3">
@@ -460,14 +460,14 @@ export const DarkHeresySheet = React.forwardRef<
                     return (
                       <div
                         key={char.key}
-                        className="relative flex min-h-[60px] flex-col justify-between rounded-md border bg-background px-0.5 py-1 text-center"
+                        className="bg-background relative flex min-h-[60px] flex-col justify-between rounded-md border px-0.5 py-1 text-center"
                       >
                         <Popover>
                           <PopoverTrigger asChild>
                             <Button
                               variant={notes ? 'secondary' : 'ghost'}
                               size="icon"
-                              className="absolute right-0.5 top-0.5 h-4 w-4"
+                              className="absolute top-0.5 right-0.5 h-4 w-4"
                             >
                               <Info className="h-2.5 w-2.5" />
                             </Button>
@@ -498,10 +498,10 @@ export const DarkHeresySheet = React.forwardRef<
                             />
                           </PopoverContent>
                         </Popover>
-                        <div className="mt-1 text-[8px] font-semibold uppercase text-muted-foreground">
+                        <div className="text-muted-foreground mt-1 text-[8px] font-semibold uppercase">
                           {char.label}
                         </div>
-                        <div className="mb-1 mt-1 flex items-center justify-center gap-1">
+                        <div className="mt-1 mb-1 flex items-center justify-center gap-1">
                           {isCharacteristicsEditing ? (
                             <Input
                               type="number"
@@ -512,10 +512,10 @@ export const DarkHeresySheet = React.forwardRef<
                                   [char.key]: parseInt(e.target.value, 10) || 0,
                                 }))
                               }
-                              className="h-6 w-10 px-1 text-center text-xs font-bold leading-tight text-primary [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                              className="text-primary h-6 w-10 [appearance:textfield] px-1 text-center text-xs leading-tight font-bold [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                             />
                           ) : (
-                            <div className="text-sm font-bold leading-tight text-primary">
+                            <div className="text-primary text-sm leading-tight font-bold">
                               {val + bonus}
                             </div>
                           )}
@@ -567,7 +567,7 @@ export const DarkHeresySheet = React.forwardRef<
                                     });
                                   }
                                 }}
-                                className="h-2.5 w-2.5 data-[state=checked]:bg-primary"
+                                className="data-[state=checked]:bg-primary h-2.5 w-2.5"
                               />
                             ))}
                           </div>
@@ -611,7 +611,7 @@ export const DarkHeresySheet = React.forwardRef<
                         }
                         className="h-6 w-10 px-1 text-center text-xs"
                       />
-                      <span className="text-[10px] text-muted-foreground">
+                      <span className="text-muted-foreground text-[10px]">
                         /
                       </span>
                       <Input
@@ -648,7 +648,7 @@ export const DarkHeresySheet = React.forwardRef<
                       >
                         <Plus className="h-3 w-3" />
                       </Button>
-                      <span className="mx-0.5 text-[10px] text-muted-foreground">
+                      <span className="text-muted-foreground mx-0.5 text-[10px]">
                         /
                       </span>
                       <span className="text-sm">
@@ -691,7 +691,7 @@ export const DarkHeresySheet = React.forwardRef<
                         }
                         className="h-6 w-10 px-1 text-center text-xs"
                       />
-                      <span className="text-[10px] text-muted-foreground">
+                      <span className="text-muted-foreground text-[10px]">
                         /
                       </span>
                       <Input
@@ -728,7 +728,7 @@ export const DarkHeresySheet = React.forwardRef<
                       >
                         <Plus className="h-3 w-3" />
                       </Button>
-                      <span className="mx-0.5 text-[10px] text-muted-foreground">
+                      <span className="text-muted-foreground mx-0.5 text-[10px]">
                         /
                       </span>
                       <span className="text-sm">
@@ -782,7 +782,7 @@ export const DarkHeresySheet = React.forwardRef<
                           }
                           className="h-6 w-10 px-1 text-center text-xs"
                         />
-                        <span className="text-[10px] text-muted-foreground">
+                        <span className="text-muted-foreground text-[10px]">
                           /
                         </span>
                         <span className="text-sm">{fatigue1stMax}</span>
@@ -808,7 +808,7 @@ export const DarkHeresySheet = React.forwardRef<
                         >
                           <Plus className="h-3 w-3" />
                         </Button>
-                        <span className="mx-0.5 text-[10px] text-muted-foreground">
+                        <span className="text-muted-foreground mx-0.5 text-[10px]">
                           /
                         </span>
                         <span className="text-sm">{fatigue1stMax}</span>
@@ -859,7 +859,7 @@ export const DarkHeresySheet = React.forwardRef<
                           }
                           className="h-6 w-10 px-1 text-center text-xs"
                         />
-                        <span className="text-[10px] text-muted-foreground">
+                        <span className="text-muted-foreground text-[10px]">
                           /
                         </span>
                         <span className="text-sm">{fatigue2ndMax}</span>
@@ -885,7 +885,7 @@ export const DarkHeresySheet = React.forwardRef<
                         >
                           <Plus className="h-3 w-3" />
                         </Button>
-                        <span className="mx-0.5 text-[10px] text-muted-foreground">
+                        <span className="text-muted-foreground mx-0.5 text-[10px]">
                           /
                         </span>
                         <span className="text-sm">{fatigue2ndMax}</span>
@@ -1033,26 +1033,26 @@ export const DarkHeresySheet = React.forwardRef<
                 const agMod = Math.floor(effectiveAg / 10);
                 return (
                   <>
-                    <div className="rounded border bg-background/50 p-1 text-center">
-                      <div className="text-[8px] uppercase text-muted-foreground">
+                    <div className="bg-background/50 rounded border p-1 text-center">
+                      <div className="text-muted-foreground text-[8px] uppercase">
                         {t('halfMove')}
                       </div>
                       <div className="text-xs font-bold">{agMod}</div>
                     </div>
-                    <div className="rounded border bg-background/50 p-1 text-center">
-                      <div className="text-[8px] uppercase text-muted-foreground">
+                    <div className="bg-background/50 rounded border p-1 text-center">
+                      <div className="text-muted-foreground text-[8px] uppercase">
                         {t('move')}
                       </div>
                       <div className="text-xs font-bold">{agMod * 2}</div>
                     </div>
-                    <div className="rounded border bg-background/50 p-1 text-center">
-                      <div className="text-[8px] uppercase text-muted-foreground">
+                    <div className="bg-background/50 rounded border p-1 text-center">
+                      <div className="text-muted-foreground text-[8px] uppercase">
                         {t('charge')}
                       </div>
                       <div className="text-xs font-bold">{agMod * 3}</div>
                     </div>
-                    <div className="rounded border bg-background/50 p-1 text-center">
-                      <div className="text-[8px] uppercase text-muted-foreground">
+                    <div className="bg-background/50 rounded border p-1 text-center">
+                      <div className="text-muted-foreground text-[8px] uppercase">
                         {t('run')}
                       </div>
                       <div className="text-xs font-bold">{agMod * 6}</div>
@@ -1139,7 +1139,7 @@ export const DarkHeresySheet = React.forwardRef<
                 ? 'hidden'
                 : 'flex-1'
               : isSkillsPanelCollapsed
-                ? 'w-12 flex-shrink-0'
+                ? 'w-12 shrink-0'
                 : 'min-w-0 flex-1',
           )}
         >
@@ -1160,7 +1160,7 @@ export const DarkHeresySheet = React.forwardRef<
                 className="h-full w-full py-4"
                 onClick={() => setIsSkillsPanelCollapsed(false)}
               >
-                <span className="rotate-180 transform whitespace-nowrap text-center text-sm font-semibold uppercase tracking-widest text-muted-foreground [writing-mode:vertical-rl]">
+                <span className="text-muted-foreground rotate-180 transform text-center text-sm font-semibold tracking-widest whitespace-nowrap uppercase [writing-mode:vertical-rl]">
                   {t('skills')}, {t('talentsAndTraits')}, {t('wounds')} &amp;{' '}
                   {t('fate')}
                 </span>
@@ -1168,7 +1168,7 @@ export const DarkHeresySheet = React.forwardRef<
             </Card>
           ) : (
             <Card id="skills-talents-panel">
-              <CardHeader className="flex-row items-center justify-between px-6 pb-6 pt-3">
+              <CardHeader className="flex-row items-center justify-between px-6 pt-3 pb-6">
                 <CardTitle className="font-headline">
                   {t('skills')}, {t('talentsAndTraits')}, {t('wounds')} &amp;{' '}
                   {t('fate')}
@@ -1251,7 +1251,7 @@ export const DarkHeresySheet = React.forwardRef<
                             >
                               <Minus className="h-4 w-4" />
                             </Button>
-                            <p className="w-12 text-center text-2xl font-bold text-primary">
+                            <p className="text-primary w-12 text-center text-2xl font-bold">
                               {getPointsObject(character.wounds).current}
                             </p>
                             <Button
@@ -1262,7 +1262,7 @@ export const DarkHeresySheet = React.forwardRef<
                             >
                               <Plus className="h-4 w-4" />
                             </Button>
-                            <p className="ml-2 text-xl font-medium text-muted-foreground">
+                            <p className="text-muted-foreground ml-2 text-xl font-medium">
                               / {getPointsObject(character.wounds).max}
                             </p>
                           </div>
@@ -1328,7 +1328,7 @@ export const DarkHeresySheet = React.forwardRef<
                             >
                               <Minus className="h-4 w-4" />
                             </Button>
-                            <p className="w-12 text-center text-2xl font-bold text-primary">
+                            <p className="text-primary w-12 text-center text-2xl font-bold">
                               {getPointsObject(character.fatePoints).current}
                             </p>
                             <Button
@@ -1339,7 +1339,7 @@ export const DarkHeresySheet = React.forwardRef<
                             >
                               <Plus className="h-4 w-4" />
                             </Button>
-                            <p className="ml-2 text-xl font-medium text-muted-foreground">
+                            <p className="text-muted-foreground ml-2 text-xl font-medium">
                               / {getPointsObject(character.fatePoints).max}
                             </p>
                           </div>
@@ -1351,7 +1351,7 @@ export const DarkHeresySheet = React.forwardRef<
 
                 {!isCompactView && (
                   <Card>
-                    <CardHeader className="flex-row items-center justify-between px-6 pb-2 pt-3">
+                    <CardHeader className="flex-row items-center justify-between px-6 pt-3 pb-2">
                       <CardTitle className="font-headline text-base">
                         Fatigue & Critical Conditions
                       </CardTitle>
@@ -1422,7 +1422,7 @@ export const DarkHeresySheet = React.forwardRef<
                                     >
                                       <Minus className="h-4 w-4" />
                                     </Button>
-                                    <p className="w-12 text-center text-2xl font-bold text-primary">
+                                    <p className="text-primary w-12 text-center text-2xl font-bold">
                                       {character.fatigue1st?.current ?? 0}
                                     </p>
                                     <Button
@@ -1435,7 +1435,7 @@ export const DarkHeresySheet = React.forwardRef<
                                     >
                                       <Plus className="h-4 w-4" />
                                     </Button>
-                                    <p className="ml-2 text-xl font-medium text-muted-foreground">
+                                    <p className="text-muted-foreground ml-2 text-xl font-medium">
                                       / {fatigue1stMax}
                                     </p>
                                   </div>
@@ -1507,7 +1507,7 @@ export const DarkHeresySheet = React.forwardRef<
                                     >
                                       <Minus className="h-4 w-4" />
                                     </Button>
-                                    <p className="w-12 text-center text-2xl font-bold text-primary">
+                                    <p className="text-primary w-12 text-center text-2xl font-bold">
                                       {character.fatigue2nd?.current ?? 0}
                                     </p>
                                     <Button
@@ -1520,7 +1520,7 @@ export const DarkHeresySheet = React.forwardRef<
                                     >
                                       <Plus className="h-4 w-4" />
                                     </Button>
-                                    <p className="ml-2 text-xl font-medium text-muted-foreground">
+                                    <p className="text-muted-foreground ml-2 text-xl font-medium">
                                       / {fatigue2ndMax}
                                     </p>
                                   </div>
@@ -1540,16 +1540,16 @@ export const DarkHeresySheet = React.forwardRef<
                             (condition) => (
                               <div
                                 key={condition.id}
-                                className="flex items-center justify-between gap-2 rounded-md bg-muted/50 p-2"
+                                className="bg-muted/50 flex items-center justify-between gap-2 rounded-md p-2"
                               >
-                                <span className="flex-1 break-words text-sm">
+                                <span className="flex-1 text-sm break-words">
                                   {condition.name}
                                 </span>
                                 {showEditButtons && (
                                   <Button
                                     size="icon"
                                     variant="ghost"
-                                    className="h-6 w-6 text-destructive hover:text-destructive"
+                                    className="text-destructive hover:text-destructive h-6 w-6"
                                     onClick={() =>
                                       removeCriticalCondition(condition.id)
                                     }
@@ -1595,7 +1595,7 @@ export const DarkHeresySheet = React.forwardRef<
         {!isCompactView && (
           <div
             className={cn(
-              'flex-shrink-0 transition-all duration-300 ease-in-out',
+              'shrink-0 transition-all duration-300 ease-in-out',
               isSkillsPanelCollapsed && isEquipmentPanelCollapsed
                 ? 'flex-1'
                 : 'w-auto',
@@ -1603,7 +1603,7 @@ export const DarkHeresySheet = React.forwardRef<
           >
             {isTabletScreen ? (
               <Card>
-                <CardHeader className="flex-row items-center justify-between px-6 pb-6 pt-3">
+                <CardHeader className="flex-row items-center justify-between px-6 pt-3 pb-6">
                   <CardTitle className="font-headline">
                     {t('characteristics')}
                   </CardTitle>
@@ -1679,14 +1679,14 @@ export const DarkHeresySheet = React.forwardRef<
                         return (
                           <div
                             key={char.key}
-                            className="relative flex min-h-[60px] flex-col justify-between rounded-md border bg-background px-0.5 py-1 text-center"
+                            className="bg-background relative flex min-h-[60px] flex-col justify-between rounded-md border px-0.5 py-1 text-center"
                           >
                             <Popover>
                               <PopoverTrigger asChild>
                                 <Button
                                   variant={notes ? 'secondary' : 'ghost'}
                                   size="icon"
-                                  className="absolute right-0.5 top-0.5 h-4 w-4"
+                                  className="absolute top-0.5 right-0.5 h-4 w-4"
                                 >
                                   <Info className="h-2.5 w-2.5" />
                                 </Button>
@@ -1717,10 +1717,10 @@ export const DarkHeresySheet = React.forwardRef<
                                 />
                               </PopoverContent>
                             </Popover>
-                            <div className="mt-1 text-[8px] font-semibold uppercase text-muted-foreground">
+                            <div className="text-muted-foreground mt-1 text-[8px] font-semibold uppercase">
                               {char.label}
                             </div>
-                            <div className="mb-1 mt-1 flex items-center justify-center gap-1">
+                            <div className="mt-1 mb-1 flex items-center justify-center gap-1">
                               {isCharacteristicsEditing ? (
                                 <Input
                                   type="number"
@@ -1732,10 +1732,10 @@ export const DarkHeresySheet = React.forwardRef<
                                         parseInt(e.target.value, 10) || 0,
                                     }))
                                   }
-                                  className="h-6 w-10 px-1 text-center text-xs font-bold leading-tight text-primary [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                                  className="text-primary h-6 w-10 [appearance:textfield] px-1 text-center text-xs leading-tight font-bold [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                                 />
                               ) : (
-                                <div className="text-sm font-bold leading-tight text-primary">
+                                <div className="text-primary text-sm leading-tight font-bold">
                                   {val + bonus}
                                 </div>
                               )}
@@ -1789,7 +1789,7 @@ export const DarkHeresySheet = React.forwardRef<
                                         });
                                       }
                                     }}
-                                    className="h-2.5 w-2.5 data-[state=checked]:bg-primary"
+                                    className="data-[state=checked]:bg-primary h-2.5 w-2.5"
                                   />
                                 ))}
                               </div>
@@ -1811,26 +1811,26 @@ export const DarkHeresySheet = React.forwardRef<
                       const agMod = Math.floor(effectiveAg / 10);
                       return (
                         <>
-                          <div className="rounded border bg-background/50 p-1 text-center">
-                            <div className="text-[8px] uppercase text-muted-foreground">
+                          <div className="bg-background/50 rounded border p-1 text-center">
+                            <div className="text-muted-foreground text-[8px] uppercase">
                               {t('halfMove')}
                             </div>
                             <div className="text-xs font-bold">{agMod}</div>
                           </div>
-                          <div className="rounded border bg-background/50 p-1 text-center">
-                            <div className="text-[8px] uppercase text-muted-foreground">
+                          <div className="bg-background/50 rounded border p-1 text-center">
+                            <div className="text-muted-foreground text-[8px] uppercase">
                               {t('move')}
                             </div>
                             <div className="text-xs font-bold">{agMod * 2}</div>
                           </div>
-                          <div className="rounded border bg-background/50 p-1 text-center">
-                            <div className="text-[8px] uppercase text-muted-foreground">
+                          <div className="bg-background/50 rounded border p-1 text-center">
+                            <div className="text-muted-foreground text-[8px] uppercase">
                               {t('charge')}
                             </div>
                             <div className="text-xs font-bold">{agMod * 3}</div>
                           </div>
-                          <div className="rounded border bg-background/50 p-1 text-center">
-                            <div className="text-[8px] uppercase text-muted-foreground">
+                          <div className="bg-background/50 rounded border p-1 text-center">
+                            <div className="text-muted-foreground text-[8px] uppercase">
                               {t('run')}
                             </div>
                             <div className="text-xs font-bold">{agMod * 6}</div>
@@ -1867,7 +1867,7 @@ export const DarkHeresySheet = React.forwardRef<
                 ? 'hidden'
                 : 'flex-1'
               : isEquipmentPanelCollapsed
-                ? 'w-12 flex-shrink-0'
+                ? 'w-12 shrink-0'
                 : 'min-w-0 flex-1',
           )}
         >
@@ -1888,14 +1888,14 @@ export const DarkHeresySheet = React.forwardRef<
                 className="h-full w-full py-4"
                 onClick={() => setIsEquipmentPanelCollapsed(false)}
               >
-                <span className="rotate-180 transform whitespace-nowrap text-center text-sm font-semibold uppercase tracking-widest text-muted-foreground [writing-mode:vertical-rl]">
+                <span className="text-muted-foreground rotate-180 transform text-center text-sm font-semibold tracking-widest whitespace-nowrap uppercase [writing-mode:vertical-rl]">
                   {t('equipment')}, {t('inventory')} &amp; {t('corruption')}
                 </span>
               </Button>
             </Card>
           ) : (
             <Card>
-              <CardHeader className="flex-row items-center gap-2 px-6 pb-6 pt-3">
+              <CardHeader className="flex-row items-center gap-2 px-6 pt-3 pb-6">
                 <Button
                   variant="ghost"
                   size="icon"
@@ -1965,7 +1965,7 @@ export const DarkHeresySheet = React.forwardRef<
                           >
                             <Minus className="h-4 w-4" />
                           </Button>
-                          <p className="w-12 text-center text-2xl font-bold text-primary">
+                          <p className="text-primary w-12 text-center text-2xl font-bold">
                             {
                               getSimplePointsObject(character.insanityPoints)
                                 .total
@@ -2033,7 +2033,7 @@ export const DarkHeresySheet = React.forwardRef<
                           >
                             <Minus className="h-4 w-4" />
                           </Button>
-                          <p className="w-12 text-center text-2xl font-bold text-primary">
+                          <p className="text-primary w-12 text-center text-2xl font-bold">
                             {
                               getSimplePointsObject(character.corruptionPoints)
                                 .total

@@ -136,23 +136,23 @@ export function DhHouseRulesDialog({
                 {customRules.map((rule, index) => (
                   <div
                     key={index}
-                    className="flex flex-col gap-1 rounded-lg border bg-muted p-3"
+                    className="bg-muted flex flex-col gap-1 rounded-lg border p-3"
                   >
                     <div className="flex items-start justify-between">
-                      <span className="break-words text-sm font-semibold">
+                      <span className="text-sm font-semibold break-words">
                         {rule.name}
                       </span>
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-6 w-6 shrink-0 text-destructive hover:text-destructive"
+                        className="text-destructive hover:text-destructive h-6 w-6 shrink-0"
                         onClick={() => handleDeleteCustomRule(index)}
                       >
                         <Trash2 className="h-3 w-3" />
                       </Button>
                     </div>
                     {rule.description && (
-                      <p className="break-words text-xs leading-relaxed text-muted-foreground">
+                      <p className="text-muted-foreground text-xs leading-relaxed break-words">
                         {rule.description}
                       </p>
                     )}

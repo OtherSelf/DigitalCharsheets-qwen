@@ -74,7 +74,7 @@ const DetailField = ({
   <div className="space-y-1">
     <Label
       className={cn(
-        'text-xs text-muted-foreground',
+        'text-muted-foreground text-xs',
         isCompactView && 'text-[10px]',
       )}
     >
@@ -91,7 +91,7 @@ const DetailField = ({
     ) : (
       <p
         className={cn(
-          'break-words text-sm font-medium',
+          'text-sm font-medium break-words',
           isCompactView && 'text-xs',
         )}
       >
@@ -142,8 +142,8 @@ export const InfoSection = ({
     <Card id="info-section">
       <CardHeader
         className={cn(
-          'flex flex-row items-center justify-between px-6 pb-6 pt-3',
-          isCompactView && 'px-4 pb-4 pt-2',
+          'flex flex-row items-center justify-between px-6 pt-3 pb-6',
+          isCompactView && 'px-4 pt-2 pb-4',
         )}
       >
         <CardTitle
@@ -163,7 +163,7 @@ export const InfoSection = ({
         )}
       </CardHeader>
       <CardContent className="pt-0">
-        <div className="grid grid-cols-2 gap-x-4 gap-y-4 md:grid-cols-3 3xl:grid-cols-4">
+        <div className="dcs-info-grid grid grid-cols-2 gap-x-4 gap-y-4 md:grid-cols-3">
           <DetailField
             label={t('characterName')}
             value={character.name}
@@ -176,7 +176,7 @@ export const InfoSection = ({
           <div className="space-y-1">
             <Label
               className={cn(
-                'text-xs text-muted-foreground',
+                'text-muted-foreground text-xs',
                 isCompactView && 'text-[10px]',
               )}
             >
@@ -184,7 +184,7 @@ export const InfoSection = ({
             </Label>
             <p
               className={cn(
-                'break-words text-sm font-medium',
+                'text-sm font-medium break-words',
                 isCompactView && 'text-xs',
               )}
             >
@@ -196,7 +196,7 @@ export const InfoSection = ({
           <div className="space-y-1">
             <Label
               className={cn(
-                'text-xs text-muted-foreground',
+                'text-muted-foreground text-xs',
                 isCompactView && 'text-[10px]',
               )}
             >
@@ -226,7 +226,7 @@ export const InfoSection = ({
             ) : (
               <p
                 className={cn(
-                  'break-words text-sm font-medium',
+                  'text-sm font-medium break-words',
                   isCompactView && 'text-xs',
                 )}
               >
@@ -242,7 +242,7 @@ export const InfoSection = ({
           <div className="space-y-1">
             <Label
               className={cn(
-                'text-xs text-muted-foreground',
+                'text-muted-foreground text-xs',
                 isCompactView && 'text-[10px]',
               )}
             >
@@ -250,7 +250,7 @@ export const InfoSection = ({
             </Label>
             <p
               className={cn(
-                'break-words text-sm font-medium',
+                'text-sm font-medium break-words',
                 isCompactView && 'text-xs',
               )}
             >
@@ -353,7 +353,7 @@ export const InfoSection = ({
             className="w-full"
           >
             <div className="mb-2 flex flex-row items-center justify-between">
-              <CollapsibleTrigger className="-ml-2 flex w-full items-center gap-2 rounded-md px-2 py-1 transition-colors hover:bg-accent hover:text-accent-foreground focus:outline-none">
+              <CollapsibleTrigger className="hover:bg-accent hover:text-accent-foreground -ml-2 flex w-full items-center gap-2 rounded-md px-2 py-1 transition-colors focus:outline-none">
                 {isBackstoryOpen ? (
                   <ChevronDown className="h-4 w-4" />
                 ) : (
@@ -361,7 +361,7 @@ export const InfoSection = ({
                 )}
                 <Label
                   className={cn(
-                    'cursor-pointer text-xs text-muted-foreground',
+                    'text-muted-foreground cursor-pointer text-xs',
                     isCompactView && 'text-[10px]',
                   )}
                 >
@@ -381,7 +381,7 @@ export const InfoSection = ({
               ) : (
                 <p
                   className={cn(
-                    'whitespace-pre-wrap break-words px-2 text-sm font-medium',
+                    'px-2 text-sm font-medium break-words whitespace-pre-wrap',
                     isCompactView && 'text-xs',
                   )}
                 >
@@ -397,7 +397,7 @@ export const InfoSection = ({
             className="w-full"
           >
             <div className="mb-2 flex flex-row items-center justify-between">
-              <CollapsibleTrigger className="-ml-2 flex w-full items-center gap-2 rounded-md px-2 py-1 transition-colors hover:bg-accent hover:text-accent-foreground focus:outline-none">
+              <CollapsibleTrigger className="hover:bg-accent hover:text-accent-foreground -ml-2 flex w-full items-center gap-2 rounded-md px-2 py-1 transition-colors focus:outline-none">
                 {isNotesOpen ? (
                   <ChevronDown className="h-4 w-4" />
                 ) : (
@@ -405,7 +405,7 @@ export const InfoSection = ({
                 )}
                 <Label
                   className={cn(
-                    'cursor-pointer text-xs text-muted-foreground',
+                    'text-muted-foreground cursor-pointer text-xs',
                     isCompactView && 'text-[10px]',
                   )}
                 >
@@ -425,7 +425,7 @@ export const InfoSection = ({
               ) : (
                 <p
                   className={cn(
-                    'whitespace-pre-wrap break-words px-2 text-sm font-medium',
+                    'px-2 text-sm font-medium break-words whitespace-pre-wrap',
                     isCompactView && 'text-xs',
                   )}
                 >
@@ -603,8 +603,8 @@ export const ProgressionSection = ({
       <Card id="progression-section">
         <CardHeader
           className={cn(
-            'flex flex-row items-center justify-between px-6 pb-6 pt-3',
-            isCompactView && 'px-4 pb-4 pt-2',
+            'flex flex-row items-center justify-between px-6 pt-3 pb-6',
+            isCompactView && 'px-4 pt-2 pb-4',
           )}
         >
           <CardTitle
@@ -631,7 +631,7 @@ export const ProgressionSection = ({
             <div className="space-y-1">
               <Label
                 htmlFor="current-exp-edit"
-                className="text-xs text-muted-foreground"
+                className="text-muted-foreground text-xs"
               >
                 {t('currentExp')}
               </Label>
@@ -691,7 +691,7 @@ export const ProgressionSection = ({
             <div className="space-y-1">
               <Label
                 htmlFor="total-exp-edit"
-                className="text-xs text-muted-foreground"
+                className="text-muted-foreground text-xs"
               >
                 {t('totalExpSpent')}
               </Label>
@@ -708,12 +708,12 @@ export const ProgressionSection = ({
 
             {/* ========== RANK DISPLAY SECTION START ========== */}
             <div className="space-y-1 border-t pt-2">
-              <Label className="text-xs text-muted-foreground">
+              <Label className="text-muted-foreground text-xs">
                 {t('rank')}
               </Label>
               <div className="flex flex-col gap-1">
                 <div className="flex flex-wrap items-center gap-2">
-                  <p className="break-words text-sm font-medium">
+                  <p className="text-sm font-medium break-words">
                     {currentRankName === 'N/A' ||
                     currentRankName === 'Unknown Rank'
                       ? t('unknownRank')
@@ -722,7 +722,7 @@ export const ProgressionSection = ({
 
                   {(editableAdvancedPath ?? character.advancedPath) ? (
                     <div className="flex items-center gap-2">
-                      <span className="rounded border border-primary/20 bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
+                      <span className="border-primary/20 bg-primary/10 text-primary rounded border px-2 py-0.5 text-[10px] font-semibold">
                         {t('advancedPath')}:{' '}
                         {t(
                           RANK_KEYS[
@@ -758,7 +758,7 @@ export const ProgressionSection = ({
                   )}
 
                   {(editableAlternatePath ?? character.alternatePath) && (
-                    <span className="rounded border border-secondary/20 bg-secondary/20 px-2 py-0.5 text-[10px] font-semibold text-secondary-foreground">
+                    <span className="border-secondary/20 bg-secondary/20 text-secondary-foreground rounded border px-2 py-0.5 text-[10px] font-semibold">
                       {t('alternatePath')}:{' '}
                       {t(
                         RANK_KEYS[

@@ -42,7 +42,7 @@ export default function ManualCharacterCreationPage() {
             <h1 className="font-headline text-2xl font-bold tracking-tight sm:text-3xl">
               {t('createNew')}
             </h1>
-            <p className="text-sm text-muted-foreground sm:text-base">
+            <p className="text-muted-foreground text-sm sm:text-base">
               {t('buildCharacterDesc')}
             </p>
           </div>

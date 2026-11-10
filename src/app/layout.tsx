@@ -46,7 +46,7 @@ export default function RootLayout({
           content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes"
         />
       </head>
-      <body className="h-full overflow-x-hidden font-body antialiased">
+      <body className="font-body h-full overflow-x-hidden antialiased">
         <ThemeProvider
           attribute="class"
           defaultTheme="light"

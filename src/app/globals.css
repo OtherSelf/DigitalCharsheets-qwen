@@ -1,6 +1,24 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@config '../../tailwind.config.ts';
+
+/*
+  Tailwind v4: тёмная тема переключается классом `dark` на <html>
+  (next-themes, attribute="class"). Раньше это давал `darkMode: ['class']`.
+*/
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+  Широкий режим для блока Info в Dark Heresy (>=1800px) — 4 колонки.
+  Раньше это был вариант `3xl:grid-cols-4`, но v4 ставит кастомный вариант
+  в каскаде раньше `md:`, и `md:grid-cols-3` перебивал его на широких экранах.
+  Явный media-запрос не зависит от порядка вариантов.
+*/
+@media (min-width: 1800px) {
+  .dcs-info-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
 
 /* FONT FIX: Explicitly map the body font to the loaded Inter variable with fallbacks */
 body {
@@ -166,6 +184,71 @@ body > div:first-child {
 
   .safe-area-top {
     padding-top: env(safe-area-top, 0px);
+  }
+}
+
+/*
+  Tailwind v4 изменил `space-y-*`: теперь `margin-block-end` ставится предыдущему
+  ребёнку, а не `margin-block-start` следующему (как было в v3). Для inline-детей
+  (`label`, `span`) вертикальный нижний margin не участвует в лейауте, поэтому
+  отступы между подписью и полем «схлопываются». Возвращаем семантику v3, чтобы
+  не менять вёрстку (эталоны визуальных тестов это фиксируют).
+*/
+@layer utilities {
+  :where(.space-y-0\.5 > :not(:last-child)) {
+    margin-block-end: 0;
+  }
+  .space-y-0\.5 > :not([hidden]) ~ :not([hidden]) {
+    margin-block-start: calc(var(--spacing) * 0.5);
+  }
+
+  :where(.space-y-1 > :not(:last-child)) {
+    margin-block-end: 0;
+  }
+  .space-y-1 > :not([hidden]) ~ :not([hidden]) {
+    margin-block-start: calc(var(--spacing) * 1);
+  }
+
+  :where(.space-y-1\.5 > :not(:last-child)) {
+    margin-block-end: 0;
+  }
+  .space-y-1\.5 > :not([hidden]) ~ :not([hidden]) {
+    margin-block-start: calc(var(--spacing) * 1.5);
+  }
+
+  :where(.space-y-2 > :not(:last-child)) {
+    margin-block-end: 0;
+  }
+  .space-y-2 > :not([hidden]) ~ :not([hidden]) {
+    margin-block-start: calc(var(--spacing) * 2);
+  }
+
+  :where(.space-y-3 > :not(:last-child)) {
+    margin-block-end: 0;
+  }
+  .space-y-3 > :not([hidden]) ~ :not([hidden]) {
+    margin-block-start: calc(var(--spacing) * 3);
+  }
+
+  :where(.space-y-4 > :not(:last-child)) {
+    margin-block-end: 0;
+  }
+  .space-y-4 > :not([hidden]) ~ :not([hidden]) {
+    margin-block-start: calc(var(--spacing) * 4);
+  }
+
+  :where(.space-y-6 > :not(:last-child)) {
+    margin-block-end: 0;
+  }
+  .space-y-6 > :not([hidden]) ~ :not([hidden]) {
+    margin-block-start: calc(var(--spacing) * 6);
+  }
+
+  :where(.space-y-8 > :not(:last-child)) {
+    margin-block-end: 0;
+  }
+  .space-y-8 > :not([hidden]) ~ :not([hidden]) {
+    margin-block-start: calc(var(--spacing) * 8);
   }
 }
 

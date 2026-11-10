@@ -250,14 +250,14 @@ export function DndProgressionSection({
           disabled={!meetsRequirements || isAlreadyUsed}
           className={
             !meetsRequirements
-              ? 'cursor-not-allowed text-muted-foreground/60'
+              ? 'text-muted-foreground/60 cursor-not-allowed'
               : ''
           }
         >
           <div className="flex w-full items-center justify-between">
             <span>{t(CLASS_TRANSLATION_KEYS[c])}</span>
             {!meetsRequirements && (
-              <span className="ml-2 text-[10px] font-semibold text-destructive">
+              <span className="text-destructive ml-2 text-[10px] font-semibold">
                 13+
               </span>
             )}
@@ -280,9 +280,9 @@ export function DndProgressionSection({
           id={`${idp}progression-section`}
           className="flex h-full shrink-0 flex-col overflow-hidden border-2"
         >
-          <CardHeader className="flex flex-row items-center justify-between bg-muted/5 px-4 pb-2 pt-2">
+          <CardHeader className="bg-muted/5 flex flex-row items-center justify-between px-4 pt-2 pb-2">
             <AccordionTrigger className="flex flex-1 items-center justify-between py-0 hover:no-underline">
-              <Label className="text-[10px] font-bold uppercase tracking-tight text-muted-foreground">
+              <Label className="text-muted-foreground text-[10px] font-bold tracking-tight uppercase">
                 {t('progression')}
               </Label>
             </AccordionTrigger>
@@ -298,7 +298,7 @@ export function DndProgressionSection({
             <CardContent className="space-y-4 p-4">
               <div className="grid grid-cols-3 gap-4">
                 <div className="flex flex-col gap-1">
-                  <Label className="text-[10px] font-bold uppercase text-muted-foreground">
+                  <Label className="text-muted-foreground text-[10px] font-bold uppercase">
                     {t('class')}
                   </Label>
                   {isProgressionEditing ? (
@@ -329,7 +329,7 @@ export function DndProgressionSection({
                   )}
                 </div>
                 <div className="flex flex-col gap-1">
-                  <Label className="text-[10px] font-bold uppercase text-muted-foreground">
+                  <Label className="text-muted-foreground text-[10px] font-bold uppercase">
                     {t('classLevel')}
                   </Label>
                   <span className="truncate text-base font-bold">
@@ -337,7 +337,7 @@ export function DndProgressionSection({
                   </span>
                 </div>
                 <div className="flex flex-col gap-1">
-                  <Label className="text-[10px] font-bold uppercase text-muted-foreground">
+                  <Label className="text-muted-foreground text-[10px] font-bold uppercase">
                     {t('totalLevel')}
                   </Label>
                   <span className="truncate text-base font-bold">
@@ -348,20 +348,20 @@ export function DndProgressionSection({
 
               <div className="space-y-4 border-t pt-2">
                 <div
-                  className="flex cursor-pointer items-center justify-between rounded-md p-1.5 transition-colors hover:bg-muted/50"
+                  className="hover:bg-muted/50 flex cursor-pointer items-center justify-between rounded-md p-1.5 transition-colors"
                   onClick={() => setIsMulticlassOpen(!isMulticlassOpen)}
                 >
                   <div className="flex items-center gap-1.5">
                     {isMulticlassOpen ? (
-                      <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                      <ChevronDown className="text-muted-foreground h-4 w-4" />
                     ) : (
-                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                      <ChevronRight className="text-muted-foreground h-4 w-4" />
                     )}
-                    <Label className="cursor-pointer select-none text-[10px] font-bold uppercase">
+                    <Label className="cursor-pointer text-[10px] font-bold uppercase select-none">
                       {t('multiclass')}
                       {progressionData.isMulticlass &&
                         progressionData.multiclasses.length > 0 && (
-                          <span className="ml-1.5 text-[9px] normal-case text-muted-foreground">
+                          <span className="text-muted-foreground ml-1.5 text-[9px] normal-case">
                             (
                             {
                               progressionData.multiclasses.filter(
@@ -390,7 +390,7 @@ export function DndProgressionSection({
                 </div>
 
                 {isMulticlassOpen && progressionData.isMulticlass && (
-                  <div className="ml-1.5 space-y-2 border-l-2 border-muted pl-6 pt-2">
+                  <div className="border-muted ml-1.5 space-y-2 border-l-2 pt-2 pl-6">
                     <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                       {progressionData.multiclasses.map((mc, idx) => (
                         <div
@@ -452,7 +452,7 @@ export function DndProgressionSection({
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-8 w-8 shrink-0 text-destructive"
+                                className="text-destructive h-8 w-8 shrink-0"
                                 onClick={() =>
                                   setProgressionData({
                                     ...progressionData,
@@ -477,7 +477,7 @@ export function DndProgressionSection({
                                 ({t('lvl')} {mc.level})
                               </span>
                               {mc.isDisabled && (
-                                <span className="rounded border border-destructive/20 bg-destructive/10 px-1.5 py-0.5 text-[10px] font-semibold text-destructive">
+                                <span className="border-destructive/20 bg-destructive/10 text-destructive rounded border px-1.5 py-0.5 text-[10px] font-semibold">
                                   {t('disabled')}
                                 </span>
                               )}
@@ -530,7 +530,7 @@ export function DndProgressionSection({
 
               <div className="space-y-4 border-t pt-2">
                 <div className="flex flex-col gap-1">
-                  <Label className="text-[10px] font-bold uppercase text-muted-foreground">
+                  <Label className="text-muted-foreground text-[10px] font-bold uppercase">
                     {t('experiencePoints')}
                   </Label>
                   {isProgressionEditing ? (
@@ -551,7 +551,7 @@ export function DndProgressionSection({
                   )}
                 </div>
                 <div className="flex flex-col gap-2">
-                  <Label className="text-[10px] font-bold uppercase text-muted-foreground">
+                  <Label className="text-muted-foreground text-[10px] font-bold uppercase">
                     {t('expToCount')}
                   </Label>
                   <div className="flex gap-2">

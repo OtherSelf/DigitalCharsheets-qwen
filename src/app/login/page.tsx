@@ -259,20 +259,20 @@ export default function LoginPage() {
         : t('authRecoverDesc');
 
   return (
-    <div className="flex h-dvh flex-col bg-gradient-to-br from-background via-background to-primary/5">
+    <div className="from-background via-background to-primary/5 flex h-dvh flex-col bg-gradient-to-br">
       {/* Единая шапка; на самой /login кнопка входа не нужна. */}
       <Header authAction="none" />
 
       <main className="safe-area-bottom flex flex-1 items-center justify-center overflow-y-auto p-4">
         <div className="w-full max-w-md py-6">
           <div className="mb-6 text-center">
-            <div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full border border-primary/20 bg-primary/10">
-              <Scroll className="h-8 w-8 text-primary" />
+            <div className="border-primary/20 bg-primary/10 mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full border">
+              <Scroll className="text-primary h-8 w-8" />
             </div>
             <h1 className="font-headline text-3xl font-bold tracking-tight">
               Digital Character Sheets
             </h1>
-            <p className="mt-2 text-muted-foreground">
+            <p className="text-muted-foreground mt-2">
               {t('authBrandTagline')}
             </p>
           </div>
@@ -318,7 +318,7 @@ export default function LoginPage() {
                       htmlFor="auth-username"
                       className="flex items-center gap-2 text-sm font-medium"
                     >
-                      <User className="h-4 w-4 text-muted-foreground" />
+                      <User className="text-muted-foreground h-4 w-4" />
                       {t('authUsernameOrEmail')}
                     </label>
                     <Input
@@ -338,7 +338,7 @@ export default function LoginPage() {
                       htmlFor="auth-password"
                       className="flex items-center gap-2 text-sm font-medium"
                     >
-                      <Lock className="h-4 w-4 text-muted-foreground" />
+                      <Lock className="text-muted-foreground h-4 w-4" />
                       {t('authPassword')}
                     </label>
                     <Input
@@ -407,7 +407,7 @@ export default function LoginPage() {
                       htmlFor="register-username"
                       className="flex items-center gap-2 text-sm font-medium"
                     >
-                      <User className="h-4 w-4 text-muted-foreground" />
+                      <User className="text-muted-foreground h-4 w-4" />
                       {t('authUsernameOrEmail')}
                     </label>
                     <Input
@@ -427,7 +427,7 @@ export default function LoginPage() {
                       htmlFor="register-display-name"
                       className="flex items-center gap-2 text-sm font-medium"
                     >
-                      <AtSign className="h-4 w-4 text-muted-foreground" />
+                      <AtSign className="text-muted-foreground h-4 w-4" />
                       {t('authDisplayName')}
                     </label>
                     <Input
@@ -447,7 +447,7 @@ export default function LoginPage() {
                       htmlFor="register-password"
                       className="flex items-center gap-2 text-sm font-medium"
                     >
-                      <Lock className="h-4 w-4 text-muted-foreground" />
+                      <Lock className="text-muted-foreground h-4 w-4" />
                       {t('authPassword')}
                     </label>
                     <Input
@@ -467,7 +467,7 @@ export default function LoginPage() {
                       htmlFor="register-recovery-phrase"
                       className="flex items-center gap-2 text-sm font-medium"
                     >
-                      <KeyRound className="h-4 w-4 text-muted-foreground" />
+                      <KeyRound className="text-muted-foreground h-4 w-4" />
                       {t('authRecoveryPhraseLabel')}
                     </label>
                     <Input
@@ -480,7 +480,7 @@ export default function LoginPage() {
                       required
                       className="h-10"
                     />
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-muted-foreground text-xs">
                       {t('authRecoveryPhraseHint')}
                     </p>
                   </div>
@@ -521,7 +521,7 @@ export default function LoginPage() {
                       htmlFor="recover-username"
                       className="flex items-center gap-2 text-sm font-medium"
                     >
-                      <User className="h-4 w-4 text-muted-foreground" />
+                      <User className="text-muted-foreground h-4 w-4" />
                       {t('authAccountUsernameOrEmail')}
                     </label>
                     <Input
@@ -538,7 +538,7 @@ export default function LoginPage() {
 
                   <div className="space-y-3">
                     <label className="flex items-center gap-2 text-sm font-medium">
-                      <KeyRound className="h-4 w-4 text-muted-foreground" />
+                      <KeyRound className="text-muted-foreground h-4 w-4" />
                       {t('authThreeWords')}
                     </label>
                     <Input
@@ -569,7 +569,7 @@ export default function LoginPage() {
                       htmlFor="recover-phrase"
                       className="flex items-center gap-2 text-sm font-medium"
                     >
-                      <Lock className="h-4 w-4 text-muted-foreground" />
+                      <Lock className="text-muted-foreground h-4 w-4" />
                       {t('authYourRecoveryPhrase')}
                     </label>
                     <Input
@@ -580,7 +580,7 @@ export default function LoginPage() {
                       required
                       className="h-10"
                     />
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-muted-foreground text-xs">
                       {t('authPhraseMatchHint')}
                     </p>
                   </div>
@@ -616,7 +616,7 @@ export default function LoginPage() {
                 </form>
               )}
 
-              <p className="mt-4 text-center text-xs text-muted-foreground">
+              <p className="text-muted-foreground mt-4 text-center text-xs">
                 {t('authLocalDataNote')}
               </p>
             </CardContent>

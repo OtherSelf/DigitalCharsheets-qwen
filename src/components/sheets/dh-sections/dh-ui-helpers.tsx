@@ -72,7 +72,7 @@ export const MetricBox = ({
   <div className="flex h-full flex-col">
     <div className="flex h-9 shrink-0 items-center justify-between px-1">
       <div className="flex items-center gap-1 overflow-hidden">
-        <h4 className="truncate text-[10px] font-semibold uppercase text-muted-foreground sm:text-xs">
+        <h4 className="text-muted-foreground truncate text-[10px] font-semibold uppercase sm:text-xs">
           {title}
         </h4>
         {!hideNotes && (
@@ -106,7 +106,7 @@ export const MetricBox = ({
     </div>
     <div
       className={cn(
-        'flex items-center justify-center overflow-hidden rounded-lg border bg-background',
+        'bg-background flex items-center justify-center overflow-hidden rounded-lg border',
         isCompactView ? 'h-14' : 'h-20',
       )}
     >

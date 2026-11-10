@@ -415,7 +415,7 @@ export default function StatsEditorPage() {
                   </CardHeader>
                   <CardContent className="overflow-x-auto">
                     <div className="min-w-[900px] space-y-2">
-                      <div className="grid grid-cols-[180px_repeat(10,1fr)_60px] items-center gap-1 border-b pb-2 text-xs font-semibold text-muted-foreground">
+                      <div className="text-muted-foreground grid grid-cols-[180px_repeat(10,1fr)_60px] items-center gap-1 border-b pb-2 text-xs font-semibold">
                         <span>{t('characterName')}</span>
                         {DH_STATS.map((s) => (
                           <span key={s.key} className="text-center">
@@ -477,7 +477,7 @@ export default function StatsEditorPage() {
                   </CardHeader>
                   <CardContent className="overflow-x-auto">
                     <div className="min-w-[700px] space-y-2">
-                      <div className="grid grid-cols-[180px_repeat(6,1fr)_60px] items-center gap-1 border-b pb-2 text-xs font-semibold text-muted-foreground">
+                      <div className="text-muted-foreground grid grid-cols-[180px_repeat(6,1fr)_60px] items-center gap-1 border-b pb-2 text-xs font-semibold">
                         <span>{t('characterName')}</span>
                         {DND_STATS.map((s) => (
                           <span key={s.key} className="text-center">
@@ -550,7 +550,7 @@ export default function StatsEditorPage() {
                   </CardHeader>
                   <CardContent className="overflow-x-auto">
                     <div className="min-w-[800px] space-y-2">
-                      <div className="grid grid-cols-[180px_repeat(5,1fr)_60px] items-center gap-2 border-b pb-2 text-xs font-semibold text-muted-foreground">
+                      <div className="text-muted-foreground grid grid-cols-[180px_repeat(5,1fr)_60px] items-center gap-2 border-b pb-2 text-xs font-semibold">
                         <span>{t('characterName')}</span>
                         <span className="text-center">{t('woundsMax')}</span>
                         <span className="text-center">{t('fateMax')}</span>
@@ -659,7 +659,7 @@ export default function StatsEditorPage() {
                 </Card>
               ) : (
                 <Card>
-                  <CardContent className="py-12 text-center text-muted-foreground">
+                  <CardContent className="text-muted-foreground py-12 text-center">
                     {t('noDhCharacters')}
                   </CardContent>
                 </Card>
@@ -686,7 +686,7 @@ export default function StatsEditorPage() {
                   </CardHeader>
                   <CardContent className="overflow-x-auto">
                     <div className="min-w-[850px] space-y-2">
-                      <div className="grid grid-cols-[180px_70px_90px_70px_70px_100px_110px_60px] items-center gap-2 border-b pb-2 text-xs font-semibold text-muted-foreground">
+                      <div className="text-muted-foreground grid grid-cols-[180px_70px_90px_70px_70px_100px_110px_60px] items-center gap-2 border-b pb-2 text-xs font-semibold">
                         <span>{t('characterName')}</span>
                         <span className="text-center">{t('level')}</span>
                         <span className="text-center">{t('hpMax')}</span>
@@ -810,7 +810,7 @@ export default function StatsEditorPage() {
                 </Card>
               ) : (
                 <Card>
-                  <CardContent className="py-12 text-center text-muted-foreground">
+                  <CardContent className="text-muted-foreground py-12 text-center">
                     {t('noDndCharacters')}
                   </CardContent>
                 </Card>
@@ -821,7 +821,7 @@ export default function StatsEditorPage() {
           {/* Empty state */}
           {characters.length === 0 && (
             <Card>
-              <CardContent className="py-12 text-center text-muted-foreground">
+              <CardContent className="text-muted-foreground py-12 text-center">
                 {t('noCharactersFound')}
               </CardContent>
             </Card>

@@ -115,8 +115,8 @@ export const DndAttunementSection = React.forwardRef<
 
   return (
     <Card id={`${idp}attunement-card`}>
-      <CardHeader className="flex flex-row items-center justify-between px-4 pb-2 pt-2">
-        <CardTitle className="text-[10px] font-bold uppercase tracking-tight text-muted-foreground">
+      <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2">
+        <CardTitle className="text-muted-foreground text-[10px] font-bold tracking-tight uppercase">
           {t('attunement')}
         </CardTitle>
         {(showEditButtons || isAttunementEditing) && (
@@ -131,7 +131,7 @@ export const DndAttunementSection = React.forwardRef<
         {attunementItems.map((it) => (
           <div
             key={it.id}
-            className="group flex items-center justify-between rounded bg-muted/10 p-1.5 text-[10px]"
+            className="group bg-muted/10 flex items-center justify-between rounded p-1.5 text-[10px]"
           >
             <div className="flex flex-1 items-center gap-2">
               <Checkbox
@@ -161,7 +161,7 @@ export const DndAttunementSection = React.forwardRef<
                 >
                   {it.description}
                   {it.attuned && (
-                    <span className="ml-1 text-[8px] font-black uppercase text-primary">
+                    <span className="text-primary ml-1 text-[8px] font-black uppercase">
                       (Attuned)
                     </span>
                   )}
@@ -206,7 +206,7 @@ export const DndAttunementSection = React.forwardRef<
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="ml-1 h-5 w-5 text-destructive"
+                  className="text-destructive ml-1 h-5 w-5"
                   onClick={() =>
                     setAttunementItems(
                       attunementItems.filter((item) => item.id !== it.id),

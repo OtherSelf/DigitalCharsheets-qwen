@@ -101,7 +101,7 @@ export function DeleteAccountCard() {
     <>
       <Card className="border-destructive/60" data-testid="danger-zone-card">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-destructive">
+          <CardTitle className="text-destructive flex items-center gap-2">
             <AlertTriangle className="h-5 w-5" />
             {t('dangerZone') || 'Danger Zone'}
           </CardTitle>
@@ -111,7 +111,7 @@ export function DeleteAccountCard() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <p className="mb-3 text-sm text-muted-foreground">
+          <p className="text-muted-foreground mb-3 text-sm">
             {t('deleteAccountDescription') ||
               'Permanently delete your profile and all of your character sheets.'}
           </p>
@@ -147,8 +147,8 @@ export function DeleteAccountCard() {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="flex gap-3 rounded-md border border-destructive/50 bg-destructive/10 p-3 text-sm">
-            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
+          <div className="border-destructive/50 bg-destructive/10 flex gap-3 rounded-md border p-3 text-sm">
+            <AlertTriangle className="text-destructive mt-0.5 h-4 w-4 shrink-0" />
             <p>
               {t('deleteAccountWarning') ||
                 'Your profile, every character sheet and the recovery phrase of this account will be erased. This action cannot be undone.'}
@@ -174,7 +174,7 @@ export function DeleteAccountCard() {
                 }
                 disabled={isDeleting}
               />
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 {t('deleteAccountPasswordHint') ||
                   'Enter your current password to confirm that this is your account.'}
               </p>
@@ -184,7 +184,7 @@ export function DeleteAccountCard() {
               <p
                 role="alert"
                 data-testid="delete-account-error"
-                className="text-sm font-medium text-destructive"
+                className="text-destructive text-sm font-medium"
               >
                 {error}
               </p>

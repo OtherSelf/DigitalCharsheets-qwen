@@ -125,8 +125,8 @@ const CharacteristicStat = ({
     return false;
   };
   return (
-    <div className="relative flex h-full min-h-[80px] flex-col justify-between rounded-lg border bg-background px-0.5 py-1 text-center">
-      <div className="px-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+    <div className="bg-background relative flex h-full min-h-[80px] flex-col justify-between rounded-lg border px-0.5 py-1 text-center">
+      <div className="text-muted-foreground px-1 text-[10px] font-semibold tracking-wide uppercase">
         {isCompactView ? label : fullName}
       </div>
       {!hideNotes && (
@@ -135,7 +135,7 @@ const CharacteristicStat = ({
             <Button
               variant={notes ? 'secondary' : 'ghost'}
               size="icon"
-              className="absolute right-0.5 top-0.5 h-5 w-5"
+              className="absolute top-0.5 right-0.5 h-5 w-5"
             >
               <Info className="h-3 w-3" />
             </Button>
@@ -160,10 +160,10 @@ const CharacteristicStat = ({
             type="number"
             value={value === 0 ? '' : value}
             onChange={onValueChange}
-            className="h-8 w-14 text-center text-base font-bold [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+            className="h-8 w-14 [appearance:textfield] text-center text-base font-bold [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
           />
         ) : (
-          <div className="w-10 text-center text-base font-bold text-primary">
+          <div className="text-primary w-10 text-center text-base font-bold">
             {displayValue}
           </div>
         )}
@@ -297,7 +297,7 @@ export const CharacteristicsSection = React.forwardRef<
 
     return (
       <Card id="characteristics-card">
-        <CardHeader className="flex flex-row items-center justify-between px-6 pb-6 pt-3">
+        <CardHeader className="flex flex-row items-center justify-between px-6 pt-3 pb-6">
           <CardTitle className="font-headline">
             {t('characteristics')}
           </CardTitle>
@@ -382,35 +382,35 @@ export const CharacteristicsSection = React.forwardRef<
                 const agMod = Math.floor(effectiveAg / 10);
                 return (
                   <>
-                    <div className="rounded-lg border bg-background p-2 text-center">
-                      <Label className="text-[10px] font-bold uppercase text-muted-foreground">
+                    <div className="bg-background rounded-lg border p-2 text-center">
+                      <Label className="text-muted-foreground text-[10px] font-bold uppercase">
                         {t('halfMove')}
                       </Label>
-                      <div className="text-lg font-bold text-primary">
+                      <div className="text-primary text-lg font-bold">
                         {agMod}
                       </div>
                     </div>
-                    <div className="rounded-lg border bg-background p-2 text-center">
-                      <Label className="text-[10px] font-bold uppercase text-muted-foreground">
+                    <div className="bg-background rounded-lg border p-2 text-center">
+                      <Label className="text-muted-foreground text-[10px] font-bold uppercase">
                         {t('move')}
                       </Label>
-                      <div className="text-lg font-bold text-primary">
+                      <div className="text-primary text-lg font-bold">
                         {agMod * 2}
                       </div>
                     </div>
-                    <div className="rounded-lg border bg-background p-2 text-center">
-                      <Label className="text-[10px] font-bold uppercase text-muted-foreground">
+                    <div className="bg-background rounded-lg border p-2 text-center">
+                      <Label className="text-muted-foreground text-[10px] font-bold uppercase">
                         {t('charge')}
                       </Label>
-                      <div className="text-lg font-bold text-primary">
+                      <div className="text-primary text-lg font-bold">
                         {agMod * 3}
                       </div>
                     </div>
-                    <div className="rounded-lg border bg-background p-2 text-center">
-                      <Label className="text-[10px] font-bold uppercase text-muted-foreground">
+                    <div className="bg-background rounded-lg border p-2 text-center">
+                      <Label className="text-muted-foreground text-[10px] font-bold uppercase">
                         {t('run')}
                       </Label>
-                      <div className="text-lg font-bold text-primary">
+                      <div className="text-primary text-lg font-bold">
                         {agMod * 6}
                       </div>
                     </div>

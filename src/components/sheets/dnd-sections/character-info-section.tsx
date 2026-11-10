@@ -209,7 +209,7 @@ const DetailField = ({
   onChange: (val: string) => void;
 }) => (
   <div className="flex flex-col gap-1">
-    <Label className="text-[10px] font-bold uppercase text-muted-foreground">
+    <Label className="text-muted-foreground text-[10px] font-bold uppercase">
       {label}
     </Label>
     {editing ? (
@@ -243,7 +243,7 @@ const DetailSelectField = ({
   t: (key: string) => string;
 }) => (
   <div className="flex flex-col gap-1">
-    <Label className="text-[10px] font-bold uppercase text-muted-foreground">
+    <Label className="text-muted-foreground text-[10px] font-bold uppercase">
       {label}
     </Label>
     {editing ? (
@@ -340,9 +340,9 @@ export const DndCharacterInfoSection = React.forwardRef<
           id={`${idp}character-info-card`}
           className="flex h-full flex-col overflow-hidden border-2"
         >
-          <CardHeader className="flex flex-row items-center justify-between bg-muted/5 px-4 pb-2 pt-2">
+          <CardHeader className="bg-muted/5 flex flex-row items-center justify-between px-4 pt-2 pb-2">
             <AccordionTrigger className="flex flex-1 items-center justify-between py-0 hover:no-underline">
-              <Label className="text-[10px] font-bold uppercase tracking-tight text-muted-foreground">
+              <Label className="text-muted-foreground text-[10px] font-bold tracking-tight uppercase">
                 {t('characterInfo')}
               </Label>
             </AccordionTrigger>
@@ -441,7 +441,7 @@ export const DndCharacterInfoSection = React.forwardRef<
                           className="min-h-[150px] text-sm"
                         />
                       ) : (
-                        <p className="whitespace-pre-wrap text-sm text-muted-foreground">
+                        <p className="text-muted-foreground text-sm whitespace-pre-wrap">
                           {headerData.backstory || '-'}
                         </p>
                       )}
@@ -465,7 +465,7 @@ export const DndCharacterInfoSection = React.forwardRef<
                           className="min-h-[100px] text-sm"
                         />
                       ) : (
-                        <p className="whitespace-pre-wrap text-sm text-muted-foreground">
+                        <p className="text-muted-foreground text-sm whitespace-pre-wrap">
                           {headerData.notes || '-'}
                         </p>
                       )}
