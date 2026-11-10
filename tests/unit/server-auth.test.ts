@@ -81,7 +81,7 @@ describe('authenticateUser', () => {
 
     const stored = readJson(paths.userFile);
     expect(stored).toMatchObject({
-      schemaVersion: 2,
+      schemaVersion: 3,
       uid,
       username: 'newbie',
       displayName: 'Newbie',
@@ -214,7 +214,7 @@ describe('accountExists / registerUser', () => {
     const uid = result.user!.uid;
     const stored = readJson(userPaths(dataDir, uid).userFile);
     expect(stored).toMatchObject({
-      schemaVersion: 2,
+      schemaVersion: 3,
       uid,
       username: 'new.user',
       displayName: 'New User',

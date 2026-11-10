@@ -3,7 +3,6 @@ import fs from 'fs';
 
 import { getUserDir, getUserFile } from './data-dir';
 import { withDataLock } from './data-lock';
-import { writeJsonAtomic } from './fs-atomic';
 import { defaultDisplayName, isUid, newUid, normalizeLogin } from './ids';
 import { LocalUser } from './local-storage';
 import { getCharactersFromServer, resetWriteSeqGuard } from './server-storage';
@@ -13,6 +12,13 @@ import {
   resolveLogin,
   writeLoginIndex,
 } from './user-index';
+import type { UserRole } from './user-role';
+import {
+  readStoredUser,
+  USER_SCHEMA_VERSION,
+  writeStoredUser,
+  type StoredUser,
+} from './user-schema';
 
 /**
  * ─── LANDMARK: USER IDENTITY / AUTH ─────────────────────────────────────────
@@ -32,18 +38,7 @@ import {
  * задача, не связанная со сменой схемы идентификаторов.
  */
 
-export interface StoredUser {
-  schemaVersion?: number;
-  uid: string;
-  username: string;
-  displayName: string;
-  passwordHash: string;
-  recoveryPhrase?: string;
-  createdAt?: string;
-  updatedAt?: string;
-  originalFirebaseId?: string;
-  [key: string]: unknown;
-}
+export type { StoredUser } from './user-schema';
 
 interface AuthResult {
   success: boolean;
@@ -55,10 +50,12 @@ interface AuthResult {
    * локализованный текст, не разбирая английскую строку ошибки):
    *   no_account       — логин свободен, но вход запрещён (регистрация отдельно);
    *   invalid_password — аккаунт есть, пароль не совпал;
+   *   blocked          — аккаунт заблокирован администратором;
    *   exists           — регистрация отклонена: логин уже занят;
    *   invalid_input    — не прошли серверные проверки полей.
    */
-  reason?: 'no_account' | 'invalid_password' | 'exists' | 'invalid_input';
+  reason?:
+    'no_account' | 'invalid_password' | 'blocked' | 'exists' | 'invalid_input';
 }
 
 export interface AuthenticateOptions {
@@ -73,7 +70,7 @@ export interface AuthenticateOptions {
   allowRegistration?: boolean;
 }
 
-function hashPassword(password: string): string {
+export function hashPassword(password: string): string {
   return crypto.createHash('sha256').update(password).digest('hex');
 }
 
@@ -91,12 +88,20 @@ function checkPhraseMatch(storedPhrase: string, inputPhrase: string): boolean {
   return inputWords.some((word) => storedWords.includes(word));
 }
 
-function toLocalUser(user: StoredUser): LocalUser {
+/**
+ * Публичный снимок профиля для UI. `role`/`isBlocked` нужны клиенту, чтобы
+ * показать пункт «Админка» и предупреждение о сгенерированном пароле, но
+ * никаких прав они не дают: сервер каждый раз проверяет роль сам.
+ */
+export function toLocalUser(user: StoredUser): LocalUser {
   return {
     uid: user.uid,
     username: user.username,
     displayName: user.displayName,
     hasRecoveryPhrase: !!user.recoveryPhrase,
+    role: user.role === 'admin' ? 'admin' : 'user',
+    isBlocked: !!user.isBlocked,
+    mustChangePassword: !!user.mustChangePassword,
   };
 }
 
@@ -106,30 +111,11 @@ export function userExists(uid: string): boolean {
 
 /**
  * Прочитать профиль по uid. Терпимо к старым/ручным файлам: `uid` берётся из
- * каталога, если в JSON его нет, а `email` считается логином.
+ * каталога, если в JSON его нет, а `email` считается логином. Сама
+ * нормализация живёт в `user-schema.ts` (её же использует startup-проверка).
  */
 export function getStoredUser(uid: string): StoredUser | null {
-  const file = getUserFile(uid);
-  if (!fs.existsSync(file)) return null;
-  try {
-    const data = JSON.parse(fs.readFileSync(file, 'utf8')) as Record<
-      string,
-      unknown
-    >;
-    if (!data.uid) data.uid = uid;
-    if (!data.username && data.email) data.username = data.email;
-    return data as unknown as StoredUser;
-  } catch (e) {
-    console.error('Failed to read user data:', e);
-    return null;
-  }
-}
-
-/** Записать профиль (атомарно) и вернуть его. */
-function writeStoredUser(uid: string, data: StoredUser): StoredUser {
-  fs.mkdirSync(getUserDir(uid), { recursive: true });
-  writeJsonAtomic(getUserFile(uid), data);
-  return data;
+  return readStoredUser(uid);
 }
 
 function authenticateExisting(uid: string, passwordHash: string): AuthResult {
@@ -153,7 +139,46 @@ function authenticateExisting(uid: string, passwordHash: string): AuthResult {
       reason: 'invalid_password',
     };
   }
-  return { success: true, isNewUser: false, user: toLocalUser(stored) };
+  // Блокировку проверяем после пароля: иначе по ответу можно было бы узнать,
+  // что аккаунт существует, не зная его пароля.
+  if (stored.isBlocked) {
+    return {
+      success: false,
+      error: 'This account is blocked by an administrator.',
+      reason: 'blocked',
+    };
+  }
+  return {
+    success: true,
+    isNewUser: false,
+    user: toLocalUser(touchLastLogin(stored)),
+  };
+}
+
+/**
+ * Отметить успешный вход. Пишем без лока: это «activity», а не профиль, и
+ * потеря отметки при гонке с админской правкой не критична. Лок здесь был бы
+ * опасен: `authenticateExisting` вызывается и внутри уже взятого лока.
+ *
+ * Перед записью перечитываем профиль: пока шла проверка пароля, админ мог
+ * сменить логин/роль/пароль, и запись устаревшего снимка откатила бы правку.
+ * Атомарность «прочитал-записал» всё равно не гарантируется, но окно гонки
+ * сужается до минимума, а чужие изменения не затираются снимком из начала
+ * входа.
+ */
+function touchLastLogin(stored: StoredUser): StoredUser {
+  try {
+    const fresh = readStoredUser(stored.uid) ?? stored;
+    const updated: StoredUser = {
+      ...fresh,
+      lastLoginAt: new Date().toISOString(),
+    };
+    writeStoredUser(stored.uid, updated);
+    return updated;
+  } catch (error) {
+    console.error('Failed to update last login time:', error);
+    return stored;
+  }
 }
 
 /** Есть ли аккаунт с таким логином (регистр/пробелы нормализуются). */
@@ -161,31 +186,45 @@ export function accountExists(username: string): boolean {
   return resolveLogin(username) !== null;
 }
 
+interface NewAccountOptions {
+  role?: UserRole;
+  mustChangePassword?: boolean;
+}
+
 /**
  * Создать профиль и запись в индексе. Вызывать только под `withDataLock`,
  * после проверки, что логин свободен.
+ *
+ * `options` нужен только служебному администратору (роль `admin` и флаг
+ * «пароль сгенерирован»); обычная регистрация всегда создаёт `user`.
  */
 function persistNewAccount(
   login: string,
   passwordHash: string,
   displayName?: string,
   recoveryPhrase?: string,
+  options: NewAccountOptions = {},
 ): AuthResult {
   const uid = newUid();
   const now = new Date().toISOString();
   const user: StoredUser = {
-    schemaVersion: 2,
+    schemaVersion: USER_SCHEMA_VERSION,
     uid,
     username: login,
     displayName:
       (displayName && displayName.trim()) || defaultDisplayName(login),
     passwordHash,
+    role: options.role === 'admin' ? 'admin' : 'user',
+    isBlocked: false,
     createdAt: now,
     updatedAt: now,
   };
 
   if (recoveryPhrase !== undefined && recoveryPhrase.trim() !== '') {
     user.recoveryPhrase = recoveryPhrase.toLowerCase().trim();
+  }
+  if (options.mustChangePassword) {
+    user.mustChangePassword = true;
   }
 
   writeStoredUser(uid, user);
@@ -348,16 +387,24 @@ export function updateUserProfile(
 
       const updated: StoredUser = {
         ...stored,
-        schemaVersion: 2,
+        schemaVersion: USER_SCHEMA_VERSION,
         uid: currentUserId,
         username: newLogin,
         displayName,
+        role: stored.role === 'admin' ? 'admin' : 'user',
+        isBlocked: !!stored.isBlocked,
         passwordHash:
           newPassword && newPassword.trim().length > 0
             ? hashPassword(newPassword)
             : stored.passwordHash,
         updatedAt: new Date().toISOString(),
       };
+
+      // Сменили сгенерированный стартовый пароль — предупреждение больше не
+      // нужно.
+      if (newPassword && newPassword.trim().length > 0) {
+        delete updated.mustChangePassword;
+      }
 
       if (newRecoveryPhrase !== undefined) {
         if (newRecoveryPhrase.trim() === '') {
@@ -643,11 +690,13 @@ export function createImportedUser(options: {
     const uid = newUid();
     const now = new Date().toISOString();
     const user: StoredUser = {
-      schemaVersion: 2,
+      schemaVersion: USER_SCHEMA_VERSION,
       uid,
       username: login,
       displayName: options.displayName,
       passwordHash: options.passwordHash,
+      role: 'user',
+      isBlocked: false,
       createdAt: now,
       updatedAt: now,
       ...(options.originalFirebaseId
@@ -664,4 +713,78 @@ export function createImportedUser(options: {
     }
     return user;
   });
+}
+
+export interface CreateServiceAdminResult {
+  success: boolean;
+  user?: LocalUser;
+  error?: string;
+  reason?: 'invalid_input' | 'exists' | 'failed';
+}
+
+/**
+ * ─── LANDMARK: SERVICE ADMIN CREATION ───────────────────────────────────────
+ * Служебный администратор создаётся стартовой проверкой (`startup.ts`), когда
+ * в data-dir нет ни одного активного админа. Пароль генерируется вызывающим и
+ * сразу помечается как «временный» (`mustChangePassword`).
+ *
+ * Логин выбирает вызывающий; здесь ещё раз проверяется занятость под локом —
+ * между сканом и созданием мог проскочить параллельный запрос.
+ */
+export function createServiceAdmin(
+  username: string,
+  password: string,
+  displayName = 'Administrator',
+): CreateServiceAdminResult {
+  const login = normalizeLogin(username);
+  if (!login) {
+    return {
+      success: false,
+      error: 'Username is required.',
+      reason: 'invalid_input',
+    };
+  }
+  if (!password || password.length < 4) {
+    return {
+      success: false,
+      error: 'Password must be at least 4 characters.',
+      reason: 'invalid_input',
+    };
+  }
+
+  try {
+    return withDataLock(() => {
+      const index = readLoginIndexForUpdate();
+      if (index.logins[login]) {
+        return {
+          success: false,
+          error: 'This login is already registered.',
+          reason: 'exists',
+        } as CreateServiceAdminResult;
+      }
+
+      const created = persistNewAccount(
+        login,
+        hashPassword(password),
+        displayName,
+        undefined,
+        { role: 'admin', mustChangePassword: true },
+      );
+      if (!created.success || !created.user) {
+        return {
+          success: false,
+          error: created.error || 'Failed to create administrator.',
+          reason: 'failed',
+        } as CreateServiceAdminResult;
+      }
+      return { success: true, user: created.user };
+    });
+  } catch (error) {
+    console.error('Failed to create service administrator:', error);
+    return {
+      success: false,
+      error: 'Failed to create administrator.',
+      reason: 'failed',
+    };
+  }
 }

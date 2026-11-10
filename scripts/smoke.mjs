@@ -271,6 +271,15 @@ await check('GET /stats-editor → 200', async () => {
   assertStatus(res, 200, 'GET /stats-editor');
 });
 
+await check('GET /admin → 200 (страница админки существует)', async () => {
+  const res = await request('/admin');
+  assertStatus(res, 200, 'GET /admin');
+  assert(
+    /text\/html/i.test(res.headers.get('content-type') || ''),
+    'GET /admin: content-type не text/html',
+  );
+});
+
 // 2. Аутентификация
 await check('POST /api/auth/exists → свободный логин', async () => {
   const res = await api('/auth/exists', {
@@ -351,6 +360,28 @@ await check(
     return userId;
   },
 );
+
+await check(
+  'GET /api/admin/users обычным пользователем → 403 (роль проверяется сервером)',
+  async () => {
+    const res = await api('/admin/users');
+    assertStatus(res, 403, 'GET /api/admin/users (обычный пользователь)');
+  },
+);
+
+await check('GET /api/auth/session → актуальный снимок профиля', async () => {
+  const res = await api('/auth/session');
+  assertStatus(res, 200, 'GET /api/auth/session');
+  const body = assertJson(res, 'GET /api/auth/session');
+  assert(
+    body.user?.uid === userId,
+    'GET /api/auth/session: uid не совпадает с зарегистрированным',
+  );
+  assert(
+    body.user?.role === 'user',
+    `GET /api/auth/session: role = ${body.user?.role}`,
+  );
+});
 
 await check('POST /api/auth/register → 409 на занятый логин', async () => {
   const res = await api('/auth/register', {
@@ -449,6 +480,11 @@ await check('GET /api/characters без сессии → 401', async () => {
   assertStatus(res, 401, 'GET /api/characters без сессии');
 });
 
+await check('GET /api/admin/users без сессии → 401', async () => {
+  const res = await api('/admin/users', { auth: false });
+  assertStatus(res, 401, 'GET /api/admin/users без сессии');
+});
+
 await check('POST /api/characters → 201 и id персонажа', async () => {
   const res = await api('/characters', { method: 'POST', body: dndCharacter });
   assertStatus(res, 201, 'POST /api/characters');
@@ -539,8 +575,13 @@ if (opts.dataDir) {
       const parsed = JSON.parse(raw);
       assert(parsed.uid === userId, `user.json: uid = ${parsed.uid}`);
       assert(
-        parsed.schemaVersion === 2,
+        parsed.schemaVersion === 3,
         `user.json: schemaVersion = ${parsed.schemaVersion}`,
+      );
+      assert(parsed.role === 'user', `user.json: role = ${parsed.role}`);
+      assert(
+        parsed.isBlocked === false,
+        `user.json: isBlocked = ${parsed.isBlocked}`,
       );
       assert(
         parsed.username === username.toLowerCase(),

@@ -43,7 +43,9 @@ export async function POST(request: Request) {
           ? 404
           : result.reason === 'invalid_input'
             ? 400
-            : 401;
+            : result.reason === 'blocked'
+              ? 403
+              : 401;
       return NextResponse.json(
         {
           success: false,

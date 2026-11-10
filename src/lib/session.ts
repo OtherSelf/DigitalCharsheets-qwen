@@ -2,7 +2,8 @@ import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
 
-import { getDataDir, getSessionSecretFile, getUserFile } from './data-dir';
+import { getDataDir, getSessionSecretFile } from './data-dir';
+import { readStoredUser } from './user-schema';
 
 /**
  * ─── LANDMARK: SERVER-SIDE SESSION ──────────────────────────────────────────
@@ -132,20 +133,26 @@ export function parseCookieHeader(
 }
 
 /**
- * uid из запроса или null, если сессии нет/она просрочена/подпись не сходится
- * или профиль удалён.
+ * uid из запроса или null, если сессии нет/она просрочена/подпись не сходится,
+ * профиль удалён или аккаунт заблокирован администратором.
  *
  * Проверка `user.json` нужна после удаления аккаунта: подпись cookie
  * самодостаточна и живёт 30 дней, поэтому старая cookie на другом устройстве
  * осталась бы «валидной». Без этой проверки `GET/POST /api/characters`
  * воссоздал бы каталог `users/<uid>/characters` и удалённые данные могли бы
  * вернуться. Нет профиля — нет сессии.
+ *
+ * Блокировка проверяется здесь же: cookie не отзывается отдельно, но правка
+ * `user.json` действует на следующем запросе. Поэтому «заблокировать» в
+ * админке сразу выкидывает пользователя из всех вкладок (следующий
+ * `/api/characters` вернёт 401).
  */
 export function getSessionUid(request: Request): string | null {
   const cookies = parseCookieHeader(request.headers.get('cookie'));
   const uid = verifySession(cookies[SESSION_COOKIE]);
   if (!uid) return null;
-  if (!fs.existsSync(getUserFile(uid))) return null;
+  const user = readStoredUser(uid);
+  if (!user || user.isBlocked) return null;
   return uid;
 }
 

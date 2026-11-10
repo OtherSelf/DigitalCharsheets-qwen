@@ -1,10 +1,21 @@
 import { Character } from '@/lib/types';
+import type { UserRole } from '@/lib/user-role';
 
+/**
+ * Снимок профиля для UI. Это НЕ источник прав: `role`/`isBlocked` здесь нужны
+ * только чтобы показать пункт «Админка» и предупреждение о стартовом пароле.
+ * Сервер проверяет роль по `user.json` на каждом административном запросе,
+ * поэтому подмена localStorage доступа не даёт.
+ */
 export interface LocalUser {
   uid: string;
   username: string;
   displayName: string;
   hasRecoveryPhrase: boolean; // Needed for UI to know if prompt is required
+  role?: UserRole;
+  isBlocked?: boolean;
+  /** Пароль был сгенерирован при первом запуске — стоит сменить. */
+  mustChangePassword?: boolean;
 }
 
 const STORAGE_KEYS = {

@@ -6,7 +6,7 @@ import { useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
-import { CircleUserRound, Settings, Type } from 'lucide-react';
+import { CircleUserRound, Settings, Shield, Type } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -110,6 +110,24 @@ export function UserNav() {
               <span>{t('settings') || 'Settings'}</span>
             </Link>
           </DropdownMenuItem>
+
+          {/*
+            ─── LANDMARK: ADMIN_MENU_ITEM ───
+            Ссылка видна только по снимку роли из localStorage. Это лишь UX:
+            саму /admin и её API сервер проверяет по user.json, поэтому
+            подделанный localStorage откроет страницу, но не данные.
+          */}
+          {user.role === 'admin' && (
+            <DropdownMenuItem asChild>
+              <Link
+                href="/admin"
+                className="flex w-full cursor-pointer items-center"
+              >
+                <Shield className="mr-2 h-4 w-4" />
+                <span>{t('adminPanel') || 'Administration'}</span>
+              </Link>
+            </DropdownMenuItem>
+          )}
 
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={logout}>
