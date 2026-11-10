@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-import { dhCharacter } from './fixtures';
+import { dhCharacter, dndCharacter } from './fixtures';
 import {
   collectPageErrors,
   expectNoHorizontalOverflow,
@@ -1009,6 +1009,173 @@ test('длинное имя персонажа: шапка не ломается
       .toBeGreaterThanOrEqual(90);
     await expectNoHorizontalOverflow(page);
   }
+});
+
+test.describe('вид листа: компактный и обычный', () => {
+  test('переключатель вида: компактный ↔ обычный', async ({
+    page,
+    context,
+  }) => {
+    test.skip(isMobile(), 'на телефоне компактный вид включается сам');
+    await prepare(context);
+    await openApp(page, `/${getState().dhId}`);
+
+    const toggle = page
+      .getByTestId('app-header')
+      .getByRole('button', { name: 'Switch to Compact View', exact: true });
+
+    // ── обычный вид ────────────────────────────────────────────────────
+    await expect(page.getByRole('navigation')).toHaveCount(0);
+    await expect(page.locator('.dh-sheet.is-compact')).toHaveCount(0);
+
+    // ── включаем компактный ───────────────────────────────────────────
+    await toggle.click();
+    await expect(page.getByRole('navigation')).toBeVisible();
+    await expect(page.locator('.dh-sheet.is-compact')).toHaveCount(1);
+    await expect(
+      page
+        .getByTestId('app-header')
+        .getByRole('button', { name: 'Switch to Default View', exact: true }),
+    ).toBeVisible();
+    await expectNoHorizontalOverflow(page);
+
+    // В компактном виде видна только активная секция.
+    await expect(page.locator('#info-section:visible')).toHaveCount(1);
+    await expect(page.locator('#inventory-section:visible')).toHaveCount(0);
+
+    // Переключение секций из левого меню работает и в этом режиме.
+    await page
+      .getByRole('navigation')
+      .getByRole('button', { name: 'Inventory', exact: true })
+      .click();
+    await page.waitForTimeout(500);
+    await expect(page.locator('#inventory-section:visible')).toHaveCount(1);
+    await expect(page.locator('#info-section:visible')).toHaveCount(0);
+    await expectNoHorizontalOverflow(page);
+
+    // ── возвращаемся в обычный ────────────────────────────────────────
+    await page
+      .getByTestId('app-header')
+      .getByRole('button', { name: 'Switch to Default View', exact: true })
+      .click();
+    await expect(page.getByRole('navigation')).toHaveCount(0);
+    await expect(page.locator('.dh-sheet.is-compact')).toHaveCount(0);
+    await expect(
+      page
+        .getByTestId('app-header')
+        .getByRole('button', { name: 'Switch to Compact View', exact: true }),
+    ).toBeVisible();
+    await expectNoHorizontalOverflow(page);
+  });
+
+  test('компактный вид на 1024px: без горизонтального скролла', async ({
+    page,
+    context,
+  }) => {
+    test.skip(isMobile(), 'проверяется переключатель на десктопе');
+    await prepare(context);
+    await page.setViewportSize({ width: 1024, height: 900 });
+    await openApp(page, `/${getState().dndId}`);
+
+    await page
+      .getByTestId('app-header')
+      .getByRole('button', { name: 'Switch to Compact View', exact: true })
+      .click();
+    await expect(page.getByRole('navigation')).toBeVisible();
+    await expect(page.locator('.dnd-sheet.is-compact')).toHaveCount(1);
+    await expectNoHorizontalOverflow(page);
+    const inner = await page.evaluate(() => {
+      const main = document.querySelector('main')!;
+      const nav = document.querySelector('nav')!;
+      return {
+        main: main.scrollWidth - main.clientWidth,
+        nav: nav.scrollWidth - nav.clientWidth,
+      };
+    });
+    expect(
+      inner.main,
+      'main не вылезает вбок в компактном виде',
+    ).toBeLessThanOrEqual(1);
+    expect(inner.nav, 'сайдбар не вылезает вбок').toBeLessThanOrEqual(1);
+  });
+
+  test('дубли id: компаньон со всеми секциями, обычный и компактный вид', async ({
+    page,
+  }) => {
+    test.skip(isMobile(), 'переключатель вида проверяется на десктопе');
+
+    // Отдельный аккаунт и персонаж: фикстуры и эталоны не затрагиваем.
+    // У компаньона включены ВСЕ необязательные секции — именно они раньше
+    // дублировали id (attunement-card, inventory-box, spells-section, ...).
+    const username = `compact-dupes-${Date.now()}`;
+    const password = 'compact-dupes-1';
+    const registered = await page.request.post('/api/auth/register', {
+      data: {
+        username,
+        password,
+        displayName: 'Compact Dupes',
+        recoveryPhrase: 'amber cobalt lantern',
+      },
+    });
+    expect([200, 201], 'регистрация аккаунта').toContain(registered.status());
+
+    const companion = {
+      ...dndCharacter.companions![0],
+      showInventory: true,
+      showSpells: true,
+      showNarrative: true,
+      showInfo: true,
+      showProgression: true,
+      showDivineBoons: true,
+    };
+    const created = await page.request.post('/api/characters', {
+      data: {
+        ...dndCharacter,
+        name: 'Companion Dupes',
+        companions: [companion],
+      },
+    });
+    expect([200, 201], 'создание персонажа').toContain(created.status());
+    const { id } = (await created.json()) as { id: string };
+
+    await page.context().clearCookies();
+    await signInViaUI(page, { username, password });
+
+    const duplicates = () =>
+      page.evaluate(() => {
+        const seen = new Map<string, number>();
+        for (const el of document.querySelectorAll('[id]')) {
+          seen.set(el.id, (seen.get(el.id) ?? 0) + 1);
+        }
+        return [...seen.entries()]
+          .filter(([, count]) => count > 1)
+          .map(([dupId, count]) => `${dupId} x${count}`);
+      });
+
+    await openApp(page, `/${id}`);
+    await page.waitForTimeout(600);
+    expect(await duplicates(), 'обычный вид: дубли id').toEqual([]);
+
+    // Все необязательные секции компаньона действительно отрисовались.
+    for (const id_ of [
+      'companion-attunement-card',
+      'companion-inventory-box',
+      'companion-spells-section',
+      'companion-narrative-section',
+      'companion-progression-section',
+      'companion-character-info-card',
+      'companion-divine-boons-section',
+    ]) {
+      await expect(page.locator(`#${id_}`), `${id_} отрисован`).toHaveCount(1);
+    }
+
+    await page
+      .getByTestId('app-header')
+      .getByRole('button', { name: 'Switch to Compact View', exact: true })
+      .click();
+    await page.waitForTimeout(600);
+    expect(await duplicates(), 'компактный вид: дубли id').toEqual([]);
+  });
 });
 
 /** Пара мелких проверок содержимого, которые не сводятся к пикселям. */
