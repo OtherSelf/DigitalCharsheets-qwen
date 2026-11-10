@@ -4,7 +4,7 @@ import React from 'react';
 import { useRouter } from 'next/navigation';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
+import { useForm, type Resolver } from 'react-hook-form';
 import { z } from 'zod';
 
 import { Button } from '@/components/ui/button';
@@ -378,13 +378,13 @@ export function DndCharacterForm() {
   const formSchema = z.object({
     name: z.string().min(2, t('nameMinLength')),
     characterClass: z.enum(DND_CLASSES as unknown as [string, ...string[]], {
-      required_error: t('selectClassError'),
+      error: t('selectClassError'),
     }),
     race: z.enum(DND_RACES as unknown as [string, ...string[]], {
-      required_error: t('selectRaceError'),
+      error: t('selectRaceError'),
     }),
     background: z.enum(DND_BACKGROUNDS as unknown as [string, ...string[]], {
-      required_error: t('selectBackgroundError'),
+      error: t('selectBackgroundError'),
     }),
     alignment: z.string().optional(),
     level: z.coerce.number().int().min(1).max(20),
@@ -420,8 +420,13 @@ export function DndCharacterForm() {
     spellSaveDifficulty: z.coerce.number().int().optional(),
   });
 
+  // zod 4 разделяет типы входа и выхода (z.input/z.output, например из-за
+  // z.coerce.number()). zodResolver возвращает разобранные данные, поэтому
+  // форма типизируется выходным типом схемы; приведение сужает TFieldValues.
   const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(formSchema) as unknown as Resolver<
+      z.infer<typeof formSchema>
+    >,
     defaultValues: {
       name: '',
       level: 1,

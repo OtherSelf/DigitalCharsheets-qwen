@@ -15,6 +15,7 @@ blob-report
 .chromium-deps
 .playwright-browsers
 .npm-cache
+.nvmrc
 
 # артефакты и данные
 package-lock.json

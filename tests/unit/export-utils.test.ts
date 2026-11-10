@@ -23,6 +23,11 @@ import {
 
 import { makeDhCharacter, makeDndCharacter } from './helpers';
 
+// xlsx 0.20 в Node подхватывает fs только при CJS-загрузке; под vitest (ESM)
+// детект не срабатывает, и writeFile/readFile уходят в браузерную ветку.
+// Явно сообщаем библиотеке про node:fs — это нужно только тестам.
+XLSX.set_fs(fs);
+
 /**
  * Экспорт и импорт листов (src/lib/export-utils.ts).
  *

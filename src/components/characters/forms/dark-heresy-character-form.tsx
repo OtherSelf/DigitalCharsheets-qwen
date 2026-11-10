@@ -4,7 +4,7 @@ import React from 'react';
 import { useRouter } from 'next/navigation';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
+import { useForm, type Resolver } from 'react-hook-form';
 import { z } from 'zod';
 
 import { Button } from '@/components/ui/button';
@@ -76,14 +76,14 @@ export function DarkHeresyCharacterForm() {
   const formSchema = z.object({
     name: z.string().min(2, t('nameMinLength')),
     homeWorld: z.enum(DarkHeresyHomeWorlds, {
-      required_error: t('selectHomeWorldError'),
+      error: t('selectHomeWorldError'),
     }),
     worldVariant: z.string().optional(),
     careerPath: z.enum(DarkHeresyCareerPaths, {
-      required_error: t('selectCareerPathError'),
+      error: t('selectCareerPathError'),
     }),
     backstory: z.string().optional(),
-    divination: z.string({ required_error: t('selectDivinationError') }),
+    divination: z.string({ error: t('selectDivinationError') }),
     quirk: z.string().optional(),
     height: z.string().optional(),
     weight: z.string().optional(),
@@ -107,8 +107,13 @@ export function DarkHeresyCharacterForm() {
     fatePoints: z.coerce.number().int(),
   });
 
+  // zod 4 разделяет типы входа и выхода (z.input/z.output, например из-за
+  // z.coerce.number()). zodResolver возвращает разобранные данные, поэтому
+  // форма типизируется выходным типом схемы; приведение сужает TFieldValues.
   const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(formSchema) as unknown as Resolver<
+      z.infer<typeof formSchema>
+    >,
     defaultValues: {
       name: '',
       worldVariant: '',
