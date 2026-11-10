@@ -139,6 +139,18 @@ export default function ProfileSettingsPage() {
             </div>
           )}
 
+          {/*
+            ─── LANDMARK: GENERATED_ADMIN_PASSWORD_WARNING ───
+            Если служебный админ создан при первом запуске, его пароль лежит в
+            консоли и data/.initial-admin.txt. Напоминаем сменить его в карточке
+            Security; после сохранения с новым паролем флаг снимается.
+          */}
+          {user.mustChangePassword && (
+            <div className="rounded-md border border-amber-500/50 bg-amber-500/10 p-3 text-sm">
+              {t('adminMustChangePassword')}
+            </div>
+          )}
+
           <form onSubmit={handleSave} className="space-y-6">
             <Card>
               <CardHeader>

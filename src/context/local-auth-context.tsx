@@ -76,6 +76,11 @@ interface LocalAuthContextType {
   deleteAccount: (password: string) => Promise<LoginResult>;
   logout: () => void;
   restoreSession: (user: LocalUser) => void; // LANDMARK: used by recovery flow
+  /**
+   * Обновить локальный снимок профиля, не меняя `lastAuthKind` (в отличие от
+   * `restoreSession`). Нужно админке после правки своей роли/логина.
+   */
+  updateUser: (user: LocalUser) => void;
   updateUserPhrase: (hasPhrase: boolean) => void;
 }
 
@@ -92,6 +97,40 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
     const storedUser = getLocalUser();
     setUser(storedUser);
     setIsUserLoading(false);
+
+    // ─── LANDMARK: SESSION_REFRESH ──────────────────────────────────────────
+    // localStorage — только снимок для мгновенного рендера. Роль, логин и
+    // блокировка могли измениться на сервере (админка), поэтому один раз за
+    // загрузку сверяемся с /api/auth/session:
+    //   • 200 — обновляем снимок (пункт «Админка» без перелогина);
+    //   • 401 — сессии нет / аккаунт удалён или заблокирован → гость.
+    // Сетевую ошибку игнорируем: страницы сами обработают 401 на данных.
+    if (!storedUser) return;
+
+    let cancelled = false;
+    void (async () => {
+      try {
+        const res = await fetch('/api/auth/session', { cache: 'no-store' });
+        if (cancelled) return;
+        if (res.status === 401) {
+          clearLocalUser();
+          setUser(null);
+          setLastAuthKind(null);
+          return;
+        }
+        const data = await res.json().catch(() => null);
+        if (!cancelled && res.ok && data?.success && data?.user) {
+          setLocalUser(data.user);
+          setUser(data.user);
+        }
+      } catch {
+        // Нет сети — оставляем локальный снимок.
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   // LANDMARK: single source of truth for persisting + setting the session
@@ -101,6 +140,11 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
     // login/register зовут restoreSession и перебивают вид своим значением
     // в том же тике — сюда попадает только восстановление по фразе.
     setLastAuthKind('restore');
+  }, []);
+
+  const updateUser = useCallback((nextUser: LocalUser) => {
+    setLocalUser(nextUser);
+    setUser(nextUser);
   }, []);
 
   const login = useCallback(
@@ -280,6 +324,7 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
         deleteAccount,
         logout,
         restoreSession,
+        updateUser,
         updateUserPhrase,
       }}
     >

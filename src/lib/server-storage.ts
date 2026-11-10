@@ -232,11 +232,13 @@ export function createUserFolder(
 
   if (!fs.existsSync(userFile)) {
     const userData = {
-      schemaVersion: 2,
+      schemaVersion: 3,
       uid: userId,
       username,
       displayName,
       passwordHash: '',
+      role: 'user',
+      isBlocked: false,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };

@@ -91,6 +91,12 @@ export default function LoginPage() {
     ) {
       return t('authIncorrectPassword');
     }
+    if (
+      result.reason === 'blocked' ||
+      /blocked by an administrator/i.test(result.error || '')
+    ) {
+      return t('authAccountBlocked');
+    }
     return result.error || t('authLoginFailed');
   };
 

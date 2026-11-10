@@ -38,6 +38,55 @@ validates `appName`, `format`, version, `kind`, character fields and `characterC
 legacy files (a bare array, a bare character or a v1 envelope) are rejected with a
 "re-export" message.
 
+## Administration
+
+The admin panel lives at **`/admin`**. It is a normal Next.js page, but every
+admin API call is guarded on the server: `GET /api/admin/users` answers 401
+without a session and 403 for a non-admin, so opening the URL as a regular user
+redirects to `/`. The role is read from `users/<uid>/user.json` — the client-side
+copy in localStorage only controls whether the menu item is visible.
+
+What the panel can do:
+
+- list users with role / block status / character-sheet count and search them;
+- edit display name and login, reset a password, promote or demote;
+- block or unblock — blocking invalidates existing sessions on the next request;
+- delete an account together with all of its sheets (typed-login confirmation);
+- open a read-only list of a user's character sheets (name, system, class,
+  level/rank, file date).
+
+### First administrator and startup checks
+
+`src/instrumentation.ts` runs `src/lib/startup.ts` once per server start (dev and
+production). It:
+
+1. checks every `users/<uid>/user.json` against schema v3 and fills in missing
+   fields (`schemaVersion`, `role`, `isBlocked`, timestamps) without overwriting
+   existing values;
+2. rebuilds the derived `index/logins.json`;
+3. creates a service administrator if there is no active one.
+
+The generated account:
+
+- login — `DCS_ADMIN_USERNAME` (default `admin`; if taken, `admin-2`, `admin-3`, …);
+- password — 16 random base64url characters, printed to the server console and
+  written to `<data-dir>/.initial-admin.txt` (mode 0600);
+- role — `admin`, plus a `mustChangePassword` flag shown on `/settings`.
+
+The credentials file and password stay as they are on later restarts while an
+active admin exists. Change the password after the first login and delete the
+file.
+
+Known limitation: changing a password does not revoke already issued sessions
+(cookies are stateless signed values). Use **Block** to cut a user off
+immediately.
+
+Admin screenshot tests live in `tests/visual/admin.spec.ts`. They use three
+deterministic `visual-admin-*` demo accounts with fixed dates/roles/blocks,
+seeded by `scripts/visual.sh` into the temporary data directory. When visual
+tests run against an external server (`--base-url`) there is no data directory
+to seed, so only the admin tests are skipped.
+
 ## Code style
 
 The Python equivalent of `isort --profile black .; black .` here is:
