@@ -1,11 +1,12 @@
 import {
   expect,
+  test,
   type BrowserContext,
   type Locator,
   type Page,
 } from '@playwright/test';
 
-import { readState, type VisualState } from './state';
+import { readCanonicalState, readState, type VisualState } from './state';
 
 /**
  * Общие помощники визуальных тестов.
@@ -34,10 +35,23 @@ export interface PrepareOptions {
   language?: 'en' | 'ru';
   /** false — гость (например, страница /login). */
   authenticated?: boolean;
+  /**
+   * Каким аккаунтом входить:
+   *   worker    — изолированный аккаунт текущего воркера (по умолчанию);
+   *   canonical — фиксированный `visual-tests`, нужен только там, где логин
+   *               виден на скриншоте (страница `/settings`).
+   */
+  account?: 'worker' | 'canonical';
 }
 
+/** Аккаунт текущего воркера: у каждого воркера свои персонажи. */
 export function getState(): VisualState {
-  return readState();
+  return readState(test.info().workerIndex);
+}
+
+/** Фиксированный аккаунт для снимков, где виден логин. */
+export function getCanonicalState(): VisualState {
+  return readCanonicalState();
 }
 
 /**
@@ -52,20 +66,39 @@ export async function prepare(
   context: BrowserContext,
   options: PrepareOptions = {},
 ): Promise<void> {
-  const { theme = 'light', language = 'en', authenticated = true } = options;
-  const state = getState();
+  const {
+    theme = 'light',
+    language = 'en',
+    authenticated = true,
+    account = 'worker',
+  } = options;
+  const state = account === 'canonical' ? getCanonicalState() : getState();
 
   // Сессия теперь httpOnly-cookie: localStorage-снимка недостаточно,
   // поэтому логинимся в cookie-jar контекста (он общий для страниц и
   // context.request).
   if (authenticated) {
-    const response = await context.request.post('/api/auth', {
-      data: { username: state.username, password: state.password },
-    });
-    if (!response.ok()) {
+    // Под параллельным прогоном (4 воркера) сервер иногда отвечает
+    // медленнее — повторяем пару раз, чтобы флейк не валил весь тест.
+    let lastStatus = 0;
+    let lastBody = '';
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      const response = await context.request.post('/api/auth', {
+        data: { username: state.username, password: state.password },
+      });
+      if (response.ok()) {
+        lastStatus = response.status();
+        lastBody = '';
+        break;
+      }
+      lastStatus = response.status();
+      lastBody = await response.text();
+      await new Promise((resolve) => setTimeout(resolve, 300 * (attempt + 1)));
+    }
+    if (lastBody) {
       throw new Error(
         `prepare(): не удалось войти аккаунтом ${state.username}: ` +
-          `HTTP ${response.status()} ${await response.text()}`,
+          `HTTP ${lastStatus} ${lastBody}`,
       );
     }
   }
@@ -135,11 +168,82 @@ export async function screenshotPage(
   });
 }
 
-/** Скриншот отдельного элемента (карточки/секции) целиком. */
+/**
+ * Скриншот отдельного элемента (карточки/секции).
+ *
+ * Если элемент выше своего скролл-контейнера, снимать его «целиком» нельзя:
+ * приложение живёт в фиксированной оболочке (`h-dvh` + `overflow: hidden`),
+ * и Chromium дорисовывает область ниже вьюпорта недетерминированно — кадр
+ * зависит от `scrollTop` и таймингов (именно это флакало при параллельном
+ * прогоне). Для таких элементов привязываем верх к контейнеру и снимаем
+ * видимую часть по `clip` — это ровно те же пиксели, но без «дорисовки».
+ */
 export async function screenshotElement(
   locator: Locator,
   name: string,
 ): Promise<void> {
+  const page = locator.page();
+  await locator.page().evaluate(() => document.fonts.ready);
+  await locator.page().mouse.move(1, 1);
+
+  const info = await locator.evaluate((el) => {
+    const node = el as HTMLElement;
+    const scroller = node.closest('main') as HTMLElement | null;
+    const rect = node.getBoundingClientRect();
+    const scrollerRect = scroller?.getBoundingClientRect();
+    return {
+      tall: !!scroller && node.offsetHeight > scroller.clientHeight,
+      clip:
+        scrollerRect && rect
+          ? {
+              x: Math.max(rect.left, scrollerRect.left),
+              y: Math.max(rect.top, scrollerRect.top),
+              width:
+                Math.min(rect.right, scrollerRect.right) -
+                Math.max(rect.left, scrollerRect.left),
+              height:
+                Math.min(rect.bottom, scrollerRect.bottom) -
+                Math.max(rect.top, scrollerRect.top),
+            }
+          : null,
+    };
+  });
+
+  if (info.tall && info.clip) {
+    await locator.evaluate((el) => {
+      const node = el as HTMLElement;
+      const scroller = node.closest('main') as HTMLElement | null;
+      if (!scroller) return;
+      const top =
+        node.getBoundingClientRect().top -
+        scroller.getBoundingClientRect().top +
+        scroller.scrollTop;
+      scroller.scrollTo({ top });
+    });
+    await waitForScrollSettled(page);
+    // Координаты берём ровно как у рамки элемента (без «подрезки» слева и
+    // сверху), иначе сдвиг на пиксель округления меняет весь кадр.
+    const clip = await locator.evaluate((el) => {
+      const node = el as HTMLElement;
+      const scroller = node.closest('main') as HTMLElement;
+      const rect = node.getBoundingClientRect();
+      const scrollerRect = scroller.getBoundingClientRect();
+      // Округляем «наружу», как это делает элементный снимок Playwright:
+      // дробная рамка иначе сдвигает кадр на пиксель и рвёт эталон.
+      const x = Math.floor(rect.left);
+      const y = Math.floor(rect.top);
+      const bottom = Math.ceil(Math.min(rect.bottom, scrollerRect.bottom));
+      return {
+        x,
+        y,
+        width: Math.ceil(rect.right) - x,
+        height: bottom - y,
+      };
+    });
+    await expect(page).toHaveScreenshot(name, { clip });
+    return;
+  }
+
   await locator.scrollIntoViewIfNeeded();
   await locator.page().evaluate(() => document.fonts.ready);
   await locator.page().mouse.move(1, 1);
@@ -264,16 +368,49 @@ export async function signInViaUI(
   page: Page,
   state: Pick<VisualState, 'username' | 'password'> = getState(),
 ): Promise<void> {
-  await page.goto('/login', { waitUntil: 'domcontentloaded' });
-  await page
-    .getByLabel('Username or Email', { exact: true })
-    .fill(state.username);
-  await page.getByLabel('Password', { exact: true }).fill(state.password);
-  await page.getByRole('button', { name: 'Sign In', exact: true }).click();
-  await page.waitForURL((url) => !url.pathname.startsWith('/login'), {
-    timeout: 30_000,
-  });
-  await page.waitForLoadState('networkidle');
+  // Вход через UI дергает сервер; под параллельным прогоном запрос может
+  // не дойти с первого раза (страница показывает «не удалось подключиться»).
+  // Повторяем форму до трёх раз и, если не вышло, сообщаем HTTP-статус —
+  // иначе тест падает таймаутом без причины.
+  let lastStatus: number | string = '—';
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    await page.goto('/login', { waitUntil: 'domcontentloaded' });
+    await page
+      .getByLabel('Username or Email', { exact: true })
+      .fill(state.username);
+    await page.getByLabel('Password', { exact: true }).fill(state.password);
+
+    const responsePromise = page
+      .waitForResponse(
+        (response) =>
+          response.url().includes('/api/auth') &&
+          response.request().method() === 'POST',
+        { timeout: 30_000 },
+      )
+      .catch(() => null);
+
+    await page.getByRole('button', { name: 'Sign In', exact: true }).click();
+    const response = await responsePromise;
+    lastStatus = response ? response.status() : 'нет ответа';
+
+    const navigated = await page
+      .waitForURL((url) => !url.pathname.startsWith('/login'), {
+        timeout: 15_000,
+      })
+      .then(() => true)
+      .catch(() => false);
+
+    if (navigated) {
+      await page.waitForLoadState('networkidle');
+      return;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 500 * attempt));
+  }
+
+  throw new Error(
+    `signInViaUI: не удалось войти аккаунтом ${state.username} после 3 попыток ` +
+      `(последний ответ: ${lastStatus})`,
+  );
 }
 
 /** Открывает на /login форму регистрации (кнопка под формой входа). */
