@@ -17,7 +17,8 @@
     "verify": "bash scripts/predeploy.sh",
     "test:visual": "bash scripts/visual.sh",
     "test:visual:update": "bash scripts/visual.sh --update-snapshots",
-    "test:visual:report": "playwright show-report"
+    "test:visual:report": "playwright show-report",
+    "test:visual:fast": "bash scripts/visual.sh --grep @fast"
   },
   "dependencies": {
     "@hookform/resolvers": "^4.1.3",

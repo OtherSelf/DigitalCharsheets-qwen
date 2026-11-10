@@ -348,51 +348,116 @@ test.describe('адаптивность', () => {
     ).toBeVisible();
   });
 
-  test('шапка листа: одна строка на планшете и до 768px', async ({
-    page,
-    context,
-  }) => {
-    test.skip(isMobile(), 'desktop/tablet-only сценарий');
-    await prepare(context);
-    await openApp(page, `/${getState().dhId}`);
+  test(
+    'шапка листа: одна строка на планшете и до 768px',
+    { tag: '@fast' },
+    async ({ page, context }) => {
+      test.skip(isMobile(), 'desktop/tablet-only сценарий');
+      await prepare(context);
+      await openApp(page, `/${getState().dhId}`);
 
-    const header = page.locator('header.app-header');
-    const sheetActions = header.locator('.header-sheet-actions');
-    const viewActions = header.locator('.header-view-actions');
-    const account = header.getByRole('button', { name: 'Open user menu' });
+      const header = page.locator('header.app-header');
+      const sheetActions = header.locator('.header-sheet-actions');
+      const viewActions = header.locator('.header-view-actions');
+      const account = header.getByRole('button', { name: 'Open user menu' });
 
-    // После перехода инструментов листа на иконки группа занимает ~180px
-    // (было 414–493px), поэтому шапка листа укладывается в ОДНУ строку
-    // вплоть до 768px. Ниже 768px включается мобильный компактный вид,
-    // где инструменты живут в сайдбаре. Раньше на 768..1299px шапка
-    // переносилась на две строки и съедала 125–141px высоты.
-    for (const width of [768, 800, 900, 1024, 1180, 1280, 1299]) {
-      await page.setViewportSize({ width, height: 900 });
+      // После перехода инструментов листа на иконки группа занимает ~180px
+      // (было 414–493px), поэтому шапка листа укладывается в ОДНУ строку
+      // вплоть до 768px. Ниже 768px включается мобильный компактный вид,
+      // где инструменты живут в сайдбаре. Раньше на 768..1299px шапка
+      // переносилась на две строки и съедала 125–141px высоты.
+      for (const width of [768, 800, 900, 1024, 1180, 1280, 1299]) {
+        await page.setViewportSize({ width, height: 900 });
 
-      // Одна строка: высота шапки без переноса (73/77/93 — зависит от
-      // вертикальных паддингов md/lg/xl, но всегда < 100).
+        // Одна строка: высота шапки без переноса (73/77/93 — зависит от
+        // вертикальных паддингов md/lg/xl, но всегда < 100).
+        await expect
+          .poll(async () => Math.round((await header.boundingBox())!.height))
+          .toBeLessThan(100);
+
+        // Все три группы на одной линии.
+        await expect
+          .poll(async () => {
+            const boxes = await Promise.all([
+              header.locator('.header-identity').boundingBox(),
+              sheetActions.boundingBox(),
+              viewActions.boundingBox(),
+            ]);
+            const centers = boxes.map(
+              (box) => box!.y + Math.round(box!.height / 2),
+            );
+            return Math.max(...centers) - Math.min(...centers);
+          })
+          .toBeLessThanOrEqual(8);
+
+        // Инструменты листа и иконки приложения на месте, иконки — у правого края.
+        await expect(sheetActions).toBeVisible();
+        await expect(viewActions).toBeVisible();
+        await expect
+          .poll(async () =>
+            Math.round(
+              (await header.boundingBox())!.x +
+                (await header.boundingBox())!.width -
+                ((await account.boundingBox())!.x +
+                  (await account.boundingBox())!.width),
+            ),
+          )
+          .toBeLessThanOrEqual(24);
+
+        // Страница целиком, шапка и скролл-контейнер — без горизонтального
+        // «излишка»: это ловит и «уехал вбок корень», и контент шире вьюпорта.
+        await expectNoHorizontalOverflow(page);
+        const inner = await page.evaluate(() => {
+          const header = document.querySelector('header.app-header')!;
+          const main = document.querySelector('main')!;
+          return {
+            header: header.scrollWidth - header.clientWidth,
+            main: main.scrollWidth - main.clientWidth,
+          };
+        });
+        expect(
+          inner.header,
+          `${width}px: шапка не вылезает вбок`,
+        ).toBeLessThanOrEqual(1);
+        expect(
+          inner.main,
+          `${width}px: main не вылезает вбок`,
+        ).toBeLessThanOrEqual(1);
+      }
+
+      // На 768..1023px имя персонажа ужимается, но не в точку: у него есть
+      // title с полным именем, а с 1024px оно помещается целиком.
+      await page.setViewportSize({ width: 768, height: 900 });
+      const name = header.locator('.header-identity h2');
+      await expect(name).toBeVisible();
       await expect
-        .poll(async () => Math.round((await header.boundingBox())!.height))
-        .toBeLessThan(100);
-
-      // Все три группы на одной линии.
+        .poll(async () => Math.round((await name.boundingBox())!.width))
+        .toBeGreaterThanOrEqual(80);
+      await expect(name).toHaveAttribute('title', 'Lucius Varn');
+      await page.setViewportSize({ width: 1024, height: 900 });
       await expect
-        .poll(async () => {
-          const boxes = await Promise.all([
-            header.locator('.header-identity').boundingBox(),
-            sheetActions.boundingBox(),
-            viewActions.boundingBox(),
-          ]);
-          const centers = boxes.map(
-            (box) => box!.y + Math.round(box!.height / 2),
-          );
-          return Math.max(...centers) - Math.min(...centers);
-        })
-        .toBeLessThanOrEqual(8);
+        .poll(async () => Math.round((await name.boundingBox())!.width))
+        .toBeGreaterThanOrEqual(150);
 
-      // Инструменты листа и иконки приложения на месте, иконки — у правого края.
-      await expect(sheetActions).toBeVisible();
-      await expect(viewActions).toBeVisible();
+      // Без персонажа (дашборд) шапка тоже одной строкой: инструментов листа
+      // нет, иконки в правом верхнем углу.
+      await openApp(page, '/');
+      await page.setViewportSize({ width: 1085, height: 900 });
+      await expect(sheetActions).toHaveCount(0);
+      const rowOffset = async () => {
+        const [identityBox, actionsBox] = await Promise.all([
+          header.locator('.header-identity').boundingBox(),
+          header.locator('.header-actions').boundingBox(),
+        ]);
+        return Math.round(
+          Math.abs(
+            identityBox!.y +
+              identityBox!.height / 2 -
+              (actionsBox!.y + actionsBox!.height / 2),
+          ),
+        );
+      };
+      await expect.poll(rowOffset).toBeLessThanOrEqual(8);
       await expect
         .poll(async () =>
           Math.round(
@@ -403,72 +468,8 @@ test.describe('адаптивность', () => {
           ),
         )
         .toBeLessThanOrEqual(24);
-
-      // Страница целиком, шапка и скролл-контейнер — без горизонтального
-      // «излишка»: это ловит и «уехал вбок корень», и контент шире вьюпорта.
-      await expectNoHorizontalOverflow(page);
-      const inner = await page.evaluate(() => {
-        const header = document.querySelector('header.app-header')!;
-        const main = document.querySelector('main')!;
-        return {
-          header: header.scrollWidth - header.clientWidth,
-          main: main.scrollWidth - main.clientWidth,
-        };
-      });
-      expect(
-        inner.header,
-        `${width}px: шапка не вылезает вбок`,
-      ).toBeLessThanOrEqual(1);
-      expect(
-        inner.main,
-        `${width}px: main не вылезает вбок`,
-      ).toBeLessThanOrEqual(1);
-    }
-
-    // На 768..1023px имя персонажа ужимается, но не в точку: у него есть
-    // title с полным именем, а с 1024px оно помещается целиком.
-    await page.setViewportSize({ width: 768, height: 900 });
-    const name = header.locator('.header-identity h2');
-    await expect(name).toBeVisible();
-    await expect
-      .poll(async () => Math.round((await name.boundingBox())!.width))
-      .toBeGreaterThanOrEqual(80);
-    await expect(name).toHaveAttribute('title', 'Lucius Varn');
-    await page.setViewportSize({ width: 1024, height: 900 });
-    await expect
-      .poll(async () => Math.round((await name.boundingBox())!.width))
-      .toBeGreaterThanOrEqual(150);
-
-    // Без персонажа (дашборд) шапка тоже одной строкой: инструментов листа
-    // нет, иконки в правом верхнем углу.
-    await openApp(page, '/');
-    await page.setViewportSize({ width: 1085, height: 900 });
-    await expect(sheetActions).toHaveCount(0);
-    const rowOffset = async () => {
-      const [identityBox, actionsBox] = await Promise.all([
-        header.locator('.header-identity').boundingBox(),
-        header.locator('.header-actions').boundingBox(),
-      ]);
-      return Math.round(
-        Math.abs(
-          identityBox!.y +
-            identityBox!.height / 2 -
-            (actionsBox!.y + actionsBox!.height / 2),
-        ),
-      );
-    };
-    await expect.poll(rowOffset).toBeLessThanOrEqual(8);
-    await expect
-      .poll(async () =>
-        Math.round(
-          (await header.boundingBox())!.x +
-            (await header.boundingBox())!.width -
-            ((await account.boundingBox())!.x +
-              (await account.boundingBox())!.width),
-        ),
-      )
-      .toBeLessThanOrEqual(24);
-  });
+    },
+  );
 
   test('переключение языка EN ↔ RU', async ({ page, context }) => {
     await prepare(context);
@@ -1012,61 +1013,62 @@ test('длинное имя персонажа: шапка не ломается
 });
 
 test.describe('вид листа: компактный и обычный', () => {
-  test('переключатель вида: компактный ↔ обычный', async ({
-    page,
-    context,
-  }) => {
-    test.skip(isMobile(), 'на телефоне компактный вид включается сам');
-    await prepare(context);
-    await openApp(page, `/${getState().dhId}`);
+  test(
+    'переключатель вида: компактный ↔ обычный',
+    { tag: '@fast' },
+    async ({ page, context }) => {
+      test.skip(isMobile(), 'на телефоне компактный вид включается сам');
+      await prepare(context);
+      await openApp(page, `/${getState().dhId}`);
 
-    const toggle = page
-      .getByTestId('app-header')
-      .getByRole('button', { name: 'Switch to Compact View', exact: true });
-
-    // ── обычный вид ────────────────────────────────────────────────────
-    await expect(page.getByRole('navigation')).toHaveCount(0);
-    await expect(page.locator('.dh-sheet.is-compact')).toHaveCount(0);
-
-    // ── включаем компактный ───────────────────────────────────────────
-    await toggle.click();
-    await expect(page.getByRole('navigation')).toBeVisible();
-    await expect(page.locator('.dh-sheet.is-compact')).toHaveCount(1);
-    await expect(
-      page
+      const toggle = page
         .getByTestId('app-header')
-        .getByRole('button', { name: 'Switch to Default View', exact: true }),
-    ).toBeVisible();
-    await expectNoHorizontalOverflow(page);
+        .getByRole('button', { name: 'Switch to Compact View', exact: true });
 
-    // В компактном виде видна только активная секция.
-    await expect(page.locator('#info-section:visible')).toHaveCount(1);
-    await expect(page.locator('#inventory-section:visible')).toHaveCount(0);
+      // ── обычный вид ────────────────────────────────────────────────────
+      await expect(page.getByRole('navigation')).toHaveCount(0);
+      await expect(page.locator('.dh-sheet.is-compact')).toHaveCount(0);
 
-    // Переключение секций из левого меню работает и в этом режиме.
-    await page
-      .getByRole('navigation')
-      .getByRole('button', { name: 'Inventory', exact: true })
-      .click();
-    await page.waitForTimeout(500);
-    await expect(page.locator('#inventory-section:visible')).toHaveCount(1);
-    await expect(page.locator('#info-section:visible')).toHaveCount(0);
-    await expectNoHorizontalOverflow(page);
+      // ── включаем компактный ───────────────────────────────────────────
+      await toggle.click();
+      await expect(page.getByRole('navigation')).toBeVisible();
+      await expect(page.locator('.dh-sheet.is-compact')).toHaveCount(1);
+      await expect(
+        page
+          .getByTestId('app-header')
+          .getByRole('button', { name: 'Switch to Default View', exact: true }),
+      ).toBeVisible();
+      await expectNoHorizontalOverflow(page);
 
-    // ── возвращаемся в обычный ────────────────────────────────────────
-    await page
-      .getByTestId('app-header')
-      .getByRole('button', { name: 'Switch to Default View', exact: true })
-      .click();
-    await expect(page.getByRole('navigation')).toHaveCount(0);
-    await expect(page.locator('.dh-sheet.is-compact')).toHaveCount(0);
-    await expect(
-      page
+      // В компактном виде видна только активная секция.
+      await expect(page.locator('#info-section:visible')).toHaveCount(1);
+      await expect(page.locator('#inventory-section:visible')).toHaveCount(0);
+
+      // Переключение секций из левого меню работает и в этом режиме.
+      await page
+        .getByRole('navigation')
+        .getByRole('button', { name: 'Inventory', exact: true })
+        .click();
+      await page.waitForTimeout(500);
+      await expect(page.locator('#inventory-section:visible')).toHaveCount(1);
+      await expect(page.locator('#info-section:visible')).toHaveCount(0);
+      await expectNoHorizontalOverflow(page);
+
+      // ── возвращаемся в обычный ────────────────────────────────────────
+      await page
         .getByTestId('app-header')
-        .getByRole('button', { name: 'Switch to Compact View', exact: true }),
-    ).toBeVisible();
-    await expectNoHorizontalOverflow(page);
-  });
+        .getByRole('button', { name: 'Switch to Default View', exact: true })
+        .click();
+      await expect(page.getByRole('navigation')).toHaveCount(0);
+      await expect(page.locator('.dh-sheet.is-compact')).toHaveCount(0);
+      await expect(
+        page
+          .getByTestId('app-header')
+          .getByRole('button', { name: 'Switch to Compact View', exact: true }),
+      ).toBeVisible();
+      await expectNoHorizontalOverflow(page);
+    },
+  );
 
   test('компактный вид на 1024px: без горизонтального скролла', async ({
     page,

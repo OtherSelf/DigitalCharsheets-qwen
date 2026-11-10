@@ -174,19 +174,23 @@ test.describe('login: вход, регистрация, восстановлен
     expect(errors, 'ошибки JS при регистрации').toEqual([]);
   });
 
-  test('login — вход через форму', async ({ page, context }) => {
-    await prepare(context, { authenticated: false, theme: 'light' });
-    const errors = collectPageErrors(page);
+  test(
+    'login — вход через форму',
+    { tag: '@fast' },
+    async ({ page, context }) => {
+      await prepare(context, { authenticated: false, theme: 'light' });
+      const errors = collectPageErrors(page);
 
-    await signInViaUI(page, getState());
+      await signInViaUI(page, getState());
 
-    await expect(
-      page.getByRole('heading', { name: 'Existing Characters' }),
-    ).toBeVisible();
-    await expect(page.getByText('Seraphina Vael')).toBeVisible();
-    await expect(page.getByText('Lucius Varn')).toBeVisible();
-    expect(errors, 'ошибки JS при входе').toEqual([]);
-  });
+      await expect(
+        page.getByRole('heading', { name: 'Existing Characters' }),
+      ).toBeVisible();
+      await expect(page.getByText('Seraphina Vael')).toBeVisible();
+      await expect(page.getByText('Lucius Varn')).toBeVisible();
+      expect(errors, 'ошибки JS при входе').toEqual([]);
+    },
+  );
 
   // Сквозной путь удаления: свой новый аккаунт (чтобы не трогать seeded),
   // неверный пароль не удаляет, верный — стирает и выводит на /login.
@@ -241,29 +245,37 @@ test.describe('login: вход, регистрация, восстановлен
 });
 
 test.describe('общие страницы', () => {
-  test('dashboard — английский язык', async ({ page, context }) => {
-    await prepare(context);
-    await openApp(page, '/');
+  test(
+    'dashboard — английский язык',
+    { tag: '@fast' },
+    async ({ page, context }) => {
+      await prepare(context);
+      await openApp(page, '/');
 
-    await expect(
-      page.getByRole('heading', { name: 'Existing Characters' }),
-    ).toBeVisible();
-    await expect(page.getByText('Seraphina Vael')).toBeVisible();
-    await expect(page.getByText('Lucius Varn')).toBeVisible();
+      await expect(
+        page.getByRole('heading', { name: 'Existing Characters' }),
+      ).toBeVisible();
+      await expect(page.getByText('Seraphina Vael')).toBeVisible();
+      await expect(page.getByText('Lucius Varn')).toBeVisible();
 
-    await screenshotPage(page, 'dashboard-en.png');
-  });
+      await screenshotPage(page, 'dashboard-en.png');
+    },
+  );
 
-  test('dashboard — русский язык', async ({ page, context }) => {
-    await prepare(context, { language: 'ru' });
-    await openApp(page, '/');
+  test(
+    'dashboard — русский язык',
+    { tag: '@fast' },
+    async ({ page, context }) => {
+      await prepare(context, { language: 'ru' });
+      await openApp(page, '/');
 
-    await expect(
-      page.getByRole('heading', { name: 'Существующие персонажи' }),
-    ).toBeVisible();
+      await expect(
+        page.getByRole('heading', { name: 'Существующие персонажи' }),
+      ).toBeVisible();
 
-    await screenshotPage(page, 'dashboard-ru.png');
-  });
+      await screenshotPage(page, 'dashboard-ru.png');
+    },
+  );
 
   test('dashboard — гостевая демо-страница (en)', async ({ page, context }) => {
     await prepare(context, { authenticated: false });
@@ -537,64 +549,70 @@ test.describe('демо и настройки профиля', () => {
     await screenshotPage(page, 'demo-ru.png');
   });
 
-  test('settings — профиль и отображение (en)', async ({ page, context }) => {
-    await prepare(context);
-    await openApp(page, '/settings');
+  test(
+    'settings — профиль и отображение (en)',
+    { tag: '@fast' },
+    async ({ page, context }) => {
+      // Логин виден на странице, поэтому снимаем под фиксированным
+      // canonical-аккаунтом (у воркеров имена разные).
+      await prepare(context, { account: 'canonical' });
+      await openApp(page, '/settings');
 
-    await expect(
-      page.getByRole('heading', { name: 'Profile Settings' }),
-    ).toBeVisible();
-    await expect(page.getByText('General Information')).toBeVisible();
-    await expect(page.getByText('Display Settings')).toBeVisible();
-    await expect(page.getByText('Security')).toBeVisible();
-    await screenshotPage(page, 'settings-en.png');
+      await expect(
+        page.getByRole('heading', { name: 'Profile Settings' }),
+      ).toBeVisible();
+      await expect(page.getByText('General Information')).toBeVisible();
+      await expect(page.getByText('Display Settings')).toBeVisible();
+      await expect(page.getByText('Security')).toBeVisible();
+      await screenshotPage(page, 'settings-en.png');
 
-    // Масштаб текста реально доезжает до документа и сбрасывается.
-    const textScale = () =>
-      page.evaluate(() =>
-        getComputedStyle(document.documentElement)
-          .getPropertyValue('--text-scale')
-          .trim(),
-      );
-
-    await expect.poll(textScale).toBe('1');
-    await page.getByRole('button', { name: 'Increase text size' }).click();
-    await expect.poll(textScale).toBe('1.1');
-    await page.getByRole('button', { name: 'Decrease text size' }).click();
-    await expect.poll(textScale).toBe('1');
-
-    // UI-масштаб ограничен сверху 150%: кнопка «+» упирается в max и гаснет.
-    const increaseScale = page.getByRole('button', {
-      name: 'Increase UI scale',
-    });
-    for (let i = 0; i < 10; i += 1) {
-      if (await increaseScale.isDisabled()) break;
-      await increaseScale.click();
-    }
-    const uiScale = await page.evaluate(() =>
-      getComputedStyle(document.documentElement)
-        .getPropertyValue('--ui-scale')
-        .trim(),
-    );
-    expect(uiScale).toBe('1.5');
-    await expect(
-      page.getByRole('button', { name: 'Increase UI scale' }),
-    ).toBeDisabled();
-
-    await page.getByRole('button', { name: 'Reset to Defaults' }).click();
-    await expect
-      .poll(() =>
+      // Масштаб текста реально доезжает до документа и сбрасывается.
+      const textScale = () =>
         page.evaluate(() =>
           getComputedStyle(document.documentElement)
-            .getPropertyValue('--ui-scale')
+            .getPropertyValue('--text-scale')
             .trim(),
-        ),
-      )
-      .toBe('1');
-  });
+        );
+
+      await expect.poll(textScale).toBe('1');
+      await page.getByRole('button', { name: 'Increase text size' }).click();
+      await expect.poll(textScale).toBe('1.1');
+      await page.getByRole('button', { name: 'Decrease text size' }).click();
+      await expect.poll(textScale).toBe('1');
+
+      // UI-масштаб ограничен сверху 150%: кнопка «+» упирается в max и гаснет.
+      const increaseScale = page.getByRole('button', {
+        name: 'Increase UI scale',
+      });
+      for (let i = 0; i < 10; i += 1) {
+        if (await increaseScale.isDisabled()) break;
+        await increaseScale.click();
+      }
+      const uiScale = await page.evaluate(() =>
+        getComputedStyle(document.documentElement)
+          .getPropertyValue('--ui-scale')
+          .trim(),
+      );
+      expect(uiScale).toBe('1.5');
+      await expect(
+        page.getByRole('button', { name: 'Increase UI scale' }),
+      ).toBeDisabled();
+
+      await page.getByRole('button', { name: 'Reset to Defaults' }).click();
+      await expect
+        .poll(() =>
+          page.evaluate(() =>
+            getComputedStyle(document.documentElement)
+              .getPropertyValue('--ui-scale')
+              .trim(),
+          ),
+        )
+        .toBe('1');
+    },
+  );
 
   test('settings — профиль (ru)', async ({ page, context }) => {
-    await prepare(context, { language: 'ru' });
+    await prepare(context, { language: 'ru', account: 'canonical' });
     await openApp(page, '/settings');
 
     await expect(
@@ -611,7 +629,7 @@ test.describe('демо и настройки профиля', () => {
     page,
     context,
   }) => {
-    await prepare(context);
+    await prepare(context, { account: 'canonical' });
     await openApp(page, '/settings');
 
     await page.getByTestId('delete-account-open').click();
@@ -638,7 +656,7 @@ test.describe('демо и настройки профиля', () => {
     page,
     context,
   }) => {
-    await prepare(context, { language: 'ru' });
+    await prepare(context, { language: 'ru', account: 'canonical' });
     await openApp(page, '/settings');
 
     await page.getByTestId('delete-account-open').click();
