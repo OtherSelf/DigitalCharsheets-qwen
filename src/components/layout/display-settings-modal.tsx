@@ -20,11 +20,18 @@ import { useUISettings } from '@/hooks/use-ui-settings';
 interface DisplaySettingsModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /**
+   * Куда вернуть фокус при закрытии. Триггером модалки служит пункт меню,
+   * который к моменту закрытия уже удалён из DOM, поэтому без этого Radix
+   * оставляет фокус на `body` (клавиатурный пользователь «теряет место»).
+   */
+  returnFocusRef?: React.RefObject<HTMLElement | null>;
 }
 
 export function DisplaySettingsModal({
   open,
   onOpenChange,
+  returnFocusRef,
 }: DisplaySettingsModalProps) {
   const { t } = useTranslation();
   const {
@@ -41,7 +48,14 @@ export function DisplaySettingsModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent
+        className="sm:max-w-[425px]"
+        onCloseAutoFocus={(event) => {
+          if (!returnFocusRef?.current) return;
+          event.preventDefault();
+          returnFocusRef.current.focus();
+        }}
+      >
         <DialogHeader>
           <DialogTitle>
             {t('displaySettings') || 'Display Settings'}
