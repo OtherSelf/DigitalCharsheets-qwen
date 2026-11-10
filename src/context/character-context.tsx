@@ -10,7 +10,7 @@ import {
   useRef,
   useState,
 } from 'react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -61,6 +61,12 @@ interface CharacterContextType {
   toggleCompactView: () => void;
   hasUnsavedChanges: boolean;
   setHasUnsavedChanges: (val: boolean) => void;
+  /**
+   * Перечитать список персонажей с сервера (дашборд делает это при возврате
+   * на страницу и при возврате фокуса в окно). Пропускает обновление, если
+   * есть несохранённые правки или очередь сохранений.
+   */
+  refreshCharacters: () => Promise<void>;
   hideNotes: boolean;
   setHideNotes: (val: boolean) => void;
   showEditButtons: boolean;
@@ -138,6 +144,7 @@ function removeSession(key: string): void {
 export function CharacterProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
   const router = useRouter();
+  const pathname = usePathname();
   const { user, isUserLoading, lastAuthKind, logout } = useLocalAuth();
   const { t } = useTranslation();
 
@@ -164,6 +171,15 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
   // Защита от повторного POST черновика при перезапуске эффекта
   // (например, после установки recovery-фразы меняется объект user).
   const creatingPendingRef = useRef(false);
+  /**
+   * LANDMARK: CHARACTERS_REFRESH_STATE
+   * Когда список персонажей грузился последний раз и не идёт ли запрос
+   * сейчас. Нужно, чтобы «освежение» на дашборде (возврат фокуса, возврат
+   * с листа) не дублировало загрузку, которую только что сделал bootstrap,
+   * и не плодило параллельные GET.
+   */
+  const lastCharactersLoadRef = useRef(0);
+  const refreshInFlightRef = useRef(false);
 
   useEffect(() => {
     userRef.current = user;
@@ -199,6 +215,45 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
     },
     [],
   );
+
+  /**
+   * ─── LANDMARK: CHARACTERS_CROSS_TAB_REFRESH ───────────────────────────────
+   * Перечитать список персонажей с сервера. Нужен потому, что персонажи
+   * живут только в состоянии провайдера и грузятся один раз на документ:
+   * при SPA-переходе «лист → дашборд» провайдер не перемонтируется, и
+   * изменения из другой вкладки/устройства не видны до перезагрузки
+   * (наглядно: во втором окне создали персонажа — в первом на дашборде его
+   * нет до F5).
+   *
+   * Безопасность: не трогаем список, если есть несохранённые правки или
+   * очередь сохранений — иначе перезапись состояния могла бы откатить
+   * правки, которые ещё летят на сервер.
+   */
+  const refreshCharacters = useCallback(async () => {
+    if (!userRef.current) return;
+    if (hasUnsavedChangesRef.current) return;
+    if (saveQueueRef.current?.hasPending()) return;
+    if (refreshInFlightRef.current) return;
+    // Только что грузились (например, bootstrap при открытии страницы) —
+    // второй GET не нужен. Небольшой порог, чтобы не дублировать запрос
+    // при монтировании, но не мешать «освежению» по фокусу.
+    if (Date.now() - lastCharactersLoadRef.current < 300) return;
+
+    refreshInFlightRef.current = true;
+    try {
+      const res = await fetch('/api/characters', { cache: 'no-store' });
+      // 401 не разлогиниваем отсюда: сессией владеет bootstrap-эффект.
+      if (!res.ok) return;
+      const data = (await res.json()) as Character[];
+      if (!Array.isArray(data)) return;
+      applyCharacters(() => data);
+      lastCharactersLoadRef.current = Date.now();
+    } catch (error) {
+      console.error('Failed to refresh characters:', error);
+    } finally {
+      refreshInFlightRef.current = false;
+    }
+  }, [applyCharacters]);
 
   /** Монотонный номер правки внутри этой загрузки страницы. */
   const nextSeq = useCallback((id: string) => {
@@ -411,16 +466,19 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
         .then((data) => {
           if (!data) {
             setIsLoaded(true);
+            lastCharactersLoadRef.current = Date.now();
             return;
           }
           applyCharacters(() => data);
           setIsLoaded(true);
+          lastCharactersLoadRef.current = Date.now();
           refreshPendingDraft();
           applyPendingUpdate(data as Character[]);
         })
         .catch((err) => {
           console.error('Failed to load characters:', err);
           setIsLoaded(true);
+          lastCharactersLoadRef.current = Date.now();
         });
     };
 
@@ -476,6 +534,42 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
     router,
     logout,
   ]);
+
+  /**
+   * ─── LANDMARK: DASHBOARD_REFRESH_ON_VISIT ─────────────────────────────────
+   * Возврат на дашборд (в т.ч. SPA-переход с листа) перечитывает список.
+   * Без этого персонаж, созданный в другой вкладке/на другом устройстве,
+   * «не существовал» до перезагрузки страницы.
+   *
+   * `isLoaded` в зависимостях не нужен: bootstrap уже отметил время загрузки,
+   * и `refreshCharacters` сам пропустит повторный GET сразу после неё.
+   */
+  useEffect(() => {
+    if (!user || pathname !== '/') return;
+    void refreshCharacters();
+  }, [pathname, user, refreshCharacters]);
+
+  /**
+   * LANDMARK: DASHBOARD_REFRESH_ON_FOCUS
+   * Вкладка уже открыта на дашборде, пользователь ушёл в другое окно, создал
+   * там персонажа и вернулся — обновляем список по возврату фокуса/видимости.
+   * Слушатели вешаем только на дашборде: на листе персонажа перезапись
+   * состояния могла бы затереть правки (дополнительно страхует
+   * `hasUnsavedChanges` и очередь сохранений внутри `refreshCharacters`).
+   */
+  useEffect(() => {
+    if (!user || pathname !== '/') return;
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') void refreshCharacters();
+    };
+    const onFocus = () => void refreshCharacters();
+    document.addEventListener('visibilitychange', onVisible);
+    window.addEventListener('focus', onFocus);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisible);
+      window.removeEventListener('focus', onFocus);
+    };
+  }, [pathname, user, refreshCharacters]);
 
   const isCompactView = isSmallScreen || userPrefersCompact;
   const toggleCompactView = () => setUserPrefersCompact((prev) => !prev);
@@ -667,6 +761,7 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
     toggleCompactView,
     hasUnsavedChanges,
     setHasUnsavedChanges,
+    refreshCharacters,
     hideNotes,
     setHideNotes,
     showEditButtons,
