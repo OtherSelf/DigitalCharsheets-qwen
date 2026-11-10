@@ -252,6 +252,13 @@ fi
 export DCS_VISUAL_BASE_URL="$BASE_URL"
 export DCS_VISUAL_STATE="$STATE_FILE"
 
+# Каталог данных временного сервера: global-setup сеет в него детерминированные
+# аккаунты для снимков /admin (фиксированные даты/роли/блокировки). В режиме
+# --base-url сервер чужой, каталога нет — админские снимки будут пропущены.
+if [ -d "$DATA_DIR" ]; then
+  export DCS_VISUAL_DATA_DIR="$DATA_DIR"
+fi
+
 step "3/3 playwright"
 if [ "${#PLAY_ARGS[@]}" -gt 0 ]; then
   dim "аргументы: ${PLAY_ARGS[*]}"

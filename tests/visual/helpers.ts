@@ -6,7 +6,12 @@ import {
   type Page,
 } from '@playwright/test';
 
-import { readCanonicalState, readState, type VisualState } from './state';
+import {
+  readAdminState,
+  readCanonicalState,
+  readState,
+  type VisualState,
+} from './state';
 
 /**
  * Общие помощники визуальных тестов.
@@ -39,9 +44,11 @@ export interface PrepareOptions {
    * Каким аккаунтом входить:
    *   worker    — изолированный аккаунт текущего воркера (по умолчанию);
    *   canonical — фиксированный `visual-tests`, нужен только там, где логин
-   *               виден на скриншоте (страница `/settings`).
+   *               виден на скриншоте (страница `/settings`);
+   *   admin     — служебный администратор временного сервера для `/admin`
+   *               (появляется только при запуске через scripts/visual.sh).
    */
-  account?: 'worker' | 'canonical';
+  account?: 'worker' | 'canonical' | 'admin';
 }
 
 /** Аккаунт текущего воркера: у каждого воркера свои персонажи. */
@@ -72,7 +79,20 @@ export async function prepare(
     authenticated = true,
     account = 'worker',
   } = options;
-  const state = account === 'canonical' ? getCanonicalState() : getState();
+  const state =
+    account === 'canonical'
+      ? getCanonicalState()
+      : account === 'admin'
+        ? readAdminState()
+        : getState();
+
+  if (!state) {
+    throw new Error(
+      'prepare(account: "admin"): нет админского аккаунта в состоянии. ' +
+        'Запускайте снимки через "npm run test:visual" (scripts/visual.sh ' +
+        'поднимает временный сервер с data-dir).',
+    );
+  }
 
   // Сессия теперь httpOnly-cookie: localStorage-снимка недостаточно,
   // поэтому логинимся в cookie-jar контекста (он общий для страниц и
