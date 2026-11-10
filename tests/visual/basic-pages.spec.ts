@@ -1,12 +1,15 @@
 import { expect, test } from '@playwright/test';
 
+import { dhCharacter } from './fixtures';
 import {
   collectPageErrors,
   expectNoHorizontalOverflow,
   getState,
   openApp,
+  openDialog,
   openMobileSection,
   prepare,
+  signInViaUI,
 } from './helpers';
 
 const isMobile = () => test.info().project.name === 'mobile';
@@ -400,7 +403,26 @@ test.describe('адаптивность', () => {
           ),
         )
         .toBeLessThanOrEqual(24);
+
+      // Страница целиком, шапка и скролл-контейнер — без горизонтального
+      // «излишка»: это ловит и «уехал вбок корень», и контент шире вьюпорта.
       await expectNoHorizontalOverflow(page);
+      const inner = await page.evaluate(() => {
+        const header = document.querySelector('header.app-header')!;
+        const main = document.querySelector('main')!;
+        return {
+          header: header.scrollWidth - header.clientWidth,
+          main: main.scrollWidth - main.clientWidth,
+        };
+      });
+      expect(
+        inner.header,
+        `${width}px: шапка не вылезает вбок`,
+      ).toBeLessThanOrEqual(1);
+      expect(
+        inner.main,
+        `${width}px: main не вылезает вбок`,
+      ).toBeLessThanOrEqual(1);
     }
 
     // На 768..1023px имя персонажа ужимается, но не в точку: у него есть
@@ -774,8 +796,219 @@ test.describe('адаптивность', () => {
         Math.abs((await header.boundingBox())!.x - before.headerX),
         `масштаб ${scale}: шапка не сдвинулась вбок`,
       ).toBeLessThanOrEqual(1);
+
+      // Оболочка масштабируется трансформом, поэтому её layout-размер
+      // намеренно больше вьюпорта — проверяем ВИЗУАЛЬНЫЙ прямоугольник:
+      // после масштаба он обязан совпадать с вьюпортом.
+      const shell = await page.evaluate(() => {
+        const rect = document
+          .querySelector('[data-ui-scale-wrapper]')!
+          .getBoundingClientRect();
+        return {
+          left: Math.round(rect.left),
+          top: Math.round(rect.top),
+          right: Math.round(rect.right),
+          bottom: Math.round(rect.bottom),
+          w: window.innerWidth,
+          h: window.innerHeight,
+        };
+      });
+      expect(
+        shell.left,
+        `масштаб ${scale}: оболочка не уехала влево`,
+      ).toBeGreaterThanOrEqual(-1);
+      expect(
+        shell.top,
+        `масштаб ${scale}: оболочка не уехала вверх`,
+      ).toBeGreaterThanOrEqual(-1);
+      expect(
+        shell.right - shell.w,
+        `масштаб ${scale}: оболочка вписана по ширине`,
+      ).toBeLessThanOrEqual(1);
+      expect(
+        shell.bottom - shell.h,
+        `масштаб ${scale}: оболочка вписана по высоте`,
+      ).toBeLessThanOrEqual(1);
     }
   });
+});
+
+test('планшетные ширины: нет горизонтального скролла', async ({
+  page,
+  context,
+}) => {
+  test.skip(isMobile(), 'ширины проверяются в desktop-проекте');
+  await prepare(context);
+
+  // 768..1299 — «планшетная» полоса: здесь жили последние вёрстко-баги
+  // (двухрядная шапка, «уезжание» левого меню), а пиксельного покрытия
+  // у неё до сих пор не было.
+  for (const width of [768, 1024, 1200]) {
+    await page.setViewportSize({ width, height: 900 });
+    for (const path of [
+      ...PAGES,
+      `/${getState().dndId}`,
+      `/${getState().dhId}`,
+    ]) {
+      await openApp(page, path);
+      await expectNoHorizontalOverflow(page);
+      const overflow = await page
+        .locator('main')
+        .evaluate((el) => el.scrollWidth - el.clientWidth);
+      expect(
+        overflow,
+        `${path} @${width}px: контент шире скролл-контейнера`,
+      ).toBeLessThanOrEqual(1);
+    }
+  }
+});
+
+test('нет дублей id на страницах', async ({ page, context }) => {
+  await prepare(context);
+
+  const duplicates = () =>
+    page.evaluate(() => {
+      const seen = new Map<string, number>();
+      for (const el of document.querySelectorAll('[id]')) {
+        seen.set(el.id, (seen.get(el.id) ?? 0) + 1);
+      }
+      return [...seen.entries()]
+        .filter(([, count]) => count > 1)
+        .map(([id, count]) => `${id} x${count}`);
+    });
+
+  // Дубли id ломают htmlFor/aria-* и селекторы `#...` в тестах.
+  // Реальный пример: лист компаньона переиспользует секции персонажа
+  // (`stats-card`, `hit-points-card`, ...) — поэтому копии получают
+  // префикс `companion-`.
+  for (const path of [
+    '/',
+    `/${getState().dndId}`,
+    `/${getState().dhId}`,
+    '/settings',
+    '/stats-editor',
+  ]) {
+    await openApp(page, path);
+    await page.waitForTimeout(300);
+    expect(await duplicates(), `${path}: дубли id`).toEqual([]);
+  }
+
+  // И с открытым диалогом поверх листа (на телефоне он открывается из
+  // компактного сайдбара, на десктопе — из шапки; helper умеет оба пути).
+  await openApp(page, `/${getState().dhId}`);
+  await openDialog(page, 'Notes', isMobile());
+  await page.waitForTimeout(300);
+  expect(await duplicates(), 'лист с открытым диалогом: дубли id').toEqual([]);
+});
+
+test('клавиатура: иконочные инструменты листа работают с Enter', async ({
+  page,
+  context,
+}) => {
+  test.skip(isMobile(), 'на телефоне инструменты листа живут в меню');
+  await prepare(context);
+  await openApp(page, `/${getState().dhId}`);
+
+  const header = page.getByTestId('app-header');
+  const toggle = header.getByRole('button', {
+    name: 'Hide Notes',
+    exact: true,
+  });
+  await toggle.focus();
+  await expect(toggle).toBeFocused();
+  await page.keyboard.press('Enter');
+
+  // Состояние переключается и доступно скринридеру.
+  const switched = header.getByRole('button', {
+    name: 'Show Notes',
+    exact: true,
+  });
+  await expect(switched).toHaveAttribute('aria-pressed', 'false');
+  await switched.focus();
+  await page.keyboard.press(' ');
+  await expect(
+    header.getByRole('button', { name: 'Hide Notes', exact: true }),
+  ).toHaveAttribute('aria-pressed', 'true');
+});
+
+test('фокус: Escape закрывает Display Settings и возвращает фокус', async ({
+  page,
+  context,
+}) => {
+  await prepare(context);
+  await openApp(page, '/');
+
+  await page.getByRole('button', { name: 'Open user menu' }).click();
+  await page.getByRole('menuitem', { name: /Display Settings/i }).click();
+  const dialog = page.getByRole('dialog');
+  await dialog.waitFor();
+
+  // Фокус-трап: Tab не должен уводить фокус из диалога.
+  for (let i = 0; i < 5; i += 1) {
+    await page.keyboard.press('Tab');
+    const inside = await page.evaluate(() => {
+      const active = document.activeElement;
+      const dialogEl = document.querySelector('[role="dialog"]');
+      return !!(active && dialogEl && dialogEl.contains(active));
+    });
+    expect(inside, `Tab #${i + 1}: фокус остаётся в диалоге`).toBe(true);
+  }
+
+  // Триггер (пункт меню) исчезает вместе с меню, поэтому фокус обязан
+  // вернуться на кнопку профиля, а не «упасть» на body (см.
+  // returnFocusRef в DisplaySettingsModal).
+  await page.keyboard.press('Escape');
+  await expect(dialog).toBeHidden();
+  await expect(
+    page.getByRole('button', { name: 'Open user menu' }),
+  ).toBeFocused();
+});
+
+test('длинное имя персонажа: шапка не ломается на 768/1024/1280', async ({
+  page,
+}) => {
+  test.skip(isMobile(), 'ширины планшета и десктопа');
+  const LONG_NAME =
+    'Александра-Мария фон дер Вельденштайн цу Штайнберг унд Ротенбург';
+
+  // Отдельный аккаунт и персонаж: фикстуры визуальных тестов не трогаем,
+  // иначе поехали бы эталоны дашборда.
+  const username = `long-name-${Date.now()}`;
+  const password = 'long-name-password-1';
+  const registered = await page.request.post('/api/auth/register', {
+    data: {
+      username,
+      password,
+      displayName: 'Long Name',
+      recoveryPhrase: 'amber cobalt lantern',
+    },
+  });
+  expect([200, 201], 'регистрация аккаунта').toContain(registered.status());
+
+  const created = await page.request.post('/api/characters', {
+    data: { ...dhCharacter, name: LONG_NAME },
+  });
+  expect([200, 201], 'создание персонажа').toContain(created.status());
+  const { id } = (await created.json()) as { id: string };
+
+  await page.context().clearCookies();
+  await signInViaUI(page, { username, password });
+
+  for (const width of [768, 1024, 1280]) {
+    await page.setViewportSize({ width, height: 900 });
+    await openApp(page, `/${id}`);
+
+    const header = page.locator('header.app-header');
+    await expect
+      .poll(async () => Math.round((await header.boundingBox())!.height))
+      .toBeLessThan(100);
+    const name = header.locator('.header-identity h2');
+    await expect(name).toHaveAttribute('title', LONG_NAME);
+    await expect
+      .poll(async () => Math.round((await name.boundingBox())!.width))
+      .toBeGreaterThanOrEqual(90);
+    await expectNoHorizontalOverflow(page);
+  }
 });
 
 /** Пара мелких проверок содержимого, которые не сводятся к пикселям. */
