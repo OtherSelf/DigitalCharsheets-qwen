@@ -25,7 +25,7 @@ export function UIScaleWrapper({ children }: { children: ReactNode }) {
     <div
       ref={wrapperRef}
       data-ui-scale-wrapper=""
-      className="flex flex-col bg-background"
+      className="bg-background flex flex-col"
       style={{
         /*
           LANDMARK: APP_SHELL_OUT_OF_FLOW

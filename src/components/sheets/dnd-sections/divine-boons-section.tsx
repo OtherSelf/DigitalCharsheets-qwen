@@ -108,9 +108,9 @@ export const DndDivineBoonsSection = React.forwardRef<
         >
           <AccordionItem value="expanded" className="border-0">
             <Card className="flex h-full flex-col overflow-hidden border-2">
-              <CardHeader className="flex flex-row items-center justify-between bg-muted/5 px-4 pb-2 pt-2">
+              <CardHeader className="bg-muted/5 flex flex-row items-center justify-between px-4 pt-2 pb-2">
                 <AccordionTrigger className="flex flex-1 items-center justify-between py-0 hover:no-underline">
-                  <Label className="text-[10px] font-bold uppercase tracking-tight text-muted-foreground">
+                  <Label className="text-muted-foreground text-[10px] font-bold tracking-tight uppercase">
                     {t('divineBoons')}
                   </Label>
                 </AccordionTrigger>
@@ -132,7 +132,7 @@ export const DndDivineBoonsSection = React.forwardRef<
               <AccordionContent>
                 <CardContent className="p-4 pt-0">
                   {divineBoons.length === 0 ? (
-                    <p className="py-4 text-center text-xs italic text-muted-foreground">
+                    <p className="text-muted-foreground py-4 text-center text-xs italic">
                       {t('noDivineBoons')}
                     </p>
                   ) : (
@@ -166,7 +166,7 @@ export const DndDivineBoonsSection = React.forwardRef<
                                   <Button
                                     variant="ghost"
                                     size="icon"
-                                    className="ml-2 h-6 w-6 shrink-0 text-destructive hover:text-destructive"
+                                    className="text-destructive hover:text-destructive ml-2 h-6 w-6 shrink-0"
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       handleDeleteBoon(i);
@@ -177,8 +177,8 @@ export const DndDivineBoonsSection = React.forwardRef<
                                 )}
                               </div>
                               {boonDesc && (
-                                <AccordionContent className="pb-3 pt-1">
-                                  <p className="text-xs leading-relaxed text-muted-foreground">
+                                <AccordionContent className="pt-1 pb-3">
+                                  <p className="text-muted-foreground text-xs leading-relaxed">
                                     {boonDesc}
                                   </p>
                                 </AccordionContent>
@@ -211,7 +211,7 @@ export const DndDivineBoonsSection = React.forwardRef<
               <AlertDialogDescription>
                 {t('deleteBoonWarning')}
                 {boonToDelete !== null && divineBoons[boonToDelete] && (
-                  <div className="mt-2 rounded bg-muted p-2">
+                  <div className="bg-muted mt-2 rounded p-2">
                     <p className="text-sm font-semibold">
                       {divineBoons[boonToDelete].split(':')[0]}
                     </p>

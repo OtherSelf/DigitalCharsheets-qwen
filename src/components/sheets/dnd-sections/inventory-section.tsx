@@ -109,13 +109,13 @@ export const DndInventorySection = React.forwardRef<
 
   return (
     <Card id={`${idp}inventory-box`}>
-      <CardHeader className="px-4 pb-2 pt-2">
-        <CardTitle className="text-[10px] font-bold uppercase tracking-tight text-muted-foreground">
+      <CardHeader className="px-4 pt-2 pb-2">
+        <CardTitle className="text-muted-foreground text-[10px] font-bold tracking-tight uppercase">
           {t('inventory')}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6 p-4 pt-0">
-        <div className="rounded-lg border bg-muted/30 p-3">
+        <div className="bg-muted/30 rounded-lg border p-3">
           <div className="mb-3 flex items-center justify-between border-b pb-1">
             <Label className="text-[10px] font-bold uppercase">
               {t('money')}
@@ -235,7 +235,7 @@ export const DndInventorySection = React.forwardRef<
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-6 w-6 text-destructive"
+                      className="text-destructive h-6 w-6"
                       onClick={() =>
                         setEquipment(equipment.filter((i) => i.id !== it.id))
                       }

@@ -231,7 +231,7 @@ export function Header({
       <header
         data-testid={isGuest ? 'guest-header' : 'app-header'}
         className={cn(
-          'app-header sticky top-0 z-50 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b bg-background/95 p-3 backdrop-blur supports-[backdrop-filter]:bg-background/60 md:p-4 xl:p-6',
+          'app-header bg-background/95 supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b p-3 backdrop-blur md:p-4 xl:p-6',
           params.id && 'is-character-sheet',
         )}
       >
@@ -255,7 +255,7 @@ export function Header({
             className="flex min-w-0 items-center gap-2"
             aria-label={t('backToDashboard') || 'Back to Dashboard'}
           >
-            <Shield className="h-6 w-6 shrink-0 text-primary" />
+            <Shield className="text-primary h-6 w-6 shrink-0" />
             {/*
             На широких экранах бренд виден всегда; на листе персонажа текст
             скрыт (там важнее имя), на служебных страницах — скрыт только на
@@ -273,13 +273,13 @@ export function Header({
               />
               <div className="flex min-w-0 flex-col gap-0">
                 <h2
-                  className={`truncate font-headline font-bold tracking-tight ${isCompactView ? 'text-sm md:text-base lg:text-lg' : 'text-lg xl:text-xl'}`}
+                  className={`font-headline truncate font-bold tracking-tight ${isCompactView ? 'text-sm md:text-base lg:text-lg' : 'text-lg xl:text-xl'}`}
                   title={character.name}
                 >
                   {character.name}
                 </h2>
                 <p
-                  className={`truncate text-muted-foreground ${isCompactView ? 'text-[10px] md:text-xs' : 'text-xs xl:text-sm'}`}
+                  className={`text-muted-foreground truncate ${isCompactView ? 'text-[10px] md:text-xs' : 'text-xs xl:text-sm'}`}
                 >
                   {getSubtitle(character)}
                 </p>
@@ -292,11 +292,11 @@ export function Header({
                 className="hidden h-8 shrink-0 md:block"
               />
               <div className="flex min-w-0 flex-col gap-0">
-                <h1 className="truncate font-headline text-lg font-bold tracking-tight xl:text-xl">
+                <h1 className="font-headline truncate text-lg font-bold tracking-tight xl:text-xl">
                   {title}
                 </h1>
                 {subtitle && (
-                  <p className="truncate text-xs text-muted-foreground xl:text-sm">
+                  <p className="text-muted-foreground truncate text-xs xl:text-sm">
                     {subtitle}
                   </p>
                 )}
@@ -306,30 +306,30 @@ export function Header({
           {/* ─── END LANDMARK: HEADER_IDENTITY_CHARACTER_INFO ─── */}
 
           {character && character.gameSystem === 'Dungeons & Dragons' && (
-            <div className="flex shrink-0 items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-2 py-1 md:ml-2 md:px-3">
+            <div className="border-primary/20 bg-primary/10 flex shrink-0 items-center gap-2 rounded-full border px-2 py-1 md:ml-2 md:px-3">
               {/* ─── LANDMARK: HEADER_INSPIRATION_LABEL ───
                   На узком планшете (768..1023) подпись скрывается, чтобы
                   имя персонажа не сжималось: смысл «+/-» остаётся понятным
                   по иконкам, а значение всегда видно. */}
-              <span className="header-field-label hidden text-[10px] font-bold uppercase tracking-widest text-primary sm:inline">
+              <span className="header-field-label text-primary hidden text-[10px] font-bold tracking-widest uppercase sm:inline">
                 {t('inspiration')}
               </span>
               <div className="flex items-center gap-1">
                 <Button
                   size="icon"
                   variant="ghost"
-                  className="h-6 w-6 text-primary hover:bg-primary/20"
+                  className="text-primary hover:bg-primary/20 h-6 w-6"
                   onClick={() => handleInspirationChange(-1)}
                 >
                   <Minus className="h-3 w-3" />
                 </Button>
-                <span className="min-w-[1rem] text-center text-sm font-black text-primary">
+                <span className="text-primary min-w-[1rem] text-center text-sm font-black">
                   {(character as DnD5eCharacter).inspiration || '0'}
                 </span>
                 <Button
                   size="icon"
                   variant="ghost"
-                  className="h-6 w-6 text-primary hover:bg-primary/20"
+                  className="text-primary hover:bg-primary/20 h-6 w-6"
                   onClick={() => handleInspirationChange(1)}
                 >
                   <Plus className="h-3 w-3" />
@@ -366,7 +366,7 @@ export function Header({
                   <span className="hidden xl:inline">{t('houseRules')}</span>
                 </Button>
                 <div className="flex items-center gap-2">
-                  <Label className="hidden whitespace-nowrap text-xs text-muted-foreground md:inline">
+                  <Label className="text-muted-foreground hidden text-xs whitespace-nowrap md:inline">
                     Edition:
                   </Label>
                   <Select
@@ -466,7 +466,7 @@ export function Header({
                   )}
                 </div>
               )}
-              <div className="flex items-center gap-1.5 md:gap-2 md:border-l md:border-r md:px-2">
+              <div className="flex items-center gap-1.5 md:gap-2 md:border-r md:border-l md:px-2">
                 <Tooltip delayDuration={0}>
                   <TooltipTrigger asChild>
                     <Button

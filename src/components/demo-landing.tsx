@@ -206,17 +206,17 @@ export function DemoLanding({ createHref = '/new' }: DemoLandingProps) {
         <h1 className="font-headline text-4xl font-bold tracking-tight">
           {t('demoHeroTitle')}
         </h1>
-        <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
+        <p className="text-muted-foreground mx-auto max-w-2xl text-lg">
           {t('demoHeroSubtitle')}
         </p>
       </div>
 
       {/* LANDMARK: DEMO_ACTION_CARDS */}
       <div className="mb-12 grid gap-6 md:grid-cols-2">
-        <Card className="transition-colors hover:border-primary/50">
+        <Card className="hover:border-primary/50 transition-colors">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-primary" />
+              <Sparkles className="text-primary h-5 w-5" />
               {t('demoCreateCardTitle')}
             </CardTitle>
             <CardDescription>{t('demoCreateCardDesc')}</CardDescription>
@@ -231,10 +231,10 @@ export function DemoLanding({ createHref = '/new' }: DemoLandingProps) {
           </CardContent>
         </Card>
 
-        <Card className="transition-colors hover:border-primary/50">
+        <Card className="hover:border-primary/50 transition-colors">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Sword className="h-5 w-5 text-primary" />
+              <Sword className="text-primary h-5 w-5" />
               {t('demoExploreCardTitle')}
             </CardTitle>
             <CardDescription>{t('demoExploreCardDesc')}</CardDescription>
@@ -262,13 +262,13 @@ export function DemoLanding({ createHref = '/new' }: DemoLandingProps) {
 
       {/* LANDMARK: DEMO_SHEET_PREVIEW */}
       {activeCharacter && (
-        <div className="space-y-4 duration-500 animate-in fade-in slide-in-from-bottom-4">
-          <div className="flex flex-col justify-between gap-4 rounded-lg border border-primary/20 bg-primary/10 p-4 sm:flex-row sm:items-center">
+        <div className="animate-in fade-in slide-in-from-bottom-4 space-y-4 duration-500">
+          <div className="border-primary/20 bg-primary/10 flex flex-col justify-between gap-4 rounded-lg border p-4 sm:flex-row sm:items-center">
             <div>
-              <h3 className="font-semibold text-primary">
+              <h3 className="text-primary font-semibold">
                 {t('demoModeActive')}
               </h3>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-muted-foreground text-sm">
                 {hintBeforeName}
                 <strong>{activeCharacter.name}</strong>
                 {hintAfterName}
@@ -282,7 +282,7 @@ export function DemoLanding({ createHref = '/new' }: DemoLandingProps) {
             </Button>
           </div>
 
-          <div className="rounded-lg border bg-card p-4 md:p-6">
+          <div className="bg-card rounded-lg border p-4 md:p-6">
             <CharacterSheet
               character={activeCharacter}
               activeCompactSection="info-section"

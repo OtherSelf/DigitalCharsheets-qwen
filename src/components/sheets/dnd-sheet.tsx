@@ -359,9 +359,9 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
         {isCompactView && (
           <div
             data-testid="compact-stats-bar"
-            className="relative space-y-3 border-b bg-card px-4 py-3 shadow-sm"
+            className="bg-card relative space-y-3 border-b px-4 py-3 shadow-sm"
           >
-            <div className="absolute right-2 top-2">
+            <div className="absolute top-2 right-2">
               <Button
                 data-testid="compact-stats-edit-button"
                 size="icon"
@@ -396,9 +396,9 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
                 return (
                   <div
                     key={key}
-                    className="flex min-w-0 flex-col items-center justify-center rounded border bg-background py-1"
+                    className="bg-background flex min-w-0 flex-col items-center justify-center rounded border py-1"
                   >
-                    <span className="w-full truncate px-0.5 text-center text-[8px] font-bold uppercase text-muted-foreground">
+                    <span className="text-muted-foreground w-full truncate px-0.5 text-center text-[8px] font-bold uppercase">
                       {t(key).slice(0, 3).toUpperCase()}
                     </span>
                     {isStatsEditing ? (
@@ -420,7 +420,7 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
                         <span className="text-xs font-black">
                           {mod >= 0 ? `+${mod}` : mod}
                         </span>
-                        <span className="text-[8px] text-muted-foreground/60">
+                        <span className="text-muted-foreground/60 text-[8px]">
                           {val}
                         </span>
                       </>
@@ -430,16 +430,16 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
               })}
             </div>
             <div className="grid grid-cols-2 gap-2">
-              <div className="flex min-w-0 items-center justify-between rounded border bg-background px-2 py-1.5">
-                <span className="mr-1 truncate text-[8px] font-bold uppercase text-muted-foreground">
+              <div className="bg-background flex min-w-0 items-center justify-between rounded border px-2 py-1.5">
+                <span className="text-muted-foreground mr-1 truncate text-[8px] font-bold uppercase">
                   {t('passivePerception')}
                 </span>
                 <span className="shrink-0 text-xs font-black">
                   {passivePerception}
                 </span>
               </div>
-              <div className="flex min-w-0 items-center justify-between rounded border bg-background px-2 py-1.5">
-                <span className="mr-1 truncate text-[8px] font-bold uppercase text-muted-foreground">
+              <div className="bg-background flex min-w-0 items-center justify-between rounded border px-2 py-1.5">
+                <span className="text-muted-foreground mr-1 truncate text-[8px] font-bold uppercase">
                   {t('proficiencyBonus')}
                 </span>
                 <span className="shrink-0 text-xs font-black">
@@ -560,8 +560,8 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
           />
           {isCompactView && (
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between px-4 pb-2 pt-2">
-                <CardTitle className="text-[10px] font-bold uppercase tracking-tight text-muted-foreground">
+              <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2">
+                <CardTitle className="text-muted-foreground text-[10px] font-bold tracking-tight uppercase">
                   {t('otherProficienciesAndLanguages')}
                 </CardTitle>
                 {(showEditButtons || isOtherProficienciesEditing) && (
@@ -589,7 +589,7 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
                 {otherProficienciesAndLanguages.map((it, i) => (
                   <div
                     key={i}
-                    className="flex justify-between rounded bg-muted/10 p-1.5 text-[10px]"
+                    className="bg-muted/10 flex justify-between rounded p-1.5 text-[10px]"
                   >
                     {isOtherProficienciesEditing ? (
                       <Input
@@ -602,7 +602,7 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
                         className="mr-2 h-6 flex-1 text-[10px]"
                       />
                     ) : (
-                      <span className="break-words font-medium">
+                      <span className="font-medium break-words">
                         &bull; {it}
                       </span>
                     )}
@@ -610,7 +610,7 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-5 w-5 text-destructive"
+                        className="text-destructive h-5 w-5"
                         onClick={() =>
                           setOtherProficienciesAndLanguages(
                             otherProficienciesAndLanguages.filter(

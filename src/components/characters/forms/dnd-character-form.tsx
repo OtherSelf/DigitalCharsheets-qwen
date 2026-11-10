@@ -594,7 +594,7 @@ export function DndCharacterForm() {
                   <Label className="text-sm font-medium">
                     {t('levelAutoCalculated')}
                   </Label>
-                  <div className="flex h-10 w-full items-center rounded-md border border-input bg-muted px-3 py-2 text-sm font-bold">
+                  <div className="border-input bg-muted flex h-10 w-full items-center rounded-md border px-3 py-2 text-sm font-bold">
                     {form.getValues('level')}
                   </div>
                 </div>

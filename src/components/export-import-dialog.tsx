@@ -209,7 +209,7 @@ export function ExportImportDialog({ character }: ExportImportDialogProps) {
                 accept=".json"
                 ref={fileInputRef}
                 onChange={handleFileSelect}
-                className="block w-full text-sm text-gray-500 file:mr-4 file:rounded-md file:border-0 file:bg-primary file:px-4 file:py-2 file:text-sm file:font-semibold file:text-primary-foreground hover:file:bg-primary/90"
+                className="file:bg-primary file:text-primary-foreground hover:file:bg-primary/90 block w-full text-sm text-gray-500 file:mr-4 file:rounded-md file:border-0 file:px-4 file:py-2 file:text-sm file:font-semibold"
               />
 
               {importError && (

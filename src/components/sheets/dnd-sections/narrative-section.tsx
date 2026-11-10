@@ -76,8 +76,8 @@ const NarrativeListCard = ({
   const { t } = useTranslation();
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between px-4 pb-2 pt-2">
-        <CardTitle className="text-[10px] font-bold uppercase text-muted-foreground">
+      <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2">
+        <CardTitle className="text-muted-foreground text-[10px] font-bold uppercase">
           {t(titleKey)}
         </CardTitle>
         {(showEditButtons || isEditing) && (
@@ -88,7 +88,7 @@ const NarrativeListCard = ({
         {items.map((it, i) => (
           <div
             key={i}
-            className="flex justify-between rounded bg-muted/10 p-1.5 text-[10px]"
+            className="bg-muted/10 flex justify-between rounded p-1.5 text-[10px]"
           >
             {isEditing ? (
               <Input
@@ -101,13 +101,13 @@ const NarrativeListCard = ({
                 className="mr-2 h-6 flex-1 text-[10px]"
               />
             ) : (
-              <span className="break-words font-medium">&bull; {it}</span>
+              <span className="font-medium break-words">&bull; {it}</span>
             )}
             {isEditing && (
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-5 w-5 text-destructive"
+                className="text-destructive h-5 w-5"
                 onClick={() =>
                   onItemsChange(items.filter((_, idx) => idx !== i))
                 }

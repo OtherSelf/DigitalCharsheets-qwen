@@ -1,24 +1,17 @@
-import { dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
-
-import { FlatCompat } from '@eslint/eslintrc';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-const compat = new FlatCompat({ baseDirectory: __dirname });
+import nextVitals from 'eslint-config-next/core-web-vitals';
+import nextTs from 'eslint-config-next/typescript';
 
 /**
- * ESLint 9 (flat config). Правила Next.js и TypeScript — через FlatCompat,
- * потому что eslint-config-next 15.x по-прежнему отдаёт eslintrc-конфиг.
+ * ESLint 9/10 (flat config). eslint-config-next 16 отдаёт готовые flat-массивы,
+ * поэтому FlatCompat больше не нужен (в 15.x конфиг был eslintrc-формата).
  *
  * Задача линтера здесь — ловить явные баги (hooks, async, a11y, React/Next),
  * а не спорить о стиле: форматирование и импорты отданы Prettier.
  */
 const eslintConfig = [
+  // Глобальные игноры (дополняют те, что уже заданы внутри next-конфига).
   {
     ignores: [
-      '.next/**',
       'node_modules/**',
       'playwright-report/**',
       'test-results/**',
@@ -26,11 +19,14 @@ const eslintConfig = [
       '.chromium-deps/**',
       '.playwright-browsers/**',
       '.npm-cache/**',
-      'next-env.d.ts',
     ],
   },
-  ...compat.extends('next/core-web-vitals', 'next/typescript'),
+  ...nextVitals,
+  ...nextTs,
   {
+    // Тот же набор файлов, что и у next-конфига: плагин `react-hooks`
+    // объявлен только для этих расширений (для .cjs его нет).
+    files: ['**/*.{js,jsx,mjs,ts,tsx,mts,cts}'],
     rules: {
       // 200+ вхождений: включать постепенно, иначе сигнал тонет в шуме.
       '@typescript-eslint/no-explicit-any': 'off',
@@ -46,6 +42,13 @@ const eslintConfig = [
       // Настоящие баги: устаревший стейт в эффектах. Пока warn — 6 известных
       // мест чинятся отдельной задачей, см. _AUDIT.md.
       'react-hooks/exhaustive-deps': 'warn',
+      // Новые правила react-hooks v6 (эпоха React Compiler), которых не было
+      // при ESLint 9 / Next 15. Пока warn: 34 известных места (setState в
+      // эффектах, компоненты внутри компонентов и т.п.) — отдельной задачей.
+      'react-hooks/set-state-in-effect': 'warn',
+      'react-hooks/static-components': 'warn',
+      'react-hooks/refs': 'warn',
+      'react-hooks/purity': 'warn',
     },
   },
   {
@@ -72,7 +75,7 @@ const eslintConfig = [
   },
   {
     // CommonJS — это не костыль, а формат: шим для EXDEV и фикстуры тестов
-    // обязаны быть .cjs, а tailwind.config.ts подключает плагин через require().
+    // обязаны быть .cjs, а tailwind.config.ts подключается к PostCSS.
     files: ['**/*.cjs', 'tailwind.config.ts'],
     rules: {
       '@typescript-eslint/no-require-imports': 'off',

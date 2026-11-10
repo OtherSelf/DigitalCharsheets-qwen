@@ -438,7 +438,7 @@ export function DarkHeresyCharacterForm() {
                     readOnly
                     value={divinationEffect ? t(divinationEffect) : ''}
                     placeholder={t('effectAppearsHere')}
-                    className="border-dashed bg-muted/50"
+                    className="bg-muted/50 border-dashed"
                   />
                 </FormItem>
                 <FormField
@@ -477,7 +477,7 @@ export function DarkHeresyCharacterForm() {
                   />
                   <label
                     htmlFor="all-quirks"
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    className="text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                   >
                     {t('showAllQuirks')}
                   </label>

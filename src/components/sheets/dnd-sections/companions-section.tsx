@@ -130,7 +130,7 @@ export function DndCompanionsSection({
           </Button>
         </CollapsibleTrigger>
         {showEditButtons && (
-          <div className="absolute right-0 top-1/2 -translate-y-1/2">
+          <div className="absolute top-1/2 right-0 -translate-y-1/2">
             <Button size="sm" variant="outline" onClick={handleAddCompanion}>
               <Plus className="mr-2 h-4 w-4" /> {t('addCompanion')}
             </Button>
@@ -155,8 +155,8 @@ export function DndCompanionsSection({
         ))}
 
         {companions.length === 0 && showEditButtons && (
-          <div className="rounded-lg border-2 border-dashed bg-muted/10 p-12 text-center">
-            <p className="mb-4 text-muted-foreground">
+          <div className="bg-muted/10 rounded-lg border-2 border-dashed p-12 text-center">
+            <p className="text-muted-foreground mb-4">
               {t('noCompanionsAdded')}
             </p>
             <Button size="sm" variant="outline" onClick={handleAddCompanion}>

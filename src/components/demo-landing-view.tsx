@@ -17,7 +17,7 @@ import { Header } from '@/components/header';
  */
 export function DemoLandingView() {
   return (
-    <div className="flex h-dvh flex-col bg-background">
+    <div className="bg-background flex h-dvh flex-col">
       <Header authAction="login" />
 
       <main className="safe-area-bottom flex-1 overflow-y-auto px-4 py-8 pb-20">

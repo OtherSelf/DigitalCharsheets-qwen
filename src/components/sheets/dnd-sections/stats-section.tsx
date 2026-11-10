@@ -57,7 +57,7 @@ const StatBox = ({
   return (
     <div
       className={cn(
-        'relative flex flex-col items-center justify-center rounded-lg border bg-background text-center',
+        'bg-background relative flex flex-col items-center justify-center rounded-lg border text-center',
         isCompactView ? 'p-1' : 'p-4',
       )}
     >
@@ -67,7 +67,7 @@ const StatBox = ({
             <Button
               variant={notes ? 'secondary' : 'ghost'}
               size="icon"
-              className="absolute right-1 top-1 h-5 w-5"
+              className="absolute top-1 right-1 h-5 w-5"
             >
               <Info className="h-3 w-3" />
             </Button>
@@ -87,7 +87,7 @@ const StatBox = ({
       )}
       <div
         className={cn(
-          'text-[10px] font-bold uppercase tracking-wider text-muted-foreground',
+          'text-muted-foreground text-[10px] font-bold tracking-wider uppercase',
           isCompactView && 'text-[8px]',
         )}
       >
@@ -109,7 +109,7 @@ const StatBox = ({
         ) : (
           <div
             className={cn(
-              'text-base font-bold text-muted-foreground',
+              'text-muted-foreground text-base font-bold',
               isCompactView && 'text-sm',
             )}
           >
@@ -118,12 +118,12 @@ const StatBox = ({
         )}
       </div>
       <div className="mt-2 w-full">
-        <div className="mb-0.5 text-[8px] font-bold uppercase text-muted-foreground">
+        <div className="text-muted-foreground mb-0.5 text-[8px] font-bold uppercase">
           {t('mod')}
         </div>
         <div
           className={cn(
-            'rounded border border-border bg-background py-1 text-base font-bold text-foreground shadow-inner',
+            'border-border bg-background text-foreground rounded border py-1 text-base font-bold shadow-inner',
             isCompactView && 'py-0.5 text-sm',
           )}
         >
@@ -231,8 +231,8 @@ export function DndStatsSection({
     >
       {!isCompactView && (
         <Card id={`${idp}stats-card`}>
-          <CardHeader className="flex flex-row items-center justify-between px-4 pb-2 pt-2">
-            <CardTitle className="text-[10px] font-bold uppercase tracking-tight text-muted-foreground">
+          <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2">
+            <CardTitle className="text-muted-foreground text-[10px] font-bold tracking-tight uppercase">
               {t('characteristics')}
             </CardTitle>
             {(showEditButtons || isStatsEditing) && (
@@ -272,19 +272,19 @@ export function DndStatsSection({
             ))}
 
             <div className="mt-3 border-t pt-3">
-              <div className="flex items-center justify-between rounded-lg border border-primary/20 bg-primary/5 p-3">
+              <div className="border-primary/20 bg-primary/5 flex items-center justify-between rounded-lg border p-3">
                 <div className="flex flex-col">
-                  <Label className="text-[10px] font-bold uppercase text-muted-foreground">
+                  <Label className="text-muted-foreground text-[10px] font-bold uppercase">
                     {t('passivePerception')}
                   </Label>
-                  <span className="text-[10px] text-muted-foreground">
+                  <span className="text-muted-foreground text-[10px]">
                     10 + {t('wisdomMod')}{' '}
                     {passivePerception > 10 + wisdomMod
                       ? `+ ${passivePerception - (10 + wisdomMod)}`
                       : ''}
                   </span>
                 </div>
-                <div className="text-2xl font-black text-primary">
+                <div className="text-primary text-2xl font-black">
                   {passivePerception}
                 </div>
               </div>
@@ -295,8 +295,8 @@ export function DndStatsSection({
 
       {!isCompactView && (
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between px-4 pb-2 pt-2">
-            <CardTitle className="text-[10px] font-bold uppercase tracking-tight text-muted-foreground">
+          <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2">
+            <CardTitle className="text-muted-foreground text-[10px] font-bold tracking-tight uppercase">
               {t('otherProficienciesAndLanguages')}
             </CardTitle>
             {(showEditButtons || isOtherProficienciesEditing) && (
@@ -311,7 +311,7 @@ export function DndStatsSection({
             {otherProficienciesAndLanguages.map((it, i) => (
               <div
                 key={i}
-                className="flex justify-between rounded bg-muted/10 p-1.5 text-[10px]"
+                className="bg-muted/10 flex justify-between rounded p-1.5 text-[10px]"
               >
                 {isOtherProficienciesEditing ? (
                   <Input
@@ -324,13 +324,13 @@ export function DndStatsSection({
                     className="mr-2 h-6 flex-1 text-[10px]"
                   />
                 ) : (
-                  <span className="break-words font-medium">&bull; {it}</span>
+                  <span className="font-medium break-words">&bull; {it}</span>
                 )}
                 {isOtherProficienciesEditing && (
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-5 w-5 text-destructive"
+                    className="text-destructive h-5 w-5"
                     onClick={() =>
                       setOtherProficienciesAndLanguages(
                         otherProficienciesAndLanguages.filter(

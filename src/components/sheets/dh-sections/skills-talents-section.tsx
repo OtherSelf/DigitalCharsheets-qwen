@@ -281,7 +281,7 @@ export const SkillsTalentsSection = React.forwardRef<
       <div id="skills-talents-content" className="w-full space-y-6">
         <div
           className={cn(
-            'space-y-6 rounded-lg border bg-card',
+            'bg-card space-y-6 rounded-lg border',
             isCompactView ? 'p-3' : 'p-4 md:p-6',
           )}
         >
@@ -293,7 +293,7 @@ export const SkillsTalentsSection = React.forwardRef<
               className="w-full"
             >
               <div className="mb-2 flex flex-row items-center justify-between">
-                <CollapsibleTrigger className="-ml-2 flex items-center gap-2 rounded-md px-2 py-1 transition-colors hover:bg-accent hover:text-accent-foreground focus:outline-none">
+                <CollapsibleTrigger className="hover:bg-accent hover:text-accent-foreground -ml-2 flex items-center gap-2 rounded-md px-2 py-1 transition-colors focus:outline-none">
                   {isSkillsOpen ? (
                     <ChevronDown className="h-5 w-5" />
                   ) : (
@@ -319,7 +319,7 @@ export const SkillsTalentsSection = React.forwardRef<
                 <div className="grid grid-cols-1 gap-x-8 gap-y-6 md:grid-cols-2">
                   {/* BASIC SKILLS */}
                   <div>
-                    <h4 className="mb-2 font-semibold text-muted-foreground">
+                    <h4 className="text-muted-foreground mb-2 font-semibold">
                       {t('basic')}
                     </h4>
                     <div className="overflow-hidden rounded-lg border">
@@ -443,7 +443,7 @@ export const SkillsTalentsSection = React.forwardRef<
                                 ) : (
                                   <p
                                     className={cn(
-                                      'whitespace-normal break-words font-medium',
+                                      'font-medium break-words whitespace-normal',
                                       isCompactView && 'text-xs',
                                     )}
                                   >
@@ -547,7 +547,7 @@ export const SkillsTalentsSection = React.forwardRef<
                                       )
                                     }
                                   >
-                                    <Trash2 className="h-4 w-4 text-destructive" />
+                                    <Trash2 className="text-destructive h-4 w-4" />
                                   </Button>
                                 </TableCell>
                               )}
@@ -557,7 +557,7 @@ export const SkillsTalentsSection = React.forwardRef<
                       </Table>
                     </div>
                     {isSkillsEditing && (
-                      <div className="mt-4 flex flex-col gap-2 rounded-md border bg-background p-3">
+                      <div className="bg-background mt-4 flex flex-col gap-2 rounded-md border p-3">
                         <div className="flex gap-2">
                           <Input
                             placeholder={t('basic')}
@@ -572,7 +572,7 @@ export const SkillsTalentsSection = React.forwardRef<
                             onChange={(e) =>
                               setNewBasicSkillChar(e.target.value)
                             }
-                            className="flex h-9 w-32 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                            className="border-input bg-background focus-visible:ring-ring flex h-9 w-32 rounded-md border px-3 py-1 text-sm shadow-sm transition-colors focus-visible:ring-1 focus-visible:outline-none"
                           >
                             {CHARACTERISTIC_KEYS.map((key) => (
                               <option key={key} value={key}>
@@ -590,7 +590,7 @@ export const SkillsTalentsSection = React.forwardRef<
 
                   {/* ADVANCED SKILLS */}
                   <div>
-                    <h4 className="mb-2 font-semibold text-muted-foreground">
+                    <h4 className="text-muted-foreground mb-2 font-semibold">
                       {t('advanced')}
                     </h4>
                     <div className="overflow-hidden rounded-lg border">
@@ -714,7 +714,7 @@ export const SkillsTalentsSection = React.forwardRef<
                                 ) : (
                                   <p
                                     className={cn(
-                                      'whitespace-normal break-words font-medium',
+                                      'font-medium break-words whitespace-normal',
                                       isCompactView && 'text-xs',
                                     )}
                                   >
@@ -818,7 +818,7 @@ export const SkillsTalentsSection = React.forwardRef<
                                       )
                                     }
                                   >
-                                    <Trash2 className="h-4 w-4 text-destructive" />
+                                    <Trash2 className="text-destructive h-4 w-4" />
                                   </Button>
                                 </TableCell>
                               )}
@@ -828,7 +828,7 @@ export const SkillsTalentsSection = React.forwardRef<
                       </Table>
                     </div>
                     {isSkillsEditing && (
-                      <div className="mt-4 flex flex-col gap-2 rounded-md border bg-background p-3">
+                      <div className="bg-background mt-4 flex flex-col gap-2 rounded-md border p-3">
                         <div className="flex gap-2">
                           <Input
                             placeholder={t('advanced')}
@@ -843,7 +843,7 @@ export const SkillsTalentsSection = React.forwardRef<
                             onChange={(e) =>
                               setNewAdvancedSkillChar(e.target.value)
                             }
-                            className="flex h-9 w-32 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                            className="border-input bg-background focus-visible:ring-ring flex h-9 w-32 rounded-md border px-3 py-1 text-sm shadow-sm transition-colors focus-visible:ring-1 focus-visible:outline-none"
                           >
                             {CHARACTERISTIC_KEYS.map((key) => (
                               <option key={key} value={key}>
@@ -875,7 +875,7 @@ export const SkillsTalentsSection = React.forwardRef<
               className="w-full"
             >
               <div className="mb-2 flex flex-row items-center justify-between">
-                <CollapsibleTrigger className="-ml-2 flex items-center gap-2 rounded-md px-2 py-1 transition-colors hover:bg-accent hover:text-accent-foreground focus:outline-none">
+                <CollapsibleTrigger className="hover:bg-accent hover:text-accent-foreground -ml-2 flex items-center gap-2 rounded-md px-2 py-1 transition-colors focus:outline-none">
                   {isTalentsOpen ? (
                     <ChevronDown className="h-5 w-5" />
                   ) : (
@@ -904,7 +904,7 @@ export const SkillsTalentsSection = React.forwardRef<
                       {(editableTalents ?? []).map((talent) => (
                         <li
                           key={talent.id}
-                          className="space-y-2 rounded-md border bg-background p-3"
+                          className="bg-background space-y-2 rounded-md border p-3"
                         >
                           <div className="flex items-center gap-2">
                             {!hideNotes && (
@@ -966,7 +966,7 @@ export const SkillsTalentsSection = React.forwardRef<
                                 )
                               }
                             >
-                              <Trash2 className="h-4 w-4 text-destructive" />
+                              <Trash2 className="text-destructive h-4 w-4" />
                             </Button>
                           </div>
                           <Textarea
@@ -986,7 +986,7 @@ export const SkillsTalentsSection = React.forwardRef<
                         </li>
                       ))}
                     </ul>
-                    <div className="space-y-2 rounded-md border bg-background p-3">
+                    <div className="bg-background space-y-2 rounded-md border p-3">
                       <Input
                         placeholder="New talent/trait name"
                         value={newTalentName}
@@ -1011,7 +1011,7 @@ export const SkillsTalentsSection = React.forwardRef<
                       character.talents.map((talent) => (
                         <div
                           key={talent.id}
-                          className="overflow-hidden rounded-md border bg-background"
+                          className="bg-background overflow-hidden rounded-md border"
                         >
                           <Collapsible>
                             <div
@@ -1057,8 +1057,8 @@ export const SkillsTalentsSection = React.forwardRef<
                                 </Popover>
                               )}
                               <div className="flex-grow">
-                                <CollapsibleTrigger className="-mx-2 flex w-full items-center justify-between rounded px-2 py-1 text-left transition-colors hover:bg-accent/50">
-                                  <p className="flex-grow break-words font-medium text-foreground">
+                                <CollapsibleTrigger className="hover:bg-accent/50 -mx-2 flex w-full items-center justify-between rounded px-2 py-1 text-left transition-colors">
+                                  <p className="text-foreground flex-grow font-medium break-words">
                                     &bull; {talent.name}
                                   </p>
                                   {talent.description && (
@@ -1069,7 +1069,7 @@ export const SkillsTalentsSection = React.forwardRef<
                                   <CollapsibleContent className="pt-2">
                                     <p
                                       className={cn(
-                                        'whitespace-pre-wrap text-muted-foreground',
+                                        'text-muted-foreground whitespace-pre-wrap',
                                         isCompactView ? 'text-xs' : 'text-sm',
                                       )}
                                     >

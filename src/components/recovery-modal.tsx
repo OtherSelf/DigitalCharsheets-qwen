@@ -216,7 +216,7 @@ export function RecoveryModal() {
               placeholder="e.g., french butter dragon"
               required
             />
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               Make it memorable! You can use the same phrase as before if you
               wish.
             </p>

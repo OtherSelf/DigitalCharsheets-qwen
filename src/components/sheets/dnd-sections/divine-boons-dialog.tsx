@@ -113,9 +113,9 @@ export function DivineBoonsDialog({
             </div>
 
             {selectedBoon && (
-              <div className="rounded-lg border bg-muted p-4">
+              <div className="bg-muted rounded-lg border p-4">
                 <h4 className="mb-2 font-semibold">{t(selectedBoon)}</h4>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-muted-foreground text-sm">
                   {t(selectedBoon + 'Desc')}
                 </p>
               </div>

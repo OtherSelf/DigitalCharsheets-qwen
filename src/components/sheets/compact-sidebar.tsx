@@ -119,7 +119,7 @@ export function CompactSidebar({
     <TooltipProvider>
       <nav
         className={cn(
-          'z-20 flex flex-col items-center gap-2 border-r bg-card p-2',
+          'bg-card z-20 flex flex-col items-center gap-2 border-r p-2',
           'w-16',
         )}
       >
@@ -232,7 +232,7 @@ export function CompactSidebar({
             </PopoverTrigger>
             <PopoverContent side="right" align="center" className="w-40 p-2">
               <div className="space-y-2">
-                <p className="text-xs font-medium text-muted-foreground">
+                <p className="text-muted-foreground text-xs font-medium">
                   Edition
                 </p>
                 <Select

@@ -124,14 +124,14 @@ export function CharacterCard({ character }: CharacterCardProps) {
 
   if (isCompactView) {
     return (
-      <Card className="compact-mobile-card flex flex-row items-stretch overflow-hidden p-2 transition-shadow duration-300 hover:shadow-lg hover:shadow-primary/10 sm:flex-row">
+      <Card className="compact-mobile-card hover:shadow-primary/10 flex flex-row items-stretch overflow-hidden p-2 transition-shadow duration-300 hover:shadow-lg sm:flex-row">
         <div className="flex min-w-0 flex-1 flex-col justify-center px-3 sm:px-4">
           <div className="flex flex-wrap items-baseline gap-2">
-            <CardTitle className="sm:text-md line-clamp-1 break-words font-headline text-sm">
+            <CardTitle className="sm:text-md font-headline line-clamp-1 text-sm break-words">
               {character.name}
             </CardTitle>
           </div>
-          <CardDescription className="mt-0.5 line-clamp-1 break-words text-xs">
+          <CardDescription className="mt-0.5 line-clamp-1 text-xs break-words">
             {character.gameSystem === 'Dungeons & Dragons' &&
               `${t('lvl')}${character.level} `}
             {character.gameSystem === 'Dark Heresy' &&
@@ -210,17 +210,17 @@ export function CharacterCard({ character }: CharacterCardProps) {
   }
 
   return (
-    <Card className="flex flex-col overflow-hidden transition-shadow duration-300 hover:shadow-lg hover:shadow-primary/10">
+    <Card className="hover:shadow-primary/10 flex flex-col overflow-hidden transition-shadow duration-300 hover:shadow-lg">
       <CardContent className="flex-grow p-4">
         <Badge variant={badgeVariant} className="mb-2 text-xs sm:text-sm">
           {character.gameSystem === 'Dungeons & Dragons'
             ? t('dungeonsAndDragons')
             : t('darkHeresy')}
         </Badge>
-        <CardTitle className="mb-1 break-words font-headline text-base sm:text-lg">
+        <CardTitle className="font-headline mb-1 text-base break-words sm:text-lg">
           {character.name}
         </CardTitle>
-        <CardDescription className="break-words text-xs sm:text-sm">
+        <CardDescription className="text-xs break-words sm:text-sm">
           {character.gameSystem === 'Dungeons & Dragons' &&
             `${t('lvl')}${character.level} `}
           {character.gameSystem === 'Dark Heresy' && `${getTranslatedRank()} `}

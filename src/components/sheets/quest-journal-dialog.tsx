@@ -198,7 +198,7 @@ export function QuestJournalSheet({
     if (!quest.objectives || quest.objectives.length === 0) return null;
     const done = quest.objectives.filter((o) => o.completed).length;
     return (
-      <span className="ml-2 text-[10px] font-bold text-muted-foreground">
+      <span className="text-muted-foreground ml-2 text-[10px] font-bold">
         {done}/{quest.objectives.length}
       </span>
     );
@@ -207,9 +207,9 @@ export function QuestJournalSheet({
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="flex w-full flex-col p-0 sm:max-w-2xl">
-        <SheetHeader className="border-b px-6 pb-4 pt-6">
+        <SheetHeader className="border-b px-6 pt-6 pb-4">
           <SheetTitle className="flex items-center gap-2">
-            <ScrollText className="h-5 w-5 text-primary" />{' '}
+            <ScrollText className="text-primary h-5 w-5" />{' '}
             {t('questJournalTitle')}
           </SheetTitle>
           <SheetDescription>{t('questJournalDesc')}</SheetDescription>
@@ -264,9 +264,9 @@ export function QuestJournalSheet({
                     <AccordionItem
                       key={quest.id}
                       value={quest.id}
-                      className="overflow-hidden rounded-lg border bg-background shadow-sm"
+                      className="bg-background overflow-hidden rounded-lg border shadow-sm"
                     >
-                      <AccordionTrigger className="px-4 py-3 transition-colors hover:bg-muted/50 hover:no-underline">
+                      <AccordionTrigger className="hover:bg-muted/50 px-4 py-3 transition-colors hover:no-underline">
                         <div className="flex w-full items-center justify-between gap-2 pr-2">
                           <div className="flex min-w-0 flex-1 items-center gap-2">
                             {getPriorityBadge(quest.priority)}
@@ -289,7 +289,7 @@ export function QuestJournalSheet({
                           </Badge>
                         </div>
                       </AccordionTrigger>
-                      <AccordionContent className="space-y-4 border-t bg-muted/5 px-4 pb-4 pt-2">
+                      <AccordionContent className="bg-muted/5 space-y-4 border-t px-4 pt-2 pb-4">
                         <div className="flex gap-2">
                           <Select
                             value={quest.priority || 'side'}
@@ -329,7 +329,7 @@ export function QuestJournalSheet({
                         </div>
 
                         <div className="space-y-1">
-                          <Label className="flex items-center gap-1 text-[10px] font-bold uppercase text-muted-foreground">
+                          <Label className="text-muted-foreground flex items-center gap-1 text-[10px] font-bold uppercase">
                             <ScrollText className="h-3 w-3" />{' '}
                             {t('questDescription')}
                           </Label>
@@ -346,7 +346,7 @@ export function QuestJournalSheet({
                         </div>
 
                         <div className="space-y-2">
-                          <Label className="flex items-center gap-1 text-[10px] font-bold uppercase text-muted-foreground">
+                          <Label className="text-muted-foreground flex items-center gap-1 text-[10px] font-bold uppercase">
                             <CheckCircle2 className="h-3 w-3" />{' '}
                             {t('questObjectives')}
                           </Label>
@@ -367,7 +367,7 @@ export function QuestJournalSheet({
                                   {obj.completed ? (
                                     <CheckCircle2 className="h-4 w-4 text-green-500" />
                                   ) : (
-                                    <Circle className="h-4 w-4 text-muted-foreground" />
+                                    <Circle className="text-muted-foreground h-4 w-4" />
                                   )}
                                 </Button>
                                 <Input
@@ -393,7 +393,7 @@ export function QuestJournalSheet({
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  className="h-6 w-6 text-destructive opacity-0 transition-opacity group-hover:opacity-100"
+                                  className="text-destructive h-6 w-6 opacity-0 transition-opacity group-hover:opacity-100"
                                   onClick={() =>
                                     deleteObjective(quest.id, obj.id)
                                   }
@@ -431,7 +431,7 @@ export function QuestJournalSheet({
 
                         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                           <div className="space-y-1">
-                            <Label className="flex items-center gap-1 text-[10px] font-bold uppercase text-muted-foreground">
+                            <Label className="text-muted-foreground flex items-center gap-1 text-[10px] font-bold uppercase">
                               <Gift className="h-3 w-3" /> {t('questRewards')}
                             </Label>
                             <Input
@@ -446,7 +446,7 @@ export function QuestJournalSheet({
                             />
                           </div>
                           <div className="space-y-1">
-                            <Label className="flex items-center gap-1 text-[10px] font-bold uppercase text-muted-foreground">
+                            <Label className="text-muted-foreground flex items-center gap-1 text-[10px] font-bold uppercase">
                               <MapPin className="h-3 w-3" />{' '}
                               {t('questLocations')}
                             </Label>
@@ -462,7 +462,7 @@ export function QuestJournalSheet({
                             />
                           </div>
                           <div className="space-y-1 sm:col-span-2">
-                            <Label className="flex items-center gap-1 text-[10px] font-bold uppercase text-muted-foreground">
+                            <Label className="text-muted-foreground flex items-center gap-1 text-[10px] font-bold uppercase">
                               <User className="h-3 w-3" /> {t('questNpcs')}
                             </Label>
                             <Input
@@ -477,7 +477,7 @@ export function QuestJournalSheet({
                         </div>
 
                         <div className="space-y-1">
-                          <Label className="flex items-center gap-1 text-[10px] font-bold uppercase text-muted-foreground">
+                          <Label className="text-muted-foreground flex items-center gap-1 text-[10px] font-bold uppercase">
                             <StickyNote className="h-3 w-3" /> {t('questNotes')}
                           </Label>
                           <Textarea
@@ -491,7 +491,7 @@ export function QuestJournalSheet({
                         </div>
 
                         <div className="flex items-center justify-between border-t pt-2">
-                          <span className="text-[10px] text-muted-foreground">
+                          <span className="text-muted-foreground text-[10px]">
                             {t('updated')}{' '}
                             {format(new Date(quest.updatedAt), 'MMM d, yyyy')}
                           </span>
@@ -527,7 +527,7 @@ export function QuestJournalSheet({
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-6 w-6 text-destructive"
+                              className="text-destructive h-6 w-6"
                               onClick={() => handleDeleteQuest(quest.id)}
                             >
                               <Trash2 className="h-4 w-4" />
@@ -540,7 +540,7 @@ export function QuestJournalSheet({
                 })}
               </Accordion>
             ) : (
-              <div className="flex flex-col items-center justify-center py-12 text-center text-muted-foreground">
+              <div className="text-muted-foreground flex flex-col items-center justify-center py-12 text-center">
                 <ScrollText className="mb-4 h-12 w-12 opacity-20" />
                 <p className="text-sm font-medium">
                   {filter === 'all'
