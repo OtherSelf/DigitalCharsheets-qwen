@@ -100,6 +100,39 @@ async function waitForHydration(page, timeoutMs) {
   );
 }
 
+/**
+ * Проверить системные API на dev-сервере. Они компилируются по первому
+ * запросу, поэтому таймаут щедрый: это не проверка скорости, а проверка того,
+ * что health/version работают и после `next dev`.
+ */
+async function probeApi(port) {
+  const checks = [
+    {
+      path: '/api/health',
+      verify: (body) => body.status === 'ok' && body.checks?.dataDir === 'ok',
+    },
+    {
+      path: '/api/version',
+      verify: (body) =>
+        typeof body.name === 'string' && typeof body.version === 'string',
+    },
+  ];
+
+  for (const { path, verify } of checks) {
+    const response = await fetch(`http://127.0.0.1:${port}${path}`, {
+      signal: AbortSignal.timeout(30_000),
+    });
+    if (!response.ok) {
+      throw new Error(`${path}: HTTP ${response.status}`);
+    }
+    const body = await response.json();
+    if (!verify(body)) {
+      throw new Error(`${path}: неожиданный ответ ${JSON.stringify(body)}`);
+    }
+    log(`✓ ${path}: ответ корректен`);
+  }
+}
+
 async function probeHost(browserType, host, port) {
   const browser = await browserType.launch({
     args: [`--host-resolver-rules=MAP ${host} 127.0.0.1`],
@@ -179,6 +212,7 @@ async function main() {
     log(`порт ${port}, данные ${dataDir}`);
     await waitForServer(`http://127.0.0.1:${port}/login`, READY_TIMEOUT_MS);
     log('dev-сервер поднялся');
+    await probeApi(port);
 
     const { chromium } = await import('@playwright/test');
 

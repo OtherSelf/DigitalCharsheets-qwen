@@ -13,7 +13,7 @@ npm run test:visual         # Playwright screenshot regression (full)
 npm run test:visual:fast    # screenshots tagged @fast
 npm run test:visual:update  # rewrite baselines
 npm run test:visual:report  # open the HTML report
-npm run test:dev            # dev-proxy hydration smoke
+npm run test:dev            # dev-proxy hydration + health/version smoke
 ```
 
 ## Unit tests
@@ -25,7 +25,7 @@ npm run test:dev            # dev-proxy hydration smoke
   `Request`; no HTTP server is started.
 - Covered areas: auth and profile updates, account deletion, recovery, file
   storage/locks/atomic writes, export/import, translations parity, OpenAPI
-  document and route coverage, admin API and bootstrap.
+  document and route coverage, admin API and bootstrap, health/version.
 - `tests/unit/openapi.test.ts` compares the OpenAPI spec with every
   `src/app/api/**/route.ts`; a new endpoint without documentation fails it.
 
@@ -40,9 +40,13 @@ node scripts/smoke.mjs -u http://127.0.0.1:3001 --data-dir /path/to/data
 ```
 
 It checks pages, login/registration, character CRUD, export, recovery, account
-deletion, admin role enforcement, OpenAPI/docs availability, and — with
-`--data-dir` — the on-disk `user.json`, login index and sheet files. It creates
-a disposable `smoke-*` account and removes it afterwards.
+deletion, admin role enforcement, OpenAPI/docs availability, `/api/health`,
+`/api/version`, and — with `--data-dir` — the on-disk `user.json`, login index
+and sheet files. It creates a disposable `smoke-*` account and removes it
+afterwards.
+
+`npm run test:dev` starts `next dev`, verifies the proxy/hydration setup for the
+known dev hosts, and checks `/api/health` and `/api/version` directly.
 
 `npm run verify` starts its own throwaway production server on a free port with
 a temporary `DCS_DATA_DIR`, so the smoke test never touches your real data.

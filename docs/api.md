@@ -36,6 +36,22 @@ Adding an endpoint without documenting it fails the unit tests.
 
 ## Endpoints
 
+### System
+
+| Method | Path | Auth | Purpose |
+| --- | --- | --- | --- |
+| `GET` | `/api/health` | — | Liveness/readiness for Docker, reverse proxies and monitoring. `200` when the data directory is writable, `503` with `status: degraded` otherwise. No paths or secrets; `Cache-Control: no-store`. |
+| `GET` | `/api/version` | — | Application name, version, commit/build date (from env, otherwise `null`) and Node runtime. No dependency list. |
+
+`commit`/`buildDate` on `/api/version` come from `DCS_GIT_COMMIT` (or
+`GIT_COMMIT` / `VERCEL_GIT_COMMIT_SHA`) and `DCS_BUILD_DATE`; without them the
+fields are `null`.
+
+The application `version` comes from the root `package.json`
+(`APP_VERSION` in [`src/lib/app-info.ts`](../src/lib/app-info.ts)). The OpenAPI
+contract version in [`src/lib/openapi.ts`](../src/lib/openapi.ts)
+(`info.version`) is a separate number.
+
 ### Authentication
 
 | Method | Path | Auth | Purpose |
