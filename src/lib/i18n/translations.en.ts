@@ -64,6 +64,7 @@ export const enTranslations = {
   'common.switchToRussian': 'Switch to Russian',
   'common.switchToEnglish': 'Switch to English',
   'common.openUserMenu': 'Open user menu',
+  'common.appVersion': 'App version',
   'common.serverConnectionFailed': 'Failed to connect to server.',
   'common.saving': 'Saving...',
   'common.characterCreatedTitle': 'Character Created!',

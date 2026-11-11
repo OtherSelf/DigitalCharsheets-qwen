@@ -44,6 +44,11 @@ monitoring:
 `DCS_GIT_COMMIT` / `DCS_BUILD_DATE` above). Both endpoints are documented in
 [api.md](api.md) and in `/api/docs`.
 
+The route is dynamic, so `DCS_GIT_COMMIT` is read at request time: exporting it
+before `next start` is enough, no rebuild required. The value (shortened to
+seven characters, `commitShort`) is what the profile menu shows as
+`v0.1.0 · a077aef`; without the variable the menu prints the version alone.
+
 The application version is `version` from the root `package.json`. Bump it and
 rebuild:
 

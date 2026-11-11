@@ -21,6 +21,7 @@ import { useTranslation } from '@/context/language-context';
 import { useLocalAuth } from '@/context/local-auth-context';
 
 import { Skeleton } from '../ui/skeleton';
+import { AppVersion } from './app-version';
 import { DisplaySettingsModal } from './display-settings-modal';
 
 export function UserNav() {
@@ -130,6 +131,17 @@ export function UserNav() {
           )}
 
           <DropdownMenuSeparator />
+
+          {/*
+            ─── LANDMARK: APP_VERSION_FOOTER ───
+            Версия и короткий commit над «Выйти»: моноширинно, мелко и
+            полупрозрачно — подпись читается при взгляде, но не спорит с
+            пунктами меню. Пока /api/version не ответил (или упал), компонент
+            не рендерит ничего, и separator остаётся последним разделителем,
+            как раньше.
+          */}
+          <AppVersion />
+
           <DropdownMenuItem onClick={logout}>
             {t('common.logout') || 'Log out'}
           </DropdownMenuItem>
