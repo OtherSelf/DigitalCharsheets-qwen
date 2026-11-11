@@ -1142,7 +1142,8 @@ export const ruTranslations = {
   authVerifyContinue: 'Проверить и продолжить',
   authVerifying: 'Проверка...',
   authBackToLogin: 'Назад ко входу',
-  authLocalDataNote: 'Все данные хранятся локально на вашем сервере.',
+  authLocalDataNote:
+    'Проект работает на вашей инфраструктуре — все данные остаются на вашем сервере.',
   authEnterUsernamePassword: 'Введите логин/email и пароль.',
   authFillAllFields: 'Заполните все поля.',
   authPhraseMinLength:
@@ -1168,7 +1169,7 @@ export const ruTranslations = {
     'Изучите наши цифровые листы персонажей для D&D 5e и Dark Heresy. Создайте нового персонажа или откройте готовый лист. Когда будете готовы сохранить прогресс, просто создайте аккаунт!',
   demoCreateCardTitle: 'Создайте своего персонажа',
   demoCreateCardDesc:
-    'Соберите героя с нуля: прогресс сохраняется локально, а в конце можно создать аккаунт, чтобы сохранить его навсегда.',
+    'Соберите героя с нуля: прогресс сохраняется в этом браузере, а в конце можно создать аккаунт, чтобы сохранить его навсегда.',
   demoCreateCardAction: 'Начать создание персонажа',
   demoExploreCardTitle: 'Посмотрите готовые листы',
   demoExploreCardDesc:

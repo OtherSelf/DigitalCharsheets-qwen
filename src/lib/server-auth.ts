@@ -563,7 +563,7 @@ function readByLogin(
 function checkOwnershipWords(user: StoredUser, words: string[]): string | null {
   const characters = getCharactersFromServer(user.uid);
   if (characters.length === 0) {
-    return 'No character sheets found locally. Cannot verify ownership.';
+    return 'No character sheets found on this server. Cannot verify ownership.';
   }
 
   const characterDataString = JSON.stringify(characters);

@@ -1140,7 +1140,8 @@ export const enTranslations = {
   authVerifyContinue: 'Verify & Continue',
   authVerifying: 'Verifying...',
   authBackToLogin: 'Back to login',
-  authLocalDataNote: 'All data is stored locally on your server.',
+  authLocalDataNote:
+    'Self-hosted on your infrastructure — all data stays on your server.',
   authEnterUsernamePassword: 'Please enter both username/email and password.',
   authFillAllFields: 'Please fill in all fields.',
   authPhraseMinLength: 'Recovery phrase must be at least 5 characters.',
@@ -1165,7 +1166,7 @@ export const enTranslations = {
     "Explore our digital character sheets for D&D 5e and Dark Heresy. Create a new character or preview a pre-made sheet. When you're ready to save your progress, simply create an account!",
   demoCreateCardTitle: 'Create Your Own Character',
   demoCreateCardDesc:
-    'Start building your hero from scratch. Your progress will be saved locally, and you can create an account at the end to keep it forever.',
+    'Start building your hero from scratch. Your progress is saved in this browser, and you can create an account at the end to keep it forever.',
   demoCreateCardAction: 'Start Character Creation',
   demoExploreCardTitle: 'Explore Pre-made Sheets',
   demoExploreCardDesc:
