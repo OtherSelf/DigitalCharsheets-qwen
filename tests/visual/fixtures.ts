@@ -1,4 +1,4 @@
-import type { DarkHeresyCharacter, DnD5eCharacter } from '../../src/lib/types';
+import type { DH1Character, DnD5eCharacter } from '../../src/lib/types';
 
 /**
  * Фикстуры для визуальных тестов.
@@ -444,7 +444,8 @@ export const dndCharacter: Omit<DnD5eCharacter, 'id' | 'userId'> = {
   ],
 };
 
-export const dhCharacter: Omit<DarkHeresyCharacter, 'id' | 'userId'> = {
+export const dhCharacter: Omit<DH1Character, 'id' | 'userId'> = {
+  systemId: 'dh1',
   gameSystem: 'Dark Heresy',
   name: 'Lucius Varn',
   characterClass: 'Adept',
@@ -510,7 +511,6 @@ export const dhCharacter: Omit<DarkHeresyCharacter, 'id' | 'userId'> = {
     perception: 39,
     willpower: 43,
     fellowship: 31,
-    influence: 28,
   },
   statUpgrades: {
     weaponSkill: [false, false, false, false],
@@ -522,7 +522,6 @@ export const dhCharacter: Omit<DarkHeresyCharacter, 'id' | 'userId'> = {
     perception: [false, false, false, false],
     willpower: [true, false, false, false],
     fellowship: [false, false, false, false],
-    influence: [false, false, false, false],
   },
   statNotes: {
     intelligence: 'Cortex implant (+5)',
@@ -673,7 +672,6 @@ export const dhCharacter: Omit<DarkHeresyCharacter, 'id' | 'userId'> = {
     },
   ],
   fatigue1st: { current: 0 },
-  fatigue2nd: { current: 0 },
   criticalConditions: [],
   customHouseRules: [
     {

@@ -20,11 +20,12 @@ import {
 } from './helpers';
 
 /**
- * Шаблон профиля v3 (src/lib/user-schema.ts).
+ * Шаблон профиля v4 (src/lib/user-schema.ts).
  *
  * Покрыто: нормализация старого user.json в памяти и на диске (роль,
- * блокировка, даты, schemaVersion, email→username), идемпотентность
- * startup-проверки, пропуск битых каталогов и отсутствующий passwordHash.
+ * блокировка, даты, schemaVersion, email→username), роль tester и
+ * неизвестные роли, идемпотентность startup-проверки, пропуск битых
+ * каталогов и отсутствующий passwordHash.
  */
 
 let dataDir: string;
@@ -79,6 +80,45 @@ describe('normalizeUserProfiles', () => {
       createdAt,
       updatedAt: createdAt,
     });
+  });
+
+  it('сохраняет роль tester при миграции v3 → v4', () => {
+    const uid = newUid();
+    const paths = writeLegacyProfile(uid, {
+      schemaVersion: 3,
+      uid,
+      username: 'tester',
+      displayName: 'Tester',
+      passwordHash: sha256('pass1'),
+      role: 'tester',
+      isBlocked: false,
+      createdAt: '2025-01-01T00:00:00.000Z',
+      updatedAt: '2025-01-01T00:00:00.000Z',
+    });
+
+    const report = normalizeUserProfiles();
+    expect(report.updated).toBe(1);
+    expect(report.issues).toEqual([]);
+
+    const stored = readJson(paths.userFile);
+    expect(stored.role).toBe('tester');
+    expect(stored.schemaVersion).toBe(USER_SCHEMA_VERSION);
+    expect(readStoredUser(uid)?.role).toBe('tester');
+  });
+
+  it('неизвестную роль нормализует в user', () => {
+    const uid = newUid();
+    const paths = writeLegacyProfile(uid, {
+      schemaVersion: 3,
+      uid,
+      username: 'strange',
+      displayName: 'Strange',
+      passwordHash: sha256('pass1'),
+      role: 'superuser',
+    });
+
+    normalizeUserProfiles();
+    expect(readJson(paths.userFile).role).toBe('user');
   });
 
   it('читает legacy-поле email как логин и подставляет displayName', () => {
@@ -139,7 +179,7 @@ describe('normalizeUserProfiles', () => {
   it('не выдумывает passwordHash, но сообщает о нём', () => {
     const uid = newUid();
     const paths = writeLegacyProfile(uid, {
-      schemaVersion: 3,
+      schemaVersion: USER_SCHEMA_VERSION,
       uid,
       username: 'nopass',
       displayName: 'No Pass',

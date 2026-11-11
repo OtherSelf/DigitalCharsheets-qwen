@@ -408,7 +408,7 @@ async function ensureAdminDemoUser(
   >;
   const next: Record<string, unknown> = {
     ...profile,
-    schemaVersion: 3,
+    schemaVersion: 4,
     uid,
     username: spec.username,
     displayName: spec.displayName,

@@ -1,11 +1,7 @@
 'use client';
 
-import type {
-  DarkHeresyBase,
-  DarkHeresyCoreStatNotes,
-  DarkHeresyCoreStats,
-  DarkHeresyCoreStatUpgrades,
-} from '@/games/dh-shared/types';
+import type { DH1Character } from '@/games/dh1/types';
+import type { DH2Character } from '@/games/dh2/types';
 import type { DnD5eCharacter } from '@/games/dnd5e/types';
 
 /**
@@ -14,9 +10,8 @@ import type { DnD5eCharacter } from '@/games/dnd5e/types';
  * (📌 D1) он собирает типы из `src/games/` и сохраняет прежние имена
  * импортов, чтобы 20+ файлов не переписывались одним коммитом.
  *
- * После этапа 3 (флоу/листы) и этапа 7 фасад схлопывается до реэкспорта;
- * legacy-тип `DarkHeresyCharacter` (v1, с `edition` и двойной усталостью)
- * удаляется вместе с поддержкой чтения v1.
+ * `DarkHeresyCharacter` — union `DH1Character | DH2Character`; поля редакций
+ * не смешиваются. После этапа 7 фасад схлопывается до реэкспорта.
  */
 
 export type {
@@ -74,23 +69,12 @@ export type {
 } from '@/games/dh2/types';
 
 /**
- * Legacy-форма листа Dark Heresy (schemaVersion 1).
- *
- * @deprecated Это переходный тип: он объединяет обе редакции и содержит
- * `edition`, `fatigue1st`/`fatigue2nd` и `influence`. Новый код работает с
- * `DH1Character` / `DH2Character` из модулей; миграция v2 (этап 2) удаляет
- * лишние поля, после чего этот тип уйдёт из фасада.
+ * Лист Dark Heresy любой редакции. Это не «legacy-форма с edition», а
+ * честный union двух независимых типов (📌 D2/D3): dh1 без `influence` и
+ * `fatigue2nd`, dh2 без `fatigue1st`. Ветвление по `systemId` допускается
+ * только внутри DH-модулей; ядро работает через capability-конфиг.
  */
-export interface DarkHeresyCharacter extends DarkHeresyBase {
-  edition?: '1st' | '2nd' | 'hybrid';
-  stats: DarkHeresyCoreStats & { influence: number };
-  statUpgrades: DarkHeresyCoreStatUpgrades & {
-    influence: [boolean, boolean, boolean, boolean];
-  };
-  statNotes?: DarkHeresyCoreStatNotes & { influence?: string };
-  fatigue1st: { current: number; notes?: string };
-  fatigue2nd: { current: number; notes?: string };
-}
+export type DarkHeresyCharacter = DH1Character | DH2Character;
 
-/** Лист любой поддерживаемой редакции (v1-совместимый union до этапа 3). */
+/** Лист любой поддерживаемой игры/редакции. */
 export type Character = DnD5eCharacter | DarkHeresyCharacter;

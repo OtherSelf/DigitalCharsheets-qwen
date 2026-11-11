@@ -1,7 +1,7 @@
 import { CHARACTER_SCHEMA_VERSION } from '@/lib/character-version';
 
 import { toPortableRecord } from '../shared/export';
-import type { GameModule, SheetComponent } from '../types';
+import type { GameModule } from '../types';
 import { createDh1Defaults } from './defaults';
 import { dh1CharacterSchema } from './schema';
 import type { DH1Character } from './types';
@@ -12,8 +12,8 @@ import type { DH1Character } from './types';
  * dh2 для общих компонентов: без `influence`, без колонки `+30`, усталость —
  * `fatigue1st`.
  *
- * 💬 До шага 1.4/этапа 3 лист общий (legacy): loader приводит его к типу
- * DH1Character. После переноса сюда появится собственная точка входа.
+ * 💬 Лист — тонкая обёртка над общим DH-компонентом; редакцию определяет
+ * capability, а не поле `edition` в данных.
  */
 export const dh1Module: GameModule<DH1Character> = {
   id: 'dh1',
@@ -33,14 +33,8 @@ export const dh1Module: GameModule<DH1Character> = {
   createDefaults: createDh1Defaults,
   components: {
     loadCreateForm: () =>
-      import('../dh-shared/create-form').then((m) => ({
-        default: m.DarkHeresyCharacterForm,
-      })),
-    loadSheet: () =>
-      import('../dh-shared/sheet').then((m) => ({
-        // TODO(stage 3): заменить на лист dh1; пока — общий legacy-лист.
-        default: m.DarkHeresySheet as unknown as SheetComponent<DH1Character>,
-      })),
+      import('./create-form').then((m) => ({ default: m.Dh1CharacterForm })),
+    loadSheet: () => import('./sheet').then((m) => ({ default: m.Dh1Sheet })),
   },
   export: {
     toPortableJson: (character) => toPortableRecord(character),

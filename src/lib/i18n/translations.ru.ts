@@ -331,6 +331,7 @@ export const ruTranslations = {
   'admin.columnLastLogin': 'Вход',
   'admin.columnActions': 'Действия',
   'admin.roleAdmin': 'Администратор',
+  'admin.roleTester': 'Тестировщик',
   'admin.roleUser': 'Пользователь',
   'admin.statusActive': 'Активен',
   'admin.statusBlocked': 'Заблокирован',

@@ -47,7 +47,9 @@ describe('character schema v1', () => {
     const { character, changed, issues } = normalizeCharacterRecord(legacy);
     const dh = character as DarkHeresyCharacter;
     expect(changed).toBe(true);
-    expect(issues).toEqual([]);
+    // В legacy-листе было influence=5 — это поле 2e, оно уходит в notes.
+    expect(issues.join(' ')).toContain('поля 2e перенесены');
+    expect(dh.notes).toContain('[migration v2]');
     expect(character.schemaVersion).toBe(CHARACTER_SCHEMA_VERSION);
     expect(dh.divination).toBe('mutationWithout');
     expect(dh.divinationEffect).toBe('minorMutation');
@@ -134,7 +136,9 @@ describe('character schema v1', () => {
     );
 
     const first: NormalizeCharactersReport = normalizeAllCharacters();
-    expect(first).toMatchObject({ total: 1, updated: 1, issues: [] });
+    expect(first).toMatchObject({ total: 1, updated: 1 });
+    // В файле был influence из старой формы — миграция сообщает об этом.
+    expect(first.issues.join(' ')).toContain('поля 2e перенесены');
     const stored = JSON.parse(fs.readFileSync(file, 'utf8'));
     expect(stored.schemaVersion).toBe(CHARACTER_SCHEMA_VERSION);
     expect(stored.divination).toBe('sinsHidden');

@@ -7,7 +7,8 @@ import * as XLSX from 'xlsx';
 import { isNonPortableField, toPortableCharacter } from './character-portable';
 import { normalizeCharacterRecord } from './character-version';
 import { DIVINATION_BY_ID } from './dark-heresy-data';
-import { Character, DarkHeresyCharacter, DnD5eCharacter } from './types';
+import type { LegacyDarkHeresyExport } from './legacy-dh-export';
+import { Character, DnD5eCharacter } from './types';
 
 export interface ExportConfig {
   includeBasicInfo: boolean;
@@ -484,7 +485,11 @@ export const filterCharacterForExport = (
   character: Character,
   config: ExportConfig,
 ): Partial<Character> => {
-  const filtered: any = { id: character.id, gameSystem: character.gameSystem };
+  const filtered: any = {
+    id: character.id,
+    systemId: character.systemId,
+    gameSystem: character.gameSystem,
+  };
 
   if (config.includeBasicInfo) {
     filtered.name = character.name;
@@ -503,7 +508,7 @@ export const filterCharacterForExport = (
       filtered.hair = dnd.hair;
       filtered.proficiencyBonus = dnd.proficiencyBonus;
     } else {
-      const dh = character as DarkHeresyCharacter;
+      const dh = character as LegacyDarkHeresyExport;
       filtered.edition = dh.edition;
       filtered.homeWorld = dh.homeWorld;
       filtered.worldVariant = dh.worldVariant;
@@ -525,7 +530,9 @@ export const filterCharacterForExport = (
     filtered.stats = character.stats;
     filtered.statNotes = character.statNotes;
     if (character.gameSystem === 'Dark Heresy') {
-      filtered.statUpgrades = (character as DarkHeresyCharacter).statUpgrades;
+      filtered.statUpgrades = (
+        character as LegacyDarkHeresyExport
+      ).statUpgrades;
     }
   }
 
@@ -547,7 +554,7 @@ export const filterCharacterForExport = (
       filtered.attacks = dnd.attacks;
       filtered.combatResources = dnd.combatResources;
     } else {
-      const dh = character as DarkHeresyCharacter;
+      const dh = character as LegacyDarkHeresyExport;
       filtered.wounds = dh.wounds;
       filtered.fatePoints = dh.fatePoints;
       filtered.insanityPoints = dh.insanityPoints;
@@ -569,7 +576,7 @@ export const filterCharacterForExport = (
       filtered.currency = (character as DnD5eCharacter).currency;
       filtered.attunementItems = (character as DnD5eCharacter).attunementItems;
     } else {
-      filtered.wealth = (character as DarkHeresyCharacter).wealth;
+      filtered.wealth = (character as LegacyDarkHeresyExport).wealth;
     }
   }
 
@@ -612,7 +619,7 @@ export const filterCharacterForExport = (
       filtered.inspiration = dnd.inspiration;
       filtered.allowInspirationHomeRule = dnd.allowInspirationHomeRule;
     } else {
-      const dh = character as DarkHeresyCharacter;
+      const dh = character as LegacyDarkHeresyExport;
       filtered.experience = dh.experience;
       filtered.totalExpSpent = dh.totalExpSpent;
       filtered.alternatePath = dh.alternatePath;
@@ -929,7 +936,7 @@ function buildCharacterSheetRows(
   const data: any[][] = [];
   const isDnD = character.gameSystem === 'Dungeons & Dragons';
   const dnd = character as DnD5eCharacter;
-  const dh = character as DarkHeresyCharacter;
+  const dh = character as LegacyDarkHeresyExport;
 
   // Helper functions
   const addHeader = (text: string) => {

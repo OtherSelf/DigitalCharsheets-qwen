@@ -12,7 +12,10 @@ import {
   POST as charactersPost,
 } from '@/app/api/characters/route';
 import { GET as exportGet } from '@/app/api/export/route';
-import { CHARACTER_SCHEMA_VERSION } from '@/lib/character-version';
+import {
+  CHARACTER_SCHEMA_VERSION,
+  normalizeCharacterRecord,
+} from '@/lib/character-version';
 import { isUid } from '@/lib/ids';
 
 import { readJson, removeDir, userPaths, useTempDataDir } from './helpers';
@@ -522,10 +525,8 @@ describe.each(SYSTEMS)(
     it('POST создаёт лист (201) и не теряет ни одного поля', async () => {
       const user = await register(`gm-${slug}`);
       const payload = build();
-      const expectedPayload =
-        slug === 'dh'
-          ? { ...payload, divinationEffect: 'intelligence3' }
-          : payload;
+      // Сервер нормализует лист до v2 (systemId, разделение DH-полей).
+      const expectedPayload = normalizeCharacterRecord(payload).character;
 
       const { status, body } = await createCharacter(user.uid, payload);
 
@@ -561,11 +562,13 @@ describe.each(SYSTEMS)(
         ),
       );
 
+      const expected = normalizeCharacterRecord(payload)
+        .character as unknown as Record<string, unknown>;
       for (const field of ownFields) {
         expect(stored, `поле ${field} должно быть у ${name}`).toHaveProperty(
           field,
         );
-        expect(stored[field]).toEqual(payload[field]);
+        expect(stored[field]).toEqual(expected[field]);
       }
       for (const field of foreignFields) {
         expect(
@@ -574,18 +577,15 @@ describe.each(SYSTEMS)(
         ).not.toHaveProperty(field);
       }
 
-      // Ключевые для листа значения тоже на месте.
-      expect(stored.stats).toEqual(payload.stats);
+      // Ключевые для листа значения тоже на месте (с учётом миграции v2).
+      expect(stored.stats).toEqual(expected.stats);
       expect(stored.name).toBe(payload.name);
     });
 
     it('лист попадает в список и доступен через /api/export?characterId', async () => {
       const user = await register(`export-${slug}`);
       const payload = build();
-      const expectedPayload =
-        slug === 'dh'
-          ? { ...payload, divinationEffect: 'intelligence3' }
-          : payload;
+      const expectedPayload = normalizeCharacterRecord(payload).character;
       const { body: created } = await createCharacter(user.uid, payload);
 
       const list = await listCharacters(user.uid);

@@ -18,68 +18,18 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { useCharacterContext } from '@/context/character-context';
 import { useTranslation } from '@/context/language-context';
-import { type DarkHeresyCharacter } from '@/lib/types';
+import { getDarkHeresyCapabilities } from '@/games/dh-shared/capabilities';
+import {
+  EMPTY_STAT_UPGRADE,
+  pickAllowedStats,
+  statRecord,
+  type DarkHeresyStatKey,
+} from '@/games/dh-shared/stats';
+import { type DarkHeresyStatUpgrade } from '@/games/dh-shared/types';
+import { type Character, type DarkHeresyCharacter } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
 import { EditSaveButton } from './dh-ui-helpers';
-
-const defaultStatUpgrades = {
-  weaponSkill: [false, false, false, false] as [
-    boolean,
-    boolean,
-    boolean,
-    boolean,
-  ],
-  ballisticSkill: [false, false, false, false] as [
-    boolean,
-    boolean,
-    boolean,
-    boolean,
-  ],
-  strength: [false, false, false, false] as [
-    boolean,
-    boolean,
-    boolean,
-    boolean,
-  ],
-  toughness: [false, false, false, false] as [
-    boolean,
-    boolean,
-    boolean,
-    boolean,
-  ],
-  agility: [false, false, false, false] as [boolean, boolean, boolean, boolean],
-  intelligence: [false, false, false, false] as [
-    boolean,
-    boolean,
-    boolean,
-    boolean,
-  ],
-  perception: [false, false, false, false] as [
-    boolean,
-    boolean,
-    boolean,
-    boolean,
-  ],
-  willpower: [false, false, false, false] as [
-    boolean,
-    boolean,
-    boolean,
-    boolean,
-  ],
-  fellowship: [false, false, false, false] as [
-    boolean,
-    boolean,
-    boolean,
-    boolean,
-  ],
-  influence: [false, false, false, false] as [
-    boolean,
-    boolean,
-    boolean,
-    boolean,
-  ],
-};
 
 // LANDMARK 1: Added notesForText and addNotesText to the component props
 const CharacteristicStat = ({
@@ -208,21 +158,38 @@ export const CharacteristicsSection = React.forwardRef<
     const { updateCharacter, hideNotes, showEditButtons } =
       useCharacterContext();
     const { t, language } = useTranslation();
+    const capabilities = getDarkHeresyCapabilities(character);
     const [isCharacteristicsEditing, setIsCharacteristicsEditing] =
       React.useState(false);
-    const [editableStats, setEditableStats] = React.useState(character.stats);
-    const [editableStatUpgrades, setEditableStatUpgrades] = React.useState(
-      character.statUpgrades ?? defaultStatUpgrades,
+    // ─── LANDMARK: EDITION-AGNOSTIC STAT VIEW ───
+    // Характеристики приводятся к одному словарю (девять + influence).
+    // Для dh1 ключ influence отфильтровывается при сохранении, поэтому
+    // лишнего поля в данных не появляется.
+    const [editableStats, setEditableStats] = React.useState(() =>
+      statRecord<number>(character, 'stats', 0),
+    );
+    const [editableStatUpgrades, setEditableStatUpgrades] = React.useState(() =>
+      statRecord<DarkHeresyStatUpgrade>(
+        character,
+        'statUpgrades',
+        EMPTY_STAT_UPGRADE,
+      ),
     );
 
     // ─── LANDMARK: SYNC EDITABLE STATE WITH CHARACTER DATA ───
     React.useEffect(() => {
-      setEditableStats(character.stats);
-      setEditableStatUpgrades(character.statUpgrades ?? defaultStatUpgrades);
-    }, [character.stats, character.statUpgrades]);
+      setEditableStats(statRecord<number>(character, 'stats', 0));
+      setEditableStatUpgrades(
+        statRecord<DarkHeresyStatUpgrade>(
+          character,
+          'statUpgrades',
+          EMPTY_STAT_UPGRADE,
+        ),
+      );
+    }, [character]);
     // ─── END SYNC EDITABLE STATE ───
 
-    // ─── LANDMARK: DYNAMIC CHARACTERISTICS BASED ON EDITION ───
+    // ─── LANDMARK: DYNAMIC CHARACTERISTICS BASED ON CAPABILITIES ───
     const characteristics = React.useMemo(() => {
       const base = [
         { key: 'weaponSkill', label: 'WS', fullName: 'Weapon Skill' },
@@ -237,21 +204,31 @@ export const CharacteristicsSection = React.forwardRef<
         { key: 'influence', label: 'Inf', fullName: 'Influence' },
       ] as const;
 
-      // 1st edition (or default/undefined) hides Influence; 2nd and Hybrid show it
-      if (character.edition === '1st' || !character.edition) {
+      if (!capabilities.influence) {
         return base.filter((char) => char.key !== 'influence');
       }
       return base;
-    }, [character.edition]);
+    }, [capabilities.influence]);
     // ─── END DYNAMIC CHARACTERISTICS ───
 
     const handleSaveCharacteristics = React.useCallback(() => {
+      // Сохраняем только ключи, которые существуют в редакции: dh1 не должен
+      // получить influence, даже если он был в форме/старом файле.
       updateCharacter(character.id, {
-        stats: editableStats,
-        statUpgrades: editableStatUpgrades,
-      });
+        stats: pickAllowedStats(editableStats, capabilities.influence),
+        statUpgrades: pickAllowedStats(
+          editableStatUpgrades,
+          capabilities.influence,
+        ),
+      } as Partial<Character>);
       setIsCharacteristicsEditing(false);
-    }, [character.id, editableStats, editableStatUpgrades, updateCharacter]);
+    }, [
+      character.id,
+      editableStats,
+      editableStatUpgrades,
+      updateCharacter,
+      capabilities.influence,
+    ]);
 
     const isAnyEditing = isCharacteristicsEditing;
     React.useEffect(() => {
@@ -269,31 +246,47 @@ export const CharacteristicsSection = React.forwardRef<
     );
 
     const handleUpgradeChange = (
-      statKey: keyof typeof defaultStatUpgrades,
+      statKey: DarkHeresyStatKey,
       index: number,
       isChecked: boolean,
     ) => {
-      if (isCharacteristicsEditing) {
-        setEditableStatUpgrades((prev) => {
-          const next = { ...prev };
-          const specific = [...(next[statKey] || [false, false, false, false])];
-          specific[index] = isChecked;
-          if (!isChecked)
-            for (let i = index + 1; i < specific.length; i++)
-              specific[i] = false;
-          next[statKey] = specific as [boolean, boolean, boolean, boolean];
-          return next;
-        });
-      } else {
-        const next = { ...character.statUpgrades };
+      const apply = (
+        upgrades: Record<DarkHeresyStatKey, DarkHeresyStatUpgrade>,
+      ) => {
+        const next = { ...upgrades };
         const specific = [...(next[statKey] || [false, false, false, false])];
         specific[index] = isChecked;
         if (!isChecked)
           for (let i = index + 1; i < specific.length; i++) specific[i] = false;
-        next[statKey] = specific as [boolean, boolean, boolean, boolean];
-        updateCharacter(character.id, { statUpgrades: next });
+        next[statKey] = specific as DarkHeresyStatUpgrade;
+        return next;
+      };
+
+      if (isCharacteristicsEditing) {
+        setEditableStatUpgrades((prev) => apply(prev));
+      } else {
+        updateCharacter(character.id, {
+          statUpgrades: pickAllowedStats(
+            apply(
+              statRecord<DarkHeresyStatUpgrade>(
+                character,
+                'statUpgrades',
+                EMPTY_STAT_UPGRADE,
+              ),
+            ),
+            capabilities.influence,
+          ),
+        } as Partial<Character>);
       }
     };
+
+    const currentStats = statRecord<number>(character, 'stats', 0);
+    const currentUpgrades = statRecord<DarkHeresyStatUpgrade>(
+      character,
+      'statUpgrades',
+      EMPTY_STAT_UPGRADE,
+    );
+    const currentNotes = statRecord<string>(character, 'statNotes', '');
 
     return (
       <Card id="characteristics-card">
@@ -326,14 +319,12 @@ export const CharacteristicsSection = React.forwardRef<
               value={
                 isCharacteristicsEditing
                   ? editableStats[char.key]
-                  : character.stats[char.key]
+                  : currentStats[char.key]
               }
               upgrades={
                 isCharacteristicsEditing
                   ? editableStatUpgrades[char.key]
-                  : character.statUpgrades
-                    ? character.statUpgrades[char.key]
-                    : [false, false, false, false]
+                  : currentUpgrades[char.key]
               }
               editing={isCharacteristicsEditing}
               onValueChange={(e) =>
@@ -345,13 +336,14 @@ export const CharacteristicsSection = React.forwardRef<
               onUpgradeChange={(index, checked) =>
                 handleUpgradeChange(char.key, index, checked)
               }
-              notes={character.statNotes?.[char.key]}
+              notes={currentNotes[char.key] || undefined}
               onNoteChange={(note) => {
-                const next = {
-                  ...(character.statNotes || {}),
-                  [char.key]: note,
-                };
-                updateCharacter(character.id, { statNotes: next });
+                updateCharacter(character.id, {
+                  statNotes: pickAllowedStats(
+                    { ...currentNotes, [char.key]: note },
+                    capabilities.influence,
+                  ),
+                } as Partial<Character>);
               }}
               isCompactView={isCompactView}
               hideNotes={hideNotes}

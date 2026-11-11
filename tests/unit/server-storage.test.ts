@@ -56,6 +56,7 @@ describe('server-storage (файловое хранилище листов)', ()
     expect(fs.existsSync(file)).toBe(true);
     expect(readJson(file)).toEqual({
       ...character,
+      systemId: 'dnd5e',
       schemaVersion: CHARACTER_SCHEMA_VERSION,
     });
     // Человекочитаемый JSON (отступ 2)

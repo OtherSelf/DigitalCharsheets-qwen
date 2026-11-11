@@ -78,12 +78,12 @@ const demoDhCharacter: Character = {
   userId: 'demo',
   name: 'Inquisitor Vane',
   characterClass: 'Acolyte',
+  systemId: 'dh1',
   gameSystem: 'Dark Heresy',
   backstory:
     'A dedicated servant of the Inquisition, rooting out heresy in the underhive.',
   notes: 'Demo character for preview purposes.',
   questLog: [],
-  edition: '1st',
   homeWorld: 'Hive World',
   worldVariant: 'Scintilla',
   careerPath: 'Guardsman',
@@ -111,7 +111,6 @@ const demoDhCharacter: Character = {
     perception: 45,
     willpower: 40,
     fellowship: 35,
-    influence: 30,
   },
   statUpgrades: {
     weaponSkill: [false, false, false, false],
@@ -123,7 +122,6 @@ const demoDhCharacter: Character = {
     perception: [false, false, false, false],
     willpower: [false, false, false, false],
     fellowship: [false, false, false, false],
-    influence: [false, false, false, false],
   },
   wounds: { current: 12, max: 12 },
   fatePoints: { current: 2, max: 2 },
@@ -174,7 +172,6 @@ const demoDhCharacter: Character = {
   skills: [],
   talents: [],
   fatigue1st: { current: 0 },
-  fatigue2nd: { current: 0 },
   criticalConditions: [],
 } as Character;
 
