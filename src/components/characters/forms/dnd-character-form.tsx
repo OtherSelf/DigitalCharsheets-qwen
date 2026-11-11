@@ -36,6 +36,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useCharacterContext } from '@/context/character-context';
 import { useTranslation } from '@/context/language-context';
 import { useToast } from '@/hooks/use-toast';
+import { CHARACTER_SCHEMA_VERSION } from '@/lib/character-version';
 import { DnD5eCharacter } from '@/lib/types';
 
 // Map internal English names to translation keys
@@ -480,6 +481,7 @@ export function DndCharacterForm() {
       race: values.race,
       background: values.background,
       alignment: values.alignment || 'Neutral',
+      schemaVersion: CHARACTER_SCHEMA_VERSION,
       experiencePoints: values.experiencePoints || 0,
       age: values.age || '',
       eyes: values.eyes || '',

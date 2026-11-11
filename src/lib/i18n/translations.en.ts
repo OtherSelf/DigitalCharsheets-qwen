@@ -1,7 +1,7 @@
 // ─── LANDMARK: TRANSLATIONS_EN_START ───
 export const enTranslations = {
   // Разделы: Common → Auth → Admin → D&D 5e → Dark Heresy → Settings →
-  // Demo → Export/Import → data exceptions. Правила: docs/i18n.md.
+  // Demo → Export/Import. Правила: docs/i18n.md.
   // Новые ключи добавлять в соответствующий домен, а не в конец файла.
 
   // ─── Common: dashboard, shared sheet labels, actions, fields ───
@@ -1123,6 +1123,78 @@ export const enTranslations = {
   'dh.addCriticalCondition': 'Add critical condition...',
   'dh.fatigueFirstEdition': '1st Ed. Fatigue',
   'dh.fatigueSecondEdition': '2nd Ed. Fatigue',
+  'dh.data.divination.mutationWithout': 'Mutation without, corruption within.',
+  'dh.data.divinationEffect.minorMutation': 'Minor Mutation.',
+  'dh.data.divination.onlyTheInsane':
+    'Only the insane have strength enough to prosper. Only those who prosper may judge what is sane.',
+  'dh.data.divinationEffect.insanity2': '+2 Insanity Points.',
+  'dh.data.divination.sinsHidden':
+    'Sins hidden in the heart turn all to decay.',
+  'dh.data.divinationEffect.corruption3': '+3 Corruption Points.',
+  'dh.data.divination.innocenceIllusion': 'Innocence is an illusion.',
+  'dh.data.divinationEffect.insanity1Corruption1':
+    '+1 Insanity Point, +1 Corruption Point.',
+  'dh.data.divination.painOfBullet':
+    'The pain of the bullet is ecstasy compared to damnation.',
+  'dh.data.divinationEffect.toughness1': '+1 Toughness.',
+  'dh.data.divination.killTheAlien':
+    'Kill the alien before it can speak its lies.',
+  'dh.data.divinationEffect.agility2': '+2 Agility.',
+  'dh.data.divination.truthSubjective': 'Truth is subjective.',
+  'dh.data.divinationEffect.intelligence3Corruption3':
+    '+3 Intelligence, +3 Corruption Points.',
+  'dh.data.divination.knowTheMutant': 'Know the mutant; kill the mutant.',
+  'dh.data.divinationEffect.perception2': '+2 Perception.',
+  'dh.data.divination.offerHisLife':
+    'Even a man who has nothing can still offer his life.',
+  'dh.data.divinationEffect.strength2': '+2 Strength.',
+  'dh.data.divination.jobWorthDying':
+    'If a job is worth doing it is worth dying for.',
+  'dh.data.divinationEffect.frenzyTalent': '"Frenzy" talent.',
+  'dh.data.divination.onlyInDeath': 'Only in death does duty end.',
+  'dh.data.divinationEffect.wound1': '+1 Wound.',
+  'dh.data.divination.mindWithoutPurpose':
+    'A mind without purpose will wander in dark places.',
+  'dh.data.divinationEffect.fate1': '+1 Fate Point.',
+  'dh.data.divination.noCivilians':
+    'There are no civilians in the battle for survival.',
+  'dh.data.divinationEffect.toughness2Wound1': '+2 Toughness, +1 Wound.',
+  'dh.data.divination.violenceSolves': 'Violence solves everything.',
+  'dh.data.divinationEffect.weaponSkill3': '+3 Weapon Skill.',
+  'dh.data.divination.toWarHuman': 'To war is human.',
+  'dh.data.divinationEffect.agility3': '+3 Agility.',
+  'dh.data.divination.spiritNotBroken':
+    'Die if you must, but not with your spirit broken.',
+  'dh.data.divinationEffect.willpower3': '+3 Willpower.',
+  'dh.data.divination.gunMightier': 'The gun is mightier than the sword.',
+  'dh.data.divinationEffect.ballisticSkill3': '+3 Ballistic Skill.',
+  'dh.data.divination.boonToBrothers':
+    'Be a boon to your brothers and bane to your enemies.',
+  'dh.data.divinationEffect.fellowship3': '+3 Fellowship.',
+  'dh.data.divination.menMustDie': 'Men must die so that Man endures.',
+  'dh.data.divinationEffect.toughness3': '+3 Toughness.',
+  'dh.data.divination.onlyTrueFear':
+    'The only true fear is of dying with your duty not done.',
+  'dh.data.divinationEffect.wounds2': '+2 Wounds.',
+  'dh.data.divination.thoughtBegetsHeresy':
+    'Thought begets Heresy; Heresy begets Retribution.',
+  'dh.data.divinationEffect.strength3': '+3 Strength.',
+  'dh.data.divination.wiseManLearns':
+    'The wise man learns from the deaths of others.',
+  'dh.data.divinationEffect.intelligence3': '+3 Intelligence.',
+  'dh.data.divination.suspiciousMind': 'A suspicious mind is a healthy mind.',
+  'dh.data.divinationEffect.perception3': '+3 Perception.',
+  'dh.data.divination.trustYourFear': 'Trust in your fear.',
+  'dh.data.divinationEffect.agility2Fate1': '+2 Agility, +1 Fate Point.',
+  'dh.data.divination.noSubstituteForZeal': 'There is no substitute for zeal.',
+  'dh.data.divinationEffect.toughness2Willpower2':
+    '+2 Toughness, +2 Willpower.',
+  'dh.data.divination.askHowNotWhy': 'Do not ask why you serve. Only ask how.',
+  'dh.data.divinationEffect.weaponSkill2BallisticSkill2':
+    '+2 Weapon Skill, +2 Ballistic Skill.',
+  'dh.data.divination.darkDreams': 'Dark dreams lie upon the heart.',
+  'dh.data.divination.darknessLightOfTerra':
+    'In the darkness, follow the light of Terra.',
 
   // ─── Settings: /settings profile and display controls ───
   'settings.addRecoveryPhrase': 'Add Recovery Phrase',
@@ -1224,83 +1296,5 @@ export const enTranslations = {
     'Upload a previously exported JSON file to create a new character.',
   'io.importSuccessDashboard': 'Character successfully created! Redirecting...',
   'io.exportJSON': 'Export JSON File',
-
-  // ─── Data-исключения: sentence-ключи DIVINATIONS/эффектов (level 2) ───
-  // Хранятся в данных персонажа как значения; пока без домена.
-  'Mutation without, corruption within.':
-    'Mutation without, corruption within.',
-  'Minor Mutation.': 'Minor Mutation.',
-  'Only the insane have strength enough to prosper. Only those who prosper may judge what is sane.':
-    'Only the insane have strength enough to prosper. Only those who prosper may judge what is sane.',
-  '+2 Insanity Points.': '+2 Insanity Points.',
-  'Sins hidden in the heart turn all to decay.':
-    'Sins hidden in the heart turn all to decay.',
-  '+3 Corruption Points.': '+3 Corruption Points.',
-  'Innocence is an illusion.': 'Innocence is an illusion.',
-  '+1 Insanity Point, +1 Corruption Point.':
-    '+1 Insanity Point, +1 Corruption Point.',
-  'Dark dreams lie upon the heart.': 'Dark dreams lie upon the heart.',
-  '+2 Corruption Points.': '+2 Corruption Points.',
-  'The pain of the bullet is ecstasy compared to damnation.':
-    'The pain of the bullet is ecstasy compared to damnation.',
-  '+1 Toughness.': '+1 Toughness.',
-  'Kill the alien before it can speak its lies.':
-    'Kill the alien before it can speak its lies.',
-  '+2 Agility.': '+2 Agility.',
-  'Truth is subjective.': 'Truth is subjective.',
-  '+3 Intelligence, +3 Corruption Points.':
-    '+3 Intelligence, +3 Corruption Points.',
-  'Know the mutant; kill the mutant.': 'Know the mutant; kill the mutant.',
-  '+2 Perception.': '+2 Perception.',
-  'Even a man who has nothing can still offer his life.':
-    'Even a man who has nothing can still offer his life.',
-  '+2 Strength.': '+2 Strength.',
-  'If a job is worth doing it is worth dying for.':
-    'If a job is worth doing it is worth dying for.',
-  '"Frenzy" talent.': '"Frenzy" talent.',
-  'Only in death does duty end.': 'Only in death does duty end.',
-  '+1 Wound.': '+1 Wound.',
-  'A mind without purpose will wander in dark places.':
-    'A mind without purpose will wander in dark places.',
-  '+1 Fate Point.': '+1 Fate Point.',
-  'There are no civilians in the battle for survival.':
-    'There are no civilians in the battle for survival.',
-  '+2 Toughness, +1 Wound.': '+2 Toughness, +1 Wound.',
-  'Violence solves everything.': 'Violence solves everything.',
-  '+3 Weapon Skill.': '+3 Weapon Skill.',
-  'To war is human.': 'To war is human.',
-  '+3 Agility.': '+3 Agility.',
-  'Die if you must, but not with your spirit broken.':
-    'Die if you must, but not with your spirit broken.',
-  '+3 Willpower.': '+3 Willpower.',
-  'The gun is mightier than the sword.': 'The gun is mightier than the sword.',
-  '+3 Ballistic Skill.': '+3 Ballistic Skill.',
-  'Be a boon to your brothers and bane to your enemies.':
-    'Be a boon to your brothers and bane to your enemies.',
-  '+3 Fellowship.': '+3 Fellowship.',
-  'Men must die so that Man endures.': 'Men must die so that Man endures.',
-  '+3 Toughness.': '+3 Toughness.',
-  'In the darkness, follow the light of Terra.':
-    'In the darkness, follow the light of Terra.',
-  'The only true fear is of dying with your duty not done.':
-    'The only true fear is of dying with your duty not done.',
-  '+2 Wounds.': '+2 Wounds.',
-  'Thought begets Heresy; Heresy begets Retribution.':
-    'Thought begets Heresy; Heresy begets Retribution.',
-  '+3 Strength.': '+3 Strength.',
-  'The wise man learns from the deaths of others.':
-    'The wise man learns from the deaths of others.',
-  '+3 Intelligence.': '+3 Intelligence.',
-  'A suspicious mind is a healthy mind.':
-    'A suspicious mind is a healthy mind.',
-  '+3 Perception.': '+3 Perception.',
-  'Trust in your fear.': 'Trust in your fear.',
-  '+2 Agility, +1 Fate Point.': '+2 Agility, +1 Fate Point.',
-  'There is no substitute for zeal.': 'There is no substitute for zeal.',
-  '+2 Toughness, +2 Willpower.': '+2 Toughness, +2 Willpower.',
-  'Do not ask why you serve. Only ask how.':
-    'Do not ask why you serve. Only ask how.',
-  '+2 Weapon Skill, +2 Ballistic Skill.':
-    '+2 Weapon Skill, +2 Ballistic Skill.',
 };
 // ─── LANDMARK: TRANSLATIONS_EN_END ───

@@ -581,7 +581,7 @@ describe('exportCharacterToExcel (xlsx)', () => {
       expect(String(rows[0][0])).toContain('DIGITAL CHARACTER SHEETS');
       expect(row(rows, 'App')).toEqual(['App', 'DigitalCharsheets-qwen']);
       expect(row(rows, 'Format')).toEqual(['Format', 'dcs-export']);
-      expect(row(rows, 'Format version')).toEqual(['Format version', '2.0']);
+      expect(row(rows, 'Format version')).toEqual(['Format version', '2.1']);
       expect(row(rows, 'Kind')).toEqual(['Kind', 'character']);
       expect(row(rows, 'Export date')).toEqual([
         'Export date',

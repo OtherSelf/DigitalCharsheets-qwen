@@ -1,4 +1,8 @@
 import { ensureServiceAdmin, type ServiceAdminReport } from './admin-bootstrap';
+import {
+  normalizeAllCharacters,
+  type NormalizeCharactersReport,
+} from './character-schema';
 import { getDataDir } from './data-dir';
 import { rebuildLoginIndex } from './user-index';
 import {
@@ -15,8 +19,10 @@ import {
  * Шаги:
  *   1. проверить шаблон всех `users/<uid>/user.json` и дописать недостающие
  *      поля (роль, блокировка, schemaVersion, даты) — см. user-schema.ts;
- *   2. пересобрать производный индекс `index/logins.json`;
- *   3. если активного администратора нет — создать служебный аккаунт и
+ *   2. нормализовать `users/<uid>/characters/*.json` до character schema v1:
+ *      старые DH-пророчества sentence → стабильные ID (character-schema.ts);
+ *   3. пересобрать производный индекс `index/logins.json`;
+ *   4. если активного администратора нет — создать служебный аккаунт и
  *      вывести сгенерированный пароль в консоль + файл.
  *
  * Ошибки не пробрасываются: сервер должен подняться даже с частично битым
@@ -26,6 +32,7 @@ import {
 export interface StartupReport {
   dataDir: string;
   profiles: NormalizeProfilesReport | null;
+  characters: NormalizeCharactersReport | null;
   admin: ServiceAdminReport | null;
   errors: string[];
 }
@@ -36,6 +43,15 @@ let cachedReport: StartupReport | null = null;
 function logProfileReport(report: NormalizeProfilesReport): void {
   console.info(
     `[dcs] startup: профили проверены — всего ${report.total}, обновлено ${report.updated}`,
+  );
+  for (const issue of report.issues) {
+    console.warn(`[dcs] startup: ${issue}`);
+  }
+}
+
+function logCharacterReport(report: NormalizeCharactersReport): void {
+  console.info(
+    `[dcs] startup: листы проверены — всего ${report.total}, обновлено ${report.updated}`,
   );
   for (const issue of report.issues) {
     console.warn(`[dcs] startup: ${issue}`);
@@ -94,6 +110,7 @@ export function runStartupMaintenance(
   const report: StartupReport = {
     dataDir,
     profiles: null,
+    characters: null,
     admin: null,
     errors: [],
   };
@@ -105,6 +122,15 @@ export function runStartupMaintenance(
     const message = error instanceof Error ? error.message : String(error);
     report.errors.push(`profile normalization failed: ${message}`);
     console.error('[dcs] startup: profile normalization failed:', error);
+  }
+
+  try {
+    report.characters = normalizeAllCharacters();
+    logCharacterReport(report.characters);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    report.errors.push(`character normalization failed: ${message}`);
+    console.error('[dcs] startup: character normalization failed:', error);
   }
 
   try {

@@ -11,101 +11,184 @@ export const DarkHeresyCareerPaths = [
 
 export const DIVINATIONS = [
   {
+    id: 'mutationWithout',
     divination: 'Mutation without, corruption within.',
+    effectId: 'minorMutation',
     effect: 'Minor Mutation.',
   },
   {
+    id: 'onlyTheInsane',
     divination:
       'Only the insane have strength enough to prosper. Only those who prosper may judge what is sane.',
+    effectId: 'insanity2',
     effect: '+2 Insanity Points.',
   },
   {
+    id: 'sinsHidden',
     divination: 'Sins hidden in the heart turn all to decay.',
+    effectId: 'corruption3',
     effect: '+3 Corruption Points.',
   },
   {
+    id: 'innocenceIllusion',
     divination: 'Innocence is an illusion.',
+    effectId: 'insanity1Corruption1',
     effect: '+1 Insanity Point, +1 Corruption Point.',
   },
   {
+    id: 'darkDreams',
     divination: 'Dark dreams lie upon the heart.',
+    effectId: 'insanity2',
     effect: '+2 Insanity Points.',
   },
   {
+    id: 'painOfBullet',
     divination: 'The pain of the bullet is ecstasy compared to damnation.',
+    effectId: 'toughness1',
     effect: '+1 Toughness.',
   },
   {
+    id: 'killTheAlien',
     divination: 'Kill the alien before it can speak its lies.',
+    effectId: 'agility2',
     effect: '+2 Agility.',
   },
   {
+    id: 'truthSubjective',
     divination: 'Truth is subjective.',
+    effectId: 'intelligence3Corruption3',
     effect: '+3 Intelligence, +3 Corruption Points.',
   },
-  { divination: 'Know the mutant; kill the mutant.', effect: '+2 Perception.' },
   {
+    id: 'knowTheMutant',
+    divination: 'Know the mutant; kill the mutant.',
+    effectId: 'perception2',
+    effect: '+2 Perception.',
+  },
+  {
+    id: 'offerHisLife',
     divination: 'Even a man who has nothing can still offer his life.',
+    effectId: 'strength2',
     effect: '+2 Strength.',
   },
   {
+    id: 'jobWorthDying',
     divination: 'If a job is worth doing it is worth dying for.',
+    effectId: 'frenzyTalent',
     effect: '"Frenzy" talent.',
   },
-  { divination: 'Only in death does duty end.', effect: '+1 Wound.' },
   {
+    id: 'onlyInDeath',
+    divination: 'Only in death does duty end.',
+    effectId: 'wound1',
+    effect: '+1 Wound.',
+  },
+  {
+    id: 'mindWithoutPurpose',
     divination: 'A mind without purpose will wander in dark places.',
+    effectId: 'fate1',
     effect: '+1 Fate Point.',
   },
   {
+    id: 'noCivilians',
     divination: 'There are no civilians in the battle for survival.',
+    effectId: 'toughness2Wound1',
     effect: '+2 Toughness, +1 Wound.',
   },
-  { divination: 'Violence solves everything.', effect: '+3 Weapon Skill.' },
-  { divination: 'To war is human.', effect: '+3 Agility.' },
   {
+    id: 'violenceSolves',
+    divination: 'Violence solves everything.',
+    effectId: 'weaponSkill3',
+    effect: '+3 Weapon Skill.',
+  },
+  {
+    id: 'toWarHuman',
+    divination: 'To war is human.',
+    effectId: 'agility3',
+    effect: '+3 Agility.',
+  },
+  {
+    id: 'spiritNotBroken',
     divination: 'Die if you must, but not with your spirit broken.',
+    effectId: 'willpower3',
     effect: '+3 Willpower.',
   },
   {
+    id: 'gunMightier',
     divination: 'The gun is mightier than the sword.',
+    effectId: 'ballisticSkill3',
     effect: '+3 Ballistic Skill.',
   },
   {
+    id: 'boonToBrothers',
     divination: 'Be a boon to your brothers and bane to your enemies.',
+    effectId: 'fellowship3',
     effect: '+3 Fellowship.',
   },
-  { divination: 'Men must die so that Man endures.', effect: '+3 Toughness.' },
   {
+    id: 'menMustDie',
+    divination: 'Men must die so that Man endures.',
+    effectId: 'toughness3',
+    effect: '+3 Toughness.',
+  },
+  {
+    id: 'darknessLightOfTerra',
     divination: 'In the darkness, follow the light of Terra.',
+    effectId: 'willpower3',
     effect: '+3 Willpower.',
   },
   {
+    id: 'onlyTrueFear',
     divination: 'The only true fear is of dying with your duty not done.',
+    effectId: 'wounds2',
     effect: '+2 Wounds.',
   },
   {
+    id: 'thoughtBegetsHeresy',
     divination: 'Thought begets Heresy; Heresy begets Retribution.',
+    effectId: 'strength3',
     effect: '+3 Strength.',
   },
   {
+    id: 'wiseManLearns',
     divination: 'The wise man learns from the deaths of others.',
+    effectId: 'intelligence3',
     effect: '+3 Intelligence.',
   },
   {
+    id: 'suspiciousMind',
     divination: 'A suspicious mind is a healthy mind.',
+    effectId: 'perception3',
     effect: '+3 Perception.',
   },
-  { divination: 'Trust in your fear.', effect: '+2 Agility, +1 Fate Point.' },
   {
+    id: 'trustYourFear',
+    divination: 'Trust in your fear.',
+    effectId: 'agility2Fate1',
+    effect: '+2 Agility, +1 Fate Point.',
+  },
+  {
+    id: 'noSubstituteForZeal',
     divination: 'There is no substitute for zeal.',
+    effectId: 'toughness2Willpower2',
     effect: '+2 Toughness, +2 Willpower.',
   },
   {
+    id: 'askHowNotWhy',
     divination: 'Do not ask why you serve. Only ask how.',
+    effectId: 'weaponSkill2BallisticSkill2',
     effect: '+2 Weapon Skill, +2 Ballistic Skill.',
   },
 ];
+
+export const DIVINATION_BY_ID: Record<string, (typeof DIVINATIONS)[number]> =
+  Object.fromEntries(DIVINATIONS.map((d) => [d.id, d]));
+export const DIVINATION_ID_BY_TEXT: Record<string, string> = Object.fromEntries(
+  DIVINATIONS.map((d) => [d.divination, d.id]),
+);
+export const EFFECT_ID_BY_TEXT: Record<string, string> = Object.fromEntries(
+  DIVINATIONS.map((d) => [d.effect, d.effectId]),
+);
 
 export const FERAL_WORLD_QUIRKS = [
   'Hairy Knuckles',

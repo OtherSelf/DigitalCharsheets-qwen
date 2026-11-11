@@ -46,6 +46,7 @@ import {
   RanksByCareer,
   type AdvancedPath,
 } from '@/lib/dark-heresy-ranks';
+import { divinationEffectLabel, divinationLabel } from '@/lib/divination-i18n';
 import {
   type DarkHeresyCareerPath,
   type DarkHeresyCharacter,
@@ -263,16 +264,13 @@ export const InfoSection = ({
           {/* --- UPDATED DIVINATION FIELDS WITH TRANSLATION --- */}
           <DetailField
             label={t('dh.divination')}
-            value={t(character.divination || '')}
-            editing={isInfoEditing}
-            onBlur={(e) =>
-              updateCharacter(character.id, { divination: e.target.value })
-            }
+            value={divinationLabel(character.divination, t)}
+            editing={false}
             isCompactView={isCompactView}
           />
           <DetailField
             label={t('dh.divinationEffect')}
-            value={t(character.divinationEffect || '')}
+            value={divinationEffectLabel(character.divinationEffect, t)}
             editing={false}
             isCompactView={isCompactView}
           />

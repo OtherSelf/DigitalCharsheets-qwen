@@ -5,6 +5,8 @@
 import * as XLSX from 'xlsx';
 
 import { isNonPortableField, toPortableCharacter } from './character-portable';
+import { normalizeCharacterRecord } from './character-version';
+import { DIVINATION_BY_ID } from './dark-heresy-data';
 import { Character, DarkHeresyCharacter, DnD5eCharacter } from './types';
 
 export interface ExportConfig {
@@ -60,7 +62,7 @@ export const DEFAULT_EXPORT_CONFIG: ExportConfig = {
  */
 export const EXPORT_APP_NAME = 'DigitalCharsheets-qwen';
 export const EXPORT_FORMAT = 'dcs-export';
-export const EXPORT_FORMAT_VERSION = '2.0';
+export const EXPORT_FORMAT_VERSION = '2.1';
 const EXPORT_FORMAT_MAJOR = 2;
 
 export type ExportKind = 'character' | 'backup';
@@ -275,8 +277,11 @@ export function buildCharacterExport(
   config: ExportConfig,
   now = new Date(),
 ): ExportData {
-  const portable = toPortableCharacter(
+  const normalized = normalizeCharacterRecord(
     character as unknown as Record<string, unknown>,
+  ).character;
+  const portable = toPortableCharacter(
+    normalized as unknown as Record<string, unknown>,
   ) as unknown as Character;
   assertExportable([portable]);
   return {
@@ -301,7 +306,9 @@ export function buildBackupExport(
   const portable = characters.map(
     (character) =>
       toPortableCharacter(
-        character as unknown as Record<string, unknown>,
+        normalizeCharacterRecord(
+          character as unknown as Record<string, unknown>,
+        ).character as unknown as Record<string, unknown>,
       ) as unknown as Character,
   );
   assertExportable(portable);
@@ -428,7 +435,10 @@ export function parseExportPayload(
 
   const characters: Partial<Character>[] = [];
   for (let index = 0; index < rawCharacters.length; index += 1) {
-    const normalized = normalizeCharacter(rawCharacters[index]);
+    const baseline = normalizeCharacter(rawCharacters[index]);
+    const normalized = normalizeCharacterRecord(
+      baseline as Record<string, unknown>,
+    ).character;
     const errors = validateCharacterPayload(normalized, index);
     if (errors.length > 0) {
       return { ok: false, error: errors.join(' ') };
@@ -994,8 +1004,14 @@ function buildCharacterSheetRows(
     addRow('Home World', dh.homeWorld);
     addRow('World Variant', dh.worldVariant);
     addRow('Career Path', dh.careerPath);
-    addRow('Divination', dh.divination);
-    addRow('Divination Effect', dh.divinationEffect);
+    addRow(
+      'Divination',
+      DIVINATION_BY_ID[dh.divination]?.divination ?? dh.divination,
+    );
+    addRow(
+      'Divination Effect',
+      DIVINATION_BY_ID[dh.divination]?.effect ?? dh.divinationEffect,
+    );
     addRow('Quirk', dh.quirk);
     addRow('Age', dh.age);
     addRow('Height', dh.height);

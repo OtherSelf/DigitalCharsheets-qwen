@@ -3,10 +3,10 @@ import path from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-import { translations } from '@/lib/translations';
+import { translations } from '@/lib/i18n';
 
 /**
- * Целостность словарей (src/lib/translations.*).
+ * Целостность словарей (src/lib/i18n/translations.*).
  *
  * Регресс, который этот тест ловит: при разбиении монолитного translations.ts
  * на translations.en.ts / translations.ru.ts часть ключей потерялась, а t()
@@ -20,8 +20,8 @@ import { translations } from '@/lib/translations';
 const ROOT = process.cwd();
 const SRC = path.join(ROOT, 'src');
 const TRANSLATION_FILES = [
-  path.join(SRC, 'lib', 'translations.en.ts'),
-  path.join(SRC, 'lib', 'translations.ru.ts'),
+  path.join(SRC, 'lib', 'i18n', 'translations.en.ts'),
+  path.join(SRC, 'lib', 'i18n', 'translations.ru.ts'),
 ];
 
 function sourceFiles(dir: string): string[] {
@@ -35,7 +35,7 @@ function sourceFiles(dir: string): string[] {
 function usedLiteralKeys(): Map<string, string> {
   const used = new Map<string, string>();
   for (const file of sourceFiles(SRC)) {
-    if (file.includes(`${path.sep}lib${path.sep}translations`)) continue;
+    if (file.includes(`${path.sep}lib${path.sep}i18n`)) continue;
     const text = fs.readFileSync(file, 'utf8');
     for (const match of text.matchAll(/\bt\(\s*['"]([A-Za-z0-9_.]+)['"]/g)) {
       if (!used.has(match[1])) used.set(match[1], file);

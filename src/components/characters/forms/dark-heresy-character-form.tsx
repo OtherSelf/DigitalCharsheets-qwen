@@ -37,6 +37,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useCharacterContext } from '@/context/character-context';
 import { useTranslation } from '@/context/language-context';
 import { useToast } from '@/hooks/use-toast';
+import { CHARACTER_SCHEMA_VERSION } from '@/lib/character-version';
 import {
   ALL_QUIRKS,
   CAREER_KEYS,
@@ -49,6 +50,11 @@ import {
   WORLD_VARIANTS_BY_HOMEWORLD,
 } from '@/lib/dark-heresy-data';
 import { calculateRank, RanksByCareer } from '@/lib/dark-heresy-ranks';
+import {
+  divinationEffectKey,
+  divinationKey,
+  effectIdForDivination,
+} from '@/lib/divination-i18n';
 import {
   DarkHeresyCareerPath,
   DarkHeresyCareerPaths,
@@ -147,9 +153,7 @@ export function DarkHeresyCharacterForm() {
   const watchedCareerPath = form.watch('careerPath');
 
   const divinationEffect = React.useMemo(() => {
-    return (
-      DIVINATIONS.find((d) => d.divination === watchedDivination)?.effect || ''
-    );
+    return effectIdForDivination(watchedDivination);
   }, [watchedDivination]);
 
   const availableWorldVariants = React.useMemo(() => {
@@ -190,6 +194,7 @@ export function DarkHeresyCharacterForm() {
       name: values.name,
       characterClass: values.careerPath,
       gameSystem: 'Dark Heresy',
+      schemaVersion: CHARACTER_SCHEMA_VERSION,
       backstory: values.backstory || '',
       homeWorld: values.homeWorld,
       worldVariant: values.worldVariant || '',
@@ -434,9 +439,9 @@ export function DarkHeresyCharacterForm() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {DIVINATIONS.map(({ divination }) => (
-                            <SelectItem key={divination} value={divination}>
-                              {t(divination)}
+                          {DIVINATIONS.map(({ id }) => (
+                            <SelectItem key={id} value={id}>
+                              {t(divinationKey(id))}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -449,7 +454,11 @@ export function DarkHeresyCharacterForm() {
                   <FormLabel>{t('dh.divinationEffect')}</FormLabel>
                   <Input
                     readOnly
-                    value={divinationEffect ? t(divinationEffect) : ''}
+                    value={
+                      divinationEffect
+                        ? t(divinationEffectKey(divinationEffect))
+                        : ''
+                    }
                     placeholder={t('dh.effectAppearsHere')}
                     className="bg-muted/50 border-dashed"
                   />
