@@ -20,13 +20,6 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useCharacterContext } from '@/context/character-context';
 import { useTranslation } from '@/context/language-context';
@@ -37,7 +30,6 @@ import {
   RANK_KEYS,
   VARIANT_KEYS,
   WORLD_VARIANT_LABELS,
-  WORLD_VARIANTS_BY_HOMEWORLD,
 } from '@/lib/dark-heresy-data';
 import {
   ADVANCED_RANK_THRESHOLD,
@@ -203,42 +195,24 @@ export const InfoSection = ({
             >
               {worldVariantLabel}
             </Label>
-            {isInfoEditing ? (
-              <Select
-                defaultValue={character.worldVariant}
-                onValueChange={(value) =>
-                  updateCharacter(character.id, { worldVariant: value })
-                }
-              >
-                <SelectTrigger className="h-8 text-xs">
-                  <SelectValue placeholder={t('dh.selectVariant')} />
-                </SelectTrigger>
-                <SelectContent>
-                  {(character.homeWorld
-                    ? WORLD_VARIANTS_BY_HOMEWORLD[character.homeWorld] || []
-                    : []
-                  ).map((v) => (
-                    <SelectItem key={v} value={v}>
-                      {t(VARIANT_KEYS[v] || v)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            ) : (
-              <p
-                className={cn(
-                  'text-sm font-medium break-words',
-                  isCompactView && 'text-xs',
-                )}
-              >
-                {character.worldVariant
-                  ? t(
-                      VARIANT_KEYS[character.worldVariant] ||
-                        character.worldVariant,
-                    )
-                  : '-'}
-              </p>
-            )}
+            {/* LANDMARK: BIRTH_WORLD_IMMUTABLE
+                Место рождения — выбор создания персонажа (как homeWorld и
+                careerPath). После создания не редактируем: смена мира ломает
+                лор/варианты и выглядит как подмена персонажа. Остальные
+                текстовые поля Info остаются редактируемыми. */}
+            <p
+              className={cn(
+                'text-sm font-medium break-words',
+                isCompactView && 'text-xs',
+              )}
+            >
+              {character.worldVariant
+                ? t(
+                    VARIANT_KEYS[character.worldVariant] ||
+                      character.worldVariant,
+                  )
+                : '-'}
+            </p>
           </div>
           <div className="space-y-1">
             <Label
