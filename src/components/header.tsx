@@ -30,6 +30,9 @@ import {
 import { useCharacterContext } from '@/context/character-context';
 import { useTranslation } from '@/context/language-context';
 import { useLocalAuth } from '@/context/local-auth-context';
+import { resolveCharacterSystemId } from '@/games/character-system';
+import { DhHouseRulesDialog as Dh1HouseRulesDialog } from '@/games/dh1/sections/dh-house-rules-dialog';
+import { DhHouseRulesDialog as Dh2HouseRulesDialog } from '@/games/dh2/sections/dh-house-rules-dialog';
 import { useSiteTitle } from '@/hooks/use-site-title';
 import {
   DarkHeresyCharacter,
@@ -41,7 +44,6 @@ import { cn } from '@/lib/utils';
 import { LanguageToggle } from './layout/language-toggle';
 import { ThemeToggle } from './layout/theme-toggle';
 import { UserNav } from './layout/user-nav';
-import { DhHouseRulesDialog } from './sheets/dh-sections/dh-house-rules-dialog';
 import { HouseRulesDialog } from './sheets/dnd-sections/house-rules-dialog';
 import { Button } from './ui/button';
 import { Separator } from './ui/separator';
@@ -149,8 +151,9 @@ export function Header({
     const rank = dh.rank || '';
     const charClass = dh.characterClass || '';
 
-    const rankKey = `rank${rank.replace(/[^a-zA-Z]/g, '')}`;
-    const classKey = `career${charClass.replace(/[^a-zA-Z]/g, '')}`;
+    const dhPrefix = resolveCharacterSystemId(char) === 'dh2' ? 'dh2' : 'dh1';
+    const rankKey = `${dhPrefix}.rank${rank.replace(/[^a-zA-Z]/g, '')}`;
+    const classKey = `${dhPrefix}.career${charClass.replace(/[^a-zA-Z]/g, '')}`;
     const translatedRank = t(rankKey) || rank;
     const translatedClass = t(classKey) || charClass;
     const translatedSystem = t('common.gameSystemDarkHeresy') || dh.gameSystem;
@@ -542,13 +545,21 @@ export function Header({
             characterId={character.id}
           />
         )}
-        {character && character.gameSystem === 'Dark Heresy' && (
-          <DhHouseRulesDialog
-            open={isHouseRulesDialogOpen}
-            onOpenChange={setIsHouseRulesDialogOpen}
-            characterId={character.id}
-          />
-        )}
+        {character &&
+          character.gameSystem === 'Dark Heresy' &&
+          (resolveCharacterSystemId(character) === 'dh2' ? (
+            <Dh2HouseRulesDialog
+              open={isHouseRulesDialogOpen}
+              onOpenChange={setIsHouseRulesDialogOpen}
+              characterId={character.id}
+            />
+          ) : (
+            <Dh1HouseRulesDialog
+              open={isHouseRulesDialogOpen}
+              onOpenChange={setIsHouseRulesDialogOpen}
+              characterId={character.id}
+            />
+          ))}
       </header>
     </TooltipProvider>
   );

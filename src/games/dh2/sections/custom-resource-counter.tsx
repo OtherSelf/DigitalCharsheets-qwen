@@ -16,8 +16,8 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { useCharacterContext } from '@/context/character-context';
 import { useTranslation } from '@/context/language-context';
-import { type DarkHeresyCharacter } from '@/lib/types';
 
+import type { DH2Character } from '../types';
 import { EditSaveButton } from './dh-ui-helpers';
 
 type CustomResource = {
@@ -32,7 +32,7 @@ export function CustomResourceCounter({
   character,
   isCompactView,
 }: {
-  character: DarkHeresyCharacter;
+  character: DH2Character;
   isCompactView: boolean;
 }) {
   const { updateCharacter, hideNotes, showEditButtons } = useCharacterContext();
@@ -113,7 +113,7 @@ export function CustomResourceCounter({
     return (
       <div className="border-t pt-2">
         <div className="mb-2 flex flex-row items-center justify-between">
-          <h4 className="text-sm font-semibold">{t('dh.customResources')}</h4>
+          <h4 className="text-sm font-semibold">{t('dh2.customResources')}</h4>
           {(showEditButtons || isEditing) && (
             <EditSaveButton
               editing={isEditing}
@@ -125,7 +125,7 @@ export function CustomResourceCounter({
         <div className="space-y-2">
           {resources.length === 0 && !isEditing && (
             <p className="text-muted-foreground rounded-lg border border-dashed py-2 text-center text-xs italic">
-              {t('dh.noCustomResourcesAdded')}
+              {t('dh2.noCustomResourcesAdded')}
             </p>
           )}
           {resources.map((res) => (
@@ -253,7 +253,7 @@ export function CustomResourceCounter({
                     size="icon"
                     className="text-destructive h-6 w-6"
                     onClick={() => removeResource(res.id)}
-                    aria-label={t('dh.removeResource')}
+                    aria-label={t('dh2.removeResource')}
                   >
                     <Trash2 className="h-3 w-3" />
                   </Button>
@@ -280,7 +280,7 @@ export function CustomResourceCounter({
                 size="sm"
                 className="h-8"
                 onClick={addResource}
-                aria-label={t('dh.addResource')}
+                aria-label={t('dh2.addResource')}
               >
                 <Plus className="h-4 w-4" />
               </Button>
@@ -297,7 +297,7 @@ export function CustomResourceCounter({
       <Card className="mt-2">
         <CardHeader className="flex flex-row items-center justify-between px-3 py-2">
           <CardTitle className="text-muted-foreground text-[10px] font-bold tracking-tight uppercase">
-            {t('dh.customResources')}
+            {t('dh2.customResources')}
           </CardTitle>
           {(showEditButtons || isEditing) && (
             <EditSaveButton
@@ -310,7 +310,7 @@ export function CustomResourceCounter({
         <CardContent className="space-y-2 p-3 pt-0">
           {resources.length === 0 && !isEditing && (
             <p className="text-muted-foreground rounded border border-dashed py-1 text-center text-[10px] italic">
-              {t('dh.noCustomResources')}
+              {t('dh2.noCustomResources')}
             </p>
           )}
           {resources.map((res) => (
@@ -385,7 +385,7 @@ export function CustomResourceCounter({
                     size="icon"
                     className="text-destructive h-5 w-5"
                     onClick={() => removeResource(res.id)}
-                    aria-label={t('dh.removeResource')}
+                    aria-label={t('dh2.removeResource')}
                   >
                     <Trash2 className="h-3 w-3" />
                   </Button>
@@ -412,7 +412,7 @@ export function CustomResourceCounter({
                 size="sm"
                 className="h-7 px-2"
                 onClick={addResource}
-                aria-label={t('dh.addResource')}
+                aria-label={t('dh2.addResource')}
               >
                 <Plus className="h-3 w-3" />
               </Button>

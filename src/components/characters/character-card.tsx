@@ -33,7 +33,7 @@ import {
   resolveCharacterSystemId,
 } from '@/games/character-system';
 import { getGameDefinition } from '@/games/games';
-import { RANK_KEYS } from '@/lib/dark-heresy-data';
+import { dhLocalizedKey, RANK_KEYS } from '@/lib/dark-heresy-data';
 import {
   DEFAULT_EXPORT_CONFIG,
   exportCharacterToExcel,
@@ -124,8 +124,11 @@ export function CharacterCard({ character }: CharacterCardProps) {
       );
     }
     return t(
-      CAREER_TRANSLATION_KEYS[character.characterClass] ||
-        character.characterClass,
+      dhLocalizedKey(
+        CAREER_TRANSLATION_KEYS[character.characterClass] ||
+          character.characterClass,
+        resolveCharacterSystemId(character) === 'dh2' ? 'dh2' : 'dh1',
+      ),
     );
   };
 

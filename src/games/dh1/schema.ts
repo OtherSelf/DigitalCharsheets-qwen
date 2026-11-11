@@ -6,7 +6,7 @@ import {
   darkHeresyCoreStatsSchema,
   darkHeresyCoreStatUpgradesSchema,
   fatigueSchema,
-} from '../dh-shared/schemas';
+} from './schemas';
 import type { DH1Character } from './types';
 
 /**

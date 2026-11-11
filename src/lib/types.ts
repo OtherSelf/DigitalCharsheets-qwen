@@ -23,10 +23,7 @@ export type {
   QuestObjective,
 } from '@/games/shared/types';
 
-export {
-  DarkHeresyCareerPaths,
-  DarkHeresyHomeWorlds,
-} from '@/games/dh-shared/types';
+export { DarkHeresyCareerPaths, DarkHeresyHomeWorlds } from '@/games/dh1/types';
 export type {
   Armor,
   ArmorPiece,
@@ -45,7 +42,7 @@ export type {
   RangedWeapon,
   Skill,
   Talent,
-} from '@/games/dh-shared/types';
+} from '@/games/dh1/types';
 export type {
   AttunementItem,
   DnD5eCharacter,

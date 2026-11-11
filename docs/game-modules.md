@@ -15,23 +15,26 @@ src/games/
   character-system.ts       systemId resolution and i18n name keys for UI
   i18n/{en,ru}.ts           registry/wizard metadata (games.*)
   shared/
-    types.ts                game-agnostic sheet types
-    schema.ts / defaults.ts helpers for schemas and factories
-    excel.ts                Excel section writer used by all modules
-  dh-shared/                code shared by both Dark Heresy editions
-    types.ts, schema.ts, defaults.ts
-    capabilities.ts         influence / +30 / fatigueField per edition
-    stats.ts                edition-agnostic stat view
-    export.ts, excel.ts     shared JSON fields and Excel sections
-    i18n/{en,ru}.ts         dh.* keys
-    create-form.tsx         parameterized creation form
-    sheet.tsx               shared sheet component
+    types.ts                game-agnostic primitives (CharacterBase, quests,
+                            inventory) — no game mechanics or translations
+    schemas.ts              shared zod primitives for those types
+    defaults.ts             readNumber/readString defaults helpers
+    excel.ts                generic Excel section writer used by all modules
   dnd5e/
     types.ts, schema.ts, defaults.ts, demo.ts
     export.ts, excel.ts
     i18n/{en,ru}.ts
     create-form.tsx, sheet.tsx, index.ts
-  dh1/  dh2/                same set; thin wrappers over dh-shared
+  dh1/                      fully self-contained edition module
+    types.ts, schemas.ts, schema.ts, defaults.ts, demo.ts
+    capabilities.ts, stats.ts
+    export.ts, excel.ts
+    i18n/{en,ru}.ts, i18n/core-{en,ru}.ts   (games.dh1.* + dh1.*)
+    create-form.tsx, sheet.tsx
+    sections/*.tsx          sheet sections (own copies)
+    index.ts
+  dh2/                      independent copy of dh1, actualized separately
+    (same file set; keys dh2.*)
 ```
 
 ## Contract
@@ -48,7 +51,7 @@ src/games/
 | `schemaVersion` | Current sheet schema version written by the module (2). |
 | `schema` | Zod schema; `ZodType<TCharacter>` makes `tsc` check it against the type. |
 | `i18n` | `{ en, ru }` dictionaries, merged by the core. |
-| `capabilities` | Feature flags for shared DH components. |
+| `capabilities` | Fixed feature flags of the module (influence, +30, fatigue field). |
 | `createDefaults()` | Character draft (no `id`) for forms/tests. |
 | `createDemo()` | Demo character for `/demo` (no `id`). |
 | `components.loadCreateForm` / `loadSheet` | Lazy UI entry points (dynamic import). |
@@ -59,16 +62,19 @@ src/games/
 ## Adding a new edition (example: `dh3`)
 
 1. **Module folder** `src/games/dh3/`:
-   - `types.ts` — `DH3Character` extends the shared DH base and adds only 3e
-     fields; `systemId: 'dh3'`.
-   - `schema.ts` — full zod schema, typed `z.ZodType<DH3Character>`.
-   - `defaults.ts` — `createDh3Defaults(input)`; reuse `dh-shared/defaults`.
+   Start by copying `src/games/dh1/` as a template (that is how `dh2`
+   began), then actualize it independently. Do **not** extract a shared
+   DH core: each edition owns its types, schema, defaults, capabilities,
+   stats, exports, translations, form, sheet and sections.
+   - `types.ts` — base Dark Heresy types + `DH3Character`; `systemId: 'dh3'`.
+   - `schemas.ts` / `schema.ts` — base schema + full `ZodType<DH3Character>`.
+   - `defaults.ts` — base defaults + `createDh3Defaults(input)`.
    - `demo.ts` — `createDh3Demo()`.
-   - `i18n/en.ts`, `i18n/ru.ts` — `games.dh3.*` plus 3e-only keys.
-   - `export.ts` — `buildDh3PortableJson` (or reuse the shared DH builder).
-   - `excel.ts` — `buildDh3ExcelSections` (or reuse `dh-shared/excel.ts`
-     with a capability config).
-   - `create-form.tsx`, `sheet.tsx` — thin wrappers over shared DH components.
+   - `capabilities.ts`, `stats.ts` — fixed 3e flags and stat view.
+   - `i18n/en.ts`, `i18n/ru.ts` + `i18n/core-{en,ru}.ts` — `games.dh3.*`
+     and `dh3.*` keys.
+   - `export.ts`, `excel.ts` — `buildDh3PortableJson` / `buildDh3ExcelSections`.
+   - `create-form.tsx`, `sheet.tsx`, `sections/*` — own UI copies.
    - `index.ts` — the `GameModule<DH3Character>` object.
 2. **Register** in `src/games/registry.ts` (`gameRegistry = createGameRegistry([...])`).
    That is the only core edit.
@@ -102,9 +108,12 @@ src/games/
   through `src/lib/module-access.ts` and `src/lib/game-catalog.ts`.
 - Sheet types are discriminated by `systemId`; a sheet never stores a
   human-readable game name.
-- Editions are independent types: no optional “shared + edition” fields, no
-  runtime edition switch. Shared code belongs to `dh-shared` and is configured
-  by `capabilities`.
+- Editions are **independent copies**: no `dh-shared`, no shared DH types,
+  translations, form or sheet. Divergence between dh1 and dh2 is expected and
+  edited in the respective module.
+- `src/games/shared` is only a tiny game-agnostic kernel (base character
+  fields, quests, inventory, Excel writer); game mechanics and translations
+  never live there.
 - Export JSON fields and Excel sections are part of the module; the core only
   writes the technical envelope/block.
 - Every module declares `defaultStatus` and `createDemo`; hiding a module in the

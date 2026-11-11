@@ -1,4 +1,4 @@
-// src/components/sheets/dh-sections/skills-talents-section.tsx
+// src/games/dh1/sections/skills-talents-section.tsx
 'use client';
 
 import * as React from 'react';
@@ -37,50 +37,50 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { useCharacterContext } from '@/context/character-context';
 import { useTranslation } from '@/context/language-context';
-import { getDarkHeresyCapabilities } from '@/games/dh-shared/capabilities';
-import { Skill, type DarkHeresyCharacter } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
+import { getDarkHeresyCapabilities } from '../capabilities';
+import type { DH1Character, Skill } from '../types';
 import { EditSaveButton } from './dh-ui-helpers';
 
 const CHARACTERISTIC_KEYS = [
-  'dh.weaponSkill',
-  'dh.ballisticSkill',
+  'dh1.weaponSkill',
+  'dh1.ballisticSkill',
   'common.strength',
-  'dh.toughness',
-  'dh.agility',
+  'dh1.toughness',
+  'dh1.agility',
   'common.intelligence',
   'common.perception',
   'common.willpower',
-  'dh.fellowship',
-  'dh.influence',
+  'dh1.fellowship',
+  'dh1.influence',
 ] as const;
 
 const ABBR_KEYS: Record<string, string> = {
-  'dh.weaponSkill': 'dh.weaponSkillAbbr',
-  'dh.ballisticSkill': 'dh.ballisticSkillAbbr',
-  'common.strength': 'dh.strengthAbbr',
-  'dh.toughness': 'dh.toughnessAbbr',
-  'dh.agility': 'dh.agilityAbbr',
-  'common.intelligence': 'dh.intelligenceAbbr',
-  'common.perception': 'dh.perceptionAbbr',
-  'common.willpower': 'dh.willpowerAbbr',
-  'dh.fellowship': 'dh.fellowshipAbbr',
-  'dh.influence': 'dh.influenceAbbr',
+  'dh1.weaponSkill': 'dh1.weaponSkillAbbr',
+  'dh1.ballisticSkill': 'dh1.ballisticSkillAbbr',
+  'common.strength': 'dh1.strengthAbbr',
+  'dh1.toughness': 'dh1.toughnessAbbr',
+  'dh1.agility': 'dh1.agilityAbbr',
+  'common.intelligence': 'dh1.intelligenceAbbr',
+  'common.perception': 'dh1.perceptionAbbr',
+  'common.willpower': 'dh1.willpowerAbbr',
+  'dh1.fellowship': 'dh1.fellowshipAbbr',
+  'dh1.influence': 'dh1.influenceAbbr',
 };
 
 const ABBR_TO_KEY: Record<string, (typeof CHARACTERISTIC_KEYS)[number]> = {
-  WS: 'dh.weaponSkill',
-  ББ: 'dh.weaponSkill',
-  BS: 'dh.ballisticSkill',
-  ДБ: 'dh.ballisticSkill',
+  WS: 'dh1.weaponSkill',
+  ББ: 'dh1.weaponSkill',
+  BS: 'dh1.ballisticSkill',
+  ДБ: 'dh1.ballisticSkill',
   S: 'common.strength',
   СЛ: 'common.strength',
-  T: 'dh.toughness',
-  СТ: 'dh.toughness',
-  Ag: 'dh.agility',
-  AG: 'dh.agility',
-  ЛВ: 'dh.agility',
+  T: 'dh1.toughness',
+  СТ: 'dh1.toughness',
+  Ag: 'dh1.agility',
+  AG: 'dh1.agility',
+  ЛВ: 'dh1.agility',
   Int: 'common.intelligence',
   INT: 'common.intelligence',
   ИН: 'common.intelligence',
@@ -89,12 +89,12 @@ const ABBR_TO_KEY: Record<string, (typeof CHARACTERISTIC_KEYS)[number]> = {
   ВП: 'common.perception',
   WP: 'common.willpower',
   СВ: 'common.willpower',
-  Fel: 'dh.fellowship',
-  FEL: 'dh.fellowship',
-  ОБ: 'dh.fellowship',
-  Inf: 'dh.influence',
-  INF: 'dh.influence',
-  ВЛ: 'dh.influence',
+  Fel: 'dh1.fellowship',
+  FEL: 'dh1.fellowship',
+  ОБ: 'dh1.fellowship',
+  Inf: 'dh1.influence',
+  INF: 'dh1.influence',
+  ВЛ: 'dh1.influence',
 };
 
 const getTranslatedSkillName = (
@@ -115,7 +115,7 @@ const getTranslatedSkillName = (
 };
 
 interface SkillsTalentsSectionProps {
-  character: DarkHeresyCharacter;
+  character: DH1Character;
   isCompactView: boolean;
   activeCompactSection: string;
   onEditingChange?: (val: boolean) => void;
@@ -144,7 +144,7 @@ export const SkillsTalentsSection = React.forwardRef<
     );
     const [newBasicSkillName, setNewBasicSkillName] = React.useState('');
     const [newBasicSkillChar, setNewBasicSkillChar] =
-      React.useState<string>('dh.agility');
+      React.useState<string>('dh1.agility');
     const [newAdvancedSkillName, setNewAdvancedSkillName] = React.useState('');
     const [newAdvancedSkillChar, setNewAdvancedSkillChar] =
       React.useState<string>('common.intelligence');
@@ -223,7 +223,7 @@ export const SkillsTalentsSection = React.forwardRef<
           },
         ]);
         setNewBasicSkillName('');
-        setNewBasicSkillChar('dh.agility');
+        setNewBasicSkillChar('dh1.agility');
       }
     };
 
@@ -337,7 +337,7 @@ export const SkillsTalentsSection = React.forwardRef<
                   {/* BASIC SKILLS */}
                   <div>
                     <h4 className="text-muted-foreground mb-2 font-semibold">
-                      {t('dh.basic')}
+                      {t('dh1.basic')}
                     </h4>
                     <div className="overflow-hidden rounded-lg border">
                       <Table>
@@ -362,7 +362,7 @@ export const SkillsTalentsSection = React.forwardRef<
                                 isCompactView && 'p-1 text-xs',
                               )}
                             >
-                              {t('dh.skilled')}
+                              {t('dh1.skilled')}
                             </TableHead>
                             <TableHead
                               className={cn(
@@ -577,7 +577,7 @@ export const SkillsTalentsSection = React.forwardRef<
                       <div className="bg-background mt-4 flex flex-col gap-2 rounded-md border p-3">
                         <div className="flex gap-2">
                           <Input
-                            placeholder={t('dh.basic')}
+                            placeholder={t('dh1.basic')}
                             value={newBasicSkillName}
                             onChange={(e) =>
                               setNewBasicSkillName(e.target.value)
@@ -608,7 +608,7 @@ export const SkillsTalentsSection = React.forwardRef<
                   {/* ADVANCED SKILLS */}
                   <div>
                     <h4 className="text-muted-foreground mb-2 font-semibold">
-                      {t('dh.advanced')}
+                      {t('dh1.advanced')}
                     </h4>
                     <div className="overflow-hidden rounded-lg border">
                       <Table>
@@ -633,7 +633,7 @@ export const SkillsTalentsSection = React.forwardRef<
                                 isCompactView && 'p-1 text-xs',
                               )}
                             >
-                              {t('dh.skilled')}
+                              {t('dh1.skilled')}
                             </TableHead>
                             <TableHead
                               className={cn(
@@ -848,7 +848,7 @@ export const SkillsTalentsSection = React.forwardRef<
                       <div className="bg-background mt-4 flex flex-col gap-2 rounded-md border p-3">
                         <div className="flex gap-2">
                           <Input
-                            placeholder={t('dh.advanced')}
+                            placeholder={t('dh1.advanced')}
                             value={newAdvancedSkillName}
                             onChange={(e) =>
                               setNewAdvancedSkillName(e.target.value)
@@ -899,7 +899,7 @@ export const SkillsTalentsSection = React.forwardRef<
                     <ChevronRight className="h-5 w-5" />
                   )}
                   <h3 className="font-headline text-lg font-semibold">
-                    {t('dh.talentsAndTraits')}
+                    {t('dh1.talentsAndTraits')}
                   </h3>
                 </CollapsibleTrigger>
                 {(showEditButtons || isTalentsEditing) && (
@@ -1005,12 +1005,12 @@ export const SkillsTalentsSection = React.forwardRef<
                     </ul>
                     <div className="bg-background space-y-2 rounded-md border p-3">
                       <Input
-                        placeholder={t('dh.newTalentPlaceholder')}
+                        placeholder={t('dh1.newTalentPlaceholder')}
                         value={newTalentName}
                         onChange={(e) => setNewTalentName(e.target.value)}
                       />
                       <Textarea
-                        placeholder={t('dh.descriptionOptional')}
+                        placeholder={t('dh1.descriptionOptional')}
                         value={newTalentDescription}
                         onChange={(e) =>
                           setNewTalentDescription(e.target.value)
@@ -1106,7 +1106,7 @@ export const SkillsTalentsSection = React.forwardRef<
                           isCompactView ? 'text-xs' : 'text-sm',
                         )}
                       >
-                        {t('dh.noTalentsOrTraits')}
+                        {t('dh1.noTalentsOrTraits')}
                       </p>
                     )}
                   </div>

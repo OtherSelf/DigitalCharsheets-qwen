@@ -1,24 +1,111 @@
-import type { DarkHeresyStatUpgrade } from '../dh-shared/types';
-import { createDh1Demo } from '../dh1/demo';
 import type { DH2CharacterDraft } from './defaults';
+import type { DarkHeresyStatUpgrade } from './types';
 
 /**
- * Демо-персонаж Dark Heresy 2-й редакции: десятая характеристика
- * `influence` и `fatigue2nd`. Основа — тот же образ, что в dh1, но это
- * самостоятельный лист без полей 1-й редакции.
+ * Демо-персонаж Dark Heresy 2-й редакции: десять характеристик
+ * (включая `influence`) и `fatigue2nd`. Модуль не зависит от dh1.
  */
 export function createDh2Demo(): DH2CharacterDraft {
-  const { fatigue1st: _fatigue1st, ...base } = createDh1Demo();
-
   return {
-    ...base,
-    systemId: 'dh2',
     name: 'Interrogator Vane',
-    stats: { ...base.stats, influence: 30 },
+    characterClass: 'Acolyte',
+    systemId: 'dh2',
+    gameSystem: 'Dark Heresy',
+    backstory:
+      'A dedicated servant of the Inquisition, rooting out heresy in the underhive.',
+    notes: 'Demo character for preview purposes.',
+    questLog: [],
+    homeWorld: 'Hive World',
+    worldVariant: 'Scintilla',
+    careerPath: 'Guardsman',
+    rank: 'Rank 1',
+    divination: 'The Emperor Protects',
+    divinationEffect: '+10 to next test',
+    quirk: 'Always cleans their weapon',
+    height: '180 cm',
+    weight: '75 kg',
+    age: '28',
+    skinColor: 'Pale',
+    hairColor: 'Black',
+    eyeColor: 'Grey',
+    experience: 500,
+    totalExpSpent: 500,
+    alternatePath: null,
+    advancedPath: null,
+    stats: {
+      weaponSkill: 35,
+      ballisticSkill: 30,
+      strength: 35,
+      toughness: 40,
+      agility: 35,
+      intelligence: 40,
+      perception: 45,
+      willpower: 40,
+      fellowship: 35,
+      influence: 30,
+    },
     statUpgrades: {
-      ...base.statUpgrades,
+      weaponSkill: [false, false, false, false],
+      ballisticSkill: [false, false, false, false],
+      strength: [false, false, false, false],
+      toughness: [false, false, false, false],
+      agility: [false, false, false, false],
+      intelligence: [false, false, false, false],
+      perception: [false, false, false, false],
+      willpower: [false, false, false, false],
+      fellowship: [false, false, false, false],
       influence: [false, false, false, false] as DarkHeresyStatUpgrade,
     },
+    statNotes: {},
+    wounds: { current: 12, max: 12 },
+    fatePoints: { current: 2, max: 2 },
+    insanityPoints: { total: 5 },
+    corruptionPoints: { total: 0 },
+    wealth: { throneGelt: 50, monthlyIncome: 10 },
+    movement: { walkHalf: 2, walkFull: 4, charge: 8, run: 12 },
+    equipment: {
+      armor: {
+        Head: { ap: 3, type: 'Flak', mods: '', quality: 'Common' },
+        'Right arm': null,
+        Body: { ap: 4, type: 'Flak', mods: '', quality: 'Common' },
+        'Left arm': null,
+        'Right leg': null,
+        'Left leg': null,
+      },
+      weapons: {
+        melee: [
+          {
+            id: 'm1',
+            name: 'Chainsword',
+            type: 'Melee',
+            range: '-',
+            penetration: '2',
+            damage: '1d10+3 R',
+            traits: 'Tearing',
+            equipped: true,
+          },
+        ],
+        ranged: [
+          {
+            id: 'r1',
+            name: 'Lasgun',
+            type: 'Basic',
+            range: '100m',
+            rof: 'S/3/-',
+            damage: '1d10+3 E',
+            clip: 60,
+            clipSize: 60,
+            reload: 'Full',
+            traits: '',
+            equipped: true,
+          },
+        ],
+      },
+    },
+    inventory: [],
+    skills: [],
+    talents: [],
     fatigue2nd: { current: 0 },
+    criticalConditions: [],
   };
 }

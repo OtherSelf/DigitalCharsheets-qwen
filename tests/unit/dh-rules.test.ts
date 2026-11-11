@@ -56,13 +56,21 @@ const CORE_CAREERS = [
 const t = (lang: 'en' | 'ru', key: string) => translations[lang][key];
 
 function expectTranslation(key: string, label: string) {
+  const keys = key.startsWith('dh.')
+    ? [`dh1.${key.slice(3)}`, `dh2.${key.slice(3)}`]
+    : [key];
   for (const lang of ['en', 'ru'] as const) {
-    const value = t(lang, key);
-    expect(value, `${label}: нет перевода «${key}» (${lang})`).toBeTruthy();
-    expect(
-      value.trim().length,
-      `${label}: пустой перевод «${key}»`,
-    ).toBeGreaterThan(0);
+    for (const localizedKey of keys) {
+      const value = t(lang, localizedKey);
+      expect(
+        value,
+        `${label}: нет перевода «${localizedKey}» (${lang})`,
+      ).toBeTruthy();
+      expect(
+        value.trim().length,
+        `${label}: пустой перевод «${localizedKey}»`,
+      ).toBeGreaterThan(0);
+    }
   }
 }
 

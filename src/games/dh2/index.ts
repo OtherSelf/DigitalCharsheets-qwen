@@ -1,10 +1,10 @@
 import { CHARACTER_SCHEMA_VERSION } from '@/lib/character-version';
 
-import { buildDarkHeresyExcelSections } from '../dh-shared/excel';
-import { buildDarkHeresyPortableJson } from '../dh-shared/export';
 import type { GameModule } from '../types';
 import { createDh2Defaults } from './defaults';
 import { createDh2Demo } from './demo';
+import { buildDh2ExcelSections } from './excel';
+import { buildDh2PortableJson } from './export';
 import { en as dh2En } from './i18n/en';
 import { ru as dh2Ru } from './i18n/ru';
 import { dh2CharacterSchema } from './schema';
@@ -12,11 +12,11 @@ import type { DH2Character } from './types';
 
 /**
  * ─── LANDMARK: DH2 MODULE ──────────────────────────────────────────────────
- * Модуль Dark Heresy 2-й редакции. Capability-конфиг: `influence`, колонка
- * `+30`, усталость — `fatigue2nd`.
+ * Модуль Dark Heresy 2-й редакции. Capability-конфиг фиксирует возможности
+ * модуля: `influence`, колонка `+30`, усталость — `fatigue2nd`.
  *
- * 💬 Лист — тонкая обёртка над общим DH-компонентом; редакцию определяет
- * capability, а не поле `edition` в данных.
+ * 💬 Лист, форма, секции и словарь — собственные файлы модуля. Общего
+ * DH-кода между редакциями нет: dh2 можно менять независимо.
  */
 export const dh2Module: GameModule<DH2Character> = {
   id: 'dh2',
@@ -42,9 +42,9 @@ export const dh2Module: GameModule<DH2Character> = {
   },
   export: {
     toPortableJson: (character, config) =>
-      buildDarkHeresyPortableJson(character, config),
+      buildDh2PortableJson(character, config),
     buildExcelSections: (character, config, translate) =>
-      buildDarkHeresyExcelSections(character, config, translate),
+      buildDh2ExcelSections(character, config, translate),
   },
   migrations: [],
 };

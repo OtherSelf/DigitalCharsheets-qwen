@@ -1,67 +1,60 @@
-import type { DH1Character } from '../dh1/types';
-import type { DH2Character } from '../dh2/types';
 import { createExcelSections } from '../shared/excel';
 import type { ExcelSection, ExportTranslate, GameExportConfig } from '../types';
-import { getDarkHeresyCapabilities } from './capabilities';
-import type { DarkHeresyStatUpgrade } from './types';
+import type { DarkHeresyStatUpgrade, DH2Character } from './types';
 
 /**
- * ─── LANDMARK: DH EXCEL ────────────────────────────────────────────────────
- * Секции Excel для Dark Heresy (обе редакции). Различия — через capability:
- * `influence`, колонка `+30` и единственное поле усталости.
+ * ─── LANDMARK: DH2 EXCEL ─────────────────────────────────────────────────
+ * Секции Excel для Dark Heresy 2-й редакции. Модуль не зависит от второй
+ * редакции: состав характеристик, усталость и колонка `+30` зафиксированы.
  */
-export function buildDarkHeresyExcelSections(
-  character: DH1Character | DH2Character,
+export function buildDh2ExcelSections(
+  character: DH2Character,
   config: GameExportConfig,
   t: ExportTranslate,
 ): readonly ExcelSection[] {
   const w = createExcelSections(t);
-  const capabilities = getDarkHeresyCapabilities(character);
   const stats = character.stats as unknown as Record<string, number>;
   const upgrades = character.statUpgrades as unknown as Record<
     string,
     DarkHeresyStatUpgrade | undefined
   >;
   const notes = (character.statNotes ?? {}) as Record<string, string>;
-  const fatigue =
-    'fatigue1st' in character ? character.fatigue1st : character.fatigue2nd;
+  const fatigue = character.fatigue2nd;
 
   const statLabels: [string, string][] = [
-    ['weaponSkill', 'dh.weaponSkill'],
-    ['ballisticSkill', 'dh.ballisticSkill'],
+    ['weaponSkill', 'dh2.weaponSkill'],
+    ['ballisticSkill', 'dh2.ballisticSkill'],
     ['strength', 'common.strength'],
-    ['toughness', 'dh.toughness'],
-    ['agility', 'dh.agility'],
+    ['toughness', 'dh2.toughness'],
+    ['agility', 'dh2.agility'],
     ['intelligence', 'common.intelligence'],
     ['perception', 'common.perception'],
     ['willpower', 'common.willpower'],
-    ['fellowship', 'dh.fellowship'],
-    ...(capabilities.influence
-      ? ([['influence', 'dh.influence']] as [string, string][])
-      : []),
+    ['fellowship', 'dh2.fellowship'],
+    ['influence', 'dh2.influence'],
   ];
 
   if (config.includeBasicInfo) {
     w.section('io.excel.basicInformation');
     w.row('io.excel.name', character.name);
     w.row('io.excel.classCareer', character.characterClass);
-    w.row('dh.rank', character.rank);
-    w.row('dh.homeWorld', character.homeWorld);
-    w.row('dh.worldVariant', character.worldVariant);
-    w.row('dh.careerPath', character.careerPath);
-    w.row('dh.divination', character.divination);
-    w.row('dh.divinationEffect', character.divinationEffect);
-    w.row('dh.quirk', character.quirk);
+    w.row('dh2.rank', character.rank);
+    w.row('dh2.homeWorld', character.homeWorld);
+    w.row('dh2.worldVariant', character.worldVariant);
+    w.row('dh2.careerPath', character.careerPath);
+    w.row('dh2.divination', character.divination);
+    w.row('dh2.divinationEffect', character.divinationEffect);
+    w.row('dh2.quirk', character.quirk);
     w.row('common.age', character.age);
     w.row('common.height', character.height);
     w.row('common.weight', character.weight);
-    w.row('dh.skinColor', character.skinColor);
-    w.row('dh.hairColor', character.hairColor);
-    w.row('dh.eyeColor', character.eyeColor);
-    w.row('dh.experience', character.experience);
-    w.row('dh.totalExpSpent', character.totalExpSpent);
-    w.row('dh.alternatePath', character.alternatePath);
-    w.row('dh.advancedPath', character.advancedPath);
+    w.row('dh2.skinColor', character.skinColor);
+    w.row('dh2.hairColor', character.hairColor);
+    w.row('dh2.eyeColor', character.eyeColor);
+    w.row('dh2.experience', character.experience);
+    w.row('dh2.totalExpSpent', character.totalExpSpent);
+    w.row('dh2.alternatePath', character.alternatePath);
+    w.row('dh2.advancedPath', character.advancedPath);
   }
 
   if (config.includeStats) {
@@ -76,10 +69,13 @@ export function buildDarkHeresyExcelSections(
 
   if (config.includeCombat) {
     w.section('io.excel.combat');
-    w.row('dh.wounds', `${character.wounds.current} / ${character.wounds.max}`);
+    w.row(
+      'dh2.wounds',
+      `${character.wounds.current} / ${character.wounds.max}`,
+    );
     w.row('io.excel.woundsNotes', character.wounds.notes);
     w.row(
-      'dh.fatePoints',
+      'dh2.fatePoints',
       `${character.fatePoints.current} / ${character.fatePoints.max}`,
     );
     w.row('io.excel.fateNotes', character.fatePoints.notes);
@@ -87,16 +83,11 @@ export function buildDarkHeresyExcelSections(
     w.row('io.excel.insanityNotes', character.insanityPoints.notes);
     w.row('io.excel.corruptionPoints', character.corruptionPoints.total);
     w.row('io.excel.corruptionNotes', character.corruptionPoints.notes);
-    w.row(
-      capabilities.fatigueField === 'fatigue1st'
-        ? 'io.excel.fatigueFirst'
-        : 'io.excel.fatigueSecond',
-      fatigue.current,
-    );
+    w.row('io.excel.fatigueSecond', fatigue.current);
     w.row('io.excel.fatigueNotes', fatigue.notes);
-    w.row('dh.criticalConditions', w.list(character.criticalConditions ?? []));
+    w.row('dh2.criticalConditions', w.list(character.criticalConditions ?? []));
     w.row(
-      'dh.customResources',
+      'dh2.customResources',
       w.list(
         (character.customResources ?? []).map((resource) => ({
           name: `${resource.description}: ${resource.current}/${resource.max}`,
@@ -122,7 +113,7 @@ export function buildDarkHeresyExcelSections(
       'io.excel.skilled',
       'io.excel.plus10',
       'io.excel.plus20',
-      ...(capabilities.plus30 ? ['io.excel.plus30'] : []),
+      'io.excel.plus30',
     ]);
     for (const skill of character.skills ?? []) {
       w.tableRow([
@@ -131,7 +122,7 @@ export function buildDarkHeresyExcelSections(
         skill.training.skilled,
         skill.training.plus10,
         skill.training.plus20,
-        ...(capabilities.plus30 ? [skill.training.plus30] : []),
+        skill.training.plus30,
       ]);
     }
 
@@ -193,8 +184,8 @@ export function buildDarkHeresyExcelSections(
     w.sub('io.excel.inventory');
     w.raw(`    ${w.list(character.inventory ?? [])}`);
     w.sub('io.excel.wealth');
-    w.row('dh.throneGelt', character.wealth.throneGelt);
-    w.row('dh.monthlyIncome', character.wealth.monthlyIncome);
+    w.row('dh2.throneGelt', character.wealth.throneGelt);
+    w.row('dh2.monthlyIncome', character.wealth.monthlyIncome);
     w.row('io.excel.wealthNotes', character.wealth.notes);
   }
 

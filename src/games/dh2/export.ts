@@ -1,18 +1,14 @@
-import type { DH1Character } from '../dh1/types';
-import type { DH2Character } from '../dh2/types';
 import type { GameExportConfig } from '../types';
-import { getDarkHeresyCapabilities } from './capabilities';
+import type { DH2Character } from './types';
 
 /**
  * ─── LANDMARK: DH EXPORT ───────────────────────────────────────────────────
- * JSON-поля Dark Heresy, общие для dh1/dh2. Отличия — через capability:
- * в экспорт попадает только существующее у редакции поле усталости
- * (`fatigue1st`/`fatigue2nd`) и корректный состав характеристик.
+ * JSON-поля Dark Heresy 2-й редакции: только её поле усталости
+ * (`fatigue2nd`) и её состав характеристик.
  */
-export function buildDarkHeresyPortableJson(
-  character: DH1Character | DH2Character,
+export function buildDh2PortableJson(
+  character: DH2Character,
   config: GameExportConfig,
-  capabilities = getDarkHeresyCapabilities(character),
 ): Record<string, unknown> {
   const result: Record<string, unknown> = {};
 
@@ -43,14 +39,13 @@ export function buildDarkHeresyPortableJson(
   }
 
   if (config.includeCombat) {
-    const fatigue =
-      'fatigue1st' in character ? character.fatigue1st : character.fatigue2nd;
+    const fatigue = character.fatigue2nd;
     Object.assign(result, {
       wounds: character.wounds,
       fatePoints: character.fatePoints,
       insanityPoints: character.insanityPoints,
       corruptionPoints: character.corruptionPoints,
-      [capabilities.fatigueField]: fatigue,
+      fatigue2nd: fatigue,
       criticalConditions: character.criticalConditions,
       customResources: character.customResources,
       movement: character.movement,

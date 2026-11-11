@@ -325,6 +325,11 @@ export const WORLD_VARIANT_LABELS: Record<string, string> = {
   'Forge World': 'Place of Birth',
 };
 
+/** Ключ данных в пространстве конкретной редакции: dh.* → dh1 или dh2. */
+export function dhLocalizedKey(key: string, edition: 'dh1' | 'dh2'): string {
+  return key.startsWith('dh.') ? `${edition}.${key.slice(3)}` : key;
+}
+
 export const HOME_WORLD_KEYS: Record<string, string> = {
   'Feral World': 'dh.homeWorldFeral',
   'Hive World': 'dh.homeWorldHive',

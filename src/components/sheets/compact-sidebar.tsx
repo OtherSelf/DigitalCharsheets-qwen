@@ -33,12 +33,14 @@ import {
 } from '@/components/ui/tooltip';
 import { useCharacterContext } from '@/context/character-context';
 import { useTranslation } from '@/context/language-context';
+import { resolveCharacterSystemId } from '@/games/character-system';
+import { DhHouseRulesDialog as Dh1HouseRulesDialog } from '@/games/dh1/sections/dh-house-rules-dialog';
+import { DhHouseRulesDialog as Dh2HouseRulesDialog } from '@/games/dh2/sections/dh-house-rules-dialog';
 import { type GameSystem } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
 import { LanguageToggle } from '../layout/language-toggle';
 import { Separator } from '../ui/separator';
-import { DhHouseRulesDialog } from './dh-sections/dh-house-rules-dialog';
 import { HouseRulesDialog } from './dnd-sections/house-rules-dialog';
 
 interface CompactSidebarProps {
@@ -83,6 +85,8 @@ export function CompactSidebar({
       : []),
   ];
 
+  const dhPrefix =
+    resolveCharacterSystemId(character ?? {}) === 'dh2' ? 'dh2' : 'dh1';
   const dhItems = [
     { label: 'common.info', id: 'info-section', icon: Info },
     {
@@ -91,8 +95,12 @@ export function CompactSidebar({
       icon: TrendingUp,
     },
     { label: 'common.skills', id: 'skills-section', icon: BookOpen },
-    { label: 'dh.talentsAndTraits', id: 'talents-section', icon: Star },
-    { label: 'dh.equipment', id: 'equipment-section', icon: Shield },
+    {
+      label: `${dhPrefix}.talentsAndTraits`,
+      id: 'talents-section',
+      icon: Star,
+    },
+    { label: `${dhPrefix}.equipment`, id: 'equipment-section', icon: Shield },
     { label: 'common.inventory', id: 'inventory-section', icon: Backpack },
   ];
 
@@ -225,13 +233,21 @@ export function CompactSidebar({
             characterId={params.id}
           />
         )}
-        {params?.id && gameSystem === 'Dark Heresy' && (
-          <DhHouseRulesDialog
-            open={isHouseRulesDialogOpen}
-            onOpenChange={setIsHouseRulesDialogOpen}
-            characterId={params.id}
-          />
-        )}
+        {params?.id &&
+          gameSystem === 'Dark Heresy' &&
+          (resolveCharacterSystemId(character ?? {}) === 'dh2' ? (
+            <Dh2HouseRulesDialog
+              open={isHouseRulesDialogOpen}
+              onOpenChange={setIsHouseRulesDialogOpen}
+              characterId={params.id}
+            />
+          ) : (
+            <Dh1HouseRulesDialog
+              open={isHouseRulesDialogOpen}
+              onOpenChange={setIsHouseRulesDialogOpen}
+              characterId={params.id}
+            />
+          ))}
         {/* DH-HOUSE-RULES-SIDEBAR-MOUNT-END */}
       </nav>
     </TooltipProvider>
