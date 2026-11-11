@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 
 import { formatAdminDate } from '@/components/admin/admin-helpers';
+import { AdminGamesSection } from '@/components/admin/games-section';
 import { UserBlockDialog } from '@/components/admin/user-block-dialog';
 import { UserCharactersDialog } from '@/components/admin/user-characters-dialog';
 import { UserDeleteDialog } from '@/components/admin/user-delete-dialog';
@@ -289,6 +290,8 @@ export default function AdminPage() {
               );
             })}
           </div>
+
+          <AdminGamesSection />
 
           <Card>
             <CardHeader className="flex flex-col gap-3 space-y-0 sm:flex-row sm:items-center sm:justify-between">

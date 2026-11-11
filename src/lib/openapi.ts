@@ -971,6 +971,75 @@ export const openApiDocument = {
         },
       },
     },
+    '/api/games': {
+      get: {
+        tags: ['Games'],
+        operationId: 'listGames',
+        summary: 'Visible games and editions',
+        description:
+          'Public catalog filtered by the role from the session cookie: published for guests/user, plus test for tester, plus hidden for admin. Also returns the optional site title override.',
+        security: [],
+        responses: {
+          200: jsonResponse('Visible games and current settings.', {
+            type: 'object',
+            additionalProperties: true,
+          }),
+          500: { $ref: '#/components/responses/ServerError' },
+        },
+      },
+    },
+    '/api/admin/games': {
+      get: {
+        tags: ['Admin'],
+        operationId: 'adminListGames',
+        summary: 'Game catalog (admin)',
+        description:
+          'Every module from the registry with its default and current visibility status, plus the site title override.',
+        responses: {
+          200: jsonResponse('Game catalog.', {
+            type: 'object',
+            additionalProperties: true,
+          }),
+          401: { $ref: '#/components/responses/Unauthorized' },
+          403: { $ref: '#/components/responses/Forbidden' },
+        },
+      },
+      put: {
+        tags: ['Admin'],
+        operationId: 'adminUpdateGames',
+        summary: 'Update visibility or site title (admin)',
+        description:
+          'Changes the status of one edition (`published`, `test`, `hidden`) and/or the optional site title. Hiding affects creation and menus, not opening existing sheets.',
+        requestBody: jsonBody({
+          type: 'object',
+          properties: {
+            systemId: {
+              type: 'string',
+              enum: ['dnd5e', 'dh1', 'dh2'],
+            },
+            status: {
+              type: 'string',
+              enum: ['published', 'test', 'hidden'],
+            },
+            siteTitle: {
+              type: ['string', 'null'],
+              maxLength: 80,
+            },
+          },
+          additionalProperties: false,
+        }),
+        responses: {
+          200: jsonResponse('Updated catalog.', {
+            type: 'object',
+            additionalProperties: true,
+          }),
+          400: { $ref: '#/components/responses/BadRequest' },
+          401: { $ref: '#/components/responses/Unauthorized' },
+          403: { $ref: '#/components/responses/Forbidden' },
+          500: { $ref: '#/components/responses/ServerError' },
+        },
+      },
+    },
     '/api/admin/users': {
       get: {
         tags: ['Admin'],

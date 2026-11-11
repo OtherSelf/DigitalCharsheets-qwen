@@ -571,4 +571,27 @@ export const ruTranslations: Record<string, string> = {
   'io.excel.none': 'Нет',
   'io.excel.yes': 'Да',
   'io.excel.no': 'Нет',
+  // ─── admin: игры/редакции и заголовок сайта (этап 6) ───
+  'common.loading': 'Загрузка…',
+  'admin.gamesTitle': 'Игры и редакции',
+  'admin.gamesDescription': 'Видимость редакций в мастере создания и меню.',
+  'admin.gameColumn': 'Игра',
+  'admin.editionColumn': 'Редакция',
+  'admin.defaultStatusColumn': 'По умолчанию',
+  'admin.currentStatusColumn': 'Сейчас',
+  'admin.statusPublished': 'Опубликована',
+  'admin.statusTest': 'Тест',
+  'admin.statusHidden': 'Скрыта',
+  'admin.gamesVisibilityNote':
+    'Скрытие влияет на создание и меню, но не мешает владельцу открыть уже созданный лист.',
+  'admin.gamesLoadFailed': 'Не удалось загрузить каталог игр.',
+  'admin.gamesSaveFailed': 'Не удалось сохранить каталог игр.',
+  'admin.gamesSaved': 'Каталог игр сохранён.',
+  'admin.siteTitle': 'Заголовок сайта',
+  'admin.siteTitleDescription':
+    'Переопределяет название в шапке. Оставьте пустым, чтобы вернуть стандартное.',
+  'admin.siteTitlePlaceholder': 'Digital Character Sheets',
+  'admin.siteTitleReset': 'Сбросить',
+  // ─── settings: роль в профиле ───
+  'settings.role': 'Роль',
 };

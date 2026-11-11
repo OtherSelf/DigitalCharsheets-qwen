@@ -1,7 +1,7 @@
 // src/components/demo-landing.tsx
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 
 import { Sparkles, Sword, UserPlus } from 'lucide-react';
@@ -36,10 +36,52 @@ interface DemoLandingProps {
 export function DemoLanding({ createHref = '/new' }: DemoLandingProps) {
   const { t } = useTranslation();
   const [previewId, setPreviewId] = useState<SystemId | null>(null);
+  const [visibleIds, setVisibleIds] = useState<Set<string> | null>(null);
+
+  // Видимость редакций — из каталога (роль читается на сервере).
+  useEffect(() => {
+    let active = true;
+    void fetch('/api/games', { cache: 'no-store' })
+      .then(async (res) => {
+        if (!res.ok) return null;
+        return (await res.json().catch(() => null)) as {
+          games?: { editions?: { id: string }[] }[];
+        } | null;
+      })
+      .then((data) => {
+        if (!active) return;
+        const ids = new Set(
+          (data?.games ?? []).flatMap((game) =>
+            (game.editions ?? []).map((edition) => edition.id),
+          ),
+        );
+        setVisibleIds(ids);
+      })
+      .catch(() => {
+        if (active) {
+          setVisibleIds(
+            new Set(
+              listGameModules()
+                .filter(
+                  (gameModule) => gameModule.defaultStatus === 'published',
+                )
+                .map((gameModule) => gameModule.id),
+            ),
+          );
+        }
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   // Один демо-персонаж на опубликованную редакцию; данные — из модулей.
   const demos = listGameModules()
-    .filter((gameModule) => gameModule.defaultStatus === 'published')
+    .filter((gameModule) =>
+      visibleIds
+        ? visibleIds.has(gameModule.id)
+        : gameModule.defaultStatus === 'published',
+    )
     .map((gameModule) => {
       const gameDefinition = getGameDefinition(gameModule.gameId);
       return {

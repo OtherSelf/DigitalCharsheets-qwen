@@ -68,6 +68,16 @@ export function getDataLockDir(): string {
   return path.join(getDataDir(), '.lock');
 }
 
+/** Каталог настроек приложения: `<data-dir>/settings`. */
+export function getSettingsDir(): string {
+  return path.join(getDataDir(), 'settings');
+}
+
+/** Каталог видимости игр: `<data-dir>/settings/game-catalog.json`. */
+export function getGameCatalogFile(): string {
+  return path.join(getSettingsDir(), 'game-catalog.json');
+}
+
 /** Ключ подписи сессионных cookie: `<data-dir>/.session-secret`. */
 export function getSessionSecretFile(): string {
   return path.join(getDataDir(), '.session-secret');
