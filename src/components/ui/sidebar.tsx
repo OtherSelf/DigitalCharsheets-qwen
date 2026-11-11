@@ -290,7 +290,7 @@ const SidebarTrigger = React.forwardRef<
       {...props}
     >
       <PanelLeft />
-      <span className="sr-only">{t('toggleSidebar')}</span>
+      <span className="sr-only">{t('common.toggleSidebar')}</span>
     </Button>
   );
 });
@@ -307,10 +307,10 @@ const SidebarRail = React.forwardRef<
     <button
       ref={ref}
       data-sidebar="rail"
-      aria-label={t('toggleSidebar')}
+      aria-label={t('common.toggleSidebar')}
       tabIndex={-1}
       onClick={toggleSidebar}
-      title={t('toggleSidebar')}
+      title={t('common.toggleSidebar')}
       className={cn(
         'hover:after:bg-sidebar-border absolute inset-y-0 z-20 hidden w-4 -translate-x-1/2 transition-all ease-linear group-data-[side=left]:-right-4 group-data-[side=right]:left-0 after:absolute after:inset-y-0 after:left-1/2 after:w-[2px] sm:flex',
         '[[data-side=left]_&]:cursor-w-resize [[data-side=right]_&]:cursor-e-resize',

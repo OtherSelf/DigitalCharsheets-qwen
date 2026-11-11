@@ -147,7 +147,7 @@ export function Header({
       const translatedClass = t(classKey) || charClass;
       const translatedBg = t(bgKey) || background;
 
-      return `${t('lvl')} ${dnd.level || 1} ${translatedRace} ${translatedClass} | ${translatedBg}`;
+      return `${t('dnd.lvl')} ${dnd.level || 1} ${translatedRace} ${translatedClass} | ${translatedBg}`;
     }
 
     const dh = char as DarkHeresyCharacter;
@@ -159,7 +159,7 @@ export function Header({
     const classKey = `career${charClass.replace(/[^a-zA-Z]/g, '')}`;
     const translatedRank = t(rankKey) || rank;
     const translatedClass = t(classKey) || charClass;
-    const translatedSystem = t('gameSystemDarkHeresy') || dh.gameSystem;
+    const translatedSystem = t('common.gameSystemDarkHeresy') || dh.gameSystem;
 
     return `${translatedRank} ${translatedClass} | ${translatedSystem}`;
   };
@@ -191,8 +191,8 @@ export function Header({
   );
 
   const compactLabel = isCompactView
-    ? t('switchToDefaultView')
-    : t('switchToCompactView');
+    ? t('common.switchToDefaultView')
+    : t('common.switchToCompactView');
 
   const authControls =
     authAction === 'login' ? (
@@ -210,9 +210,9 @@ export function Header({
           asChild
           className="sm:min-w-[15em] sm:justify-start"
         >
-          <Link href="/login" aria-label={t('authLoginRegister')}>
+          <Link href="/login" aria-label={t('auth.loginRegister')}>
             <LogIn className="h-4 w-4 sm:mr-2" />
-            <span className="hidden sm:inline">{t('authLoginRegister')}</span>
+            <span className="hidden sm:inline">{t('auth.loginRegister')}</span>
           </Link>
         </Button>
       ) : (
@@ -244,7 +244,7 @@ export function Header({
               asChild
               className="h-9 w-9 shrink-0"
             >
-              <Link href={backHref} aria-label={t('back') || 'Back'}>
+              <Link href={backHref} aria-label={t('common.back') || 'Back'}>
                 <ArrowLeft className="h-5 w-5" />
               </Link>
             </Button>
@@ -253,7 +253,7 @@ export function Header({
           <Link
             href="/"
             className="flex min-w-0 items-center gap-2"
-            aria-label={t('backToDashboard') || 'Back to Dashboard'}
+            aria-label={t('common.backToDashboard') || 'Back to Dashboard'}
           >
             <Shield className="text-primary h-6 w-6 shrink-0" />
             {/*
@@ -312,7 +312,7 @@ export function Header({
                   имя персонажа не сжималось: смысл «+/-» остаётся понятным
                   по иконкам, а значение всегда видно. */}
               <span className="header-field-label text-primary hidden text-[10px] font-bold tracking-widest uppercase sm:inline">
-                {t('inspiration')}
+                {t('common.inspiration')}
               </span>
               <div className="flex items-center gap-1">
                 <Button
@@ -341,10 +341,12 @@ export function Header({
                   size="sm"
                   onClick={() => setIsHouseRulesDialogOpen(true)}
                   className="h-7 px-2 xl:ml-2"
-                  aria-label={t('houseRules')}
+                  aria-label={t('common.houseRules')}
                 >
                   <Scale className="h-4 w-4 xl:mr-2" />
-                  <span className="hidden xl:inline">{t('houseRules')}</span>
+                  <span className="hidden xl:inline">
+                    {t('common.houseRules')}
+                  </span>
                 </Button>
               )}
             </div>
@@ -360,14 +362,16 @@ export function Header({
                   size="sm"
                   onClick={() => setIsHouseRulesDialogOpen(true)}
                   className="h-7 px-2"
-                  aria-label={t('houseRules')}
+                  aria-label={t('common.houseRules')}
                 >
                   <Scale className="h-4 w-4 xl:mr-2" />
-                  <span className="hidden xl:inline">{t('houseRules')}</span>
+                  <span className="hidden xl:inline">
+                    {t('common.houseRules')}
+                  </span>
                 </Button>
                 <div className="flex items-center gap-2">
                   <Label className="text-muted-foreground hidden text-xs whitespace-nowrap md:inline">
-                    {t('edition')}:
+                    {t('common.edition')}:
                   </Label>
                   <Select
                     value={character.edition || '1st'}
@@ -382,9 +386,15 @@ export function Header({
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="1st">{t('firstEdition')}</SelectItem>
-                      <SelectItem value="2nd">{t('secondEdition')}</SelectItem>
-                      <SelectItem value="hybrid">{t('hybridView')}</SelectItem>
+                      <SelectItem value="1st">
+                        {t('common.firstEdition')}
+                      </SelectItem>
+                      <SelectItem value="2nd">
+                        {t('common.secondEdition')}
+                      </SelectItem>
+                      <SelectItem value="hybrid">
+                        {t('common.hybridView')}
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -405,7 +415,7 @@ export function Header({
                   className="h-9 w-9 sm:hidden"
                 >
                   <Menu className="h-4 w-4" />
-                  <span className="sr-only">{t('openMenu')}</span>
+                  <span className="sr-only">{t('common.openMenu')}</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
@@ -435,14 +445,14 @@ export function Header({
                           variant="outline"
                           size="icon"
                           onClick={onNotesClick}
-                          aria-label={t('notes')}
+                          aria-label={t('common.notes')}
                           className="h-8 w-8 md:h-9 md:w-9"
                         >
                           <BookText className="h-4 w-4" />
                         </Button>
                       </TooltipTrigger>
                       <TooltipContent side="bottom">
-                        <p>{t('notes')}</p>
+                        <p>{t('common.notes')}</p>
                       </TooltipContent>
                     </Tooltip>
                   )}
@@ -453,14 +463,14 @@ export function Header({
                           variant="outline"
                           size="icon"
                           onClick={onJournalClick}
-                          aria-label={t('questJournalTitle')}
+                          aria-label={t('common.questJournalTitle')}
                           className="h-8 w-8 md:h-9 md:w-9"
                         >
                           <Scroll className="h-4 w-4" />
                         </Button>
                       </TooltipTrigger>
                       <TooltipContent side="bottom">
-                        <p>{t('questJournalTitle')}</p>
+                        <p>{t('common.questJournalTitle')}</p>
                       </TooltipContent>
                     </Tooltip>
                   )}
@@ -473,7 +483,11 @@ export function Header({
                       variant={hideNotes ? 'ghost' : 'secondary'}
                       size="icon"
                       onClick={() => setHideNotes(!hideNotes)}
-                      aria-label={hideNotes ? t('showNotes') : t('hideNotes')}
+                      aria-label={
+                        hideNotes
+                          ? t('common.showNotes')
+                          : t('common.hideNotes')
+                      }
                       aria-pressed={!hideNotes}
                       className="h-8 w-8 md:h-9 md:w-9"
                     >
@@ -485,7 +499,11 @@ export function Header({
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent side="bottom">
-                    <p>{hideNotes ? t('showNotes') : t('hideNotes')}</p>
+                    <p>
+                      {hideNotes
+                        ? t('common.showNotes')
+                        : t('common.hideNotes')}
+                    </p>
                   </TooltipContent>
                 </Tooltip>
                 <Tooltip delayDuration={0}>
@@ -496,8 +514,8 @@ export function Header({
                       onClick={() => setShowEditButtons(!showEditButtons)}
                       aria-label={
                         showEditButtons
-                          ? t('hideEditButtons')
-                          : t('showEditButtons')
+                          ? t('common.hideEditButtons')
+                          : t('common.showEditButtons')
                       }
                       aria-pressed={showEditButtons}
                       className="h-8 w-8 md:h-9 md:w-9"
@@ -512,8 +530,8 @@ export function Header({
                   <TooltipContent side="bottom">
                     <p>
                       {showEditButtons
-                        ? t('hideEditButtons')
-                        : t('showEditButtons')}
+                        ? t('common.hideEditButtons')
+                        : t('common.showEditButtons')}
                     </p>
                   </TooltipContent>
                 </Tooltip>

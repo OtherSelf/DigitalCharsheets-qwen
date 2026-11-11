@@ -113,31 +113,31 @@ export function ExportImportDialog({ character }: ExportImportDialogProps) {
 
   // ─── LANDMARK: GAME_SYSTEM_AWARE_CHECKBOXES ───
   const configOptions: { key: keyof ExportConfig; label: string }[] = [
-    { key: 'includeBasicInfo', label: t('exportBasicInfo') },
-    { key: 'includeStats', label: t('exportStats') },
-    { key: 'includeCombat', label: t('exportCombat') },
-    { key: 'includeEquipment', label: t('exportEquipment') },
-    { key: 'includeInventory', label: t('exportInventory') },
+    { key: 'includeBasicInfo', label: t('io.exportBasicInfo') },
+    { key: 'includeStats', label: t('io.exportStats') },
+    { key: 'includeCombat', label: t('io.exportCombat') },
+    { key: 'includeEquipment', label: t('io.exportEquipment') },
+    { key: 'includeInventory', label: t('io.exportInventory') },
     ...(character.gameSystem === 'Dungeons & Dragons'
       ? [
           {
             key: 'includeSpells' as keyof ExportConfig,
-            label: t('exportSpells'),
+            label: t('io.exportSpells'),
           },
         ]
       : []),
-    { key: 'includeNarrative', label: t('exportNarrative') },
-    { key: 'includeProgression', label: t('exportProgression') },
+    { key: 'includeNarrative', label: t('io.exportNarrative') },
+    { key: 'includeProgression', label: t('io.exportProgression') },
     ...(character.gameSystem === 'Dungeons & Dragons'
       ? [
           {
             key: 'includeCompanions' as keyof ExportConfig,
-            label: t('exportCompanions'),
+            label: t('io.exportCompanions'),
           },
         ]
       : []),
-    { key: 'includeQuestLog', label: t('exportQuestLog') },
-    { key: 'includeCustomHouseRules', label: t('exportHouseRules') },
+    { key: 'includeQuestLog', label: t('io.exportQuestLog') },
+    { key: 'includeCustomHouseRules', label: t('io.exportHouseRules') },
   ];
 
   return (
@@ -145,16 +145,18 @@ export function ExportImportDialog({ character }: ExportImportDialogProps) {
       <DialogTrigger asChild>
         <Button variant="outline" size="sm" className="hidden h-8 sm:flex">
           <FileDown className="mr-2 h-4 w-4" />
-          <span>{t('importExport')}</span>
+          <span>{t('io.importExport')}</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>
-            {mode === 'export' ? t('exportCharacter') : t('importCharacter')}
+            {mode === 'export'
+              ? t('io.exportCharacter')
+              : t('io.importCharacter')}
           </DialogTitle>
           <DialogDescription>
-            {mode === 'export' ? t('exportDesc') : t('importDesc')}
+            {mode === 'export' ? t('io.exportDesc') : t('io.importDesc')}
           </DialogDescription>
         </DialogHeader>
 
@@ -168,7 +170,7 @@ export function ExportImportDialog({ character }: ExportImportDialogProps) {
               setImportError(null);
             }}
           >
-            {t('exportCharacter').split(' ')[0]}
+            {t('io.exportCharacter').split(' ')[0]}
           </Button>
           <Button
             variant={mode === 'import' ? 'default' : 'outline'}
@@ -179,7 +181,7 @@ export function ExportImportDialog({ character }: ExportImportDialogProps) {
               setImportError(null);
             }}
           >
-            {t('importCharacter').split(' ')[0]}
+            {t('io.importCharacter').split(' ')[0]}
           </Button>
         </div>
 
@@ -222,13 +224,13 @@ export function ExportImportDialog({ character }: ExportImportDialogProps) {
               {importSuccess && (
                 <Alert className="border-green-200 bg-green-50 text-green-800 dark:border-green-800 dark:bg-green-900/20 dark:text-green-300">
                   <CheckCircle2 className="h-4 w-4" />
-                  <AlertDescription>{t('importSuccess')}</AlertDescription>
+                  <AlertDescription>{t('io.importSuccess')}</AlertDescription>
                 </Alert>
               )}
 
               {importedData && !importError && !importSuccess && (
                 <Alert>
-                  <AlertDescription>{t('readyToMerge')}</AlertDescription>
+                  <AlertDescription>{t('io.readyToMerge')}</AlertDescription>
                 </Alert>
               )}
             </div>
@@ -239,7 +241,7 @@ export function ExportImportDialog({ character }: ExportImportDialogProps) {
           {mode === 'export' ? (
             <Button onClick={handleExport}>
               <FileDown className="mr-2 h-4 w-4" />
-              {t('downloadJson')}
+              {t('io.downloadJson')}
             </Button>
           ) : (
             <Button
@@ -247,7 +249,7 @@ export function ExportImportDialog({ character }: ExportImportDialogProps) {
               disabled={!importedData || !!importError}
             >
               <FileUp className="mr-2 h-4 w-4" />
-              {t('applyImport')}
+              {t('io.applyImport')}
             </Button>
           )}
         </DialogFooter>

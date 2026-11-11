@@ -40,10 +40,10 @@ export default function ManualCharacterCreationPage() {
         <div className="mb-6 flex flex-col justify-between gap-4 sm:mb-8 sm:flex-row sm:items-center">
           <div className="flex flex-col gap-1">
             <h1 className="font-headline text-2xl font-bold tracking-tight sm:text-3xl">
-              {t('createNew')}
+              {t('common.createNew')}
             </h1>
             <p className="text-muted-foreground text-sm sm:text-base">
-              {t('buildCharacterDesc')}
+              {t('common.buildCharacterDesc')}
             </p>
           </div>
 
@@ -54,7 +54,7 @@ export default function ManualCharacterCreationPage() {
             <Button variant="outline" size="sm" asChild>
               <Link href="/">
                 <ChevronLeft className="mr-2 h-4 w-4" />
-                {t('backToDashboard')}
+                {t('common.backToDashboard')}
               </Link>
             </Button>
           </div>
@@ -65,10 +65,10 @@ export default function ManualCharacterCreationPage() {
           <Card className="mb-4 sm:mb-8">
             <CardHeader className="p-4 sm:p-6">
               <CardTitle className="text-lg sm:text-xl">
-                {t('gameSystem')}
+                {t('admin.gameSystem')}
               </CardTitle>
               <CardDescription className="text-xs sm:text-sm">
-                {t('selectGameSystemDesc')}
+                {t('common.selectGameSystemDesc')}
               </CardDescription>
             </CardHeader>
             <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
@@ -77,13 +77,17 @@ export default function ManualCharacterCreationPage() {
                 value={gameSystem}
               >
                 <SelectTrigger className="w-full md:w-[280px]">
-                  <SelectValue placeholder={t('selectGameSystemPlaceholder')} />
+                  <SelectValue
+                    placeholder={t('common.selectGameSystemPlaceholder')}
+                  />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Dungeons & Dragons">
-                    {t('dungeonsAndDragons')}
+                    {t('common.dungeonsAndDragons')}
                   </SelectItem>
-                  <SelectItem value="Dark Heresy">{t('darkHeresy')}</SelectItem>
+                  <SelectItem value="Dark Heresy">
+                    {t('common.darkHeresy')}
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </CardContent>

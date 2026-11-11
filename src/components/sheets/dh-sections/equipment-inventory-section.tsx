@@ -220,7 +220,7 @@ export const EquipmentInventorySection = React.forwardRef<
     const addMeleeWeapon = () => {
       const newWeapon: MeleeWeapon = {
         id: `melee-${Date.now()}`,
-        name: t('newMeleeWeapon'),
+        name: t('dh.newMeleeWeapon'),
         type: '',
         range: '',
         penetration: '',
@@ -272,7 +272,7 @@ export const EquipmentInventorySection = React.forwardRef<
     const addRangedWeapon = () => {
       const newWeapon: RangedWeapon = {
         id: `ranged-${Date.now()}`,
-        name: t('newRangedWeapon'),
+        name: t('dh.newRangedWeapon'),
         type: '',
         range: '',
         rof: '',
@@ -335,12 +335,12 @@ export const EquipmentInventorySection = React.forwardRef<
     };
 
     const bodyPartTranslations: Record<BodyPart, string> = {
-      Head: t('armorHead'),
-      'Right arm': t('armorRightArm'),
-      'Left arm': t('armorLeftArm'),
-      Body: t('armorBody'),
-      'Right leg': t('armorRightLeg'),
-      'Left leg': t('armorLeftLeg'),
+      Head: t('dh.armorHead'),
+      'Right arm': t('dh.armorRightArm'),
+      'Left arm': t('dh.armorLeftArm'),
+      Body: t('dh.armorBody'),
+      'Right leg': t('dh.armorRightLeg'),
+      'Left leg': t('dh.armorLeftLeg'),
     };
 
     const ARMOR_TYPE_OPTIONS = ARMOR_TYPES.map((type) => ({
@@ -364,13 +364,13 @@ export const EquipmentInventorySection = React.forwardRef<
     };
     // LANDMARK 1: Changed 'none' value from '' to 'none' to avoid Radix Select error
     const ARMOR_QUALITY_OPTIONS = [
-      { value: 'none', label: t('armorQualityNone') },
-      { value: 'Poor', label: t('armorQualityPoor') },
-      { value: 'Cheap', label: t('armorQualityCheap') },
-      { value: 'Common', label: t('armorQualityCommon') },
-      { value: 'Good', label: t('armorQualityGood') },
-      { value: 'Best', label: t('armorQualityBest') },
-      { value: 'Master-Crafted', label: t('armorQualityMasterCrafted') },
+      { value: 'none', label: t('dh.armorQualityNone') },
+      { value: 'Poor', label: t('dh.armorQualityPoor') },
+      { value: 'Cheap', label: t('dh.armorQualityCheap') },
+      { value: 'Common', label: t('dh.armorQualityCommon') },
+      { value: 'Good', label: t('dh.armorQualityGood') },
+      { value: 'Best', label: t('dh.armorQualityBest') },
+      { value: 'Master-Crafted', label: t('dh.armorQualityMasterCrafted') },
     ];
 
     const currentEquipment =
@@ -413,7 +413,7 @@ export const EquipmentInventorySection = React.forwardRef<
           >
             <div className="flex items-center border-b pr-4">
               <h3 className="font-headline flex-1 px-6 py-4 text-lg leading-none font-semibold tracking-tight">
-                {t('equipment')}
+                {t('dh.equipment')}
               </h3>
               <CollapsibleTrigger asChild>
                 <Button size="icon" variant="ghost">
@@ -423,7 +423,7 @@ export const EquipmentInventorySection = React.forwardRef<
                       isEquipmentSectionOpen && 'rotate-90',
                     )}
                   />
-                  <span className="sr-only">{t('toggleEquipment')}</span>
+                  <span className="sr-only">{t('dh.toggleEquipment')}</span>
                 </Button>
               </CollapsibleTrigger>
             </div>
@@ -443,7 +443,7 @@ export const EquipmentInventorySection = React.forwardRef<
                           )}
                         >
                           <h4 className="text-lg font-semibold">
-                            {t('armor')}
+                            {t('dh.armor')}
                           </h4>
                           {isCompactView && (
                             <ChevronDown
@@ -483,7 +483,7 @@ export const EquipmentInventorySection = React.forwardRef<
                                   {isArmorEditing ? (
                                     <>
                                       <div className="space-y-1">
-                                        <Label>{t('armorAp')}</Label>
+                                        <Label>{t('dh.armorAp')}</Label>
                                         <Input
                                           type="number"
                                           className="h-7 text-xs"
@@ -502,7 +502,7 @@ export const EquipmentInventorySection = React.forwardRef<
                                         />
                                       </div>
                                       <div className="space-y-1">
-                                        <Label>{t('armorType')}</Label>
+                                        <Label>{t('dh.armorType')}</Label>
                                         <Select
                                           value={armorPiece?.type ?? ''}
                                           onValueChange={(value) =>
@@ -515,7 +515,7 @@ export const EquipmentInventorySection = React.forwardRef<
                                         >
                                           <SelectTrigger className="h-7 text-xs">
                                             <SelectValue
-                                              placeholder={t('armorType')}
+                                              placeholder={t('dh.armorType')}
                                             />
                                           </SelectTrigger>
                                           <SelectContent>
@@ -533,7 +533,7 @@ export const EquipmentInventorySection = React.forwardRef<
                                         </Select>
                                       </div>
                                       <div className="col-span-2 space-y-1">
-                                        <Label>{t('armorMods')}</Label>
+                                        <Label>{t('dh.armorMods')}</Label>
                                         <Input
                                           className="h-7 text-xs"
                                           value={armorPiece?.mods ?? ''}
@@ -547,7 +547,7 @@ export const EquipmentInventorySection = React.forwardRef<
                                         />
                                       </div>
                                       <div className="col-span-2 space-y-1">
-                                        <Label>{t('armorQuality')}</Label>
+                                        <Label>{t('dh.armorQuality')}</Label>
                                         <Select
                                           value={armorPiece?.quality ?? 'none'}
                                           onValueChange={(value) =>
@@ -560,7 +560,7 @@ export const EquipmentInventorySection = React.forwardRef<
                                         >
                                           <SelectTrigger className="h-7 text-xs">
                                             <SelectValue
-                                              placeholder={t('armorQuality')}
+                                              placeholder={t('dh.armorQuality')}
                                             />
                                           </SelectTrigger>
                                           <SelectContent>
@@ -582,25 +582,25 @@ export const EquipmentInventorySection = React.forwardRef<
                                     <>
                                       <div>
                                         <strong className="text-muted-foreground">
-                                          {t('armorAp')}:
+                                          {t('dh.armorAp')}:
                                         </strong>{' '}
                                         {armorPiece?.ap ?? '-'}
                                       </div>
                                       <div>
                                         <strong className="text-muted-foreground">
-                                          {t('armorType')}:
+                                          {t('dh.armorType')}:
                                         </strong>{' '}
                                         {displayArmorType(armorPiece?.type)}
                                       </div>
                                       <div className="col-span-2">
                                         <strong className="text-muted-foreground">
-                                          {t('armorMods')}:
+                                          {t('dh.armorMods')}:
                                         </strong>{' '}
                                         {armorPiece?.mods ?? '-'}
                                       </div>
                                       <div className="col-span-2">
                                         <strong className="text-muted-foreground">
-                                          {t('armorQuality')}:
+                                          {t('dh.armorQuality')}:
                                         </strong>{' '}
                                         {displayQuality(armorPiece?.quality)}
                                       </div>
@@ -616,11 +616,11 @@ export const EquipmentInventorySection = React.forwardRef<
                           <Table>
                             <TableHeader>
                               <TableRow>
-                                <TableHead>{t('armorLocation')}</TableHead>
-                                <TableHead>{t('armorAp')}</TableHead>
-                                <TableHead>{t('armorType')}</TableHead>
-                                <TableHead>{t('armorMods')}</TableHead>
-                                <TableHead>{t('armorQuality')}</TableHead>
+                                <TableHead>{t('dh.armorLocation')}</TableHead>
+                                <TableHead>{t('dh.armorAp')}</TableHead>
+                                <TableHead>{t('dh.armorType')}</TableHead>
+                                <TableHead>{t('dh.armorMods')}</TableHead>
+                                <TableHead>{t('dh.armorQuality')}</TableHead>
                               </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -660,7 +660,7 @@ export const EquipmentInventorySection = React.forwardRef<
                                           >
                                             <SelectTrigger className="h-8">
                                               <SelectValue
-                                                placeholder={t('armorType')}
+                                                placeholder={t('dh.armorType')}
                                               />
                                             </SelectTrigger>
                                             <SelectContent>
@@ -705,7 +705,9 @@ export const EquipmentInventorySection = React.forwardRef<
                                           >
                                             <SelectTrigger className="h-8">
                                               <SelectValue
-                                                placeholder={t('armorQuality')}
+                                                placeholder={t(
+                                                  'dh.armorQuality',
+                                                )}
                                               />
                                             </SelectTrigger>
                                             <SelectContent>
@@ -753,7 +755,7 @@ export const EquipmentInventorySection = React.forwardRef<
                   <div>
                     <div className="mb-2 flex items-center justify-between">
                       <h4 className="text-lg font-semibold">
-                        {t('meleeWeapons')}
+                        {t('dh.meleeWeapons')}
                       </h4>
                       {(showEditButtons || isMeleeWeaponsEditing) && (
                         <EditSaveButton
@@ -803,7 +805,7 @@ export const EquipmentInventorySection = React.forwardRef<
                                   </PopoverTrigger>
                                   <PopoverContent className="w-64">
                                     <Label className="mb-2 block text-xs">
-                                      {t('notesFor')} {weapon.name}
+                                      {t('common.notesFor')} {weapon.name}
                                     </Label>
                                     <Textarea
                                       defaultValue={weapon.notes || ''}
@@ -840,7 +842,7 @@ export const EquipmentInventorySection = React.forwardRef<
                                                 },
                                               }),
                                           })}
-                                      placeholder={t('addNotesPlaceholder')}
+                                      placeholder={t('dh.addNotesPlaceholder')}
                                       className="mt-2 min-h-[100px] text-sm"
                                     />
                                   </PopoverContent>
@@ -863,7 +865,7 @@ export const EquipmentInventorySection = React.forwardRef<
                               <>
                                 <div className="space-y-1">
                                   {' '}
-                                  <Label>{t('weaponType')}</Label>{' '}
+                                  <Label>{t('dh.weaponType')}</Label>{' '}
                                   <Input
                                     defaultValue={weapon.type}
                                     onChange={(e) =>
@@ -878,7 +880,7 @@ export const EquipmentInventorySection = React.forwardRef<
                                 </div>
                                 <div className="space-y-1">
                                   {' '}
-                                  <Label>{t('weaponRange')}</Label>{' '}
+                                  <Label>{t('dh.weaponRange')}</Label>{' '}
                                   <Input
                                     defaultValue={weapon.range}
                                     onChange={(e) =>
@@ -893,7 +895,7 @@ export const EquipmentInventorySection = React.forwardRef<
                                 </div>
                                 <div className="space-y-1">
                                   {' '}
-                                  <Label>{t('weaponDamage')}</Label>{' '}
+                                  <Label>{t('dh.weaponDamage')}</Label>{' '}
                                   <Input
                                     defaultValue={weapon.damage}
                                     onChange={(e) =>
@@ -908,7 +910,9 @@ export const EquipmentInventorySection = React.forwardRef<
                                 </div>
                                 <div className="space-y-1">
                                   {' '}
-                                  <Label>{t('weaponPenetration')}</Label>{' '}
+                                  <Label>
+                                    {t('dh.weaponPenetration')}
+                                  </Label>{' '}
                                   <Input
                                     defaultValue={weapon.penetration}
                                     onChange={(e) =>
@@ -923,7 +927,7 @@ export const EquipmentInventorySection = React.forwardRef<
                                 </div>
                                 <div className="col-span-2 space-y-1">
                                   {' '}
-                                  <Label>{t('weaponTraits')}</Label>{' '}
+                                  <Label>{t('dh.weaponTraits')}</Label>{' '}
                                   <Input
                                     defaultValue={weapon.traits}
                                     onChange={(e) =>
@@ -941,31 +945,31 @@ export const EquipmentInventorySection = React.forwardRef<
                               <>
                                 <div>
                                   <strong className="text-muted-foreground">
-                                    {t('weaponType')}:
+                                    {t('dh.weaponType')}:
                                   </strong>{' '}
                                   {weapon.type || '-'}
                                 </div>
                                 <div>
                                   <strong className="text-muted-foreground">
-                                    {t('weaponRange')}:
+                                    {t('dh.weaponRange')}:
                                   </strong>{' '}
                                   {weapon.range || '-'}
                                 </div>
                                 <div>
                                   <strong className="text-muted-foreground">
-                                    {t('weaponDamage')}:
+                                    {t('dh.weaponDamage')}:
                                   </strong>{' '}
                                   {weapon.damage || '-'}
                                 </div>
                                 <div>
                                   <strong className="text-muted-foreground">
-                                    {t('weaponPenetration')}:
+                                    {t('dh.weaponPenetration')}:
                                   </strong>{' '}
                                   {weapon.penetration || '-'}
                                 </div>
                                 <div className="col-span-2">
                                   <strong className="text-muted-foreground">
-                                    {t('weaponTraits')}:
+                                    {t('dh.weaponTraits')}:
                                   </strong>{' '}
                                   <span className="break-words">
                                     {weapon.traits || '-'}
@@ -1002,7 +1006,9 @@ export const EquipmentInventorySection = React.forwardRef<
                                     })
                               }
                             />
-                            <Label className="text-xs">{t('equipped')}</Label>
+                            <Label className="text-xs">
+                              {t('dh.equipped')}
+                            </Label>
                           </div>
                         </div>
                       ))}
@@ -1015,7 +1021,7 @@ export const EquipmentInventorySection = React.forwardRef<
                     >
                       <AccordionPrimitive.Header className="flex w-full">
                         <AccordionPrimitive.Trigger className="flex flex-1 items-center justify-between py-2 text-sm font-medium">
-                          <span>{t('notEquipped')}</span>
+                          <span>{t('dh.notEquipped')}</span>
                           <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
                         </AccordionPrimitive.Trigger>
                       </AccordionPrimitive.Header>
@@ -1060,7 +1066,7 @@ export const EquipmentInventorySection = React.forwardRef<
                                       </PopoverTrigger>
                                       <PopoverContent className="w-64">
                                         <Label className="mb-2 block text-xs">
-                                          {t('notesFor')} {weapon.name}
+                                          {t('common.notesFor')} {weapon.name}
                                         </Label>
                                         <Textarea
                                           defaultValue={weapon.notes || ''}
@@ -1102,7 +1108,9 @@ export const EquipmentInventorySection = React.forwardRef<
                                                     },
                                                   ),
                                               })}
-                                          placeholder={t('addNotesPlaceholder')}
+                                          placeholder={t(
+                                            'dh.addNotesPlaceholder',
+                                          )}
                                           className="mt-2 min-h-[100px] text-sm"
                                         />
                                       </PopoverContent>
@@ -1127,7 +1135,7 @@ export const EquipmentInventorySection = React.forwardRef<
                                   <>
                                     <div className="space-y-1">
                                       {' '}
-                                      <Label>{t('weaponType')}</Label>{' '}
+                                      <Label>{t('dh.weaponType')}</Label>{' '}
                                       <Input
                                         defaultValue={weapon.type}
                                         onChange={(e) =>
@@ -1142,7 +1150,7 @@ export const EquipmentInventorySection = React.forwardRef<
                                     </div>
                                     <div className="space-y-1">
                                       {' '}
-                                      <Label>{t('weaponRange')}</Label>{' '}
+                                      <Label>{t('dh.weaponRange')}</Label>{' '}
                                       <Input
                                         defaultValue={weapon.range}
                                         onChange={(e) =>
@@ -1157,7 +1165,7 @@ export const EquipmentInventorySection = React.forwardRef<
                                     </div>
                                     <div className="space-y-1">
                                       {' '}
-                                      <Label>{t('weaponDamage')}</Label>{' '}
+                                      <Label>{t('dh.weaponDamage')}</Label>{' '}
                                       <Input
                                         defaultValue={weapon.damage}
                                         onChange={(e) =>
@@ -1173,7 +1181,7 @@ export const EquipmentInventorySection = React.forwardRef<
                                     <div className="space-y-1">
                                       {' '}
                                       <Label>
-                                        {t('weaponPenetration')}
+                                        {t('dh.weaponPenetration')}
                                       </Label>{' '}
                                       <Input
                                         defaultValue={weapon.penetration}
@@ -1189,7 +1197,7 @@ export const EquipmentInventorySection = React.forwardRef<
                                     </div>
                                     <div className="col-span-2 space-y-1">
                                       {' '}
-                                      <Label>{t('weaponTraits')}</Label>{' '}
+                                      <Label>{t('dh.weaponTraits')}</Label>{' '}
                                       <Input
                                         defaultValue={weapon.traits}
                                         onChange={(e) =>
@@ -1207,31 +1215,31 @@ export const EquipmentInventorySection = React.forwardRef<
                                   <>
                                     <div>
                                       <strong className="text-muted-foreground">
-                                        {t('weaponType')}:
+                                        {t('dh.weaponType')}:
                                       </strong>{' '}
                                       {weapon.type || '-'}
                                     </div>
                                     <div>
                                       <strong className="text-muted-foreground">
-                                        {t('weaponRange')}:
+                                        {t('dh.weaponRange')}:
                                       </strong>{' '}
                                       {weapon.range || '-'}
                                     </div>
                                     <div>
                                       <strong className="text-muted-foreground">
-                                        {t('weaponDamage')}:
+                                        {t('dh.weaponDamage')}:
                                       </strong>{' '}
                                       {weapon.damage || '-'}
                                     </div>
                                     <div>
                                       <strong className="text-muted-foreground">
-                                        {t('weaponPenetration')}:
+                                        {t('dh.weaponPenetration')}:
                                       </strong>{' '}
                                       {weapon.penetration || '-'}
                                     </div>
                                     <div className="col-span-2">
                                       <strong className="text-muted-foreground">
-                                        {t('weaponTraits')}:
+                                        {t('dh.weaponTraits')}:
                                       </strong>{' '}
                                       <span className="break-words">
                                         {weapon.traits || '-'}
@@ -1269,7 +1277,7 @@ export const EquipmentInventorySection = React.forwardRef<
                                   }
                                 />
                                 <Label className="text-xs">
-                                  {t('equipped')}
+                                  {t('dh.equipped')}
                                 </Label>
                               </div>
                             </div>
@@ -1282,8 +1290,8 @@ export const EquipmentInventorySection = React.forwardRef<
                               size="sm"
                               className="w-full"
                             >
-                              <Plus className="mr-2 h-4 w-4" /> {t('add')}{' '}
-                              {t('meleeWeapons')}
+                              <Plus className="mr-2 h-4 w-4" />{' '}
+                              {t('common.add')} {t('dh.meleeWeapons')}
                             </Button>
                           </div>
                         )}
@@ -1295,7 +1303,7 @@ export const EquipmentInventorySection = React.forwardRef<
                   <div>
                     <div className="mb-2 flex items-center justify-between">
                       <h4 className="text-lg font-semibold">
-                        {t('rangedWeapons')}
+                        {t('dh.rangedWeapons')}
                       </h4>
                       {(showEditButtons || isRangedWeaponsEditing) && (
                         <EditSaveButton
@@ -1345,7 +1353,7 @@ export const EquipmentInventorySection = React.forwardRef<
                                   </PopoverTrigger>
                                   <PopoverContent className="w-64">
                                     <Label className="mb-2 block text-xs">
-                                      {t('notesFor')} {weapon.name}
+                                      {t('common.notesFor')} {weapon.name}
                                     </Label>
                                     <Textarea
                                       defaultValue={weapon.notes || ''}
@@ -1382,7 +1390,7 @@ export const EquipmentInventorySection = React.forwardRef<
                                                 },
                                               }),
                                           })}
-                                      placeholder={t('addNotesPlaceholder')}
+                                      placeholder={t('dh.addNotesPlaceholder')}
                                       className="mt-2 min-h-[100px] text-sm"
                                     />
                                   </PopoverContent>
@@ -1405,7 +1413,7 @@ export const EquipmentInventorySection = React.forwardRef<
                               <>
                                 <div className="space-y-1">
                                   {' '}
-                                  <Label>{t('weaponType')}</Label>{' '}
+                                  <Label>{t('dh.weaponType')}</Label>{' '}
                                   <Input
                                     defaultValue={weapon.type}
                                     onChange={(e) =>
@@ -1420,7 +1428,7 @@ export const EquipmentInventorySection = React.forwardRef<
                                 </div>
                                 <div className="space-y-1">
                                   {' '}
-                                  <Label>{t('weaponRange')}</Label>{' '}
+                                  <Label>{t('dh.weaponRange')}</Label>{' '}
                                   <Input
                                     defaultValue={weapon.range}
                                     onChange={(e) =>
@@ -1435,7 +1443,7 @@ export const EquipmentInventorySection = React.forwardRef<
                                 </div>
                                 <div className="space-y-1">
                                   {' '}
-                                  <Label>{t('weaponRof')}</Label>{' '}
+                                  <Label>{t('dh.weaponRof')}</Label>{' '}
                                   <Input
                                     defaultValue={weapon.rof}
                                     onChange={(e) =>
@@ -1450,7 +1458,7 @@ export const EquipmentInventorySection = React.forwardRef<
                                 </div>
                                 <div className="space-y-1">
                                   {' '}
-                                  <Label>{t('weaponDamage')}</Label>{' '}
+                                  <Label>{t('dh.weaponDamage')}</Label>{' '}
                                   <Input
                                     defaultValue={weapon.damage}
                                     onChange={(e) =>
@@ -1465,7 +1473,7 @@ export const EquipmentInventorySection = React.forwardRef<
                                 </div>
                                 <div className="space-y-1">
                                   {' '}
-                                  <Label>{t('weaponClip')}</Label>{' '}
+                                  <Label>{t('dh.weaponClip')}</Label>{' '}
                                   <Input
                                     type="number"
                                     defaultValue={
@@ -1483,7 +1491,7 @@ export const EquipmentInventorySection = React.forwardRef<
                                 </div>
                                 <div className="space-y-1">
                                   {' '}
-                                  <Label>{t('weaponClipSize')}</Label>{' '}
+                                  <Label>{t('dh.weaponClipSize')}</Label>{' '}
                                   <Input
                                     type="number"
                                     defaultValue={
@@ -1503,7 +1511,7 @@ export const EquipmentInventorySection = React.forwardRef<
                                 </div>
                                 <div className="col-span-2 space-y-1">
                                   {' '}
-                                  <Label>{t('weaponReload')}</Label>{' '}
+                                  <Label>{t('dh.weaponReload')}</Label>{' '}
                                   <Input
                                     defaultValue={weapon.reload}
                                     onChange={(e) =>
@@ -1518,7 +1526,7 @@ export const EquipmentInventorySection = React.forwardRef<
                                 </div>
                                 <div className="col-span-2 space-y-1">
                                   {' '}
-                                  <Label>{t('weaponTraits')}</Label>{' '}
+                                  <Label>{t('dh.weaponTraits')}</Label>{' '}
                                   <Input
                                     defaultValue={weapon.traits}
                                     onChange={(e) =>
@@ -1536,43 +1544,43 @@ export const EquipmentInventorySection = React.forwardRef<
                               <>
                                 <div>
                                   <strong className="text-muted-foreground">
-                                    {t('weaponType')}:
+                                    {t('dh.weaponType')}:
                                   </strong>{' '}
                                   {weapon.type || '-'}
                                 </div>
                                 <div>
                                   <strong className="text-muted-foreground">
-                                    {t('weaponRange')}:
+                                    {t('dh.weaponRange')}:
                                   </strong>{' '}
                                   {weapon.range || '-'}
                                 </div>
                                 <div>
                                   <strong className="text-muted-foreground">
-                                    {t('weaponRof')}:
+                                    {t('dh.weaponRof')}:
                                   </strong>{' '}
                                   {weapon.rof || '-'}
                                 </div>
                                 <div>
                                   <strong className="text-muted-foreground">
-                                    {t('weaponDamage')}:
+                                    {t('dh.weaponDamage')}:
                                   </strong>{' '}
                                   {weapon.damage || '-'}
                                 </div>
                                 <div>
                                   <strong className="text-muted-foreground">
-                                    {t('weaponClip')}:
+                                    {t('dh.weaponClip')}:
                                   </strong>{' '}
                                   {weapon.clip} / {weapon.clipSize}
                                 </div>
                                 <div>
                                   <strong className="text-muted-foreground">
-                                    {t('weaponReload')}:
+                                    {t('dh.weaponReload')}:
                                   </strong>{' '}
                                   {weapon.reload || '-'}
                                 </div>
                                 <div className="col-span-2">
                                   <strong className="text-muted-foreground">
-                                    {t('weaponTraits')}:
+                                    {t('dh.weaponTraits')}:
                                   </strong>{' '}
                                   <span className="break-words">
                                     {weapon.traits || '-'}
@@ -1609,7 +1617,9 @@ export const EquipmentInventorySection = React.forwardRef<
                                     })
                               }
                             />
-                            <Label className="text-xs">{t('equipped')}</Label>
+                            <Label className="text-xs">
+                              {t('dh.equipped')}
+                            </Label>
                           </div>
                         </div>
                       ))}
@@ -1622,7 +1632,7 @@ export const EquipmentInventorySection = React.forwardRef<
                     >
                       <AccordionPrimitive.Header className="flex w-full">
                         <AccordionPrimitive.Trigger className="flex flex-1 items-center justify-between py-2 text-sm font-medium">
-                          <span>{t('notEquipped')}</span>
+                          <span>{t('dh.notEquipped')}</span>
                           <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
                         </AccordionPrimitive.Trigger>
                       </AccordionPrimitive.Header>
@@ -1667,7 +1677,7 @@ export const EquipmentInventorySection = React.forwardRef<
                                       </PopoverTrigger>
                                       <PopoverContent className="w-64">
                                         <Label className="mb-2 block text-xs">
-                                          {t('notesFor')} {weapon.name}
+                                          {t('common.notesFor')} {weapon.name}
                                         </Label>
                                         <Textarea
                                           defaultValue={weapon.notes || ''}
@@ -1709,7 +1719,9 @@ export const EquipmentInventorySection = React.forwardRef<
                                                     },
                                                   ),
                                               })}
-                                          placeholder={t('addNotesPlaceholder')}
+                                          placeholder={t(
+                                            'dh.addNotesPlaceholder',
+                                          )}
                                           className="mt-2 min-h-[100px] text-sm"
                                         />
                                       </PopoverContent>
@@ -1734,7 +1746,7 @@ export const EquipmentInventorySection = React.forwardRef<
                                   <>
                                     <div className="space-y-1">
                                       {' '}
-                                      <Label>{t('weaponType')}</Label>{' '}
+                                      <Label>{t('dh.weaponType')}</Label>{' '}
                                       <Input
                                         defaultValue={weapon.type}
                                         onChange={(e) =>
@@ -1749,7 +1761,7 @@ export const EquipmentInventorySection = React.forwardRef<
                                     </div>
                                     <div className="space-y-1">
                                       {' '}
-                                      <Label>{t('weaponRange')}</Label>{' '}
+                                      <Label>{t('dh.weaponRange')}</Label>{' '}
                                       <Input
                                         defaultValue={weapon.range}
                                         onChange={(e) =>
@@ -1764,7 +1776,7 @@ export const EquipmentInventorySection = React.forwardRef<
                                     </div>
                                     <div className="space-y-1">
                                       {' '}
-                                      <Label>{t('weaponRof')}</Label>{' '}
+                                      <Label>{t('dh.weaponRof')}</Label>{' '}
                                       <Input
                                         defaultValue={weapon.rof}
                                         onChange={(e) =>
@@ -1779,7 +1791,7 @@ export const EquipmentInventorySection = React.forwardRef<
                                     </div>
                                     <div className="space-y-1">
                                       {' '}
-                                      <Label>{t('weaponDamage')}</Label>{' '}
+                                      <Label>{t('dh.weaponDamage')}</Label>{' '}
                                       <Input
                                         defaultValue={weapon.damage}
                                         onChange={(e) =>
@@ -1794,7 +1806,7 @@ export const EquipmentInventorySection = React.forwardRef<
                                     </div>
                                     <div className="space-y-1">
                                       {' '}
-                                      <Label>{t('weaponClip')}</Label>{' '}
+                                      <Label>{t('dh.weaponClip')}</Label>{' '}
                                       <Input
                                         type="number"
                                         defaultValue={
@@ -1812,7 +1824,9 @@ export const EquipmentInventorySection = React.forwardRef<
                                     </div>
                                     <div className="space-y-1">
                                       {' '}
-                                      <Label>{t('weaponClipSize')}</Label>{' '}
+                                      <Label>
+                                        {t('dh.weaponClipSize')}
+                                      </Label>{' '}
                                       <Input
                                         type="number"
                                         defaultValue={
@@ -1832,7 +1846,7 @@ export const EquipmentInventorySection = React.forwardRef<
                                     </div>
                                     <div className="col-span-2 space-y-1">
                                       {' '}
-                                      <Label>{t('weaponReload')}</Label>{' '}
+                                      <Label>{t('dh.weaponReload')}</Label>{' '}
                                       <Input
                                         defaultValue={weapon.reload}
                                         onChange={(e) =>
@@ -1847,7 +1861,7 @@ export const EquipmentInventorySection = React.forwardRef<
                                     </div>
                                     <div className="col-span-2 space-y-1">
                                       {' '}
-                                      <Label>{t('weaponTraits')}</Label>{' '}
+                                      <Label>{t('dh.weaponTraits')}</Label>{' '}
                                       <Input
                                         defaultValue={weapon.traits}
                                         onChange={(e) =>
@@ -1865,43 +1879,43 @@ export const EquipmentInventorySection = React.forwardRef<
                                   <>
                                     <div>
                                       <strong className="text-muted-foreground">
-                                        {t('weaponType')}:
+                                        {t('dh.weaponType')}:
                                       </strong>{' '}
                                       {weapon.type || '-'}
                                     </div>
                                     <div>
                                       <strong className="text-muted-foreground">
-                                        {t('weaponRange')}:
+                                        {t('dh.weaponRange')}:
                                       </strong>{' '}
                                       {weapon.range || '-'}
                                     </div>
                                     <div>
                                       <strong className="text-muted-foreground">
-                                        {t('weaponRof')}:
+                                        {t('dh.weaponRof')}:
                                       </strong>{' '}
                                       {weapon.rof || '-'}
                                     </div>
                                     <div>
                                       <strong className="text-muted-foreground">
-                                        {t('weaponDamage')}:
+                                        {t('dh.weaponDamage')}:
                                       </strong>{' '}
                                       {weapon.damage || '-'}
                                     </div>
                                     <div>
                                       <strong className="text-muted-foreground">
-                                        {t('weaponClip')}:
+                                        {t('dh.weaponClip')}:
                                       </strong>{' '}
                                       {weapon.clip} / {weapon.clipSize}
                                     </div>
                                     <div>
                                       <strong className="text-muted-foreground">
-                                        {t('weaponReload')}:
+                                        {t('dh.weaponReload')}:
                                       </strong>{' '}
                                       {weapon.reload || '-'}
                                     </div>
                                     <div className="col-span-2">
                                       <strong className="text-muted-foreground">
-                                        {t('weaponTraits')}:
+                                        {t('dh.weaponTraits')}:
                                       </strong>{' '}
                                       <span className="break-words">
                                         {weapon.traits || '-'}
@@ -1939,7 +1953,7 @@ export const EquipmentInventorySection = React.forwardRef<
                                   }
                                 />
                                 <Label className="text-xs">
-                                  {t('equipped')}
+                                  {t('dh.equipped')}
                                 </Label>
                               </div>
                             </div>
@@ -1952,8 +1966,8 @@ export const EquipmentInventorySection = React.forwardRef<
                               size="sm"
                               className="w-full"
                             >
-                              <Plus className="mr-2 h-4 w-4" /> {t('add')}{' '}
-                              {t('rangedWeapons')}
+                              <Plus className="mr-2 h-4 w-4" />{' '}
+                              {t('common.add')} {t('dh.rangedWeapons')}
                             </Button>
                           </div>
                         )}
@@ -1983,7 +1997,7 @@ export const EquipmentInventorySection = React.forwardRef<
           >
             <div className="flex items-center border-b pr-4">
               <h3 className="font-headline flex-1 px-6 py-4 text-lg leading-none font-semibold tracking-tight">
-                {t('inventory')}
+                {t('common.inventory')}
               </h3>
               <CollapsibleTrigger asChild>
                 <Button size="icon" variant="ghost">
@@ -1993,7 +2007,7 @@ export const EquipmentInventorySection = React.forwardRef<
                       isInventorySectionOpen && 'rotate-90',
                     )}
                   />
-                  <span className="sr-only">{t('toggleInventory')}</span>
+                  <span className="sr-only">{t('dh.toggleInventory')}</span>
                 </Button>
               </CollapsibleTrigger>
             </div>
@@ -2003,7 +2017,7 @@ export const EquipmentInventorySection = React.forwardRef<
                   <div className="mb-4 flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <h4 className="text-primary text-lg font-semibold">
-                        {t('wealth')}
+                        {t('dh.wealth')}
                       </h4>
                       {!hideNotes && (
                         <Popover>
@@ -2020,7 +2034,7 @@ export const EquipmentInventorySection = React.forwardRef<
                           </PopoverTrigger>
                           <PopoverContent className="w-64">
                             <Label className="mb-2 block text-xs">
-                              {t('wealthNotes')}
+                              {t('dh.wealthNotes')}
                             </Label>
                             <Textarea
                               defaultValue={character.wealth?.notes || ''}
@@ -2032,7 +2046,7 @@ export const EquipmentInventorySection = React.forwardRef<
                                   },
                                 })
                               }
-                              placeholder={t('wealthNotesPlaceholder')}
+                              placeholder={t('dh.wealthNotesPlaceholder')}
                               className="min-h-[100px] text-sm"
                             />
                           </PopoverContent>
@@ -2050,7 +2064,7 @@ export const EquipmentInventorySection = React.forwardRef<
                   {isWealthEditing ? (
                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                       <div className="space-y-1">
-                        <Label>{t('throneGelt')}</Label>
+                        <Label>{t('dh.throneGelt')}</Label>
                         <Input
                           type="number"
                           value={
@@ -2067,7 +2081,7 @@ export const EquipmentInventorySection = React.forwardRef<
                         />
                       </div>
                       <div className="space-y-1">
-                        <Label>{t('monthlyIncome')}</Label>
+                        <Label>{t('dh.monthlyIncome')}</Label>
                         <Input
                           type="number"
                           value={
@@ -2087,13 +2101,13 @@ export const EquipmentInventorySection = React.forwardRef<
                   ) : (
                     <div className="grid grid-cols-1 gap-4 text-sm font-medium md:grid-cols-2">
                       <div className="bg-background flex items-center justify-between rounded border p-2">
-                        <span>{t('throneGelt')}:</span>{' '}
+                        <span>{t('dh.throneGelt')}:</span>{' '}
                         <span className="text-primary font-bold">
                           {character.wealth?.throneGelt ?? 0}
                         </span>
                       </div>
                       <div className="bg-background flex items-center justify-between rounded border p-2">
-                        <span>{t('monthlyIncome')}:</span>{' '}
+                        <span>{t('dh.monthlyIncome')}:</span>{' '}
                         <span className="text-primary font-bold">
                           {character.wealth?.monthlyIncome ?? 0}
                         </span>
@@ -2103,7 +2117,9 @@ export const EquipmentInventorySection = React.forwardRef<
                 </div>
                 <div className="bg-card space-y-4 rounded-lg border p-4 shadow-sm">
                   <div className="flex items-center justify-between border-b pb-2">
-                    <h4 className="text-lg font-semibold">{t('items')}</h4>
+                    <h4 className="text-lg font-semibold">
+                      {t('common.items')}
+                    </h4>
                     {(showEditButtons || isInventoryEditing) && (
                       <EditSaveButton
                         editing={isInventoryEditing}
@@ -2146,7 +2162,7 @@ export const EquipmentInventorySection = React.forwardRef<
                                 </PopoverTrigger>
                                 <PopoverContent className="w-64">
                                   <Label className="mb-2 block text-xs">
-                                    {t('notesFor')} {item.name}
+                                    {t('common.notesFor')} {item.name}
                                   </Label>
                                   <Textarea
                                     defaultValue={item.notes || ''}
@@ -2159,7 +2175,7 @@ export const EquipmentInventorySection = React.forwardRef<
                                         ),
                                       )
                                     }
-                                    placeholder={t('addNotesPlaceholder')}
+                                    placeholder={t('dh.addNotesPlaceholder')}
                                     className="mt-2 min-h-[100px] text-sm"
                                   />
                                 </PopoverContent>
@@ -2184,12 +2200,12 @@ export const EquipmentInventorySection = React.forwardRef<
                       </div>
                       <div className="flex gap-2 pt-2">
                         <Input
-                          placeholder={t('newInventoryItem')}
+                          placeholder={t('dh.newInventoryItem')}
                           value={newInventoryItem}
                           onChange={(e) => setNewInventoryItem(e.target.value)}
                         />
                         <Button onClick={addInventoryItem} size="sm">
-                          <Plus className="mr-2 h-4 w-4" /> {t('add')}
+                          <Plus className="mr-2 h-4 w-4" /> {t('common.add')}
                         </Button>
                       </div>
                     </div>
@@ -2218,7 +2234,7 @@ export const EquipmentInventorySection = React.forwardRef<
                                 </PopoverTrigger>
                                 <PopoverContent className="w-64">
                                   <Label className="mb-2 block text-xs">
-                                    {t('notesFor')} {item.name}
+                                    {t('common.notesFor')} {item.name}
                                   </Label>
                                   <Textarea
                                     defaultValue={item.notes || ''}
@@ -2233,7 +2249,7 @@ export const EquipmentInventorySection = React.forwardRef<
                                         ),
                                       })
                                     }
-                                    placeholder={t('addNotesPlaceholder')}
+                                    placeholder={t('dh.addNotesPlaceholder')}
                                     className="mt-2 min-h-[100px] text-sm"
                                   />
                                 </PopoverContent>
@@ -2243,7 +2259,7 @@ export const EquipmentInventorySection = React.forwardRef<
                         ))
                       ) : (
                         <p className="text-muted-foreground col-span-full rounded-lg border border-dashed p-4 text-center text-sm italic">
-                          {t('noInventoryItems')}
+                          {t('dh.noInventoryItems')}
                         </p>
                       )}
                     </div>

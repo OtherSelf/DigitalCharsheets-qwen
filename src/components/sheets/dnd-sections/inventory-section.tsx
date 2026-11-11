@@ -111,14 +111,14 @@ export const DndInventorySection = React.forwardRef<
     <Card id={`${idp}inventory-box`}>
       <CardHeader className="px-4 pt-2 pb-2">
         <CardTitle className="text-muted-foreground text-[10px] font-bold tracking-tight uppercase">
-          {t('inventory')}
+          {t('common.inventory')}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6 p-4 pt-0">
         <div className="bg-muted/30 rounded-lg border p-3">
           <div className="mb-3 flex items-center justify-between border-b pb-1">
             <Label className="text-[10px] font-bold uppercase">
-              {t('money')}
+              {t('dnd.money')}
             </Label>
             {(showEditButtons || isMoneyEditing) && (
               <EditSaveButton
@@ -156,7 +156,7 @@ export const DndInventorySection = React.forwardRef<
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <Label className="text-[10px] font-bold uppercase">
-              {t('items')}
+              {t('common.items')}
             </Label>
             {(showEditButtons || isItemsEditing) && (
               <EditSaveButton
@@ -205,14 +205,14 @@ export const DndInventorySection = React.forwardRef<
                             variant={it.notes ? 'secondary' : 'ghost'}
                             size="icon"
                             className="h-6 w-6 shrink-0"
-                            title={t('notes')}
+                            title={t('common.notes')}
                           >
                             <Info className="h-3 w-3" />
                           </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-64">
                           <Label className="mb-2 block text-xs">
-                            {t('notesFor')} {it.name || t('item')}
+                            {t('common.notesFor')} {it.name || t('dnd.item')}
                           </Label>
                           <Textarea
                             defaultValue={it.notes || ''}
@@ -225,7 +225,7 @@ export const DndInventorySection = React.forwardRef<
                               setEquipment(next);
                               updateCharacter(characterId, { equipment: next });
                             }}
-                            placeholder={`${t('addNotes')}...`}
+                            placeholder={`${t('common.addNotes')}...`}
                             className="mt-2 min-h-[100px] text-sm"
                           />
                         </PopoverContent>
@@ -252,14 +252,14 @@ export const DndInventorySection = React.forwardRef<
                             variant={it.notes ? 'secondary' : 'ghost'}
                             size="icon"
                             className="h-5 w-5 shrink-0"
-                            title={t('notes')}
+                            title={t('common.notes')}
                           >
                             <Info className="h-3 w-3" />
                           </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-64">
                           <Label className="mb-2 block text-xs">
-                            {t('notesFor')} {it.name || t('item')}
+                            {t('common.notesFor')} {it.name || t('dnd.item')}
                           </Label>
                           <Textarea
                             defaultValue={it.notes || ''}
@@ -272,7 +272,7 @@ export const DndInventorySection = React.forwardRef<
                               setEquipment(next);
                               updateCharacter(characterId, { equipment: next });
                             }}
-                            placeholder={`${t('addNotes')}...`}
+                            placeholder={`${t('common.addNotes')}...`}
                             className="mt-2 min-h-[100px] text-sm"
                           />
                         </PopoverContent>
@@ -293,7 +293,7 @@ export const DndInventorySection = React.forwardRef<
             {isItemsEditing && (
               <div className="flex gap-2 border-t pt-2">
                 <Input
-                  placeholder={t('newItemPlaceholder')}
+                  placeholder={t('dnd.newItemPlaceholder')}
                   value={newEquipmentItem}
                   onChange={(e) => setNewEquipmentItem(e.target.value)}
                   className="h-8 text-xs"

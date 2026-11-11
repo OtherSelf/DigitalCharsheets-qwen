@@ -42,8 +42,8 @@ export function NotesDialog({
   const handleSave = () => {
     updateCharacter(character.id, { notes });
     toast({
-      title: t('notesSaved'),
-      description: t('notesUpdatedDesc'),
+      title: t('common.notesSaved'),
+      description: t('common.notesUpdatedDesc'),
     });
     onOpenChange(false);
   };
@@ -55,20 +55,22 @@ export function NotesDialog({
         onOpenAutoFocus={(e) => e.preventDefault()}
       >
         <DialogHeader>
-          <DialogTitle>{t('characterNotes')}</DialogTitle>
-          <DialogDescription>{t('characterNotesDesc')}</DialogDescription>
+          <DialogTitle>{t('common.characterNotes')}</DialogTitle>
+          <DialogDescription>
+            {t('common.characterNotesDesc')}
+          </DialogDescription>
         </DialogHeader>
         <div className="py-4">
           <Textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            placeholder={t('jotDownNotesPlaceholder')}
+            placeholder={t('common.jotDownNotesPlaceholder')}
             className="min-h-[300px]"
           />
         </div>
         <DialogFooter>
           <Button type="button" onClick={handleSave}>
-            {t('saveChanges')}
+            {t('common.saveChanges')}
           </Button>
         </DialogFooter>
       </DialogContent>

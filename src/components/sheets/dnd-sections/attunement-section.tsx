@@ -117,7 +117,7 @@ export const DndAttunementSection = React.forwardRef<
     <Card id={`${idp}attunement-card`}>
       <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2">
         <CardTitle className="text-muted-foreground text-[10px] font-bold tracking-tight uppercase">
-          {t('attunement')}
+          {t('dnd.attunement')}
         </CardTitle>
         {(showEditButtons || isAttunementEditing) && (
           <EditSaveButton
@@ -162,7 +162,7 @@ export const DndAttunementSection = React.forwardRef<
                   {it.description}
                   {it.attuned && (
                     <span className="text-primary ml-1 text-[8px] font-black uppercase">
-                      ({t('attuned')})
+                      ({t('dnd.attuned')})
                     </span>
                   )}
                 </span>
@@ -175,14 +175,14 @@ export const DndAttunementSection = React.forwardRef<
                       variant={it.notes ? 'secondary' : 'ghost'}
                       size="icon"
                       className="h-5 w-5 shrink-0"
-                      title={t('notes')}
+                      title={t('common.notes')}
                     >
                       <Info className="h-3 w-3" />
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-64">
                     <Label className="mb-2 block text-xs">
-                      {t('notesFor')} {it.description || t('item')}
+                      {t('common.notesFor')} {it.description || t('dnd.item')}
                     </Label>
                     <Textarea
                       defaultValue={it.notes || ''}
@@ -195,7 +195,7 @@ export const DndAttunementSection = React.forwardRef<
                         setAttunementItems(next);
                         updateCharacter(characterId, { attunementItems: next });
                       }}
-                      placeholder={`${t('addNotes')}...`}
+                      placeholder={`${t('common.addNotes')}...`}
                       className="mt-2 min-h-[100px] text-sm"
                     />
                   </PopoverContent>
@@ -222,7 +222,7 @@ export const DndAttunementSection = React.forwardRef<
         {isAttunementEditing && (
           <div className="flex gap-2 border-t pt-2">
             <Input
-              placeholder={t('newItemPlaceholder')}
+              placeholder={t('dnd.newItemPlaceholder')}
               value={newAttunementItem}
               onChange={(e) => setNewAttunementItem(e.target.value)}
               className="h-7 text-[10px]"

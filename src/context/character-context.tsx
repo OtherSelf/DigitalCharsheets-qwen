@@ -297,8 +297,8 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
       onError: () => {
         toastRef.current({
           variant: 'destructive',
-          title: tRef.current('saveFailed'),
-          description: tRef.current('saveFailedDesc'),
+          title: tRef.current('common.saveFailed'),
+          description: tRef.current('common.saveFailedDesc'),
         });
       },
     });
@@ -602,8 +602,8 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
         console.error('Failed to create character:', error);
         toast({
           variant: 'destructive',
-          title: t('error'),
-          description: t('failedToCreateCharacter'),
+          title: t('common.error'),
+          description: t('io.failedToCreateCharacter'),
         });
         return undefined;
       }
@@ -695,8 +695,8 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
       console.error('Failed to create pending character:', error);
       toast({
         variant: 'destructive',
-        title: t('error'),
-        description: t('failedToCreateCharacter'),
+        title: t('common.error'),
+        description: t('io.failedToCreateCharacter'),
       });
     }
   }, [user, applyCharacters, router, toast, t]);
@@ -715,8 +715,8 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
         .then(() => {
           if (characterToDelete) {
             toast({
-              title: t('characterDeleted'),
-              description: `${characterToDelete.name} ${t('characterDeletedDesc')}`,
+              title: t('common.characterDeleted'),
+              description: `${characterToDelete.name} ${t('common.characterDeletedDesc')}`,
             });
           }
         })

@@ -78,8 +78,8 @@ export function DivineBoonsDialog({
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-h-[80vh] overflow-y-auto sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>{t('addDivineBoon')}</DialogTitle>
-          <DialogDescription>{t('chooseEpicBoonDesc')}</DialogDescription>
+          <DialogTitle>{t('dnd.addDivineBoon')}</DialogTitle>
+          <DialogDescription>{t('dnd.chooseEpicBoonDesc')}</DialogDescription>
         </DialogHeader>
 
         <Tabs
@@ -88,19 +88,19 @@ export function DivineBoonsDialog({
           className="mt-4"
         >
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="official">{t('officialBoons')}</TabsTrigger>
-            <TabsTrigger value="custom">{t('customBoon')}</TabsTrigger>
+            <TabsTrigger value="official">{t('dnd.officialBoons')}</TabsTrigger>
+            <TabsTrigger value="custom">{t('dnd.customBoon')}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="official" className="mt-4 space-y-4">
             <div className="space-y-2">
-              <Label>{t('selectEpicBoon')}</Label>
+              <Label>{t('dnd.selectEpicBoon')}</Label>
               <Select
                 value={selectedBoon}
                 onValueChange={(v) => setSelectedBoon(v as EpicBoonKey)}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder={t('chooseABoon')} />
+                  <SelectValue placeholder={t('dnd.chooseABoon')} />
                 </SelectTrigger>
                 <SelectContent className="max-h-[300px] overflow-y-auto">
                   {EPIC_BOON_KEYS.map((key) => (
@@ -124,19 +124,19 @@ export function DivineBoonsDialog({
 
           <TabsContent value="custom" className="mt-4 space-y-4">
             <div className="space-y-2">
-              <Label>{t('boonName')}</Label>
+              <Label>{t('dnd.boonName')}</Label>
               <Input
                 value={customBoonName}
                 onChange={(e) => setCustomBoonName(e.target.value)}
-                placeholder={t('boonNamePlaceholder')}
+                placeholder={t('dnd.boonNamePlaceholder')}
               />
             </div>
             <div className="space-y-2">
-              <Label>{t('description')}</Label>
+              <Label>{t('common.description')}</Label>
               <Textarea
                 value={customBoonDesc}
                 onChange={(e) => setCustomBoonDesc(e.target.value)}
-                placeholder={t('boonDescriptionPlaceholder')}
+                placeholder={t('dnd.boonDescriptionPlaceholder')}
                 className="min-h-[100px]"
               />
             </div>
@@ -145,7 +145,7 @@ export function DivineBoonsDialog({
 
         <DialogFooter className="mt-6">
           <Button variant="outline" onClick={handleClose}>
-            {t('cancel')}
+            {t('common.cancel')}
           </Button>
           <Button
             onClick={
@@ -155,7 +155,7 @@ export function DivineBoonsDialog({
               activeTab === 'official' ? !selectedBoon : !customBoonName.trim()
             }
           >
-            {t('addBoon')}
+            {t('dnd.addBoon')}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -188,16 +188,16 @@ const SKILL_STAT_MAP: Record<string, keyof DnDCompanion['stats']> = {
 };
 
 const SECTION_LABELS: Record<string, string> = {
-  stats: 'characteristics',
-  combat: 'combatStats',
-  attacks: 'attacksAndSpellcasting',
-  inventory: 'inventory',
-  spells: 'spells',
-  narrative: 'narrativeSection',
-  info: 'characterInfo',
-  progression: 'progression',
-  divineBoons: 'divineBoons',
-  hitDice: 'hitDice',
+  stats: 'common.characteristics',
+  combat: 'dnd.combatStats',
+  attacks: 'dnd.attacksAndSpellcasting',
+  inventory: 'common.inventory',
+  spells: 'dnd.spells',
+  narrative: 'dnd.narrativeSection',
+  info: 'dnd.characterInfo',
+  progression: 'common.progression',
+  divineBoons: 'dnd.divineBoons',
+  hitDice: 'dnd.hitDice',
 };
 
 interface CompanionSheetProps {
@@ -373,27 +373,27 @@ export function CompanionSheet({
                 value={companion.name}
                 onChange={(e) => onUpdate({ name: e.target.value })}
                 className="h-10 w-full text-xl font-bold"
-                placeholder={t('companionNamePlaceholder')}
+                placeholder={t('dnd.companionNamePlaceholder')}
               />
               <div className="flex gap-2">
                 <Input
                   value={companion.type}
                   onChange={(e) => onUpdate({ type: e.target.value })}
                   className="h-8 flex-1 text-sm"
-                  placeholder={t('companionTypePlaceholder')}
+                  placeholder={t('dnd.companionTypePlaceholder')}
                 />
                 <Input
                   value={companion.size}
                   onChange={(e) => onUpdate({ size: e.target.value })}
                   className="h-8 flex-1 text-sm"
-                  placeholder={t('companionSizePlaceholder')}
+                  placeholder={t('dnd.companionSizePlaceholder')}
                 />
               </div>
             </div>
           ) : (
             <div>
               <CardTitle className="text-2xl font-bold">
-                {companion.name || t('unnamedCompanion')}
+                {companion.name || t('dnd.unnamedCompanion')}
               </CardTitle>
               {(companion.type || companion.size) && (
                 <p className="text-muted-foreground mt-1 text-sm">
@@ -436,7 +436,7 @@ export function CompanionSheet({
       {isEditing && (
         <div className="bg-muted/30 mb-6 flex flex-wrap gap-4 rounded-lg border p-4">
           <Label className="mb-1 w-full text-xs font-bold uppercase">
-            {t('showSections')}
+            {t('dnd.showSections')}
           </Label>
           {(
             Object.keys(SECTION_LABELS) as Array<keyof typeof SECTION_LABELS>

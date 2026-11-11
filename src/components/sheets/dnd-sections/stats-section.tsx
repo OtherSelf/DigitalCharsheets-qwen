@@ -74,12 +74,12 @@ const StatBox = ({
           </PopoverTrigger>
           <PopoverContent className="w-64">
             <Label className="mb-2 block text-xs">
-              {t('notesFor')} {label}
+              {t('common.notesFor')} {label}
             </Label>
             <Textarea
               defaultValue={notes || ''}
               onBlur={(e) => onNoteChange(e.target.value)}
-              placeholder={`${t('addNotes')}...`}
+              placeholder={`${t('common.addNotes')}...`}
               className="min-h-[100px] text-sm"
             />
           </PopoverContent>
@@ -119,7 +119,7 @@ const StatBox = ({
       </div>
       <div className="mt-2 w-full">
         <div className="text-muted-foreground mb-0.5 text-[8px] font-bold uppercase">
-          {t('mod')}
+          {t('dnd.mod')}
         </div>
         <div
           className={cn(
@@ -233,7 +233,7 @@ export function DndStatsSection({
         <Card id={`${idp}stats-card`}>
           <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2">
             <CardTitle className="text-muted-foreground text-[10px] font-bold tracking-tight uppercase">
-              {t('characteristics')}
+              {t('common.characteristics')}
             </CardTitle>
             {(showEditButtons || isStatsEditing) && (
               <EditSaveButton
@@ -275,10 +275,10 @@ export function DndStatsSection({
               <div className="border-primary/20 bg-primary/5 flex items-center justify-between rounded-lg border p-3">
                 <div className="flex flex-col">
                   <Label className="text-muted-foreground text-[10px] font-bold uppercase">
-                    {t('passivePerception')}
+                    {t('dnd.passivePerception')}
                   </Label>
                   <span className="text-muted-foreground text-[10px]">
-                    10 + {t('wisdomMod')}{' '}
+                    10 + {t('dnd.wisdomMod')}{' '}
                     {passivePerception > 10 + wisdomMod
                       ? `+ ${passivePerception - (10 + wisdomMod)}`
                       : ''}
@@ -297,7 +297,7 @@ export function DndStatsSection({
         <Card>
           <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2">
             <CardTitle className="text-muted-foreground text-[10px] font-bold tracking-tight uppercase">
-              {t('otherProficienciesAndLanguages')}
+              {t('dnd.otherProficienciesAndLanguages')}
             </CardTitle>
             {(showEditButtons || isOtherProficienciesEditing) && (
               <EditSaveButton
@@ -347,7 +347,7 @@ export function DndStatsSection({
             {isOtherProficienciesEditing && (
               <div className="flex gap-2 border-t pt-2">
                 <Input
-                  placeholder={t('newItemPlaceholder')}
+                  placeholder={t('dnd.newItemPlaceholder')}
                   value={newProfItem}
                   onChange={(e) => setNewProfItem(e.target.value)}
                   className="h-7 text-[10px]"

@@ -40,7 +40,7 @@ export function UserNav() {
   if (!user)
     return (
       <Button asChild>
-        <Link href="/login">{t('signIn') || 'Sign In'}</Link>
+        <Link href="/login">{t('common.signIn') || 'Sign In'}</Link>
       </Button>
     );
 
@@ -68,7 +68,7 @@ export function UserNav() {
           >
             <CircleUserRound className="h-6 w-6" />
             <span className="sr-only">
-              {t('openUserMenu') || 'Open user menu'}
+              {t('common.openUserMenu') || 'Open user menu'}
             </span>
           </Button>
         </DropdownMenuTrigger>
@@ -76,7 +76,7 @@ export function UserNav() {
           <DropdownMenuLabel className="font-normal">
             <div className="flex flex-col space-y-1">
               <p className="text-sm leading-none font-medium">
-                {user.displayName || t('user') || 'User'}
+                {user.displayName || t('admin.user') || 'User'}
               </p>
               <p className="text-muted-foreground text-xs">{user.username}</p>
             </div>
@@ -97,7 +97,7 @@ export function UserNav() {
             className="flex w-full cursor-pointer items-center"
           >
             <Type className="mr-2 h-4 w-4" />
-            <span>{t('displaySettings') || 'Display Settings'}</span>
+            <span>{t('settings.displaySettings') || 'Display Settings'}</span>
           </DropdownMenuItem>
 
           {/* LANDMARK: SETTINGS_MENU_ITEM */}
@@ -107,7 +107,7 @@ export function UserNav() {
               className="flex w-full cursor-pointer items-center"
             >
               <Settings className="mr-2 h-4 w-4" />
-              <span>{t('settings') || 'Settings'}</span>
+              <span>{t('settings.title') || 'Settings'}</span>
             </Link>
           </DropdownMenuItem>
 
@@ -124,14 +124,14 @@ export function UserNav() {
                 className="flex w-full cursor-pointer items-center"
               >
                 <Shield className="mr-2 h-4 w-4" />
-                <span>{t('adminPanel') || 'Administration'}</span>
+                <span>{t('admin.panel') || 'Administration'}</span>
               </Link>
             </DropdownMenuItem>
           )}
 
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={logout}>
-            {t('logout') || 'Log out'}
+            {t('common.logout') || 'Log out'}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

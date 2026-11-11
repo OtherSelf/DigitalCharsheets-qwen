@@ -197,17 +197,17 @@ export function DemoLanding({ createHref = '/new' }: DemoLandingProps) {
         : null;
 
   // Имя персонажа в переводе остаётся подстановкой внутри фразы.
-  const [hintBeforeName, hintAfterName] = t('demoModeHint').split('{name}');
+  const [hintBeforeName, hintAfterName] = t('demo.modeHint').split('{name}');
 
   return (
     <>
       {/* LANDMARK: DEMO_HERO */}
       <div className="mb-10 space-y-4 text-center">
         <h1 className="font-headline text-4xl font-bold tracking-tight">
-          {t('demoHeroTitle')}
+          {t('demo.heroTitle')}
         </h1>
         <p className="text-muted-foreground mx-auto max-w-2xl text-lg">
-          {t('demoHeroSubtitle')}
+          {t('demo.heroSubtitle')}
         </p>
       </div>
 
@@ -217,15 +217,15 @@ export function DemoLanding({ createHref = '/new' }: DemoLandingProps) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Sparkles className="text-primary h-5 w-5" />
-              {t('demoCreateCardTitle')}
+              {t('demo.createCardTitle')}
             </CardTitle>
-            <CardDescription>{t('demoCreateCardDesc')}</CardDescription>
+            <CardDescription>{t('demo.createCardDesc')}</CardDescription>
           </CardHeader>
           <CardContent>
             <Button asChild className="w-full">
               <Link href={createHref}>
                 <UserPlus className="mr-2 h-4 w-4" />
-                {t('demoCreateCardAction')}
+                {t('demo.createCardAction')}
               </Link>
             </Button>
           </CardContent>
@@ -235,9 +235,9 @@ export function DemoLanding({ createHref = '/new' }: DemoLandingProps) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Sword className="text-primary h-5 w-5" />
-              {t('demoExploreCardTitle')}
+              {t('demo.exploreCardTitle')}
             </CardTitle>
-            <CardDescription>{t('demoExploreCardDesc')}</CardDescription>
+            <CardDescription>{t('demo.exploreCardDesc')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             <Button
@@ -247,14 +247,14 @@ export function DemoLanding({ createHref = '/new' }: DemoLandingProps) {
               className="w-full justify-start"
               onClick={() => setPreviewSystem('Dungeons & Dragons')}
             >
-              {t('demoPreviewDnd')}
+              {t('demo.previewDnd')}
             </Button>
             <Button
               variant={previewSystem === 'Dark Heresy' ? 'default' : 'outline'}
               className="w-full justify-start"
               onClick={() => setPreviewSystem('Dark Heresy')}
             >
-              {t('demoPreviewDh')}
+              {t('demo.previewDh')}
             </Button>
           </CardContent>
         </Card>
@@ -266,7 +266,7 @@ export function DemoLanding({ createHref = '/new' }: DemoLandingProps) {
           <div className="border-primary/20 bg-primary/10 flex flex-col justify-between gap-4 rounded-lg border p-4 sm:flex-row sm:items-center">
             <div>
               <h3 className="text-primary font-semibold">
-                {t('demoModeActive')}
+                {t('demo.modeActive')}
               </h3>
               <p className="text-muted-foreground text-sm">
                 {hintBeforeName}
@@ -277,7 +277,7 @@ export function DemoLanding({ createHref = '/new' }: DemoLandingProps) {
             <Button asChild variant="default" className="shrink-0">
               <Link href="/login">
                 <UserPlus className="mr-2 h-4 w-4" />
-                {t('demoCreateAccountToSave')}
+                {t('demo.createAccountToSave')}
               </Link>
             </Button>
           </div>

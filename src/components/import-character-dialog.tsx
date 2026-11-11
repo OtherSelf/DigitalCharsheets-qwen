@@ -111,13 +111,13 @@ export function ImportCharacterDialog({
         }, 1500);
       } else {
         setImportError(
-          t('failedToCreateCharacter') || 'Failed to create character',
+          t('io.failedToCreateCharacter') || 'Failed to create character',
         );
       }
     } catch (err) {
       console.error(err);
       setImportError(
-        t('failedToCreateCharacter') || 'Failed to create character',
+        t('io.failedToCreateCharacter') || 'Failed to create character',
       );
     } finally {
       setIsImporting(false);
@@ -133,7 +133,7 @@ export function ImportCharacterDialog({
             className="border-muted-foreground/30 text-muted-foreground hover:border-accent hover:bg-accent/10 hover:text-accent-foreground flex h-20 w-full items-center justify-center rounded-lg border-2 border-dashed bg-transparent p-0 transition-colors duration-200"
           >
             <FileUp className="mr-4 h-8 w-8" />
-            <span className="font-semibold">{t('importCharacter')}</span>
+            <span className="font-semibold">{t('io.importCharacter')}</span>
           </Button>
         ) : (
           <Button
@@ -141,14 +141,14 @@ export function ImportCharacterDialog({
             className="border-muted-foreground/30 text-muted-foreground hover:border-accent hover:bg-accent/10 hover:text-accent-foreground flex h-full min-h-[200px] w-full flex-col items-center justify-center rounded-lg border-2 border-dashed bg-transparent p-0 transition-colors duration-200"
           >
             <FileUp className="mb-2 h-12 w-12" />
-            <span className="font-semibold">{t('importCharacter')}</span>
+            <span className="font-semibold">{t('io.importCharacter')}</span>
           </Button>
         )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>{t('importCharacter')}</DialogTitle>
-          <DialogDescription>{t('importDashboardDesc')}</DialogDescription>
+          <DialogTitle>{t('io.importCharacter')}</DialogTitle>
+          <DialogDescription>{t('io.importDashboardDesc')}</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
@@ -171,7 +171,9 @@ export function ImportCharacterDialog({
           {importSuccess && (
             <Alert className="border-green-200 bg-green-50 text-green-800 dark:border-green-800 dark:bg-green-900/20 dark:text-green-300">
               <CheckCircle2 className="h-4 w-4" />
-              <AlertDescription>{t('importSuccessDashboard')}</AlertDescription>
+              <AlertDescription>
+                {t('io.importSuccessDashboard')}
+              </AlertDescription>
             </Alert>
           )}
         </div>
@@ -182,7 +184,7 @@ export function ImportCharacterDialog({
             onClick={() => setOpen(false)}
             disabled={isImporting}
           >
-            {t('cancel')}
+            {t('common.cancel')}
           </Button>
         </DialogFooter>
       </DialogContent>

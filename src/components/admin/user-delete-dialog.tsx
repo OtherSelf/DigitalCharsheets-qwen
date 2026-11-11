@@ -65,7 +65,7 @@ export function UserDeleteDialog({
     event.preventDefault();
     if (!user || isSaving) return;
     if (!matches) {
-      setError(t('adminDeleteMismatch'));
+      setError(t('admin.deleteMismatch'));
       return;
     }
 
@@ -82,15 +82,15 @@ export function UserDeleteDialog({
         setError(
           adminReasonMessage(data?.reason, t) ||
             data?.error ||
-            t('adminDeleteFailed'),
+            t('admin.deleteFailed'),
         );
         return;
       }
 
-      toast({ title: t('adminDeletedToast') });
+      toast({ title: t('admin.deletedToast') });
       onDone();
     } catch {
-      setError(t('adminDeleteFailed'));
+      setError(t('admin.deleteFailed'));
     } finally {
       setIsSaving(false);
     }
@@ -103,8 +103,8 @@ export function UserDeleteDialog({
         data-testid="admin-delete-dialog"
       >
         <DialogHeader>
-          <DialogTitle>{t('adminDeleteTitle')}</DialogTitle>
-          <DialogDescription>{t('adminDeleteDescription')}</DialogDescription>
+          <DialogTitle>{t('admin.deleteTitle')}</DialogTitle>
+          <DialogDescription>{t('admin.deleteDescription')}</DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleDelete} className="space-y-4">
@@ -114,7 +114,7 @@ export function UserDeleteDialog({
 
           <div className="space-y-2">
             <Label htmlFor="admin-delete-confirm">
-              {t('adminDeleteConfirmLabel').replace('{username}', expected)}
+              {t('admin.deleteConfirmLabel').replace('{username}', expected)}
             </Label>
             <Input
               id="admin-delete-confirm"
@@ -139,7 +139,7 @@ export function UserDeleteDialog({
               onClick={() => handleOpenChange(false)}
               disabled={isSaving}
             >
-              {t('cancel')}
+              {t('common.cancel')}
             </Button>
             <Button
               type="submit"
@@ -151,7 +151,7 @@ export function UserDeleteDialog({
               ) : (
                 <Trash2 className="mr-2 h-4 w-4" />
               )}
-              {t('delete')}
+              {t('common.delete')}
             </Button>
           </DialogFooter>
         </form>

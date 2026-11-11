@@ -83,21 +83,21 @@ export default function LoginPage() {
       result.reason === 'no_account' ||
       /no account found/i.test(result.error || '')
     ) {
-      return t('authNoAccountFound');
+      return t('auth.noAccountFound');
     }
     if (
       result.reason === 'invalid_password' ||
       /incorrect password/i.test(result.error || '')
     ) {
-      return t('authIncorrectPassword');
+      return t('auth.incorrectPassword');
     }
     if (
       result.reason === 'blocked' ||
       /blocked by an administrator/i.test(result.error || '')
     ) {
-      return t('authAccountBlocked');
+      return t('auth.accountBlocked');
     }
-    return result.error || t('authLoginFailed');
+    return result.error || t('auth.loginFailed');
   };
 
   const mapRegisterError = (result: AuthFailure): string => {
@@ -105,29 +105,30 @@ export default function LoginPage() {
       result.reason === 'exists' ||
       /already registered/i.test(result.error || '')
     ) {
-      return t('authAccountExists');
+      return t('auth.accountExists');
     }
     if (/recovery phrase/i.test(result.error || '')) {
-      return t('authPhraseMinLength');
+      return t('auth.authPhraseMinLength');
     }
     if (/4 characters/i.test(result.error || '')) {
-      return t('passwordMinLength');
+      return t('common.passwordMinLength');
     }
-    return result.error || t('authRegistrationFailed');
+    return result.error || t('auth.registrationFailed');
   };
 
   const mapRecoveryError = (message: string | undefined): string => {
     const text = message || '';
     const wordMatch = /The word "([^"]+)" was not found/.exec(text);
-    if (wordMatch) return t('authWordNotFound').replace('{word}', wordMatch[1]);
-    if (/no account found/i.test(text)) return t('authNoAccountFound');
-    if (/no recovery phrase/i.test(text)) return t('authNoRecoveryPhrase');
-    if (/no character sheets/i.test(text)) return t('authNoCharacterSheets');
+    if (wordMatch)
+      return t('auth.wordNotFound').replace('{word}', wordMatch[1]);
+    if (/no account found/i.test(text)) return t('auth.noAccountFound');
+    if (/no recovery phrase/i.test(text)) return t('auth.noRecoveryPhrase');
+    if (/no character sheets/i.test(text)) return t('auth.noCharacterSheets');
     if (/recovery phrase does not match/i.test(text))
-      return t('authPhraseMismatch');
+      return t('auth.phraseMismatch');
     if (/provide valid words|required/i.test(text))
-      return t('authFillAllFields');
-    return text || t('authGenericError');
+      return t('auth.fillAllFields');
+    return text || t('auth.genericError');
   };
 
   // ─── Вход: сначала проверяем существование аккаунта ───────────────────────
@@ -136,7 +137,7 @@ export default function LoginPage() {
     setError('');
 
     if (!username || !password) {
-      setError(t('authEnterUsernamePassword'));
+      setError(t('auth.enterUsernamePassword'));
       return;
     }
 
@@ -144,12 +145,12 @@ export default function LoginPage() {
 
     const check = await accountExists(username.trim());
     if (check.error) {
-      setError(t('authConnectFailed'));
+      setError(t('auth.connectFailed'));
       setIsLoading(false);
       return;
     }
     if (!check.exists) {
-      setError(t('authNoAccountFound'));
+      setError(t('auth.noAccountFound'));
       setIsLoading(false);
       return;
     }
@@ -170,15 +171,15 @@ export default function LoginPage() {
     setError('');
 
     if (!username || !displayName || !password || !recoveryPhrase) {
-      setError(t('authFillAllFields'));
+      setError(t('auth.fillAllFields'));
       return;
     }
     if (password.length < 4) {
-      setError(t('passwordMinLength'));
+      setError(t('common.passwordMinLength'));
       return;
     }
     if (recoveryPhrase.trim().length < 5) {
-      setError(t('authPhraseMinLength'));
+      setError(t('auth.authPhraseMinLength'));
       return;
     }
 
@@ -214,7 +215,7 @@ export default function LoginPage() {
     setError('');
 
     if (!username || !word1 || !word2 || !word3 || !recoveryPhraseInput) {
-      setError(t('authFillAllFields'));
+      setError(t('auth.fillAllFields'));
       return;
     }
 
@@ -244,7 +245,7 @@ export default function LoginPage() {
       router.push('/?recovery_mode=true');
     } catch (err) {
       console.error('[recovery] verification failed:', err);
-      setError(t('authConnectFailed'));
+      setError(t('auth.connectFailed'));
     } finally {
       setIsLoading(false);
     }
@@ -252,17 +253,17 @@ export default function LoginPage() {
 
   const modeTitle =
     mode === 'login'
-      ? t('authLoginTitle')
+      ? t('auth.loginTitle')
       : mode === 'register'
-        ? t('authRegisterTitle')
-        : t('authRecoverTitle');
+        ? t('auth.registerTitle')
+        : t('auth.recoverTitle');
 
   const modeDescription =
     mode === 'login'
-      ? t('authLoginDesc')
+      ? t('auth.loginDesc')
       : mode === 'register'
-        ? t('authRegisterDesc')
-        : t('authRecoverDesc');
+        ? t('auth.registerDesc')
+        : t('auth.recoverDesc');
 
   return (
     <div className="from-background via-background to-primary/5 flex h-dvh flex-col bg-gradient-to-br">
@@ -279,7 +280,7 @@ export default function LoginPage() {
               Digital Character Sheets
             </h1>
             <p className="text-muted-foreground mt-2">
-              {t('authBrandTagline')}
+              {t('auth.brandTagline')}
             </p>
           </div>
 
@@ -297,8 +298,8 @@ export default function LoginPage() {
                     variant="ghost"
                     size="icon"
                     onClick={() => switchMode('login')}
-                    title={t('authBackToLogin')}
-                    aria-label={t('authBackToLogin')}
+                    title={t('auth.backToLogin')}
+                    aria-label={t('auth.backToLogin')}
                   >
                     <ArrowLeft className="h-4 w-4" />
                   </Button>
@@ -325,14 +326,14 @@ export default function LoginPage() {
                       className="flex items-center gap-2 text-sm font-medium"
                     >
                       <User className="text-muted-foreground h-4 w-4" />
-                      {t('authUsernameOrEmail')}
+                      {t('auth.usernameOrEmail')}
                     </label>
                     <Input
                       id="auth-username"
                       type="text"
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
-                      placeholder={t('authUsernamePlaceholder')}
+                      placeholder={t('auth.usernamePlaceholder')}
                       autoComplete="username"
                       required
                       className="h-10"
@@ -345,14 +346,14 @@ export default function LoginPage() {
                       className="flex items-center gap-2 text-sm font-medium"
                     >
                       <Lock className="text-muted-foreground h-4 w-4" />
-                      {t('authPassword')}
+                      {t('auth.password')}
                     </label>
                     <Input
                       id="auth-password"
                       type="password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      placeholder={t('authPasswordPlaceholder')}
+                      placeholder={t('auth.passwordPlaceholder')}
                       autoComplete="current-password"
                       required
                       className="h-10"
@@ -366,7 +367,7 @@ export default function LoginPage() {
                       className="px-0 text-sm"
                       onClick={() => switchMode('recover')}
                     >
-                      {t('authForgotPassword')}
+                      {t('auth.forgotPassword')}
                     </Button>
                   </div>
 
@@ -378,12 +379,12 @@ export default function LoginPage() {
                     {isFormLoading ? (
                       <span className="flex items-center gap-2">
                         <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                        {t('authCheckingAccount')}
+                        {t('auth.checkingAccount')}
                       </span>
                     ) : (
                       <span className="flex items-center gap-2">
                         <LogIn className="h-4 w-4" />
-                        {t('authSignIn')}
+                        {t('auth.signIn')}
                       </span>
                     )}
                   </Button>
@@ -397,7 +398,7 @@ export default function LoginPage() {
                     data-testid="open-register"
                   >
                     <UserPlus className="mr-2 h-4 w-4" />
-                    {t('authCreateAccount')}
+                    {t('auth.createAccount')}
                   </Button>
                 </form>
               )}
@@ -414,14 +415,14 @@ export default function LoginPage() {
                       className="flex items-center gap-2 text-sm font-medium"
                     >
                       <User className="text-muted-foreground h-4 w-4" />
-                      {t('authUsernameOrEmail')}
+                      {t('auth.usernameOrEmail')}
                     </label>
                     <Input
                       id="register-username"
                       type="text"
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
-                      placeholder={t('authUsernamePlaceholder')}
+                      placeholder={t('auth.usernamePlaceholder')}
                       autoComplete="username"
                       required
                       className="h-10"
@@ -434,14 +435,14 @@ export default function LoginPage() {
                       className="flex items-center gap-2 text-sm font-medium"
                     >
                       <AtSign className="text-muted-foreground h-4 w-4" />
-                      {t('authDisplayName')}
+                      {t('auth.displayName')}
                     </label>
                     <Input
                       id="register-display-name"
                       type="text"
                       value={displayName}
                       onChange={(e) => setDisplayName(e.target.value)}
-                      placeholder={t('authDisplayNamePlaceholder')}
+                      placeholder={t('auth.displayNamePlaceholder')}
                       autoComplete="nickname"
                       required
                       className="h-10"
@@ -454,14 +455,14 @@ export default function LoginPage() {
                       className="flex items-center gap-2 text-sm font-medium"
                     >
                       <Lock className="text-muted-foreground h-4 w-4" />
-                      {t('authPassword')}
+                      {t('auth.password')}
                     </label>
                     <Input
                       id="register-password"
                       type="password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      placeholder={t('authPasswordPlaceholder')}
+                      placeholder={t('auth.passwordPlaceholder')}
                       autoComplete="new-password"
                       required
                       className="h-10"
@@ -474,20 +475,20 @@ export default function LoginPage() {
                       className="flex items-center gap-2 text-sm font-medium"
                     >
                       <KeyRound className="text-muted-foreground h-4 w-4" />
-                      {t('authRecoveryPhraseLabel')}
+                      {t('auth.recoveryPhraseLabel')}
                     </label>
                     <Input
                       id="register-recovery-phrase"
                       type="text"
                       value={recoveryPhrase}
                       onChange={(e) => setRecoveryPhrase(e.target.value)}
-                      placeholder={t('authRecoveryPhrasePlaceholder')}
+                      placeholder={t('auth.recoveryPhrasePlaceholder')}
                       autoComplete="off"
                       required
                       className="h-10"
                     />
                     <p className="text-muted-foreground text-xs">
-                      {t('authRecoveryPhraseHint')}
+                      {t('auth.recoveryPhraseHint')}
                     </p>
                   </div>
 
@@ -499,12 +500,12 @@ export default function LoginPage() {
                     {isFormLoading ? (
                       <span className="flex items-center gap-2">
                         <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                        {t('authCreatingAccount')}
+                        {t('auth.creatingAccount')}
                       </span>
                     ) : (
                       <span className="flex items-center gap-2">
                         <UserPlus className="h-4 w-4" />
-                        {t('authCreateAndSignIn')}
+                        {t('auth.createAndSignIn')}
                       </span>
                     )}
                   </Button>
@@ -515,7 +516,7 @@ export default function LoginPage() {
                     className="w-full text-sm"
                     onClick={() => switchMode('login')}
                   >
-                    {t('authBackToLogin')}
+                    {t('auth.backToLogin')}
                   </Button>
                 </form>
               )}
@@ -528,14 +529,14 @@ export default function LoginPage() {
                       className="flex items-center gap-2 text-sm font-medium"
                     >
                       <User className="text-muted-foreground h-4 w-4" />
-                      {t('authAccountUsernameOrEmail')}
+                      {t('auth.accountUsernameOrEmail')}
                     </label>
                     <Input
                       id="recover-username"
                       type="text"
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
-                      placeholder={t('authUsernamePlaceholder')}
+                      placeholder={t('auth.usernamePlaceholder')}
                       autoComplete="username"
                       required
                       className="h-10"
@@ -545,26 +546,26 @@ export default function LoginPage() {
                   <div className="space-y-3">
                     <label className="flex items-center gap-2 text-sm font-medium">
                       <KeyRound className="text-muted-foreground h-4 w-4" />
-                      {t('authThreeWords')}
+                      {t('auth.threeWords')}
                     </label>
                     <Input
                       value={word1}
                       onChange={(e) => setWord1(e.target.value)}
-                      placeholder={t('authWord1Placeholder')}
+                      placeholder={t('auth.word1Placeholder')}
                       required
                       className="h-10"
                     />
                     <Input
                       value={word2}
                       onChange={(e) => setWord2(e.target.value)}
-                      placeholder={t('authWord2Placeholder')}
+                      placeholder={t('auth.word2Placeholder')}
                       required
                       className="h-10"
                     />
                     <Input
                       value={word3}
                       onChange={(e) => setWord3(e.target.value)}
-                      placeholder={t('authWord3Placeholder')}
+                      placeholder={t('auth.word3Placeholder')}
                       required
                       className="h-10"
                     />
@@ -576,18 +577,18 @@ export default function LoginPage() {
                       className="flex items-center gap-2 text-sm font-medium"
                     >
                       <Lock className="text-muted-foreground h-4 w-4" />
-                      {t('authYourRecoveryPhrase')}
+                      {t('auth.yourRecoveryPhrase')}
                     </label>
                     <Input
                       id="recover-phrase"
                       value={recoveryPhraseInput}
                       onChange={(e) => setRecoveryPhraseInput(e.target.value)}
-                      placeholder={t('authRecoveryPhrasePlaceholder')}
+                      placeholder={t('auth.recoveryPhrasePlaceholder')}
                       required
                       className="h-10"
                     />
                     <p className="text-muted-foreground text-xs">
-                      {t('authPhraseMatchHint')}
+                      {t('auth.phraseMatchHint')}
                     </p>
                   </div>
 
@@ -599,12 +600,12 @@ export default function LoginPage() {
                     {isFormLoading ? (
                       <span className="flex items-center gap-2">
                         <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                        {t('authVerifying')}
+                        {t('auth.verifying')}
                       </span>
                     ) : (
                       <span className="flex items-center gap-2">
                         <KeyRound className="h-4 w-4" />
-                        {t('authVerifyContinue')}
+                        {t('auth.verifyContinue')}
                       </span>
                     )}
                   </Button>
@@ -617,13 +618,13 @@ export default function LoginPage() {
                     onClick={() => switchMode('login')}
                     data-testid="back-to-login"
                   >
-                    {t('authBackToLogin')}
+                    {t('auth.backToLogin')}
                   </Button>
                 </form>
               )}
 
               <p className="text-muted-foreground mt-4 text-center text-xs">
-                {t('authLocalDataNote')}
+                {t('auth.localDataNote')}
               </p>
             </CardContent>
           </Card>

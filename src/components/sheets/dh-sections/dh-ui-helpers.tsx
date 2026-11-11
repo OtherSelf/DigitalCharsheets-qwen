@@ -91,12 +91,12 @@ export const MetricBox = ({
               </PopoverTrigger>
               <PopoverContent className="w-64">
                 <Label className="mb-2 block text-xs">
-                  {t('notesFor')} {title}
+                  {t('common.notesFor')} {title}
                 </Label>
                 <Textarea
                   defaultValue={notes || ''}
                   onBlur={(e) => onNoteChange(e.target.value)}
-                  placeholder={`${t('addNotes')}...`}
+                  placeholder={`${t('common.addNotes')}...`}
                   className="min-h-[100px] text-sm"
                 />
               </PopoverContent>

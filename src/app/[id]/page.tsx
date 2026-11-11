@@ -161,23 +161,23 @@ export default function CharacterPage() {
         >
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>{t('unsavedChanges')}</AlertDialogTitle>
+              <AlertDialogTitle>{t('common.unsavedChanges')}</AlertDialogTitle>
               <AlertDialogDescription>
-                {t('unsavedChangesDesc')}
+                {t('common.unsavedChangesDesc')}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel onClick={() => setPendingSectionId(null)}>
-                {t('stayAndEdit')}
+                {t('common.stayAndEdit')}
               </AlertDialogCancel>
               <AlertDialogAction
                 onClick={() => confirmFailsafe(false)}
                 className="border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
               >
-                {t('discardAndContinue')}
+                {t('common.discardAndContinue')}
               </AlertDialogAction>
               <AlertDialogAction onClick={() => confirmFailsafe(true)}>
-                {t('saveAndContinue')}
+                {t('auth.saveAndContinue')}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

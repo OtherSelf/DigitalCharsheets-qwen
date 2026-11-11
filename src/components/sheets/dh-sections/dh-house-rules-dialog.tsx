@@ -96,26 +96,26 @@ export function DhHouseRulesDialog({
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-h-[80vh] overflow-y-auto sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>{t('houseRulesTitle')}</DialogTitle>
-          <DialogDescription>{t('houseRulesDesc')}</DialogDescription>
+          <DialogTitle>{t('common.houseRulesTitle')}</DialogTitle>
+          <DialogDescription>{t('common.houseRulesDesc')}</DialogDescription>
         </DialogHeader>
 
         <div className="mt-4 space-y-4">
           <div className="space-y-3">
             <div className="space-y-2">
-              <Label>{t('ruleName')}</Label>
+              <Label>{t('common.ruleName')}</Label>
               <Input
                 value={newRuleName}
                 onChange={(e) => setNewRuleName(e.target.value)}
-                placeholder={t('ruleNamePlaceholder')}
+                placeholder={t('common.ruleNamePlaceholder')}
               />
             </div>
             <div className="space-y-2">
-              <Label>{t('ruleDescription')}</Label>
+              <Label>{t('common.ruleDescription')}</Label>
               <Textarea
                 value={newRuleDesc}
                 onChange={(e) => setNewRuleDesc(e.target.value)}
-                placeholder={t('ruleDescriptionPlaceholder')}
+                placeholder={t('common.ruleDescriptionPlaceholder')}
                 className="min-h-[80px]"
               />
             </div>
@@ -125,13 +125,13 @@ export function DhHouseRulesDialog({
               className="w-full"
             >
               <Plus className="mr-2 h-4 w-4" />
-              {t('addCustomRule')}
+              {t('common.addCustomRule')}
             </Button>
           </div>
 
           {customRules.length > 0 && (
             <div className="mt-4 space-y-2">
-              <Label>{t('activeCustomRules')}</Label>
+              <Label>{t('common.activeCustomRules')}</Label>
               <div className="max-h-[250px] space-y-2 overflow-y-auto pr-1">
                 {customRules.map((rule, index) => (
                   <div
@@ -165,9 +165,9 @@ export function DhHouseRulesDialog({
 
         <DialogFooter className="mt-6">
           <Button variant="outline" onClick={handleClose}>
-            {t('close')}
+            {t('common.close')}
           </Button>
-          <Button onClick={handleSave}>{t('saveChanges')}</Button>
+          <Button onClick={handleSave}>{t('common.saveChanges')}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

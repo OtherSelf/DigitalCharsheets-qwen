@@ -144,12 +144,12 @@ export const DndCombatSection = React.forwardRef<
     const { t } = useTranslation();
 
     const exhaustionEffects = [
-      t('exhaustionEffect1'),
-      t('exhaustionEffect2'),
-      t('exhaustionEffect3'),
-      t('exhaustionEffect4'),
-      t('exhaustionEffect5'),
-      t('exhaustionEffect6'),
+      t('dnd.exhaustionEffect1'),
+      t('dnd.exhaustionEffect2'),
+      t('dnd.exhaustionEffect3'),
+      t('dnd.exhaustionEffect4'),
+      t('dnd.exhaustionEffect5'),
+      t('dnd.exhaustionEffect6'),
     ];
 
     const [combatStats, setCombatStats] =
@@ -237,7 +237,7 @@ export const DndCombatSection = React.forwardRef<
     const addAttack = () => {
       const newAttack: DnDAttack = {
         id: `atk-${Date.now()}`,
-        name: t('newAttack'),
+        name: t('dnd.newAttack'),
         ability: 'strength',
         useProficiencyBonus: true,
         damageDice: '1d6',
@@ -571,7 +571,7 @@ export const DndCombatSection = React.forwardRef<
         <Card id={`${idp}combat-stats-card`}>
           <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2">
             <CardTitle className="text-muted-foreground text-[10px] font-bold tracking-tight uppercase">
-              {t('combatStats')}
+              {t('dnd.combatStats')}
             </CardTitle>
             {(showEditButtons || isCombatStatsEditing) && (
               <EditSaveButton
@@ -584,7 +584,7 @@ export const DndCombatSection = React.forwardRef<
           <CardContent className="grid grid-cols-3 gap-4 p-4 pt-0 text-center">
             <div className="bg-background rounded-lg border p-2">
               <Label className="text-muted-foreground text-[10px] font-bold uppercase">
-                {t('armorClass')}
+                {t('dnd.armorClass')}
               </Label>
               {isCombatStatsEditing ? (
                 <Input
@@ -606,12 +606,12 @@ export const DndCombatSection = React.forwardRef<
                 </div>
               )}
               <div className="text-muted-foreground mt-1 text-[9px] font-medium">
-                {t('baseUnarmoredAC')} {10 + dexMod}
+                {t('dnd.baseUnarmoredAC')} {10 + dexMod}
               </div>
             </div>
             <div className="bg-background rounded-lg border p-2">
               <Label className="text-muted-foreground text-[10px] font-bold uppercase">
-                {t('initiative')}
+                {t('dnd.initiative')}
               </Label>
               <div className="text-sm font-bold">
                 {dexMod >= 0 ? `+${dexMod}` : dexMod}
@@ -619,7 +619,7 @@ export const DndCombatSection = React.forwardRef<
             </div>
             <div className="bg-background rounded-lg border p-2">
               <Label className="text-muted-foreground text-[10px] font-bold uppercase">
-                {t('speed')}
+                {t('dnd.speed')}
               </Label>
               {isCombatStatsEditing ? (
                 <Input
@@ -644,7 +644,7 @@ export const DndCombatSection = React.forwardRef<
           <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2">
             <div className="flex items-center gap-2">
               <CardTitle className="text-muted-foreground text-[10px] font-bold tracking-tight uppercase">
-                {t('hitPoints')}
+                {t('dnd.hitPoints')}
               </CardTitle>
               {!hideNotes && (
                 <Popover>
@@ -655,14 +655,14 @@ export const DndCombatSection = React.forwardRef<
                       }
                       size="icon"
                       className="h-5 w-5 shrink-0"
-                      title={t('healthNotes')}
+                      title={t('dnd.healthNotes')}
                     >
                       <Info className="h-3 w-3" />
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-64">
                     <Label className="mb-2 block text-xs">
-                      {t('healthNotes')}
+                      {t('dnd.healthNotes')}
                     </Label>
                     <Textarea
                       defaultValue={combatStats.hitPointsNotes || ''}
@@ -676,7 +676,7 @@ export const DndCombatSection = React.forwardRef<
                           hitPointsNotes: e.target.value,
                         });
                       }}
-                      placeholder={t('notes')}
+                      placeholder={t('common.notes')}
                       className="mt-2 min-h-[100px] text-sm"
                     />
                   </PopoverContent>
@@ -696,10 +696,10 @@ export const DndCombatSection = React.forwardRef<
               <div className="space-y-4">
                 <div className="rounded border p-2 text-center">
                   <div className="text-muted-foreground mb-1 text-[9px] italic">
-                    {t('baseValue')}: {baseMaxHp}
+                    {t('dnd.baseValue')}: {baseMaxHp}
                   </div>
                   <Label className="text-[10px] font-bold uppercase">
-                    {t('maximum')}
+                    {t('dnd.maximum')}
                   </Label>
                   {isHpEditing ? (
                     <Input
@@ -728,7 +728,7 @@ export const DndCombatSection = React.forwardRef<
                 </div>
                 <div className="rounded border p-2 text-center">
                   <Label className="text-[10px] font-bold uppercase">
-                    {t('current')}
+                    {t('common.current')}
                   </Label>
                   {isHpEditing ? (
                     <Input
@@ -759,7 +759,7 @@ export const DndCombatSection = React.forwardRef<
               <div className="space-y-4">
                 <div className="rounded border p-2 text-center">
                   <Label className="text-[10px] font-bold uppercase">
-                    {t('temp')}
+                    {t('dnd.temp')}
                   </Label>
                   {isHpEditing ? (
                     <Input
@@ -802,14 +802,14 @@ export const DndCombatSection = React.forwardRef<
                       variant="outline"
                       onClick={() => handleHpMath('sub')}
                     >
-                      {t('damage')}
+                      {t('common.damage')}
                     </Button>
                     <Button
                       size="sm"
                       variant="outline"
                       onClick={() => handleHpMath('rec')}
                     >
-                      {t('heal')}
+                      {t('dnd.heal')}
                     </Button>
                   </div>
                 </div>
@@ -818,7 +818,7 @@ export const DndCombatSection = React.forwardRef<
 
             <div className="border-t pt-4">
               <Label className="mb-2 block text-[10px] font-bold uppercase">
-                {t('hpTracking')}
+                {t('dnd.hpTracking')}
               </Label>
               <Textarea
                 value={combatStats.hpTracking || ''}
@@ -827,7 +827,7 @@ export const DndCombatSection = React.forwardRef<
                   setCombatStats(next);
                   updateCharacter(characterId, { hpTracking: e.target.value });
                 }}
-                placeholder={t('trackConditions')}
+                placeholder={t('dnd.trackConditions')}
                 className="min-h-[80px] resize-none text-xs"
               />
             </div>
@@ -837,7 +837,7 @@ export const DndCombatSection = React.forwardRef<
         <Card id={`${idp}death-saves-exhaustion-card`}>
           <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2">
             <CardTitle className="text-muted-foreground text-[10px] font-bold tracking-tight uppercase">
-              {t('deathSavesAndExhaustion')}
+              {t('dnd.deathSavesAndExhaustion')}
             </CardTitle>
             <Button
               variant="ghost"
@@ -845,14 +845,14 @@ export const DndCombatSection = React.forwardRef<
               className="h-6 text-[10px]"
               onClick={resetDeathSaves}
             >
-              {t('reset')}
+              {t('dnd.reset')}
             </Button>
           </CardHeader>
           <CardContent className="space-y-4 p-4 pt-0">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label className="text-[10px] font-bold text-green-600 uppercase">
-                  {t('successes')}
+                  {t('dnd.successes')}
                 </Label>
                 <div className="flex items-center gap-2">
                   <Button
@@ -898,7 +898,7 @@ export const DndCombatSection = React.forwardRef<
               </div>
               <div className="space-y-2">
                 <Label className="text-[10px] font-bold text-red-600 uppercase">
-                  {t('failures')}
+                  {t('dnd.failures')}
                 </Label>
                 <div className="flex items-center gap-2">
                   <Button
@@ -946,7 +946,7 @@ export const DndCombatSection = React.forwardRef<
             <div className="border-t pt-3">
               <div className="mb-2 flex items-center justify-between">
                 <Label className="text-[10px] font-bold uppercase">
-                  {t('exhaustion')}
+                  {t('dnd.exhaustion')}
                 </Label>
                 <div className="flex items-center gap-2">
                   <Button
@@ -986,7 +986,7 @@ export const DndCombatSection = React.forwardRef<
 
               {exhaustion === 0 ? (
                 <p className="text-center text-[10px] font-medium text-green-500">
-                  {t('noExhaustionEffects')}
+                  {t('dnd.noExhaustionEffects')}
                 </p>
               ) : (
                 <ul className="space-y-1">
@@ -1019,7 +1019,7 @@ export const DndCombatSection = React.forwardRef<
         <Card id={`${idp}hit-dice-card`}>
           <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2">
             <CardTitle className="text-muted-foreground text-[10px] font-bold tracking-tight uppercase">
-              {t('hitDice')}
+              {t('dnd.hitDice')}
             </CardTitle>
             <Button
               variant="ghost"
@@ -1027,7 +1027,7 @@ export const DndCombatSection = React.forwardRef<
               className="h-6 text-[10px]"
               onClick={resetAllHitDice}
             >
-              {t('longRest')}
+              {t('dnd.longRest')}
             </Button>
           </CardHeader>
           <CardContent className="space-y-3 p-4 pt-0">
@@ -1103,7 +1103,7 @@ export const DndCombatSection = React.forwardRef<
         <Card id={`${idp}attacks-and-spellcasting-box`}>
           <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2">
             <CardTitle className="text-muted-foreground text-[10px] font-bold tracking-tight uppercase">
-              {t('attacksAndSpellcasting')}
+              {t('dnd.attacksAndSpellcasting')}
             </CardTitle>
             {(showEditButtons || isAttacksEditing || isSpellcastingEditing) && (
               <EditSaveButton
@@ -1134,16 +1134,16 @@ export const DndCombatSection = React.forwardRef<
                             variant={entry.notes ? 'secondary' : 'ghost'}
                             size="icon"
                             className="h-5 w-5 shrink-0"
-                            title={t('notes')}
+                            title={t('common.notes')}
                           >
                             <Info className="h-3 w-3" />
                           </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-64">
                           <Label className="mb-2 block text-xs">
-                            {t('notes')}:{' '}
+                            {t('common.notes')}:{' '}
                             {entry.ability === 'none'
-                              ? t('spellcasting')
+                              ? t('dnd.spellcasting')
                               : t(entry.ability)}
                           </Label>
                           <Textarea
@@ -1159,14 +1159,14 @@ export const DndCombatSection = React.forwardRef<
                                 spellcastingEntries: updated,
                               });
                             }}
-                            placeholder={t('notes')}
+                            placeholder={t('common.notes')}
                             className="mt-2 min-h-[100px] text-sm"
                           />
                         </PopoverContent>
                       </Popover>
                     )}
                     <Label className="text-muted-foreground text-[9px] uppercase">
-                      {t('ability')}
+                      {t('dnd.ability')}
                     </Label>
                   </div>
                   {isSpellcastingEditing ? (
@@ -1180,7 +1180,7 @@ export const DndCombatSection = React.forwardRef<
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="none">{t('none')}</SelectItem>
+                        <SelectItem value="none">{t('common.none')}</SelectItem>
                         <SelectItem
                           value="strength"
                           disabled={
@@ -1188,7 +1188,7 @@ export const DndCombatSection = React.forwardRef<
                             entry.ability !== 'strength'
                           }
                         >
-                          {t('strength')}
+                          {t('common.strength')}
                         </SelectItem>
                         <SelectItem
                           value="dexterity"
@@ -1197,7 +1197,7 @@ export const DndCombatSection = React.forwardRef<
                             entry.ability !== 'dexterity'
                           }
                         >
-                          {t('dexterity')}
+                          {t('common.dexterity')}
                         </SelectItem>
                         <SelectItem
                           value="constitution"
@@ -1206,7 +1206,7 @@ export const DndCombatSection = React.forwardRef<
                             entry.ability !== 'constitution'
                           }
                         >
-                          {t('constitution')}
+                          {t('common.constitution')}
                         </SelectItem>
                         <SelectItem
                           value="intelligence"
@@ -1215,7 +1215,7 @@ export const DndCombatSection = React.forwardRef<
                             entry.ability !== 'intelligence'
                           }
                         >
-                          {t('intelligence')}
+                          {t('common.intelligence')}
                         </SelectItem>
                         <SelectItem
                           value="wisdom"
@@ -1224,7 +1224,7 @@ export const DndCombatSection = React.forwardRef<
                             entry.ability !== 'wisdom'
                           }
                         >
-                          {t('wisdom')}
+                          {t('common.wisdom')}
                         </SelectItem>
                         <SelectItem
                           value="charisma"
@@ -1233,19 +1233,21 @@ export const DndCombatSection = React.forwardRef<
                             entry.ability !== 'charisma'
                           }
                         >
-                          {t('charisma')}
+                          {t('common.charisma')}
                         </SelectItem>
                       </SelectContent>
                     </Select>
                   ) : (
                     <span className="text-xs font-bold">
-                      {entry.ability === 'none' ? t('none') : t(entry.ability)}
+                      {entry.ability === 'none'
+                        ? t('common.none')
+                        : t(entry.ability)}
                     </span>
                   )}
                 </div>
                 <div className="col-span-3 w-full">
                   <Label className="text-muted-foreground mb-1 block text-[9px] uppercase">
-                    {t('atkBonus')}
+                    {t('dnd.atkBonus')}
                   </Label>
                   {isSpellcastingEditing ? (
                     <Input
@@ -1267,7 +1269,7 @@ export const DndCombatSection = React.forwardRef<
                 </div>
                 <div className="col-span-2 w-full">
                   <Label className="text-muted-foreground mb-1 block text-[9px] uppercase">
-                    {t('spellSaveDC')}
+                    {t('dnd.spellSaveDC')}
                   </Label>
                   {isSpellcastingEditing ? (
                     <Input
@@ -1310,13 +1312,14 @@ export const DndCombatSection = React.forwardRef<
                 onClick={addSpellcastingEntry}
                 disabled={usedAbilities.size >= 6}
               >
-                <Plus className="mr-1 h-3 w-3" /> {t('addSpellcastingEntry')}
+                <Plus className="mr-1 h-3 w-3" />{' '}
+                {t('dnd.addSpellcastingEntry')}
               </Button>
             )}
 
             <div className="border-t pt-4">
               <Label className="text-muted-foreground mb-2 block text-[10px] font-bold uppercase">
-                {t('attacksAndSpellcasting')}
+                {t('dnd.attacksAndSpellcasting')}
               </Label>
               {attacks.map((atk) => (
                 <div
@@ -1325,7 +1328,7 @@ export const DndCombatSection = React.forwardRef<
                 >
                   <div className="col-span-2 w-full">
                     <Label className="text-muted-foreground mb-1 block text-[9px] uppercase">
-                      {t('name')}
+                      {t('common.name')}
                     </Label>
                     {isAttacksEditing ? (
                       <Input
@@ -1345,7 +1348,7 @@ export const DndCombatSection = React.forwardRef<
                   </div>
                   <div className="col-span-2 w-full">
                     <Label className="text-muted-foreground mb-1 block text-[9px] uppercase">
-                      {t('ability')}
+                      {t('dnd.ability')}
                     </Label>
                     {isAttacksEditing ? (
                       <Select
@@ -1358,36 +1361,40 @@ export const DndCombatSection = React.forwardRef<
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="none">{t('none')}</SelectItem>
+                          <SelectItem value="none">
+                            {t('common.none')}
+                          </SelectItem>
                           <SelectItem value="strength">
-                            {t('strength')}
+                            {t('common.strength')}
                           </SelectItem>
                           <SelectItem value="dexterity">
-                            {t('dexterity')}
+                            {t('common.dexterity')}
                           </SelectItem>
                           <SelectItem value="constitution">
-                            {t('constitution')}
+                            {t('common.constitution')}
                           </SelectItem>
                           <SelectItem value="intelligence">
-                            {t('intelligence')}
+                            {t('common.intelligence')}
                           </SelectItem>
-                          <SelectItem value="wisdom">{t('wisdom')}</SelectItem>
+                          <SelectItem value="wisdom">
+                            {t('common.wisdom')}
+                          </SelectItem>
                           <SelectItem value="charisma">
-                            {t('charisma')}
+                            {t('common.charisma')}
                           </SelectItem>
                         </SelectContent>
                       </Select>
                     ) : (
                       <span className="text-xs font-bold">
                         {!atk.ability || atk.ability === 'none'
-                          ? t('none')
+                          ? t('common.none')
                           : t(atk.ability)}
                       </span>
                     )}
                   </div>
                   <div className="col-span-1 w-full">
                     <Label className="text-muted-foreground mb-1 block text-[9px] uppercase">
-                      {t('proficiency')}
+                      {t('dnd.proficiency')}
                     </Label>
                     <div className="flex justify-center">
                       {isAttacksEditing ? (
@@ -1411,7 +1418,7 @@ export const DndCombatSection = React.forwardRef<
                   </div>
                   <div className="col-span-2 w-full">
                     <Label className="text-muted-foreground mb-1 block text-[9px] uppercase">
-                      {t('atkBonus')}
+                      {t('dnd.atkBonus')}
                     </Label>
                     <span className="text-xs font-bold">
                       {calculateAttackBonus(
@@ -1422,7 +1429,7 @@ export const DndCombatSection = React.forwardRef<
                   </div>
                   <div className="col-span-2 w-full">
                     <Label className="text-muted-foreground mb-1 block text-[9px] uppercase">
-                      {t('dice')}
+                      {t('dnd.dice')}
                     </Label>
                     {isAttacksEditing ? (
                       <Select
@@ -1468,7 +1475,7 @@ export const DndCombatSection = React.forwardRef<
                   </div>
                   <div className="col-span-2 w-full">
                     <Label className="text-muted-foreground mb-1 block text-[9px] uppercase">
-                      {t('modifier')}
+                      {t('dnd.modifier')}
                     </Label>
                     {isAttacksEditing ? (
                       <Input
@@ -1510,7 +1517,7 @@ export const DndCombatSection = React.forwardRef<
                   className="mt-2 h-8 w-full text-[10px]"
                   onClick={addAttack}
                 >
-                  <Plus className="mr-1 h-3 w-3" /> {t('addAttack')}
+                  <Plus className="mr-1 h-3 w-3" /> {t('dnd.addAttack')}
                 </Button>
               )}
             </div>
@@ -1520,7 +1527,7 @@ export const DndCombatSection = React.forwardRef<
         <Card id={`${idp}combat-resources-card`}>
           <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2">
             <CardTitle className="text-muted-foreground text-[10px] font-bold tracking-tight uppercase">
-              {t('combatResources')}
+              {t('dnd.combatResources')}
             </CardTitle>
             {(showEditButtons || isResourcesEditing) && (
               <EditSaveButton
@@ -1533,7 +1540,7 @@ export const DndCombatSection = React.forwardRef<
           <CardContent className="space-y-2 p-4 pt-0">
             {combatResources.length === 0 && !isResourcesEditing && (
               <p className="text-muted-foreground rounded-lg border border-dashed py-2 text-center text-xs italic">
-                {t('noResources')}
+                {t('dnd.noResources')}
               </p>
             )}
             {combatResources.map((res) => (
@@ -1553,11 +1560,11 @@ export const DndCombatSection = React.forwardRef<
                         )
                       }
                       className="h-7 text-xs"
-                      placeholder={t('resourceName')}
+                      placeholder={t('common.resourceName')}
                     />
                     <div className="flex items-center gap-1">
                       <span className="text-muted-foreground shrink-0 text-[9px] font-bold uppercase">
-                        {t('maximum')}
+                        {t('dnd.maximum')}
                       </span>
                       <Input
                         type="number"
@@ -1585,7 +1592,7 @@ export const DndCombatSection = React.forwardRef<
                           </PopoverTrigger>
                           <PopoverContent className="w-64">
                             <Label className="mb-2 block text-xs">
-                              {t('notes')}: {res.description}
+                              {t('common.notes')}: {res.description}
                             </Label>
                             <Textarea
                               defaultValue={res.notes || ''}
@@ -1596,7 +1603,7 @@ export const DndCombatSection = React.forwardRef<
                                   e.target.value,
                                 )
                               }
-                              placeholder={t('notes')}
+                              placeholder={t('common.notes')}
                               className="mt-2 min-h-[100px] text-sm"
                             />
                           </PopoverContent>
@@ -1619,7 +1626,7 @@ export const DndCombatSection = React.forwardRef<
                         </PopoverTrigger>
                         <PopoverContent className="w-64">
                           <Label className="mb-2 block text-xs">
-                            {t('notes')}: {res.description}
+                            {t('common.notes')}: {res.description}
                           </Label>
                           <Textarea
                             defaultValue={res.notes || ''}
@@ -1634,7 +1641,7 @@ export const DndCombatSection = React.forwardRef<
                                 combatResources: next,
                               });
                             }}
-                            placeholder={t('notes')}
+                            placeholder={t('common.notes')}
                             className="mt-2 min-h-[100px] text-sm"
                           />
                         </PopoverContent>
@@ -1683,7 +1690,7 @@ export const DndCombatSection = React.forwardRef<
             {isResourcesEditing && (
               <div className="flex items-center gap-2 border-t pt-2">
                 <Input
-                  placeholder={t('resourceName')}
+                  placeholder={t('common.resourceName')}
                   value={newResourceDesc}
                   onChange={(e) => setNewResourceDesc(e.target.value)}
                   className="h-8 flex-1 text-xs"

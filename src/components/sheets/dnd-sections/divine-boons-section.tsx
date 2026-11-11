@@ -111,7 +111,7 @@ export const DndDivineBoonsSection = React.forwardRef<
               <CardHeader className="bg-muted/5 flex flex-row items-center justify-between px-4 pt-2 pb-2">
                 <AccordionTrigger className="flex flex-1 items-center justify-between py-0 hover:no-underline">
                   <Label className="text-muted-foreground text-[10px] font-bold tracking-tight uppercase">
-                    {t('divineBoons')}
+                    {t('dnd.divineBoons')}
                   </Label>
                 </AccordionTrigger>
                 {showEditButtons && (
@@ -125,7 +125,7 @@ export const DndDivineBoonsSection = React.forwardRef<
                     }}
                   >
                     <Plus className="mr-1 h-3 w-3" />
-                    {t('add')}
+                    {t('common.add')}
                   </Button>
                 )}
               </CardHeader>
@@ -133,7 +133,7 @@ export const DndDivineBoonsSection = React.forwardRef<
                 <CardContent className="p-4 pt-0">
                   {divineBoons.length === 0 ? (
                     <p className="text-muted-foreground py-4 text-center text-xs italic">
-                      {t('noDivineBoons')}
+                      {t('dnd.noDivineBoons')}
                     </p>
                   ) : (
                     <div
@@ -207,9 +207,9 @@ export const DndDivineBoonsSection = React.forwardRef<
         >
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>{t('deleteDivineBoon')}</AlertDialogTitle>
+              <AlertDialogTitle>{t('dnd.deleteDivineBoon')}</AlertDialogTitle>
               <AlertDialogDescription>
-                {t('deleteBoonWarning')}
+                {t('dnd.deleteBoonWarning')}
                 {boonToDelete !== null && divineBoons[boonToDelete] && (
                   <div className="bg-muted mt-2 rounded p-2">
                     <p className="text-sm font-semibold">
@@ -220,12 +220,12 @@ export const DndDivineBoonsSection = React.forwardRef<
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
+              <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
               <AlertDialogAction
                 onClick={confirmDeleteBoon}
                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               >
-                {t('delete')}
+                {t('common.delete')}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

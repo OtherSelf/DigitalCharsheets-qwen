@@ -58,10 +58,10 @@ export function DisplaySettingsModal({
       >
         <DialogHeader>
           <DialogTitle>
-            {t('displaySettings') || 'Display Settings'}
+            {t('settings.displaySettings') || 'Display Settings'}
           </DialogTitle>
           <DialogDescription>
-            {t('adjustUiAppearance') ||
+            {t('settings.adjustUiAppearance') ||
               'Adjust text size and overall UI scale independently. Changes apply in real-time.'}
           </DialogDescription>
         </DialogHeader>
@@ -69,7 +69,7 @@ export function DisplaySettingsModal({
         <div className="space-y-6 py-4">
           {/* LANDMARK: MODAL_TEXT_SIZE_CONTROLS */}
           <div className="space-y-3">
-            <Label>{t('fontSize') || 'Text Size'}</Label>
+            <Label>{t('settings.fontSize') || 'Text Size'}</Label>
             <div className="flex items-center gap-3">
               <Button
                 type="button"
@@ -77,7 +77,7 @@ export function DisplaySettingsModal({
                 size="icon"
                 onClick={() => updateTextScale(textScale - 0.1)}
                 disabled={textScale <= minTextScale}
-                aria-label={t('decreaseTextSize')}
+                aria-label={t('settings.decreaseTextSize')}
               >
                 <Minus className="h-4 w-4" />
               </Button>
@@ -91,13 +91,13 @@ export function DisplaySettingsModal({
                 size="icon"
                 onClick={() => updateTextScale(textScale + 0.1)}
                 disabled={textScale >= maxTextScale}
-                aria-label={t('increaseTextSize')}
+                aria-label={t('settings.increaseTextSize')}
               >
                 <Plus className="h-4 w-4" />
               </Button>
             </div>
             <p className="text-muted-foreground text-xs">
-              {t('minFontSizeWarning') ||
+              {t('settings.minFontSizeWarning') ||
                 'Minimum 8pt. Boxes, padding and spacing stay unchanged.'}
             </p>
           </div>
@@ -106,7 +106,7 @@ export function DisplaySettingsModal({
 
           {/* LANDMARK: MODAL_UI_SCALE_CONTROLS */}
           <div className="space-y-3">
-            <Label>{t('uiScale') || 'UI Scale'}</Label>
+            <Label>{t('settings.uiScale') || 'UI Scale'}</Label>
             <div className="flex items-center gap-3">
               <Button
                 type="button"
@@ -114,7 +114,7 @@ export function DisplaySettingsModal({
                 size="icon"
                 onClick={() => updateUiScale(uiScale - 0.1)}
                 disabled={uiScale <= minUiScale}
-                aria-label={t('decreaseUiScale')}
+                aria-label={t('settings.decreaseUiScale')}
               >
                 <Minus className="h-4 w-4" />
               </Button>
@@ -127,13 +127,13 @@ export function DisplaySettingsModal({
                 size="icon"
                 onClick={() => updateUiScale(uiScale + 0.1)}
                 disabled={uiScale >= maxUiScale}
-                aria-label={t('increaseUiScale')}
+                aria-label={t('settings.increaseUiScale')}
               >
                 <Plus className="h-4 w-4" />
               </Button>
             </div>
             <p className="text-muted-foreground text-xs">
-              {t('uiScaleWarning') ||
+              {t('settings.uiScaleWarning') ||
                 'Range: 50% to 150%. Scales the whole interface.'}
             </p>
           </div>
@@ -146,7 +146,7 @@ export function DisplaySettingsModal({
               className="w-full"
             >
               <RotateCcw className="mr-2 h-4 w-4" />
-              {t('resetToDefaults') || 'Reset to Defaults'}
+              {t('settings.resetToDefaults') || 'Reset to Defaults'}
             </Button>
           </div>
         </div>

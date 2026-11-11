@@ -28,142 +28,142 @@ import { Input } from '../../ui/input';
 import { Textarea } from '../../ui/textarea';
 
 const RACE_TRANSLATION_KEYS: Record<string, string> = {
-  Aarakocra: 'raceAarakocra',
-  Aasimar: 'raceAasimar',
-  Autognome: 'raceAutognome',
-  'Astral elf': 'raceAstralelf',
-  Bugbear: 'raceBugbear',
-  Vedalken: 'raceVedalken',
-  Verdan: 'raceVerdan',
-  'Simic hybrid': 'raceSimichybrid',
-  Gith: 'raceGith',
-  Giff: 'raceGiff',
-  Gnome: 'raceGnome',
-  Goblin: 'raceGoblin',
-  Goliath: 'raceGoliath',
-  Grung: 'raceGrung',
-  Dwarf: 'raceDwarf',
-  Genasi: 'raceGenasi',
-  Dragonborn: 'raceDragonborn',
-  Harengon: 'raceHarengon',
-  Kalashtar: 'raceKalashtar',
-  Kender: 'raceKender',
-  Kenku: 'raceKenku',
-  Centaur: 'raceCentaur',
-  Kobold: 'raceKobold',
-  Warforged: 'raceWarforged',
-  Leonin: 'raceLeonin',
-  Locathah: 'raceLocathah',
-  Loxodon: 'raceLoxodon',
-  Lizardfolk: 'raceLizardfolk',
-  Minotaur: 'raceMinotaur',
-  Orc: 'raceOrc',
-  Plasmoid: 'racePlasmoid',
-  'Half-orc': 'raceHalforc',
-  Halfling: 'raceHalfling',
-  'Half-elf': 'raceHalfelf',
-  Satyr: 'raceSatyr',
-  Owlin: 'raceOwlin',
-  Tabaxi: 'raceTabaxi',
-  Tiefling: 'raceTiefling',
-  Tortle: 'raceTortle',
-  'Thri-kreen': 'raceThrikreen',
-  Triton: 'raceTriton',
-  Firbolg: 'raceFirbolg',
-  Fairy: 'raceFairy',
-  Hadozee: 'raceHadozee',
-  Hobgoblin: 'raceHobgoblin',
-  Changeling: 'raceChangeling',
-  Human: 'raceHuman',
-  Shifter: 'raceShifter',
-  Elf: 'raceElf',
-  'Yuan-ti Pureblood': 'raceYuantPureblood',
+  Aarakocra: 'dnd.raceAarakocra',
+  Aasimar: 'dnd.raceAasimar',
+  Autognome: 'dnd.raceAutognome',
+  'Astral elf': 'dnd.raceAstralelf',
+  Bugbear: 'dnd.raceBugbear',
+  Vedalken: 'dnd.raceVedalken',
+  Verdan: 'dnd.raceVerdan',
+  'Simic hybrid': 'dnd.raceSimichybrid',
+  Gith: 'dnd.raceGith',
+  Giff: 'dnd.raceGiff',
+  Gnome: 'dnd.raceGnome',
+  Goblin: 'dnd.raceGoblin',
+  Goliath: 'dnd.raceGoliath',
+  Grung: 'dnd.raceGrung',
+  Dwarf: 'dnd.raceDwarf',
+  Genasi: 'dnd.raceGenasi',
+  Dragonborn: 'dnd.raceDragonborn',
+  Harengon: 'dnd.raceHarengon',
+  Kalashtar: 'dnd.raceKalashtar',
+  Kender: 'dnd.raceKender',
+  Kenku: 'dnd.raceKenku',
+  Centaur: 'dnd.raceCentaur',
+  Kobold: 'dnd.raceKobold',
+  Warforged: 'dnd.raceWarforged',
+  Leonin: 'dnd.raceLeonin',
+  Locathah: 'dnd.raceLocathah',
+  Loxodon: 'dnd.raceLoxodon',
+  Lizardfolk: 'dnd.raceLizardfolk',
+  Minotaur: 'dnd.raceMinotaur',
+  Orc: 'dnd.raceOrc',
+  Plasmoid: 'dnd.racePlasmoid',
+  'Half-orc': 'dnd.raceHalforc',
+  Halfling: 'dnd.raceHalfling',
+  'Half-elf': 'dnd.raceHalfelf',
+  Satyr: 'dnd.raceSatyr',
+  Owlin: 'dnd.raceOwlin',
+  Tabaxi: 'dnd.raceTabaxi',
+  Tiefling: 'dnd.raceTiefling',
+  Tortle: 'dnd.raceTortle',
+  'Thri-kreen': 'dnd.raceThrikreen',
+  Triton: 'dnd.raceTriton',
+  Firbolg: 'dnd.raceFirbolg',
+  Fairy: 'dnd.raceFairy',
+  Hadozee: 'dnd.raceHadozee',
+  Hobgoblin: 'dnd.raceHobgoblin',
+  Changeling: 'dnd.raceChangeling',
+  Human: 'dnd.raceHuman',
+  Shifter: 'dnd.raceShifter',
+  Elf: 'dnd.raceElf',
+  'Yuan-ti Pureblood': 'dnd.raceYuantPureblood',
 };
 
 const BG_TRANSLATION_KEYS: Record<string, string> = {
-  Entertainer: 'bgEntertainer',
-  Urchin: 'bgUrchin',
-  Noble: 'bgNoble',
-  'Guild Artisan': 'bgGuildArtisan',
-  Sailor: 'bgSailor',
-  Sage: 'bgSage',
-  'Folk Hero': 'bgFolkHero',
-  Hermit: 'bgHermit',
-  Outlander: 'bgOutlander',
-  Charlatan: 'bgCharlatan',
-  Pirate: 'bgPirate',
-  Criminal: 'bgCriminal',
-  Acolyte: 'bgAcolyte',
-  Soldier: 'bgSoldier',
-  Gambler: 'bgGambler',
-  Plaintiff: 'bgPlaintiff',
-  'Failed Merchant': 'bgFailedMerchant',
-  'Celebrity Adventurers Scion': 'bgCelebrityAdventurersScion',
-  'Rival Intern': 'bgRivalIntern',
-  'Giant Foundling': 'bgGiantFoundling',
-  'Rune Carver': 'bgRuneCarver',
-  Rewarded: 'bgRewarded',
-  Ruined: 'bgRuined',
-  'House Agent': 'bgHouseAgent',
-  'Volstrucker Agent': 'bgVolstruckerAgent',
-  Grinner: 'bgGrinner',
-  'Golgari Agent': 'bgGolgariAgent',
-  'Gruul Anarch': 'bgGruulAnarch',
-  'Izzet Engineer': 'bgIzzetEngineer',
-  'Rakdos Cultist': 'bgRakdosCultist',
-  'Boros Legionnaire': 'bgBorosLegionnaire',
-  'Dimir Operative': 'bgDimirOperative',
-  'Selesnya Initiate': 'bgSelesnyaInitiate',
-  'Orzhov Representative': 'bgOrzhovRepresentative',
-  'Simic Scientist': 'bgSimicScientist',
-  'Azorius Functionary': 'bgAzoriusFunctionary',
-  Athlete: 'bgAthlete',
-  'Planar Philosopher': 'bgPlanarPhilosopher',
-  'Gate Warden': 'bgGateWarden',
-  'Astral Drifter': 'bgAstralDrifter',
-  Wildspacer: 'bgWildspacer',
-  'Mercenary Veteran': 'bgMercenaryVeteran',
-  'Urban Bounty Hunter': 'bgUrbanBountyHunter',
-  'City Watch': 'bgCityWatch',
-  'Far Traveler': 'bgFarTraveler',
-  'Waterdhavian Noble': 'bgWaterdhavianNoble',
-  'Clan Crafter': 'bgClanCrafter',
-  Inheritor: 'bgInheritor',
-  'Faction Agent': 'bgFactionAgent',
-  Courtier: 'bgCourtier',
-  'Knight of the Order': 'bgKnightoftheOrder',
-  'Uthgardt Tribe Member': 'bgUthgardtTribeMember',
-  'Cloistered Scholar': 'bgCloisteredScholar',
-  'Haunted One': 'bgHauntedOne',
-  Investigator: 'bgInvestigator',
-  Faceless: 'bgFaceless',
-  'Mage of Hight Sorcery': 'bgMageofHightSorcery',
-  'Knight of Solamnia': 'bgKnightofSolamnia',
-  Smuggler: 'bgSmuggler',
-  Shipwright: 'bgShipwright',
-  Marine: 'bgMarine',
-  Fisher: 'bgFisher',
-  'Witherbloom Student': 'bgWitherbloomStudent',
-  'Quandrix Student': 'bgQuandrixStudent',
-  'Lorehold Student': 'bgLoreholdStudent',
-  'Prismari Student': 'bgPrismariStudent',
-  'Silverquill Student': 'bgSilverquillStudent',
-  Anthropologist: 'bgAnthropologist',
-  Archeologist: 'bgArcheologist',
-  'Witchlight Hand': 'bgWitchlightHand',
-  Feylost: 'bgFeylost',
+  Entertainer: 'dnd.bgEntertainer',
+  Urchin: 'dnd.bgUrchin',
+  Noble: 'dnd.bgNoble',
+  'Guild Artisan': 'dnd.bgGuildArtisan',
+  Sailor: 'dnd.bgSailor',
+  Sage: 'dnd.bgSage',
+  'Folk Hero': 'dnd.bgFolkHero',
+  Hermit: 'dnd.bgHermit',
+  Outlander: 'dnd.bgOutlander',
+  Charlatan: 'dnd.bgCharlatan',
+  Pirate: 'dnd.bgPirate',
+  Criminal: 'dnd.bgCriminal',
+  Acolyte: 'dnd.bgAcolyte',
+  Soldier: 'dnd.bgSoldier',
+  Gambler: 'dnd.bgGambler',
+  Plaintiff: 'dnd.bgPlaintiff',
+  'Failed Merchant': 'dnd.bgFailedMerchant',
+  'Celebrity Adventurers Scion': 'dnd.bgCelebrityAdventurersScion',
+  'Rival Intern': 'dnd.bgRivalIntern',
+  'Giant Foundling': 'dnd.bgGiantFoundling',
+  'Rune Carver': 'dnd.bgRuneCarver',
+  Rewarded: 'dnd.bgRewarded',
+  Ruined: 'dnd.bgRuined',
+  'House Agent': 'dnd.bgHouseAgent',
+  'Volstrucker Agent': 'dnd.bgVolstruckerAgent',
+  Grinner: 'dnd.bgGrinner',
+  'Golgari Agent': 'dnd.bgGolgariAgent',
+  'Gruul Anarch': 'dnd.bgGruulAnarch',
+  'Izzet Engineer': 'dnd.bgIzzetEngineer',
+  'Rakdos Cultist': 'dnd.bgRakdosCultist',
+  'Boros Legionnaire': 'dnd.bgBorosLegionnaire',
+  'Dimir Operative': 'dnd.bgDimirOperative',
+  'Selesnya Initiate': 'dnd.bgSelesnyaInitiate',
+  'Orzhov Representative': 'dnd.bgOrzhovRepresentative',
+  'Simic Scientist': 'dnd.bgSimicScientist',
+  'Azorius Functionary': 'dnd.bgAzoriusFunctionary',
+  Athlete: 'dnd.bgAthlete',
+  'Planar Philosopher': 'dnd.bgPlanarPhilosopher',
+  'Gate Warden': 'dnd.bgGateWarden',
+  'Astral Drifter': 'dnd.bgAstralDrifter',
+  Wildspacer: 'dnd.bgWildspacer',
+  'Mercenary Veteran': 'dnd.bgMercenaryVeteran',
+  'Urban Bounty Hunter': 'dnd.bgUrbanBountyHunter',
+  'City Watch': 'dnd.bgCityWatch',
+  'Far Traveler': 'dnd.bgFarTraveler',
+  'Waterdhavian Noble': 'dnd.bgWaterdhavianNoble',
+  'Clan Crafter': 'dnd.bgClanCrafter',
+  Inheritor: 'dnd.bgInheritor',
+  'Faction Agent': 'dnd.bgFactionAgent',
+  Courtier: 'dnd.bgCourtier',
+  'Knight of the Order': 'dnd.bgKnightoftheOrder',
+  'Uthgardt Tribe Member': 'dnd.bgUthgardtTribeMember',
+  'Cloistered Scholar': 'dnd.bgCloisteredScholar',
+  'Haunted One': 'dnd.bgHauntedOne',
+  Investigator: 'dnd.bgInvestigator',
+  Faceless: 'dnd.bgFaceless',
+  'Mage of Hight Sorcery': 'dnd.bgMageofHightSorcery',
+  'Knight of Solamnia': 'dnd.bgKnightofSolamnia',
+  Smuggler: 'dnd.bgSmuggler',
+  Shipwright: 'dnd.bgShipwright',
+  Marine: 'dnd.bgMarine',
+  Fisher: 'dnd.bgFisher',
+  'Witherbloom Student': 'dnd.bgWitherbloomStudent',
+  'Quandrix Student': 'dnd.bgQuandrixStudent',
+  'Lorehold Student': 'dnd.bgLoreholdStudent',
+  'Prismari Student': 'dnd.bgPrismariStudent',
+  'Silverquill Student': 'dnd.bgSilverquillStudent',
+  Anthropologist: 'dnd.bgAnthropologist',
+  Archeologist: 'dnd.bgArcheologist',
+  'Witchlight Hand': 'dnd.bgWitchlightHand',
+  Feylost: 'dnd.bgFeylost',
 };
 
 const ALIGNMENT_TRANSLATION_KEYS: Record<string, string> = {
-  'Lawful Good': 'alignmentLawfulGood',
-  'Neutral Good': 'alignmentNeutralGood',
-  'Chaotic Good': 'alignmentChaoticGood',
-  'Lawful Neutral': 'alignmentLawfulNeutral',
-  'True Neutral': 'alignmentTrueNeutral',
-  'Chaotic Neutral': 'alignmentChaoticNeutral',
-  'Lawful Evil': 'alignmentLawfulEvil',
-  'Neutral Evil': 'alignmentNeutralEvil',
-  'Chaotic Evil': 'alignmentChaoticEvil',
+  'Lawful Good': 'dnd.alignmentLawfulGood',
+  'Neutral Good': 'dnd.alignmentNeutralGood',
+  'Chaotic Good': 'dnd.alignmentChaoticGood',
+  'Lawful Neutral': 'dnd.alignmentLawfulNeutral',
+  'True Neutral': 'dnd.alignmentTrueNeutral',
+  'Chaotic Neutral': 'dnd.alignmentChaoticNeutral',
+  'Lawful Evil': 'dnd.alignmentLawfulEvil',
+  'Neutral Evil': 'dnd.alignmentNeutralEvil',
+  'Chaotic Evil': 'dnd.alignmentChaoticEvil',
 };
 
 const EditSaveButton = ({
@@ -343,7 +343,7 @@ export const DndCharacterInfoSection = React.forwardRef<
           <CardHeader className="bg-muted/5 flex flex-row items-center justify-between px-4 pt-2 pb-2">
             <AccordionTrigger className="flex flex-1 items-center justify-between py-0 hover:no-underline">
               <Label className="text-muted-foreground text-[10px] font-bold tracking-tight uppercase">
-                {t('characterInfo')}
+                {t('dnd.characterInfo')}
               </Label>
             </AccordionTrigger>
             {(showEditButtons || isHeaderEditing) && (
@@ -357,7 +357,7 @@ export const DndCharacterInfoSection = React.forwardRef<
           <AccordionContent>
             <CardContent className="grid grid-cols-2 gap-4 p-4 md:grid-cols-3">
               <DetailSelectField
-                label={t('race')}
+                label={t('dnd.race')}
                 value={headerData.race}
                 editing={isHeaderEditing}
                 onChange={(v) => setHeaderData({ ...headerData, race: v })}
@@ -366,7 +366,7 @@ export const DndCharacterInfoSection = React.forwardRef<
                 t={t}
               />
               <DetailSelectField
-                label={t('background')}
+                label={t('dnd.background')}
                 value={headerData.background}
                 editing={isHeaderEditing}
                 onChange={(v) =>
@@ -377,7 +377,7 @@ export const DndCharacterInfoSection = React.forwardRef<
                 t={t}
               />
               <DetailSelectField
-                label={t('alignment')}
+                label={t('dnd.alignment')}
                 value={headerData.alignment}
                 editing={isHeaderEditing}
                 onChange={(v) => setHeaderData({ ...headerData, alignment: v })}
@@ -386,37 +386,37 @@ export const DndCharacterInfoSection = React.forwardRef<
                 t={t}
               />
               <DetailField
-                label={t('age')}
+                label={t('common.age')}
                 value={headerData.age}
                 editing={isHeaderEditing}
                 onChange={(v) => setHeaderData({ ...headerData, age: v })}
               />
               <DetailField
-                label={t('eyes')}
+                label={t('dnd.eyes')}
                 value={headerData.eyes}
                 editing={isHeaderEditing}
                 onChange={(v) => setHeaderData({ ...headerData, eyes: v })}
               />
               <DetailField
-                label={t('skin')}
+                label={t('dnd.skin')}
                 value={headerData.skin}
                 editing={isHeaderEditing}
                 onChange={(v) => setHeaderData({ ...headerData, skin: v })}
               />
               <DetailField
-                label={t('height')}
+                label={t('common.height')}
                 value={headerData.height}
                 editing={isHeaderEditing}
                 onChange={(v) => setHeaderData({ ...headerData, height: v })}
               />
               <DetailField
-                label={t('weight')}
+                label={t('common.weight')}
                 value={headerData.weight}
                 editing={isHeaderEditing}
                 onChange={(v) => setHeaderData({ ...headerData, weight: v })}
               />
               <DetailField
-                label={t('hairFur')}
+                label={t('dnd.hairFur')}
                 value={headerData.hair}
                 editing={isHeaderEditing}
                 onChange={(v) => setHeaderData({ ...headerData, hair: v })}
@@ -425,7 +425,7 @@ export const DndCharacterInfoSection = React.forwardRef<
                 <Accordion type="multiple" className="w-full">
                   <AccordionItem value="backstory" className="border-b-0">
                     <AccordionTrigger className="py-2 font-semibold hover:no-underline">
-                      {t('backstory')}
+                      {t('common.backstory')}
                     </AccordionTrigger>
                     <AccordionContent className="pt-2">
                       {isHeaderEditing ? (
@@ -437,7 +437,7 @@ export const DndCharacterInfoSection = React.forwardRef<
                               backstory: e.target.value,
                             })
                           }
-                          placeholder={t('backstoryPlaceholder')}
+                          placeholder={t('dnd.backstoryPlaceholder')}
                           className="min-h-[150px] text-sm"
                         />
                       ) : (
@@ -449,7 +449,7 @@ export const DndCharacterInfoSection = React.forwardRef<
                   </AccordionItem>
                   <AccordionItem value="notes" className="border-b-0">
                     <AccordionTrigger className="py-2 font-semibold hover:no-underline">
-                      {t('notes')}
+                      {t('common.notes')}
                     </AccordionTrigger>
                     <AccordionContent className="pt-2">
                       {isHeaderEditing ? (
@@ -461,7 +461,7 @@ export const DndCharacterInfoSection = React.forwardRef<
                               notes: e.target.value,
                             })
                           }
-                          placeholder={t('generalNotesPlaceholder')}
+                          placeholder={t('dnd.generalNotesPlaceholder')}
                           className="min-h-[100px] text-sm"
                         />
                       ) : (

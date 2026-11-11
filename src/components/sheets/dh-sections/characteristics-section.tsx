@@ -299,7 +299,7 @@ export const CharacteristicsSection = React.forwardRef<
       <Card id="characteristics-card">
         <CardHeader className="flex flex-row items-center justify-between px-6 pt-3 pb-6">
           <CardTitle className="font-headline">
-            {t('characteristics')}
+            {t('common.characteristics')}
           </CardTitle>
           {(showEditButtons || isCharacteristicsEditing) && (
             <EditSaveButton
@@ -356,8 +356,8 @@ export const CharacteristicsSection = React.forwardRef<
               isCompactView={isCompactView}
               hideNotes={hideNotes}
               // LANDMARK 4: Passing translated strings for the notes popover
-              notesForText={t('notesFor')}
-              addNotesText={t('addNotes')}
+              notesForText={t('common.notesFor')}
+              addNotesText={t('common.addNotes')}
             />
           ))}
         </CardContent>
@@ -384,7 +384,7 @@ export const CharacteristicsSection = React.forwardRef<
                   <>
                     <div className="bg-background rounded-lg border p-2 text-center">
                       <Label className="text-muted-foreground text-[10px] font-bold uppercase">
-                        {t('halfMove')}
+                        {t('dh.halfMove')}
                       </Label>
                       <div className="text-primary text-lg font-bold">
                         {agMod}
@@ -392,7 +392,7 @@ export const CharacteristicsSection = React.forwardRef<
                     </div>
                     <div className="bg-background rounded-lg border p-2 text-center">
                       <Label className="text-muted-foreground text-[10px] font-bold uppercase">
-                        {t('move')}
+                        {t('dh.move')}
                       </Label>
                       <div className="text-primary text-lg font-bold">
                         {agMod * 2}
@@ -400,7 +400,7 @@ export const CharacteristicsSection = React.forwardRef<
                     </div>
                     <div className="bg-background rounded-lg border p-2 text-center">
                       <Label className="text-muted-foreground text-[10px] font-bold uppercase">
-                        {t('charge')}
+                        {t('dh.charge')}
                       </Label>
                       <div className="text-primary text-lg font-bold">
                         {agMod * 3}
@@ -408,7 +408,7 @@ export const CharacteristicsSection = React.forwardRef<
                     </div>
                     <div className="bg-background rounded-lg border p-2 text-center">
                       <Label className="text-muted-foreground text-[10px] font-bold uppercase">
-                        {t('run')}
+                        {t('dh.run')}
                       </Label>
                       <div className="text-primary text-lg font-bold">
                         {agMod * 6}

@@ -125,14 +125,14 @@ export const InfoSection = ({
   }, [isInfoEditing, onEditingChange]);
 
   const worldVariantLabel = React.useMemo(() => {
-    if (!character.homeWorld) return t('waitingHomeWorld');
+    if (!character.homeWorld) return t('dh.waitingHomeWorld');
     const key = WORLD_VARIANT_LABELS[character.homeWorld];
-    if (key === 'Tribal Taboos') return t('tribalTaboos');
-    if (key === 'Hive Class') return t('hiveClass');
-    if (key === 'Birth Planet') return t('birthPlanet');
-    if (key === 'Ship Tradition') return t('shipTradition');
-    if (key === 'Place of Birth') return t('placeOfBirth');
-    return t('worldVariant');
+    if (key === 'Tribal Taboos') return t('dh.tribalTaboos');
+    if (key === 'Hive Class') return t('dh.hiveClass');
+    if (key === 'Birth Planet') return t('dh.birthPlanet');
+    if (key === 'Ship Tradition') return t('dh.shipTradition');
+    if (key === 'Place of Birth') return t('dh.placeOfBirth');
+    return t('dh.worldVariant');
   }, [character.homeWorld, t]);
 
   const showInfo = !isCompactView || activeCompactSection === 'info-section';
@@ -152,7 +152,7 @@ export const InfoSection = ({
             isCompactView ? 'text-lg' : 'text-2xl',
           )}
         >
-          {t('info')}
+          {t('common.info')}
         </CardTitle>
         {(showEditButtons || isInfoEditing) && (
           <EditSaveButton
@@ -165,7 +165,7 @@ export const InfoSection = ({
       <CardContent className="pt-0">
         <div className="dcs-info-grid grid grid-cols-2 gap-x-4 gap-y-4 md:grid-cols-3">
           <DetailField
-            label={t('characterName')}
+            label={t('common.characterName')}
             value={character.name}
             editing={isInfoEditing}
             onBlur={(e) =>
@@ -180,7 +180,7 @@ export const InfoSection = ({
                 isCompactView && 'text-[10px]',
               )}
             >
-              {t('homeWorld')}
+              {t('dh.homeWorld')}
             </Label>
             <p
               className={cn(
@@ -189,7 +189,7 @@ export const InfoSection = ({
               )}
             >
               {character.homeWorld
-                ? t(HOME_WORLD_KEYS[character.homeWorld] || 'homeWorld')
+                ? t(HOME_WORLD_KEYS[character.homeWorld] || 'dh.homeWorld')
                 : '-'}
             </p>
           </div>
@@ -210,7 +210,7 @@ export const InfoSection = ({
                 }
               >
                 <SelectTrigger className="h-8 text-xs">
-                  <SelectValue placeholder={t('selectVariant')} />
+                  <SelectValue placeholder={t('dh.selectVariant')} />
                 </SelectTrigger>
                 <SelectContent>
                   {(character.homeWorld
@@ -246,7 +246,7 @@ export const InfoSection = ({
                 isCompactView && 'text-[10px]',
               )}
             >
-              {t('careerPath')}
+              {t('dh.careerPath')}
             </Label>
             <p
               className={cn(
@@ -255,14 +255,14 @@ export const InfoSection = ({
               )}
             >
               {character.careerPath
-                ? t(CAREER_KEYS[character.careerPath] || 'careerPath')
+                ? t(CAREER_KEYS[character.careerPath] || 'dh.careerPath')
                 : '-'}
             </p>
           </div>
 
           {/* --- UPDATED DIVINATION FIELDS WITH TRANSLATION --- */}
           <DetailField
-            label={t('divination')}
+            label={t('dh.divination')}
             value={t(character.divination || '')}
             editing={isInfoEditing}
             onBlur={(e) =>
@@ -271,7 +271,7 @@ export const InfoSection = ({
             isCompactView={isCompactView}
           />
           <DetailField
-            label={t('divinationEffect')}
+            label={t('dh.divinationEffect')}
             value={t(character.divinationEffect || '')}
             editing={false}
             isCompactView={isCompactView}
@@ -279,7 +279,7 @@ export const InfoSection = ({
           {/* --- END UPDATED DIVINATION FIELDS --- */}
 
           <DetailField
-            label={t('quirk')}
+            label={t('dh.quirk')}
             value={
               character.quirk
                 ? t(QUIRK_KEYS[character.quirk] || character.quirk)
@@ -292,7 +292,7 @@ export const InfoSection = ({
             isCompactView={isCompactView}
           />
           <DetailField
-            label={t('height')}
+            label={t('common.height')}
             value={character.height}
             editing={isInfoEditing}
             onBlur={(e) =>
@@ -301,7 +301,7 @@ export const InfoSection = ({
             isCompactView={isCompactView}
           />
           <DetailField
-            label={t('weight')}
+            label={t('common.weight')}
             value={character.weight}
             editing={isInfoEditing}
             onBlur={(e) =>
@@ -310,7 +310,7 @@ export const InfoSection = ({
             isCompactView={isCompactView}
           />
           <DetailField
-            label={t('age')}
+            label={t('common.age')}
             value={character.age}
             editing={isInfoEditing}
             onBlur={(e) =>
@@ -319,7 +319,7 @@ export const InfoSection = ({
             isCompactView={isCompactView}
           />
           <DetailField
-            label={t('skinColor')}
+            label={t('dh.skinColor')}
             value={character.skinColor}
             editing={isInfoEditing}
             onBlur={(e) =>
@@ -328,7 +328,7 @@ export const InfoSection = ({
             isCompactView={isCompactView}
           />
           <DetailField
-            label={t('hairColor')}
+            label={t('dh.hairColor')}
             value={character.hairColor}
             editing={isInfoEditing}
             onBlur={(e) =>
@@ -337,7 +337,7 @@ export const InfoSection = ({
             isCompactView={isCompactView}
           />
           <DetailField
-            label={t('eyeColor')}
+            label={t('dh.eyeColor')}
             value={character.eyeColor}
             editing={isInfoEditing}
             onBlur={(e) =>
@@ -365,7 +365,7 @@ export const InfoSection = ({
                     isCompactView && 'text-[10px]',
                   )}
                 >
-                  {t('backstory')}
+                  {t('common.backstory')}
                 </Label>
               </CollapsibleTrigger>
             </div>
@@ -409,7 +409,7 @@ export const InfoSection = ({
                     isCompactView && 'text-[10px]',
                   )}
                 >
-                  {t('notes')}
+                  {t('common.notes')}
                 </Label>
               </CollapsibleTrigger>
             </div>
@@ -613,7 +613,7 @@ export const ProgressionSection = ({
               isCompactView ? 'text-lg' : 'text-2xl',
             )}
           >
-            {t('progression')}
+            {t('common.progression')}
           </CardTitle>
           {(showEditButtons || isProgressionEditing) && (
             <EditSaveButton
@@ -633,7 +633,7 @@ export const ProgressionSection = ({
                 htmlFor="current-exp-edit"
                 className="text-muted-foreground text-xs"
               >
-                {t('currentExp')}
+                {t('dh.currentExp')}
               </Label>
               <Input
                 id="current-exp-edit"
@@ -646,7 +646,7 @@ export const ProgressionSection = ({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="spend-exp-amount">{t('spendExp')}</Label>
+              <Label htmlFor="spend-exp-amount">{t('dh.spendExp')}</Label>
               <div className="flex items-center gap-2">
                 <Button
                   size="icon"
@@ -686,14 +686,14 @@ export const ProgressionSection = ({
               }
               className="w-full"
             >
-              {t('spendExp')}
+              {t('dh.spendExp')}
             </Button>
             <div className="space-y-1">
               <Label
                 htmlFor="total-exp-edit"
                 className="text-muted-foreground text-xs"
               >
-                {t('totalExpSpent')}
+                {t('dh.totalExpSpent')}
               </Label>
               <Input
                 id="total-exp-edit"
@@ -709,21 +709,21 @@ export const ProgressionSection = ({
             {/* ========== RANK DISPLAY SECTION START ========== */}
             <div className="space-y-1 border-t pt-2">
               <Label className="text-muted-foreground text-xs">
-                {t('rank')}
+                {t('dh.rank')}
               </Label>
               <div className="flex flex-col gap-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <p className="text-sm font-medium break-words">
                     {currentRankName === 'N/A' ||
                     currentRankName === 'Unknown Rank'
-                      ? t('unknownRank')
+                      ? t('dh.unknownRank')
                       : t(RANK_KEYS[currentRankName] || currentRankName)}
                   </p>
 
                   {(editableAdvancedPath ?? character.advancedPath) ? (
                     <div className="flex items-center gap-2">
                       <span className="border-primary/20 bg-primary/10 text-primary rounded border px-2 py-0.5 text-[10px] font-semibold">
-                        {t('advancedPath')}:{' '}
+                        {t('dh.advancedPath')}:{' '}
                         {t(
                           RANK_KEYS[
                             editableAdvancedPath ?? character.advancedPath!
@@ -739,7 +739,7 @@ export const ProgressionSection = ({
                             className="h-6 px-2 text-[10px]"
                             onClick={() => setIsAdvancedPathModalOpen(true)}
                           >
-                            {t('changeAdvancedPath')}
+                            {t('dh.changeAdvancedPath')}
                           </Button>
                         )}
                     </div>
@@ -752,14 +752,14 @@ export const ProgressionSection = ({
                         className="h-6 px-2 text-[10px]"
                         onClick={() => setIsAdvancedPathModalOpen(true)}
                       >
-                        {t('selectAdvancedPath')}
+                        {t('dh.selectAdvancedPath')}
                       </Button>
                     )
                   )}
 
                   {(editableAlternatePath ?? character.alternatePath) && (
                     <span className="border-secondary/20 bg-secondary/20 text-secondary-foreground rounded border px-2 py-0.5 text-[10px] font-semibold">
-                      {t('alternatePath')}:{' '}
+                      {t('dh.alternatePath')}:{' '}
                       {t(
                         RANK_KEYS[
                           editableAlternatePath ?? character.alternatePath!
@@ -779,8 +779,8 @@ export const ProgressionSection = ({
                       onClick={() => setIsAlternateRankModalOpen(true)}
                     >
                       {(editableAlternatePath ?? character.alternatePath)
-                        ? t('changeAlternateRank')
-                        : t('selectAlternateRank')}
+                        ? t('dh.changeAlternateRank')
+                        : t('dh.selectAlternateRank')}
                     </Button>
                   )}
                 </div>
@@ -801,8 +801,10 @@ export const ProgressionSection = ({
           onEscapeKeyDown={(e) => e.preventDefault()}
         >
           <DialogHeader>
-            <DialogTitle>{t('selectAdvancedPathTitle')}</DialogTitle>
-            <DialogDescription>{t('selectAdvancedPathDesc')}</DialogDescription>
+            <DialogTitle>{t('dh.selectAdvancedPathTitle')}</DialogTitle>
+            <DialogDescription>
+              {t('dh.selectAdvancedPathDesc')}
+            </DialogDescription>
           </DialogHeader>
           <div className="grid grid-cols-1 gap-4 py-4">
             {possibleAdvancedPaths &&
@@ -812,7 +814,7 @@ export const ProgressionSection = ({
                   onClick={() => handleSelectAdvancedPath(path.name)}
                   className="h-12 text-base"
                 >
-                  {t('choose')} {t(RANK_KEYS[path.name] || path.name)}
+                  {t('dh.choose')} {t(RANK_KEYS[path.name] || path.name)}
                 </Button>
               ))}
           </div>
@@ -825,9 +827,9 @@ export const ProgressionSection = ({
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{t('selectAlternateRankTitle')}</DialogTitle>
+            <DialogTitle>{t('dh.selectAlternateRankTitle')}</DialogTitle>
             <DialogDescription>
-              {t('selectAlternateRankDesc')}
+              {t('dh.selectAlternateRankDesc')}
             </DialogDescription>
           </DialogHeader>
           <div className="grid grid-cols-1 gap-4 py-4">
@@ -835,13 +837,13 @@ export const ProgressionSection = ({
               onClick={() => handleSelectAlternateRank(null)}
               className="h-12 text-base"
             >
-              {t('choose')} {t('rankInditor')}
+              {t('dh.choose')} {t('dh.rankInditor')}
             </Button>
             <Button
               onClick={() => handleSelectAlternateRank('Chirurgeon')}
               className="h-12 text-base"
             >
-              {t('choose')} {t('rankChirurgeon')}
+              {t('dh.choose')} {t('dh.rankChirurgeon')}
             </Button>
           </div>
         </DialogContent>

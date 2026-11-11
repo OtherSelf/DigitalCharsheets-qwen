@@ -64,19 +64,19 @@ const MULTICLASS_REQUIREMENTS: Record<string, (stats: DnDStats) => boolean> = {
 
 // Map internal English class names to translation keys
 const CLASS_TRANSLATION_KEYS: Record<string, string> = {
-  Artificer: 'classArtificer',
-  Barbarian: 'classBarbarian',
-  Bard: 'classBard',
-  Cleric: 'classCleric',
-  Druid: 'classDruid',
-  Fighter: 'classFighter',
-  Monk: 'classMonk',
-  Paladin: 'classPaladin',
-  Ranger: 'classRanger',
-  Rogue: 'classRogue',
-  Sorcerer: 'classSorcerer',
-  Warlock: 'classWarlock',
-  Wizard: 'classWizard',
+  Artificer: 'dnd.classArtificer',
+  Barbarian: 'dnd.classBarbarian',
+  Bard: 'dnd.classBard',
+  Cleric: 'dnd.classCleric',
+  Druid: 'dnd.classDruid',
+  Fighter: 'dnd.classFighter',
+  Monk: 'dnd.classMonk',
+  Paladin: 'dnd.classPaladin',
+  Ranger: 'dnd.classRanger',
+  Rogue: 'dnd.classRogue',
+  Sorcerer: 'dnd.classSorcerer',
+  Warlock: 'dnd.classWarlock',
+  Wizard: 'dnd.classWizard',
 };
 
 const DND_CLASSES = Object.keys(CLASS_TRANSLATION_KEYS);
@@ -283,7 +283,7 @@ export function DndProgressionSection({
           <CardHeader className="bg-muted/5 flex flex-row items-center justify-between px-4 pt-2 pb-2">
             <AccordionTrigger className="flex flex-1 items-center justify-between py-0 hover:no-underline">
               <Label className="text-muted-foreground text-[10px] font-bold tracking-tight uppercase">
-                {t('progression')}
+                {t('common.progression')}
               </Label>
             </AccordionTrigger>
             {(showEditButtons || isProgressionEditing) && (
@@ -299,7 +299,7 @@ export function DndProgressionSection({
               <div className="grid grid-cols-3 gap-4">
                 <div className="flex flex-col gap-1">
                   <Label className="text-muted-foreground text-[10px] font-bold uppercase">
-                    {t('class')}
+                    {t('common.class')}
                   </Label>
                   {isProgressionEditing ? (
                     <Select
@@ -330,7 +330,7 @@ export function DndProgressionSection({
                 </div>
                 <div className="flex flex-col gap-1">
                   <Label className="text-muted-foreground text-[10px] font-bold uppercase">
-                    {t('classLevel')}
+                    {t('dnd.classLevel')}
                   </Label>
                   <span className="truncate text-base font-bold">
                     {mainClassLevel}
@@ -338,7 +338,7 @@ export function DndProgressionSection({
                 </div>
                 <div className="flex flex-col gap-1">
                   <Label className="text-muted-foreground text-[10px] font-bold uppercase">
-                    {t('totalLevel')}
+                    {t('dnd.totalLevel')}
                   </Label>
                   <span className="truncate text-base font-bold">
                     {progressionData.level}
@@ -358,7 +358,7 @@ export function DndProgressionSection({
                       <ChevronRight className="text-muted-foreground h-4 w-4" />
                     )}
                     <Label className="cursor-pointer text-[10px] font-bold uppercase select-none">
-                      {t('multiclass')}
+                      {t('dnd.multiclass')}
                       {progressionData.isMulticlass &&
                         progressionData.multiclasses.length > 0 && (
                           <span className="text-muted-foreground ml-1.5 text-[9px] normal-case">
@@ -368,7 +368,7 @@ export function DndProgressionSection({
                                 (m) => !m.isDisabled,
                               ).length
                             }{' '}
-                            {t('active')})
+                            {t('dnd.active')})
                           </span>
                         )}
                     </Label>
@@ -474,11 +474,11 @@ export function DndProgressionSection({
                                 {t(
                                   CLASS_TRANSLATION_KEYS[mc.class] || mc.class,
                                 )}{' '}
-                                ({t('lvl')} {mc.level})
+                                ({t('dnd.lvl')} {mc.level})
                               </span>
                               {mc.isDisabled && (
                                 <span className="border-destructive/20 bg-destructive/10 text-destructive rounded border px-1.5 py-0.5 text-[10px] font-semibold">
-                                  {t('disabled')}
+                                  {t('dnd.disabled')}
                                 </span>
                               )}
                             </div>
@@ -521,7 +521,7 @@ export function DndProgressionSection({
                           }
                         }}
                       >
-                        <Plus className="mr-1 h-3 w-3" /> {t('addClass')}
+                        <Plus className="mr-1 h-3 w-3" /> {t('dnd.addClass')}
                       </Button>
                     )}
                   </div>
@@ -531,7 +531,7 @@ export function DndProgressionSection({
               <div className="space-y-4 border-t pt-2">
                 <div className="flex flex-col gap-1">
                   <Label className="text-muted-foreground text-[10px] font-bold uppercase">
-                    {t('experiencePoints')}
+                    {t('dnd.experiencePoints')}
                   </Label>
                   {isProgressionEditing ? (
                     <Input
@@ -552,7 +552,7 @@ export function DndProgressionSection({
                 </div>
                 <div className="flex flex-col gap-2">
                   <Label className="text-muted-foreground text-[10px] font-bold uppercase">
-                    {t('expToCount')}
+                    {t('dnd.expToCount')}
                   </Label>
                   <div className="flex gap-2">
                     <Input
@@ -573,7 +573,7 @@ export function DndProgressionSection({
                       }}
                       className="h-8 px-3 text-xs"
                     >
-                      {t('add')}
+                      {t('common.add')}
                     </Button>
                   </div>
                 </div>
