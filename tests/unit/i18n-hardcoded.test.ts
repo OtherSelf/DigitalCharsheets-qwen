@@ -18,7 +18,7 @@ import { describe, expect, it } from 'vitest';
  */
 
 const ROOT = process.cwd();
-const ROOTS = ['src/components', 'src/app'];
+const ROOTS = ['src/components', 'src/app', 'src/games'];
 const ATTRS = new Set(['placeholder', 'title', 'aria-label', 'alt']);
 
 const ALLOWED_TEXT = new Set([

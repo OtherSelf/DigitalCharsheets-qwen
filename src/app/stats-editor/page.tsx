@@ -448,8 +448,8 @@ export default function StatsEditorPage() {
                       <CardTitle>
                         {t('common.dhStats')} ·{' '}
                         {group.edition === 'dh1'
-                          ? t('common.firstEdition')
-                          : t('common.secondEdition')}{' '}
+                          ? t('games.dh1.name')
+                          : t('games.dh2.name')}{' '}
                         ({group.stats.length})
                       </CardTitle>
                       <CardDescription>

@@ -4,6 +4,8 @@ import { toPortableRecord } from '../shared/export';
 import type { GameModule } from '../types';
 import { createDh2Defaults } from './defaults';
 import { createDh2Demo } from './demo';
+import { en as dh2En } from './i18n/en';
+import { ru as dh2Ru } from './i18n/ru';
 import { dh2CharacterSchema } from './schema';
 import type { DH2Character } from './types';
 
@@ -20,11 +22,11 @@ export const dh2Module: GameModule<DH2Character> = {
   gameId: 'darkHeresy',
   order: 30,
   defaultStatus: 'published',
-  nameKey: 'common.secondEdition',
+  nameKey: 'games.dh2.name',
   descriptionKey: 'games.dh2.description',
   schemaVersion: CHARACTER_SCHEMA_VERSION,
   schema: dh2CharacterSchema,
-  i18n: { en: {}, ru: {} },
+  i18n: { en: dh2En, ru: dh2Ru },
   capabilities: {
     influence: true,
     plus30: true,

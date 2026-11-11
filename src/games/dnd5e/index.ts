@@ -4,6 +4,8 @@ import { toPortableRecord } from '../shared/export';
 import type { GameModule } from '../types';
 import { createDnd5eDefaults } from './defaults';
 import { createDnd5eDemo } from './demo';
+import { en as dnd5eEn } from './i18n/en';
+import { ru as dnd5eRu } from './i18n/ru';
 import { dnd5eCharacterSchema } from './schema';
 import type { DnD5eCharacter } from './types';
 
@@ -22,7 +24,7 @@ export const dnd5eModule: GameModule<DnD5eCharacter> = {
   descriptionKey: 'games.dnd5e.description',
   schemaVersion: CHARACTER_SCHEMA_VERSION,
   schema: dnd5eCharacterSchema,
-  i18n: { en: {}, ru: {} },
+  i18n: { en: dnd5eEn, ru: dnd5eRu },
   capabilities: {},
   createDefaults: createDnd5eDefaults,
   createDemo: createDnd5eDemo,
