@@ -47,8 +47,7 @@ test.describe('диалоги — журнал заданий', () => {
     await screenshotPage(page, 'dialog-dh-quest-journal-en.png');
   });
 
-  test('D&D — ru', async ({ page, context }) => {
-    test.skip(isMobile(), 'desktop-only: русская локаль диалогов');
+  test('D&D — ru', { tag: '@desktop' }, async ({ page, context }) => {
     await prepare(context, { language: 'ru' });
     await openApp(page, `/${getState().dndId}`);
 
@@ -58,8 +57,7 @@ test.describe('диалоги — журнал заданий', () => {
     await screenshotPage(page, 'dialog-dnd-quest-journal-ru.png');
   });
 
-  test('Dark Heresy — ru', async ({ page, context }) => {
-    test.skip(isMobile(), 'desktop-only: русская локаль диалогов');
+  test('Dark Heresy — ru', { tag: '@desktop' }, async ({ page, context }) => {
     await prepare(context, { language: 'ru' });
     await openApp(page, `/${getState().dhId}`);
 
@@ -73,8 +71,7 @@ test.describe('диалоги — журнал заданий', () => {
 });
 
 test.describe('диалоги — домашние правила', () => {
-  test('D&D — en (desktop)', async ({ page, context }) => {
-    test.skip(isMobile(), 'desktop-only сценарий');
+  test('D&D — en (desktop)', { tag: '@desktop' }, async ({ page, context }) => {
     await prepare(context);
     await openApp(page, `/${getState().dndId}`);
 
@@ -90,19 +87,21 @@ test.describe('диалоги — домашние правила', () => {
     await screenshotPage(page, 'dialog-dnd-house-rules-en.png');
   });
 
-  test('Dark Heresy — en (desktop)', async ({ page, context }) => {
-    test.skip(isMobile(), 'desktop-only сценарий');
-    await prepare(context);
-    await openApp(page, `/${getState().dhId}`);
+  test(
+    'Dark Heresy — en (desktop)',
+    { tag: '@desktop' },
+    async ({ page, context }) => {
+      await prepare(context);
+      await openApp(page, `/${getState().dhId}`);
 
-    const dialog = await openDialog(page, 'House Rules', false);
-    await expect(dialog.getByText('Critical hits on 96–00')).toBeVisible();
+      const dialog = await openDialog(page, 'House Rules', false);
+      await expect(dialog.getByText('Critical hits on 96–00')).toBeVisible();
 
-    await screenshotPage(page, 'dialog-dh-house-rules-en.png');
-  });
+      await screenshotPage(page, 'dialog-dh-house-rules-en.png');
+    },
+  );
 
-  test('D&D — en (mobile)', async ({ page, context }) => {
-    test.skip(!isMobile(), 'mobile-only сценарий');
+  test('D&D — en (mobile)', { tag: '@mobile' }, async ({ page, context }) => {
     await prepare(context);
     await openApp(page, `/${getState().dndId}`);
 
@@ -115,19 +114,21 @@ test.describe('диалоги — домашние правила', () => {
     await screenshotPage(page, 'dialog-dnd-mobile-house-rules-en.png');
   });
 
-  test('Dark Heresy — en (mobile)', async ({ page, context }) => {
-    test.skip(!isMobile(), 'mobile-only сценарий');
-    await prepare(context);
-    await openApp(page, `/${getState().dhId}`);
+  test(
+    'Dark Heresy — en (mobile)',
+    { tag: '@mobile' },
+    async ({ page, context }) => {
+      await prepare(context);
+      await openApp(page, `/${getState().dhId}`);
 
-    const dialog = await openDialog(page, 'House Rules', true);
-    await expect(dialog.getByText('Critical hits on 96–00')).toBeVisible();
+      const dialog = await openDialog(page, 'House Rules', true);
+      await expect(dialog.getByText('Critical hits on 96–00')).toBeVisible();
 
-    await screenshotPage(page, 'dialog-dh-mobile-house-rules-en.png');
-  });
+      await screenshotPage(page, 'dialog-dh-mobile-house-rules-en.png');
+    },
+  );
 
-  test('D&D — ru', async ({ page, context }) => {
-    test.skip(isMobile(), 'desktop-only: русская локаль диалогов');
+  test('D&D — ru', { tag: '@desktop' }, async ({ page, context }) => {
     await prepare(context, { language: 'ru' });
     await openApp(page, `/${getState().dndId}`);
 
@@ -142,8 +143,7 @@ test.describe('диалоги — домашние правила', () => {
 });
 
 test.describe('диалоги — заметки', () => {
-  test('D&D — en (desktop)', async ({ page, context }) => {
-    test.skip(isMobile(), 'desktop-only сценарий');
+  test('D&D — en (desktop)', { tag: '@desktop' }, async ({ page, context }) => {
     await prepare(context);
     await openApp(page, `/${getState().dndId}`);
 
@@ -158,21 +158,23 @@ test.describe('диалоги — заметки', () => {
     await screenshotPage(page, 'dialog-dnd-notes-en.png');
   });
 
-  test('Dark Heresy — en (desktop)', async ({ page, context }) => {
-    test.skip(isMobile(), 'desktop-only сценарий');
-    await prepare(context);
-    await openApp(page, `/${getState().dhId}`);
+  test(
+    'Dark Heresy — en (desktop)',
+    { tag: '@desktop' },
+    async ({ page, context }) => {
+      await prepare(context);
+      await openApp(page, `/${getState().dhId}`);
 
-    const dialog = await openDialog(page, 'Notes', false);
-    await expect(dialog.locator('textarea')).toHaveValue(
-      /Keep the sealed dossier/,
-    );
+      const dialog = await openDialog(page, 'Notes', false);
+      await expect(dialog.locator('textarea')).toHaveValue(
+        /Keep the sealed dossier/,
+      );
 
-    await screenshotPage(page, 'dialog-dh-notes-en.png');
-  });
+      await screenshotPage(page, 'dialog-dh-notes-en.png');
+    },
+  );
 
-  test('D&D — en (mobile)', async ({ page, context }) => {
-    test.skip(!isMobile(), 'mobile-only сценарий');
+  test('D&D — en (mobile)', { tag: '@mobile' }, async ({ page, context }) => {
     await prepare(context);
     await openApp(page, `/${getState().dndId}`);
 
@@ -184,21 +186,23 @@ test.describe('диалоги — заметки', () => {
     await screenshotPage(page, 'dialog-dnd-mobile-notes-en.png');
   });
 
-  test('Dark Heresy — en (mobile)', async ({ page, context }) => {
-    test.skip(!isMobile(), 'mobile-only сценарий');
-    await prepare(context);
-    await openApp(page, `/${getState().dhId}`);
+  test(
+    'Dark Heresy — en (mobile)',
+    { tag: '@mobile' },
+    async ({ page, context }) => {
+      await prepare(context);
+      await openApp(page, `/${getState().dhId}`);
 
-    const dialog = await openDialog(page, 'Notes', true);
-    await expect(dialog.locator('textarea')).toHaveValue(
-      /Keep the sealed dossier/,
-    );
+      const dialog = await openDialog(page, 'Notes', true);
+      await expect(dialog.locator('textarea')).toHaveValue(
+        /Keep the sealed dossier/,
+      );
 
-    await screenshotPage(page, 'dialog-dh-mobile-notes-en.png');
-  });
+      await screenshotPage(page, 'dialog-dh-mobile-notes-en.png');
+    },
+  );
 
-  test('Dark Heresy — ru', async ({ page, context }) => {
-    test.skip(isMobile(), 'desktop-only: русская локаль диалогов');
+  test('Dark Heresy — ru', { tag: '@desktop' }, async ({ page, context }) => {
     await prepare(context, { language: 'ru' });
     await openApp(page, `/${getState().dhId}`);
 
@@ -212,8 +216,7 @@ test.describe('диалоги — заметки', () => {
 });
 
 test.describe('диалоги — божественные дары (только D&D)', () => {
-  test('desktop — en', async ({ page, context }) => {
-    test.skip(isMobile(), 'desktop-only сценарий');
+  test('desktop — en', { tag: '@desktop' }, async ({ page, context }) => {
     await prepare(context);
     await openApp(page, `/${getState().dndId}`);
 
@@ -226,8 +229,7 @@ test.describe('диалоги — божественные дары (тольк�
     await screenshotPage(page, 'dialog-dnd-divine-boons-en.png');
   });
 
-  test('mobile — en', async ({ page, context }) => {
-    test.skip(!isMobile(), 'mobile-only сценарий');
+  test('mobile — en', { tag: '@mobile' }, async ({ page, context }) => {
     await prepare(context);
     await openApp(page, `/${getState().dndId}`);
 
@@ -240,8 +242,7 @@ test.describe('диалоги — божественные дары (тольк�
     await screenshotPage(page, 'dialog-dnd-mobile-divine-boons-en.png');
   });
 
-  test('desktop — ru', async ({ page, context }) => {
-    test.skip(isMobile(), 'desktop-only: русская локаль диалогов');
+  test('desktop — ru', { tag: '@desktop' }, async ({ page, context }) => {
     await prepare(context, { language: 'ru' });
     await openApp(page, `/${getState().dndId}`);
 

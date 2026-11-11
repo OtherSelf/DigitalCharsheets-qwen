@@ -98,38 +98,37 @@ test.describe('гостевая шапка (главная и /login)', () => {
     await expectNoHorizontalOverflow(page);
   });
 
-  test('гостевая главная и /demo: контент скроллится на мобильном', async ({
-    page,
-    context,
-  }) => {
-    test.skip(!isMobile(), 'мобильный сценарий: проверяем touch-скролл');
+  test(
+    'гостевая главная и /demo: контент скроллится на мобильном',
+    { tag: '@mobile' },
+    async ({ page, context }) => {
+      await prepare(context, { authenticated: false });
+      for (const path of ['/', '/demo']) {
+        await openApp(page, path);
 
-    await prepare(context, { authenticated: false });
-    for (const path of ['/', '/demo']) {
-      await openApp(page, path);
+        const main = page.locator('main');
+        const metrics = await main.evaluate((el) => {
+          el.scrollTop = el.scrollHeight;
+          const style = getComputedStyle(el);
+          return {
+            top: el.scrollTop,
+            overflowY: style.overflowY,
+            scrollHeight: el.scrollHeight,
+            clientHeight: el.clientHeight,
+          };
+        });
 
-      const main = page.locator('main');
-      const metrics = await main.evaluate((el) => {
-        el.scrollTop = el.scrollHeight;
-        const style = getComputedStyle(el);
-        return {
-          top: el.scrollTop,
-          overflowY: style.overflowY,
-          scrollHeight: el.scrollHeight,
-          clientHeight: el.clientHeight,
-        };
-      });
-
-      expect(metrics.overflowY, `${path}: main — скролл-контейнер`).toMatch(
-        /auto|scroll/,
-      );
-      expect(
-        metrics.scrollHeight,
-        `${path}: контент длиннее экрана`,
-      ).toBeGreaterThan(metrics.clientHeight);
-      expect(metrics.top, `${path}: main прокручивается`).toBeGreaterThan(0);
-    }
-  });
+        expect(metrics.overflowY, `${path}: main — скролл-контейнер`).toMatch(
+          /auto|scroll/,
+        );
+        expect(
+          metrics.scrollHeight,
+          `${path}: контент длиннее экрана`,
+        ).toBeGreaterThan(metrics.clientHeight);
+        expect(metrics.top, `${path}: main прокручивается`).toBeGreaterThan(0);
+      }
+    },
+  );
 
   test('login: шапка с видом/темой/языком и перевод формы', async ({
     page,
@@ -350,9 +349,8 @@ test.describe('адаптивность', () => {
 
   test(
     'шапка листа: одна строка на планшете и до 768px',
-    { tag: '@fast' },
+    { tag: ['@fast', '@desktop'] },
     async ({ page, context }) => {
-      test.skip(isMobile(), 'desktop/tablet-only сценарий');
       await prepare(context);
       await openApp(page, `/${getState().dhId}`);
 
@@ -509,360 +507,364 @@ test.describe('адаптивность', () => {
     }
   });
 
-  test('мобильные секции D&D: переключение и отсутствие скролла', async ({
-    page,
-    context,
-  }) => {
-    test.skip(!isMobile(), 'mobile-only сценарий');
-    await prepare(context);
-    await openApp(page, `/${getState().dndId}`);
+  test(
+    'мобильные секции D&D: переключение и отсутствие скролла',
+    { tag: '@mobile' },
+    async ({ page, context }) => {
+      await prepare(context);
+      await openApp(page, `/${getState().dndId}`);
 
-    for (const [label, selector] of [
-      ['Ability Scores', '#saving-throws-card'],
-      ['Combat Stats', '#hit-points-card'],
-      ['Inventory & Attunement', '#inventory-box'],
-    ] as const) {
-      await openMobileSection(page, label);
-      await expect(page.locator(selector + ':visible').first()).toBeVisible();
-      await expectNoHorizontalOverflow(page);
-    }
-  });
+      for (const [label, selector] of [
+        ['Ability Scores', '#saving-throws-card'],
+        ['Combat Stats', '#hit-points-card'],
+        ['Inventory & Attunement', '#inventory-box'],
+      ] as const) {
+        await openMobileSection(page, label);
+        await expect(page.locator(selector + ':visible').first()).toBeVisible();
+        await expectNoHorizontalOverflow(page);
+      }
+    },
+  );
 
-  test('мобильные секции Dark Heresy: переключение', async ({
-    page,
-    context,
-  }) => {
-    test.skip(!isMobile(), 'mobile-only сценарий');
-    await prepare(context);
-    await openApp(page, `/${getState().dhId}`);
+  test(
+    'мобильные секции Dark Heresy: переключение',
+    { tag: '@mobile' },
+    async ({ page, context }) => {
+      await prepare(context);
+      await openApp(page, `/${getState().dhId}`);
 
-    for (const [label, selector, sectionId] of [
-      ['Skills', 'main', undefined],
-      ['Talents & Traits', 'main', undefined],
-      ['Equipment', '#equipment-section', 'equipment-section'],
-      ['Inventory', '#inventory-section', 'inventory-section'],
-    ] as const) {
-      await openMobileSection(page, label, sectionId);
-      await expect(page.locator(selector + ':visible').first()).toBeVisible();
-      await expectNoHorizontalOverflow(page);
-    }
-  });
+      for (const [label, selector, sectionId] of [
+        ['Skills', 'main', undefined],
+        ['Talents & Traits', 'main', undefined],
+        ['Equipment', '#equipment-section', 'equipment-section'],
+        ['Inventory', '#inventory-section', 'inventory-section'],
+      ] as const) {
+        await openMobileSection(page, label, sectionId);
+        await expect(page.locator(selector + ':visible').first()).toBeVisible();
+        await expectNoHorizontalOverflow(page);
+      }
+    },
+  );
 
-  test('минимальный размер тач-целей в шапке', async ({ page, context }) => {
-    test.skip(!isMobile(), 'mobile-only сценарий');
-    await prepare(context);
-    await openApp(page, '/');
+  test(
+    'минимальный размер тач-целей в шапке',
+    { tag: '@mobile' },
+    async ({ page, context }) => {
+      await prepare(context);
+      await openApp(page, '/');
 
-    const targets = [
-      page.getByRole('button', { name: 'Open menu' }),
-      page.getByRole('button', { name: /toggle theme/i }),
-      page.getByRole('button', { name: /^EN$/ }),
-    ];
+      const targets = [
+        page.getByRole('button', { name: 'Open menu' }),
+        page.getByRole('button', { name: /toggle theme/i }),
+        page.getByRole('button', { name: /^EN$/ }),
+      ];
 
-    for (const target of targets) {
-      const box = await target.boundingBox();
-      expect(box, 'кнопка должна иметь размер').not.toBeNull();
-      expect(box!.width, 'ширина тач-цели').toBeGreaterThanOrEqual(32);
-      expect(box!.height, 'высота тач-цели').toBeGreaterThanOrEqual(32);
-    }
-  });
+      for (const target of targets) {
+        const box = await target.boundingBox();
+        expect(box, 'кнопка должна иметь размер').not.toBeNull();
+        expect(box!.width, 'ширина тач-цели').toBeGreaterThanOrEqual(32);
+        expect(box!.height, 'высота тач-цели').toBeGreaterThanOrEqual(32);
+      }
+    },
+  );
 
-  test('инструменты листа: иконки с подсказками и состоянием', async ({
-    page,
-    context,
-  }) => {
-    test.skip(isMobile(), 'на телефоне инструменты листа живут в меню');
-    await prepare(context);
-    await openApp(page, `/${getState().dhId}`);
+  test(
+    'инструменты листа: иконки с подсказками и состоянием',
+    { tag: '@desktop' },
+    async ({ page, context }) => {
+      await prepare(context);
+      await openApp(page, `/${getState().dhId}`);
 
-    const header = page.getByTestId('app-header');
-    const notes = header.getByRole('button', { name: 'Notes', exact: true });
-    const journal = header.getByRole('button', {
-      name: 'Quest Journal',
-      exact: true,
-    });
-    const notesToggle = header.getByRole('button', {
-      name: 'Hide Notes',
-      exact: true,
-    });
-    const editToggle = header.getByRole('button', {
-      name: 'Edit Buttons',
-      exact: true,
-    });
+      const header = page.getByTestId('app-header');
+      const notes = header.getByRole('button', { name: 'Notes', exact: true });
+      const journal = header.getByRole('button', {
+        name: 'Quest Journal',
+        exact: true,
+      });
+      const notesToggle = header.getByRole('button', {
+        name: 'Hide Notes',
+        exact: true,
+      });
+      const editToggle = header.getByRole('button', {
+        name: 'Edit Buttons',
+        exact: true,
+      });
 
-    // Кнопки остались доступными по имени, хотя видимого текста больше нет:
-    // на него опираются и openDialog(), и скриншот-тесты диалогов.
-    for (const button of [notes, journal, notesToggle, editToggle]) {
-      await expect(button).toBeVisible();
-    }
-    await expect(notes, 'у кнопки только иконка, без подписи').toHaveText('');
+      // Кнопки остались доступными по имени, хотя видимого текста больше нет:
+      // на него опираются и openDialog(), и скриншот-тесты диалогов.
+      for (const button of [notes, journal, notesToggle, editToggle]) {
+        await expect(button).toBeVisible();
+      }
+      await expect(notes, 'у кнопки только иконка, без подписи').toHaveText('');
 
-    // Подсказка при наведении — вместо убранной подписи.
-    await notes.hover();
-    await expect(page.getByRole('tooltip')).toHaveText('Notes');
+      // Подсказка при наведении — вместо убранной подписи.
+      await notes.hover();
+      await expect(page.getByRole('tooltip')).toHaveText('Notes');
 
-    // Состояние тумблера живёт в aria-pressed, а не в видимом тексте.
-    await expect(notesToggle).toHaveAttribute('aria-pressed', 'true');
-    await notesToggle.click();
-    const showNotes = header.getByRole('button', {
-      name: 'Show Notes',
-      exact: true,
-    });
-    await expect(showNotes).toHaveAttribute('aria-pressed', 'false');
-    await showNotes.click();
-    await expect(
-      header.getByRole('button', { name: 'Hide Notes', exact: true }),
-    ).toHaveAttribute('aria-pressed', 'true');
+      // Состояние тумблера живёт в aria-pressed, а не в видимом тексте.
+      await expect(notesToggle).toHaveAttribute('aria-pressed', 'true');
+      await notesToggle.click();
+      const showNotes = header.getByRole('button', {
+        name: 'Show Notes',
+        exact: true,
+      });
+      await expect(showNotes).toHaveAttribute('aria-pressed', 'false');
+      await showNotes.click();
+      await expect(
+        header.getByRole('button', { name: 'Hide Notes', exact: true }),
+      ).toHaveAttribute('aria-pressed', 'true');
 
-    // Иконочные кнопки не должны стать мельче тач-цели на планшете.
-    for (const button of [notes, journal, notesToggle, editToggle]) {
-      const box = await button.boundingBox();
-      expect(box, 'кнопка должна иметь размер').not.toBeNull();
-      expect(box!.width, 'ширина тач-цели').toBeGreaterThanOrEqual(32);
-      expect(box!.height, 'высота тач-цели').toBeGreaterThanOrEqual(32);
-    }
-  });
+      // Иконочные кнопки не должны стать мельче тач-цели на планшете.
+      for (const button of [notes, journal, notesToggle, editToggle]) {
+        const box = await button.boundingBox();
+        expect(box, 'кнопка должна иметь размер').not.toBeNull();
+        expect(box!.width, 'ширина тач-цели').toBeGreaterThanOrEqual(32);
+        expect(box!.height, 'высота тач-цели').toBeGreaterThanOrEqual(32);
+      }
+    },
+  );
 
-  test('Display Settings: смена UI Scale на 80% не двигает корень', async ({
-    page,
-    context,
-  }) => {
-    test.skip(!isMobile(), 'мобильный компактный вид');
-    await prepare(context);
-    await openApp(page, `/${getState().dhId}`);
+  test(
+    'Display Settings: смена UI Scale на 80% не двигает корень',
+    { tag: '@mobile' },
+    async ({ page, context }) => {
+      await prepare(context);
+      await openApp(page, `/${getState().dhId}`);
 
-    // Ровно путь пользователя: профиль → Display Settings → UI Scale 80%.
-    // Пока диалог открыт, Radix ставит body.style.overflow = 'hidden'
-    // инлайном и перебивает наш `overflow: clip`; если оболочка приложения
-    // остаётся в потоке, у body появляется прокручиваемый «излишек»
-    // (125dvh при 80%) и корень можно сдвинуть — тогда «уезжают» шапка
-    // и левое меню. Оболочка вынесена из потока (position: fixed),
-    // поэтому сдвигать нечего.
-    await page.getByRole('button', { name: 'Open user menu' }).click();
-    await page.getByRole('menuitem', { name: /Display Settings/i }).click();
-    const dialog = page.getByRole('dialog');
-    await dialog.waitFor();
+      // Ровно путь пользователя: профиль → Display Settings → UI Scale 80%.
+      // Пока диалог открыт, Radix ставит body.style.overflow = 'hidden'
+      // инлайном и перебивает наш `overflow: clip`; если оболочка приложения
+      // остаётся в потоке, у body появляется прокручиваемый «излишек»
+      // (125dvh при 80%) и корень можно сдвинуть — тогда «уезжают» шапка
+      // и левое меню. Оболочка вынесена из потока (position: fixed),
+      // поэтому сдвигать нечего.
+      await page.getByRole('button', { name: 'Open user menu' }).click();
+      await page.getByRole('menuitem', { name: /Display Settings/i }).click();
+      const dialog = page.getByRole('dialog');
+      await dialog.waitFor();
 
-    const decrease = dialog.getByRole('button', {
-      name: 'Decrease UI scale',
-    });
-    for (let i = 0; i < 2; i += 1) {
-      await decrease.click();
-      await page.waitForTimeout(200);
-    }
-    await expect(dialog).toContainText('80%');
+      const decrease = dialog.getByRole('button', {
+        name: 'Decrease UI scale',
+      });
+      for (let i = 0; i < 2; i += 1) {
+        await decrease.click();
+        await page.waitForTimeout(200);
+      }
+      await expect(dialog).toContainText('80%');
 
-    // Пока диалог открыт: body реально переключён на overflow: hidden.
-    await expect
-      .poll(async () =>
-        page.evaluate(() => getComputedStyle(document.body).overflow),
-      )
-      .toBe('hidden');
+      // Пока диалог открыт: body реально переключён на overflow: hidden.
+      await expect
+        .poll(async () =>
+          page.evaluate(() => getComputedStyle(document.body).overflow),
+        )
+        .toBe('hidden');
 
-    await page.keyboard.press('Escape');
-    await expect(dialog).toBeHidden();
-    await page.waitForTimeout(400);
+      await page.keyboard.press('Escape');
+      await expect(dialog).toBeHidden();
+      await page.waitForTimeout(400);
 
-    const state = async () =>
-      page.evaluate(() => {
-        const wrapper = document.querySelector(
-          '[data-ui-scale-wrapper]',
-        ) as HTMLElement;
-        return {
-          scale: getComputedStyle(document.documentElement)
-            .getPropertyValue('--ui-scale')
-            .trim(),
-          rootTop: document.documentElement.scrollTop,
-          rootLeft: document.documentElement.scrollLeft,
+      const state = async () =>
+        page.evaluate(() => {
+          const wrapper = document.querySelector(
+            '[data-ui-scale-wrapper]',
+          ) as HTMLElement;
+          return {
+            scale: getComputedStyle(document.documentElement)
+              .getPropertyValue('--ui-scale')
+              .trim(),
+            rootTop: document.documentElement.scrollTop,
+            rootLeft: document.documentElement.scrollLeft,
+            bodyTop: document.body.scrollTop,
+            bodyLeft: document.body.scrollLeft,
+            wrapperTop: Math.round(wrapper.getBoundingClientRect().top),
+            wrapperLeft: Math.round(wrapper.getBoundingClientRect().left),
+            wrapperPosition: getComputedStyle(wrapper).position,
+          };
+        });
+
+      const afterScale = await state();
+      expect(afterScale.scale, 'масштаб применён').toBe('0.8');
+      expect(afterScale.wrapperPosition, 'оболочка вне потока').toBe('fixed');
+      expect(
+        {
+          rootTop: afterScale.rootTop,
+          rootLeft: afterScale.rootLeft,
+          bodyTop: afterScale.bodyTop,
+          bodyLeft: afterScale.bodyLeft,
+        },
+        'после закрытия диалога корень на месте',
+      ).toEqual({ rootTop: 0, rootLeft: 0, bodyTop: 0, bodyLeft: 0 });
+      expect(afterScale.wrapperTop, 'оболочка не уехала вверх').toBe(0);
+      expect(afterScale.wrapperLeft, 'оболочка не уехала вбок').toBe(0);
+
+      // И переход между секциями при 80% тоже ничего не сдвигает.
+      await page
+        .getByRole('navigation')
+        .getByRole('button', { name: 'Inventory', exact: true })
+        .click();
+      await page.waitForTimeout(600);
+      const afterSection = await state();
+      expect(afterSection.scale).toBe('0.8');
+      expect(
+        {
+          rootTop: afterSection.rootTop,
+          rootLeft: afterSection.rootLeft,
+          bodyTop: afterSection.bodyTop,
+          bodyLeft: afterSection.bodyLeft,
+        },
+        'после смены секции корень на месте',
+      ).toEqual({ rootTop: 0, rootLeft: 0, bodyTop: 0, bodyLeft: 0 });
+      expect(afterSection.wrapperTop).toBe(0);
+    },
+  );
+
+  test(
+    'масштаб интерфейса ≠ 100%: корень не прокручивается',
+    { tag: '@mobile' },
+    async ({ page, context }) => {
+      for (const scale of ['0.5', '0.8', '1.25', '1.5']) {
+        await prepare(context);
+        await context.addInitScript((value) => {
+          try {
+            localStorage.setItem('ui-scale', value);
+          } catch {
+            /* storage недоступен — не критично */
+          }
+        }, scale);
+        await openApp(page, `/${getState().dhId}`);
+        await page.waitForFunction(
+          (value) =>
+            getComputedStyle(document.documentElement)
+              .getPropertyValue('--ui-scale')
+              .trim() === value,
+          scale,
+        );
+
+        const header = page.locator('header.app-header');
+        const nav = page.getByRole('navigation');
+        const before = {
+          header: (await header.boundingBox())!.y,
+          headerX: (await header.boundingBox())!.x,
+          nav: (await nav.boundingBox())!.y,
+        };
+
+        // Переход между секциями — именно он вызывал scrollIntoView по корню.
+        await nav
+          .getByRole('button', { name: 'Inventory', exact: true })
+          .click();
+        await page.waitForTimeout(600);
+
+        // UIScaleWrapper раскладывается в 1/scale раз больше вьюпорта,
+        // поэтому body получает «лишнюю» высоту/ширину. overflow: clip
+        // на html/body не даёт корню сдвинуться — иначе шапка и левое
+        // меню уезжали вверх/вбок (баг «меню убегает»).
+        const root = await page.evaluate(() => ({
+          top: document.documentElement.scrollTop,
+          left: document.documentElement.scrollLeft,
           bodyTop: document.body.scrollTop,
           bodyLeft: document.body.scrollLeft,
-          wrapperTop: Math.round(wrapper.getBoundingClientRect().top),
-          wrapperLeft: Math.round(wrapper.getBoundingClientRect().left),
-          wrapperPosition: getComputedStyle(wrapper).position,
-        };
-      });
+        }));
+        expect(root, `масштаб ${scale}: корень остаётся на месте`).toEqual({
+          top: 0,
+          left: 0,
+          bodyTop: 0,
+          bodyLeft: 0,
+        });
+        expect(
+          Math.abs((await header.boundingBox())!.y - before.header),
+          `масштаб ${scale}: шапка на месте`,
+        ).toBeLessThanOrEqual(1);
+        expect(
+          Math.abs((await nav.boundingBox())!.y - before.nav),
+          `масштаб ${scale}: левое меню на месте`,
+        ).toBeLessThanOrEqual(1);
 
-    const afterScale = await state();
-    expect(afterScale.scale, 'масштаб применён').toBe('0.8');
-    expect(afterScale.wrapperPosition, 'оболочка вне потока').toBe('fixed');
-    expect(
-      {
-        rootTop: afterScale.rootTop,
-        rootLeft: afterScale.rootLeft,
-        bodyTop: afterScale.bodyTop,
-        bodyLeft: afterScale.bodyLeft,
-      },
-      'после закрытия диалога корень на месте',
-    ).toEqual({ rootTop: 0, rootLeft: 0, bodyTop: 0, bodyLeft: 0 });
-    expect(afterScale.wrapperTop, 'оболочка не уехала вверх').toBe(0);
-    expect(afterScale.wrapperLeft, 'оболочка не уехала вбок').toBe(0);
+        // `expectNoHorizontalOverflow` здесь не годится: при масштабе ≠ 100%
+        // scrollWidth body намеренно больше вьюпорта (обёртка раскладывается
+        // в 1/scale раз крупнее и масштабируется трансформом). Проверяем то,
+        // что важно: «лишним» размером нельзя уехать ни вбок, ни вниз.
+        await page.mouse.move(200, 300);
+        await page.mouse.wheel(400, 0);
+        await page.waitForTimeout(300);
+        const shifted = await page.evaluate(() => ({
+          root: document.documentElement.scrollLeft,
+          body: document.body.scrollLeft,
+        }));
+        expect(shifted, 'горизонтально корень тоже не двигается').toEqual({
+          root: 0,
+          body: 0,
+        });
+        expect(
+          Math.abs((await header.boundingBox())!.x - before.headerX),
+          `масштаб ${scale}: шапка не сдвинулась вбок`,
+        ).toBeLessThanOrEqual(1);
 
-    // И переход между секциями при 80% тоже ничего не сдвигает.
-    await page
-      .getByRole('navigation')
-      .getByRole('button', { name: 'Inventory', exact: true })
-      .click();
-    await page.waitForTimeout(600);
-    const afterSection = await state();
-    expect(afterSection.scale).toBe('0.8');
-    expect(
-      {
-        rootTop: afterSection.rootTop,
-        rootLeft: afterSection.rootLeft,
-        bodyTop: afterSection.bodyTop,
-        bodyLeft: afterSection.bodyLeft,
-      },
-      'после смены секции корень на месте',
-    ).toEqual({ rootTop: 0, rootLeft: 0, bodyTop: 0, bodyLeft: 0 });
-    expect(afterSection.wrapperTop).toBe(0);
-  });
-
-  test('масштаб интерфейса ≠ 100%: корень не прокручивается', async ({
-    page,
-    context,
-  }) => {
-    test.skip(!isMobile(), 'мобильный компактный вид');
-
-    for (const scale of ['0.5', '0.8', '1.25', '1.5']) {
-      await prepare(context);
-      await context.addInitScript((value) => {
-        try {
-          localStorage.setItem('ui-scale', value);
-        } catch {
-          /* storage недоступен — не критично */
-        }
-      }, scale);
-      await openApp(page, `/${getState().dhId}`);
-      await page.waitForFunction(
-        (value) =>
-          getComputedStyle(document.documentElement)
-            .getPropertyValue('--ui-scale')
-            .trim() === value,
-        scale,
-      );
-
-      const header = page.locator('header.app-header');
-      const nav = page.getByRole('navigation');
-      const before = {
-        header: (await header.boundingBox())!.y,
-        headerX: (await header.boundingBox())!.x,
-        nav: (await nav.boundingBox())!.y,
-      };
-
-      // Переход между секциями — именно он вызывал scrollIntoView по корню.
-      await nav.getByRole('button', { name: 'Inventory', exact: true }).click();
-      await page.waitForTimeout(600);
-
-      // UIScaleWrapper раскладывается в 1/scale раз больше вьюпорта,
-      // поэтому body получает «лишнюю» высоту/ширину. overflow: clip
-      // на html/body не даёт корню сдвинуться — иначе шапка и левое
-      // меню уезжали вверх/вбок (баг «меню убегает»).
-      const root = await page.evaluate(() => ({
-        top: document.documentElement.scrollTop,
-        left: document.documentElement.scrollLeft,
-        bodyTop: document.body.scrollTop,
-        bodyLeft: document.body.scrollLeft,
-      }));
-      expect(root, `масштаб ${scale}: корень остаётся на месте`).toEqual({
-        top: 0,
-        left: 0,
-        bodyTop: 0,
-        bodyLeft: 0,
-      });
-      expect(
-        Math.abs((await header.boundingBox())!.y - before.header),
-        `масштаб ${scale}: шапка на месте`,
-      ).toBeLessThanOrEqual(1);
-      expect(
-        Math.abs((await nav.boundingBox())!.y - before.nav),
-        `масштаб ${scale}: левое меню на месте`,
-      ).toBeLessThanOrEqual(1);
-
-      // `expectNoHorizontalOverflow` здесь не годится: при масштабе ≠ 100%
-      // scrollWidth body намеренно больше вьюпорта (обёртка раскладывается
-      // в 1/scale раз крупнее и масштабируется трансформом). Проверяем то,
-      // что важно: «лишним» размером нельзя уехать ни вбок, ни вниз.
-      await page.mouse.move(200, 300);
-      await page.mouse.wheel(400, 0);
-      await page.waitForTimeout(300);
-      const shifted = await page.evaluate(() => ({
-        root: document.documentElement.scrollLeft,
-        body: document.body.scrollLeft,
-      }));
-      expect(shifted, 'горизонтально корень тоже не двигается').toEqual({
-        root: 0,
-        body: 0,
-      });
-      expect(
-        Math.abs((await header.boundingBox())!.x - before.headerX),
-        `масштаб ${scale}: шапка не сдвинулась вбок`,
-      ).toBeLessThanOrEqual(1);
-
-      // Оболочка масштабируется трансформом, поэтому её layout-размер
-      // намеренно больше вьюпорта — проверяем ВИЗУАЛЬНЫЙ прямоугольник:
-      // после масштаба он обязан совпадать с вьюпортом.
-      const shell = await page.evaluate(() => {
-        const rect = document
-          .querySelector('[data-ui-scale-wrapper]')!
-          .getBoundingClientRect();
-        return {
-          left: Math.round(rect.left),
-          top: Math.round(rect.top),
-          right: Math.round(rect.right),
-          bottom: Math.round(rect.bottom),
-          w: window.innerWidth,
-          h: window.innerHeight,
-        };
-      });
-      expect(
-        shell.left,
-        `масштаб ${scale}: оболочка не уехала влево`,
-      ).toBeGreaterThanOrEqual(-1);
-      expect(
-        shell.top,
-        `масштаб ${scale}: оболочка не уехала вверх`,
-      ).toBeGreaterThanOrEqual(-1);
-      expect(
-        shell.right - shell.w,
-        `масштаб ${scale}: оболочка вписана по ширине`,
-      ).toBeLessThanOrEqual(1);
-      expect(
-        shell.bottom - shell.h,
-        `масштаб ${scale}: оболочка вписана по высоте`,
-      ).toBeLessThanOrEqual(1);
-    }
-  });
+        // Оболочка масштабируется трансформом, поэтому её layout-размер
+        // намеренно больше вьюпорта — проверяем ВИЗУАЛЬНЫЙ прямоугольник:
+        // после масштаба он обязан совпадать с вьюпортом.
+        const shell = await page.evaluate(() => {
+          const rect = document
+            .querySelector('[data-ui-scale-wrapper]')!
+            .getBoundingClientRect();
+          return {
+            left: Math.round(rect.left),
+            top: Math.round(rect.top),
+            right: Math.round(rect.right),
+            bottom: Math.round(rect.bottom),
+            w: window.innerWidth,
+            h: window.innerHeight,
+          };
+        });
+        expect(
+          shell.left,
+          `масштаб ${scale}: оболочка не уехала влево`,
+        ).toBeGreaterThanOrEqual(-1);
+        expect(
+          shell.top,
+          `масштаб ${scale}: оболочка не уехала вверх`,
+        ).toBeGreaterThanOrEqual(-1);
+        expect(
+          shell.right - shell.w,
+          `масштаб ${scale}: оболочка вписана по ширине`,
+        ).toBeLessThanOrEqual(1);
+        expect(
+          shell.bottom - shell.h,
+          `масштаб ${scale}: оболочка вписана по высоте`,
+        ).toBeLessThanOrEqual(1);
+      }
+    },
+  );
 });
 
-test('планшетные ширины: нет горизонтального скролла', async ({
-  page,
-  context,
-}) => {
-  test.skip(isMobile(), 'ширины проверяются в desktop-проекте');
-  await prepare(context);
+test(
+  'планшетные ширины: нет горизонтального скролла',
+  { tag: '@desktop' },
+  async ({ page, context }) => {
+    await prepare(context);
 
-  // 768..1299 — «планшетная» полоса: здесь жили последние вёрстко-баги
-  // (двухрядная шапка, «уезжание» левого меню), а пиксельного покрытия
-  // у неё до сих пор не было.
-  for (const width of [768, 1024, 1200]) {
-    await page.setViewportSize({ width, height: 900 });
-    for (const path of [
-      ...PAGES,
-      `/${getState().dndId}`,
-      `/${getState().dhId}`,
-    ]) {
-      await openApp(page, path);
-      await expectNoHorizontalOverflow(page);
-      const overflow = await page
-        .locator('main')
-        .evaluate((el) => el.scrollWidth - el.clientWidth);
-      expect(
-        overflow,
-        `${path} @${width}px: контент шире скролл-контейнера`,
-      ).toBeLessThanOrEqual(1);
+    // 768..1299 — «планшетная» полоса: здесь жили последние вёрстко-баги
+    // (двухрядная шапка, «уезжание» левого меню), а пиксельного покрытия
+    // у неё до сих пор не было.
+    for (const width of [768, 1024, 1200]) {
+      await page.setViewportSize({ width, height: 900 });
+      for (const path of [
+        ...PAGES,
+        `/${getState().dndId}`,
+        `/${getState().dhId}`,
+      ]) {
+        await openApp(page, path);
+        await expectNoHorizontalOverflow(page);
+        const overflow = await page
+          .locator('main')
+          .evaluate((el) => el.scrollWidth - el.clientWidth);
+        expect(
+          overflow,
+          `${path} @${width}px: контент шире скролл-контейнера`,
+        ).toBeLessThanOrEqual(1);
+      }
     }
-  }
-});
+  },
+);
 
 test('нет дублей id на страницах', async ({ page, context }) => {
   await prepare(context);
@@ -902,35 +904,35 @@ test('нет дублей id на страницах', async ({ page, context })
   expect(await duplicates(), 'лист с открытым диалогом: дубли id').toEqual([]);
 });
 
-test('клавиатура: иконочные инструменты листа работают с Enter', async ({
-  page,
-  context,
-}) => {
-  test.skip(isMobile(), 'на телефоне инструменты листа живут в меню');
-  await prepare(context);
-  await openApp(page, `/${getState().dhId}`);
+test(
+  'клавиатура: иконочные инструменты листа работают с Enter',
+  { tag: '@desktop' },
+  async ({ page, context }) => {
+    await prepare(context);
+    await openApp(page, `/${getState().dhId}`);
 
-  const header = page.getByTestId('app-header');
-  const toggle = header.getByRole('button', {
-    name: 'Hide Notes',
-    exact: true,
-  });
-  await toggle.focus();
-  await expect(toggle).toBeFocused();
-  await page.keyboard.press('Enter');
+    const header = page.getByTestId('app-header');
+    const toggle = header.getByRole('button', {
+      name: 'Hide Notes',
+      exact: true,
+    });
+    await toggle.focus();
+    await expect(toggle).toBeFocused();
+    await page.keyboard.press('Enter');
 
-  // Состояние переключается и доступно скринридеру.
-  const switched = header.getByRole('button', {
-    name: 'Show Notes',
-    exact: true,
-  });
-  await expect(switched).toHaveAttribute('aria-pressed', 'false');
-  await switched.focus();
-  await page.keyboard.press(' ');
-  await expect(
-    header.getByRole('button', { name: 'Hide Notes', exact: true }),
-  ).toHaveAttribute('aria-pressed', 'true');
-});
+    // Состояние переключается и доступно скринридеру.
+    const switched = header.getByRole('button', {
+      name: 'Show Notes',
+      exact: true,
+    });
+    await expect(switched).toHaveAttribute('aria-pressed', 'false');
+    await switched.focus();
+    await page.keyboard.press(' ');
+    await expect(
+      header.getByRole('button', { name: 'Hide Notes', exact: true }),
+    ).toHaveAttribute('aria-pressed', 'true');
+  },
+);
 
 test('фокус: Escape закрывает Display Settings и возвращает фокус', async ({
   page,
@@ -965,59 +967,59 @@ test('фокус: Escape закрывает Display Settings и возвраща
   ).toBeFocused();
 });
 
-test('длинное имя персонажа: шапка не ломается на 768/1024/1280', async ({
-  page,
-}) => {
-  test.skip(isMobile(), 'ширины планшета и десктопа');
-  const LONG_NAME =
-    'Александра-Мария фон дер Вельденштайн цу Штайнберг унд Ротенбург';
+test(
+  'длинное имя персонажа: шапка не ломается на 768/1024/1280',
+  { tag: '@desktop' },
+  async ({ page }) => {
+    const LONG_NAME =
+      'Александра-Мария фон дер Вельденштайн цу Штайнберг унд Ротенбург';
 
-  // Отдельный аккаунт и персонаж: фикстуры визуальных тестов не трогаем,
-  // иначе поехали бы эталоны дашборда.
-  const username = `long-name-${Date.now()}`;
-  const password = 'long-name-password-1';
-  const registered = await page.request.post('/api/auth/register', {
-    data: {
-      username,
-      password,
-      displayName: 'Long Name',
-      recoveryPhrase: 'amber cobalt lantern',
-    },
-  });
-  expect([200, 201], 'регистрация аккаунта').toContain(registered.status());
+    // Отдельный аккаунт и персонаж: фикстуры визуальных тестов не трогаем,
+    // иначе поехали бы эталоны дашборда.
+    const username = `long-name-${Date.now()}`;
+    const password = 'long-name-password-1';
+    const registered = await page.request.post('/api/auth/register', {
+      data: {
+        username,
+        password,
+        displayName: 'Long Name',
+        recoveryPhrase: 'amber cobalt lantern',
+      },
+    });
+    expect([200, 201], 'регистрация аккаунта').toContain(registered.status());
 
-  const created = await page.request.post('/api/characters', {
-    data: { ...dhCharacter, name: LONG_NAME },
-  });
-  expect([200, 201], 'создание персонажа').toContain(created.status());
-  const { id } = (await created.json()) as { id: string };
+    const created = await page.request.post('/api/characters', {
+      data: { ...dhCharacter, name: LONG_NAME },
+    });
+    expect([200, 201], 'создание персонажа').toContain(created.status());
+    const { id } = (await created.json()) as { id: string };
 
-  await page.context().clearCookies();
-  await signInViaUI(page, { username, password });
+    await page.context().clearCookies();
+    await signInViaUI(page, { username, password });
 
-  for (const width of [768, 1024, 1280]) {
-    await page.setViewportSize({ width, height: 900 });
-    await openApp(page, `/${id}`);
+    for (const width of [768, 1024, 1280]) {
+      await page.setViewportSize({ width, height: 900 });
+      await openApp(page, `/${id}`);
 
-    const header = page.locator('header.app-header');
-    await expect
-      .poll(async () => Math.round((await header.boundingBox())!.height))
-      .toBeLessThan(100);
-    const name = header.locator('.header-identity h2');
-    await expect(name).toHaveAttribute('title', LONG_NAME);
-    await expect
-      .poll(async () => Math.round((await name.boundingBox())!.width))
-      .toBeGreaterThanOrEqual(90);
-    await expectNoHorizontalOverflow(page);
-  }
-});
+      const header = page.locator('header.app-header');
+      await expect
+        .poll(async () => Math.round((await header.boundingBox())!.height))
+        .toBeLessThan(100);
+      const name = header.locator('.header-identity h2');
+      await expect(name).toHaveAttribute('title', LONG_NAME);
+      await expect
+        .poll(async () => Math.round((await name.boundingBox())!.width))
+        .toBeGreaterThanOrEqual(90);
+      await expectNoHorizontalOverflow(page);
+    }
+  },
+);
 
 test.describe('вид листа: компактный и обычный', () => {
   test(
     'переключатель вида: компактный ↔ обычный',
-    { tag: '@fast' },
+    { tag: ['@fast', '@desktop'] },
     async ({ page, context }) => {
-      test.skip(isMobile(), 'на телефоне компактный вид включается сам');
       await prepare(context);
       await openApp(page, `/${getState().dhId}`);
 
@@ -1070,114 +1072,116 @@ test.describe('вид листа: компактный и обычный', () =>
     },
   );
 
-  test('компактный вид на 1024px: без горизонтального скролла', async ({
-    page,
-    context,
-  }) => {
-    test.skip(isMobile(), 'проверяется переключатель на десктопе');
-    await prepare(context);
-    await page.setViewportSize({ width: 1024, height: 900 });
-    await openApp(page, `/${getState().dndId}`);
+  test(
+    'компактный вид на 1024px: без горизонтального скролла',
+    { tag: '@desktop' },
+    async ({ page, context }) => {
+      await prepare(context);
+      await page.setViewportSize({ width: 1024, height: 900 });
+      await openApp(page, `/${getState().dndId}`);
 
-    await page
-      .getByTestId('app-header')
-      .getByRole('button', { name: 'Switch to Compact View', exact: true })
-      .click();
-    await expect(page.getByRole('navigation')).toBeVisible();
-    await expect(page.locator('.dnd-sheet.is-compact')).toHaveCount(1);
-    await expectNoHorizontalOverflow(page);
-    const inner = await page.evaluate(() => {
-      const main = document.querySelector('main')!;
-      const nav = document.querySelector('nav')!;
-      return {
-        main: main.scrollWidth - main.clientWidth,
-        nav: nav.scrollWidth - nav.clientWidth,
-      };
-    });
-    expect(
-      inner.main,
-      'main не вылезает вбок в компактном виде',
-    ).toBeLessThanOrEqual(1);
-    expect(inner.nav, 'сайдбар не вылезает вбок').toBeLessThanOrEqual(1);
-  });
-
-  test('дубли id: компаньон со всеми секциями, обычный и компактный вид', async ({
-    page,
-  }) => {
-    test.skip(isMobile(), 'переключатель вида проверяется на десктопе');
-
-    // Отдельный аккаунт и персонаж: фикстуры и эталоны не затрагиваем.
-    // У компаньона включены ВСЕ необязательные секции — именно они раньше
-    // дублировали id (attunement-card, inventory-box, spells-section, ...).
-    const username = `compact-dupes-${Date.now()}`;
-    const password = 'compact-dupes-1';
-    const registered = await page.request.post('/api/auth/register', {
-      data: {
-        username,
-        password,
-        displayName: 'Compact Dupes',
-        recoveryPhrase: 'amber cobalt lantern',
-      },
-    });
-    expect([200, 201], 'регистрация аккаунта').toContain(registered.status());
-
-    const companion = {
-      ...dndCharacter.companions![0],
-      showInventory: true,
-      showSpells: true,
-      showNarrative: true,
-      showInfo: true,
-      showProgression: true,
-      showDivineBoons: true,
-    };
-    const created = await page.request.post('/api/characters', {
-      data: {
-        ...dndCharacter,
-        name: 'Companion Dupes',
-        companions: [companion],
-      },
-    });
-    expect([200, 201], 'создание персонажа').toContain(created.status());
-    const { id } = (await created.json()) as { id: string };
-
-    await page.context().clearCookies();
-    await signInViaUI(page, { username, password });
-
-    const duplicates = () =>
-      page.evaluate(() => {
-        const seen = new Map<string, number>();
-        for (const el of document.querySelectorAll('[id]')) {
-          seen.set(el.id, (seen.get(el.id) ?? 0) + 1);
-        }
-        return [...seen.entries()]
-          .filter(([, count]) => count > 1)
-          .map(([dupId, count]) => `${dupId} x${count}`);
+      await page
+        .getByTestId('app-header')
+        .getByRole('button', { name: 'Switch to Compact View', exact: true })
+        .click();
+      await expect(page.getByRole('navigation')).toBeVisible();
+      await expect(page.locator('.dnd-sheet.is-compact')).toHaveCount(1);
+      await expectNoHorizontalOverflow(page);
+      const inner = await page.evaluate(() => {
+        const main = document.querySelector('main')!;
+        const nav = document.querySelector('nav')!;
+        return {
+          main: main.scrollWidth - main.clientWidth,
+          nav: nav.scrollWidth - nav.clientWidth,
+        };
       });
+      expect(
+        inner.main,
+        'main не вылезает вбок в компактном виде',
+      ).toBeLessThanOrEqual(1);
+      expect(inner.nav, 'сайдбар не вылезает вбок').toBeLessThanOrEqual(1);
+    },
+  );
 
-    await openApp(page, `/${id}`);
-    await page.waitForTimeout(600);
-    expect(await duplicates(), 'обычный вид: дубли id').toEqual([]);
+  test(
+    'дубли id: компаньон со всеми секциями, обычный и компактный вид',
+    { tag: '@desktop' },
+    async ({ page }) => {
+      // Отдельный аккаунт и персонаж: фикстуры и эталоны не затрагиваем.
+      // У компаньона включены ВСЕ необязательные секции — именно они раньше
+      // дублировали id (attunement-card, inventory-box, spells-section, ...).
+      const username = `compact-dupes-${Date.now()}`;
+      const password = 'compact-dupes-1';
+      const registered = await page.request.post('/api/auth/register', {
+        data: {
+          username,
+          password,
+          displayName: 'Compact Dupes',
+          recoveryPhrase: 'amber cobalt lantern',
+        },
+      });
+      expect([200, 201], 'регистрация аккаунта').toContain(registered.status());
 
-    // Все необязательные секции компаньона действительно отрисовались.
-    for (const id_ of [
-      'companion-attunement-card',
-      'companion-inventory-box',
-      'companion-spells-section',
-      'companion-narrative-section',
-      'companion-progression-section',
-      'companion-character-info-card',
-      'companion-divine-boons-section',
-    ]) {
-      await expect(page.locator(`#${id_}`), `${id_} отрисован`).toHaveCount(1);
-    }
+      const companion = {
+        ...dndCharacter.companions![0],
+        showInventory: true,
+        showSpells: true,
+        showNarrative: true,
+        showInfo: true,
+        showProgression: true,
+        showDivineBoons: true,
+      };
+      const created = await page.request.post('/api/characters', {
+        data: {
+          ...dndCharacter,
+          name: 'Companion Dupes',
+          companions: [companion],
+        },
+      });
+      expect([200, 201], 'создание персонажа').toContain(created.status());
+      const { id } = (await created.json()) as { id: string };
 
-    await page
-      .getByTestId('app-header')
-      .getByRole('button', { name: 'Switch to Compact View', exact: true })
-      .click();
-    await page.waitForTimeout(600);
-    expect(await duplicates(), 'компактный вид: дубли id').toEqual([]);
-  });
+      await page.context().clearCookies();
+      await signInViaUI(page, { username, password });
+
+      const duplicates = () =>
+        page.evaluate(() => {
+          const seen = new Map<string, number>();
+          for (const el of document.querySelectorAll('[id]')) {
+            seen.set(el.id, (seen.get(el.id) ?? 0) + 1);
+          }
+          return [...seen.entries()]
+            .filter(([, count]) => count > 1)
+            .map(([dupId, count]) => `${dupId} x${count}`);
+        });
+
+      await openApp(page, `/${id}`);
+      await page.waitForTimeout(600);
+      expect(await duplicates(), 'обычный вид: дубли id').toEqual([]);
+
+      // Все необязательные секции компаньона действительно отрисовались.
+      for (const id_ of [
+        'companion-attunement-card',
+        'companion-inventory-box',
+        'companion-spells-section',
+        'companion-narrative-section',
+        'companion-progression-section',
+        'companion-character-info-card',
+        'companion-divine-boons-section',
+      ]) {
+        await expect(page.locator(`#${id_}`), `${id_} отрисован`).toHaveCount(
+          1,
+        );
+      }
+
+      await page
+        .getByTestId('app-header')
+        .getByRole('button', { name: 'Switch to Compact View', exact: true })
+        .click();
+      await page.waitForTimeout(600);
+      expect(await duplicates(), 'компактный вид: дубли id').toEqual([]);
+    },
+  );
 });
 
 test.describe('синхронизация между вкладками', () => {

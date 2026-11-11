@@ -21,8 +21,6 @@ import {
  * снимается на обоих языках — включая регистрацию и восстановление.
  */
 
-const isMobile = () => test.info().project.name === 'mobile';
-
 test.describe('login: вход, регистрация, восстановление', () => {
   test('login — гостевая страница (en)', async ({ page, context }) => {
     await prepare(context, { authenticated: false, theme: 'light' });
@@ -377,6 +375,26 @@ test.describe('общие страницы', () => {
     await screenshotPage(page, 'dashboard-draft-ru.png');
   });
 
+  test(
+    'dashboard — диалог импорта персонажа (en)',
+    { tag: '@fast' },
+    async ({ page, context }) => {
+      await prepare(context, { account: 'canonical', theme: 'light' });
+      await openApp(page, '/');
+
+      await page.getByRole('button', { name: /Import Character/i }).click();
+
+      const dialog = page.getByRole('dialog');
+      await expect(dialog).toBeVisible();
+      await expect(
+        dialog.getByRole('heading', { name: /Import Character/i }),
+      ).toBeVisible();
+      await expect(dialog.locator('input[type="file"]')).toBeAttached();
+
+      await screenshotPage(page, 'import-dialog-en.png');
+    },
+  );
+
   test('new — выбор системы (en)', async ({ page, context }) => {
     await prepare(context);
     await openApp(page, '/new');
@@ -454,8 +472,6 @@ test.describe('общие страницы', () => {
     await expect(
       page.getByRole('heading', { name: 'Create New Character', level: 1 }),
     ).toBeVisible();
-
-    await screenshotPage(page, 'new-manual-en.png');
   });
 
   test('stats-editor — массовый редактор (en)', async ({ page, context }) => {
@@ -481,34 +497,41 @@ test.describe('общие страницы', () => {
     await screenshotPage(page, 'stats-editor-ru.png');
   });
 
-  test('stats-editor — вкладка DH Vitals (en)', async ({ page, context }) => {
-    test.skip(isMobile(), 'desktop-only: широкие таблицы виталов');
-    await prepare(context);
-    await openApp(page, '/stats-editor');
+  test(
+    'stats-editor — вкладка DH Vitals (en)',
+    { tag: '@desktop' },
+    async ({ page, context }) => {
+      await prepare(context);
+      await openApp(page, '/stats-editor');
 
-    await page.getByRole('button', { name: /^Dark Heresy Vitals/ }).click();
-    await expect(page.getByText('Max Wounds').first()).toBeVisible();
+      await page.getByRole('button', { name: /^Dark Heresy Vitals/ }).click();
+      await expect(page.getByText('Max Wounds').first()).toBeVisible();
 
-    await screenshotPage(page, 'stats-editor-dh-vitals-en.png');
-  });
+      await screenshotPage(page, 'stats-editor-dh-vitals-en.png');
+    },
+  );
 
-  test('stats-editor — вкладка D&D Vitals (en)', async ({ page, context }) => {
-    test.skip(isMobile(), 'desktop-only: широкие таблицы виталов');
-    await prepare(context);
-    await openApp(page, '/stats-editor');
+  test(
+    'stats-editor — вкладка D&D Vitals (en)',
+    { tag: '@desktop' },
+    async ({ page, context }) => {
+      await prepare(context);
+      await openApp(page, '/stats-editor');
 
-    await page.getByRole('button', { name: /^D&D Vitals/ }).click();
-    await expect(page.getByText('Max HP').first()).toBeVisible();
+      await page.getByRole('button', { name: /^D&D Vitals/ }).click();
+      await expect(page.getByText('Max HP').first()).toBeVisible();
 
-    await screenshotPage(page, 'stats-editor-dnd-vitals-en.png');
-  });
+      await screenshotPage(page, 'stats-editor-dnd-vitals-en.png');
+    },
+  );
 });
 
 /**
  * Демо-лендинг и профиль пользователя.
  *
- * Гостевая главная и /demo используют общий компонент DemoLanding, поэтому
- * базовый лендинг снимается на en и ru. Превью листов внутри демо
+ * Гостевая главная и /demo используют общий компонент DemoLanding. Базовый
+ * лендинг снимается один раз — на гостевой главной (dashboard-guest), а /demo
+ * проверяется assertions и превью листов. Превью листов внутри демо
  * (demo-dnd, demo-dh) остаются только en: сами листы уже покрыты на обоих
  * языках в sheet:dnd / sheet:dh.
  */
@@ -521,7 +544,6 @@ test.describe('демо и настройки профиля', () => {
       page.getByRole('heading', { name: 'Try Before You Commit' }),
     ).toBeVisible();
     await expect(page.getByText('Create Your Own Character')).toBeVisible();
-    await screenshotPage(page, 'demo-en.png');
 
     await page
       .getByRole('button', { name: 'Preview D&D 5e Character' })
@@ -546,7 +568,6 @@ test.describe('демо и настройки профиля', () => {
       page.getByRole('heading', { name: 'Попробуйте без регистрации' }),
     ).toBeVisible();
     await expect(page.getByText('Создайте своего персонажа')).toBeVisible();
-    await screenshotPage(page, 'demo-ru.png');
   });
 
   test(

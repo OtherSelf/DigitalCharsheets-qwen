@@ -2,11 +2,14 @@ import { expect, test } from '@playwright/test';
 
 import { getState, openApp, prepare, screenshotPage } from './helpers';
 
-const isMobile = () => test.info().project.name === 'mobile';
-
 /**
- * Темы и их сочетание с языком. Тёмная тема проверяется на дашборде и обоих
- * листах (en/ru), тёплая — на мобильных листах обеих систем.
+ * Темы проверяются по представителю, а не по полной матрице
+ * «тема × язык × лист × viewport»:
+ *   • dark — dashboard (en/ru) и верх обоих листов на desktop;
+ *   • warm — только мобильный верх D&D.
+ *
+ * Контраст и палитра общие для компонентов, поэтому остальные комбинации
+ * дают мало нового сигнала, но удваивают эталоны.
  */
 test.describe('темы', () => {
   test('dashboard — тёмная тема (en)', async ({ page, context }) => {
@@ -29,71 +32,118 @@ test.describe('темы', () => {
     await screenshotPage(page, 'dashboard-dark-ru.png');
   });
 
-  test('лист D&D — тёмная тема (en)', async ({ page, context }) => {
-    test.skip(isMobile(), 'desktop-only сценарий');
-    await prepare(context, { theme: 'dark' });
-    await openApp(page, `/${getState().dndId}`);
+  test(
+    'dashboard — тёплая тема (en)',
+    { tag: '@desktop' },
+    async ({ page, context }) => {
+      await prepare(context, { theme: 'warm' });
+      await openApp(page, '/');
 
-    await expect(
-      page.getByRole('heading', { name: 'Seraphina Vael' }),
-    ).toBeVisible();
-    await screenshotPage(page, 'sheet-dnd-dark-en.png');
-  });
+      await expect(
+        page.getByRole('heading', { name: 'Existing Characters' }),
+      ).toBeVisible();
+      await screenshotPage(page, 'dashboard-warm-en.png');
+    },
+  );
 
-  test('лист DH — тёмная тема (en)', async ({ page, context }) => {
-    test.skip(isMobile(), 'desktop-only сценарий');
-    await prepare(context, { theme: 'dark' });
-    await openApp(page, `/${getState().dhId}`);
+  test(
+    'переключатель темы — все варианты (en)',
+    { tag: '@fast' },
+    async ({ page, context }) => {
+      await prepare(context);
+      await openApp(page, '/');
 
-    await expect(
-      page.getByRole('heading', { name: 'Lucius Varn' }),
-    ).toBeVisible();
-    await screenshotPage(page, 'sheet-dh-dark-en.png');
-  });
+      await page.getByRole('button', { name: /toggle theme/i }).click();
+      const menu = page.getByRole('menu');
+      await expect(
+        menu.getByRole('menuitem', { name: 'Light', exact: true }),
+      ).toBeVisible();
+      await expect(
+        menu.getByRole('menuitem', { name: 'Dark', exact: true }),
+      ).toBeVisible();
+      await expect(
+        menu.getByRole('menuitem', { name: 'Light (Warm)', exact: true }),
+      ).toBeVisible();
 
-  test('лист D&D — тёмная тема (ru)', async ({ page, context }) => {
-    test.skip(isMobile(), 'desktop-only сценарий');
-    await prepare(context, { theme: 'dark', language: 'ru' });
-    await openApp(page, `/${getState().dndId}`);
+      await screenshotPage(page, 'theme-switcher-en.png');
+    },
+  );
 
-    await screenshotPage(page, 'sheet-dnd-dark-ru.png');
-  });
+  test(
+    'лист D&D — тёмная тема (en)',
+    { tag: '@desktop' },
+    async ({ page, context }) => {
+      await prepare(context, { theme: 'dark' });
+      await openApp(page, `/${getState().dndId}`);
 
-  test('лист DH — тёмная тема (ru)', async ({ page, context }) => {
-    test.skip(isMobile(), 'desktop-only сценарий');
-    await prepare(context, { theme: 'dark', language: 'ru' });
-    await openApp(page, `/${getState().dhId}`);
+      await expect(
+        page.getByRole('heading', { name: 'Seraphina Vael' }),
+      ).toBeVisible();
+      await screenshotPage(page, 'sheet-dnd-dark-en.png');
+    },
+  );
 
-    await screenshotPage(page, 'sheet-dh-dark-ru.png');
-  });
+  test(
+    'лист D&D — тёплая тема (en)',
+    { tag: '@desktop' },
+    async ({ page, context }) => {
+      await prepare(context, { theme: 'warm' });
+      await openApp(page, `/${getState().dndId}`);
 
-  test('лист D&D — тёмная тема на мобильном (en)', async ({
-    page,
-    context,
-  }) => {
-    test.skip(!isMobile(), 'mobile-only сценарий');
-    await prepare(context, { theme: 'dark' });
-    await openApp(page, `/${getState().dndId}`);
+      await expect(
+        page.getByRole('heading', { name: 'Seraphina Vael' }),
+      ).toBeVisible();
+      await screenshotPage(page, 'sheet-dnd-warm-en.png');
+    },
+  );
 
-    await screenshotPage(page, 'sheet-dnd-mobile-dark-en.png');
-  });
+  test(
+    'лист DH — тёмная тема (en)',
+    { tag: '@desktop' },
+    async ({ page, context }) => {
+      await prepare(context, { theme: 'dark' });
+      await openApp(page, `/${getState().dhId}`);
 
-  test('лист DH — тёплая тема на мобильном (en)', async ({ page, context }) => {
-    test.skip(!isMobile(), 'mobile-only сценарий');
-    await prepare(context, { theme: 'warm' });
-    await openApp(page, `/${getState().dhId}`);
+      await expect(
+        page.getByRole('heading', { name: 'Lucius Varn' }),
+      ).toBeVisible();
+      await screenshotPage(page, 'sheet-dh-dark-en.png');
+    },
+  );
 
-    await screenshotPage(page, 'sheet-dh-mobile-warm-en.png');
-  });
+  test(
+    'лист DH — тёплая тема (en)',
+    { tag: '@desktop' },
+    async ({ page, context }) => {
+      await prepare(context, { theme: 'warm' });
+      await openApp(page, `/${getState().dhId}`);
 
-  test('лист D&D — тёплая тема на мобильном (en)', async ({
-    page,
-    context,
-  }) => {
-    test.skip(!isMobile(), 'mobile-only сценарий');
-    await prepare(context, { theme: 'warm' });
-    await openApp(page, `/${getState().dndId}`);
+      await expect(
+        page.getByRole('heading', { name: 'Lucius Varn' }),
+      ).toBeVisible();
+      await screenshotPage(page, 'sheet-dh-warm-en.png');
+    },
+  );
 
-    await screenshotPage(page, 'sheet-dnd-mobile-warm-en.png');
-  });
+  test(
+    'лист D&D — тёмная тема на мобильном (en)',
+    { tag: '@mobile' },
+    async ({ page, context }) => {
+      await prepare(context, { theme: 'dark' });
+      await openApp(page, `/${getState().dndId}`);
+
+      await screenshotPage(page, 'sheet-dnd-mobile-dark-en.png');
+    },
+  );
+
+  test(
+    'лист D&D — тёплая тема на мобильном (en)',
+    { tag: '@mobile' },
+    async ({ page, context }) => {
+      await prepare(context, { theme: 'warm' });
+      await openApp(page, `/${getState().dndId}`);
+
+      await screenshotPage(page, 'sheet-dnd-mobile-warm-en.png');
+    },
+  );
 });

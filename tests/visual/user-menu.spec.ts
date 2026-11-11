@@ -59,6 +59,70 @@ test.describe('profile menu', () => {
     await screenshotPage(page, 'profile-menu-en.png');
   });
 
+  test(
+    'display settings — модалка (en)',
+    { tag: '@fast' },
+    async ({ page, context }) => {
+      await prepare(context, { account: 'canonical', theme: 'light' });
+      await openApp(page, '/');
+      await openUserMenu(page);
+
+      await page.getByRole('menuitem', { name: 'Display Settings' }).click();
+
+      const dialog = page.getByRole('dialog');
+      await expect(dialog).toBeVisible();
+      await expect(
+        dialog.getByRole('heading', { name: 'Display Settings' }),
+      ).toBeVisible();
+      await expect(
+        dialog.getByText('Font Size', { exact: true }),
+      ).toBeVisible();
+      await expect(dialog.getByText('UI Scale', { exact: true })).toBeVisible();
+      await expect(
+        dialog.getByRole('button', { name: 'Reset to defaults' }),
+      ).toBeVisible();
+
+      await screenshotPage(page, 'display-settings-en.png');
+    },
+  );
+
+  test(
+    'ui scale 80% — dashboard (en)',
+    { tag: '@fast' },
+    async ({ page, context }) => {
+      await prepare(context, { account: 'canonical', theme: 'light' });
+      await openApp(page, '/');
+      await openUserMenu(page);
+
+      await page.getByRole('menuitem', { name: 'Display Settings' }).click();
+      const dialog = page.getByRole('dialog');
+      await expect(dialog).toBeVisible();
+
+      const decrease = dialog.getByRole('button', {
+        name: 'Decrease UI scale',
+      });
+      for (let i = 0; i < 2; i += 1) {
+        await decrease.click();
+        await page.waitForTimeout(200);
+      }
+      await expect(dialog).toContainText('80%');
+
+      await page.keyboard.press('Escape');
+      await expect(dialog).toBeHidden();
+      await expect
+        .poll(() =>
+          page.evaluate(() =>
+            getComputedStyle(document.documentElement)
+              .getPropertyValue('--ui-scale')
+              .trim(),
+          ),
+        )
+        .toBe('0.8');
+
+      await screenshotPage(page, 'dashboard-ui-scale-80-en.png');
+    },
+  );
+
   test('profile menu — администратор (en)', async ({ page, context }) => {
     test.skip(
       !admin,

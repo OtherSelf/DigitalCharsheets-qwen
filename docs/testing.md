@@ -10,7 +10,10 @@ the pre-deploy gate that ties them together. None of them touch your real
 npm test                    # unit tests (Vitest)
 npm run verify              # full pre-deploy gate
 npm run test:visual         # Playwright screenshot regression (full)
-npm run test:visual:fast    # screenshots tagged @fast
+npm run test:visual:full    # explicit alias for the full visual run
+npm run test:visual:fast    # screenshots tagged @fast (~28 tests)
+npm run test:visual:changed # only specs affected by the current diff
+npm run test:visual:prune   # list obsolete PNG baselines
 npm run test:visual:update  # rewrite baselines
 npm run test:visual:report  # open the HTML report
 npm run test:dev            # dev-proxy hydration + health/version smoke
@@ -66,6 +69,44 @@ baselines in `tests/visual/__screenshots__/`.
   navigation.
 - Run `npx playwright install chromium` once if the browser is missing.
 
+Coverage is intentionally tiered instead of a full
+theme × language × mode × viewport cross-product:
+
+- EN is the full baseline; RU covers the layout-sensitive screens (login,
+  dashboard, sheet top, dense sections, settings, admin, profile menu).
+- Themes are sampled: dark dashboard (en/ru), dark/warm sheet tops on desktop,
+  one mobile dark sheet and one mobile warm sheet; the switcher itself covers
+  Light / Dark / Light (Warm).
+- Edit mode is full on desktop EN and sampled on mobile; compact/tablet views
+  stay in their own specs.
+- `/` and `/demo`, `/new` and `/new/manual` are checked by assertions but
+  share one baseline pair instead of duplicating identical PNGs.
+- Tests that only make sense in one project are tagged `@desktop`/`@mobile`;
+  `playwright.config.ts` filters them with `grepInvert`, so there are no
+  skipped duplicates in the report.
+
+`test:visual:changed` maps the current diff (committed vs `--base`, plus
+staged/unstaged/untracked files) to specs. It is deliberately conservative:
+unknown UI code and `package.json` changes fall back to `@fast`, helper/config
+changes run the full set, and backend/docs-only diffs skip visuals.
+
+```bash
+npm run test:visual:changed -- --dry-run
+npm run test:visual:changed -- --base origin/main
+npm run test:visual:changed -- --skip-build
+```
+
+Removing a test or a screenshot does not delete its PNG automatically:
+
+```bash
+npm run test:visual:prune
+npm run test:visual:prune -- --write
+```
+
+`@full` is not a separate tag: the full suite is the default run;
+`test:visual:full` is an explicit alias. `@fast` is the small PR/pre-commit
+subset.
+
 Useful flags:
 
 ```bash
@@ -88,7 +129,9 @@ skipped.
 The profile dropdown in the header is covered separately by
 [`tests/visual/user-menu.spec.ts`](../tests/visual/user-menu.spec.ts): regular
 user (en/ru) and administrator (with the Administration item), desktop and
-mobile.
+mobile. The same spec covers the Display Settings modal and the dashboard at
+80% UI scale; the theme switcher is in `themes.spec.ts`, and the import dialog
+is in `pages.spec.ts`.
 
 ## Pre-deploy gate
 

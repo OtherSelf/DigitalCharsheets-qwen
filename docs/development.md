@@ -55,7 +55,10 @@ Deployment details, reverse proxy and environment variables:
 | `npm run test:smoke` | HTTP smoke test against a running server (default `http://localhost:3000`). |
 | `npm run test:dev` | Dev-proxy smoke: hydration through known dev hosts + `/api/health`/`/api/version`. |
 | `npm run test:visual` | Playwright visual regression (full). |
-| `npm run test:visual:fast` | Visual subset tagged `@fast`. |
+| `npm run test:visual:full` | Explicit alias for the full visual run. |
+| `npm run test:visual:fast` | Visual subset tagged `@fast` (~28 tests). |
+| `npm run test:visual:changed` | Only visual specs affected by the current diff. |
+| `npm run test:visual:prune` | List obsolete PNG baselines (`--write` to delete). |
 | `npm run test:visual:update` | Rewrite visual baselines. |
 | `npm run test:visual:report` | Open the Playwright HTML report. |
 | `npm run verify` | Full pre-deploy gate: format + lint + typecheck + unit + build + smoke. |
