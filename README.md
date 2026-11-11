@@ -1,129 +1,71 @@
-# DnD and Dark Heresy digital charsheet app
+# Digital Character Sheets
 
-My AI-slop-web app that I'm making for the fun (and potential usability) of it.
+A **self-hosted** web app for creating, editing and playing with **Dungeons &
+Dragons 5e** and **Dark Heresy** character sheets. Run it on your own server or
+local machine — your data stays under your control.
 
-Feel free to use it as you wish.
+It started as a Firebase Studio prototype, was finished with Qwen assistance, and
+is now a Next.js App Router application that keeps everything in JSON files in a
+data directory on the host you control.
 
-Working with Google Firebase Studio gave me a mental trauma and irreplacible brain damage, so just ignore the files descriptions. 
+## Features
 
-Qwen helped me finish this. All hail AI.
+- Full character sheets for D&D 5e and Dark Heresy (stats, skills, combat,
+  inventory, spells, psychic powers, quest journal, notes).
+- Local accounts with a recovery phrase, password change and account deletion.
+- Admin panel at `/admin`: users, roles, password resets, blocking, deletion and
+  a read-only list of a user's sheets.
+- Portable JSON export/import for one sheet or a full backup, plus Excel export.
+- English/Russian UI, light/dark/warm themes, compact sheet view, independent
+  text and UI scaling.
+- **Self-hosted:** run it on your own server or local machine. The app itself
+  needs no database, cloud account or external service.
 
-## Export format
+## Quick start
 
-Both JSON exports (one character and the full backup) use the same envelope:
-
-```json
-{
-  "metadata": {
-    "appName": "DigitalCharsheets-qwen",
-    "format": "dcs-export",
-    "version": "2.0",
-    "kind": "character",
-    "exportDate": "2026-11-08T21:32:41.717Z",
-    "characterCount": 1,
-    "config": { "...": "..." }
-  },
-  "character": { "id": "…", "gameSystem": "Dungeons & Dragons", "name": "…" }
-}
-```
-
-A full backup uses `"kind": "backup"`, `"characters": [...]` and `"account": "<login>"`.
-Files are named `dcs_character_<name>_<YYYY-MM-DD>.json` and
-`dcs_characters_all_<login>_<YYYY-MM-DD>.json`. The Excel export follows the same
-base name (`dcs_character_<name>_<YYYY-MM-DD>.xlsx`) and starts with the same
-technical block (`App`, `Format`, `Format version`, `Kind`, `Export date`,
-`Character ID`, `Character`, `Game system`) before the human-readable sections;
-the sheet is named after the character. Import accepts only this format and
-validates `appName`, `format`, version, `kind`, character fields and `characterCount`;
-legacy files (a bare array, a bare character or a v1 envelope) are rejected with a
-"re-export" message.
-
-## Administration
-
-The admin panel lives at **`/admin`**. It is a normal Next.js page, but every
-admin API call is guarded on the server: `GET /api/admin/users` answers 401
-without a session and 403 for a non-admin, so opening the URL as a regular user
-redirects to `/`. The role is read from `users/<uid>/user.json` — the client-side
-copy in localStorage only controls whether the menu item is visible.
-
-What the panel can do:
-
-- list users with role / block status / character-sheet count and search them;
-- edit display name and login, reset a password, promote or demote;
-- block or unblock — blocking invalidates existing sessions on the next request;
-- delete an account together with all of its sheets (typed-login confirmation);
-- open a read-only list of a user's character sheets (name, system, class,
-  level/rank, file date).
-
-### First administrator and startup checks
-
-`src/instrumentation.ts` runs `src/lib/startup.ts` once per server start (dev and
-production). It:
-
-1. checks every `users/<uid>/user.json` against schema v3 and fills in missing
-   fields (`schemaVersion`, `role`, `isBlocked`, timestamps) without overwriting
-   existing values;
-2. rebuilds the derived `index/logins.json`;
-3. creates a service administrator if there is no active one.
-
-The generated account:
-
-- login — `DCS_ADMIN_USERNAME` (default `admin`; if taken, `admin-2`, `admin-3`, …);
-- password — 16 random base64url characters, printed to the server console and
-  written to `<data-dir>/.initial-admin.txt` (mode 0600);
-- role — `admin`, plus a `mustChangePassword` flag shown on `/settings`.
-
-The credentials file and password stay as they are on later restarts while an
-active admin exists. Change the password after the first login and delete the
-file.
-
-Known limitation: changing a password does not revoke already issued sessions
-(cookies are stateless signed values). Use **Block** to cut a user off
-immediately.
-
-Admin screenshot tests live in `tests/visual/admin.spec.ts`. They use three
-deterministic `visual-admin-*` demo accounts with fixed dates/roles/blocks,
-seeded by `scripts/visual.sh` into the temporary data directory. When visual
-tests run against an external server (`--base-url`) there is no data directory
-to seed, so only the admin tests are skipped.
-
-## Code style
-
-The Python equivalent of `isort --profile black .; black .` here is:
+Requirements: **Node.js >= 22.12** and npm 11 (`.nvmrc` points to 24).
 
 ```bash
-npm run format         # prettier --write . — import sorting + formatting
-npm run format:check   # prettier --check . — CI / pre-commit gate
-npm run lint           # eslint . — hooks, async, React/Next correctness
-npm run lint:fix       # eslint . --fix — safe autofixes only
+npm ci
+npm run dev
 ```
 
-- `prettier` — formatting (the `black` part), config in `prettier.config.mjs`.
-- `@ianvs/prettier-plugin-sort-imports` — the `isort` part: groups imports as
-  builtin → `react`/`next` → third-party → `@/…` → relative, and sorts them.
-- `prettier-plugin-tailwindcss` — sorts Tailwind classes inside `className`.
-- `.prettierignore` keeps `.next`, `node_modules`, Playwright reports, `data/`,
-  `public/` and `*.md` out of the run.
-- `eslint` (flat config, `next/core-web-vitals` + `next/typescript`) — the part
-  neither Prettier nor `tsc` covers: `react-hooks/exhaustive-deps`, async
-  handlers in `onClick`/`onSubmit`, a11y and Next-specific rules. Errors block
-  `npm run verify`, warnings (known `exhaustive-deps` and unused locals) are
-  printed but do not.
+Open <http://localhost:3000>.
 
-## Tests (before deploying)
+- Data lives in `./data` and is gitignored. Point the app elsewhere with
+  `DCS_DATA_DIR=/path/to/data`.
+- On the first start the app creates a service administrator if there is no
+  active one. The generated login and password are printed to the server console
+  and written to `data/.initial-admin.txt` (mode `0600`) — change the password
+  after the first login. See [docs/admin.md](docs/admin.md).
+
+## Production
 
 ```bash
-npm test            # unit tests (vitest)
-npm run verify      # full pre-deploy gate: format + lint + typecheck + tests + build + HTTP smoke test
-npm run test:visual # Playwright screenshot regression: desktop + mobile
+npm run build
+npm start
 ```
 
-`npm run verify` runs `scripts/predeploy.sh`: it builds, starts a throwaway
-production server on a free port with a temporary `DCS_DATA_DIR`, runs
-`scripts/smoke.mjs` against it (pages, auth, character CRUD, export, on-disk
-files) and shuts it down. Your real `./data` is never touched.
+Set `DCS_DATA_DIR` to a persistent writable directory and `DCS_COOKIE_SECURE=1`
+when running behind HTTPS. The full environment-variable table and backup notes
+are in [docs/deployment.md](docs/deployment.md).
 
-`npm run test:visual` renders the app in Chromium at 1440×900 and Pixel 7,
-compares screenshots with the baselines in `tests/visual/__screenshots__/`,
-and also checks for JS errors, horizontal overflow and mobile navigation.
-Run `npx playwright install chromium` once first.
+## Documentation
+
+Start at **[docs/README.md](docs/README.md)** — it explains the structure and
+rules for adding documentation. Useful pages:
+
+- [Architecture](docs/architecture.md) — stack, auth/session, startup checks.
+- [Data storage](docs/data-storage.md) — on-disk layout and `user.json` schema.
+- [HTTP API](docs/api.md) — endpoints and the `/api/docs` / `/api/openapi.json`
+  reference.
+- [Administration](docs/admin.md) — `/admin`, roles, first administrator.
+- [Export format](docs/export-format.md) — portable JSON/Excel envelope.
+- [Development](docs/development.md) — setup, scripts, code style.
+- [Testing](docs/testing.md) — unit, smoke, visual and pre-deploy checks.
+- [Deployment](docs/deployment.md) — production start, env vars, backups.
+
+## Tech stack
+
+Next.js 16 (App Router) · React 19 · TypeScript · Tailwind CSS 4 · Radix/shadcn ·
+local JSON storage · Vitest · Playwright.
