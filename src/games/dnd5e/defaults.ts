@@ -113,7 +113,7 @@ export function createDnd5eDefaults(
     characterClass: readString(input, 'characterClass', ''),
     race: readString(input, 'race', 'Human'),
     background: readString(input, 'background', 'Acolyte'),
-    alignment: readString(input, 'alignment', 'Neutral'),
+    alignment: readString(input, 'alignment', '') || 'Neutral',
     schemaVersion: CHARACTER_SCHEMA_VERSION,
     systemId: 'dnd5e',
     gameSystem: 'Dungeons & Dragons',
