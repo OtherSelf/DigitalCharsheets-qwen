@@ -107,6 +107,20 @@ describe('переводы: целостность словарей', () => {
     }
   });
 
+  it('в ru нет слов со смешанной кириллицей и латиницей', () => {
+    // Ловит порчу вроде «Скintиллы»: в одном слове одновременно кириллица
+    // и латиница. Разделители, дефисы и «JSON-экспорт» не считаются словом.
+    const mixed: string[] = [];
+    for (const [key, value] of Object.entries(ru)) {
+      for (const token of value.split(/[^\p{L}\p{M}]+/u)) {
+        if (/[А-Яа-яЁё]/.test(token) && /[A-Za-z]/.test(token)) {
+          mixed.push(`${key}: ${token}`);
+        }
+      }
+    }
+    expect(mixed, 'слова со смешанной раскладкой').toEqual([]);
+  });
+
   it('словари не пустые и содержат идентичные переводы обеих локалей', () => {
     expect(Object.keys(en).length).toBeGreaterThan(500);
     expect(Object.keys(ru).length).toBe(Object.keys(en).length);

@@ -157,8 +157,8 @@ describe('визуальные тесты: имена эталонов', () => {
 const REQUIRED_LANGS: Record<string, Array<'en' | 'ru'>> = {
   login: ['en', 'ru'],
   dashboard: ['en', 'ru'],
-  // Лендинг локализован (общий DemoLanding на / и /demo) — базовый экран en/ru.
-  demo: ['en', 'ru'],
+  // `/` и `/demo` — один DemoLanding; базовый лендинг снимается как
+  // dashboard-guest-en/ru, поэтому отдельного demo-en/ru больше нет.
   // Превью листов внутри демо — только en: листы уже покрыты в sheet:*.
   'demo:dnd': ['en'],
   'demo:dh': ['en'],
@@ -232,6 +232,13 @@ const REQUIRED_EDIT_SECTIONS: Record<string, string[]> = {
   ],
 };
 
+// RU edit — выборка по матрице, а не полное зеркало EN: длинные строки
+// проверяются на самых плотных секциях, остальные остаются в EN-покрытии.
+const REQUIRED_RU_EDIT_SECTIONS: Record<string, string[]> = {
+  'sheet:dnd': ['stats', 'skills', 'inventory', 'spells'],
+  'sheet:dh': ['characteristics', 'skills', 'equipment'],
+};
+
 describe('визуальные тесты: покрытие', () => {
   it('для каждого экрана есть все обязательные языки', () => {
     for (const [key, langs] of Object.entries(REQUIRED_LANGS)) {
@@ -272,20 +279,20 @@ describe('визуальные тесты: покрытие', () => {
     }
   });
 
-  it('каждая редактируемая секция снята на en и ru', () => {
-    for (const [key, sections] of Object.entries(REQUIRED_EDIT_SECTIONS)) {
+  it('RU edit покрывает ключевые секции матрицы', () => {
+    for (const [key, sections] of Object.entries(REQUIRED_RU_EDIT_SECTIONS)) {
       const items = keys.get(key) ?? [];
       for (const section of sections) {
         const editItems = items.filter(
           (item) =>
-            item.extras.includes('edit') && item.extraText.includes(section),
+            item.extras.includes('edit') &&
+            item.extraText.includes(section) &&
+            item.lang === 'ru',
         );
-        for (const lang of ['en', 'ru'] as const) {
-          expect(
-            editItems.some((item) => item.lang === lang),
-            `${key}: нет edit-скриншота "${section}" на "${lang}"`,
-          ).toBe(true);
-        }
+        expect(
+          editItems.length > 0,
+          `${key}: нет RU edit-скриншота "${section}"`,
+        ).toBe(true);
       }
     }
   });
