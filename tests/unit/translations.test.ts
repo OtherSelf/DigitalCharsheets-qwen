@@ -3,18 +3,20 @@ import path from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
+import { listGameModules } from '@/games/registry';
 import { translations } from '@/lib/i18n';
 
 /**
- * Целостность словарей (src/lib/i18n/translations.*).
+ * Целостность словарей: общий слой (`src/lib/i18n/translations.*`),
+ * метаданные реестра (`src/games/i18n`) и словари модулей
+ * (`src/games/<id>/i18n`, общий DH — `dh-shared`).
  *
  * Регресс, который этот тест ловит: при разбиении монолитного translations.ts
- * на translations.en.ts / translations.ru.ts часть ключей потерялась, а t()
- * возвращает сам ключ при промахе — в UI попадали сырые строки вроде
- * «weaponSkillAbbr». Поэтому проверяем:
- *   1. en и ru содержат одинаковый набор ключей;
+ * на слой + модули часть ключей теряется, а t() возвращает сам ключ при
+ * промахе — в UI попадают сырые строки вроде «weaponSkillAbbr». Проверяем:
+ *   1. en и ru содержат одинаковый набор ключей (в т.ч. по каждому модулю);
  *   2. каждый литеральный ключ из t('...') в src существует в обоих языках;
- *   3. нет пустых значений и дублей ключей внутри файла.
+ *   3. нет пустых значений и дублей внутри файла и между слоями.
  */
 
 const ROOT = process.cwd();
@@ -22,6 +24,16 @@ const SRC = path.join(ROOT, 'src');
 const TRANSLATION_FILES = [
   path.join(SRC, 'lib', 'i18n', 'translations.en.ts'),
   path.join(SRC, 'lib', 'i18n', 'translations.ru.ts'),
+  path.join(SRC, 'games', 'i18n', 'en.ts'),
+  path.join(SRC, 'games', 'i18n', 'ru.ts'),
+  path.join(SRC, 'games', 'dh-shared', 'i18n', 'en.ts'),
+  path.join(SRC, 'games', 'dh-shared', 'i18n', 'ru.ts'),
+  path.join(SRC, 'games', 'dnd5e', 'i18n', 'en.ts'),
+  path.join(SRC, 'games', 'dnd5e', 'i18n', 'ru.ts'),
+  path.join(SRC, 'games', 'dh1', 'i18n', 'en.ts'),
+  path.join(SRC, 'games', 'dh1', 'i18n', 'ru.ts'),
+  path.join(SRC, 'games', 'dh2', 'i18n', 'en.ts'),
+  path.join(SRC, 'games', 'dh2', 'i18n', 'ru.ts'),
 ];
 
 function sourceFiles(dir: string): string[] {
@@ -35,7 +47,7 @@ function sourceFiles(dir: string): string[] {
 function usedLiteralKeys(): Map<string, string> {
   const used = new Map<string, string>();
   for (const file of sourceFiles(SRC)) {
-    if (file.includes(`${path.sep}lib${path.sep}i18n`)) continue;
+    if (file.includes(`${path.sep}i18n${path.sep}`)) continue;
     const text = fs.readFileSync(file, 'utf8');
     for (const match of text.matchAll(/\bt\(\s*['"]([A-Za-z0-9_.]+)['"]/g)) {
       if (!used.has(match[1])) used.set(match[1], file);
@@ -134,8 +146,59 @@ describe('переводы: целостность словарей', () => {
 
   it('нет дублей ключей внутри файла словаря', () => {
     for (const file of TRANSLATION_FILES) {
-      expect(duplicateKeys(file), `дубли в ${path.basename(file)}`).toEqual([]);
+      expect(
+        duplicateKeys(file),
+        `дубли в ${path.relative(ROOT, file)}`,
+      ).toEqual([]);
     }
+  });
+
+  it('нет дублей ключей между слоями и модулями', () => {
+    for (const language of ['en', 'ru'] as const) {
+      const files = TRANSLATION_FILES.filter((file) =>
+        new RegExp(`(^|[./])${language}\\.ts$`).test(file),
+      );
+      const seen = new Map<string, string>();
+      const duplicates: string[] = [];
+      for (const file of files) {
+        const relative = path.relative(ROOT, file);
+        for (const line of fs.readFileSync(file, 'utf8').split('\n')) {
+          const match = /^\s{2}(?:'([^']+)'|"([^"]+)"):\s*/.exec(line);
+          if (!match) continue;
+          const key = match[1] ?? match[2];
+          const previous = seen.get(key);
+          if (previous && previous !== relative) {
+            duplicates.push(`${key} (${previous} и ${relative})`);
+          } else {
+            seen.set(key, relative);
+          }
+        }
+      }
+      expect(
+        duplicates.sort(),
+        `${language}: ключи объявлены в нескольких слоях`,
+      ).toEqual([]);
+    }
+  });
+
+  it('каждый модуль реестра отдаёт паритет en/ru', () => {
+    for (const gameModule of listGameModules()) {
+      const enKeys = Object.keys(gameModule.i18n.en).sort();
+      const ruKeys = Object.keys(gameModule.i18n.ru).sort();
+      expect(enKeys, `${gameModule.id}: en/ru расходятся`).toEqual(ruKeys);
+      expect(enKeys.length, `${gameModule.id}: пустой словарь`).toBeGreaterThan(
+        0,
+      );
+    }
+  });
+
+  it('домены dnd/dh/games приходят из модулей, а не из общего слоя', () => {
+    expect(en['dnd.lvl']).toBeTruthy();
+    expect(en['dh.weaponSkill']).toBeTruthy();
+    expect(en['games.stepGame']).toBeTruthy();
+    expect(en['games.dh1.name']).toBeTruthy();
+    expect(en['games.dh2.name']).toBeTruthy();
+    expect(en['games.dnd5e.name']).toBeTruthy();
   });
 
   it('в ru нет слов со смешанной кириллицей и латиницей', () => {
