@@ -15,6 +15,7 @@ deploying lives here, one topic per page.
 | [admin.md](admin.md) | `/admin`, roles, first administrator, profile checks, block/delete rules |
 | [export-format.md](export-format.md) | Portable JSON/Excel export envelope and import rules |
 | [development.md](development.md) | Local setup, npm scripts, code style, formatting, lint, typecheck |
+| [i18n.md](i18n.md) | Translation keys, naming conventions, RU/EN rules and i18n tests |
 | [testing.md](testing.md) | Unit, smoke, visual regression and the pre-deploy gate |
 | [deployment.md](deployment.md) | Production start, environment variables, data dir, HTTPS, backups |
 | [blueprint.md](blueprint.md) | Original app concept (historical, kept as-is) |

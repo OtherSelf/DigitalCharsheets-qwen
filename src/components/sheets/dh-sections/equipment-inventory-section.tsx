@@ -423,7 +423,7 @@ export const EquipmentInventorySection = React.forwardRef<
                       isEquipmentSectionOpen && 'rotate-90',
                     )}
                   />
-                  <span className="sr-only">Toggle Equipment</span>
+                  <span className="sr-only">{t('toggleEquipment')}</span>
                 </Button>
               </CollapsibleTrigger>
             </div>
@@ -1993,7 +1993,7 @@ export const EquipmentInventorySection = React.forwardRef<
                       isInventorySectionOpen && 'rotate-90',
                     )}
                   />
-                  <span className="sr-only">Toggle Inventory</span>
+                  <span className="sr-only">{t('toggleInventory')}</span>
                 </Button>
               </CollapsibleTrigger>
             </div>

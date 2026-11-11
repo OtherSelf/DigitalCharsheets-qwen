@@ -1,5 +1,7 @@
 // ─── LANDMARK: TRANSLATIONS_RU_START ───
 export const ruTranslations = {
+  // Flat keys in rough feature order. Domain prefixes and section rules:
+  // docs/i18n.md. New keys go next to their feature block.
   dashboard: 'Панель управления',
   newCharacter: 'Новый персонаж',
   existingCharacters: 'Существующие персонажи',
@@ -147,18 +149,7 @@ export const ruTranslations = {
   saveAndContinue: 'Сохранить и продолжить',
   discardAndContinue: 'Отменить изменения',
   stayAndEdit: 'Отмена',
-  migrateTitle: 'Перенос персонажей',
-  migrateDesc:
-    'Скопируйте своих персонажей из устаревшей учетной записи в текущую учетную запись Google.',
-  migrateButton: 'Перенести устаревшие персонажи',
-  legacyUsername: 'Имя пользователя (устаревшее)',
-  legacyPassword: 'Пароль (устаревший)',
-  verifyAccount: 'Подтвердить учетную запись',
-  selectCharacters: 'Выберите персонажей для копирования',
-  noLegacyCharacters: 'В этой устаревшей учетной записи персонажи не найдены.',
-  importing: 'Импорт...',
   importSuccess: 'Персонажи успешно скопированы!',
-  importFailed: 'Не удалось подтвердить учетную запись. Проверьте свои данные.',
   characterClass: 'Класс персонажа',
   spellcastingStats: 'Параметры заклинаний',
   spellSaveDC: 'Сложность спасброска от заклинания',
@@ -902,7 +893,7 @@ export const ruTranslations = {
   gameSystemDarkHeresy: 'Dark Heresy',
   newBasicSkillPlaceholder: 'Новый базовый навык...',
   newAdvancedSkillPlaceholder: 'Новый продвинутый навык...',
-  newTalentPlaceholder: 'Новый талант...',
+  newTalentPlaceholder: 'Название нового таланта или черты',
   noTalentsOrTraits: 'Пока нет талантов или черт.',
   addNotesPlaceholder: 'Добавить заметки...',
   newMeleeWeapon: 'Новое оружие ближнего боя',
@@ -1251,5 +1242,50 @@ export const ruTranslations = {
   adminMustChangePassword:
     'Вы используете сгенерированный пароль администратора. Смените его в разделе «Безопасность» ниже.',
   authAccountBlocked: 'Этот аккаунт заблокирован администратором.',
+
+  // i18n cleanup: strings that used to be hardcoded in components.
+  hybridView: 'Гибрид',
+  openMenu: 'Открыть меню',
+  toggleSidebar: 'Переключить боковую панель',
+  selectEdition: 'Выберите редакцию',
+  firstEdition: '1-я редакция',
+  secondEdition: '2-я редакция',
+  edition: 'Редакция',
+  item: 'Предмет',
+  attuned: 'Настроено',
+  criticalConditions: 'Критические состояния',
+  fatigueAndCriticalConditions: 'Усталость и критические состояния',
+  collapsePanel: 'Свернуть панель',
+  toggleEquipment: 'Показать/скрыть снаряжение',
+  toggleInventory: 'Показать/скрыть инвентарь',
+  customResources: 'Пользовательские ресурсы',
+  noCustomResourcesAdded: 'Пользовательские ресурсы не добавлены.',
+  noCustomResources: 'Пользовательские ресурсы отсутствуют',
+  max: 'Макс.',
+  addResource: 'Добавить ресурс',
+  removeResource: 'Удалить ресурс',
+  decreaseTextSize: 'Уменьшить размер текста',
+  increaseTextSize: 'Увеличить размер текста',
+  decreaseUiScale: 'Уменьшить масштаб интерфейса',
+  increaseUiScale: 'Увеличить масштаб интерфейса',
+  backstoryPlaceholder: 'Предыстория вашего персонажа...',
+  generalNotesPlaceholder: 'Общие заметки об этом персонаже...',
+  clearManualModifier: 'Очистить ручной модификатор',
+  descriptionOptional: 'Описание (необязательно)',
+  addCriticalCondition: 'Добавить критическое состояние...',
+  fatigueFirstEdition: 'Усталость 1-й ред.',
+  fatigueSecondEdition: 'Усталость 2-й ред.',
+  settingsUsernamePlaceholder: 'например, DungeonMaster',
+  settingsEmailPlaceholder: 'например, user@example.com',
+  recoveryPhraseExample: 'например, french butter dragon',
+  secureAccountTitle: 'Защитите аккаунт',
+  secureAccountDesc:
+    'Добро пожаловать! Настройте фразу восстановления, чтобы сохранить доступ к аккаунту, если забудете пароль.',
+  resetCredentialsTitle: 'Сбросить данные для входа',
+  resetCredentialsDesc:
+    'Вы успешно подтвердили личность. Задайте новый пароль и новую фразу восстановления, чтобы завершить сброс.',
+  recoveryPhraseHint:
+    'Сделайте фразу запоминающейся! При желании можно использовать прежнюю фразу.',
+  credentialsUpdateFailed: 'Не удалось обновить данные для входа.',
 };
 // ─── LANDMARK: TRANSLATIONS_RU_END ───

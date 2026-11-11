@@ -171,7 +171,7 @@ export default function ProfileSettingsPage() {
                     id="displayName"
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value)}
-                    placeholder="e.g. DungeonMaster"
+                    placeholder={t('settingsUsernamePlaceholder')}
                   />
                 </div>
                 <div className="space-y-2">
@@ -182,7 +182,7 @@ export default function ProfileSettingsPage() {
                     id="username"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
-                    placeholder="e.g. user@example.com"
+                    placeholder={t('settingsEmailPlaceholder')}
                   />
                 </div>
               </CardContent>
@@ -209,7 +209,7 @@ export default function ProfileSettingsPage() {
                       size="icon"
                       onClick={() => updateTextScale(textScale - 0.1)}
                       disabled={textScale <= minTextScale}
-                      aria-label="Decrease text size"
+                      aria-label={t('decreaseTextSize')}
                     >
                       <Minus className="h-4 w-4" />
                     </Button>
@@ -223,7 +223,7 @@ export default function ProfileSettingsPage() {
                       size="icon"
                       onClick={() => updateTextScale(textScale + 0.1)}
                       disabled={textScale >= maxTextScale}
-                      aria-label="Increase text size"
+                      aria-label={t('increaseTextSize')}
                     >
                       <Plus className="h-4 w-4" />
                     </Button>
@@ -245,7 +245,7 @@ export default function ProfileSettingsPage() {
                       size="icon"
                       onClick={() => updateUiScale(uiScale - 0.1)}
                       disabled={uiScale <= minUiScale}
-                      aria-label="Decrease UI scale"
+                      aria-label={t('decreaseUiScale')}
                     >
                       <Minus className="h-4 w-4" />
                     </Button>
@@ -258,7 +258,7 @@ export default function ProfileSettingsPage() {
                       size="icon"
                       onClick={() => updateUiScale(uiScale + 0.1)}
                       disabled={uiScale >= maxUiScale}
-                      aria-label="Increase UI scale"
+                      aria-label={t('increaseUiScale')}
                     >
                       <Plus className="h-4 w-4" />
                     </Button>

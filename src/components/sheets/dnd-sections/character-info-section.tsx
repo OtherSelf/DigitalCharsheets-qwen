@@ -437,7 +437,7 @@ export const DndCharacterInfoSection = React.forwardRef<
                               backstory: e.target.value,
                             })
                           }
-                          placeholder="Your character's backstory..."
+                          placeholder={t('backstoryPlaceholder')}
                           className="min-h-[150px] text-sm"
                         />
                       ) : (
@@ -461,7 +461,7 @@ export const DndCharacterInfoSection = React.forwardRef<
                               notes: e.target.value,
                             })
                           }
-                          placeholder="General notes about this character..."
+                          placeholder={t('generalNotesPlaceholder')}
                           className="min-h-[100px] text-sm"
                         />
                       ) : (

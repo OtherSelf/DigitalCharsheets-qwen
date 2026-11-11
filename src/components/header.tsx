@@ -367,7 +367,7 @@ export function Header({
                 </Button>
                 <div className="flex items-center gap-2">
                   <Label className="text-muted-foreground hidden text-xs whitespace-nowrap md:inline">
-                    Edition:
+                    {t('edition')}:
                   </Label>
                   <Select
                     value={character.edition || '1st'}
@@ -382,9 +382,9 @@ export function Header({
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="1st">1st Edition</SelectItem>
-                      <SelectItem value="2nd">2nd Edition</SelectItem>
-                      <SelectItem value="hybrid">Hybrid</SelectItem>
+                      <SelectItem value="1st">{t('firstEdition')}</SelectItem>
+                      <SelectItem value="2nd">{t('secondEdition')}</SelectItem>
+                      <SelectItem value="hybrid">{t('hybridView')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -405,7 +405,7 @@ export function Header({
                   className="h-9 w-9 sm:hidden"
                 >
                   <Menu className="h-4 w-4" />
-                  <span className="sr-only">Open menu</span>
+                  <span className="sr-only">{t('openMenu')}</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">

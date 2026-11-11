@@ -1,5 +1,7 @@
 // ─── LANDMARK: TRANSLATIONS_EN_START ───
 export const enTranslations = {
+  // Flat keys in rough feature order. Domain prefixes and section rules:
+  // docs/i18n.md. New keys go next to their feature block.
   dashboard: 'Dashboard',
   newCharacter: 'New Character',
   existingCharacters: 'Existing Characters',
@@ -147,19 +149,7 @@ export const enTranslations = {
   saveAndContinue: 'Save & Continue',
   discardAndContinue: 'Discard Changes',
   stayAndEdit: 'Cancel',
-  migrateTitle: 'Migrate Characters',
-  migrateDesc:
-    'Copy your characters from a legacy account to your current Google account.',
-  migrateButton: 'Migrate Legacy Characters',
-  legacyUsername: 'Legacy Username',
-  legacyPassword: 'Legacy Password',
-  verifyAccount: 'Verify Account',
-  selectCharacters: 'Select Characters to Copy',
-  noLegacyCharacters: 'No characters found in this legacy account.',
-  importing: 'Importing...',
   importSuccess: 'Characters successfully copied!',
-  importFailed:
-    'Failed to verify legacy account. Please check your credentials.',
   characterClass: 'Character Class',
   spellcastingStats: 'Spellcasting Stats',
   spellSaveDC: 'Spell Save DC',
@@ -903,7 +893,7 @@ export const enTranslations = {
   gameSystemDarkHeresy: 'Dark Heresy',
   newBasicSkillPlaceholder: 'New basic skill...',
   newAdvancedSkillPlaceholder: 'New advanced skill...',
-  newTalentPlaceholder: 'New talent...',
+  newTalentPlaceholder: 'New talent/trait name',
   noTalentsOrTraits: 'No talents or traits yet.',
   addNotesPlaceholder: 'Add notes...',
   newMeleeWeapon: 'New melee weapon',
@@ -1247,5 +1237,50 @@ export const enTranslations = {
   adminMustChangePassword:
     'You are using a generated administrator password. Change it in Security below.',
   authAccountBlocked: 'This account is blocked by an administrator.',
+
+  // i18n cleanup: strings that used to be hardcoded in components.
+  hybridView: 'Hybrid',
+  openMenu: 'Open menu',
+  toggleSidebar: 'Toggle Sidebar',
+  selectEdition: 'Select Edition',
+  firstEdition: '1st Edition',
+  secondEdition: '2nd Edition',
+  edition: 'Edition',
+  item: 'Item',
+  attuned: 'Attuned',
+  criticalConditions: 'Critical Conditions',
+  fatigueAndCriticalConditions: 'Fatigue & Critical Conditions',
+  collapsePanel: 'Collapse Panel',
+  toggleEquipment: 'Toggle Equipment',
+  toggleInventory: 'Toggle Inventory',
+  customResources: 'Custom Resources',
+  noCustomResourcesAdded: 'No custom resources added.',
+  noCustomResources: 'No custom resources',
+  max: 'Max',
+  addResource: 'Add resource',
+  removeResource: 'Remove resource',
+  decreaseTextSize: 'Decrease text size',
+  increaseTextSize: 'Increase text size',
+  decreaseUiScale: 'Decrease UI scale',
+  increaseUiScale: 'Increase UI scale',
+  backstoryPlaceholder: "Your character's backstory...",
+  generalNotesPlaceholder: 'General notes about this character...',
+  clearManualModifier: 'Clear manual modifier',
+  descriptionOptional: 'Description (optional)',
+  addCriticalCondition: 'Add critical condition...',
+  fatigueFirstEdition: '1st Ed. Fatigue',
+  fatigueSecondEdition: '2nd Ed. Fatigue',
+  settingsUsernamePlaceholder: 'e.g. DungeonMaster',
+  settingsEmailPlaceholder: 'e.g. user@example.com',
+  recoveryPhraseExample: 'e.g., french butter dragon',
+  secureAccountTitle: 'Secure Your Account',
+  secureAccountDesc:
+    'Welcome! Please set up a recovery phrase to secure your account in case you forget your password.',
+  resetCredentialsTitle: 'Reset Credentials',
+  resetCredentialsDesc:
+    'You have successfully verified your identity. Please set a new password and a new recovery phrase to complete the process.',
+  recoveryPhraseHint:
+    'Make it memorable! You can use the same phrase as before if you wish.',
+  credentialsUpdateFailed: 'Failed to update credentials.',
 };
 // ─── LANDMARK: TRANSLATIONS_EN_END ───

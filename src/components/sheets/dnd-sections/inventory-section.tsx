@@ -205,14 +205,14 @@ export const DndInventorySection = React.forwardRef<
                             variant={it.notes ? 'secondary' : 'ghost'}
                             size="icon"
                             className="h-6 w-6 shrink-0"
-                            title="Notes"
+                            title={t('notes')}
                           >
                             <Info className="h-3 w-3" />
                           </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-64">
                           <Label className="mb-2 block text-xs">
-                            Notes for {it.name || 'Item'}
+                            {t('notesFor')} {it.name || t('item')}
                           </Label>
                           <Textarea
                             defaultValue={it.notes || ''}
@@ -225,7 +225,7 @@ export const DndInventorySection = React.forwardRef<
                               setEquipment(next);
                               updateCharacter(characterId, { equipment: next });
                             }}
-                            placeholder="Add notes..."
+                            placeholder={`${t('addNotes')}...`}
                             className="mt-2 min-h-[100px] text-sm"
                           />
                         </PopoverContent>
@@ -252,14 +252,14 @@ export const DndInventorySection = React.forwardRef<
                             variant={it.notes ? 'secondary' : 'ghost'}
                             size="icon"
                             className="h-5 w-5 shrink-0"
-                            title="Notes"
+                            title={t('notes')}
                           >
                             <Info className="h-3 w-3" />
                           </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-64">
                           <Label className="mb-2 block text-xs">
-                            Notes for {it.name || 'Item'}
+                            {t('notesFor')} {it.name || t('item')}
                           </Label>
                           <Textarea
                             defaultValue={it.notes || ''}
@@ -272,7 +272,7 @@ export const DndInventorySection = React.forwardRef<
                               setEquipment(next);
                               updateCharacter(characterId, { equipment: next });
                             }}
-                            placeholder="Add notes..."
+                            placeholder={`${t('addNotes')}...`}
                             className="mt-2 min-h-[100px] text-sm"
                           />
                         </PopoverContent>
@@ -293,7 +293,7 @@ export const DndInventorySection = React.forwardRef<
             {isItemsEditing && (
               <div className="flex gap-2 border-t pt-2">
                 <Input
-                  placeholder="New..."
+                  placeholder={t('newItemPlaceholder')}
                   value={newEquipmentItem}
                   onChange={(e) => setNewEquipmentItem(e.target.value)}
                   className="h-8 text-xs"

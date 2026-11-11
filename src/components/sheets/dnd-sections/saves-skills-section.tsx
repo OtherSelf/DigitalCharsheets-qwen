@@ -231,7 +231,7 @@ export function DndSavesSkillsSection({
                               savingThrows: updated,
                             });
                           }}
-                          title="Clear manual modifier"
+                          title={t('clearManualModifier')}
                         >
                           <RefreshCw className="h-3 w-3" />
                         </Button>
@@ -348,7 +348,7 @@ export function DndSavesSkillsSection({
                             setSkills(updated);
                             updateCharacter(characterId, { skills: updated });
                           }}
-                          title="Clear manual modifier"
+                          title={t('clearManualModifier')}
                         >
                           <RefreshCw className="h-3 w-3" />
                         </Button>

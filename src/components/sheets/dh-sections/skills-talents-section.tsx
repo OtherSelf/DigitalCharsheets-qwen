@@ -399,7 +399,7 @@ export const SkillsTalentsSection = React.forwardRef<
                                     </PopoverTrigger>
                                     <PopoverContent className="w-64">
                                       <Label className="mb-2 block text-xs">
-                                        Notes for{' '}
+                                        {t('notesFor')}{' '}
                                         {getTranslatedSkillName(skill.name, t)}
                                       </Label>
                                       <Textarea
@@ -418,7 +418,7 @@ export const SkillsTalentsSection = React.forwardRef<
                                             ),
                                           })
                                         }
-                                        placeholder="Add notes..."
+                                        placeholder={`${t('addNotes')}...`}
                                         className="mt-2 min-h-[100px] text-sm"
                                       />
                                     </PopoverContent>
@@ -670,7 +670,7 @@ export const SkillsTalentsSection = React.forwardRef<
                                     </PopoverTrigger>
                                     <PopoverContent className="w-64">
                                       <Label className="mb-2 block text-xs">
-                                        Notes for{' '}
+                                        {t('notesFor')}{' '}
                                         {getTranslatedSkillName(skill.name, t)}
                                       </Label>
                                       <Textarea
@@ -689,7 +689,7 @@ export const SkillsTalentsSection = React.forwardRef<
                                             ),
                                           })
                                         }
-                                        placeholder="Add notes..."
+                                        placeholder={`${t('addNotes')}...`}
                                         className="mt-2 min-h-[100px] text-sm"
                                       />
                                     </PopoverContent>
@@ -922,7 +922,7 @@ export const SkillsTalentsSection = React.forwardRef<
                                 </PopoverTrigger>
                                 <PopoverContent className="w-64">
                                   <Label className="mb-2 block text-xs">
-                                    Notes for {talent.name}
+                                    {t('notesFor')} {talent.name}
                                   </Label>
                                   <Textarea
                                     defaultValue={talent.notes || ''}
@@ -935,7 +935,7 @@ export const SkillsTalentsSection = React.forwardRef<
                                         ),
                                       )
                                     }
-                                    placeholder="Add notes..."
+                                    placeholder={`${t('addNotes')}...`}
                                     className="mt-2 min-h-[100px] text-sm"
                                   />
                                 </PopoverContent>
@@ -980,7 +980,7 @@ export const SkillsTalentsSection = React.forwardRef<
                                 ),
                               )
                             }
-                            placeholder="Description..."
+                            placeholder={`${t('description')}...`}
                             className="min-h-[60px] text-sm"
                           />
                         </li>
@@ -988,12 +988,12 @@ export const SkillsTalentsSection = React.forwardRef<
                     </ul>
                     <div className="bg-background space-y-2 rounded-md border p-3">
                       <Input
-                        placeholder="New talent/trait name"
+                        placeholder={t('newTalentPlaceholder')}
                         value={newTalentName}
                         onChange={(e) => setNewTalentName(e.target.value)}
                       />
                       <Textarea
-                        placeholder="Description (optional)"
+                        placeholder={t('descriptionOptional')}
                         value={newTalentDescription}
                         onChange={(e) =>
                           setNewTalentDescription(e.target.value)
@@ -1035,7 +1035,7 @@ export const SkillsTalentsSection = React.forwardRef<
                                   </PopoverTrigger>
                                   <PopoverContent className="w-64">
                                     <Label className="mb-2 block text-xs">
-                                      Notes for {talent.name}
+                                      {t('notesFor')} {talent.name}
                                     </Label>
                                     <Textarea
                                       defaultValue={talent.notes || ''}
@@ -1050,7 +1050,7 @@ export const SkillsTalentsSection = React.forwardRef<
                                           ),
                                         })
                                       }
-                                      placeholder="Add notes..."
+                                      placeholder={`${t('addNotes')}...`}
                                       className="mt-2 min-h-[100px] text-sm"
                                     />
                                   </PopoverContent>
@@ -1089,7 +1089,7 @@ export const SkillsTalentsSection = React.forwardRef<
                           isCompactView ? 'text-xs' : 'text-sm',
                         )}
                       >
-                        No talents or traits.
+                        {t('noTalentsOrTraits')}
                       </p>
                     )}
                   </div>

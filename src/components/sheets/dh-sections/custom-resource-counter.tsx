@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/popover';
 import { Textarea } from '@/components/ui/textarea';
 import { useCharacterContext } from '@/context/character-context';
+import { useTranslation } from '@/context/language-context';
 import { type DarkHeresyCharacter } from '@/lib/types';
 
 import { EditSaveButton } from './dh-ui-helpers';
@@ -35,6 +36,7 @@ export function CustomResourceCounter({
   isCompactView: boolean;
 }) {
   const { updateCharacter, hideNotes, showEditButtons } = useCharacterContext();
+  const { t } = useTranslation();
   const [resources, setResources] = React.useState<CustomResource[]>(
     character.customResources || [],
   );
@@ -111,7 +113,7 @@ export function CustomResourceCounter({
     return (
       <div className="border-t pt-2">
         <div className="mb-2 flex flex-row items-center justify-between">
-          <h4 className="text-sm font-semibold">Custom Resources</h4>
+          <h4 className="text-sm font-semibold">{t('customResources')}</h4>
           {(showEditButtons || isEditing) && (
             <EditSaveButton
               editing={isEditing}
@@ -123,7 +125,7 @@ export function CustomResourceCounter({
         <div className="space-y-2">
           {resources.length === 0 && !isEditing && (
             <p className="text-muted-foreground rounded-lg border border-dashed py-2 text-center text-xs italic">
-              No custom resources added.
+              {t('noCustomResourcesAdded')}
             </p>
           )}
           {resources.map((res) => (
@@ -139,11 +141,11 @@ export function CustomResourceCounter({
                       handleFieldChange(res.id, 'description', e.target.value)
                     }
                     className="h-7 text-xs"
-                    placeholder="Resource Name"
+                    placeholder={t('resourceName')}
                   />
                   <div className="flex items-center gap-1">
                     <span className="text-muted-foreground shrink-0 text-[9px] font-bold uppercase">
-                      Max
+                      {t('max')}
                     </span>
                     <Input
                       type="number"
@@ -167,14 +169,14 @@ export function CustomResourceCounter({
                         </PopoverTrigger>
                         <PopoverContent className="w-64">
                           <Label className="mb-2 block text-xs">
-                            Notes: {res.description}
+                            {t('notes')}: {res.description}
                           </Label>
                           <Textarea
                             defaultValue={res.notes || ''}
                             onChange={(e) =>
                               handleFieldChange(res.id, 'notes', e.target.value)
                             }
-                            placeholder="Notes"
+                            placeholder={t('notes')}
                             className="mt-2 min-h-[100px] text-sm"
                           />
                         </PopoverContent>
@@ -197,7 +199,7 @@ export function CustomResourceCounter({
                       </PopoverTrigger>
                       <PopoverContent className="w-64">
                         <Label className="mb-2 block text-xs">
-                          Notes: {res.description}
+                          {t('notes')}: {res.description}
                         </Label>
                         <Textarea
                           defaultValue={res.notes || ''}
@@ -212,7 +214,7 @@ export function CustomResourceCounter({
                               customResources: next,
                             });
                           }}
-                          placeholder="Notes"
+                          placeholder={t('notes')}
                           className="mt-2 min-h-[100px] text-sm"
                         />
                       </PopoverContent>
@@ -251,6 +253,7 @@ export function CustomResourceCounter({
                     size="icon"
                     className="text-destructive h-6 w-6"
                     onClick={() => removeResource(res.id)}
+                    aria-label={t('removeResource')}
                   >
                     <Trash2 className="h-3 w-3" />
                   </Button>
@@ -261,7 +264,7 @@ export function CustomResourceCounter({
           {isEditing && (
             <div className="flex items-center gap-2 border-t pt-2">
               <Input
-                placeholder="Resource Name"
+                placeholder={t('resourceName')}
                 value={newDesc}
                 onChange={(e) => setNewDesc(e.target.value)}
                 className="h-8 flex-1 text-xs"
@@ -273,7 +276,12 @@ export function CustomResourceCounter({
                 className="h-8 w-16 text-center text-xs"
                 min={1}
               />
-              <Button size="sm" className="h-8" onClick={addResource}>
+              <Button
+                size="sm"
+                className="h-8"
+                onClick={addResource}
+                aria-label={t('addResource')}
+              >
                 <Plus className="h-4 w-4" />
               </Button>
             </div>
@@ -289,7 +297,7 @@ export function CustomResourceCounter({
       <Card className="mt-2">
         <CardHeader className="flex flex-row items-center justify-between px-3 py-2">
           <CardTitle className="text-muted-foreground text-[10px] font-bold tracking-tight uppercase">
-            Custom Resources
+            {t('customResources')}
           </CardTitle>
           {(showEditButtons || isEditing) && (
             <EditSaveButton
@@ -302,7 +310,7 @@ export function CustomResourceCounter({
         <CardContent className="space-y-2 p-3 pt-0">
           {resources.length === 0 && !isEditing && (
             <p className="text-muted-foreground rounded border border-dashed py-1 text-center text-[10px] italic">
-              No custom resources
+              {t('noCustomResources')}
             </p>
           )}
           {resources.map((res) => (
@@ -324,7 +332,7 @@ export function CustomResourceCounter({
                     </PopoverTrigger>
                     <PopoverContent className="w-56">
                       <Label className="mb-2 block text-xs">
-                        Notes: {res.description}
+                        {t('notes')}: {res.description}
                       </Label>
                       <Textarea
                         defaultValue={res.notes || ''}
@@ -339,7 +347,7 @@ export function CustomResourceCounter({
                             customResources: next,
                           });
                         }}
-                        placeholder="Notes"
+                        placeholder={t('notes')}
                         className="mt-2 min-h-[80px] text-xs"
                       />
                     </PopoverContent>
@@ -377,6 +385,7 @@ export function CustomResourceCounter({
                     size="icon"
                     className="text-destructive h-5 w-5"
                     onClick={() => removeResource(res.id)}
+                    aria-label={t('removeResource')}
                   >
                     <Trash2 className="h-3 w-3" />
                   </Button>
@@ -387,7 +396,7 @@ export function CustomResourceCounter({
           {isEditing && (
             <div className="flex items-center gap-1 border-t pt-1">
               <Input
-                placeholder="Name"
+                placeholder={t('name')}
                 value={newDesc}
                 onChange={(e) => setNewDesc(e.target.value)}
                 className="h-7 flex-1 text-[10px]"
@@ -399,7 +408,12 @@ export function CustomResourceCounter({
                 className="h-7 w-12 text-center text-[10px]"
                 min={1}
               />
-              <Button size="sm" className="h-7 px-2" onClick={addResource}>
+              <Button
+                size="sm"
+                className="h-7 px-2"
+                onClick={addResource}
+                aria-label={t('addResource')}
+              >
                 <Plus className="h-3 w-3" />
               </Button>
             </div>
