@@ -85,6 +85,11 @@ temporary data directory. When running against an external server
 (`--base-url`) there is no data directory to seed, so only the admin tests are
 skipped.
 
+The profile dropdown in the header is covered separately by
+[`tests/visual/user-menu.spec.ts`](../tests/visual/user-menu.spec.ts): regular
+user (en/ru) and administrator (with the Administration item), desktop and
+mobile.
+
 ## Pre-deploy gate
 
 `npm run verify` runs [`scripts/predeploy.sh`](../scripts/predeploy.sh):
