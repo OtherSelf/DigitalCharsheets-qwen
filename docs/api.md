@@ -41,11 +41,17 @@ Adding an endpoint without documenting it fails the unit tests.
 | Method | Path | Auth | Purpose |
 | --- | --- | --- | --- |
 | `GET` | `/api/health` | — | Liveness/readiness for Docker, reverse proxies and monitoring. `200` when the data directory is writable, `503` with `status: degraded` otherwise. No paths or secrets; `Cache-Control: no-store`. |
-| `GET` | `/api/version` | — | Application name, version, commit/build date (from env, otherwise `null`) and Node runtime. No dependency list. |
+| `GET` | `/api/version` | — | Application name, version, commit/build date (from env, otherwise `null`), 7-character `commitShort` and Node runtime. No dependency list. |
 
 `commit`/`buildDate` on `/api/version` come from `DCS_GIT_COMMIT` (or
 `GIT_COMMIT` / `VERCEL_GIT_COMMIT_SHA`) and `DCS_BUILD_DATE`; without them the
-fields are `null`.
+fields are `null`. `commitShort` is the first 7 characters of `commit`,
+lowercased — the form the UI shows in the profile menu (`v0.1.0 · a077aef`);
+it is `null` whenever `commit` is.
+
+The menu label is the only consumer: `src/components/layout/app-version.tsx`
+fetches `/api/version` once per session and renders nothing if the request
+fails, so a broken API never produces a half-empty badge.
 
 The application `version` comes from the root `package.json`
 (`APP_VERSION` in [`src/lib/app-info.ts`](../src/lib/app-info.ts)). The OpenAPI

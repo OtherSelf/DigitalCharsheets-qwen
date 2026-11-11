@@ -55,6 +55,9 @@ test.describe('profile menu', () => {
     await expect(
       menu.getByRole('menuitem', { name: 'Administration' }),
     ).toHaveCount(0);
+    // Подпись версии в подвале меню. В тестовом окружении /api/version отдаёт
+    // commit: null, поэтому видна только версия из package.json.
+    await expect(menu.getByText(/v\d+\.\d+\.\d+/)).toBeVisible();
 
     await screenshotPage(page, 'profile-menu-en.png');
   });
@@ -139,6 +142,7 @@ test.describe('profile menu', () => {
     await expect(
       menu.getByRole('menuitem', { name: 'Administration' }),
     ).toBeVisible();
+    await expect(menu.getByText(/v\d+\.\d+\.\d+/)).toBeVisible();
 
     await screenshotPage(page, 'profile-menu-admin-en.png');
   });
@@ -168,6 +172,7 @@ test.describe('profile menu', () => {
     await expect(menu.getByRole('menuitem', { name: 'Админка' })).toHaveCount(
       0,
     );
+    await expect(menu.getByText(/v\d+\.\d+\.\d+/)).toBeVisible();
 
     await screenshotPage(page, 'profile-menu-ru.png');
   });

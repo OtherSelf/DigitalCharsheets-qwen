@@ -64,6 +64,7 @@ export const ruTranslations = {
   'common.switchToRussian': 'Переключить на русский',
   'common.switchToEnglish': 'Переключить на английский',
   'common.openUserMenu': 'Открыть меню пользователя',
+  'common.appVersion': 'Версия приложения',
   'common.serverConnectionFailed': 'Не удалось подключиться к серверу.',
   'common.saving': 'Сохранение...',
   'common.characterCreatedTitle': 'Персонаж создан!',
