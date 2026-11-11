@@ -4,6 +4,7 @@ import { toPortableRecord } from '../shared/export';
 import type { GameModule } from '../types';
 import { createDnd5eDefaults } from './defaults';
 import { createDnd5eDemo } from './demo';
+import { buildDnd5ePortableJson } from './export';
 import { en as dnd5eEn } from './i18n/en';
 import { ru as dnd5eRu } from './i18n/ru';
 import { dnd5eCharacterSchema } from './schema';
@@ -39,7 +40,8 @@ export const dnd5eModule: GameModule<DnD5eCharacter> = {
       })),
   },
   export: {
-    toPortableJson: (character) => toPortableRecord(character),
+    toPortableJson: (character, config) =>
+      buildDnd5ePortableJson(character, config),
     buildExcelSections: () => {
       // LANDMARK: EXCEL_SECTIONS — секции Excel переезжают из
       // `src/lib/export-utils.ts` в модуль на этапе 5.

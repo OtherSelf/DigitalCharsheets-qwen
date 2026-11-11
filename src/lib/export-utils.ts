@@ -4,25 +4,20 @@
 
 import * as XLSX from 'xlsx';
 
+import {
+  getCharacterModule,
+  resolveCharacterSystemId,
+} from '@/games/character-system';
+import type { GameExportConfig } from '@/games/types';
+
 import { isNonPortableField, toPortableCharacter } from './character-portable';
 import { normalizeCharacterRecord } from './character-version';
 import { DIVINATION_BY_ID } from './dark-heresy-data';
 import type { LegacyDarkHeresyExport } from './legacy-dh-export';
 import { Character, DnD5eCharacter } from './types';
 
-export interface ExportConfig {
-  includeBasicInfo: boolean;
-  includeStats: boolean;
-  includeCombat: boolean;
-  includeEquipment: boolean;
-  includeInventory: boolean;
-  includeSpells: boolean;
-  includeNarrative: boolean;
-  includeProgression: boolean;
-  includeCompanions: boolean;
-  includeQuestLog: boolean;
-  includeCustomHouseRules: boolean;
-}
+/** Конфиг секций экспорта; тип живёт в контракте модулей. */
+export type ExportConfig = GameExportConfig;
 
 export const DEFAULT_EXPORT_CONFIG: ExportConfig = {
   includeBasicInfo: true,
@@ -46,7 +41,7 @@ export const DEFAULT_EXPORT_CONFIG: ExportConfig = {
  *     "metadata": {
  *       "appName": "DigitalCharsheets-qwen",
  *       "format": "dcs-export",
- *       "version": "2.0",              // версия ФОРМАТА, не приложения
+ *       "version": "3.0",              // версия ФОРМАТА, не приложения
  *       "kind": "character" | "backup",
  *       "exportDate": "2026-11-08T…Z",
  *       "characterCount": 1,
@@ -57,14 +52,18 @@ export const DEFAULT_EXPORT_CONFIG: ExportConfig = {
  *     "characters": [ … ]              // kind=backup
  *   }
  *
- * Формат новый и единственный: старые файлы (просто массив листов, голый лист,
- * конверт v1 без format/kind) импорт намеренно не принимает — при попытке
- * будет понятная ошибка «переэкспортируйте файл».
+ * Экспорт всегда пишет 3.0: в персонаже `systemId` (`dnd5e`/`dh1`/`dh2`) и
+ * `schemaVersion: 2`. Импорт принимает 3.0 нативно, а 2.0/2.1 — с миграцией
+ * листа по правилам v2 (📌 D9). Старые файлы (просто массив листов, голый
+ * лист, конверт v1 без format/kind) импорт намеренно не принимает — при
+ * попытке будет понятная ошибка «переэкспортируйте файл».
  */
 export const EXPORT_APP_NAME = 'DigitalCharsheets-qwen';
 export const EXPORT_FORMAT = 'dcs-export';
-export const EXPORT_FORMAT_VERSION = '2.1';
-const EXPORT_FORMAT_MAJOR = 2;
+export const EXPORT_FORMAT_VERSION = '3.0';
+const EXPORT_FORMAT_MAJOR = 3;
+/** Версии, которые импорт умеет мигрировать (в старом конверте). */
+const LEGACY_EXPORT_MAJORS = [2];
 
 export type ExportKind = 'character' | 'backup';
 
@@ -194,6 +193,7 @@ const normalizeCharacter = (char: any): any => {
 };
 
 const SUPPORTED_EXPORT_SYSTEMS = ['Dungeons & Dragons', 'Dark Heresy'] as const;
+const SUPPORTED_SYSTEM_IDS = ['dnd5e', 'dh1', 'dh2'] as const;
 
 function validateCharacterPayload(character: any, index: number): string[] {
   const label = `Персонаж #${index + 1}`;
@@ -201,9 +201,14 @@ function validateCharacterPayload(character: any, index: number): string[] {
     return [`${label}: ожидался объект.`];
   }
   const errors: string[] = [];
-  if (!SUPPORTED_EXPORT_SYSTEMS.includes(character.gameSystem)) {
+  const knownSystem =
+    SUPPORTED_SYSTEM_IDS.includes(character.systemId) ||
+    SUPPORTED_EXPORT_SYSTEMS.includes(character.gameSystem);
+  if (!knownSystem) {
     errors.push(
-      `${label}: неизвестная игровая система ${JSON.stringify(character.gameSystem)}.`,
+      `${label}: неизвестная игровая система ${JSON.stringify(
+        character.systemId ?? character.gameSystem,
+      )}.`,
     );
   }
   if (typeof character.name !== 'string' || !character.name.trim()) {
@@ -382,10 +387,12 @@ export function parseExportPayload(
   if (!version || !Number.isFinite(major)) {
     return { ok: false, error: 'В metadata не указана версия формата.' };
   }
-  if (major !== EXPORT_FORMAT_MAJOR) {
+  const supported =
+    major === EXPORT_FORMAT_MAJOR || LEGACY_EXPORT_MAJORS.includes(major);
+  if (!supported) {
     return {
       ok: false,
-      error: `Неподдерживаемая версия формата ${version}: поддерживается ${EXPORT_FORMAT_MAJOR}.x.`,
+      error: `Неподдерживаемая версия формата ${version}: поддерживаются 2.0/2.1 (с миграцией) и ${EXPORT_FORMAT_MAJOR}.x.`,
     };
   }
 
@@ -481,164 +488,35 @@ export type ImportResult = {
   error?: string;
 };
 
+/**
+ * ─── LANDMARK: EXPORT FIELD SELECTION ─────────────────────────────────────
+ * Состав JSON-полей задаёт адаптер модуля; ядро добавляет только идентичность
+ * конверта (`id`, `systemId`, `schemaVersion`, legacy `gameSystem`).
+ */
 export const filterCharacterForExport = (
   character: Character,
   config: ExportConfig,
 ): Partial<Character> => {
-  const filtered: any = {
-    id: character.id,
-    systemId: character.systemId,
-    gameSystem: character.gameSystem,
-  };
-
-  if (config.includeBasicInfo) {
-    filtered.name = character.name;
-    filtered.characterClass = character.characterClass;
-
-    if (character.gameSystem === 'Dungeons & Dragons') {
-      const dnd = character as DnD5eCharacter;
-      filtered.race = dnd.race;
-      filtered.background = dnd.background;
-      filtered.alignment = dnd.alignment;
-      filtered.age = dnd.age;
-      filtered.height = dnd.height;
-      filtered.weight = dnd.weight;
-      filtered.eyes = dnd.eyes;
-      filtered.skin = dnd.skin;
-      filtered.hair = dnd.hair;
-      filtered.proficiencyBonus = dnd.proficiencyBonus;
-    } else {
-      const dh = character as LegacyDarkHeresyExport;
-      filtered.edition = dh.edition;
-      filtered.homeWorld = dh.homeWorld;
-      filtered.worldVariant = dh.worldVariant;
-      filtered.careerPath = dh.careerPath;
-      filtered.rank = dh.rank;
-      filtered.divination = dh.divination;
-      filtered.divinationEffect = dh.divinationEffect;
-      filtered.quirk = dh.quirk;
-      filtered.height = dh.height;
-      filtered.weight = dh.weight;
-      filtered.age = dh.age;
-      filtered.skinColor = dh.skinColor;
-      filtered.hairColor = dh.hairColor;
-      filtered.eyeColor = dh.eyeColor;
-    }
+  const normalized = normalizeCharacterRecord(
+    character as unknown as Record<string, unknown>,
+  ).character;
+  const gameModule = getCharacterModule(normalized);
+  if (!gameModule) {
+    throw new Error(
+      `Неизвестная редакция персонажа: ${normalized.systemId ?? normalized.gameSystem}`,
+    );
   }
 
-  if (config.includeStats) {
-    filtered.stats = character.stats;
-    filtered.statNotes = character.statNotes;
-    if (character.gameSystem === 'Dark Heresy') {
-      filtered.statUpgrades = (
-        character as LegacyDarkHeresyExport
-      ).statUpgrades;
-    }
-  }
-
-  if (config.includeCombat) {
-    if (character.gameSystem === 'Dungeons & Dragons') {
-      const dnd = character as DnD5eCharacter;
-      filtered.armorClass = dnd.armorClass;
-      filtered.speed = dnd.speed;
-      filtered.hitPoints = dnd.hitPoints;
-      filtered.hpTracking = dnd.hpTracking;
-      filtered.hitPointsNotes = dnd.hitPointsNotes;
-      filtered.temporaryHitPoints = dnd.temporaryHitPoints;
-      filtered.hitDice = dnd.hitDice;
-      filtered.hitDiceUsed = dnd.hitDiceUsed;
-      filtered.deathSaves = dnd.deathSaves;
-      filtered.exhaustion = dnd.exhaustion;
-      filtered.savingThrows = dnd.savingThrows;
-      filtered.skills = dnd.skills;
-      filtered.attacks = dnd.attacks;
-      filtered.combatResources = dnd.combatResources;
-    } else {
-      const dh = character as LegacyDarkHeresyExport;
-      filtered.wounds = dh.wounds;
-      filtered.fatePoints = dh.fatePoints;
-      filtered.insanityPoints = dh.insanityPoints;
-      filtered.corruptionPoints = dh.corruptionPoints;
-      filtered.fatigue1st = dh.fatigue1st;
-      filtered.fatigue2nd = dh.fatigue2nd;
-      filtered.criticalConditions = dh.criticalConditions;
-      filtered.customResources = dh.customResources;
-      filtered.movement = dh.movement;
-      filtered.skills = dh.skills;
-      filtered.talents = dh.talents;
-    }
-  }
-
-  if (config.includeEquipment) filtered.equipment = character.equipment;
-  if (config.includeInventory) {
-    filtered.inventory = character.inventory;
-    if (character.gameSystem === 'Dungeons & Dragons') {
-      filtered.currency = (character as DnD5eCharacter).currency;
-      filtered.attunementItems = (character as DnD5eCharacter).attunementItems;
-    } else {
-      filtered.wealth = (character as LegacyDarkHeresyExport).wealth;
-    }
-  }
-
-  if (config.includeSpells && character.gameSystem === 'Dungeons & Dragons') {
-    const dnd = character as DnD5eCharacter;
-    filtered.spells = dnd.spells;
-    filtered.spellSlots = dnd.spellSlots;
-    filtered.spellcastingAbility = dnd.spellcastingAbility;
-    filtered.spellAttackBonus = dnd.spellAttackBonus;
-    filtered.spellSaveDifficulty = dnd.spellSaveDifficulty;
-    filtered.spellcastingEntries = dnd.spellcastingEntries;
-  }
-
-  if (config.includeNarrative) {
-    filtered.backstory = character.backstory;
-    filtered.notes = character.notes;
-    const src = character as any;
-    if (src.otherProficienciesAndLanguages !== undefined)
-      filtered.otherProficienciesAndLanguages =
-        src.otherProficienciesAndLanguages;
-    if (src.personalityTraits !== undefined)
-      filtered.personalityTraits = src.personalityTraits;
-    if (src.ideals !== undefined) filtered.ideals = src.ideals;
-    if (src.bonds !== undefined) filtered.bonds = src.bonds;
-    if (src.flaws !== undefined) filtered.flaws = src.flaws;
-    if (src.featuresAndTraits !== undefined)
-      filtered.featuresAndTraits = src.featuresAndTraits;
-  }
-
-  if (config.includeProgression) {
-    if (character.gameSystem === 'Dungeons & Dragons') {
-      const dnd = character as DnD5eCharacter;
-      filtered.level = dnd.level;
-      filtered.experiencePoints = dnd.experiencePoints;
-      filtered.isMulticlass = dnd.isMulticlass;
-      filtered.multiclasses = dnd.multiclasses;
-      filtered.divineBoons = dnd.divineBoons;
-      filtered.allowDivineBoonsBeforeLevel20 =
-        dnd.allowDivineBoonsBeforeLevel20;
-      filtered.inspiration = dnd.inspiration;
-      filtered.allowInspirationHomeRule = dnd.allowInspirationHomeRule;
-    } else {
-      const dh = character as LegacyDarkHeresyExport;
-      filtered.experience = dh.experience;
-      filtered.totalExpSpent = dh.totalExpSpent;
-      filtered.alternatePath = dh.alternatePath;
-      filtered.advancedPath = dh.advancedPath;
-    }
-  }
-
-  if (
-    config.includeCompanions &&
-    character.gameSystem === 'Dungeons & Dragons'
-  ) {
-    filtered.companions = (character as DnD5eCharacter).companions;
-  }
-
-  if (config.includeQuestLog) filtered.questLog = character.questLog;
-  if (config.includeCustomHouseRules)
-    filtered.customHouseRules = character.customHouseRules;
-
-  return filtered;
+  const fields = gameModule.export.toPortableJson(normalized, config);
+  return {
+    id: normalized.id,
+    gameSystem: normalized.gameSystem,
+    systemId: normalized.systemId ?? gameModule.id,
+    ...(normalized.schemaVersion !== undefined
+      ? { schemaVersion: normalized.schemaVersion }
+      : {}),
+    ...fields,
+  } as unknown as Partial<Character>;
 };
 
 function downloadJsonFile(data: unknown, filename: string): void {
@@ -729,200 +607,218 @@ export const mergeImportedData = (
   importedData: ExportData,
   importConfig: ExportConfig,
 ): Character => {
-  const merged = { ...targetCharacter } as any;
-  const source = importedData.character as any;
+  const target = normalizeCharacterRecord(
+    targetCharacter as unknown as Record<string, unknown>,
+  ).character;
+  const source = normalizeCharacterRecord(
+    (importedData.character ?? {}) as unknown as Record<string, unknown>,
+  ).character as any;
+  const merged = { ...(target as any) } as any;
+  const targetSystemId = resolveCharacterSystemId(target);
+  const sourceSystemId = resolveCharacterSystemId(source);
+
+  if (sourceSystemId && targetSystemId && sourceSystemId !== targetSystemId) {
+    throw new Error(
+      'Нельзя слить лист другой редакции в существующий персонаж: создайте нового.',
+    );
+  }
+
+  const isDnd = targetSystemId === 'dnd5e';
+  const isDh1 = targetSystemId === 'dh1';
+  const isDh2 = targetSystemId === 'dh2';
 
   if (importConfig.includeBasicInfo) {
     if (source.name !== undefined) merged.name = source.name;
-    if (source.characterClass !== undefined)
+    if (source.characterClass !== undefined) {
       merged.characterClass = source.characterClass;
-    if (merged.gameSystem === 'Dungeons & Dragons') {
-      if (source.race !== undefined) merged.race = source.race;
-      if (source.background !== undefined)
-        merged.background = source.background;
-      if (source.alignment !== undefined) merged.alignment = source.alignment;
-      if (source.age !== undefined) merged.age = source.age;
-      if (source.height !== undefined) merged.height = source.height;
-      if (source.weight !== undefined) merged.weight = source.weight;
-      if (source.eyes !== undefined) merged.eyes = source.eyes;
-      if (source.skin !== undefined) merged.skin = source.skin;
-      if (source.hair !== undefined) merged.hair = source.hair;
-      if (source.proficiencyBonus !== undefined)
-        merged.proficiencyBonus = source.proficiencyBonus;
+    }
+    if (isDnd) {
+      for (const key of [
+        'race',
+        'background',
+        'alignment',
+        'age',
+        'height',
+        'weight',
+        'eyes',
+        'skin',
+        'hair',
+        'proficiencyBonus',
+      ]) {
+        if (source[key] !== undefined) merged[key] = source[key];
+      }
     } else {
-      if (source.homeWorld !== undefined) merged.homeWorld = source.homeWorld;
-      if (source.worldVariant !== undefined)
-        merged.worldVariant = source.worldVariant;
-      if (source.careerPath !== undefined)
-        merged.careerPath = source.careerPath;
-      if (source.rank !== undefined) merged.rank = source.rank;
-      if (source.divination !== undefined)
-        merged.divination = source.divination;
-      if (source.divinationEffect !== undefined)
-        merged.divinationEffect = source.divinationEffect;
-      if (source.quirk !== undefined) merged.quirk = source.quirk;
-      if (source.height !== undefined) merged.height = source.height;
-      if (source.weight !== undefined) merged.weight = source.weight;
-      if (source.age !== undefined) merged.age = source.age;
-      if (source.skinColor !== undefined) merged.skinColor = source.skinColor;
-      if (source.hairColor !== undefined) merged.hairColor = source.hairColor;
-      if (source.eyeColor !== undefined) merged.eyeColor = source.eyeColor;
-      if (source.edition !== undefined) merged.edition = source.edition;
+      for (const key of [
+        'homeWorld',
+        'worldVariant',
+        'careerPath',
+        'rank',
+        'divination',
+        'divinationEffect',
+        'quirk',
+        'height',
+        'weight',
+        'age',
+        'skinColor',
+        'hairColor',
+        'eyeColor',
+      ]) {
+        if (source[key] !== undefined) merged[key] = source[key];
+      }
     }
   }
 
   if (importConfig.includeStats) {
-    if (source.stats) merged.stats = source.stats;
+    if (source.stats) {
+      const stats = { ...source.stats };
+      // Чужие редакции не протекают: dh1 без influence, dh2 — с ним.
+      if (isDh1) delete stats.influence;
+      if (isDh2) stats.influence = stats.influence ?? 30;
+      merged.stats = { ...merged.stats, ...stats };
+    }
     if (source.statNotes) merged.statNotes = source.statNotes;
-    if (merged.gameSystem === 'Dark Heresy' && source.statUpgrades)
+    if ((isDh1 || isDh2) && source.statUpgrades) {
       merged.statUpgrades = source.statUpgrades;
-  }
-
-  if (importConfig.includeCombat) {
-    if (merged.gameSystem === 'Dungeons & Dragons') {
-      if (source.armorClass !== undefined)
-        merged.armorClass = source.armorClass;
-      if (source.speed !== undefined) merged.speed = source.speed;
-      if (source.hitPoints)
-        merged.hitPoints = { ...merged.hitPoints, ...source.hitPoints };
-      if (source.hpTracking !== undefined)
-        merged.hpTracking = source.hpTracking;
-      if (source.hitPointsNotes !== undefined)
-        merged.hitPointsNotes = source.hitPointsNotes;
-      if (source.temporaryHitPoints !== undefined)
-        merged.temporaryHitPoints = source.temporaryHitPoints;
-      if (source.hitDice !== undefined) merged.hitDice = source.hitDice;
-      if (source.hitDiceUsed)
-        merged.hitDiceUsed = { ...merged.hitDiceUsed, ...source.hitDiceUsed };
-      if (source.deathSaves)
-        merged.deathSaves = { ...merged.deathSaves, ...source.deathSaves };
-      if (source.exhaustion !== undefined)
-        merged.exhaustion = source.exhaustion;
-      if (source.savingThrows) merged.savingThrows = source.savingThrows;
-      if (source.skills) merged.skills = source.skills;
-      if (source.attacks) merged.attacks = source.attacks;
-      if (source.combatResources)
-        merged.combatResources = source.combatResources;
-    } else {
-      if (source.wounds) merged.wounds = { ...merged.wounds, ...source.wounds };
-      if (source.fatePoints)
-        merged.fatePoints = { ...merged.fatePoints, ...source.fatePoints };
-      if (source.insanityPoints)
-        merged.insanityPoints = {
-          ...merged.insanityPoints,
-          ...source.insanityPoints,
-        };
-      if (source.corruptionPoints)
-        merged.corruptionPoints = {
-          ...merged.corruptionPoints,
-          ...source.corruptionPoints,
-        };
-      if (source.movement)
-        merged.movement = { ...merged.movement, ...source.movement };
-      if (source.fatigue1st)
-        merged.fatigue1st = { ...merged.fatigue1st, ...source.fatigue1st };
-      if (source.fatigue2nd)
-        merged.fatigue2nd = { ...merged.fatigue2nd, ...source.fatigue2nd };
-      if (source.criticalConditions !== undefined)
-        merged.criticalConditions = source.criticalConditions;
-      if (source.customResources !== undefined)
-        merged.customResources = source.customResources;
-      if (source.skills) merged.skills = source.skills;
-      if (source.talents) merged.talents = source.talents;
     }
   }
 
-  if (importConfig.includeEquipment) {
-    if (source.equipment) merged.equipment = source.equipment;
+  if (importConfig.includeCombat) {
+    if (isDnd) {
+      for (const key of [
+        'armorClass',
+        'speed',
+        'hpTracking',
+        'hitPointsNotes',
+        'temporaryHitPoints',
+        'hitDice',
+        'exhaustion',
+        'savingThrows',
+        'skills',
+        'attacks',
+        'combatResources',
+      ]) {
+        if (source[key] !== undefined) merged[key] = source[key];
+      }
+      if (source.hitPoints) {
+        merged.hitPoints = { ...merged.hitPoints, ...source.hitPoints };
+      }
+      if (source.hitDiceUsed) {
+        merged.hitDiceUsed = { ...merged.hitDiceUsed, ...source.hitDiceUsed };
+      }
+      if (source.deathSaves) {
+        merged.deathSaves = { ...merged.deathSaves, ...source.deathSaves };
+      }
+    } else {
+      for (const key of [
+        'wounds',
+        'fatePoints',
+        'insanityPoints',
+        'corruptionPoints',
+        'movement',
+        'criticalConditions',
+        'customResources',
+        'skills',
+        'talents',
+      ]) {
+        const value = source[key];
+        if (value === undefined) continue;
+        merged[key] =
+          value && typeof value === 'object' && !Array.isArray(value)
+            ? { ...(merged[key] || {}), ...value }
+            : value;
+      }
+      // Усталость — только существующее у редакции поле.
+      if (isDh1 && source.fatigue1st && merged.fatigue1st !== undefined) {
+        merged.fatigue1st = { ...merged.fatigue1st, ...source.fatigue1st };
+      }
+      if (isDh2 && source.fatigue2nd && merged.fatigue2nd !== undefined) {
+        merged.fatigue2nd = { ...merged.fatigue2nd, ...source.fatigue2nd };
+      }
+    }
+  }
+
+  if (importConfig.includeEquipment && source.equipment) {
+    merged.equipment = source.equipment;
   }
 
   if (importConfig.includeInventory) {
     if (source.inventory) merged.inventory = source.inventory;
-    if (merged.gameSystem === 'Dungeons & Dragons') {
-      if (source.currency)
+    if (isDnd) {
+      if (source.currency) {
         merged.currency = { ...merged.currency, ...source.currency };
-      if (source.attunementItems !== undefined)
+      }
+      if (source.attunementItems !== undefined) {
         merged.attunementItems = source.attunementItems;
-    } else {
-      if (source.wealth) merged.wealth = { ...merged.wealth, ...source.wealth };
+      }
+    } else if (source.wealth) {
+      merged.wealth = { ...merged.wealth, ...source.wealth };
     }
   }
 
-  if (
-    importConfig.includeSpells &&
-    merged.gameSystem === 'Dungeons & Dragons'
-  ) {
-    if (source.spells !== undefined) merged.spells = source.spells;
-    if (source.spellSlots !== undefined) merged.spellSlots = source.spellSlots;
-    if (source.spellcastingAbility !== undefined)
-      merged.spellcastingAbility = source.spellcastingAbility;
-    if (source.spellAttackBonus !== undefined)
-      merged.spellAttackBonus = source.spellAttackBonus;
-    if (source.spellSaveDifficulty !== undefined)
-      merged.spellSaveDifficulty = source.spellSaveDifficulty;
-    if (source.spellcastingEntries !== undefined)
-      merged.spellcastingEntries = source.spellcastingEntries;
+  if (importConfig.includeSpells && isDnd) {
+    for (const key of [
+      'spells',
+      'spellSlots',
+      'spellcastingAbility',
+      'spellAttackBonus',
+      'spellSaveDifficulty',
+      'spellcastingEntries',
+    ]) {
+      if (source[key] !== undefined) merged[key] = source[key];
+    }
   }
 
   if (importConfig.includeNarrative) {
-    if (source.backstory !== undefined) merged.backstory = source.backstory;
-    if (source.notes !== undefined) merged.notes = source.notes;
-    if (source.otherProficienciesAndLanguages !== undefined)
-      merged.otherProficienciesAndLanguages =
-        source.otherProficienciesAndLanguages;
-    if (source.personalityTraits !== undefined)
-      merged.personalityTraits = source.personalityTraits;
-    if (source.ideals !== undefined) merged.ideals = source.ideals;
-    if (source.bonds !== undefined) merged.bonds = source.bonds;
-    if (source.flaws !== undefined) merged.flaws = source.flaws;
-    if (source.featuresAndTraits !== undefined)
-      merged.featuresAndTraits = source.featuresAndTraits;
-  }
-
-  if (importConfig.includeProgression) {
-    if (merged.gameSystem === 'Dungeons & Dragons') {
-      if (source.level !== undefined) merged.level = source.level;
-      if (source.experiencePoints !== undefined)
-        merged.experiencePoints = source.experiencePoints;
-      if (source.isMulticlass !== undefined)
-        merged.isMulticlass = source.isMulticlass;
-      if (source.multiclasses !== undefined)
-        merged.multiclasses = source.multiclasses;
-      if (source.divineBoons !== undefined)
-        merged.divineBoons = source.divineBoons;
-      if (source.allowDivineBoonsBeforeLevel20 !== undefined)
-        merged.allowDivineBoonsBeforeLevel20 =
-          source.allowDivineBoonsBeforeLevel20;
-      if (source.inspiration !== undefined)
-        merged.inspiration = source.inspiration;
-      if (source.allowInspirationHomeRule !== undefined)
-        merged.allowInspirationHomeRule = source.allowInspirationHomeRule;
-    } else {
-      if (source.experience !== undefined)
-        merged.experience = source.experience;
-      if (source.totalExpSpent !== undefined)
-        merged.totalExpSpent = source.totalExpSpent;
-      if (source.alternatePath !== undefined)
-        merged.alternatePath = source.alternatePath;
-      if (source.advancedPath !== undefined)
-        merged.advancedPath = source.advancedPath;
+    for (const key of [
+      'backstory',
+      'notes',
+      'otherProficienciesAndLanguages',
+      'personalityTraits',
+      'ideals',
+      'bonds',
+      'flaws',
+      'featuresAndTraits',
+    ]) {
+      if (source[key] !== undefined) merged[key] = source[key];
     }
   }
 
-  if (
-    importConfig.includeCompanions &&
-    merged.gameSystem === 'Dungeons & Dragons'
-  ) {
-    if (source.companions !== undefined) merged.companions = source.companions;
+  if (importConfig.includeProgression) {
+    if (isDnd) {
+      for (const key of [
+        'level',
+        'experiencePoints',
+        'isMulticlass',
+        'multiclasses',
+        'divineBoons',
+        'allowDivineBoonsBeforeLevel20',
+        'inspiration',
+        'allowInspirationHomeRule',
+      ]) {
+        if (source[key] !== undefined) merged[key] = source[key];
+      }
+    } else {
+      for (const key of [
+        'experience',
+        'totalExpSpent',
+        'alternatePath',
+        'advancedPath',
+      ]) {
+        if (source[key] !== undefined) merged[key] = source[key];
+      }
+    }
   }
 
-  if (importConfig.includeQuestLog) {
-    if (source.questLog) merged.questLog = source.questLog;
+  if (importConfig.includeCompanions && isDnd && source.companions) {
+    merged.companions = source.companions;
   }
 
-  if (importConfig.includeCustomHouseRules) {
-    if (source.customHouseRules)
-      merged.customHouseRules = source.customHouseRules;
+  if (importConfig.includeQuestLog && source.questLog) {
+    merged.questLog = source.questLog;
+  }
+
+  if (importConfig.includeCustomHouseRules && source.customHouseRules) {
+    merged.customHouseRules = source.customHouseRules;
   }
 
   return merged as Character;
@@ -1705,13 +1601,16 @@ export const exportCharacterToExcel = (
   now = new Date(),
 ): { success: boolean; filename?: string; error?: string } => {
   try {
-    const errors = validateCharacterPayload(character, 0);
+    const normalized = normalizeCharacterRecord(
+      character as unknown as Record<string, unknown>,
+    ).character;
+    const errors = validateCharacterPayload(normalized, 0);
     if (errors.length > 0) {
       return { success: false, error: `Экспорт отменён: ${errors.join(' ')}` };
     }
 
     const worksheet = XLSX.utils.aoa_to_sheet(
-      buildCharacterSheetRows(character, now),
+      buildCharacterSheetRows(normalized, now),
     );
     worksheet['!cols'] = EXCEL_COLUMNS;
 

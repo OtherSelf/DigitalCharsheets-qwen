@@ -1,6 +1,6 @@
 import { CHARACTER_SCHEMA_VERSION } from '@/lib/character-version';
 
-import { toPortableRecord } from '../shared/export';
+import { buildDarkHeresyPortableJson } from '../dh-shared/export';
 import type { GameModule } from '../types';
 import { createDh1Defaults } from './defaults';
 import { createDh1Demo } from './demo';
@@ -41,7 +41,8 @@ export const dh1Module: GameModule<DH1Character> = {
     loadSheet: () => import('./sheet').then((m) => ({ default: m.Dh1Sheet })),
   },
   export: {
-    toPortableJson: (character) => toPortableRecord(character),
+    toPortableJson: (character, config) =>
+      buildDarkHeresyPortableJson(character, config),
     buildExcelSections: () => {
       // LANDMARK: EXCEL_SECTIONS — перенос секций Excel на этапе 5.
       throw new Error('dh1: секции Excel ещё не перенесены в модуль (этап 5)');
