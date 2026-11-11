@@ -80,7 +80,7 @@ test.describe('гостевая шапка (главная и /login)', () => {
       page.getByRole('link', { name: 'Начать создание персонажа' }),
     ).toBeVisible();
     await expect(
-      page.getByRole('button', { name: 'Предпросмотр персонажа D&D 5e' }),
+      page.getByRole('button', { name: 'Dungeons & Dragons · 5-я редакция' }),
     ).toBeVisible();
 
     const themeBoxAfter = await themeToggle.boundingBox();
