@@ -234,8 +234,8 @@ test.describe('редактирование Dark Heresy', () => {
       await startEditing(progression);
       await screenshotElement(progression, 'sheet-dh-edit-progression-en.png');
 
-      // Характеристики зависят от редакции: в 1-й (дефолт для персонажей без
-      // поля edition) Influence скрыт — 9 полей, во 2-й появляется 10-е.
+      // Фикстура — dh1: девять характеристик, Influence отсутствует.
+      // Переключателя редакций больше нет: редакция задаётся модулем.
       const characteristics = page
         .locator('#characteristics-card:visible')
         .first();
@@ -248,23 +248,6 @@ test.describe('редактирование Dark Heresy', () => {
         characteristics,
         'sheet-dh-edit-characteristics-1st-en.png',
       );
-
-      await page.getByTestId('dh-edition-select').click();
-      await page.getByRole('option', { name: '2nd Edition' }).click();
-      await expect(statInputs).toHaveCount(10);
-      // Данные Influence не теряются при смене редакции на лету.
-      await expect(statInputs.nth(9)).toHaveValue('28');
-      await screenshotElement(
-        characteristics,
-        'sheet-dh-edit-characteristics-2nd-en.png',
-      );
-
-      // Фикстура общая для всех тестов (один сервер + один набор данных),
-      // поэтому редакцию возвращаем обратно и ждём, пока уйдёт PUT.
-      await page.getByTestId('dh-edition-select').click();
-      await page.getByRole('option', { name: '1st Edition' }).click();
-      await expect(statInputs).toHaveCount(9);
-      await page.waitForTimeout(700);
     },
   );
 

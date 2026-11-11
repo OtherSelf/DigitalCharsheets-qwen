@@ -59,7 +59,7 @@ async function fetchCharacters(page: Page): Promise<any[]> {
   return (await res.json()) as any[];
 }
 
-/** Путь реального пользователя: дашборд → «Create New Character» → выбор системы. */
+/** Путь реального пользователя: дашборд → «Create New Character» → игра → редакция. */
 async function openCreationForm(
   page: Page,
   system: 'Dungeons & Dragons' | 'Dark Heresy',
@@ -67,17 +67,14 @@ async function openCreationForm(
   await page.getByRole('link', { name: 'Create New Character' }).click();
   await page.waitForURL(/\/new$/, { timeout: 15_000 });
 
-  // На странице выбора системы это единственный combobox.
-  await page.getByRole('combobox').first().click();
-  await page
-    .getByRole('option', {
-      name:
-        system === 'Dungeons & Dragons'
-          ? 'Dungeons & Dragons'
-          : 'Warhammer 40k: Dark Heresy',
-      exact: true,
-    })
-    .click();
+  if (system === 'Dungeons & Dragons') {
+    await page.getByTestId('create-game-dnd').click();
+    await page.getByTestId('create-edition-dnd5e').click();
+  } else {
+    await page.getByTestId('create-game-darkHeresy').click();
+    // Старый флоу создавал DH без edition — это 1-я редакция (📌 D3).
+    await page.getByTestId('create-edition-dh1').click();
+  }
 
   await expect(
     page.getByRole('button', { name: 'Create Character' }),
@@ -243,14 +240,18 @@ test.describe('создание персонажа — Dark Heresy', () => {
     expect(created).toMatchObject({
       id,
       name,
+      systemId: 'dh1',
       gameSystem: 'Dark Heresy',
       characterClass: 'Adept',
       careerPath: 'Adept',
       homeWorld: 'Hive World',
-      // Дефолты формы DH.
+      // Дефолты формы DH1.
       wounds: { current: 10, max: 10 },
       fatePoints: { current: 1, max: 1 },
+      fatigue1st: { current: 0 },
     });
+    expect(created.edition, 'поля edition больше нет').toBeUndefined();
+    expect(created.fatigue2nd, 'у dh1 нет второй усталости').toBeUndefined();
     expect(created.stats).toMatchObject({
       weaponSkill: 30,
       ballisticSkill: 30,
@@ -261,10 +262,13 @@ test.describe('создание персонажа — Dark Heresy', () => {
       perception: 30,
       willpower: 30,
       fellowship: 30,
-      influence: 30,
     });
+    expect(
+      created.stats.influence,
+      'influence есть только у dh2',
+    ).toBeUndefined();
     expect(created.divination, 'пророчество выбрано').toBeTruthy();
-    expect(Object.keys(created.statUpgrades)).toHaveLength(10);
+    expect(Object.keys(created.statUpgrades)).toHaveLength(9);
 
     // Персонаж виден в дашборде (карточка листа).
     await page.goto('/');
@@ -336,10 +340,8 @@ async function createGuestDraft(page: Page, name: string): Promise<void> {
   await page.goto('/new/manual', { waitUntil: 'domcontentloaded' });
   await page.waitForLoadState('networkidle');
 
-  await page.getByRole('combobox').first().click();
-  await page
-    .getByRole('option', { name: 'Dungeons & Dragons', exact: true })
-    .click();
+  await page.getByTestId('create-game-dnd').click();
+  await page.getByTestId('create-edition-dnd5e').click();
   await page.getByLabel('Character Name', { exact: true }).fill(name);
   await page.getByLabel('Class', { exact: true }).click();
   await page.getByRole('option', { name: 'Wizard', exact: true }).click();

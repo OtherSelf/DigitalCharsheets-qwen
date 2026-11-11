@@ -10,6 +10,7 @@ deploying lives here, one topic per page.
 | File | What it covers |
 | --- | --- |
 | [architecture.md](architecture.md) | Stack, application layout, auth/session flow, startup checks, client state |
+| [game-modules.md](game-modules.md) | How a game/edition module is added, the registry contract and module layout |
 | [data-storage.md](data-storage.md) | On-disk data layout, user schema, locks, atomic writes, backups |
 | [api.md](api.md) | HTTP API, OpenAPI/Scalar docs, auth, endpoint map |
 | [admin.md](admin.md) | `/admin`, roles, first administrator, profile checks, block/delete rules |

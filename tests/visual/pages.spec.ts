@@ -284,7 +284,7 @@ test.describe('общие страницы', () => {
       page.getByRole('heading', { name: 'Try Before You Commit' }),
     ).toBeVisible();
     await expect(
-      page.getByRole('button', { name: 'Preview D&D 5e Character' }),
+      page.getByRole('button', { name: 'Dungeons & Dragons · 5th Edition' }),
     ).toBeVisible();
     await expect(
       page
@@ -304,7 +304,7 @@ test.describe('общие страницы', () => {
       page.getByRole('heading', { name: 'Попробуйте без регистрации' }),
     ).toBeVisible();
     await expect(
-      page.getByRole('button', { name: 'Предпросмотр персонажа D&D 5e' }),
+      page.getByRole('button', { name: 'Dungeons & Dragons · 5-я редакция' }),
     ).toBeVisible();
     await expect(
       page
@@ -419,8 +419,8 @@ test.describe('общие страницы', () => {
     await prepare(context);
     await openApp(page, '/new');
 
-    await page.getByRole('combobox').click();
-    await page.getByRole('option').first().click();
+    await page.getByTestId('create-game-dnd').click();
+    await page.getByTestId('create-edition-dnd5e').click();
     await expect(
       page.getByRole('button', { name: 'Create Character' }),
     ).toBeVisible();
@@ -433,8 +433,8 @@ test.describe('общие страницы', () => {
     await prepare(context, { language: 'ru' });
     await openApp(page, '/new');
 
-    await page.getByRole('combobox').click();
-    await page.getByRole('option').first().click();
+    await page.getByTestId('create-game-dnd').click();
+    await page.getByTestId('create-edition-dnd5e').click();
     await expect(page.locator('form').first()).toBeVisible();
     await page.locator('form').first().scrollIntoViewIfNeeded();
 
@@ -445,8 +445,8 @@ test.describe('общие страницы', () => {
     await prepare(context);
     await openApp(page, '/new');
 
-    await page.getByRole('combobox').click();
-    await page.getByRole('option').nth(1).click();
+    await page.getByTestId('create-game-darkHeresy').click();
+    await page.getByTestId('create-edition-dh1').click();
     await expect(page.getByText('Home World').first()).toBeVisible();
     await page.locator('form').first().scrollIntoViewIfNeeded();
 
@@ -457,8 +457,8 @@ test.describe('общие страницы', () => {
     await prepare(context, { language: 'ru' });
     await openApp(page, '/new');
 
-    await page.getByRole('combobox').click();
-    await page.getByRole('option').nth(1).click();
+    await page.getByTestId('create-game-darkHeresy').click();
+    await page.getByTestId('create-edition-dh1').click();
     await expect(page.locator('form').first()).toBeVisible();
     await page.locator('form').first().scrollIntoViewIfNeeded();
 
@@ -546,18 +546,24 @@ test.describe('демо и настройки профиля', () => {
     await expect(page.getByText('Create Your Own Character')).toBeVisible();
 
     await page
-      .getByRole('button', { name: 'Preview D&D 5e Character' })
+      .getByRole('button', { name: 'Dungeons & Dragons · 5th Edition' })
       .click();
     await expect(page.getByText('Demo Mode Active')).toBeVisible();
     await expect(page.getByText('Thorin Ironforge').first()).toBeVisible();
     await screenshotPage(page, 'demo-dnd-en.png');
 
     await page
-      .getByRole('button', { name: 'Preview Dark Heresy Character' })
+      .getByRole('button', { name: 'Dark Heresy · 1st Edition' })
       .click();
     await expect(page.getByText('Demo Mode Active')).toBeVisible();
     await expect(page.getByText('Inquisitor Vane').first()).toBeVisible();
     await screenshotPage(page, 'demo-dh-en.png');
+
+    await page
+      .getByRole('button', { name: 'Dark Heresy · 2nd Edition' })
+      .click();
+    await expect(page.getByText('Interrogator Vane').first()).toBeVisible();
+    await screenshotPage(page, 'demo-dh2-en.png');
   });
 
   test('demo — превью персонажей (ru)', async ({ page, context }) => {

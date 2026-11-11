@@ -10,6 +10,11 @@ infrastructure you control. It has no database and no
 external backend: user profiles and character sheets are JSON files in a data
 directory, and the same Node process serves both the UI and the API.
 
+Games and editions are **modules**: every sheet type, form, validator, demo,
+translations and export adapter lives under `src/games/<systemId>/`, and the
+core works through a single registry. Adding a game does not touch the core.
+See [game-modules.md](game-modules.md).
+
 The original prototype was scaffolded in Firebase Studio (see
 [blueprint.md](blueprint.md)); the current version is a Next.js App Router
 rewrite finished with Qwen assistance.
@@ -35,7 +40,9 @@ src/
     admin/             Admin panel page
   components/          UI (sheet sections, admin dialogs, shadcn primitives)
   context/             LocalAuthProvider, CharacterProvider, language
-  lib/                 Server auth/session, storage, export, OpenAPI, schema
+  games/               Game modules (registry, contract, dnd5e/dh1/dh2)
+  lib/                 Server auth/session, storage, export, OpenAPI, schema,
+                       game catalog and module access
   instrumentation.ts   Runs startup maintenance when the server starts
   hooks/               UI helpers (toasts, mobile, display settings)
 tests/
@@ -54,11 +61,14 @@ Browser
 Next.js route handler
   │  getSessionUid(request)  → verifies HMAC + expiry, reads user.json
   │  requireAdmin(request)   → additionally checks role === "admin"
+  │  requireModuleAccess()   → role × game catalog visibility
   ▼
 src/lib/* (server-only)
-  │  data-dir.ts, data-lock.ts, fs-atomic.ts, server-storage.ts, server-auth.ts
+  │  data-dir.ts, data-lock.ts, fs-atomic.ts, server-storage.ts, server-auth.ts,
+  │  game-catalog.ts, module-access.ts
   ▼
 <data-dir>/users/<uid>/…   (JSON files)
+<data-dir>/settings/game-catalog.json
 ```
 
 - UI pages are mostly client components; they fetch the API with the cookie.
@@ -79,10 +89,13 @@ src/lib/* (server-only)
 - `getSessionUid()` also checks that the profile still exists and is not blocked.
   Blocking a user therefore invalidates their existing sessions on the next
   request.
-- Roles live in `user.json` (`role: "admin" | "user"`). `requireAdmin()` is the
-  only server-side gate for `/api/admin/*`.
+- Roles live in `user.json` (`role: "admin" | "tester" | "user"`).
+  `requireAdmin()` is the only server-side gate for `/api/admin/*`; `tester`
+  behaves like `user` plus it may create `test` editions. The edition
+  visibility matrix is enforced by `requireModuleAccess()` on creation.
 - All API routes that touch user data take the uid from the session, never from
-  the query or body.
+  the query or body. Creating a sheet additionally checks that the role may see
+  the requested edition (403 otherwise).
 
 See [admin.md](admin.md) for the admin invariants and
 [data-storage.md](data-storage.md) for the file layout.
@@ -92,13 +105,15 @@ See [admin.md](admin.md) for the admin invariants and
 `src/instrumentation.ts` runs once per Node server process (dev and production)
 and calls `src/lib/startup.ts`:
 
-1. **Profile check** — every `users/<uid>/user.json` is normalized to schema v3:
+1. **Profile check** — every `users/<uid>/user.json` is normalized to schema v4:
    missing `schemaVersion`, `role`, `isBlocked`, `createdAt`/`updatedAt` are
-   filled in; existing values are preserved. Broken profiles are reported but do
-   not abort startup.
-2. **Login index rebuild** — `index/logins.json` is derived and can be
+   filled in; existing values (including `tester`) are preserved.
+2. **Character sheets** — every `users/*/characters/*.json` is normalized to
+   sheet schema v2 (`systemId`, dh1/dh2 split, divination IDs, hybrid values to
+   `notes`). Files newer than v2 are left untouched.
+3. **Login index rebuild** — `index/logins.json` is derived and can be
    regenerated from the profiles.
-3. **Administrator bootstrap** — if no active administrator exists, a service
+4. **Administrator bootstrap** — if no active administrator exists, a service
    account is created with a generated password (console + data-dir file).
 
 The startup work is best-effort: a read-only or partially broken data directory
@@ -114,9 +129,13 @@ does not prevent the server from starting.
   late writes using `__page`/`__seq` tokens.
 - UI language (`en`/`ru`) and theme are stored in localStorage; sheets support a
   compact view and independent text/UI scaling.
+- `GET /api/games` returns the games/editions visible to the current role and
+  the optional site-title override; the creation wizard and `/demo` render from
+  it. The header caches the title for the session.
 
 ## Related
 
+- [game-modules.md](game-modules.md) — how a game/edition is added
 - [data-storage.md](data-storage.md) — concrete files and schemas
 - [api.md](api.md) — endpoints and OpenAPI docs
 - [testing.md](testing.md) — how the behaviour is verified

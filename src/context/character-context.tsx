@@ -66,7 +66,7 @@ interface CharacterContextType {
    * на страницу и при возврате фокуса в окно). Пропускает обновление, если
    * есть несохранённые правки или очередь сохранений.
    */
-  refreshCharacters: () => Promise<void>;
+  refreshCharacters: (options?: { force?: boolean }) => Promise<void>;
   hideNotes: boolean;
   setHideNotes: (val: boolean) => void;
   showEditButtons: boolean;
@@ -229,31 +229,39 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
    * очередь сохранений — иначе перезапись состояния могла бы откатить
    * правки, которые ещё летят на сервер.
    */
-  const refreshCharacters = useCallback(async () => {
-    if (!userRef.current) return;
-    if (hasUnsavedChangesRef.current) return;
-    if (saveQueueRef.current?.hasPending()) return;
-    if (refreshInFlightRef.current) return;
-    // Только что грузились (например, bootstrap при открытии страницы) —
-    // второй GET не нужен. Небольшой порог, чтобы не дублировать запрос
-    // при монтировании, но не мешать «освежению» по фокусу.
-    if (Date.now() - lastCharactersLoadRef.current < 300) return;
+  const refreshCharacters = useCallback(
+    async (options?: { force?: boolean }) => {
+      if (!userRef.current) return;
+      if (hasUnsavedChangesRef.current) return;
+      if (saveQueueRef.current?.hasPending()) return;
+      if (refreshInFlightRef.current) return;
+      // Только что грузились (например, bootstrap при открытии страницы) —
+      // второй GET не нужен. Небольшой порог, чтобы не дублировать запрос
+      // при монтировании, но не мешать «освежению» по фокусу.
+      // Возврат на дашборд передаёт `force`: bootstrap мог завершиться уже
+      // после перехода и обновить окно дедупликации, из-за чего реальный
+      // свежий GET терялся (персонаж из другой вкладки не появлялся).
+      if (!options?.force && Date.now() - lastCharactersLoadRef.current < 300) {
+        return;
+      }
 
-    refreshInFlightRef.current = true;
-    try {
-      const res = await fetch('/api/characters', { cache: 'no-store' });
-      // 401 не разлогиниваем отсюда: сессией владеет bootstrap-эффект.
-      if (!res.ok) return;
-      const data = (await res.json()) as Character[];
-      if (!Array.isArray(data)) return;
-      applyCharacters(() => data);
-      lastCharactersLoadRef.current = Date.now();
-    } catch (error) {
-      console.error('Failed to refresh characters:', error);
-    } finally {
-      refreshInFlightRef.current = false;
-    }
-  }, [applyCharacters]);
+      refreshInFlightRef.current = true;
+      try {
+        const res = await fetch('/api/characters', { cache: 'no-store' });
+        // 401 не разлогиниваем отсюда: сессией владеет bootstrap-эффект.
+        if (!res.ok) return;
+        const data = (await res.json()) as Character[];
+        if (!Array.isArray(data)) return;
+        applyCharacters(() => data);
+        lastCharactersLoadRef.current = Date.now();
+      } catch (error) {
+        console.error('Failed to refresh characters:', error);
+      } finally {
+        refreshInFlightRef.current = false;
+      }
+    },
+    [applyCharacters],
+  );
 
   /** Монотонный номер правки внутри этой загрузки страницы. */
   const nextSeq = useCallback((id: string) => {
@@ -546,7 +554,7 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
    */
   useEffect(() => {
     if (!user || pathname !== '/') return;
-    void refreshCharacters();
+    void refreshCharacters({ force: true });
   }, [pathname, user, refreshCharacters]);
 
   /**

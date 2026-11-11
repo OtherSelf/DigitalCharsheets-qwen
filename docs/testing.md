@@ -27,9 +27,10 @@ npm run test:dev            # dev-proxy hydration + health/version smoke
 - API route handlers are imported and called as ordinary functions with a
   `Request`; no HTTP server is started.
 - Covered areas: auth and profile updates, account deletion, recovery, file
-  storage/locks/atomic writes, export/import, translations parity and
-  hardcoded-UI checks, OpenAPI document and route coverage, admin API and
-  bootstrap, health/version.
+  storage/locks/atomic writes, character schema v2 migration, export/import 3.0
+  (JSON and Excel), the game registry/module contract, game catalog visibility
+  and module-access matrix, translations parity and hardcoded-UI checks,
+  OpenAPI document and route coverage, admin API and bootstrap, health/version.
 - `tests/unit/openapi.test.ts` compares the OpenAPI spec with every
   `src/app/api/**/route.ts`; a new endpoint without documentation fails it.
 
@@ -120,8 +121,8 @@ bash scripts/visual.sh --base-url http://127.0.0.1:3000
 ### Admin screenshots
 
 [`tests/visual/admin.spec.ts`](../tests/visual/admin.spec.ts) covers the user
-list (en/ru), edit dialog, sheet list, block dialog and delete dialog on desktop
-and mobile. It uses three deterministic `visual-admin-*` demo accounts with
+list (en/ru), edit dialog, sheet list, block dialog, delete dialog and the
+Games & editions section on desktop and mobile. It uses three deterministic `visual-admin-*` demo accounts with
 fixed dates/roles/blocks and sheet mtimes, seeded by `scripts/visual.sh` into the
 temporary data directory. When running against an external server
 (`--base-url`) there is no data directory to seed, so only the admin tests are
@@ -132,7 +133,9 @@ The profile dropdown in the header is covered separately by
 user (en/ru) and administrator (with the Administration item), desktop and
 mobile. The same spec covers the Display Settings modal and the dashboard at
 80% UI scale; the theme switcher is in `themes.spec.ts`, and the import dialog
-is in `pages.spec.ts`.
+is in `pages.spec.ts`; the creation wizard (game → edition → form), `/demo`
+with one character per edition, and the dashboard game/edition badges also live
+there.
 
 ## Pre-deploy gate
 
