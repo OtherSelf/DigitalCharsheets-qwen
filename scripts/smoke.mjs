@@ -280,6 +280,38 @@ await check('GET /admin → 200 (страница админки существ�
   );
 });
 
+await check('GET /api/openapi.json → 200 (OpenAPI 3.x)', async () => {
+  const res = await request('/api/openapi.json', { auth: false });
+  assertStatus(res, 200, 'GET /api/openapi.json');
+  const body = assertJson(res, 'GET /api/openapi.json');
+  assert(
+    typeof body.openapi === 'string' && body.openapi.startsWith('3.'),
+    `GET /api/openapi.json: openapi = ${body.openapi}`,
+  );
+  assert(
+    body.paths && body.paths['/api/auth'] && body.paths['/api/auth'].post,
+    'GET /api/openapi.json: нет POST /api/auth',
+  );
+  assert(
+    body.paths['/api/admin/users'] && body.paths['/api/admin/users'].get,
+    'GET /api/openapi.json: нет GET /api/admin/users',
+  );
+  return body.openapi;
+});
+
+await check('GET /api/docs → 200 (Scalar HTML)', async () => {
+  const res = await request('/api/docs', { auth: false });
+  assertStatus(res, 200, 'GET /api/docs');
+  assert(
+    /text\/html/i.test(res.headers.get('content-type') || ''),
+    'GET /api/docs: content-type не text/html',
+  );
+  assert(
+    res.text.replace(/\\\//g, '/').includes('/api/openapi.json'),
+    'GET /api/docs: HTML не ссылается на /api/openapi.json',
+  );
+});
+
 // 2. Аутентификация
 await check('POST /api/auth/exists → свободный логин', async () => {
   const res = await api('/auth/exists', {
