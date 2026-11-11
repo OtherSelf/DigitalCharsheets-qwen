@@ -37,30 +37,30 @@ import {
 import { type Character } from '@/lib/types';
 
 const CLASS_TRANSLATION_KEYS: Record<string, string> = {
-  Artificer: 'classArtificer',
-  Barbarian: 'classBarbarian',
-  Bard: 'classBard',
-  Cleric: 'classCleric',
-  Druid: 'classDruid',
-  Fighter: 'classFighter',
-  Monk: 'classMonk',
-  Paladin: 'classPaladin',
-  Ranger: 'classRanger',
-  Rogue: 'classRogue',
-  Sorcerer: 'classSorcerer',
-  Warlock: 'classWarlock',
-  Wizard: 'classWizard',
+  Artificer: 'dnd.classArtificer',
+  Barbarian: 'dnd.classBarbarian',
+  Bard: 'dnd.classBard',
+  Cleric: 'dnd.classCleric',
+  Druid: 'dnd.classDruid',
+  Fighter: 'dnd.classFighter',
+  Monk: 'dnd.classMonk',
+  Paladin: 'dnd.classPaladin',
+  Ranger: 'dnd.classRanger',
+  Rogue: 'dnd.classRogue',
+  Sorcerer: 'dnd.classSorcerer',
+  Warlock: 'dnd.classWarlock',
+  Wizard: 'dnd.classWizard',
 };
 
 const CAREER_TRANSLATION_KEYS: Record<string, string> = {
-  Adept: 'careerAdept',
-  Arbitrator: 'careerArbitrator',
-  Assassin: 'careerAssassin',
-  Cleric: 'careerCleric',
-  Guardsman: 'careerGuardsman',
-  'Imperial Psyker': 'careerImperialPsyker',
-  Scum: 'careerScum',
-  'Tech-Priest': 'careerTechPriest',
+  Adept: 'dh.careerAdept',
+  Arbitrator: 'dh.careerArbitrator',
+  Assassin: 'dh.careerAssassin',
+  Cleric: 'dh.careerCleric',
+  Guardsman: 'dh.careerGuardsman',
+  'Imperial Psyker': 'dh.careerImperialPsyker',
+  Scum: 'dh.careerScum',
+  'Tech-Priest': 'dh.careerTechPriest',
 };
 
 type CharacterCardProps = {
@@ -83,7 +83,7 @@ export function CharacterCard({ character }: CharacterCardProps) {
     if (!result.success) {
       toast({
         variant: 'destructive',
-        title: t('error'),
+        title: t('common.error'),
         description: result.error || 'Export failed.',
       });
     }
@@ -94,7 +94,7 @@ export function CharacterCard({ character }: CharacterCardProps) {
     if (!result.success) {
       toast({
         variant: 'destructive',
-        title: t('error'),
+        title: t('common.error'),
         description: result.error || 'Export failed.',
       });
     }
@@ -133,7 +133,7 @@ export function CharacterCard({ character }: CharacterCardProps) {
           </div>
           <CardDescription className="mt-0.5 line-clamp-1 text-xs break-words">
             {character.gameSystem === 'Dungeons & Dragons' &&
-              `${t('lvl')}${character.level} `}
+              `${t('dnd.lvl')}${character.level} `}
             {character.gameSystem === 'Dark Heresy' &&
               `${getTranslatedRank()} `}
             {getTranslatedClass()}
@@ -143,8 +143,8 @@ export function CharacterCard({ character }: CharacterCardProps) {
             className="system-badge mt-2 w-fit max-w-full text-xs"
           >
             {character.gameSystem === 'Dungeons & Dragons'
-              ? t('dungeonsAndDragons')
-              : t('darkHeresy')}
+              ? t('common.dungeonsAndDragons')
+              : t('common.darkHeresy')}
           </Badge>
         </div>
         <div className="actions-wrapper flex min-w-0 flex-1 items-center justify-end gap-1 p-2 sm:gap-2">
@@ -153,7 +153,7 @@ export function CharacterCard({ character }: CharacterCardProps) {
               href={`/${character.id}`}
               className="block w-full truncate text-center"
             >
-              {t('view')}
+              {t('common.view')}
             </Link>
           </Button>
           <Button
@@ -161,7 +161,7 @@ export function CharacterCard({ character }: CharacterCardProps) {
             size="icon"
             className="h-8 w-8 shrink-0 sm:h-9 sm:w-9"
             onClick={handleExportJSON}
-            title={t('exportJSON') || 'Export JSON'}
+            title={t('io.exportJSON') || 'Export JSON'}
           >
             <FileJson className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
           </Button>
@@ -170,7 +170,7 @@ export function CharacterCard({ character }: CharacterCardProps) {
             size="icon"
             className="h-8 w-8 shrink-0 sm:h-9 sm:w-9"
             onClick={handleExportExcel}
-            title={t('exportSheet') || 'Export Excel'}
+            title={t('io.exportSheet') || 'Export Excel'}
           >
             <FileDown className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
           </Button>
@@ -190,16 +190,16 @@ export function CharacterCard({ character }: CharacterCardProps) {
               }}
             >
               <AlertDialogHeader>
-                <AlertDialogTitle>{t('confirmDelete')}</AlertDialogTitle>
+                <AlertDialogTitle>{t('common.confirmDelete')}</AlertDialogTitle>
                 <AlertDialogDescription>
-                  {t('deleteWarning')}
+                  {t('common.deleteWarning')}
                   {character.name}.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
+                <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
                 <AlertDialogAction onClick={handleDelete}>
-                  {t('delete')}
+                  {t('common.delete')}
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
@@ -214,29 +214,29 @@ export function CharacterCard({ character }: CharacterCardProps) {
       <CardContent className="flex-grow p-4">
         <Badge variant={badgeVariant} className="mb-2 text-xs sm:text-sm">
           {character.gameSystem === 'Dungeons & Dragons'
-            ? t('dungeonsAndDragons')
-            : t('darkHeresy')}
+            ? t('common.dungeonsAndDragons')
+            : t('common.darkHeresy')}
         </Badge>
         <CardTitle className="font-headline mb-1 text-base break-words sm:text-lg">
           {character.name}
         </CardTitle>
         <CardDescription className="text-xs break-words sm:text-sm">
           {character.gameSystem === 'Dungeons & Dragons' &&
-            `${t('lvl')}${character.level} `}
+            `${t('dnd.lvl')}${character.level} `}
           {character.gameSystem === 'Dark Heresy' && `${getTranslatedRank()} `}
           {getTranslatedClass()}
         </CardDescription>
       </CardContent>
       <CardFooter className="flex items-center justify-between gap-2 p-3 pt-0 sm:p-4">
         <Button asChild className="w-full text-xs sm:text-sm">
-          <Link href={`/${character.id}`}>{t('viewSheet')}</Link>
+          <Link href={`/${character.id}`}>{t('common.viewSheet')}</Link>
         </Button>
         <Button
           variant="outline"
           size="icon"
           className="h-8 w-8 shrink-0 sm:h-9 sm:w-9"
           onClick={handleExportJSON}
-          title={t('exportJSON') || 'Export JSON'}
+          title={t('io.exportJSON') || 'Export JSON'}
         >
           <FileJson className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
         </Button>
@@ -245,7 +245,7 @@ export function CharacterCard({ character }: CharacterCardProps) {
           size="icon"
           className="h-8 w-8 shrink-0 sm:h-9 sm:w-9"
           onClick={handleExportExcel}
-          title={t('exportSheet') || 'Export Excel'}
+          title={t('io.exportSheet') || 'Export Excel'}
         >
           <FileDown className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
         </Button>
@@ -265,16 +265,16 @@ export function CharacterCard({ character }: CharacterCardProps) {
             }}
           >
             <AlertDialogHeader>
-              <AlertDialogTitle>{t('confirmDelete')}</AlertDialogTitle>
+              <AlertDialogTitle>{t('common.confirmDelete')}</AlertDialogTitle>
               <AlertDialogDescription>
-                {t('deleteWarning')}
+                {t('common.deleteWarning')}
                 {character.name}.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
+              <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
               <AlertDialogAction onClick={handleDelete}>
-                {t('delete')}
+                {t('common.delete')}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

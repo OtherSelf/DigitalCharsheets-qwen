@@ -147,7 +147,7 @@ export function DndSavesSkillsSection({
       <Card>
         <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2">
           <CardTitle className="text-muted-foreground text-[10px] font-bold tracking-tight uppercase">
-            {t('proficiencyBonus')}
+            {t('dnd.proficiencyBonus')}
           </CardTitle>
         </CardHeader>
         <CardContent className="p-4 pt-0">
@@ -160,7 +160,7 @@ export function DndSavesSkillsSection({
       <Card id={`${idp}saving-throws-card`}>
         <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2">
           <CardTitle className="text-muted-foreground text-[10px] font-bold tracking-tight uppercase">
-            {t('savingThrows')}
+            {t('dnd.savingThrows')}
           </CardTitle>
           {(showEditButtons || isSavesEditing) && (
             <EditSaveButton
@@ -231,7 +231,7 @@ export function DndSavesSkillsSection({
                               savingThrows: updated,
                             });
                           }}
-                          title={t('clearManualModifier')}
+                          title={t('dnd.clearManualModifier')}
                         >
                           <RefreshCw className="h-3 w-3" />
                         </Button>
@@ -261,7 +261,7 @@ export function DndSavesSkillsSection({
       <Card id={`${idp}skills-card`}>
         <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2">
           <CardTitle className="text-muted-foreground text-[10px] font-bold tracking-tight uppercase">
-            {t('skills')}
+            {t('common.skills')}
           </CardTitle>
           {(showEditButtons || isSkillsEditing) && (
             <EditSaveButton
@@ -348,7 +348,7 @@ export function DndSavesSkillsSection({
                             setSkills(updated);
                             updateCharacter(characterId, { skills: updated });
                           }}
-                          title={t('clearManualModifier')}
+                          title={t('dnd.clearManualModifier')}
                         >
                           <RefreshCw className="h-3 w-3" />
                         </Button>

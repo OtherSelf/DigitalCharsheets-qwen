@@ -112,14 +112,14 @@ export default function AdminPage() {
           .catch(() => null)) as AdminUsersResponse | null;
 
         if (!res.ok || !data?.success) {
-          setError(data?.error || tRef.current('adminLoadFailed'));
+          setError(data?.error || tRef.current('admin.loadFailed'));
           return;
         }
 
         setUsers(data.users);
         setStats(data.stats);
       } catch {
-        setError(tRef.current('adminLoadFailed'));
+        setError(tRef.current('admin.loadFailed'));
       } finally {
         setIsLoading(false);
         setIsRefreshing(false);
@@ -185,25 +185,25 @@ export default function AdminPage() {
   }[] = [
     {
       key: 'total',
-      label: t('adminStatsTotal'),
+      label: t('admin.statsTotal'),
       value: visibleStats.totalUsers,
       icon: Users,
     },
     {
       key: 'admins',
-      label: t('adminStatsAdmins'),
+      label: t('admin.statsAdmins'),
       value: visibleStats.admins,
       icon: ShieldCheck,
     },
     {
       key: 'blocked',
-      label: t('adminStatsBlocked'),
+      label: t('admin.statsBlocked'),
       value: visibleStats.blocked,
       icon: Ban,
     },
     {
       key: 'characters',
-      label: t('adminStatsCharacters'),
+      label: t('admin.statsCharacters'),
       value: visibleStats.totalCharacters,
       icon: ScrollText,
     },
@@ -247,7 +247,7 @@ export default function AdminPage() {
 
   return (
     <div className="flex h-dvh flex-col">
-      <Header title={t('adminPanel')} subtitle={t('adminPanelSubtitle')} />
+      <Header title={t('admin.panel')} subtitle={t('admin.panelSubtitle')} />
 
       <main className="safe-area-bottom flex-1 overflow-y-auto p-4 md:p-8">
         <div className="mx-auto max-w-6xl space-y-6">
@@ -293,11 +293,11 @@ export default function AdminPage() {
           <Card>
             <CardHeader className="flex flex-col gap-3 space-y-0 sm:flex-row sm:items-center sm:justify-between">
               <div className="min-w-0">
-                <CardTitle>{t('adminUsersTitle')}</CardTitle>
+                <CardTitle>{t('admin.usersTitle')}</CardTitle>
                 <CardDescription>
                   {isFiltered
-                    ? t('adminFilteredDescription')
-                    : t('adminUsersDescription')}
+                    ? t('admin.filteredDescription')
+                    : t('admin.usersDescription')}
                 </CardDescription>
               </div>
               <div className="flex items-center gap-2">
@@ -309,8 +309,8 @@ export default function AdminPage() {
                   <Input
                     value={query}
                     onChange={(event) => setQuery(event.target.value)}
-                    placeholder={t('adminSearchPlaceholder')}
-                    aria-label={t('adminSearchPlaceholder')}
+                    placeholder={t('admin.searchPlaceholder')}
+                    aria-label={t('admin.searchPlaceholder')}
                     className="pl-8"
                     data-testid="admin-search"
                   />
@@ -321,8 +321,8 @@ export default function AdminPage() {
                   size="icon"
                   onClick={() => void load(true)}
                   disabled={isRefreshing}
-                  aria-label={t('adminRefresh')}
-                  title={t('adminRefresh')}
+                  aria-label={t('admin.refresh')}
+                  title={t('admin.refresh')}
                 >
                   <RefreshCw
                     className={
@@ -339,8 +339,8 @@ export default function AdminPage() {
                   <Users className="h-8 w-8" aria-hidden="true" />
                   <p>
                     {users.length === 0
-                      ? t('adminNoUsers')
-                      : t('adminNoSearchResults')}
+                      ? t('admin.noUsers')
+                      : t('admin.noSearchResults')}
                   </p>
                 </div>
               ) : (
@@ -348,24 +348,24 @@ export default function AdminPage() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>{t('adminColumnUser')}</TableHead>
+                        <TableHead>{t('admin.columnUser')}</TableHead>
                         <TableHead className="hidden md:table-cell">
-                          {t('adminColumnRole')}
+                          {t('admin.columnRole')}
                         </TableHead>
                         <TableHead className="hidden md:table-cell">
-                          {t('adminColumnStatus')}
+                          {t('admin.columnStatus')}
                         </TableHead>
                         <TableHead className="hidden md:table-cell">
-                          {t('adminColumnSheets')}
+                          {t('admin.columnSheets')}
                         </TableHead>
                         <TableHead className="hidden md:table-cell">
-                          {t('adminColumnCreated')}
+                          {t('admin.columnCreated')}
                         </TableHead>
                         <TableHead className="hidden md:table-cell">
-                          {t('adminColumnLastLogin')}
+                          {t('admin.columnLastLogin')}
                         </TableHead>
                         <TableHead className="text-right">
-                          {t('adminColumnActions')}
+                          {t('admin.columnActions')}
                         </TableHead>
                       </TableRow>
                     </TableHeader>
@@ -380,8 +380,8 @@ export default function AdminPage() {
                             }
                           >
                             {item.role === 'admin'
-                              ? t('adminRoleAdmin')
-                              : t('adminRoleUser')}
+                              ? t('admin.roleAdmin')
+                              : t('admin.roleUser')}
                           </Badge>
                         );
                         const statusBadge = (
@@ -389,8 +389,8 @@ export default function AdminPage() {
                             variant={item.isBlocked ? 'destructive' : 'outline'}
                           >
                             {item.isBlocked
-                              ? t('adminStatusBlocked')
-                              : t('adminStatusActive')}
+                              ? t('admin.statusBlocked')
+                              : t('admin.statusActive')}
                           </Badge>
                         );
                         const sheetsButton = (
@@ -400,8 +400,8 @@ export default function AdminPage() {
                             size="sm"
                             className="h-8 gap-1 px-2"
                             onClick={() => setSheetsTarget(item)}
-                            aria-label={`${t('adminViewSheets')}: ${item.displayName}`}
-                            title={t('adminViewSheets')}
+                            aria-label={`${t('admin.viewSheets')}: ${item.displayName}`}
+                            title={t('admin.viewSheets')}
                           >
                             <ScrollText
                               className="h-3.5 w-3.5"
@@ -428,7 +428,7 @@ export default function AdminPage() {
                                   </span>
                                   {isSelf && (
                                     <Badge variant="outline">
-                                      {t('adminYou')}
+                                      {t('admin.you')}
                                     </Badge>
                                   )}
                                 </div>
@@ -474,8 +474,8 @@ export default function AdminPage() {
                                   size="icon"
                                   className="h-8 w-8"
                                   onClick={() => setEditTarget(item)}
-                                  aria-label={`${t('adminEditUser')}: ${item.displayName}`}
-                                  title={t('adminEditUser')}
+                                  aria-label={`${t('admin.editUser')}: ${item.displayName}`}
+                                  title={t('admin.editUser')}
                                 >
                                   <Pencil
                                     className="h-4 w-4"
@@ -490,11 +490,11 @@ export default function AdminPage() {
                                       size="icon"
                                       className="h-8 w-8"
                                       onClick={() => setBlockTarget(item)}
-                                      aria-label={`${item.isBlocked ? t('adminUnblock') : t('adminBlock')}: ${item.displayName}`}
+                                      aria-label={`${item.isBlocked ? t('admin.unblock') : t('admin.block')}: ${item.displayName}`}
                                       title={
                                         item.isBlocked
-                                          ? t('adminUnblock')
-                                          : t('adminBlock')
+                                          ? t('admin.unblock')
+                                          : t('admin.block')
                                       }
                                     >
                                       {item.isBlocked ? (
@@ -515,8 +515,8 @@ export default function AdminPage() {
                                       size="icon"
                                       className="text-destructive h-8 w-8"
                                       onClick={() => setDeleteTarget(item)}
-                                      aria-label={`${t('delete')}: ${item.displayName}`}
-                                      title={t('delete')}
+                                      aria-label={`${t('common.delete')}: ${item.displayName}`}
+                                      title={t('common.delete')}
                                     >
                                       <Trash2
                                         className="h-4 w-4"

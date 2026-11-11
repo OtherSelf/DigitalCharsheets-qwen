@@ -37,7 +37,7 @@ function usedLiteralKeys(): Map<string, string> {
   for (const file of sourceFiles(SRC)) {
     if (file.includes(`${path.sep}lib${path.sep}translations`)) continue;
     const text = fs.readFileSync(file, 'utf8');
-    for (const match of text.matchAll(/\bt\(\s*['"]([A-Za-z0-9_]+)['"]/g)) {
+    for (const match of text.matchAll(/\bt\(\s*['"]([A-Za-z0-9_.]+)['"]/g)) {
       if (!used.has(match[1])) used.set(match[1], file);
     }
   }
@@ -48,9 +48,12 @@ function usedLiteralKeys(): Map<string, string> {
 function duplicateKeys(file: string): string[] {
   const seen = new Map<string, number>();
   for (const line of fs.readFileSync(file, 'utf8').split('\n')) {
-    const match = /^\s{2}([A-Za-z0-9_]+):\s*(['"])/.exec(line);
+    const match = /^\s{2}(?:'([^']+)'|"([^"]+)"|([A-Za-z0-9_]+)):\s*/.exec(
+      line,
+    );
     if (!match) continue;
-    seen.set(match[1], (seen.get(match[1]) ?? 0) + 1);
+    const key = match[1] ?? match[2] ?? match[3];
+    seen.set(key, (seen.get(key) ?? 0) + 1);
   }
   return [...seen.entries()]
     .filter(([, count]) => count > 1)
@@ -63,12 +66,14 @@ const ru = translations.ru;
 
 // Значения, которые законно совпадают в en/ru: имена систем, числовой
 // placeholder и маска пароля. Новые совпадения должны быть осознанными.
+const NAMESPACE_RE = /^(common|auth|admin|dnd|dh|settings|demo|io)\./;
+
 const SAME_VALUE_ALLOWED = new Set([
-  'gameSystemDarkHeresy',
-  'dungeonsAndDragons',
-  'darkHeresy',
-  'placeholderAge',
-  'authPasswordPlaceholder',
+  'common.gameSystemDarkHeresy',
+  'common.dungeonsAndDragons',
+  'common.darkHeresy',
+  'dh.placeholderAge',
+  'auth.passwordPlaceholder',
 ]);
 
 describe('переводы: целостность словарей', () => {
@@ -82,6 +87,15 @@ describe('переводы: целостность словарей', () => {
 
     expect(onlyEn, 'ключи только в en').toEqual([]);
     expect(onlyRu, 'ключи только в ru').toEqual([]);
+  });
+
+  it('все ключи-идентификаторы namespaced', () => {
+    // 55 sentence-ключей — значения DIVINATIONS/эффектов, они хранятся в
+    // данных персонажа как есть; их миграция — отдельный level 2.
+    const bad = Object.keys(en).filter(
+      (key) => /^[A-Za-z][A-Za-z0-9]*$/.test(key) && !NAMESPACE_RE.test(key),
+    );
+    expect(bad, 'ключи без домена').toEqual([]);
   });
 
   it('каждый литеральный ключ t(...) есть в обоих языках', () => {
@@ -100,6 +114,11 @@ describe('переводы: целостность словарей', () => {
 
     expect(missingEn.sort(), 'нет в en').toEqual([]);
     expect(missingRu.sort(), 'нет в ru').toEqual([]);
+
+    const badNamespace = [...used.keys()]
+      .filter((key) => !NAMESPACE_RE.test(key))
+      .sort();
+    expect(badNamespace, 'литеральные t() без домена').toEqual([]);
   });
 
   it('нет пустых значений', () => {

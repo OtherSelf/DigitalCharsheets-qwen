@@ -42,7 +42,7 @@ export function DndCompanionsSection({
   const handleAddCompanion = () => {
     const newCompanion: DnDCompanion = {
       id: `comp-${Date.now()}`,
-      name: t('newCompanion'),
+      name: t('dnd.newCompanion'),
       type: '',
       size: '',
       armorClass: 10,
@@ -120,7 +120,7 @@ export function DndCompanionsSection({
             className="flex h-auto items-center gap-2 p-0 hover:bg-transparent"
           >
             <h2 className="font-headline text-2xl font-bold">
-              {t('companions')}
+              {t('dnd.companions')}
             </h2>
             {isCompanionsOpen ? (
               <ChevronUp className="h-5 w-5" />
@@ -132,7 +132,7 @@ export function DndCompanionsSection({
         {showEditButtons && (
           <div className="absolute top-1/2 right-0 -translate-y-1/2">
             <Button size="sm" variant="outline" onClick={handleAddCompanion}>
-              <Plus className="mr-2 h-4 w-4" /> {t('addCompanion')}
+              <Plus className="mr-2 h-4 w-4" /> {t('dnd.addCompanion')}
             </Button>
           </div>
         )}
@@ -157,10 +157,10 @@ export function DndCompanionsSection({
         {companions.length === 0 && showEditButtons && (
           <div className="bg-muted/10 rounded-lg border-2 border-dashed p-12 text-center">
             <p className="text-muted-foreground mb-4">
-              {t('noCompanionsAdded')}
+              {t('dnd.noCompanionsAdded')}
             </p>
             <Button size="sm" variant="outline" onClick={handleAddCompanion}>
-              <Plus className="mr-2 h-4 w-4" /> {t('addYourFirstCompanion')}
+              <Plus className="mr-2 h-4 w-4" /> {t('dnd.addYourFirstCompanion')}
             </Button>
           </div>
         )}

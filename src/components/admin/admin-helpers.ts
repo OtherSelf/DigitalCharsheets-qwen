@@ -12,13 +12,13 @@ export function adminReasonMessage(
 ): string | null {
   switch (reason) {
     case 'username_taken':
-      return t('adminUsernameTaken');
+      return t('admin.usernameTaken');
     case 'last_admin':
-      return t('adminLastAdmin');
+      return t('admin.lastAdmin');
     case 'self':
-      return t('adminSelfAction');
+      return t('admin.selfAction');
     case 'not_found':
-      return t('adminUserNotFound');
+      return t('admin.userNotFound');
     default:
       return null;
   }
@@ -48,7 +48,7 @@ export function adminCharacterLevelLabel(
   character: { level: number | null; rank: string | null },
   t: Translate,
 ): string {
-  if (character.level !== null) return `${t('adminLevel')} ${character.level}`;
-  if (character.rank) return `${t('adminRank')} ${character.rank}`;
+  if (character.level !== null) return `${t('admin.level')} ${character.level}`;
+  if (character.rank) return `${t('admin.rank')} ${character.rank}`;
   return '—';
 }

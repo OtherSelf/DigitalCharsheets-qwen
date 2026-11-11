@@ -57,11 +57,11 @@ import {
 } from '@/lib/types';
 
 const VARIANT_LABEL_KEYS: Record<string, string> = {
-  'Feral World': 'tribalTaboos',
-  'Hive World': 'hiveClass',
-  'Imperial World': 'birthPlanet',
-  'Void Born': 'shipTradition',
-  'Forge World': 'placeOfBirth',
+  'Feral World': 'dh.tribalTaboos',
+  'Hive World': 'dh.hiveClass',
+  'Imperial World': 'dh.birthPlanet',
+  'Void Born': 'dh.shipTradition',
+  'Forge World': 'dh.placeOfBirth',
 };
 
 export function DarkHeresyCharacterForm() {
@@ -74,16 +74,16 @@ export function DarkHeresyCharacterForm() {
 
   // MOVED INSIDE COMPONENT TO ACCESS t()
   const formSchema = z.object({
-    name: z.string().min(2, t('nameMinLength')),
+    name: z.string().min(2, t('common.nameMinLength')),
     homeWorld: z.enum(DarkHeresyHomeWorlds, {
-      error: t('selectHomeWorldError'),
+      error: t('dh.selectHomeWorldError'),
     }),
     worldVariant: z.string().optional(),
     careerPath: z.enum(DarkHeresyCareerPaths, {
-      error: t('selectCareerPathError'),
+      error: t('dh.selectCareerPathError'),
     }),
     backstory: z.string().optional(),
-    divination: z.string({ error: t('selectDivinationError') }),
+    divination: z.string({ error: t('dh.selectDivinationError') }),
     quirk: z.string().optional(),
     height: z.string().optional(),
     weight: z.string().optional(),
@@ -160,8 +160,8 @@ export function DarkHeresyCharacterForm() {
 
   const worldVariantLabel = React.useMemo(() => {
     return watchedHomeWorld
-      ? WORLD_VARIANT_LABELS[watchedHomeWorld] || t('worldVariant')
-      : t('waitingHomeWorld');
+      ? WORLD_VARIANT_LABELS[watchedHomeWorld] || t('dh.worldVariant')
+      : t('dh.waitingHomeWorld');
   }, [watchedHomeWorld]);
 
   React.useEffect(() => {
@@ -277,8 +277,8 @@ export function DarkHeresyCharacterForm() {
 
     if (docRef) {
       toast({
-        title: t('characterCreatedTitle'),
-        description: t('characterCreatedDescDH'),
+        title: t('common.characterCreatedTitle'),
+        description: t('dh.characterCreatedDescDH'),
       });
       router.push(`/${docRef.id}`);
     }
@@ -287,22 +287,27 @@ export function DarkHeresyCharacterForm() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{t('dhCharacterDetails')}</CardTitle>
+        <CardTitle>{t('dh.characterDetails')}</CardTitle>
       </CardHeader>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>
           <CardContent className="space-y-6">
             <div className="space-y-2">
-              <h3 className="text-base font-medium">{t('basicInformation')}</h3>
+              <h3 className="text-base font-medium">
+                {t('common.basicInformation')}
+              </h3>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <FormField
                   control={form.control}
                   name="name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('characterName')}</FormLabel>
+                      <FormLabel>{t('common.characterName')}</FormLabel>
                       <FormControl>
-                        <Input placeholder={t('placeholderJax')} {...field} />
+                        <Input
+                          placeholder={t('dh.placeholderJax')}
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -313,14 +318,16 @@ export function DarkHeresyCharacterForm() {
                   name="homeWorld"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('homeWorld')}</FormLabel>
+                      <FormLabel>{t('dh.homeWorld')}</FormLabel>
                       <Select
                         onValueChange={field.onChange}
                         defaultValue={field.value}
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder={t('selectHomeWorld')} />
+                            <SelectValue
+                              placeholder={t('dh.selectHomeWorld')}
+                            />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -343,7 +350,7 @@ export function DarkHeresyCharacterForm() {
                       <FormLabel>
                         {t(
                           VARIANT_LABEL_KEYS[watchedHomeWorld] ||
-                            'worldVariant',
+                            'dh.worldVariant',
                         )}
                       </FormLabel>
                       <Select
@@ -353,7 +360,7 @@ export function DarkHeresyCharacterForm() {
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder={t('selectVariant')} />
+                            <SelectValue placeholder={t('dh.selectVariant')} />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -377,14 +384,16 @@ export function DarkHeresyCharacterForm() {
                   name="careerPath"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('careerPath')}</FormLabel>
+                      <FormLabel>{t('dh.careerPath')}</FormLabel>
                       <Select
                         onValueChange={field.onChange}
                         defaultValue={field.value}
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder={t('selectCareerPath')} />
+                            <SelectValue
+                              placeholder={t('dh.selectCareerPath')}
+                            />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -403,21 +412,25 @@ export function DarkHeresyCharacterForm() {
             </div>
 
             <div className="space-y-2">
-              <h3 className="text-base font-medium">{t('description')}</h3>
+              <h3 className="text-base font-medium">
+                {t('common.description')}
+              </h3>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <FormField
                   control={form.control}
                   name="divination"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('divination')}</FormLabel>
+                      <FormLabel>{t('dh.divination')}</FormLabel>
                       <Select
                         onValueChange={field.onChange}
                         defaultValue={field.value}
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder={t('selectDivination')} />
+                            <SelectValue
+                              placeholder={t('dh.selectDivination')}
+                            />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -433,11 +446,11 @@ export function DarkHeresyCharacterForm() {
                   )}
                 />
                 <FormItem>
-                  <FormLabel>{t('divinationEffect')}</FormLabel>
+                  <FormLabel>{t('dh.divinationEffect')}</FormLabel>
                   <Input
                     readOnly
                     value={divinationEffect ? t(divinationEffect) : ''}
-                    placeholder={t('effectAppearsHere')}
+                    placeholder={t('dh.effectAppearsHere')}
                     className="bg-muted/50 border-dashed"
                   />
                 </FormItem>
@@ -446,7 +459,7 @@ export function DarkHeresyCharacterForm() {
                   name="quirk"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('quirk')}</FormLabel>
+                      <FormLabel>{t('dh.quirk')}</FormLabel>
                       <Select
                         onValueChange={field.onChange}
                         value={field.value}
@@ -454,7 +467,7 @@ export function DarkHeresyCharacterForm() {
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder={t('selectQuirk')} />
+                            <SelectValue placeholder={t('dh.selectQuirk')} />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -479,7 +492,7 @@ export function DarkHeresyCharacterForm() {
                     htmlFor="all-quirks"
                     className="text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                   >
-                    {t('showAllQuirks')}
+                    {t('dh.showAllQuirks')}
                   </label>
                 </div>
               </div>
@@ -489,10 +502,10 @@ export function DarkHeresyCharacterForm() {
                   name="height"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('height')}</FormLabel>
+                      <FormLabel>{t('common.height')}</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder={t('placeholderHeight')}
+                          placeholder={t('dh.placeholderHeight')}
                           {...field}
                         />
                       </FormControl>
@@ -505,10 +518,10 @@ export function DarkHeresyCharacterForm() {
                   name="weight"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('weight')}</FormLabel>
+                      <FormLabel>{t('common.weight')}</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder={t('placeholderWeight')}
+                          placeholder={t('dh.placeholderWeight')}
                           {...field}
                         />
                       </FormControl>
@@ -521,9 +534,12 @@ export function DarkHeresyCharacterForm() {
                   name="age"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('age')}</FormLabel>
+                      <FormLabel>{t('common.age')}</FormLabel>
                       <FormControl>
-                        <Input placeholder={t('placeholderAge')} {...field} />
+                        <Input
+                          placeholder={t('dh.placeholderAge')}
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -534,10 +550,10 @@ export function DarkHeresyCharacterForm() {
                   name="skinColor"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('skinColor')}</FormLabel>
+                      <FormLabel>{t('dh.skinColor')}</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder={t('placeholderSkinColor')}
+                          placeholder={t('dh.placeholderSkinColor')}
                           {...field}
                         />
                       </FormControl>
@@ -550,10 +566,10 @@ export function DarkHeresyCharacterForm() {
                   name="hairColor"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('hairColor')}</FormLabel>
+                      <FormLabel>{t('dh.hairColor')}</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder={t('placeholderHairColor')}
+                          placeholder={t('dh.placeholderHairColor')}
                           {...field}
                         />
                       </FormControl>
@@ -566,10 +582,10 @@ export function DarkHeresyCharacterForm() {
                   name="eyeColor"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('eyeColor')}</FormLabel>
+                      <FormLabel>{t('dh.eyeColor')}</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder={t('placeholderEyeColor')}
+                          placeholder={t('dh.placeholderEyeColor')}
                           {...field}
                         />
                       </FormControl>
@@ -585,10 +601,10 @@ export function DarkHeresyCharacterForm() {
               name="backstory"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t('backstory')}</FormLabel>
+                  <FormLabel>{t('common.backstory')}</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder={t('placeholderUnderhive')}
+                      placeholder={t('dh.placeholderUnderhive')}
                       {...field}
                     />
                   </FormControl>
@@ -598,14 +614,16 @@ export function DarkHeresyCharacterForm() {
             />
 
             <div className="space-y-2">
-              <h3 className="text-base font-medium">{t('progression')}</h3>
+              <h3 className="text-base font-medium">
+                {t('common.progression')}
+              </h3>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <FormField
                   control={form.control}
                   name="experience"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('experience')}</FormLabel>
+                      <FormLabel>{t('dh.experience')}</FormLabel>
                       <FormControl>
                         <Input type="number" {...field} />
                       </FormControl>
@@ -618,7 +636,7 @@ export function DarkHeresyCharacterForm() {
                   name="totalExpSpent"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('totalExpSpent')}</FormLabel>
+                      <FormLabel>{t('dh.totalExpSpent')}</FormLabel>
                       <FormControl>
                         <Input type="number" {...field} />
                       </FormControl>
@@ -630,14 +648,16 @@ export function DarkHeresyCharacterForm() {
             </div>
 
             <div className="space-y-2">
-              <h3 className="text-base font-medium">{t('characteristics')}</h3>
+              <h3 className="text-base font-medium">
+                {t('common.characteristics')}
+              </h3>
               <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
                 <FormField
                   control={form.control}
                   name="weaponSkill"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('weaponSkill')}</FormLabel>
+                      <FormLabel>{t('dh.weaponSkill')}</FormLabel>
                       <FormControl>
                         <Input type="number" {...field} />
                       </FormControl>
@@ -650,7 +670,7 @@ export function DarkHeresyCharacterForm() {
                   name="ballisticSkill"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('ballisticSkill')}</FormLabel>
+                      <FormLabel>{t('dh.ballisticSkill')}</FormLabel>
                       <FormControl>
                         <Input type="number" {...field} />
                       </FormControl>
@@ -663,7 +683,7 @@ export function DarkHeresyCharacterForm() {
                   name="strength"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('strength')}</FormLabel>
+                      <FormLabel>{t('common.strength')}</FormLabel>
                       <FormControl>
                         <Input type="number" {...field} />
                       </FormControl>
@@ -676,7 +696,7 @@ export function DarkHeresyCharacterForm() {
                   name="toughness"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('toughness')}</FormLabel>
+                      <FormLabel>{t('dh.toughness')}</FormLabel>
                       <FormControl>
                         <Input type="number" {...field} />
                       </FormControl>
@@ -689,7 +709,7 @@ export function DarkHeresyCharacterForm() {
                   name="agility"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('agility')}</FormLabel>
+                      <FormLabel>{t('dh.agility')}</FormLabel>
                       <FormControl>
                         <Input type="number" {...field} />
                       </FormControl>
@@ -702,7 +722,7 @@ export function DarkHeresyCharacterForm() {
                   name="intelligence"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('intelligence')}</FormLabel>
+                      <FormLabel>{t('common.intelligence')}</FormLabel>
                       <FormControl>
                         <Input type="number" {...field} />
                       </FormControl>
@@ -715,7 +735,7 @@ export function DarkHeresyCharacterForm() {
                   name="perception"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('perception')}</FormLabel>
+                      <FormLabel>{t('common.perception')}</FormLabel>
                       <FormControl>
                         <Input type="number" {...field} />
                       </FormControl>
@@ -728,7 +748,7 @@ export function DarkHeresyCharacterForm() {
                   name="willpower"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('willpower')}</FormLabel>
+                      <FormLabel>{t('common.willpower')}</FormLabel>
                       <FormControl>
                         <Input type="number" {...field} />
                       </FormControl>
@@ -741,7 +761,7 @@ export function DarkHeresyCharacterForm() {
                   name="fellowship"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('fellowship')}</FormLabel>
+                      <FormLabel>{t('dh.fellowship')}</FormLabel>
                       <FormControl>
                         <Input type="number" {...field} />
                       </FormControl>
@@ -754,7 +774,7 @@ export function DarkHeresyCharacterForm() {
                   name="influence"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('influence')}</FormLabel>
+                      <FormLabel>{t('dh.influence')}</FormLabel>
                       <FormControl>
                         <Input type="number" {...field} />
                       </FormControl>
@@ -766,14 +786,14 @@ export function DarkHeresyCharacterForm() {
             </div>
 
             <div className="space-y-2">
-              <h3 className="text-base font-medium">{t('otherStats')}</h3>
+              <h3 className="text-base font-medium">{t('dh.otherStats')}</h3>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <FormField
                   control={form.control}
                   name="wounds"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('wounds')}</FormLabel>
+                      <FormLabel>{t('dh.wounds')}</FormLabel>
                       <FormControl>
                         <Input type="number" {...field} />
                       </FormControl>
@@ -786,7 +806,7 @@ export function DarkHeresyCharacterForm() {
                   name="fatePoints"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('fatePoints')}</FormLabel>
+                      <FormLabel>{t('dh.fatePoints')}</FormLabel>
                       <FormControl>
                         <Input type="number" {...field} />
                       </FormControl>
@@ -798,7 +818,7 @@ export function DarkHeresyCharacterForm() {
             </div>
           </CardContent>
           <CardFooter>
-            <Button type="submit">{t('createCharacter')}</Button>
+            <Button type="submit">{t('common.createCharacter')}</Button>
           </CardFooter>
         </form>
       </Form>

@@ -17,7 +17,11 @@ export function LanguageToggle({ className }: LanguageToggleProps) {
       size="icon"
       className={cn('text-xs font-bold', className)}
       onClick={() => setLanguage(language === 'en' ? 'ru' : 'en')}
-      title={language === 'en' ? t('switchToRussian') : t('switchToEnglish')}
+      title={
+        language === 'en'
+          ? t('common.switchToRussian')
+          : t('common.switchToEnglish')
+      }
     >
       {language === 'en' ? 'EN' : 'RU'}
     </Button>

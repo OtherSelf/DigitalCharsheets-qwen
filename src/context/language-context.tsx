@@ -32,7 +32,20 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   };
 
   const t = (key: string) => {
-    return translations[language][key] || key;
+    const dict = translations[language];
+    const direct = dict[key];
+    if (direct) return direct;
+
+    // Level 1 transition: some keys come from persisted character data or
+    // server enums (e.g. `weaponSkill`, `classFighter`) and are not yet
+    // rewritten to `dh.*`/`dnd.*`. Resolve a unique suffix, then level 2 can
+    // remove this fallback.
+    if (!key.includes('.')) {
+      const suffix = `.${key}`;
+      const matches = Object.keys(dict).filter((k) => k.endsWith(suffix));
+      if (matches.length === 1) return dict[matches[0]];
+    }
+    return key;
   };
 
   return (

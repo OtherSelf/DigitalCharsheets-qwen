@@ -94,8 +94,8 @@ export function QuestJournalSheet({
     if (!newQuestTitle.trim()) {
       toast({
         variant: 'destructive',
-        title: t('toastTitleRequired'),
-        description: t('toastEnterTitle'),
+        title: t('common.toastTitleRequired'),
+        description: t('common.toastEnterTitle'),
       });
       return;
     }
@@ -170,7 +170,7 @@ export function QuestJournalSheet({
       case 'main':
         return (
           <Badge variant="destructive" className="h-4 px-1.5 text-[9px]">
-            {t('mainQuest')}
+            {t('common.mainQuest')}
           </Badge>
         );
       case 'personal':
@@ -179,7 +179,7 @@ export function QuestJournalSheet({
             variant="secondary"
             className="h-4 border-yellow-500/50 bg-yellow-500/20 px-1.5 text-[9px] text-yellow-600"
           >
-            {t('personalQuest')}
+            {t('common.personalQuest')}
           </Badge>
         );
       default:
@@ -188,7 +188,7 @@ export function QuestJournalSheet({
             variant="outline"
             className="h-4 border-blue-500/50 px-1.5 text-[9px] text-blue-500"
           >
-            {t('sideQuest')}
+            {t('common.sideQuest')}
           </Badge>
         );
     }
@@ -210,9 +210,9 @@ export function QuestJournalSheet({
         <SheetHeader className="border-b px-6 pt-6 pb-4">
           <SheetTitle className="flex items-center gap-2">
             <ScrollText className="text-primary h-5 w-5" />{' '}
-            {t('questJournalTitle')}
+            {t('common.questJournalTitle')}
           </SheetTitle>
-          <SheetDescription>{t('questJournalDesc')}</SheetDescription>
+          <SheetDescription>{t('common.questJournalDesc')}</SheetDescription>
 
           <div className="mt-4 flex gap-2">
             {(['all', 'active', 'completed'] as FilterType[]).map((f) => (
@@ -224,10 +224,10 @@ export function QuestJournalSheet({
                 onClick={() => setFilter(f)}
               >
                 {f === 'all'
-                  ? t('filterAll')
+                  ? t('common.filterAll')
                   : f === 'active'
-                    ? t('filterActive')
-                    : t('filterCompleted')}
+                    ? t('common.filterActive')
+                    : t('common.filterCompleted')}
                 {f === 'active' &&
                   ` (${questLog.filter((q) => q.status === 'active').length})`}
               </Button>
@@ -240,7 +240,7 @@ export function QuestJournalSheet({
             {filter !== 'completed' && (
               <div className="flex gap-2">
                 <Input
-                  placeholder={t('newQuestTitlePlaceholder')}
+                  placeholder={t('common.newQuestTitlePlaceholder')}
                   value={newQuestTitle}
                   onChange={(e) => setNewQuestTitle(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleAddQuest()}
@@ -285,7 +285,9 @@ export function QuestJournalSheet({
                             variant={isCompleted ? 'secondary' : 'default'}
                             className="h-4 shrink-0 px-1.5 text-[9px]"
                           >
-                            {isCompleted ? t('questDone') : t('questActive')}
+                            {isCompleted
+                              ? t('common.questDone')
+                              : t('common.questActive')}
                           </Badge>
                         </div>
                       </AccordionTrigger>
@@ -302,13 +304,13 @@ export function QuestJournalSheet({
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="main">
-                                {t('selectMainQuest')}
+                                {t('common.selectMainQuest')}
                               </SelectItem>
                               <SelectItem value="side">
-                                {t('selectSideQuest')}
+                                {t('common.selectSideQuest')}
                               </SelectItem>
                               <SelectItem value="personal">
-                                {t('selectPersonalQuest')}
+                                {t('common.selectPersonalQuest')}
                               </SelectItem>
                             </SelectContent>
                           </Select>
@@ -323,15 +325,15 @@ export function QuestJournalSheet({
                             }
                           >
                             {isCompleted
-                              ? t('markAsActive')
-                              : t('markAsCompleted')}
+                              ? t('common.markAsActive')
+                              : t('common.markAsCompleted')}
                           </Button>
                         </div>
 
                         <div className="space-y-1">
                           <Label className="text-muted-foreground flex items-center gap-1 text-[10px] font-bold uppercase">
                             <ScrollText className="h-3 w-3" />{' '}
-                            {t('questDescription')}
+                            {t('common.questDescription')}
                           </Label>
                           <Textarea
                             defaultValue={quest.description}
@@ -340,7 +342,9 @@ export function QuestJournalSheet({
                                 description: e.target.value,
                               })
                             }
-                            placeholder={t('questDescriptionPlaceholder')}
+                            placeholder={t(
+                              'common.questDescriptionPlaceholder',
+                            )}
                             className="min-h-[60px] text-sm"
                           />
                         </div>
@@ -348,7 +352,7 @@ export function QuestJournalSheet({
                         <div className="space-y-2">
                           <Label className="text-muted-foreground flex items-center gap-1 text-[10px] font-bold uppercase">
                             <CheckCircle2 className="h-3 w-3" />{' '}
-                            {t('questObjectives')}
+                            {t('common.questObjectives')}
                           </Label>
                           <div className="space-y-1">
                             {(quest.objectives || []).map((obj) => (
@@ -405,7 +409,7 @@ export function QuestJournalSheet({
                           </div>
                           <div className="flex gap-2">
                             <Input
-                              placeholder={t('addObjectivePlaceholder')}
+                              placeholder={t('common.addObjectivePlaceholder')}
                               value={newObjectiveText[quest.id] || ''}
                               onChange={(e) =>
                                 setNewObjectiveText((prev) => ({
@@ -432,7 +436,8 @@ export function QuestJournalSheet({
                         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                           <div className="space-y-1">
                             <Label className="text-muted-foreground flex items-center gap-1 text-[10px] font-bold uppercase">
-                              <Gift className="h-3 w-3" /> {t('questRewards')}
+                              <Gift className="h-3 w-3" />{' '}
+                              {t('common.questRewards')}
                             </Label>
                             <Input
                               defaultValue={quest.rewards || ''}
@@ -441,14 +446,14 @@ export function QuestJournalSheet({
                                   rewards: e.target.value,
                                 })
                               }
-                              placeholder={t('questRewardsPlaceholder')}
+                              placeholder={t('common.questRewardsPlaceholder')}
                               className="h-7 text-xs"
                             />
                           </div>
                           <div className="space-y-1">
                             <Label className="text-muted-foreground flex items-center gap-1 text-[10px] font-bold uppercase">
                               <MapPin className="h-3 w-3" />{' '}
-                              {t('questLocations')}
+                              {t('common.questLocations')}
                             </Label>
                             <Input
                               defaultValue={quest.locations || ''}
@@ -457,20 +462,23 @@ export function QuestJournalSheet({
                                   locations: e.target.value,
                                 })
                               }
-                              placeholder={t('questLocationsPlaceholder')}
+                              placeholder={t(
+                                'common.questLocationsPlaceholder',
+                              )}
                               className="h-7 text-xs"
                             />
                           </div>
                           <div className="space-y-1 sm:col-span-2">
                             <Label className="text-muted-foreground flex items-center gap-1 text-[10px] font-bold uppercase">
-                              <User className="h-3 w-3" /> {t('questNpcs')}
+                              <User className="h-3 w-3" />{' '}
+                              {t('common.questNpcs')}
                             </Label>
                             <Input
                               defaultValue={quest.npcs || ''}
                               onBlur={(e) =>
                                 updateQuest(quest.id, { npcs: e.target.value })
                               }
-                              placeholder={t('questNpcsPlaceholder')}
+                              placeholder={t('common.questNpcsPlaceholder')}
                               className="h-7 text-xs"
                             />
                           </div>
@@ -478,21 +486,22 @@ export function QuestJournalSheet({
 
                         <div className="space-y-1">
                           <Label className="text-muted-foreground flex items-center gap-1 text-[10px] font-bold uppercase">
-                            <StickyNote className="h-3 w-3" /> {t('questNotes')}
+                            <StickyNote className="h-3 w-3" />{' '}
+                            {t('common.questNotes')}
                           </Label>
                           <Textarea
                             defaultValue={quest.notes || ''}
                             onBlur={(e) =>
                               updateQuest(quest.id, { notes: e.target.value })
                             }
-                            placeholder={t('questNotesPlaceholder')}
+                            placeholder={t('common.questNotesPlaceholder')}
                             className="min-h-[50px] text-xs"
                           />
                         </div>
 
                         <div className="flex items-center justify-between border-t pt-2">
                           <span className="text-muted-foreground text-[10px]">
-                            {t('updated')}{' '}
+                            {t('common.updated')}{' '}
                             {format(new Date(quest.updatedAt), 'MMM d, yyyy')}
                           </span>
                           <div className="flex gap-1">
@@ -544,15 +553,15 @@ export function QuestJournalSheet({
                 <ScrollText className="mb-4 h-12 w-12 opacity-20" />
                 <p className="text-sm font-medium">
                   {filter === 'all'
-                    ? t('journalEmpty')
+                    ? t('common.journalEmpty')
                     : filter === 'active'
-                      ? t('noActiveQuests')
-                      : t('noCompletedQuests')}
+                      ? t('common.noActiveQuests')
+                      : t('common.noCompletedQuests')}
                 </p>
                 <p className="mt-1 text-xs">
                   {filter === 'all'
-                    ? t('journalEmptyDesc')
-                    : t('noFilteredQuestsDesc')}
+                    ? t('common.journalEmptyDesc')
+                    : t('common.noFilteredQuestsDesc')}
                 </p>
               </div>
             )}

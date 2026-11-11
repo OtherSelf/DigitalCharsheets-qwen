@@ -113,7 +113,7 @@ export function CustomResourceCounter({
     return (
       <div className="border-t pt-2">
         <div className="mb-2 flex flex-row items-center justify-between">
-          <h4 className="text-sm font-semibold">{t('customResources')}</h4>
+          <h4 className="text-sm font-semibold">{t('dh.customResources')}</h4>
           {(showEditButtons || isEditing) && (
             <EditSaveButton
               editing={isEditing}
@@ -125,7 +125,7 @@ export function CustomResourceCounter({
         <div className="space-y-2">
           {resources.length === 0 && !isEditing && (
             <p className="text-muted-foreground rounded-lg border border-dashed py-2 text-center text-xs italic">
-              {t('noCustomResourcesAdded')}
+              {t('dh.noCustomResourcesAdded')}
             </p>
           )}
           {resources.map((res) => (
@@ -141,11 +141,11 @@ export function CustomResourceCounter({
                       handleFieldChange(res.id, 'description', e.target.value)
                     }
                     className="h-7 text-xs"
-                    placeholder={t('resourceName')}
+                    placeholder={t('common.resourceName')}
                   />
                   <div className="flex items-center gap-1">
                     <span className="text-muted-foreground shrink-0 text-[9px] font-bold uppercase">
-                      {t('max')}
+                      {t('common.max')}
                     </span>
                     <Input
                       type="number"
@@ -169,14 +169,14 @@ export function CustomResourceCounter({
                         </PopoverTrigger>
                         <PopoverContent className="w-64">
                           <Label className="mb-2 block text-xs">
-                            {t('notes')}: {res.description}
+                            {t('common.notes')}: {res.description}
                           </Label>
                           <Textarea
                             defaultValue={res.notes || ''}
                             onChange={(e) =>
                               handleFieldChange(res.id, 'notes', e.target.value)
                             }
-                            placeholder={t('notes')}
+                            placeholder={t('common.notes')}
                             className="mt-2 min-h-[100px] text-sm"
                           />
                         </PopoverContent>
@@ -199,7 +199,7 @@ export function CustomResourceCounter({
                       </PopoverTrigger>
                       <PopoverContent className="w-64">
                         <Label className="mb-2 block text-xs">
-                          {t('notes')}: {res.description}
+                          {t('common.notes')}: {res.description}
                         </Label>
                         <Textarea
                           defaultValue={res.notes || ''}
@@ -214,7 +214,7 @@ export function CustomResourceCounter({
                               customResources: next,
                             });
                           }}
-                          placeholder={t('notes')}
+                          placeholder={t('common.notes')}
                           className="mt-2 min-h-[100px] text-sm"
                         />
                       </PopoverContent>
@@ -253,7 +253,7 @@ export function CustomResourceCounter({
                     size="icon"
                     className="text-destructive h-6 w-6"
                     onClick={() => removeResource(res.id)}
-                    aria-label={t('removeResource')}
+                    aria-label={t('dh.removeResource')}
                   >
                     <Trash2 className="h-3 w-3" />
                   </Button>
@@ -264,7 +264,7 @@ export function CustomResourceCounter({
           {isEditing && (
             <div className="flex items-center gap-2 border-t pt-2">
               <Input
-                placeholder={t('resourceName')}
+                placeholder={t('common.resourceName')}
                 value={newDesc}
                 onChange={(e) => setNewDesc(e.target.value)}
                 className="h-8 flex-1 text-xs"
@@ -280,7 +280,7 @@ export function CustomResourceCounter({
                 size="sm"
                 className="h-8"
                 onClick={addResource}
-                aria-label={t('addResource')}
+                aria-label={t('dh.addResource')}
               >
                 <Plus className="h-4 w-4" />
               </Button>
@@ -297,7 +297,7 @@ export function CustomResourceCounter({
       <Card className="mt-2">
         <CardHeader className="flex flex-row items-center justify-between px-3 py-2">
           <CardTitle className="text-muted-foreground text-[10px] font-bold tracking-tight uppercase">
-            {t('customResources')}
+            {t('dh.customResources')}
           </CardTitle>
           {(showEditButtons || isEditing) && (
             <EditSaveButton
@@ -310,7 +310,7 @@ export function CustomResourceCounter({
         <CardContent className="space-y-2 p-3 pt-0">
           {resources.length === 0 && !isEditing && (
             <p className="text-muted-foreground rounded border border-dashed py-1 text-center text-[10px] italic">
-              {t('noCustomResources')}
+              {t('dh.noCustomResources')}
             </p>
           )}
           {resources.map((res) => (
@@ -332,7 +332,7 @@ export function CustomResourceCounter({
                     </PopoverTrigger>
                     <PopoverContent className="w-56">
                       <Label className="mb-2 block text-xs">
-                        {t('notes')}: {res.description}
+                        {t('common.notes')}: {res.description}
                       </Label>
                       <Textarea
                         defaultValue={res.notes || ''}
@@ -347,7 +347,7 @@ export function CustomResourceCounter({
                             customResources: next,
                           });
                         }}
-                        placeholder={t('notes')}
+                        placeholder={t('common.notes')}
                         className="mt-2 min-h-[80px] text-xs"
                       />
                     </PopoverContent>
@@ -385,7 +385,7 @@ export function CustomResourceCounter({
                     size="icon"
                     className="text-destructive h-5 w-5"
                     onClick={() => removeResource(res.id)}
-                    aria-label={t('removeResource')}
+                    aria-label={t('dh.removeResource')}
                   >
                     <Trash2 className="h-3 w-3" />
                   </Button>
@@ -396,7 +396,7 @@ export function CustomResourceCounter({
           {isEditing && (
             <div className="flex items-center gap-1 border-t pt-1">
               <Input
-                placeholder={t('name')}
+                placeholder={t('common.name')}
                 value={newDesc}
                 onChange={(e) => setNewDesc(e.target.value)}
                 className="h-7 flex-1 text-[10px]"
@@ -412,7 +412,7 @@ export function CustomResourceCounter({
                 size="sm"
                 className="h-7 px-2"
                 onClick={addResource}
-                aria-label={t('addResource')}
+                aria-label={t('dh.addResource')}
               >
                 <Plus className="h-3 w-3" />
               </Button>

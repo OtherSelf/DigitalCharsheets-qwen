@@ -78,12 +78,12 @@ const ArmorDisplay = ({
   }) => {
     const armorPiece = armor[part];
     const bodyPartKey: Record<BodyPart, string> = {
-      Head: 'bodyPartHead',
-      'Right arm': 'bodyPartRightArm',
-      'Left arm': 'bodyPartLeftArm',
-      Body: 'bodyPartBody',
-      'Right leg': 'bodyPartRightLeg',
-      'Left leg': 'bodyPartLeftLeg',
+      Head: 'dh.bodyPartHead',
+      'Right arm': 'dh.bodyPartRightArm',
+      'Left arm': 'dh.bodyPartLeftArm',
+      Body: 'dh.bodyPartBody',
+      'Right leg': 'dh.bodyPartRightLeg',
+      'Left leg': 'dh.bodyPartLeftLeg',
     };
     const title = t(bodyPartKey[part] || part);
     return (
@@ -111,12 +111,14 @@ const ArmorDisplay = ({
           )}
         >
           <p className="truncate">
-            <strong className="text-muted-foreground">{t('armorAp')}: </strong>
+            <strong className="text-muted-foreground">
+              {t('dh.armorAp')}:{' '}
+            </strong>
             {armorPiece?.ap ?? '—'}
           </p>
           <p className="truncate">
             <strong className="text-muted-foreground">
-              {t('armorType')}:{' '}
+              {t('dh.armorType')}:{' '}
             </strong>
             {displayArmorType(armorPiece?.type)}
           </p>
@@ -401,7 +403,7 @@ export const DarkHeresySheet = React.forwardRef<
               <div className="flex flex-row items-center justify-between">
                 <div className="flex h-auto flex-1 items-center justify-start p-0 hover:bg-transparent">
                   <CardTitle className="font-headline text-base">
-                    {t('characteristics')}
+                    {t('common.characteristics')}
                   </CardTitle>
                 </div>
                 <EditSaveButton
@@ -415,23 +417,29 @@ export const DarkHeresySheet = React.forwardRef<
                   [
                     {
                       key: 'weaponSkill' as const,
-                      label: t('weaponSkillAbbr'),
+                      label: t('dh.weaponSkillAbbr'),
                     },
                     {
                       key: 'ballisticSkill' as const,
-                      label: t('ballisticSkillAbbr'),
+                      label: t('dh.ballisticSkillAbbr'),
                     },
-                    { key: 'strength' as const, label: t('strengthAbbr') },
-                    { key: 'toughness' as const, label: t('toughnessAbbr') },
-                    { key: 'agility' as const, label: t('agilityAbbr') },
+                    { key: 'strength' as const, label: t('dh.strengthAbbr') },
+                    { key: 'toughness' as const, label: t('dh.toughnessAbbr') },
+                    { key: 'agility' as const, label: t('dh.agilityAbbr') },
                     {
                       key: 'intelligence' as const,
-                      label: t('intelligenceAbbr'),
+                      label: t('dh.intelligenceAbbr'),
                     },
-                    { key: 'perception' as const, label: t('perceptionAbbr') },
-                    { key: 'willpower' as const, label: t('willpowerAbbr') },
-                    { key: 'fellowship' as const, label: t('fellowshipAbbr') },
-                    { key: 'influence' as const, label: t('influenceAbbr') },
+                    {
+                      key: 'perception' as const,
+                      label: t('dh.perceptionAbbr'),
+                    },
+                    { key: 'willpower' as const, label: t('dh.willpowerAbbr') },
+                    {
+                      key: 'fellowship' as const,
+                      label: t('dh.fellowshipAbbr'),
+                    },
+                    { key: 'influence' as const, label: t('dh.influenceAbbr') },
                   ] as const
                 )
                   .filter((c) =>
@@ -478,7 +486,7 @@ export const DarkHeresySheet = React.forwardRef<
                             align="center"
                           >
                             <Label className="mb-2 block text-xs font-semibold">
-                              {char.label} - {t('notes')}
+                              {char.label} - {t('common.notes')}
                             </Label>
                             <Textarea
                               defaultValue={notes}
@@ -492,7 +500,7 @@ export const DarkHeresySheet = React.forwardRef<
                                 });
                               }}
                               placeholder={t(
-                                'addNotesCharacteristicPlaceholder',
+                                'dh.addNotesCharacteristicPlaceholder',
                               )}
                               className="min-h-[80px] text-xs"
                             />
@@ -579,7 +587,7 @@ export const DarkHeresySheet = React.forwardRef<
             </div>
             <div className="mt-1 grid grid-cols-2 gap-1 px-1 md:col-span-2">
               <MetricBox
-                title={t('wounds')}
+                title={t('dh.wounds')}
                 notes={getPointsObject(character.wounds).notes}
                 onNoteChange={(val) =>
                   updateCharacter(character.id, {
@@ -659,7 +667,7 @@ export const DarkHeresySheet = React.forwardRef<
                 </div>
               </MetricBox>
               <MetricBox
-                title={t('fate')}
+                title={t('dh.fate')}
                 notes={getPointsObject(character.fatePoints).notes}
                 onNoteChange={(val) =>
                   updateCharacter(character.id, {
@@ -743,7 +751,7 @@ export const DarkHeresySheet = React.forwardRef<
                 character.edition === 'hybrid' ||
                 !character.edition) && (
                 <MetricBox
-                  title={t('fatigueFirstEdition')}
+                  title={t('dh.fatigueFirstEdition')}
                   notes={character.fatigue1st?.notes}
                   onNoteChange={(val) =>
                     updateCharacter(character.id, {
@@ -820,7 +828,7 @@ export const DarkHeresySheet = React.forwardRef<
               {(character.edition === '2nd' ||
                 character.edition === 'hybrid') && (
                 <MetricBox
-                  title={t('fatigueSecondEdition')}
+                  title={t('dh.fatigueSecondEdition')}
                   notes={character.fatigue2nd?.notes}
                   onNoteChange={(val) =>
                     updateCharacter(character.id, {
@@ -901,7 +909,7 @@ export const DarkHeresySheet = React.forwardRef<
               />
 
               <MetricBox
-                title={t('insanity')}
+                title={t('dh.insanity')}
                 notes={getSimplePointsObject(character.insanityPoints).notes}
                 onNoteChange={(val) =>
                   updateCharacter(character.id, {
@@ -958,7 +966,7 @@ export const DarkHeresySheet = React.forwardRef<
                 </div>
               </MetricBox>
               <MetricBox
-                title={t('corruption')}
+                title={t('dh.corruption')}
                 notes={getSimplePointsObject(character.corruptionPoints).notes}
                 onNoteChange={(val) =>
                   updateCharacter(character.id, {
@@ -1035,25 +1043,25 @@ export const DarkHeresySheet = React.forwardRef<
                   <>
                     <div className="bg-background/50 rounded border p-1 text-center">
                       <div className="text-muted-foreground text-[8px] uppercase">
-                        {t('halfMove')}
+                        {t('dh.halfMove')}
                       </div>
                       <div className="text-xs font-bold">{agMod}</div>
                     </div>
                     <div className="bg-background/50 rounded border p-1 text-center">
                       <div className="text-muted-foreground text-[8px] uppercase">
-                        {t('move')}
+                        {t('dh.move')}
                       </div>
                       <div className="text-xs font-bold">{agMod * 2}</div>
                     </div>
                     <div className="bg-background/50 rounded border p-1 text-center">
                       <div className="text-muted-foreground text-[8px] uppercase">
-                        {t('charge')}
+                        {t('dh.charge')}
                       </div>
                       <div className="text-xs font-bold">{agMod * 3}</div>
                     </div>
                     <div className="bg-background/50 rounded border p-1 text-center">
                       <div className="text-muted-foreground text-[8px] uppercase">
-                        {t('run')}
+                        {t('dh.run')}
                       </div>
                       <div className="text-xs font-bold">{agMod * 6}</div>
                     </div>
@@ -1161,8 +1169,8 @@ export const DarkHeresySheet = React.forwardRef<
                 onClick={() => setIsSkillsPanelCollapsed(false)}
               >
                 <span className="text-muted-foreground rotate-180 transform text-center text-sm font-semibold tracking-widest whitespace-nowrap uppercase [writing-mode:vertical-rl]">
-                  {t('skills')}, {t('talentsAndTraits')}, {t('wounds')} &amp;{' '}
-                  {t('fate')}
+                  {t('common.skills')}, {t('dh.talentsAndTraits')},{' '}
+                  {t('dh.wounds')} &amp; {t('dh.fate')}
                 </span>
               </Button>
             </Card>
@@ -1170,14 +1178,14 @@ export const DarkHeresySheet = React.forwardRef<
             <Card id="skills-talents-panel">
               <CardHeader className="flex-row items-center justify-between px-6 pt-3 pb-6">
                 <CardTitle className="font-headline">
-                  {t('skills')}, {t('talentsAndTraits')}, {t('wounds')} &amp;{' '}
-                  {t('fate')}
+                  {t('common.skills')}, {t('dh.talentsAndTraits')},{' '}
+                  {t('dh.wounds')} &amp; {t('dh.fate')}
                 </CardTitle>
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={() => setIsSkillsPanelCollapsed(true)}
-                  aria-label={t('collapsePanel')}
+                  aria-label={t('dh.collapsePanel')}
                   className={cn(isCompactView && 'hidden')}
                 >
                   <ChevronLeft className="h-5 w-5" />
@@ -1195,7 +1203,7 @@ export const DarkHeresySheet = React.forwardRef<
                 {!isCompactView && (
                   <div className="grid grid-cols-2 gap-4">
                     <MetricBox
-                      title={t('wounds')}
+                      title={t('dh.wounds')}
                       notes={getPointsObject(character.wounds).notes}
                       onNoteChange={(val) =>
                         updateCharacter(character.id, {
@@ -1270,7 +1278,7 @@ export const DarkHeresySheet = React.forwardRef<
                       </div>
                     </MetricBox>
                     <MetricBox
-                      title={t('fate')}
+                      title={t('dh.fate')}
                       notes={getPointsObject(character.fatePoints).notes}
                       onNoteChange={(val) =>
                         updateCharacter(character.id, {
@@ -1353,7 +1361,7 @@ export const DarkHeresySheet = React.forwardRef<
                   <Card>
                     <CardHeader className="flex-row items-center justify-between px-6 pt-3 pb-2">
                       <CardTitle className="font-headline text-base">
-                        {t('fatigueAndCriticalConditions')}
+                        {t('dh.fatigueAndCriticalConditions')}
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4 pt-0">
@@ -1363,7 +1371,7 @@ export const DarkHeresySheet = React.forwardRef<
                           !character.edition) && (
                           <div className="min-w-[140px] flex-1">
                             <MetricBox
-                              title={t('fatigueFirstEdition')}
+                              title={t('dh.fatigueFirstEdition')}
                               notes={character.fatigue1st?.notes}
                               onNoteChange={(val) =>
                                 updateCharacter(character.id, {
@@ -1448,7 +1456,7 @@ export const DarkHeresySheet = React.forwardRef<
                           character.edition === 'hybrid') && (
                           <div className="min-w-[140px] flex-1">
                             <MetricBox
-                              title={t('fatigueSecondEdition')}
+                              title={t('dh.fatigueSecondEdition')}
                               notes={character.fatigue2nd?.notes}
                               onNoteChange={(val) =>
                                 updateCharacter(character.id, {
@@ -1533,7 +1541,7 @@ export const DarkHeresySheet = React.forwardRef<
 
                       <div className="border-t pt-2">
                         <h4 className="mb-2 text-sm font-semibold">
-                          {t('criticalConditions')}
+                          {t('dh.criticalConditions')}
                         </h4>
                         <div className="space-y-2">
                           {(character.criticalConditions || []).map(
@@ -1563,7 +1571,7 @@ export const DarkHeresySheet = React.forwardRef<
                           {showEditButtons && (
                             <div className="flex gap-2 pt-2">
                               <Input
-                                placeholder={t('addCriticalCondition')}
+                                placeholder={t('dh.addCriticalCondition')}
                                 value={newCriticalCondition}
                                 onChange={(e) =>
                                   setNewCriticalCondition(e.target.value)
@@ -1573,7 +1581,8 @@ export const DarkHeresySheet = React.forwardRef<
                                 }
                               />
                               <Button onClick={addCriticalCondition} size="sm">
-                                <Plus className="mr-2 h-4 w-4" /> {t('add')}
+                                <Plus className="mr-2 h-4 w-4" />{' '}
+                                {t('common.add')}
                               </Button>
                             </div>
                           )}
@@ -1605,7 +1614,7 @@ export const DarkHeresySheet = React.forwardRef<
               <Card>
                 <CardHeader className="flex-row items-center justify-between px-6 pt-3 pb-6">
                   <CardTitle className="font-headline">
-                    {t('characteristics')}
+                    {t('common.characteristics')}
                   </CardTitle>
                   <EditSaveButton
                     editing={isCharacteristicsEditing}
@@ -1619,37 +1628,40 @@ export const DarkHeresySheet = React.forwardRef<
                       [
                         {
                           key: 'weaponSkill' as const,
-                          label: t('weaponSkillAbbr'),
+                          label: t('dh.weaponSkillAbbr'),
                         },
                         {
                           key: 'ballisticSkill' as const,
-                          label: t('ballisticSkillAbbr'),
+                          label: t('dh.ballisticSkillAbbr'),
                         },
-                        { key: 'strength' as const, label: t('strengthAbbr') },
+                        {
+                          key: 'strength' as const,
+                          label: t('dh.strengthAbbr'),
+                        },
                         {
                           key: 'toughness' as const,
-                          label: t('toughnessAbbr'),
+                          label: t('dh.toughnessAbbr'),
                         },
-                        { key: 'agility' as const, label: t('agilityAbbr') },
+                        { key: 'agility' as const, label: t('dh.agilityAbbr') },
                         {
                           key: 'intelligence' as const,
-                          label: t('intelligenceAbbr'),
+                          label: t('dh.intelligenceAbbr'),
                         },
                         {
                           key: 'perception' as const,
-                          label: t('perceptionAbbr'),
+                          label: t('dh.perceptionAbbr'),
                         },
                         {
                           key: 'willpower' as const,
-                          label: t('willpowerAbbr'),
+                          label: t('dh.willpowerAbbr'),
                         },
                         {
                           key: 'fellowship' as const,
-                          label: t('fellowshipAbbr'),
+                          label: t('dh.fellowshipAbbr'),
                         },
                         {
                           key: 'influence' as const,
-                          label: t('influenceAbbr'),
+                          label: t('dh.influenceAbbr'),
                         },
                       ] as const
                     )
@@ -1697,7 +1709,7 @@ export const DarkHeresySheet = React.forwardRef<
                                 align="center"
                               >
                                 <Label className="mb-2 block text-xs font-semibold">
-                                  {char.label} - {t('notes')}
+                                  {char.label} - {t('common.notes')}
                                 </Label>
                                 <Textarea
                                   defaultValue={notes}
@@ -1711,7 +1723,7 @@ export const DarkHeresySheet = React.forwardRef<
                                     });
                                   }}
                                   placeholder={t(
-                                    'addNotesCharacteristicPlaceholder',
+                                    'dh.addNotesCharacteristicPlaceholder',
                                   )}
                                   className="min-h-[80px] text-xs"
                                 />
@@ -1813,25 +1825,25 @@ export const DarkHeresySheet = React.forwardRef<
                         <>
                           <div className="bg-background/50 rounded border p-1 text-center">
                             <div className="text-muted-foreground text-[8px] uppercase">
-                              {t('halfMove')}
+                              {t('dh.halfMove')}
                             </div>
                             <div className="text-xs font-bold">{agMod}</div>
                           </div>
                           <div className="bg-background/50 rounded border p-1 text-center">
                             <div className="text-muted-foreground text-[8px] uppercase">
-                              {t('move')}
+                              {t('dh.move')}
                             </div>
                             <div className="text-xs font-bold">{agMod * 2}</div>
                           </div>
                           <div className="bg-background/50 rounded border p-1 text-center">
                             <div className="text-muted-foreground text-[8px] uppercase">
-                              {t('charge')}
+                              {t('dh.charge')}
                             </div>
                             <div className="text-xs font-bold">{agMod * 3}</div>
                           </div>
                           <div className="bg-background/50 rounded border p-1 text-center">
                             <div className="text-muted-foreground text-[8px] uppercase">
-                              {t('run')}
+                              {t('dh.run')}
                             </div>
                             <div className="text-xs font-bold">{agMod * 6}</div>
                           </div>
@@ -1889,7 +1901,8 @@ export const DarkHeresySheet = React.forwardRef<
                 onClick={() => setIsEquipmentPanelCollapsed(false)}
               >
                 <span className="text-muted-foreground rotate-180 transform text-center text-sm font-semibold tracking-widest whitespace-nowrap uppercase [writing-mode:vertical-rl]">
-                  {t('equipment')}, {t('inventory')} &amp; {t('corruption')}
+                  {t('dh.equipment')}, {t('common.inventory')} &amp;{' '}
+                  {t('dh.corruption')}
                 </span>
               </Button>
             </Card>
@@ -1900,12 +1913,13 @@ export const DarkHeresySheet = React.forwardRef<
                   variant="ghost"
                   size="icon"
                   onClick={() => setIsEquipmentPanelCollapsed(true)}
-                  aria-label={t('collapsePanel')}
+                  aria-label={t('dh.collapsePanel')}
                 >
                   <ChevronRight className="h-5 w-5" />
                 </Button>
                 <CardTitle className="font-headline">
-                  {t('equipment')}, {t('inventory')} &amp; {t('corruption')}
+                  {t('dh.equipment')}, {t('common.inventory')} &amp;{' '}
+                  {t('dh.corruption')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-8 pt-0">
@@ -1918,7 +1932,7 @@ export const DarkHeresySheet = React.forwardRef<
                 />
                 <div className="grid grid-cols-2 gap-4">
                   <MetricBox
-                    title={t('insanity')}
+                    title={t('dh.insanity')}
                     notes={
                       getSimplePointsObject(character.insanityPoints).notes
                     }
@@ -1986,7 +2000,7 @@ export const DarkHeresySheet = React.forwardRef<
                     </div>
                   </MetricBox>
                   <MetricBox
-                    title={t('corruption')}
+                    title={t('dh.corruption')}
                     notes={
                       getSimplePointsObject(character.corruptionPoints).notes
                     }

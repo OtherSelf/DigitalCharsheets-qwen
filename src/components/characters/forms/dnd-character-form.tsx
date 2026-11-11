@@ -40,130 +40,130 @@ import { DnD5eCharacter } from '@/lib/types';
 
 // Map internal English names to translation keys
 const RACE_TRANSLATION_KEYS: Record<string, string> = {
-  Aarakocra: 'raceAarakocra',
-  Aasimar: 'raceAasimar',
-  Autognome: 'raceAutognome',
-  'Astral elf': 'raceAstralelf',
-  Bugbear: 'raceBugbear',
-  Vedalken: 'raceVedalken',
-  Verdan: 'raceVerdan',
-  'Simic hybrid': 'raceSimichybrid',
-  Gith: 'raceGith',
-  Giff: 'raceGiff',
-  Gnome: 'raceGnome',
-  Goblin: 'raceGoblin',
-  Goliath: 'raceGoliath',
-  Grung: 'raceGrung',
-  Dwarf: 'raceDwarf',
-  Genasi: 'raceGenasi',
-  Dragonborn: 'raceDragonborn',
-  Harengon: 'raceHarengon',
-  Kalashtar: 'raceKalashtar',
-  Kender: 'raceKender',
-  Kenku: 'raceKenku',
-  Centaur: 'raceCentaur',
-  Kobold: 'raceKobold',
-  Warforged: 'raceWarforged',
-  Leonin: 'raceLeonin',
-  Locathah: 'raceLocathah',
-  Loxodon: 'raceLoxodon',
-  Lizardfolk: 'raceLizardfolk',
-  Minotaur: 'raceMinotaur',
-  Orc: 'raceOrc',
-  Plasmoid: 'racePlasmoid',
-  'Half-orc': 'raceHalforc',
-  Halfling: 'raceHalfling',
-  'Half-elf': 'raceHalfelf',
-  Satyr: 'raceSatyr',
-  Owlin: 'raceOwlin',
-  Tabaxi: 'raceTabaxi',
-  Tiefling: 'raceTiefling',
-  Tortle: 'raceTortle',
-  'Thri-kreen': 'raceThrikreen',
-  Triton: 'raceTriton',
-  Firbolg: 'raceFirbolg',
-  Fairy: 'raceFairy',
-  Hadozee: 'raceHadozee',
-  Hobgoblin: 'raceHobgoblin',
-  Changeling: 'raceChangeling',
-  Human: 'raceHuman',
-  Shifter: 'raceShifter',
-  Elf: 'raceElf',
-  'Yuan-ti Pureblood': 'raceYuantPureblood',
+  Aarakocra: 'dnd.raceAarakocra',
+  Aasimar: 'dnd.raceAasimar',
+  Autognome: 'dnd.raceAutognome',
+  'Astral elf': 'dnd.raceAstralelf',
+  Bugbear: 'dnd.raceBugbear',
+  Vedalken: 'dnd.raceVedalken',
+  Verdan: 'dnd.raceVerdan',
+  'Simic hybrid': 'dnd.raceSimichybrid',
+  Gith: 'dnd.raceGith',
+  Giff: 'dnd.raceGiff',
+  Gnome: 'dnd.raceGnome',
+  Goblin: 'dnd.raceGoblin',
+  Goliath: 'dnd.raceGoliath',
+  Grung: 'dnd.raceGrung',
+  Dwarf: 'dnd.raceDwarf',
+  Genasi: 'dnd.raceGenasi',
+  Dragonborn: 'dnd.raceDragonborn',
+  Harengon: 'dnd.raceHarengon',
+  Kalashtar: 'dnd.raceKalashtar',
+  Kender: 'dnd.raceKender',
+  Kenku: 'dnd.raceKenku',
+  Centaur: 'dnd.raceCentaur',
+  Kobold: 'dnd.raceKobold',
+  Warforged: 'dnd.raceWarforged',
+  Leonin: 'dnd.raceLeonin',
+  Locathah: 'dnd.raceLocathah',
+  Loxodon: 'dnd.raceLoxodon',
+  Lizardfolk: 'dnd.raceLizardfolk',
+  Minotaur: 'dnd.raceMinotaur',
+  Orc: 'dnd.raceOrc',
+  Plasmoid: 'dnd.racePlasmoid',
+  'Half-orc': 'dnd.raceHalforc',
+  Halfling: 'dnd.raceHalfling',
+  'Half-elf': 'dnd.raceHalfelf',
+  Satyr: 'dnd.raceSatyr',
+  Owlin: 'dnd.raceOwlin',
+  Tabaxi: 'dnd.raceTabaxi',
+  Tiefling: 'dnd.raceTiefling',
+  Tortle: 'dnd.raceTortle',
+  'Thri-kreen': 'dnd.raceThrikreen',
+  Triton: 'dnd.raceTriton',
+  Firbolg: 'dnd.raceFirbolg',
+  Fairy: 'dnd.raceFairy',
+  Hadozee: 'dnd.raceHadozee',
+  Hobgoblin: 'dnd.raceHobgoblin',
+  Changeling: 'dnd.raceChangeling',
+  Human: 'dnd.raceHuman',
+  Shifter: 'dnd.raceShifter',
+  Elf: 'dnd.raceElf',
+  'Yuan-ti Pureblood': 'dnd.raceYuantPureblood',
 };
 
 const BG_TRANSLATION_KEYS: Record<string, string> = {
-  Entertainer: 'bgEntertainer',
-  Urchin: 'bgUrchin',
-  Noble: 'bgNoble',
-  'Guild Artisan': 'bgGuildArtisan',
-  Sailor: 'bgSailor',
-  Sage: 'bgSage',
-  'Folk Hero': 'bgFolkHero',
-  Hermit: 'bgHermit',
-  Outlander: 'bgOutlander',
-  Charlatan: 'bgCharlatan',
-  Pirate: 'bgPirate',
-  Criminal: 'bgCriminal',
-  Acolyte: 'bgAcolyte',
-  Soldier: 'bgSoldier',
-  Gambler: 'bgGambler',
-  Plaintiff: 'bgPlaintiff',
-  'Failed Merchant': 'bgFailedMerchant',
-  'Celebrity Adventurers Scion': 'bgCelebrityAdventurersScion',
-  'Rival Intern': 'bgRivalIntern',
-  'Giant Foundling': 'bgGiantFoundling',
-  'Rune Carver': 'bgRuneCarver',
-  Rewarded: 'bgRewarded',
-  Ruined: 'bgRuined',
-  'House Agent': 'bgHouseAgent',
-  'Volstrucker Agent': 'bgVolstruckerAgent',
-  Grinner: 'bgGrinner',
-  'Golgari Agent': 'bgGolgariAgent',
-  'Gruul Anarch': 'bgGruulAnarch',
-  'Izzet Engineer': 'bgIzzetEngineer',
-  'Rakdos Cultist': 'bgRakdosCultist',
-  'Boros Legionnaire': 'bgBorosLegionnaire',
-  'Dimir Operative': 'bgDimirOperative',
-  'Selesnya Initiate': 'bgSelesnyaInitiate',
-  'Orzhov Representative': 'bgOrzhovRepresentative',
-  'Simic Scientist': 'bgSimicScientist',
-  'Azorius Functionary': 'bgAzoriusFunctionary',
-  Athlete: 'bgAthlete',
-  'Planar Philosopher': 'bgPlanarPhilosopher',
-  'Gate Warden': 'bgGateWarden',
-  'Astral Drifter': 'bgAstralDrifter',
-  Wildspacer: 'bgWildspacer',
-  'Mercenary Veteran': 'bgMercenaryVeteran',
-  'Urban Bounty Hunter': 'bgUrbanBountyHunter',
-  'City Watch': 'bgCityWatch',
-  'Far Traveler': 'bgFarTraveler',
-  'Waterdhavian Noble': 'bgWaterdhavianNoble',
-  'Clan Crafter': 'bgClanCrafter',
-  Inheritor: 'bgInheritor',
-  'Faction Agent': 'bgFactionAgent',
-  Courtier: 'bgCourtier',
-  'Knight of the Order': 'bgKnightoftheOrder',
-  'Uthgardt Tribe Member': 'bgUthgardtTribeMember',
-  'Cloistered Scholar': 'bgCloisteredScholar',
-  'Haunted One': 'bgHauntedOne',
-  Investigator: 'bgInvestigator',
-  Faceless: 'bgFaceless',
-  'Mage of Hight Sorcery': 'bgMageofHightSorcery',
-  'Knight of Solamnia': 'bgKnightofSolamnia',
-  Smuggler: 'bgSmuggler',
-  Shipwright: 'bgShipwright',
-  Marine: 'bgMarine',
-  Fisher: 'bgFisher',
-  'Witherbloom Student': 'bgWitherbloomStudent',
-  'Quandrix Student': 'bgQuandrixStudent',
-  'Lorehold Student': 'bgLoreholdStudent',
-  'Prismari Student': 'bgPrismariStudent',
-  'Silverquill Student': 'bgSilverquillStudent',
-  Anthropologist: 'bgAnthropologist',
-  Archeologist: 'bgArcheologist',
-  'Witchlight Hand': 'bgWitchlightHand',
-  Feylost: 'bgFeylost',
+  Entertainer: 'dnd.bgEntertainer',
+  Urchin: 'dnd.bgUrchin',
+  Noble: 'dnd.bgNoble',
+  'Guild Artisan': 'dnd.bgGuildArtisan',
+  Sailor: 'dnd.bgSailor',
+  Sage: 'dnd.bgSage',
+  'Folk Hero': 'dnd.bgFolkHero',
+  Hermit: 'dnd.bgHermit',
+  Outlander: 'dnd.bgOutlander',
+  Charlatan: 'dnd.bgCharlatan',
+  Pirate: 'dnd.bgPirate',
+  Criminal: 'dnd.bgCriminal',
+  Acolyte: 'dnd.bgAcolyte',
+  Soldier: 'dnd.bgSoldier',
+  Gambler: 'dnd.bgGambler',
+  Plaintiff: 'dnd.bgPlaintiff',
+  'Failed Merchant': 'dnd.bgFailedMerchant',
+  'Celebrity Adventurers Scion': 'dnd.bgCelebrityAdventurersScion',
+  'Rival Intern': 'dnd.bgRivalIntern',
+  'Giant Foundling': 'dnd.bgGiantFoundling',
+  'Rune Carver': 'dnd.bgRuneCarver',
+  Rewarded: 'dnd.bgRewarded',
+  Ruined: 'dnd.bgRuined',
+  'House Agent': 'dnd.bgHouseAgent',
+  'Volstrucker Agent': 'dnd.bgVolstruckerAgent',
+  Grinner: 'dnd.bgGrinner',
+  'Golgari Agent': 'dnd.bgGolgariAgent',
+  'Gruul Anarch': 'dnd.bgGruulAnarch',
+  'Izzet Engineer': 'dnd.bgIzzetEngineer',
+  'Rakdos Cultist': 'dnd.bgRakdosCultist',
+  'Boros Legionnaire': 'dnd.bgBorosLegionnaire',
+  'Dimir Operative': 'dnd.bgDimirOperative',
+  'Selesnya Initiate': 'dnd.bgSelesnyaInitiate',
+  'Orzhov Representative': 'dnd.bgOrzhovRepresentative',
+  'Simic Scientist': 'dnd.bgSimicScientist',
+  'Azorius Functionary': 'dnd.bgAzoriusFunctionary',
+  Athlete: 'dnd.bgAthlete',
+  'Planar Philosopher': 'dnd.bgPlanarPhilosopher',
+  'Gate Warden': 'dnd.bgGateWarden',
+  'Astral Drifter': 'dnd.bgAstralDrifter',
+  Wildspacer: 'dnd.bgWildspacer',
+  'Mercenary Veteran': 'dnd.bgMercenaryVeteran',
+  'Urban Bounty Hunter': 'dnd.bgUrbanBountyHunter',
+  'City Watch': 'dnd.bgCityWatch',
+  'Far Traveler': 'dnd.bgFarTraveler',
+  'Waterdhavian Noble': 'dnd.bgWaterdhavianNoble',
+  'Clan Crafter': 'dnd.bgClanCrafter',
+  Inheritor: 'dnd.bgInheritor',
+  'Faction Agent': 'dnd.bgFactionAgent',
+  Courtier: 'dnd.bgCourtier',
+  'Knight of the Order': 'dnd.bgKnightoftheOrder',
+  'Uthgardt Tribe Member': 'dnd.bgUthgardtTribeMember',
+  'Cloistered Scholar': 'dnd.bgCloisteredScholar',
+  'Haunted One': 'dnd.bgHauntedOne',
+  Investigator: 'dnd.bgInvestigator',
+  Faceless: 'dnd.bgFaceless',
+  'Mage of Hight Sorcery': 'dnd.bgMageofHightSorcery',
+  'Knight of Solamnia': 'dnd.bgKnightofSolamnia',
+  Smuggler: 'dnd.bgSmuggler',
+  Shipwright: 'dnd.bgShipwright',
+  Marine: 'dnd.bgMarine',
+  Fisher: 'dnd.bgFisher',
+  'Witherbloom Student': 'dnd.bgWitherbloomStudent',
+  'Quandrix Student': 'dnd.bgQuandrixStudent',
+  'Lorehold Student': 'dnd.bgLoreholdStudent',
+  'Prismari Student': 'dnd.bgPrismariStudent',
+  'Silverquill Student': 'dnd.bgSilverquillStudent',
+  Anthropologist: 'dnd.bgAnthropologist',
+  Archeologist: 'dnd.bgArcheologist',
+  'Witchlight Hand': 'dnd.bgWitchlightHand',
+  Feylost: 'dnd.bgFeylost',
 };
 
 const DND_CLASSES = [
@@ -197,15 +197,15 @@ const DND_ALIGNMENTS = [
 ];
 
 const ALIGNMENT_TRANSLATION_KEYS: Record<string, string> = {
-  'Lawful Good': 'alignmentLawfulGood',
-  'Neutral Good': 'alignmentNeutralGood',
-  'Chaotic Good': 'alignmentChaoticGood',
-  'Lawful Neutral': 'alignmentLawfulNeutral',
-  'True Neutral': 'alignmentTrueNeutral',
-  'Chaotic Neutral': 'alignmentChaoticNeutral',
-  'Lawful Evil': 'alignmentLawfulEvil',
-  'Neutral Evil': 'alignmentNeutralEvil',
-  'Chaotic Evil': 'alignmentChaoticEvil',
+  'Lawful Good': 'dnd.alignmentLawfulGood',
+  'Neutral Good': 'dnd.alignmentNeutralGood',
+  'Chaotic Good': 'dnd.alignmentChaoticGood',
+  'Lawful Neutral': 'dnd.alignmentLawfulNeutral',
+  'True Neutral': 'dnd.alignmentTrueNeutral',
+  'Chaotic Neutral': 'dnd.alignmentChaoticNeutral',
+  'Lawful Evil': 'dnd.alignmentLawfulEvil',
+  'Neutral Evil': 'dnd.alignmentNeutralEvil',
+  'Chaotic Evil': 'dnd.alignmentChaoticEvil',
 };
 
 const DND_DEFAULT_SAVING_THROWS = [
@@ -376,15 +376,15 @@ export function DndCharacterForm() {
   const { t } = useTranslation();
 
   const formSchema = z.object({
-    name: z.string().min(2, t('nameMinLength')),
+    name: z.string().min(2, t('common.nameMinLength')),
     characterClass: z.enum(DND_CLASSES as unknown as [string, ...string[]], {
-      error: t('selectClassError'),
+      error: t('dnd.selectClassError'),
     }),
     race: z.enum(DND_RACES as unknown as [string, ...string[]], {
-      error: t('selectRaceError'),
+      error: t('dnd.selectRaceError'),
     }),
     background: z.enum(DND_BACKGROUNDS as unknown as [string, ...string[]], {
-      error: t('selectBackgroundError'),
+      error: t('dnd.selectBackgroundError'),
     }),
     alignment: z.string().optional(),
     level: z.coerce.number().int().min(1).max(20),
@@ -544,8 +544,8 @@ export function DndCharacterForm() {
 
     if (docRef) {
       toast({
-        title: t('characterCreatedTitle'),
-        description: t('characterCreatedDesc'),
+        title: t('common.characterCreatedTitle'),
+        description: t('dnd.characterCreatedDesc'),
       });
       router.push(`/${docRef.id}`);
     }
@@ -554,22 +554,27 @@ export function DndCharacterForm() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{t('dndCharacterDetails')}</CardTitle>
+        <CardTitle>{t('dnd.characterDetails')}</CardTitle>
       </CardHeader>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>
           <CardContent className="space-y-6">
             <div className="space-y-4">
-              <h3 className="text-base font-medium">{t('basicInformation')}</h3>
+              <h3 className="text-base font-medium">
+                {t('common.basicInformation')}
+              </h3>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <FormField
                   control={form.control}
                   name="name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('characterName')}</FormLabel>
+                      <FormLabel>{t('common.characterName')}</FormLabel>
                       <FormControl>
-                        <Input placeholder={t('placeholderName')} {...field} />
+                        <Input
+                          placeholder={t('dnd.placeholderName')}
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -580,7 +585,7 @@ export function DndCharacterForm() {
                   name="experiencePoints"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('experiencePoints')}</FormLabel>
+                      <FormLabel>{t('dnd.experiencePoints')}</FormLabel>
                       <FormControl>
                         <Input type="number" placeholder="0" {...field} />
                       </FormControl>
@@ -592,7 +597,7 @@ export function DndCharacterForm() {
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div className="flex flex-col gap-2">
                   <Label className="text-sm font-medium">
-                    {t('levelAutoCalculated')}
+                    {t('dnd.levelAutoCalculated')}
                   </Label>
                   <div className="border-input bg-muted flex h-10 w-full items-center rounded-md border px-3 py-2 text-sm font-bold">
                     {form.getValues('level')}
@@ -603,14 +608,14 @@ export function DndCharacterForm() {
                   name="characterClass"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('class')}</FormLabel>
+                      <FormLabel>{t('common.class')}</FormLabel>
                       <Select
                         onValueChange={field.onChange}
                         defaultValue={field.value}
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder={t('selectClass')} />
+                            <SelectValue placeholder={t('dnd.selectClass')} />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -632,14 +637,14 @@ export function DndCharacterForm() {
                   name="race"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('race')}</FormLabel>
+                      <FormLabel>{t('dnd.race')}</FormLabel>
                       <Select
                         onValueChange={field.onChange}
                         defaultValue={field.value}
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder={t('selectRace')} />
+                            <SelectValue placeholder={t('dnd.selectRace')} />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -659,14 +664,16 @@ export function DndCharacterForm() {
                   name="background"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('background')}</FormLabel>
+                      <FormLabel>{t('dnd.background')}</FormLabel>
                       <Select
                         onValueChange={field.onChange}
                         defaultValue={field.value}
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder={t('selectBackground')} />
+                            <SelectValue
+                              placeholder={t('dnd.selectBackground')}
+                            />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent className="max-h-[300px]">
@@ -688,14 +695,16 @@ export function DndCharacterForm() {
                   name="alignment"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('alignment')}</FormLabel>
+                      <FormLabel>{t('dnd.alignment')}</FormLabel>
                       <Select
                         onValueChange={field.onChange}
                         defaultValue={field.value}
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder={t('selectAlignment')} />
+                            <SelectValue
+                              placeholder={t('dnd.selectAlignment')}
+                            />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -717,7 +726,7 @@ export function DndCharacterForm() {
                   name="age"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('age')}</FormLabel>
+                      <FormLabel>{t('common.age')}</FormLabel>
                       <FormControl>
                         <Input {...field} />
                       </FormControl>
@@ -729,7 +738,7 @@ export function DndCharacterForm() {
                   name="eyes"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('eyes')}</FormLabel>
+                      <FormLabel>{t('dnd.eyes')}</FormLabel>
                       <FormControl>
                         <Input {...field} />
                       </FormControl>
@@ -741,7 +750,7 @@ export function DndCharacterForm() {
                   name="skin"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('skin')}</FormLabel>
+                      <FormLabel>{t('dnd.skin')}</FormLabel>
                       <FormControl>
                         <Input {...field} />
                       </FormControl>
@@ -753,7 +762,7 @@ export function DndCharacterForm() {
                   name="height"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('height')}</FormLabel>
+                      <FormLabel>{t('common.height')}</FormLabel>
                       <FormControl>
                         <Input {...field} />
                       </FormControl>
@@ -765,7 +774,7 @@ export function DndCharacterForm() {
                   name="weight"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('weight')}</FormLabel>
+                      <FormLabel>{t('common.weight')}</FormLabel>
                       <FormControl>
                         <Input {...field} />
                       </FormControl>
@@ -777,7 +786,7 @@ export function DndCharacterForm() {
                   name="hair"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('hairFur')}</FormLabel>
+                      <FormLabel>{t('dnd.hairFur')}</FormLabel>
                       <FormControl>
                         <Input {...field} />
                       </FormControl>
@@ -792,10 +801,10 @@ export function DndCharacterForm() {
               name="backstory"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t('backstory')}</FormLabel>
+                  <FormLabel>{t('common.backstory')}</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder={t('placeholderBackstory')}
+                      placeholder={t('dnd.placeholderBackstory')}
                       {...field}
                     />
                   </FormControl>
@@ -805,14 +814,16 @@ export function DndCharacterForm() {
             />
 
             <div className="space-y-2">
-              <h3 className="text-base font-medium">{t('abilityScores')}</h3>
+              <h3 className="text-base font-medium">
+                {t('dnd.abilityScores')}
+              </h3>
               <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
                 <FormField
                   control={form.control}
                   name="strength"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('strength')}</FormLabel>
+                      <FormLabel>{t('common.strength')}</FormLabel>
                       <FormControl>
                         <Input type="number" min={1} max={30} {...field} />
                       </FormControl>
@@ -825,7 +836,7 @@ export function DndCharacterForm() {
                   name="dexterity"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('dexterity')}</FormLabel>
+                      <FormLabel>{t('common.dexterity')}</FormLabel>
                       <FormControl>
                         <Input type="number" min={1} max={30} {...field} />
                       </FormControl>
@@ -838,7 +849,7 @@ export function DndCharacterForm() {
                   name="constitution"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('constitution')}</FormLabel>
+                      <FormLabel>{t('common.constitution')}</FormLabel>
                       <FormControl>
                         <Input type="number" min={1} max={30} {...field} />
                       </FormControl>
@@ -851,7 +862,7 @@ export function DndCharacterForm() {
                   name="intelligence"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('intelligence')}</FormLabel>
+                      <FormLabel>{t('common.intelligence')}</FormLabel>
                       <FormControl>
                         <Input type="number" min={1} max={30} {...field} />
                       </FormControl>
@@ -864,7 +875,7 @@ export function DndCharacterForm() {
                   name="wisdom"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('wisdom')}</FormLabel>
+                      <FormLabel>{t('common.wisdom')}</FormLabel>
                       <FormControl>
                         <Input type="number" min={1} max={30} {...field} />
                       </FormControl>
@@ -877,7 +888,7 @@ export function DndCharacterForm() {
                   name="charisma"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('charisma')}</FormLabel>
+                      <FormLabel>{t('common.charisma')}</FormLabel>
                       <FormControl>
                         <Input type="number" min={1} max={30} {...field} />
                       </FormControl>
@@ -890,7 +901,7 @@ export function DndCharacterForm() {
 
             <div className="space-y-2">
               <h3 className="text-base font-medium">
-                {t('combatAndSpellStats')}
+                {t('dnd.combatAndSpellStats')}
               </h3>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                 <FormField
@@ -898,7 +909,7 @@ export function DndCharacterForm() {
                   name="armorClass"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('armorClass')}</FormLabel>
+                      <FormLabel>{t('dnd.armorClass')}</FormLabel>
                       <FormControl>
                         <Input type="number" {...field} />
                       </FormControl>
@@ -911,7 +922,7 @@ export function DndCharacterForm() {
                   name="speed"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('speed')}</FormLabel>
+                      <FormLabel>{t('dnd.speed')}</FormLabel>
                       <FormControl>
                         <Input type="number" {...field} />
                       </FormControl>
@@ -924,7 +935,7 @@ export function DndCharacterForm() {
                   name="max"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('maxHitPoints')}</FormLabel>
+                      <FormLabel>{t('dnd.maxHitPoints')}</FormLabel>
                       <FormControl>
                         <Input type="number" {...field} />
                       </FormControl>
@@ -939,24 +950,30 @@ export function DndCharacterForm() {
                   name="spellcastingAbility"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('primarySpellcastingAbility')}</FormLabel>
+                      <FormLabel>
+                        {t('dnd.primarySpellcastingAbility')}
+                      </FormLabel>
                       <Select
                         onValueChange={field.onChange}
                         defaultValue={field.value}
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder={t('select')} />
+                            <SelectValue placeholder={t('dnd.select')} />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="none">{t('none')}</SelectItem>
-                          <SelectItem value="intelligence">
-                            {t('intelligence')}
+                          <SelectItem value="none">
+                            {t('common.none')}
                           </SelectItem>
-                          <SelectItem value="wisdom">{t('wisdom')}</SelectItem>
+                          <SelectItem value="intelligence">
+                            {t('common.intelligence')}
+                          </SelectItem>
+                          <SelectItem value="wisdom">
+                            {t('common.wisdom')}
+                          </SelectItem>
                           <SelectItem value="charisma">
-                            {t('charisma')}
+                            {t('common.charisma')}
                           </SelectItem>
                         </SelectContent>
                       </Select>
@@ -969,7 +986,7 @@ export function DndCharacterForm() {
                   name="spellAttackBonus"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('spellAttackBonus')}</FormLabel>
+                      <FormLabel>{t('dnd.spellAttackBonus')}</FormLabel>
                       <FormControl>
                         <Input placeholder="+0" {...field} />
                       </FormControl>
@@ -982,7 +999,7 @@ export function DndCharacterForm() {
                   name="spellSaveDifficulty"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('spellSaveDC')}</FormLabel>
+                      <FormLabel>{t('dnd.spellSaveDC')}</FormLabel>
                       <FormControl>
                         <Input type="number" placeholder="8" {...field} />
                       </FormControl>
@@ -994,7 +1011,7 @@ export function DndCharacterForm() {
             </div>
           </CardContent>
           <CardFooter>
-            <Button type="submit">{t('createCharacter')}</Button>
+            <Button type="submit">{t('common.createCharacter')}</Button>
           </CardFooter>
         </form>
       </Form>

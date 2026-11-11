@@ -66,12 +66,12 @@ export function UserCharactersDialog({
         if (cancelled) return;
 
         if (!res.ok || !data?.success) {
-          setError(t('adminSheetsLoadFailed'));
+          setError(t('admin.sheetsLoadFailed'));
           return;
         }
         setCharacters(data.characters);
       } catch {
-        if (!cancelled) setError(t('adminSheetsLoadFailed'));
+        if (!cancelled) setError(t('admin.sheetsLoadFailed'));
       } finally {
         if (!cancelled) setIsLoading(false);
       }
@@ -90,7 +90,7 @@ export function UserCharactersDialog({
       <DialogContent className="max-w-2xl" data-testid="admin-sheets-dialog">
         <DialogHeader>
           <DialogTitle>
-            {t('adminSheetsTitle').replace('{name}', user?.displayName ?? '')}
+            {t('admin.sheetsTitle').replace('{name}', user?.displayName ?? '')}
           </DialogTitle>
           <DialogDescription>
             {user ? `@${user.username} · ${user.characterCount}` : ''}
@@ -107,18 +107,18 @@ export function UserCharactersDialog({
           </p>
         ) : characters.length === 0 ? (
           <p className="text-muted-foreground py-6 text-center text-sm">
-            {t('adminSheetsEmpty')}
+            {t('admin.sheetsEmpty')}
           </p>
         ) : (
           <div className="max-h-[60vh] min-w-0 overflow-x-auto overflow-y-auto">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>{t('adminColumnCharacter')}</TableHead>
-                  <TableHead>{t('gameSystem')}</TableHead>
-                  <TableHead>{t('class')}</TableHead>
-                  <TableHead>{t('adminLevelOrRank')}</TableHead>
-                  <TableHead>{t('adminUpdated')}</TableHead>
+                  <TableHead>{t('admin.columnCharacter')}</TableHead>
+                  <TableHead>{t('admin.gameSystem')}</TableHead>
+                  <TableHead>{t('common.class')}</TableHead>
+                  <TableHead>{t('admin.levelOrRank')}</TableHead>
+                  <TableHead>{t('admin.updated')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

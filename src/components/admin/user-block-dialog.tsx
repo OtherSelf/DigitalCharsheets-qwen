@@ -72,17 +72,17 @@ export function UserBlockDialog({
         setError(
           adminReasonMessage(data?.reason, t) ||
             data?.error ||
-            t('adminSaveFailed'),
+            t('admin.saveFailed'),
         );
         return;
       }
 
       toast({
-        title: blocking ? t('adminBlockedToast') : t('adminUnblockedToast'),
+        title: blocking ? t('admin.blockedToast') : t('admin.unblockedToast'),
       });
       onDone();
     } catch {
-      setError(t('adminSaveFailed'));
+      setError(t('admin.saveFailed'));
     } finally {
       setIsSaving(false);
     }
@@ -93,12 +93,12 @@ export function UserBlockDialog({
       <AlertDialogContent data-testid="admin-block-dialog">
         <AlertDialogHeader>
           <AlertDialogTitle>
-            {blocking ? t('adminBlockTitle') : t('adminUnblockTitle')}
+            {blocking ? t('admin.blockTitle') : t('admin.unblockTitle')}
           </AlertDialogTitle>
           <AlertDialogDescription>
             {blocking
-              ? t('adminBlockDescription')
-              : t('adminUnblockDescription')}
+              ? t('admin.blockDescription')
+              : t('admin.unblockDescription')}
             {user ? ` (${user.displayName} · @${user.username})` : ''}
           </AlertDialogDescription>
         </AlertDialogHeader>
@@ -111,7 +111,7 @@ export function UserBlockDialog({
 
         <AlertDialogFooter>
           <AlertDialogCancel disabled={isSaving}>
-            {t('cancel')}
+            {t('common.cancel')}
           </AlertDialogCancel>
           <Button
             type="button"
@@ -120,7 +120,7 @@ export function UserBlockDialog({
             disabled={isSaving}
           >
             {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {blocking ? t('adminBlock') : t('adminUnblock')}
+            {blocking ? t('admin.block') : t('admin.unblock')}
           </Button>
         </AlertDialogFooter>
       </AlertDialogContent>

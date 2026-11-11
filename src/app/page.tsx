@@ -84,7 +84,7 @@ export default function DashboardPage() {
                   className="flex cursor-pointer items-center"
                 >
                   <Settings2 className="mr-2 h-4 w-4" />
-                  <span>{t('statsEditor')}</span>
+                  <span>{t('common.statsEditor')}</span>
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem
@@ -93,7 +93,7 @@ export default function DashboardPage() {
                 onClick={handleBackupAll}
               >
                 <FileDown className="mr-2 h-4 w-4" />
-                <span>{t('backupAll')}</span>
+                <span>{t('common.backupAll')}</span>
               </DropdownMenuItem>
             </>
           }
@@ -113,10 +113,10 @@ export default function DashboardPage() {
               <AlertDescription className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div className="min-w-0">
                   <p className="text-foreground font-medium">
-                    {t('pendingDraftTitle')}
+                    {t('common.pendingDraftTitle')}
                   </p>
                   <p className="text-muted-foreground">
-                    {t('pendingDraftDesc').replace(
+                    {t('common.pendingDraftDesc').replace(
                       '{name}',
                       pendingDraft.name || '—',
                     )}
@@ -129,7 +129,7 @@ export default function DashboardPage() {
                     data-testid="pending-draft-create"
                   >
                     <PlusCircle className="mr-2 h-4 w-4" />
-                    {t('pendingDraftCreate')}
+                    {t('common.pendingDraftCreate')}
                   </Button>
                   <Button
                     size="sm"
@@ -137,7 +137,7 @@ export default function DashboardPage() {
                     onClick={discardPendingDraft}
                     data-testid="pending-draft-discard"
                   >
-                    {t('pendingDraftDiscard')}
+                    {t('common.pendingDraftDiscard')}
                   </Button>
                 </div>
               </AlertDescription>
@@ -147,10 +147,10 @@ export default function DashboardPage() {
           <div className="mb-6 flex flex-col gap-4 sm:mb-8">
             <div className="flex flex-col gap-2">
               <h1 className="font-headline text-2xl font-bold sm:text-3xl">
-                {t('existingCharacters')}
+                {t('common.existingCharacters')}
               </h1>
               <p className="text-muted-foreground max-w-2xl text-sm sm:text-base">
-                {t('companionText')}
+                {t('common.companionText')}
               </p>
             </div>
             {/* LANDMARK: DESKTOP_BUTTON_GROUP - Hidden on mobile, visible on sm+ */}
@@ -163,7 +163,7 @@ export default function DashboardPage() {
               >
                 <Link href="/stats-editor">
                   <Settings2 className="mr-2 h-4 w-4 shrink-0" />
-                  {t('statsEditor')}
+                  {t('common.statsEditor')}
                 </Link>
               </Button>
               <Button
@@ -174,15 +174,15 @@ export default function DashboardPage() {
                 className="justify-start"
               >
                 <FileDown className="mr-2 h-4 w-4 shrink-0" />
-                {t('backupAll')}
+                {t('common.backupAll')}
               </Button>
             </div>
           </div>
 
           <Card>
             <CardHeader>
-              <CardTitle>{t('myCharacters')}</CardTitle>
-              <CardDescription>{t('allHeroes')}</CardDescription>
+              <CardTitle>{t('common.myCharacters')}</CardTitle>
+              <CardDescription>{t('common.allHeroes')}</CardDescription>
             </CardHeader>
             <CardContent>
               <div
@@ -205,7 +205,7 @@ export default function DashboardPage() {
                     <Link href="/new">
                       <PlusCircle className="mr-3 h-6 w-6 sm:mr-4 sm:h-8 sm:w-8" />
                       <span className="text-sm font-semibold sm:text-base">
-                        {t('createNew')}
+                        {t('common.createNew')}
                       </span>
                     </Link>
                   </Button>
@@ -218,7 +218,7 @@ export default function DashboardPage() {
                     <Link href="/new">
                       <PlusCircle className="mb-2 h-10 w-10 sm:h-12 sm:w-12" />
                       <span className="text-sm font-semibold sm:text-base">
-                        {t('createNew')}
+                        {t('common.createNew')}
                       </span>
                     </Link>
                   </Button>

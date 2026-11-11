@@ -432,7 +432,7 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
             <div className="grid grid-cols-2 gap-2">
               <div className="bg-background flex min-w-0 items-center justify-between rounded border px-2 py-1.5">
                 <span className="text-muted-foreground mr-1 truncate text-[8px] font-bold uppercase">
-                  {t('passivePerception')}
+                  {t('dnd.passivePerception')}
                 </span>
                 <span className="shrink-0 text-xs font-black">
                   {passivePerception}
@@ -440,7 +440,7 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
               </div>
               <div className="bg-background flex min-w-0 items-center justify-between rounded border px-2 py-1.5">
                 <span className="text-muted-foreground mr-1 truncate text-[8px] font-bold uppercase">
-                  {t('proficiencyBonus')}
+                  {t('dnd.proficiencyBonus')}
                 </span>
                 <span className="shrink-0 text-xs font-black">
                   +{proficiencyBonus}
@@ -562,7 +562,7 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
             <Card>
               <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2">
                 <CardTitle className="text-muted-foreground text-[10px] font-bold tracking-tight uppercase">
-                  {t('otherProficienciesAndLanguages')}
+                  {t('dnd.otherProficienciesAndLanguages')}
                 </CardTitle>
                 {(showEditButtons || isOtherProficienciesEditing) && (
                   <Button
@@ -627,7 +627,7 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
                 {isOtherProficienciesEditing && (
                   <div className="flex gap-2 border-t pt-2">
                     <Input
-                      placeholder={t('newItemPlaceholder')}
+                      placeholder={t('dnd.newItemPlaceholder')}
                       value={newProfItem}
                       onChange={(e) => setNewProfItem(e.target.value)}
                       className="h-7 text-[10px]"

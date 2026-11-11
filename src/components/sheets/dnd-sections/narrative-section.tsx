@@ -120,7 +120,7 @@ const NarrativeListCard = ({
         {isEditing && (
           <div className="flex gap-2 border-t pt-2">
             <Input
-              placeholder={t('newItemPlaceholder')}
+              placeholder={t('dnd.newItemPlaceholder')}
               value={newItem}
               onChange={(e) => onNewItemChange(e.target.value)}
               className="h-7 text-[10px]"

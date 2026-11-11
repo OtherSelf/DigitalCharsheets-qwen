@@ -43,44 +43,57 @@ import { cn } from '@/lib/utils';
 import { EditSaveButton } from './dh-ui-helpers';
 
 const CHARACTERISTIC_KEYS = [
-  'weaponSkill',
-  'ballisticSkill',
-  'strength',
-  'toughness',
-  'agility',
-  'intelligence',
-  'perception',
-  'willpower',
-  'fellowship',
-  'influence',
+  'dh.weaponSkill',
+  'dh.ballisticSkill',
+  'common.strength',
+  'dh.toughness',
+  'dh.agility',
+  'common.intelligence',
+  'common.perception',
+  'common.willpower',
+  'dh.fellowship',
+  'dh.influence',
 ] as const;
 
+const ABBR_KEYS: Record<string, string> = {
+  'dh.weaponSkill': 'dh.weaponSkillAbbr',
+  'dh.ballisticSkill': 'dh.ballisticSkillAbbr',
+  'common.strength': 'dh.strengthAbbr',
+  'dh.toughness': 'dh.toughnessAbbr',
+  'dh.agility': 'dh.agilityAbbr',
+  'common.intelligence': 'dh.intelligenceAbbr',
+  'common.perception': 'dh.perceptionAbbr',
+  'common.willpower': 'dh.willpowerAbbr',
+  'dh.fellowship': 'dh.fellowshipAbbr',
+  'dh.influence': 'dh.influenceAbbr',
+};
+
 const ABBR_TO_KEY: Record<string, (typeof CHARACTERISTIC_KEYS)[number]> = {
-  WS: 'weaponSkill',
-  ББ: 'weaponSkill',
-  BS: 'ballisticSkill',
-  ДБ: 'ballisticSkill',
-  S: 'strength',
-  СЛ: 'strength',
-  T: 'toughness',
-  СТ: 'toughness',
-  Ag: 'agility',
-  AG: 'agility',
-  ЛВ: 'agility',
-  Int: 'intelligence',
-  INT: 'intelligence',
-  ИН: 'intelligence',
-  Per: 'perception',
-  PER: 'perception',
-  ВП: 'perception',
-  WP: 'willpower',
-  СВ: 'willpower',
-  Fel: 'fellowship',
-  FEL: 'fellowship',
-  ОБ: 'fellowship',
-  Inf: 'influence',
-  INF: 'influence',
-  ВЛ: 'influence',
+  WS: 'dh.weaponSkill',
+  ББ: 'dh.weaponSkill',
+  BS: 'dh.ballisticSkill',
+  ДБ: 'dh.ballisticSkill',
+  S: 'common.strength',
+  СЛ: 'common.strength',
+  T: 'dh.toughness',
+  СТ: 'dh.toughness',
+  Ag: 'dh.agility',
+  AG: 'dh.agility',
+  ЛВ: 'dh.agility',
+  Int: 'common.intelligence',
+  INT: 'common.intelligence',
+  ИН: 'common.intelligence',
+  Per: 'common.perception',
+  PER: 'common.perception',
+  ВП: 'common.perception',
+  WP: 'common.willpower',
+  СВ: 'common.willpower',
+  Fel: 'dh.fellowship',
+  FEL: 'dh.fellowship',
+  ОБ: 'dh.fellowship',
+  Inf: 'dh.influence',
+  INF: 'dh.influence',
+  ВЛ: 'dh.influence',
 };
 
 const getTranslatedSkillName = (
@@ -92,8 +105,9 @@ const getTranslatedSkillName = (
     const baseName = match[1].trim();
     const abbr = match[2].trim();
     const key = ABBR_TO_KEY[abbr];
-    if (key) {
-      return `${baseName} (${t(`${key}Abbr`)})`;
+    const abbrKey = key ? ABBR_KEYS[key] : undefined;
+    if (abbrKey) {
+      return `${baseName} (${t(abbrKey)})`;
     }
   }
   return skillName;
@@ -129,10 +143,10 @@ export const SkillsTalentsSection = React.forwardRef<
     );
     const [newBasicSkillName, setNewBasicSkillName] = React.useState('');
     const [newBasicSkillChar, setNewBasicSkillChar] =
-      React.useState<string>('agility');
+      React.useState<string>('dh.agility');
     const [newAdvancedSkillName, setNewAdvancedSkillName] = React.useState('');
     const [newAdvancedSkillChar, setNewAdvancedSkillChar] =
-      React.useState<string>('intelligence');
+      React.useState<string>('common.intelligence');
     const [editableTalents, setEditableTalents] = React.useState(
       character.talents ?? [],
     );
@@ -190,7 +204,8 @@ export const SkillsTalentsSection = React.forwardRef<
 
     const addBasicSkill = () => {
       if (newBasicSkillName.trim() !== '') {
-        const charAbbr = t(`${newBasicSkillChar}Abbr`);
+        const abbrKey = ABBR_KEYS[newBasicSkillChar];
+        const charAbbr = abbrKey ? t(abbrKey) : newBasicSkillChar;
         setEditableSkills([
           ...editableSkills,
           {
@@ -207,13 +222,14 @@ export const SkillsTalentsSection = React.forwardRef<
           },
         ]);
         setNewBasicSkillName('');
-        setNewBasicSkillChar('agility');
+        setNewBasicSkillChar('dh.agility');
       }
     };
 
     const addAdvancedSkill = () => {
       if (newAdvancedSkillName.trim() !== '') {
-        const charAbbr = t(`${newAdvancedSkillChar}Abbr`);
+        const abbrKey = ABBR_KEYS[newAdvancedSkillChar];
+        const charAbbr = abbrKey ? t(abbrKey) : newAdvancedSkillChar;
         setEditableSkills([
           ...editableSkills,
           {
@@ -300,7 +316,7 @@ export const SkillsTalentsSection = React.forwardRef<
                     <ChevronRight className="h-5 w-5" />
                   )}
                   <h3 className="font-headline text-lg font-semibold">
-                    {t('skills')}
+                    {t('common.skills')}
                   </h3>
                 </CollapsibleTrigger>
                 {(showEditButtons || isSkillsEditing) && (
@@ -320,7 +336,7 @@ export const SkillsTalentsSection = React.forwardRef<
                   {/* BASIC SKILLS */}
                   <div>
                     <h4 className="text-muted-foreground mb-2 font-semibold">
-                      {t('basic')}
+                      {t('dh.basic')}
                     </h4>
                     <div className="overflow-hidden rounded-lg border">
                       <Table>
@@ -329,7 +345,7 @@ export const SkillsTalentsSection = React.forwardRef<
                             <TableHead
                               className={cn('w-[40px]', isCompactView && 'p-1')}
                             >
-                              {t('notes')}
+                              {t('common.notes')}
                             </TableHead>
                             <TableHead
                               className={cn(
@@ -337,7 +353,7 @@ export const SkillsTalentsSection = React.forwardRef<
                                 isCompactView && 'p-2 text-xs',
                               )}
                             >
-                              {t('name')}
+                              {t('common.name')}
                             </TableHead>
                             <TableHead
                               className={cn(
@@ -345,7 +361,7 @@ export const SkillsTalentsSection = React.forwardRef<
                                 isCompactView && 'p-1 text-xs',
                               )}
                             >
-                              {t('skilled')}
+                              {t('dh.skilled')}
                             </TableHead>
                             <TableHead
                               className={cn(
@@ -399,7 +415,7 @@ export const SkillsTalentsSection = React.forwardRef<
                                     </PopoverTrigger>
                                     <PopoverContent className="w-64">
                                       <Label className="mb-2 block text-xs">
-                                        {t('notesFor')}{' '}
+                                        {t('common.notesFor')}{' '}
                                         {getTranslatedSkillName(skill.name, t)}
                                       </Label>
                                       <Textarea
@@ -418,7 +434,7 @@ export const SkillsTalentsSection = React.forwardRef<
                                             ),
                                           })
                                         }
-                                        placeholder={`${t('addNotes')}...`}
+                                        placeholder={`${t('common.addNotes')}...`}
                                         className="mt-2 min-h-[100px] text-sm"
                                       />
                                     </PopoverContent>
@@ -560,7 +576,7 @@ export const SkillsTalentsSection = React.forwardRef<
                       <div className="bg-background mt-4 flex flex-col gap-2 rounded-md border p-3">
                         <div className="flex gap-2">
                           <Input
-                            placeholder={t('basic')}
+                            placeholder={t('dh.basic')}
                             value={newBasicSkillName}
                             onChange={(e) =>
                               setNewBasicSkillName(e.target.value)
@@ -576,12 +592,12 @@ export const SkillsTalentsSection = React.forwardRef<
                           >
                             {CHARACTERISTIC_KEYS.map((key) => (
                               <option key={key} value={key}>
-                                {t(key)} ({t(`${key}Abbr`)})
+                                {t(key)} ({t(ABBR_KEYS[key])})
                               </option>
                             ))}
                           </select>
                           <Button onClick={addBasicSkill} size="sm">
-                            <Plus className="mr-2 h-4 w-4" /> {t('add')}
+                            <Plus className="mr-2 h-4 w-4" /> {t('common.add')}
                           </Button>
                         </div>
                       </div>
@@ -591,7 +607,7 @@ export const SkillsTalentsSection = React.forwardRef<
                   {/* ADVANCED SKILLS */}
                   <div>
                     <h4 className="text-muted-foreground mb-2 font-semibold">
-                      {t('advanced')}
+                      {t('dh.advanced')}
                     </h4>
                     <div className="overflow-hidden rounded-lg border">
                       <Table>
@@ -600,7 +616,7 @@ export const SkillsTalentsSection = React.forwardRef<
                             <TableHead
                               className={cn('w-[40px]', isCompactView && 'p-1')}
                             >
-                              {t('notes')}
+                              {t('common.notes')}
                             </TableHead>
                             <TableHead
                               className={cn(
@@ -608,7 +624,7 @@ export const SkillsTalentsSection = React.forwardRef<
                                 isCompactView && 'p-2 text-xs',
                               )}
                             >
-                              {t('name')}
+                              {t('common.name')}
                             </TableHead>
                             <TableHead
                               className={cn(
@@ -616,7 +632,7 @@ export const SkillsTalentsSection = React.forwardRef<
                                 isCompactView && 'p-1 text-xs',
                               )}
                             >
-                              {t('skilled')}
+                              {t('dh.skilled')}
                             </TableHead>
                             <TableHead
                               className={cn(
@@ -670,7 +686,7 @@ export const SkillsTalentsSection = React.forwardRef<
                                     </PopoverTrigger>
                                     <PopoverContent className="w-64">
                                       <Label className="mb-2 block text-xs">
-                                        {t('notesFor')}{' '}
+                                        {t('common.notesFor')}{' '}
                                         {getTranslatedSkillName(skill.name, t)}
                                       </Label>
                                       <Textarea
@@ -689,7 +705,7 @@ export const SkillsTalentsSection = React.forwardRef<
                                             ),
                                           })
                                         }
-                                        placeholder={`${t('addNotes')}...`}
+                                        placeholder={`${t('common.addNotes')}...`}
                                         className="mt-2 min-h-[100px] text-sm"
                                       />
                                     </PopoverContent>
@@ -831,7 +847,7 @@ export const SkillsTalentsSection = React.forwardRef<
                       <div className="bg-background mt-4 flex flex-col gap-2 rounded-md border p-3">
                         <div className="flex gap-2">
                           <Input
-                            placeholder={t('advanced')}
+                            placeholder={t('dh.advanced')}
                             value={newAdvancedSkillName}
                             onChange={(e) =>
                               setNewAdvancedSkillName(e.target.value)
@@ -847,12 +863,12 @@ export const SkillsTalentsSection = React.forwardRef<
                           >
                             {CHARACTERISTIC_KEYS.map((key) => (
                               <option key={key} value={key}>
-                                {t(key)} ({t(`${key}Abbr`)})
+                                {t(key)} ({t(ABBR_KEYS[key])})
                               </option>
                             ))}
                           </select>
                           <Button onClick={addAdvancedSkill} size="sm">
-                            <Plus className="mr-2 h-4 w-4" /> {t('add')}
+                            <Plus className="mr-2 h-4 w-4" /> {t('common.add')}
                           </Button>
                         </div>
                       </div>
@@ -882,7 +898,7 @@ export const SkillsTalentsSection = React.forwardRef<
                     <ChevronRight className="h-5 w-5" />
                   )}
                   <h3 className="font-headline text-lg font-semibold">
-                    {t('talentsAndTraits')}
+                    {t('dh.talentsAndTraits')}
                   </h3>
                 </CollapsibleTrigger>
                 {(showEditButtons || isTalentsEditing) && (
@@ -922,7 +938,7 @@ export const SkillsTalentsSection = React.forwardRef<
                                 </PopoverTrigger>
                                 <PopoverContent className="w-64">
                                   <Label className="mb-2 block text-xs">
-                                    {t('notesFor')} {talent.name}
+                                    {t('common.notesFor')} {talent.name}
                                   </Label>
                                   <Textarea
                                     defaultValue={talent.notes || ''}
@@ -935,7 +951,7 @@ export const SkillsTalentsSection = React.forwardRef<
                                         ),
                                       )
                                     }
-                                    placeholder={`${t('addNotes')}...`}
+                                    placeholder={`${t('common.addNotes')}...`}
                                     className="mt-2 min-h-[100px] text-sm"
                                   />
                                 </PopoverContent>
@@ -980,7 +996,7 @@ export const SkillsTalentsSection = React.forwardRef<
                                 ),
                               )
                             }
-                            placeholder={`${t('description')}...`}
+                            placeholder={`${t('common.description')}...`}
                             className="min-h-[60px] text-sm"
                           />
                         </li>
@@ -988,12 +1004,12 @@ export const SkillsTalentsSection = React.forwardRef<
                     </ul>
                     <div className="bg-background space-y-2 rounded-md border p-3">
                       <Input
-                        placeholder={t('newTalentPlaceholder')}
+                        placeholder={t('dh.newTalentPlaceholder')}
                         value={newTalentName}
                         onChange={(e) => setNewTalentName(e.target.value)}
                       />
                       <Textarea
-                        placeholder={t('descriptionOptional')}
+                        placeholder={t('dh.descriptionOptional')}
                         value={newTalentDescription}
                         onChange={(e) =>
                           setNewTalentDescription(e.target.value)
@@ -1001,7 +1017,7 @@ export const SkillsTalentsSection = React.forwardRef<
                         className="min-h-[60px] text-sm"
                       />
                       <Button onClick={addTalent} className="w-full">
-                        <Plus className="mr-2 h-4 w-4" /> {t('add')}
+                        <Plus className="mr-2 h-4 w-4" /> {t('common.add')}
                       </Button>
                     </div>
                   </div>
@@ -1035,7 +1051,7 @@ export const SkillsTalentsSection = React.forwardRef<
                                   </PopoverTrigger>
                                   <PopoverContent className="w-64">
                                     <Label className="mb-2 block text-xs">
-                                      {t('notesFor')} {talent.name}
+                                      {t('common.notesFor')} {talent.name}
                                     </Label>
                                     <Textarea
                                       defaultValue={talent.notes || ''}
@@ -1050,7 +1066,7 @@ export const SkillsTalentsSection = React.forwardRef<
                                           ),
                                         })
                                       }
-                                      placeholder={`${t('addNotes')}...`}
+                                      placeholder={`${t('common.addNotes')}...`}
                                       className="mt-2 min-h-[100px] text-sm"
                                     />
                                   </PopoverContent>
@@ -1089,7 +1105,7 @@ export const SkillsTalentsSection = React.forwardRef<
                           isCompactView ? 'text-xs' : 'text-sm',
                         )}
                       >
-                        {t('noTalentsOrTraits')}
+                        {t('dh.noTalentsOrTraits')}
                       </p>
                     )}
                   </div>

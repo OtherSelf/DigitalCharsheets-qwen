@@ -78,15 +78,15 @@ export function UserEditDialog({
     if (!user || isSaving) return;
 
     if (!displayName.trim()) {
-      setError(t('adminDisplayNameRequired'));
+      setError(t('admin.displayNameRequired'));
       return;
     }
     if (!username.trim()) {
-      setError(t('adminLoginRequired'));
+      setError(t('admin.loginRequired'));
       return;
     }
     if (password && password.length < 4) {
-      setError(t('adminPasswordShort'));
+      setError(t('admin.passwordShort'));
       return;
     }
 
@@ -112,16 +112,16 @@ export function UserEditDialog({
         setError(
           adminReasonMessage(data?.reason, t) ||
             data?.error ||
-            t('adminSaveFailed'),
+            t('admin.saveFailed'),
         );
         return;
       }
 
-      toast({ title: t('adminUserSaved') });
+      toast({ title: t('admin.userSaved') });
       onSaved(data.user as AdminUserSummary);
       onOpenChange(false);
     } catch {
-      setError(t('adminSaveFailed'));
+      setError(t('admin.saveFailed'));
     } finally {
       setIsSaving(false);
     }
@@ -134,13 +134,17 @@ export function UserEditDialog({
         data-testid="admin-edit-dialog"
       >
         <DialogHeader>
-          <DialogTitle>{t('adminEditUser')}</DialogTitle>
-          <DialogDescription>{t('adminEditUserDescription')}</DialogDescription>
+          <DialogTitle>{t('admin.editUser')}</DialogTitle>
+          <DialogDescription>
+            {t('admin.editUserDescription')}
+          </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="admin-edit-display-name">{t('displayName')}</Label>
+            <Label htmlFor="admin-edit-display-name">
+              {t('common.displayName')}
+            </Label>
             <Input
               id="admin-edit-display-name"
               value={displayName}
@@ -151,7 +155,7 @@ export function UserEditDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="admin-edit-username">{t('login')}</Label>
+            <Label htmlFor="admin-edit-username">{t('auth.login')}</Label>
             <Input
               id="admin-edit-username"
               value={username}
@@ -162,7 +166,9 @@ export function UserEditDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="admin-edit-password">{t('newPassword')}</Label>
+            <Label htmlFor="admin-edit-password">
+              {t('common.newPassword')}
+            </Label>
             <Input
               id="admin-edit-password"
               type="password"
@@ -172,12 +178,12 @@ export function UserEditDialog({
               autoComplete="new-password"
             />
             <p className="text-muted-foreground text-xs">
-              {t('adminNewPasswordHint')}
+              {t('admin.newPasswordHint')}
             </p>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="admin-edit-role">{t('adminColumnRole')}</Label>
+            <Label htmlFor="admin-edit-role">{t('admin.columnRole')}</Label>
             <Select
               value={role}
               onValueChange={(value) => setRole(value as UserRole)}
@@ -187,8 +193,8 @@ export function UserEditDialog({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="user">{t('adminRoleUser')}</SelectItem>
-                <SelectItem value="admin">{t('adminRoleAdmin')}</SelectItem>
+                <SelectItem value="user">{t('admin.roleUser')}</SelectItem>
+                <SelectItem value="admin">{t('admin.roleAdmin')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -206,11 +212,11 @@ export function UserEditDialog({
               onClick={() => handleOpenChange(false)}
               disabled={isSaving}
             >
-              {t('cancel')}
+              {t('common.cancel')}
             </Button>
             <Button type="submit" disabled={isSaving}>
               {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {t('adminSave')}
+              {t('admin.save')}
             </Button>
           </DialogFooter>
         </form>

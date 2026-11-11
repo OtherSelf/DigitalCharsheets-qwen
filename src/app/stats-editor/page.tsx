@@ -23,25 +23,25 @@ import { DarkHeresyCharacter, DnD5eCharacter } from '@/lib/types';
 
 // ─── STAT DEFINITIONS ──────────────────────────────────────────────
 const DH_STATS = [
-  { key: 'weaponSkill', labelKey: 'weaponSkill' },
-  { key: 'ballisticSkill', labelKey: 'ballisticSkill' },
-  { key: 'strength', labelKey: 'strength' },
-  { key: 'toughness', labelKey: 'toughness' },
-  { key: 'agility', labelKey: 'agility' },
-  { key: 'intelligence', labelKey: 'intelligence' },
-  { key: 'perception', labelKey: 'perception' },
-  { key: 'willpower', labelKey: 'willpower' },
-  { key: 'fellowship', labelKey: 'fellowship' },
-  { key: 'influence', labelKey: 'influence' },
+  { key: 'weaponSkill', labelKey: 'dh.weaponSkill' },
+  { key: 'ballisticSkill', labelKey: 'dh.ballisticSkill' },
+  { key: 'strength', labelKey: 'common.strength' },
+  { key: 'toughness', labelKey: 'dh.toughness' },
+  { key: 'agility', labelKey: 'dh.agility' },
+  { key: 'intelligence', labelKey: 'common.intelligence' },
+  { key: 'perception', labelKey: 'common.perception' },
+  { key: 'willpower', labelKey: 'common.willpower' },
+  { key: 'fellowship', labelKey: 'dh.fellowship' },
+  { key: 'influence', labelKey: 'dh.influence' },
 ];
 
 const DND_STATS = [
-  { key: 'strength', labelKey: 'statStrAbbr' },
-  { key: 'dexterity', labelKey: 'statDexAbbr' },
-  { key: 'constitution', labelKey: 'statConAbbr' },
-  { key: 'intelligence', labelKey: 'statIntAbbr' },
-  { key: 'wisdom', labelKey: 'statWisAbbr' },
-  { key: 'charisma', labelKey: 'statChaAbbr' },
+  { key: 'strength', labelKey: 'common.statStrAbbr' },
+  { key: 'dexterity', labelKey: 'common.statDexAbbr' },
+  { key: 'constitution', labelKey: 'common.statConAbbr' },
+  { key: 'intelligence', labelKey: 'common.statIntAbbr' },
+  { key: 'wisdom', labelKey: 'common.statWisAbbr' },
+  { key: 'charisma', labelKey: 'common.statChaAbbr' },
 ];
 
 // ─── EDIT STATE TYPES ──────────────────────────────────────────────
@@ -196,7 +196,7 @@ export default function StatsEditorPage() {
     setStatsEdits((prev) =>
       prev.map((e) => (e.id === charId ? { ...e, saved: true } : e)),
     );
-    flashStatus(`${t('savedStatsFor')} "${edit.name}"`);
+    flashStatus(`${t('common.savedStatsFor')} "${edit.name}"`);
   };
 
   const handleSaveAllStats = () => {
@@ -206,7 +206,7 @@ export default function StatsEditorPage() {
         updateCharacter(edit.id, { stats: edit.stats } as any);
       });
     setStatsEdits((prev) => prev.map((e) => ({ ...e, saved: true })));
-    flashStatus(t('allStatsSaved'));
+    flashStatus(t('common.allStatsSaved'));
   };
 
   // ─── DH VITALS HANDLERS ──────────────────────────────────────────
@@ -247,7 +247,7 @@ export default function StatsEditorPage() {
     setDhVitalsEdits((prev) =>
       prev.map((e) => (e.id === charId ? { ...e, saved: true } : e)),
     );
-    flashStatus(`${t('savedVitalsFor')} "${edit.name}"`);
+    flashStatus(`${t('common.savedVitalsFor')} "${edit.name}"`);
   };
 
   const handleSaveAllDHVitals = () => {
@@ -263,7 +263,7 @@ export default function StatsEditorPage() {
         } as any);
       });
     setDhVitalsEdits((prev) => prev.map((e) => ({ ...e, saved: true })));
-    flashStatus(t('allDhVitalsSaved'));
+    flashStatus(t('common.allDhVitalsSaved'));
   };
 
   // ─── DND VITALS HANDLERS ─────────────────────────────────────────
@@ -310,7 +310,7 @@ export default function StatsEditorPage() {
     setDndVitalsEdits((prev) =>
       prev.map((e) => (e.id === charId ? { ...e, saved: true } : e)),
     );
-    flashStatus(`${t('savedVitalsFor')} "${edit.name}"`);
+    flashStatus(`${t('common.savedVitalsFor')} "${edit.name}"`);
   };
 
   const handleSaveAllDnDVitals = () => {
@@ -328,7 +328,7 @@ export default function StatsEditorPage() {
         } as any);
       });
     setDndVitalsEdits((prev) => prev.map((e) => ({ ...e, saved: true })));
-    flashStatus(t('allDndVitalsSaved'));
+    flashStatus(t('common.allDndVitalsSaved'));
   };
 
   // ─── GUARDS ──────────────────────────────────────────────────────
@@ -343,7 +343,7 @@ export default function StatsEditorPage() {
   if (isUserLoading || !isLoaded) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <p className="text-muted-foreground">{t('loadingCharacters')}</p>
+        <p className="text-muted-foreground">{t('common.loadingCharacters')}</p>
       </div>
     );
   }
@@ -369,20 +369,23 @@ export default function StatsEditorPage() {
       {/* LANDMARK: STATS_EDITOR_HEADER — та же шапка, что на остальных страницах.
           Стрелка «назад» не нужна: бренд-ссылка ведёт домой, а редактор
           всегда открывается с дашборда. */}
-      <Header title={t('bulkEditor')} subtitle={t('bulkEditorDesc')} />
+      <Header
+        title={t('common.bulkEditor')}
+        subtitle={t('common.bulkEditorDesc')}
+      />
 
       <main className="safe-area-bottom flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
         <div className="mx-auto max-w-7xl space-y-6">
           {/* Tab Bar */}
           <div className="flex flex-wrap gap-2">
-            {tabButton('stats', t('statsTab'))}
+            {tabButton('stats', t('common.statsTab'))}
             {tabButton(
               'dh-vitals',
-              `${t('dhVitals')} (${dhVitalsEdits.length})`,
+              `${t('common.dhVitals')} (${dhVitalsEdits.length})`,
             )}
             {tabButton(
               'dnd-vitals',
-              `${t('dndVitals')} (${dndVitalsEdits.length})`,
+              `${t('common.dndVitals')} (${dndVitalsEdits.length})`,
             )}
           </div>
 
@@ -401,7 +404,7 @@ export default function StatsEditorPage() {
             <div className="space-y-6">
               <div className="flex justify-end">
                 <Button onClick={handleSaveAllStats}>
-                  <Save className="mr-2 h-4 w-4" /> {t('saveAllStats')}
+                  <Save className="mr-2 h-4 w-4" /> {t('common.saveAllStats')}
                 </Button>
               </div>
 
@@ -409,14 +412,14 @@ export default function StatsEditorPage() {
                 <Card>
                   <CardHeader>
                     <CardTitle>
-                      {t('dhStats')} ({dhStats.length})
+                      {t('common.dhStats')} ({dhStats.length})
                     </CardTitle>
-                    <CardDescription>{t('dhStatsDesc')}</CardDescription>
+                    <CardDescription>{t('common.dhStatsDesc')}</CardDescription>
                   </CardHeader>
                   <CardContent className="overflow-x-auto">
                     <div className="min-w-[900px] space-y-2">
                       <div className="text-muted-foreground grid grid-cols-[180px_repeat(10,1fr)_60px] items-center gap-1 border-b pb-2 text-xs font-semibold">
-                        <span>{t('characterName')}</span>
+                        <span>{t('common.characterName')}</span>
                         {DH_STATS.map((s) => (
                           <span key={s.key} className="text-center">
                             {t(s.labelKey)}
@@ -471,14 +474,14 @@ export default function StatsEditorPage() {
                 <Card>
                   <CardHeader>
                     <CardTitle>
-                      {t('dndStats')} ({dndStats.length})
+                      {t('common.dndStats')} ({dndStats.length})
                     </CardTitle>
-                    <CardDescription>{t('dhStatsDesc')}</CardDescription>
+                    <CardDescription>{t('common.dhStatsDesc')}</CardDescription>
                   </CardHeader>
                   <CardContent className="overflow-x-auto">
                     <div className="min-w-[700px] space-y-2">
                       <div className="text-muted-foreground grid grid-cols-[180px_repeat(6,1fr)_60px] items-center gap-1 border-b pb-2 text-xs font-semibold">
-                        <span>{t('characterName')}</span>
+                        <span>{t('common.characterName')}</span>
                         {DND_STATS.map((s) => (
                           <span key={s.key} className="text-center">
                             {t(s.labelKey)}
@@ -536,7 +539,8 @@ export default function StatsEditorPage() {
             <div className="space-y-6">
               <div className="flex justify-end">
                 <Button onClick={handleSaveAllDHVitals}>
-                  <Save className="mr-2 h-4 w-4" /> {t('saveAllDhVitals')}
+                  <Save className="mr-2 h-4 w-4" />{' '}
+                  {t('common.saveAllDhVitals')}
                 </Button>
               </div>
 
@@ -544,19 +548,29 @@ export default function StatsEditorPage() {
                 <Card>
                   <CardHeader>
                     <CardTitle>
-                      {t('dhVitals')} ({dhVitalsEdits.length})
+                      {t('common.dhVitals')} ({dhVitalsEdits.length})
                     </CardTitle>
-                    <CardDescription>{t('dhVitalsDesc')}</CardDescription>
+                    <CardDescription>
+                      {t('common.dhVitalsDesc')}
+                    </CardDescription>
                   </CardHeader>
                   <CardContent className="overflow-x-auto">
                     <div className="min-w-[800px] space-y-2">
                       <div className="text-muted-foreground grid grid-cols-[180px_repeat(5,1fr)_60px] items-center gap-2 border-b pb-2 text-xs font-semibold">
-                        <span>{t('characterName')}</span>
-                        <span className="text-center">{t('woundsMax')}</span>
-                        <span className="text-center">{t('fateMax')}</span>
-                        <span className="text-center">{t('insanity')}</span>
-                        <span className="text-center">{t('corruption')}</span>
-                        <span className="text-center">{t('experience')}</span>
+                        <span>{t('common.characterName')}</span>
+                        <span className="text-center">
+                          {t('common.woundsMax')}
+                        </span>
+                        <span className="text-center">
+                          {t('common.fateMax')}
+                        </span>
+                        <span className="text-center">{t('dh.insanity')}</span>
+                        <span className="text-center">
+                          {t('dh.corruption')}
+                        </span>
+                        <span className="text-center">
+                          {t('dh.experience')}
+                        </span>
                         <span></span>
                       </div>
                       {dhVitalsEdits.map((char) => (
@@ -660,7 +674,7 @@ export default function StatsEditorPage() {
               ) : (
                 <Card>
                   <CardContent className="text-muted-foreground py-12 text-center">
-                    {t('noDhCharacters')}
+                    {t('common.noDhCharacters')}
                   </CardContent>
                 </Card>
               )}
@@ -672,7 +686,8 @@ export default function StatsEditorPage() {
             <div className="space-y-6">
               <div className="flex justify-end">
                 <Button onClick={handleSaveAllDnDVitals}>
-                  <Save className="mr-2 h-4 w-4" /> {t('saveAllDndVitals')}
+                  <Save className="mr-2 h-4 w-4" />{' '}
+                  {t('common.saveAllDndVitals')}
                 </Button>
               </div>
 
@@ -680,20 +695,28 @@ export default function StatsEditorPage() {
                 <Card>
                   <CardHeader>
                     <CardTitle>
-                      {t('dndVitals')} ({dndVitalsEdits.length})
+                      {t('common.dndVitals')} ({dndVitalsEdits.length})
                     </CardTitle>
-                    <CardDescription>{t('dndVitalsDesc')}</CardDescription>
+                    <CardDescription>
+                      {t('common.dndVitalsDesc')}
+                    </CardDescription>
                   </CardHeader>
                   <CardContent className="overflow-x-auto">
                     <div className="min-w-[850px] space-y-2">
                       <div className="text-muted-foreground grid grid-cols-[180px_70px_90px_70px_70px_100px_110px_60px] items-center gap-2 border-b pb-2 text-xs font-semibold">
-                        <span>{t('characterName')}</span>
-                        <span className="text-center">{t('level')}</span>
-                        <span className="text-center">{t('hpMax')}</span>
-                        <span className="text-center">{t('armorClass')}</span>
-                        <span className="text-center">{t('profShort')}</span>
-                        <span className="text-center">{t('speed')}</span>
-                        <span className="text-center">{t('experience')}</span>
+                        <span>{t('common.characterName')}</span>
+                        <span className="text-center">{t('dnd.level')}</span>
+                        <span className="text-center">{t('common.hpMax')}</span>
+                        <span className="text-center">
+                          {t('dnd.armorClass')}
+                        </span>
+                        <span className="text-center">
+                          {t('common.profShort')}
+                        </span>
+                        <span className="text-center">{t('dnd.speed')}</span>
+                        <span className="text-center">
+                          {t('dh.experience')}
+                        </span>
                         <span></span>
                       </div>
                       {dndVitalsEdits.map((char) => (
@@ -811,7 +834,7 @@ export default function StatsEditorPage() {
               ) : (
                 <Card>
                   <CardContent className="text-muted-foreground py-12 text-center">
-                    {t('noDndCharacters')}
+                    {t('common.noDndCharacters')}
                   </CardContent>
                 </Card>
               )}
@@ -822,7 +845,7 @@ export default function StatsEditorPage() {
           {characters.length === 0 && (
             <Card>
               <CardContent className="text-muted-foreground py-12 text-center">
-                {t('noCharactersFound')}
+                {t('common.noCharactersFound')}
               </CardContent>
             </Card>
           )}

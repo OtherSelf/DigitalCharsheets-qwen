@@ -87,7 +87,7 @@ export function RecoveryModal() {
 
     if (isSetup) {
       if (!newRecoveryPhrase || newRecoveryPhrase.trim().length < 5) {
-        setError(t('phraseMinLength'));
+        setError(t('auth.phraseMinLength'));
         return;
       }
       setIsLoading(true);
@@ -110,25 +110,25 @@ export function RecoveryModal() {
             router.replace(window.location.pathname, { scroll: false });
           }, 100);
         } else {
-          setError(data.error || t('phraseUpdateFailed'));
+          setError(data.error || t('auth.phraseUpdateFailed'));
         }
       } catch (err) {
-        setError(t('serverConnectionFailed'));
+        setError(t('common.serverConnectionFailed'));
       } finally {
         setIsLoading(false);
       }
     } else {
       // Recovery mode
       if (!newPassword || !newRecoveryPhrase) {
-        setError(t('authFillAllFields'));
+        setError(t('auth.fillAllFields'));
         return;
       }
       if (newPassword.length < 4) {
-        setError(t('passwordMinLength'));
+        setError(t('common.passwordMinLength'));
         return;
       }
       if (newRecoveryPhrase.trim().length < 5) {
-        setError(t('phraseMinLength'));
+        setError(t('auth.phraseMinLength'));
         return;
       }
 
@@ -156,10 +156,10 @@ export function RecoveryModal() {
             router.replace(window.location.pathname, { scroll: false });
           }, 100);
         } else {
-          setError(data.error || t('credentialsUpdateFailed'));
+          setError(data.error || t('auth.credentialsUpdateFailed'));
         }
       } catch (err) {
-        setError(t('serverConnectionFailed'));
+        setError(t('common.serverConnectionFailed'));
       } finally {
         setIsLoading(false);
       }
@@ -173,10 +173,14 @@ export function RecoveryModal() {
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>
-            {isRecovery ? t('resetCredentialsTitle') : t('secureAccountTitle')}
+            {isRecovery
+              ? t('auth.resetCredentialsTitle')
+              : t('auth.secureAccountTitle')}
           </DialogTitle>
           <DialogDescription>
-            {isRecovery ? t('resetCredentialsDesc') : t('secureAccountDesc')}
+            {isRecovery
+              ? t('auth.resetCredentialsDesc')
+              : t('auth.secureAccountDesc')}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 py-4">
@@ -192,7 +196,7 @@ export function RecoveryModal() {
                 htmlFor="recovery-new-password"
                 className="text-sm font-medium"
               >
-                {t('newPassword')}
+                {t('common.newPassword')}
               </label>
               <Input
                 id="recovery-new-password"
@@ -207,27 +211,27 @@ export function RecoveryModal() {
 
           <div className="space-y-2">
             <label htmlFor="recovery-phrase" className="text-sm font-medium">
-              {isRecovery ? t('recoveryPhrase') : t('authRecoveryPhraseLabel')}
+              {isRecovery ? t('auth.phrase') : t('auth.recoveryPhraseLabel')}
             </label>
             <Input
               id="recovery-phrase"
               value={newRecoveryPhrase}
               onChange={(e) => setNewRecoveryPhrase(e.target.value)}
-              placeholder={t('recoveryPhraseExample')}
+              placeholder={t('auth.phraseExample')}
               required
             />
             <p className="text-muted-foreground text-xs">
-              {t('recoveryPhraseHint')}
+              {t('auth.phraseHint')}
             </p>
           </div>
 
           <DialogFooter>
             <Button type="submit" disabled={isLoading}>
               {isLoading
-                ? t('saving')
+                ? t('common.saving')
                 : isRecovery
-                  ? t('saveAndContinue')
-                  : t('savePhrase')}
+                  ? t('auth.saveAndContinue')
+                  : t('auth.savePhrase')}
             </Button>
           </DialogFooter>
         </form>

@@ -83,36 +83,40 @@ export function CompactSidebar({
   const [isHouseRulesDialogOpen, setIsHouseRulesDialogOpen] = useState(false);
 
   const dndItems = [
-    { label: 'info', id: 'info-section', icon: Info },
-    { label: 'abilityScores', id: 'stats-section', icon: Activity },
-    { label: 'combatStats', id: 'combat-section', icon: Swords },
+    { label: 'common.info', id: 'info-section', icon: Info },
+    { label: 'dnd.abilityScores', id: 'stats-section', icon: Activity },
+    { label: 'dnd.combatStats', id: 'combat-section', icon: Swords },
     {
-      label: 'inventoryAndAttunement',
+      label: 'common.inventoryAndAttunement',
       id: 'inventory-section',
       icon: Backpack,
     },
-    { label: 'spells', id: 'spells-section', icon: Sparkles },
-    { label: 'companions', id: 'companion-section', icon: PawPrint },
+    { label: 'dnd.spells', id: 'spells-section', icon: Sparkles },
+    { label: 'dnd.companions', id: 'companion-section', icon: PawPrint },
     ...(isLevel20
-      ? [{ label: 'divineBoons', id: 'boons-section', icon: Star }]
+      ? [{ label: 'dnd.divineBoons', id: 'boons-section', icon: Star }]
       : []),
   ];
 
   const dhItems = [
-    { label: 'info', id: 'info-section', icon: Info },
-    { label: 'progression', id: 'progression-section', icon: TrendingUp },
-    { label: 'skills', id: 'skills-section', icon: BookOpen },
-    { label: 'talentsAndTraits', id: 'talents-section', icon: Star },
-    { label: 'equipment', id: 'equipment-section', icon: Shield },
-    { label: 'inventory', id: 'inventory-section', icon: Backpack },
+    { label: 'common.info', id: 'info-section', icon: Info },
+    {
+      label: 'common.progression',
+      id: 'progression-section',
+      icon: TrendingUp,
+    },
+    { label: 'common.skills', id: 'skills-section', icon: BookOpen },
+    { label: 'dh.talentsAndTraits', id: 'talents-section', icon: Star },
+    { label: 'dh.equipment', id: 'equipment-section', icon: Shield },
+    { label: 'common.inventory', id: 'inventory-section', icon: Backpack },
   ];
 
   const sidebarItems = gameSystem === 'Dungeons & Dragons' ? dndItems : dhItems;
 
   const extraSidebarItems = [
-    { label: 'notes', id: 'notes-section', icon: BookText },
-    { label: 'questJournal', id: 'journal-section', icon: Scroll },
-    { label: 'houseRules', id: 'house-rules', icon: Scale },
+    { label: 'common.notes', id: 'notes-section', icon: BookText },
+    { label: 'common.questJournal', id: 'journal-section', icon: Scroll },
+    { label: 'common.houseRules', id: 'house-rules', icon: Scale },
   ];
 
   return (
@@ -176,7 +180,9 @@ export function CompactSidebar({
             <Button
               variant={hideNotes ? 'ghost' : 'secondary'}
               onClick={() => setHideNotes(!hideNotes)}
-              aria-label={hideNotes ? t('showNotes') : t('hideNotes')}
+              aria-label={
+                hideNotes ? t('common.showNotes') : t('common.hideNotes')
+              }
               className="w-full"
               size="icon"
             >
@@ -188,7 +194,7 @@ export function CompactSidebar({
             </Button>
           </TooltipTrigger>
           <TooltipContent side="right">
-            <p>{hideNotes ? t('showNotes') : t('hideNotes')}</p>
+            <p>{hideNotes ? t('common.showNotes') : t('common.hideNotes')}</p>
           </TooltipContent>
         </Tooltip>
 
@@ -198,7 +204,9 @@ export function CompactSidebar({
               variant={showEditButtons ? 'secondary' : 'ghost'}
               onClick={() => setShowEditButtons(!showEditButtons)}
               aria-label={
-                showEditButtons ? t('hideEditButtons') : t('showEditButtons')
+                showEditButtons
+                  ? t('common.hideEditButtons')
+                  : t('common.showEditButtons')
               }
               className="w-full"
               size="icon"
@@ -212,7 +220,9 @@ export function CompactSidebar({
           </TooltipTrigger>
           <TooltipContent side="right">
             <p>
-              {showEditButtons ? t('hideEditButtons') : t('showEditButtons')}
+              {showEditButtons
+                ? t('common.hideEditButtons')
+                : t('common.showEditButtons')}
             </p>
           </TooltipContent>
         </Tooltip>
@@ -223,7 +233,7 @@ export function CompactSidebar({
             <PopoverTrigger asChild>
               <Button
                 variant="ghost"
-                aria-label={t('selectEdition')}
+                aria-label={t('common.selectEdition')}
                 className="w-full"
                 size="icon"
               >
@@ -233,7 +243,7 @@ export function CompactSidebar({
             <PopoverContent side="right" align="center" className="w-40 p-2">
               <div className="space-y-2">
                 <p className="text-muted-foreground text-xs font-medium">
-                  {t('edition')}
+                  {t('common.edition')}
                 </p>
                 <Select
                   value={character.edition || '1st'}
@@ -246,9 +256,15 @@ export function CompactSidebar({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="1st">{t('firstEdition')}</SelectItem>
-                    <SelectItem value="2nd">{t('secondEdition')}</SelectItem>
-                    <SelectItem value="hybrid">{t('hybridView')}</SelectItem>
+                    <SelectItem value="1st">
+                      {t('common.firstEdition')}
+                    </SelectItem>
+                    <SelectItem value="2nd">
+                      {t('common.secondEdition')}
+                    </SelectItem>
+                    <SelectItem value="hybrid">
+                      {t('common.hybridView')}
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>

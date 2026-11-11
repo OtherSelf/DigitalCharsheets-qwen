@@ -215,7 +215,7 @@ export function DndSpellsSection({
             {level > 0 && (
               <div className="flex items-center gap-2">
                 <span className="text-muted-foreground text-[10px] font-bold uppercase">
-                  {t('slots')}
+                  {t('dnd.slots')}
                 </span>
                 <div className="flex items-center gap-1">
                   <Button
@@ -292,7 +292,7 @@ export function DndSpellsSection({
                   updateCharacter(characterId, { spellSlots: n });
                 }}
                 disabled={slots.current <= 0}
-                title={t('damage')}
+                title={t('common.damage')}
               >
                 <Minus className="h-3 w-3" />
               </Button>
@@ -322,7 +322,7 @@ export function DndSpellsSection({
                   updateCharacter(characterId, { spellSlots: n });
                 }}
                 disabled={slots.current >= slots.max}
-                title={t('heal')}
+                title={t('dnd.heal')}
               >
                 <Plus className="h-3 w-3" />
               </Button>
@@ -349,7 +349,7 @@ export function DndSpellsSection({
                     </PopoverTrigger>
                     <PopoverContent className="w-64">
                       <Label className="mb-2 block text-xs">
-                        {t('notesFor')} {spell.name}
+                        {t('common.notesFor')} {spell.name}
                       </Label>
                       <Textarea
                         defaultValue={spell.notes || ''}
@@ -362,7 +362,7 @@ export function DndSpellsSection({
                             ),
                           )
                         }
-                        placeholder={t('addNotes')}
+                        placeholder={t('common.addNotes')}
                         className="mt-2 min-h-[100px] text-sm"
                       />
                     </PopoverContent>
@@ -405,7 +405,7 @@ export function DndSpellsSection({
           {isEditing && (
             <div className="space-y-2 border-t pt-2">
               <Input
-                placeholder={t('spellNamePlaceholder')}
+                placeholder={t('dnd.spellNamePlaceholder')}
                 value={newSpellName}
                 onChange={(e) => setNewSpellName(e.target.value)}
                 className="h-7 text-xs"
@@ -428,7 +428,7 @@ export function DndSpellsSection({
                   }
                 }}
               >
-                <Plus className="mr-1 h-3 w-3" /> {t('add')}
+                <Plus className="mr-1 h-3 w-3" /> {t('common.add')}
               </Button>
             </div>
           )}
@@ -455,7 +455,7 @@ export function DndSpellsSection({
             className="flex h-auto items-center gap-2 p-0 hover:bg-transparent"
           >
             <h2 className="font-headline text-2xl font-bold">
-              {t('spellList')}
+              {t('dnd.spellList')}
             </h2>
             {isSpellsOpen ? (
               <ChevronUp className="h-5 w-5" />
@@ -471,7 +471,7 @@ export function DndSpellsSection({
           <Card className="mb-6">
             <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2">
               <CardTitle className="text-muted-foreground text-[10px] font-bold tracking-tight uppercase">
-                {t('spellcastingStats')}
+                {t('dnd.spellcastingStats')}
               </CardTitle>
               {(showEditButtons || isSpellcastingEditing) && (
                 <EditSaveButton
@@ -496,16 +496,16 @@ export function DndSpellsSection({
                               variant={entry.notes ? 'secondary' : 'ghost'}
                               size="icon"
                               className="h-5 w-5 shrink-0"
-                              title={t('notes')}
+                              title={t('common.notes')}
                             >
                               <Info className="h-3 w-3" />
                             </Button>
                           </PopoverTrigger>
                           <PopoverContent className="w-64">
                             <Label className="mb-2 block text-xs">
-                              {t('notes')}:{' '}
+                              {t('common.notes')}:{' '}
                               {entry.ability === 'none'
-                                ? t('spellcasting')
+                                ? t('dnd.spellcasting')
                                 : t(entry.ability)}
                             </Label>
                             <Textarea
@@ -521,14 +521,14 @@ export function DndSpellsSection({
                                   spellcastingEntries: updated,
                                 });
                               }}
-                              placeholder={t('addNotes')}
+                              placeholder={t('common.addNotes')}
                               className="mt-2 min-h-[100px] text-sm"
                             />
                           </PopoverContent>
                         </Popover>
                       )}
                       <Label className="text-muted-foreground text-[9px] uppercase">
-                        {t('ability')}
+                        {t('dnd.ability')}
                       </Label>
                     </div>
                     {isSpellcastingEditing ? (
@@ -542,36 +542,40 @@ export function DndSpellsSection({
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="none">{t('none')}</SelectItem>
+                          <SelectItem value="none">
+                            {t('common.none')}
+                          </SelectItem>
                           <SelectItem value="strength">
-                            {t('strength')}
+                            {t('common.strength')}
                           </SelectItem>
                           <SelectItem value="dexterity">
-                            {t('dexterity')}
+                            {t('common.dexterity')}
                           </SelectItem>
                           <SelectItem value="constitution">
-                            {t('constitution')}
+                            {t('common.constitution')}
                           </SelectItem>
                           <SelectItem value="intelligence">
-                            {t('intelligence')}
+                            {t('common.intelligence')}
                           </SelectItem>
-                          <SelectItem value="wisdom">{t('wisdom')}</SelectItem>
+                          <SelectItem value="wisdom">
+                            {t('common.wisdom')}
+                          </SelectItem>
                           <SelectItem value="charisma">
-                            {t('charisma')}
+                            {t('common.charisma')}
                           </SelectItem>
                         </SelectContent>
                       </Select>
                     ) : (
                       <span className="text-xs font-bold">
                         {entry.ability === 'none'
-                          ? t('none')
+                          ? t('common.none')
                           : t(entry.ability)}
                       </span>
                     )}
                   </div>
                   <div className="col-span-3 w-full">
                     <Label className="text-muted-foreground mb-1 block text-[9px] uppercase">
-                      {t('atkBonus')}
+                      {t('dnd.atkBonus')}
                     </Label>
                     {isSpellcastingEditing ? (
                       <Input
@@ -593,7 +597,7 @@ export function DndSpellsSection({
                   </div>
                   <div className="col-span-2 w-full">
                     <Label className="text-muted-foreground mb-1 block text-[9px] uppercase">
-                      {t('spellSaveDC')}
+                      {t('dnd.spellSaveDC')}
                     </Label>
                     {isSpellcastingEditing ? (
                       <Input
@@ -635,7 +639,8 @@ export function DndSpellsSection({
                   className="mt-2 h-8 w-full text-[10px]"
                   onClick={addSpellcastingEntry}
                 >
-                  <Plus className="mr-1 h-3 w-3" /> {t('addSpellcastingEntry')}
+                  <Plus className="mr-1 h-3 w-3" />{' '}
+                  {t('dnd.addSpellcastingEntry')}
                 </Button>
               )}
             </CardContent>
@@ -643,9 +648,9 @@ export function DndSpellsSection({
         )}
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
-          {renderSpellBox(0, t('cantrips'))}
+          {renderSpellBox(0, t('dnd.cantrips'))}
           {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((lvl) =>
-            renderSpellBox(lvl, `${t('level')} ${lvl}`),
+            renderSpellBox(lvl, `${t('dnd.level')} ${lvl}`),
           )}
         </div>
       </CollapsibleContent>
