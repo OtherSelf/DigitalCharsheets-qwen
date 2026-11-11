@@ -26,11 +26,11 @@ export const dnd5eModule: GameModule<DnD5eCharacter> = {
   createDefaults: createDnd5eDefaults,
   components: {
     loadCreateForm: () =>
-      import('@/components/characters/forms/dnd-character-form').then((m) => ({
+      import('./create-form').then((m) => ({
         default: m.DndCharacterForm,
       })),
     loadSheet: () =>
-      import('@/components/sheets/dnd-sheet').then((m) => ({
+      import('./sheet').then((m) => ({
         default: m.DndSheet,
       })),
   },

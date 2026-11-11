@@ -33,11 +33,11 @@ export const dh1Module: GameModule<DH1Character> = {
   createDefaults: createDh1Defaults,
   components: {
     loadCreateForm: () =>
-      import('@/components/characters/forms/dark-heresy-character-form').then(
-        (m) => ({ default: m.DarkHeresyCharacterForm }),
-      ),
+      import('../dh-shared/create-form').then((m) => ({
+        default: m.DarkHeresyCharacterForm,
+      })),
     loadSheet: () =>
-      import('@/components/sheets/dark-heresy-sheet').then((m) => ({
+      import('../dh-shared/sheet').then((m) => ({
         // TODO(stage 3): заменить на лист dh1; пока — общий legacy-лист.
         default: m.DarkHeresySheet as unknown as SheetComponent<DH1Character>,
       })),

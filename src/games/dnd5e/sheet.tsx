@@ -1,0 +1,775 @@
+'use client';
+
+import * as React from 'react';
+
+import { Edit, Plus, Save, Trash2 } from 'lucide-react';
+
+import { DndAttunementSection } from '@/components/sheets/dnd-sections/attunement-section';
+import { DndCharacterInfoSection } from '@/components/sheets/dnd-sections/character-info-section';
+import { DndCombatSection } from '@/components/sheets/dnd-sections/combat-section';
+import { DndCompanionsSection } from '@/components/sheets/dnd-sections/companions-section';
+import { DndDivineBoonsSection } from '@/components/sheets/dnd-sections/divine-boons-section';
+import { DndInventorySection } from '@/components/sheets/dnd-sections/inventory-section';
+import { DndNarrativeSection } from '@/components/sheets/dnd-sections/narrative-section';
+import { DndProgressionSection } from '@/components/sheets/dnd-sections/progression-section';
+import { DndSavesSkillsSection } from '@/components/sheets/dnd-sections/saves-skills-section';
+import { DndSpellsSection } from '@/components/sheets/dnd-sections/spells-section';
+import { DndStatsSection } from '@/components/sheets/dnd-sections/stats-section';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { useCharacterContext } from '@/context/character-context';
+import { useTranslation } from '@/context/language-context';
+import { cn } from '@/lib/utils';
+
+import { DnD5eCharacter, DnDCompanion, DnDSkill } from './types';
+
+type DndSheetProps = {
+  character: DnD5eCharacter;
+  isCompactView: boolean;
+  activeCompactSection: string;
+};
+
+const DEFAULT_SKILLS: DnDSkill[] = [
+  {
+    name: 'acrobatics',
+    label: 'Acrobatics (Dex)',
+    proficient: false,
+    expertise: false,
+    value: 0,
+  },
+  {
+    name: 'animalHandling',
+    label: 'Animal Handling (Wis)',
+    proficient: false,
+    expertise: false,
+    value: 0,
+  },
+  {
+    name: 'arcana',
+    label: 'Arcana (Int)',
+    proficient: false,
+    expertise: false,
+    value: 0,
+  },
+  {
+    name: 'athletics',
+    label: 'Athletics (Str)',
+    proficient: false,
+    expertise: false,
+    value: 0,
+  },
+  {
+    name: 'deception',
+    label: 'Deception (Cha)',
+    proficient: false,
+    expertise: false,
+    value: 0,
+  },
+  {
+    name: 'history',
+    label: 'History (Int)',
+    proficient: false,
+    expertise: false,
+    value: 0,
+  },
+  {
+    name: 'insight',
+    label: 'Insight (Wis)',
+    proficient: false,
+    expertise: false,
+    value: 0,
+  },
+  {
+    name: 'intimidation',
+    label: 'Intimidation (Cha)',
+    proficient: false,
+    expertise: false,
+    value: 0,
+  },
+  {
+    name: 'investigation',
+    label: 'Investigation (Int)',
+    proficient: false,
+    expertise: false,
+    value: 0,
+  },
+  {
+    name: 'medicine',
+    label: 'Medicine (Wis)',
+    proficient: false,
+    expertise: false,
+    value: 0,
+  },
+  {
+    name: 'nature',
+    label: 'Nature (Int)',
+    proficient: false,
+    expertise: false,
+    value: 0,
+  },
+  {
+    name: 'perception',
+    label: 'Perception (Wis)',
+    proficient: false,
+    expertise: false,
+    value: 0,
+  },
+  {
+    name: 'performance',
+    label: 'Performance (Cha)',
+    proficient: false,
+    expertise: false,
+    value: 0,
+  },
+  {
+    name: 'persuasion',
+    label: 'Persuasion (Cha)',
+    proficient: false,
+    expertise: false,
+    value: 0,
+  },
+  {
+    name: 'religion',
+    label: 'Religion (Int)',
+    proficient: false,
+    expertise: false,
+    value: 0,
+  },
+  {
+    name: 'sleightOfHand',
+    label: 'Sleight of Hand (Dex)',
+    proficient: false,
+    expertise: false,
+    value: 0,
+  },
+  {
+    name: 'stealth',
+    label: 'Stealth (Dex)',
+    proficient: false,
+    expertise: false,
+    value: 0,
+  },
+  {
+    name: 'survival',
+    label: 'Survival (Wis)',
+    proficient: false,
+    expertise: false,
+    value: 0,
+  },
+];
+
+const SKILL_STAT_MAP: Record<string, keyof DnD5eCharacter['stats']> = {
+  acrobatics: 'dexterity',
+  animalHandling: 'wisdom',
+  arcana: 'intelligence',
+  athletics: 'strength',
+  deception: 'charisma',
+  history: 'intelligence',
+  insight: 'wisdom',
+  intimidation: 'charisma',
+  investigation: 'intelligence',
+  medicine: 'wisdom',
+  nature: 'intelligence',
+  perception: 'wisdom',
+  performance: 'charisma',
+  persuasion: 'charisma',
+  religion: 'intelligence',
+  sleightOfHand: 'dexterity',
+  stealth: 'dexterity',
+  survival: 'wisdom',
+};
+
+export const DndSheet = React.forwardRef<any, DndSheetProps>(
+  ({ character, isCompactView, activeCompactSection }, ref) => {
+    const { updateCharacter, showEditButtons, setHasUnsavedChanges } =
+      useCharacterContext();
+    const { t } = useTranslation();
+
+    const narrativeRef = React.useRef<{ saveAll: () => void }>(null);
+    const attunementRef = React.useRef<{ saveAll: () => void }>(null);
+    const inventoryRef = React.useRef<{ saveAll: () => void }>(null);
+    const characterInfoRef = React.useRef<{ saveAll: () => void }>(null);
+    const combatRef = React.useRef<{ saveAll: () => void }>(null);
+    const boonsRef = React.useRef<{ saveAll: () => void }>(null);
+
+    const [isProgressionEditing, setIsProgressionEditing] =
+      React.useState(false);
+    const [isStatsEditing, setIsStatsEditing] = React.useState(false);
+    const [isSavesEditing, setIsSavesEditing] = React.useState(false);
+    const [isSkillsEditing, setIsSkillsEditing] = React.useState(false);
+    const [isOtherProficienciesEditing, setIsOtherProficienciesEditing] =
+      React.useState(false);
+
+    const [progressionData, setProgressionData] = React.useState({
+      characterClass: character.characterClass,
+      level: character.level,
+      experiencePoints: character.experiencePoints || 0,
+      isMulticlass: character.isMulticlass || false,
+      multiclasses: character.multiclasses || [],
+    });
+    const [expToCount, setExpToCount] = React.useState(0);
+    const [stats, setStats] = React.useState(character.stats);
+    const [savingThrows, setSavingThrows] = React.useState(
+      character.savingThrows && character.savingThrows.length > 0
+        ? character.savingThrows
+        : [],
+    );
+    const [skills, setSkills] = React.useState(
+      character.skills && character.skills.length > 0
+        ? character.skills
+        : DEFAULT_SKILLS,
+    );
+    const [otherProficienciesAndLanguages, setOtherProficienciesAndLanguages] =
+      React.useState<string[]>(character.otherProficienciesAndLanguages || []);
+    const [newProfItem, setNewProfItem] = React.useState('');
+    const companions = character.companions || [];
+    const setCompanions = (
+      newCompanions:
+        DnDCompanion[] | ((prev: DnDCompanion[]) => DnDCompanion[]),
+    ) => {
+      const resolvedCompanions =
+        typeof newCompanions === 'function'
+          ? newCompanions(companions)
+          : newCompanions;
+      updateCharacter(character.id, { companions: resolvedCompanions });
+    };
+
+    React.useEffect(() => {
+      if (character.level !== progressionData.level) {
+        updateCharacter(character.id, { level: progressionData.level });
+      }
+    }, [progressionData.level, character.id, character.level, updateCharacter]);
+
+    // ─── LANDMARK: D&D DIRTY TRACKING ───
+    // Failsafe «несохранённые изменения» раньше работал только для Dark Heresy.
+    const isAnyEditing =
+      isProgressionEditing ||
+      isStatsEditing ||
+      isSavesEditing ||
+      isSkillsEditing ||
+      isOtherProficienciesEditing;
+    React.useEffect(() => {
+      setHasUnsavedChanges(isAnyEditing);
+    }, [isAnyEditing, setHasUnsavedChanges]);
+
+    // Опыт больше не ждёт кнопку Save: Add и ручной ввод пишутся сразу.
+    const handlePersistExperience = React.useCallback(
+      (experiencePoints: number, level: number) => {
+        updateCharacter(character.id, { experiencePoints, level });
+      },
+      [character.id, updateCharacter],
+    );
+
+    const proficiencyBonus = Math.floor((progressionData.level - 1) / 4) + 2;
+
+    const calculatedSkills = React.useMemo(() => {
+      return skills.map((skill) => {
+        const statKey = SKILL_STAT_MAP[skill.name];
+        if (!statKey) return skill;
+
+        const mod = Math.floor((stats[statKey] - 10) / 2);
+        const baseValue =
+          mod +
+          (skill.proficient ? proficiencyBonus : 0) +
+          (skill.expertise ? proficiencyBonus : 0);
+        const finalValue = baseValue + (skill.manualModifier || 0);
+
+        return { ...skill, value: finalValue };
+      });
+    }, [skills, stats, proficiencyBonus]);
+
+    const passivePerception =
+      10 + (calculatedSkills.find((s) => s.name === 'perception')?.value || 0);
+    const conMod = Math.floor(((character.stats?.constitution ?? 10) - 10) / 2);
+    const baseMaxHp = 8 + conMod;
+    const safeHitPoints =
+      character.hitPoints && character.hitPoints.max > 0
+        ? character.hitPoints
+        : { current: baseMaxHp, max: baseMaxHp };
+
+    const calculatedSavingThrows = React.useMemo(() => {
+      return savingThrows.map((st) => {
+        const statKey = st.name.toLowerCase() as keyof typeof stats;
+        const mod = Math.floor((stats[statKey] - 10) / 2);
+        const baseValue = mod + (st.proficient ? proficiencyBonus : 0);
+        const finalValue = baseValue + (st.manualModifier || 0);
+
+        return { ...st, value: finalValue };
+      });
+    }, [savingThrows, stats, proficiencyBonus]);
+
+    const handleSaveProgression = React.useCallback(() => {
+      updateCharacter(character.id, { ...progressionData });
+      setIsProgressionEditing(false);
+    }, [character.id, progressionData, updateCharacter]);
+    const handleSaveStats = React.useCallback(() => {
+      updateCharacter(character.id, { stats });
+      setIsStatsEditing(false);
+    }, [character.id, stats, updateCharacter]);
+    const handleSaveSaves = React.useCallback(() => {
+      updateCharacter(character.id, { savingThrows: calculatedSavingThrows });
+      setIsSavesEditing(false);
+    }, [character.id, calculatedSavingThrows, updateCharacter]);
+    const handleSaveSkills = React.useCallback(() => {
+      updateCharacter(character.id, { skills: calculatedSkills });
+      setIsSkillsEditing(false);
+    }, [character.id, calculatedSkills, updateCharacter]);
+    const handleSaveOtherProf = React.useCallback(() => {
+      updateCharacter(character.id, {
+        otherProficienciesAndLanguages: otherProficienciesAndLanguages,
+      });
+      setIsOtherProficienciesEditing(false);
+    }, [character.id, otherProficienciesAndLanguages, updateCharacter]);
+
+    const handleSaveAll = React.useCallback(() => {
+      if (isProgressionEditing) handleSaveProgression();
+      if (isStatsEditing) handleSaveStats();
+      if (isSavesEditing) handleSaveSaves();
+      if (isSkillsEditing) handleSaveSkills();
+      if (isOtherProficienciesEditing) handleSaveOtherProf();
+      characterInfoRef.current?.saveAll();
+      combatRef.current?.saveAll();
+      narrativeRef.current?.saveAll();
+      attunementRef.current?.saveAll();
+      inventoryRef.current?.saveAll();
+      boonsRef.current?.saveAll();
+    }, [
+      isProgressionEditing,
+      isStatsEditing,
+      isSavesEditing,
+      isSkillsEditing,
+      isOtherProficienciesEditing,
+      handleSaveProgression,
+      handleSaveStats,
+      handleSaveSaves,
+      handleSaveSkills,
+      handleSaveOtherProf,
+    ]);
+
+    React.useImperativeHandle(ref, () => ({ saveAll: handleSaveAll }));
+
+    return (
+      <div
+        className={cn(
+          'dnd-sheet space-y-8 pb-12',
+          isCompactView && 'is-compact',
+        )}
+      >
+        {isCompactView && (
+          <div
+            data-testid="compact-stats-bar"
+            className="bg-card relative space-y-3 border-b px-4 py-3 shadow-sm"
+          >
+            <div className="absolute top-2 right-2">
+              <Button
+                data-testid="compact-stats-edit-button"
+                size="icon"
+                variant="ghost"
+                className="h-6 w-6"
+                onClick={() => {
+                  if (isStatsEditing) {
+                    handleSaveStats();
+                  } else {
+                    setIsStatsEditing(true);
+                  }
+                }}
+              >
+                {isStatsEditing ? (
+                  <Save className="h-4 w-4" />
+                ) : (
+                  <Edit className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
+            <div className="mt-6 grid grid-cols-6 gap-1">
+              {[
+                'strength',
+                'dexterity',
+                'constitution',
+                'intelligence',
+                'wisdom',
+                'charisma',
+              ].map((key) => {
+                const val = stats[key as keyof typeof stats];
+                const mod = Math.floor((val - 10) / 2);
+                return (
+                  <div
+                    key={key}
+                    className="bg-background flex min-w-0 flex-col items-center justify-center rounded border py-1"
+                  >
+                    <span className="text-muted-foreground w-full truncate px-0.5 text-center text-[8px] font-bold uppercase">
+                      {t(key).slice(0, 3).toUpperCase()}
+                    </span>
+                    {isStatsEditing ? (
+                      <Input
+                        type="number"
+                        min={1}
+                        max={30}
+                        value={val}
+                        onChange={(e) =>
+                          setStats({
+                            ...stats,
+                            [key]: parseInt(e.target.value) || 1,
+                          })
+                        }
+                        className="mt-1 h-6 w-12 p-0 text-center text-xs"
+                      />
+                    ) : (
+                      <>
+                        <span className="text-xs font-black">
+                          {mod >= 0 ? `+${mod}` : mod}
+                        </span>
+                        <span className="text-muted-foreground/60 text-[8px]">
+                          {val}
+                        </span>
+                      </>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="bg-background flex min-w-0 items-center justify-between rounded border px-2 py-1.5">
+                <span className="text-muted-foreground mr-1 truncate text-[8px] font-bold uppercase">
+                  {t('dnd.passivePerception')}
+                </span>
+                <span className="shrink-0 text-xs font-black">
+                  {passivePerception}
+                </span>
+              </div>
+              <div className="bg-background flex min-w-0 items-center justify-between rounded border px-2 py-1.5">
+                <span className="text-muted-foreground mr-1 truncate text-[8px] font-bold uppercase">
+                  {t('dnd.proficiencyBonus')}
+                </span>
+                <span className="shrink-0 text-xs font-black">
+                  +{proficiencyBonus}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div
+          className={cn(
+            'flex flex-col items-stretch gap-6',
+            isCompactView &&
+              activeCompactSection &&
+              activeCompactSection !== 'info-section' &&
+              'hidden',
+          )}
+        >
+          <div className="sheet-top-row flex flex-col items-stretch gap-6 md:flex-row">
+            {/* MULTICLASS REQUIREMENTS LANDMARK: Added stats={stats} prop here */}
+            <DndProgressionSection
+              progressionData={progressionData}
+              setProgressionData={setProgressionData}
+              expToCount={expToCount}
+              setExpToCount={setExpToCount}
+              isProgressionEditing={isProgressionEditing}
+              setIsProgressionEditing={setIsProgressionEditing}
+              handleSaveProgression={handleSaveProgression}
+              stats={stats}
+              onPersistExperience={handlePersistExperience}
+            />
+            {(progressionData.level >= 20 ||
+              character.allowDivineBoonsBeforeLevel20) && (
+              <DndDivineBoonsSection
+                ref={boonsRef}
+                characterId={character.id}
+                initialBoons={character.divineBoons || []}
+                isCompactView={isCompactView}
+                activeCompactSection={activeCompactSection}
+              />
+            )}
+            <DndCharacterInfoSection
+              ref={characterInfoRef}
+              characterId={character.id}
+              initialName={character.name}
+              initialHeaderData={{
+                background: character.background,
+                race: character.race,
+                alignment: character.alignment || '',
+                age: character.age || '',
+                eyes: character.eyes || '',
+                skin: character.skin || '',
+                height: character.height || '',
+                weight: character.weight || '',
+                hair: character.hair || '',
+                backstory: character.backstory || '',
+                notes: character.notes || '',
+              }}
+            />
+            {isCompactView && (
+              <DndNarrativeSection
+                ref={narrativeRef}
+                characterId={character.id}
+                initialData={{
+                  personalityTraits: character.personalityTraits || [],
+                  ideals: character.ideals || [],
+                  bonds: character.bonds || [],
+                  flaws: character.flaws || [],
+                  featuresAndTraits: character.featuresAndTraits || [],
+                  divineBoons: character.divineBoons || [],
+                }}
+              />
+            )}
+          </div>
+        </div>
+
+        <div className="sheet-main-grid grid grid-cols-1 items-start gap-6 md:grid-cols-12">
+          <DndStatsSection
+            characterId={character.id}
+            stats={stats}
+            setStats={setStats}
+            isStatsEditing={isStatsEditing}
+            setIsStatsEditing={setIsStatsEditing}
+            handleSaveStats={handleSaveStats}
+            statNotes={character.statNotes}
+            otherProficienciesAndLanguages={otherProficienciesAndLanguages}
+            setOtherProficienciesAndLanguages={
+              setOtherProficienciesAndLanguages
+            }
+            isOtherProficienciesEditing={isOtherProficienciesEditing}
+            setIsOtherProficienciesEditing={setIsOtherProficienciesEditing}
+            newProfItem={newProfItem}
+            setNewProfItem={setNewProfItem}
+            handleSaveOtherProf={handleSaveOtherProf}
+            isCompactView={isCompactView}
+            activeCompactSection={activeCompactSection}
+            proficiencyBonus={proficiencyBonus}
+            passivePerception={passivePerception}
+          />
+          <DndSavesSkillsSection
+            characterId={character.id}
+            savingThrows={savingThrows}
+            setSavingThrows={setSavingThrows}
+            isSavesEditing={isSavesEditing}
+            setIsSavesEditing={setIsSavesEditing}
+            handleSaveSaves={handleSaveSaves}
+            calculatedSavingThrows={calculatedSavingThrows}
+            skills={skills}
+            setSkills={setSkills}
+            isSkillsEditing={isSkillsEditing}
+            setIsSkillsEditing={setIsSkillsEditing}
+            handleSaveSkills={handleSaveSkills}
+            calculatedSkills={calculatedSkills}
+            isCompactView={isCompactView}
+            activeCompactSection={activeCompactSection}
+            proficiencyBonus={proficiencyBonus}
+          />
+          {isCompactView && (
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2">
+                <CardTitle className="text-muted-foreground text-[10px] font-bold tracking-tight uppercase">
+                  {t('dnd.otherProficienciesAndLanguages')}
+                </CardTitle>
+                {(showEditButtons || isOtherProficienciesEditing) && (
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-7 w-7"
+                    onClick={() => {
+                      if (isOtherProficienciesEditing) {
+                        handleSaveOtherProf();
+                      } else {
+                        setIsOtherProficienciesEditing(true);
+                      }
+                    }}
+                  >
+                    {isOtherProficienciesEditing ? (
+                      <Save className="h-4 w-4" />
+                    ) : (
+                      <Edit className="h-4 w-4" />
+                    )}
+                  </Button>
+                )}
+              </CardHeader>
+              <CardContent className="space-y-2 p-4 pt-0">
+                {otherProficienciesAndLanguages.map((it, i) => (
+                  <div
+                    key={i}
+                    className="bg-muted/10 flex justify-between rounded p-1.5 text-[10px]"
+                  >
+                    {isOtherProficienciesEditing ? (
+                      <Input
+                        value={it}
+                        onChange={(e) => {
+                          const n = [...otherProficienciesAndLanguages];
+                          n[i] = e.target.value;
+                          setOtherProficienciesAndLanguages(n);
+                        }}
+                        className="mr-2 h-6 flex-1 text-[10px]"
+                      />
+                    ) : (
+                      <span className="font-medium break-words">
+                        &bull; {it}
+                      </span>
+                    )}
+                    {isOtherProficienciesEditing && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-destructive h-5 w-5"
+                        onClick={() =>
+                          setOtherProficienciesAndLanguages(
+                            otherProficienciesAndLanguages.filter(
+                              (_, idx) => idx !== i,
+                            ),
+                          )
+                        }
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    )}
+                  </div>
+                ))}
+                {isOtherProficienciesEditing && (
+                  <div className="flex gap-2 border-t pt-2">
+                    <Input
+                      placeholder={t('dnd.newItemPlaceholder')}
+                      value={newProfItem}
+                      onChange={(e) => setNewProfItem(e.target.value)}
+                      className="h-7 text-[10px]"
+                    />
+                    <Button
+                      size="sm"
+                      className="h-7"
+                      onClick={() => {
+                        if (newProfItem.trim()) {
+                          setOtherProficienciesAndLanguages([
+                            ...otherProficienciesAndLanguages,
+                            newProfItem.trim(),
+                          ]);
+                          setNewProfItem('');
+                        }
+                      }}
+                    >
+                      <Plus className="h-3 w-3" />
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+          <DndCombatSection
+            ref={combatRef}
+            characterId={character.id}
+            initialCombatStats={{
+              armorClass: character.armorClass,
+              speed: character.speed,
+              hitPoints: character.hitPoints || {
+                current: baseMaxHp,
+                max: baseMaxHp,
+              },
+              temporaryHitPoints: character.temporaryHitPoints || 0,
+              deathSaves: character.deathSaves || { successes: 0, failures: 0 },
+              hitPointsNotes: character.hitPointsNotes || '',
+              hpTracking: character.hpTracking || '',
+            }}
+            initialExhaustion={character.exhaustion || 0}
+            initialHitDiceUsed={character.hitDiceUsed || {}}
+            initialAttacks={character.attacks || []}
+            initialCombatResources={character.combatResources || []}
+            initialSpellcastingEntries={character.spellcastingEntries || []}
+            stats={stats}
+            proficiencyBonus={proficiencyBonus}
+            progressionData={progressionData}
+            isCompactView={isCompactView}
+            activeCompactSection={activeCompactSection}
+          />
+
+          <div
+            className={cn(
+              'space-y-6 md:col-span-3',
+              isCompactView &&
+                activeCompactSection &&
+                activeCompactSection !== 'inventory-section' &&
+                'hidden',
+            )}
+          >
+            {!isCompactView && (
+              <>
+                <DndNarrativeSection
+                  ref={narrativeRef}
+                  characterId={character.id}
+                  initialData={{
+                    personalityTraits: character.personalityTraits || [],
+                    ideals: character.ideals || [],
+                    bonds: character.bonds || [],
+                    flaws: character.flaws || [],
+                    featuresAndTraits: character.featuresAndTraits || [],
+                    divineBoons: character.divineBoons || [],
+                  }}
+                />
+                <DndAttunementSection
+                  ref={attunementRef}
+                  characterId={character.id}
+                  initialItems={character.attunementItems || []}
+                />
+                <DndInventorySection
+                  ref={inventoryRef}
+                  characterId={character.id}
+                  initialCurrency={
+                    character.currency || {
+                      cp: 0,
+                      sp: 0,
+                      ep: 0,
+                      gp: 150,
+                      pp: 5,
+                    }
+                  }
+                  initialEquipment={character.equipment ?? []}
+                />
+              </>
+            )}
+            {isCompactView && (
+              <>
+                <DndAttunementSection
+                  ref={attunementRef}
+                  characterId={character.id}
+                  initialItems={character.attunementItems || []}
+                />
+                <DndInventorySection
+                  ref={inventoryRef}
+                  characterId={character.id}
+                  initialCurrency={
+                    character.currency || {
+                      cp: 0,
+                      sp: 0,
+                      ep: 0,
+                      gp: 150,
+                      pp: 5,
+                    }
+                  }
+                  initialEquipment={character.equipment ?? []}
+                />
+              </>
+            )}
+          </div>
+        </div>
+        <div className="flex flex-col gap-8">
+          <DndSpellsSection
+            characterId={character.id}
+            initialSpells={character.spells || []}
+            initialSpellSlots={character.spellSlots}
+            initialSpellcastingEntries={character.spellcastingEntries || []}
+            stats={stats}
+            proficiencyBonus={proficiencyBonus}
+            isCompactView={isCompactView}
+            activeCompactSection={activeCompactSection}
+          />
+
+          <DndCompanionsSection
+            characterId={character.id}
+            companions={companions}
+            setCompanions={setCompanions}
+            isCompactView={isCompactView}
+            activeCompactSection={activeCompactSection}
+          />
+        </div>
+      </div>
+    );
+  },
+);
+DndSheet.displayName = 'DndSheet';
