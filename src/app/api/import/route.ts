@@ -303,7 +303,7 @@ export async function GET() {
     const passwordHash = hashPassword(DEFAULT_PASSWORD);
 
     for (const [firebaseUserId, chars] of Object.entries(userGroups)) {
-      // Без домена: в локальном приложении логин — просто ключ.
+      // Без домена: в этом приложении логин — просто ключ.
       const userLogin = `imported-${firebaseUserId.substr(0, 6)}`;
       const displayName = `Player ${firebaseUserId.substr(0, 4)}`;
 
