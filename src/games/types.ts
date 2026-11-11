@@ -171,10 +171,8 @@ export interface GameModule<
 
   /** Версия схемы листа, которую пишет модуль. */
   readonly schemaVersion: number;
-  /** Строгая zod-схема листа; тип выводится из неё. */
+  /** Строгая zod-схема листа (сверяется с типом через tsc). */
   readonly schema: ZodType<TCharacter>;
-  /** Терпимая схема для чтения legacy-файлов до миграции (этап 2). */
-  readonly legacySchema?: ZodType<unknown>;
 
   /** Словари модуля (en/ru), сливаются с общим слоем при инициализации. */
   readonly i18n: LocalizedMessages;
@@ -182,8 +180,13 @@ export interface GameModule<
   /** Capability-конфиг общих компонентов (DH1/DH2 и т.п.). */
   readonly capabilities: ModuleCapabilities;
 
-  /** Фабрика персонажа с дефолтными значениями. */
-  createDefaults(input?: Readonly<Record<string, unknown>>): TCharacter;
+  /**
+   * Фабрика персонажа с дефолтными значениями. `id` присваивает сервер при
+   * создании, поэтому фабрика возвращает черновик без него.
+   */
+  createDefaults(
+    input?: Readonly<Record<string, unknown>>,
+  ): Omit<TCharacter, 'id'>;
 
   /** Ленивые компоненты формы и листа. */
   readonly components: GameModuleComponents<TCharacter>;
