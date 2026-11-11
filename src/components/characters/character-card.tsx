@@ -106,7 +106,7 @@ export function CharacterCard({ character }: CharacterCardProps) {
   };
 
   const handleExportExcel = () => {
-    const result = exportCharacterToExcel(character);
+    const result = exportCharacterToExcel(character, new Date(), t);
     if (!result.success) {
       toast({
         variant: 'destructive',

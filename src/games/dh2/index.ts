@@ -1,5 +1,6 @@
 import { CHARACTER_SCHEMA_VERSION } from '@/lib/character-version';
 
+import { buildDarkHeresyExcelSections } from '../dh-shared/excel';
 import { buildDarkHeresyPortableJson } from '../dh-shared/export';
 import type { GameModule } from '../types';
 import { createDh2Defaults } from './defaults';
@@ -42,10 +43,8 @@ export const dh2Module: GameModule<DH2Character> = {
   export: {
     toPortableJson: (character, config) =>
       buildDarkHeresyPortableJson(character, config),
-    buildExcelSections: () => {
-      // LANDMARK: EXCEL_SECTIONS — перенос секций Excel на этапе 5.
-      throw new Error('dh2: секции Excel ещё не перенесены в модуль (этап 5)');
-    },
+    buildExcelSections: (character, config, translate) =>
+      buildDarkHeresyExcelSections(character, config, translate),
   },
   migrations: [],
 };

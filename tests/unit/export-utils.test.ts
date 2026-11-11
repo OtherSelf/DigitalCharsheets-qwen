@@ -20,6 +20,7 @@ import {
   parseExportPayload,
   sanitizeData,
 } from '@/lib/export-utils';
+import { translations } from '@/lib/i18n';
 
 import { makeDhCharacter, makeDndCharacter } from './helpers';
 
@@ -624,7 +625,7 @@ describe('exportCharacterToExcel (xlsx)', () => {
       expect(row(rows, 'Character')).toEqual(['Character', 'Ragnar Testborn']);
       expect(row(rows, 'Game system')).toEqual([
         'Game system',
-        'Dungeons & Dragons',
+        'Dungeons & Dragons · 5th Edition',
       ]);
       expect(row(rows, 'Character ID')).toEqual(['Character ID', 'dnd-1']);
 
@@ -670,6 +671,27 @@ describe('exportCharacterToExcel (xlsx)', () => {
       expect(String(row(rows, 'Custom Resources')?.[1] ?? '')).toContain(
         'Ammo: 3/10',
       );
+    } finally {
+      process.chdir(originalCwd);
+    }
+  });
+
+  it('подписи Excel переводятся на язык сайта', () => {
+    process.chdir(tmp);
+    try {
+      const result = exportCharacterToExcel(
+        makeDndCharacter() as any,
+        date,
+        (key) => translations.ru[key] ?? key,
+      );
+      expect(result.success).toBe(true);
+      const rows = readRows(result.filename!);
+      const labels = rows.map((r) => String(r[0] ?? '').trim());
+      expect(labels).toContain('ХАРАКТЕРИСТИКИ');
+      expect(labels).toContain('Класс брони');
+      expect(labels).toContain('Уровень');
+      expect(labels).toContain('ИСТОРИЯ И ЗАМЕТКИ');
+      expect(labels).not.toContain('Ability Scores');
     } finally {
       process.chdir(originalCwd);
     }

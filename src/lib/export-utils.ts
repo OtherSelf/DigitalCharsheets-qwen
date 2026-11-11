@@ -8,13 +8,17 @@ import {
   getCharacterModule,
   resolveCharacterSystemId,
 } from '@/games/character-system';
-import type { GameExportConfig } from '@/games/types';
+import { getGameDefinition } from '@/games/games';
+import type {
+  ExcelCell,
+  ExportTranslate,
+  GameExportConfig,
+} from '@/games/types';
 
 import { isNonPortableField, toPortableCharacter } from './character-portable';
 import { normalizeCharacterRecord } from './character-version';
-import { DIVINATION_BY_ID } from './dark-heresy-data';
-import type { LegacyDarkHeresyExport } from './legacy-dh-export';
-import { Character, DnD5eCharacter } from './types';
+import { translations } from './i18n';
+import { Character } from './types';
 
 /** Конфиг секций экспорта; тип живёт в контракте модулей. */
 export type ExportConfig = GameExportConfig;
@@ -824,748 +828,58 @@ export const mergeImportedData = (
   return merged as Character;
 };
 
-// LANDMARK: COMPREHENSIVE_USER_FRIENDLY_EXCEL_EXPORT
+// LANDMARK: EXCEL_LEDGER
+/** Английский словарь по умолчанию: тесты и вызовы без контекста языка. */
+const defaultExcelTranslate: ExportTranslate = (key) =>
+  translations.en[key] ?? key;
+
+/**
+ * ─── LANDMARK: EXCEL SHEET ASSEMBLY ───────────────────────────────────────
+ * Технический блок + секции из адаптера модуля. Структура человекочитаемой
+ * части живёт в `src/games/<id>/excel.ts`, поэтому новая игра не требует
+ * правок этого файла.
+ */
 function buildCharacterSheetRows(
   character: Character,
+  translate: ExportTranslate,
   now = new Date(),
-): any[][] {
-  const data: any[][] = [];
-  const isDnD = character.gameSystem === 'Dungeons & Dragons';
-  const dnd = character as DnD5eCharacter;
-  const dh = character as LegacyDarkHeresyExport;
+): ExcelCell[][] {
+  const gameModule = getCharacterModule(character);
+  if (!gameModule) {
+    throw new Error(
+      `Неизвестная редакция персонажа: ${character.systemId ?? character.gameSystem}`,
+    );
+  }
+  const gameDefinition = getGameDefinition(gameModule.gameId);
+  const data: ExcelCell[][] = [
+    [translate('io.excel.exportTitle').toUpperCase()],
+    [translate('io.excel.app'), EXPORT_APP_NAME],
+    [translate('io.excel.format'), EXPORT_FORMAT],
+    [translate('io.excel.formatVersion'), EXPORT_FORMAT_VERSION],
+    [translate('io.excel.kind'), 'character'],
+    [translate('io.excel.exportDate'), now.toISOString()],
+    [translate('io.excel.characterId'), character.id],
+    [translate('io.excel.character'), character.name],
+    [
+      translate('io.excel.gameSystem'),
+      gameDefinition
+        ? `${translate(gameDefinition.nameKey)} · ${translate(gameModule.nameKey)}`
+        : character.gameSystem,
+    ],
+    [],
+  ];
 
-  // Helper functions
-  const addHeader = (text: string) => {
-    data.push([text.toUpperCase()]);
+  const sections = gameModule.export.buildExcelSections(
+    character,
+    DEFAULT_EXPORT_CONFIG,
+    translate,
+  );
+  for (const section of sections) {
+    data.push([section.title.toUpperCase()]);
     data.push([]);
-  };
-
-  const addSubHeader = (text: string) => {
-    data.push([`  ${text}`]);
-  };
-
-  const addRow = (label: string, value: any) => {
-    if (value === undefined || value === null || value === '') return;
-    data.push([`    ${label}`, value]);
-  };
-
-  const addEmptyRow = () => data.push([]);
-
-  const formatList = (items: any[], nameKey = 'name'): string => {
-    if (!items || items.length === 0) return 'None';
-    return items
-      .map((item) => {
-        if (typeof item === 'string') return `• ${item}`;
-        if (item && typeof item === 'object') {
-          const name =
-            item[nameKey] || item.label || item.title || JSON.stringify(item);
-          return `• ${name}`;
-        }
-        return `• ${String(item)}`;
-      })
-      .join('\n');
-  };
-
-  // ═══════════════════════════════════════════════════════════
-  // HEADER / METADATA (тот же стандарт, что у JSON-экспорта)
-  // ═══════════════════════════════════════════════════════════
-  data.push(['DIGITAL CHARACTER SHEETS — CHARACTER EXPORT']);
-  data.push(['App', EXPORT_APP_NAME]);
-  data.push(['Format', EXPORT_FORMAT]);
-  data.push(['Format version', EXPORT_FORMAT_VERSION]);
-  data.push(['Kind', 'character']);
-  data.push(['Export date', now.toISOString()]);
-  data.push(['Character ID', character.id]);
-  data.push(['Character', character.name]);
-  data.push(['Game system', character.gameSystem]);
-  addEmptyRow();
-
-  // ═══════════════════════════════════════════════════════════
-  // BASIC INFORMATION
-  // ═══════════════════════════════════════════════════════════
-  addHeader('Basic Information');
-  addRow('Name', character.name);
-  addRow('Class / Career', character.characterClass);
-
-  if (isDnD) {
-    addRow('Race', dnd.race);
-    addRow('Level', dnd.level);
-    addRow('Background', dnd.background);
-    addRow('Alignment', dnd.alignment);
-    addRow('Age', dnd.age);
-    addRow('Height', dnd.height);
-    addRow('Weight', dnd.weight);
-    addRow('Eyes', dnd.eyes);
-    addRow('Hair', dnd.hair);
-    addRow('Skin', dnd.skin);
-    addRow('Experience Points', dnd.experiencePoints);
-    addRow('Proficiency Bonus', (dnd as any).proficiencyBonus);
-    addRow('Inspiration', (dnd as any).inspiration);
-  } else {
-    addRow('Edition', dh.edition);
-    addRow('Rank', dh.rank);
-    addRow('Home World', dh.homeWorld);
-    addRow('World Variant', dh.worldVariant);
-    addRow('Career Path', dh.careerPath);
-    addRow(
-      'Divination',
-      DIVINATION_BY_ID[dh.divination]?.divination ?? dh.divination,
-    );
-    addRow(
-      'Divination Effect',
-      DIVINATION_BY_ID[dh.divination]?.effect ?? dh.divinationEffect,
-    );
-    addRow('Quirk', dh.quirk);
-    addRow('Age', dh.age);
-    addRow('Height', dh.height);
-    addRow('Weight', dh.weight);
-    addRow('Skin Color', dh.skinColor);
-    addRow('Hair Color', dh.hairColor);
-    addRow('Eye Color', dh.eyeColor);
-    addRow('Experience', dh.experience);
-    addRow('Total XP Spent', dh.totalExpSpent);
-    addRow('Alternate Path', dh.alternatePath);
-    addRow('Advanced Path', dh.advancedPath);
+    for (const row of section.rows) data.push([...row]);
+    data.push([]);
   }
-  addEmptyRow();
-
-  // ═══════════════════════════════════════════════════════════
-  // STATS / CHARACTERISTICS
-  // ═══════════════════════════════════════════════════════════
-  addHeader(isDnD ? 'Ability Scores' : 'Characteristics');
-
-  if (isDnD) {
-    const stats = dnd.stats || {
-      strength: 10,
-      dexterity: 10,
-      constitution: 10,
-      intelligence: 10,
-      wisdom: 10,
-      charisma: 10,
-    };
-    data.push(['    Stat', 'Score', 'Modifier']);
-    const statNames = [
-      'strength',
-      'dexterity',
-      'constitution',
-      'intelligence',
-      'wisdom',
-      'charisma',
-    ];
-    statNames.forEach((stat) => {
-      const val = (stats as any)[stat] || 10;
-      const mod = Math.floor((val - 10) / 2);
-      const modStr = mod >= 0 ? `+${mod}` : `${mod}`;
-      data.push([
-        '    ' + stat.charAt(0).toUpperCase() + stat.slice(1),
-        val,
-        modStr,
-      ]);
-    });
-  } else {
-    const stats = dh.stats || {
-      weaponSkill: 0,
-      ballisticSkill: 0,
-      strength: 0,
-      toughness: 0,
-      agility: 0,
-      intelligence: 0,
-      perception: 0,
-      willpower: 0,
-      fellowship: 0,
-      influence: 0,
-    };
-    const statKeys = [
-      'weaponSkill',
-      'ballisticSkill',
-      'strength',
-      'toughness',
-      'agility',
-      'intelligence',
-      'perception',
-      'willpower',
-      'fellowship',
-      'influence',
-    ];
-    const statLabels = [
-      'Weapon Skill',
-      'Ballistic Skill',
-      'Strength',
-      'Toughness',
-      'Agility',
-      'Intelligence',
-      'Perception',
-      'Willpower',
-      'Fellowship',
-      'Influence',
-    ];
-
-    data.push(['    Characteristic', 'Value', 'Advances']);
-    statKeys.forEach((key, idx) => {
-      const val = (stats as any)[key] || 0;
-      const upgrades = (dh.statUpgrades as any)?.[key];
-      const advCount = Array.isArray(upgrades)
-        ? upgrades.filter(Boolean).length
-        : 0;
-      data.push(['    ' + statLabels[idx], val, advCount]);
-    });
-  }
-  addEmptyRow();
-
-  // ═══════════════════════════════════════════════════════════
-  // COMBAT & STATUS
-  // ═══════════════════════════════════════════════════════════
-  addHeader('Combat & Status');
-
-  if (isDnD) {
-    addRow('Armor Class', dnd.armorClass);
-    addRow('Speed', dnd.speed ? `${dnd.speed} ft.` : undefined);
-    addRow(
-      'Hit Points',
-      dnd.hitPoints
-        ? `${dnd.hitPoints.current} / ${dnd.hitPoints.max}`
-        : undefined,
-    );
-    addRow('Temporary Hit Points', dnd.temporaryHitPoints);
-    addRow('Hit Dice', dnd.hitDice);
-    addRow('Hit Dice Used', dnd.hitDiceUsed);
-    addRow(
-      'Death Saves',
-      dnd.deathSaves
-        ? `Successes: ${dnd.deathSaves.successes}, Failures: ${dnd.deathSaves.failures}`
-        : undefined,
-    );
-    addRow('Exhaustion', dnd.exhaustion);
-    addRow('HP Notes', dnd.hitPointsNotes);
-  } else {
-    addRow(
-      'Wounds',
-      dh.wounds ? `${dh.wounds.current} / ${dh.wounds.max}` : undefined,
-    );
-    addRow('Wounds Notes', dh.wounds?.notes);
-    addRow(
-      'Fate Points',
-      dh.fatePoints
-        ? `${dh.fatePoints.current} / ${dh.fatePoints.max}`
-        : undefined,
-    );
-    addRow('Fate Points Notes', dh.fatePoints?.notes);
-    addRow('Insanity Points', dh.insanityPoints?.total);
-    addRow('Insanity Notes', dh.insanityPoints?.notes);
-    addRow('Corruption Points', dh.corruptionPoints?.total);
-    addRow('Corruption Notes', dh.corruptionPoints?.notes);
-    addRow('Fatigue (1st)', dh.fatigue1st?.current);
-    addRow('Fatigue (1st) Notes', dh.fatigue1st?.notes);
-    addRow('Fatigue (2nd)', dh.fatigue2nd?.current);
-    addRow('Fatigue (2nd) Notes', dh.fatigue2nd?.notes);
-    addRow(
-      'Critical Conditions',
-      formatList(dh.criticalConditions || [], 'name'),
-    );
-    addRow(
-      'Custom Resources',
-      (dh.customResources || [])
-        .map(
-          (r) =>
-            `${r.description}: ${r.current}/${r.max}${r.notes ? ` (${r.notes})` : ''}`,
-        )
-        .join('\n') || undefined,
-    );
-    addRow('Movement - Walk (Half)', dh.movement?.walkHalf);
-    addRow('Movement - Walk (Full)', dh.movement?.walkFull);
-    addRow('Movement - Charge', dh.movement?.charge);
-    addRow('Movement - Run', dh.movement?.run);
-  }
-  addEmptyRow();
-
-  // ═══════════════════════════════════════════════════════════
-  // SAVING THROWS (DnD) / SKILLS & TALENTS
-  // ═══════════════════════════════════════════════════════════
-  if (isDnD) {
-    addHeader('Saving Throws');
-    const saves = (dnd as any).savingThrows || [];
-    if (saves.length > 0) {
-      data.push(['    Ability', 'Proficient', 'Bonus']);
-      saves.forEach((save: any) => {
-        if (typeof save === 'string') {
-          data.push(['    ' + save]);
-        } else if (save && typeof save === 'object') {
-          const name = save.name || save.ability || '';
-          const prof = save.proficient ? 'Yes' : '';
-          const bonus =
-            save.bonus !== undefined
-              ? save.bonus >= 0
-                ? `+${save.bonus}`
-                : `${save.bonus}`
-              : '';
-          data.push(['    ' + name, prof, bonus]);
-        }
-      });
-    } else {
-      data.push(['    None']);
-    }
-    addEmptyRow();
-  }
-
-  addHeader('Skills');
-  if (isDnD) {
-    const skills = (dnd as any).skills || [];
-    if (skills.length > 0) {
-      data.push([
-        '    Skill Name',
-        'Ability',
-        'Bonus',
-        'Proficient',
-        'Expertise',
-        'Notes',
-      ]);
-      skills.forEach((skill: any) => {
-        if (typeof skill === 'string') {
-          data.push(['    ' + skill]);
-        } else if (skill && typeof skill === 'object') {
-          data.push([
-            '    ' + (skill.name || ''),
-            skill.ability || '',
-            skill.bonus !== undefined
-              ? skill.bonus >= 0
-                ? `+${skill.bonus}`
-                : `${skill.bonus}`
-              : '',
-            skill.proficient ? 'Yes' : '',
-            skill.expertise ? 'Yes' : '',
-            skill.notes || '',
-          ]);
-        }
-      });
-    } else {
-      data.push(['    None']);
-    }
-  } else {
-    const skills = dh.skills || [];
-    if (skills.length > 0) {
-      data.push(['    Skill Name', 'Characteristic', 'Proficiency', 'Notes']);
-      skills.forEach((skill: any) => {
-        if (typeof skill === 'string') {
-          data.push(['    ' + skill, '', '', '']);
-        } else if (skill && typeof skill === 'object') {
-          let proficiency = 'Untrained';
-          if (skill.training?.plus20) {
-            proficiency = '+20';
-          } else if (skill.training?.plus10) {
-            proficiency = '+10';
-          } else if (skill.training?.skilled) {
-            proficiency = 'Skilled (+0)';
-          }
-
-          data.push([
-            '    ' + (skill.name || ''),
-            skill.characteristic || '',
-            proficiency,
-            skill.notes || '',
-          ]);
-        }
-      });
-    } else {
-      data.push(['    None']);
-    }
-  }
-  addEmptyRow();
-
-  if (!isDnD) {
-    addHeader('Talents');
-    const talents = dh.talents || [];
-    if (talents.length > 0) {
-      // FIX: Separated Description and Notes into their own columns
-      data.push(['    Talent Name', 'Description', 'Notes']);
-      talents.forEach((t: any) => {
-        if (typeof t === 'string') {
-          data.push(['    ' + t, '', '']);
-        } else if (t && typeof t === 'object') {
-          data.push([
-            '    ' + (t.name || ''),
-            t.description || '',
-            t.notes || '',
-          ]);
-        }
-      });
-    } else {
-      data.push(['    None']);
-    }
-    addEmptyRow();
-  }
-
-  // ═══════════════════════════════════════════════════════════
-  // ATTACKS & COMBAT RESOURCES (DnD)
-  // ═══════════════════════════════════════════════════════════
-  if (isDnD) {
-    addHeader('Attacks & Combat');
-    const attacks = (dnd as any).attacks || [];
-    if (attacks.length > 0) {
-      data.push([
-        '    Name',
-        'Attack Bonus',
-        'Damage',
-        'Damage Type',
-        'Properties',
-        'Notes',
-      ]);
-      attacks.forEach((a: any) => {
-        if (typeof a === 'string') {
-          data.push(['    ' + a]);
-        } else if (a && typeof a === 'object') {
-          data.push([
-            '    ' + (a.name || ''),
-            a.attackBonus || a.bonus || '',
-            a.damage || '',
-            a.damageType || a.type || '',
-            a.properties || '',
-            a.notes || '',
-          ]);
-        }
-      });
-    } else {
-      data.push(['    None']);
-    }
-
-    const resources = (dnd as any).combatResources || [];
-    if (resources.length > 0) {
-      addSubHeader('Combat Resources');
-      data.push(['    Resource', 'Current', 'Max', 'Notes']);
-      resources.forEach((r: any) => {
-        if (typeof r === 'string') {
-          data.push(['    ' + r]);
-        } else if (r && typeof r === 'object') {
-          data.push([
-            '    ' + (r.name || ''),
-            r.current || '',
-            r.max || '',
-            r.notes || '',
-          ]);
-        }
-      });
-    }
-    addEmptyRow();
-  }
-
-  // ═══════════════════════════════════════════════════════════
-  // EQUIPMENT & INVENTORY
-  // ═══════════════════════════════════════════════════════════
-  addHeader('Equipment & Inventory');
-
-  if (isDnD) {
-    const c = dnd.currency || { cp: 0, sp: 0, gp: 0, ep: 0, pp: 0 };
-    addSubHeader('Currency');
-    data.push(['    CP', c.cp, 'SP', c.sp, 'GP', c.gp]);
-    data.push(['    EP', c.ep, 'PP', c.pp]);
-
-    addSubHeader('Equipment');
-    const equipment = (dnd as any).equipment || [];
-    if (equipment.length > 0) {
-      data.push(['    Item', 'Quantity', 'Weight', 'Notes']);
-      equipment.forEach((e: any) => {
-        if (typeof e === 'string') {
-          data.push(['    ' + e]);
-        } else if (e && typeof e === 'object') {
-          data.push([
-            '    ' + (e.name || ''),
-            e.quantity || e.count || 1,
-            e.weight || '',
-            e.notes || '',
-          ]);
-        }
-      });
-    } else {
-      data.push(['    None']);
-    }
-
-    addSubHeader('Inventory');
-    const inventory = (dnd as any).inventory || [];
-    if (inventory.length > 0) {
-      data.push(['    Item', 'Quantity', 'Weight', 'Notes']);
-      inventory.forEach((i: any) => {
-        if (typeof i === 'string') {
-          data.push(['    ' + i]);
-        } else if (i && typeof i === 'object') {
-          data.push([
-            '    ' + (i.name || ''),
-            i.quantity || i.count || 1,
-            i.weight || '',
-            i.notes || '',
-          ]);
-        }
-      });
-    } else {
-      data.push(['    None']);
-    }
-
-    const attunement = (dnd as any).attunementItems || [];
-    if (attunement.length > 0) {
-      addSubHeader('Attunement Items');
-      data.push(['    ' + formatList(attunement)]);
-    }
-  } else {
-    addSubHeader('Wealth');
-    data.push(['    Throne Gelt', dh.wealth?.throneGelt || 0]);
-    data.push(['    Monthly Income', dh.wealth?.monthlyIncome || 0]);
-    data.push(['    Notes', dh.wealth?.notes || '']);
-
-    addSubHeader('Armor');
-    const armor = (dh.equipment as any)?.armor || {};
-    const armorEntries = Object.entries(armor).filter(
-      ([_, v]) => v !== null && v !== undefined && v !== '',
-    );
-    if (armorEntries.length > 0) {
-      data.push(['    Location', 'Armor Details']);
-      armorEntries.forEach(([loc, item]) => {
-        if (typeof item === 'string') {
-          data.push(['    ' + loc, item]);
-        } else if (item && typeof item === 'object') {
-          const details: string[] = [];
-          Object.entries(item).forEach(([key, value]) => {
-            if (value !== null && value !== undefined && value !== '') {
-              if (typeof value === 'object') {
-                details.push(`${key}: ${JSON.stringify(value)}`);
-              } else {
-                details.push(`${key}: ${value}`);
-              }
-            }
-          });
-          data.push(['    ' + loc, details.join(' | ')]);
-        }
-      });
-    } else {
-      data.push(['    None']);
-    }
-
-    addSubHeader('Weapons');
-    const weapons = (dh.equipment as any)?.weapons || { melee: [], ranged: [] };
-    const allWeapons = [...(weapons.melee || []), ...(weapons.ranged || [])];
-    if (allWeapons.length > 0) {
-      data.push([
-        '    Name',
-        'Type',
-        'Range',
-        'Damage',
-        'Penetration',
-        'Traits',
-      ]);
-      allWeapons.forEach((w: any) => {
-        if (typeof w === 'string') {
-          data.push(['    ' + w, '', '', '', '', '']);
-        } else if (w && typeof w === 'object') {
-          data.push([
-            '    ' + (w.name || ''),
-            w.type || w.class || '',
-            w.range || '',
-            w.damage || '',
-            w.penetration || w.pen || '',
-            w.traits || w.qualities || w.special || '',
-          ]);
-        }
-      });
-    } else {
-      data.push(['    None']);
-    }
-
-    addSubHeader('Inventory');
-    const inventory = dh.inventory || [];
-    if (inventory.length > 0) {
-      data.push(['    Item', 'Quantity', 'Weight', 'Notes']);
-      inventory.forEach((i: any) => {
-        if (typeof i === 'string') {
-          data.push(['    ' + i]);
-        } else if (i && typeof i === 'object') {
-          data.push([
-            '    ' + (i.name || ''),
-            i.quantity || i.count || 1,
-            i.weight || '',
-            i.notes || '',
-          ]);
-        }
-      });
-    } else {
-      data.push(['    None']);
-    }
-  }
-  addEmptyRow();
-
-  // ═══════════════════════════════════════════════════════════
-  // SPELLS (DnD only)
-  // ═══════════════════════════════════════════════════════════
-  if (isDnD) {
-    addHeader('Spellcasting');
-    addRow('Spellcasting Ability', (dnd as any).spellcastingAbility);
-    addRow('Spell Save DC', (dnd as any).spellSaveDifficulty);
-    addRow('Spell Attack Bonus', (dnd as any).spellAttackBonus);
-
-    const slots = (dnd as any).spellSlots || {};
-    if (
-      typeof slots === 'object' &&
-      !Array.isArray(slots) &&
-      Object.keys(slots).length > 0
-    ) {
-      addSubHeader('Spell Slots');
-      data.push(['    Level', 'Total', 'Used']);
-      Object.entries(slots).forEach(([level, count]) => {
-        const used = ((dnd as any).spellSlotsUsed || {})[level] || 0;
-        data.push(['    ' + level, count, used]);
-      });
-    }
-
-    const spells = (dnd as any).spells || [];
-    if (spells.length > 0) {
-      addSubHeader('Known / Prepared Spells');
-      data.push([
-        '    Spell Name',
-        'Level',
-        'School',
-        'Casting Time',
-        'Components',
-        'Range',
-        'Duration',
-        'Prepared',
-        'Notes',
-      ]);
-      spells.forEach((s: any) => {
-        if (typeof s === 'string') {
-          data.push(['    ' + s]);
-        } else if (s && typeof s === 'object') {
-          data.push([
-            '    ' + (s.name || ''),
-            s.level !== undefined ? s.level : '',
-            s.school || '',
-            s.castingTime || s.casting_time || '',
-            s.components || '',
-            s.range || '',
-            s.duration || '',
-            s.prepared ? 'Yes' : '',
-            s.notes || '',
-          ]);
-        }
-      });
-    }
-
-    const entries = (dnd as any).spellcastingEntries || [];
-    if (entries.length > 0) {
-      addSubHeader('Spellcasting Entries');
-      data.push(['    ' + formatList(entries)]);
-    }
-    addEmptyRow();
-  }
-
-  // ═══════════════════════════════════════════════════════════
-  // FEATURES & TRAITS (DnD)
-  // ═══════════════════════════════════════════════════════════
-  if (isDnD) {
-    addHeader('Features & Traits');
-    const features = (dnd as any).featuresAndTraits || [];
-    if (features.length > 0) {
-      data.push(['    Name', 'Source', 'Description']);
-      features.forEach((f: any) => {
-        if (typeof f === 'string') {
-          data.push(['    ' + f]);
-        } else if (f && typeof f === 'object') {
-          data.push([
-            '    ' + (f.name || ''),
-            f.source || '',
-            f.description || '',
-          ]);
-        }
-      });
-    } else {
-      data.push(['    None']);
-    }
-    addEmptyRow();
-  }
-
-  // ═══════════════════════════════════════════════════════════
-  // NARRATIVE
-  // ═══════════════════════════════════════════════════════════
-  addHeader('Narrative & Notes');
-  addRow('Backstory', character.backstory);
-  addRow('Notes', character.notes);
-
-  if (isDnD) {
-    addRow('Personality Traits', (dnd as any).personalityTraits);
-    addRow('Ideals', (dnd as any).ideals);
-    addRow('Bonds', (dnd as any).bonds);
-    addRow('Flaws', (dnd as any).flaws);
-    addRow(
-      'Proficiencies & Languages',
-      (dnd as any).otherProficienciesAndLanguages,
-    );
-  }
-  addEmptyRow();
-
-  // ═══════════════════════════════════════════════════════════
-  // COMPANIONS (DnD)
-  // ═══════════════════════════════════════════════════════════
-  if (isDnD) {
-    const companions = (dnd as any).companions || [];
-    if (companions.length > 0) {
-      addHeader('Companions');
-      data.push(['    Name', 'Type', 'AC', 'HP', 'Notes']);
-      companions.forEach((c: any) => {
-        if (typeof c === 'string') {
-          data.push(['    ' + c]);
-        } else if (c && typeof c === 'object') {
-          data.push([
-            '    ' + (c.name || ''),
-            c.type || '',
-            c.ac || '',
-            c.hp || '',
-            c.notes || '',
-          ]);
-        }
-      });
-      addEmptyRow();
-    }
-  }
-
-  // ═══════════════════════════════════════════════════════════
-  // QUEST LOG
-  // ═══════════════════════════════════════════════════════════
-  const quests = character.questLog || [];
-  if (quests.length > 0) {
-    addHeader('Quest Log');
-    data.push(['    Quest Name', 'Status', 'Description', 'Rewards', 'Notes']);
-    quests.forEach((q: any) => {
-      if (typeof q === 'string') {
-        data.push(['    ' + q]);
-      } else if (q && typeof q === 'object') {
-        data.push([
-          '    ' + (q.name || q.title || ''),
-          q.status || '',
-          q.description || '',
-          q.rewards || '',
-          q.notes || '',
-        ]);
-      }
-    });
-    addEmptyRow();
-  }
-
-  // ═══════════════════════════════════════════════════════════
-  // CUSTOM HOUSE RULES
-  // ═══════════════════════════════════════════════════════════
-  const houseRules = character.customHouseRules || [];
-  if (houseRules.length > 0) {
-    addHeader('Custom House Rules');
-    data.push(['    Rule Name', 'Description']);
-    if (Array.isArray(houseRules)) {
-      houseRules.forEach((r: any) => {
-        if (typeof r === 'string') {
-          data.push(['    ' + r]);
-        } else if (r && typeof r === 'object') {
-          data.push(['    ' + (r.name || r.title || ''), r.description || '']);
-        }
-      });
-    } else if (typeof houseRules === 'string') {
-      data.push(['    ' + houseRules]);
-    }
-    addEmptyRow();
-  }
-
   return data;
 }
 
@@ -1599,6 +913,7 @@ const EXCEL_COLUMNS = [
 export const exportCharacterToExcel = (
   character: Character,
   now = new Date(),
+  translate: ExportTranslate = defaultExcelTranslate,
 ): { success: boolean; filename?: string; error?: string } => {
   try {
     const normalized = normalizeCharacterRecord(
@@ -1610,7 +925,7 @@ export const exportCharacterToExcel = (
     }
 
     const worksheet = XLSX.utils.aoa_to_sheet(
-      buildCharacterSheetRows(normalized, now),
+      buildCharacterSheetRows(normalized, translate, now),
     );
     worksheet['!cols'] = EXCEL_COLUMNS;
 
