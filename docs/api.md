@@ -1,0 +1,103 @@
+# HTTP API
+
+The API is served by Next.js route handlers under `src/app/api/`. It uses JSON
+over the same origin as the UI and authenticates with a signed HttpOnly cookie.
+
+## Interactive docs
+
+| URL | What it is |
+| --- | --- |
+| **`/api/docs`** | Scalar reference for the OpenAPI document. |
+| **`/api/openapi.json`** | The OpenAPI 3.1 document itself. |
+
+The source of truth is [`src/lib/openapi.ts`](../src/lib/openapi.ts). The Scalar
+UI is served by [`src/app/api/docs/route.ts`](../src/app/api/docs/route.ts); its
+bundle is loaded from jsDelivr at a pinned version
+(`@scalar/api-reference@1.78.0`). The API is served by the same self-hosted app.
+For an offline/air-gapped setup, vendor the bundle into `public/` and point
+`cdn` at it.
+
+`tests/unit/openapi.test.ts` validates the document (refs, `operationId`s,
+responses) and compares its paths/methods with every `src/app/api/**/route.ts`.
+Adding an endpoint without documenting it fails the unit tests.
+
+## Authentication
+
+- `POST /api/auth` (login) and `POST /api/auth/register` set the
+  `dcs_session` cookie: `<uid>.<exp>.<hmac>`, `HttpOnly; SameSite=Lax`, 30 days.
+- Send the cookie with every request that touches user data. The browser does
+  this automatically for same-origin requests.
+- The server resolves the uid from the cookie only; `userId` in a query/body is
+  ignored.
+- An account that is deleted or blocked has no valid session: requests answer
+  `401`.
+- `GET /api/auth/session` returns the current profile snapshot and is the
+  canonical way for the client to refresh role/block state.
+
+## Endpoints
+
+### Authentication
+
+| Method | Path | Auth | Purpose |
+| --- | --- | --- | --- |
+| `POST` | `/api/auth` | — | Log in; unknown login → 404, blocked → 403. |
+| `POST` | `/api/auth/register` | — | Create an account with a recovery phrase and sign in. |
+| `POST` | `/api/auth/exists` | — | Check whether a login is taken. |
+| `GET` | `/api/auth/session` | cookie | Current profile snapshot (role, block state, etc.). |
+| `POST` | `/api/auth/logout` | — | Clear the session cookie. |
+| `PUT` | `/api/auth/profile` | cookie | Update own login, display name, password, recovery phrase. |
+| `DELETE` | `/api/auth/profile` | cookie | Delete own account and all sheets; requires the current password. |
+| `POST` | `/api/auth/phrase` | cookie | Set own recovery phrase. |
+| `POST` | `/api/auth/recover` | — | Reset a password using words from sheets + the recovery phrase. |
+| `POST` | `/api/auth/recover/verify` | — | Verify ownership and issue a session. |
+| `POST` | `/api/auth/recover/update` | — | Set a new password and recovery phrase during recovery. |
+
+### Characters
+
+| Method | Path | Auth | Purpose |
+| --- | --- | --- | --- |
+| `GET` | `/api/characters` | cookie | List the current user's sheets. |
+| `POST` | `/api/characters` | cookie | Create a sheet; the server assigns `id`/`userId`. |
+| `PUT` | `/api/characters/{id}` | cookie | Partial update; optional `__page`/`__seq` tokens drop late writes. |
+| `DELETE` | `/api/characters/{id}` | cookie | Delete a sheet. |
+
+### Import / export
+
+| Method | Path | Auth | Purpose |
+| --- | --- | --- | --- |
+| `GET` | `/api/export` | cookie | Portable JSON of one sheet (`?characterId=…`) or all sheets. |
+| `GET` | `/api/import` | — | Legacy Firestore import from `<data-dir>/import-source.json`. |
+
+Export/import format: [export-format.md](export-format.md).
+
+### Admin
+
+All admin endpoints go through `requireAdmin()`: no session → `401`, non-admin
+role → `403`.
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| `GET` | `/api/admin/users` | Users, roles, block state, last login, sheet counts, stats. |
+| `PATCH` | `/api/admin/users/{uid}` | Update fields / password / role / block state. |
+| `DELETE` | `/api/admin/users/{uid}` | Delete the account, its sheets and index entries. |
+| `GET` | `/api/admin/users/{uid}/characters` | Read-only sheet summaries for one user. |
+
+Rules and invariants: [admin.md](admin.md).
+
+## Response conventions
+
+- Success responses are JSON; most use `{ "success": true, ... }`.
+- Errors are JSON. Session/profile routes use
+  `{ "success": false, "error": "...", "reason": "..." }`; character/export
+  routes may use `{ "error": "..." }`.
+- Common status codes: `400` invalid input, `401` no/expired/blocked session,
+  `403` wrong role or wrong password, `404` not found, `409` conflict (taken
+  login, last administrator), `500` unexpected server error.
+- The exact schemas live in `/api/openapi.json`.
+
+## Related
+
+- [architecture.md](architecture.md) — auth/session implementation
+- [admin.md](admin.md) — admin endpoints and invariants
+- [export-format.md](export-format.md) — portable JSON/Excel envelope
+- [`src/lib/openapi.ts`](../src/lib/openapi.ts) — spec source
