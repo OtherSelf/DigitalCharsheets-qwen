@@ -1298,5 +1298,30 @@ export const enTranslations = {
     'Upload a previously exported JSON file to create a new character.',
   'io.importSuccessDashboard': 'Character successfully created! Redirecting...',
   'io.exportJSON': 'Export JSON File',
+  // ─── games: реестр игр/редакций и мастер создания ───
+  'games.dnd.name': 'Dungeons & Dragons',
+  'games.dnd.description': 'Heroic fantasy: classes, spells and d20 checks.',
+  'games.darkHeresy.name': 'Dark Heresy',
+  'games.darkHeresy.description':
+    'Grimdark investigation in the Warhammer 40,000 universe.',
+  'games.dnd5e.name': '5th Edition',
+  'games.dnd5e.description':
+    'The current D&D edition: d20, advantage and three pillars of play.',
+  'games.dh1.name': '1st Edition',
+  'games.dh1.description':
+    'Classic Dark Heresy: nine characteristics and first-edition fatigue.',
+  'games.dh2.name': '2nd Edition',
+  'games.dh2.description':
+    'Dark Heresy 2e: Influence, second-edition fatigue and +30 training.',
+  'games.stepGame': 'Game',
+  'games.stepEdition': 'Edition',
+  'games.stepCharacter': 'Character',
+  'games.chooseGame': 'Choose a game',
+  'games.chooseGameDesc': 'Step 1: pick the game world.',
+  'games.chooseEdition': 'Choose an edition',
+  'games.chooseEditionDesc':
+    'Step 2: editions have different rules and character sheets.',
+  'games.backToGames': 'Back to games',
+  'games.backToEditions': 'Back to editions',
 };
 // ─── LANDMARK: TRANSLATIONS_EN_END ───

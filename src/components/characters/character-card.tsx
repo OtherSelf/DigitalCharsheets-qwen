@@ -28,6 +28,11 @@ import {
 } from '@/components/ui/card';
 import { useCharacterContext } from '@/context/character-context';
 import { useTranslation } from '@/context/language-context';
+import {
+  getCharacterModule,
+  resolveCharacterSystemId,
+} from '@/games/character-system';
+import { getGameDefinition } from '@/games/games';
 import { RANK_KEYS } from '@/lib/dark-heresy-data';
 import {
   DEFAULT_EXPORT_CONFIG,
@@ -71,8 +76,19 @@ export function CharacterCard({ character }: CharacterCardProps) {
   const { t } = useTranslation();
   const { deleteCharacter, isCompactView, toast } = useCharacterContext();
 
-  const badgeVariant =
-    character.gameSystem === 'Dungeons & Dragons' ? 'default' : 'secondary';
+  const systemId = resolveCharacterSystemId(character);
+  const gameModule = getCharacterModule(character);
+  const gameDefinition = gameModule
+    ? getGameDefinition(gameModule.gameId)
+    : undefined;
+  const isDnd = gameModule?.gameId === 'dnd';
+  const isDarkHeresy = gameModule?.gameId === 'darkHeresy';
+  const badgeVariant = isDnd ? 'default' : 'secondary';
+  // Бейдж «игра · редакция» целиком из реестра и i18n.
+  const systemLabel =
+    gameDefinition && gameModule
+      ? `${t(gameDefinition.nameKey)} · ${t(gameModule.nameKey)}`
+      : character.gameSystem;
 
   const handleDelete = () => {
     deleteCharacter(character.id);
@@ -101,7 +117,7 @@ export function CharacterCard({ character }: CharacterCardProps) {
   };
 
   const getTranslatedClass = () => {
-    if (character.gameSystem === 'Dungeons & Dragons') {
+    if (isDnd) {
       return t(
         CLASS_TRANSLATION_KEYS[character.characterClass] ||
           character.characterClass,
@@ -132,19 +148,16 @@ export function CharacterCard({ character }: CharacterCardProps) {
             </CardTitle>
           </div>
           <CardDescription className="mt-0.5 line-clamp-1 text-xs break-words">
-            {character.gameSystem === 'Dungeons & Dragons' &&
-              `${t('dnd.lvl')}${character.level} `}
-            {character.gameSystem === 'Dark Heresy' &&
-              `${getTranslatedRank()} `}
+            {isDnd &&
+              `${t('dnd.lvl')}${'level' in character ? character.level : ''} `}
+            {isDarkHeresy && `${getTranslatedRank()} `}
             {getTranslatedClass()}
           </CardDescription>
           <Badge
             variant={badgeVariant}
             className="system-badge mt-2 w-fit max-w-full text-xs"
           >
-            {character.gameSystem === 'Dungeons & Dragons'
-              ? t('common.dungeonsAndDragons')
-              : t('common.darkHeresy')}
+            {systemLabel}
           </Badge>
         </div>
         <div className="actions-wrapper flex min-w-0 flex-1 items-center justify-end gap-1 p-2 sm:gap-2">
@@ -213,17 +226,15 @@ export function CharacterCard({ character }: CharacterCardProps) {
     <Card className="hover:shadow-primary/10 flex flex-col overflow-hidden transition-shadow duration-300 hover:shadow-lg">
       <CardContent className="flex-grow p-4">
         <Badge variant={badgeVariant} className="mb-2 text-xs sm:text-sm">
-          {character.gameSystem === 'Dungeons & Dragons'
-            ? t('common.dungeonsAndDragons')
-            : t('common.darkHeresy')}
+          {systemLabel}
         </Badge>
         <CardTitle className="font-headline mb-1 text-base break-words sm:text-lg">
           {character.name}
         </CardTitle>
         <CardDescription className="text-xs break-words sm:text-sm">
-          {character.gameSystem === 'Dungeons & Dragons' &&
-            `${t('dnd.lvl')}${character.level} `}
-          {character.gameSystem === 'Dark Heresy' && `${getTranslatedRank()} `}
+          {isDnd &&
+            `${t('dnd.lvl')}${'level' in character ? character.level : ''} `}
+          {isDarkHeresy && `${getTranslatedRank()} `}
           {getTranslatedClass()}
         </CardDescription>
       </CardContent>
