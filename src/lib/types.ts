@@ -1,4 +1,18 @@
 'use client';
+
+import type {
+  CombatResource,
+  InventoryItem,
+  Quest,
+} from '@/games/shared/types';
+
+export type {
+  CombatResource,
+  InventoryItem,
+  Quest,
+  QuestObjective,
+} from '@/games/shared/types';
+
 export type GameSystem = 'Dungeons & Dragons' | 'Dark Heresy';
 
 export const DarkHeresyHomeWorlds = [
@@ -21,25 +35,10 @@ export const DarkHeresyCareerPaths = [
 ] as const;
 export type DarkHeresyCareerPath = (typeof DarkHeresyCareerPaths)[number];
 
-export interface InventoryItem {
-  id: string;
-  name: string;
-  status: 'default' | 'lost';
-  notes?: string;
-}
-
 export interface AttunementItem {
   id: string;
   description: string;
   attuned: boolean;
-  notes?: string;
-}
-
-export interface CombatResource {
-  id: string;
-  description: string;
-  current: number;
-  max: number;
   notes?: string;
 }
 
@@ -250,28 +249,6 @@ export interface DarkHeresyWeapons {
 export interface DarkHeresyEquipment {
   armor: Armor;
   weapons: DarkHeresyWeapons;
-}
-
-export interface QuestObjective {
-  id: string;
-  text: string;
-  completed: boolean;
-}
-
-export interface Quest {
-  id: string;
-  title: string;
-  status: 'active' | 'completed';
-  description: string;
-  createdAt: string;
-  updatedAt: string;
-  // New UX fields (optional for backward compatibility)
-  priority?: 'main' | 'side' | 'personal';
-  notes?: string;
-  rewards?: string;
-  npcs?: string;
-  locations?: string;
-  objectives?: QuestObjective[];
 }
 
 export interface CharacterBase {
