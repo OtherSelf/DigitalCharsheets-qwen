@@ -1,0 +1,88 @@
+import type { DH1Character } from '../dh1/types';
+import type { DH2Character } from '../dh2/types';
+import type { GameExportConfig } from '../types';
+import { getDarkHeresyCapabilities } from './capabilities';
+
+/**
+ * ─── LANDMARK: DH EXPORT ───────────────────────────────────────────────────
+ * JSON-поля Dark Heresy, общие для dh1/dh2. Отличия — через capability:
+ * в экспорт попадает только существующее у редакции поле усталости
+ * (`fatigue1st`/`fatigue2nd`) и корректный состав характеристик.
+ */
+export function buildDarkHeresyPortableJson(
+  character: DH1Character | DH2Character,
+  config: GameExportConfig,
+  capabilities = getDarkHeresyCapabilities(character),
+): Record<string, unknown> {
+  const result: Record<string, unknown> = {};
+
+  if (config.includeBasicInfo) {
+    Object.assign(result, {
+      name: character.name,
+      characterClass: character.characterClass,
+      homeWorld: character.homeWorld,
+      worldVariant: character.worldVariant,
+      careerPath: character.careerPath,
+      rank: character.rank,
+      divination: character.divination,
+      divinationEffect: character.divinationEffect,
+      quirk: character.quirk,
+      height: character.height,
+      weight: character.weight,
+      age: character.age,
+      skinColor: character.skinColor,
+      hairColor: character.hairColor,
+      eyeColor: character.eyeColor,
+    });
+  }
+
+  if (config.includeStats) {
+    result.stats = character.stats;
+    result.statNotes = character.statNotes;
+    result.statUpgrades = character.statUpgrades;
+  }
+
+  if (config.includeCombat) {
+    const fatigue =
+      'fatigue1st' in character ? character.fatigue1st : character.fatigue2nd;
+    Object.assign(result, {
+      wounds: character.wounds,
+      fatePoints: character.fatePoints,
+      insanityPoints: character.insanityPoints,
+      corruptionPoints: character.corruptionPoints,
+      [capabilities.fatigueField]: fatigue,
+      criticalConditions: character.criticalConditions,
+      customResources: character.customResources,
+      movement: character.movement,
+      skills: character.skills,
+      talents: character.talents,
+    });
+  }
+
+  if (config.includeEquipment) result.equipment = character.equipment;
+  if (config.includeInventory) {
+    result.inventory = character.inventory;
+    result.wealth = character.wealth;
+  }
+
+  if (config.includeNarrative) {
+    result.backstory = character.backstory;
+    result.notes = character.notes;
+  }
+
+  if (config.includeProgression) {
+    Object.assign(result, {
+      experience: character.experience,
+      totalExpSpent: character.totalExpSpent,
+      alternatePath: character.alternatePath,
+      advancedPath: character.advancedPath,
+    });
+  }
+
+  if (config.includeQuestLog) result.questLog = character.questLog;
+  if (config.includeCustomHouseRules) {
+    result.customHouseRules = character.customHouseRules;
+  }
+
+  return result;
+}

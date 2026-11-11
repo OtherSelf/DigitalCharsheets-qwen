@@ -90,6 +90,27 @@ export type ModuleCapabilities = Readonly<
   Record<string, string | number | boolean>
 >;
 
+/**
+ * Какие секции включать в экспорт листа. Живёт в контракте, чтобы адаптеры
+ * модулей не импортировали клиентский `export-utils` (и не было цикла).
+ */
+export interface GameExportConfig {
+  includeBasicInfo: boolean;
+  includeStats: boolean;
+  includeCombat: boolean;
+  includeEquipment: boolean;
+  includeInventory: boolean;
+  includeSpells: boolean;
+  includeNarrative: boolean;
+  includeProgression: boolean;
+  includeCompanions: boolean;
+  includeQuestLog: boolean;
+  includeCustomHouseRules: boolean;
+}
+
+/** Перевод подписи Excel (ключ → строка) для текущего языка сайта. */
+export type ExportTranslate = (key: string) => string;
+
 /** Строка Excel-секции: `label` — стабильный i18n-ключ подписи. */
 export interface ExcelRow {
   readonly label: string;
@@ -113,9 +134,16 @@ export interface ExcelSection {
  */
 export interface GameExportAdapter<TCharacter extends CharacterRecord> {
   /** Поля листа, которые попадают в переносимый JSON (без служебных). */
-  toPortableJson(character: TCharacter): Record<string, unknown>;
-  /** Секции Excel в порядке вывода. */
-  buildExcelSections(character: TCharacter): readonly ExcelSection[];
+  toPortableJson(
+    character: TCharacter,
+    config: GameExportConfig,
+  ): Record<string, unknown>;
+  /** Секции Excel в порядке вывода; подписи — уже переведённые строки. */
+  buildExcelSections(
+    character: TCharacter,
+    config: GameExportConfig,
+    translate: ExportTranslate,
+  ): readonly ExcelSection[];
 }
 
 /** Один шаг цепочки версий схемы листа; должен быть идемпотентным. */

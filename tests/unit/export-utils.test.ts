@@ -102,7 +102,12 @@ describe('filterCharacterForExport', () => {
       makeDndCharacter() as any,
       allOff,
     );
-    expect(filtered).toEqual({ id: 'dnd-1', gameSystem: 'Dungeons & Dragons' });
+    expect(filtered).toEqual({
+      id: 'dnd-1',
+      gameSystem: 'Dungeons & Dragons',
+      systemId: 'dnd5e',
+      schemaVersion: 2,
+    });
   });
 
   it('базовая информация, статы и боевые поля D&D попадают в экспорт', () => {
@@ -140,7 +145,7 @@ describe('filterCharacterForExport', () => {
     expect((filtered as any).race).toBeUndefined();
   });
 
-  it('не теряет новые поля DH: edition, fatigue, criticalConditions, customResources', () => {
+  it('не теряет поля DH v2: fatigue2nd, criticalConditions, customResources', () => {
     const dh = makeDhCharacter({
       edition: '2nd',
       fatigue1st: { current: 2, notes: 'beaten' },
@@ -153,9 +158,12 @@ describe('filterCharacterForExport', () => {
       DEFAULT_EXPORT_CONFIG,
     ) as any;
 
-    expect(filtered.edition).toBe('2nd');
-    expect(filtered.fatigue1st).toEqual({ current: 2, notes: 'beaten' });
+    expect(filtered.systemId).toBe('dh2');
+    expect(filtered.edition).toBeUndefined();
+    expect(filtered.fatigue1st).toBeUndefined();
     expect(filtered.fatigue2nd).toEqual({ current: 1, notes: '' });
+    // Значимая fatigue1st не потеряна — ушла в notes миграции.
+    expect(String(filtered.notes)).toContain('[migration v2]');
     expect(filtered.criticalConditions).toHaveLength(1);
     expect(filtered.criticalConditions[0].name).toBe('Broken arm');
     expect(filtered.customResources).toHaveLength(1);
@@ -381,7 +389,7 @@ describe('importCharacterFromJSON (только формат dcs-export v2)', ()
 
     const newer = await importCharacterFromJSON(
       fileOf({
-        metadata: { ...meta('character'), version: '3.0' },
+        metadata: { ...meta('character'), version: '4.0' },
         character: makeDndCharacter(),
       }),
     );
@@ -475,17 +483,20 @@ describe('mergeImportedData', () => {
     expect((merged as any).backstory).toBe('original');
   });
 
-  it('восстанавливает при импорте поля DH: edition, fatigue, критические, ресурсы', () => {
-    const target = makeDhCharacter() as any;
+  it('восстанавливает при импорте поля DH v2: fatigue2nd, критические, ресурсы', () => {
+    const target = makeDhCharacter({ edition: '2nd' }) as any;
     const imported = {
       metadata: {
         appName: 'DigitalCharsheets-qwen',
-        version: '1.0',
+        version: '3.0',
         exportDate: '',
+        kind: 'character',
         config: DEFAULT_EXPORT_CONFIG,
       },
       character: {
-        edition: '2nd',
+        systemId: 'dh2',
+        gameSystem: 'Dark Heresy',
+        schemaVersion: 2,
         fatigue1st: { current: 4 },
         fatigue2nd: { current: 2 },
         criticalConditions: [{ id: 'c9', name: 'Concussion' }],
@@ -501,11 +512,34 @@ describe('mergeImportedData', () => {
       DEFAULT_EXPORT_CONFIG,
     ) as any;
 
-    expect(merged.edition).toBe('2nd');
-    expect(merged.fatigue1st).toEqual({ current: 4, ...target.fatigue1st });
-    expect(merged.fatigue2nd).toEqual({ current: 2, ...target.fatigue2nd });
+    expect(merged.systemId).toBe('dh2');
+    expect(merged.edition).toBeUndefined();
+    expect(merged.fatigue2nd.current).toBe(2);
+    expect(merged.fatigue1st).toBeUndefined();
     expect(merged.criticalConditions[0].name).toBe('Concussion');
     expect(merged.customResources[0].description).toBe('Grenades');
+  });
+
+  it('не подмешивает fatigue2nd в dh1', () => {
+    const target = makeDhCharacter() as any;
+    const imported = {
+      metadata: { appName: 'DigitalCharsheets-qwen', version: '3.0' },
+      character: {
+        systemId: 'dh1',
+        gameSystem: 'Dark Heresy',
+        schemaVersion: 2,
+        fatigue2nd: { current: 9 },
+      },
+    };
+
+    const merged = mergeImportedData(
+      target,
+      imported as any,
+      DEFAULT_EXPORT_CONFIG,
+    ) as any;
+
+    expect(merged.systemId).toBe('dh1');
+    expect(merged.fatigue2nd).toBeUndefined();
   });
 
   it('мержит вложенные объекты (хиты) вместо замены целиком', () => {
@@ -581,7 +615,7 @@ describe('exportCharacterToExcel (xlsx)', () => {
       expect(String(rows[0][0])).toContain('DIGITAL CHARACTER SHEETS');
       expect(row(rows, 'App')).toEqual(['App', 'DigitalCharsheets-qwen']);
       expect(row(rows, 'Format')).toEqual(['Format', 'dcs-export']);
-      expect(row(rows, 'Format version')).toEqual(['Format version', '2.1']);
+      expect(row(rows, 'Format version')).toEqual(['Format version', '3.0']);
       expect(row(rows, 'Kind')).toEqual(['Kind', 'character']);
       expect(row(rows, 'Export date')).toEqual([
         'Export date',
@@ -603,7 +637,7 @@ describe('exportCharacterToExcel (xlsx)', () => {
     }
   });
 
-  it('выгружает поля Dark Heresy: edition, fatigue, критические, ресурсы', () => {
+  it('выгружает поля Dark Heresy v2: fatigue2nd, критические, ресурсы', () => {
     process.chdir(tmp);
     try {
       const character = makeDhCharacter({
@@ -619,8 +653,17 @@ describe('exportCharacterToExcel (xlsx)', () => {
       expect(result.success).toBe(true);
 
       const rows = readRows(result.filename!);
-      expect(row(rows, 'Edition')?.[1]).toBe('2nd');
-      expect(row(rows, 'Fatigue (1st)')?.[1]).toBe(2);
+      // edition больше нет; fatigue1st ушла в notes миграции.
+      expect(row(rows, 'Edition')).toBeUndefined();
+      expect(row(rows, 'Fatigue (1st)')).toBeUndefined();
+      expect(row(rows, 'Fatigue (2nd)')?.[1]).toBe(1);
+      // Несколько строк с подписью Notes: миграционная — та, где текст.
+      const migrationNote = rows.find(
+        (r) =>
+          String(r[0] ?? '').trim() === 'Notes' &&
+          String(r[1] ?? '').includes('[migration v2]'),
+      );
+      expect(migrationNote).toBeDefined();
       expect(String(row(rows, 'Critical Conditions')?.[1] ?? '')).toContain(
         'Broken arm',
       );

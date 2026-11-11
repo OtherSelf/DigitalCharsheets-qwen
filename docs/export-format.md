@@ -14,7 +14,7 @@ Both JSON exports (one character and the full backup) use the same envelope:
   "metadata": {
     "appName": "DigitalCharsheets-qwen",
     "format": "dcs-export",
-    "version": "2.1",
+    "version": "3.0",
     "kind": "character",
     "exportDate": "2026-11-08T21:32:41.717Z",
     "characterCount": 1,
@@ -22,6 +22,8 @@ Both JSON exports (one character and the full backup) use the same envelope:
   },
   "character": {
     "id": "…",
+    "systemId": "dnd5e",
+    "schemaVersion": 2,
     "gameSystem": "Dungeons & Dragons",
     "name": "…"
   }
@@ -42,8 +44,11 @@ A full backup uses `"kind": "backup"`, `"characters": [...]` and
 The Excel file follows the same base name and starts with the same technical
 block before the human-readable sections:
 
-`App`, `Format`, `Format version`, `Kind`, `Export date`, `Character ID`,
-`Character`, `Game system`.
+`App`, `Format`, `Format version` (`3.0`), `Kind`, `Export date`,
+`Character ID`, `Character`, `Game system`.
+
+The human-readable section titles and row labels are resolved through i18n in
+the site language at export time.
 
 The sheet is named after the character.
 
@@ -52,12 +57,22 @@ The sheet is named after the character.
 The user-facing import accepts only the `dcs-export` format and validates
 `appName`, `format`, version, `kind`, character fields and `characterCount`.
 
-Current exports use format **2.1** and include `schemaVersion: 1` on each
-character. Dark Heresy divination fields are stable IDs
-(`"divination": "mutationWithout"`, `"divinationEffect": "minorMutation"`).
-Exports from **2.0** (sentence values) are still accepted and migrated on
-import; a bare array, a bare character or a v1 envelope is rejected with a
-"re-export" message.
+Exports always use format **3.0**. Each character has a machine `systemId`
+(`dnd5e`, `dh1`, `dh2`), `schemaVersion: 2`, and the legacy `gameSystem` mirror
+that is kept for consumers still being migrated. Dark Heresy divination fields
+are stable IDs (`"divination": "mutationWithout"`,
+`"divinationEffect": "minorMutation"`).
+
+Import accepts:
+
+- **3.0** natively;
+- **2.0 / 2.1** with migration to the v2 sheet (edition split, `systemId`,
+  sentence divinations);
+- older or foreign envelopes are rejected with a "re-export" message
+  (bare arrays, bare characters, v1 envelopes, other apps).
+
+The portable shape drops migration provenance and the owner id; the owner is
+taken from the current session on import.
 
 The portable shape intentionally drops migration provenance and the owner id;
 the owner is taken from the current session on import (the legacy Firestore
@@ -66,8 +81,11 @@ normalizer).
 
 ## Where the code lives
 
-- [`src/lib/export-utils.ts`](../src/lib/export-utils.ts) — JSON/Excel builders,
-  file names, the export config.
+- [`src/lib/export-utils.ts`](../src/lib/export-utils.ts) — envelope, import
+  parsing/merging, file names and the Excel workbook writer.
+- [`src/games/dnd5e/export.ts`](../src/games/dnd5e/export.ts),
+  [`src/games/dh-shared/export.ts`](../src/games/dh-shared/export.ts) — JSON
+  field selection per module (Excel sections are moving there too).
 - [`src/lib/character-portable.ts`](../src/lib/character-portable.ts) — removes
   migration/Firestore/`userId` fields for the portable shape.
 - [`src/app/api/export/route.ts`](../src/app/api/export/route.ts) — HTTP export.

@@ -155,7 +155,7 @@ export const openApiDocument = {
           username: { type: 'string', description: 'Normalized login.' },
           displayName: { type: 'string' },
           hasRecoveryPhrase: { type: 'boolean' },
-          role: { type: 'string', enum: ['user', 'admin'] },
+          role: { type: 'string', enum: ['user', 'tester', 'admin'] },
           isBlocked: { type: 'boolean' },
           mustChangePassword: {
             type: 'boolean',
@@ -412,9 +412,19 @@ export const openApiDocument = {
         properties: {
           id: { type: 'string' },
           userId: { type: 'string', format: 'uuid' },
+          systemId: {
+            type: 'string',
+            enum: ['dnd5e', 'dh1', 'dh2'],
+            description: 'Machine game/edition id; discriminant of the sheet.',
+          },
+          schemaVersion: {
+            type: 'integer',
+            description: 'Character sheet schema version (2).',
+          },
           gameSystem: {
             type: 'string',
             enum: ['Dungeons & Dragons', 'Dark Heresy'],
+            description: 'Legacy human-readable mirror of systemId.',
           },
           name: { type: 'string' },
           characterClass: { type: 'string' },
@@ -424,15 +434,25 @@ export const openApiDocument = {
         },
         additionalProperties: true,
         description:
-          'A character sheet. Fields depend on the game system; unknown fields are preserved.',
+          'A character sheet. Fields depend on the game/edition; unknown fields are preserved.',
       },
       CharacterInput: {
         type: 'object',
-        required: ['gameSystem', 'name', 'characterClass'],
+        required: ['name', 'characterClass'],
         properties: {
+          systemId: {
+            type: 'string',
+            enum: ['dnd5e', 'dh1', 'dh2'],
+            description: 'Machine game/edition id; discriminant of the sheet.',
+          },
+          schemaVersion: {
+            type: 'integer',
+            description: 'Character sheet schema version (2).',
+          },
           gameSystem: {
             type: 'string',
             enum: ['Dungeons & Dragons', 'Dark Heresy'],
+            description: 'Legacy mirror; systemId is preferred.',
           },
           name: { type: 'string' },
           characterClass: { type: 'string' },
@@ -446,12 +466,29 @@ export const openApiDocument = {
       },
       PortableCharacter: {
         type: 'object',
-        required: ['id', 'gameSystem', 'name', 'characterClass'],
+        required: [
+          'id',
+          'systemId',
+          'schemaVersion',
+          'gameSystem',
+          'name',
+          'characterClass',
+        ],
         properties: {
           id: { type: 'string' },
+          systemId: {
+            type: 'string',
+            enum: ['dnd5e', 'dh1', 'dh2'],
+            description: 'Machine game/edition id; discriminant of the sheet.',
+          },
+          schemaVersion: {
+            type: 'integer',
+            description: 'Character sheet schema version (2).',
+          },
           gameSystem: {
             type: 'string',
             enum: ['Dungeons & Dragons', 'Dark Heresy'],
+            description: 'Legacy mirror of systemId.',
           },
           name: { type: 'string' },
           characterClass: { type: 'string' },
@@ -527,7 +564,7 @@ export const openApiDocument = {
           uid: { type: 'string', format: 'uuid' },
           username: { type: 'string' },
           displayName: { type: 'string' },
-          role: { type: 'string', enum: ['user', 'admin'] },
+          role: { type: 'string', enum: ['user', 'tester', 'admin'] },
           isBlocked: { type: 'boolean' },
           createdAt: { type: ['string', 'null'], format: 'date-time' },
           updatedAt: { type: ['string', 'null'], format: 'date-time' },
@@ -575,7 +612,7 @@ export const openApiDocument = {
           displayName: { type: 'string' },
           username: { type: 'string' },
           password: { type: 'string', minLength: 4 },
-          role: { type: 'string', enum: ['user', 'admin'] },
+          role: { type: 'string', enum: ['user', 'tester', 'admin'] },
           isBlocked: { type: 'boolean' },
         },
         additionalProperties: false,

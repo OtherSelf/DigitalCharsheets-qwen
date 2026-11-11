@@ -128,17 +128,35 @@ describe('модули: дефолты и схемы', () => {
   });
 
   it('адаптер экспорта убирает непереносимые поля', () => {
-    const portable = dnd5eModule.export.toPortableJson({
-      ...dnd5eModule.createDefaults(),
-      id: 'c1',
-      userId: 'u1',
-      migratedFrom: 'firebase',
-      __seq: 3,
-    } as never);
+    const portable = dnd5eModule.export.toPortableJson(
+      {
+        ...dnd5eModule.createDefaults(),
+        name: 'Export Test',
+        id: 'c1',
+        userId: 'u1',
+        migratedFrom: 'firebase',
+        __seq: 3,
+      } as never,
+      {
+        includeBasicInfo: true,
+        includeStats: true,
+        includeCombat: true,
+        includeEquipment: true,
+        includeInventory: true,
+        includeSpells: true,
+        includeNarrative: true,
+        includeProgression: true,
+        includeCompanions: true,
+        includeQuestLog: true,
+        includeCustomHouseRules: true,
+      },
+    );
+    // Идентичность добавляет ядро; адаптер отдаёт только поля модуля.
     expect(portable.userId).toBeUndefined();
     expect(portable.migratedFrom).toBeUndefined();
     expect(portable.__seq).toBeUndefined();
-    expect(portable.id).toBe('c1');
+    expect(portable.id).toBeUndefined();
+    expect(portable.name).toBe('Export Test');
   });
 });
 
