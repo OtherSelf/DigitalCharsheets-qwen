@@ -240,7 +240,7 @@ export const ruTranslations = {
   showAllQuirks: 'Показать все особенности',
   effectAppearsHere: 'Эффект отображается здесь',
   placeholderJax: 'Джакс Валериус',
-  placeholderUnderhive: 'Рожденный в подуллье Скintиллы...',
+  placeholderUnderhive: 'Рождённый в нижнем улье Сцинтиллы...',
   characterCreatedDescDH: 'Ваш новый персонаж Dark Heresy был сохранен.',
   error: 'Ошибка',
   failedToCreateCharacter: 'Не удалось создать персонажа.',
