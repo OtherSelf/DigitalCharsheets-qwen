@@ -87,6 +87,8 @@ export default defineConfig({
       name: 'desktop',
       // Планшетные эталоны снимаются только в проекте `tablet`.
       testIgnore: /tablet\.spec\.ts/,
+      // Тесты с @mobile не планируются в desktop (иначе висят skipped).
+      grepInvert: /@mobile/,
       use: {
         viewport: { width: 1440, height: 900 },
         deviceScaleFactor: 1,
@@ -98,6 +100,8 @@ export default defineConfig({
       // Android/Chrome: настоящий мобильный вьюпорт, touch, isMobile.
       name: 'mobile',
       testIgnore: /tablet\.spec\.ts/,
+      // Тесты с @desktop не планируются в mobile.
+      grepInvert: /@desktop/,
       use: {
         ...pixel7,
         // Скриншоты и так в CSS-пикселях, но DPR важен для отрисовки.
