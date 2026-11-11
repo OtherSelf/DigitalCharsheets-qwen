@@ -27,8 +27,9 @@ npm run test:dev            # dev-proxy hydration + health/version smoke
 - API route handlers are imported and called as ordinary functions with a
   `Request`; no HTTP server is started.
 - Covered areas: auth and profile updates, account deletion, recovery, file
-  storage/locks/atomic writes, export/import, translations parity, OpenAPI
-  document and route coverage, admin API and bootstrap, health/version.
+  storage/locks/atomic writes, export/import, translations parity and
+  hardcoded-UI checks, OpenAPI document and route coverage, admin API and
+  bootstrap, health/version.
 - `tests/unit/openapi.test.ts` compares the OpenAPI spec with every
   `src/app/api/**/route.ts`; a new endpoint without documentation fails it.
 

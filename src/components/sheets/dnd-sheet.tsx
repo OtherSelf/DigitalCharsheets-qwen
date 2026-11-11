@@ -627,7 +627,7 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
                 {isOtherProficienciesEditing && (
                   <div className="flex gap-2 border-t pt-2">
                     <Input
-                      placeholder="New..."
+                      placeholder={t('newItemPlaceholder')}
                       value={newProfItem}
                       onChange={(e) => setNewProfItem(e.target.value)}
                       className="h-7 text-[10px]"

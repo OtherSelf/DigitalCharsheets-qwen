@@ -61,6 +61,16 @@ function duplicateKeys(file: string): string[] {
 const en = translations.en;
 const ru = translations.ru;
 
+// Значения, которые законно совпадают в en/ru: имена систем, числовой
+// placeholder и маска пароля. Новые совпадения должны быть осознанными.
+const SAME_VALUE_ALLOWED = new Set([
+  'gameSystemDarkHeresy',
+  'dungeonsAndDragons',
+  'darkHeresy',
+  'placeholderAge',
+  'authPasswordPlaceholder',
+]);
+
 describe('переводы: целостность словарей', () => {
   it('en и ru содержат одинаковый набор ключей', () => {
     const onlyEn = Object.keys(en)
@@ -119,6 +129,16 @@ describe('переводы: целостность словарей', () => {
       }
     }
     expect(mixed, 'слова со смешанной раскладкой').toEqual([]);
+  });
+
+  it('в ru нет непереведённых значений, совпадающих с en', () => {
+    const untranslated = Object.entries(ru)
+      .filter(
+        ([key, value]) => value === en[key] && !SAME_VALUE_ALLOWED.has(key),
+      )
+      .map(([key]) => key)
+      .sort();
+    expect(untranslated, 'ru-значения, совпадающие с en').toEqual([]);
   });
 
   it('словари не пустые и содержат идентичные переводы обеих локалей', () => {

@@ -14,11 +14,13 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { useTranslation } from '@/context/language-context';
 import { useLocalAuth } from '@/context/local-auth-context';
 
 export function RecoveryModal() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { t } = useTranslation();
   const { user, updateUserPhrase } = useLocalAuth();
 
   const [newPassword, setNewPassword] = useState('');
@@ -85,7 +87,7 @@ export function RecoveryModal() {
 
     if (isSetup) {
       if (!newRecoveryPhrase || newRecoveryPhrase.trim().length < 5) {
-        setError('Recovery phrase must be at least 5 characters.');
+        setError(t('phraseMinLength'));
         return;
       }
       setIsLoading(true);
@@ -108,25 +110,25 @@ export function RecoveryModal() {
             router.replace(window.location.pathname, { scroll: false });
           }, 100);
         } else {
-          setError(data.error || 'Failed to update phrase.');
+          setError(data.error || t('phraseUpdateFailed'));
         }
       } catch (err) {
-        setError('Failed to connect to server.');
+        setError(t('serverConnectionFailed'));
       } finally {
         setIsLoading(false);
       }
     } else {
       // Recovery mode
       if (!newPassword || !newRecoveryPhrase) {
-        setError('Please fill in all fields.');
+        setError(t('authFillAllFields'));
         return;
       }
       if (newPassword.length < 4) {
-        setError('Password must be at least 4 characters.');
+        setError(t('passwordMinLength'));
         return;
       }
       if (newRecoveryPhrase.trim().length < 5) {
-        setError('Recovery phrase must be at least 5 characters.');
+        setError(t('phraseMinLength'));
         return;
       }
 
@@ -154,10 +156,10 @@ export function RecoveryModal() {
             router.replace(window.location.pathname, { scroll: false });
           }, 100);
         } else {
-          setError(data.error || 'Failed to update credentials.');
+          setError(data.error || t('credentialsUpdateFailed'));
         }
       } catch (err) {
-        setError('Failed to connect to server.');
+        setError(t('serverConnectionFailed'));
       } finally {
         setIsLoading(false);
       }
@@ -171,12 +173,10 @@ export function RecoveryModal() {
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>
-            {isRecovery ? 'Reset Credentials' : 'Secure Your Account'}
+            {isRecovery ? t('resetCredentialsTitle') : t('secureAccountTitle')}
           </DialogTitle>
           <DialogDescription>
-            {isRecovery
-              ? 'You have successfully verified your identity. Please set a new password and a new recovery phrase to complete the process.'
-              : 'Welcome! Please set up a recovery phrase to secure your account in case you forget your password.'}
+            {isRecovery ? t('resetCredentialsDesc') : t('secureAccountDesc')}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 py-4">
@@ -192,7 +192,7 @@ export function RecoveryModal() {
                 htmlFor="recovery-new-password"
                 className="text-sm font-medium"
               >
-                New Password
+                {t('newPassword')}
               </label>
               <Input
                 id="recovery-new-password"
@@ -207,28 +207,27 @@ export function RecoveryModal() {
 
           <div className="space-y-2">
             <label htmlFor="recovery-phrase" className="text-sm font-medium">
-              {isRecovery ? 'New Recovery Phrase' : 'Recovery Phrase'}
+              {isRecovery ? t('recoveryPhrase') : t('authRecoveryPhraseLabel')}
             </label>
             <Input
               id="recovery-phrase"
               value={newRecoveryPhrase}
               onChange={(e) => setNewRecoveryPhrase(e.target.value)}
-              placeholder="e.g., french butter dragon"
+              placeholder={t('recoveryPhraseExample')}
               required
             />
             <p className="text-muted-foreground text-xs">
-              Make it memorable! You can use the same phrase as before if you
-              wish.
+              {t('recoveryPhraseHint')}
             </p>
           </div>
 
           <DialogFooter>
             <Button type="submit" disabled={isLoading}>
               {isLoading
-                ? 'Saving...'
+                ? t('saving')
                 : isRecovery
-                  ? 'Save & Continue'
-                  : 'Save Phrase'}
+                  ? t('saveAndContinue')
+                  : t('savePhrase')}
             </Button>
           </DialogFooter>
         </form>

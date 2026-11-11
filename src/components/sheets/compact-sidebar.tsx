@@ -223,7 +223,7 @@ export function CompactSidebar({
             <PopoverTrigger asChild>
               <Button
                 variant="ghost"
-                aria-label="Select Edition"
+                aria-label={t('selectEdition')}
                 className="w-full"
                 size="icon"
               >
@@ -233,7 +233,7 @@ export function CompactSidebar({
             <PopoverContent side="right" align="center" className="w-40 p-2">
               <div className="space-y-2">
                 <p className="text-muted-foreground text-xs font-medium">
-                  Edition
+                  {t('edition')}
                 </p>
                 <Select
                   value={character.edition || '1st'}
@@ -246,9 +246,9 @@ export function CompactSidebar({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="1st">1st Edition</SelectItem>
-                    <SelectItem value="2nd">2nd Edition</SelectItem>
-                    <SelectItem value="hybrid">Hybrid</SelectItem>
+                    <SelectItem value="1st">{t('firstEdition')}</SelectItem>
+                    <SelectItem value="2nd">{t('secondEdition')}</SelectItem>
+                    <SelectItem value="hybrid">{t('hybridView')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

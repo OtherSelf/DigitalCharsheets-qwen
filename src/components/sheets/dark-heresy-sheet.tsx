@@ -478,7 +478,7 @@ export const DarkHeresySheet = React.forwardRef<
                             align="center"
                           >
                             <Label className="mb-2 block text-xs font-semibold">
-                              {char.label} - Notes
+                              {char.label} - {t('notes')}
                             </Label>
                             <Textarea
                               defaultValue={notes}
@@ -743,7 +743,7 @@ export const DarkHeresySheet = React.forwardRef<
                 character.edition === 'hybrid' ||
                 !character.edition) && (
                 <MetricBox
-                  title="1st Ed. Fatigue"
+                  title={t('fatigueFirstEdition')}
                   notes={character.fatigue1st?.notes}
                   onNoteChange={(val) =>
                     updateCharacter(character.id, {
@@ -820,7 +820,7 @@ export const DarkHeresySheet = React.forwardRef<
               {(character.edition === '2nd' ||
                 character.edition === 'hybrid') && (
                 <MetricBox
-                  title="2nd Ed. Fatigue"
+                  title={t('fatigueSecondEdition')}
                   notes={character.fatigue2nd?.notes}
                   onNoteChange={(val) =>
                     updateCharacter(character.id, {
@@ -1177,7 +1177,7 @@ export const DarkHeresySheet = React.forwardRef<
                   variant="ghost"
                   size="icon"
                   onClick={() => setIsSkillsPanelCollapsed(true)}
-                  aria-label="Collapse Panel"
+                  aria-label={t('collapsePanel')}
                   className={cn(isCompactView && 'hidden')}
                 >
                   <ChevronLeft className="h-5 w-5" />
@@ -1353,7 +1353,7 @@ export const DarkHeresySheet = React.forwardRef<
                   <Card>
                     <CardHeader className="flex-row items-center justify-between px-6 pt-3 pb-2">
                       <CardTitle className="font-headline text-base">
-                        Fatigue & Critical Conditions
+                        {t('fatigueAndCriticalConditions')}
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4 pt-0">
@@ -1363,7 +1363,7 @@ export const DarkHeresySheet = React.forwardRef<
                           !character.edition) && (
                           <div className="min-w-[140px] flex-1">
                             <MetricBox
-                              title="1st Ed. Fatigue"
+                              title={t('fatigueFirstEdition')}
                               notes={character.fatigue1st?.notes}
                               onNoteChange={(val) =>
                                 updateCharacter(character.id, {
@@ -1448,7 +1448,7 @@ export const DarkHeresySheet = React.forwardRef<
                           character.edition === 'hybrid') && (
                           <div className="min-w-[140px] flex-1">
                             <MetricBox
-                              title="2nd Ed. Fatigue"
+                              title={t('fatigueSecondEdition')}
                               notes={character.fatigue2nd?.notes}
                               onNoteChange={(val) =>
                                 updateCharacter(character.id, {
@@ -1533,7 +1533,7 @@ export const DarkHeresySheet = React.forwardRef<
 
                       <div className="border-t pt-2">
                         <h4 className="mb-2 text-sm font-semibold">
-                          Critical Conditions
+                          {t('criticalConditions')}
                         </h4>
                         <div className="space-y-2">
                           {(character.criticalConditions || []).map(
@@ -1563,7 +1563,7 @@ export const DarkHeresySheet = React.forwardRef<
                           {showEditButtons && (
                             <div className="flex gap-2 pt-2">
                               <Input
-                                placeholder="Add critical condition..."
+                                placeholder={t('addCriticalCondition')}
                                 value={newCriticalCondition}
                                 onChange={(e) =>
                                   setNewCriticalCondition(e.target.value)
@@ -1573,7 +1573,7 @@ export const DarkHeresySheet = React.forwardRef<
                                 }
                               />
                               <Button onClick={addCriticalCondition} size="sm">
-                                <Plus className="mr-2 h-4 w-4" /> Add
+                                <Plus className="mr-2 h-4 w-4" /> {t('add')}
                               </Button>
                             </div>
                           )}
@@ -1697,7 +1697,7 @@ export const DarkHeresySheet = React.forwardRef<
                                 align="center"
                               >
                                 <Label className="mb-2 block text-xs font-semibold">
-                                  {char.label} - Notes
+                                  {char.label} - {t('notes')}
                                 </Label>
                                 <Textarea
                                   defaultValue={notes}
@@ -1900,7 +1900,7 @@ export const DarkHeresySheet = React.forwardRef<
                   variant="ghost"
                   size="icon"
                   onClick={() => setIsEquipmentPanelCollapsed(true)}
-                  aria-label="Collapse Panel"
+                  aria-label={t('collapsePanel')}
                 >
                   <ChevronRight className="h-5 w-5" />
                 </Button>

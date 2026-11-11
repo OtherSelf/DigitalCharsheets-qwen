@@ -77,7 +77,7 @@ export function DisplaySettingsModal({
                 size="icon"
                 onClick={() => updateTextScale(textScale - 0.1)}
                 disabled={textScale <= minTextScale}
-                aria-label="Decrease text size"
+                aria-label={t('decreaseTextSize')}
               >
                 <Minus className="h-4 w-4" />
               </Button>
@@ -91,7 +91,7 @@ export function DisplaySettingsModal({
                 size="icon"
                 onClick={() => updateTextScale(textScale + 0.1)}
                 disabled={textScale >= maxTextScale}
-                aria-label="Increase text size"
+                aria-label={t('increaseTextSize')}
               >
                 <Plus className="h-4 w-4" />
               </Button>
@@ -114,7 +114,7 @@ export function DisplaySettingsModal({
                 size="icon"
                 onClick={() => updateUiScale(uiScale - 0.1)}
                 disabled={uiScale <= minUiScale}
-                aria-label="Decrease UI scale"
+                aria-label={t('decreaseUiScale')}
               >
                 <Minus className="h-4 w-4" />
               </Button>
@@ -127,7 +127,7 @@ export function DisplaySettingsModal({
                 size="icon"
                 onClick={() => updateUiScale(uiScale + 0.1)}
                 disabled={uiScale >= maxUiScale}
-                aria-label="Increase UI scale"
+                aria-label={t('increaseUiScale')}
               >
                 <Plus className="h-4 w-4" />
               </Button>
