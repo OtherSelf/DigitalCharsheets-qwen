@@ -1,7 +1,7 @@
 import { CHARACTER_SCHEMA_VERSION } from '@/lib/character-version';
 
 import { toPortableRecord } from '../shared/export';
-import type { GameModule, SheetComponent } from '../types';
+import type { GameModule } from '../types';
 import { createDh2Defaults } from './defaults';
 import { dh2CharacterSchema } from './schema';
 import type { DH2Character } from './types';
@@ -11,8 +11,8 @@ import type { DH2Character } from './types';
  * Модуль Dark Heresy 2-й редакции. Capability-конфиг: `influence`, колонка
  * `+30`, усталость — `fatigue2nd`.
  *
- * 💬 До шага 1.4/этапа 3 лист общий (legacy): loader приводит его к типу
- * DH2Character. После переноса сюда появится собственная точка входа.
+ * 💬 Лист — тонкая обёртка над общим DH-компонентом; редакцию определяет
+ * capability, а не поле `edition` в данных.
  */
 export const dh2Module: GameModule<DH2Character> = {
   id: 'dh2',
@@ -32,14 +32,8 @@ export const dh2Module: GameModule<DH2Character> = {
   createDefaults: createDh2Defaults,
   components: {
     loadCreateForm: () =>
-      import('../dh-shared/create-form').then((m) => ({
-        default: m.DarkHeresyCharacterForm,
-      })),
-    loadSheet: () =>
-      import('../dh-shared/sheet').then((m) => ({
-        // TODO(stage 3): заменить на лист dh2; пока — общий legacy-лист.
-        default: m.DarkHeresySheet as unknown as SheetComponent<DH2Character>,
-      })),
+      import('./create-form').then((m) => ({ default: m.Dh2CharacterForm })),
+    loadSheet: () => import('./sheet').then((m) => ({ default: m.Dh2Sheet })),
   },
   export: {
     toPortableJson: (character) => toPortableRecord(character),

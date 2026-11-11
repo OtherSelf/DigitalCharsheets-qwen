@@ -12,7 +12,7 @@ import {
   resolveLogin,
   writeLoginIndex,
 } from './user-index';
-import type { UserRole } from './user-role';
+import { normalizeUserRole, type UserRole } from './user-role';
 import {
   readStoredUser,
   USER_SCHEMA_VERSION,
@@ -99,7 +99,7 @@ export function toLocalUser(user: StoredUser): LocalUser {
     username: user.username,
     displayName: user.displayName,
     hasRecoveryPhrase: !!user.recoveryPhrase,
-    role: user.role === 'admin' ? 'admin' : 'user',
+    role: normalizeUserRole(user.role),
     isBlocked: !!user.isBlocked,
     mustChangePassword: !!user.mustChangePassword,
   };
@@ -214,7 +214,7 @@ function persistNewAccount(
     displayName:
       (displayName && displayName.trim()) || defaultDisplayName(login),
     passwordHash,
-    role: options.role === 'admin' ? 'admin' : 'user',
+    role: normalizeUserRole(options.role),
     isBlocked: false,
     createdAt: now,
     updatedAt: now,
@@ -391,7 +391,7 @@ export function updateUserProfile(
         uid: currentUserId,
         username: newLogin,
         displayName,
-        role: stored.role === 'admin' ? 'admin' : 'user',
+        role: normalizeUserRole(stored.role),
         isBlocked: !!stored.isBlocked,
         passwordHash:
           newPassword && newPassword.trim().length > 0

@@ -19,6 +19,7 @@ import {
   resolveLogin,
   writeLoginIndex,
 } from './user-index';
+import { isUserRole, normalizeUserRole } from './user-role';
 import {
   readStoredUser,
   scanUserRecords,
@@ -57,7 +58,7 @@ function toSummary(user: StoredUser, characterCount: number): AdminUserSummary {
     uid: user.uid,
     username: user.username,
     displayName: user.displayName,
-    role: user.role === 'admin' ? 'admin' : 'user',
+    role: normalizeUserRole(user.role),
     isBlocked: !!user.isBlocked,
     createdAt: user.createdAt ?? null,
     updatedAt: user.updatedAt ?? null,
@@ -244,10 +245,11 @@ export function updateUserByAdmin(
       }
 
       if (patch.role !== undefined) {
-        if (patch.role !== 'admin' && patch.role !== 'user') {
+        if (!isUserRole(patch.role)) {
           return invalid('Unknown role.');
         }
-        if (targetUid === actorUid && patch.role === 'user') {
+        // Снять с себя админа нельзя (в т.ч. переведя себя в tester).
+        if (targetUid === actorUid && patch.role !== 'admin') {
           return {
             success: false,
             error: 'You cannot remove your own administrator role.',

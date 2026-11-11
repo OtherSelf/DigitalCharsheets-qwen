@@ -194,6 +194,7 @@ export function UserEditDialog({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="user">{t('admin.roleUser')}</SelectItem>
+                <SelectItem value="tester">{t('admin.roleTester')}</SelectItem>
                 <SelectItem value="admin">{t('admin.roleAdmin')}</SelectItem>
               </SelectContent>
             </Select>

@@ -19,7 +19,6 @@ import { Checkbox } from '@/components/ui/checkbox';
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -37,7 +36,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { useCharacterContext } from '@/context/character-context';
 import { useTranslation } from '@/context/language-context';
 import { useToast } from '@/hooks/use-toast';
-import { CHARACTER_SCHEMA_VERSION } from '@/lib/character-version';
 import {
   ALL_QUIRKS,
   CAREER_KEYS,
@@ -46,22 +44,17 @@ import {
   HOME_WORLD_KEYS,
   QUIRK_KEYS,
   VARIANT_KEYS,
-  WORLD_VARIANT_LABELS,
   WORLD_VARIANTS_BY_HOMEWORLD,
 } from '@/lib/dark-heresy-data';
-import { calculateRank, RanksByCareer } from '@/lib/dark-heresy-ranks';
 import {
   divinationEffectKey,
   divinationKey,
   effectIdForDivination,
 } from '@/lib/divination-i18n';
-import type { DarkHeresyCharacter } from '@/lib/types';
 
-import {
-  DarkHeresyCareerPaths,
-  DarkHeresyHomeWorlds,
-  type DarkHeresyCareerPath,
-} from './types';
+import { createDh1Defaults } from '../dh1/defaults';
+import { createDh2Defaults } from '../dh2/defaults';
+import { DarkHeresyCareerPaths, DarkHeresyHomeWorlds } from './types';
 
 const VARIANT_LABEL_KEYS: Record<string, string> = {
   'Feral World': 'dh.tribalTaboos',
@@ -71,7 +64,19 @@ const VARIANT_LABEL_KEYS: Record<string, string> = {
   'Forge World': 'dh.placeOfBirth',
 };
 
-export function DarkHeresyCharacterForm() {
+export type DarkHeresyFormVariant = 'dh1' | 'dh2';
+
+/**
+ * ─── LANDMARK: DARK HERESY CREATE FORM ─────────────────────────────────────
+ * Одна форма на обе редакции: `variant` приходит из модуля (dh1/dh2), а
+ * различается только поле Influence. Персонаж собирается фабрикой модуля,
+ * поэтому в данных не появляются поля чужой редакции (📌 D2/D3).
+ */
+export function DarkHeresyCreateForm({
+  variant,
+}: {
+  variant: DarkHeresyFormVariant;
+}) {
   const { toast } = useToast();
   const router = useRouter();
   const { addCharacter } = useCharacterContext();
@@ -151,23 +156,10 @@ export function DarkHeresyCharacterForm() {
 
   const watchedDivination = form.watch('divination');
   const watchedHomeWorld = form.watch('homeWorld');
-  const watchedCareerPath = form.watch('careerPath');
 
   const divinationEffect = React.useMemo(() => {
     return effectIdForDivination(watchedDivination);
   }, [watchedDivination]);
-
-  const availableWorldVariants = React.useMemo(() => {
-    return watchedHomeWorld
-      ? WORLD_VARIANTS_BY_HOMEWORLD[watchedHomeWorld] || []
-      : [];
-  }, [watchedHomeWorld]);
-
-  const worldVariantLabel = React.useMemo(() => {
-    return watchedHomeWorld
-      ? WORLD_VARIANT_LABELS[watchedHomeWorld] || t('dh.worldVariant')
-      : t('dh.waitingHomeWorld');
-  }, [watchedHomeWorld]);
 
   React.useEffect(() => {
     if (showAllQuirks) {
@@ -186,98 +178,8 @@ export function DarkHeresyCharacterForm() {
   }, [watchedHomeWorld, form]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    const careerRanks = watchedCareerPath
-      ? RanksByCareer[watchedCareerPath as DarkHeresyCareerPath]
-      : null;
-    const agiBonus = Math.floor(values.agility / 10);
-
-    const newCharacter: Omit<DarkHeresyCharacter, 'id' | 'userId'> = {
-      name: values.name,
-      characterClass: values.careerPath,
-      gameSystem: 'Dark Heresy',
-      schemaVersion: CHARACTER_SCHEMA_VERSION,
-      backstory: values.backstory || '',
-      homeWorld: values.homeWorld,
-      worldVariant: values.worldVariant || '',
-      careerPath: values.careerPath,
-      rank: careerRanks
-        ? calculateRank(careerRanks, values.totalExpSpent ?? 0, null, null)
-        : 'N/A',
-      divination: values.divination,
-      divinationEffect: divinationEffect,
-      quirk: values.quirk || '',
-      height: values.height || '',
-      weight: values.weight || '',
-      age: values.age || '',
-      skinColor: values.skinColor || '',
-      hairColor: values.hairColor || '',
-      eyeColor: values.eyeColor || '',
-      experience: values.experience || 0,
-      totalExpSpent: values.totalExpSpent || 0,
-      alternatePath: null,
-      advancedPath: null,
-      notes: '',
-      questLog: [],
-      stats: {
-        weaponSkill: values.weaponSkill,
-        ballisticSkill: values.ballisticSkill,
-        strength: values.strength,
-        toughness: values.toughness,
-        agility: values.agility,
-        intelligence: values.intelligence,
-        perception: values.perception,
-        willpower: values.willpower,
-        fellowship: values.fellowship,
-        influence: values.influence,
-      },
-      statUpgrades: {
-        weaponSkill: [false, false, false, false],
-        ballisticSkill: [false, false, false, false],
-        strength: [false, false, false, false],
-        toughness: [false, false, false, false],
-        agility: [false, false, false, false],
-        intelligence: [false, false, false, false],
-        perception: [false, false, false, false],
-        willpower: [false, false, false, false],
-        fellowship: [false, false, false, false],
-        influence: [false, false, false, false],
-      },
-      statNotes: {},
-      wounds: { current: values.wounds, max: values.wounds },
-      fatePoints: { current: values.fatePoints, max: values.fatePoints },
-      insanityPoints: { total: 0, notes: '' },
-      corruptionPoints: { total: 0, notes: '' },
-      wealth: {
-        throneGelt: 0,
-        monthlyIncome: 0,
-      },
-      movement: {
-        walkHalf: agiBonus,
-        walkFull: agiBonus * 2,
-        charge: agiBonus * 3,
-        run: agiBonus * 6,
-      },
-      equipment: {
-        armor: {
-          Head: null,
-          Body: null,
-          'Left arm': null,
-          'Right arm': null,
-          'Left leg': null,
-          'Right leg': null,
-        },
-        weapons: {
-          melee: [],
-          ranged: [],
-        },
-      },
-      inventory: [],
-      skills: [],
-      talents: [],
-      fatigue1st: { current: 0 },
-      fatigue2nd: { current: 0 },
-      criticalConditions: [],
-    };
+    const newCharacter =
+      variant === 'dh2' ? createDh2Defaults(values) : createDh1Defaults(values);
 
     const docRef = await addCharacter(newCharacter);
 
@@ -779,19 +681,21 @@ export function DarkHeresyCharacterForm() {
                     </FormItem>
                   )}
                 />
-                <FormField
-                  control={form.control}
-                  name="influence"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t('dh.influence')}</FormLabel>
-                      <FormControl>
-                        <Input type="number" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                {variant === 'dh2' && (
+                  <FormField
+                    control={form.control}
+                    name="influence"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t('dh.influence')}</FormLabel>
+                        <FormControl>
+                          <Input type="number" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
               </div>
             </div>
 
@@ -834,4 +738,13 @@ export function DarkHeresyCharacterForm() {
       </Form>
     </Card>
   );
+}
+
+/**
+ * @deprecated Совместимость до этапа 3: старый импорт без пропсов создаёт dh1
+ * (редакция по умолчанию, 📌 D3). Новый код использует `DarkHeresyCreateForm`
+ * с явным `variant` или обёртки `src/games/dh1|dh2/create-form.tsx`.
+ */
+export function DarkHeresyCharacterForm() {
+  return <DarkHeresyCreateForm variant="dh1" />;
 }

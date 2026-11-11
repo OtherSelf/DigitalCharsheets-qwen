@@ -4,14 +4,15 @@ import { getUserDir, getUserFile, getUsersDir } from './data-dir';
 import { withDataLock } from './data-lock';
 import { writeJsonAtomic } from './fs-atomic';
 import { defaultDisplayName, isUid, normalizeLogin } from './ids';
-import type { UserRole } from './user-role';
+import { isUserRole, type UserRole } from './user-role';
 
 /**
- * ─── LANDMARK: USER PROFILE SCHEMA v3 ──────────────────────────────────────
- * `users/<uid>/user.json` — источник истины по аккаунту. До v3 в профиле не
- * было ролей и блокировок, поэтому на старте приложения шаблон проверяется:
- * недостающие поля дописываются значениями по умолчанию, существующие
- * значения не перезаписываются.
+ * ─── LANDMARK: USER PROFILE SCHEMA v4 ──────────────────────────────────────
+ * `users/<uid>/user.json` — источник истины по аккаунту. v4 добавила роль
+ * `tester` (видит test-редакции, но не админку); неизвестная роль
+ * нормализуется в `user` (fail-closed). На старте приложения шаблон
+ * проверяется: недостающие поля дописываются значениями по умолчанию,
+ * существующие не перезаписываются.
  *
  * Проверка идемпотентна: файл пишется только если после нормализации его
  * содержимое реально изменилось (сравнение JSON до/после). Это важно, потому
@@ -23,7 +24,7 @@ import type { UserRole } from './user-role';
  * /admin, а вход по пустому хешу и так невозможен.
  */
 
-export const USER_SCHEMA_VERSION = 3;
+export const USER_SCHEMA_VERSION = 4;
 
 export interface StoredUser {
   schemaVersion?: number;
@@ -95,7 +96,7 @@ export function normalizeStoredUser(
     missing.push('passwordHash');
   }
 
-  if (user.role !== 'admin' && user.role !== 'user') {
+  if (!isUserRole(user.role)) {
     missing.push('role');
     user.role = 'user';
   }

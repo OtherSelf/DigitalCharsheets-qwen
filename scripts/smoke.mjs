@@ -652,7 +652,7 @@ if (opts.dataDir) {
       const parsed = JSON.parse(raw);
       assert(parsed.uid === userId, `user.json: uid = ${parsed.uid}`);
       assert(
-        parsed.schemaVersion === 3,
+        parsed.schemaVersion === 4,
         `user.json: schemaVersion = ${parsed.schemaVersion}`,
       );
       assert(parsed.role === 'user', `user.json: role = ${parsed.role}`);

@@ -376,12 +376,18 @@ export default function AdminPage() {
                         const roleBadge = (
                           <Badge
                             variant={
-                              item.role === 'admin' ? 'default' : 'secondary'
+                              item.role === 'admin'
+                                ? 'default'
+                                : item.role === 'tester'
+                                  ? 'outline'
+                                  : 'secondary'
                             }
                           >
                             {item.role === 'admin'
                               ? t('admin.roleAdmin')
-                              : t('admin.roleUser')}
+                              : item.role === 'tester'
+                                ? t('admin.roleTester')
+                                : t('admin.roleUser')}
                           </Badge>
                         );
                         const statusBadge = (

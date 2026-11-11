@@ -43,14 +43,6 @@ import { UserNav } from './layout/user-nav';
 import { DhHouseRulesDialog } from './sheets/dh-sections/dh-house-rules-dialog';
 import { HouseRulesDialog } from './sheets/dnd-sections/house-rules-dialog';
 import { Button } from './ui/button';
-import { Label } from './ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from './ui/select';
 import { Separator } from './ui/separator';
 import {
   Tooltip,
@@ -352,7 +344,9 @@ export function Header({
             </div>
           )}
 
-          {/* ─── LANDMARK: DH HEADER CONTROLS (House Rules + Edition) ─── */}
+          {/* ─── LANDMARK: DH HEADER CONTROLS (House Rules) ───
+              Переключателя редакций больше нет: редакция фиксируется модулем
+              при создании персонажа (📌 D2/D3). */}
           {character &&
             character.gameSystem === 'Dark Heresy' &&
             !isCompactView && (
@@ -369,35 +363,6 @@ export function Header({
                     {t('common.houseRules')}
                   </span>
                 </Button>
-                <div className="flex items-center gap-2">
-                  <Label className="text-muted-foreground hidden text-xs whitespace-nowrap md:inline">
-                    {t('common.edition')}:
-                  </Label>
-                  <Select
-                    value={character.edition || '1st'}
-                    onValueChange={(value: '1st' | '2nd' | 'hybrid') =>
-                      updateCharacter(character.id, { edition: value })
-                    }
-                  >
-                    <SelectTrigger
-                      className="h-7 w-[110px] text-xs"
-                      data-testid="dh-edition-select"
-                    >
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="1st">
-                        {t('common.firstEdition')}
-                      </SelectItem>
-                      <SelectItem value="2nd">
-                        {t('common.secondEdition')}
-                      </SelectItem>
-                      <SelectItem value="hybrid">
-                        {t('common.hybridView')}
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
               </div>
             )}
           {/* ─── END DH HEADER CONTROLS ─── */}

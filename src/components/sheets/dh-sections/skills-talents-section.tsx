@@ -37,6 +37,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { useCharacterContext } from '@/context/character-context';
 import { useTranslation } from '@/context/language-context';
+import { getDarkHeresyCapabilities } from '@/games/dh-shared/capabilities';
 import { Skill, type DarkHeresyCharacter } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
@@ -153,10 +154,10 @@ export const SkillsTalentsSection = React.forwardRef<
     const [newTalentName, setNewTalentName] = React.useState('');
     const [newTalentDescription, setNewTalentDescription] = React.useState('');
 
-    // ==================== LANDMARK: EDITION CHECK FOR +30 COLUMN ====================
-    // Strictly checks lowercase '2nd' and 'hybrid' to match the TypeScript union type
-    const showPlus30 =
-      character.edition === '2nd' || character.edition === 'hybrid';
+    // ==================== LANDMARK: CAPABILITY CHECK FOR +30 COLUMN ====================
+    // Колонка +30 существует только во 2-й редакции; редакция приходит из
+    // модуля (systemId), переключателя в UI больше нет.
+    const showPlus30 = getDarkHeresyCapabilities(character).plus30;
 
     const handleSaveSkills = React.useCallback(() => {
       updateCharacter(character.id, { skills: editableSkills });

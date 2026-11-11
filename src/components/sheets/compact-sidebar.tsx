@@ -12,7 +12,6 @@ import {
   Eye,
   EyeOff,
   Info,
-  Layers,
   PawPrint,
   Pencil,
   PencilLine,
@@ -23,22 +22,9 @@ import {
   Star,
   Swords,
   TrendingUp,
-  Wand2,
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import {
   Tooltip,
   TooltipContent,
@@ -74,7 +60,6 @@ export function CompactSidebar({
     setHideNotes,
     showEditButtons,
     setShowEditButtons,
-    updateCharacter,
   } = useCharacterContext();
   const character = params?.id ? getCharacter(params.id) : null;
   const isLevel20 =
@@ -226,52 +211,6 @@ export function CompactSidebar({
             </p>
           </TooltipContent>
         </Tooltip>
-
-        {/* ─── LANDMARK: EDITION SELECTOR FOR MOBILE SIDEBAR ─── */}
-        {character?.gameSystem === 'Dark Heresy' && (
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="ghost"
-                aria-label={t('common.selectEdition')}
-                className="w-full"
-                size="icon"
-              >
-                <Layers className="h-5 w-5" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent side="right" align="center" className="w-40 p-2">
-              <div className="space-y-2">
-                <p className="text-muted-foreground text-xs font-medium">
-                  {t('common.edition')}
-                </p>
-                <Select
-                  value={character.edition || '1st'}
-                  onValueChange={(value: '1st' | '2nd' | 'hybrid') => {
-                    if (character)
-                      updateCharacter(character.id, { edition: value });
-                  }}
-                >
-                  <SelectTrigger className="h-8 text-xs">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1st">
-                      {t('common.firstEdition')}
-                    </SelectItem>
-                    <SelectItem value="2nd">
-                      {t('common.secondEdition')}
-                    </SelectItem>
-                    <SelectItem value="hybrid">
-                      {t('common.hybridView')}
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </PopoverContent>
-          </Popover>
-        )}
-        {/* ─── END EDITION SELECTOR ─── */}
 
         <div className="mt-auto flex flex-col items-center gap-2 pt-2">
           <Separator className="mb-2 w-full" />

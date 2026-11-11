@@ -25,7 +25,7 @@ import {
 } from '@/lib/server-storage';
 import { runStartupMaintenance } from '@/lib/startup';
 import { resolveLogin } from '@/lib/user-index';
-import { readStoredUser } from '@/lib/user-schema';
+import { readStoredUser, USER_SCHEMA_VERSION } from '@/lib/user-schema';
 
 import {
   loginIndexPath,
@@ -191,7 +191,7 @@ describe('ensureServiceAdmin', () => {
     expect(report.profiles).toMatchObject({ total: 1, updated: 1 });
     expect(report.admin?.created).toBe(true);
     expect(readJson(paths.userFile)).toMatchObject({
-      schemaVersion: 3,
+      schemaVersion: USER_SCHEMA_VERSION,
       role: 'user',
       isBlocked: false,
     });

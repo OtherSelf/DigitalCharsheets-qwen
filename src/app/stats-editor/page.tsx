@@ -19,6 +19,7 @@ import { Input } from '@/components/ui/input';
 import { useCharacterContext } from '@/context/character-context';
 import { useTranslation } from '@/context/language-context';
 import { useLocalAuth } from '@/context/local-auth-context';
+import { getDarkHeresyCapabilities } from '@/games/dh-shared/capabilities';
 import { DarkHeresyCharacter, DnD5eCharacter } from '@/lib/types';
 
 // ─── STAT DEFINITIONS ──────────────────────────────────────────────
@@ -102,7 +103,10 @@ export default function StatsEditorPage() {
     // Stats edits
     const stats = characters.map((char) => {
       const isDH = char.gameSystem === 'Dark Heresy';
-      const statKeys = isDH ? DH_STATS : DND_STATS;
+      const allowInfluence = isDH && getDarkHeresyCapabilities(char).influence;
+      const statKeys = isDH
+        ? DH_STATS.filter((s) => allowInfluence || s.key !== 'influence')
+        : DND_STATS;
       const defaultStats: Record<string, number> = {};
       statKeys.forEach((s) => {
         defaultStats[s.key] = (char as any).stats?.[s.key] || (isDH ? 30 : 10);
@@ -189,10 +193,25 @@ export default function StatsEditorPage() {
     );
   };
 
+  /** dh1 не должен получить influence даже из массового редактора. */
+  const statsPayloadFor = (charId: string, stats: Record<string, number>) => {
+    const char = characters.find((c) => c.id === charId);
+    if (
+      char?.gameSystem === 'Dark Heresy' &&
+      !getDarkHeresyCapabilities(char).influence
+    ) {
+      const { influence: _influence, ...rest } = stats;
+      return rest;
+    }
+    return stats;
+  };
+
   const handleSaveStats = (charId: string) => {
     const edit = statsEdits.find((e) => e.id === charId);
     if (!edit) return;
-    updateCharacter(charId, { stats: edit.stats } as any);
+    updateCharacter(charId, {
+      stats: statsPayloadFor(charId, edit.stats),
+    } as any);
     setStatsEdits((prev) =>
       prev.map((e) => (e.id === charId ? { ...e, saved: true } : e)),
     );
@@ -203,7 +222,9 @@ export default function StatsEditorPage() {
     statsEdits
       .filter((e) => !e.saved)
       .forEach((edit) => {
-        updateCharacter(edit.id, { stats: edit.stats } as any);
+        updateCharacter(edit.id, {
+          stats: statsPayloadFor(edit.id, edit.stats),
+        } as any);
       });
     setStatsEdits((prev) => prev.map((e) => ({ ...e, saved: true })));
     flashStatus(t('common.allStatsSaved'));
@@ -350,6 +371,17 @@ export default function StatsEditorPage() {
 
   // Split stats by system for rendering
   const dhStats = statsEdits.filter((e) => e.gameSystem === 'Dark Heresy');
+  const dhGroups = (['dh1', 'dh2'] as const).map((edition) => ({
+    edition,
+    stats: dhStats.filter((e) => {
+      const char = characters.find((c) => c.id === e.id);
+      return char ? getDarkHeresyCapabilities(char).edition === edition : false;
+    }),
+    statKeys:
+      edition === 'dh1'
+        ? DH_STATS.filter((s) => s.key !== 'influence')
+        : DH_STATS,
+  }));
   const dndStats = statsEdits.filter(
     (e) => e.gameSystem === 'Dungeons & Dragons',
   );
@@ -408,67 +440,87 @@ export default function StatsEditorPage() {
                 </Button>
               </div>
 
-              {dhStats.length > 0 && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>
-                      {t('common.dhStats')} ({dhStats.length})
-                    </CardTitle>
-                    <CardDescription>{t('common.dhStatsDesc')}</CardDescription>
-                  </CardHeader>
-                  <CardContent className="overflow-x-auto">
-                    <div className="min-w-[900px] space-y-2">
-                      <div className="text-muted-foreground grid grid-cols-[180px_repeat(10,1fr)_60px] items-center gap-1 border-b pb-2 text-xs font-semibold">
-                        <span>{t('common.characterName')}</span>
-                        {DH_STATS.map((s) => (
-                          <span key={s.key} className="text-center">
-                            {t(s.labelKey)}
-                          </span>
-                        ))}
-                        <span></span>
-                      </div>
-                      {dhStats.map((char) => (
+              {dhGroups
+                .filter((group) => group.stats.length > 0)
+                .map((group) => (
+                  <Card key={group.edition}>
+                    <CardHeader>
+                      <CardTitle>
+                        {t('common.dhStats')} ·{' '}
+                        {group.edition === 'dh1'
+                          ? t('common.firstEdition')
+                          : t('common.secondEdition')}{' '}
+                        ({group.stats.length})
+                      </CardTitle>
+                      <CardDescription>
+                        {t('common.dhStatsDesc')}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="overflow-x-auto">
+                      <div className="min-w-[900px] space-y-2">
                         <div
-                          key={char.id}
-                          className="grid grid-cols-[180px_repeat(10,1fr)_60px] items-center gap-1"
+                          className="text-muted-foreground grid items-center gap-1 border-b pb-2 text-xs font-semibold"
+                          style={{
+                            gridTemplateColumns: `180px repeat(${group.statKeys.length}, 1fr) 60px`,
+                          }}
                         >
-                          <span
-                            className="truncate text-sm font-medium"
-                            title={char.name}
-                          >
-                            {char.name}
-                          </span>
-                          {DH_STATS.map((s) => (
-                            <Input
-                              key={s.key}
-                              type="number"
-                              value={char.stats[s.key] || 0}
-                              onChange={(e) =>
-                                handleStatChange(char.id, s.key, e.target.value)
-                              }
-                              className="h-8 text-center text-sm"
-                              min={0}
-                              max={100}
-                            />
+                          <span>{t('common.characterName')}</span>
+                          {group.statKeys.map((s) => (
+                            <span key={s.key} className="text-center">
+                              {t(s.labelKey)}
+                            </span>
                           ))}
-                          <Button
-                            size="sm"
-                            variant={char.saved ? 'outline' : 'default'}
-                            onClick={() => handleSaveStats(char.id)}
-                            className="h-8"
-                          >
-                            {char.saved ? (
-                              <Check className="h-4 w-4" />
-                            ) : (
-                              <Save className="h-4 w-4" />
-                            )}
-                          </Button>
+                          <span></span>
                         </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
+                        {group.stats.map((char) => (
+                          <div
+                            key={char.id}
+                            className="grid items-center gap-1"
+                            style={{
+                              gridTemplateColumns: `180px repeat(${group.statKeys.length}, 1fr) 60px`,
+                            }}
+                          >
+                            <span
+                              className="truncate text-sm font-medium"
+                              title={char.name}
+                            >
+                              {char.name}
+                            </span>
+                            {group.statKeys.map((s) => (
+                              <Input
+                                key={s.key}
+                                type="number"
+                                value={char.stats[s.key] || 0}
+                                onChange={(e) =>
+                                  handleStatChange(
+                                    char.id,
+                                    s.key,
+                                    e.target.value,
+                                  )
+                                }
+                                className="h-8 text-center text-sm"
+                                min={0}
+                                max={100}
+                              />
+                            ))}
+                            <Button
+                              size="sm"
+                              variant={char.saved ? 'outline' : 'default'}
+                              onClick={() => handleSaveStats(char.id)}
+                              className="h-8"
+                            >
+                              {char.saved ? (
+                                <Check className="h-4 w-4" />
+                              ) : (
+                                <Save className="h-4 w-4" />
+                              )}
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
 
               {dndStats.length > 0 && (
                 <Card>

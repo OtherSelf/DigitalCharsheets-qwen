@@ -36,9 +36,11 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { useCharacterContext } from '@/context/character-context';
 import { useTranslation } from '@/context/language-context';
-import type { DarkHeresyCharacter } from '@/lib/types';
+import { type Character, type DarkHeresyCharacter } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
+import { getDarkHeresyCapabilities } from './capabilities';
+import { EMPTY_STAT_UPGRADE, pickAllowedStats, statRecord } from './stats';
 import type { BodyPart } from './types';
 
 const defaultArmor = {
@@ -191,6 +193,7 @@ export const DarkHeresySheet = React.forwardRef<
     isTabletScreen,
   } = useCharacterContext();
   const { t } = useTranslation();
+  const capabilities = getDarkHeresyCapabilities(character);
   const [isPointsEditing, setIsPointsEditing] = React.useState(false);
   const [isSkillsPanelCollapsed, setIsSkillsPanelCollapsed] =
     React.useState(false);
@@ -198,23 +201,39 @@ export const DarkHeresySheet = React.forwardRef<
     React.useState(false);
   const [isCharacteristicsEditing, setIsCharacteristicsEditing] =
     React.useState(false);
-  const [editableStats, setEditableStats] = React.useState(character.stats);
-  const [editableStatUpgrades, setEditableStatUpgrades] = React.useState(
-    character.statUpgrades ?? {},
+  // ─── LANDMARK: EDITION-AGNOSTIC STAT VIEW ───
+  // Обе редакции используют один словарь (девять + influence); при
+  // сохранении ключи, которых нет в редакции, отфильтровываются.
+  const [editableStats, setEditableStats] = React.useState(() =>
+    statRecord<number>(character, 'stats', 0),
+  );
+  const [editableStatUpgrades, setEditableStatUpgrades] = React.useState(() =>
+    statRecord(character, 'statUpgrades', EMPTY_STAT_UPGRADE),
   );
 
   React.useEffect(() => {
-    setEditableStats(character.stats);
-    setEditableStatUpgrades(character.statUpgrades ?? {});
-  }, [character.stats, character.statUpgrades]);
+    setEditableStats(statRecord<number>(character, 'stats', 0));
+    setEditableStatUpgrades(
+      statRecord(character, 'statUpgrades', EMPTY_STAT_UPGRADE),
+    );
+  }, [character]);
 
   const handleSaveCharacteristics = React.useCallback(() => {
     updateCharacter(character.id, {
-      stats: editableStats,
-      statUpgrades: editableStatUpgrades,
-    });
+      stats: pickAllowedStats(editableStats, capabilities.influence),
+      statUpgrades: pickAllowedStats(
+        editableStatUpgrades,
+        capabilities.influence,
+      ),
+    } as Partial<Character>);
     setIsCharacteristicsEditing(false);
-  }, [character.id, editableStats, editableStatUpgrades, updateCharacter]);
+  }, [
+    character.id,
+    editableStats,
+    editableStatUpgrades,
+    updateCharacter,
+    capabilities.influence,
+  ]);
 
   const characteristicsRef = React.useRef<{ saveAll: () => void }>(null);
   const skillsTalentsRef = React.useRef<{ saveAll: () => void }>(null);
@@ -331,16 +350,27 @@ export const DarkHeresySheet = React.forwardRef<
     0,
     getStatMod(effectiveToughness) + getStatMod(effectiveWillpower),
   );
-  const handleFatigueChange = (edition: '1st' | '2nd', delta: number) => {
-    const key = edition === '1st' ? 'fatigue1st' : 'fatigue2nd';
-    const currentData =
-      edition === '1st' ? character.fatigue1st : character.fatigue2nd;
-    const currentVal = currentData?.current ?? 0;
-    const maxVal = edition === '1st' ? fatigue1stMax : fatigue2ndMax;
-    const newVal = Math.max(0, Math.min(currentVal + delta, maxVal));
+  // У редакции существует ровно одно поле усталости; `in` сужает union.
+  const isFirstEditionFatigue = 'fatigue1st' in character;
+  const fatigue = isFirstEditionFatigue
+    ? character.fatigue1st
+    : character.fatigue2nd;
+  const fatigueMax = isFirstEditionFatigue ? fatigue1stMax : fatigue2ndMax;
+  const handleFatigueChange = (delta: number) => {
+    const currentVal = fatigue?.current ?? 0;
+    const newVal = Math.max(0, Math.min(currentVal + delta, fatigueMax));
+    const next = { ...(fatigue || {}), current: newVal };
     updateCharacter(character.id, {
-      [key]: { ...(currentData || {}), current: newVal },
-    });
+      [isFirstEditionFatigue ? 'fatigue1st' : 'fatigue2nd']: next,
+    } as Partial<Character>);
+  };
+  const updateFatigue = (patch: { current?: number; notes?: string }) => {
+    updateCharacter(character.id, {
+      [isFirstEditionFatigue ? 'fatigue1st' : 'fatigue2nd']: {
+        ...(fatigue || {}),
+        ...patch,
+      },
+    } as Partial<Character>);
   };
   const addCriticalCondition = () => {
     if (newCriticalCondition.trim() !== '') {
@@ -447,28 +477,29 @@ export const DarkHeresySheet = React.forwardRef<
                   ] as const
                 )
                   .filter((c) =>
-                    character.edition === '1st' || !character.edition
-                      ? c.key !== 'influence'
-                      : true,
+                    capabilities.influence ? true : c.key !== 'influence',
                   )
                   .map((char, idx) => {
                     const stats = isCharacteristicsEditing
                       ? editableStats
-                      : character.stats;
+                      : statRecord<number>(character, 'stats', 0);
                     const statUpgrades = isCharacteristicsEditing
                       ? editableStatUpgrades
-                      : character.statUpgrades || {};
-                    const statNotes = character.statNotes as
-                      Record<string, string> | undefined;
-                    const val = stats?.[char.key] || 0;
-                    const upgrades = (statUpgrades?.[char.key] || [
-                      false,
-                      false,
-                      false,
-                      false,
-                    ]) as boolean[];
+                      : statRecord(
+                          character,
+                          'statUpgrades',
+                          EMPTY_STAT_UPGRADE,
+                        );
+                    const statNotes = statRecord<string>(
+                      character,
+                      'statNotes',
+                      '',
+                    );
+                    const val = stats[char.key] || 0;
+                    const upgrades = (statUpgrades[char.key] ||
+                      EMPTY_STAT_UPGRADE) as boolean[];
                     const bonus = upgrades.filter(Boolean).length * 5;
-                    const notes = statNotes?.[char.key] || '';
+                    const notes = statNotes[char.key] || '';
                     return (
                       <div
                         key={char.key}
@@ -496,12 +527,19 @@ export const DarkHeresySheet = React.forwardRef<
                               defaultValue={notes}
                               onBlur={(e) => {
                                 const nextNotes = {
-                                  ...(character.statNotes || {}),
+                                  ...statRecord<string>(
+                                    character,
+                                    'statNotes',
+                                    '',
+                                  ),
                                   [char.key]: e.target.value,
                                 };
                                 updateCharacter(character.id, {
-                                  statNotes: nextNotes,
-                                });
+                                  statNotes: pickAllowedStats(
+                                    nextNotes,
+                                    capabilities.influence,
+                                  ),
+                                } as Partial<Character>);
                               }}
                               placeholder={t(
                                 'dh.addNotesCharacteristicPlaceholder',
@@ -545,7 +583,11 @@ export const DarkHeresySheet = React.forwardRef<
                                   const currentUpgrades =
                                     isCharacteristicsEditing
                                       ? editableStatUpgrades
-                                      : character.statUpgrades || {};
+                                      : statRecord(
+                                          character,
+                                          'statUpgrades',
+                                          EMPTY_STAT_UPGRADE,
+                                        );
                                   const nextUpgrades = { ...currentUpgrades };
                                   const specific = [
                                     ...(nextUpgrades[char.key] || [
@@ -575,8 +617,11 @@ export const DarkHeresySheet = React.forwardRef<
                                     setEditableStatUpgrades(nextUpgrades);
                                   } else {
                                     updateCharacter(character.id, {
-                                      statUpgrades: nextUpgrades,
-                                    });
+                                      statUpgrades: pickAllowedStats(
+                                        nextUpgrades,
+                                        capabilities.influence,
+                                      ),
+                                    } as Partial<Character>);
                                   }
                                 }}
                                 className="data-[state=checked]:bg-primary h-2.5 w-2.5"
@@ -751,161 +796,76 @@ export const DarkHeresySheet = React.forwardRef<
                 </div>
               </MetricBox>
               {/* ─── LANDMARK: COMPACT VIEW FATIGUE COUNTERS ─── */}
-              {(character.edition === '1st' ||
-                character.edition === 'hybrid' ||
-                !character.edition) && (
-                <MetricBox
-                  title={t('dh.fatigueFirstEdition')}
-                  notes={character.fatigue1st?.notes}
-                  onNoteChange={(val) =>
-                    updateCharacter(character.id, {
-                      fatigue1st: {
-                        ...(character.fatigue1st || {}),
-                        notes: val,
-                      },
-                    })
-                  }
-                  editing={isPointsEditing}
-                  onEdit={() => setIsPointsEditing(true)}
-                  onSave={handleSavePoints}
-                  isCompactView={isCompactView}
-                  hideNotes={hideNotes}
-                  showEditButtons={showEditButtons}
-                >
-                  <div className="flex items-center justify-center gap-1">
-                    {isPointsEditing ? (
-                      <>
-                        <Input
-                          type="number"
-                          value={character.fatigue1st?.current ?? 0}
-                          onChange={(e) =>
-                            updateCharacter(character.id, {
-                              fatigue1st: {
-                                ...(character.fatigue1st || {}),
-                                current: Math.max(
-                                  0,
-                                  Math.min(
-                                    parseInt(e.target.value, 10) || 0,
-                                    fatigue1stMax,
-                                  ),
-                                ),
-                              },
-                            })
-                          }
-                          className="h-6 w-10 px-1 text-center text-xs"
-                        />
-                        <span className="text-muted-foreground text-[10px]">
-                          /
-                        </span>
-                        <span className="text-sm">{fatigue1stMax}</span>
-                      </>
-                    ) : (
-                      <div className="flex items-center justify-center gap-1">
-                        <Button
-                          size="icon"
-                          variant="outline"
-                          className="h-5 w-5"
-                          onClick={() => handleFatigueChange('1st', -1)}
-                        >
-                          <Minus className="h-3 w-3" />
-                        </Button>
-                        <span className="min-w-[1.2rem] text-center text-sm font-bold">
-                          {character.fatigue1st?.current ?? 0}
-                        </span>
-                        <Button
-                          size="icon"
-                          variant="outline"
-                          className="h-5 w-5"
-                          onClick={() => handleFatigueChange('1st', 1)}
-                        >
-                          <Plus className="h-3 w-3" />
-                        </Button>
-                        <span className="text-muted-foreground mx-0.5 text-[10px]">
-                          /
-                        </span>
-                        <span className="text-sm">{fatigue1stMax}</span>
-                      </div>
-                    )}
-                  </div>
-                </MetricBox>
-              )}
-              {(character.edition === '2nd' ||
-                character.edition === 'hybrid') && (
-                <MetricBox
-                  title={t('dh.fatigueSecondEdition')}
-                  notes={character.fatigue2nd?.notes}
-                  onNoteChange={(val) =>
-                    updateCharacter(character.id, {
-                      fatigue2nd: {
-                        ...(character.fatigue2nd || {}),
-                        notes: val,
-                      },
-                    })
-                  }
-                  editing={isPointsEditing}
-                  onEdit={() => setIsPointsEditing(true)}
-                  onSave={handleSavePoints}
-                  isCompactView={isCompactView}
-                  hideNotes={hideNotes}
-                  showEditButtons={showEditButtons}
-                >
-                  <div className="flex items-center justify-center gap-1">
-                    {isPointsEditing ? (
-                      <>
-                        <Input
-                          type="number"
-                          value={character.fatigue2nd?.current ?? 0}
-                          onChange={(e) =>
-                            updateCharacter(character.id, {
-                              fatigue2nd: {
-                                ...(character.fatigue2nd || {}),
-                                current: Math.max(
-                                  0,
-                                  Math.min(
-                                    parseInt(e.target.value, 10) || 0,
-                                    fatigue2ndMax,
-                                  ),
-                                ),
-                              },
-                            })
-                          }
-                          className="h-6 w-10 px-1 text-center text-xs"
-                        />
-                        <span className="text-muted-foreground text-[10px]">
-                          /
-                        </span>
-                        <span className="text-sm">{fatigue2ndMax}</span>
-                      </>
-                    ) : (
-                      <div className="flex items-center justify-center gap-1">
-                        <Button
-                          size="icon"
-                          variant="outline"
-                          className="h-5 w-5"
-                          onClick={() => handleFatigueChange('2nd', -1)}
-                        >
-                          <Minus className="h-3 w-3" />
-                        </Button>
-                        <span className="min-w-[1.2rem] text-center text-sm font-bold">
-                          {character.fatigue2nd?.current ?? 0}
-                        </span>
-                        <Button
-                          size="icon"
-                          variant="outline"
-                          className="h-5 w-5"
-                          onClick={() => handleFatigueChange('2nd', 1)}
-                        >
-                          <Plus className="h-3 w-3" />
-                        </Button>
-                        <span className="text-muted-foreground mx-0.5 text-[10px]">
-                          /
-                        </span>
-                        <span className="text-sm">{fatigue2ndMax}</span>
-                      </div>
-                    )}
-                  </div>
-                </MetricBox>
-              )}
+              {/* У редакции ровно одно поле усталости; имя и максимум
+                  выбирает capability модуля, переключателя в UI нет. */}
+              <MetricBox
+                title={
+                  isFirstEditionFatigue
+                    ? t('dh.fatigueFirstEdition')
+                    : t('dh.fatigueSecondEdition')
+                }
+                notes={fatigue.notes}
+                onNoteChange={(val) => updateFatigue({ notes: val })}
+                editing={isPointsEditing}
+                onEdit={() => setIsPointsEditing(true)}
+                onSave={handleSavePoints}
+                isCompactView={isCompactView}
+                hideNotes={hideNotes}
+                showEditButtons={showEditButtons}
+              >
+                <div className="flex items-center justify-center gap-1">
+                  {isPointsEditing ? (
+                    <>
+                      <Input
+                        type="number"
+                        value={fatigue.current ?? 0}
+                        onChange={(e) =>
+                          updateFatigue({
+                            current: Math.max(
+                              0,
+                              Math.min(
+                                parseInt(e.target.value, 10) || 0,
+                                fatigueMax,
+                              ),
+                            ),
+                          })
+                        }
+                        className="h-6 w-10 px-1 text-center text-xs"
+                      />
+                      <span className="text-muted-foreground text-[10px]">
+                        /
+                      </span>
+                      <span className="text-sm">{fatigueMax}</span>
+                    </>
+                  ) : (
+                    <div className="flex items-center justify-center gap-1">
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        className="h-5 w-5"
+                        onClick={() => handleFatigueChange(-1)}
+                      >
+                        <Minus className="h-3 w-3" />
+                      </Button>
+                      <span className="min-w-[1.2rem] text-center text-sm font-bold">
+                        {fatigue.current ?? 0}
+                      </span>
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        className="h-5 w-5"
+                        onClick={() => handleFatigueChange(1)}
+                      >
+                        <Plus className="h-3 w-3" />
+                      </Button>
+                      <span className="text-muted-foreground mx-0.5 text-[10px]">
+                        /
+                      </span>
+                      <span className="text-sm">{fatigueMax}</span>
+                    </div>
+                  )}
+                </div>
+              </MetricBox>
               {/* ─── END COMPACT VIEW FATIGUE COUNTERS ─── */}
               <CustomResourceCounter
                 character={character}
@@ -1370,177 +1330,79 @@ export const DarkHeresySheet = React.forwardRef<
                     </CardHeader>
                     <CardContent className="space-y-4 pt-0">
                       <div className="flex flex-wrap gap-4">
-                        {(character.edition === '1st' ||
-                          character.edition === 'hybrid' ||
-                          !character.edition) && (
-                          <div className="min-w-[140px] flex-1">
-                            <MetricBox
-                              title={t('dh.fatigueFirstEdition')}
-                              notes={character.fatigue1st?.notes}
-                              onNoteChange={(val) =>
-                                updateCharacter(character.id, {
-                                  fatigue1st: {
-                                    ...(character.fatigue1st || {}),
-                                    notes: val,
-                                  },
-                                })
-                              }
-                              editing={isPointsEditing}
-                              onEdit={() => setIsPointsEditing(true)}
-                              onSave={handleSavePoints}
-                              isCompactView={isCompactView}
-                              hideNotes={hideNotes}
-                              showEditButtons={showEditButtons}
-                            >
-                              <div className="flex h-full flex-col items-center justify-center text-center">
-                                {isPointsEditing ? (
-                                  <div className="flex items-center justify-center gap-2">
-                                    <Input
-                                      type="number"
-                                      value={character.fatigue1st?.current ?? 0}
-                                      onChange={(e) =>
-                                        updateCharacter(character.id, {
-                                          fatigue1st: {
-                                            ...(character.fatigue1st || {}),
-                                            current: Math.max(
-                                              0,
-                                              Math.min(
-                                                parseInt(e.target.value, 10) ||
-                                                  0,
-                                                fatigue1stMax,
-                                              ),
-                                            ),
-                                          },
-                                        })
-                                      }
-                                      className="h-8 w-16 text-center text-lg font-bold"
-                                    />
-                                    <span className="text-muted-foreground">
-                                      /
-                                    </span>
-                                    <span className="flex h-8 w-16 items-center justify-center text-center text-lg font-bold">
-                                      {fatigue1stMax}
-                                    </span>
-                                  </div>
-                                ) : (
-                                  <div className="flex items-center justify-center gap-2">
-                                    <Button
-                                      size="icon"
-                                      variant="outline"
-                                      className="h-6 w-6"
-                                      onClick={() =>
-                                        handleFatigueChange('1st', -1)
-                                      }
-                                    >
-                                      <Minus className="h-4 w-4" />
-                                    </Button>
-                                    <p className="text-primary w-12 text-center text-2xl font-bold">
-                                      {character.fatigue1st?.current ?? 0}
-                                    </p>
-                                    <Button
-                                      size="icon"
-                                      variant="outline"
-                                      className="h-6 w-6"
-                                      onClick={() =>
-                                        handleFatigueChange('1st', 1)
-                                      }
-                                    >
-                                      <Plus className="h-4 w-4" />
-                                    </Button>
-                                    <p className="text-muted-foreground ml-2 text-xl font-medium">
-                                      / {fatigue1stMax}
-                                    </p>
-                                  </div>
-                                )}
-                              </div>
-                            </MetricBox>
-                          </div>
-                        )}
-                        {(character.edition === '2nd' ||
-                          character.edition === 'hybrid') && (
-                          <div className="min-w-[140px] flex-1">
-                            <MetricBox
-                              title={t('dh.fatigueSecondEdition')}
-                              notes={character.fatigue2nd?.notes}
-                              onNoteChange={(val) =>
-                                updateCharacter(character.id, {
-                                  fatigue2nd: {
-                                    ...(character.fatigue2nd || {}),
-                                    notes: val,
-                                  },
-                                })
-                              }
-                              editing={isPointsEditing}
-                              onEdit={() => setIsPointsEditing(true)}
-                              onSave={handleSavePoints}
-                              isCompactView={isCompactView}
-                              hideNotes={hideNotes}
-                              showEditButtons={showEditButtons}
-                            >
-                              <div className="flex h-full flex-col items-center justify-center text-center">
-                                {isPointsEditing ? (
-                                  <div className="flex items-center justify-center gap-2">
-                                    <Input
-                                      type="number"
-                                      value={character.fatigue2nd?.current ?? 0}
-                                      onChange={(e) =>
-                                        updateCharacter(character.id, {
-                                          fatigue2nd: {
-                                            ...(character.fatigue2nd || {}),
-                                            current: Math.max(
-                                              0,
-                                              Math.min(
-                                                parseInt(e.target.value, 10) ||
-                                                  0,
-                                                fatigue2ndMax,
-                                              ),
-                                            ),
-                                          },
-                                        })
-                                      }
-                                      className="h-8 w-16 text-center text-lg font-bold"
-                                    />
-                                    <span className="text-muted-foreground">
-                                      /
-                                    </span>
-                                    <span className="flex h-8 w-16 items-center justify-center text-center text-lg font-bold">
-                                      {fatigue2ndMax}
-                                    </span>
-                                  </div>
-                                ) : (
-                                  <div className="flex items-center justify-center gap-2">
-                                    <Button
-                                      size="icon"
-                                      variant="outline"
-                                      className="h-6 w-6"
-                                      onClick={() =>
-                                        handleFatigueChange('2nd', -1)
-                                      }
-                                    >
-                                      <Minus className="h-4 w-4" />
-                                    </Button>
-                                    <p className="text-primary w-12 text-center text-2xl font-bold">
-                                      {character.fatigue2nd?.current ?? 0}
-                                    </p>
-                                    <Button
-                                      size="icon"
-                                      variant="outline"
-                                      className="h-6 w-6"
-                                      onClick={() =>
-                                        handleFatigueChange('2nd', 1)
-                                      }
-                                    >
-                                      <Plus className="h-4 w-4" />
-                                    </Button>
-                                    <p className="text-muted-foreground ml-2 text-xl font-medium">
-                                      / {fatigue2ndMax}
-                                    </p>
-                                  </div>
-                                )}
-                              </div>
-                            </MetricBox>
-                          </div>
-                        )}
+                        <div className="min-w-[140px] flex-1">
+                          <MetricBox
+                            title={
+                              isFirstEditionFatigue
+                                ? t('dh.fatigueFirstEdition')
+                                : t('dh.fatigueSecondEdition')
+                            }
+                            notes={fatigue.notes}
+                            onNoteChange={(val) =>
+                              updateFatigue({ notes: val })
+                            }
+                            editing={isPointsEditing}
+                            onEdit={() => setIsPointsEditing(true)}
+                            onSave={handleSavePoints}
+                            isCompactView={isCompactView}
+                            hideNotes={hideNotes}
+                            showEditButtons={showEditButtons}
+                          >
+                            <div className="flex h-full flex-col items-center justify-center text-center">
+                              {isPointsEditing ? (
+                                <div className="flex items-center justify-center gap-2">
+                                  <Input
+                                    type="number"
+                                    value={fatigue.current ?? 0}
+                                    onChange={(e) =>
+                                      updateFatigue({
+                                        current: Math.max(
+                                          0,
+                                          Math.min(
+                                            parseInt(e.target.value, 10) || 0,
+                                            fatigueMax,
+                                          ),
+                                        ),
+                                      })
+                                    }
+                                    className="h-8 w-16 text-center text-lg font-bold"
+                                  />
+                                  <span className="text-muted-foreground">
+                                    /
+                                  </span>
+                                  <span className="flex h-8 w-16 items-center justify-center text-center text-lg font-bold">
+                                    {fatigueMax}
+                                  </span>
+                                </div>
+                              ) : (
+                                <div className="flex items-center justify-center gap-2">
+                                  <Button
+                                    size="icon"
+                                    variant="outline"
+                                    className="h-6 w-6"
+                                    onClick={() => handleFatigueChange(-1)}
+                                  >
+                                    <Minus className="h-4 w-4" />
+                                  </Button>
+                                  <p className="text-primary w-12 text-center text-2xl font-bold">
+                                    {fatigue.current ?? 0}
+                                  </p>
+                                  <Button
+                                    size="icon"
+                                    variant="outline"
+                                    className="h-6 w-6"
+                                    onClick={() => handleFatigueChange(1)}
+                                  >
+                                    <Plus className="h-4 w-4" />
+                                  </Button>
+                                  <p className="text-muted-foreground ml-2 text-xl font-medium">
+                                    / {fatigueMax}
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          </MetricBox>
+                        </div>
                       </div>
 
                       <div className="border-t pt-2">
@@ -1670,28 +1532,29 @@ export const DarkHeresySheet = React.forwardRef<
                       ] as const
                     )
                       .filter((c) =>
-                        character.edition === '1st' || !character.edition
-                          ? c.key !== 'influence'
-                          : true,
+                        capabilities.influence ? true : c.key !== 'influence',
                       )
                       .map((char) => {
                         const stats = isCharacteristicsEditing
                           ? editableStats
-                          : character.stats;
+                          : statRecord<number>(character, 'stats', 0);
                         const statUpgrades = isCharacteristicsEditing
                           ? editableStatUpgrades
-                          : character.statUpgrades || {};
-                        const statNotes = character.statNotes as
-                          Record<string, string> | undefined;
-                        const val = stats?.[char.key] || 0;
-                        const upgrades = (statUpgrades?.[char.key] || [
-                          false,
-                          false,
-                          false,
-                          false,
-                        ]) as boolean[];
+                          : statRecord(
+                              character,
+                              'statUpgrades',
+                              EMPTY_STAT_UPGRADE,
+                            );
+                        const statNotes = statRecord<string>(
+                          character,
+                          'statNotes',
+                          '',
+                        );
+                        const val = stats[char.key] || 0;
+                        const upgrades = (statUpgrades[char.key] ||
+                          EMPTY_STAT_UPGRADE) as boolean[];
                         const bonus = upgrades.filter(Boolean).length * 5;
-                        const notes = statNotes?.[char.key] || '';
+                        const notes = statNotes[char.key] || '';
                         return (
                           <div
                             key={char.key}
@@ -1719,12 +1582,19 @@ export const DarkHeresySheet = React.forwardRef<
                                   defaultValue={notes}
                                   onBlur={(e) => {
                                     const nextNotes = {
-                                      ...(character.statNotes || {}),
+                                      ...statRecord<string>(
+                                        character,
+                                        'statNotes',
+                                        '',
+                                      ),
                                       [char.key]: e.target.value,
                                     };
                                     updateCharacter(character.id, {
-                                      statNotes: nextNotes,
-                                    });
+                                      statNotes: pickAllowedStats(
+                                        nextNotes,
+                                        capabilities.influence,
+                                      ),
+                                    } as Partial<Character>);
                                   }}
                                   placeholder={t(
                                     'dh.addNotesCharacteristicPlaceholder',
@@ -1769,7 +1639,11 @@ export const DarkHeresySheet = React.forwardRef<
                                       const currentUpgrades =
                                         isCharacteristicsEditing
                                           ? editableStatUpgrades
-                                          : character.statUpgrades || {};
+                                          : statRecord(
+                                              character,
+                                              'statUpgrades',
+                                              EMPTY_STAT_UPGRADE,
+                                            );
                                       const nextUpgrades = {
                                         ...currentUpgrades,
                                       };
@@ -1801,8 +1675,11 @@ export const DarkHeresySheet = React.forwardRef<
                                         setEditableStatUpgrades(nextUpgrades);
                                       } else {
                                         updateCharacter(character.id, {
-                                          statUpgrades: nextUpgrades,
-                                        });
+                                          statUpgrades: pickAllowedStats(
+                                            nextUpgrades,
+                                            capabilities.influence,
+                                          ),
+                                        } as Partial<Character>);
                                       }
                                     }}
                                     className="data-[state=checked]:bg-primary h-2.5 w-2.5"

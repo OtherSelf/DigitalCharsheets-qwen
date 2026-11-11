@@ -18,6 +18,7 @@ import {
 } from '@/lib/server-auth';
 import { saveCharacterToServer } from '@/lib/server-storage';
 import { resolveLogin } from '@/lib/user-index';
+import { USER_SCHEMA_VERSION } from '@/lib/user-schema';
 
 import {
   loginIndexPath,
@@ -81,7 +82,7 @@ describe('authenticateUser', () => {
 
     const stored = readJson(paths.userFile);
     expect(stored).toMatchObject({
-      schemaVersion: 3,
+      schemaVersion: USER_SCHEMA_VERSION,
       uid,
       username: 'newbie',
       displayName: 'Newbie',
@@ -214,7 +215,7 @@ describe('accountExists / registerUser', () => {
     const uid = result.user!.uid;
     const stored = readJson(userPaths(dataDir, uid).userFile);
     expect(stored).toMatchObject({
-      schemaVersion: 3,
+      schemaVersion: USER_SCHEMA_VERSION,
       uid,
       username: 'new.user',
       displayName: 'New User',

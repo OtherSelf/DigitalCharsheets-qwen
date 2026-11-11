@@ -327,6 +327,7 @@ export const enTranslations = {
   'admin.columnLastLogin': 'Last login',
   'admin.columnActions': 'Actions',
   'admin.roleAdmin': 'Administrator',
+  'admin.roleTester': 'Tester',
   'admin.roleUser': 'User',
   'admin.statusActive': 'Active',
   'admin.statusBlocked': 'Blocked',
