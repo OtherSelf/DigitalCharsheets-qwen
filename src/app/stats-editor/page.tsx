@@ -19,7 +19,7 @@ import { Input } from '@/components/ui/input';
 import { useCharacterContext } from '@/context/character-context';
 import { useTranslation } from '@/context/language-context';
 import { useLocalAuth } from '@/context/local-auth-context';
-import { getDarkHeresyCapabilities } from '@/games/dh-shared/capabilities';
+import { resolveCharacterSystemId } from '@/games/character-system';
 import { DarkHeresyCharacter, DnD5eCharacter } from '@/lib/types';
 
 // ─── STAT DEFINITIONS ──────────────────────────────────────────────
@@ -62,6 +62,7 @@ interface DHVitalsEdit {
   insanityPoints: { total: number; notes: string };
   corruptionPoints: { total: number; notes: string };
   experience: number;
+  systemId: 'dh1' | 'dh2';
   saved: boolean;
 }
 
@@ -80,6 +81,18 @@ interface DnDVitalsEdit {
 type TabId = 'stats' | 'dh-vitals' | 'dnd-vitals';
 
 // ─── HELPERS ───────────────────────────────────────────────────────
+/** DH-ключи принадлежат редакции; общие (common.*) не меняются. */
+function statLabel(
+  labelKey: string,
+  edition: 'dh1' | 'dh2',
+  t: (key: string) => string,
+): string {
+  return t(
+    labelKey.startsWith('dh.')
+      ? labelKey.replace('dh.', `${edition}.`)
+      : labelKey,
+  );
+}
 function getDndExperience(char: any): number {
   return char.experiencePoints ?? char.experience ?? 0;
 }
@@ -103,7 +116,7 @@ export default function StatsEditorPage() {
     // Stats edits
     const stats = characters.map((char) => {
       const isDH = char.gameSystem === 'Dark Heresy';
-      const allowInfluence = isDH && getDarkHeresyCapabilities(char).influence;
+      const allowInfluence = isDH && resolveCharacterSystemId(char) === 'dh2';
       const statKeys = isDH
         ? DH_STATS.filter((s) => allowInfluence || s.key !== 'influence')
         : DND_STATS;
@@ -128,6 +141,8 @@ export default function StatsEditorPage() {
       return {
         id: char.id,
         name: char.name || 'Unnamed',
+        systemId: (resolveCharacterSystemId(char) === 'dh2' ? 'dh2' : 'dh1') as
+          'dh1' | 'dh2',
         wounds: {
           current: dh.wounds?.current ?? 0,
           max: dh.wounds?.max ?? 0,
@@ -198,7 +213,7 @@ export default function StatsEditorPage() {
     const char = characters.find((c) => c.id === charId);
     if (
       char?.gameSystem === 'Dark Heresy' &&
-      !getDarkHeresyCapabilities(char).influence
+      resolveCharacterSystemId(char) !== 'dh2'
     ) {
       const { influence: _influence, ...rest } = stats;
       return rest;
@@ -369,13 +384,15 @@ export default function StatsEditorPage() {
     );
   }
 
+  const dhVitalsPrefix = dhVitalsEdits[0]?.systemId ?? 'dh1';
+
   // Split stats by system for rendering
   const dhStats = statsEdits.filter((e) => e.gameSystem === 'Dark Heresy');
   const dhGroups = (['dh1', 'dh2'] as const).map((edition) => ({
     edition,
     stats: dhStats.filter((e) => {
       const char = characters.find((c) => c.id === e.id);
-      return char ? getDarkHeresyCapabilities(char).edition === edition : false;
+      return char ? resolveCharacterSystemId(char) === edition : false;
     }),
     statKeys:
       edition === 'dh1'
@@ -467,7 +484,7 @@ export default function StatsEditorPage() {
                           <span>{t('common.characterName')}</span>
                           {group.statKeys.map((s) => (
                             <span key={s.key} className="text-center">
-                              {t(s.labelKey)}
+                              {statLabel(s.labelKey, group.edition, t)}
                             </span>
                           ))}
                           <span></span>
@@ -616,12 +633,14 @@ export default function StatsEditorPage() {
                         <span className="text-center">
                           {t('common.fateMax')}
                         </span>
-                        <span className="text-center">{t('dh.insanity')}</span>
                         <span className="text-center">
-                          {t('dh.corruption')}
+                          {t(`${dhVitalsPrefix}.insanity`)}
                         </span>
                         <span className="text-center">
-                          {t('dh.experience')}
+                          {t(`${dhVitalsPrefix}.corruption`)}
+                        </span>
+                        <span className="text-center">
+                          {t(`${dhVitalsPrefix}.experience`)}
                         </span>
                         <span></span>
                       </div>
@@ -767,7 +786,7 @@ export default function StatsEditorPage() {
                         </span>
                         <span className="text-center">{t('dnd.speed')}</span>
                         <span className="text-center">
-                          {t('dh.experience')}
+                          {t('dh1.experience')}
                         </span>
                         <span></span>
                       </div>

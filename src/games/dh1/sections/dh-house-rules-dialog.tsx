@@ -1,4 +1,4 @@
-// src/components/sheets/dh-sections/dh-house-rules-dialog.tsx
+// src/games/dh1/sections/dh-house-rules-dialog.tsx
 'use client';
 
 import * as React from 'react';
@@ -19,7 +19,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useCharacterContext } from '@/context/character-context';
 import { useTranslation } from '@/context/language-context';
-import { type DarkHeresyCharacter } from '@/lib/types';
+
+import type { DH1Character } from '../types';
 
 interface DhHouseRulesDialogProps {
   open: boolean;
@@ -37,8 +38,7 @@ export function DhHouseRulesDialog({
   const { getCharacter, updateCharacter } = useCharacterContext();
   const { t } = useTranslation();
 
-  const character = getCharacter(characterId) as
-    DarkHeresyCharacter | undefined;
+  const character = getCharacter(characterId) as DH1Character | undefined;
   const isDarkHeresy = character?.gameSystem === 'Dark Heresy';
 
   const [customRules, setCustomRules] = React.useState<DhCustomRule[]>([]);

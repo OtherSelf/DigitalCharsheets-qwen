@@ -1,4 +1,4 @@
-// src/components/sheets/dh-sections/dh-ui-helpers.tsx
+// src/games/dh1/sections/dh-ui-helpers.tsx
 'use client';
 
 import * as React from 'react';

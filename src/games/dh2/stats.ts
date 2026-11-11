@@ -1,19 +1,16 @@
-import type { DH1Character } from '../dh1/types';
-import type { DH2Character } from '../dh2/types';
 import {
   DARK_HERESY_CORE_STATS,
   type DarkHeresyCoreStat,
   type DarkHeresyStatUpgrade,
+  type DH2Character,
 } from './types';
 
 /**
- * ─── LANDMARK: DH STAT VIEW ────────────────────────────────────────────────
- * Общие компоненты DH рисуют обе редакции, поэтому работают с одним словарём
- * характеристик (девять + `influence`). При сохранении ключи, которых нет в
- * редакции, отфильтровываются: dh1 никогда не получает `influence`.
+ * ─── LANDMARK: DH2 STAT VIEW ───────────────────────────────────────────────
+ * Словарь характеристик 2-й редакции: девять полей + `influence`.
  */
 export type DarkHeresyStatKey = DarkHeresyCoreStat | 'influence';
-export type DarkHeresyCharacterLike = DH1Character | DH2Character;
+export type DarkHeresyCharacterLike = DH2Character;
 
 export const ALL_DARK_HERESY_STATS: readonly DarkHeresyStatKey[] = [
   ...DARK_HERESY_CORE_STATS,
@@ -42,10 +39,9 @@ export function statRecord<T>(
 
 export function pickAllowedStats<T>(
   record: Record<DarkHeresyStatKey, T>,
-  allowInfluence: boolean,
+  _allowInfluence: boolean,
 ): Partial<Record<DarkHeresyStatKey, T>> {
-  const keys = allowInfluence ? ALL_DARK_HERESY_STATS : DARK_HERESY_CORE_STATS;
   const result: Partial<Record<DarkHeresyStatKey, T>> = {};
-  for (const key of keys) result[key] = record[key];
+  for (const key of ALL_DARK_HERESY_STATS) result[key] = record[key];
   return result;
 }

@@ -11,10 +11,9 @@ import type {
 } from './types';
 
 /**
- * ─── LANDMARK: DH SHARED SCHEMAS ───────────────────────────────────────────
- * Схемы общей части Dark Heresy. `darkHeresyBaseFields` — набор полей, из
- * которого dh1/dh2 собирают свои схемы; редакционные отличия добавляются в
- * `src/games/dh1/schema.ts` и `src/games/dh2/schema.ts`.
+ * ─── LANDMARK: DARK_HERESY BASE SCHEMAS ───────────────────────────────────
+ * Базовая схема листа Dark Heresy внутри модуля. `darkHeresyBaseFields` —
+ * набор полей, из которого схема редакции собирает свой лист.
  */
 
 const homeWorldSchema = z.union([

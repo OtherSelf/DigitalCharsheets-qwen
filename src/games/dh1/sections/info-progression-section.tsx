@@ -25,6 +25,7 @@ import { useCharacterContext } from '@/context/character-context';
 import { useTranslation } from '@/context/language-context';
 import {
   CAREER_KEYS,
+  dhLocalizedKey,
   HOME_WORLD_KEYS,
   QUIRK_KEYS,
   RANK_KEYS,
@@ -39,12 +40,9 @@ import {
   type AdvancedPath,
 } from '@/lib/dark-heresy-ranks';
 import { divinationEffectLabel, divinationLabel } from '@/lib/divination-i18n';
-import {
-  type DarkHeresyCareerPath,
-  type DarkHeresyCharacter,
-} from '@/lib/types';
 import { cn } from '@/lib/utils';
 
+import { type DarkHeresyCareerPath, type DH1Character } from '../types';
 import { EditSaveButton } from './dh-ui-helpers';
 
 const DetailField = ({
@@ -95,7 +93,7 @@ const DetailField = ({
 );
 
 interface SectionProps {
-  character: DarkHeresyCharacter;
+  character: DH1Character;
   isCompactView: boolean;
   activeCompactSection?: string;
   onEditingChange?: (val: boolean) => void;
@@ -118,14 +116,14 @@ export const InfoSection = ({
   }, [isInfoEditing, onEditingChange]);
 
   const worldVariantLabel = React.useMemo(() => {
-    if (!character.homeWorld) return t('dh.waitingHomeWorld');
+    if (!character.homeWorld) return t('dh1.waitingHomeWorld');
     const key = WORLD_VARIANT_LABELS[character.homeWorld];
-    if (key === 'Tribal Taboos') return t('dh.tribalTaboos');
-    if (key === 'Hive Class') return t('dh.hiveClass');
-    if (key === 'Birth Planet') return t('dh.birthPlanet');
-    if (key === 'Ship Tradition') return t('dh.shipTradition');
-    if (key === 'Place of Birth') return t('dh.placeOfBirth');
-    return t('dh.worldVariant');
+    if (key === 'Tribal Taboos') return t('dh1.tribalTaboos');
+    if (key === 'Hive Class') return t('dh1.hiveClass');
+    if (key === 'Birth Planet') return t('dh1.birthPlanet');
+    if (key === 'Ship Tradition') return t('dh1.shipTradition');
+    if (key === 'Place of Birth') return t('dh1.placeOfBirth');
+    return t('dh1.worldVariant');
   }, [character.homeWorld, t]);
 
   const showInfo = !isCompactView || activeCompactSection === 'info-section';
@@ -173,7 +171,7 @@ export const InfoSection = ({
                 isCompactView && 'text-[10px]',
               )}
             >
-              {t('dh.homeWorld')}
+              {t('dh1.homeWorld')}
             </Label>
             <p
               className={cn(
@@ -182,7 +180,12 @@ export const InfoSection = ({
               )}
             >
               {character.homeWorld
-                ? t(HOME_WORLD_KEYS[character.homeWorld] || 'dh.homeWorld')
+                ? t(
+                    dhLocalizedKey(
+                      HOME_WORLD_KEYS[character.homeWorld] || 'dh1.homeWorld',
+                      'dh1',
+                    ),
+                  )
                 : '-'}
             </p>
           </div>
@@ -208,8 +211,11 @@ export const InfoSection = ({
             >
               {character.worldVariant
                 ? t(
-                    VARIANT_KEYS[character.worldVariant] ||
-                      character.worldVariant,
+                    dhLocalizedKey(
+                      VARIANT_KEYS[character.worldVariant] ||
+                        character.worldVariant,
+                      'dh1',
+                    ),
                   )
                 : '-'}
             </p>
@@ -221,7 +227,7 @@ export const InfoSection = ({
                 isCompactView && 'text-[10px]',
               )}
             >
-              {t('dh.careerPath')}
+              {t('dh1.careerPath')}
             </Label>
             <p
               className={cn(
@@ -230,31 +236,41 @@ export const InfoSection = ({
               )}
             >
               {character.careerPath
-                ? t(CAREER_KEYS[character.careerPath] || 'dh.careerPath')
+                ? t(
+                    dhLocalizedKey(
+                      CAREER_KEYS[character.careerPath] || 'dh1.careerPath',
+                      'dh1',
+                    ),
+                  )
                 : '-'}
             </p>
           </div>
 
           {/* --- UPDATED DIVINATION FIELDS WITH TRANSLATION --- */}
           <DetailField
-            label={t('dh.divination')}
-            value={divinationLabel(character.divination, t)}
+            label={t('dh1.divination')}
+            value={divinationLabel(character.divination, t, 'dh1')}
             editing={false}
             isCompactView={isCompactView}
           />
           <DetailField
-            label={t('dh.divinationEffect')}
-            value={divinationEffectLabel(character.divinationEffect, t)}
+            label={t('dh1.divinationEffect')}
+            value={divinationEffectLabel(character.divinationEffect, t, 'dh1')}
             editing={false}
             isCompactView={isCompactView}
           />
           {/* --- END UPDATED DIVINATION FIELDS --- */}
 
           <DetailField
-            label={t('dh.quirk')}
+            label={t('dh1.quirk')}
             value={
               character.quirk
-                ? t(QUIRK_KEYS[character.quirk] || character.quirk)
+                ? t(
+                    dhLocalizedKey(
+                      QUIRK_KEYS[character.quirk] || character.quirk,
+                      'dh1',
+                    ),
+                  )
                 : ''
             }
             editing={isInfoEditing}
@@ -291,7 +307,7 @@ export const InfoSection = ({
             isCompactView={isCompactView}
           />
           <DetailField
-            label={t('dh.skinColor')}
+            label={t('dh1.skinColor')}
             value={character.skinColor}
             editing={isInfoEditing}
             onBlur={(e) =>
@@ -300,7 +316,7 @@ export const InfoSection = ({
             isCompactView={isCompactView}
           />
           <DetailField
-            label={t('dh.hairColor')}
+            label={t('dh1.hairColor')}
             value={character.hairColor}
             editing={isInfoEditing}
             onBlur={(e) =>
@@ -309,7 +325,7 @@ export const InfoSection = ({
             isCompactView={isCompactView}
           />
           <DetailField
-            label={t('dh.eyeColor')}
+            label={t('dh1.eyeColor')}
             value={character.eyeColor}
             editing={isInfoEditing}
             onBlur={(e) =>
@@ -605,7 +621,7 @@ export const ProgressionSection = ({
                 htmlFor="current-exp-edit"
                 className="text-muted-foreground text-xs"
               >
-                {t('dh.currentExp')}
+                {t('dh1.currentExp')}
               </Label>
               <Input
                 id="current-exp-edit"
@@ -618,7 +634,7 @@ export const ProgressionSection = ({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="spend-exp-amount">{t('dh.spendExp')}</Label>
+              <Label htmlFor="spend-exp-amount">{t('dh1.spendExp')}</Label>
               <div className="flex items-center gap-2">
                 <Button
                   size="icon"
@@ -658,14 +674,14 @@ export const ProgressionSection = ({
               }
               className="w-full"
             >
-              {t('dh.spendExp')}
+              {t('dh1.spendExp')}
             </Button>
             <div className="space-y-1">
               <Label
                 htmlFor="total-exp-edit"
                 className="text-muted-foreground text-xs"
               >
-                {t('dh.totalExpSpent')}
+                {t('dh1.totalExpSpent')}
               </Label>
               <Input
                 id="total-exp-edit"
@@ -681,21 +697,26 @@ export const ProgressionSection = ({
             {/* ========== RANK DISPLAY SECTION START ========== */}
             <div className="space-y-1 border-t pt-2">
               <Label className="text-muted-foreground text-xs">
-                {t('dh.rank')}
+                {t('dh1.rank')}
               </Label>
               <div className="flex flex-col gap-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <p className="text-sm font-medium break-words">
                     {currentRankName === 'N/A' ||
                     currentRankName === 'Unknown Rank'
-                      ? t('dh.unknownRank')
-                      : t(RANK_KEYS[currentRankName] || currentRankName)}
+                      ? t('dh1.unknownRank')
+                      : t(
+                          dhLocalizedKey(
+                            RANK_KEYS[currentRankName] || currentRankName,
+                            'dh1',
+                          ),
+                        )}
                   </p>
 
                   {(editableAdvancedPath ?? character.advancedPath) ? (
                     <div className="flex items-center gap-2">
                       <span className="border-primary/20 bg-primary/10 text-primary rounded border px-2 py-0.5 text-[10px] font-semibold">
-                        {t('dh.advancedPath')}:{' '}
+                        {t('dh1.advancedPath')}:{' '}
                         {t(
                           RANK_KEYS[
                             editableAdvancedPath ?? character.advancedPath!
@@ -711,7 +732,7 @@ export const ProgressionSection = ({
                             className="h-6 px-2 text-[10px]"
                             onClick={() => setIsAdvancedPathModalOpen(true)}
                           >
-                            {t('dh.changeAdvancedPath')}
+                            {t('dh1.changeAdvancedPath')}
                           </Button>
                         )}
                     </div>
@@ -724,14 +745,14 @@ export const ProgressionSection = ({
                         className="h-6 px-2 text-[10px]"
                         onClick={() => setIsAdvancedPathModalOpen(true)}
                       >
-                        {t('dh.selectAdvancedPath')}
+                        {t('dh1.selectAdvancedPath')}
                       </Button>
                     )
                   )}
 
                   {(editableAlternatePath ?? character.alternatePath) && (
                     <span className="border-secondary/20 bg-secondary/20 text-secondary-foreground rounded border px-2 py-0.5 text-[10px] font-semibold">
-                      {t('dh.alternatePath')}:{' '}
+                      {t('dh1.alternatePath')}:{' '}
                       {t(
                         RANK_KEYS[
                           editableAlternatePath ?? character.alternatePath!
@@ -751,8 +772,8 @@ export const ProgressionSection = ({
                       onClick={() => setIsAlternateRankModalOpen(true)}
                     >
                       {(editableAlternatePath ?? character.alternatePath)
-                        ? t('dh.changeAlternateRank')
-                        : t('dh.selectAlternateRank')}
+                        ? t('dh1.changeAlternateRank')
+                        : t('dh1.selectAlternateRank')}
                     </Button>
                   )}
                 </div>
@@ -773,9 +794,9 @@ export const ProgressionSection = ({
           onEscapeKeyDown={(e) => e.preventDefault()}
         >
           <DialogHeader>
-            <DialogTitle>{t('dh.selectAdvancedPathTitle')}</DialogTitle>
+            <DialogTitle>{t('dh1.selectAdvancedPathTitle')}</DialogTitle>
             <DialogDescription>
-              {t('dh.selectAdvancedPathDesc')}
+              {t('dh1.selectAdvancedPathDesc')}
             </DialogDescription>
           </DialogHeader>
           <div className="grid grid-cols-1 gap-4 py-4">
@@ -786,7 +807,8 @@ export const ProgressionSection = ({
                   onClick={() => handleSelectAdvancedPath(path.name)}
                   className="h-12 text-base"
                 >
-                  {t('dh.choose')} {t(RANK_KEYS[path.name] || path.name)}
+                  {t('dh1.choose')}{' '}
+                  {t(dhLocalizedKey(RANK_KEYS[path.name] || path.name, 'dh1'))}
                 </Button>
               ))}
           </div>
@@ -799,9 +821,9 @@ export const ProgressionSection = ({
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{t('dh.selectAlternateRankTitle')}</DialogTitle>
+            <DialogTitle>{t('dh1.selectAlternateRankTitle')}</DialogTitle>
             <DialogDescription>
-              {t('dh.selectAlternateRankDesc')}
+              {t('dh1.selectAlternateRankDesc')}
             </DialogDescription>
           </DialogHeader>
           <div className="grid grid-cols-1 gap-4 py-4">
@@ -809,13 +831,13 @@ export const ProgressionSection = ({
               onClick={() => handleSelectAlternateRank(null)}
               className="h-12 text-base"
             >
-              {t('dh.choose')} {t('dh.rankInditor')}
+              {t('dh1.choose')} {t('dh1.rankInditor')}
             </Button>
             <Button
               onClick={() => handleSelectAlternateRank('Chirurgeon')}
               className="h-12 text-base"
             >
-              {t('dh.choose')} {t('dh.rankChirurgeon')}
+              {t('dh1.choose')} {t('dh1.rankChirurgeon')}
             </Button>
           </div>
         </DialogContent>

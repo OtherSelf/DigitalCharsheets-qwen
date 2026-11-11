@@ -87,11 +87,13 @@ normalizer).
 - [`src/lib/export-utils.ts`](../src/lib/export-utils.ts) — envelope, import
   parsing/merging, file names and the Excel workbook writer.
 - [`src/games/dnd5e/export.ts`](../src/games/dnd5e/export.ts),
-  [`src/games/dh-shared/export.ts`](../src/games/dh-shared/export.ts) — JSON
-  field selection per module.
+  [`src/games/dh1/export.ts`](../src/games/dh1/export.ts),
+  [`src/games/dh2/export.ts`](../src/games/dh2/export.ts) — JSON field
+  selection per module.
 - [`src/games/dnd5e/excel.ts`](../src/games/dnd5e/excel.ts),
-  [`src/games/dh-shared/excel.ts`](../src/games/dh-shared/excel.ts) — Excel
-  sections per module; shared section writer in
+  [`src/games/dh1/excel.ts`](../src/games/dh1/excel.ts),
+  [`src/games/dh2/excel.ts`](../src/games/dh2/excel.ts) — Excel sections per
+  module; generic section writer in
   [`src/games/shared/excel.ts`](../src/games/shared/excel.ts).
 - [`src/lib/character-portable.ts`](../src/lib/character-portable.ts) — removes
   migration/Firestore/`userId` fields for the portable shape.

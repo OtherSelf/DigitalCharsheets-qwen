@@ -1,4 +1,4 @@
-// src/components/sheets/dh-sections/characteristics-section.tsx
+// src/games/dh1/sections/characteristics-section.tsx
 'use client';
 
 import * as React from 'react';
@@ -18,17 +18,17 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { useCharacterContext } from '@/context/character-context';
 import { useTranslation } from '@/context/language-context';
-import { getDarkHeresyCapabilities } from '@/games/dh-shared/capabilities';
+import type { Character } from '@/lib/types';
+import { cn } from '@/lib/utils';
+
+import { getDarkHeresyCapabilities } from '../capabilities';
 import {
   EMPTY_STAT_UPGRADE,
   pickAllowedStats,
   statRecord,
   type DarkHeresyStatKey,
-} from '@/games/dh-shared/stats';
-import { type DarkHeresyStatUpgrade } from '@/games/dh-shared/types';
-import { type Character, type DarkHeresyCharacter } from '@/lib/types';
-import { cn } from '@/lib/utils';
-
+} from '../stats';
+import type { DarkHeresyStatUpgrade, DH1Character } from '../types';
 import { EditSaveButton } from './dh-ui-helpers';
 
 // LANDMARK 1: Added notesForText and addNotesText to the component props
@@ -134,7 +134,7 @@ const CharacteristicStat = ({
 };
 
 interface CharacteristicsSectionProps {
-  character: DarkHeresyCharacter;
+  character: DH1Character;
   isCompactView: boolean;
   isSkillsPanelCollapsed: boolean;
   isEquipmentPanelCollapsed: boolean;
@@ -315,7 +315,18 @@ export const CharacteristicsSection = React.forwardRef<
               key={char.key}
               label={char.label}
               // LANDMARK 3: Passing the translated full name using the char.key
-              fullName={t(char.key)}
+              fullName={t(
+                [
+                  'weaponSkill',
+                  'ballisticSkill',
+                  'toughness',
+                  'agility',
+                  'fellowship',
+                  'influence',
+                ].includes(char.key)
+                  ? `dh1.${char.key}`
+                  : char.key,
+              )}
               value={
                 isCharacteristicsEditing
                   ? editableStats[char.key]
@@ -376,7 +387,7 @@ export const CharacteristicsSection = React.forwardRef<
                   <>
                     <div className="bg-background rounded-lg border p-2 text-center">
                       <Label className="text-muted-foreground text-[10px] font-bold uppercase">
-                        {t('dh.halfMove')}
+                        {t('dh1.halfMove')}
                       </Label>
                       <div className="text-primary text-lg font-bold">
                         {agMod}
@@ -384,7 +395,7 @@ export const CharacteristicsSection = React.forwardRef<
                     </div>
                     <div className="bg-background rounded-lg border p-2 text-center">
                       <Label className="text-muted-foreground text-[10px] font-bold uppercase">
-                        {t('dh.move')}
+                        {t('dh1.move')}
                       </Label>
                       <div className="text-primary text-lg font-bold">
                         {agMod * 2}
@@ -392,7 +403,7 @@ export const CharacteristicsSection = React.forwardRef<
                     </div>
                     <div className="bg-background rounded-lg border p-2 text-center">
                       <Label className="text-muted-foreground text-[10px] font-bold uppercase">
-                        {t('dh.charge')}
+                        {t('dh1.charge')}
                       </Label>
                       <div className="text-primary text-lg font-bold">
                         {agMod * 3}
@@ -400,7 +411,7 @@ export const CharacteristicsSection = React.forwardRef<
                     </div>
                     <div className="bg-background rounded-lg border p-2 text-center">
                       <Label className="text-muted-foreground text-[10px] font-bold uppercase">
-                        {t('dh.run')}
+                        {t('dh1.run')}
                       </Label>
                       <div className="text-primary text-lg font-bold">
                         {agMod * 6}

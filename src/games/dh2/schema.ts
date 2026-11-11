@@ -7,7 +7,7 @@ import {
   darkHeresyCoreStatUpgradesFields,
   darkHeresyStatUpgradeSchema,
   fatigueSchema,
-} from '../dh-shared/schemas';
+} from './schemas';
 import type { DH2Character } from './types';
 
 /**

@@ -11,12 +11,12 @@ import {
  * файлов/экспортов оставлены маппинги sentence → ID: миграция переводит их в
  * ID, а UI умеет показать неизвестное кастомное значение как есть.
  */
-export function divinationKey(id: string): string {
-  return `dh.data.divination.${id}`;
+export function divinationKey(id: string, prefix = 'dh'): string {
+  return `${prefix}.data.divination.${id}`;
 }
 
-export function divinationEffectKey(id: string): string {
-  return `dh.data.divinationEffect.${id}`;
+export function divinationEffectKey(id: string, prefix = 'dh'): string {
+  return `${prefix}.data.divinationEffect.${id}`;
 }
 
 export function resolveDivinationId(value: string | null | undefined): string {
@@ -42,20 +42,22 @@ export function effectIdForDivination(divinationId: string): string {
 export function divinationLabel(
   value: string | null | undefined,
   t: (key: string) => string,
+  prefix = 'dh',
 ): string {
   if (!value) return '';
   const id = resolveDivinationId(value);
-  return id ? t(divinationKey(id)) : value;
+  return id ? t(divinationKey(id, prefix)) : value;
 }
 
 export function divinationEffectLabel(
   value: string | null | undefined,
   t: (key: string) => string,
+  prefix = 'dh',
 ): string {
   if (!value) return '';
   const id = resolveDivinationEffectId(value);
   const known = id
     ? Object.values(DIVINATION_BY_ID).some((d) => d.effectId === id)
     : false;
-  return known ? t(divinationEffectKey(id)) : value;
+  return known ? t(divinationEffectKey(id, prefix)) : value;
 }

@@ -9,7 +9,7 @@ import { translations } from '@/lib/i18n';
 /**
  * Целостность словарей: общий слой (`src/lib/i18n/translations.*`),
  * метаданные реестра (`src/games/i18n`) и словари модулей
- * (`src/games/<id>/i18n`, общий DH — `dh-shared`).
+ * (`src/games/<id>/i18n`); у dh1 и dh2 свои независимые словари.
  *
  * Регресс, который этот тест ловит: при разбиении монолитного translations.ts
  * на слой + модули часть ключей теряется, а t() возвращает сам ключ при
@@ -26,8 +26,10 @@ const TRANSLATION_FILES = [
   path.join(SRC, 'lib', 'i18n', 'translations.ru.ts'),
   path.join(SRC, 'games', 'i18n', 'en.ts'),
   path.join(SRC, 'games', 'i18n', 'ru.ts'),
-  path.join(SRC, 'games', 'dh-shared', 'i18n', 'en.ts'),
-  path.join(SRC, 'games', 'dh-shared', 'i18n', 'ru.ts'),
+  path.join(SRC, 'games', 'dh1', 'i18n', 'core-en.ts'),
+  path.join(SRC, 'games', 'dh1', 'i18n', 'core-ru.ts'),
+  path.join(SRC, 'games', 'dh2', 'i18n', 'core-en.ts'),
+  path.join(SRC, 'games', 'dh2', 'i18n', 'core-ru.ts'),
   path.join(SRC, 'games', 'dnd5e', 'i18n', 'en.ts'),
   path.join(SRC, 'games', 'dnd5e', 'i18n', 'ru.ts'),
   path.join(SRC, 'games', 'dh1', 'i18n', 'en.ts'),
@@ -78,9 +80,12 @@ const ru = translations.ru;
 
 // Значения, которые законно совпадают в en/ru: имена систем, числовой
 // placeholder и маска пароля. Новые совпадения должны быть осознанными.
-const NAMESPACE_RE = /^(common|auth|admin|dnd|dh|settings|demo|io|games)\./;
+const NAMESPACE_RE =
+  /^(common|auth|admin|dnd|dh1|dh2|settings|demo|io|games)\./;
 
 const SAME_VALUE_ALLOWED = new Set([
+  'dh1.placeholderAge',
+  'dh2.placeholderAge',
   'common.gameSystemDarkHeresy',
   'common.dungeonsAndDragons',
   'common.darkHeresy',
@@ -90,7 +95,6 @@ const SAME_VALUE_ALLOWED = new Set([
   'io.excel.plus10',
   'io.excel.plus20',
   'io.excel.plus30',
-  'dh.placeholderAge',
   'auth.passwordPlaceholder',
 ]);
 
@@ -199,7 +203,8 @@ describe('переводы: целостность словарей', () => {
   it('все используемые ключи io.excel.* есть в словарях', () => {
     const files = [
       path.join(SRC, 'games', 'dnd5e', 'excel.ts'),
-      path.join(SRC, 'games', 'dh-shared', 'excel.ts'),
+      path.join(SRC, 'games', 'dh1', 'excel.ts'),
+      path.join(SRC, 'games', 'dh2', 'excel.ts'),
       path.join(SRC, 'lib', 'export-utils.ts'),
     ];
     const keys = new Set<string>();
@@ -218,7 +223,8 @@ describe('переводы: целостность словарей', () => {
 
   it('домены dnd/dh/games приходят из модулей, а не из общего слоя', () => {
     expect(en['dnd.lvl']).toBeTruthy();
-    expect(en['dh.weaponSkill']).toBeTruthy();
+    expect(en['dh1.weaponSkill']).toBeTruthy();
+    expect(en['dh2.influence']).toBeTruthy();
     expect(en['games.stepGame']).toBeTruthy();
     expect(en['games.dh1.name']).toBeTruthy();
     expect(en['games.dh2.name']).toBeTruthy();
