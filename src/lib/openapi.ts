@@ -274,7 +274,14 @@ export const openApiDocument = {
       },
       VersionResponse: {
         type: 'object',
-        required: ['name', 'version', 'commit', 'buildDate', 'runtime'],
+        required: [
+          'name',
+          'version',
+          'commit',
+          'commitShort',
+          'buildDate',
+          'runtime',
+        ],
         properties: {
           name: { type: 'string' },
           version: { type: 'string' },
@@ -282,6 +289,11 @@ export const openApiDocument = {
             type: ['string', 'null'],
             description:
               'Build commit from DCS_GIT_COMMIT / GIT_COMMIT / VERCEL_GIT_COMMIT_SHA.',
+          },
+          commitShort: {
+            type: ['string', 'null'],
+            description:
+              'First 7 characters of `commit`, lowercased — the form shown in the UI. `null` when `commit` is `null`.',
           },
           buildDate: {
             type: ['string', 'null'],
@@ -631,7 +643,7 @@ export const openApiDocument = {
         operationId: 'version',
         summary: 'Application version and build info',
         description:
-          'Application name, version, commit/build date (from environment, otherwise null) and the Node runtime version. No authentication and no dependency list.',
+          'Application name, version, commit/build date (from environment, otherwise null), a 7-character `commitShort` for UI badges, and the Node runtime version. No authentication and no dependency list.',
         security: [],
         responses: {
           200: jsonResponse('Build information.', ref('VersionResponse')),
