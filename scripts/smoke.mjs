@@ -339,6 +339,17 @@ await check('GET /api/version → 200 (JSON, без сессии)', async () => 
   const body = assertJson(res, 'GET /api/version');
   assert(body.name === 'Digital Character Sheets', 'GET /api/version: name');
   assert(typeof body.version === 'string', 'GET /api/version: нет version');
+  // commitShort — либо строка (commit задан), либо null (переменных нет).
+  assert(
+    body.commitShort === null || typeof body.commitShort === 'string',
+    'GET /api/version: commitShort не строка и не null',
+  );
+  assert(
+    body.commitShort === null ||
+      (body.commitShort.length === 7 &&
+        body.commitShort === body.commitShort.toLowerCase()),
+    'GET /api/version: commitShort не 7 символов в нижнем регистре',
+  );
   assert(
     body.runtime && typeof body.runtime.node === 'string',
     'GET /api/version: нет runtime.node',

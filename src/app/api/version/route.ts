@@ -12,6 +12,8 @@ import { getAppInfo } from '@/lib/app-info';
  *
  * `commit`/`buildDate` задаются через DCS_GIT_COMMIT/DCS_BUILD_DATE (или
  * GIT_COMMIT/VERCEL_GIT_COMMIT_SHA для commit). Если переменных нет — null.
+ * `commitShort` — первые 7 символов commit в нижнем регистре, ровно та форма,
+ * которую показывает меню профиля (`v0.1.0 · a077aef`); без commit — null.
  */
 export const dynamic = 'force-dynamic';
 
