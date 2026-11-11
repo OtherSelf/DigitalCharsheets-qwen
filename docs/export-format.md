@@ -47,8 +47,11 @@ block before the human-readable sections:
 `App`, `Format`, `Format version` (`3.0`), `Kind`, `Export date`,
 `Character ID`, `Character`, `Game system`.
 
-The human-readable section titles and row labels are resolved through i18n in
-the site language at export time.
+The human-readable section titles and row labels live in the module adapter
+(`src/games/<id>/excel.ts`) and are resolved through i18n (`io.excel.*`) in the
+site language at export time. The core only writes the technical block and
+concatenates the module sections, so a new game does not touch
+`export-utils.ts`.
 
 The sheet is named after the character.
 
@@ -85,7 +88,11 @@ normalizer).
   parsing/merging, file names and the Excel workbook writer.
 - [`src/games/dnd5e/export.ts`](../src/games/dnd5e/export.ts),
   [`src/games/dh-shared/export.ts`](../src/games/dh-shared/export.ts) — JSON
-  field selection per module (Excel sections are moving there too).
+  field selection per module.
+- [`src/games/dnd5e/excel.ts`](../src/games/dnd5e/excel.ts),
+  [`src/games/dh-shared/excel.ts`](../src/games/dh-shared/excel.ts) — Excel
+  sections per module; shared section writer in
+  [`src/games/shared/excel.ts`](../src/games/shared/excel.ts).
 - [`src/lib/character-portable.ts`](../src/lib/character-portable.ts) — removes
   migration/Firestore/`userId` fields for the portable shape.
 - [`src/app/api/export/route.ts`](../src/app/api/export/route.ts) — HTTP export.

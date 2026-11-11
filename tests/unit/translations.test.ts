@@ -86,6 +86,9 @@ const SAME_VALUE_ALLOWED = new Set([
   'common.darkHeresy',
   'games.dnd.name',
   'games.darkHeresy.name',
+  'io.excel.plus10',
+  'io.excel.plus20',
+  'io.excel.plus30',
   'dh.placeholderAge',
   'auth.passwordPlaceholder',
 ]);
@@ -190,6 +193,26 @@ describe('переводы: целостность словарей', () => {
         0,
       );
     }
+  });
+
+  it('все используемые ключи io.excel.* есть в словарях', () => {
+    const files = [
+      path.join(SRC, 'games', 'dnd5e', 'excel.ts'),
+      path.join(SRC, 'games', 'dh-shared', 'excel.ts'),
+      path.join(SRC, 'lib', 'export-utils.ts'),
+    ];
+    const keys = new Set<string>();
+    for (const file of files) {
+      const text = fs.readFileSync(file, 'utf8');
+      for (const match of text.matchAll(/'io\.excel\.[A-Za-z0-9]+'/g)) {
+        keys.add(match[0].slice(1, -1));
+      }
+    }
+    expect(keys.size).toBeGreaterThan(80);
+    const missing = [...keys]
+      .filter((key) => !(key in en) || !(key in ru))
+      .sort();
+    expect(missing, 'нет ключей io.excel.* в en/ru').toEqual([]);
   });
 
   it('домены dnd/dh/games приходят из модулей, а не из общего слоя', () => {

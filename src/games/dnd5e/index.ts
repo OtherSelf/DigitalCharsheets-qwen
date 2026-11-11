@@ -1,9 +1,9 @@
 import { CHARACTER_SCHEMA_VERSION } from '@/lib/character-version';
 
-import { toPortableRecord } from '../shared/export';
 import type { GameModule } from '../types';
 import { createDnd5eDefaults } from './defaults';
 import { createDnd5eDemo } from './demo';
+import { buildDnd5eExcelSections } from './excel';
 import { buildDnd5ePortableJson } from './export';
 import { en as dnd5eEn } from './i18n/en';
 import { ru as dnd5eRu } from './i18n/ru';
@@ -42,13 +42,8 @@ export const dnd5eModule: GameModule<DnD5eCharacter> = {
   export: {
     toPortableJson: (character, config) =>
       buildDnd5ePortableJson(character, config),
-    buildExcelSections: () => {
-      // LANDMARK: EXCEL_SECTIONS — секции Excel переезжают из
-      // `src/lib/export-utils.ts` в модуль на этапе 5.
-      throw new Error(
-        'dnd5e: секции Excel ещё не перенесены в модуль (этап 5)',
-      );
-    },
+    buildExcelSections: (character, config, translate) =>
+      buildDnd5eExcelSections(character, config, translate),
   },
   migrations: [],
 };

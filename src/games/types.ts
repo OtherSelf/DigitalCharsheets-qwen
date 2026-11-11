@@ -111,16 +111,13 @@ export interface GameExportConfig {
 /** Перевод подписи Excel (ключ → строка) для текущего языка сайта. */
 export type ExportTranslate = (key: string) => string;
 
-/** Строка Excel-секции: `label` — стабильный i18n-ключ подписи. */
-export interface ExcelRow {
-  readonly label: string;
-  readonly value: string | number | boolean | null | undefined;
-}
+/** Ячейка Excel: строка/число/булево/пусто. */
+export type ExcelCell = string | number | boolean | null | undefined;
 
-/** Секция Excel-листа, которую модуль отдаёт ядру экспорта. */
+/** Секция Excel-листа, которую модуль отдаёт ядру экспорта (уже переведённая). */
 export interface ExcelSection {
-  readonly titleKey: string;
-  readonly rows: readonly ExcelRow[];
+  readonly title: string;
+  readonly rows: readonly (readonly ExcelCell[])[];
 }
 
 /**
