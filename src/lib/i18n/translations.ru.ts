@@ -1303,5 +1303,31 @@ export const ruTranslations = {
     'Загрузите ранее экспортированный JSON-файл, чтобы создать нового персонажа.',
   'io.importSuccessDashboard': 'Персонаж успешно создан! Перенаправление...',
   'io.exportJSON': 'Выгрузить JSON-файл',
+  // ─── games: реестр игр/редакций и мастер создания ───
+  'games.dnd.name': 'Dungeons & Dragons',
+  'games.dnd.description':
+    'Героическое фэнтези: классы, заклинания и проверки d20.',
+  'games.darkHeresy.name': 'Dark Heresy',
+  'games.darkHeresy.description':
+    'Мрачное расследование во вселенной Warhammer 40,000.',
+  'games.dnd5e.name': '5-я редакция',
+  'games.dnd5e.description':
+    'Текущая редакция D&D: d20, преимущество и три столпа игры.',
+  'games.dh1.name': '1-я редакция',
+  'games.dh1.description':
+    'Классическая Dark Heresy: девять характеристик и усталость 1-й редакции.',
+  'games.dh2.name': '2-я редакция',
+  'games.dh2.description':
+    'Dark Heresy 2e: Влияние, усталость 2-й редакции и тренировка +30.',
+  'games.stepGame': 'Игра',
+  'games.stepEdition': 'Редакция',
+  'games.stepCharacter': 'Персонаж',
+  'games.chooseGame': 'Выберите игру',
+  'games.chooseGameDesc': 'Шаг 1: выберите игровой мир.',
+  'games.chooseEdition': 'Выберите редакцию',
+  'games.chooseEditionDesc':
+    'Шаг 2: у редакций разные правила и листы персонажа.',
+  'games.backToGames': 'Назад к играм',
+  'games.backToEditions': 'Назад к редакциям',
 };
 // ─── LANDMARK: TRANSLATIONS_RU_END ───

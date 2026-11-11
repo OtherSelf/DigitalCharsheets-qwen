@@ -66,12 +66,14 @@ const ru = translations.ru;
 
 // Значения, которые законно совпадают в en/ru: имена систем, числовой
 // placeholder и маска пароля. Новые совпадения должны быть осознанными.
-const NAMESPACE_RE = /^(common|auth|admin|dnd|dh|settings|demo|io)\./;
+const NAMESPACE_RE = /^(common|auth|admin|dnd|dh|settings|demo|io|games)\./;
 
 const SAME_VALUE_ALLOWED = new Set([
   'common.gameSystemDarkHeresy',
   'common.dungeonsAndDragons',
   'common.darkHeresy',
+  'games.dnd.name',
+  'games.darkHeresy.name',
   'dh.placeholderAge',
   'auth.passwordPlaceholder',
 ]);

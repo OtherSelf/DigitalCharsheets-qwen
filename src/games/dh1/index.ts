@@ -3,6 +3,7 @@ import { CHARACTER_SCHEMA_VERSION } from '@/lib/character-version';
 import { toPortableRecord } from '../shared/export';
 import type { GameModule } from '../types';
 import { createDh1Defaults } from './defaults';
+import { createDh1Demo } from './demo';
 import { dh1CharacterSchema } from './schema';
 import type { DH1Character } from './types';
 
@@ -31,6 +32,7 @@ export const dh1Module: GameModule<DH1Character> = {
     fatigueField: 'fatigue1st',
   },
   createDefaults: createDh1Defaults,
+  createDemo: createDh1Demo,
   components: {
     loadCreateForm: () =>
       import('./create-form').then((m) => ({ default: m.Dh1CharacterForm })),

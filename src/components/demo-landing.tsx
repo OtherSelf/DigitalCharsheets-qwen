@@ -16,6 +16,9 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { useTranslation } from '@/context/language-context';
+import { getGameDefinition } from '@/games/games';
+import { listGameModules } from '@/games/registry';
+import { type SystemId } from '@/games/types';
 import { type Character } from '@/lib/types';
 
 /**
@@ -25,156 +28,6 @@ import { type Character } from '@/lib/types';
  * словарей (en/ru), а отличаются только ссылкой «Начать создание персонажа».
  */
 
-// LANDMARK: DEMO_MOCK_DATA_DND
-const demoDndCharacter: Character = {
-  id: 'demo-dnd-1',
-  userId: 'demo',
-  name: 'Thorin Ironforge',
-  characterClass: 'Fighter',
-  gameSystem: 'Dungeons & Dragons',
-  backstory:
-    'A seasoned warrior from the northern mountains, seeking glory and gold.',
-  notes: 'Demo character for preview purposes.',
-  questLog: [],
-  level: 3,
-  race: 'Dwarf',
-  background: 'Soldier',
-  alignment: 'Lawful Good',
-  experiencePoints: 900,
-  inspiration: '0',
-  proficiencyBonus: 2,
-  stats: {
-    strength: 16,
-    dexterity: 12,
-    constitution: 15,
-    intelligence: 10,
-    wisdom: 13,
-    charisma: 8,
-  },
-  savingThrows: [],
-  skills: [],
-  armorClass: 18,
-  speed: 25,
-  hitPoints: { current: 28, max: 28 },
-  temporaryHitPoints: 0,
-  hitDice: '3d10',
-  deathSaves: { successes: 0, failures: 0 },
-  otherProficienciesAndLanguages: ['Common', 'Dwarvish'],
-  attacks: [],
-  personalityTraits: ['I face problems head-on.'],
-  ideals: ['Tradition. The ancient traditions of my people must be preserved.'],
-  bonds: ['I will bring glory to my clan.'],
-  flaws: ['I am suspicious of strangers.'],
-  featuresAndTraits: ['Darkvision', 'Dwarven Resilience'],
-  equipment: [],
-  currency: { cp: 0, sp: 0, gp: 15, pp: 0, ep: 0 },
-  inventory: [],
-  spells: [],
-} as Character;
-
-// LANDMARK: DEMO_MOCK_DATA_DH
-const demoDhCharacter: Character = {
-  id: 'demo-dh-1',
-  userId: 'demo',
-  name: 'Inquisitor Vane',
-  characterClass: 'Acolyte',
-  systemId: 'dh1',
-  gameSystem: 'Dark Heresy',
-  backstory:
-    'A dedicated servant of the Inquisition, rooting out heresy in the underhive.',
-  notes: 'Demo character for preview purposes.',
-  questLog: [],
-  homeWorld: 'Hive World',
-  worldVariant: 'Scintilla',
-  careerPath: 'Guardsman',
-  rank: 'Rank 1',
-  divination: 'The Emperor Protects',
-  divinationEffect: '+10 to next test',
-  quirk: 'Always cleans their weapon',
-  height: '180 cm',
-  weight: '75 kg',
-  age: '28',
-  skinColor: 'Pale',
-  hairColor: 'Black',
-  eyeColor: 'Grey',
-  experience: 500,
-  totalExpSpent: 500,
-  alternatePath: null,
-  advancedPath: null,
-  stats: {
-    weaponSkill: 35,
-    ballisticSkill: 30,
-    strength: 35,
-    toughness: 40,
-    agility: 35,
-    intelligence: 40,
-    perception: 45,
-    willpower: 40,
-    fellowship: 35,
-  },
-  statUpgrades: {
-    weaponSkill: [false, false, false, false],
-    ballisticSkill: [false, false, false, false],
-    strength: [false, false, false, false],
-    toughness: [false, false, false, false],
-    agility: [false, false, false, false],
-    intelligence: [false, false, false, false],
-    perception: [false, false, false, false],
-    willpower: [false, false, false, false],
-    fellowship: [false, false, false, false],
-  },
-  wounds: { current: 12, max: 12 },
-  fatePoints: { current: 2, max: 2 },
-  insanityPoints: { total: 5 },
-  corruptionPoints: { total: 0 },
-  wealth: { throneGelt: 50, monthlyIncome: 10 },
-  movement: { walkHalf: 2, walkFull: 4, charge: 8, run: 12 },
-  equipment: {
-    armor: {
-      Head: { ap: 3, type: 'Flak', mods: '', quality: 'Common' },
-      'Right arm': null,
-      Body: { ap: 4, type: 'Flak', mods: '', quality: 'Common' },
-      'Left arm': null,
-      'Right leg': null,
-      'Left leg': null,
-    },
-    weapons: {
-      melee: [
-        {
-          id: 'm1',
-          name: 'Chainsword',
-          type: 'Melee',
-          range: '-',
-          penetration: '2',
-          damage: '1d10+3 R',
-          traits: 'Tearing',
-          equipped: true,
-        },
-      ],
-      ranged: [
-        {
-          id: 'r1',
-          name: 'Lasgun',
-          type: 'Basic',
-          range: '100m',
-          rof: 'S/3/-',
-          damage: '1d10+3 E',
-          clip: 60,
-          clipSize: 60,
-          reload: 'Full',
-          traits: '',
-          equipped: true,
-        },
-      ],
-    },
-  },
-  inventory: [],
-  skills: [],
-  talents: [],
-  fatigue1st: { current: 0 },
-  criticalConditions: [],
-} as Character;
-
 interface DemoLandingProps {
   /** Куда ведёт «Начать создание персонажа» (по умолчанию общий маршрут /new). */
   createHref?: string;
@@ -182,16 +35,28 @@ interface DemoLandingProps {
 
 export function DemoLanding({ createHref = '/new' }: DemoLandingProps) {
   const { t } = useTranslation();
-  const [previewSystem, setPreviewSystem] = useState<
-    'Dungeons & Dragons' | 'Dark Heresy' | null
-  >(null);
+  const [previewId, setPreviewId] = useState<SystemId | null>(null);
+
+  // Один демо-персонаж на опубликованную редакцию; данные — из модулей.
+  const demos = listGameModules()
+    .filter((gameModule) => gameModule.defaultStatus === 'published')
+    .map((gameModule) => {
+      const gameDefinition = getGameDefinition(gameModule.gameId);
+      return {
+        id: gameModule.id,
+        label: gameDefinition
+          ? `${t(gameDefinition.nameKey)} · ${t(gameModule.nameKey)}`
+          : t(gameModule.nameKey),
+        character: {
+          ...(gameModule.createDemo() as unknown as Record<string, unknown>),
+          id: `demo-${gameModule.id}`,
+          userId: 'demo',
+        } as unknown as Character,
+      };
+    });
 
   const activeCharacter =
-    previewSystem === 'Dungeons & Dragons'
-      ? demoDndCharacter
-      : previewSystem === 'Dark Heresy'
-        ? demoDhCharacter
-        : null;
+    demos.find((demo) => demo.id === previewId)?.character ?? null;
 
   // Имя персонажа в переводе остаётся подстановкой внутри фразы.
   const [hintBeforeName, hintAfterName] = t('demo.modeHint').split('{name}');
@@ -237,22 +102,16 @@ export function DemoLanding({ createHref = '/new' }: DemoLandingProps) {
             <CardDescription>{t('demo.exploreCardDesc')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            <Button
-              variant={
-                previewSystem === 'Dungeons & Dragons' ? 'default' : 'outline'
-              }
-              className="w-full justify-start"
-              onClick={() => setPreviewSystem('Dungeons & Dragons')}
-            >
-              {t('demo.previewDnd')}
-            </Button>
-            <Button
-              variant={previewSystem === 'Dark Heresy' ? 'default' : 'outline'}
-              className="w-full justify-start"
-              onClick={() => setPreviewSystem('Dark Heresy')}
-            >
-              {t('demo.previewDh')}
-            </Button>
+            {demos.map((demo) => (
+              <Button
+                key={demo.id}
+                variant={previewId === demo.id ? 'default' : 'outline'}
+                className="w-full justify-start"
+                onClick={() => setPreviewId(demo.id)}
+              >
+                {demo.label}
+              </Button>
+            ))}
           </CardContent>
         </Card>
       </div>

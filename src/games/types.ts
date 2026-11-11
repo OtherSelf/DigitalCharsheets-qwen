@@ -188,6 +188,9 @@ export interface GameModule<
     input?: Readonly<Record<string, unknown>>,
   ): Omit<TCharacter, 'id'>;
 
+  /** Демо-персонаж для `/demo` (без `id`). */
+  createDemo(): Omit<TCharacter, 'id'>;
+
   /** Ленивые компоненты формы и листа. */
   readonly components: GameModuleComponents<TCharacter>;
 

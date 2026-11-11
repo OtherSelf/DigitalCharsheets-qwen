@@ -3,6 +3,7 @@ import { CHARACTER_SCHEMA_VERSION } from '@/lib/character-version';
 import { toPortableRecord } from '../shared/export';
 import type { GameModule } from '../types';
 import { createDnd5eDefaults } from './defaults';
+import { createDnd5eDemo } from './demo';
 import { dnd5eCharacterSchema } from './schema';
 import type { DnD5eCharacter } from './types';
 
@@ -17,13 +18,14 @@ export const dnd5eModule: GameModule<DnD5eCharacter> = {
   gameId: 'dnd',
   order: 10,
   defaultStatus: 'published',
-  nameKey: 'common.dungeonsAndDragons',
+  nameKey: 'games.dnd5e.name',
   descriptionKey: 'games.dnd5e.description',
   schemaVersion: CHARACTER_SCHEMA_VERSION,
   schema: dnd5eCharacterSchema,
   i18n: { en: {}, ru: {} },
   capabilities: {},
   createDefaults: createDnd5eDefaults,
+  createDemo: createDnd5eDemo,
   components: {
     loadCreateForm: () =>
       import('./create-form').then((m) => ({
