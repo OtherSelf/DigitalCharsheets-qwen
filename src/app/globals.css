@@ -1,6 +1,6 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
-@config '../../tailwind.config.ts';
+@config '../../tailwind.config.mts';
 
 /*
   Tailwind v4: тёмная тема переключается классом `dark` на <html>
