@@ -1,443 +1,96 @@
 'use client';
 
 import type {
-  CombatResource,
-  InventoryItem,
-  Quest,
-} from '@/games/shared/types';
+  DarkHeresyBase,
+  DarkHeresyCoreStatNotes,
+  DarkHeresyCoreStats,
+  DarkHeresyCoreStatUpgrades,
+} from '@/games/dh-shared/types';
+import type { DnD5eCharacter } from '@/games/dnd5e/types';
+
+/**
+ * ─── LANDMARK: CHARACTER TYPES FACADE ──────────────────────────────────────
+ * Публичный фасад типов листов. На время перехода к модульной архитектуре
+ * (📌 D1) он собирает типы из `src/games/` и сохраняет прежние имена
+ * импортов, чтобы 20+ файлов не переписывались одним коммитом.
+ *
+ * После этапа 3 (флоу/листы) и этапа 7 фасад схлопывается до реэкспорта;
+ * legacy-тип `DarkHeresyCharacter` (v1, с `edition` и двойной усталостью)
+ * удаляется вместе с поддержкой чтения v1.
+ */
 
 export type {
+  CharacterBase,
   CombatResource,
+  GameSystem,
   InventoryItem,
   Quest,
   QuestObjective,
 } from '@/games/shared/types';
 
-export type GameSystem = 'Dungeons & Dragons' | 'Dark Heresy';
+export {
+  DarkHeresyCareerPaths,
+  DarkHeresyHomeWorlds,
+} from '@/games/dh-shared/types';
+export type {
+  Armor,
+  ArmorPiece,
+  BodyPart,
+  DarkHeresyBase,
+  DarkHeresyCareerPath,
+  DarkHeresyCoreStat,
+  DarkHeresyCoreStatNotes,
+  DarkHeresyCoreStatUpgrades,
+  DarkHeresyCoreStats,
+  DarkHeresyEquipment,
+  DarkHeresyHomeWorld,
+  DarkHeresyStatUpgrade,
+  DarkHeresyWeapons,
+  MeleeWeapon,
+  RangedWeapon,
+  Skill,
+  Talent,
+} from '@/games/dh-shared/types';
+export type {
+  AttunementItem,
+  DnD5eCharacter,
+  DnDAbility,
+  DnDActionOrFeature,
+  DnDAttack,
+  DnDCompanion,
+  DnDMulticlass,
+  DnDSavingThrow,
+  DnDSkill,
+  Spell,
+  SpellcastingEntry,
+} from '@/games/dnd5e/types';
+export type { DH1Character, DH1Fatigue } from '@/games/dh1/types';
+export type {
+  DH2Character,
+  DH2Fatigue,
+  DH2StatNotes,
+  DH2StatUpgrades,
+  DH2Stats,
+} from '@/games/dh2/types';
 
-export const DarkHeresyHomeWorlds = [
-  'Feral World',
-  'Hive World',
-  'Imperial World',
-  'Void Born',
-  'Forge World',
-] as const;
-export type DarkHeresyHomeWorld = (typeof DarkHeresyHomeWorlds)[number];
-export const DarkHeresyCareerPaths = [
-  'Adept',
-  'Arbitrator',
-  'Assassin',
-  'Cleric',
-  'Guardsman',
-  'Imperial Psyker',
-  'Scum',
-  'Tech-Priest',
-] as const;
-export type DarkHeresyCareerPath = (typeof DarkHeresyCareerPaths)[number];
-
-export interface AttunementItem {
-  id: string;
-  description: string;
-  attuned: boolean;
-  notes?: string;
-}
-
-export interface Spell {
-  id: string;
-  name: string;
-  level: number;
-  notes: string;
-}
-
-export interface DnDSavingThrow {
-  name: string;
-  proficient: boolean;
-  value: number;
-  manualModifier?: number;
-  notes?: string;
-}
-
-export interface DnDSkill {
-  name: string;
-  label: string;
-  proficient: boolean;
-  expertise: boolean;
-  value: number;
-  manualModifier?: number;
-  notes?: string;
-}
-
-export interface Skill {
-  id: string;
-  name: string;
-  notes: string;
-  type: 'basic' | 'advanced';
-  training: {
-    skilled: boolean;
-    plus10: boolean;
-    plus20: boolean;
-    plus30: boolean;
-  };
-}
-
-export interface Talent {
-  id: string;
-  name: string;
-  notes?: string;
-  description?: string;
-}
-
-export interface DnDAttack {
-  id: string;
-  name: string;
-  ability: DnDAbility | 'none';
-  useProficiencyBonus: boolean;
-  damageDice: string;
-  damageModifier: string;
-  notes?: string;
-}
-
-export interface SpellcastingEntry {
-  id: string;
-  ability: DnDAbility | 'none';
-  attackBonus: string;
-  saveDC: number;
-  notes?: string;
-}
-
-export interface DnDActionOrFeature {
-  id: string;
-  name: string;
-  notes: string;
-}
-
-export interface DnDCompanion {
-  id: string;
-  name: string;
-  type: string;
-  size: string;
-  armorClass: number;
-  initiative: number;
-  speed: string;
-  proficiencyBonus: string;
-  stats: {
-    strength: number;
-    dexterity: number;
-    constitution: number;
-    intelligence: number;
-    wisdom: number;
-    charisma: number;
-  };
-  skills: DnDSkill[];
-  hitPoints: { current: number; max: number };
-  actions: DnDActionOrFeature[];
-  features: DnDActionOrFeature[];
-
-  // Full NPC support
-  savingThrows?: DnDSavingThrow[];
-  hpTracking?: string;
-  hitPointsNotes?: string;
-  temporaryHitPoints?: number;
-  hitDice?: string;
-  hitDiceUsed?: Record<string, number>;
-  deathSaves?: { successes: number; failures: number };
-  exhaustion?: number;
-  otherProficienciesAndLanguages?: string[];
-  attacks?: DnDAttack[];
-  combatResources?: CombatResource[];
-  spellcastingAbility?: DnDAbility | 'none';
-  spellAttackBonus?: string;
-  spellSaveDifficulty?: number;
-  spellcastingEntries?: SpellcastingEntry[];
-  spells?: Spell[];
-  spellSlots?: Record<number, { max: number; current: number }>;
-  personalityTraits?: string[];
-  ideals?: string[];
-  bonds?: string[];
-  flaws?: string[];
-  featuresAndTraits?: string[];
-  equipment?: InventoryItem[];
-  attunementItems?: AttunementItem[];
-  currency?: { cp: number; sp: number; gp: number; pp: number; ep: number };
-  inventory?: InventoryItem[];
-  age?: string;
-  eyes?: string;
-  skin?: string;
-  height?: string;
-  weight?: string;
-  hair?: string;
-  background?: string;
-  race?: string;
-  alignment?: string;
-  backstory?: string;
-  notes?: string;
-  statNotes?: {
-    strength?: string;
-    dexterity?: string;
-    constitution?: string;
-    intelligence?: string;
-    wisdom?: string;
-    charisma?: string;
-  };
-
-  // Progression fields
-  characterClass?: string;
-  level?: number;
-  experiencePoints?: number;
-  isMulticlass?: boolean;
-  multiclasses?: DnDMulticlass[];
-  divineBoons?: string[];
-  allowDivineBoonsBeforeLevel20?: boolean;
-
-  // Visibility toggles
-  showStats?: boolean;
-  showCombat?: boolean;
-  showAttacks?: boolean;
-  showInventory?: boolean;
-  showSpells?: boolean;
-  showNarrative?: boolean;
-  showInfo?: boolean;
-  showProgression?: boolean;
-  showDivineBoons?: boolean;
-  showHitDice?: boolean;
-}
-
-export interface ArmorPiece {
-  ap: number;
-  type: string;
-  mods: string;
-  quality: string;
-}
-
-export type BodyPart =
-  'Head' | 'Right arm' | 'Body' | 'Left arm' | 'Right leg' | 'Left leg';
-
-export type Armor = Record<BodyPart, ArmorPiece | null>;
-
-export interface MeleeWeapon {
-  id: string;
-  name: string;
-  type: string;
-  range: string;
-  penetration: string;
-  damage: string;
-  traits: string;
-  equipped?: boolean;
-  notes?: string;
-}
-
-export interface RangedWeapon {
-  id: string;
-  name: string;
-  type: string;
-  range: string;
-  rof: string;
-  damage: string;
-  clip: number;
-  clipSize: number;
-  reload: string;
-  traits: string;
-  equipped?: boolean;
-  notes?: string;
-}
-
-export interface DarkHeresyWeapons {
-  melee: MeleeWeapon[];
-  ranged: RangedWeapon[];
-}
-
-export interface DarkHeresyEquipment {
-  armor: Armor;
-  weapons: DarkHeresyWeapons;
-}
-
-export interface CharacterBase {
-  id: string;
-  name: string;
-  characterClass: string;
-  gameSystem: GameSystem;
-  backstory: string;
-  notes: string;
-  questLog: Quest[];
-  /** Версия формата файла листа; у legacy-файлов отсутствует. */
-  schemaVersion?: number;
-}
-
-export interface DnDMulticlass {
-  class: string;
-  level: number;
-  isDisabled?: boolean; // Added to preserve progress when XP is lowered
-}
-
-export type DnDAbility =
-  | 'strength'
-  | 'dexterity'
-  | 'constitution'
-  | 'intelligence'
-  | 'wisdom'
-  | 'charisma';
-
-export interface DnD5eCharacter extends CharacterBase {
-  gameSystem: 'Dungeons & Dragons';
-  level: number;
-  race: string;
-  background: string;
-  alignment: string;
-  experiencePoints: number;
-  isMulticlass?: boolean;
-  multiclasses?: DnDMulticlass[];
-  divineBoons?: string[];
-  inspiration: string;
-  allowInspirationHomeRule?: boolean;
-  allowDivineBoonsBeforeLevel20?: boolean;
-  customHouseRules?: { name: string; description: string }[];
-  proficiencyBonus: number;
-  age?: string;
-  eyes?: string;
-  skin?: string;
-  height?: string;
-  weight?: string;
-  hair?: string;
-  stats: {
-    strength: number;
-    dexterity: number;
-    constitution: number;
-    intelligence: number;
-    wisdom: number;
-    charisma: number;
-  };
-  statNotes?: {
-    strength?: string;
-    dexterity?: string;
-    constitution?: string;
-    intelligence?: string;
-    wisdom?: string;
-    charisma?: string;
-  };
-  savingThrows: DnDSavingThrow[];
-  skills: DnDSkill[];
-  armorClass: number;
-  speed: number;
-  hitPoints: {
-    current: number;
-    max: number;
-  };
-  hpTracking?: string;
-  hitPointsNotes?: string;
-  temporaryHitPoints: number;
-  hitDice: string;
-  hitDiceUsed?: Record<string, number>;
-  deathSaves: {
-    successes: number;
-    failures: number;
-  };
-  exhaustion?: number;
-  otherProficienciesAndLanguages: string[];
-  attacks: DnDAttack[];
-  combatResources?: CombatResource[];
-  spellcastingAbility?: DnDAbility | 'none';
-  spellAttackBonus?: string;
-  spellSaveDifficulty?: number;
-  spellcastingEntries?: SpellcastingEntry[];
-  personalityTraits: string[];
-  ideals: string[];
-  bonds: string[];
-  flaws: string[];
-  featuresAndTraits: string[];
-  equipment: InventoryItem[];
-  attunementItems?: AttunementItem[];
-  currency: {
-    cp: number;
-    sp: number;
-    gp: number;
-    pp: number;
-    ep: number;
-  };
-  inventory: InventoryItem[];
-  spells: Spell[];
-  spellSlots?: Record<number, { max: number; current: number }>;
-  companions?: DnDCompanion[];
-}
-
-export interface DarkHeresyCharacter extends CharacterBase {
-  gameSystem: 'Dark Heresy';
-  edition?: '1st' | '2nd' | 'hybrid'; // ─── LANDMARK: EDITION FIELD ───
-  homeWorld: DarkHeresyHomeWorld | '';
-  worldVariant: string;
-  careerPath: DarkHeresyCareerPath | '';
-  rank: string;
-  /** Стабильный ID пророчества (`mutationWithout`), не текст. */
-  divination: string;
-  /** Стабильный ID эффекта (`insanity2`), не текст. */
-  divinationEffect: string;
-  quirk: string;
-  height: string;
-  weight: string;
-  age: string;
-  skinColor: string;
-  hairColor: string;
-  eyeColor: string;
-  experience: number;
-  totalExpSpent: number;
-  alternatePath: string | null;
-  advancedPath: string | null;
-  stats: {
-    weaponSkill: number;
-    ballisticSkill: number;
-    strength: number;
-    toughness: number;
-    agility: number;
-    intelligence: number;
-    perception: number;
-    willpower: number;
-    fellowship: number;
-    influence: number;
-  };
-  statUpgrades: {
-    weaponSkill: [boolean, boolean, boolean, boolean];
-    ballisticSkill: [boolean, boolean, boolean, boolean];
-    strength: [boolean, boolean, boolean, boolean];
-    toughness: [boolean, boolean, boolean, boolean];
-    agility: [boolean, boolean, boolean, boolean];
-    intelligence: [boolean, boolean, boolean, boolean];
-    perception: [boolean, boolean, boolean, boolean];
-    willpower: [boolean, boolean, boolean, boolean];
-    fellowship: [boolean, boolean, boolean, boolean];
+/**
+ * Legacy-форма листа Dark Heresy (schemaVersion 1).
+ *
+ * @deprecated Это переходный тип: он объединяет обе редакции и содержит
+ * `edition`, `fatigue1st`/`fatigue2nd` и `influence`. Новый код работает с
+ * `DH1Character` / `DH2Character` из модулей; миграция v2 (этап 2) удаляет
+ * лишние поля, после чего этот тип уйдёт из фасада.
+ */
+export interface DarkHeresyCharacter extends DarkHeresyBase {
+  edition?: '1st' | '2nd' | 'hybrid';
+  stats: DarkHeresyCoreStats & { influence: number };
+  statUpgrades: DarkHeresyCoreStatUpgrades & {
     influence: [boolean, boolean, boolean, boolean];
   };
-  statNotes?: {
-    weaponSkill?: string;
-    ballisticSkill?: string;
-    strength?: string;
-    toughness?: string;
-    agility?: string;
-    intelligence?: string;
-    perception?: string;
-    willpower?: string;
-    fellowship?: string;
-    influence?: string;
-  };
-  wounds: { current: number; max: number; notes?: string };
-  fatePoints: { current: number; max: number; notes?: string };
-  insanityPoints: { total: number; notes?: string };
-  corruptionPoints: { total: number; notes?: string };
-  wealth: { throneGelt: number; monthlyIncome: number; notes?: string };
-  movement: { walkHalf: number; walkFull: number; charge: number; run: number };
-  equipment: DarkHeresyEquipment;
-  inventory: InventoryItem[];
-  skills: Skill[];
-  talents: Talent[];
+  statNotes?: DarkHeresyCoreStatNotes & { influence?: string };
   fatigue1st: { current: number; notes?: string };
   fatigue2nd: { current: number; notes?: string };
-  criticalConditions: { id: string; name: string; notes?: string }[];
-  customHouseRules?: { name: string; description: string }[];
-  customResources?: {
-    id: string;
-    description: string;
-    current: number;
-    max: number;
-    notes?: string;
-  }[];
 }
 
+/** Лист любой поддерживаемой редакции (v1-совместимый union до этапа 3). */
 export type Character = DnD5eCharacter | DarkHeresyCharacter;

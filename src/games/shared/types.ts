@@ -1,3 +1,5 @@
+import type { SystemId } from '../types';
+
 /**
  * ─── LANDMARK: SHARED_CHARACTER_TYPES ──────────────────────────────────────
  * Типы листа, не зависящие от игры/редакции. Живут отдельно от `lib/types`,
@@ -6,6 +8,31 @@
  *
  * Здесь только данные; поведение — в модулях и `src/lib`.
  */
+
+/**
+ * Человекочитаемое имя системы в legacy-данных (schemaVersion 1).
+ *
+ * 📌 D4: начиная с v2 дискриминантом листа служит `systemId`, а это поле
+ * читается только миграцией и не пишется в новые файлы. До этапа 3 UI
+ * продолжает на него опираться — поэтому поле пока обязательно.
+ */
+export type GameSystem = 'Dungeons & Dragons' | 'Dark Heresy';
+
+/** Общая часть любого листа. */
+export interface CharacterBase {
+  id: string;
+  name: string;
+  characterClass: string;
+  /** Legacy-дискриминант v1; в v2 заменяется на `systemId` (📌 D4). */
+  gameSystem: GameSystem;
+  /** Машинный ID редакции (`dnd5e`, `dh1`, `dh2`); появляется в v2. */
+  systemId?: SystemId;
+  backstory: string;
+  notes: string;
+  questLog: Quest[];
+  /** Версия формата файла листа; у legacy-файлов отсутствует. */
+  schemaVersion?: number;
+}
 
 /** Предмет инвентаря (D&D и Dark Heresy). */
 export interface InventoryItem {
