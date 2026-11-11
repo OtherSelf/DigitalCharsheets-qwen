@@ -65,6 +65,10 @@ export const openApiDocument = {
       name: 'Admin',
       description: 'User management. Requires an active administrator.',
     },
+    {
+      name: 'System',
+      description: 'Health and build information (public, no authentication).',
+    },
   ],
   security: [{ cookieAuth: [] }],
   components: {
@@ -234,6 +238,64 @@ export const openApiDocument = {
         properties: {
           success: { type: 'boolean' },
           message: { type: 'string' },
+        },
+        additionalProperties: false,
+      },
+      HealthResponse: {
+        type: 'object',
+        required: ['status', 'version', 'uptime', 'timestamp', 'checks'],
+        properties: {
+          status: {
+            type: 'string',
+            enum: ['ok', 'degraded'],
+            description: '`degraded` is returned with HTTP 503.',
+          },
+          version: { type: 'string', description: 'Application version.' },
+          uptime: {
+            type: 'integer',
+            description: 'Process uptime in seconds.',
+          },
+          timestamp: { type: 'string', format: 'date-time' },
+          checks: {
+            type: 'object',
+            required: ['dataDir'],
+            additionalProperties: false,
+            properties: {
+              dataDir: {
+                type: 'string',
+                enum: ['ok', 'error'],
+                description:
+                  'Whether the data directory exists and is writable. No path is exposed.',
+              },
+            },
+          },
+        },
+        additionalProperties: false,
+      },
+      VersionResponse: {
+        type: 'object',
+        required: ['name', 'version', 'commit', 'buildDate', 'runtime'],
+        properties: {
+          name: { type: 'string' },
+          version: { type: 'string' },
+          commit: {
+            type: ['string', 'null'],
+            description:
+              'Build commit from DCS_GIT_COMMIT / GIT_COMMIT / VERCEL_GIT_COMMIT_SHA.',
+          },
+          buildDate: {
+            type: ['string', 'null'],
+            format: 'date-time',
+            description: 'Build date from DCS_BUILD_DATE.',
+          },
+          runtime: {
+            type: 'object',
+            required: ['node'],
+            additionalProperties: false,
+            properties: {
+              node: { type: 'string' },
+            },
+          },
         },
         additionalProperties: false,
       },
@@ -546,6 +608,36 @@ export const openApiDocument = {
     },
   },
   paths: {
+    '/api/health': {
+      get: {
+        tags: ['System'],
+        operationId: 'health',
+        summary: 'Service health',
+        description:
+          'Liveness/readiness probe for Docker, reverse proxies and monitoring. No authentication. Returns 200 when the data directory is writable, otherwise 503 with `status: degraded`. Does not expose paths or secrets.',
+        security: [],
+        responses: {
+          200: jsonResponse('Healthy.', ref('HealthResponse')),
+          503: jsonResponse(
+            'Degraded: the data directory is missing or not writable.',
+            ref('HealthResponse'),
+          ),
+        },
+      },
+    },
+    '/api/version': {
+      get: {
+        tags: ['System'],
+        operationId: 'version',
+        summary: 'Application version and build info',
+        description:
+          'Application name, version, commit/build date (from environment, otherwise null) and the Node runtime version. No authentication and no dependency list.',
+        security: [],
+        responses: {
+          200: jsonResponse('Build information.', ref('VersionResponse')),
+        },
+      },
+    },
     '/api/auth': {
       post: {
         tags: ['Authentication'],

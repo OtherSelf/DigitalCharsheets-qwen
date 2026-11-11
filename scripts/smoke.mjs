@@ -312,6 +312,40 @@ await check('GET /api/docs → 200 (Scalar HTML)', async () => {
   );
 });
 
+await check('GET /api/health → 200 (JSON, без сессии)', async () => {
+  const res = await request('/api/health', { auth: false });
+  assertStatus(res, 200, 'GET /api/health');
+  assert(
+    /application\/json/i.test(res.headers.get('content-type') || ''),
+    'GET /api/health: content-type не application/json',
+  );
+  const body = assertJson(res, 'GET /api/health');
+  assert(body.status === 'ok', `GET /api/health: status = ${body.status}`);
+  assert(
+    body.checks?.dataDir === 'ok',
+    `GET /api/health: dataDir = ${body.checks?.dataDir}`,
+  );
+  assert(typeof body.version === 'string', 'GET /api/health: нет version');
+  assert(
+    /no-store/i.test(res.headers.get('cache-control') || ''),
+    'GET /api/health: cache-control без no-store',
+  );
+  return `version ${body.version}`;
+});
+
+await check('GET /api/version → 200 (JSON, без сессии)', async () => {
+  const res = await request('/api/version', { auth: false });
+  assertStatus(res, 200, 'GET /api/version');
+  const body = assertJson(res, 'GET /api/version');
+  assert(body.name === 'Digital Character Sheets', 'GET /api/version: name');
+  assert(typeof body.version === 'string', 'GET /api/version: нет version');
+  assert(
+    body.runtime && typeof body.runtime.node === 'string',
+    'GET /api/version: нет runtime.node',
+  );
+  return `${body.name} ${body.version}`;
+});
+
 // 2. Аутентификация
 await check('POST /api/auth/exists → свободный логин', async () => {
   const res = await api('/auth/exists', {

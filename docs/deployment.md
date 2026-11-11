@@ -25,9 +25,40 @@ dependencies and the generated `.next/` directory.
 | `DCS_SESSION_SECRET` | `<data-dir>/.session-secret` | HMAC key for session cookies. Set explicitly if several instances/processes share one data dir or if the data dir is ephemeral. |
 | `DCS_COOKIE_SECURE` | unset | Set to `1` behind HTTPS so the session cookie gets the `Secure` flag. |
 | `DCS_ADMIN_USERNAME` | `admin` | Preferred login for the bootstrap administrator; `admin-2`, … if taken. |
+| `DCS_GIT_COMMIT` | unset | Commit shown by `/api/version`; falls back to `GIT_COMMIT` / `VERCEL_GIT_COMMIT_SHA`. |
+| `DCS_BUILD_DATE` | unset | ISO build date shown by `/api/version`. |
 | `PORT` | `3000` | HTTP port. |
 
 See [data-storage.md](data-storage.md) for the directory layout.
+
+## Health checks
+
+`GET /api/health` is meant for Docker `HEALTHCHECK`, reverse proxies and
+monitoring:
+
+- `200` with `status: "ok"` — process is up and the data directory is writable;
+- `503` with `status: "degraded"` — the data directory is missing/read-only;
+- no authentication, no filesystem paths, `Cache-Control: no-store`.
+
+`GET /api/version` returns the application version and build metadata (see
+`DCS_GIT_COMMIT` / `DCS_BUILD_DATE` above). Both endpoints are documented in
+[api.md](api.md) and in `/api/docs`.
+
+The application version is `version` from the root `package.json`. Bump it and
+rebuild:
+
+```bash
+npm version patch --no-git-tag-version   # updates package.json + package-lock.json
+npm run build
+```
+
+`commit`/`buildDate` are build metadata, not part of the package version.
+
+Example:
+
+```bash
+curl -fsS http://127.0.0.1:3000/api/health
+```
 
 ## Data directory
 

@@ -53,7 +53,7 @@ Deployment details, reverse proxy and environment variables:
 | `npm test` | Unit tests (Vitest). |
 | `npm run test:watch` | Vitest in watch mode. |
 | `npm run test:smoke` | HTTP smoke test against a running server (default `http://localhost:3000`). |
-| `npm run test:dev` | Dev-proxy smoke: hydration through known dev hosts. |
+| `npm run test:dev` | Dev-proxy smoke: hydration through known dev hosts + `/api/health`/`/api/version`. |
 | `npm run test:visual` | Playwright visual regression (full). |
 | `npm run test:visual:fast` | Visual subset tagged `@fast`. |
 | `npm run test:visual:update` | Rewrite visual baselines. |
