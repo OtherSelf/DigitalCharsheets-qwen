@@ -670,10 +670,10 @@ describe('/api/export', () => {
 });
 
 describe('recovery-роуты', () => {
-  function createUserWithCharacter(username = 'recover-api') {
+  async function createUserWithCharacter(username = 'recover-api') {
     const result = authenticateUser(username, 'pass1');
     const uid = result.user!.uid;
-    charactersPost(
+    await charactersPost(
       json(
         { ...makeDndCharacter({ name: 'Ragnar Testborn' }) },
         sessionHeaders(uid),
@@ -689,7 +689,7 @@ describe('recovery-роуты', () => {
   });
 
   it('/api/auth/phrase сохраняет фразу текущему пользователю', async () => {
-    const uid = createUserWithCharacter();
+    const uid = await createUserWithCharacter();
     const res = await phraseRoute(
       json({ phrase: 'Alpha Beta' }, sessionHeaders(uid)),
     );
@@ -702,13 +702,13 @@ describe('recovery-роуты', () => {
   });
 
   it('/api/auth/phrase валидирует поля', async () => {
-    const uid = createUserWithCharacter();
+    const uid = await createUserWithCharacter();
     const res = await phraseRoute(json({}, sessionHeaders(uid)));
     expect(res.status).toBe(400);
   });
 
   it('/api/auth/recover/verify проверяет слова и фразу и выдаёт сессию', async () => {
-    const uid = createUserWithCharacter();
+    const uid = await createUserWithCharacter();
     setRecoveryPhrase(uid, 'alpha beta');
 
     const ok = await recoverVerifyRoute(
@@ -737,7 +737,7 @@ describe('recovery-роуты', () => {
   });
 
   it('/api/auth/recover/reset меняет пароль по словам', async () => {
-    const uid = createUserWithCharacter('reset-api');
+    const uid = await createUserWithCharacter('reset-api');
     setRecoveryPhrase(uid, 'alpha beta');
 
     const res = await recoverRoute(
@@ -756,7 +756,7 @@ describe('recovery-роуты', () => {
   });
 
   it('/api/auth/recover/update валидирует длину пароля и фразы', async () => {
-    createUserWithCharacter('update-api');
+    await createUserWithCharacter('update-api');
 
     const shortPassword = await recoverUpdateRoute(
       json({

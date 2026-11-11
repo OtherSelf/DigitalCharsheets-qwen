@@ -166,6 +166,16 @@ export default function ProfileSettingsPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
+                {user.role && user.role !== 'user' && (
+                  <p className="text-muted-foreground text-right text-xs">
+                    {t('settings.role')}:{' '}
+                    {t(
+                      user.role === 'admin'
+                        ? 'admin.roleAdmin'
+                        : 'admin.roleTester',
+                    )}
+                  </p>
+                )}
                 <div className="space-y-2">
                   <Label htmlFor="displayName">
                     {t('common.displayName') || 'Display Name'}

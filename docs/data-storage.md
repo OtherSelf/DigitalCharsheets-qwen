@@ -20,6 +20,8 @@ JSON files, written through small, synchronous helpers in `src/lib/`.
       user.json                 profile (schema v4, source of truth)
       characters/
         <character-id>.json     one file per character sheet (schema v2)
+  settings/
+    game-catalog.json           runtime visibility/statuses + site title
   index/
     logins.json                 derived: normalized login → uid
   .session-secret               HMAC key for session cookies (0600)
@@ -131,6 +133,29 @@ reported but not rewritten.
 A backup is a copy of the whole data directory (or of the JSON export envelope,
 `docs/export-format.md`). Because migrations rewrite files in place, take a copy
 before upgrading a production data directory.
+
+## `settings/game-catalog.json`
+
+Runtime overrides for edition visibility and the optional site title. Missing
+file means "all modules use `defaultStatus` from the registry".
+
+```json
+{
+  "version": 1,
+  "statuses": { "dh2": "test" },
+  "siteTitle": "My table"
+}
+```
+
+| Field | Meaning |
+| --- | --- |
+| `statuses` | `systemId` → `published` / `test` / `hidden`; invalid values are ignored. |
+| `siteTitle` | Optional header title override (≤80 chars). Empty/absent → built-in brand. |
+
+Written atomically under the data-dir lock by `src/lib/game-catalog.ts`
+(`setModuleStatus`, `setSiteTitle`). The visibility matrix lives there:
+`published` → everyone, `test` → tester+admin, `hidden` → admin. It applies to
+creation/menus, not to reading existing sheets.
 
 ## Login index
 

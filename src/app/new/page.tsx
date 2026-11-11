@@ -1,10 +1,17 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 
-import { ChevronLeft, Gamepad2, Layers, ScrollText } from 'lucide-react';
+import {
+  ChevronLeft,
+  Gamepad2,
+  Layers,
+  Loader2,
+  ScrollText,
+} from 'lucide-react';
 
 import { Header } from '@/components/header';
 import { Button } from '@/components/ui/button';
@@ -17,12 +24,7 @@ import {
 } from '@/components/ui/card';
 import { useTranslation } from '@/context/language-context';
 import { listCatalog } from '@/games/character-system';
-import { getGameDefinition } from '@/games/games';
-import {
-  getGameModule,
-  listGameModules,
-  listGameModulesForGame,
-} from '@/games/registry';
+import { getGameModule, listGameModules } from '@/games/registry';
 
 /**
  * ─── LANDMARK: CREATE WIZARD ───────────────────────────────────────────────
@@ -31,8 +33,9 @@ import {
  * редакций. Шаги адресуемые (`/new?game=…&edition=…`), поэтому кнопка «назад»
  * браузера работает ожидаемо.
  *
- * Список игр/редакций берётся из реестра; фильтрация по видимости роли
- * добавится на этапе 6.
+ * Список игр/редакций и их видимость приходят из `/api/games` (роль читается
+ * на сервере). Если запрос не удался, показываем fallback по defaultStatus
+ * реестра — страница остаётся рабочей без переопределений каталога.
  */
 
 // Формы модулей грузятся лениво: в бандл попадает только выбранная редакция.
@@ -45,6 +48,44 @@ const FORM_COMPONENTS = new Map(
 
 type WizardStep = 1 | 2 | 3;
 
+interface CatalogEdition {
+  id: string;
+  nameKey: string;
+  descriptionKey: string;
+  status: string;
+}
+
+interface CatalogGame {
+  id: string;
+  nameKey: string;
+  descriptionKey: string;
+  editions: CatalogEdition[];
+}
+
+interface GamesResponse {
+  success: boolean;
+  games?: CatalogGame[];
+}
+
+/** Fallback без сервера: только опубликованные по умолчанию редакции. */
+function fallbackCatalog(): CatalogGame[] {
+  return listCatalog()
+    .map(({ game, editions }) => ({
+      id: game.id,
+      nameKey: game.nameKey,
+      descriptionKey: game.descriptionKey,
+      editions: editions
+        .filter((gameModule) => gameModule.defaultStatus === 'published')
+        .map((gameModule) => ({
+          id: gameModule.id,
+          nameKey: gameModule.nameKey,
+          descriptionKey: gameModule.descriptionKey,
+          status: gameModule.defaultStatus,
+        })),
+    }))
+    .filter((game) => game.editions.length > 0);
+}
+
 export default function ManualCharacterCreationPage() {
   const { t } = useTranslation();
   const router = useRouter();
@@ -53,18 +94,36 @@ export default function ManualCharacterCreationPage() {
   const editionParam = searchParams.get('edition');
   const gameParam = searchParams.get('game');
 
-  const editionModule = editionParam ? getGameModule(editionParam) : undefined;
-  const game = gameParam
-    ? getGameDefinition(gameParam)
-    : editionModule
-      ? getGameDefinition(editionModule.gameId)
-      : undefined;
+  const [games, setGames] = useState<CatalogGame[] | null>(null);
 
-  const editions = game ? listGameModulesForGame(game.id) : [];
-  const selectedModule =
-    editionModule && game && editionModule.gameId === game.id
-      ? editionModule
-      : undefined;
+  useEffect(() => {
+    let active = true;
+    void fetch('/api/games', { cache: 'no-store' })
+      .then(async (res) => {
+        if (!res.ok) return null;
+        return (await res.json().catch(() => null)) as GamesResponse | null;
+      })
+      .then((data) => {
+        if (!active) return;
+        setGames(data?.success && data.games ? data.games : fallbackCatalog());
+      })
+      .catch(() => {
+        if (active) setGames(fallbackCatalog());
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const game =
+    games?.find((catalogGame) => catalogGame.id === gameParam) ??
+    (editionParam
+      ? games?.find((catalogGame) =>
+          catalogGame.editions.some((item) => item.id === editionParam),
+        )
+      : undefined);
+  const edition = game?.editions.find((item) => item.id === editionParam);
+  const selectedModule = edition ? getGameModule(edition.id) : undefined;
 
   const step: WizardStep = selectedModule ? 3 : game ? 2 : 1;
   const Form = selectedModule
@@ -79,6 +138,17 @@ export default function ManualCharacterCreationPage() {
       { number: 2, label: t('games.stepEdition'), icon: Layers },
       { number: 3, label: t('games.stepCharacter'), icon: ScrollText },
     ];
+
+  if (!games) {
+    return (
+      <div className="flex h-dvh flex-col">
+        <Header />
+        <main className="safe-area-bottom flex flex-1 items-center justify-center">
+          <Loader2 className="text-muted-foreground h-8 w-8 animate-spin" />
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-dvh flex-col">
@@ -141,7 +211,7 @@ export default function ManualCharacterCreationPage() {
                 <CardDescription>{t('games.chooseGameDesc')}</CardDescription>
               </CardHeader>
               <CardContent className="grid gap-3 sm:grid-cols-2">
-                {listCatalog().map(({ game: catalogGame, editions: list }) => (
+                {games.map((catalogGame) => (
                   <button
                     key={catalogGame.id}
                     type="button"
@@ -158,7 +228,9 @@ export default function ManualCharacterCreationPage() {
                       {t(catalogGame.descriptionKey)}
                     </p>
                     <p className="text-muted-foreground mt-3 text-xs">
-                      {list.map((item) => t(item.nameKey)).join(' · ')}
+                      {catalogGame.editions
+                        .map((item) => t(item.nameKey))
+                        .join(' · ')}
                     </p>
                   </button>
                 ))}
@@ -176,7 +248,7 @@ export default function ManualCharacterCreationPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid gap-3 sm:grid-cols-2">
-                  {editions.map((item) => (
+                  {game.editions.map((item) => (
                     <button
                       key={item.id}
                       type="button"

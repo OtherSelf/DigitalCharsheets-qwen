@@ -86,6 +86,7 @@ const SAME_VALUE_ALLOWED = new Set([
   'common.darkHeresy',
   'games.dnd.name',
   'games.darkHeresy.name',
+  'admin.siteTitlePlaceholder',
   'io.excel.plus10',
   'io.excel.plus20',
   'io.excel.plus30',

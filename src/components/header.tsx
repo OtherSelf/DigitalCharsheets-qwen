@@ -30,6 +30,7 @@ import {
 import { useCharacterContext } from '@/context/character-context';
 import { useTranslation } from '@/context/language-context';
 import { useLocalAuth } from '@/context/local-auth-context';
+import { useSiteTitle } from '@/hooks/use-site-title';
 import {
   DarkHeresyCharacter,
   DnD5eCharacter,
@@ -109,6 +110,7 @@ export function Header({
     updateCharacter,
   } = useCharacterContext();
   const { t } = useTranslation();
+  const siteTitle = useSiteTitle();
   const { user } = useLocalAuth();
   const params = useParams<{ id: string }>();
   const [isHouseRulesDialogOpen, setIsHouseRulesDialogOpen] = useState(false);
@@ -253,7 +255,9 @@ export function Header({
             скрыт (там важнее имя), на служебных страницах — скрыт только на
             телефоне, где рядом стоит заголовок.
           */}
-            <span className={brandTextClass}>Digital Character Sheets</span>
+            <span className={brandTextClass}>
+              {siteTitle || 'Digital Character Sheets'}
+            </span>
           </Link>
 
           {/* ─── LANDMARK: HEADER_IDENTITY_CHARACTER_INFO (Now visible in Compact View with responsive sizing) ─── */}

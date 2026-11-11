@@ -567,4 +567,28 @@ export const enTranslations: Record<string, string> = {
   'io.excel.none': 'None',
   'io.excel.yes': 'Yes',
   'io.excel.no': 'No',
+  // ─── admin: игры/редакции и заголовок сайта (этап 6) ───
+  'common.loading': 'Loading…',
+  'admin.gamesTitle': 'Games & editions',
+  'admin.gamesDescription':
+    'Visibility of editions in the creation wizard and menus.',
+  'admin.gameColumn': 'Game',
+  'admin.editionColumn': 'Edition',
+  'admin.defaultStatusColumn': 'Default',
+  'admin.currentStatusColumn': 'Current',
+  'admin.statusPublished': 'Published',
+  'admin.statusTest': 'Test',
+  'admin.statusHidden': 'Hidden',
+  'admin.gamesVisibilityNote':
+    'Hiding affects creation and menus but does not block owners from opening existing sheets.',
+  'admin.gamesLoadFailed': 'Failed to load the game catalog.',
+  'admin.gamesSaveFailed': 'Failed to save the game catalog.',
+  'admin.gamesSaved': 'Game catalog saved.',
+  'admin.siteTitle': 'Site title',
+  'admin.siteTitleDescription':
+    'Overrides the brand title in the header. Leave empty to use the default.',
+  'admin.siteTitlePlaceholder': 'Digital Character Sheets',
+  'admin.siteTitleReset': 'Reset',
+  // ─── settings: роль в профиле ───
+  'settings.role': 'Role',
 };

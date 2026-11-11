@@ -15,6 +15,8 @@ import type { GameDefinition, SystemId } from './types';
 export interface CharacterSystemSource {
   systemId?: string;
   gameSystem?: string;
+  /** Legacy 1e/2e marker: используется только до миграции v2 (📌 D3). */
+  edition?: string;
 }
 
 export function resolveCharacterSystemId(
@@ -23,9 +25,11 @@ export function resolveCharacterSystemId(
   if (character.systemId && getGameModule(character.systemId)) {
     return character.systemId;
   }
-  // Legacy-файлы до миграции v2 (📌 D3): DH без systemId — всегда dh1.
+  // Legacy-файлы/запросы до миграции v2 (📌 D3).
   if (character.gameSystem === 'Dungeons & Dragons') return 'dnd5e';
-  if (character.gameSystem === 'Dark Heresy') return 'dh1';
+  if (character.gameSystem === 'Dark Heresy') {
+    return character.edition === '2nd' ? 'dh2' : 'dh1';
+  }
   return undefined;
 }
 

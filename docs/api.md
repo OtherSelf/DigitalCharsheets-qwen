@@ -66,6 +66,7 @@ contract version in [`src/lib/openapi.ts`](../src/lib/openapi.ts)
 | `POST` | `/api/auth/register` | — | Create an account with a recovery phrase and sign in. |
 | `POST` | `/api/auth/exists` | — | Check whether a login is taken. |
 | `GET` | `/api/auth/session` | cookie | Current profile snapshot (role, block state, etc.). |
+| `GET` | `/api/games` | optional cookie | Games/editions visible to the current role; also the site-title override. |
 | `POST` | `/api/auth/logout` | — | Clear the session cookie. |
 | `PUT` | `/api/auth/profile` | cookie | Update own login, display name, password, recovery phrase. |
 | `DELETE` | `/api/auth/profile` | cookie | Delete own account and all sheets; requires the current password. |
@@ -95,11 +96,13 @@ Export/import format: [export-format.md](export-format.md).
 ### Admin
 
 All admin endpoints go through `requireAdmin()`: no session → `401`, non-admin
-role → `403`.
+role → `403` (`tester` is not an administrator).
 
 | Method | Path | Purpose |
 | --- | --- | --- |
 | `GET` | `/api/admin/users` | Users, roles, block state, last login, sheet counts, stats. |
+| `GET` | `/api/admin/games` | Game catalog with default/current visibility and site title. |
+| `PUT` | `/api/admin/games` | Set one edition status (`published`/`test`/`hidden`) and/or the site title. |
 | `PATCH` | `/api/admin/users/{uid}` | Update fields / password / role / block state. |
 | `DELETE` | `/api/admin/users/{uid}` | Delete the account, its sheets and index entries. |
 | `GET` | `/api/admin/users/{uid}/characters` | Read-only sheet summaries for one user. |

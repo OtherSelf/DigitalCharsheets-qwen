@@ -9,6 +9,8 @@ client-side copy in localStorage only controls whether the menu item is visible.
 ## What the panel can do
 
 - list users with role / block status / character-sheet count and search them;
+- manage **Games & editions** visibility (`published` / `test` / `hidden`) and
+  the optional site-title override;
 - edit display name and login, reset a password, promote or demote;
 - block or unblock — blocking invalidates existing sessions on the next request;
 - delete an account together with all of its sheets (typed-login confirmation);
@@ -19,7 +21,7 @@ The API behind it is documented in [api.md](api.md).
 
 ## Roles and guards
 
-- `role: "admin" | "user"` is stored in `user.json`; a missing or invalid value
+- `role: "admin" | "tester" | "user"` is stored in `user.json`; a missing or invalid value
   is treated as `user`.
 - `requireAdmin(request)` in [`src/lib/admin-auth.ts`](../src/lib/admin-auth.ts)
   is the only server-side gate. It calls `getSessionUid()` (cookie, profile
@@ -29,6 +31,27 @@ The API behind it is documented in [api.md](api.md).
   - you cannot delete your own account from `/admin` (use `/settings`);
   - you cannot demote, block or delete the **last active administrator**;
   - deleting an account removes its directory, sheets and login-index entries.
+
+## Game visibility
+
+`/admin` has a **Games & editions** section backed by
+`GET/PUT /api/admin/games` (admin only). The current status of every module is
+stored in `<data-dir>/settings/game-catalog.json` and overrides the module's
+`defaultStatus` from `src/games/registry.ts`:
+
+| Status | Who sees it in `/new`, `/demo` and menus |
+| --- | --- |
+| `published` | everyone (including guests) |
+| `test` | `tester` and `admin` |
+| `hidden` | `admin` only |
+
+Hiding affects **creation and menus**, not opening existing sheets: the owner
+can still open sheets of a hidden edition, and `GET /api/characters` does not
+filter by status. The server enforces the matrix on `POST /api/characters`
+(`403 module_forbidden`) and the client only mirrors it.
+
+The same catalog file may override the header title (`siteTitle`). Leave it
+empty to return to the built-in brand.
 
 ## First administrator and startup checks
 
