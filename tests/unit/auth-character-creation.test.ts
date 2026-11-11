@@ -12,6 +12,7 @@ import {
   POST as charactersPost,
 } from '@/app/api/characters/route';
 import { GET as exportGet } from '@/app/api/export/route';
+import { CHARACTER_SCHEMA_VERSION } from '@/lib/character-version';
 import { isUid } from '@/lib/ids';
 
 import { readJson, removeDir, userPaths, useTempDataDir } from './helpers';
@@ -521,6 +522,10 @@ describe.each(SYSTEMS)(
     it('POST создаёт лист (201) и не теряет ни одного поля', async () => {
       const user = await register(`gm-${slug}`);
       const payload = build();
+      const expectedPayload =
+        slug === 'dh'
+          ? { ...payload, divinationEffect: 'intelligence3' }
+          : payload;
 
       const { status, body } = await createCharacter(user.uid, payload);
 
@@ -537,9 +542,10 @@ describe.each(SYSTEMS)(
       );
       expect(fs.existsSync(filePath)).toBe(true);
       expect(readJson(filePath)).toEqual({
-        ...payload,
+        ...expectedPayload,
         id: body.id,
         userId: user.uid,
+        schemaVersion: CHARACTER_SCHEMA_VERSION,
       });
     });
 
@@ -576,6 +582,10 @@ describe.each(SYSTEMS)(
     it('лист попадает в список и доступен через /api/export?characterId', async () => {
       const user = await register(`export-${slug}`);
       const payload = build();
+      const expectedPayload =
+        slug === 'dh'
+          ? { ...payload, divinationEffect: 'intelligence3' }
+          : payload;
       const { body: created } = await createCharacter(user.uid, payload);
 
       const list = await listCharacters(user.uid);
@@ -591,7 +601,11 @@ describe.each(SYSTEMS)(
       const exported = await res.json();
       // Экспорт — переносимый: служебный userId в него не попадает.
       expect(exported.userId).toBeUndefined();
-      expect(exported).toEqual({ ...payload, id: created.id });
+      expect(exported).toEqual({
+        ...expectedPayload,
+        id: created.id,
+        schemaVersion: CHARACTER_SCHEMA_VERSION,
+      });
     });
 
     it('лист виден после повторного входа в аккаунт', async () => {

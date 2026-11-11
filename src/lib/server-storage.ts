@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 
+import { normalizeCharacterRecord } from './character-version';
 import { getUserDir } from './data-dir';
 import { writeJsonAtomic } from './fs-atomic';
 import { Character } from './types';
@@ -106,8 +107,8 @@ export function getCharactersFromServer(userId: string): Character[] {
     for (const file of files) {
       try {
         const content = fs.readFileSync(path.join(charsDir, file), 'utf8');
-        const char = JSON.parse(content) as Character;
-        characters.push(char);
+        const parsed = JSON.parse(content) as Record<string, unknown>;
+        characters.push(normalizeCharacterRecord(parsed).character);
       } catch (e) {
         console.error(`Error reading character file ${file}:`, e);
       }
@@ -126,7 +127,11 @@ export function saveCharacterToServer(
 ): void {
   const charsDir = ensureCharactersDir(userId);
   const filePath = path.join(charsDir, `${character.id}.json`);
-  writeJsonAtomic(filePath, character);
+  writeJsonAtomic(
+    filePath,
+    normalizeCharacterRecord(character as unknown as Record<string, unknown>)
+      .character,
+  );
 }
 
 // WRITE: Save multiple characters (used during import)
@@ -165,7 +170,9 @@ export function updateCharacterOnServer(
   const content = fs.readFileSync(filePath, 'utf8');
   let character: Character;
   try {
-    character = JSON.parse(content) as Character;
+    character = normalizeCharacterRecord(
+      JSON.parse(content) as Record<string, unknown>,
+    ).character;
   } catch (e) {
     // Битый файл: НЕ перезаписываем его молча — иначе потеряем остатки данных.
     console.error(`Character file ${characterId} is corrupted:`, e);
@@ -182,7 +189,10 @@ export function updateCharacterOnServer(
 
   // LANDMARK: Explicit cast to Character to resolve TypeScript discriminated union
   // inference issues when spreading Partial<Character> over a union type.
-  const updated: Character = { ...character, ...data } as Character;
+  const updated: Character = normalizeCharacterRecord({
+    ...character,
+    ...data,
+  } as Record<string, unknown>).character;
 
   // Привязка к владельцу. Поле не входит в тип Character (это метаданные,
   // авторизация — по каталогу и cookie), но на диске оно должно быть: так

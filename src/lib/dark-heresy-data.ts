@@ -11,101 +11,184 @@ export const DarkHeresyCareerPaths = [
 
 export const DIVINATIONS = [
   {
+    id: 'mutationWithout',
     divination: '',
+    effectId: 'minorMutation',
     effect: 'Minor Mutation.',
   },
   {
+    id: 'onlyTheInsane',
     divination:
       '',
+    effectId: 'insanity2',
     effect: '+2 Insanity Points.',
   },
   {
+    id: 'sinsHidden',
     divination: '',
+    effectId: 'corruption3',
     effect: '+3 Corruption Points.',
   },
   {
+    id: 'innocenceIllusion',
     divination: '',
+    effectId: 'insanity1Corruption1',
     effect: '+1 Insanity Point, +1 Corruption Point.',
   },
   {
+    id: 'darkDreams',
     divination: '',
+    effectId: 'insanity2',
     effect: '+2 Insanity Points.',
   },
   {
+    id: 'painOfBullet',
     divination: '',
+    effectId: 'toughness1',
     effect: '+1 Toughness.',
   },
   {
+    id: 'killTheAlien',
     divination: '',
+    effectId: 'agility2',
     effect: '+2 Agility.',
   },
   {
+    id: 'truthSubjective',
     divination: '',
+    effectId: 'intelligence3Corruption3',
     effect: '+3 Intelligence, +3 Corruption Points.',
   },
-  { divination: '', effect: '+2 Perception.' },
   {
+    id: 'knowTheMutant',
     divination: '',
+    effectId: 'perception2',
+    effect: '+2 Perception.',
+  },
+  {
+    id: 'offerHisLife',
+    divination: '',
+    effectId: 'strength2',
     effect: '+2 Strength.',
   },
   {
+    id: 'jobWorthDying',
     divination: '',
+    effectId: 'frenzyTalent',
     effect: '"Frenzy" talent.',
   },
-  { divination: '', effect: '+1 Wound.' },
   {
+    id: 'onlyInDeath',
     divination: '',
+    effectId: 'wound1',
+    effect: '+1 Wound.',
+  },
+  {
+    id: 'mindWithoutPurpose',
+    divination: '',
+    effectId: 'fate1',
     effect: '+1 Fate Point.',
   },
   {
+    id: 'noCivilians',
     divination: '',
+    effectId: 'toughness2Wound1',
     effect: '+2 Toughness, +1 Wound.',
   },
-  { divination: '', effect: '+3 Weapon Skill.' },
-  { divination: '', effect: '+3 Agility.' },
   {
+    id: 'violenceSolves',
     divination: '',
+    effectId: 'weaponSkill3',
+    effect: '+3 Weapon Skill.',
+  },
+  {
+    id: 'toWarHuman',
+    divination: '',
+    effectId: 'agility3',
+    effect: '+3 Agility.',
+  },
+  {
+    id: 'spiritNotBroken',
+    divination: '',
+    effectId: 'willpower3',
     effect: '+3 Willpower.',
   },
   {
+    id: 'gunMightier',
     divination: '',
+    effectId: 'ballisticSkill3',
     effect: '+3 Ballistic Skill.',
   },
   {
+    id: 'boonToBrothers',
     divination: '',
+    effectId: 'fellowship3',
     effect: '+3 Fellowship.',
   },
-  { divination: '', effect: '+3 Toughness.' },
   {
+    id: 'menMustDie',
     divination: '',
+    effectId: 'toughness3',
+    effect: '+3 Toughness.',
+  },
+  {
+    id: 'darknessLightOfTerra',
+    divination: '',
+    effectId: 'willpower3',
     effect: '+3 Willpower.',
   },
   {
+    id: 'onlyTrueFear',
     divination: '',
+    effectId: 'wounds2',
     effect: '+2 Wounds.',
   },
   {
+    id: 'thoughtBegetsHeresy',
     divination: '',
+    effectId: 'strength3',
     effect: '+3 Strength.',
   },
   {
+    id: 'wiseManLearns',
     divination: '',
+    effectId: 'intelligence3',
     effect: '+3 Intelligence.',
   },
   {
+    id: 'suspiciousMind',
     divination: '',
+    effectId: 'perception3',
     effect: '+3 Perception.',
   },
-  { divination: '', effect: '+2 Agility, +1 Fate Point.' },
   {
+    id: 'trustYourFear',
     divination: '',
+    effectId: 'agility2Fate1',
+    effect: '+2 Agility, +1 Fate Point.',
+  },
+  {
+    id: 'noSubstituteForZeal',
+    divination: '',
+    effectId: 'toughness2Willpower2',
     effect: '+2 Toughness, +2 Willpower.',
   },
   {
+    id: 'askHowNotWhy',
     divination: '',
+    effectId: 'weaponSkill2BallisticSkill2',
     effect: '+2 Weapon Skill, +2 Ballistic Skill.',
   },
 ];
+
+export const DIVINATION_BY_ID: Record<string, (typeof DIVINATIONS)[number]> =
+  Object.fromEntries(DIVINATIONS.map((d) => [d.id, d]));
+export const DIVINATION_ID_BY_TEXT: Record<string, string> = Object.fromEntries(
+  DIVINATIONS.map((d) => [d.divination, d.id]),
+);
+export const EFFECT_ID_BY_TEXT: Record<string, string> = Object.fromEntries(
+  DIVINATIONS.map((d) => [d.effect, d.effectId]),
+);
 
 export const FERAL_WORLD_QUIRKS = [
   'Hairy Knuckles',

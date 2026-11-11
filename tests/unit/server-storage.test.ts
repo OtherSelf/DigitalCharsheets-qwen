@@ -3,6 +3,7 @@ import path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { CHARACTER_SCHEMA_VERSION } from '@/lib/character-version';
 import {
   createUserFolder,
   deleteCharacterFromServer,
@@ -53,7 +54,10 @@ describe('server-storage (файловое хранилище листов)', ()
       'char-a.json',
     );
     expect(fs.existsSync(file)).toBe(true);
-    expect(readJson(file)).toEqual(character);
+    expect(readJson(file)).toEqual({
+      ...character,
+      schemaVersion: CHARACTER_SCHEMA_VERSION,
+    });
     // Человекочитаемый JSON (отступ 2)
     expect(fs.readFileSync(file, 'utf8')).toContain('\n  "id"');
   });

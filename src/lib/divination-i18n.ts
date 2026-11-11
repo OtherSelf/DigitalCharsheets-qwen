@@ -1,0 +1,61 @@
+import {
+  DIVINATION_BY_ID,
+  DIVINATION_ID_BY_TEXT,
+  EFFECT_ID_BY_TEXT,
+} from './dark-heresy-data';
+
+/**
+ * ─── LANDMARK: DIVINATION I18N ──────────────────────────────────────────────
+ * Пророчества и эффекты хранятся в персонаже как стабильные ID
+ * (`mutationWithout`, `insanity2`), а не как английские фразы. Для старых
+ * файлов/экспортов оставлены маппинги sentence → ID: миграция переводит их в
+ * ID, а UI умеет показать неизвестное кастомное значение как есть.
+ */
+export function divinationKey(id: string): string {
+  return `dh.data.divination.${id}`;
+}
+
+export function divinationEffectKey(id: string): string {
+  return `dh.data.divinationEffect.${id}`;
+}
+
+export function resolveDivinationId(value: string | null | undefined): string {
+  if (!value) return '';
+  if (DIVINATION_BY_ID[value]) return value;
+  return DIVINATION_ID_BY_TEXT[value] ?? '';
+}
+
+export function resolveDivinationEffectId(
+  value: string | null | undefined,
+): string {
+  if (!value) return '';
+  if (value.startsWith('dh.data.divinationEffect.')) {
+    return value.slice('dh.data.divinationEffect.'.length);
+  }
+  return EFFECT_ID_BY_TEXT[value] ?? value;
+}
+
+export function effectIdForDivination(divinationId: string): string {
+  return DIVINATION_BY_ID[divinationId]?.effectId ?? '';
+}
+
+export function divinationLabel(
+  value: string | null | undefined,
+  t: (key: string) => string,
+): string {
+  if (!value) return '';
+  const id = resolveDivinationId(value);
+  return id ? t(divinationKey(id)) : value;
+}
+
+export function divinationEffectLabel(
+  value: string | null | undefined,
+  t: (key: string) => string,
+): string {
+  if (!value) return '';
+  const id = resolveDivinationEffectId(value);
+  const known = id
+    ? Object.values(DIVINATION_BY_ID).some((d) => d.effectId === id)
+    : false;
+  return known ? t(divinationEffectKey(id)) : value;
+}

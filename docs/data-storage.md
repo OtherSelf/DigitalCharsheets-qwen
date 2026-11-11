@@ -9,8 +9,7 @@ JSON files, written through small, synchronous helpers in `src/lib/`.
 - Default data directory: `./data` (relative to the project root).
 - Override: `DCS_DATA_DIR=/absolute/or/relative/path`.
 - The directory must be writable by the server process.
-- The data directory is **not** committed; `data/*` is gitignored (except the
-  placeholder `data/Hello.txt`).
+- The data directory is **not** committed; `data/*` is gitignored.
 
 ## Layout
 
@@ -20,7 +19,7 @@ JSON files, written through small, synchronous helpers in `src/lib/`.
     <uid>/
       user.json                 profile (schema v3, source of truth)
       characters/
-        <character-id>.json     one file per character sheet
+        <character-id>.json     one file per character sheet (schema v1)
   index/
     logins.json                 derived: normalized login → uid
   .session-secret               HMAC key for session cookies (0600)
@@ -69,13 +68,34 @@ Startup normalization (`src/lib/user-schema.ts`) fills missing v3 fields without
 overwriting existing values. A profile without `passwordHash` is reported but
 cannot be logged into; an administrator can set a password from `/admin`.
 
-## Character sheets
+## Character sheets (schema v1)
 
 One file per sheet: `users/<uid>/characters/<character-id>.json`. The content is
 the `Character` object from `src/lib/types.ts` (D&D 5e or Dark Heresy shape).
 The file name is the sheet `id`. `GET /api/characters` reads and parses every
 `*.json` in the user's `characters/` directory; a broken file is skipped rather
 than failing the whole list.
+
+`CharacterBase.schemaVersion` is `1`; legacy files without it are migrated on
+startup by `src/lib/character-schema.ts`. The migration is idempotent and writes
+a file only when it changes.
+
+For Dark Heresy, `divination` and `divinationEffect` store stable IDs, not
+sentences:
+
+```json
+{
+  "schemaVersion": 1,
+  "gameSystem": "Dark Heresy",
+  "divination": "mutationWithout",
+  "divinationEffect": "minorMutation"
+}
+```
+
+Old files and 2.0 exports contain sentences (`"Mutation without..."`); the
+normalizer maps them to IDs via `src/lib/divination-i18n.ts`. Unknown custom
+values are preserved and shown as-is. Files with a newer `schemaVersion` are
+reported but not rewritten.
 
 ## Login index
 

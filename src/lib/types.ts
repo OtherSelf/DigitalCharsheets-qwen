@@ -282,6 +282,8 @@ export interface CharacterBase {
   backstory: string;
   notes: string;
   questLog: Quest[];
+  /** Версия формата файла листа; у legacy-файлов отсутствует. */
+  schemaVersion?: number;
 }
 
 export interface DnDMulticlass {
@@ -387,7 +389,9 @@ export interface DarkHeresyCharacter extends CharacterBase {
   worldVariant: string;
   careerPath: DarkHeresyCareerPath | '';
   rank: string;
+  /** Стабильный ID пророчества (`mutationWithout`), не текст. */
   divination: string;
+  /** Стабильный ID эффекта (`insanity2`), не текст. */
   divinationEffect: string;
   quirk: string;
   height: string;

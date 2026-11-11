@@ -1,7 +1,7 @@
 // ─── LANDMARK: TRANSLATIONS_EN_START ───
 export const enTranslations = {
   // Разделы: Common → Auth → Admin → D&D 5e → Dark Heresy → Settings →
-  // Demo → Export/Import → data exceptions. Правила: docs/i18n.md.
+  // Demo → Export/Import. Правила: docs/i18n.md.
   // Новые ключи добавлять в соответствующий домен, а не в конец файла.
 
   // ─── Common: dashboard, shared sheet labels, actions, fields ───
@@ -1123,6 +1123,78 @@ export const enTranslations = {
   'dh.addCriticalCondition': 'Add critical condition...',
   'dh.fatigueFirstEdition': '1st Ed. Fatigue',
   'dh.fatigueSecondEdition': '2nd Ed. Fatigue',
+  'dh.data.divination.mutationWithout': '',
+  'dh.data.divinationEffect.minorMutation': 'Minor Mutation.',
+  'dh.data.divination.onlyTheInsane':
+    '',
+  'dh.data.divinationEffect.insanity2': '+2 Insanity Points.',
+  'dh.data.divination.sinsHidden':
+    '',
+  'dh.data.divinationEffect.corruption3': '+3 Corruption Points.',
+  'dh.data.divination.innocenceIllusion': '',
+  'dh.data.divinationEffect.insanity1Corruption1':
+    '+1 Insanity Point, +1 Corruption Point.',
+  'dh.data.divination.painOfBullet':
+    '',
+  'dh.data.divinationEffect.toughness1': '+1 Toughness.',
+  'dh.data.divination.killTheAlien':
+    '',
+  'dh.data.divinationEffect.agility2': '+2 Agility.',
+  'dh.data.divination.truthSubjective': '',
+  'dh.data.divinationEffect.intelligence3Corruption3':
+    '+3 Intelligence, +3 Corruption Points.',
+  'dh.data.divination.knowTheMutant': '',
+  'dh.data.divinationEffect.perception2': '+2 Perception.',
+  'dh.data.divination.offerHisLife':
+    '',
+  'dh.data.divinationEffect.strength2': '+2 Strength.',
+  'dh.data.divination.jobWorthDying':
+    '',
+  'dh.data.divinationEffect.frenzyTalent': '"Frenzy" talent.',
+  'dh.data.divination.onlyInDeath': '',
+  'dh.data.divinationEffect.wound1': '+1 Wound.',
+  'dh.data.divination.mindWithoutPurpose':
+    '',
+  'dh.data.divinationEffect.fate1': '+1 Fate Point.',
+  'dh.data.divination.noCivilians':
+    '',
+  'dh.data.divinationEffect.toughness2Wound1': '+2 Toughness, +1 Wound.',
+  'dh.data.divination.violenceSolves': '',
+  'dh.data.divinationEffect.weaponSkill3': '+3 Weapon Skill.',
+  'dh.data.divination.toWarHuman': '',
+  'dh.data.divinationEffect.agility3': '+3 Agility.',
+  'dh.data.divination.spiritNotBroken':
+    '',
+  'dh.data.divinationEffect.willpower3': '+3 Willpower.',
+  'dh.data.divination.gunMightier': '',
+  'dh.data.divinationEffect.ballisticSkill3': '+3 Ballistic Skill.',
+  'dh.data.divination.boonToBrothers':
+    '',
+  'dh.data.divinationEffect.fellowship3': '+3 Fellowship.',
+  'dh.data.divination.menMustDie': '',
+  'dh.data.divinationEffect.toughness3': '+3 Toughness.',
+  'dh.data.divination.onlyTrueFear':
+    '',
+  'dh.data.divinationEffect.wounds2': '+2 Wounds.',
+  'dh.data.divination.thoughtBegetsHeresy':
+    '',
+  'dh.data.divinationEffect.strength3': '+3 Strength.',
+  'dh.data.divination.wiseManLearns':
+    '',
+  'dh.data.divinationEffect.intelligence3': '+3 Intelligence.',
+  'dh.data.divination.suspiciousMind': '',
+  'dh.data.divinationEffect.perception3': '+3 Perception.',
+  'dh.data.divination.trustYourFear': '',
+  'dh.data.divinationEffect.agility2Fate1': '+2 Agility, +1 Fate Point.',
+  'dh.data.divination.noSubstituteForZeal': '',
+  'dh.data.divinationEffect.toughness2Willpower2':
+    '+2 Toughness, +2 Willpower.',
+  'dh.data.divination.askHowNotWhy': '',
+  'dh.data.divinationEffect.weaponSkill2BallisticSkill2':
+    '+2 Weapon Skill, +2 Ballistic Skill.',
+  'dh.data.divination.darkDreams': '',
+  'dh.data.divination.darknessLightOfTerra':
+    '',
 
   // ─── Settings: /settings profile and display controls ───
   'settings.addRecoveryPhrase': 'Add Recovery Phrase',
@@ -1224,83 +1296,5 @@ export const enTranslations = {
     'Upload a previously exported JSON file to create a new character.',
   'io.importSuccessDashboard': 'Character successfully created! Redirecting...',
   'io.exportJSON': 'Export JSON File',
-
-  // ─── Data-исключения: sentence-ключи DIVINATIONS/эффектов (level 2) ───
-  // Хранятся в данных персонажа как значения; пока без домена.
-  '':
-    '',
-  'Minor Mutation.': 'Minor Mutation.',
-  '':
-    '',
-  '+2 Insanity Points.': '+2 Insanity Points.',
-  '':
-    '',
-  '+3 Corruption Points.': '+3 Corruption Points.',
-  '': '',
-  '+1 Insanity Point, +1 Corruption Point.':
-    '+1 Insanity Point, +1 Corruption Point.',
-  '': '',
-  '+2 Corruption Points.': '+2 Corruption Points.',
-  '':
-    '',
-  '+1 Toughness.': '+1 Toughness.',
-  '':
-    '',
-  '+2 Agility.': '+2 Agility.',
-  '': '',
-  '+3 Intelligence, +3 Corruption Points.':
-    '+3 Intelligence, +3 Corruption Points.',
-  '': '',
-  '+2 Perception.': '+2 Perception.',
-  '':
-    '',
-  '+2 Strength.': '+2 Strength.',
-  '':
-    '',
-  '"Frenzy" talent.': '"Frenzy" talent.',
-  '': '',
-  '+1 Wound.': '+1 Wound.',
-  '':
-    '',
-  '+1 Fate Point.': '+1 Fate Point.',
-  '':
-    '',
-  '+2 Toughness, +1 Wound.': '+2 Toughness, +1 Wound.',
-  '': '',
-  '+3 Weapon Skill.': '+3 Weapon Skill.',
-  '': '',
-  '+3 Agility.': '+3 Agility.',
-  '':
-    '',
-  '+3 Willpower.': '+3 Willpower.',
-  '': '',
-  '+3 Ballistic Skill.': '+3 Ballistic Skill.',
-  '':
-    '',
-  '+3 Fellowship.': '+3 Fellowship.',
-  '': '',
-  '+3 Toughness.': '+3 Toughness.',
-  '':
-    '',
-  '':
-    '',
-  '+2 Wounds.': '+2 Wounds.',
-  '':
-    '',
-  '+3 Strength.': '+3 Strength.',
-  '':
-    '',
-  '+3 Intelligence.': '+3 Intelligence.',
-  '':
-    '',
-  '+3 Perception.': '+3 Perception.',
-  '': '',
-  '+2 Agility, +1 Fate Point.': '+2 Agility, +1 Fate Point.',
-  '': '',
-  '+2 Toughness, +2 Willpower.': '+2 Toughness, +2 Willpower.',
-  '':
-    '',
-  '+2 Weapon Skill, +2 Ballistic Skill.':
-    '+2 Weapon Skill, +2 Ballistic Skill.',
 };
 // ─── LANDMARK: TRANSLATIONS_EN_END ───

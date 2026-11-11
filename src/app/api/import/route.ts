@@ -4,6 +4,7 @@ import path from 'path';
 
 import { NextResponse } from 'next/server';
 
+import { normalizeCharacterRecord } from '@/lib/character-version';
 import { getCharactersDir, getDataDir } from '@/lib/data-dir';
 import { createImportedUser } from '@/lib/server-auth';
 
@@ -339,6 +340,9 @@ export async function GET() {
         }
 
         // Write individual character file
+        character = normalizeCharacterRecord(
+          character as Record<string, unknown>,
+        ).character;
         const charFile = path.join(charsDir, `${character.id}.json`);
         fs.writeFileSync(charFile, JSON.stringify(character, null, 2), 'utf8');
         importedChars.push({

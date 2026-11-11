@@ -14,7 +14,7 @@ Both JSON exports (one character and the full backup) use the same envelope:
   "metadata": {
     "appName": "DigitalCharsheets-qwen",
     "format": "dcs-export",
-    "version": "2.0",
+    "version": "2.1",
     "kind": "character",
     "exportDate": "2026-11-08T21:32:41.717Z",
     "characterCount": 1,
@@ -52,10 +52,17 @@ The sheet is named after the character.
 The user-facing import accepts only the `dcs-export` format and validates
 `appName`, `format`, version, `kind`, character fields and `characterCount`.
 
-Legacy files — a bare array, a bare character or a v1 envelope — are rejected
-with a "re-export" message. The portable shape intentionally drops migration
-provenance and the owner id; the owner is taken from the current session on
-import (the legacy Firestore import creates local accounts separately).
+Current exports use format **2.1** and include `schemaVersion: 1` on each
+character. Dark Heresy divination fields are stable IDs
+(`"divination": "mutationWithout"`, `"divinationEffect": "minorMutation"`).
+Exports from **2.0** (sentence values) are still accepted and migrated on
+import; a bare array, a bare character or a v1 envelope is rejected with a
+"re-export" message.
+
+The portable shape intentionally drops migration provenance and the owner id;
+the owner is taken from the current session on import (the legacy Firestore
+import creates local accounts separately and runs the same character
+normalizer).
 
 ## Where the code lives
 

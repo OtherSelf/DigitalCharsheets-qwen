@@ -1,7 +1,7 @@
 // ─── LANDMARK: TRANSLATIONS_RU_START ───
 export const ruTranslations = {
   // Разделы: Common → Auth → Admin → D&D 5e → Dark Heresy → Settings →
-  // Demo → Export/Import → data exceptions. Правила: docs/i18n.md.
+  // Demo → Export/Import. Правила: docs/i18n.md.
   // Новые ключи добавлять в соответствующий домен, а не в конец файла.
 
   // ─── Common: dashboard, shared sheet labels, actions, fields ───
@@ -1128,6 +1128,78 @@ export const ruTranslations = {
   'dh.addCriticalCondition': 'Добавить критическое состояние...',
   'dh.fatigueFirstEdition': 'Усталость 1-й ред.',
   'dh.fatigueSecondEdition': 'Усталость 2-й ред.',
+  'dh.data.divination.mutationWithout': 'Мутация вовне, разврат внутри.',
+  'dh.data.divinationEffect.minorMutation': 'Незначительная мутация.',
+  'dh.data.divination.onlyTheInsane':
+    'Только безумные имеют достаточно сил, чтобы преуспеть. Только преуспевающие могут судить о том, что есть здравомыслие.',
+  'dh.data.divinationEffect.insanity2': '+2 очка Безумия.',
+  'dh.data.divination.sinsHidden':
+    'Грехи, сокрытые в сердце, ведут всё к упадку.',
+  'dh.data.divinationEffect.corruption3': '+3 очка Порчи.',
+  'dh.data.divination.innocenceIllusion': 'Невинность — это иллюзия.',
+  'dh.data.divinationEffect.insanity1Corruption1':
+    '+1 очко Безумия, +1 очко Порчи.',
+  'dh.data.divination.painOfBullet':
+    'Боль от пули — это экстаз по сравнению с проклятием.',
+  'dh.data.divinationEffect.toughness1': '+1 к Стойкости.',
+  'dh.data.divination.killTheAlien':
+    'Убей ксеноса, пока он не успел произнести свою ложь.',
+  'dh.data.divinationEffect.agility2': '+2 к Ловкости.',
+  'dh.data.divination.truthSubjective': '',
+  'dh.data.divinationEffect.intelligence3Corruption3':
+    '+3 к Интеллекту, +3 очка Порчи.',
+  'dh.data.divination.knowTheMutant': '.',
+  'dh.data.divinationEffect.perception2': '+2 к Восприятию.',
+  'dh.data.divination.offerHisLife':
+    'Даже человек, у которого ничего нет, всё ещё может предложить свою жизнь.',
+  'dh.data.divinationEffect.strength2': '+2 к Силе.',
+  'dh.data.divination.jobWorthDying':
+    'Если дело стоит того, чтобы его делать, оно стоит того, чтобы за него умереть.',
+  'dh.data.divinationEffect.frenzyTalent': 'Талант «Ярость».',
+  'dh.data.divination.onlyInDeath': 'Только смерть заканчивает долг.',
+  'dh.data.divinationEffect.wound1': '+1 к Ранам.',
+  'dh.data.divination.mindWithoutPurpose':
+    'Разум без цели будет блуждать во тьме.',
+  'dh.data.divinationEffect.fate1': '+1 очко Судьбы.',
+  'dh.data.divination.noCivilians': 'В битве за выживание нет гражданских.',
+  'dh.data.divinationEffect.toughness2Wound1': '+2 к Стойкости, +1 к Ранам.',
+  'dh.data.divination.violenceSolves': 'Насилие решает всё.',
+  'dh.data.divinationEffect.weaponSkill3': '+3 к Навыку Оружия.',
+  'dh.data.divination.toWarHuman': 'Воевать — это по-человечески.',
+  'dh.data.divinationEffect.agility3': '+3 к Ловкости.',
+  'dh.data.divination.spiritNotBroken':
+    'Умри, если должен, но не с сломленным духом.',
+  'dh.data.divinationEffect.willpower3': '+3 к Силе Воли.',
+  'dh.data.divination.gunMightier': 'Пушка мощнее меча.',
+  'dh.data.divinationEffect.ballisticSkill3': '+3 к Навыку Стрельбы.',
+  'dh.data.divination.boonToBrothers':
+    'Будь благословением для братьев и погибелью для врагов.',
+  'dh.data.divinationEffect.fellowship3': '+3 к Общению.',
+  'dh.data.divination.menMustDie':
+    'Люди должны умирать, чтобы Человечество выжило.',
+  'dh.data.divinationEffect.toughness3': '+3 к Стойкости.',
+  'dh.data.divination.onlyTrueFear':
+    'Единственный истинный страх — это умереть, не исполнив свой долг.',
+  'dh.data.divinationEffect.wounds2': '+2 к Ранам.',
+  'dh.data.divination.thoughtBegetsHeresy':
+    'Мысль порождает Ересь; Ересь порождает Возмездие.',
+  'dh.data.divinationEffect.strength3': '+3 к Силе.',
+  'dh.data.divination.wiseManLearns': '.',
+  'dh.data.divinationEffect.intelligence3': '+3 к Интеллекту.',
+  'dh.data.divination.suspiciousMind':
+    'Подозрительный разум — это здоровый разум.',
+  'dh.data.divinationEffect.perception3': '+3 к Восприятию.',
+  'dh.data.divination.trustYourFear': 'Доверяй своему страху.',
+  'dh.data.divinationEffect.agility2Fate1': '+2 к Ловкости, +1 очко Судьбы.',
+  'dh.data.divination.noSubstituteForZeal': '',
+  'dh.data.divinationEffect.toughness2Willpower2':
+    '+2 к Стойкости, +2 к Силе Воли.',
+  'dh.data.divination.askHowNotWhy':
+    'Не спрашивай, зачем ты служишь. Спрашивай только как.',
+  'dh.data.divinationEffect.weaponSkill2BallisticSkill2':
+    '+2 к Навыку Оружия, +2 к Навыку Стрельбы.',
+  'dh.data.divination.darkDreams': 'Тёмные сны лежат на сердце.',
+  'dh.data.divination.darknessLightOfTerra': '.',
 
   // ─── Settings: /settings profile and display controls ───
   'settings.addRecoveryPhrase': 'Добавить фразу восстановления',
@@ -1229,81 +1301,5 @@ export const ruTranslations = {
     'Загрузите ранее экспортированный JSON-файл, чтобы создать нового персонажа.',
   'io.importSuccessDashboard': 'Персонаж успешно создан! Перенаправление...',
   'io.exportJSON': 'Выгрузить JSON-файл',
-
-  // ─── Data-исключения: sentence-ключи DIVINATIONS/эффектов (level 2) ───
-  // Хранятся в данных персонажа как значения; пока без домена.
-  '': 'Мутация вовне, разврат внутри.',
-  'Minor Mutation.': 'Незначительная мутация.',
-  '':
-    'Только безумные имеют достаточно сил, чтобы преуспеть. Только преуспевающие могут судить о том, что есть здравомыслие.',
-  '+2 Insanity Points.': '+2 очка Безумия.',
-  '':
-    'Грехи, сокрытые в сердце, ведут всё к упадку.',
-  '+3 Corruption Points.': '+3 очка Порчи.',
-  '': 'Невинность — это иллюзия.',
-  '+1 Insanity Point, +1 Corruption Point.': '+1 очко Безумия, +1 очко Порчи.',
-  '': 'Тёмные сны лежат на сердце.',
-  '+2 Corruption Points.': '+2 очка Порчи.',
-  '':
-    'Боль от пули — это экстаз по сравнению с проклятием.',
-  '+1 Toughness.': '+1 к Стойкости.',
-  '':
-    'Убей ксеноса, пока он не успел произнести свою ложь.',
-  '+2 Agility.': '+2 к Ловкости.',
-  '': '',
-  '+3 Intelligence, +3 Corruption Points.': '+3 к Интеллекту, +3 очка Порчи.',
-  '': '.',
-  '+2 Perception.': '+2 к Восприятию.',
-  '':
-    'Даже человек, у которого ничего нет, всё ещё может предложить свою жизнь.',
-  '+2 Strength.': '+2 к Силе.',
-  '':
-    'Если дело стоит того, чтобы его делать, оно стоит того, чтобы за него умереть.',
-  '"Frenzy" talent.': 'Талант «Ярость».',
-  '': 'Только смерть заканчивает долг.',
-  '+1 Wound.': '+1 к Ранам.',
-  '':
-    'Разум без цели будет блуждать во тьме.',
-  '+1 Fate Point.': '+1 очко Судьбы.',
-  '':
-    'В битве за выживание нет гражданских.',
-  '+2 Toughness, +1 Wound.': '+2 к Стойкости, +1 к Ранам.',
-  '': 'Насилие решает всё.',
-  '+3 Weapon Skill.': '+3 к Навыку Оружия.',
-  '': 'Воевать — это по-человечески.',
-  '+3 Agility.': '+3 к Ловкости.',
-  '':
-    'Умри, если должен, но не с сломленным духом.',
-  '+3 Willpower.': '+3 к Силе Воли.',
-  '': 'Пушка мощнее меча.',
-  '+3 Ballistic Skill.': '+3 к Навыку Стрельбы.',
-  '':
-    'Будь благословением для братьев и погибелью для врагов.',
-  '+3 Fellowship.': '+3 к Общению.',
-  '':
-    'Люди должны умирать, чтобы Человечество выжило.',
-  '+3 Toughness.': '+3 к Стойкости.',
-  '':
-    '.',
-  '':
-    'Единственный истинный страх — это умереть, не исполнив свой долг.',
-  '+2 Wounds.': '+2 к Ранам.',
-  '':
-    'Мысль порождает Ересь; Ересь порождает Возмездие.',
-  '+3 Strength.': '+3 к Силе.',
-  '':
-    '.',
-  '+3 Intelligence.': '+3 к Интеллекту.',
-  '':
-    'Подозрительный разум — это здоровый разум.',
-  '+3 Perception.': '+3 к Восприятию.',
-  '': 'Доверяй своему страху.',
-  '+2 Agility, +1 Fate Point.': '+2 к Ловкости, +1 очко Судьбы.',
-  '': '',
-  '+2 Toughness, +2 Willpower.': '+2 к Стойкости, +2 к Силе Воли.',
-  '':
-    'Не спрашивай, зачем ты служишь. Спрашивай только как.',
-  '+2 Weapon Skill, +2 Ballistic Skill.':
-    '+2 к Навыку Оружия, +2 к Навыку Стрельбы.',
 };
 // ─── LANDMARK: TRANSLATIONS_RU_END ───

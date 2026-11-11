@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
-import { translations } from '@/lib/translations';
+import { translations } from '@/lib/i18n';
 
 type Language = 'en' | 'ru';
 

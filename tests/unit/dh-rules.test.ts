@@ -12,7 +12,8 @@ import {
   WORLD_VARIANTS_BY_HOMEWORLD,
 } from '@/lib/dark-heresy-data';
 import { AdvancedPathsByCareer, RanksByCareer } from '@/lib/dark-heresy-ranks';
-import { translations } from '@/lib/translations';
+import { divinationEffectKey, divinationKey } from '@/lib/divination-i18n';
+import { translations } from '@/lib/i18n';
 import { DarkHeresyCareerPaths, DarkHeresyHomeWorlds } from '@/lib/types';
 
 /**
@@ -92,10 +93,15 @@ describe('Dark Heresy: справочные данные против базов
     }
   });
 
-  it('в Таблице 1-18 ровно 28 пророчеств, у каждого есть эффект', () => {
+  it('в Таблице 1-18 ровно 28 пророчеств, у каждого есть стабильный id и эффект', () => {
     expect(DIVINATIONS).toHaveLength(28);
-    for (const { divination, effect } of DIVINATIONS) {
+    const ids = new Set<string>();
+    for (const { id, divination, effectId, effect } of DIVINATIONS) {
+      expect(id.trim(), 'пустой id пророчества').toBeTruthy();
+      expect(ids.has(id), `дубль id пророчества: ${id}`).toBe(false);
+      ids.add(id);
       expect(divination.trim(), 'пустое пророчество').toBeTruthy();
+      expect(effectId.trim(), `эффект без id: ${divination}`).toBeTruthy();
       expect(
         effect.trim(),
         `пророчество без эффекта: ${divination}`,
@@ -104,9 +110,9 @@ describe('Dark Heresy: справочные данные против базов
   });
 
   it('тексты пророчеств и эффектов переведены на оба языка', () => {
-    for (const { divination, effect } of DIVINATIONS) {
-      expectTranslation(divination, 'пророчество');
-      expectTranslation(effect, 'эффект пророчества');
+    for (const { id, effectId } of DIVINATIONS) {
+      expectTranslation(divinationKey(id), 'пророчество');
+      expectTranslation(divinationEffectKey(effectId), 'эффект пророчества');
     }
   });
 
