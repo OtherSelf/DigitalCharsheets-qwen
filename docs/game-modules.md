@@ -22,13 +22,16 @@ src/games/
     excel.ts                generic Excel section writer used by all modules
   dnd5e/
     types.ts, schema.ts, defaults.ts, demo.ts
-    export.ts, excel.ts
+    export.ts, excel.ts, epic-boons.ts
     i18n/{en,ru}.ts
     create-form.tsx, sheet.tsx, index.ts
+    sections/*.tsx          sheet sections (D&D moved here at plugin stage 0)
   dh1/                      fully self-contained edition module
     types.ts, schemas.ts, schema.ts, defaults.ts, demo.ts
     capabilities.ts, stats.ts
     export.ts, excel.ts
+    dark-heresy-data.ts, dark-heresy-ranks.ts, divination-i18n.ts
+                            edition data pack (own copy, D10)
     i18n/{en,ru}.ts, i18n/core-{en,ru}.ts   (games.dh1.* + dh1.*)
     create-form.tsx, sheet.tsx
     sections/*.tsx          sheet sections (own copies)
@@ -120,6 +123,34 @@ src/games/
   catalog affects creation and menus, not opening existing sheets.
 - Keep `LANDMARK` comments at the module boundary, registry, catalog and
   migration points.
+- Game data belongs to the module: a `src/lib/*` file that only a game reads
+  must move into `src/games/<id>/` (`epic-boons.ts` did in stage 0, the DH
+  data packs started as copies in dh1/dh2).
+- A module imports the core only through the lists in
+  `scripts/plugins/boundaries.json` (`forbidden`, `allowed`, `legacy`) —
+  see [Import boundaries](#import-boundaries).
+
+## Import boundaries
+
+`npm run plugins:boundaries` (also part of `npm run verify`) reads
+`scripts/plugins/boundaries.json` and checks every file under
+`src/games/<id>/`:
+
+| List | Meaning |
+| --- | --- |
+| `forbidden` | never importable from a module: `@/app*`, `@/instrumentation`, `fs`, `path`, `child_process`, `os` (with `node:` variants). Saving goes through the host API, not the file system. |
+| `allowed` | always importable: React, zod, react-hook-form, Radix primitives, lucide icons, `@/components/ui/*`, `@/lib/utils`, `@/lib/i18n`, and (from stage 1) `@/games/plugin-api`. |
+| `legacy` | core imports that still exist while the core is being decoupled (stages 2–3). Every entry has `files` (how many module files import it), `removeBy` (plan stage) and `why`. |
+
+`legacy` is a ratchet, not a permission list: adding an import of a listed
+module from one more file fails the check, and so does a stale entry after the
+imports were removed — fix it with
+`npm run plugins:boundaries -- --update`, which recomputes the counters and
+keeps the `why`/`removeBy` notes.
+
+Relative imports are only allowed inside the module's own folder and inside
+`src/games` core files (`types.ts`, `shared/*`); an import that resolves into
+another module's folder fails (editions are independent copies, D10).
 
 ## Related
 

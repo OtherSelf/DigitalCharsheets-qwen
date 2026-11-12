@@ -1,3 +1,9 @@
+/**
+ * ─── LANDMARK: DND5E EPIC BOONS ────────────────────────────────────────────
+ * Ключи эпических даров (уровень 20+ и «Divine Boons»). Раньше лежали в
+ * `src/lib/epic-boons.ts` — то есть игровые данные в ядре; теперь это часть
+ * модуля dnd5e, как и остальные данные редакции.
+ */
 export const EPIC_BOON_KEYS = [
   'dnd.boonCombatProwess',
   'dnd.boonDimensionalTravel',

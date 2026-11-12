@@ -33,6 +33,7 @@ import { useLocalAuth } from '@/context/local-auth-context';
 import { resolveCharacterSystemId } from '@/games/character-system';
 import { DhHouseRulesDialog as Dh1HouseRulesDialog } from '@/games/dh1/sections/dh-house-rules-dialog';
 import { DhHouseRulesDialog as Dh2HouseRulesDialog } from '@/games/dh2/sections/dh-house-rules-dialog';
+import { HouseRulesDialog } from '@/games/dnd5e/sections/house-rules-dialog';
 import { useSiteTitle } from '@/hooks/use-site-title';
 import {
   DarkHeresyCharacter,
@@ -44,7 +45,6 @@ import { cn } from '@/lib/utils';
 import { LanguageToggle } from './layout/language-toggle';
 import { ThemeToggle } from './layout/theme-toggle';
 import { UserNav } from './layout/user-nav';
-import { HouseRulesDialog } from './sheets/dnd-sections/house-rules-dialog';
 import { Button } from './ui/button';
 import { Separator } from './ui/separator';
 import {

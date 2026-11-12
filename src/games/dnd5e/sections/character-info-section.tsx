@@ -10,6 +10,9 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -18,14 +21,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 import { useCharacterContext } from '@/context/character-context';
 import { useTranslation } from '@/context/language-context';
 import { cn } from '@/lib/utils';
-
-import { Button } from '../../ui/button';
-import { Card, CardContent, CardHeader } from '../../ui/card';
-import { Input } from '../../ui/input';
-import { Textarea } from '../../ui/textarea';
 
 const RACE_TRANSLATION_KEYS: Record<string, string> = {
   Aarakocra: 'dnd.raceAarakocra',

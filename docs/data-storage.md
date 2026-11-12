@@ -124,8 +124,12 @@ sentences:
 ```
 
 Old files and 2.0 exports contain sentences (`"Mutation without..."`); the
-normalizer maps them to IDs via `src/lib/divination-i18n.ts`. Unknown custom
-values are preserved and shown as-is. Files with a newer `schemaVersion` are
+normalizer maps them to IDs via `src/lib/divination-i18n.ts`. Each edition also
+has its own copy (`src/games/dh1/divination-i18n.ts`,
+`src/games/dh2/divination-i18n.ts`) that its form and sections use, so the
+editions stay independent (D10); the shared normalizer keeps using the `lib`
+copy until migrations move into the plugins (stage 2). Unknown custom values are
+preserved and shown as-is. Files with a newer `schemaVersion` are
 reported but not rewritten.
 
 ### Backups

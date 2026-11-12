@@ -4,6 +4,10 @@ import * as React from 'react';
 
 import { Edit, Save, Trash2 } from 'lucide-react';
 
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useTranslation } from '@/context/language-context';
 import {
@@ -13,10 +17,6 @@ import {
 } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
-import { Button } from '../../ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
-import { Checkbox } from '../../ui/checkbox';
-import { Input } from '../../ui/input';
 import { DndAttunementSection } from './attunement-section';
 import { DndCharacterInfoSection } from './character-info-section';
 import { DndCombatSection } from './combat-section';

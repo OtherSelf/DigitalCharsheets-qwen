@@ -4,17 +4,6 @@ import * as React from 'react';
 
 import { Edit, Plus, Save, Trash2 } from 'lucide-react';
 
-import { DndAttunementSection } from '@/components/sheets/dnd-sections/attunement-section';
-import { DndCharacterInfoSection } from '@/components/sheets/dnd-sections/character-info-section';
-import { DndCombatSection } from '@/components/sheets/dnd-sections/combat-section';
-import { DndCompanionsSection } from '@/components/sheets/dnd-sections/companions-section';
-import { DndDivineBoonsSection } from '@/components/sheets/dnd-sections/divine-boons-section';
-import { DndInventorySection } from '@/components/sheets/dnd-sections/inventory-section';
-import { DndNarrativeSection } from '@/components/sheets/dnd-sections/narrative-section';
-import { DndProgressionSection } from '@/components/sheets/dnd-sections/progression-section';
-import { DndSavesSkillsSection } from '@/components/sheets/dnd-sections/saves-skills-section';
-import { DndSpellsSection } from '@/components/sheets/dnd-sections/spells-section';
-import { DndStatsSection } from '@/components/sheets/dnd-sections/stats-section';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -22,6 +11,17 @@ import { useCharacterContext } from '@/context/character-context';
 import { useTranslation } from '@/context/language-context';
 import { cn } from '@/lib/utils';
 
+import { DndAttunementSection } from './sections/attunement-section';
+import { DndCharacterInfoSection } from './sections/character-info-section';
+import { DndCombatSection } from './sections/combat-section';
+import { DndCompanionsSection } from './sections/companions-section';
+import { DndDivineBoonsSection } from './sections/divine-boons-section';
+import { DndInventorySection } from './sections/inventory-section';
+import { DndNarrativeSection } from './sections/narrative-section';
+import { DndProgressionSection } from './sections/progression-section';
+import { DndSavesSkillsSection } from './sections/saves-skills-section';
+import { DndSpellsSection } from './sections/spells-section';
+import { DndStatsSection } from './sections/stats-section';
 import { DnD5eCharacter, DnDCompanion, DnDSkill } from './types';
 
 type DndSheetProps = {

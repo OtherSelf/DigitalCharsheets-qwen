@@ -1,8 +1,8 @@
 import { CHARACTER_SCHEMA_VERSION } from '@/lib/character-version';
-import { calculateRank, RanksByCareer } from '@/lib/dark-heresy-ranks';
-import { effectIdForDivination } from '@/lib/divination-i18n';
 
 import { readNumber, readString, type DefaultsInput } from '../shared/defaults';
+import { calculateRank, RanksByCareer } from './dark-heresy-ranks';
+import { effectIdForDivination } from './divination-i18n';
 import {
   DARK_HERESY_CORE_STATS,
   DarkHeresyCareerPaths,

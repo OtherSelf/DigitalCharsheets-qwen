@@ -9,7 +9,8 @@
 #    2/7 формат    — prettier --check .: стиль и порядок импортов
 #                    (аналог `black --check` / `isort --check`)
 #    3/7 линт      — eslint .: hooks, async, React/Next-правила
-#                    (next/core-web-vitals + next/typescript)
+#                    (next/core-web-vitals + next/typescript) и границы
+#                    импортов плагинов (scripts/plugins/check-boundaries.mjs)
 #    4/7 typecheck — tsc --noEmit (next.config.ts игнорирует ошибки TS при сборке,
 #                    поэтому проверяем отдельно)
 #    5/7 unit      — vitest: авторизация, файловое хранилище, экспорт/импорт,
@@ -233,6 +234,14 @@ ok "формат соблюдён"
 step "3/7 линт (eslint .)"
 "$ESLINT" . || die "ESLint нашёл ошибки (см. вывод выше)"
 ok "линт без ошибок"
+
+# Границы импортов плагинов: ESLint их не видит, ему не важен путь модуля.
+# Храповик (scripts/plugins/boundaries.json) падает и на новой зависимости
+# плагина от ядра, и на неубранной записи после сокращения долга.
+step "3/7 границы плагинов (scripts/plugins/check-boundaries.mjs)"
+node scripts/plugins/check-boundaries.mjs \
+  || die "Нарушены границы импортов плагинов (см. вывод выше; правила — scripts/plugins/boundaries.json)"
+ok "границы плагинов соблюдены"
 
 # ── 4. typecheck ────────────────────────────────────────────────────────────
 step "4/7 typecheck ($TSC --noEmit)"

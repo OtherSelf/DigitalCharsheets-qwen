@@ -36,6 +36,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useCharacterContext } from '@/context/character-context';
 import { useTranslation } from '@/context/language-context';
 import { useToast } from '@/hooks/use-toast';
+
 import {
   ALL_QUIRKS,
   CAREER_KEYS,
@@ -46,14 +47,13 @@ import {
   QUIRK_KEYS,
   VARIANT_KEYS,
   WORLD_VARIANTS_BY_HOMEWORLD,
-} from '@/lib/dark-heresy-data';
+} from './dark-heresy-data';
+import { createDh2Defaults } from './defaults';
 import {
   divinationEffectKey,
   divinationKey,
   effectIdForDivination,
-} from '@/lib/divination-i18n';
-
-import { createDh2Defaults } from './defaults';
+} from './divination-i18n';
 import { DarkHeresyCareerPaths, DarkHeresyHomeWorlds } from './types';
 
 const VARIANT_LABEL_KEYS: Record<string, string> = {
