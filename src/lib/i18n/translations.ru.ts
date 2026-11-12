@@ -83,6 +83,8 @@ export const ruTranslations: Record<string, string> = {
   'common.perception': 'Восприятие',
   'common.willpower': 'Сила воли',
   'common.error': 'Ошибка',
+  'common.fillRequiredFields': 'Заполните обязательные поля',
+  'common.checkFields': 'Проверьте подсвеченные поля.',
   'common.retry': 'Повторить',
   'common.loadErrorTitle': 'Не удалось загрузить персонажей',
   'common.loadErrorDesc':

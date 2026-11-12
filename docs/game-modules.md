@@ -266,7 +266,7 @@ It is the executable form of "new game = folder + `plugin.json` + `sheet.tsx` +
 | List | Meaning |
 | --- | --- |
 | `forbidden` | never importable from a module: `@/app*`, `@/instrumentation`, `fs`, `path`, `child_process`, `os` (with `node:` variants). Saving goes through the host API, not the file system. |
-| `allowed` | always importable: React, zod, react-hook-form, Radix primitives, lucide icons, `@/components/ui/*`, `@/lib/utils`, `@/lib/i18n`, `@/games/plugin-api` (types) and `@/games/plugin-host` (host hooks). |
+| `allowed` | always importable: React, zod, react-hook-form, Radix primitives, lucide icons, `@/components/ui/*`, `@/lib/utils`, `@/lib/i18n`, `@/lib/form-validation`, `@/games/plugin-api` (types) and `@/games/plugin-host` (host hooks). |
 | `legacy` | debt ratchet. **Empty since stage 5**: plugins no longer import `@/context/*`, `@/hooks/*`, `@/lib/types` or `next/navigation`; the list is kept as the mechanism for future transitional debt. |
 
 `legacy` is a ratchet, not a permission list: adding an import of a listed

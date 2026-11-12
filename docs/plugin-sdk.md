@@ -61,7 +61,7 @@ src/games/<id>/
 ```
 
 Rules summary: keep everything game-specific inside the folder; do not import
-`next/*`, `@/app`, `@/lib/*` (except `@/lib/utils`, `@/lib/i18n`), `fs` or
+`next/*`, `@/app`, `@/lib/*` (except `@/lib/utils`, `@/lib/i18n`, `@/lib/form-validation`), `fs` or
 `child_process`; resolve host services through `@/games/plugin-api` (types) and
 `@/games/plugin-host` (hooks) and the UI kit. `npm run plugins:boundaries`
 enforces this and the `legacy` allowlist is now **empty** (see
