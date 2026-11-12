@@ -1,7 +1,13 @@
 import { getGameDefinition, listGameDefinitions } from './games';
 import type { GeneratedPluginRegistration, PluginManifest } from './plugin-api';
-import { generatedPlugins } from './registry.generated';
-import type { GameDefinition, GameId, GameModule, SystemId } from './types';
+import { generatedPlugins, generatedUiLoaders } from './registry.generated';
+import type {
+  GameDefinition,
+  GameId,
+  GameModule,
+  GameUiSlots,
+  SystemId,
+} from './types';
 
 /**
  * ─── LANDMARK: GAME REGISTRY ───────────────────────────────────────────────
@@ -100,6 +106,46 @@ export const getGamePlugin = (
   id: SystemId,
 ): GeneratedPluginRegistration | undefined =>
   gamePlugins.find((plugin) => plugin.manifest.id === id);
+
+/**
+ * Ленивые UI-слоты плагина (этап 3). Компоненты и функции слотов грузятся
+ * отдельным чанком: реестр не тянет React-контекст и UI-кит в общий бандл,
+ * а при ошибке загрузки хост рисует нейтральные fallback-варианты.
+ */
+const uiSlotsCache = new Map<string, GameUiSlots<any>>();
+const uiSlotsLoading = new Map<string, Promise<GameUiSlots<any>>>();
+
+/** Уже загруженные слоты (для синхронного первого рендера). */
+export function getLoadedGameUiSlots(
+  id: SystemId,
+): GameUiSlots<any> | undefined {
+  return uiSlotsCache.get(id);
+}
+
+export function loadGameUiSlots(
+  id: SystemId,
+): Promise<GameUiSlots<any>> | undefined {
+  const cached = uiSlotsCache.get(id);
+  if (cached) return Promise.resolve(cached);
+  const loader = generatedUiLoaders[id];
+  if (!loader) return undefined;
+  const pending = uiSlotsLoading.get(id);
+  if (pending) return pending;
+
+  const promise = loader()
+    .then((slots) => {
+      uiSlotsCache.set(id, slots);
+      uiSlotsLoading.delete(id);
+      return slots;
+    })
+    .catch((error) => {
+      console.error(`[plugins] не удалось загрузить UI-слоты ${id}:`, error);
+      uiSlotsLoading.delete(id);
+      return {};
+    });
+  uiSlotsLoading.set(id, promise);
+  return promise;
+}
 
 /** Манифест плагина по `systemId` — источник названий и порядка (D4). */
 export const getPluginManifest = (id: SystemId): PluginManifest | undefined =>

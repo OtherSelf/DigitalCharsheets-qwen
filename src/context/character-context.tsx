@@ -12,6 +12,7 @@ import {
 } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 
+import { getCharacterModule } from '@/games/character-system';
 import { useToast } from '@/hooks/use-toast';
 import {
   parsePendingCharacter,
@@ -633,31 +634,25 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
         return;
       }
 
+      // Вложенные существа (спутники) открываются виртуальным id; что это
+      // за сущность и как её обновлять — знает плагин (этап 3).
       if (id.startsWith('companion-')) {
-        const companionId = id.replace('companion-', '');
-        const owner = charactersRef.current.find((char) => {
-          if (char.gameSystem !== 'Dungeons & Dragons') return false;
-          const companions = (char as any).companions;
-          return (
-            Array.isArray(companions) &&
-            companions.some((c: any) => c.id === companionId)
-          );
-        });
-        if (!owner) return;
-
-        const companions = ((owner as any).companions as any[]).map((c) =>
-          c.id === companionId ? { ...c, ...data } : c,
+        const owner = charactersRef.current.find((char) =>
+          Boolean(getCharacterModule(char)?.findEmbedded?.(char, id)),
         );
+        if (!owner) return;
+        const updated = getCharacterModule(owner)?.updateEmbedded?.(
+          owner,
+          id,
+          data as Readonly<Record<string, unknown>>,
+        );
+        if (!updated) return;
         applyCharacters((prev) =>
-          prev.map((char) =>
-            char.id === owner.id
-              ? ({ ...char, companions } as Character)
-              : char,
-          ),
+          prev.map((char) => (char.id === owner.id ? updated.character : char)),
         );
         // Побочный эффект вынесен из state-апдейтера: он выполняется ровно
         // один раз и не дублируется в StrictMode.
-        enqueueSave(owner.id, { companions } as Partial<Character>);
+        enqueueSave(owner.id, updated.patch);
         return;
       }
 
@@ -736,14 +731,9 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
   const getCharacter = useCallback(
     (id: string) => {
       if (id.startsWith('companion-')) {
-        const companionId = id.replace('companion-', '');
         for (const char of characters) {
-          if (char.gameSystem === 'Dungeons & Dragons') {
-            const comp = (char as any).companions?.find(
-              (c: any) => c.id === companionId,
-            );
-            if (comp) return { ...char, ...comp } as any;
-          }
+          const embedded = getCharacterModule(char)?.findEmbedded?.(char, id);
+          if (embedded) return { ...char, ...embedded } as any;
         }
         return undefined;
       }

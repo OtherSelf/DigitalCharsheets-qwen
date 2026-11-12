@@ -295,6 +295,15 @@ export interface GamePlugin<
     config: GameExportConfig,
   ): TCharacter;
   readonly migrations: readonly CharacterMigration[];
+  findEmbedded?(
+    character: TCharacter,
+    id: string,
+  ): Record<string, unknown> | undefined;
+  updateEmbedded?(
+    character: TCharacter,
+    id: string,
+    data: Readonly<Record<string, unknown>>,
+  ): { character: TCharacter; patch: Partial<TCharacter> } | undefined;
   readonly ui?: GameUiSlots<TCharacter>;
 }
 

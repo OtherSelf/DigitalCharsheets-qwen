@@ -12,7 +12,11 @@ import { dh2Module } from './dh2';
 import dh2Manifest from './dh2/plugin.json';
 import { dnd5eModule } from './dnd5e';
 import dnd5eManifest from './dnd5e/plugin.json';
-import type { GeneratedPluginRegistration, PluginManifest } from './plugin-api';
+import type {
+  GameUiSlots,
+  GeneratedPluginRegistration,
+  PluginManifest,
+} from './plugin-api';
 
 /** Зарегистрированные плагины в порядке показа (`order`, затем `id`). */
 export const generatedPlugins: readonly GeneratedPluginRegistration[] = [
@@ -29,3 +33,12 @@ export const generatedPlugins: readonly GeneratedPluginRegistration[] = [
     module: dh2Module,
   },
 ];
+
+/** Ленивые UI-слоты: `systemId` → загрузчик объекта `GameUiSlots`. */
+export const generatedUiLoaders: Readonly<
+  Record<string, () => Promise<GameUiSlots<any>>>
+> = {
+  dnd5e: () => import('./dnd5e/ui').then((module) => module.uiSlots),
+  dh1: () => import('./dh1/ui').then((module) => module.uiSlots),
+  dh2: () => import('./dh2/ui').then((module) => module.uiSlots),
+};

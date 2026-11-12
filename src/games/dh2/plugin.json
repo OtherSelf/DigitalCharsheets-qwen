@@ -14,7 +14,11 @@
     "en": "Dark Heresy 2e: influence, the +30 column and second-edition fatigue.",
     "ru": "Dark Heresy 2e: влияние, колонка «+30» и усталость 2-й редакции."
   },
-  "tags": ["warhammer40k", "d100", "grimdark"],
+  "tags": [
+    "warhammer40k",
+    "d100",
+    "grimdark"
+  ],
   "author": "Digital Character Sheets",
   "license": "MIT",
   "schemaVersion": 2,
@@ -67,6 +71,7 @@
       "CardSummary",
       "HouseRulesDialog",
       "BulkEditor"
-    ]
+    ],
+    "entry": "ui.ts"
   }
 }

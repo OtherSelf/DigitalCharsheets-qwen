@@ -152,6 +152,9 @@ export function validatePluginFolder({ gamesDir, dirName, manifest }) {
     ['export.json', manifest.export?.json],
     ['export.excel', manifest.export?.excel],
   ];
+  if (manifest.ui?.entry) {
+    entries.push(['ui.entry', manifest.ui.entry]);
+  }
   if (manifest.import) {
     entries.push(
       ['import.normalize', manifest.import.normalize],
@@ -368,6 +371,20 @@ export function renderRegistry(plugins) {
     )
     .join('\n');
 
+  // UI-слоты подключаются лениво (dynamic import): реестр не тянет
+  // React-компоненты и контекст хоста в общий бандл и не создаёт цикл
+  // registry → slots → context → registry.
+  const uiLoaders = sorted
+    .filter(({ manifest }) => typeof manifest.ui?.entry === 'string')
+    .map(({ manifest }) => {
+      const spec = `./${manifest.id}/${manifest.ui.entry.replace(/\.(ts|tsx)$/, '')}`;
+      const key = /^[A-Za-z_$][A-Za-z0-9_$]*$/.test(manifest.id)
+        ? manifest.id
+        : JSON.stringify(manifest.id);
+      return `  ${key}: () => import('${spec}').then((module) => module.uiSlots),`;
+    })
+    .join('\n');
+
   return `/**
  * ─── AUTO-GENERATED — НЕ РЕДАКТИРОВАТЬ ─────────────────────────────────────
  * Реестр плагинов, сгенерированный из манифестов \`src/games/<id>/plugin.json\`
@@ -377,12 +394,23 @@ export function renderRegistry(plugins) {
  * Проверить:    npm run plugins:check   (шаг \`npm run verify\`)
  */
 ${imports}
-import type { GeneratedPluginRegistration, PluginManifest } from './plugin-api';
+import type {
+  GameUiSlots,
+  GeneratedPluginRegistration,
+  PluginManifest,
+} from './plugin-api';
 
 /** Зарегистрированные плагины в порядке показа (\`order\`, затем \`id\`). */
 export const generatedPlugins: readonly GeneratedPluginRegistration[] = [
 ${entries}
 ];
+
+/** Ленивые UI-слоты: \`systemId\` → загрузчик объекта \`GameUiSlots\`. */
+export const generatedUiLoaders: Readonly<
+  Record<string, () => Promise<GameUiSlots<any>>>
+> = {
+${uiLoaders}
+};
 `;
 }
 

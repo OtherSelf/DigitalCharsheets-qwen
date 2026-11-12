@@ -27,7 +27,11 @@ import {
 import { useCharacterContext } from '@/context/character-context';
 import { useTranslation } from '@/context/language-context';
 import { useLocalAuth } from '@/context/local-auth-context';
-import { getCharacterModule } from '@/games/character-system';
+import {
+  getCharacterModule,
+  resolveCharacterSystemId,
+} from '@/games/character-system';
+import { useGameUiSlots } from '@/hooks/use-game-ui-slots';
 import { useSiteTitle } from '@/hooks/use-site-title';
 import { type Character } from '@/lib/types';
 import { cn } from '@/lib/utils';
@@ -117,11 +121,12 @@ export function Header({
 
   // Игровые подпись и действия в шапке приходят из слота плагина (этап 3):
   // в ядре не остаётся ни одной проверки на конкретную игру.
+  const systemId = character ? resolveCharacterSystemId(character) : undefined;
   const gameModule = character ? getCharacterModule(character) : undefined;
-  const headerUi = gameModule?.ui;
-  const HeaderActions = headerUi?.HeaderActions;
+  const uiSlots = useGameUiSlots(systemId);
+  const HeaderActions = uiSlots?.HeaderActions;
   const characterSubtitle = character
-    ? (headerUi?.HeaderSubtitle?.(character, t) ??
+    ? (uiSlots?.HeaderSubtitle?.(character, t) ??
       (gameModule ? t(gameModule.nameKey) : ''))
     : undefined;
 

@@ -2,14 +2,21 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { SheetBoundary } from '@/components/sheets/sheet-error-boundary';
 import { PLUGIN_UI_SLOTS } from '@/games/plugin-api';
-import { gamePlugins, listGameModules } from '@/games/registry';
+import {
+  gamePlugins,
+  getLoadedGameUiSlots,
+  listGameModules,
+  loadGameUiSlots,
+} from '@/games/registry';
+import type { GameUiSlots } from '@/games/types';
 import { translations } from '@/lib/i18n';
 
 /**
  * ─── LANDMARK: PLUGIN UI SLOTS TESTS ──────────────────────────────────────
  * Контракт UI-слотов этапа 3:
  *   • лист и форма каждого плагина действительно грузятся через реестр;
- *   • манифест перечисляет ровно те слоты, которые модуль реализовал;
+ *   • UI-слоты грузятся лениво (`loadGameUiSlots`) и кэшируются;
+ *   • манифест перечисляет ровно те слоты, которые плагин реализовал;
  *   • слоты-функции (`HeaderSubtitle`, `CompactNav`, `CardSummary`) дают
  *     непустые подписи и валидные ключи из словарей;
  *   • граница ошибок листа переводит рендер плагина в безопасный fallback.
@@ -23,7 +30,18 @@ function plugin(id: string) {
   return entry;
 }
 
-describe('загрузка листа и формы через реестр', () => {
+const slotsCache = new Map<string, GameUiSlots<any>>();
+
+async function slotsFor(id: string): Promise<GameUiSlots<any>> {
+  const cached = slotsCache.get(id);
+  if (cached) return cached;
+  const loaded = await loadGameUiSlots(id);
+  if (!loaded) throw new Error(`нет UI-слотов для ${id}`);
+  slotsCache.set(id, loaded);
+  return loaded;
+}
+
+describe('загрузка листа, формы и слотов через реестр', () => {
   it('каждый модуль отдаёт загружаемые компоненты', async () => {
     const modules = listGameModules();
     expect(modules.length).toBeGreaterThan(0);
@@ -37,18 +55,31 @@ describe('загрузка листа и формы через реестр', ()
       expect(form.default, gameModule.id).toBeTruthy();
     }
   });
+
+  it('UI-слоты грузятся лениво и кэшируются', async () => {
+    for (const entry of gamePlugins) {
+      const first = await slotsFor(entry.manifest.id);
+      expect(first).toBeDefined();
+      const second = await slotsFor(entry.manifest.id);
+      expect(second).toBe(first);
+      expect(getLoadedGameUiSlots(entry.manifest.id)).toBe(first);
+    }
+  });
+
+  it('неизвестный systemId не падает и не отдаёт слоты', async () => {
+    expect(loadGameUiSlots('missing-plugin')).toBeUndefined();
+  });
 });
 
 describe('слоты: манифест ↔ модуль', () => {
-  it('перечисленные слоты реализованы, лишних нет', () => {
+  it('перечисленные слоты реализованы, лишних нет', async () => {
+    const FIELD_TO_SLOT: Record<string, string> = {
+      bulkEditor: 'BulkEditor',
+    };
     for (const entry of gamePlugins) {
-      // Сравниваем в терминах имён слотов: в модуле BulkEditor — это
-      // данные (`bulkEditor`), остальные — компоненты/функции.
+      const slots = await slotsFor(entry.manifest.id);
       const declared = [...(entry.manifest.ui?.slots ?? [])].sort();
-      const FIELD_TO_SLOT: Record<string, string> = {
-        bulkEditor: 'BulkEditor',
-      };
-      const implemented = Object.entries(entry.module.ui ?? {})
+      const implemented = Object.entries(slots)
         .filter(
           ([name, value]) =>
             value !== undefined &&
@@ -63,43 +94,49 @@ describe('слоты: манифест ↔ модуль', () => {
 });
 
 describe('слоты-функции плагинов', () => {
-  it('dnd5e: подпись шапки и карточки содержат уровень', () => {
+  it('dnd5e: подпись шапки и карточки содержат уровень', async () => {
     const entry = plugin('dnd5e');
+    const slots = await slotsFor('dnd5e');
     const character = {
       ...entry.module.createDefaults(),
       id: 'fixture',
       level: 3,
     } as never;
 
-    expect(entry.module.ui?.HeaderSubtitle?.(character, t)).toContain('Lvl');
-    const summary = entry.module.ui?.CardSummary?.(character, t);
+    expect(slots.HeaderSubtitle?.(character, t)).toContain('Lvl');
+    const summary = slots.CardSummary?.(character, t);
     expect(summary?.text).toContain('Lvl');
     expect(summary?.badgeVariant).toBe('default');
   });
 
-  it.each([['dh1'], ['dh2']])('%s: подпись шапки и карточки непустые', (id) => {
-    const entry = plugin(id);
-    const character = {
-      ...entry.module.createDefaults(),
-      id: 'fixture',
-    } as never;
-
-    const headerSubtitle = entry.module.ui?.HeaderSubtitle?.(character, t);
-    expect(headerSubtitle).toBeTruthy();
-    expect(headerSubtitle).toContain(t('common.gameSystemDarkHeresy'));
-
-    const summary = entry.module.ui?.CardSummary?.(character, t);
-    expect(summary?.text).toBeTruthy();
-    expect(summary?.badgeVariant).toBe('secondary');
-  });
-
-  it('CompactNav отдаёт пункты с полными i18n-ключами', () => {
-    for (const entry of gamePlugins) {
+  it.each([['dh1'], ['dh2']])(
+    '%s: подпись шапки и карточки непустые',
+    async (id) => {
+      const entry = plugin(id);
+      const slots = await slotsFor(id);
       const character = {
         ...entry.module.createDefaults(),
         id: 'fixture',
       } as never;
-      const items = entry.module.ui?.CompactNav?.(character) ?? [];
+
+      const headerSubtitle = slots.HeaderSubtitle?.(character, t);
+      expect(headerSubtitle).toBeTruthy();
+      expect(headerSubtitle).toContain(t('common.gameSystemDarkHeresy'));
+
+      const summary = slots.CardSummary?.(character, t);
+      expect(summary?.text).toBeTruthy();
+      expect(summary?.badgeVariant).toBe('secondary');
+    },
+  );
+
+  it('CompactNav отдаёт пункты с полными i18n-ключами', async () => {
+    for (const entry of gamePlugins) {
+      const slots = await slotsFor(entry.manifest.id);
+      const character = {
+        ...entry.module.createDefaults(),
+        id: 'fixture',
+      } as never;
+      const items = slots.CompactNav?.(character) ?? [];
       expect(items.length, entry.manifest.id).toBeGreaterThan(0);
       for (const item of items) {
         expect(item.labelKey, `${entry.manifest.id}: ${item.id}`).toContain(
@@ -114,11 +151,12 @@ describe('слоты-функции плагинов', () => {
     }
   });
 
-  it('dnd5e показывает эпические дары только на 20 уровне', () => {
+  it('dnd5e показывает эпические дары только на 20 уровне', async () => {
     const entry = plugin('dnd5e');
+    const slots = await slotsFor('dnd5e');
     const base = entry.module.createDefaults() as Record<string, unknown>;
-    const navAt1 = entry.module.ui?.CompactNav?.({ ...base, id: 'x' } as never);
-    const navAt20 = entry.module.ui?.CompactNav?.({
+    const navAt1 = slots.CompactNav?.({ ...base, id: 'x' } as never);
+    const navAt20 = slots.CompactNav?.({
       ...base,
       id: 'x',
       level: 20,
@@ -127,10 +165,18 @@ describe('слоты-функции плагинов', () => {
     expect(navAt20?.some((item) => item.id === 'boons-section')).toBe(true);
   });
 
-  it('у каждой игры своя иконка вкладки', () => {
-    expect(plugin('dnd5e').module.ui?.favicon).toBe('/favicon-dnd.png');
-    expect(plugin('dh1').module.ui?.favicon).toBe('/favicon-dh.png');
-    expect(plugin('dh2').module.ui?.favicon).toBe('/favicon-dh.png');
+  it('у каждой игры своя иконка вкладки', async () => {
+    expect((await slotsFor('dnd5e')).favicon).toBe('/favicon-dnd.png');
+    expect((await slotsFor('dh1')).favicon).toBe('/favicon-dh.png');
+    expect((await slotsFor('dh2')).favicon).toBe('/favicon-dh.png');
+  });
+
+  it('BulkEditor отдаётся данными, а не компонентом', async () => {
+    for (const entry of gamePlugins) {
+      const slots = await slotsFor(entry.manifest.id);
+      expect(Array.isArray(slots.bulkEditor)).toBe(true);
+      expect(slots.bulkEditor?.length).toBeGreaterThan(0);
+    }
   });
 });
 

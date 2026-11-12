@@ -404,6 +404,26 @@ export interface GameModule<
   ): NormalizeResult<TCharacter>;
 
   /**
+   * Найти вложенное в лист существо по его виртуальному id (например,
+   * спутник D&D с id `companion-*`). Ядро хранит только формат id и не знает,
+   * что там за сущность (этап 3).
+   */
+  findEmbedded?(
+    character: TCharacter,
+    id: string,
+  ): Record<string, unknown> | undefined;
+
+  /**
+   * Обновить вложенное существо: вернуть новый лист и патч для сохранения.
+   * Если id не принадлежит листу — `undefined`.
+   */
+  updateEmbedded?(
+    character: TCharacter,
+    id: string,
+    data: Readonly<Record<string, unknown>>,
+  ): { character: TCharacter; patch: Partial<TCharacter> } | undefined;
+
+  /**
    * Слить импортированные данные в существующий лист. Раньше это делала
    * `mergeImportedData` ветками `isDnd/isDh1/isDh2`; теперь — модуль (этап 2).
    */

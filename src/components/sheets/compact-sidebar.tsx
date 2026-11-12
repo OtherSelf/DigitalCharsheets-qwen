@@ -22,7 +22,8 @@ import {
 } from '@/components/ui/tooltip';
 import { useCharacterContext } from '@/context/character-context';
 import { useTranslation } from '@/context/language-context';
-import { getCharacterModule } from '@/games/character-system';
+import { resolveCharacterSystemId } from '@/games/character-system';
+import { useGameUiSlots } from '@/hooks/use-game-ui-slots';
 import { type Character } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
@@ -52,9 +53,9 @@ export function CompactSidebar({
     useCharacterContext();
   const [isHouseRulesDialogOpen, setIsHouseRulesDialogOpen] = useState(false);
 
-  const gameModule = getCharacterModule(character);
-  const navItems = gameModule?.ui?.CompactNav?.(character) ?? [];
-  const HouseRulesDialogSlot = gameModule?.ui?.HouseRulesDialog;
+  const uiSlots = useGameUiSlots(resolveCharacterSystemId(character));
+  const navItems = uiSlots?.CompactNav?.(character) ?? [];
+  const HouseRulesDialogSlot = uiSlots?.HouseRulesDialog;
 
   const extraSidebarItems = [
     {

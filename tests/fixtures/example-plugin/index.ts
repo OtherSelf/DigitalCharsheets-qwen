@@ -12,11 +12,6 @@ import { buildExamplePortableJson } from './export';
 import { en as exampleEn } from './i18n/en';
 import { ru as exampleRu } from './i18n/ru';
 import { exampleCharacterSchema } from './schema';
-import {
-  exampleCardSummary,
-  exampleCompactNav,
-  exampleHeaderSubtitle,
-} from './slots';
 import type { ExampleCharacter } from './types';
 
 /**
@@ -68,9 +63,4 @@ export const exampleModule: GameModule<ExampleCharacter> = {
   },
   export: { toPortableJson, buildExcelSections },
   migrations: [],
-  ui: {
-    HeaderSubtitle: exampleHeaderSubtitle,
-    CompactNav: exampleCompactNav,
-    CardSummary: exampleCardSummary,
-  },
 };

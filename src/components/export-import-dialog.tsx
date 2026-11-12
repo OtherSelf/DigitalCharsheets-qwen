@@ -20,6 +20,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { useCharacterContext } from '@/context/character-context';
 import { useTranslation } from '@/context/language-context';
+import { getCharacterModule } from '@/games/character-system';
 import {
   DEFAULT_EXPORT_CONFIG,
   exportCharacterToJSON,
@@ -111,14 +112,16 @@ export function ExportImportDialog({ character }: ExportImportDialogProps) {
     setConfig((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
-  // ─── LANDMARK: GAME_SYSTEM_AWARE_CHECKBOXES ───
+  // ─── LANDMARK: CAPABILITY-AWARE CHECKBOXES ───
+  // Какие секции есть у редакции, сообщает плагин (capabilities), а не ядро.
+  const capabilities = getCharacterModule(character)?.capabilities ?? {};
   const configOptions: { key: keyof ExportConfig; label: string }[] = [
     { key: 'includeBasicInfo', label: t('io.exportBasicInfo') },
     { key: 'includeStats', label: t('io.exportStats') },
     { key: 'includeCombat', label: t('io.exportCombat') },
     { key: 'includeEquipment', label: t('io.exportEquipment') },
     { key: 'includeInventory', label: t('io.exportInventory') },
-    ...(character.gameSystem === 'Dungeons & Dragons'
+    ...(capabilities.spells
       ? [
           {
             key: 'includeSpells' as keyof ExportConfig,
@@ -128,7 +131,7 @@ export function ExportImportDialog({ character }: ExportImportDialogProps) {
       : []),
     { key: 'includeNarrative', label: t('io.exportNarrative') },
     { key: 'includeProgression', label: t('io.exportProgression') },
-    ...(character.gameSystem === 'Dungeons & Dragons'
+    ...(capabilities.companions
       ? [
           {
             key: 'includeCompanions' as keyof ExportConfig,
