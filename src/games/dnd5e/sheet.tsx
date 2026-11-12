@@ -240,8 +240,9 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
       }
     }, [progressionData.level, character.id, character.level, updateCharacter]);
 
-    // ─── LANDMARK: D&D DIRTY TRACKING ───
-    // Failsafe «несохранённые изменения» раньше работал только для Dark Heresy.
+    // ─── LANDMARK: DND_DIRTY_TRACKING ───
+    // Пока открыт хотя бы один редактор секции, уход со страницы должен
+    // предупредить о несохранённых правках — независимо от редакции.
     const isAnyEditing =
       isProgressionEditing ||
       isStatsEditing ||
@@ -459,7 +460,9 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
           )}
         >
           <div className="sheet-top-row flex flex-col items-stretch gap-6 md:flex-row">
-            {/* MULTICLASS REQUIREMENTS LANDMARK: Added stats={stats} prop here */}
+            {/* LANDMARK: MULTICLASS_REQUIREMENTS */}
+            {/* Пороги мультикласса считаются от текущих характеристик, поэтому
+                stats передаётся пропсом. */}
             <DndProgressionSection
               progressionData={progressionData}
               setProgressionData={setProgressionData}

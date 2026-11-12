@@ -72,7 +72,7 @@ async function openCreationForm(
     await page.getByTestId('create-edition-dnd5e').click();
   } else {
     await page.getByTestId('create-game-darkHeresy').click();
-    // Старый флоу создавал DH без edition — это 1-я редакция (📌 D3).
+    // Старый флоу создавал DH без edition — это 1-я редакция (D3).
     await page.getByTestId('create-edition-dh1').click();
   }
 

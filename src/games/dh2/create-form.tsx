@@ -89,7 +89,8 @@ export function DarkHeresyCreateForm({
   const [showAllQuirks, setShowAllQuirks] = React.useState(false);
   const [availableQuirks, setAvailableQuirks] = React.useState<string[]>([]);
 
-  // MOVED INSIDE COMPONENT TO ACCESS t()
+  // Схема зависит от языка: тексты ошибок берутся из словаря, поэтому она
+  // собирается внутри компонента, а не один раз на уровне модуля.
   const formSchema = z.object({
     name: z.string().min(2, t('common.nameMinLength')),
     homeWorld: z.enum(DarkHeresyHomeWorlds, {

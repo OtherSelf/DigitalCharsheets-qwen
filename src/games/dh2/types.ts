@@ -188,7 +188,7 @@ export interface DH2Fatigue {
  *   • десять характеристик, включая `influence`;
  *   • усталость — `fatigue2nd` (`fatigue1st` не существует);
  *   • в навыках доступна тренировка `+30`;
- *   • `edition` отсутствует: редакция задаётся модулем/`systemId` (📌 D3).
+ *   • `edition` отсутствует: редакция задаётся модулем/`systemId` (D3).
  */
 export interface DH2Character extends DarkHeresyBase {
   systemId?: 'dh2';

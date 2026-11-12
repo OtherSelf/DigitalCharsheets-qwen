@@ -153,7 +153,7 @@ export const SkillsTalentsSection = React.forwardRef<
     const [newTalentName, setNewTalentName] = React.useState('');
     const [newTalentDescription, setNewTalentDescription] = React.useState('');
 
-    // ==================== LANDMARK: CAPABILITY CHECK FOR +30 COLUMN ====================
+    // ─── LANDMARK: CAPABILITY_PLUS30_COLUMN ───
     // Колонка +30 существует только во 2-й редакции; редакция приходит из
     // модуля (systemId), переключателя в UI больше нет.
     const showPlus30 = getDarkHeresyCapabilities(character).plus30;

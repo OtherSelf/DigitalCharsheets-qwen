@@ -182,7 +182,7 @@ export interface DH1Fatigue {
  *   • девять характеристик без `influence`;
  *   • усталость — `fatigue1st` (`fatigue2nd` не существует);
  *   • `+30` в навыках не используется в UI;
- *   • `edition` отсутствует: редакция задаётся модулем/`systemId` (📌 D3).
+ *   • `edition` отсутствует: редакция задаётся модулем/`systemId` (D3).
  */
 export interface DH1Character extends DarkHeresyBase {
   systemId?: 'dh1';

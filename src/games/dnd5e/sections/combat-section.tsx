@@ -524,6 +524,9 @@ export const DndCombatSection = React.forwardRef<
         setSpellcastingEntries(updated);
         updateCharacter(characterId, { spellcastingEntries: updated });
       }
+      // `spellcastingEntries` в зависимостях дал бы цикл: эффект сам пишет
+      // новый массив, и он же снова его запускал. Пересчёт нужен только при
+      // смене характеристик/бонуса мастерства.
     }, [stats, proficiencyBonus]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const handleSpellcastingFieldChange = (

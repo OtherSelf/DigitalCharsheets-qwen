@@ -389,7 +389,8 @@ export default function LoginPage() {
                     )}
                   </Button>
 
-                  {/* LANDMARK: SEPARATE_REGISTER_BUTTON — открывает форму регистрации */}
+                  {/* LANDMARK: SEPARATE_REGISTER_BUTTON */}
+                  {/* Открывает форму регистрации, не уводя со страницы входа. */}
                   <Button
                     type="button"
                     variant="outline"
@@ -610,7 +611,8 @@ export default function LoginPage() {
                     )}
                   </Button>
 
-                  {/* LANDMARK: BACK_TO_LOGIN — как в форме регистрации */}
+                  {/* LANDMARK: BACK_TO_LOGIN */}
+                  {/* Возврат к входу тем же переключателем, что и в регистрации. */}
                   <Button
                     type="button"
                     variant="link"

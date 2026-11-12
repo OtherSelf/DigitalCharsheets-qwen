@@ -21,7 +21,7 @@ import type { GameDefinition, SystemId } from './types';
 export interface CharacterSystemSource {
   systemId?: string;
   gameSystem?: string;
-  /** Legacy 1e/2e marker: используется только до миграции v2 (📌 D3). */
+  /** Legacy 1e/2e marker: используется только до миграции v2 (D3). */
   edition?: string;
 }
 

@@ -75,7 +75,9 @@ interface LocalAuthContextType {
    */
   deleteAccount: (password: string) => Promise<LoginResult>;
   logout: () => void;
-  restoreSession: (user: LocalUser) => void; // LANDMARK: used by recovery flow
+  // LANDMARK: RESTORE_SESSION
+  // Пишет сессию в оба состояния; используется и восстановлением по фразе.
+  restoreSession: (user: LocalUser) => void;
   /**
    * Обновить локальный снимок профиля, не меняя `lastAuthKind` (в отличие от
    * `restoreSession`). Нужно админке после правки своей роли/логина.
@@ -137,7 +139,9 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  // LANDMARK: single source of truth for persisting + setting the session
+  // LANDMARK: RESTORE_SESSION
+  // Единая точка записи сессии в оба состояния (localStorage-снимок и
+  // серверный профиль): иначе они разъезжаются при login/register/restore.
   const restoreSession = useCallback((nextUser: LocalUser) => {
     setLocalUser(nextUser);
     setUser(nextUser);

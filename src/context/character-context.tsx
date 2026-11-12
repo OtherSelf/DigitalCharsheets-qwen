@@ -553,7 +553,8 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
           .then((newCharacter: Character) => {
             removeSession(PENDING_CHARACTER_KEY);
             refreshPendingDraft();
-            // LANDMARK: Add character to state immediately before redirecting
+            // Дашборд уже не должен показывать пустой список, пока грузится
+            // ответ: карточка появляется до перехода на лист.
             applyCharacters((prev) => [...prev, newCharacter]);
             const needsSetup = !user.hasRecoveryPhrase
               ? '?setup_phrase=true'
@@ -667,7 +668,9 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
 
   const updateCharacter = useCallback(
     (id: string, data: Partial<Character>) => {
-      // LANDMARK: DEMO_UNREGISTERED_SAVE - Prompt unregistered users to create an account
+      // LANDMARK: DEMO_UNREGISTERED_SAVE
+      // Гость правит демо-лист локально; после входа его сохранение не должно
+      // потеряться, поэтому черновик ждёт в sessionStorage до регистрации.
       if (!user) {
         if (typeof window !== 'undefined') {
           sessionStorage.setItem(

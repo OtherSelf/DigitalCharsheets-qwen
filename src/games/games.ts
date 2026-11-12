@@ -6,7 +6,7 @@ import type { GameDefinition, GameId } from './types';
  * модулей (`src/games/registry.ts`), а здесь задаётся порядок карточек на
  * шаге выбора игры и i18n-ключи названия/описания.
  *
- * 📌 Человекочитаемые названия живут только в i18n; в данных листа их нет.
+ * Человекочитаемые названия живут только в i18n; в данных листа их нет.
  */
 export const GAME_DEFINITIONS: readonly GameDefinition[] = [
   {

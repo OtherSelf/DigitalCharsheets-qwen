@@ -13,7 +13,8 @@ import { cn } from '@/lib/utils';
 
 import type { DnDSavingThrow, DnDSkill } from '../types';
 
-// Helper to map skill internal names to translation keys (with abbreviations)
+// Внутренние имена навыков — английские, для UI нужны ключ словаря и
+// сокращение (STR/DEX…).
 const getSkillTranslationKey = (name: string): string => {
   const map: Record<string, string> = {
     acrobatics: 'dnd.skillAcrobatics',
@@ -38,7 +39,7 @@ const getSkillTranslationKey = (name: string): string => {
   return map[name] || name;
 };
 
-// Helper to map saving throw internal names to translation keys
+// То же для спасбросков: имя в данных не совпадает с ключом словаря.
 const getSaveTranslationKey = (name: string): string => {
   const map: Record<string, string> = {
     strength: 'dnd.saveStrength',

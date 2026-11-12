@@ -12,7 +12,7 @@ import type { SystemId } from '../types';
 /**
  * Человекочитаемое имя системы в legacy-данных (schemaVersion 1).
  *
- * 📌 D4: начиная с v2 дискриминантом листа служит `systemId`, а это поле
+ * D4: начиная с v2 дискриминантом листа служит `systemId`, а это поле
  * читается только миграцией и не пишется в новые файлы. До этапа 3 UI
  * продолжает на него опираться — поэтому поле пока обязательно.
  */
@@ -27,7 +27,7 @@ export interface CharacterBase {
   id: string;
   name: string;
   characterClass: string;
-  /** Legacy-дискриминант v1; в v2 заменяется на `systemId` (📌 D4). */
+  /** Legacy-дискриминант v1; в v2 заменяется на `systemId` (D4). */
   gameSystem: GameSystem;
   /** Машинный ID редакции (значение `plugin.json#id`); появляется в v2. */
   systemId?: SystemId;
