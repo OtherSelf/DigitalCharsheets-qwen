@@ -51,6 +51,10 @@ interface CharacterContextType {
   createPendingDraft: () => Promise<void>;
   discardPendingDraft: () => void;
   isLoaded: boolean;
+  /** Загрузка списка не удалась (сеть/5xx): дашборд показывает «Повторить». */
+  loadError: boolean;
+  /** Повторить загрузку списка после ошибки. */
+  retryCharacters: () => Promise<void>;
   toast: (options: {
     title: string;
     description: string;
@@ -97,6 +101,24 @@ const CharacterContext = createContext<CharacterContextType | undefined>(
  * ────────────────────────────────────────────────────────────────────────────
  */
 const SAVE_SETTLE_MS = 250;
+
+/**
+ * LANDMARK: CHARACTERS_LOAD_TIMEOUT
+ * GET /api/characters не должен висеть вечно: при обрыве сети/зависшем
+ * прокси промис никогда не завершится, и приложение навсегда останется на
+ * спиннере (`app/loading.tsx`). Через 15 секунд показываем экран ошибки с
+ * кнопкой «Повторить».
+ */
+const CHARACTERS_LOAD_TIMEOUT_MS = 15_000;
+
+function createFetchTimeout(ms: number): {
+  signal: AbortSignal;
+  clear: () => void;
+} {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), ms);
+  return { signal: controller.signal, clear: () => clearTimeout(timer) };
+}
 const SAVE_MAX_ATTEMPTS = 3;
 const SAVE_RETRY_DELAY_MS = 5000;
 
@@ -151,6 +173,7 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
 
   const [characters, setCharacters] = useState<Character[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [loadError, setLoadError] = useState(false);
   const [pendingDraft, setPendingDraft] = useState<DraftCharacter | null>(null);
 
   const [userPrefersCompact, setUserPrefersCompact] = useState(false);
@@ -247,17 +270,29 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
       }
 
       refreshInFlightRef.current = true;
+      const timeout = createFetchTimeout(CHARACTERS_LOAD_TIMEOUT_MS);
       try {
-        const res = await fetch('/api/characters', { cache: 'no-store' });
+        const res = await fetch('/api/characters', {
+          cache: 'no-store',
+          signal: timeout.signal,
+        });
         // 401 не разлогиниваем отсюда: сессией владеет bootstrap-эффект.
-        if (!res.ok) return;
+        if (!res.ok) {
+          if (charactersRef.current.length === 0) setLoadError(true);
+          return;
+        }
         const data = (await res.json()) as Character[];
         if (!Array.isArray(data)) return;
         applyCharacters(() => data);
+        setLoadError(false);
         lastCharactersLoadRef.current = Date.now();
       } catch (error) {
         console.error('Failed to refresh characters:', error);
+        // Не прячем уже показанные листы из-за разового сбоя — экран ошибки
+        // нужен только когда показать нечего.
+        if (charactersRef.current.length === 0) setLoadError(true);
       } finally {
+        timeout.clear();
         refreshInFlightRef.current = false;
       }
     },
@@ -429,6 +464,7 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
       // После выхода черновик может появиться заново (новая гостевая сессия) —
       // защита от повторного POST не должна переживать logout.
       creatingPendingRef.current = false;
+      setLoadError(false);
       setIsLoaded(true);
       return;
     }
@@ -462,7 +498,12 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
 
     const loadCharacters = () => {
       setIsLoaded(false);
-      fetch('/api/characters')
+      setLoadError(false);
+      const timeout = createFetchTimeout(CHARACTERS_LOAD_TIMEOUT_MS);
+      fetch('/api/characters', {
+        cache: 'no-store',
+        signal: timeout.signal,
+      })
         .then((res) => {
           if (res.status === 401) {
             // Сессия истекла или отозвана — локальный профиль недействителен.
@@ -486,8 +527,12 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
         })
         .catch((err) => {
           console.error('Failed to load characters:', err);
+          setLoadError(true);
           setIsLoaded(true);
           lastCharactersLoadRef.current = Date.now();
+        })
+        .finally(() => {
+          timeout.clear();
         });
     };
 
@@ -728,6 +773,16 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
     [user, applyCharacters, toast, t],
   );
 
+  /**
+   * Повторная загрузка после ошибки: сбрасывает экран ошибки и делает
+   * принудительный GET (минуя окно дедупликации). Ошибка снова включит
+   * экран, успех — вернёт список.
+   */
+  const retryCharacters = useCallback(async () => {
+    setLoadError(false);
+    await refreshCharacters({ force: true });
+  }, [refreshCharacters]);
+
   const getCharacter = useCallback(
     (id: string) => {
       if (id.startsWith('companion-')) {
@@ -752,6 +807,8 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
     createPendingDraft,
     discardPendingDraft,
     isLoaded,
+    loadError,
+    retryCharacters,
     toast,
     isCompactView,
     isSmallScreen,

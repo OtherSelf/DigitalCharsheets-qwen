@@ -110,7 +110,11 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
     let cancelled = false;
     void (async () => {
       try {
-        const res = await fetch('/api/auth/session', { cache: 'no-store' });
+        // Таймаут: зависшая сессия не должна держать страницу в loading.
+        const res = await fetch('/api/auth/session', {
+          cache: 'no-store',
+          signal: AbortSignal.timeout(15_000),
+        });
         if (cancelled) return;
         if (res.status === 401) {
           clearLocalUser();

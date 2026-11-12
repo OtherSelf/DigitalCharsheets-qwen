@@ -83,6 +83,13 @@ export const enTranslations: Record<string, string> = {
   'common.perception': 'Perception',
   'common.willpower': 'Willpower',
   'common.error': 'Error',
+  'common.retry': 'Retry',
+  'common.loadErrorTitle': 'Could not load characters',
+  'common.loadErrorDesc':
+    'The server did not respond. Check the connection and try again.',
+  'common.characterNotFound': 'Character not found',
+  'common.characterNotFoundDesc':
+    'It may have been deleted or the link is outdated.',
   'common.sheetUnavailable': 'Sheet unavailable',
   'common.sheetUnavailableHint':
     'The game plugin failed to render. Your data is intact — JSON export is still available.',

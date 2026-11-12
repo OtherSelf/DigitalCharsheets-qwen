@@ -2,6 +2,7 @@
 
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 
 import { FileDown, PlusCircle, Scroll, Settings2 } from 'lucide-react';
@@ -35,6 +36,8 @@ export default function DashboardPage() {
   const {
     characters,
     isLoaded,
+    loadError,
+    retryCharacters,
     isCompactView,
     pendingDraft,
     createPendingDraft,
@@ -42,6 +45,16 @@ export default function DashboardPage() {
   } = useCharacterContext();
   const { user, isUserLoading } = useLocalAuth();
   const { t } = useTranslation();
+  const [isRetrying, setIsRetrying] = useState(false);
+
+  const handleRetry = async () => {
+    setIsRetrying(true);
+    try {
+      await retryCharacters();
+    } finally {
+      setIsRetrying(false);
+    }
+  };
 
   // «Backup All»: сервер отдаёт листы, клиент упаковывает их в стандартный
   // конверт и называет файл по шаблону dcs_characters_all_<логин>_<дата>.json.
@@ -185,46 +198,66 @@ export default function DashboardPage() {
               <CardDescription>{t('common.allHeroes')}</CardDescription>
             </CardHeader>
             <CardContent>
-              <div
-                className={cn(
-                  'grid gap-4',
-                  isCompactView
-                    ? 'grid-cols-1'
-                    : 'grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4',
-                )}
-              >
-                {characters.map((character) => (
-                  <CharacterCard key={character.id} character={character} />
-                ))}
-                {isCompactView ? (
+              {loadError && characters.length === 0 ? (
+                <div
+                  data-testid="characters-load-error"
+                  className="flex flex-col items-start gap-3 rounded-lg border p-4"
+                >
+                  <div>
+                    <p className="font-medium">{t('common.loadErrorTitle')}</p>
+                    <p className="text-muted-foreground text-sm">
+                      {t('common.loadErrorDesc')}
+                    </p>
+                  </div>
                   <Button
-                    variant="outline"
-                    asChild
-                    className="border-muted-foreground/30 text-muted-foreground hover:border-accent hover:bg-accent/10 hover:text-accent-foreground flex h-16 w-full items-center justify-center rounded-lg border-2 border-dashed bg-transparent p-0 transition-colors duration-200 sm:h-20"
+                    onClick={() => void handleRetry()}
+                    disabled={isRetrying}
                   >
-                    <Link href="/new">
-                      <PlusCircle className="mr-3 h-6 w-6 sm:mr-4 sm:h-8 sm:w-8" />
-                      <span className="text-sm font-semibold sm:text-base">
-                        {t('common.createNew')}
-                      </span>
-                    </Link>
+                    {t('common.retry')}
                   </Button>
-                ) : (
-                  <Button
-                    variant="outline"
-                    asChild
-                    className="border-muted-foreground/30 text-muted-foreground hover:border-accent hover:bg-accent/10 hover:text-accent-foreground flex h-full min-h-[180px] w-full flex-col items-center justify-center rounded-lg border-2 border-dashed bg-transparent p-0 transition-colors duration-200 sm:min-h-[200px]"
-                  >
-                    <Link href="/new">
-                      <PlusCircle className="mb-2 h-10 w-10 sm:h-12 sm:w-12" />
-                      <span className="text-sm font-semibold sm:text-base">
-                        {t('common.createNew')}
-                      </span>
-                    </Link>
-                  </Button>
-                )}
-                <ImportCharacterDialog isCompactView={isCompactView} />
-              </div>
+                </div>
+              ) : (
+                <div
+                  className={cn(
+                    'grid gap-4',
+                    isCompactView
+                      ? 'grid-cols-1'
+                      : 'grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4',
+                  )}
+                >
+                  {characters.map((character) => (
+                    <CharacterCard key={character.id} character={character} />
+                  ))}
+                  {isCompactView ? (
+                    <Button
+                      variant="outline"
+                      asChild
+                      className="border-muted-foreground/30 text-muted-foreground hover:border-accent hover:bg-accent/10 hover:text-accent-foreground flex h-16 w-full items-center justify-center rounded-lg border-2 border-dashed bg-transparent p-0 transition-colors duration-200 sm:h-20"
+                    >
+                      <Link href="/new">
+                        <PlusCircle className="mr-3 h-6 w-6 sm:mr-4 sm:h-8 sm:w-8" />
+                        <span className="text-sm font-semibold sm:text-base">
+                          {t('common.createNew')}
+                        </span>
+                      </Link>
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      asChild
+                      className="border-muted-foreground/30 text-muted-foreground hover:border-accent hover:bg-accent/10 hover:text-accent-foreground flex h-full min-h-[180px] w-full flex-col items-center justify-center rounded-lg border-2 border-dashed bg-transparent p-0 transition-colors duration-200 sm:min-h-[200px]"
+                    >
+                      <Link href="/new">
+                        <PlusCircle className="mb-2 h-10 w-10 sm:h-12 sm:w-12" />
+                        <span className="text-sm font-semibold sm:text-base">
+                          {t('common.createNew')}
+                        </span>
+                      </Link>
+                    </Button>
+                  )}
+                  <ImportCharacterDialog isCompactView={isCompactView} />
+                </div>
+              )}
             </CardContent>
           </Card>
         </main>
