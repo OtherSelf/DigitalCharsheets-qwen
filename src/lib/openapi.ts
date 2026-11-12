@@ -152,6 +152,17 @@ export const openApiDocument = {
         'The requested change conflicts with the current state (taken login, last administrator, etc.).',
       ),
       ServerError: errorResponse('Unexpected server error.'),
+      RateLimited: {
+        description:
+          "Too many attempts for this IP/login pair. The body carries a machine-readable `reason: 'rate_limited'`; wait for the number of seconds in `Retry-After`.",
+        headers: {
+          'Retry-After': {
+            description: 'Seconds to wait before the next attempt.',
+            schema: { type: 'integer' },
+          },
+        },
+        content: jsonContent(ref('ErrorResponse')),
+      },
     },
     schemas: {
       ErrorResponse: {
@@ -369,41 +380,53 @@ export const openApiDocument = {
         properties: { phrase: { type: 'string', minLength: 5 } },
         additionalProperties: false,
       },
+      RecoveryToken: {
+        type: 'string',
+        description:
+          'Single-use token from POST /api/auth/recover/verify. Valid for 15 minutes, burned on a successful exchange, and never returned as a session cookie.',
+      },
       RecoveryRequest: {
         type: 'object',
-        required: ['username', 'word1', 'word2', 'word3', 'newPassword'],
+        required: ['token', 'newPassword'],
         properties: {
-          username: { type: 'string' },
-          word1: { type: 'string' },
-          word2: { type: 'string' },
-          word3: { type: 'string' },
+          token: ref('RecoveryToken'),
           newPassword: { type: 'string', minLength: 4 },
+          newRecoveryPhrase: {
+            type: 'string',
+            minLength: 5,
+            description: 'Optional; when omitted the current phrase is kept.',
+          },
         },
         additionalProperties: false,
       },
       RecoveryVerifyRequest: {
         type: 'object',
-        required: [
-          'username',
-          'word1',
-          'word2',
-          'word3',
-          'recoveryPhraseInput',
-        ],
+        required: ['username', 'recoveryPhrase'],
         properties: {
           username: { type: 'string' },
-          word1: { type: 'string' },
-          word2: { type: 'string' },
-          word3: { type: 'string' },
-          recoveryPhraseInput: { type: 'string' },
+          recoveryPhrase: {
+            type: 'string',
+            description:
+              'The whole phrase. Case and extra spaces are ignored; the set and order of words are not.',
+          },
+        },
+        additionalProperties: false,
+      },
+      RecoveryVerifyResponse: {
+        type: 'object',
+        required: ['success', 'token', 'expiresAt'],
+        properties: {
+          success: { type: 'boolean' },
+          token: ref('RecoveryToken'),
+          expiresAt: { type: 'string', format: 'date-time' },
         },
         additionalProperties: false,
       },
       RecoveryUpdateRequest: {
         type: 'object',
-        required: ['username', 'newPassword', 'newRecoveryPhrase'],
+        required: ['token', 'newPassword'],
         properties: {
-          username: { type: 'string' },
+          token: ref('RecoveryToken'),
           newPassword: { type: 'string', minLength: 4 },
           newRecoveryPhrase: { type: 'string', minLength: 5 },
         },
@@ -860,14 +883,18 @@ export const openApiDocument = {
       post: {
         tags: ['Authentication'],
         operationId: 'recoverPassword',
-        summary: 'Reset a password with recovery words',
+        summary: 'Reset a password with a recovery token',
         description:
-          'Checks three words found in the account sheets plus the recovery phrase, then sets a new password.',
+          'Legacy alias of POST /api/auth/recover/update: a single-use token from POST /api/auth/recover/verify is required. The old `username` + three-word contract is gone — words from character sheets do not prove account ownership.',
         security: [],
         requestBody: jsonBody(ref('RecoveryRequest')),
         responses: {
           200: jsonResponse('Password reset.', ref('SimpleSuccess')),
           400: { $ref: '#/components/responses/BadRequest' },
+          401: errorResponse(
+            'Missing, expired or already used recovery token.',
+          ),
+          429: { $ref: '#/components/responses/RateLimited' },
           500: { $ref: '#/components/responses/ServerError' },
         },
       },
@@ -876,20 +903,18 @@ export const openApiDocument = {
       post: {
         tags: ['Authentication'],
         operationId: 'verifyRecovery',
-        summary: 'Verify ownership and sign in',
+        summary: 'Verify the recovery phrase and get a single-use token',
         description:
-          'Checks three words from the sheets and the recovery phrase. On success returns the user and sets the session cookie.',
+          'Compares the whole phrase (case and extra spaces ignored, word order enforced) and returns a single-use token. No session cookie is set: only POST /api/auth/recover/update can change the credentials. Failures share one status and text so the response does not reveal whether the account exists.',
         security: [],
         requestBody: jsonBody(ref('RecoveryVerifyRequest')),
         responses: {
-          200: {
-            ...jsonResponse(
-              'Recovery verified, cookie set.',
-              ref('AuthUserResponse'),
-            ),
-            headers: { 'Set-Cookie': { schema: { type: 'string' } } },
-          },
+          200: jsonResponse(
+            'Phrase accepted, token issued.',
+            ref('RecoveryVerifyResponse'),
+          ),
           400: { $ref: '#/components/responses/BadRequest' },
+          429: { $ref: '#/components/responses/RateLimited' },
           500: { $ref: '#/components/responses/ServerError' },
         },
       },
@@ -898,12 +923,16 @@ export const openApiDocument = {
       post: {
         tags: ['Authentication'],
         operationId: 'updateRecoveryCredentials',
-        summary: 'Set a new password and recovery phrase',
+        summary: 'Set a new password and recovery phrase with a token',
         security: [],
         requestBody: jsonBody(ref('RecoveryUpdateRequest')),
         responses: {
           200: jsonResponse('Credentials updated.', ref('SimpleSuccess')),
           400: { $ref: '#/components/responses/BadRequest' },
+          401: errorResponse(
+            'Missing, expired or already used recovery token.',
+          ),
+          429: { $ref: '#/components/responses/RateLimited' },
           500: { $ref: '#/components/responses/ServerError' },
         },
       },

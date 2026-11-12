@@ -24,6 +24,7 @@ JSON files, written through small, synchronous helpers in `src/lib/`.
     game-catalog.json           runtime visibility/statuses + site title
   index/
     logins.json                 derived: normalized login → uid
+  tokens.json                   single-use recovery tokens (hashed)
   .session-secret               HMAC key for session cookies (0600)
   .lock/                        short-lived directory mutex
   .initial-admin.txt            generated bootstrap admin (0600, optional)
@@ -45,7 +46,7 @@ directory and sheets stay where they are.
   "role": "user",
   "isBlocked": false,
   "lastLoginAt": "2026-01-01T00:00:00.000Z",
-  "recoveryPhrase": "amber cobalt lantern",
+  "recoveryPhrase": "scrypt$16384$8$1$<salt>$<hash>",
   "createdAt": "2026-01-01T00:00:00.000Z",
   "updatedAt": "2026-01-01T00:00:00.000Z"
 }
@@ -62,9 +63,15 @@ directory and sheets stay where they are.
 | `blockedAt` | Timestamp set while blocked; removed on unblock. |
 | `lastLoginAt` | Updated on successful login; absent before the first login. |
 | `mustChangePassword` | Present only for the bootstrap admin; removed after a password change. |
-| `recoveryPhrase` | Lowercase phrase used by the recovery flow. |
+| `recoveryPhrase` | Salted `scrypt` hash of the normalized phrase (`src/lib/security/phrase.ts`). The phrase itself is never stored; older plaintext values are re-hashed on the first successful verification and by the startup pass. |
 | `createdAt`/`updatedAt` | ISO timestamps; missing values are filled from file mtime. |
 | `originalFirebaseId` | Present only on accounts imported from the old Firebase export. |
+
+`tokens.json` holds hashes (never the tokens) of single-use recovery tokens,
+keyed by the SHA-256 of the value handed to the client: `{ "version": 1,
+"tokens": { "<sha256>": { "uid", "createdAt", "expiresAt" } } }`. An entry is
+deleted when exchanged and dropped after 15 minutes, so a copied data directory
+cannot be used to reset a password.
 
 Startup normalization (`src/lib/user-schema.ts`) fills missing v4 fields without
 overwriting existing values (including an existing `tester` role). A profile

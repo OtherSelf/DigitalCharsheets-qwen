@@ -71,9 +71,25 @@ contract version in [`src/lib/openapi.ts`](../src/lib/openapi.ts)
 | `PUT` | `/api/auth/profile` | cookie | Update own login, display name, password, recovery phrase. |
 | `DELETE` | `/api/auth/profile` | cookie | Delete own account and all sheets; requires the current password. |
 | `POST` | `/api/auth/phrase` | cookie | Set own recovery phrase. |
-| `POST` | `/api/auth/recover` | — | Reset a password using words from sheets + the recovery phrase. |
-| `POST` | `/api/auth/recover/verify` | — | Verify ownership and issue a session. |
-| `POST` | `/api/auth/recover/update` | — | Set a new password and recovery phrase during recovery. |
+| `POST` | `/api/auth/recover/verify` | — | Check the whole recovery phrase; on success return a single-use token (`{token, expiresAt}`). No session cookie is set. |
+| `POST` | `/api/auth/recover/update` | — | Exchange that token for a new password (and optionally a new phrase); the token is burned. |
+| `POST` | `/api/auth/recover` | — | Legacy alias of `recover/update`; requires a token. The old `username` + three-words body was removed because words from sheets do not prove account ownership. |
+
+Recovery flow:
+
+1. `POST /api/auth/recover/verify` with `{ username, recoveryPhrase }` →
+   `200 { token, expiresAt }`, or `400 { reason: "recovery_failed" }`. Failures
+   are indistinguishable (same status, same text, fixed delay) so the response
+   cannot be used to enumerate accounts.
+2. `POST /api/auth/recover/update` with `{ token, newPassword,
+   newRecoveryPhrase }` → `200`; the token is single-use and dies after
+   15 minutes. `401 { reason: "invalid_token" }` for a missing, expired or
+   already used token.
+3. Sign in normally — recovery never creates a session.
+
+Both endpoints are rate limited per IP + login: 5 attempts per 15 minutes, then
+`429` with `Retry-After`. Recovery phrases are stored as hashes, so neither a
+`user.json` copy nor the API response reveals them.
 
 ### Characters
 

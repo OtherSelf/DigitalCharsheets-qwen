@@ -6,6 +6,7 @@
  */
 
 export * from './paths';
+export * from './phrase';
 export * from './rate-limit';
 export * from './timing';
 export * from './tokens';

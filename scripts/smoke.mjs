@@ -740,15 +740,105 @@ await check('POST /api/auth/recover/verify без полей → 400', async () 
 });
 
 await check(
-  'POST /api/auth/recover/update → 400 на короткую фразу',
+  'POST /api/auth/recover/verify с неверной фразой → 400',
+  async () => {
+    const res = await api('/auth/recover/verify', {
+      method: 'POST',
+      body: { username, recoveryPhrase: 'wrong words here' },
+      auth: false,
+    });
+    assertStatus(res, 400, 'recover/verify неверная фраза');
+    const body = assertJson(res, 'recover/verify неверная фраза');
+    assert(
+      body.reason === 'recovery_failed',
+      `recover/verify: reason = ${body.reason}, ожидали recovery_failed`,
+    );
+  },
+);
+
+await check('POST /api/auth/recover/update без токена → 401', async () => {
+  const res = await api('/auth/recover/update', {
+    method: 'POST',
+    body: {
+      // Логин в теле ничего не доказывает — раньше этого хватало для захвата.
+      username,
+      newPassword: 'pwned-pass-123',
+      newRecoveryPhrase: 'x y z',
+    },
+    auth: false,
+  });
+  assertStatus(res, 401, 'recover/update без токена');
+  const body = assertJson(res, 'recover/update без токена');
+  assert(
+    body.reason === 'invalid_token',
+    `recover/update без токена: reason = ${body.reason}`,
+  );
+});
+
+let recoveryToken = '';
+
+await check(
+  'POST /api/auth/recover/verify → 200, одноразовый токен без cookie',
+  async () => {
+    const res = await api('/auth/recover/verify', {
+      method: 'POST',
+      body: { username, recoveryPhrase },
+      auth: false,
+    });
+    assertStatus(res, 200, 'recover/verify');
+    const body = assertJson(res, 'recover/verify');
+    assert(
+      typeof body.token === 'string' && body.token.length > 20,
+      'recover/verify: токен не выдан',
+    );
+    assert(
+      !res.headers.get('set-cookie'),
+      'recover/verify: выдал сессионную cookie — должен только токен',
+    );
+    recoveryToken = body.token;
+  },
+);
+
+await check(
+  'POST /api/auth/recover/update по токену → 200, токен гаснет',
   async () => {
     const res = await api('/auth/recover/update', {
       method: 'POST',
-      body: { username, newPassword: 'newpass123', newRecoveryPhrase: 'ab' },
+      body: {
+        token: recoveryToken,
+        newPassword: password,
+        newRecoveryPhrase: 'delta echo foxtrot',
+      },
+      auth: false,
     });
-    assertStatus(res, 400, 'recover/update короткая фраза');
+    assertStatus(res, 200, 'recover/update по токену');
+    assert(
+      assertJson(res, 'recover/update по токену').success === true,
+      'recover/update: success !== true',
+    );
+
+    // Повторный обмен того же токена невозможен: он уже погашен.
+    const again = await api('/auth/recover/update', {
+      method: 'POST',
+      body: { token: recoveryToken, newPassword: 'second-pass-123' },
+      auth: false,
+    });
+    assertStatus(again, 401, 'повторный recover/update');
   },
 );
+
+await check('вход с паролем после восстановления → 200', async () => {
+  const res = await api('/auth', {
+    method: 'POST',
+    body: { username, password },
+    auth: false,
+  });
+  assertStatus(res, 200, 'вход после восстановления');
+  assert(
+    assertJson(res, 'вход после восстановления').success === true,
+    'вход после восстановления: success !== true',
+  );
+});
 
 // 6. Удаление аккаунта (danger zone на /settings)
 await check('DELETE /api/auth/profile без сессии → 401', async () => {

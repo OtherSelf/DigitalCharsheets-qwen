@@ -6,23 +6,26 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { isUid, newUid, normalizeLogin } from '@/lib/ids';
 import {
+  isRecoveryPhraseHash,
+  recoveryPhraseMatches,
+} from '@/lib/security/phrase';
+import { issueRecoveryToken } from '@/lib/security/tokens';
+import {
   accountExists,
   authenticateUser,
   getStoredUser,
-  recoverPasswordWithUsernameAndWords,
+  hashLegacyRecoveryPhrases,
   registerUser,
+  resetCredentialsWithToken,
   setRecoveryPhrase,
-  updateRecoveryCredentials,
   userExists,
   verifyRecovery,
 } from '@/lib/server-auth';
-import { saveCharacterToServer } from '@/lib/server-storage';
 import { resolveLogin } from '@/lib/user-index';
 import { USER_SCHEMA_VERSION } from '@/lib/user-schema';
 
 import {
   loginIndexPath,
-  makeDndCharacter,
   readJson,
   removeDir,
   userPaths,
@@ -34,8 +37,8 @@ import {
  *
  * Покрыто: normalizeLogin (регистр/пробелы); uid — случайный UUID, который
  * не меняется при повторном входе; формат user.json (schemaVersion/uid);
- * индекс «логин → uid»; вход по паролю; legacy-поле email; recovery-фраза и
- * сброс пароля по словам из листов.
+ * индекс «логин → uid»; вход по паролю; legacy-поле email; recovery-фраза
+ * (хэш, сравнение целиком) и сброс пароля по одноразовому токену.
  */
 
 let dataDir: string;
@@ -220,8 +223,12 @@ describe('accountExists / registerUser', () => {
       username: 'new.user',
       displayName: 'New User',
       passwordHash: sha256('pass1'),
-      recoveryPhrase: 'amber cobalt',
     });
+    // Фраза хранится хэшем, а не открытым текстом.
+    expect(isRecoveryPhraseHash(stored.recoveryPhrase)).toBe(true);
+    expect(recoveryPhraseMatches(stored.recoveryPhrase, 'amber cobalt')).toBe(
+      true,
+    );
     expect(resolveLogin('new.user')).toBe(uid);
 
     // Пароль из регистрации работает при входе.
@@ -240,7 +247,10 @@ describe('accountExists / registerUser', () => {
     const stored = readJson(userPaths(dataDir, first.user!.uid).userFile);
     expect(stored.displayName).toBe('First');
     expect(stored.passwordHash).toBe(sha256('pass1'));
-    expect(stored.recoveryPhrase).toBe('amber cobalt');
+    expect(isRecoveryPhraseHash(stored.recoveryPhrase)).toBe(true);
+    expect(recoveryPhraseMatches(stored.recoveryPhrase, 'zulu yankee')).toBe(
+      false,
+    );
   });
 
   it('registerUser валидирует пароль и фразу', () => {
@@ -266,165 +276,259 @@ describe('accountExists / registerUser', () => {
 });
 
 /**
- * CURRENT (insecure): эти сценарии описывают поведение, которое даёт захват
- * аккаунта (SEC-1: сброс без доказательства владения; SEC-4: достаточно одного
- * слова фразы). Они намеренно оставлены зелёными до фикса и будут заменены
- * target-тестами из блока `TARGET (SEC-1, SEC-4)` внизу файла — не удалять
- * молча и не «подгонять» под новое поведение без переписывания сценария.
+ * RECOVERY (SEC-1, SEC-4): восстановление доступа.
+ *
+ * Инварианты, которые здесь закреплены:
+ *   • фраза хранится хэшем и сравнивается целиком (состав и порядок слов);
+ *   • слова из листов персонажей — не фактор: лист видел кто угодно;
+ *   • пароль и фразу меняет только одноразовый токен, а не логин;
+ *   • фраза работает для аккаунта без листов и на кириллице.
  */
-describe('CURRENT (insecure): recovery / смена пароля', () => {
-  function setupAccountWithCharacter(
+describe('recovery: проверка фразы и сброс по токену', () => {
+  function setupAccount(
     username = 'recoverer',
     password = 'pass1',
+    phrase = 'alpha beta gamma',
   ) {
     const result = authenticateUser(username, password);
     const uid = result.user!.uid;
-    saveCharacterToServer(
-      uid,
-      makeDndCharacter({ userId: uid, name: 'Ragnar Testborn' }) as any,
-    );
+    expect(setRecoveryPhrase(uid, phrase)).toBe(true);
     return uid;
   }
 
-  it('setRecoveryPhrase сохраняет фразу в нижнем регистре', () => {
-    const uid = setupAccountWithCharacter();
-    expect(setRecoveryPhrase(uid, '  Alpha Beta Gamma  ')).toBe(true);
+  const storedPhrase = (uid: string) =>
+    readJson(userPaths(dataDir, uid).userFile).recoveryPhrase;
 
-    const stored = readJson(userPaths(dataDir, uid).userFile);
-    expect(stored.recoveryPhrase).toBe('alpha beta gamma');
+  it('setRecoveryPhrase хранит хэш, а не открытый текст', () => {
+    const uid = setupAccount();
+    const stored = storedPhrase(uid);
+
+    expect(typeof stored).toBe('string');
+    expect(stored).not.toContain('alpha');
+    expect(isRecoveryPhraseHash(stored)).toBe(true);
+    expect(recoveryPhraseMatches(stored, 'Alpha Beta Gamma')).toBe(true);
     expect(authenticateUser('recoverer', 'pass1').user?.hasRecoveryPhrase).toBe(
       true,
     );
   });
 
-  it('setRecoveryPhrase возвращает false для несуществующего аккаунта', () => {
+  it('setRecoveryPhrase возвращает false для пустой фразы и чужого uid', () => {
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    expect(setRecoveryPhrase(newUid(), 'alpha')).toBe(false);
+    expect(setRecoveryPhrase(newUid(), 'alpha beta')).toBe(false);
+    const uid = setupAccount('empty-phrase');
+    expect(setRecoveryPhrase(uid, '   ')).toBe(false);
     errorSpy.mockRestore();
   });
 
-  it('verifyRecovery отклоняет несуществующий аккаунт', () => {
-    const result = verifyRecovery('nobody', ['alpha'], 'alpha beta');
-    expect(result.success).toBe(false);
-    expect(result.error).toContain('No account found');
-  });
-
-  it('verifyRecovery требует установленную фразу', () => {
-    authenticateUser('nophrase', 'pass1');
-    const result = verifyRecovery('nophrase', ['word'], 'word');
-    expect(result.success).toBe(false);
-    expect(result.error).toContain('No recovery phrase');
-  });
-
-  it('verifyRecovery требует наличие листов персонажей', () => {
-    const result = authenticateUser('nosheets', 'pass1');
-    setRecoveryPhrase(result.user!.uid, 'alpha beta gamma');
-
-    const verified = verifyRecovery('nosheets', ['alpha'], 'alpha');
-    expect(verified.success).toBe(false);
-    expect(verified.error).toContain('No character sheets');
-  });
-
-  it('verifyRecovery: слово из листа + совпавшее слово фразы = успех', () => {
-    const uid = setupAccountWithCharacter();
-    setRecoveryPhrase(uid, 'alpha beta gamma');
-
-    // "ragnar" есть в имени персонажа, "alpha" есть в recovery-фразе.
-    const result = verifyRecovery('recoverer', ['ragnar'], 'gamma');
+  it('verifyRecovery принимает полную фразу и не зависит от регистра', () => {
+    const uid = setupAccount();
+    const result = verifyRecovery('Recoverer', '  ALPHA   beta Gamma ');
 
     expect(result.success).toBe(true);
     expect(result.user?.uid).toBe(uid);
-    expect(result.user?.hasRecoveryPhrase).toBe(true);
   });
 
-  it('verifyRecovery ищет слова как целые слова, а не подстроки', () => {
-    const uid = setupAccountWithCharacter();
-    setRecoveryPhrase(uid, 'alpha beta');
+  it('verifyRecovery отклоняет одно слово и частичную фразу', () => {
+    setupAccount();
 
-    // "rag" — подстрока "Ragnar", но не отдельное слово
-    const result = verifyRecovery('recoverer', ['rag'], 'alpha');
-    expect(result.success).toBe(false);
-    expect(result.error).toContain('rag');
+    // Раньше совпадало «хотя бы одно слово» — это и был захват.
+    for (const partial of ['alpha', 'gamma', 'alpha beta', 'beta alpha']) {
+      const result = verifyRecovery('recoverer', partial);
+      expect({ partial, success: result.success }).toEqual({
+        partial,
+        success: false,
+      });
+      expect(result.reason).toBe('mismatch');
+    }
   });
 
-  it('verifyRecovery отклоняет фразу без общих слов', () => {
-    const uid = setupAccountWithCharacter();
-    setRecoveryPhrase(uid, 'alpha beta');
-
-    const result = verifyRecovery('recoverer', ['ragnar'], 'zulu yankee');
-    expect(result.success).toBe(false);
-    expect(result.error).toContain('Recovery phrase does not match');
+  it('verifyRecovery не падает на пунктуации и спецсимволах', () => {
+    setupAccount();
+    for (const input of ['.', '(', ')', '[', '$&', '*']) {
+      const result = verifyRecovery('recoverer', input);
+      expect({ input, success: result.success }).toEqual({
+        input,
+        success: false,
+      });
+    }
   });
 
-  it('reset по словам меняет пароль, старый перестаёт работать', () => {
-    const uid = setupAccountWithCharacter('resetme', 'oldpass');
-    setRecoveryPhrase(uid, 'alpha beta');
+  it('verifyRecovery работает на кириллице', () => {
+    const uid = setupAccount('cyrillic', 'pass1', '  Синий Кит Фонарь ');
+    const result = verifyRecovery('cyrillic', 'синий кит фонарь');
 
-    const reset = recoverPasswordWithUsernameAndWords(
-      'resetme',
-      ['ragnar'],
-      'newpass',
-    );
-    expect(reset.success).toBe(true);
-
-    expect(authenticateUser('resetme', 'newpass').success).toBe(true);
-    expect(authenticateUser('resetme', 'oldpass').success).toBe(false);
+    expect(result.success).toBe(true);
+    expect(result.user?.uid).toBe(uid);
   });
 
-  it('reset по словам не срабатывает на неверное слово', () => {
-    const uid = setupAccountWithCharacter('resetme', 'oldpass');
-    setRecoveryPhrase(uid, 'alpha beta');
-
-    const reset = recoverPasswordWithUsernameAndWords(
-      'resetme',
-      ['gnome'],
-      'newpass',
-    );
-    expect(reset.success).toBe(false);
+  it('verifyRecovery не требует листов персонажей', () => {
+    // Автор персонажа — не обязательно владелец аккаунта, поэтому листы
+    // фактором владения не считаются вовсе.
+    setupAccount('nosheets');
+    expect(verifyRecovery('nosheets', 'alpha beta gamma').success).toBe(true);
   });
 
-  it('updateRecoveryCredentials меняет пароль и фразу и убирает legacy email', () => {
+  it('verifyRecovery сообщает причины отказа', () => {
+    expect(verifyRecovery('nobody', 'alpha').reason).toBe('no_account');
+    authenticateUser('nophrase-level', 'pass1');
+    expect(verifyRecovery('nophrase-level', 'alpha').reason).toBe('no_phrase');
+  });
+
+  it('verifyRecovery переводит старую открытую фразу в хэш', () => {
     const uid = newUid();
     const paths = userPaths(dataDir, uid);
     fs.mkdirSync(paths.userDir, { recursive: true });
     fs.writeFileSync(
       paths.userFile,
       JSON.stringify({
-        email: 'updateme',
-        displayName: 'U',
+        uid,
+        username: 'legacy-phrase',
+        displayName: 'Legacy',
         passwordHash: sha256('old'),
+        recoveryPhrase: 'old amber cobalt',
       }),
     );
 
-    const update = updateRecoveryCredentials(
-      'updateme',
-      'fresh1',
-      'New Phrase',
+    expect(verifyRecovery('legacy-phrase', 'old amber cobalt').success).toBe(
+      true,
     );
-    expect(update.success).toBe(true);
+    const stored = readJson(paths.userFile).recoveryPhrase;
+    expect(isRecoveryPhraseHash(stored)).toBe(true);
+    expect(stored).not.toContain('amber');
+    // Хэш сохранённой фразы по-прежнему принимает ту же фразу.
+    expect(verifyRecovery('legacy-phrase', 'old amber cobalt').success).toBe(
+      true,
+    );
+    expect(verifyRecovery('legacy-phrase', 'amber').success).toBe(false);
+  });
+
+  it('resetCredentialsWithToken меняет пароль и фразу, старый пароль не работает', () => {
+    const uid = setupAccount('resetme', 'oldpass');
+    const { token } = issueRecoveryToken(uid);
+
+    const reset = resetCredentialsWithToken(
+      token,
+      'freshpass',
+      '  New Phrase Here ',
+    );
+    expect(reset.success).toBe(true);
+    expect(reset.uid).toBe(uid);
+
+    expect(authenticateUser('resetme', 'freshpass').success).toBe(true);
+    expect(authenticateUser('resetme', 'oldpass').success).toBe(false);
+    // Новая фраза сравнивается целиком и хранится хэшем.
+    expect(verifyRecovery('resetme', 'new phrase here').success).toBe(true);
+    expect(isRecoveryPhraseHash(storedPhrase(uid))).toBe(true);
+  });
+
+  it('сброс по логину без токена невозможен', () => {
+    setupAccount('victim', 'oldpass');
+
+    expect(resetCredentialsWithToken('', 'pwned-pass', 'x y z').success).toBe(
+      false,
+    );
+    expect(
+      resetCredentialsWithToken('not-a-token', 'pwned-pass', 'x y z').reason,
+    ).toBe('invalid_token');
+    // Пароль не изменился.
+    expect(authenticateUser('victim', 'oldpass').success).toBe(true);
+    expect(authenticateUser('victim', 'pwned-pass').success).toBe(false);
+  });
+
+  it('токен одноразовый и не переживает лимит времени', () => {
+    const uid = setupAccount('once', 'oldpass');
+    const { token } = issueRecoveryToken(uid);
+
+    expect(resetCredentialsWithToken(token, 'first-pass').success).toBe(true);
+    expect(resetCredentialsWithToken(token, 'second-pass').reason).toBe(
+      'invalid_token',
+    );
+
+    const expired = issueRecoveryToken(uid, {
+      ttlMs: 1000,
+      nowMs: Date.now() - 5000,
+    });
+    expect(resetCredentialsWithToken(expired.token, 'third-pass').success).toBe(
+      false,
+    );
+  });
+
+  it('чужой токен не даёт сменить пароль другому аккаунту', () => {
+    setupAccount('attacker', 'pass1');
+    const victimUid = setupAccount('victim2', 'oldpass');
+    const { token } = issueRecoveryToken(victimUid);
+
+    // Токен принадлежит жертве; логин атакующего не участвует вовсе.
+    expect(resetCredentialsWithToken(token, 'hijacked').success).toBe(true);
+    expect(authenticateUser('victim2', 'hijacked').success).toBe(true);
+    // Пароль второго (атакующего) аккаунта не изменился.
+    expect(authenticateUser('attacker', 'pass1').success).toBe(true);
+    expect(authenticateUser('attacker', 'hijacked').success).toBe(false);
+  });
+
+  it('успешный сброс гасит остальные выданные токены', () => {
+    const uid = setupAccount('multi-token', 'oldpass');
+    const first = issueRecoveryToken(uid);
+    const second = issueRecoveryToken(uid);
+
+    expect(resetCredentialsWithToken(first.token, 'newpass1').success).toBe(
+      true,
+    );
+    expect(resetCredentialsWithToken(second.token, 'newpass2').success).toBe(
+      false,
+    );
+  });
+
+  it('сброс убирает legacy email и флаг mustChangePassword', () => {
+    const uid = newUid();
+    const paths = userPaths(dataDir, uid);
+    fs.mkdirSync(paths.userDir, { recursive: true });
+    fs.writeFileSync(
+      paths.userFile,
+      JSON.stringify({
+        uid,
+        username: 'legacy-mail',
+        displayName: 'Legacy',
+        passwordHash: sha256('old'),
+        recoveryPhrase: 'amber cobalt',
+        mustChangePassword: true,
+        email: 'legacy-mail@example.com',
+      }),
+    );
+
+    // Фраза ещё открытым текстом: verify мигрирует её в хэш.
+    expect(verifyRecovery('legacy-mail', 'amber cobalt').success).toBe(true);
+    const { token } = issueRecoveryToken(uid);
+    expect(resetCredentialsWithToken(token, 'freshpass').success).toBe(true);
 
     const stored = readJson(paths.userFile);
     expect(stored.email).toBeUndefined();
-    expect(stored.username).toBe('updateme');
-    expect(stored.passwordHash).toBe(sha256('fresh1'));
-    expect(stored.recoveryPhrase).toBe('new phrase');
+    expect(stored.mustChangePassword).toBeUndefined();
+    expect(stored.username).toBe('legacy-mail');
+    expect(stored.passwordHash).toBe(sha256('freshpass'));
     expect(userExists(uid)).toBe(true);
   });
-});
 
-/**
- * TARGET (SEC-1, SEC-4): принимаемые критерии восстановления доступа.
- * Заготовки фиксируют, что именно должно измениться; по мере реализации
- * этапов 1 они превращаются в обычные тесты, а «CURRENT (insecure)» выше
- * удаляется.
- */
-describe('TARGET (SEC-1, SEC-4): восстановление доступа', () => {
-  it.todo(
-    'сброс пароля возможен только по одноразовому токену, но не по логину',
-  );
-  it.todo('verifyRecovery сравнивает фразу целиком, а не по одному слову');
-  it.todo('verifyRecovery отвечает 400 на частичную фразу и на "." / "("');
-  it.todo('фраза на кириллице проходит нормализацию и сравнение');
-  it.todo('просроченный и повторно использованный токен отклоняются');
-  it.todo('падающий до этого regex не даёт 500');
+  it('hashLegacyRecoveryPhrases переводит открытые фразы в хэши идемпотентно', () => {
+    const plainUid = setupAccount('migrate-me', 'pass1');
+    // Имитируем старые данные: записываем фразу открытым текстом.
+    const paths = userPaths(dataDir, plainUid);
+    const raw = readJson(paths.userFile);
+    raw.recoveryPhrase = 'plain amber cobalt';
+    fs.writeFileSync(paths.userFile, JSON.stringify(raw, null, 2));
+
+    const hashedUid = setupAccount('already-hashed', 'pass1', 'kept phrase');
+    const hashedBefore = storedPhrase(hashedUid);
+
+    const report = hashLegacyRecoveryPhrases();
+    expect(report.updated).toBeGreaterThanOrEqual(1);
+    expect(isRecoveryPhraseHash(storedPhrase(plainUid))).toBe(true);
+    expect(
+      recoveryPhraseMatches(storedPhrase(plainUid), 'plain amber cobalt'),
+    ).toBe(true);
+    // Уже захешированная фраза не переписывается.
+    expect(storedPhrase(hashedUid)).toBe(hashedBefore);
+
+    expect(hashLegacyRecoveryPhrases().updated).toBe(0);
+  });
 });

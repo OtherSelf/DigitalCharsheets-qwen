@@ -233,7 +233,7 @@ export const ruTranslations: Record<string, string> = {
   'auth.loginDesc': 'Войдите в существующий аккаунт.',
   'auth.recoverTitle': 'Восстановление аккаунта',
   'auth.recoverDesc':
-    'Подтвердите владение тремя словами из ваших листов и фразой восстановления.',
+    'Подтвердите владение аккаунтом фразой восстановления: сервер выдаст одноразовый код для смены пароля.',
   'auth.registerTitle': 'Регистрация',
   'auth.registerDesc':
     'Укажите логин, отображаемое имя и запоминающуюся фразу восстановления.',
@@ -254,13 +254,9 @@ export const ruTranslations: Record<string, string> = {
   'auth.recoveryPhrasePlaceholder': 'например, french butter',
   'auth.recoveryPhraseHint':
     'Не менее 5 символов. Запомните её — это единственный способ восстановить аккаунт.',
-  'auth.threeWords': 'Три слова из ваших листов',
-  'auth.word1Placeholder': 'Слово 1 (например, Fighter)',
-  'auth.word2Placeholder': 'Слово 2 (например, Strength)',
-  'auth.word3Placeholder': 'Слово 3 (например, Longsword)',
   'auth.yourRecoveryPhrase': 'Ваша фраза восстановления',
   'auth.phraseMatchHint':
-    'Регистр не важен. Порядок не важен. Хотя бы одно слово должно совпадать с исходной фразой.',
+    'Регистр не важен, но все слова и их порядок должны совпадать с исходной фразой.',
   'auth.verifyContinue': 'Проверить и продолжить',
   'auth.verifying': 'Проверка...',
   'auth.backToLogin': 'Назад ко входу',
@@ -280,13 +276,14 @@ export const ruTranslations: Record<string, string> = {
   'auth.checkingAccount': 'Проверка аккаунта...',
   'auth.connectFailed': 'Не удалось подключиться к серверу.',
   'auth.genericError': 'Произошла непредвиденная ошибка.',
-  'auth.noRecoveryPhrase': 'Для этого аккаунта не задана фраза восстановления.',
-  'auth.noCharacterSheets':
-    'Листы персонажей не найдены. Невозможно подтвердить владение.',
-  'auth.phraseMismatch': 'Фраза восстановления не совпадает.',
-  'auth.wordNotFound':
-    'Слово «{word}» не найдено ни в одном из ваших листов персонажей.',
   'auth.accountBlocked': 'Этот аккаунт заблокирован администратором.',
+  'auth.recoveryFailed':
+    'Фраза восстановления не подошла. Проверьте логин и фразу.',
+  'auth.recoveryRateLimited': 'Слишком много попыток. Попробуйте позже.',
+  'auth.recoveryTokenInvalid':
+    'Код восстановления истёк. Проверьте фразу ещё раз.',
+  'auth.recoverySuccess':
+    'Данные для входа обновлены. Войдите с новым паролем.',
   'auth.phraseExample': 'например, french butter dragon',
   'auth.secureAccountTitle': 'Защитите аккаунт',
   'auth.secureAccountDesc':

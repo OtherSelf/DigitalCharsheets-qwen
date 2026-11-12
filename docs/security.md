@@ -133,6 +133,13 @@ burns it and changes the password and phrase. Recovery never returns a session,
 so the user signs in normally afterwards. Failed attempts share one response and
 one delay, and are rate limited.
 
+The phrase itself is stored as a salted `scrypt` hash
+([`src/lib/security/phrase.ts`](../src/lib/security/phrase.ts)) and compared as
+a whole: case and extra spaces are normalized away, the set and order of words
+are not. Plaintext values written by older versions are re-hashed on the first
+successful verification and by the startup pass, so a copied `user.json` no
+longer reveals the phrase.
+
 ## Rate limiting and anti-enumeration
 
 [`src/lib/security/rate-limit.ts`](../src/lib/security/rate-limit.ts) is a
@@ -141,8 +148,9 @@ default is in-process memory, which is correct for the single-process
 deployment and can be swapped for a file-backed store when several instances
 share a data directory.
 
-Limits are part of the API contract (see [api.md](api.md) once documented):
-exceeding a window answers `429` with `Retry-After`, never with a password hint.
+Current windows: login 10 attempts / 10 minutes, recovery 5 attempts /
+15 minutes. Exceeding one answers `429` with `Retry-After`, never with a hint
+about the password; [api.md](api.md) lists the contract per endpoint.
 
 ## Data directory privacy
 

@@ -231,7 +231,7 @@ export const enTranslations: Record<string, string> = {
   'auth.loginDesc': 'Sign in to an existing account.',
   'auth.recoverTitle': 'Recover Account',
   'auth.recoverDesc':
-    'Prove ownership with 3 words from your sheets + your recovery phrase.',
+    'Prove account ownership with your recovery phrase: the server issues a single-use code for changing the password.',
   'auth.registerTitle': 'Create Account',
   'auth.registerDesc':
     'Pick a login, a display name and a memorable recovery phrase.',
@@ -252,13 +252,9 @@ export const enTranslations: Record<string, string> = {
   'auth.recoveryPhrasePlaceholder': 'e.g., french butter',
   'auth.recoveryPhraseHint':
     'At least 5 characters. Remember it — it is the only way to recover your account.',
-  'auth.threeWords': 'Three words from your sheets',
-  'auth.word1Placeholder': 'Word 1 (e.g., Fighter)',
-  'auth.word2Placeholder': 'Word 2 (e.g., Strength)',
-  'auth.word3Placeholder': 'Word 3 (e.g., Longsword)',
   'auth.yourRecoveryPhrase': 'Your Recovery Phrase',
   'auth.phraseMatchHint':
-    "Case-insensitive. Order doesn't matter. At least one word must match your original phrase.",
+    'Case does not matter, but every word and its order must match the original phrase.',
   'auth.verifyContinue': 'Verify & Continue',
   'auth.verifying': 'Verifying...',
   'auth.backToLogin': 'Back to login',
@@ -278,13 +274,13 @@ export const enTranslations: Record<string, string> = {
   'auth.checkingAccount': 'Checking account...',
   'auth.connectFailed': 'Failed to connect to server.',
   'auth.genericError': 'An unexpected error occurred.',
-  'auth.noRecoveryPhrase': 'No recovery phrase is set for this account.',
-  'auth.noCharacterSheets':
-    'No character sheets found. Cannot verify ownership.',
-  'auth.phraseMismatch': 'Recovery phrase does not match.',
-  'auth.wordNotFound':
-    'The word "{word}" was not found in any of your character sheets.',
   'auth.accountBlocked': 'This account is blocked by an administrator.',
+  'auth.recoveryFailed': 'The login or recovery phrase did not match.',
+  'auth.recoveryRateLimited': 'Too many attempts. Try again later.',
+  'auth.recoveryTokenInvalid':
+    'The recovery code has expired. Verify the phrase again.',
+  'auth.recoverySuccess':
+    'Credentials updated. Sign in with your new password.',
   'auth.phraseExample': 'e.g., french butter dragon',
   'auth.secureAccountTitle': 'Secure Your Account',
   'auth.secureAccountDesc':
