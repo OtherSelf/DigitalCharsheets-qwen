@@ -1,7 +1,6 @@
 'use client';
 
 import * as React from 'react';
-import { useRouter } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -13,16 +12,16 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useCharacterContext } from '@/context/character-context';
-import { useTranslation } from '@/context/language-context';
+import { useCharacterContext, useTranslation } from '@/games/plugin-host';
 
 import { createExampleDefaults } from './defaults';
 
 /** Форма создания эталонного плагина: без пропсов, контекст/API — от хоста. */
-export function ExampleCharacterForm() {
+export function ExampleCharacterForm({
+  onCreated,
+}: { onCreated?: (characterId: string) => void } = {}) {
   const { addCharacter } = useCharacterContext();
   const { t } = useTranslation();
-  const router = useRouter();
   const [name, setName] = React.useState('');
   const [rank, setRank] = React.useState('Novice');
 
@@ -32,7 +31,7 @@ export function ExampleCharacterForm() {
     const created = await addCharacter(
       draft as unknown as Parameters<typeof addCharacter>[0],
     );
-    if (created) router.push(`/${created.id}`);
+    if (created) onCreated?.(created.id);
   };
 
   return (

@@ -10,6 +10,7 @@ deploying lives here, one topic per page.
 | File | What it covers |
 | --- | --- |
 | [architecture.md](architecture.md) | Stack, application layout, auth/session flow, startup checks, client state |
+| [plugin-sdk.md](plugin-sdk.md) | **SDK v1**: manifest, entry points, sheet/form, UI slots, i18n, migrations, conformance |
 | [game-modules.md](game-modules.md) | How a game/edition module is added, the registry contract and module layout |
 | [data-storage.md](data-storage.md) | On-disk data layout, user schema, locks, atomic writes, backups |
 | [api.md](api.md) | HTTP API, OpenAPI/Scalar docs, auth, endpoint map |

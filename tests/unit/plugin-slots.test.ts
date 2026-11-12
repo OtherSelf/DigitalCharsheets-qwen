@@ -121,7 +121,7 @@ describe('слоты-функции плагинов', () => {
 
       const headerSubtitle = slots.HeaderSubtitle?.(character, t);
       expect(headerSubtitle).toBeTruthy();
-      expect(headerSubtitle).toContain(t('common.gameSystemDarkHeresy'));
+      expect(headerSubtitle).toContain(t(`${id}.systemName`));
 
       const summary = slots.CardSummary?.(character, t);
       expect(summary?.text).toBeTruthy();

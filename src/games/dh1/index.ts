@@ -4,8 +4,8 @@ import { createDh1Defaults } from './defaults';
 import { createDh1Demo } from './demo';
 import { buildDh1ExcelSections } from './excel';
 import { buildDh1PortableJson } from './export';
-import { en as dh1En } from './i18n/en';
-import { ru as dh1Ru } from './i18n/ru';
+import dh1En from './i18n/en.json';
+import dh1Ru from './i18n/ru.json';
 import {
   dh1ConvertLegacyImport,
   dh1LegacyImportName,

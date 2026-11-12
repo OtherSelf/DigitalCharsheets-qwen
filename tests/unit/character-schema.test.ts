@@ -45,7 +45,7 @@ describe('character schema v1', () => {
     });
 
     const { character, changed, issues } = normalizeCharacterRecord(legacy);
-    const dh = character as DarkHeresyCharacter;
+    const dh = character as unknown as DarkHeresyCharacter;
     expect(changed).toBe(true);
     // В legacy-листе было influence=5 — это поле 2e, оно уходит в notes.
     expect(issues.join(' ')).toContain('поля 2e перенесены');
@@ -66,7 +66,7 @@ describe('character schema v1', () => {
       first.character as unknown as Record<string, unknown>,
     );
     expect(second.changed).toBe(false);
-    const dh = second.character as DarkHeresyCharacter;
+    const dh = second.character as unknown as DarkHeresyCharacter;
     expect(dh.divination).toBe('darkDreams');
     expect(dh.divinationEffect).toBe('insanity2');
   });
@@ -78,7 +78,7 @@ describe('character schema v1', () => {
         divinationEffect: '+3 Intelligence.',
       }),
     );
-    const dh = character as DarkHeresyCharacter;
+    const dh = character as unknown as DarkHeresyCharacter;
     expect(dh.divination).toBe('Knowledge is power, guard it well.');
     expect(character.schemaVersion).toBe(CHARACTER_SCHEMA_VERSION);
     expect(issues.join(' ')).toContain('неизвестное пророчество');
@@ -102,7 +102,7 @@ describe('character schema v1', () => {
     const parsed = parseExportPayload(payload);
     expect(parsed.ok).toBe(true);
     if (!parsed.ok) return;
-    const imported = parsed.characters[0] as DarkHeresyCharacter;
+    const imported = parsed.characters[0] as unknown as DarkHeresyCharacter;
     expect(imported.schemaVersion).toBe(CHARACTER_SCHEMA_VERSION);
     expect(imported.divination).toBe('trustYourFear');
     expect(imported.divinationEffect).toBe('agility2Fate1');

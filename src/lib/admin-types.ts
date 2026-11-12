@@ -39,6 +39,8 @@ export interface AdminUsersResponse {
 export interface AdminCharacterSummary {
   id: string;
   name: string;
+  /** Машинный id редакции (null — плагин не установлен). */
+  systemId: string | null;
   gameSystem: string;
   characterClass: string;
   /** Уровень D&D; для Dark Heresy — null. */

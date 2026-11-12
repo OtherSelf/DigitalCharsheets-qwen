@@ -32,12 +32,12 @@ const STATS_TAB: BulkEditorTab = {
 
 const VITALS_TAB: BulkEditorTab = {
   id: 'dh-vitals',
-  labelKey: 'common.dhVitals',
+  labelKey: 'dh1.bulkVitals',
   order: 20,
   showCount: true,
-  saveAllLabelKey: 'common.saveAllDhVitals',
-  saveAllDoneKey: 'common.allDhVitalsSaved',
-  emptyKey: 'common.noDhCharacters',
+  saveAllLabelKey: 'dh1.bulkSaveVitals',
+  saveAllDoneKey: 'dh1.bulkVitalsSaved',
+  emptyKey: 'dh1.bulkNoCharacters',
 };
 
 export const dh1BulkEditor: readonly BulkEditorTable<DH1Character>[] = [
@@ -45,8 +45,8 @@ export const dh1BulkEditor: readonly BulkEditorTable<DH1Character>[] = [
     id: 'dh1-stats',
     order: 10,
     tab: STATS_TAB,
-    titleKey: 'common.dhStats',
-    descriptionKey: 'common.dhStatsDesc',
+    titleKey: 'dh1.bulkStats',
+    descriptionKey: 'dh1.bulkStatsDesc',
     editionNameKey: 'games.dh1.name',
     minWidth: 900,
     gap: 1,
@@ -71,8 +71,8 @@ export const dh1BulkEditor: readonly BulkEditorTable<DH1Character>[] = [
     id: 'dh1-vitals',
     order: 10,
     tab: VITALS_TAB,
-    titleKey: 'common.dhVitals',
-    descriptionKey: 'common.dhVitalsDesc',
+    titleKey: 'dh1.bulkVitals',
+    descriptionKey: 'dh1.bulkVitalsDesc',
     minWidth: 800,
     gap: 2,
     saveOneKey: 'common.savedVitalsFor',

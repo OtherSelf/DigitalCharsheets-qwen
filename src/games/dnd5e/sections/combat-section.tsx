@@ -22,15 +22,11 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { useCharacterContext } from '@/context/character-context';
-import { useTranslation } from '@/context/language-context';
-import {
-  type CombatResource,
-  type DnDAbility,
-  type DnDAttack,
-  type SpellcastingEntry,
-} from '@/lib/types';
+import { useCharacterContext, useTranslation } from '@/games/plugin-host';
+import type { CombatResource } from '@/games/shared/types';
 import { cn } from '@/lib/utils';
+
+import type { DnDAbility, DnDAttack, SpellcastingEntry } from '../types';
 
 const CLASS_HIT_DICE: Record<string, number> = {
   Artificer: 8,

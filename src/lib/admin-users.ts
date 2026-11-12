@@ -1,6 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 
+import { resolveCharacterSystemId } from '@/games/character-system';
+
 import {
   type AdminActionResponse,
   type AdminCharacterSummary,
@@ -139,6 +141,8 @@ export function listCharactersForAdmin(
             ? raw.id
             : file.replace(/\.json$/, ''),
         name: typeof raw.name === 'string' && raw.name.trim() ? raw.name : '—',
+        systemId:
+          resolveCharacterSystemId(raw as Record<string, string>) ?? null,
         gameSystem:
           typeof raw.gameSystem === 'string' ? raw.gameSystem : 'Unknown',
         characterClass:

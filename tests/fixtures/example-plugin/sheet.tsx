@@ -5,8 +5,7 @@ import * as React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { useCharacterContext } from '@/context/character-context';
-import { useTranslation } from '@/context/language-context';
+import { useCharacterContext, useTranslation } from '@/games/plugin-host';
 import type { SheetHandle } from '@/games/types';
 
 import type { ExampleCharacter } from './types';

@@ -21,6 +21,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { useTranslation } from '@/context/language-context';
+import { getGameModule } from '@/games/registry';
 import type {
   AdminCharactersResponse,
   AdminCharacterSummary,
@@ -128,15 +129,12 @@ export function UserCharactersDialog({
                       {character.name}
                     </TableCell>
                     <TableCell>
-                      <Badge
-                        variant={
-                          character.gameSystem === 'Dungeons & Dragons'
-                            ? 'default'
-                            : 'secondary'
-                        }
-                      >
-                        {character.gameSystem === 'Dungeons & Dragons'
-                          ? 'D&D 5e'
+                      <Badge variant="secondary">
+                        {character.systemId
+                          ? t(
+                              getGameModule(character.systemId)?.nameKey ??
+                                character.gameSystem,
+                            )
                           : character.gameSystem}
                       </Badge>
                     </TableCell>

@@ -29,10 +29,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useCharacterContext } from '@/context/character-context';
-import { useTranslation } from '@/context/language-context';
-import { type DnDMulticlass } from '@/lib/types';
+import { useCharacterContext, useTranslation } from '@/games/plugin-host';
 import { cn } from '@/lib/utils';
+
+import type { DnDMulticlass } from '../types';
 
 // MULTICLASS REQUIREMENTS LANDMARK: Define stats type and requirements
 type DnDStats = {

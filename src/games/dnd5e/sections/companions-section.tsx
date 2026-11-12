@@ -10,11 +10,10 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
-import { useCharacterContext } from '@/context/character-context';
-import { useTranslation } from '@/context/language-context';
-import { type DnDCompanion } from '@/lib/types';
+import { useCharacterContext, useTranslation } from '@/games/plugin-host';
 import { cn } from '@/lib/utils';
 
+import type { DnDCompanion } from '../types';
 import { CompanionSheet } from './companion-sheet';
 
 interface CompanionsSectionProps {

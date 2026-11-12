@@ -22,9 +22,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { Textarea } from '@/components/ui/textarea';
-import { useCharacterContext } from '@/context/character-context';
-import { useTranslation } from '@/context/language-context';
-import type { Character } from '@/lib/types';
+import { useCharacterContext, useTranslation } from '@/games/plugin-host';
 import { cn } from '@/lib/utils';
 
 import { getDarkHeresyCapabilities } from './capabilities';
@@ -38,7 +36,11 @@ import {
 } from './sections/info-progression-section';
 import { SkillsTalentsSection } from './sections/skills-talents-section';
 import { EMPTY_STAT_UPGRADE, pickAllowedStats, statRecord } from './stats';
-import type { BodyPart, DH2Character } from './types';
+import type {
+  BodyPart,
+  DH2Character as Character,
+  DH2Character,
+} from './types';
 
 const defaultArmor = {
   Head: null,

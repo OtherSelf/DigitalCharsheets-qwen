@@ -17,8 +17,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { useCharacterContext } from '@/context/character-context';
-import { useTranslation } from '@/context/language-context';
+import { useCharacterContext, useTranslation } from '@/games/plugin-host';
 
 import type { DH2Character } from '../types';
 

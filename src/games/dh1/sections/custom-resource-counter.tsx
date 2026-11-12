@@ -14,8 +14,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { Textarea } from '@/components/ui/textarea';
-import { useCharacterContext } from '@/context/character-context';
-import { useTranslation } from '@/context/language-context';
+import { useCharacterContext, useTranslation } from '@/games/plugin-host';
 
 import type { DH1Character } from '../types';
 import { EditSaveButton } from './dh-ui-helpers';

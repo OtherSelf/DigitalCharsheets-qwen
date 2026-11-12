@@ -21,22 +21,39 @@ import { translations } from '@/lib/i18n';
 
 const ROOT = process.cwd();
 const SRC = path.join(ROOT, 'src');
-const TRANSLATION_FILES = [
-  path.join(SRC, 'lib', 'i18n', 'translations.en.ts'),
-  path.join(SRC, 'lib', 'i18n', 'translations.ru.ts'),
-  path.join(SRC, 'games', 'i18n', 'en.ts'),
-  path.join(SRC, 'games', 'i18n', 'ru.ts'),
-  path.join(SRC, 'games', 'dh1', 'i18n', 'core-en.ts'),
-  path.join(SRC, 'games', 'dh1', 'i18n', 'core-ru.ts'),
-  path.join(SRC, 'games', 'dh2', 'i18n', 'core-en.ts'),
-  path.join(SRC, 'games', 'dh2', 'i18n', 'core-ru.ts'),
-  path.join(SRC, 'games', 'dnd5e', 'i18n', 'en.ts'),
-  path.join(SRC, 'games', 'dnd5e', 'i18n', 'ru.ts'),
-  path.join(SRC, 'games', 'dh1', 'i18n', 'en.ts'),
-  path.join(SRC, 'games', 'dh1', 'i18n', 'ru.ts'),
-  path.join(SRC, 'games', 'dh2', 'i18n', 'en.ts'),
-  path.join(SRC, 'games', 'dh2', 'i18n', 'ru.ts'),
-];
+/**
+ * Файлы словарей. Ядро пока TS (`translations.*.ts`), плагины — JSON
+ * (`i18n/{en,ru}.json`, D13), поэтому список собирается сканированием, а не
+ * руками: новый плагин не требует правок теста.
+ */
+function dictionaryFiles(): string[] {
+  const fixed = [
+    path.join(SRC, 'lib', 'i18n', 'translations.en.ts'),
+    path.join(SRC, 'lib', 'i18n', 'translations.ru.ts'),
+    path.join(SRC, 'games', 'i18n', 'en.ts'),
+    path.join(SRC, 'games', 'i18n', 'ru.ts'),
+  ];
+  const pluginsDir = path.join(SRC, 'games');
+  const pluginDictionaries = fs
+    .readdirSync(pluginsDir, { recursive: true, encoding: 'utf8' })
+    .map((file) => path.join(pluginsDir, file))
+    .filter((file) => {
+      const base = path.basename(file);
+      return (
+        (base === 'en.json' ||
+          base === 'ru.json' ||
+          base === 'en.ts' ||
+          base === 'ru.ts') &&
+        file.includes(`${path.sep}i18n${path.sep}`)
+      );
+    })
+    .sort();
+  return [...fixed, ...pluginDictionaries].filter((file) =>
+    fs.existsSync(file),
+  );
+}
+
+const TRANSLATION_FILES = dictionaryFiles();
 
 function sourceFiles(dir: string): string[] {
   return fs
@@ -86,7 +103,9 @@ const NAMESPACE_RE =
 const SAME_VALUE_ALLOWED = new Set([
   'dh1.placeholderAge',
   'dh2.placeholderAge',
-  'common.gameSystemDarkHeresy',
+  'dh1.systemName',
+  'dh2.systemName',
+  'dnd5e.systemName',
   'common.dungeonsAndDragons',
   'common.darkHeresy',
   'games.dnd.name',
@@ -164,7 +183,7 @@ describe('переводы: целостность словарей', () => {
   it('нет дублей ключей между слоями и модулями', () => {
     for (const language of ['en', 'ru'] as const) {
       const files = TRANSLATION_FILES.filter((file) =>
-        new RegExp(`(^|[./])${language}\\.ts$`).test(file),
+        new RegExp(`(^|[./])${language}\\.(ts|json)$`).test(file),
       );
       const seen = new Map<string, string>();
       const duplicates: string[] = [];

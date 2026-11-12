@@ -39,8 +39,8 @@
     "createForm": "create-form.tsx"
   },
   "i18n": {
-    "en": "i18n/en.ts",
-    "ru": "i18n/ru.ts"
+    "en": "i18n/en.json",
+    "ru": "i18n/ru.json"
   },
   "demo": {
     "entry": "index.ts#createDemo"

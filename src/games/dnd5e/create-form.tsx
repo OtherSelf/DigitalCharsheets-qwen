@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import { useRouter } from 'next/navigation';
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, type Resolver } from 'react-hook-form';
@@ -33,10 +32,13 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { useCharacterContext } from '@/context/character-context';
-import { useTranslation } from '@/context/language-context';
-import { useToast } from '@/hooks/use-toast';
+import {
+  useCharacterContext,
+  useToast,
+  useTranslation,
+} from '@/games/plugin-host';
 
+import type { CreateFormProps } from '../types';
 import { calculateLevelFromExp, createDnd5eDefaults } from './defaults';
 
 // Map internal English names to translation keys
@@ -209,9 +211,8 @@ const ALIGNMENT_TRANSLATION_KEYS: Record<string, string> = {
   'Chaotic Evil': 'dnd.alignmentChaoticEvil',
 };
 
-export function DndCharacterForm() {
+export function DndCharacterForm({ onCreated }: CreateFormProps = {}) {
   const { toast } = useToast();
-  const router = useRouter();
   const { addCharacter } = useCharacterContext();
   const { t } = useTranslation();
 
@@ -321,7 +322,7 @@ export function DndCharacterForm() {
         title: t('common.characterCreatedTitle'),
         description: t('dnd.characterCreatedDesc'),
       });
-      router.push(`/${docRef.id}`);
+      onCreated?.(docRef.id);
     }
   }
 

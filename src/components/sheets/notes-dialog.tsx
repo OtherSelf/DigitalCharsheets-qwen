@@ -62,7 +62,7 @@ export function NotesDialog({
         </DialogHeader>
         <div className="py-4">
           <Textarea
-            value={notes}
+            value={String(notes ?? '')}
             onChange={(e) => setNotes(e.target.value)}
             placeholder={t('common.jotDownNotesPlaceholder')}
             className="min-h-[300px]"

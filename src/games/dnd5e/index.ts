@@ -5,8 +5,8 @@ import { createDnd5eDemo } from './demo';
 import { dnd5eFindEmbedded, dnd5eUpdateEmbedded } from './embedded';
 import { buildDnd5eExcelSections } from './excel';
 import { buildDnd5ePortableJson } from './export';
-import { en as dnd5eEn } from './i18n/en';
-import { ru as dnd5eRu } from './i18n/ru';
+import dnd5eEn from './i18n/en.json';
+import dnd5eRu from './i18n/ru.json';
 import {
   dnd5eConvertLegacyImport,
   dnd5eLegacyImportName,

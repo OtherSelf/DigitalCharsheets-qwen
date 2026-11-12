@@ -8,10 +8,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
-import { useCharacterContext } from '@/context/character-context';
-import { useTranslation } from '@/context/language-context';
-import { type DnDSavingThrow, type DnDSkill } from '@/lib/types';
+import { useCharacterContext, useTranslation } from '@/games/plugin-host';
 import { cn } from '@/lib/utils';
+
+import type { DnDSavingThrow, DnDSkill } from '../types';
 
 // Helper to map skill internal names to translation keys (with abbreviations)
 const getSkillTranslationKey = (name: string): string => {

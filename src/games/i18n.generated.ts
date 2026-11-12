@@ -7,12 +7,12 @@
  * Пересобрать:  npm run plugins:generate
  * Проверить:    npm run plugins:check
  */
-import { en as dh1En } from './dh1/i18n/en';
-import { ru as dh1Ru } from './dh1/i18n/ru';
-import { en as dh2En } from './dh2/i18n/en';
-import { ru as dh2Ru } from './dh2/i18n/ru';
-import { en as dnd5eEn } from './dnd5e/i18n/en';
-import { ru as dnd5eRu } from './dnd5e/i18n/ru';
+import dh1En from './dh1/i18n/en.json';
+import dh1Ru from './dh1/i18n/ru.json';
+import dh2En from './dh2/i18n/en.json';
+import dh2Ru from './dh2/i18n/ru.json';
+import dnd5eEn from './dnd5e/i18n/en.json';
+import dnd5eRu from './dnd5e/i18n/ru.json';
 import type { LocalizedMessages } from './types';
 
 /** Словари по `systemId`; порядок ключей — по id (стабильная генерация). */

@@ -19,6 +19,21 @@ npm run test:visual:report  # open the HTML report
 npm run test:dev            # dev-proxy hydration + health/version smoke
 ```
 
+## Plugin conformance
+
+`npm run plugins:conformance` runs the plugin contract suite:
+
+- `plugins-registry.test.ts` — generated registry/i18n match the manifests; every
+  manifest ↔ module field and entry point; defaults/demo vs schema;
+- `plugin-slots.test.ts` — lazy UI slots load and are exactly the declared ones;
+  labels/keys, read-only boundary state;
+- `bulk-editor.test.ts` — `/stats-editor` tables: columns, defaults, save patches;
+- `example-plugin.test.ts` — the reference fixture (custom sheet/form/i18n/slots)
+  installed into a temporary `src/games/` and run through the same generator.
+
+`npm run plugins:boundaries` enforces the import rules (the legacy allowlist is
+empty), `npm run plugins:check` fails when the generated files are stale.
+
 ## Unit tests
 
 - Runner: Vitest (`tests/unit/*.test.ts`), Node environment.

@@ -22,7 +22,7 @@ import {
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
-import { useTranslation } from '@/context/language-context';
+import { useTranslation } from '@/games/plugin-host';
 
 import { EPIC_BOON_KEYS, type EpicBoonKey } from '../epic-boons';
 

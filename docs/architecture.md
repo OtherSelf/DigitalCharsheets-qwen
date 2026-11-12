@@ -43,7 +43,9 @@ src/
   context/             LocalAuthProvider, CharacterProvider, language
   games/               Game plugins (contract, generated registry,
                        dnd5e/dh1/dh2): a plugin folder owns its plugin.json,
-                       sheet, form, sections and data
+                       sheet, form, sections, ui.ts slots, JSON dictionaries
+                       and data; registry.generated.ts + i18n.generated.ts are
+                       produced from the manifests
   lib/                 Server auth/session, storage, export, OpenAPI, schema,
                        game catalog and module access
   instrumentation.ts   Runs startup maintenance when the server starts
@@ -52,7 +54,8 @@ tests/
   unit/                Vitest: lib/API/storage/OpenAPI
   visual/              Playwright screenshot regression + baselines
 scripts/               smoke / visual / predeploy / dev helpers
-scripts/plugins/       plugin import-boundary check + its allowlist
+scripts/plugins/       plugin manifest validation, registry/i18n generation and
+                       import-boundary check (`npm run plugins:*`)
 docs/                  This documentation
 ```
 

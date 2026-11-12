@@ -296,7 +296,9 @@ export default function ManualCharacterCreationPage() {
                 </Button>
               </div>
               {Form ? (
-                <Form />
+                <Form
+                  onCreated={(characterId) => router.push(`/${characterId}`)}
+                />
               ) : (
                 <p className="text-destructive text-sm">{t('common.error')}</p>
               )}
