@@ -914,54 +914,6 @@ export function hashLegacyRecoveryPhrases(): HashLegacyPhrasesReport {
   return report;
 }
 
-/**
- * Создать импортированный аккаунт (Firestore-экспорт) с неизменяемым uid.
- * Вызывать под `withDataLock`: функция пишет user.json и индекс.
- */
-export function createImportedUser(options: {
-  username: string;
-  displayName: string;
-  passwordHash: string;
-  originalFirebaseId?: string;
-}): StoredUser {
-  return withDataLock(() => {
-    const index = readLoginIndexForUpdate();
-    const login = normalizeLogin(options.username);
-
-    const existing = index.logins[login];
-    if (existing) {
-      const stored = getStoredUser(existing);
-      if (stored) return stored;
-    }
-
-    const uid = newUid();
-    const now = new Date().toISOString();
-    const user: StoredUser = {
-      schemaVersion: USER_SCHEMA_VERSION,
-      uid,
-      username: login,
-      displayName: options.displayName,
-      passwordHash: options.passwordHash,
-      role: 'user',
-      isBlocked: false,
-      createdAt: now,
-      updatedAt: now,
-      ...(options.originalFirebaseId
-        ? { originalFirebaseId: options.originalFirebaseId }
-        : {}),
-    };
-
-    writeStoredUser(uid, user);
-    index.logins[login] = uid;
-    try {
-      writeLoginIndex(index);
-    } catch (e) {
-      console.error('Failed to update login index for imported user:', e);
-    }
-    return user;
-  });
-}
-
 export interface CreateServiceAdminResult {
   success: boolean;
   user?: LocalUser;

@@ -15,8 +15,9 @@ import { sessionCookieHeader } from '@/lib/session';
  * (POST /api/auth/exists) и предлагает регистрацию
  * (POST /api/auth/register). Поэтому здесь `allowRegistration: false`.
  *
- * Статусы: 400 — не заполнены поля; 401 — неверный пароль; 404 — аккаунт не
- * найден; 429 — превышен лимит попыток; 200 — сессия в httpOnly-cookie.
+ * Статусы: 400 — не заполнены поля; 401 — «нет такого аккаунта» и «неверный
+ * пароль» неразличимы; 403 — аккаунт заблокирован (виден только после верного
+ * пароля); 429 — превышен лимит попыток; 200 — сессия в httpOnly-cookie.
  *
  * Длину пароля вход НЕ проверяет: политика (минимум 12) действует в момент
  * установки пароля, иначе аккаунты, созданные раньше, потеряли бы доступ.
@@ -62,14 +63,31 @@ export async function POST(request: Request) {
       console.warn(
         `[security] login rejected: reason=${result.reason ?? 'unknown'}`,
       );
+
+      // «Нет аккаунта» и «неверный пароль» — один статус и один текст:
+      // иначе логин становится оракулом перечисления аккаунтов (SEC-9).
+      if (
+        result.reason === 'no_account' ||
+        result.reason === 'invalid_password'
+      ) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'Invalid login or password.',
+            reason: 'invalid_credentials',
+          },
+          { status: 401 },
+        );
+      }
+
+      // Блокировка видна только после верного пароля, поэтому аккаунт не
+      // выдаёт; ошибки валидации полей — 400.
       const status =
-        result.reason === 'no_account'
-          ? 404
-          : result.reason === 'invalid_input'
-            ? 400
-            : result.reason === 'blocked'
-              ? 403
-              : 401;
+        result.reason === 'invalid_input'
+          ? 400
+          : result.reason === 'blocked'
+            ? 403
+            : 401;
       return NextResponse.json(
         {
           success: false,

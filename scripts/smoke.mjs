@@ -374,18 +374,19 @@ await check('POST /api/auth/exists → свободный логин', async () 
 });
 
 await check(
-  'POST /api/auth → 404 для несуществующего аккаунта (не регистрирует)',
+  'POST /api/auth → 401 для несуществующего аккаунта (не регистрирует)',
   async () => {
     const res = await api('/auth', {
       method: 'POST',
       body: { username, password },
       auth: false,
     });
-    assertStatus(res, 404, 'вход в несуществующий аккаунт');
+    assertStatus(res, 401, 'вход в несуществующий аккаунт');
     const body = assertJson(res, 'вход в несуществующий аккаунт');
     assert(body.success === false, 'несуществующий аккаунт: success !== false');
+    // Ответ не должен отличать «нет аккаунта» от «неверный пароль» (SEC-9).
     assert(
-      body.reason === 'no_account',
+      body.reason === 'invalid_credentials',
       `несуществующий аккаунт: reason = ${body.reason}`,
     );
     assert(
@@ -667,6 +668,12 @@ await check('GET /api/export?characterId → JSON персонажа', async () 
 await check('GET /api/export?characterId=<нет такого> → 404', async () => {
   const res = await api('/export?characterId=missing-id');
   assertStatus(res, 404, 'GET /api/export (404)');
+});
+
+// SEC-8: публичный импорт убран из рантайма — путь не существует.
+await check('GET /api/import → 404 (маршрут удалён)', async () => {
+  const res = await api('/import', { auth: false });
+  assertStatus(res, 404, 'GET /api/import');
 });
 
 await check('PUT /api/characters/<id> → правка сохраняется', async () => {
@@ -995,13 +1002,13 @@ await check('DELETE /api/auth/profile → 200 и cookie стёрта', async () 
   );
 });
 
-await check('после удаления вход старым паролем → 404', async () => {
+await check('после удаления вход старым паролем → 401', async () => {
   const res = await api('/auth', {
     method: 'POST',
     body: { username, password },
     auth: false,
   });
-  assertStatus(res, 404, 'вход после удаления аккаунта');
+  assertStatus(res, 401, 'вход после удаления аккаунта');
 });
 
 if (opts.dataDir) {
@@ -1042,8 +1049,8 @@ await check('11-я неудачная попытка входа → 429 с Retry
   }
 
   assert(
-    statuses.slice(0, 10).every((status) => status === 404),
-    `первые 10 попыток: ${statuses.join(', ')}, ожидали 404`,
+    statuses.slice(0, 10).every((status) => status === 401),
+    `первые 10 попыток: ${statuses.join(', ')}, ожидали 401`,
   );
   assert(statuses[10] === 429, `11-я попытка: ${statuses[10]}, ожидали 429`);
   assert(Number(retryAfter) > 0, `Retry-After = ${retryAfter}`);

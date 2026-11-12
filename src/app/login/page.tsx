@@ -94,6 +94,12 @@ export default function LoginPage() {
   };
 
   const mapLoginError = (result: AuthFailure): string => {
+    // Сервер не различает «нет аккаунта» и «неверный пароль» (SEC-9), поэтому
+    // и UI показывает общую формулировку. Подсказку «аккаунт не найден» даёт
+    // только отдельная проверка существования (она под лимитом).
+    if (result.reason === 'invalid_credentials') {
+      return t('auth.invalidCredentials');
+    }
     if (
       result.reason === 'no_account' ||
       /no account found/i.test(result.error || '')

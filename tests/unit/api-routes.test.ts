@@ -24,7 +24,6 @@ import {
   POST as charactersPost,
 } from '@/app/api/characters/route';
 import { GET as exportGet } from '@/app/api/export/route';
-import { GET as importGet } from '@/app/api/import/route';
 import { isUid } from '@/lib/ids';
 import {
   isRecoveryPhraseHash,
@@ -52,7 +51,7 @@ import {
  * Покрыто: /api/auth (200/401/400, битый JSON → 500, Set-Cookie), /api/auth/logout,
  * /api/auth/profile (uid из сессии), /api/characters (CRUD, 401 без сессии,
  * 404 на неизвестный id, отбрасывание запоздавшего PUT, __page/__seq не попадают
- * в файл), /api/export, recovery-роуты, легаси /api/import.
+ * в файл), /api/export, recovery-роуты; отсутствие легаси /api/import.
  *
  * Сессия: uid больше не приходит в query/body. Запросы авторизуются заголовком
  * `cookie: dcs_session=…` (см. sessionHeaders в helpers).
@@ -250,18 +249,37 @@ describe('POST /api/auth/exists', () => {
 });
 
 describe('POST /api/auth', () => {
-  it('не создаёт аккаунт для неизвестного логина — 404', async () => {
+  it('не создаёт аккаунт для неизвестного логина и не выдаёт сессию', async () => {
     const res = await loginRoute(
       json({ username: 'unknown', password: 'test-pass-1234' }),
     );
 
-    expect(res.status).toBe(404);
+    expect(res.status).toBe(401);
+    expect(res.headers.get('set-cookie')).toBeNull();
     expect(await res.json()).toMatchObject({
       success: false,
-      reason: 'no_account',
+      reason: 'invalid_credentials',
     });
     // Свободный логин больше не означает «регистрация первым входом».
     expect(fs.existsSync(path.join(dataDir, 'users'))).toBe(false);
+  });
+
+  it('«нет аккаунта» и «неверный пароль» неразличимы (SEC-9)', async () => {
+    await loginAs('api-enum', 'test-pass-1234');
+
+    const noAccount = await loginRoute(
+      json({ username: 'nobody-here', password: 'test-pass-1234' }),
+    );
+    const wrongPassword = await loginRoute(
+      json({ username: 'api-enum', password: 'wrong-pass-1234' }),
+    );
+
+    expect(noAccount.status).toBe(401);
+    expect(wrongPassword.status).toBe(401);
+    // Одинаковые статус, тело и заголовки: по ответу нельзя перечислять логины.
+    expect(await noAccount.json()).toEqual(await wrongPassword.json());
+    expect(noAccount.headers.get('set-cookie')).toBeNull();
+    expect(wrongPassword.headers.get('set-cookie')).toBeNull();
   });
 
   it('возвращает 401 на неверный пароль', async () => {
@@ -288,7 +306,7 @@ describe('POST /api/auth', () => {
     const shortPassword = await loginRoute(
       json({ username: 'x', password: '123' }),
     );
-    expect(shortPassword.status).toBe(404);
+    expect(shortPassword.status).toBe(401);
 
     // Политика (12 символов) действует при регистрации.
     const shortOnRegister = await registerRoute(
@@ -607,11 +625,13 @@ describe('DELETE /api/auth/profile', () => {
       readJson(loginIndexPath(dataDir)).logins['delete-me'],
     ).toBeUndefined();
 
-    // Вход по старому паролю больше не находит аккаунт.
+    // Вход по старому паролю больше не находит аккаунт (и не подсказывает,
+    // что его нет: 401 неотличим от неверного пароля).
     const relogin = await loginRoute(
       json({ username: 'delete-me', password: 'test-pass-1234' }),
     );
-    expect(relogin.status).toBe(404);
+    expect(relogin.status).toBe(401);
+    expect((await relogin.json()).reason).toBe('invalid_credentials');
   });
 
   it('старая cookie после удаления не работает и не воссоздаёт каталог', async () => {
@@ -621,7 +641,7 @@ describe('DELETE /api/auth/profile', () => {
         .status,
     ).toBe(200);
 
-    // Подпись cookie ещё валидна (30 дней), но профиля уже нет — 401.
+    // Подпись cookie ещё валидна, но записи сессии и профиля уже нет — 401.
     const res = await charactersGet(
       req('http://localhost/api/characters', 'GET', sessionHeaders(uid)),
     );
@@ -1354,77 +1374,19 @@ describe('recovery-роуты (SEC-1, SEC-4)', () => {
   });
 });
 
-describe('GET /api/import (разовый перенос из Firestore-экспорта)', () => {
-  const firestoreRow = (fbUser: string, overrides: Record<string, any>) => ({
-    'Document ID': `projects/demo/databases/(default)/documents/users/${fbUser}/characterSheets/doc1`,
-    gameSystem: 'Dungeons & Dragons',
-    characterClass: '  Rogue  ',
-    background: 'Urchin',
-    level: 2,
-    ...overrides,
+/**
+ * SEC-8: публичный импорт из Firestore-экспорта убран из рантайма. Он создавал
+ * аккаунты с паролем `1234` без всякой аутентификации и отдавал пароли в
+ * ответе. Маршрута нет — Next отвечает `404`; миграция выполняется офлайн.
+ */
+describe('легаси /api/import удалён (SEC-8)', () => {
+  it('маршрута нет в дереве приложения', () => {
+    const routeDir = path.join(process.cwd(), 'src', 'app', 'api', 'import');
+    expect(fs.existsSync(routeDir)).toBe(false);
   });
 
-  it('404, если файла data/import-source.json нет', async () => {
-    const res = await importGet();
-    expect(res.status).toBe(404);
-    expect((await res.json()).success).toBe(false);
-  });
-
-  it('импортирует пользователей и листы обеих систем, затем удаляет файл', async () => {
-    fs.mkdirSync(dataDir, { recursive: true });
-    fs.writeFileSync(
-      path.join(dataDir, 'import-source.json'),
-      JSON.stringify([
-        firestoreRow('fbuser1', { name: '  Ragnar  ' }),
-        firestoreRow('fbuser1', {
-          gameSystem: 'Dark Heresy',
-          careerPath: 'Adept',
-          homeWorld: 'Hive World',
-        }),
-        firestoreRow('fbuser2', { level: 4 }),
-        firestoreRow('fbuser3', { gameSystem: 'Unknown System' }),
-      ]),
-    );
-
-    const res = await importGet();
-    const body = await res.json();
-
-    expect(res.status).toBe(200);
-    expect(body.success).toBe(true);
-    expect(body.users).toHaveLength(3);
-    // У третьего пользователя единственный лист неизвестной системы — он пропущен.
-    expect(body.users[2].charactersImported).toBe(0);
-    expect(body.defaultPassword).toBe('1234');
-
-    const index = readJson(loginIndexPath(dataDir));
-    for (const user of body.users.filter(
-      (u: any) => u.charactersImported > 0,
-    )) {
-      expect(isUid(user.localUserId)).toBe(true);
-      const paths = userPaths(dataDir, user.localUserId);
-      expect(fs.existsSync(paths.userFile)).toBe(true);
-      expect(readJson(paths.userFile).uid).toBe(user.localUserId);
-      expect(index.logins[user.username]).toBe(user.localUserId);
-
-      const files = fs.readdirSync(paths.charactersDir);
-      expect(files.length).toBeGreaterThan(0);
-      const character = readJson(path.join(paths.charactersDir, files[0]));
-      expect(character.userId).toBe(user.localUserId);
-      expect(character.gameSystem).toMatch(/Dungeons|Dark Heresy/);
-    }
-
-    // Oчистка исходника после успешного импорта
-    expect(fs.existsSync(path.join(dataDir, 'import-source.json'))).toBe(false);
-  });
-
-  it('отклоняет пустой/невалидный файл', async () => {
-    fs.mkdirSync(dataDir, { recursive: true });
-    fs.writeFileSync(
-      path.join(dataDir, 'import-source.json'),
-      JSON.stringify({ not: 'array' }),
-    );
-
-    const res = await importGet();
-    expect(res.status).toBe(400);
+  it('сервер не экспортирует createImportedUser', async () => {
+    const serverAuth = await import('@/lib/server-auth');
+    expect('createImportedUser' in serverAuth).toBe(false);
   });
 });

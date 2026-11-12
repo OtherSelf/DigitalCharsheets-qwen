@@ -1,9 +1,9 @@
 # Export format
 
 Digital Character Sheets uses one portable envelope for single-character and
-full-backup JSON exports. The user-facing import accepts only this format; the
-separate legacy `GET /api/import` maintenance endpoint is described in
-[api.md](api.md).
+full-backup JSON exports. The user-facing import accepts only this format. The
+legacy Firestore migration lives offline — the former `GET /api/import`
+endpoint is gone (see [api.md](api.md)).
 
 ## JSON envelope
 
