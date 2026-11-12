@@ -1,8 +1,9 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import Link from 'next/link';
 
-import { Loader2, Save, ShieldAlert } from 'lucide-react';
+import { ExternalLink, Loader2, Save, ShieldAlert } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -13,6 +14,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -31,6 +33,13 @@ interface AdminGame {
   descriptionKey: string;
   defaultStatus: ModuleStatus;
   status: ModuleStatus;
+  enabled: boolean;
+  version: string | null;
+  schemaVersion: number;
+  tags: string[];
+  dependencies: { host: string; plugins: Record<string, string> } | null;
+  conformance: string | null;
+  demo: boolean;
 }
 
 interface AdminGamesResponse {
@@ -115,6 +124,32 @@ export function AdminGamesSection() {
     }
   };
 
+  const updateEnabled = async (systemId: string, enabled: boolean) => {
+    setIsSaving(true);
+    setStatus('');
+    setError('');
+    try {
+      const res = await fetch('/api/admin/games', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ systemId, enabled }),
+      });
+      const data = (await res
+        .json()
+        .catch(() => null)) as AdminGamesResponse | null;
+      if (!res.ok || !data?.success) {
+        setError(data?.error || t('admin.gamesSaveFailed'));
+        return;
+      }
+      apply(data);
+      setStatus(t('admin.gamesSaved'));
+    } catch {
+      setError(t('admin.gamesSaveFailed'));
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const saveTitle = async (value: string | null) => {
     setIsSaving(true);
     setStatus('');
@@ -176,7 +211,7 @@ export function AdminGamesSection() {
             </p>
           )}
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[640px] text-sm">
+            <table className="w-full min-w-[820px] text-sm">
               <thead>
                 <tr className="text-muted-foreground border-b text-left text-xs">
                   <th className="py-2 pr-3 font-semibold">
@@ -186,10 +221,19 @@ export function AdminGamesSection() {
                     {t('admin.editionColumn')}
                   </th>
                   <th className="py-2 pr-3 font-semibold">
+                    {t('admin.versionColumn')}
+                  </th>
+                  <th className="py-2 pr-3 font-semibold">
                     {t('admin.defaultStatusColumn')}
                   </th>
                   <th className="py-2 pr-3 font-semibold">
                     {t('admin.currentStatusColumn')}
+                  </th>
+                  <th className="py-2 pr-3 font-semibold">
+                    {t('admin.enabledColumn')}
+                  </th>
+                  <th className="py-2 pr-3 font-semibold">
+                    {t('admin.demoColumn')}
                   </th>
                 </tr>
               </thead>
@@ -198,6 +242,18 @@ export function AdminGamesSection() {
                   <tr key={game.id} className="border-b last:border-0">
                     <td className="py-2 pr-3">{t(game.nameKey)}</td>
                     <td className="py-2 pr-3">{t(game.descriptionKey)}</td>
+                    <td className="py-2 pr-3 whitespace-nowrap">
+                      <Badge variant="outline">
+                        {game.version ? `v${game.version}` : '—'}
+                      </Badge>
+                      <span className="text-muted-foreground mt-1 block text-[11px]">
+                        {t('admin.schemaColumn')} {game.schemaVersion}
+                        {game.conformance ? ` · ${game.conformance}` : ''}
+                        {game.dependencies
+                          ? ` · ${t('admin.hostApiLabel')} ${game.dependencies.host}`
+                          : ''}
+                      </span>
+                    </td>
                     <td className="py-2 pr-3">
                       <Badge variant="outline">
                         {statusLabel(game.defaultStatus)}
@@ -226,6 +282,30 @@ export function AdminGamesSection() {
                         </SelectContent>
                       </Select>
                     </td>
+                    <td className="py-2 pr-3">
+                      <Checkbox
+                        checked={game.enabled}
+                        disabled={isSaving}
+                        onCheckedChange={(checked) =>
+                          void updateEnabled(game.id, checked === true)
+                        }
+                        aria-label={`${t('admin.enabledColumn')}: ${t(game.nameKey)}`}
+                      />
+                    </td>
+                    <td className="py-2 pr-3">
+                      {game.demo ? (
+                        <Button variant="ghost" size="sm" asChild>
+                          <Link href="/demo">
+                            <ExternalLink className="h-4 w-4" />
+                            <span className="sr-only">
+                              {t('admin.demoColumn')}
+                            </span>
+                          </Link>
+                        </Button>
+                      ) : (
+                        '—'
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -233,6 +313,9 @@ export function AdminGamesSection() {
           </div>
           <p className="text-muted-foreground text-xs">
             {t('admin.gamesVisibilityNote')}
+          </p>
+          <p className="text-muted-foreground text-xs">
+            {t('admin.gamesEnabledNote')}
           </p>
         </CardContent>
       </Card>

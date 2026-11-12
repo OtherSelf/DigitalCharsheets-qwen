@@ -27,6 +27,7 @@ import type {
   BulkEditorTable,
   BulkEditorValue,
 } from '@/games/types';
+import { useAllGameUiSlots } from '@/hooks/use-game-ui-slots';
 import { type Character } from '@/lib/types';
 
 /**
@@ -175,12 +176,16 @@ export default function StatsEditorPage() {
   const [saveStatus, setSaveStatus] = useState('');
 
   const modules = listGameModules();
+  const slotsById = useAllGameUiSlots();
   const tables = useMemo<BulkTableEntry[]>(
     () =>
       modules.flatMap((module) =>
-        (module.ui?.bulkEditor ?? []).map((table) => ({ module, table })),
+        (slotsById[module.id]?.bulkEditor ?? []).map((table) => ({
+          module,
+          table,
+        })),
       ),
-    [modules],
+    [modules, slotsById],
   );
 
   const tabs = useMemo<BulkEditorTab[]>(() => {

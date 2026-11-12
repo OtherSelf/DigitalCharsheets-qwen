@@ -11,7 +11,11 @@ import {
   POST as charactersPost,
 } from '@/app/api/characters/route';
 import { GET as gamesGet } from '@/app/api/games/route';
-import { setModuleStatus, setSiteTitle } from '@/lib/game-catalog';
+import {
+  setModuleEnabled,
+  setModuleStatus,
+  setSiteTitle,
+} from '@/lib/game-catalog';
 import { authenticateUser } from '@/lib/server-auth';
 import type { UserRole } from '@/lib/user-role';
 import { readStoredUser, writeStoredUser } from '@/lib/user-schema';
@@ -73,6 +77,7 @@ async function listGames(uid?: string) {
   return (await res.json()) as {
     games: { id: string; editions: { id: string; status: string }[] }[];
     siteTitle: string | null;
+    disabled?: string[];
   };
 }
 
@@ -235,7 +240,11 @@ describe('/api/admin/games', () => {
     expect((await putTitle.json()).siteTitle).toBe('Новый стол');
 
     const stored = readJson(`${dataDir}/settings/game-catalog.json`);
-    expect(stored.statuses.dh2).toBe('test');
+    expect(stored.version).toBe(2);
+    expect(stored.plugins.dh2).toEqual({
+      enabled: true,
+      visibility: 'test',
+    });
     expect(stored.siteTitle).toBe('Новый стол');
     expect(fs.existsSync(`${dataDir}/settings/game-catalog.json`)).toBe(true);
   });
@@ -258,6 +267,130 @@ describe('/api/admin/games', () => {
         '/api/admin/games',
         'PUT',
         { systemId: 'dh9', status: 'test' },
+        admin,
+      ),
+    );
+    expect(badSystem.status).toBe(400);
+  });
+});
+
+describe('отключённый плагин (enabled=false, D9)', () => {
+  it('/api/games скрывает его из создания и отдаёт список disabled', async () => {
+    setModuleEnabled('dh1', false);
+    const guest = await listGames();
+    expect(
+      guest.games
+        .find((game) => game.id === 'darkHeresy')
+        ?.editions.map((edition) => edition.id),
+    ).toEqual(['dh2']);
+    expect(guest.disabled).toContain('dh1');
+  });
+
+  it('создание листа отключённой игры запрещено даже админу', async () => {
+    setModuleEnabled('dh2', false);
+    const admin = createUser('disabled-admin', 'admin');
+    const payload = makeDhCharacter({ edition: '2nd', systemId: 'dh2' });
+
+    const denied = await charactersPost(
+      jsonRequest('/api/characters', 'POST', payload, admin),
+    );
+    expect(denied.status).toBe(403);
+    expect((await denied.json()).reason).toBe('module_disabled');
+  });
+
+  it('существующие листы не пропадают из списка', async () => {
+    const uid = createUser('owner-user');
+    const created = await charactersPost(
+      jsonRequest('/api/characters', 'POST', makeDndCharacter(), uid),
+    );
+    expect(created.status).toBe(201);
+
+    setModuleEnabled('dnd5e', false);
+    const list = await charactersGet(
+      request('/api/characters', { headers: sessionHeaders(uid) }),
+    );
+    expect(list.status).toBe(200);
+    const body = await list.json();
+    expect(body.characters ?? body).toHaveLength(1);
+  });
+});
+
+describe('админский API: метаданные плагинов и enabled', () => {
+  it('GET отдаёт версию, схему, conformance и зависимости из манифеста', async () => {
+    const admin = createUser('meta-admin', 'admin');
+    const res = await adminGamesGet(
+      request('/api/admin/games', { headers: sessionHeaders(admin) }),
+    );
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    const dnd = body.games.find((game: { id: string }) => game.id === 'dnd5e');
+    expect(dnd).toMatchObject({
+      enabled: true,
+      version: '1.0.0',
+      schemaVersion: 2,
+      conformance: '>=1',
+      tags: expect.any(Array),
+      dependencies: { host: '^1.0.0', plugins: {} },
+      demo: true,
+    });
+  });
+
+  it('PUT enabled переключает плагин, не меняя visibility', async () => {
+    const admin = createUser('toggle-admin', 'admin');
+    setModuleStatus('dh2', 'test');
+
+    const off = await adminGamesPut(
+      jsonRequest(
+        '/api/admin/games',
+        'PUT',
+        { systemId: 'dh2', enabled: false },
+        admin,
+      ),
+    );
+    expect(off.status).toBe(200);
+    const offBody = await off.json();
+    expect(
+      offBody.games.find((game: { id: string }) => game.id === 'dh2'),
+    ).toMatchObject({ enabled: false, status: 'test' });
+
+    const stored = readJson(`${dataDir}/settings/game-catalog.json`);
+    expect(stored.plugins.dh2).toEqual({
+      enabled: false,
+      visibility: 'test',
+    });
+
+    const on = await adminGamesPut(
+      jsonRequest(
+        '/api/admin/games',
+        'PUT',
+        { systemId: 'dh2', enabled: true },
+        admin,
+      ),
+    );
+    expect(on.status).toBe(200);
+    expect(
+      (await on.json()).games.find((game: { id: string }) => game.id === 'dh2')
+        .enabled,
+    ).toBe(true);
+  });
+
+  it('PUT enabled валидирует boolean и систему', async () => {
+    const admin = createUser('toggle-validate', 'admin');
+    const badEnabled = await adminGamesPut(
+      jsonRequest(
+        '/api/admin/games',
+        'PUT',
+        { systemId: 'dh1', enabled: 'yes' },
+        admin,
+      ),
+    );
+    expect(badEnabled.status).toBe(400);
+
+    const badSystem = await adminGamesPut(
+      jsonRequest(
+        '/api/admin/games',
+        'PUT',
+        { systemId: 'dh9', enabled: false },
         admin,
       ),
     );

@@ -115,13 +115,17 @@ export const sanitizeData = (data: any): any => {
   return data;
 };
 
-function validateCharacterPayload(character: any, index: number): string[] {
+function validateCharacterPayload(
+  character: any,
+  index: number,
+  options: { allowUnknownSystem?: boolean } = {},
+): string[] {
   const label = `Персонаж #${index + 1}`;
   if (!character || typeof character !== 'object' || Array.isArray(character)) {
     return [`${label}: ожидался объект.`];
   }
   const errors: string[] = [];
-  if (!resolveCharacterSystemId(character)) {
+  if (!options.allowUnknownSystem && !resolveCharacterSystemId(character)) {
     errors.push(
       `${label}: неизвестная игровая система ${JSON.stringify(
         character.systemId ?? character.gameSystem,
@@ -148,9 +152,12 @@ function normalizeExportConfig(raw: unknown): ExportConfig {
   return config;
 }
 
-function assertExportable(characters: any[]): void {
+function assertExportable(
+  characters: any[],
+  options: { allowUnknownSystem?: boolean } = {},
+): void {
   const errors = characters.flatMap((character, index) =>
-    validateCharacterPayload(character, index),
+    validateCharacterPayload(character, index, options),
   );
   if (errors.length > 0) {
     throw new Error(`Экспорт отменён: ${errors.join(' ')}`);
@@ -206,7 +213,8 @@ export function buildCharacterExport(
   const portable = toPortableCharacter(
     normalized as unknown as Record<string, unknown>,
   ) as unknown as Character;
-  assertExportable([portable]);
+  // Плагин может быть удалён из сборки: JSON-экспорт его листа не пропадает.
+  assertExportable([portable], { allowUnknownSystem: true });
   return {
     metadata: {
       appName: EXPORT_APP_NAME,
@@ -234,7 +242,7 @@ export function buildBackupExport(
         ).character as unknown as Record<string, unknown>,
       ) as unknown as Character,
   );
-  assertExportable(portable);
+  assertExportable(portable, { allowUnknownSystem: true });
   return {
     metadata: {
       appName: EXPORT_APP_NAME,
@@ -419,9 +427,11 @@ export const filterCharacterForExport = (
   ).character;
   const gameModule = getCharacterModule(normalized);
   if (!gameModule) {
-    throw new Error(
-      `Неизвестная редакция персонажа: ${normalized.systemId ?? normalized.gameSystem}`,
-    );
+    // Плагин не установлен (удалён из сборки): отдаём переносимые поля
+    // как есть, чтобы JSON-экспорт работал (D9).
+    return {
+      ...(normalized as unknown as Record<string, unknown>),
+    } as Partial<Character>;
   }
 
   const fields = gameModule.export.toPortableJson(normalized, config);

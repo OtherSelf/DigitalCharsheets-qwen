@@ -1,9 +1,11 @@
 import { NextResponse } from 'next/server';
 
 import { listCatalog } from '@/games/character-system';
+import { listGameModules } from '@/games/registry';
 import {
-  canAccessModule,
+  canCreateWithModule,
   getModuleStatus,
+  isModuleEnabled,
   readGameCatalog,
 } from '@/lib/game-catalog';
 import { getRequestActor } from '@/lib/module-access';
@@ -29,13 +31,14 @@ export async function GET(request: Request) {
       descriptionKey: game.descriptionKey,
       editions: editions
         .filter((gameModule) =>
-          canAccessModule(actor.role, gameModule.id, catalog),
+          canCreateWithModule(actor.role, gameModule.id, catalog),
         )
         .map((gameModule) => ({
           id: gameModule.id,
           nameKey: gameModule.nameKey,
           descriptionKey: gameModule.descriptionKey,
           status: getModuleStatus(gameModule.id, catalog),
+          enabled: isModuleEnabled(gameModule.id, catalog),
         })),
     }))
     .filter((game) => game.editions.length > 0);
@@ -45,5 +48,9 @@ export async function GET(request: Request) {
     role: actor.role,
     siteTitle: catalog.siteTitle ?? null,
     games,
+    // Отключённые плагины нужны странице листа для read-only режима (D9).
+    disabled: listGameModules()
+      .filter((gameModule) => !isModuleEnabled(gameModule.id, catalog))
+      .map((gameModule) => gameModule.id),
   });
 }

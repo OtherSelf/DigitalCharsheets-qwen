@@ -4,6 +4,7 @@ import {
   getCharacterModule,
   resolveCharacterSystemId,
   resolveLegacySystemId,
+  resolveSheetReadOnly,
   type CharacterSystemSource,
 } from '@/games/character-system';
 
@@ -81,6 +82,37 @@ describe('разрешение systemId', () => {
       'dnd5e',
     );
     expect(getCharacterModule({ gameSystem: 'Unknown' })).toBeUndefined();
+  });
+});
+
+describe('режим листа «только чтение» (D9)', () => {
+  it('обычный лист — редактируемый', () => {
+    expect(resolveSheetReadOnly({ systemId: 'dh1' }, [])).toEqual({
+      readOnly: false,
+      reason: null,
+    });
+  });
+
+  it('отключённый админом плагин — read-only c причиной disabled', () => {
+    expect(resolveSheetReadOnly({ systemId: 'dh1' }, ['dh1'])).toEqual({
+      readOnly: true,
+      reason: 'disabled',
+    });
+    // Выключение одной редакции не задевает другую.
+    expect(resolveSheetReadOnly({ systemId: 'dh2' }, ['dh1']).readOnly).toBe(
+      false,
+    );
+  });
+
+  it('плагин не установлен — read-only c причиной plugin_missing', () => {
+    expect(resolveSheetReadOnly({ systemId: 'gone' }, [])).toEqual({
+      readOnly: true,
+      reason: 'plugin_missing',
+    });
+    expect(resolveSheetReadOnly({}, [])).toEqual({
+      readOnly: true,
+      reason: 'plugin_missing',
+    });
   });
 });
 

@@ -193,6 +193,14 @@ export const enTranslations: Record<string, string> = {
   'common.noDhCharacters': 'No Dark Heresy characters found.',
   'common.noDndCharacters': 'No D&D characters found.',
   'common.noCharactersFound': 'No characters found. Create characters first.',
+  'common.gameDisabled': 'This game is disabled by the administrator',
+  'common.gameDisabledHint':
+    'Existing sheets are read-only: viewing and JSON export work, editing and creation are turned off.',
+  'common.pluginNotInstalled': 'Game plugin is not installed',
+  'common.pluginNotInstalledHint':
+    'The sheet is shown as raw JSON because its plugin is missing from this build. Export still works; install the plugin and rebuild to open the sheet UI.',
+  'common.copyJson': 'Copy JSON',
+  'common.jsonCopied': 'JSON copied',
   'common.loadingCharacters': 'Loading characters...',
   'common.savedStatsFor': 'Characteristics saved for',
   'common.allStatsSaved': 'All characteristics saved!',
@@ -579,6 +587,13 @@ export const enTranslations: Record<string, string> = {
   'admin.editionColumn': 'Edition',
   'admin.defaultStatusColumn': 'Default',
   'admin.currentStatusColumn': 'Current',
+  'admin.versionColumn': 'Version',
+  'admin.schemaColumn': 'Schema',
+  'admin.enabledColumn': 'Enabled',
+  'admin.demoColumn': 'Demo',
+  'admin.hostApiLabel': 'host API',
+  'admin.gamesEnabledNote':
+    'A disabled plugin disappears from creation and menus; its existing sheets open read-only (JSON export still works).',
   'admin.statusPublished': 'Published',
   'admin.statusTest': 'Test',
   'admin.statusHidden': 'Hidden',

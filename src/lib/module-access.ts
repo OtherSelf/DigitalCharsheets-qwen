@@ -1,7 +1,7 @@
 import { resolveCharacterSystemId } from '@/games/character-system';
 import type { SystemId } from '@/games/types';
 
-import { canAccessModule } from './game-catalog';
+import { canAccessModule, isModuleEnabled } from './game-catalog';
 import { getSessionUid } from './session';
 import { normalizeUserRole, type UserRole } from './user-role';
 import { readStoredUser } from './user-schema';
@@ -39,7 +39,11 @@ export type ModuleAccessResult =
       ok: false;
       status: 400 | 401 | 403;
       error: string;
-      reason: 'unknown_system' | 'unauthorized' | 'module_forbidden';
+      reason:
+        | 'unknown_system'
+        | 'unauthorized'
+        | 'module_forbidden'
+        | 'module_disabled';
     };
 
 export function requireModuleAccess(
@@ -81,6 +85,16 @@ export function requireModuleAccess(
       status: 403,
       error: 'Эта редакция недоступна вашей роли.',
       reason: 'module_forbidden',
+    };
+  }
+
+  // Отключённый плагин: создание недоступно даже админу (D9, read-only).
+  if (!isModuleEnabled(systemId)) {
+    return {
+      ok: false,
+      status: 403,
+      error: 'Эта игра отключена администратором.',
+      reason: 'module_disabled',
     };
   }
 

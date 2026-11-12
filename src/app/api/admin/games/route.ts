@@ -1,12 +1,18 @@
 import { NextResponse } from 'next/server';
 
-import { getGameModule, listGameModules } from '@/games/registry';
+import {
+  getGameModule,
+  getPluginManifest,
+  listGameModules,
+} from '@/games/registry';
 import type { SystemId } from '@/games/types';
 import { requireAdmin } from '@/lib/admin-auth';
 import {
   getModuleStatus,
+  isModuleEnabled,
   isModuleStatus,
   readGameCatalog,
+  setModuleEnabled,
   setModuleStatus,
   setSiteTitle,
 } from '@/lib/game-catalog';
@@ -24,14 +30,26 @@ function catalogResponse() {
   return {
     success: true as const,
     siteTitle: catalog.siteTitle ?? null,
-    games: listGameModules().map((gameModule) => ({
-      id: gameModule.id,
-      gameId: gameModule.gameId,
-      nameKey: gameModule.nameKey,
-      descriptionKey: gameModule.descriptionKey,
-      defaultStatus: gameModule.defaultStatus,
-      status: getModuleStatus(gameModule.id, catalog),
-    })),
+    games: listGameModules().map((gameModule) => {
+      const manifest = getPluginManifest(gameModule.id);
+      return {
+        id: gameModule.id,
+        gameId: gameModule.gameId,
+        nameKey: gameModule.nameKey,
+        descriptionKey: gameModule.descriptionKey,
+        defaultStatus: gameModule.defaultStatus,
+        status: getModuleStatus(gameModule.id, catalog),
+        enabled: isModuleEnabled(gameModule.id, catalog),
+        // Метаданные плагина для админки (D4): версия, схема, зависимости.
+        // tags хранятся, но в UI не выводятся (D15).
+        version: manifest?.version ?? null,
+        schemaVersion: manifest?.schemaVersion ?? gameModule.schemaVersion,
+        tags: manifest?.tags ?? [],
+        dependencies: manifest?.dependencies ?? null,
+        conformance: manifest?.tests?.conformance ?? null,
+        demo: Boolean(manifest?.demo),
+      };
+    }),
   };
 }
 
@@ -71,7 +89,32 @@ export async function PUT(request: Request) {
       setSiteTitle(body.siteTitle as string | null);
     }
 
-    if (body.systemId !== undefined || body.status !== undefined) {
+    if (body.systemId !== undefined && body.enabled !== undefined) {
+      const systemId = body.systemId as SystemId;
+      if (!systemId || !getGameModule(systemId)) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'Unknown game module.',
+            reason: 'unknown_system',
+          },
+          { status: 400 },
+        );
+      }
+      if (typeof body.enabled !== 'boolean') {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'enabled must be a boolean.',
+            reason: 'bad_request',
+          },
+          { status: 400 },
+        );
+      }
+      setModuleEnabled(systemId, body.enabled);
+    }
+
+    if (body.status !== undefined) {
       const systemId = body.systemId as SystemId;
       if (!systemId || !getGameModule(systemId)) {
         return NextResponse.json(

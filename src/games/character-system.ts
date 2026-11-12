@@ -104,6 +104,27 @@ export function getSystemNameKeys(
   };
 }
 
+/**
+ * Режим листа «только чтение» (D9): плагин не установлен или отключён
+ * администратором. Возвращает причину, чтобы страница показала нужный баннер.
+ */
+export interface SheetReadOnlyState {
+  readOnly: boolean;
+  reason: 'plugin_missing' | 'disabled' | null;
+}
+
+export function resolveSheetReadOnly(
+  character: CharacterSystemSource,
+  disabledIds: readonly string[],
+): SheetReadOnlyState {
+  const systemId = resolveCharacterSystemId(character);
+  if (!systemId) return { readOnly: true, reason: 'plugin_missing' };
+  if (disabledIds.includes(systemId)) {
+    return { readOnly: true, reason: 'disabled' };
+  }
+  return { readOnly: false, reason: null };
+}
+
 export interface CatalogGame {
   game: GameDefinition;
   editions: readonly AnyGameModule[];

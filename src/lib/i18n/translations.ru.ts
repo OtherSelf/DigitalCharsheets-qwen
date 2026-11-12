@@ -83,6 +83,14 @@ export const ruTranslations: Record<string, string> = {
   'common.perception': 'Восприятие',
   'common.willpower': 'Сила воли',
   'common.error': 'Ошибка',
+  'common.gameDisabled': 'Игра отключена администратором',
+  'common.gameDisabledHint':
+    'Существующие листы открываются только для чтения: просмотр и JSON-экспорт работают, редактирование и создание отключены.',
+  'common.pluginNotInstalled': 'Плагин игры не установлен',
+  'common.pluginNotInstalledHint':
+    'Лист показан как сырой JSON: плагина нет в этой сборке. Экспорт работает; установите плагин и пересоберите, чтобы открыть лист в интерфейсе.',
+  'common.copyJson': 'Копировать JSON',
+  'common.jsonCopied': 'JSON скопирован',
   'common.sheetUnavailable': 'Лист недоступен',
   'common.sheetUnavailableHint':
     'Плагин игры не смог отрисовать лист. Данные не потеряны — JSON-экспорт по-прежнему доступен.',
@@ -582,6 +590,13 @@ export const ruTranslations: Record<string, string> = {
   'admin.editionColumn': 'Редакция',
   'admin.defaultStatusColumn': 'По умолчанию',
   'admin.currentStatusColumn': 'Сейчас',
+  'admin.versionColumn': 'Версия',
+  'admin.schemaColumn': 'Схема',
+  'admin.enabledColumn': 'Включён',
+  'admin.demoColumn': 'Демо',
+  'admin.hostApiLabel': 'API хоста',
+  'admin.gamesEnabledNote':
+    'Отключённый плагин исчезает из создания и меню; его существующие листы открываются только для чтения (JSON-экспорт работает).',
   'admin.statusPublished': 'Опубликована',
   'admin.statusTest': 'Тест',
   'admin.statusHidden': 'Скрыта',

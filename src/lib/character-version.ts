@@ -4,6 +4,7 @@ import {
   type NormalizeOptions,
 } from '@/games/plugin-api';
 import { getGameModule } from '@/games/registry';
+import type { CharacterMigration } from '@/games/types';
 
 import type { Character } from './types';
 
@@ -33,6 +34,28 @@ export interface ParsedCharacterRecord {
   character: Character;
   changed: boolean;
   issues: string[];
+  /** Сколько шагов цепочки миграций применилось. */
+  migrationsApplied: number;
+}
+
+/**
+ * Применить упорядоченную цепочку миграций плагина к ещё не версионированному
+ * листу. Порядок — массив `migrations` модуля; шаг применяется, если файл
+ * старше его `to`. Возвращает число примененных шагов.
+ */
+export function applyCharacterMigrations(
+  migrations: readonly CharacterMigration[],
+  raw: Readonly<Record<string, unknown>>,
+  incomingVersion: number,
+): { character: Record<string, unknown>; applied: number } {
+  let character = { ...raw };
+  let applied = 0;
+  for (const step of migrations) {
+    if (incomingVersion >= step.to) continue;
+    character = { ...character, ...step.migrate(character) };
+    applied += 1;
+  }
+  return { character, applied };
 }
 
 export function normalizeCharacterRecord(
@@ -54,6 +77,7 @@ export function normalizeCharacterRecord(
       character: character as unknown as Character,
       changed: false,
       issues,
+      migrationsApplied: 0,
     };
   }
 
@@ -67,6 +91,7 @@ export function normalizeCharacterRecord(
       character: character as unknown as Character,
       changed: false,
       issues,
+      migrationsApplied: 0,
     };
   }
 
@@ -81,6 +106,7 @@ export function normalizeCharacterRecord(
       character: character as unknown as Character,
       changed: false,
       issues,
+      migrationsApplied: 0,
     };
   }
 
@@ -92,15 +118,17 @@ export function normalizeCharacterRecord(
       character: character as unknown as Character,
       changed: false,
       issues,
+      migrationsApplied: 0,
     };
   }
 
   // Цепочка миграций (пока пустая у всех плагинов: v1→v2 — это нормализация).
-  for (const step of gameModule.migrations) {
-    if (incomingVersion < step.to) {
-      Object.assign(character, step.migrate(character));
-    }
-  }
+  const migrated = applyCharacterMigrations(
+    gameModule.migrations,
+    character,
+    incomingVersion,
+  );
+  Object.assign(character, migrated.character);
 
   character.systemId = systemId;
   character.schemaVersion = targetVersion;
@@ -120,5 +148,6 @@ export function normalizeCharacterRecord(
     character: result,
     changed: JSON.stringify(result) !== before,
     issues,
+    migrationsApplied: migrated.applied,
   };
 }

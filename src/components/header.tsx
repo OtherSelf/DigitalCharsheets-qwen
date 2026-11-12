@@ -82,6 +82,11 @@ interface HeaderProps {
   subtitle?: string;
   /** Куда ведёт стрелка «назад»; без неё остаётся только бренд-ссылка домой. */
   backHref?: string;
+  /**
+   * Лист в режиме только чтения (игра отключена или плагин не установлен, D9):
+   * скрываем действия, которые меняют данные.
+   */
+  readOnly?: boolean;
 }
 
 export function Header({
@@ -92,6 +97,7 @@ export function Header({
   title,
   subtitle,
   backHref,
+  readOnly = false,
 }: HeaderProps) {
   const {
     isCompactView,
@@ -260,7 +266,7 @@ export function Header({
           ) : null}
           {/* ─── END LANDMARK: HEADER_IDENTITY_CHARACTER_INFO ─── */}
 
-          {character && HeaderActions && (
+          {character && HeaderActions && !readOnly && (
             <HeaderActions
               character={character}
               isCompactView={isCompactView}
@@ -299,7 +305,7 @@ export function Header({
             Раньше подписи занимали до 310 px, и на планшете (768–1299 px)
             шапка переносилась на две строки. На планшете эта группа остаётся
             слева, а иконки приложения справа. */}
-          {character && !isSmallScreen && (
+          {character && !isSmallScreen && !readOnly && (
             <div className="header-sheet-actions flex flex-wrap items-center gap-2">
               {(onNotesClick || onJournalClick) && (
                 <div className="flex items-center gap-1.5 md:gap-2">

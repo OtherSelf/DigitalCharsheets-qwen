@@ -11,6 +11,8 @@ import { CharacterSheet } from '@/components/sheets/character-sheet';
 import { CompactSidebar } from '@/components/sheets/compact-sidebar';
 import { NotesDialog } from '@/components/sheets/notes-dialog';
 import { QuestJournalSheet } from '@/components/sheets/quest-journal-dialog';
+import { SheetStateBanner } from '@/components/sheets/sheet-state-banner';
+import { UnknownSheetView } from '@/components/sheets/unknown-sheet-view';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,7 +25,11 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useCharacterContext } from '@/context/character-context';
 import { useTranslation } from '@/context/language-context';
-import { resolveCharacterSystemId } from '@/games/character-system';
+import {
+  getCharacterModule,
+  resolveCharacterSystemId,
+  resolveSheetReadOnly,
+} from '@/games/character-system';
 import type { SheetHandle } from '@/games/types';
 import { useGameUiSlots } from '@/hooks/use-game-ui-slots';
 import { cn } from '@/lib/utils';
@@ -49,6 +55,25 @@ export default function CharacterPage() {
   const character = getCharacter(params.id);
   const systemId = character ? resolveCharacterSystemId(character) : undefined;
   const uiSlots = useGameUiSlots(systemId);
+  const [disabledIds, setDisabledIds] = useState<string[]>([]);
+
+  // Отключённые админом плагины: их листы открываются только для чтения (D9).
+  // Видимость по ролям приходит отдельно (/api/games), поэтому здесь нужен
+  // только список отключённых — он не зависит от роли.
+  useEffect(() => {
+    let active = true;
+    void fetch('/api/games', { cache: 'no-store' })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data: { disabled?: string[] } | null) => {
+        if (active && Array.isArray(data?.disabled)) {
+          setDisabledIds(data.disabled);
+        }
+      })
+      .catch(() => undefined);
+    return () => {
+      active = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (isLoaded && !character) {
@@ -119,6 +144,12 @@ export default function CharacterPage() {
     return <Loading />;
   }
 
+  const gameModule = getCharacterModule(character);
+  // Плагин не установлен или выключен — редактирование недоступно (D9).
+  const sheetState = resolveSheetReadOnly(character, disabledIds);
+  const isDisabled = sheetState.reason === 'disabled';
+  const isReadOnly = sheetState.readOnly;
+
   return (
     <>
       {/* LANDMARK: DYNAMIC SHEET FAVICON INJECTION */}
@@ -127,11 +158,12 @@ export default function CharacterPage() {
 
       <div className="flex h-full flex-col">
         <Header
-          onNotesClick={() => setNotesOpen(true)}
-          onJournalClick={() => setJournalOpen(true)}
+          readOnly={isReadOnly}
+          onNotesClick={isReadOnly ? undefined : () => setNotesOpen(true)}
+          onJournalClick={isReadOnly ? undefined : () => setJournalOpen(true)}
         />
         <div className="flex flex-1 overflow-hidden">
-          {isCompactView && (
+          {isCompactView && !isReadOnly && (
             <CompactSidebar
               character={character}
               activeSection={activeCompactSection}
@@ -139,14 +171,27 @@ export default function CharacterPage() {
             />
           )}
           <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
-            <CharacterSheet
-              ref={sheetRef}
-              character={character}
-              activeCompactSection={activeCompactSection}
-            />
+            {isDisabled && (
+              <SheetStateBanner
+                testId="game-disabled-banner"
+                title={t('common.gameDisabled')}
+                hint={t('common.gameDisabledHint')}
+              />
+            )}
+            {!gameModule ? (
+              <UnknownSheetView character={character} />
+            ) : (
+              <div inert={isDisabled}>
+                <CharacterSheet
+                  ref={sheetRef}
+                  character={character}
+                  activeCompactSection={activeCompactSection}
+                />
+              </div>
+            )}
           </main>
         </div>
-        {character && (
+        {character && !isReadOnly && (
           <>
             <NotesDialog
               character={character}

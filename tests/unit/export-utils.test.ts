@@ -266,19 +266,30 @@ describe('export format', () => {
     expect((payload.characters[0] as any).userId).toBeUndefined();
   });
 
-  it('build отказывается экспортировать лист без имени/системы', () => {
+  it('build отказывается экспортировать лист без имени', () => {
     expect(() =>
       buildCharacterExport(
         makeDndCharacter({ name: '' }) as any,
         DEFAULT_EXPORT_CONFIG,
       ),
     ).toThrow(/Экспорт отменён/);
-    expect(() =>
-      buildCharacterExport(
-        { gameSystem: 'Unknown', name: 'X' } as any,
-        DEFAULT_EXPORT_CONFIG,
-      ),
-    ).toThrow(/игровая система/);
+  });
+
+  it('экспортирует лист удалённого плагина как есть (D9)', () => {
+    // Плагин не установлен: JSON-экспорт должен работать, а не падать.
+    const payload = buildCharacterExport(
+      { systemId: 'gone', gameSystem: 'Unknown', name: 'X', notes: 'n' } as any,
+      DEFAULT_EXPORT_CONFIG,
+    );
+    expect((payload.character as any).name).toBe('X');
+    expect((payload.character as any).systemId).toBe('gone');
+
+    // Импорт такого файла по-прежнему требует установленный плагин.
+    const parsed = parseExportPayload(
+      JSON.parse(JSON.stringify(payload)),
+      date,
+    );
+    expect(parsed.ok).toBe(false);
   });
 
   it('round-trip: build → parse возвращает тот же набор', () => {
