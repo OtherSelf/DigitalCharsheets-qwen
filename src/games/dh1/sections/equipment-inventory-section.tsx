@@ -195,7 +195,7 @@ export const EquipmentInventorySection = React.forwardRef<
           ? { ...newArmor[part]! }
           : { ap: 0, type: '', mods: '', quality: '' };
         if (field === 'ap') currentPiece.ap = parseInt(value, 10) || 0;
-        else (currentPiece as any)[field] = value;
+        else Object.assign(currentPiece, { [field]: value });
         newArmor[part] = currentPiece;
         return { ...prev, armor: newArmor };
       });
@@ -259,8 +259,10 @@ export const EquipmentInventorySection = React.forwardRef<
             if (w.id === weaponId) {
               const updated = { ...w };
               if (field === 'clip' || field === 'clipSize')
-                (updated as any)[field] = parseInt(value as string, 10) || 0;
-              else (updated as any)[field] = value;
+                Object.assign(updated, {
+                  [field]: parseInt(value as string, 10) || 0,
+                });
+              else Object.assign(updated, { [field]: value });
               return updated;
             }
             return w;
@@ -344,12 +346,12 @@ export const EquipmentInventorySection = React.forwardRef<
 
     const ARMOR_TYPE_OPTIONS = ARMOR_TYPES.map((type) => ({
       value: type,
-      label: t(`dh1.armorType${type}` as any),
+      label: t(`dh1.armorType${type}`),
     }));
     // Helper to translate armor type for display
     const displayArmorType = (type: string | undefined | null) => {
       if (!type) return '-';
-      const translationKey = `dh1.armorType${type}` as any;
+      const translationKey = `dh1.armorType${type}`;
       const translated = t(translationKey);
       return translated === translationKey ? type : translated;
     };
@@ -357,12 +359,12 @@ export const EquipmentInventorySection = React.forwardRef<
     // Helper to translate armor quality for display
     const displayQuality = (quality: string | undefined | null) => {
       if (!quality || quality === 'none') return '-';
-      const translationKey =
-        `dh1.armorQuality${quality.replace('-', '')}` as any;
+      const translationKey = `dh1.armorQuality${quality.replace('-', '')}`;
       const translated = t(translationKey);
       return translated === translationKey ? quality : translated;
     };
-    // LANDMARK 1: Changed 'none' value from '' to 'none' to avoid Radix Select error
+    // Radix Select не принимает пустой value: элемент с value='' не выбирается
+    // и роняет Select. Поэтому «нет значения» — это явный 'none'.
     const ARMOR_QUALITY_OPTIONS = [
       { value: 'none', label: t('dh1.armorQualityNone') },
       { value: 'Poor', label: t('dh1.armorQualityPoor') },

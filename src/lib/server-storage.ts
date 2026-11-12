@@ -6,7 +6,8 @@ import { getUserDir } from './data-dir';
 import { writeJsonAtomic } from './fs-atomic';
 import { Character } from './types';
 
-// Ensure a user's data directory exists
+// Каталог пользователя создаётся при первой записи: профиль и листы
+// появляются в одном месте.
 function ensureUserDir(userId: string): string {
   const userDir = getUserDir(userId);
   if (!fs.existsSync(userDir)) {
@@ -15,7 +16,8 @@ function ensureUserDir(userId: string): string {
   return userDir;
 }
 
-// Ensure a user's characters directory exists
+// Подкаталог листов — рядом с user.json, чтобы удаление аккаунта было
+// одним `rm -rf` по каталогу.
 function ensureCharactersDir(userId: string): string {
   const userDir = ensureUserDir(userId);
   const charsDir = path.join(userDir, 'characters');
@@ -97,7 +99,7 @@ export function resetWriteSeqGuard(
   }
 }
 
-// READ: Get all characters for a user (reads individual files)
+// ЧТЕНИЕ: все листы пользователя; битый файл пропускается, а не роняет список.
 export function getCharactersFromServer(userId: string): Character[] {
   const charsDir = ensureCharactersDir(userId);
   const characters: Character[] = [];
@@ -120,7 +122,8 @@ export function getCharactersFromServer(userId: string): Character[] {
   return characters;
 }
 
-// WRITE: Save a single character to its own file
+// ЗАПИСЬ: лист всегда живёт в своём файле, поэтому конфликтов между
+// листами нет.
 export function saveCharacterToServer(
   userId: string,
   character: Character,
@@ -134,7 +137,7 @@ export function saveCharacterToServer(
   );
 }
 
-// WRITE: Save multiple characters (used during import)
+// ЗАПИСЬ: пачка листов (импорт/массовые операции) — по файлу на лист.
 export function saveCharactersToServer(
   userId: string,
   characters: Character[],
@@ -145,7 +148,7 @@ export function saveCharactersToServer(
 }
 
 /**
- * UPDATE: Update a specific character file.
+ * ПЕРЕЗАПИСЬ: обновить один лист с защитой от запоздавших PUT.
  *
  * Возвращает:
  *   • `Character` — запись применена (или отброшена как устаревшая, тогда
@@ -187,8 +190,8 @@ export function updateCharacterOnServer(
     return character;
   }
 
-  // LANDMARK: Explicit cast to Character to resolve TypeScript discriminated union
-  // inference issues when spreading Partial<Character> over a union type.
+  // Нормализация принимает «сырой» объект: спред Partial<Character> поверх
+  // union-типа TS вывести не может, а normalize всё равно пересобирает лист.
   const updated: Character = normalizeCharacterRecord({
     ...character,
     ...data,
@@ -198,15 +201,16 @@ export function updateCharacterOnServer(
   // авторизация — по каталогу и cookie), но на диске оно должно быть: так
   // «плоский» бэкап и диагностика видят, чей это лист. Дописываем, если лист
   // пришёл из миграции/импорта без него.
-  if (!(updated as any).userId) {
-    (updated as any).userId = userId;
+  const withOwner = updated as unknown as Record<string, unknown>;
+  if (!withOwner.userId) {
+    withOwner.userId = userId;
   }
 
   writeJsonAtomic(filePath, updated);
   return updated;
 }
 
-// DELETE: Remove a character file
+// УДАЛЕНИЕ: файл листа; true — удалили, false — файла не было или он занят.
 export function deleteCharacterFromServer(
   userId: string,
   characterId: string,
@@ -226,12 +230,12 @@ export function deleteCharacterFromServer(
   }
 }
 
-// Check if a user exists
+// Есть ли у пользователя каталог (профиль или хотя бы черновик).
 export function userFolderExists(userId: string): boolean {
   return fs.existsSync(getUserDir(userId));
 }
 
-// Create a user folder with user.json
+// Создать каталог и минимальный user.json, если профиля ещё нет.
 export function createUserFolder(
   userId: string,
   username: string,
