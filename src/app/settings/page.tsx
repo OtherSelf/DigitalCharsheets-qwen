@@ -73,10 +73,7 @@ export default function ProfileSettingsPage() {
     if (!user) return;
 
     if (password && password.length < 4) {
-      setError(
-        t('common.passwordMinLength') ||
-          'Password must be at least 4 characters.',
-      );
+      setError(t('common.passwordMinLength'));
       return;
     }
 
@@ -96,18 +93,14 @@ export default function ProfileSettingsPage() {
       const data = await res.json();
       if (data.success) {
         restoreSession(data.user);
-        setSuccess(t('settings.saved') || 'Settings saved successfully!');
+        setSuccess(t('settings.saved'));
         setPassword('');
         setRecoveryPhrase('');
       } else {
-        setError(
-          data.error || t('settings.saveFailed') || 'Failed to save settings.',
-        );
+        setError(data.error || t('settings.saveFailed'));
       }
     } catch (err) {
-      setError(
-        t('common.serverConnectionFailed') || 'Failed to connect to server.',
-      );
+      setError(t('common.serverConnectionFailed'));
     } finally {
       setIsSaving(false);
     }
@@ -124,7 +117,7 @@ export default function ProfileSettingsPage() {
         уже ведёт домой, и дублировать её иконкой незачем.
       */}
       <Header
-        title={t('settings.profileSettings') || 'Profile Settings'}
+        title={t('settings.profileSettings')}
         backHref={!isFromDashboard ? backTarget : undefined}
       />
 
@@ -157,12 +150,9 @@ export default function ProfileSettingsPage() {
           <form onSubmit={handleSave} className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>
-                  {t('settings.generalInformation') || 'General Information'}
-                </CardTitle>
+                <CardTitle>{t('settings.generalInformation')}</CardTitle>
                 <CardDescription>
-                  {t('settings.updateYourDisplayNameAndLogin') ||
-                    'Update your display name and login credentials.'}
+                  {t('settings.updateYourDisplayNameAndLogin')}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -177,9 +167,7 @@ export default function ProfileSettingsPage() {
                   </p>
                 )}
                 <div className="space-y-2">
-                  <Label htmlFor="displayName">
-                    {t('common.displayName') || 'Display Name'}
-                  </Label>
+                  <Label htmlFor="displayName">{t('common.displayName')}</Label>
                   <Input
                     id="displayName"
                     value={displayName}
@@ -188,9 +176,7 @@ export default function ProfileSettingsPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="username">
-                    {t('auth.login') || 'Login (Email or Username)'}
-                  </Label>
+                  <Label htmlFor="username">{t('auth.login')}</Label>
                   <Input
                     id="username"
                     value={username}
@@ -204,17 +190,14 @@ export default function ProfileSettingsPage() {
             {/* LANDMARK: DISPLAY_SETTINGS_CARD */}
             <Card>
               <CardHeader>
-                <CardTitle>
-                  {t('settings.displaySettings') || 'Display Settings'}
-                </CardTitle>
+                <CardTitle>{t('settings.displaySettings')}</CardTitle>
                 <CardDescription>
-                  {t('settings.adjustUiAppearance') ||
-                    'Adjust text size and overall UI scale independently.'}
+                  {t('settings.adjustUiAppearance')}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-3">
-                  <Label>{t('settings.fontSize') || 'Text Size'}</Label>
+                  <Label>{t('settings.fontSize')}</Label>
                   <div className="flex items-center gap-3">
                     <Button
                       type="button"
@@ -242,15 +225,14 @@ export default function ProfileSettingsPage() {
                     </Button>
                   </div>
                   <p className="text-muted-foreground text-xs">
-                    {t('settings.minFontSizeWarning') ||
-                      'Minimum 8pt. Boxes, padding and spacing stay unchanged.'}
+                    {t('settings.minFontSizeWarning')}
                   </p>
                 </div>
 
                 <Separator />
 
                 <div className="space-y-3">
-                  <Label>{t('settings.uiScale') || 'UI Scale'}</Label>
+                  <Label>{t('settings.uiScale')}</Label>
                   <div className="flex items-center gap-3">
                     <Button
                       type="button"
@@ -277,8 +259,7 @@ export default function ProfileSettingsPage() {
                     </Button>
                   </div>
                   <p className="text-muted-foreground text-xs">
-                    {t('settings.uiScaleWarning') ||
-                      'Range: 50% to 150%. Scales the whole interface.'}
+                    {t('settings.uiScaleWarning')}
                   </p>
                 </div>
 
@@ -290,7 +271,7 @@ export default function ProfileSettingsPage() {
                     className="w-full sm:w-auto"
                   >
                     <RotateCcw className="mr-2 h-4 w-4" />
-                    {t('settings.resetToDefaults') || 'Reset to Defaults'}
+                    {t('settings.resetToDefaults')}
                   </Button>
                 </div>
               </CardContent>
@@ -298,43 +279,33 @@ export default function ProfileSettingsPage() {
 
             <Card>
               <CardHeader>
-                <CardTitle>{t('settings.security') || 'Security'}</CardTitle>
+                <CardTitle>{t('settings.security')}</CardTitle>
                 <CardDescription>
-                  {t('settings.updatePasswordAndRecovery') ||
-                    'Update your password and recovery phrase.'}
+                  {t('settings.updatePasswordAndRecovery')}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="password">
-                    {t('common.newPassword') || 'New Password'}
-                  </Label>
+                  <Label htmlFor="password">{t('common.newPassword')}</Label>
                   <Input
                     id="password"
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder={
-                      t('settings.leaveBlankToKeepCurrent') ||
-                      'Leave blank to keep current password'
-                    }
+                    placeholder={t('settings.leaveBlankToKeepCurrent')}
                   />
                 </div>
                 <Separator />
                 <div className="space-y-2">
-                  <Label htmlFor="recoveryPhrase">
-                    {t('auth.phrase') || 'Recovery Phrase'}
-                  </Label>
+                  <Label htmlFor="recoveryPhrase">{t('auth.phrase')}</Label>
                   <Input
                     id="recoveryPhrase"
                     value={recoveryPhrase}
                     onChange={(e) => setRecoveryPhrase(e.target.value)}
                     placeholder={
                       user.hasRecoveryPhrase
-                        ? t('settings.updateRecoveryPhrase') ||
-                          'Enter new recovery phrase'
-                        : t('settings.addRecoveryPhrase') ||
-                          'Add recovery phrase'
+                        ? t('settings.updateRecoveryPhrase')
+                        : t('settings.addRecoveryPhrase')
                     }
                   />
                 </div>
@@ -342,11 +313,11 @@ export default function ProfileSettingsPage() {
               <CardFooter>
                 <Button type="submit" className="w-full" disabled={isSaving}>
                   {isSaving ? (
-                    t('common.saving') || 'Saving...'
+                    t('common.saving')
                   ) : (
                     <>
                       <Save className="mr-2 h-4 w-4" />
-                      {t('common.saveChanges') || 'Save Changes'}
+                      {t('common.saveChanges')}
                     </>
                   )}
                 </Button>

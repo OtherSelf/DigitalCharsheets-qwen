@@ -26,6 +26,7 @@ import {
   exportCharacterToJSON,
   ExportConfig,
   ExportData,
+  IMPORT_ERROR_I18N_KEYS,
   importCharacterFromJSON,
   mergeImportedData,
 } from '@/lib/export-utils';
@@ -49,7 +50,7 @@ export function ExportImportDialog({ character }: ExportImportDialogProps) {
   const handleExport = () => {
     const result = exportCharacterToJSON(character, config);
     if (!result.success) {
-      setImportError(result.error || 'Export failed.');
+      setImportError(result.error || t('io.exportFailed'));
       return;
     }
     setOpen(false);
@@ -65,24 +66,31 @@ export function ExportImportDialog({ character }: ExportImportDialogProps) {
 
     const result = await importCharacterFromJSON(file);
     if (!result.success) {
-      setImportError(result.error || 'Unknown error');
+      const key = result.reason
+        ? IMPORT_ERROR_I18N_KEYS[result.reason]
+        : undefined;
+      setImportError(key ? t(key) : result.error || t('io.unknownError'));
       return;
     }
     if (result.kind === 'backup') {
       setImportError(
-        `Файл содержит ${result.batchData?.length ?? 0} персонажей — это бэкап. ` +
-          `Импортируйте его через «Import» на дашборде.`,
+        t('io.backupInCharacterImport').replace(
+          '{count}',
+          String(result.batchData?.length ?? 0),
+        ),
       );
       return;
     }
     if (!result.data) {
-      setImportError('В файле нет данных персонажа.');
+      setImportError(t('io.noCharacterData'));
       return;
     }
 
     if (result.data.character.gameSystem !== character.gameSystem) {
       setImportError(
-        `Game system mismatch: File is for ${result.data.character.gameSystem}, current character is ${character.gameSystem}`,
+        t('io.gameSystemMismatch')
+          .replace('{file}', result.data.character.gameSystem ?? 'unknown')
+          .replace('{current}', character.gameSystem ?? 'unknown'),
       );
       return;
     }

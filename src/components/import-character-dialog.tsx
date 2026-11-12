@@ -19,7 +19,11 @@ import {
 } from '@/components/ui/dialog';
 import { useCharacterContext } from '@/context/character-context';
 import { useTranslation } from '@/context/language-context';
-import { importCharacterFromJSON } from '@/lib/export-utils';
+import {
+  IMPORT_ERROR_I18N_KEYS,
+  importCharacterFromJSON,
+} from '@/lib/export-utils';
+import { Character } from '@/lib/types';
 
 interface ImportCharacterDialogProps {
   isCompactView: boolean;
@@ -48,7 +52,10 @@ export function ImportCharacterDialog({
     const result = await importCharacterFromJSON(file);
 
     if (!result.success) {
-      setImportError(result.error || 'Unknown error');
+      const key = result.reason
+        ? IMPORT_ERROR_I18N_KEYS[result.reason]
+        : undefined;
+      setImportError(key ? t(key) : result.error || t('io.unknownError'));
       setIsImporting(false);
       return;
     }
@@ -61,36 +68,43 @@ export function ImportCharacterDialog({
       let lastCreatedCharId: string | undefined;
       let importedCount = 0;
 
-      // [LANDMARK: BATCH IMPORT SUPPORT]
+      // LANDMARK: BATCH_IMPORT
+      // Бэкап содержит много листов: каждый создаётся отдельным запросом,
+      // иначе сервер отказал бы на частично невалидном наборе.
       if (result.batchData && result.batchData.length > 0) {
         for (const charData of result.batchData) {
           const safeCharacterData = {
-            name: charData.name || 'Imported Character',
-            characterClass: charData.characterClass || 'Unknown',
+            name: charData.name || t('io.importedCharacterName'),
+            characterClass: charData.characterClass || t('io.unknownClass'),
             backstory: charData.backstory || '',
             notes: charData.notes || '',
             questLog: charData.questLog || [],
             ...charData,
           };
-          const newChar = await addCharacter(safeCharacterData as any);
+          const newChar = await addCharacter(
+            safeCharacterData as Omit<Character, 'id' | 'userId'>,
+          );
           if (newChar) {
             lastCreatedCharId = newChar.id;
             importedCount++;
           }
         }
       }
-      // [LANDMARK: SINGLE IMPORT FALLBACK]
+      // LANDMARK: SINGLE_IMPORT
+      // Одиночный экспорт: один лист, без пакетной ветки.
       else if (result.data) {
         const { id: _id, ...characterData } = result.data.character;
         const safeCharacterData = {
-          name: characterData.name || 'Imported Character',
-          characterClass: characterData.characterClass || 'Unknown',
+          name: characterData.name || t('io.importedCharacterName'),
+          characterClass: characterData.characterClass || t('io.unknownClass'),
           backstory: characterData.backstory || '',
           notes: characterData.notes || '',
           questLog: characterData.questLog || [],
           ...characterData,
         };
-        const newChar = await addCharacter(safeCharacterData as any);
+        const newChar = await addCharacter(
+          safeCharacterData as Omit<Character, 'id' | 'userId'>,
+        );
         if (newChar) {
           lastCreatedCharId = newChar.id;
           importedCount++;
@@ -108,15 +122,11 @@ export function ImportCharacterDialog({
           }
         }, 1500);
       } else {
-        setImportError(
-          t('io.failedToCreateCharacter') || 'Failed to create character',
-        );
+        setImportError(t('io.failedToCreateCharacter'));
       }
     } catch (err) {
       console.error(err);
-      setImportError(
-        t('io.failedToCreateCharacter') || 'Failed to create character',
-      );
+      setImportError(t('io.failedToCreateCharacter'));
     } finally {
       setIsImporting(false);
     }

@@ -1,6 +1,6 @@
 // ─── LANDMARK: TRANSLATIONS_COMMON ───
-// Общий слой (common/auth/admin/settings/demo/io). Ключи игр живут в
-// src/games/<id>/i18n; сборка — в src/lib/i18n/index.ts.
+// Shared layer (common/auth/admin/settings/demo/io). Game keys live in
+// src/games/<id>/i18n; the merged result is built in src/lib/i18n/index.ts.
 export const enTranslations: Record<string, string> = {
   'common.dashboard': 'Dashboard',
   'common.newCharacter': 'New Character',
@@ -460,7 +460,39 @@ export const enTranslations: Record<string, string> = {
     'Upload a previously exported JSON file to create a new character.',
   'io.importSuccessDashboard': 'Character successfully created! Redirecting...',
   'io.exportJSON': 'Export JSON File',
-  // ─── io.excel: подписи Excel-выгрузки (ключи стабильны) ───
+  // ─── io.importError*: import errors, keyed by the parser's reason code ───
+  'io.importErrorBadFormat':
+    'Unrecognized file: expected a Digital Character Sheets export.',
+  'io.importErrorNoMetadata':
+    'Unrecognized file: metadata is missing. Re-export it with the current app version.',
+  'io.importErrorForeignFormat':
+    'Unrecognized file format. Only dcs-export files are supported.',
+  'io.importErrorForeignApp':
+    'The file was created by another application; import cancelled.',
+  'io.importErrorNoVersion': 'The file does not specify a format version.',
+  'io.importErrorUnsupportedVersion':
+    'Unsupported format version. Re-export the file with the current app version.',
+  'io.importErrorNoKind':
+    'The file does not specify the export kind (character or backup).',
+  'io.importErrorMissingCharacter':
+    'The export is marked as a character but contains no character.',
+  'io.importErrorMissingCharacters':
+    'The export is marked as a backup but contains no characters.',
+  'io.importErrorEmpty': 'The file contains no characters.',
+  'io.importErrorInvalidCharacter':
+    'The character data is invalid or incomplete.',
+  'io.importErrorBadJson':
+    'Failed to parse the JSON file. Make sure it is a valid backup.',
+  'io.exportFailed': 'Export failed.',
+  'io.unknownError': 'Unknown error',
+  'io.importedCharacterName': 'Imported Character',
+  'io.unknownClass': 'Unknown',
+  'io.backupInCharacterImport':
+    'The file contains {count} characters — it is a backup. Import it via Import on the dashboard.',
+  'io.noCharacterData': 'The file contains no character data.',
+  'io.gameSystemMismatch':
+    'Game system mismatch: the file is for {file}, the current character is {current}.',
+  // ─── io.excel: Excel export labels (keys are stable) ───
   'io.excel.exportTitle': 'Digital Character Sheets — Character Export',
   'io.excel.app': 'App',
   'io.excel.format': 'Format',
@@ -571,7 +603,7 @@ export const enTranslations: Record<string, string> = {
   'io.excel.none': 'None',
   'io.excel.yes': 'Yes',
   'io.excel.no': 'No',
-  // ─── admin: игры/редакции и заголовок сайта (этап 6) ───
+  // ─── admin: games/editions and the site title ───
   'common.loading': 'Loading…',
   'admin.gamesTitle': 'Games & editions',
   'admin.gamesDescription':
@@ -600,6 +632,6 @@ export const enTranslations: Record<string, string> = {
     'Overrides the brand title in the header. Leave empty to use the default.',
   'admin.siteTitlePlaceholder': 'Digital Character Sheets',
   'admin.siteTitleReset': 'Reset',
-  // ─── settings: роль в профиле ───
+  // ─── settings: role in the profile ───
   'settings.role': 'Role',
 };

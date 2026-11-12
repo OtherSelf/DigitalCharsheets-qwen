@@ -41,7 +41,7 @@ export function UserNav() {
   if (!user)
     return (
       <Button asChild>
-        <Link href="/login">{t('common.signIn') || 'Sign In'}</Link>
+        <Link href="/login">{t('common.signIn')}</Link>
       </Button>
     );
 
@@ -68,16 +68,14 @@ export function UserNav() {
             className="h-9 w-9 rounded-full"
           >
             <CircleUserRound className="h-6 w-6" />
-            <span className="sr-only">
-              {t('common.openUserMenu') || 'Open user menu'}
-            </span>
+            <span className="sr-only">{t('common.openUserMenu')}</span>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-56" align="end" forceMount>
           <DropdownMenuLabel className="font-normal">
             <div className="flex flex-col space-y-1">
               <p className="text-sm leading-none font-medium">
-                {user.displayName || t('admin.user') || 'User'}
+                {user.displayName || t('admin.user')}
               </p>
               <p className="text-muted-foreground text-xs">{user.username}</p>
             </div>
@@ -87,10 +85,10 @@ export function UserNav() {
           {/* LANDMARK: DISPLAY_SETTINGS_MENU_ITEM */}
           <DropdownMenuItem
             onClick={() => {
-              // FIX: Defer opening the dialog by 50ms.
-              // This allows the DropdownMenu to fully close and release its focus
-              // trap before the Dialog tries to establish its own, preventing the
-              // Radix UI aria-hidden/focus race condition that freezes the page.
+              // Radix закрывает меню и снимает focus-trap асинхронно; если
+              // открыть Dialog сразу, два focus-trap конфликтуют и страница
+              // замирает с aria-hidden на всём остальном дереве. Даём меню
+              // 50 мс, чтобы оно отпустило фокус.
               setTimeout(() => {
                 setIsDisplaySettingsOpen(true);
               }, 50);
@@ -98,7 +96,7 @@ export function UserNav() {
             className="flex w-full cursor-pointer items-center"
           >
             <Type className="mr-2 h-4 w-4" />
-            <span>{t('settings.displaySettings') || 'Display Settings'}</span>
+            <span>{t('settings.displaySettings')}</span>
           </DropdownMenuItem>
 
           {/* LANDMARK: SETTINGS_MENU_ITEM */}
@@ -108,7 +106,7 @@ export function UserNav() {
               className="flex w-full cursor-pointer items-center"
             >
               <Settings className="mr-2 h-4 w-4" />
-              <span>{t('settings.title') || 'Settings'}</span>
+              <span>{t('settings.title')}</span>
             </Link>
           </DropdownMenuItem>
 
@@ -125,7 +123,7 @@ export function UserNav() {
                 className="flex w-full cursor-pointer items-center"
               >
                 <Shield className="mr-2 h-4 w-4" />
-                <span>{t('admin.panel') || 'Administration'}</span>
+                <span>{t('admin.panel')}</span>
               </Link>
             </DropdownMenuItem>
           )}
@@ -143,7 +141,7 @@ export function UserNav() {
           <AppVersion />
 
           <DropdownMenuItem onClick={logout}>
-            {t('common.logout') || 'Log out'}
+            {t('common.logout')}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
