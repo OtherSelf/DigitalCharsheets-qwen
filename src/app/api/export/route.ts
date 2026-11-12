@@ -26,7 +26,7 @@ export async function GET(request: Request) {
   const characters = getCharactersFromServer(uid);
 
   if (characterId) {
-    // Export single character
+    // Один лист по `characterId`; чужой id неотличим от несуществующего.
     const character = characters.find((c) => c.id === characterId);
     if (!character) {
       return NextResponse.json(
@@ -39,7 +39,7 @@ export async function GET(request: Request) {
     );
   }
 
-  // Export all characters
+  // Бэкап всех листов без служебных полей.
   return NextResponse.json(
     characters.map((character) =>
       toPortableCharacter(character as unknown as Record<string, unknown>),

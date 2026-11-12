@@ -34,7 +34,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const t = (key: string) => {
     const dict = translations[language];
     // Ключи всегда полные (`namespace.key`): suffix-fallback эпохи перехода
-    // удалён на этапе 3, тест на «сырые» ключи — tests/unit/i18n-keys.test.ts.
+    // удалён; namespaced-ключи проверяет tests/unit/translations.test.ts.
     return dict[key] ?? key;
   };
 

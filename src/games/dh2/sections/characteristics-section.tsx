@@ -33,7 +33,6 @@ import type {
 } from '../types';
 import { EditSaveButton } from './dh-ui-helpers';
 
-// LANDMARK 1: Added notesForText and addNotesText to the component props
 const CharacteristicStat = ({
   label,
   fullName,
@@ -316,7 +315,7 @@ export const CharacteristicsSection = React.forwardRef<
             <CharacteristicStat
               key={char.key}
               label={char.label}
-              // LANDMARK 3: Passing the translated full name using the char.key
+              // Полное имя — по ключу характеристики, а не по label: label может быть сокращён.
               fullName={t(
                 [
                   'weaponSkill',
@@ -360,7 +359,7 @@ export const CharacteristicsSection = React.forwardRef<
               }}
               isCompactView={isCompactView}
               hideNotes={hideNotes}
-              // LANDMARK 4: Passing translated strings for the notes popover
+              // Поповер заметок не знает про i18n: готовые строки передаёт родитель.
               notesForText={t('common.notesFor')}
               addNotesText={t('common.addNotes')}
             />

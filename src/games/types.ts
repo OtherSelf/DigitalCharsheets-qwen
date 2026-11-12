@@ -150,7 +150,7 @@ export interface LegacyImportContext {
  * секции Excel описывает модуль. Благодаря этому новая игра не требует
  * правок экспорта.
  *
- * 📌 Подписи Excel — i18n-ключи: язык выбирает ядро в момент выгрузки.
+ * Подписи Excel — i18n-ключи: язык выбирает ядро в момент выгрузки.
  */
 export interface GameExportAdapter<TCharacter extends CharacterRecord> {
   /** Поля листа, которые попадают в переносимый JSON (без служебных). */

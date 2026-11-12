@@ -9,7 +9,7 @@ import { makeDhCharacter, makeDndCharacter } from './helpers';
 
 /**
  * ─── LANDMARK: CHARACTER MIGRATION v2 TESTS ────────────────────────────────
- * Правила миграции (📌 D3/D4/D8):
+ * Правила миграции (D3/D4/D8):
  *   • dnd5e / dh1 / dh2 по `systemId`, legacy — по `gameSystem` + `edition`;
  *   • dh1 без influence/fatigue2nd, dh2 без fatigue1st;
  *   • значения чужой редакции не теряются: hybrid/конфликты → notes;

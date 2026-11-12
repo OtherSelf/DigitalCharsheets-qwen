@@ -29,7 +29,9 @@ export function RecoveryModal() {
   const [error, setError] = useState('');
   const [isOpen, setIsOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
-  const [hasShownModal, setHasShownModal] = useState(false); // LANDMARK: Track if we've shown the modal
+  /* Once the user closes the prompt, it must not reopen on every route or
+     query change: the flag is reset only when the account changes. */
+  const [hasShownModal, setHasShownModal] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
@@ -37,23 +39,24 @@ export function RecoveryModal() {
 
   const isRecovery = searchParams.get('recovery_mode') === 'true';
 
-  // LANDMARK: Reset form state when user changes to prevent stale data
+  // Another account's draft must not leak into this one.
   useEffect(() => {
     if (user) {
       setNewPassword('');
       setNewRecoveryPhrase('');
       setError('');
-      setHasShownModal(false); // Reset flag when user changes
+      setHasShownModal(false);
     }
-  }, [user?.username]); // Only reset when user changes (different user)
+  }, [user?.username]);
 
-  // LANDMARK: Sync dialog state with actual user data
+  // Open the prompt when the profile misses a phrase or the URL asks for it;
+  // any other navigation closes a stale dialog.
   useEffect(() => {
     if (isMounted && user) {
       const needsSetup = !user.hasRecoveryPhrase;
       const isSetupParam = searchParams.get('setup_phrase') === 'true';
 
-      // LANDMARK: Only show modal once per user session to prevent double-showing
+      // Guard against searchParams churn: a closed prompt must not reopen.
       if ((needsSetup || isSetupParam || isRecovery) && !hasShownModal) {
         setIsOpen(true);
         setHasShownModal(true);
@@ -66,7 +69,7 @@ export function RecoveryModal() {
   const handleOpenChange = (open: boolean) => {
     if (!open) {
       setIsOpen(false);
-      // LANDMARK: Clean up form state when closing
+      // Reopening must start from a clean draft, not the last attempt.
       setNewPassword('');
       setNewRecoveryPhrase('');
       setError('');
@@ -101,7 +104,8 @@ export function RecoveryModal() {
         if (data.success) {
           updateUserPhrase(true);
           setIsOpen(false);
-          // LANDMARK: Clean up form state
+          // The saved values are no longer a draft: drop them before the
+          // modal can be opened again.
           setNewPassword('');
           setNewRecoveryPhrase('');
           setError('');
@@ -147,7 +151,8 @@ export function RecoveryModal() {
         if (data.success) {
           updateUserPhrase(true);
           setIsOpen(false);
-          // LANDMARK: Clean up form state
+          // The saved values are no longer a draft: drop them before the
+          // modal can be opened again.
           setNewPassword('');
           setNewRecoveryPhrase('');
           setError('');

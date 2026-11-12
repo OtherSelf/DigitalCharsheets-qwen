@@ -34,7 +34,9 @@ import { cn } from '@/lib/utils';
 
 import type { DnDMulticlass } from '../types';
 
-// MULTICLASS REQUIREMENTS LANDMARK: Define stats type and requirements
+// LANDMARK: MULTICLASS_REQUIREMENTS
+// Пороги мультикласса по правилам 5e: класс открывается, если соблюдены
+// требования и по основной, и по новой характеристике.
 type DnDStats = {
   strength: number;
   dexterity: number;
@@ -59,9 +61,9 @@ const MULTICLASS_REQUIREMENTS: Record<string, (stats: DnDStats) => boolean> = {
   Warlock: (s) => s.charisma >= 13,
   Wizard: (s) => s.intelligence >= 13,
 };
-// END MULTICLASS REQUIREMENTS LANDMARK
 
-// Map internal English class names to translation keys
+// Внутренние имена классов английские (они же в данных листа); для UI
+// нужен ключ словаря, поэтому перевод идёт через отдельную карту.
 const CLASS_TRANSLATION_KEYS: Record<string, string> = {
   Artificer: 'dnd.classArtificer',
   Barbarian: 'dnd.classBarbarian',
@@ -373,7 +375,9 @@ export function DndProgressionSection({
                     </Label>
                   </div>
 
-                  {/* MULTICLASS TOGGLE LANDMARK: Removed isProgressionEditing check so it's always visible and functional */}
+                  {/* LANDMARK: MULTICLASS_TOGGLE */}
+                  {/* Тумблер виден и вне режима редактирования: включение
+                      мультикласса сразу открывает выбор классов. */}
                   <Checkbox
                     checked={progressionData.isMulticlass}
                     onCheckedChange={(v) => {
@@ -537,8 +541,9 @@ export function DndProgressionSection({
                       value={progressionData.experiencePoints}
                       onChange={(v) => {
                         const n = parseInt(v.target.value) || 0;
-                        // LANDMARK: опыт сохраняется сразу (очередь в контексте
-                        // склеивает «печатание» в один запрос), а не только по Save.
+                        // LANDMARK: EXPERIENCE_AUTOSAVE
+                        // Опыт сохраняется сразу (очередь в контексте склеивает
+                        // «печатание» в один запрос), а не только по Save.
                         persistExperience(n);
                       }}
                       className="h-7 p-1 text-xs"

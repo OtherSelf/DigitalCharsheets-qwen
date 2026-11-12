@@ -22,7 +22,7 @@ import { Character } from '@/lib/types';
  * admin — любую.
  */
 
-// GET: Fetch all characters for the current user
+// Список листов текущего пользователя; uid — только из сессии.
 export async function GET(request: Request) {
   const uid = getSessionUid(request);
   if (!uid) {
@@ -33,7 +33,7 @@ export async function GET(request: Request) {
   return NextResponse.json(characters);
 }
 
-// POST: Create a new character for the current user
+// Создание листа: владелец — из сессии, доступ к редакции — по роли.
 export async function POST(request: Request) {
   const body = (await request.json().catch(() => null)) as Record<
     string,

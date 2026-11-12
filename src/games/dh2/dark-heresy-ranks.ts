@@ -8,7 +8,7 @@
  */
 import { DarkHeresyCareerPath } from './types';
 
-// The EXP threshold for unlocking advanced career paths.
+// Порог опыта, после которого открываются продвинутые карьерные пути.
 export const ADVANCED_RANK_THRESHOLD = 6000;
 
 interface Rank {
@@ -275,12 +275,13 @@ export function calculateRank(
   advancedPath: AdvancedPath | null,
   alternatePath: string | null,
 ): string {
-  // If no career progression data exists, return early
+  // Без стандартной ветки ранги не посчитать: лучше явная заглушка,
+  // чем «ранг 0» из пустого массива.
   if (!careerProgression || !careerProgression.standard) {
     return 'Unknown Rank';
   }
 
-  // Priority 1: Advanced Path
+  // Приоритет 1: выбранный продвинутый путь.
   if (advancedPath) {
     const currentAdvancedRank = [...advancedPath.ranks]
       .reverse()
@@ -290,7 +291,8 @@ export function calculateRank(
     }
   }
 
-  // Priority 2: Alternate Path
+  // Приоритет 2: альтернативная ветка, пока она не упёрлась в порог
+  // возврата к стандартной.
   if (alternatePath && careerProgression.alternates) {
     const path = careerProgression.alternates.find(
       (p) => p.name === alternatePath,
@@ -323,7 +325,7 @@ export function calculateRank(
     }
   }
 
-  // Priority 3: Standard Path (Fallback)
+  // Приоритет 3: стандартная ветка.
   const currentBasicRank = [...careerProgression.standard]
     .reverse()
     .find((rank) => totalExpSpent >= rank.expThreshold);
