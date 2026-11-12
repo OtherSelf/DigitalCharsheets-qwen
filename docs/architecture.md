@@ -15,9 +15,10 @@ translations and export adapter lives under `src/games/<systemId>/`, and the
 core works through a single registry. Adding a game does not touch the core.
 See [game-modules.md](game-modules.md).
 
-The original prototype was scaffolded in Firebase Studio (see
-[blueprint.md](blueprint.md)); the current version is a Next.js App Router
-rewrite finished with Qwen assistance.
+The original prototype was scaffolded in Firebase Studio; the current version is
+a Next.js App Router rewrite finished with Qwen assistance. The legacy schema the
+importer still accepts is summarised in
+[data-storage.md](data-storage.md#legacy-data).
 
 ## Stack
 

@@ -12,7 +12,7 @@ deploying lives here, one topic per page.
 | [architecture.md](architecture.md) | Stack, application layout, auth/session flow, startup checks, client state |
 | [plugin-sdk.md](plugin-sdk.md) | **SDK v1**: manifest, entry points, sheet/form, UI slots, i18n, migrations, conformance |
 | [game-modules.md](game-modules.md) | How a game/edition module is added, the registry contract and module layout |
-| [data-storage.md](data-storage.md) | On-disk data layout, user schema, locks, atomic writes, backups |
+| [data-storage.md](data-storage.md) | On-disk data layout, user schema, locks, atomic writes, backups, legacy Firebase schema |
 | [api.md](api.md) | HTTP API, OpenAPI/Scalar docs, auth, endpoint map |
 | [admin.md](admin.md) | `/admin`, roles, first administrator, profile checks, block/delete rules |
 | [export-format.md](export-format.md) | Portable JSON/Excel export envelope and import rules |
@@ -20,8 +20,6 @@ deploying lives here, one topic per page.
 | [i18n.md](i18n.md) | Translation keys, naming conventions, RU/EN rules and i18n tests |
 | [testing.md](testing.md) | Unit, smoke, visual regression and the pre-deploy gate |
 | [deployment.md](deployment.md) | Production start, environment variables, data dir, HTTPS, backups |
-| [blueprint.md](blueprint.md) | Original app concept (historical, kept as-is) |
-| [backend.json](backend.json) | Original Firebase Studio entity schema (historical, kept as-is) |
 
 ## What belongs where
 
@@ -43,9 +41,9 @@ deploying lives here, one topic per page.
   pasting large code blocks; keep only small, illustrative snippets.
 - **Keep it in sync.** If a change alters behaviour, update the relevant page in
   the same change. If a page becomes obsolete, remove it or mark it historical.
-- **Historical files** (`blueprint.md`, `backend.json`) are the original
-  concept/schema. Don't rewrite them to match the current app; link to them when
-  context is useful.
+- **Don't keep standalone historical dumps.** If old data still matters (legacy
+  formats, removed schemas), describe the part the code still handles in the page
+  that owns the current behaviour — for example `data-storage.md` § Legacy data.
 
 ## Page template
 
@@ -74,8 +72,8 @@ Commands, payloads or a minimal walkthrough.
 
 ## Conventions
 
-- Language: **English**, matching the README and the existing blueprint. Code
-  identifiers, file names and API fields stay as-is.
+- Language: **English**, matching the README. Code identifiers, file names and
+  API fields stay as-is.
 - Commands go in fenced `bash` blocks; environment variables and paths go in
   backticks.
 - Dates use ISO 8601 (`2026-01-01T00:00:00.000Z`).

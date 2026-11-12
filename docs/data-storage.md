@@ -218,11 +218,30 @@ Per-user JSON/Excel exports are a separate feature; see
 
 ## Legacy data
 
-The original Firebase Studio schema is kept in
-[`backend.json`](backend.json). The `GET /api/import` maintenance endpoint reads
-a Firestore export from `<data-dir>/import-source.json`, creates local accounts
-and converts sheets. It is a legacy path, not part of the regular user flow; see
-[api.md](api.md) for its current status.
+The project started as a Firebase Studio app. Firebase itself is gone — no SDK,
+no `firebase/` directory — but `GET /api/import` still understands a Firestore
+export from `<data-dir>/import-source.json`. The original entity schema is
+reproduced here for reference; the import code is the source of truth
+([`src/app/api/import/route.ts`](../src/app/api/import/route.ts), plus
+`matchesLegacyImport` / `convertLegacyImport` in each game plugin).
+
+Firestore paths:
+
+```text
+/users/{userId}
+/users/{userId}/characterSheets/{characterSheetId}
+```
+
+| Entity | Fields |
+| --- | --- |
+| `UserProfile` | `id`, `username`, `createdAt`, `updatedAt` |
+| `CharacterSheet` | `id`, `userId`, `name`, `gameSystem`, `concept`, `notes`, `questLog`, `data` (JSON string with the system-specific sheet), `createdAt`, `updatedAt` |
+
+The prototype used the `google.com` and `password` auth providers and keyed
+everything by the Firebase UID. The importer groups rows by the `Document ID`
+(`/users/<uid>/characterSheets/<sheetId>`), creates local accounts and converts
+each sheet through the owning plugin. It is a legacy path, not part of the
+regular user flow; see [api.md](api.md) for its current status.
 
 ## Related
 
