@@ -1,5 +1,10 @@
 import { NextResponse } from 'next/server';
 
+import {
+  getAuthRateLimiter,
+  LOGIN_RATE_LIMIT,
+  rateLimitKey,
+} from '@/lib/security/rate-limit';
 import { authenticateUser } from '@/lib/server-auth';
 import { sessionCookieHeader } from '@/lib/session';
 
@@ -10,8 +15,12 @@ import { sessionCookieHeader } from '@/lib/session';
  * (POST /api/auth/exists) и предлагает регистрацию
  * (POST /api/auth/register). Поэтому здесь `allowRegistration: false`.
  *
- * Статусы: 400 — не заполнены поля/короткий пароль; 404 — аккаунт не найден;
- * 401 — неверный пароль; 200 — сессия в httpOnly-cookie.
+ * Статусы: 400 — не заполнены поля; 401 — неверный пароль; 404 — аккаунт не
+ * найден; 429 — превышен лимит попыток; 200 — сессия в httpOnly-cookie.
+ *
+ * Длину пароля вход НЕ проверяет: политика (минимум 12) действует в момент
+ * установки пароля, иначе аккаунты, созданные раньше, потеряли бы доступ.
+ * Перебор ограничивает лимитер (10 попыток за 10 минут на IP+логин).
  */
 export async function POST(request: Request) {
   try {
@@ -26,10 +35,21 @@ export async function POST(request: Request) {
       );
     }
 
-    if (password.length < 4) {
+    const limiter = getAuthRateLimiter().check(
+      rateLimitKey('login', request, String(username)),
+      LOGIN_RATE_LIMIT,
+    );
+    if (!limiter.allowed) {
       return NextResponse.json(
-        { success: false, error: 'Password must be at least 4 characters.' },
-        { status: 400 },
+        {
+          success: false,
+          error: 'Too many login attempts. Try again later.',
+          reason: 'rate_limited',
+        },
+        {
+          status: 429,
+          headers: { 'Retry-After': String(limiter.retryAfterSeconds) },
+        },
       );
     }
 
@@ -38,6 +58,10 @@ export async function POST(request: Request) {
     });
 
     if (!result.success || !result.user) {
+      // В журнал — только причина: логин и пароль в лог не попадают.
+      console.warn(
+        `[security] login rejected: reason=${result.reason ?? 'unknown'}`,
+      );
       const status =
         result.reason === 'no_account'
           ? 404

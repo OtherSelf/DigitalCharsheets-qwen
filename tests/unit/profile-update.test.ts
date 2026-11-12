@@ -4,10 +4,12 @@ import fs from 'node:fs';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { newUid } from '@/lib/ids';
+import { verifyPassword } from '@/lib/security/password';
 import {
   isRecoveryPhraseHash,
   recoveryPhraseMatches,
 } from '@/lib/security/phrase';
+import { isScryptHash } from '@/lib/security/scrypt';
 import {
   authenticateUser,
   getStoredUser,
@@ -51,7 +53,8 @@ const sha256 = (value: string) =>
 
 describe('updateUserProfile', () => {
   it('меняет displayName, сохраняя uid, пароль и персонажей', () => {
-    const uid = authenticateUser('hero', 'pass1234', 'Old Name').user!.uid;
+    const uid = authenticateUser('hero', 'pass-1234-secure', 'Old Name').user!
+      .uid;
     saveCharacterToServer(uid, makeDndCharacter({ userId: uid }));
 
     const result = updateUserProfile(uid, 'hero', '  New Name  ');
@@ -63,12 +66,16 @@ describe('updateUserProfile', () => {
     const paths = userPaths(dataDir, uid);
     const stored = readJson(paths.userFile);
     expect(stored.displayName).toBe('New Name');
-    expect(stored.passwordHash).toBe(sha256('pass1234'));
+    // Хэш не перегенерируется и не подменяется: пароль тот же.
+    expect(verifyPassword(stored.passwordHash, 'pass-1234-secure').valid).toBe(
+      true,
+    );
     expect(fs.existsSync(paths.charactersDir)).toBe(true);
   });
 
   it('при смене логина uid и каталог НЕ меняются, листы остаются на месте', () => {
-    const uid = authenticateUser('oldlogin', 'pass1234', 'Hero').user!.uid;
+    const uid = authenticateUser('oldlogin', 'pass-1234-secure', 'Hero').user!
+      .uid;
     saveCharacterToServer(uid, makeDndCharacter({ userId: uid }));
 
     const result = updateUserProfile(uid, 'newlogin', 'Hero');
@@ -89,19 +96,19 @@ describe('updateUserProfile', () => {
 
     // Старый логин освобождается: вход под ним создаёт НОВЫЙ пустой аккаунт,
     // а не открывает существующий.
-    const oldLogin = authenticateUser('oldlogin', 'pass1234');
+    const oldLogin = authenticateUser('oldlogin', 'pass-1234-secure');
     expect(oldLogin.isNewUser).toBe(true);
     expect(oldLogin.user?.uid).not.toBe(uid);
 
     // Вход под новым логином ведёт в тот же аккаунт.
-    const relogin = authenticateUser('newlogin', 'pass1234');
+    const relogin = authenticateUser('newlogin', 'pass-1234-secure');
     expect(relogin.success).toBe(true);
     expect(relogin.isNewUser).toBe(false);
     expect(relogin.user?.uid).toBe(uid);
   });
 
   it('при смене только регистра логина каталог и индекс не переписываются зря', () => {
-    const uid = authenticateUser('hero', 'pass1234').user!.uid;
+    const uid = authenticateUser('hero', 'pass-1234-secure').user!.uid;
     const result = updateUserProfile(uid, '  HERO ', 'hero');
 
     expect(result.success).toBe(true);
@@ -111,8 +118,8 @@ describe('updateUserProfile', () => {
   });
 
   it('отказывает, если новый логин уже занят, и не трогает данные', () => {
-    const first = authenticateUser('first', 'pass1').user!.uid;
-    const second = authenticateUser('second', 'pass2').user!.uid;
+    const first = authenticateUser('first', 'pass-one-1234').user!.uid;
+    const second = authenticateUser('second', 'pass-two-1234').user!.uid;
     saveCharacterToServer(first, makeDndCharacter({ userId: first }));
 
     const result = updateUserProfile(first, 'second', 'First');
@@ -130,30 +137,34 @@ describe('updateUserProfile', () => {
   });
 
   it('меняет пароль: старый перестаёт работать, новый — работает', () => {
-    const uid = authenticateUser('pwuser', 'oldpass').user!.uid;
+    const uid = authenticateUser('pwuser', 'old-pass-1234').user!.uid;
 
-    const result = updateUserProfile(uid, 'pwuser', 'pwuser', 'newpass');
+    const result = updateUserProfile(uid, 'pwuser', 'pwuser', 'new-pass-1234');
 
     expect(result.success).toBe(true);
-    expect(authenticateUser('pwuser', 'oldpass').success).toBe(false);
-    expect(authenticateUser('pwuser', 'newpass').success).toBe(true);
-    expect(readJson(userPaths(dataDir, uid).userFile).passwordHash).toBe(
-      sha256('newpass'),
-    );
+    expect(authenticateUser('pwuser', 'old-pass-1234').success).toBe(false);
+    expect(authenticateUser('pwuser', 'new-pass-1234').success).toBe(true);
+    const rotated = readJson(userPaths(dataDir, uid).userFile).passwordHash;
+    expect(isScryptHash(rotated)).toBe(true);
+    expect(verifyPassword(rotated, 'new-pass-1234').valid).toBe(true);
   });
 
   it('пустой пароль не меняет хеш', () => {
-    const uid = authenticateUser('keep', 'pass1').user!.uid;
+    const uid = authenticateUser('keep', 'pass-one-1234').user!.uid;
 
+    const before = readJson(userPaths(dataDir, uid).userFile).passwordHash;
     updateUserProfile(uid, 'keep', 'keep', '   ');
 
-    expect(readJson(userPaths(dataDir, uid).userFile).passwordHash).toBe(
-      sha256('pass1'),
+    // Пустой пароль не трогает хэш: значение и проверка те же.
+    const stored = readJson(userPaths(dataDir, uid).userFile);
+    expect(stored.passwordHash).toBe(before);
+    expect(verifyPassword(stored.passwordHash, 'pass-one-1234').valid).toBe(
+      true,
     );
   });
 
   it('устанавливает recovery-фразу', () => {
-    const uid = authenticateUser('recovery', 'pass1').user!.uid;
+    const uid = authenticateUser('recovery', 'pass-one-1234').user!.uid;
 
     const result = updateUserProfile(
       uid,
@@ -173,7 +184,7 @@ describe('updateUserProfile', () => {
   });
 
   it('undefined сохраняет recovery-фразу, пустая строка — сбрасывает', () => {
-    const uid = authenticateUser('phrase', 'pass1').user!.uid;
+    const uid = authenticateUser('phrase', 'pass-one-1234').user!.uid;
     updateUserProfile(uid, 'phrase', 'phrase', undefined, 'one two three');
 
     const keptBefore = readJson(

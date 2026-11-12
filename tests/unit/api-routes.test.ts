@@ -58,6 +58,12 @@ import {
  * `cookie: dcs_session=…` (см. sessionHeaders в helpers).
  */
 
+/**
+ * Пароль тестовых аккаунтов: политика требует минимум 12 символов, поэтому
+ * короткие значения ниже проверяются только как невалидные.
+ */
+const TEST_PASSWORD = 'test-pass-1234';
+
 const json = (body: unknown, headers: Record<string, string> = {}) =>
   new Request('http://localhost/api/test', {
     method: 'POST',
@@ -91,7 +97,7 @@ afterEach(() => {
 /** Войти через /api/auth и вернуть uid, cookie и тело ответа. */
 async function loginAs(
   username: string,
-  password = '1234',
+  password = TEST_PASSWORD,
   displayName?: string,
 ) {
   // Большинству тестов нужен существующий аккаунт: регистрация теперь
@@ -109,7 +115,7 @@ async function loginAs(
 /** Зарегистрировать аккаунт через /api/auth/register. */
 async function registerAs(
   username: string,
-  password = '1234',
+  password = TEST_PASSWORD,
   displayName?: string,
   recoveryPhrase = 'amber cobalt lantern',
 ) {
@@ -126,7 +132,7 @@ describe('POST /api/auth/register', () => {
   it('создаёт аккаунт с uid, recovery-фразой и сессией', async () => {
     const { res, body, uid, cookie } = await registerAs(
       'api-user',
-      '1234',
+      'test-pass-1234',
       'API',
     );
 
@@ -149,10 +155,10 @@ describe('POST /api/auth/register', () => {
   });
 
   it('возвращает 409 на занятый логин и не меняет чужой профиль', async () => {
-    const first = await registerAs('occupied', '1234', 'First');
+    const first = await registerAs('occupied', 'test-pass-1234', 'First');
     const second = await registerAs(
       'occupied',
-      '5678',
+      'test-pass-5678',
       'Second',
       'zulu yankee',
     );
@@ -178,10 +184,10 @@ describe('POST /api/auth/register', () => {
       json({ username: 'x', password: '123', recoveryPhrase: 'amber cobalt' }),
     );
     expect(shortPassword.status).toBe(400);
-    expect((await shortPassword.json()).error).toContain('at least 4');
+    expect((await shortPassword.json()).error).toContain('at least 12');
 
     const shortPhrase = await registerRoute(
-      json({ username: 'x', password: '1234', recoveryPhrase: 'ab' }),
+      json({ username: 'x', password: 'test-pass-1234', recoveryPhrase: 'ab' }),
     );
     expect(shortPhrase.status).toBe(400);
     expect((await shortPhrase.json()).error).toContain('Recovery phrase');
@@ -213,6 +219,19 @@ describe('POST /api/auth/exists', () => {
       success: true,
       exists: false,
     });
+
+    // Оракул перечисления упирается в лимит, а не отвечает бесконечно.
+    let limited = 0;
+    for (let attempt = 0; attempt < 30; attempt += 1) {
+      const res = await existsRoute(json({ username: 'probe-login' }));
+      if (res.status === 429) {
+        expect(Number(res.headers.get('retry-after'))).toBeGreaterThan(0);
+        limited += 1;
+        break;
+      }
+      expect(res.status).toBe(200);
+    }
+    expect(limited).toBe(1);
   });
 
   it('400 без логина и 500 на битом JSON', async () => {
@@ -233,7 +252,7 @@ describe('POST /api/auth/exists', () => {
 describe('POST /api/auth', () => {
   it('не создаёт аккаунт для неизвестного логина — 404', async () => {
     const res = await loginRoute(
-      json({ username: 'unknown', password: '1234' }),
+      json({ username: 'unknown', password: 'test-pass-1234' }),
     );
 
     expect(res.status).toBe(404);
@@ -246,7 +265,7 @@ describe('POST /api/auth', () => {
   });
 
   it('возвращает 401 на неверный пароль', async () => {
-    await loginAs('api-user', '1234');
+    await loginAs('api-user', 'test-pass-1234');
     const res = await loginRoute(
       json({ username: 'api-user', password: 'nope' }),
     );
@@ -255,30 +274,71 @@ describe('POST /api/auth', () => {
     expect((await res.json()).success).toBe(false);
   });
 
-  it('валидирует обязательные поля и длину пароля', async () => {
+  it('валидирует обязательные поля; длину пароля проверяет регистрация', async () => {
     const noPassword = await loginRoute(json({ username: 'x' }));
     expect(noPassword.status).toBe(400);
 
     const blankUsername = await loginRoute(
-      json({ username: '   ', password: '1234' }),
+      json({ username: '   ', password: 'test-pass-1234' }),
     );
     expect(blankUsername.status).toBe(400);
 
+    // Вход длину пароля не проверяет: короткий пароль — просто неверный,
+    // а аккаунта с таким логином нет.
     const shortPassword = await loginRoute(
       json({ username: 'x', password: '123' }),
     );
-    expect(shortPassword.status).toBe(400);
-    expect((await shortPassword.json()).error).toContain('at least 4');
+    expect(shortPassword.status).toBe(404);
+
+    // Политика (12 символов) действует при регистрации.
+    const shortOnRegister = await registerRoute(
+      json({
+        username: 'short-register',
+        password: '123',
+        displayName: 'Short',
+        recoveryPhrase: 'amber cobalt',
+      }),
+    );
+    expect(shortOnRegister.status).toBe(400);
+    expect((await shortOnRegister.json()).error).toContain('at least 12');
   });
 
   it('успешно входит в существующий аккаунт и не создаёт новый', async () => {
-    const { uid } = await registerAs('returning', '1234', 'Returning');
-    const { res, body } = await loginAs('returning', '1234');
+    const { uid } = await registerAs(
+      'returning',
+      'test-pass-1234',
+      'Returning',
+    );
+    const { res, body } = await loginAs('returning', 'test-pass-1234');
 
     expect(res.status).toBe(200);
     expect(body.success).toBe(true);
     expect(body.isNewUser).toBe(false);
     expect(body.user.uid).toBe(uid);
+  });
+
+  it('после 10 неудачных попыток вход отвечает 429 с Retry-After', async () => {
+    await registerAs('brute-target', TEST_PASSWORD, 'Brute');
+
+    const statuses: number[] = [];
+    let retryAfter: string | null = null;
+    for (let attempt = 1; attempt <= 11; attempt += 1) {
+      const res = await loginRoute(
+        json({ username: 'brute-target', password: 'wrong-pass-1234' }),
+      );
+      statuses.push(res.status);
+      if (attempt === 11) retryAfter = res.headers.get('retry-after');
+    }
+
+    expect(statuses.slice(0, 10)).toEqual(Array(10).fill(401));
+    expect(statuses[10]).toBe(429);
+    expect(Number(retryAfter)).toBeGreaterThan(0);
+
+    // Пароль не подбирается: верный пароль тоже ждёт окончания окна.
+    const correct = await loginRoute(
+      json({ username: 'brute-target', password: TEST_PASSWORD }),
+    );
+    expect(correct.status).toBe(429);
   });
 
   it('возвращает 500 (а не падает) на битом JSON', async () => {
@@ -311,7 +371,11 @@ describe('PUT /api/auth/profile', () => {
   });
 
   it('меняет логин, uid и каталог не меняются', async () => {
-    const { uid, cookie } = await loginAs('old-login', '1234', 'Name');
+    const { uid, cookie } = await loginAs(
+      'old-login',
+      'test-pass-1234',
+      'Name',
+    );
 
     const res = await profileRoute(
       json(
@@ -331,7 +395,7 @@ describe('PUT /api/auth/profile', () => {
 
     // Старая cookie продолжает работать: uid не менялся.
     const stillValid = await loginRoute(
-      json({ username: 'new-login', password: '1234' }),
+      json({ username: 'new-login', password: 'test-pass-1234' }),
     );
     expect(stillValid.status).toBe(200);
     const relogin = await stillValid.json();
@@ -349,7 +413,7 @@ describe('DELETE /api/auth/profile', () => {
     });
 
   it('без сессии — 401 и ничего не удаляет', async () => {
-    const res = await profileDelete(deleteReq('1234'));
+    const res = await profileDelete(deleteReq('test-pass-1234'));
     expect(res.status).toBe(401);
     expect((await res.json()).reason).toBe('unauthorized');
   });
@@ -384,7 +448,9 @@ describe('DELETE /api/auth/profile', () => {
     const { uid } = await loginAs('delete-me');
     await charactersPost(json({ ...makeDndCharacter() }, sessionHeaders(uid)));
 
-    const res = await profileDelete(deleteReq('1234', sessionHeaders(uid)));
+    const res = await profileDelete(
+      deleteReq('test-pass-1234', sessionHeaders(uid)),
+    );
 
     expect(res.status).toBe(200);
     expect(await res.json()).toMatchObject({ success: true });
@@ -398,7 +464,7 @@ describe('DELETE /api/auth/profile', () => {
 
     // Вход по старому паролю больше не находит аккаунт.
     const relogin = await loginRoute(
-      json({ username: 'delete-me', password: '1234' }),
+      json({ username: 'delete-me', password: 'test-pass-1234' }),
     );
     expect(relogin.status).toBe(404);
   });
@@ -406,7 +472,8 @@ describe('DELETE /api/auth/profile', () => {
   it('старая cookie после удаления не работает и не воссоздаёт каталог', async () => {
     const { uid } = await loginAs('stale-cookie');
     expect(
-      (await profileDelete(deleteReq('1234', sessionHeaders(uid)))).status,
+      (await profileDelete(deleteReq('test-pass-1234', sessionHeaders(uid))))
+        .status,
     ).toBe(200);
 
     // Подпись cookie ещё валидна (30 дней), но профиля уже нет — 401.
@@ -420,9 +487,13 @@ describe('DELETE /api/auth/profile', () => {
 
   it('освобождённый логин можно зарегистрировать заново с новым uid', async () => {
     const { uid: oldUid } = await loginAs('reborn-account');
-    await profileDelete(deleteReq('1234', sessionHeaders(oldUid)));
+    await profileDelete(deleteReq('test-pass-1234', sessionHeaders(oldUid)));
 
-    const again = await registerAs('reborn-account', 'fresh-pass', 'Reborn');
+    const again = await registerAs(
+      'reborn-account',
+      'fresh-pass-1234',
+      'Reborn',
+    );
 
     expect(again.res.status).toBe(200);
     expect(isUid(again.uid)).toBe(true);
@@ -618,7 +689,7 @@ describe('/api/characters', () => {
  */
 describe('path traversal в /api/characters/[id] (SEC-3, SEC-3b)', () => {
   async function accountWithSheet(username: string) {
-    const { uid } = await registerAs(username, '1234', username);
+    const { uid } = await registerAs(username, 'test-pass-1234', username);
     const created = await charactersPost(
       json(
         { ...makeDndCharacter({ name: `${username} sheet` }) },
@@ -636,7 +707,10 @@ describe('path traversal в /api/characters/[id] (SEC-3, SEC-3b)', () => {
     const before = profileOf(uid);
 
     const res = await characterPut(
-      json({ passwordHash: 'pwned', name: 'hijacked' }, sessionHeaders(uid)),
+      json(
+        { passwordHash: 'pwned', name: 'hijacked-pass-1234' },
+        sessionHeaders(uid),
+      ),
       params('../user'),
     );
 
@@ -651,7 +725,11 @@ describe('path traversal в /api/characters/[id] (SEC-3, SEC-3b)', () => {
 
   it('PUT по «../../<uid>/user» не меняет чужой профиль — 400', async () => {
     const victim = await accountWithSheet('traversal-victim');
-    const attacker = await registerAs('traversal-attacker', '1234', 'A');
+    const attacker = await registerAs(
+      'traversal-attacker',
+      'test-pass-1234',
+      'A',
+    );
     const before = profileOf(victim.uid);
 
     const res = await characterPut(
@@ -662,12 +740,14 @@ describe('path traversal в /api/characters/[id] (SEC-3, SEC-3b)', () => {
     expect(res.status).toBe(400);
     expect(profileOf(victim.uid)).toEqual(before);
     // Вход под жертвой старым паролем всё ещё работает.
-    expect(authenticateUser('traversal-victim', '1234').success).toBe(true);
+    expect(authenticateUser('traversal-victim', 'test-pass-1234').success).toBe(
+      true,
+    );
   });
 
   it('DELETE по «../../<uid>/user» не удаляет чужой профиль — 400', async () => {
     const victim = await accountWithSheet('del-victim');
-    const attacker = await registerAs('del-attacker', '1234', 'A');
+    const attacker = await registerAs('del-attacker', 'test-pass-1234', 'A');
 
     const res = await characterDelete(
       req(
@@ -814,7 +894,10 @@ describe('/api/export', () => {
  * Логин в теле `update` ничего не доказывает и не принимается.
  */
 describe('recovery-роуты (SEC-1, SEC-4)', () => {
-  async function createUser(username = 'recover-api', password = 'pass1') {
+  async function createUser(
+    username = 'recover-api',
+    password = 'pass-one-1234',
+  ) {
     const result = authenticateUser(username, password);
     return result.user!.uid;
   }
@@ -962,7 +1045,7 @@ describe('recovery-роуты (SEC-1, SEC-4)', () => {
       json({
         // Логин ничего не доказывает — раньше этого хватало для захвата.
         username: 'recover-api',
-        newPassword: 'pwned-pass',
+        newPassword: 'pwned-pass-1234',
         newRecoveryPhrase: 'x y z',
       }),
     );
@@ -972,7 +1055,9 @@ describe('recovery-роуты (SEC-1, SEC-4)', () => {
     expect(readJson(userPaths(dataDir, uid).userFile).passwordHash).toBe(
       before,
     );
-    expect(authenticateUser('recover-api', 'pwned-pass').success).toBe(false);
+    expect(authenticateUser('recover-api', 'pwned-pass-1234').success).toBe(
+      false,
+    );
   });
 
   it('recover/update по токену меняет пароль и фразу', async () => {
@@ -1015,18 +1100,22 @@ describe('recovery-роуты (SEC-1, SEC-4)', () => {
     const { token } = await verified.json();
 
     const first = await recoverUpdateRoute(
-      json({ token, newPassword: 'first-pass' }),
+      json({ token, newPassword: 'first-pass-1234' }),
     );
     expect(first.status).toBe(200);
 
     const second = await recoverUpdateRoute(
-      json({ token, newPassword: 'second-pass' }),
+      json({ token, newPassword: 'second-pass-1234' }),
     );
     expect(second.status).toBe(401);
 
     // Второй пароль не применился.
-    expect(authenticateUser('recover-api', 'first-pass').success).toBe(true);
-    expect(authenticateUser('recover-api', 'second-pass').success).toBe(false);
+    expect(authenticateUser('recover-api', 'first-pass-1234').success).toBe(
+      true,
+    );
+    expect(authenticateUser('recover-api', 'second-pass-1234').success).toBe(
+      false,
+    );
   });
 
   it('recover/update валидирует длину пароля и фразы', async () => {
@@ -1046,16 +1135,22 @@ describe('recovery-роуты (SEC-1, SEC-4)', () => {
     expect(shortPassword.status).toBe(400);
 
     const shortPhrase = await recoverUpdateRoute(
-      json({ token, newPassword: '12345', newRecoveryPhrase: 'ab' }),
+      json({ token, newPassword: 'test-pass-12345', newRecoveryPhrase: 'ab' }),
     );
     expect(shortPhrase.status).toBe(400);
 
     // Токен не сгорел на неудачных валидациях — им ещё можно воспользоваться.
     const ok = await recoverUpdateRoute(
-      json({ token, newPassword: '12345', newRecoveryPhrase: 'gamma delta' }),
+      json({
+        token,
+        newPassword: 'test-pass-12345',
+        newRecoveryPhrase: 'gamma delta',
+      }),
     );
     expect(ok.status).toBe(200);
-    expect(authenticateUser('recover-api', '12345').success).toBe(true);
+    expect(authenticateUser('recover-api', 'test-pass-12345').success).toBe(
+      true,
+    );
     expect(recoveryPhraseMatches(storedPhrase(uid), 'gamma delta')).toBe(true);
   });
 
@@ -1068,7 +1163,7 @@ describe('recovery-роуты (SEC-1, SEC-4)', () => {
         word1: 'ragnar',
         word2: 'testborn',
         word3: 'fighter',
-        newPassword: 'fresh-pass',
+        newPassword: 'fresh-pass-1234',
       }),
     );
     expect(byWords.status).toBe(401);
@@ -1083,10 +1178,12 @@ describe('recovery-роуты (SEC-1, SEC-4)', () => {
     ).json();
 
     const byToken = await recoverRoute(
-      json({ token, newPassword: 'fresh-pass' }),
+      json({ token, newPassword: 'fresh-pass-1234' }),
     );
     expect(byToken.status).toBe(200);
-    expect(authenticateUser('legacy-api', 'fresh-pass').success).toBe(true);
+    expect(authenticateUser('legacy-api', 'fresh-pass-1234').success).toBe(
+      true,
+    );
     // Фраза не менялась: в теле её не было.
     expect(
       recoveryPhraseMatches(storedPhrase(uid), 'amber cobalt lantern'),

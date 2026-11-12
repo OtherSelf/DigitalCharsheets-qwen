@@ -24,6 +24,7 @@ import { Separator } from '@/components/ui/separator';
 import { useTranslation } from '@/context/language-context';
 import { useLocalAuth } from '@/context/local-auth-context';
 import { useUISettings } from '@/hooks/use-ui-settings';
+import { MIN_PASSWORD_LENGTH } from '@/lib/security/password';
 
 export default function ProfileSettingsPage() {
   const { user, isUserLoading, restoreSession } = useLocalAuth();
@@ -72,7 +73,7 @@ export default function ProfileSettingsPage() {
     setSuccess('');
     if (!user) return;
 
-    if (password && password.length < 4) {
+    if (password && password.length < MIN_PASSWORD_LENGTH) {
       setError(t('common.passwordMinLength'));
       return;
     }

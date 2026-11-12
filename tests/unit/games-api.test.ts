@@ -47,7 +47,7 @@ afterEach(() => {
 });
 
 function createUser(username: string, role: UserRole = 'user'): string {
-  const result = authenticateUser(username, 'pass1');
+  const result = authenticateUser(username, 'pass-one-1234');
   const uid = result.user!.uid;
   const stored = readStoredUser(uid)!;
   writeStoredUser(uid, { ...stored, role });

@@ -7,6 +7,12 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { getRecoveryTokensFile } from '@/lib/data-dir';
 import {
+  hashPassword,
+  MIN_PASSWORD_LENGTH,
+  passwordPolicyError,
+  verifyPassword,
+} from '@/lib/security/password';
+import {
   isSafeId,
   MAX_SAFE_ID_LENGTH,
   resolveCharacterFile,
@@ -20,6 +26,11 @@ import {
   rateLimitKey,
   RECOVERY_RATE_LIMIT,
 } from '@/lib/security/rate-limit';
+import {
+  hashSecret,
+  isScryptHash,
+  verifySecretHash,
+} from '@/lib/security/scrypt';
 import { safeStringEqual } from '@/lib/security/timing';
 import {
   consumeRecoveryToken,
@@ -328,5 +339,77 @@ describe('валидация путей (SEC-3, SEC-3b)', () => {
         path: null,
       });
     }
+  });
+});
+
+describe('пароли: scrypt и прозрачная миграция', () => {
+  it('хэш имеет версионированный формат и уникальную соль', () => {
+    const first = hashPassword('correct horse battery');
+    const second = hashPassword('correct horse battery');
+
+    expect(first).toMatch(
+      /^scrypt\$16384\$8\$1\$[A-Za-z0-9_-]+\$[A-Za-z0-9_-]+$/,
+    );
+    // Одинаковые пароли выглядят по-разному: соль на каждое значение своя.
+    expect(first).not.toBe(second);
+    expect(isScryptHash(first)).toBe(true);
+    expect(verifyPassword(first, 'correct horse battery')).toEqual({
+      valid: true,
+      needsRehash: false,
+    });
+    expect(verifyPassword(second, 'correct horse battery').valid).toBe(true);
+  });
+
+  it('неверный пароль и битый хэш отклоняются без исключений', () => {
+    const hash = hashPassword('correct horse battery');
+
+    expect(verifyPassword(hash, 'wrong password')).toEqual({
+      valid: false,
+      needsRehash: false,
+    });
+    expect(verifyPassword('', 'anything').valid).toBe(false);
+    expect(verifyPassword(null, 'anything').valid).toBe(false);
+    expect(verifyPassword('scrypt$nonsense', 'anything').valid).toBe(false);
+    // Слишком дорогие параметры в чужом файле не должны вешать процесс.
+    expect(
+      verifyPassword(
+        'scrypt$999999999$8$1$c2FsdHNhbHQ$aGFzaGhhc2hoYXNoaGFzaA',
+        'x',
+      ).valid,
+    ).toBe(false);
+  });
+
+  it('старый sha256-хэш принимается и помечается на перезапись', () => {
+    const legacy = crypto
+      .createHash('sha256')
+      .update('legacy-pass-1234')
+      .digest('hex');
+
+    expect(verifyPassword(legacy, 'legacy-pass-1234')).toEqual({
+      valid: true,
+      needsRehash: true,
+    });
+    expect(verifyPassword(legacy, 'other-pass-1234')).toEqual({
+      valid: false,
+      needsRehash: false,
+    });
+  });
+
+  it('политика: минимум 12, максимум 128, пустой пароль отдельно', () => {
+    expect(passwordPolicyError('short-pass1')).toBe(
+      `Password must be at least ${MIN_PASSWORD_LENGTH} characters.`,
+    );
+    expect(passwordPolicyError('')).toBe('Password is required.');
+    expect(passwordPolicyError(undefined)).toBe('Password is required.');
+    expect(passwordPolicyError('exactly-12-c')).toBeNull();
+    expect(passwordPolicyError('x'.repeat(129))).toMatch(/at most 128/);
+    expect(passwordPolicyError('x'.repeat(128))).toBeNull();
+  });
+
+  it('секрет из scrypt-хэша не восстанавливается', () => {
+    const hash = hashPassword('correct horse battery');
+    expect(hash).not.toContain('correct');
+    expect(verifySecretHash(hash, 'correct horse battery')).toBe(true);
+    expect(hashSecret('correct horse battery')).not.toBe(hash);
   });
 });

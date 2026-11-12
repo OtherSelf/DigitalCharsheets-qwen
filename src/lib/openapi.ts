@@ -216,7 +216,11 @@ export const openApiDocument = {
             type: 'string',
             description: 'Login (case-insensitive).',
           },
-          password: { type: 'string', minLength: 4 },
+          password: {
+            type: 'string',
+            description:
+              'Not length-checked on login: accounts created before the 12-character policy must still be able to sign in.',
+          },
           displayName: {
             type: 'string',
             description: 'Optional, only used if the account is created.',
@@ -229,7 +233,13 @@ export const openApiDocument = {
         required: ['username', 'password', 'displayName', 'recoveryPhrase'],
         properties: {
           username: { type: 'string' },
-          password: { type: 'string', minLength: 4 },
+          password: {
+            type: 'string',
+            minLength: 12,
+            maxLength: 128,
+            description:
+              'Password policy: at least 12 characters. Stored as a salted scrypt hash.',
+          },
           displayName: { type: 'string' },
           recoveryPhrase: { type: 'string', minLength: 5 },
         },
@@ -360,7 +370,13 @@ export const openApiDocument = {
         properties: {
           newUsername: { type: 'string' },
           newDisplayName: { type: 'string' },
-          newPassword: { type: 'string', minLength: 4 },
+          newPassword: {
+            type: 'string',
+            minLength: 12,
+            maxLength: 128,
+            description:
+              'Password policy: at least 12 characters. Omit or send an empty string to keep the current password.',
+          },
           newRecoveryPhrase: {
             type: 'string',
             description: 'Empty string removes the phrase.',
@@ -390,7 +406,7 @@ export const openApiDocument = {
         required: ['token', 'newPassword'],
         properties: {
           token: ref('RecoveryToken'),
-          newPassword: { type: 'string', minLength: 4 },
+          newPassword: { type: 'string', minLength: 12, maxLength: 128 },
           newRecoveryPhrase: {
             type: 'string',
             minLength: 5,
@@ -427,7 +443,7 @@ export const openApiDocument = {
         required: ['token', 'newPassword'],
         properties: {
           token: ref('RecoveryToken'),
-          newPassword: { type: 'string', minLength: 4 },
+          newPassword: { type: 'string', minLength: 12, maxLength: 128 },
           newRecoveryPhrase: { type: 'string', minLength: 5 },
         },
         additionalProperties: false,
@@ -666,7 +682,7 @@ export const openApiDocument = {
         properties: {
           displayName: { type: 'string' },
           username: { type: 'string' },
-          password: { type: 'string', minLength: 4 },
+          password: { type: 'string', minLength: 12, maxLength: 128 },
           role: { type: 'string', enum: ['user', 'tester', 'admin'] },
           isBlocked: { type: 'boolean' },
         },
@@ -775,7 +791,7 @@ export const openApiDocument = {
         operationId: 'register',
         summary: 'Create an account',
         description:
-          'Creates a new account with a recovery phrase and immediately signs it in.',
+          'Creates a new account with a recovery phrase and immediately signs it in. The password policy (12–128 characters) is enforced here; registrations are limited to 10 per 10 minutes per IP + login.',
         security: [],
         requestBody: jsonBody(ref('RegisterRequest')),
         responses: {
@@ -790,6 +806,7 @@ export const openApiDocument = {
           },
           400: { $ref: '#/components/responses/BadRequest' },
           409: errorResponse('This login is already registered.'),
+          429: { $ref: '#/components/responses/RateLimited' },
           500: { $ref: '#/components/responses/ServerError' },
         },
       },
@@ -799,11 +816,14 @@ export const openApiDocument = {
         tags: ['Authentication'],
         operationId: 'accountExists',
         summary: 'Check whether a login is taken',
+        description:
+          'An enumeration oracle, so it is rate limited: 20 checks per 10 minutes per IP + login, then `429` with `Retry-After`.',
         security: [],
         requestBody: jsonBody(ref('ExistsRequest')),
         responses: {
           200: jsonResponse('Check result.', ref('ExistsResponse')),
           400: { $ref: '#/components/responses/BadRequest' },
+          429: { $ref: '#/components/responses/RateLimited' },
           500: { $ref: '#/components/responses/ServerError' },
         },
       },
@@ -839,12 +859,13 @@ export const openApiDocument = {
         operationId: 'updateProfile',
         summary: 'Update own profile',
         description:
-          'Changes login, display name, password and/or recovery phrase. A blank `newPassword` keeps the current password.',
+          'Changes login, display name, password and/or recovery phrase. A blank `newPassword` keeps the current password; a new password must satisfy the 12–128 character policy. Limited to 10 changes per 10 minutes.',
         requestBody: jsonBody(ref('ProfileUpdateRequest')),
         responses: {
           200: jsonResponse('Updated profile.', ref('AuthUserResponse')),
           400: { $ref: '#/components/responses/BadRequest' },
           401: { $ref: '#/components/responses/Unauthorized' },
+          429: { $ref: '#/components/responses/RateLimited' },
           500: { $ref: '#/components/responses/ServerError' },
         },
       },
@@ -875,6 +896,7 @@ export const openApiDocument = {
           200: jsonResponse('Phrase saved.', ref('SimpleSuccess')),
           400: { $ref: '#/components/responses/BadRequest' },
           401: { $ref: '#/components/responses/Unauthorized' },
+          429: { $ref: '#/components/responses/RateLimited' },
           500: { $ref: '#/components/responses/ServerError' },
         },
       },

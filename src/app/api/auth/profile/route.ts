@@ -1,5 +1,10 @@
 import { NextResponse } from 'next/server';
 
+import {
+  AUTH_MUTATION_RATE_LIMIT,
+  getAuthRateLimiter,
+  rateLimitKey,
+} from '@/lib/security/rate-limit';
 import { deleteUserAccount, updateUserProfile } from '@/lib/server-auth';
 import { clearSessionCookieHeader, getSessionUid } from '@/lib/session';
 
@@ -15,6 +20,24 @@ export async function PUT(request: Request) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized.' },
         { status: 401 },
+      );
+    }
+
+    const limiter = getAuthRateLimiter().check(
+      rateLimitKey('profile-update', request, uid),
+      AUTH_MUTATION_RATE_LIMIT,
+    );
+    if (!limiter.allowed) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Too many attempts. Try again later.',
+          reason: 'rate_limited',
+        },
+        {
+          status: 429,
+          headers: { 'Retry-After': String(limiter.retryAfterSeconds) },
+        },
       );
     }
 

@@ -91,7 +91,7 @@ function seedAdmin(username = 'admin', password = 'admin-pass-1') {
   return { uid: result.user!.uid, username, password };
 }
 
-function seedUser(username = 'hero', password = 'user-pass-1') {
+function seedUser(username = 'hero', password = 'user-pass-1234') {
   const result = registerUser(
     username,
     password,
@@ -143,7 +143,7 @@ describe('ensureServiceAdmin', () => {
   });
 
   it('не занимает чужой логин `admin`, а берёт admin-2', () => {
-    const user = seedUser('admin', 'user-pass-1');
+    const user = seedUser('admin', 'user-pass-1234');
 
     const result = ensureServiceAdmin();
     expect(result.created).toBe(true);
@@ -151,12 +151,12 @@ describe('ensureServiceAdmin', () => {
 
     // Старый аккаунт не тронут: по-прежнему обычный пользователь.
     expect(readStoredUser(user.uid)?.role).toBe('user');
-    expect(authenticateUser('admin', 'user-pass-1').success).toBe(true);
+    expect(authenticateUser('admin', 'user-pass-1234').success).toBe(true);
     expect(authenticateUser('admin-2', result.password!).success).toBe(true);
   });
 
   it('не трогает установку, где уже есть активный админ', () => {
-    const existing = seedAdmin('boss', 'boss-pass-1');
+    const existing = seedAdmin('boss', 'boss-pass-1234');
     const result = ensureServiceAdmin();
 
     expect(result.created).toBe(false);
@@ -179,7 +179,7 @@ describe('ensureServiceAdmin', () => {
   });
 
   it('runStartupMaintenance нормализует профили и создаёт админа', () => {
-    const user = seedUser('old-user', 'user-pass-1');
+    const user = seedUser('old-user', 'user-pass-1234');
     const paths = userPaths(dataDir, user.uid);
     const legacy = readJson(paths.userFile);
     legacy.schemaVersion = 2;
@@ -266,7 +266,7 @@ describe('PATCH /api/admin/users/[uid]', () => {
         {
           displayName: '  Renamed Hero  ',
           username: '  Renamed.Login ',
-          password: 'new-pass-2',
+          password: 'new-pass-1234',
           role: 'admin',
         },
         sessionHeaders(admin.uid),
@@ -291,8 +291,10 @@ describe('PATCH /api/admin/users/[uid]', () => {
     expect(stored.mustChangePassword).toBeUndefined();
 
     // Новый пароль работает, старый — нет.
-    expect(authenticateUser('renamed.login', 'new-pass-2').success).toBe(true);
-    expect(authenticateUser('renamed.login', 'user-pass-1').success).toBe(
+    expect(authenticateUser('renamed.login', 'new-pass-1234').success).toBe(
+      true,
+    );
+    expect(authenticateUser('renamed.login', 'user-pass-1234').success).toBe(
       false,
     );
   });

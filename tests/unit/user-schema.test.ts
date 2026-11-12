@@ -57,7 +57,7 @@ describe('normalizeUserProfiles', () => {
       uid,
       username: 'Legacy@Example.com',
       displayName: 'Legacy Hero',
-      passwordHash: sha256('pass1'),
+      passwordHash: sha256('pass-one-1234'),
       createdAt,
       updatedAt: createdAt,
     });
@@ -74,7 +74,7 @@ describe('normalizeUserProfiles', () => {
       // Логин — ключ индекса, поэтому нормализуется в нижний регистр.
       username: 'legacy@example.com',
       displayName: 'Legacy Hero',
-      passwordHash: sha256('pass1'),
+      passwordHash: sha256('pass-one-1234'),
       role: 'user',
       isBlocked: false,
       createdAt,
@@ -89,7 +89,7 @@ describe('normalizeUserProfiles', () => {
       uid,
       username: 'tester',
       displayName: 'Tester',
-      passwordHash: sha256('pass1'),
+      passwordHash: sha256('pass-one-1234'),
       role: 'tester',
       isBlocked: false,
       createdAt: '2025-01-01T00:00:00.000Z',
@@ -113,7 +113,7 @@ describe('normalizeUserProfiles', () => {
       uid,
       username: 'strange',
       displayName: 'Strange',
-      passwordHash: sha256('pass1'),
+      passwordHash: sha256('pass-one-1234'),
       role: 'superuser',
     });
 
@@ -126,7 +126,7 @@ describe('normalizeUserProfiles', () => {
     const paths = writeLegacyProfile(uid, {
       schemaVersion: 1,
       email: 'Old@Example.com',
-      passwordHash: sha256('pass1'),
+      passwordHash: sha256('pass-one-1234'),
     });
 
     const report = normalizeUserProfiles();
@@ -150,7 +150,7 @@ describe('normalizeUserProfiles', () => {
       uid,
       username: 'dated',
       displayName: 'Dated',
-      passwordHash: sha256('pass1'),
+      passwordHash: sha256('pass-one-1234'),
     });
     const past = new Date('2024-03-04T05:06:07.000Z');
     fs.utimesSync(paths.userFile, past, past);
@@ -168,7 +168,7 @@ describe('normalizeUserProfiles', () => {
       uid,
       username: 'stable',
       displayName: 'Stable',
-      passwordHash: sha256('pass1'),
+      passwordHash: sha256('pass-one-1234'),
     });
 
     expect(normalizeUserProfiles().updated).toBe(1);
@@ -184,7 +184,7 @@ describe('normalizeUserProfiles', () => {
       uid,
       username: 'future',
       displayName: 'Future',
-      passwordHash: sha256('pass1'),
+      passwordHash: sha256('pass-one-1234'),
       role: 'user',
       isBlocked: false,
       createdAt: '2025-01-01T00:00:00.000Z',
@@ -225,7 +225,7 @@ describe('normalizeUserProfiles', () => {
       uid: goodUid,
       username: 'good',
       displayName: 'Good',
-      passwordHash: sha256('pass1'),
+      passwordHash: sha256('pass-one-1234'),
     });
 
     const brokenUid = newUid();
@@ -259,7 +259,7 @@ describe('normalizeUserProfiles', () => {
       uid,
       username: 'ReadOnly',
       displayName: 'Read Only',
-      passwordHash: sha256('pass1'),
+      passwordHash: sha256('pass-one-1234'),
     });
     const before = fs.readFileSync(paths.userFile, 'utf8');
 

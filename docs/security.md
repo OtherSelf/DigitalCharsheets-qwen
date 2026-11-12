@@ -107,14 +107,18 @@ src/lib (session, storage, auth)    ← path and format validation
 request: `getSessionUid` rejects a blocked or deleted profile even when the
 signature is still valid.
 
-Password hashing rules:
+Password hashing rules
+([`src/lib/security/password.ts`](../src/lib/security/password.ts)):
 
 - new passwords and password changes are stored as salted `scrypt` with an
   explicit format version, compared with `timingSafeEqual`;
-- legacy unsalted `sha256` values are migrated transparently on successful
-  login;
-- minimum length is enforced on every entry point (register, recovery, profile,
-  admin, service admin).
+- legacy unsalted `sha256` values are verified once and re-hashed on the same
+  successful login — nobody has to change a password because of the migration;
+- the policy (12–128 characters) is enforced wherever a password is **set**:
+  registration, recovery, profile update, admin edit, service-admin bootstrap.
+  Login deliberately does not check the length, otherwise accounts created
+  before the policy could not sign in; guessing is bounded by the limiter. The
+  minimum is a length rule only — no composition requirements.
 
 ## Sessions
 

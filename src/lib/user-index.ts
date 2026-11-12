@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 
-import { getLoginIndexFile, getUsersDir } from './data-dir';
+import { getDataDir, getLoginIndexFile, getUsersDir } from './data-dir';
 import { writeJsonAtomic } from './fs-atomic';
 import { normalizeLogin } from './ids';
 
@@ -125,9 +125,36 @@ export function writeLoginIndex(index: LoginIndex): void {
 }
 
 /**
- * Найти uid по логину. При промахе пересобирает индекс один раз: это лечит
- * рассинхронизацию после падения между записью user.json и индекса, а также
- * ручное удаление `index/logins.json`.
+ * Пересборка индекса на промахе — не чаще одного раза в минуту на data-dir.
+ * Раньше любой несуществующий логин (а это дешёвый запрос для перебора)
+ * заставлял читать все `user.json` с диска: лимитер ограничивает попытки, но
+ * сам скан не должен быть бесплатным. Гонка «профиль записан, индекс — ещё
+ * нет» переживается следующей попыткой входа в пределах минуты.
+ */
+const REBUILD_COOLDOWN_MS = 60_000;
+let lastRebuild: { dataDir: string; at: number } | null = null;
+
+/** Сбросить троттлинг пересборки (тесты, диагностика). */
+export function resetLoginIndexRebuildCooldown(): void {
+  lastRebuild = null;
+}
+
+function mayRebuildNow(dataDir: string, now: number): boolean {
+  if (
+    lastRebuild &&
+    lastRebuild.dataDir === dataDir &&
+    now - lastRebuild.at < REBUILD_COOLDOWN_MS
+  ) {
+    return false;
+  }
+  lastRebuild = { dataDir, at: now };
+  return true;
+}
+
+/**
+ * Найти uid по логину. При промахе пересобирает индекс (не чаще раза в
+ * минуту): это лечит рассинхронизацию после падения между записью user.json и
+ * индекса, а также ручное удаление `index/logins.json`.
  */
 export function resolveLogin(login: string): string | null {
   const normalized = normalizeLogin(login);
@@ -136,6 +163,8 @@ export function resolveLogin(login: string): string | null {
   const index = readLoginIndex();
   const found = index.logins[normalized];
   if (found) return found;
+
+  if (!mayRebuildNow(getDataDir(), Date.now())) return null;
 
   const rebuilt = rebuildLoginIndex();
   return rebuilt.logins[normalized] ?? null;

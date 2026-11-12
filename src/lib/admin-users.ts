@@ -13,6 +13,7 @@ import {
 import { getCharactersDir, getUserDir } from './data-dir';
 import { withDataLock } from './data-lock';
 import { isUid, normalizeLogin } from './ids';
+import { passwordPolicyError } from './security/password';
 import { hashPassword, type StoredUser } from './server-auth';
 import { resetWriteSeqGuard } from './server-storage';
 import {
@@ -239,9 +240,11 @@ export function updateUserByAdmin(
       }
 
       if (patch.password !== undefined) {
-        if (typeof patch.password !== 'string' || patch.password.length < 4) {
-          return invalid('Password must be at least 4 characters.');
+        if (typeof patch.password !== 'string') {
+          return invalid('Password is required.');
         }
+        const policyError = passwordPolicyError(patch.password);
+        if (policyError) return invalid(policyError);
         updated.passwordHash = hashPassword(patch.password);
         // Стартовый пароль сменён — предупреждение больше не актуально.
         delete updated.mustChangePassword;

@@ -56,6 +56,24 @@ export const RECOVERY_RATE_LIMIT: RateLimitRule = {
   windowMs: 15 * 60_000,
 };
 
+/** Проверка «логин занят?»: запас на UX, но перечисление упирается в лимит. */
+export const EXISTS_RATE_LIMIT: RateLimitRule = {
+  limit: 20,
+  windowMs: 10 * 60_000,
+};
+
+/** Регистрация: 10 аккаунтов за 10 минут с одного адреса. */
+export const REGISTER_RATE_LIMIT: RateLimitRule = {
+  limit: 10,
+  windowMs: 10 * 60_000,
+};
+
+/** Auth-мутации под сессией (смена пароля/фразы): 10 за 10 минут. */
+export const AUTH_MUTATION_RATE_LIMIT: RateLimitRule = {
+  limit: 10,
+  windowMs: 10 * 60_000,
+};
+
 const MAX_STORE_KEYS = 10_000;
 
 export function createMemoryRateLimitStore(): RateLimitStore {
