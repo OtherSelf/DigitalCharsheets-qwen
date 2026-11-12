@@ -43,9 +43,9 @@ export interface AdminCharacterSummary {
   systemId: string | null;
   gameSystem: string;
   characterClass: string;
-  /** Уровень D&D; для Dark Heresy — null. */
+  /** Уровень персонажа (если игра его ведёт); иначе null. */
   level: number | null;
-  /** Ранг Dark Heresy; для D&D — null. */
+  /** Ранг/звание (если игра его ведёт); иначе null. */
   rank: string | null;
   /** Время изменения файла листа (в самих листах нет общего updatedAt). */
   updatedAt: string | null;

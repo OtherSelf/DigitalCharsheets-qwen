@@ -19,8 +19,8 @@ import {
   divinationEffectKey,
   divinationKey,
 } from '@/games/dh1/divination-i18n';
+import { DarkHeresyCareerPaths, DarkHeresyHomeWorlds } from '@/games/dh1/types';
 import { translations } from '@/lib/i18n';
-import { DarkHeresyCareerPaths, DarkHeresyHomeWorlds } from '@/lib/types';
 
 /**
  * Сверка справочных данных Dark Heresy с базовой книгой правил

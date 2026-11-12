@@ -18,18 +18,12 @@ import type { ZodType } from 'zod';
  */
 
 /**
- * Встроенные машинные идентификаторы редакций. Расширение (новая игра,
- * DH3, другая редакция D&D) не требует правок ядра: достаточно модуля и
- * записи в реестре, а `SystemId` остаётся совместим со строкой.
+ * Машинные идентификаторы редакций и игр. Список не хардкодится: он целиком
+ * приходит из `plugin.json` (этап 5, D4). `SystemId`/`GameId` — строки, а
+ * валидность проверяет генератор реестра (уникальные `id`, `gameId`).
  */
-export const BUILTIN_SYSTEM_IDS = ['dnd5e', 'dh1', 'dh2'] as const;
-export type BuiltinSystemId = (typeof BUILTIN_SYSTEM_IDS)[number];
-export type SystemId = BuiltinSystemId | (string & Record<never, never>);
-
-/** Игры-«семейства»: одна игра может содержать несколько редакций. */
-export const BUILTIN_GAME_IDS = ['dnd', 'darkHeresy'] as const;
-export type BuiltinGameId = (typeof BUILTIN_GAME_IDS)[number];
-export type GameId = BuiltinGameId | (string & Record<never, never>);
+export type SystemId = string & Record<never, never>;
+export type GameId = string & Record<never, never>;
 
 /**
  * Статус видимости редакции. Дефолт задаётся модулем, runtime-переопределение
