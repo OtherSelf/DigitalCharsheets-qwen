@@ -31,7 +31,8 @@
     "test:visual:prune": "node scripts/visual-prune.mjs",
     "test:visual:update": "bash scripts/visual.sh --update-snapshots",
     "test:visual:report": "playwright show-report",
-    "test:visual:fast": "bash scripts/visual.sh --grep @fast"
+    "test:visual:fast": "bash scripts/visual.sh --grep @fast",
+    "plugins:conformance": "vitest run tests/unit/plugins-registry.test.ts tests/unit/plugin-slots.test.ts tests/unit/bulk-editor.test.ts tests/unit/example-plugin.test.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^7.0.5",

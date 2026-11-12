@@ -18,6 +18,7 @@ src/games/
   games.ts                  game families (D&D, Dark Heresy) + order + i18n keys
   character-system.ts       systemId resolution and i18n name keys for UI
   i18n/{en,ru}.ts           registry/wizard metadata (games.*)
+  i18n.generated.ts         plugin dictionaries from plugin.json#i18n
   shared/
     types.ts                game-agnostic primitives (CharacterBase, quests,
                             inventory) — no game mechanics or translations
@@ -180,8 +181,7 @@ per-game save handlers out of the page.
    - `defaults.ts` — base defaults + `createDh3Defaults(input)`.
    - `demo.ts` — `createDh3Demo()`.
    - `capabilities.ts`, `stats.ts` — fixed 3e flags and stat view.
-   - `i18n/en.ts`, `i18n/ru.ts` + `i18n/core-{en,ru}.ts` — `games.dh3.*`
-     and `dh3.*` keys.
+   - `i18n/en.json`, `i18n/ru.json` — `games.dh3.*` and `dh3.*` keys (D13).
    - `export.ts`, `excel.ts` — `buildDh3PortableJson` / `buildDh3ExcelSections`.
    - `create-form.tsx`, `sheet.tsx`, `sections/*` — own UI copies.
    - `index.ts` — the `GameModule<DH3Character>` object plus the named entry
@@ -204,10 +204,12 @@ per-game save handlers out of the page.
 6. **Visibility** — `defaultStatus` in the manifest is the default; admins can
    override it in `settings/game-catalog.json` via `/admin` (Games & editions).
 7. **Tests**:
-   - registry tests (`tests/unit/game-registry.test.ts` and
-     `tests/unit/plugins-registry.test.ts`) — add the module id to the expected
-     sorted list; the manifest↔module contract test then covers the new plugin
-     automatically (entry points, demo vs schema, i18n parity, migrations);
+   - `npm run plugins:conformance` runs the manifest↔module contract for every
+     plugin (entry points, demo vs schema, i18n parity, migrations, UI slots,
+     bulk-editor tables); add the module id to the expected sorted list in the
+     registry tests;
+   - a copy of `tests/fixtures/example-plugin` proves that a folder + manifest is
+     enough — use it as the template (`docs/plugin-sdk.md`);
    - i18n parity (`tests/unit/translations.test.ts`) runs per module;
    - export tests — JSON round-trip and Excel sections for the new module;
    - migration test if legacy data exists;
@@ -264,8 +266,8 @@ It is the executable form of "new game = folder + `plugin.json` + `sheet.tsx` +
 | List | Meaning |
 | --- | --- |
 | `forbidden` | never importable from a module: `@/app*`, `@/instrumentation`, `fs`, `path`, `child_process`, `os` (with `node:` variants). Saving goes through the host API, not the file system. |
-| `allowed` | always importable: React, zod, react-hook-form, Radix primitives, lucide icons, `@/components/ui/*`, `@/lib/utils`, `@/lib/i18n`, and (from stage 1) `@/games/plugin-api`. |
-| `legacy` | core imports that still exist while the core is being decoupled (stages 2–3). Every entry has `files` (how many module files import it), `removeBy` (plan stage) and `why`. |
+| `allowed` | always importable: React, zod, react-hook-form, Radix primitives, lucide icons, `@/components/ui/*`, `@/lib/utils`, `@/lib/i18n`, `@/games/plugin-api` (types) and `@/games/plugin-host` (host hooks). |
+| `legacy` | debt ratchet. **Empty since stage 5**: plugins no longer import `@/context/*`, `@/hooks/*`, `@/lib/types` or `next/navigation`; the list is kept as the mechanism for future transitional debt. |
 
 `legacy` is a ratchet, not a permission list: adding an import of a listed
 module from one more file fails the check, and so does a stale entry after the

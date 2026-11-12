@@ -9,8 +9,8 @@ import { createExampleDefaults } from './defaults';
 import { createExampleDemo } from './demo';
 import { buildExampleExcelSections } from './excel';
 import { buildExamplePortableJson } from './export';
-import { en as exampleEn } from './i18n/en';
-import { ru as exampleRu } from './i18n/ru';
+import exampleEn from './i18n/en.json';
+import exampleRu from './i18n/ru.json';
 import { exampleCharacterSchema } from './schema';
 import type { ExampleCharacter } from './types';
 

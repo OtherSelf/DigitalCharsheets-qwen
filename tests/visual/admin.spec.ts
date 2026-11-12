@@ -120,7 +120,10 @@ test.describe('admin', () => {
     await expect(dialog).toBeVisible();
     await expect(dialog.getByText('Seraphina Vael')).toBeVisible();
     await expect(dialog.getByText('Lucius Varn')).toBeVisible();
-    await expect(dialog.getByText('D&D 5e', { exact: true })).toBeVisible();
+    // Бейдж игры берётся из реестра плагинов (nameKey), а не из gameSystem.
+    await expect(
+      dialog.getByText('5th Edition', { exact: true }),
+    ).toBeVisible();
 
     await screenshotPage(page, 'admin-sheets-en.png');
   });

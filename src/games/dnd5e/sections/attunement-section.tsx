@@ -15,11 +15,14 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { Textarea } from '@/components/ui/textarea';
-import { useCharacterContext } from '@/context/character-context';
-import { useTranslation } from '@/context/language-context';
-import { useToast } from '@/hooks/use-toast';
-import { type AttunementItem } from '@/lib/types';
+import {
+  useCharacterContext,
+  useToast,
+  useTranslation,
+} from '@/games/plugin-host';
 import { cn } from '@/lib/utils';
+
+import type { AttunementItem } from '../types';
 
 const EditSaveButton = ({
   editing,

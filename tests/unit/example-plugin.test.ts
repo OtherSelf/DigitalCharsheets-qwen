@@ -8,8 +8,8 @@ import { CURRENT_SCHEMA_VERSION, PLUGIN_API_VERSION } from '@/games/plugin-api';
 import { gamePlugins } from '@/games/registry';
 
 import * as example from '../fixtures/example-plugin';
-import { en as exampleEn } from '../fixtures/example-plugin/i18n/en';
-import { ru as exampleRu } from '../fixtures/example-plugin/i18n/ru';
+import exampleEn from '../fixtures/example-plugin/i18n/en.json';
+import exampleRu from '../fixtures/example-plugin/i18n/ru.json';
 import exampleManifest from '../fixtures/example-plugin/plugin.json';
 import type { ExampleCharacter } from '../fixtures/example-plugin/types';
 import { uiSlots as exampleUiSlots } from '../fixtures/example-plugin/ui';

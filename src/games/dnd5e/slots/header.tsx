@@ -5,8 +5,7 @@ import * as React from 'react';
 import { Minus, Plus, Scale } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
-import { useCharacterContext } from '@/context/character-context';
-import { useTranslation } from '@/context/language-context';
+import { useCharacterContext, useTranslation } from '@/games/plugin-host';
 
 import { HouseRulesDialog } from '../sections/house-rules-dialog';
 import type { DnD5eCharacter } from '../types';

@@ -73,33 +73,8 @@
     "@/games/shared/*",
     "@/lib/i18n",
     "@/lib/i18n/*",
-    "@/lib/utils"
+    "@/lib/utils",
+    "@/games/plugin-host"
   ],
-  "legacy": {
-    "@/context/character-context": {
-      "files": 31,
-      "removeBy": "этап 3",
-      "why": "чтение/запись листа идёт через состояние хоста; в Plugin API станет частью Host API (character state) и переедет в allowed"
-    },
-    "@/context/language-context": {
-      "files": 37,
-      "removeBy": "этап 3",
-      "why": "хук переводов хоста; после Plugin API плагин получает t()/useI18n от хоста, а не импортирует контекст"
-    },
-    "@/hooks/use-toast": {
-      "files": 4,
-      "removeBy": "этап 3",
-      "why": "тосты хоста; станут частью Plugin API (host ui)"
-    },
-    "@/lib/types": {
-      "files": 13,
-      "removeBy": "этап 2",
-      "why": "фасад конкретных типов ядра; плагин владеет своими типами, ядро оставляет CharacterRecord + generics (этап 2)"
-    },
-    "next/navigation": {
-      "files": 3,
-      "removeBy": "этап 3",
-      "why": "форма создания сама делает router.push; навигацию после создания должен делать хост (контракт createForm, этап 3)"
-    }
-  }
+  "legacy": {}
 }

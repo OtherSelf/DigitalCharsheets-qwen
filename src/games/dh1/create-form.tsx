@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import { useRouter } from 'next/navigation';
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, type Resolver } from 'react-hook-form';
@@ -33,9 +32,11 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { useCharacterContext } from '@/context/character-context';
-import { useTranslation } from '@/context/language-context';
-import { useToast } from '@/hooks/use-toast';
+import {
+  useCharacterContext,
+  useToast,
+  useTranslation,
+} from '@/games/plugin-host';
 
 import {
   ALL_QUIRKS,
@@ -73,11 +74,12 @@ export type DarkHeresyFormVariant = 'dh1';
  */
 export function DarkHeresyCreateForm({
   variant,
+  onCreated,
 }: {
   variant: DarkHeresyFormVariant;
+  onCreated?: (characterId: string) => void;
 }) {
   const { toast } = useToast();
-  const router = useRouter();
   const { addCharacter } = useCharacterContext();
   const { t } = useTranslation();
   const [showAllQuirks, setShowAllQuirks] = React.useState(false);
@@ -186,7 +188,7 @@ export function DarkHeresyCreateForm({
         title: t('common.characterCreatedTitle'),
         description: t('dh1.characterCreatedDescDH'),
       });
-      router.push(`/${docRef.id}`);
+      onCreated?.(docRef.id);
     }
   }
 
@@ -738,8 +740,10 @@ export function DarkHeresyCreateForm({
   );
 }
 
-export function Dh1CharacterForm() {
-  return <DarkHeresyCreateForm variant="dh1" />;
+export function Dh1CharacterForm({
+  onCreated,
+}: { onCreated?: (characterId: string) => void } = {}) {
+  return <DarkHeresyCreateForm variant="dh1" onCreated={onCreated} />;
 }
 
 export default Dh1CharacterForm;

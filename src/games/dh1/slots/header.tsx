@@ -5,7 +5,7 @@ import * as React from 'react';
 import { Scale } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
-import { useTranslation } from '@/context/language-context';
+import { useTranslation } from '@/games/plugin-host';
 
 import { DhHouseRulesDialog } from '../sections/dh-house-rules-dialog';
 import type { DH1Character } from '../types';
@@ -49,8 +49,7 @@ export function dh1HeaderSubtitle(
     characterClass,
   );
   const translatedSystem =
-    translateOr(t, 'common.gameSystemDarkHeresy', character.gameSystem) ||
-    'Dark Heresy';
+    translateOr(t, 'dh1.systemName', character.gameSystem) || 'Dark Heresy';
 
   return `${translatedRank} ${translatedClass} | ${translatedSystem}`;
 }

@@ -69,7 +69,9 @@ export function QuestJournalSheet({
   const { toast } = useToast();
   const { t } = useTranslation();
 
-  const [questLog, setQuestLog] = useState<Quest[]>(character.questLog ?? []);
+  const [questLog, setQuestLog] = useState<Quest[]>(
+    (character.questLog as Quest[] | undefined) ?? [],
+  );
   const [newQuestTitle, setNewQuestTitle] = useState('');
   const [filter, setFilter] = useState<FilterType>('all');
   const [newObjectiveText, setNewObjectiveText] = useState<

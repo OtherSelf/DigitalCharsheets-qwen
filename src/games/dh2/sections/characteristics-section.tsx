@@ -16,9 +16,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { Textarea } from '@/components/ui/textarea';
-import { useCharacterContext } from '@/context/character-context';
-import { useTranslation } from '@/context/language-context';
-import type { Character } from '@/lib/types';
+import { useCharacterContext, useTranslation } from '@/games/plugin-host';
 import { cn } from '@/lib/utils';
 
 import { getDarkHeresyCapabilities } from '../capabilities';
@@ -28,7 +26,11 @@ import {
   statRecord,
   type DarkHeresyStatKey,
 } from '../stats';
-import type { DarkHeresyStatUpgrade, DH2Character } from '../types';
+import type {
+  DH2Character as Character,
+  DarkHeresyStatUpgrade,
+  DH2Character,
+} from '../types';
 import { EditSaveButton } from './dh-ui-helpers';
 
 // LANDMARK 1: Added notesForText and addNotesText to the component props

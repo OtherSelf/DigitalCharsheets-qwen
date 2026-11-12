@@ -12,9 +12,13 @@ data directory on the host you control.
 
 - Full character sheets for D&D 5e and Dark Heresy (stats, skills, combat,
   inventory, spells, psychic powers, quest journal, notes).
+- **Games are plugins:** a game/edition is a folder + `plugin.json` + custom
+  React sheet/form, discovered at build time. Adding one needs no core edits —
+  see [docs/plugin-sdk.md](docs/plugin-sdk.md).
 - Local accounts with a recovery phrase, password change and account deletion.
-- Admin panel at `/admin`: users, roles, password resets, blocking, deletion and
-  a read-only list of a user's sheets.
+- Admin panel at `/admin`: users, roles, password resets, blocking, deletion, a
+  read-only list of a user's sheets, and plugin management (visibility,
+  enabled, versions, conformance, demo links).
 - Portable JSON export/import for one sheet or a full backup, plus Excel export.
 - English/Russian UI, light/dark/warm themes, compact sheet view, independent
   text and UI scaling.
@@ -55,6 +59,8 @@ are in [docs/deployment.md](docs/deployment.md).
 Start at **[docs/README.md](docs/README.md)** — it explains the structure and
 rules for adding documentation. Useful pages:
 
+- [Plugin SDK](docs/plugin-sdk.md) — how to add a game/edition (`plugin.json`,
+  UI slots, i18n, migrations, conformance).
 - [Architecture](docs/architecture.md) — stack, auth/session, startup checks.
 - [Data storage](docs/data-storage.md) — on-disk layout and `user.json` schema.
 - [HTTP API](docs/api.md) — endpoints and the `/api/docs` / `/api/openapi.json`

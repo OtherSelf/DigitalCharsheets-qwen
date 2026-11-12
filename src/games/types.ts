@@ -188,8 +188,16 @@ export interface SheetHandle {
   saveAll(): void;
 }
 
-/** Форма создания персонажа модуля (пропсов пока не требует). */
-export type CreateFormComponent = ComponentType<Record<string, never>>;
+/**
+ * Пропсы формы создания. Навигацию после создания делает хост: плагин только
+ * сообщает id через `onCreated` (поэтому `next/navigation` ему не нужен).
+ */
+export interface CreateFormProps {
+  readonly onCreated?: (characterId: string) => void;
+}
+
+/** Форма создания персонажа модуля. */
+export type CreateFormComponent = ComponentType<CreateFormProps>;
 
 /** Общие пропсы листа, которые передаёт ядро. */
 export interface GameSheetProps<TCharacter extends CharacterRecord> {

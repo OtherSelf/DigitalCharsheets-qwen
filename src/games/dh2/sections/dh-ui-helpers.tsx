@@ -13,7 +13,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { Textarea } from '@/components/ui/textarea';
-import { useTranslation } from '@/context/language-context';
+import { useTranslation } from '@/games/plugin-host';
 import { cn } from '@/lib/utils';
 
 export const EditSaveButton = ({

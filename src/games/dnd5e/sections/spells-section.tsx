@@ -36,10 +36,10 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { useCharacterContext } from '@/context/character-context';
-import { useTranslation } from '@/context/language-context';
-import { type Spell, type SpellcastingEntry } from '@/lib/types';
+import { useCharacterContext, useTranslation } from '@/games/plugin-host';
 import { cn } from '@/lib/utils';
+
+import type { Spell, SpellcastingEntry } from '../types';
 
 const EditSaveButton = ({
   editing,

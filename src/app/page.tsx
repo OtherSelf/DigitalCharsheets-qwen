@@ -118,7 +118,7 @@ export default function DashboardPage() {
                   <p className="text-muted-foreground">
                     {t('common.pendingDraftDesc').replace(
                       '{name}',
-                      pendingDraft.name || '—',
+                      String(pendingDraft.name ?? '') || '—',
                     )}
                   </p>
                 </div>

@@ -18,9 +18,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
-import { useCharacterContext } from '@/context/character-context';
-import { useTranslation } from '@/context/language-context';
-import { DnD5eCharacter } from '@/lib/types';
+import { useCharacterContext, useTranslation } from '@/games/plugin-host';
+
+import type { DnD5eCharacter } from '../types';
 
 interface HouseRulesDialogProps {
   open: boolean;
