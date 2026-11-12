@@ -1,7 +1,8 @@
 {
   "name": "digital-character-sheets",
-  "version": "0.3.0",
+  "version": "0.4.1",
   "private": true,
+  "license": "MIT",
   "engines": {
     "node": ">=22.12.0"
   },

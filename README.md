@@ -75,3 +75,12 @@ rules for adding documentation. Useful pages:
 
 Next.js 16 (App Router) · React 19 · TypeScript · Tailwind CSS 4 · Radix/shadcn ·
 local JSON storage · Vitest · Playwright.
+
+## License
+
+MIT — see [LICENSE](LICENSE).
+
+This project is not affiliated with Wizards of the Coast or Games Workshop.
+D&D 5e and Dark Heresy are trademarks of their respective owners. This software
+is provided under the MIT License, but game rules and text remain subject to
+their respective licenses (e.g., OGL/ORC).
