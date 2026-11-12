@@ -92,7 +92,48 @@ Caddy, Traefik, …) and:
 
 - forward `Host` and `X-Forwarded-Proto`;
 - set `DCS_COOKIE_SECURE=1` so the session cookie is `Secure`;
-- keep WebSocket/HMR out of the picture in production (not needed there).
+- proxy with **HTTP/1.1** and pass `Upgrade`/`Connection`;
+- allow long-lived responses (long `proxy_read_timeout`).
+
+### nginx (Next 16)
+
+Next serves pages as a stream (RSC/HTML + client chunks). With the default
+upstream protocol (`HTTP/1.0`) and no upgrade handling, the browser can receive
+the page shell and stay on `app/loading.tsx` **forever**, even though `/api/*`
+answers `200` — the page never hydrates. Working `location /`:
+
+```nginx
+map $http_upgrade $connection_upgrade {
+    default upgrade;
+    ''      close;
+}
+
+location / {
+    proxy_pass http://127.0.0.1:3000;
+
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection $connection_upgrade;
+
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+
+    proxy_connect_timeout 10s;
+    proxy_send_timeout 3600s;
+    proxy_read_timeout 3600s;
+}
+```
+
+`map` must live in the `http {}` context (an included `conf.d/*.conf` file is
+fine). If nginx already defines `$connection_upgrade`, drop the `map` block and
+keep only the `proxy_set_header` lines. A stale proxy config can look exactly
+like an application crash — check it before suspecting data migrations.
+
+The reference configs live in the workspace `nginx/` directory
+(`dcs.conf` for production, `dcs-dev.conf` for the dev bench); update both when
+the proxy setup changes.
 
 ## Upgrades
 
