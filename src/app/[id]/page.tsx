@@ -2,7 +2,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 
 import Loading from '@/app/loading';
 import { DynamicFavicon } from '@/components/dynamic-favicon';
@@ -23,6 +23,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { UnavailableState } from '@/components/unavailable-state';
 import { useCharacterContext } from '@/context/character-context';
 import { useTranslation } from '@/context/language-context';
 import {
@@ -36,10 +37,11 @@ import { cn } from '@/lib/utils';
 
 export default function CharacterPage() {
   const params = useParams<{ id: string }>();
-  const router = useRouter();
   const {
     getCharacter,
     isLoaded,
+    loadError,
+    retryCharacters,
     isCompactView,
     hasUnsavedChanges,
     setHasUnsavedChanges,
@@ -74,12 +76,6 @@ export default function CharacterPage() {
       active = false;
     };
   }, []);
-
-  useEffect(() => {
-    if (isLoaded && !character) {
-      router.push('/');
-    }
-  }, [isLoaded, character, router]);
 
   const performNavigation = (id: string) => {
     if (id === 'notes-section') {
@@ -140,8 +136,28 @@ export default function CharacterPage() {
     scroller.scrollTo({ top, behavior: 'smooth' });
   }, [activeCompactSection, isCompactView]);
 
-  if (!isLoaded || !character) {
+  if (!isLoaded) {
     return <Loading />;
+  }
+
+  if (!character) {
+    // Неизвестный/удалённый id — это не «вечная загрузка», а понятный экран.
+    // При сетевой ошибке предлагаем повторить, иначе — ссылку на главную.
+    return loadError ? (
+      <UnavailableState
+        testId="sheet-load-error"
+        title={t('common.loadErrorTitle')}
+        description={t('common.loadErrorDesc')}
+        actionLabel={t('common.retry')}
+        onAction={() => void retryCharacters()}
+      />
+    ) : (
+      <UnavailableState
+        testId="sheet-not-found"
+        title={t('common.characterNotFound')}
+        description={t('common.characterNotFoundDesc')}
+      />
+    );
   }
 
   const gameModule = getCharacterModule(character);

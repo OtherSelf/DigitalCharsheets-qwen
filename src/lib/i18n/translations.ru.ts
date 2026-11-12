@@ -83,6 +83,12 @@ export const ruTranslations: Record<string, string> = {
   'common.perception': 'Восприятие',
   'common.willpower': 'Сила воли',
   'common.error': 'Ошибка',
+  'common.retry': 'Повторить',
+  'common.loadErrorTitle': 'Не удалось загрузить персонажей',
+  'common.loadErrorDesc':
+    'Сервер не ответил. Проверьте соединение и попробуйте ещё раз.',
+  'common.characterNotFound': 'Персонаж не найден',
+  'common.characterNotFoundDesc': 'Возможно, он удалён или ссылка устарела.',
   'common.gameDisabled': 'Игра отключена администратором',
   'common.gameDisabledHint':
     'Существующие листы открываются только для чтения: просмотр и JSON-экспорт работают, редактирование и создание отключены.',
