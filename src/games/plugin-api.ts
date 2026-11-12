@@ -16,6 +16,7 @@ import type {
   GameModule,
   GameModuleComponents,
   GameUiSlots,
+  LegacyImportContext,
   LocalizedMessages,
   ModuleCapabilities,
   ModuleStatus,
@@ -295,6 +296,15 @@ export interface GamePlugin<
     config: GameExportConfig,
   ): TCharacter;
   readonly migrations: readonly CharacterMigration[];
+  matchesLegacyImport?(raw: Readonly<Record<string, unknown>>): boolean;
+  legacyImportName?(
+    raw: Readonly<Record<string, unknown>>,
+    index: number,
+  ): string;
+  convertLegacyImport?(
+    raw: Readonly<Record<string, unknown>>,
+    context: LegacyImportContext,
+  ): Record<string, unknown> | undefined;
   findEmbedded?(
     character: TCharacter,
     id: string,
@@ -365,6 +375,7 @@ export type {
   GameModule,
   GameModuleComponents,
   GameUiSlots,
+  LegacyImportContext,
   LocalizedMessages,
   ModuleCapabilities,
   ModuleStatus,

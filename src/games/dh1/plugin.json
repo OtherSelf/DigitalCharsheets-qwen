@@ -14,11 +14,7 @@
     "en": "Classic Dark Heresy: nine characteristics, first-edition fatigue and career ranks.",
     "ru": "Классическая Dark Heresy: девять характеристик, усталость 1-й редакции и ранги карьеры."
   },
-  "tags": [
-    "warhammer40k",
-    "d100",
-    "grimdark"
-  ],
+  "tags": ["warhammer40k", "d100", "grimdark"],
   "author": "Digital Character Sheets",
   "license": "MIT",
   "schemaVersion": 2,

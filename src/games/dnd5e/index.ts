@@ -7,6 +7,11 @@ import { buildDnd5eExcelSections } from './excel';
 import { buildDnd5ePortableJson } from './export';
 import { en as dnd5eEn } from './i18n/en';
 import { ru as dnd5eRu } from './i18n/ru';
+import {
+  dnd5eConvertLegacyImport,
+  dnd5eLegacyImportName,
+  dnd5eMatchesLegacyImport,
+} from './legacy-import';
 import { mergeDnd5eData } from './merge';
 import { normalizeDnd5e } from './normalize';
 import { dnd5eCharacterSchema } from './schema';
@@ -75,4 +80,7 @@ export const dnd5eModule: GameModule<DnD5eCharacter> = {
     buildExcelSections,
   },
   migrations: [],
+  matchesLegacyImport: dnd5eMatchesLegacyImport,
+  legacyImportName: dnd5eLegacyImportName,
+  convertLegacyImport: dnd5eConvertLegacyImport,
 };
