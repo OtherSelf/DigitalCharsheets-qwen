@@ -8,6 +8,7 @@ import { listGameModules } from '@/games/registry';
 import { normalizeCharacterRecord } from '@/lib/character-version';
 import { getCharactersDir, getDataDir } from '@/lib/data-dir';
 import { writeJsonAtomic } from '@/lib/fs-atomic';
+import { isSafeId, resolveCharacterFile } from '@/lib/security/paths';
 import { createImportedUser } from '@/lib/server-auth';
 
 function importFilePath(): string {
@@ -147,7 +148,12 @@ export async function GET() {
         // Обрыв посреди импорта не должен оставить обрезанный JSON: файл
         // подменяется атомарно, как и везде в файловом хранилище.
         const character = normalizeCharacterRecord(converted).character;
-        const charFile = path.join(charsDir, `${character.id}.json`);
+        // id приходит из выгрузки, то есть из внешнего файла: в путь он
+        // попадает только после проверки. Небезопасный заменяем новым —
+        // терять лист из-за формата идентификатора незачем.
+        if (!isSafeId(character.id)) character.id = generateId();
+        const charFile = resolveCharacterFile(charsDir, character.id);
+        if (!charFile) return;
         writeJsonAtomic(charFile, character);
         importedChars.push({
           name: character.name,

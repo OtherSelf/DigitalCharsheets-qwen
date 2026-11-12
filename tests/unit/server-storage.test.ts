@@ -63,13 +63,13 @@ describe('server-storage (файловое хранилище листов)', ()
     expect(fs.readFileSync(file, 'utf8')).toContain('\n  "id"');
   });
 
-  it('getCharactersFromServer на пустом каталоге возвращает [] и создаёт каталоги', () => {
+  it('getCharactersFromServer на пустом каталоге возвращает [] и НЕ создаёт каталоги', () => {
     const characters = getCharactersFromServer('user-new');
 
     expect(characters).toEqual([]);
-    expect(
-      fs.existsSync(path.join(dataDir, 'users', 'user-new', 'characters')),
-    ).toBe(true);
+    // Чтение не оставляет следов на диске: иначе запрос создавал бы каталог
+    // для uid, которого нет в данных (SEC-3/3b).
+    expect(fs.existsSync(path.join(dataDir, 'users', 'user-new'))).toBe(false);
   });
 
   it('читает все сохранённые листы', () => {

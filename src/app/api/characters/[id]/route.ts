@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 
+import { isSafeId } from '@/lib/security/paths';
 import {
   deleteCharacterFromServer,
   updateCharacterOnServer,
@@ -18,6 +19,10 @@ import type { Character } from '@/lib/types';
  * Пользователь определяется сессионной cookie, а не телом запроса. Поле
  * `userId` из старых клиентов игнорируется и в файл не попадает.
  *
+ * `id` из URL — внешнее значение, из которого строится путь файла, поэтому он
+ * проверяется до любых обращений к диску: `..%2Fuser` и подобное — `400`, а не
+ * запись в чужой профиль.
+ *
  * `__page`/`__seq` позволяют отбросить запоздавшую запись: при уходе со
  * страницы keepalive-досылка со свежим снимком и обычный PUT со старыми
  * данными могут прийти в любом порядке, и раньше «побеждал» тот, кто пришёл
@@ -25,7 +30,7 @@ import type { Character } from '@/lib/types';
  *
  * Коды ответа:
  *   200 — записано (в т.ч. если запись отброшена как устаревшая);
- *   400 — битое тело;
+ *   400 — битое тело или недопустимый id;
  *   401 — нет/просрочена сессия;
  *   404 — листа нет;
  *   500 — ошибка чтения/записи файла (клиент повторит: 5xx ретраится).
@@ -39,6 +44,13 @@ export async function PUT(
   const uid = getSessionUid(request);
   if (!uid) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  if (!isSafeId(id)) {
+    return NextResponse.json(
+      { error: 'Invalid character id', reason: 'invalid_id' },
+      { status: 400 },
+    );
   }
 
   // keepalive-запрос при уходе со страницы может прийти без тела —
@@ -96,6 +108,13 @@ export async function DELETE(
   const uid = getSessionUid(request);
   if (!uid) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  if (!isSafeId(id)) {
+    return NextResponse.json(
+      { error: 'Invalid character id', reason: 'invalid_id' },
+      { status: 400 },
+    );
   }
 
   const deleted = deleteCharacterFromServer(uid, id);

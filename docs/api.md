@@ -84,6 +84,10 @@ contract version in [`src/lib/openapi.ts`](../src/lib/openapi.ts)
 | `PUT` | `/api/characters/{id}` | cookie | Partial update; optional `__page`/`__seq` tokens drop late writes. |
 | `DELETE` | `/api/characters/{id}` | cookie | Delete a sheet. |
 
+`{id}` must match `^[A-Za-z0-9_-]{1,64}$`; any other value (for example
+`..%2Fuser`) is rejected with `400` before the file system is touched. See
+[security.md](security.md) § Invariants.
+
 ### Import / export
 
 | Method | Path | Auth | Purpose |

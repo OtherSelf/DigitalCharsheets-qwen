@@ -113,8 +113,13 @@ export const openApiDocument = {
         name: 'id',
         in: 'path',
         required: true,
-        description: 'Character sheet id (the file name without `.json`).',
-        schema: { type: 'string' },
+        description:
+          'Character sheet id (the file name without `.json`). Must match `^[A-Za-z0-9_-]{1,64}$`; anything else is rejected with `400` before touching the disk.',
+        schema: {
+          type: 'string',
+          pattern: '^[A-Za-z0-9_-]{1,64}$',
+          maxLength: 64,
+        },
       },
       CharacterIdQuery: {
         name: 'characterId',
@@ -963,6 +968,7 @@ export const openApiDocument = {
         parameters: [paramRef('CharacterId')],
         responses: {
           200: jsonResponse('Deleted.', ref('SimpleSuccess')),
+          400: { $ref: '#/components/responses/BadRequest' },
           401: { $ref: '#/components/responses/Unauthorized' },
           404: { $ref: '#/components/responses/NotFound' },
         },

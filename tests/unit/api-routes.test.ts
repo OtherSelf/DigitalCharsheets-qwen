@@ -593,6 +593,128 @@ describe('/api/characters', () => {
   });
 });
 
+/**
+ * SEC-3 / SEC-3b: `id` листа — внешнее значение, из которого строился путь
+ * файла. `..%2Fuser` давал собственный `user.json`, `..%2F..%2F<uid>%2Fuser` —
+ * чужой, то есть подмену `passwordHash` и захват аккаунта.
+ *
+ * Next декодирует сегмент URL, поэтому обработчик получает уже `../user` —
+ * именно такие значения и передаём в `params`.
+ */
+describe('path traversal в /api/characters/[id] (SEC-3, SEC-3b)', () => {
+  async function accountWithSheet(username: string) {
+    const { uid } = await registerAs(username, '1234', username);
+    const created = await charactersPost(
+      json(
+        { ...makeDndCharacter({ name: `${username} sheet` }) },
+        sessionHeaders(uid),
+      ),
+    );
+    const sheet = await created.json();
+    return { uid, sheetId: sheet.id as string };
+  }
+
+  const profileOf = (uid: string) => readJson(userPaths(dataDir, uid).userFile);
+
+  it('PUT по «../user» не перезаписывает свой профиль — 400', async () => {
+    const { uid, sheetId } = await accountWithSheet('traversal-self');
+    const before = profileOf(uid);
+
+    const res = await characterPut(
+      json({ passwordHash: 'pwned', name: 'hijacked' }, sessionHeaders(uid)),
+      params('../user'),
+    );
+
+    expect(res.status).toBe(400);
+    expect((await res.json()).reason).toBe('invalid_id');
+    expect(profileOf(uid)).toEqual(before);
+    // Ни одной записи не произошло: в каталоге только созданный лист.
+    expect(fs.readdirSync(userPaths(dataDir, uid).charactersDir)).toEqual([
+      `${sheetId}.json`,
+    ]);
+  });
+
+  it('PUT по «../../<uid>/user» не меняет чужой профиль — 400', async () => {
+    const victim = await accountWithSheet('traversal-victim');
+    const attacker = await registerAs('traversal-attacker', '1234', 'A');
+    const before = profileOf(victim.uid);
+
+    const res = await characterPut(
+      json({ passwordHash: 'pwned' }, sessionHeaders(attacker.uid)),
+      params(`../${victim.uid}/user`),
+    );
+
+    expect(res.status).toBe(400);
+    expect(profileOf(victim.uid)).toEqual(before);
+    // Вход под жертвой старым паролем всё ещё работает.
+    expect(authenticateUser('traversal-victim', '1234').success).toBe(true);
+  });
+
+  it('DELETE по «../../<uid>/user» не удаляет чужой профиль — 400', async () => {
+    const victim = await accountWithSheet('del-victim');
+    const attacker = await registerAs('del-attacker', '1234', 'A');
+
+    const res = await characterDelete(
+      req(
+        'http://localhost/api/characters/x',
+        'DELETE',
+        sessionHeaders(attacker.uid),
+      ),
+      params(`../${victim.uid}/user`),
+    );
+
+    expect(res.status).toBe(400);
+    expect(fs.existsSync(userPaths(dataDir, victim.uid).userFile)).toBe(true);
+  });
+
+  it('кодированные, абсолютные и «слэш»-варианты id → 400', async () => {
+    const { uid } = await accountWithSheet('traversal-variants');
+
+    for (const id of [
+      '..%2Fuser',
+      '%2e%2e%2fuser',
+      '/etc/passwd',
+      'a/b',
+      '..\\user',
+      '..',
+      '',
+    ]) {
+      const put = await characterPut(
+        json({ passwordHash: 'pwned' }, sessionHeaders(uid)),
+        params(id),
+      );
+      expect({ id, status: put.status }).toEqual({ id, status: 400 });
+
+      const del = await characterDelete(
+        req('http://localhost/api/characters/x', 'DELETE', sessionHeaders(uid)),
+        params(id),
+      );
+      expect({ id, status: del.status }).toEqual({ id, status: 400 });
+    }
+
+    // Ничего не создано и не удалено: профиль и каталог листов на месте.
+    expect(fs.existsSync(userPaths(dataDir, uid).userFile)).toBe(true);
+    expect(fs.existsSync(userPaths(dataDir, uid).charactersDir)).toBe(true);
+  });
+
+  it('не создаёт файлов и каталогов вне дерева данных', async () => {
+    const { uid } = await accountWithSheet('traversal-outside');
+    const usersBefore = fs.readdirSync(path.join(dataDir, 'users')).sort();
+
+    const res = await characterPut(
+      json({ passwordHash: 'pwned' }, sessionHeaders(uid)),
+      params('../../escaped/characters/pwned'),
+    );
+    expect(res.status).toBe(400);
+
+    // Каталог data/escaped не появился: traversal не дошёл до mkdir/write.
+    expect(fs.existsSync(path.join(dataDir, 'escaped'))).toBe(false);
+    expect(fs.readdirSync(path.join(dataDir, 'users')).sort()).toEqual(
+      usersBefore,
+    );
+  });
+});
+
 describe('/api/export', () => {
   it('без сессии — 401', async () => {
     const res = await exportGet(req('http://localhost/api/export'));

@@ -510,10 +510,11 @@ describe('авторизация: изоляция персонажей по а�
       ),
     ).toBe(true);
 
-    // Каталог Боба (его создаёт сам GET) существует, но файлов в нём нет.
-    const bobCharsDir = userPaths(dataDir, bob.uid).charactersDir;
-    expect(fs.existsSync(bobCharsDir)).toBe(true);
-    expect(fs.readdirSync(bobCharsDir)).toEqual([]);
+    // Список Боба пуст и не создаёт ему каталог: чтение не оставляет следов
+    // на диске (каталог появляется с первым листом).
+    expect(fs.existsSync(userPaths(dataDir, bob.uid).charactersDir)).toBe(
+      false,
+    );
   });
 });
 

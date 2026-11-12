@@ -2,8 +2,9 @@ import fs from 'fs';
 import path from 'path';
 
 import { normalizeCharacterRecord } from './character-version';
-import { getUserDir } from './data-dir';
+import { getCharactersDir, getUserDir } from './data-dir';
 import { writeJsonAtomic } from './fs-atomic';
+import { resolveCharacterFile } from './security/paths';
 import { Character } from './types';
 
 // Каталог пользователя создаётся при первой записи: профиль и листы
@@ -17,7 +18,8 @@ function ensureUserDir(userId: string): string {
 }
 
 // Подкаталог листов — рядом с user.json, чтобы удаление аккаунта было
-// одним `rm -rf` по каталогу.
+// одним `rm -rf` по каталогу. Создаётся только на записи: чтение не должно
+// оставлять каталоги для uid, которого нет в данных.
 function ensureCharactersDir(userId: string): string {
   const userDir = ensureUserDir(userId);
   const charsDir = path.join(userDir, 'characters');
@@ -100,8 +102,9 @@ export function resetWriteSeqGuard(
 }
 
 // ЧТЕНИЕ: все листы пользователя; битый файл пропускается, а не роняет список.
+// Каталог здесь не создаётся: у нового аккаунта листов ещё нет.
 export function getCharactersFromServer(userId: string): Character[] {
-  const charsDir = ensureCharactersDir(userId);
+  const charsDir = getCharactersDir(userId);
   const characters: Character[] = [];
 
   try {
@@ -116,7 +119,11 @@ export function getCharactersFromServer(userId: string): Character[] {
       }
     }
   } catch (e) {
-    console.error(`Error reading characters directory for ${userId}:`, e);
+    // ENOENT — обычное состояние нового аккаунта, а не ошибка: каталог
+    // появляется с первым листом (чтение его не создаёт).
+    if ((e as NodeJS.ErrnoException)?.code !== 'ENOENT') {
+      console.error(`Error reading characters directory for ${userId}:`, e);
+    }
   }
 
   return characters;
@@ -128,8 +135,14 @@ export function saveCharacterToServer(
   userId: string,
   character: Character,
 ): void {
-  const charsDir = ensureCharactersDir(userId);
-  const filePath = path.join(charsDir, `${character.id}.json`);
+  const charsDir = getCharactersDir(userId);
+  const filePath = resolveCharacterFile(charsDir, character.id);
+  if (!filePath) {
+    // Сюда попадает только программная ошибка: id нового листа выдаёт сервер,
+    // а не клиент. Молча писать «как получилось» нельзя — это путь на диске.
+    throw new Error(`Unsafe character id: ${String(character.id)}`);
+  }
+  ensureCharactersDir(userId);
   writeJsonAtomic(
     filePath,
     normalizeCharacterRecord(character as unknown as Record<string, unknown>)
@@ -165,8 +178,9 @@ export function updateCharacterOnServer(
   data: Partial<Character>,
   options: { writeToken?: WriteToken } = {},
 ): Character | null {
-  const charsDir = ensureCharactersDir(userId);
-  const filePath = path.join(charsDir, `${characterId}.json`);
+  const filePath = resolveCharacterFile(getCharactersDir(userId), characterId);
+  // Небезопасный id роут отсекает сам (400) — здесь он просто не даёт пути.
+  if (!filePath) return null;
 
   if (!fs.existsSync(filePath)) return null;
 
@@ -215,8 +229,8 @@ export function deleteCharacterFromServer(
   userId: string,
   characterId: string,
 ): boolean {
-  const charsDir = ensureCharactersDir(userId);
-  const filePath = path.join(charsDir, `${characterId}.json`);
+  const filePath = resolveCharacterFile(getCharactersDir(userId), characterId);
+  if (!filePath) return false;
 
   if (!fs.existsSync(filePath)) return false;
 
