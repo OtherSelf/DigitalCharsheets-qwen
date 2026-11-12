@@ -174,6 +174,31 @@ async function settle(page: Page, resetScroll = true): Promise<void> {
 }
 
 /** Скриншот всего вьюпорта (страница в приложении и так h-dvh). */
+/**
+ * Сырые i18n-ключи в видимом тексте страницы (например `dh.rankScholar`).
+ *
+ * Проверка намеренно шире, чем скриншот: визуальный дифф прощает небольшие
+ * изменения текста (порог по пикселям), а «сырой ключ» — это всегда баг,
+ * даже если он занимает одну строку на карточке. Домены перечислены явно,
+ * чтобы не ловить обычные сокращения/email в тексте.
+ */
+const RAW_I18N_KEY_RE =
+  /\b(?:dh|dh1|dh2|dnd|dnd5e|common|games|auth|admin|io|settings)\.(?:[a-z][A-Za-z0-9_]*|data\.)/g;
+
+export async function expectNoRawI18nKeys(
+  page: Page,
+  label = 'страница',
+): Promise<void> {
+  // Даём ленивым слотам/словарям догрузиться, чтобы проверка была не гонкой.
+  await page.waitForTimeout(500);
+  const text = await page.locator('body').innerText();
+  const matches = [...new Set(text.match(RAW_I18N_KEY_RE) ?? [])];
+  expect(
+    matches,
+    `${label}: в тексте остались сырые i18n-ключи: ${matches.join(', ')}`,
+  ).toEqual([]);
+}
+
 export async function screenshotPage(
   page: Page,
   name: string,

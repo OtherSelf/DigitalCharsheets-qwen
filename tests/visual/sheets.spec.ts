@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 import {
+  expectNoRawI18nKeys,
   getState,
   openApp,
   openMobileSection,
@@ -32,6 +33,7 @@ test.describe('лист D&D — чтение', () => {
       await expect(
         page.getByRole('heading', { name: 'Seraphina Vael' }),
       ).toBeVisible();
+      await expectNoRawI18nKeys(page, 'лист D&D (en)');
       await screenshotPage(page, 'sheet-dnd-top-en.png');
 
       await screenshotElement(
@@ -149,6 +151,7 @@ test.describe('лист Dark Heresy — чтение', () => {
       await expect(
         page.getByRole('heading', { name: 'Lucius Varn' }),
       ).toBeVisible();
+      await expectNoRawI18nKeys(page, 'лист Dark Heresy (en)');
       await screenshotPage(page, 'sheet-dh-top-en.png');
 
       await screenshotElement(

@@ -2,6 +2,7 @@ import { expect, test, type BrowserContext } from '@playwright/test';
 
 import {
   collectPageErrors,
+  expectNoRawI18nKeys,
   getState,
   openApp,
   openRegisterForm,
@@ -256,6 +257,7 @@ test.describe('общие страницы', () => {
       await expect(page.getByText('Seraphina Vael')).toBeVisible();
       await expect(page.getByText('Lucius Varn')).toBeVisible();
 
+      await expectNoRawI18nKeys(page, 'dashboard (en)');
       await screenshotPage(page, 'dashboard-en.png');
     },
   );
@@ -271,6 +273,7 @@ test.describe('общие страницы', () => {
         page.getByRole('heading', { name: 'Существующие персонажи' }),
       ).toBeVisible();
 
+      await expectNoRawI18nKeys(page, 'dashboard (ru)');
       await screenshotPage(page, 'dashboard-ru.png');
     },
   );

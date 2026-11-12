@@ -62,8 +62,11 @@ const CORE_CAREERS = [
 const t = (lang: 'en' | 'ru', key: string) => translations[lang][key];
 
 function expectTranslation(key: string, label: string) {
-  const keys = key.startsWith('dh.')
-    ? [`dh1.${key.slice(3)}`, `dh2.${key.slice(3)}`]
+  // Ключи справочных данных уже приходят с редакцией (`dh1.*`/`dh2.*`);
+  // проверяем обе редакции, чтобы равенство словарей DH не разъехалось.
+  const editionMatch = /^dh([12])\.(.*)$/.exec(key);
+  const keys = editionMatch
+    ? [`dh1.${editionMatch[2]}`, `dh2.${editionMatch[2]}`]
     : [key];
   for (const lang of ['en', 'ru'] as const) {
     for (const localizedKey of keys) {

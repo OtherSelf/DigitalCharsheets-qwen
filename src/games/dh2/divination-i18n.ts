@@ -19,11 +19,11 @@ import {
  * файлов/экспортов оставлены маппинги sentence → ID: миграция переводит их в
  * ID, а UI умеет показать неизвестное кастомное значение как есть.
  */
-export function divinationKey(id: string, prefix = 'dh'): string {
+export function divinationKey(id: string, prefix = 'dh2'): string {
   return `${prefix}.data.divination.${id}`;
 }
 
-export function divinationEffectKey(id: string, prefix = 'dh'): string {
+export function divinationEffectKey(id: string, prefix = 'dh2'): string {
   return `${prefix}.data.divinationEffect.${id}`;
 }
 
@@ -37,8 +37,8 @@ export function resolveDivinationEffectId(
   value: string | null | undefined,
 ): string {
   if (!value) return '';
-  if (value.startsWith('dh.data.divinationEffect.')) {
-    return value.slice('dh.data.divinationEffect.'.length);
+  if (value.startsWith('dh2.data.divinationEffect.')) {
+    return value.slice('dh2.data.divinationEffect.'.length);
   }
   return EFFECT_ID_BY_TEXT[value] ?? value;
 }
@@ -50,7 +50,7 @@ export function effectIdForDivination(divinationId: string): string {
 export function divinationLabel(
   value: string | null | undefined,
   t: (key: string) => string,
-  prefix = 'dh',
+  prefix = 'dh2',
 ): string {
   if (!value) return '';
   const id = resolveDivinationId(value);
@@ -60,7 +60,7 @@ export function divinationLabel(
 export function divinationEffectLabel(
   value: string | null | undefined,
   t: (key: string) => string,
-  prefix = 'dh',
+  prefix = 'dh2',
 ): string {
   if (!value) return '';
   const id = resolveDivinationEffectId(value);
