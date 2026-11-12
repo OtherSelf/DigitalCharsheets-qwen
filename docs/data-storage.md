@@ -145,26 +145,37 @@ before upgrading a production data directory.
 
 ## `settings/game-catalog.json`
 
-Runtime overrides for edition visibility and the optional site title. Missing
-file means "all modules use `defaultStatus` from the registry".
+Runtime state of the installed plugins and the optional site title. Missing
+file means "every plugin is enabled and uses `defaultStatus`".
+
+The file is **v2** (the plugin catalog). The old v1 `statuses` map is read and
+migrated automatically on the next read: every plugin becomes `enabled: true`
+with `visibility` equal to its old status (§5.9 of the plugin plan).
 
 ```json
 {
-  "version": 1,
-  "statuses": { "dh2": "test" },
+  "version": 2,
+  "plugins": {
+    "dh1": { "enabled": true, "visibility": "published" },
+    "dh2": { "enabled": false, "visibility": "test" }
+  },
   "siteTitle": "My table"
 }
 ```
 
 | Field | Meaning |
 | --- | --- |
-| `statuses` | `systemId` → `published` / `test` / `hidden`; invalid values are ignored. |
+| `plugins[id].visibility` | `published` / `test` / `hidden` — who sees the plugin in creation and menus. Matrix: `published` → everyone, `test` → tester+admin, `hidden` → admin. Invalid values are ignored. |
+| `plugins[id].enabled` | Whether the plugin is active at all. `false` disappears from creation/menus/demo; existing sheets open **read-only** with a banner, JSON export keeps working (D9). Missing → `true`. |
 | `siteTitle` | Optional header title override (≤80 chars). Empty/absent → built-in brand. |
 
+`enabled` and `visibility` are independent (D16): a hidden plugin can still be
+enabled for admins, and a disabled plugin stays hidden from everyone's creation
+wizard regardless of visibility.
+
 Written atomically under the data-dir lock by `src/lib/game-catalog.ts`
-(`setModuleStatus`, `setSiteTitle`). The visibility matrix lives there:
-`published` → everyone, `test` → tester+admin, `hidden` → admin. It applies to
-creation/menus, not to reading existing sheets.
+(`setModuleStatus`, `setModuleEnabled`, `setSiteTitle`). It applies to
+creation/menus, not to reading or exporting existing sheets.
 
 ## Login index
 

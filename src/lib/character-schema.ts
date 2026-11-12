@@ -20,6 +20,8 @@ import { isUid } from './ids';
 export interface NormalizeCharactersReport {
   total: number;
   updated: number;
+  /** Сколько шагов цепочек миграций применено ко всем листам. */
+  migrations: number;
   issues: string[];
 }
 
@@ -32,6 +34,7 @@ export function normalizeAllCharacters(): NormalizeCharactersReport {
   const report: NormalizeCharactersReport = {
     total: 0,
     updated: 0,
+    migrations: 0,
     issues: [],
   };
 
@@ -82,6 +85,15 @@ export function normalizeAllCharacters(): NormalizeCharactersReport {
       if (!normalized.changed) continue;
 
       try {
+        // Перед первой перезаписью мигрированного листа кладём рядом .bak:
+        // миграция необратима, а данные пользователя — нет.
+        if (normalized.migrationsApplied > 0) {
+          report.migrations += normalized.migrationsApplied;
+          const backupPath = `${full}.bak`;
+          if (!fs.existsSync(backupPath)) {
+            fs.copyFileSync(full, backupPath);
+          }
+        }
         withDataLock(() => writeJsonAtomic(full, normalized.character));
         report.updated += 1;
       } catch (error) {

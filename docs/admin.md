@@ -35,15 +35,27 @@ The API behind it is documented in [api.md](api.md).
 ## Game visibility
 
 `/admin` has a **Games & editions** section backed by
-`GET/PUT /api/admin/games` (admin only). The current status of every module is
-stored in `<data-dir>/settings/game-catalog.json` and overrides the module's
-`defaultStatus` from its `plugin.json` (see `src/games/registry.generated.ts`):
+`GET/PUT /api/admin/games` (admin only). For every installed plugin it shows
+the manifest data — version, sheet schema version, conformance tag and host API
+dependency — plus two independent switches stored in
+`<data-dir>/settings/game-catalog.json` (v2):
+
+| Control | Stored as | Effect |
+| --- | --- | --- |
+| Current visibility | `plugins[id].visibility` | Overrides the manifest `defaultStatus`: |
+| Enabled | `plugins[id].enabled` | `false` removes the plugin from creation, menus and `/demo`; existing sheets open read-only with a banner and JSON export still works (D9). |
+
+Tags from the manifest are stored but intentionally not displayed (D15).
+The visibility matrix:
 
 | Status | Who sees it in `/new`, `/demo` and menus |
 | --- | --- |
 | `published` | everyone (including guests) |
 | `test` | `tester` and `admin` |
 | `hidden` | `admin` only |
+
+The same section also shows a **Demo** link for plugins whose manifest declares
+a demo entry, and the **Site title** card below it.
 
 Hiding affects **creation and menus**, not opening existing sheets: the owner
 can still open sheets of a hidden edition, and `GET /api/characters` does not
