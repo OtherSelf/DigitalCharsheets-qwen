@@ -1,0 +1,162 @@
+# Security model
+
+Threat model, trust boundaries and the invariants every change must preserve.
+Read it before touching authentication, sessions, storage paths or the public
+HTTP surface.
+
+## Overview
+
+The application is a single-process Next.js server with no database and no
+external identity provider. Everything that decides «who is this user» lives in
+the process: an httpOnly session cookie, the profiles under `<data-dir>/users/`
+and a few files in the data directory root. Consequently the whole security
+model rests on three things:
+
+- **identity comes from the session, never from the request payload** — uid is
+  read from the signed cookie, only `requireAdmin` decides roles;
+- **the data directory is the only store** — every path built from a
+  request-supplied value must be validated and confined to it;
+- **secrets live outside the repository** — the session signing key and user
+  files are data, not code.
+
+Rules below are normative. Each rule links the module that enforces it; a rule
+without a link is a requirement of the model rather than a guarantee of the
+current code.
+
+## Assets
+
+| Asset | Where | Why it matters |
+| --- | --- | --- |
+| Account credentials (`passwordHash`, `recoveryPhrase`) | `users/<uid>/user.json` | Account takeover |
+| Session signing key | `DCS_SESSION_SECRET` or `<data-dir>/.session-secret` | Forgery of any session |
+| Character sheets | `users/<uid>/characters/<id>.json` | Private game data of every player |
+| Login index | `index/logins.json` | Maps a login to a uid (the uid is the file path) |
+| Ability to sign in as another user | `/api/auth*` | Everything else follows |
+
+## Trust boundaries
+
+```
+browser / curl
+   │  untrusted: every header, cookie, query value, JSON field
+   ▼
+nginx (TLS, reverse proxy)          ← x-forwarded-for is trusted only here
+   ▼
+Next route handlers (src/app/api)   ← the only authorization point
+   ▼
+src/lib (session, storage, auth)    ← path and format validation
+   ▼
+<data-dir> on disk                  ← trusted, owned by the service account
+```
+
+- The client is **always** untrusted. Nothing in the React tree is a security
+  control: a hidden «Админка» item is UX, `requireAdmin` is the control.
+- `src/lib` trusts its callers only for values that already passed validation
+  (uid from `getSessionUid`, ids checked by `assertSafeId`).
+- The data directory is trusted for integrity but every external id used to
+  build a path in it is validated first.
+- The public git repository is **untrusted output**: no profile, phrase or
+  password may ever be committed, and history counts as output.
+
+## Threat catalogue
+
+| Threat | Control |
+| --- | --- |
+| Reset another account's password without any proof | Recovery must prove possession of the phrase and hand out a single-use token; `recover/update` accepts only that token ([`src/lib/security/tokens.ts`](../src/lib/security/tokens.ts)) |
+| Guess the recovery phrase word by word | Whole-phrase comparison after normalization; ownership words from sheets are not a factor |
+| Read or overwrite files outside `users/<uid>/characters` (`../user`, absolute ids) | One validator for request ids and one containment check ([`src/lib/security/paths.ts`](../src/lib/security/paths.ts)) |
+| Offline cracking of a leaked password hash | Salted `scrypt` with a versioned format and `timingSafeEqual` |
+| Online password guessing | Shared limiter per IP + login, `429` with `Retry-After` ([`src/lib/security/rate-limit.ts`](../src/lib/security/rate-limit.ts)) |
+| Account enumeration (login / `exists`) | Identical status and text for «no account» and «wrong password»; existence checks are rate limited |
+| Stolen session cookie replayed after logout or password change | Sessions carry a `jti` that is stored (and revocable) server-side |
+| Cross-site scripting and framing | CSP, `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy`, no third-party image optimizer |
+| Import route abused to create accounts | The Firestore import is not part of the public runtime |
+| Oversized or malformed JSON breaking a sheet | Module schema validation on write, request body limit |
+
+## Invariants
+
+🔒 Breaking one of these is a security regression, not a refactor.
+
+1. **uid is never taken from a request.** `?userId=`, `body.userId` and
+   `body.username`-derived uids are ignored; the only source is
+   [`getSessionUid`](../src/lib/session.ts). Profiles are only reachable through
+   a UUID-shaped uid (`isUid` in [`src/lib/ids.ts`](../src/lib/ids.ts)).
+2. **Roles are checked on the server.** `requireAdmin`
+   ([`src/lib/admin-auth.ts`](../src/lib/admin-auth.ts)) guards every `/api/admin`
+   route and the admin page.
+3. **Recovery never mints a session.** `POST /api/auth/recover/verify` answers
+   with a single-use token; only `POST /api/auth` and `POST /api/auth/register`
+   set the cookie.
+4. **Recovery phrase is a full-match secret.** Comparison is
+   `normalize → compare all words`, never «any single word», and the stored
+   value is a hash.
+5. **Paths derived from request data stay inside the data directory.** Every
+   id matches `^[A-Za-z0-9_-]{1,64}$` and the resolved path is checked against
+   its base directory.
+6. **Secrets are never in the repository** and never in an API response:
+   `passwordHash`, `recoveryPhrase`, `DCS_SESSION_SECRET` and the generated
+   session secret are data-dir/server-only.
+7. **Writes are atomic and profile mutations are locked.**
+   [`writeJsonAtomic`](../src/lib/fs-atomic.ts) and `withDataLock`
+   ([`src/lib/data-lock.ts`](../src/lib/data-lock.ts)) keep truncated JSON and
+   lost index entries out of the data directory.
+
+## Authentication
+
+`POST /api/auth` verifies the password and sets `<uid>.<exp>.<hmac>`
+([`src/lib/session.ts`](../src/lib/session.ts)). Blocking is enforced on every
+request: `getSessionUid` rejects a blocked or deleted profile even when the
+signature is still valid.
+
+Password hashing rules:
+
+- new passwords and password changes are stored as salted `scrypt` with an
+  explicit format version, compared with `timingSafeEqual`;
+- legacy unsalted `sha256` values are migrated transparently on successful
+  login;
+- minimum length is enforced on every entry point (register, recovery, profile,
+  admin, service admin).
+
+## Sessions
+
+- The cookie is `HttpOnly`, `SameSite=Lax`, `Path=/`, `Secure` in production,
+  and carries an expiry that is also covered by the HMAC.
+- A session record (`jti`) is stored server-side so logout, password/phrase
+  change and administrative blocking can revoke it.
+- Session lifetime is bounded; revoking all sessions of a uid is the «sign out
+  everywhere» action.
+
+## Recovery
+
+`recover/verify` proves possession of the phrase, then returns a token whose
+hash is stored for a short time; `recover/update` accepts **only** the token,
+burns it and changes the password and phrase. Recovery never returns a session,
+so the user signs in normally afterwards. Failed attempts share one response and
+one delay, and are rate limited.
+
+## Rate limiting and anti-enumeration
+
+[`src/lib/security/rate-limit.ts`](../src/lib/security/rate-limit.ts) is a
+sliding-window limiter keyed by `IP + login`. Storage is an interface: the
+default is in-process memory, which is correct for the single-process
+deployment and can be swapped for a file-backed store when several instances
+share a data directory.
+
+Limits are part of the API contract (see [api.md](api.md) once documented):
+exceeding a window answers `429` with `Retry-After`, never with a password hint.
+
+## Data directory privacy
+
+- Commit only code. `<data-dir>` — profiles, sheets, indexes, secrets — is
+  runtime state and is never versioned.
+- Backups copy `<data-dir>` as a whole and are stored with the same care as
+  credentials.
+- Rotating `.session-secret` (or `DCS_SESSION_SECRET`) invalidates every
+  outstanding cookie; see [deployment.md](deployment.md).
+
+## Related
+
+- [architecture.md](architecture.md) — request flow and module layout
+- [data-storage.md](data-storage.md) — on-disk layout, locks, atomic writes
+- [api.md](api.md) — endpoints and statuses
+- [admin.md](admin.md) — roles, first administrator, block/delete rules
+- [deployment.md](deployment.md) — environment variables, secrets, backups
