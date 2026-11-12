@@ -116,7 +116,12 @@ export function normalizeStoredUser(
     user.updatedAt = user.createdAt;
   }
 
-  if (user.schemaVersion !== USER_SCHEMA_VERSION) {
+  // Более новый профиль (schemaVersion больше текущего) не трогаем: его мог
+  // записать более свежий инстанс, и понижение версии потеряло бы поля.
+  if (typeof user.schemaVersion !== 'number') {
+    missing.push('schemaVersion');
+    user.schemaVersion = USER_SCHEMA_VERSION;
+  } else if (user.schemaVersion < USER_SCHEMA_VERSION) {
     missing.push('schemaVersion');
     user.schemaVersion = USER_SCHEMA_VERSION;
   }

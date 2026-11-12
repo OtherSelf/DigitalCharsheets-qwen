@@ -7,6 +7,7 @@ import { NextResponse } from 'next/server';
 import { listGameModules } from '@/games/registry';
 import { normalizeCharacterRecord } from '@/lib/character-version';
 import { getCharactersDir, getDataDir } from '@/lib/data-dir';
+import { writeJsonAtomic } from '@/lib/fs-atomic';
 import { createImportedUser } from '@/lib/server-auth';
 
 function importFilePath(): string {
@@ -14,22 +15,25 @@ function importFilePath(): string {
 }
 const DEFAULT_PASSWORD = '1234'; // Default password for all imported users
 
-// ─── CLEANING UTILITIES ────────────────────────────────────────────
+// ─── ЧИСТКА ДАННЫХ ─────────────────────────────────────────────────
 
-function cleanObject(obj: any): any {
-  if (obj === null || obj === undefined) return obj;
-  if (typeof obj === 'string') return obj.trim();
-  if (typeof obj === 'number' || typeof obj === 'boolean') return obj;
-  if (Array.isArray(obj)) return obj.map((item) => cleanObject(item));
-  if (typeof obj === 'object') {
-    const cleaned: any = {};
-    for (const [key, value] of Object.entries(obj)) {
-      const cleanKey = key.trim();
-      cleaned[cleanKey] = cleanObject(value);
+// Выгрузка Firestore приходит с пробелами в ключах и значениях; чистим
+// рекурсивно, не зная структуры заранее.
+function cleanObject(value: unknown): unknown {
+  if (value === null || value === undefined) return value;
+  if (typeof value === 'string') return value.trim();
+  if (typeof value === 'number' || typeof value === 'boolean') return value;
+  if (Array.isArray(value)) return value.map((item) => cleanObject(item));
+  if (typeof value === 'object') {
+    const cleaned: Record<string, unknown> = {};
+    for (const [key, rawValue] of Object.entries(
+      value as Record<string, unknown>,
+    )) {
+      cleaned[key.trim()] = cleanObject(rawValue);
     }
     return cleaned;
   }
-  return obj;
+  return value;
 }
 
 function hashPassword(password: string): string {
@@ -40,11 +44,11 @@ function generateId(): string {
   return Date.now().toString(36) + Math.random().toString(36).substr(2);
 }
 
-// ─── IMPORT HANDLER (GET request - just visit the URL) ─────────────
+// ─── ОБРАБОТЧИК ИМПОРТА (GET — открыть URL в браузере) ─────────────
 
 export async function GET() {
   try {
-    // Check if import file exists
+    // Без входного файла импортировать нечего.
     const IMPORT_FILE = importFilePath();
     if (!fs.existsSync(IMPORT_FILE)) {
       return NextResponse.json(
@@ -56,7 +60,7 @@ export async function GET() {
       );
     }
 
-    // Read the import file
+    // Читаем выгрузку целиком: она одноразовая и лежит в data-dir.
     const fileContent = fs.readFileSync(IMPORT_FILE, 'utf8');
     const rawData = JSON.parse(fileContent);
 
@@ -70,13 +74,16 @@ export async function GET() {
       );
     }
 
-    // Step 1: Clean all data
-    const cleanedData = rawData.map((char: any) => cleanObject(char));
+    // Шаг 1. Чистим пробелы в ключах и значениях.
+    const cleanedData = rawData.map(
+      (char) => cleanObject(char) as Record<string, unknown>,
+    );
 
-    // Step 2: Group by Firebase user ID
-    const userGroups: Record<string, any[]> = {};
+    // Шаг 2. Группируем по Firebase-пользователю из Document ID.
+    const userGroups: Record<string, Record<string, unknown>[]> = {};
     for (const char of cleanedData) {
-      const docId = char['Document ID'] || '';
+      const docId =
+        typeof char['Document ID'] === 'string' ? char['Document ID'] : '';
       const match = docId.match(/\/users\/([^\/]+)\/characterSheets\//);
       if (match) {
         const firebaseUserId = match[1];
@@ -85,8 +92,14 @@ export async function GET() {
       }
     }
 
-    // Step 3: Process each user
-    const results: any[] = [];
+    // Шаг 3. По пользователю: аккаунт, затем его листы.
+    const results: {
+      localUserId: string;
+      username: string;
+      password: string;
+      charactersImported: number;
+      characters: { name: string; system: string }[];
+    }[] = [];
     let totalImported = 0;
     const passwordHash = hashPassword(DEFAULT_PASSWORD);
 
@@ -111,8 +124,8 @@ export async function GET() {
         fs.mkdirSync(charsDir, { recursive: true });
       }
 
-      // Process each character
-      const importedChars: any[] = [];
+      // Конвертацию каждого листа делает плагин, который узнал свою систему.
+      const importedChars: { name: string; system: string }[] = [];
       chars.forEach((raw, index) => {
         // Какая игра и как конвертировать legacy-запись — знает плагин
         // (`matchesLegacyImport`/`legacyImportName`/`convertLegacyImport`).
@@ -131,13 +144,14 @@ export async function GET() {
         });
         if (!converted) return;
 
-        // Write individual character file
+        // Обрыв посреди импорта не должен оставить обрезанный JSON: файл
+        // подменяется атомарно, как и везде в файловом хранилище.
         const character = normalizeCharacterRecord(converted).character;
         const charFile = path.join(charsDir, `${character.id}.json`);
-        fs.writeFileSync(charFile, JSON.stringify(character, null, 2), 'utf8');
+        writeJsonAtomic(charFile, character);
         importedChars.push({
           name: character.name,
-          system: character.gameSystem,
+          system: character.gameSystem ?? 'unknown',
         });
         totalImported++;
       });
@@ -151,7 +165,7 @@ export async function GET() {
       });
     }
 
-    // Step 4: Delete the import file after success
+    // Шаг 4. Файл одноразовый: повторный импорт создал бы дубли.
     fs.unlinkSync(IMPORT_FILE);
 
     return NextResponse.json({
@@ -161,12 +175,12 @@ export async function GET() {
       users: results,
       note: 'The import-source.json file has been deleted. You can now log in with the usernames listed above using the default password.',
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Import error:', error);
     return NextResponse.json(
       {
         success: false,
-        error: `Import failed: ${error.message}`,
+        error: `Import failed: ${error instanceof Error ? error.message : 'unknown'}`,
       },
       { status: 500 },
     );
