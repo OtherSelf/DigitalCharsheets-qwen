@@ -77,12 +77,12 @@
   ],
   "legacy": {
     "@/context/character-context": {
-      "files": 30,
+      "files": 31,
       "removeBy": "этап 3",
       "why": "чтение/запись листа идёт через состояние хоста; в Plugin API станет частью Host API (character state) и переедет в allowed"
     },
     "@/context/language-context": {
-      "files": 34,
+      "files": 37,
       "removeBy": "этап 3",
       "why": "хук переводов хоста; после Plugin API плагин получает t()/useI18n от хоста, а не импортирует контекст"
     },

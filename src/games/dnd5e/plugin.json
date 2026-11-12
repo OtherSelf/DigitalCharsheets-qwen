@@ -57,5 +57,14 @@
     {
       "gameSystem": "Dungeons & Dragons"
     }
-  ]
+  ],
+  "ui": {
+    "slots": [
+      "HeaderActions",
+      "HeaderSubtitle",
+      "CompactNav",
+      "CardSummary",
+      "HouseRulesDialog"
+    ]
+  }
 }

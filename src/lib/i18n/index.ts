@@ -1,15 +1,20 @@
+import { generatedI18n } from '@/games/i18n.generated';
 import { en as gamesCoreEn } from '@/games/i18n/en';
 import { ru as gamesCoreRu } from '@/games/i18n/ru';
-import { gameRegistry } from '@/games/registry';
 
 import { enTranslations } from './translations.en';
 import { ruTranslations } from './translations.ru';
 
 /**
  * ─── LANDMARK: TRANSLATIONS_MAIN ───────────────────────────────────────────
- * Сборка словарей: общий слой + метаданные реестра + словари всех модулей
- * из реестра. Модули (`src/games/<id>/i18n`) не знают друг о друге и не делят
- * DH-словарь; единственный список — `gameRegistry`.
+ * Сборка словарей: общий слой + метаданные реестра + словари всех модулей.
+ * Модули (`src/games/<id>/i18n`) не знают друг о друге и не делят
+ * DH-словарь.
+ *
+ * Список словарей берётся из `i18n.generated.ts` (генерируется из
+ * `plugin.json#i18n`), а НЕ из `gameRegistry`: реестр импортирует UI-слоты
+ * плагинов, которые импортируют контекст языка, — это дало бы цикл
+ * `i18n → registry → slots → language-context → i18n` (этап 3).
  *
  * Дубликат ключа между слоями — ошибка разработчика: падаем на старте (и в
  * тестах), а не молча затираем строку.
@@ -29,17 +34,17 @@ function mergeDictionaries(
   return result;
 }
 
-const modules = gameRegistry.list();
+const moduleDictionaries = Object.values(generatedI18n);
 
 export const translations: Record<string, Record<string, string>> = {
   en: mergeDictionaries([
     enTranslations,
     gamesCoreEn,
-    ...modules.map((gameModule) => gameModule.i18n.en),
+    ...moduleDictionaries.map((messages) => messages.en),
   ]),
   ru: mergeDictionaries([
     ruTranslations,
     gamesCoreRu,
-    ...modules.map((gameModule) => gameModule.i18n.ru),
+    ...moduleDictionaries.map((messages) => messages.ru),
   ]),
 };

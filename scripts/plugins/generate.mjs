@@ -39,6 +39,7 @@ export const ROOT = resolve(HERE, '../..');
 export const GAMES_DIR = join(ROOT, 'src/games');
 export const SCHEMA_PATH = join(GAMES_DIR, 'plugin.schema.json');
 export const REGISTRY_PATH = join(GAMES_DIR, 'registry.generated.ts');
+export const I18N_REGISTRY_PATH = join(GAMES_DIR, 'i18n.generated.ts');
 export const MANIFEST_FILE = 'plugin.json';
 
 /** Версия Plugin API, с которой сверяется `pluginApi` манифестов. */
@@ -386,6 +387,71 @@ ${entries}
 }
 
 /**
+ * Текст `i18n.generated.ts` — словари плагинов без импорта их модулей.
+ *
+ * Зачем отдельный файл: `src/lib/i18n` нужен до инициализации реестра
+ * (контекст языка импортируют в том числе UI-слоты плагинов), поэтому
+ * собирать словари из `gameRegistry` нельзя — получается цикл
+ * `i18n → registry → plugin ui → language-context → i18n`. Генерируем
+ * статические импорты только словарей (этап 3).
+ *
+ * @param {{dirName: string, manifest: any}[]} plugins
+ */
+export function renderI18nRegistry(plugins) {
+  const sorted = [...plugins].sort((a, b) =>
+    a.manifest.id.localeCompare(b.manifest.id, 'en'),
+  );
+
+  const imports = sorted
+    .map(({ manifest }) => {
+      const camel = manifest.id.replace(/[-_]+(.)?/g, (_, chr) =>
+        chr ? chr.toUpperCase() : '',
+      );
+      return ['en', 'ru']
+        .map((locale) => {
+          const rel = manifest.i18n[locale];
+          const isJson = rel.endsWith('.json');
+          const spec = `./${manifest.id}/${rel.replace(/\.(ts|tsx|json)$/, '')}${isJson ? '.json' : ''}`;
+          return isJson
+            ? `import ${camel}${locale === 'en' ? 'En' : 'Ru'} from '${spec}';`
+            : `import { ${locale} as ${camel}${locale === 'en' ? 'En' : 'Ru'} } from '${spec}';`;
+        })
+        .join('\n');
+    })
+    .join('\n');
+
+  const entries = sorted
+    .map(({ manifest }) => {
+      const camel = manifest.id.replace(/[-_]+(.)?/g, (_, chr) =>
+        chr ? chr.toUpperCase() : '',
+      );
+      const key = /^[A-Za-z_$][A-Za-z0-9_$]*$/.test(manifest.id)
+        ? manifest.id
+        : JSON.stringify(manifest.id);
+      return `  ${key}: { en: ${camel}En, ru: ${camel}Ru },`;
+    })
+    .join('\n');
+
+  return `/**
+ * ─── AUTO-GENERATED — НЕ РЕДАКТИРОВАТЬ ─────────────────────────────────────
+ * Словари плагинов, сгенерированные из \`src/games/<id>/plugin.json\` (поле
+ * \`i18n\`). Импортируются \`src/lib/i18n\` до инициализации реестра, поэтому
+ * здесь только словари — без модулей, схем и UI (этап 3).
+ *
+ * Пересобрать:  npm run plugins:generate
+ * Проверить:    npm run plugins:check
+ */
+${imports}
+import type { LocalizedMessages } from './types';
+
+/** Словари по \`systemId\`; порядок ключей — по id (стабильная генерация). */
+export const generatedI18n: Readonly<Record<string, LocalizedMessages>> = {
+${entries}
+};
+`;
+}
+
+/**
  * Полный цикл: манифесты → проверки → текст реестра.
  *
  * @param {{gamesDir?: string, schemaPath?: string}} [options]
@@ -437,6 +503,7 @@ export function buildRegistry({
         title: manifest.name.en,
       })),
     content: renderRegistry(plugins),
+    i18nContent: renderI18nRegistry(plugins),
   };
 }
 
@@ -461,7 +528,7 @@ function main(argv) {
     return 0;
   }
 
-  const { plugins, content } = buildRegistry();
+  const { plugins, content, i18nContent } = buildRegistry();
   const summary = plugins
     .map((plugin) => `${plugin.id}@${plugin.version} (order ${plugin.order})`)
     .join(', ');
@@ -472,31 +539,41 @@ function main(argv) {
   }
 
   if (flags.has('--check')) {
-    const current = existsSync(REGISTRY_PATH)
-      ? readFileSync(REGISTRY_PATH, 'utf8')
-      : '';
-    if (current !== content) {
+    const targets = [
+      ['registry.generated.ts', REGISTRY_PATH, content],
+      ['i18n.generated.ts', I18N_REGISTRY_PATH, i18nContent],
+    ];
+    let failed = false;
+    for (const [label, filePath, expected] of targets) {
+      const current = existsSync(filePath)
+        ? readFileSync(filePath, 'utf8')
+        : '';
+      if (current === expected) continue;
+      failed = true;
       console.error(
-        '✗ src/games/registry.generated.ts устарел: манифесты и реестр расходятся.',
+        `✗ src/games/${label} устарел: манифесты и файл расходятся.`,
       );
       console.error('  Пересоберите: npm run plugins:generate');
       const currentLines = current.split('\n');
-      const nextLines = content.split('\n');
+      const nextLines = expected.split('\n');
       const index = nextLines.findIndex((line, i) => currentLines[i] !== line);
       if (index >= 0) {
         console.error(`  первое расхождение — строка ${index + 1}:`);
         console.error(`    в файле:  ${currentLines[index] ?? '∅'}`);
         console.error(`    ожидается: ${nextLines[index]}`);
       }
-      return 1;
     }
-    console.log(`✓ registry.generated.ts в синхроне · ${summary}`);
+    if (failed) return 1;
+    console.log(
+      `✓ registry.generated.ts и i18n.generated.ts в синхроне · ${summary}`,
+    );
     return 0;
   }
 
   writeFileSync(REGISTRY_PATH, content, 'utf8');
+  writeFileSync(I18N_REGISTRY_PATH, i18nContent, 'utf8');
   console.log(
-    `✓ registry.generated.ts: ${plugins.length} плагин(ов) · ${summary}`,
+    `✓ registry.generated.ts + i18n.generated.ts: ${plugins.length} плагин(ов) · ${summary}`,
   );
   return 0;
 }

@@ -11,12 +11,9 @@ import {
   EyeOff,
   LogIn,
   Menu,
-  Minus,
   Monitor,
   Pencil,
   PencilLine,
-  Plus,
-  Scale,
   Scroll,
   Shield,
   Smartphone,
@@ -30,16 +27,9 @@ import {
 import { useCharacterContext } from '@/context/character-context';
 import { useTranslation } from '@/context/language-context';
 import { useLocalAuth } from '@/context/local-auth-context';
-import { resolveCharacterSystemId } from '@/games/character-system';
-import { DhHouseRulesDialog as Dh1HouseRulesDialog } from '@/games/dh1/sections/dh-house-rules-dialog';
-import { DhHouseRulesDialog as Dh2HouseRulesDialog } from '@/games/dh2/sections/dh-house-rules-dialog';
-import { HouseRulesDialog } from '@/games/dnd5e/sections/house-rules-dialog';
+import { getCharacterModule } from '@/games/character-system';
 import { useSiteTitle } from '@/hooks/use-site-title';
-import {
-  DarkHeresyCharacter,
-  DnD5eCharacter,
-  type Character,
-} from '@/lib/types';
+import { type Character } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
 import { LanguageToggle } from './layout/language-toggle';
@@ -115,7 +105,6 @@ export function Header({
   const siteTitle = useSiteTitle();
   const { user } = useLocalAuth();
   const params = useParams<{ id: string }>();
-  const [isHouseRulesDialogOpen, setIsHouseRulesDialogOpen] = useState(false);
   const [character, setCharacter] = useState<Character | undefined>(undefined);
 
   useEffect(() => {
@@ -126,53 +115,15 @@ export function Header({
     }
   }, [isLoaded, params.id, getCharacter]);
 
-  // ─── LANDMARK: SAFE_GET_SUBTITLE ───
-  const getSubtitle = (char: Character) => {
-    if (char.gameSystem === 'Dungeons & Dragons') {
-      const dnd = char as DnD5eCharacter;
-
-      const race = dnd.race || '';
-      const background = dnd.background || '';
-      const charClass = dnd.characterClass || '';
-
-      const raceKey = `race${race.replace(/[^a-zA-Z]/g, '')}`;
-      const classKey = `class${charClass}`;
-      const bgKey = `bg${background.replace(/[^a-zA-Z]/g, '')}`;
-
-      const translatedRace = t(raceKey) || race;
-      const translatedClass = t(classKey) || charClass;
-      const translatedBg = t(bgKey) || background;
-
-      return `${t('dnd.lvl')} ${dnd.level || 1} ${translatedRace} ${translatedClass} | ${translatedBg}`;
-    }
-
-    const dh = char as DarkHeresyCharacter;
-
-    const rank = dh.rank || '';
-    const charClass = dh.characterClass || '';
-
-    const dhPrefix = resolveCharacterSystemId(char) === 'dh2' ? 'dh2' : 'dh1';
-    const rankKey = `${dhPrefix}.rank${rank.replace(/[^a-zA-Z]/g, '')}`;
-    const classKey = `${dhPrefix}.career${charClass.replace(/[^a-zA-Z]/g, '')}`;
-    const translatedRank = t(rankKey) || rank;
-    const translatedClass = t(classKey) || charClass;
-    const translatedSystem = t('common.gameSystemDarkHeresy') || dh.gameSystem;
-
-    return `${translatedRank} ${translatedClass} | ${translatedSystem}`;
-  };
-
-  const handleInspirationChange = (delta: number) => {
-    if (character && character.gameSystem === 'Dungeons & Dragons') {
-      const dnd = character as DnD5eCharacter;
-      const current = parseInt(dnd.inspiration) || 0;
-      const maxInspiration = dnd.allowInspirationHomeRule ? 999 : 1;
-      const next = Math.max(
-        0,
-        Math.min(maxInspiration, current + delta),
-      ).toString();
-      updateCharacter(dnd.id, { inspiration: next });
-    }
-  };
+  // Игровые подпись и действия в шапке приходят из слота плагина (этап 3):
+  // в ядре не остаётся ни одной проверки на конкретную игру.
+  const gameModule = character ? getCharacterModule(character) : undefined;
+  const headerUi = gameModule?.ui;
+  const HeaderActions = headerUi?.HeaderActions;
+  const characterSubtitle = character
+    ? (headerUi?.HeaderSubtitle?.(character, t) ??
+      (gameModule ? t(gameModule.nameKey) : ''))
+    : undefined;
 
   // Пока сессия не прочитана на клиенте, гостем считаем любого без user:
   // страницы приложения сами показывают Loader до окончания загрузки.
@@ -280,7 +231,7 @@ export function Header({
                 <p
                   className={`text-muted-foreground truncate ${isCompactView ? 'text-[10px] md:text-xs' : 'text-xs xl:text-sm'}`}
                 >
-                  {getSubtitle(character)}
+                  {characterSubtitle}
                 </p>
               </div>
             </>
@@ -304,75 +255,12 @@ export function Header({
           ) : null}
           {/* ─── END LANDMARK: HEADER_IDENTITY_CHARACTER_INFO ─── */}
 
-          {character && character.gameSystem === 'Dungeons & Dragons' && (
-            <div className="border-primary/20 bg-primary/10 flex shrink-0 items-center gap-2 rounded-full border px-2 py-1 md:ml-2 md:px-3">
-              {/* ─── LANDMARK: HEADER_INSPIRATION_LABEL ───
-                  На узком планшете (768..1023) подпись скрывается, чтобы
-                  имя персонажа не сжималось: смысл «+/-» остаётся понятным
-                  по иконкам, а значение всегда видно. */}
-              <span className="header-field-label text-primary hidden text-[10px] font-bold tracking-widest uppercase sm:inline">
-                {t('common.inspiration')}
-              </span>
-              <div className="flex items-center gap-1">
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="text-primary hover:bg-primary/20 h-6 w-6"
-                  onClick={() => handleInspirationChange(-1)}
-                >
-                  <Minus className="h-3 w-3" />
-                </Button>
-                <span className="text-primary min-w-[1rem] text-center text-sm font-black">
-                  {(character as DnD5eCharacter).inspiration || '0'}
-                </span>
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="text-primary hover:bg-primary/20 h-6 w-6"
-                  onClick={() => handleInspirationChange(1)}
-                >
-                  <Plus className="h-3 w-3" />
-                </Button>
-              </div>
-              {!isCompactView && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setIsHouseRulesDialogOpen(true)}
-                  className="h-7 px-2 xl:ml-2"
-                  aria-label={t('common.houseRules')}
-                >
-                  <Scale className="h-4 w-4 xl:mr-2" />
-                  <span className="hidden xl:inline">
-                    {t('common.houseRules')}
-                  </span>
-                </Button>
-              )}
-            </div>
+          {character && HeaderActions && (
+            <HeaderActions
+              character={character}
+              isCompactView={isCompactView}
+            />
           )}
-
-          {/* ─── LANDMARK: DH HEADER CONTROLS (House Rules) ───
-              Переключателя редакций больше нет: редакция фиксируется модулем
-              при создании персонажа (📌 D2/D3). */}
-          {character &&
-            character.gameSystem === 'Dark Heresy' &&
-            !isCompactView && (
-              <div className="ml-2 flex shrink-0 items-center gap-2 border-l pl-2 md:gap-3 md:pl-4">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setIsHouseRulesDialogOpen(true)}
-                  className="h-7 px-2"
-                  aria-label={t('common.houseRules')}
-                >
-                  <Scale className="h-4 w-4 xl:mr-2" />
-                  <span className="hidden xl:inline">
-                    {t('common.houseRules')}
-                  </span>
-                </Button>
-              </div>
-            )}
-          {/* ─── END DH HEADER CONTROLS ─── */}
         </div>
 
         {/* ─── LANDMARK: HEADER_ACTIONS ─── */}
@@ -537,29 +425,6 @@ export function Header({
             {authControls}
           </div>
         </div>
-
-        {character && character.gameSystem === 'Dungeons & Dragons' && (
-          <HouseRulesDialog
-            open={isHouseRulesDialogOpen}
-            onOpenChange={setIsHouseRulesDialogOpen}
-            characterId={character.id}
-          />
-        )}
-        {character &&
-          character.gameSystem === 'Dark Heresy' &&
-          (resolveCharacterSystemId(character) === 'dh2' ? (
-            <Dh2HouseRulesDialog
-              open={isHouseRulesDialogOpen}
-              onOpenChange={setIsHouseRulesDialogOpen}
-              characterId={character.id}
-            />
-          ) : (
-            <Dh1HouseRulesDialog
-              open={isHouseRulesDialogOpen}
-              onOpenChange={setIsHouseRulesDialogOpen}
-              characterId={character.id}
-            />
-          ))}
       </header>
     </TooltipProvider>
   );

@@ -61,5 +61,14 @@
     {
       "gameSystem": "Dark Heresy"
     }
-  ]
+  ],
+  "ui": {
+    "slots": [
+      "HeaderActions",
+      "HeaderSubtitle",
+      "CompactNav",
+      "CardSummary",
+      "HouseRulesDialog"
+    ]
+  }
 }

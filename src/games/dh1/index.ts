@@ -9,6 +9,13 @@ import { ru as dh1Ru } from './i18n/ru';
 import { mergeDh1Data } from './merge';
 import { normalizeDh1 } from './normalize';
 import { dh1CharacterSchema } from './schema';
+import { dh1CardSummary } from './slots/card-summary';
+import { dh1CompactNav } from './slots/compact-nav';
+import {
+  Dh1HeaderActions,
+  dh1HeaderSubtitle,
+  Dh1HouseRulesDialogSlot,
+} from './slots/header';
 import type { DH1Character } from './types';
 
 /**
@@ -63,6 +70,14 @@ export const dh1Module: GameModule<DH1Character> = {
   createDemo,
   normalize: normalizeDh1,
   merge: mergeDh1Data,
+  ui: {
+    HeaderActions: Dh1HeaderActions,
+    HeaderSubtitle: dh1HeaderSubtitle,
+    CompactNav: dh1CompactNav,
+    CardSummary: dh1CardSummary,
+    favicon: '/favicon-dh.png',
+    HouseRulesDialog: Dh1HouseRulesDialogSlot,
+  },
   components: {
     loadCreateForm: () =>
       import('./create-form').then((m) => ({ default: m.Dh1CharacterForm })),

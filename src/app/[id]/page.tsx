@@ -23,6 +23,8 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useCharacterContext } from '@/context/character-context';
 import { useTranslation } from '@/context/language-context';
+import { getCharacterModule } from '@/games/character-system';
+import type { SheetHandle } from '@/games/types';
 import { cn } from '@/lib/utils';
 
 export default function CharacterPage() {
@@ -41,7 +43,7 @@ export default function CharacterPage() {
   const [notesOpen, setNotesOpen] = useState(false);
   const [journalOpen, setJournalOpen] = useState(false);
   const [pendingSectionId, setPendingSectionId] = useState<string | null>(null);
-  const sheetRef = useRef<any>(null);
+  const sheetRef = useRef<SheetHandle | null>(null);
 
   const character = getCharacter(params.id);
 
@@ -114,11 +116,13 @@ export default function CharacterPage() {
     return <Loading />;
   }
 
+  const gameModule = getCharacterModule(character);
+
   return (
     <>
       {/* LANDMARK: DYNAMIC SHEET FAVICON INJECTION */}
 
-      <DynamicFavicon gameSystem={character.gameSystem} />
+      <DynamicFavicon href={gameModule?.ui?.favicon} />
 
       <div className="flex h-full flex-col">
         <Header
@@ -128,7 +132,7 @@ export default function CharacterPage() {
         <div className="flex flex-1 overflow-hidden">
           {isCompactView && (
             <CompactSidebar
-              gameSystem={character.gameSystem}
+              character={character}
               activeSection={activeCompactSection}
               onSectionChange={handleSectionChange}
             />

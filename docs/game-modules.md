@@ -12,7 +12,8 @@ src/games/
   types.ts                  GameModule contract, SystemId/GameId, statuses
   plugin-api.ts             plugin contract: manifests, entry points, UI slots
   plugin.schema.json        JSON Schema of plugin.json (validated at build time)
-  registry.generated.ts     generated from plugin.json — never edited by hand
+  registry.generated.ts     modules + manifests, generated from plugin.json
+  i18n.generated.ts         plugin dictionaries, generated from plugin.json#i18n
   registry.ts               registry factory + helpers (createGameRegistry)
   games.ts                  game families (D&D, Dark Heresy) + order + i18n keys
   character-system.ts       systemId resolution and i18n name keys for UI
@@ -31,6 +32,7 @@ src/games/
     i18n/{en,ru}.ts
     create-form.tsx, sheet.tsx, index.ts
     sections/*.tsx          sheet sections (D&D moved here at plugin stage 0)
+    slots/*                 header/card/compact-nav slot components
   dh1/                      fully self-contained edition module
     plugin.json             manifest (own copy, not shared with dh2)
     types.ts, schemas.ts, schema.ts, defaults.ts, demo.ts
@@ -42,6 +44,7 @@ src/games/
     i18n/{en,ru}.ts, i18n/core-{en,ru}.ts   (games.dh1.* + dh1.*)
     create-form.tsx, sheet.tsx
     sections/*.tsx          sheet sections (own copies)
+    slots/*                 header/card/compact-nav slot components
     index.ts
   dh2/                      independent copy of dh1, actualized separately
     (same file set; keys dh2.*)
@@ -99,11 +102,32 @@ Rules:
 - `import` (normalize/merge), `ui.slots` and `aliases` are declared in the
   schema for stages 2–3 and are optional until then.
 
-`registry.generated.ts` is produced by `npm run plugins:generate` (also
-`predev`/`prebuild`) from the manifests; `npm run plugins:check` is part of
-`npm run verify` and fails if the file is stale. `registry.ts` no longer
-contains a hand-written list — it only re-exports the generated plugins and
-helpers (`gameRegistry`, `listGamePlugins`, `getPluginManifest`).
+`registry.generated.ts` and `i18n.generated.ts` are produced by
+`npm run plugins:generate` (also `predev`/`prebuild`) from the manifests;
+`npm run plugins:check` is part of `npm run verify` and fails if either file is
+stale. `registry.ts` no longer contains a hand-written list — it only
+re-exports the generated plugins and helpers (`gameRegistry`,
+`listGamePlugins`, `getPluginManifest`).
+
+`i18n.generated.ts` exists because `src/lib/i18n` must be importable before the
+registry is initialised (language context is imported by plugin UI slots); it
+contains only dictionaries, no modules or UI.
+
+UI slots are part of the module object (`ui`). The host components read them
+through the registry:
+
+```tsx
+const plugin = getCharacterModule(character);
+plugin?.ui?.HeaderSubtitle?.(character, t);
+plugin?.ui?.CardSummary?.(character, t);
+{plugin?.ui?.HeaderActions && (
+  <plugin.ui.HeaderActions character={character} isCompactView={isCompactView} />
+)}
+```
+
+The sheet itself is loaded lazily (`components.loadSheet`), so a render error in
+a plugin shows the *sheet unavailable* card instead of breaking the page; the
+header, sidebar, dialogs and JSON export keep working.
 
 ## Contract
 
@@ -122,7 +146,8 @@ helpers (`gameRegistry`, `listGamePlugins`, `getPluginManifest`).
 | `capabilities` | Fixed feature flags of the module (influence, +30, fatigue field). |
 | `createDefaults()` | Character draft (no `id`) for forms/tests. |
 | `createDemo()` | Demo character for `/demo` (no `id`). |
-| `components.loadCreateForm` / `loadSheet` | Lazy UI entry points (dynamic import). |
+| `components.loadCreateForm` / `loadSheet` | Lazy UI entry points; the host wraps the sheet in `Suspense` + `ErrorBoundary` and passes a typed `ref: SheetHandle` (`saveAll()`). |
+| `ui` | Optional UI slots (stage 3): `HeaderActions`, `HeaderSubtitle`, `CompactNav`, `BulkEditor`, `CardSummary`, `HouseRulesDialog` + static `favicon`. The host renders a neutral fallback when a slot is missing. |
 | `export.toPortableJson` | JSON field selection for export 3.0. |
 | `export.buildExcelSections` | Localized Excel sections. |
 | `normalize(raw, options?)` | Legacy normalization: remaps fields per edition and (with `applyDefaults`) fills missing structures. Replaces the core's `normalizeCharacter`/`normalizeCharacterRecord` branches (stage 2). |

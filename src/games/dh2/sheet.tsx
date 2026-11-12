@@ -68,7 +68,7 @@ const ArmorDisplay = ({
   };
   const displayArmorType = (type: string | undefined | null) => {
     if (!type) return '—';
-    const translationKey = `armorType${type}` as any;
+    const translationKey = `common.armorType${type}`;
     const translated = t(translationKey);
     return translated === translationKey ? type : translated;
   };

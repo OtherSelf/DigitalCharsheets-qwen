@@ -395,7 +395,7 @@ export function DndCharacterForm() {
                         <SelectContent>
                           {DND_CLASSES.map((cls) => (
                             <SelectItem key={cls} value={cls}>
-                              {t(`class${cls}`)}
+                              {t(`dnd.class${cls}`)}
                             </SelectItem>
                           ))}
                         </SelectContent>
