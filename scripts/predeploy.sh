@@ -12,8 +12,8 @@
 #                    (next/core-web-vitals + next/typescript), границы
 #                    импортов плагинов (scripts/plugins/check-boundaries.mjs)
 #                    и актуальность сгенерированного реестра (plugins:check)
-#    4/7 typecheck — tsc --noEmit (next.config.ts игнорирует ошибки TS при сборке,
-#                    поэтому проверяем отдельно)
+#    4/7 typecheck — tsc --noEmit отдельным шагом: падение видно до сборки и не
+#                    тонет в выводе next build
 #    5/7 unit      — vitest: авторизация, файловое хранилище, экспорт/импорт,
 #                    API-роуты (без сети, на временном каталоге данных)
 #    6/7 build     — next build (NODE_ENV=production); при EXDEV — повтор с
