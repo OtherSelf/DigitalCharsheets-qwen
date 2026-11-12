@@ -548,6 +548,54 @@ await check('POST /api/auth/register → 400 на пароль короче 12',
   );
 });
 
+// 2.1 Сессии (SEC-6): logout гасит cookie на сервере, а не только в браузере
+await check('после logout старая cookie не работает', async () => {
+  const oldCookie = sessionCookie;
+  const res = await api('/auth/logout', { method: 'POST' });
+  assertStatus(res, 200, 'POST /api/auth/logout');
+  assert(
+    /dcs_session=;/.test(res.headers.get('set-cookie') || ''),
+    'logout: cookie не стёрта в ответе',
+  );
+
+  // Отправляем именно погашенную cookie: сервер обязан ответить 401.
+  sessionCookie = oldCookie;
+  const stale = await api('/characters');
+  assertStatus(stale, 401, 'GET /api/characters со старой cookie после logout');
+
+  const relogin = await api('/auth', {
+    method: 'POST',
+    body: { username, password },
+    auth: false,
+  });
+  assertStatus(relogin, 200, 'повторный вход после logout');
+  assert(
+    sessionCookie && sessionCookie !== oldCookie,
+    'повторный вход должен выдать новую cookie',
+  );
+});
+
+if (opts.dataDir) {
+  await check('сессионная cookie в production помечена Secure', async () => {
+    // --data-dir передаёт predeploy: сервер поднят в production-режиме.
+    const res = await api('/auth', {
+      method: 'POST',
+      body: { username, password },
+      auth: false,
+    });
+    assertStatus(res, 200, 'вход для проверки флагов cookie');
+    const setCookie = res.headers.get('set-cookie') || '';
+    assert(
+      /;\s*Secure/i.test(setCookie),
+      `Set-Cookie без Secure: ${truncate(setCookie)}`,
+    );
+    assert(
+      /HttpOnly/i.test(setCookie),
+      `Set-Cookie без HttpOnly: ${truncate(setCookie)}`,
+    );
+  });
+}
+
 // 3. Лист персонажа: создание/чтение/правка/удаление
 await check(
   'GET /api/characters → пустой список у нового аккаунта',
@@ -691,6 +739,39 @@ if (opts.dataDir) {
     },
   );
 
+  await check(
+    'реестр сессий data/sessions.json хранит только живые jti',
+    async () => {
+      const sessionsFile = path.join(opts.dataDir, 'sessions.json');
+      assert(fs.existsSync(sessionsFile), `нет файла ${sessionsFile}`);
+      const parsed = JSON.parse(fs.readFileSync(sessionsFile, 'utf8'));
+      assert(
+        parsed.version === 1,
+        `sessions.json: version = ${parsed.version}`,
+      );
+
+      const records = Object.entries(parsed.sessions || {});
+      assert(records.length > 0, 'sessions.json: нет ни одной живой сессии');
+      const cookieValue = (sessionCookie || '').split('=')[1] || '';
+      const jti = cookieValue.split('.')[2];
+      assert(
+        jti && records.some(([key]) => key === jti),
+        'sessions.json: jti текущей сессии не найден',
+      );
+      for (const [key, record] of records) {
+        assert(
+          record.uid === userId,
+          `sessions.json: ${key} принадлежит ${record.uid}, ожидали ${userId}`,
+        );
+        assert(!record.revokedAt, `sessions.json: ${key} помечена отозванной`);
+      }
+      assert(
+        !JSON.stringify(parsed).includes(cookieValue),
+        'sessions.json: значение cookie лежит в файле',
+      );
+    },
+  );
+
   await check('индекс data/index/logins.json знает логин → uid', async () => {
     const indexFile = path.join(opts.dataDir, 'index', 'logins.json');
     assert(fs.existsSync(indexFile), `нет файла ${indexFile}`);
@@ -792,6 +873,7 @@ await check('POST /api/auth/recover/update без токена → 401', async (
 });
 
 let recoveryToken = '';
+let staleCookieBeforeReset = '';
 
 await check(
   'POST /api/auth/recover/verify → 200, одноразовый токен без cookie',
@@ -818,6 +900,8 @@ await check(
 await check(
   'POST /api/auth/recover/update по токену → 200, токен гаснет',
   async () => {
+    // Запоминаем живую сессию до сброса: после смены пароля она обязана умереть.
+    staleCookieBeforeReset = sessionCookie;
     const res = await api('/auth/recover/update', {
       method: 'POST',
       body: {
@@ -840,6 +924,24 @@ await check(
       auth: false,
     });
     assertStatus(again, 401, 'повторный recover/update');
+  },
+);
+
+await check(
+  'после восстановления доступа старая сессия не работает',
+  async () => {
+    // Cookie, полученная до сброса пароля, должна быть погашена.
+    if (staleCookieBeforeReset) {
+      const saved = sessionCookie;
+      sessionCookie = staleCookieBeforeReset;
+      const res = await api('/characters');
+      assertStatus(
+        res,
+        401,
+        'GET /api/characters со старой cookie после сброса',
+      );
+      sessionCookie = saved;
+    }
   },
 );
 

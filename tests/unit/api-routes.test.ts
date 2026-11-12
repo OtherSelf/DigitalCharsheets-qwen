@@ -353,12 +353,28 @@ describe('POST /api/auth', () => {
   });
 });
 
-describe('POST /api/auth/logout', () => {
-  it('стирает сессионную cookie', async () => {
-    const res = await logoutRoute();
+describe('POST /api/auth/logout (SEC-6)', () => {
+  it('гасит сессию на сервере и стирает cookie', async () => {
+    const { uid, cookie } = await loginAs('logout-user');
+
+    const res = await logoutRoute(
+      new Request('http://localhost/api/auth/logout', {
+        method: 'POST',
+        headers: { cookie },
+      }),
+    );
     expect(res.status).toBe(200);
     expect(res.headers.get('set-cookie')).toMatch(/dcs_session=;/);
     expect(res.headers.get('set-cookie')).toMatch(/Max-Age=0/);
+
+    // Украденная копия cookie после logout больше не работает.
+    const after = await charactersGet(
+      req('http://localhost/api/characters', 'GET', { cookie }),
+    );
+    expect(after.status).toBe(401);
+
+    const fresh = await loginAs('logout-user');
+    expect(fresh.uid).toBe(uid);
   });
 });
 
@@ -401,6 +417,135 @@ describe('PUT /api/auth/profile', () => {
     const relogin = await stillValid.json();
     expect(relogin.user.uid).toBe(uid);
     expect(cookie).toContain('dcs_session=');
+  });
+});
+
+describe('сессии: отзыв и повторная аутентификация (SEC-6)', () => {
+  it('смена пароля рвёт чужие сессии и требует текущий пароль', async () => {
+    const { uid, cookie } = await loginAs('session-rotate');
+
+    // «Второе устройство»: отдельный вход — отдельный jti.
+    const secondLogin = await loginRoute(
+      json({ username: 'session-rotate', password: TEST_PASSWORD }),
+    );
+    const secondCookie = (secondLogin.headers.get('set-cookie') || '').split(
+      ';',
+    )[0];
+    expect(secondCookie).toBeTruthy();
+
+    // Без текущего пароля смена не проходит.
+    const noCurrent = await profileRoute(
+      json(
+        {
+          newUsername: 'session-rotate',
+          newDisplayName: 'Rotate',
+          newPassword: 'rotated-pass-1234',
+        },
+        { cookie },
+      ),
+    );
+    expect(noCurrent.status).toBe(403);
+    expect((await noCurrent.json()).reason).toBe('invalid_password');
+
+    // Неверный текущий пароль — тоже 403.
+    const wrongCurrent = await profileRoute(
+      json(
+        {
+          newUsername: 'session-rotate',
+          newDisplayName: 'Rotate',
+          newPassword: 'rotated-pass-1234',
+          currentPassword: 'not-my-pass-1234',
+        },
+        { cookie },
+      ),
+    );
+    expect(wrongCurrent.status).toBe(403);
+    expect(authenticateUser('session-rotate', TEST_PASSWORD).success).toBe(
+      true,
+    );
+
+    // Верный текущий пароль — смена проходит.
+    const rotated = await profileRoute(
+      json(
+        {
+          newUsername: 'session-rotate',
+          newDisplayName: 'Rotate',
+          newPassword: 'rotated-pass-1234',
+          currentPassword: TEST_PASSWORD,
+        },
+        { cookie },
+      ),
+    );
+    expect(rotated.status).toBe(200);
+    expect(
+      authenticateUser('session-rotate', 'rotated-pass-1234').success,
+    ).toBe(true);
+
+    // Текущая сессия жива, второе устройство — нет.
+    const current = await charactersGet(
+      req('http://localhost/api/characters', 'GET', { cookie }),
+    );
+    expect(current.status).toBe(200);
+    const other = await charactersGet(
+      req('http://localhost/api/characters', 'GET', { cookie: secondCookie }),
+    );
+    expect(other.status).toBe(401);
+  });
+
+  it('logout {all:true} гасит сессии всех устройств', async () => {
+    const { uid, cookie } = await loginAs('logout-all');
+
+    const secondLogin = await loginRoute(
+      json({ username: 'logout-all', password: TEST_PASSWORD }),
+    );
+    const secondCookie = (secondLogin.headers.get('set-cookie') || '').split(
+      ';',
+    )[0];
+
+    const res = await logoutRoute(json({ all: true }, { cookie }));
+    expect(res.status).toBe(200);
+
+    for (const stale of [cookie, secondCookie]) {
+      const check = await charactersGet(
+        req('http://localhost/api/characters', 'GET', { cookie: stale }),
+      );
+      expect(check.status).toBe(401);
+    }
+
+    // Новый вход по-прежнему возможен.
+    const again = await loginAs('logout-all');
+    expect(again.uid).toBe(uid);
+  });
+
+  it('восстановление доступа гасит все сессии аккаунта', async () => {
+    const { uid, cookie } = await loginAs('recover-revoke');
+    expect(
+      (
+        await charactersGet(
+          req('http://localhost/api/characters', 'GET', { cookie }),
+        )
+      ).status,
+    ).toBe(200);
+
+    const { token } = await (
+      await recoverVerifyRoute(
+        json({
+          username: 'recover-revoke',
+          recoveryPhrase: 'amber cobalt lantern',
+        }),
+      )
+    ).json();
+    const reset = await recoverUpdateRoute(
+      json({ token, newPassword: 'brand-new-pass-1234' }),
+    );
+    expect(reset.status).toBe(200);
+
+    // Старая cookie не должна пережить смену пароля.
+    const stale = await charactersGet(
+      req('http://localhost/api/characters', 'GET', { cookie }),
+    );
+    expect(stale.status).toBe(401);
+    expect(uid).toBeTruthy();
   });
 });
 

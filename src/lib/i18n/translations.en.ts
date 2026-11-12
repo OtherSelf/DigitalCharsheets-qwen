@@ -385,7 +385,16 @@ export const enTranslations: Record<string, string> = {
   'settings.uiScaleWarning':
     'Scale ranges from 50% to 150%. Changes apply instantly.',
   'settings.resetToDefaults': 'Reset to defaults',
-  'settings.dangerZone': 'Danger Zone',
+  'settings.sessionsTitle': 'Sessions',
+  'settings.sessionsDescription':
+    'Sign out of the account on every device where it is still open. Useful when a device is lost or a password may have leaked.',
+  'settings.signOutEverywhere': 'Sign out everywhere',
+  'settings.signOutEverywhereTitle': 'End all sessions?',
+  'settings.signOutEverywhereDescription':
+    'Every session of this account will be ended, including this one. You can sign in again with your password.',
+  'settings.signOutEverywhereFailed':
+    'Could not end the sessions on the server. Check the connection and try again.',
+  'settings.dangerZone': 'Danger zone',
   'settings.dangerZoneDescription':
     'Irreversible actions. Read the warning carefully before continuing.',
   'settings.deleteAccount': 'Delete Account',

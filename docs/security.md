@@ -102,7 +102,7 @@ src/lib (session, storage, auth)    ← path and format validation
 
 ## Authentication
 
-`POST /api/auth` verifies the password and sets `<uid>.<exp>.<hmac>`
+`POST /api/auth` verifies the password and sets `<uid>.<exp>.<jti>.<hmac>`
 ([`src/lib/session.ts`](../src/lib/session.ts)). Blocking is enforced on every
 request: `getSessionUid` rejects a blocked or deleted profile even when the
 signature is still valid.
@@ -122,12 +122,21 @@ Password hashing rules
 
 ## Sessions
 
-- The cookie is `HttpOnly`, `SameSite=Lax`, `Path=/`, `Secure` in production,
-  and carries an expiry that is also covered by the HMAC.
-- A session record (`jti`) is stored server-side so logout, password/phrase
-  change and administrative blocking can revoke it.
-- Session lifetime is bounded; revoking all sessions of a uid is the «sign out
-  everywhere» action.
+- The cookie is `HttpOnly`, `SameSite=Lax`, `Path=/`, and `Secure` by default in
+  production (`DCS_COOKIE_INSECURE=1` is a deliberate, documented opt-out for
+  local development). The expiry is covered by the HMAC.
+- Every login creates a `jti` record in `<data-dir>/sessions.json`
+  ([`src/lib/security/sessions.ts`](../src/lib/security/sessions.ts)), and
+  `getSessionUid` accepts a cookie only while that record is alive.
+- Revocation is immediate and covers logout, password change, phrase change,
+  recovery (all sessions) and an administrator setting a new password. The
+  password change itself requires the current password — one live session is not
+  enough to take an unlocked device's account away.
+- Session lifetime is 14 days. «Sign out everywhere» on `/settings` calls
+  `POST /api/auth/logout` with `{ "all": true }` and revokes every session of the
+  account.
+- Upgrading from a version without `jti` invalidates old cookies once: users
+  sign in again, which is expected after a session-format change.
 
 ## Recovery
 

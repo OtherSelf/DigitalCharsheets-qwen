@@ -5,8 +5,9 @@ import {
   getAuthRateLimiter,
   rateLimitKey,
 } from '@/lib/security/rate-limit';
+import { revokeAllSessionsForUser } from '@/lib/security/sessions';
 import { setRecoveryPhrase } from '@/lib/server-auth';
-import { getSessionUid } from '@/lib/session';
+import { getSessionUid, readSession } from '@/lib/session';
 
 /**
  * Установка recovery-фразы. Раньше сюда приходил `username` и uid вычислялся
@@ -59,6 +60,10 @@ export async function POST(request: Request) {
         { status: 500 },
       );
     }
+
+    // Новая фраза — новый секрет: чужие сессии (старые устройства) гасим,
+    // текущую оставляем.
+    revokeAllSessionsForUser(uid, readSession(request)?.jti);
 
     return NextResponse.json({ success: true });
   } catch (error) {

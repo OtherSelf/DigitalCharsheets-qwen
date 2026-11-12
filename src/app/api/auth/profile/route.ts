@@ -5,8 +5,13 @@ import {
   getAuthRateLimiter,
   rateLimitKey,
 } from '@/lib/security/rate-limit';
+import { revokeAllSessionsForUser } from '@/lib/security/sessions';
 import { deleteUserAccount, updateUserProfile } from '@/lib/server-auth';
-import { clearSessionCookieHeader, getSessionUid } from '@/lib/session';
+import {
+  clearSessionCookieHeader,
+  getSessionUid,
+  readSession,
+} from '@/lib/session';
 
 /**
  * ─── LANDMARK: PROFILE (uid из сессии) ──────────────────────────────────────
@@ -42,8 +47,13 @@ export async function PUT(request: Request) {
     }
 
     const body = await request.json();
-    const { newUsername, newDisplayName, newPassword, newRecoveryPhrase } =
-      body;
+    const {
+      newUsername,
+      newDisplayName,
+      newPassword,
+      newRecoveryPhrase,
+      currentPassword,
+    } = body;
 
     if (!newUsername || !newDisplayName) {
       return NextResponse.json(
@@ -58,13 +68,30 @@ export async function PUT(request: Request) {
       newDisplayName,
       newPassword,
       newRecoveryPhrase,
+      { currentPassword },
     );
 
-    if (!result.success) {
+    if (!result.success || !result.user) {
+      const status =
+        result.reason === 'invalid_password'
+          ? 403
+          : result.reason === 'not_found'
+            ? 404
+            : 400;
       return NextResponse.json(
-        { success: false, error: result.error },
-        { status: 400 },
+        { success: false, error: result.error, reason: result.reason },
+        { status },
       );
+    }
+
+    // Пароль/фраза сменились — гасим остальные устройства, оставляя текущую
+    // сессию: пользователь не должен вылетать с той вкладки, где менял пароль.
+    const credentialsChanged =
+      (typeof newPassword === 'string' && newPassword.trim() !== '') ||
+      newRecoveryPhrase !== undefined;
+    if (credentialsChanged) {
+      const session = readSession(request);
+      revokeAllSessionsForUser(uid, session?.jti);
     }
 
     return NextResponse.json({ success: true, user: result.user });

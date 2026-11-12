@@ -388,6 +388,15 @@ export const ruTranslations: Record<string, string> = {
   'settings.uiScaleWarning':
     'Масштаб варьируется от 50% до 150%. Изменения применяются мгновенно.',
   'settings.resetToDefaults': 'Сбросить к стандартным настройкам',
+  'settings.sessionsTitle': 'Сессии',
+  'settings.sessionsDescription':
+    'Выйти из аккаунта на всех устройствах, где он ещё открыт. Полезно, если устройство потеряно или пароль мог утечь.',
+  'settings.signOutEverywhere': 'Выйти на всех устройствах',
+  'settings.signOutEverywhereTitle': 'Завершить все сессии?',
+  'settings.signOutEverywhereDescription':
+    'Все сессии аккаунта будут завершены, включая эту. Войти снова можно будет паролем.',
+  'settings.signOutEverywhereFailed':
+    'Не удалось завершить сессии на сервере. Проверьте соединение и попробуйте ещё раз.',
   'settings.dangerZone': 'Опасная зона',
   'settings.dangerZoneDescription':
     'Необратимые действия. Перед продолжением внимательно прочитайте предупреждение.',

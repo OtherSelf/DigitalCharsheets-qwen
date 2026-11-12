@@ -105,7 +105,7 @@ export const openApiDocument = {
         in: 'cookie',
         name: 'dcs_session',
         description:
-          'Signed HttpOnly session cookie. Set by /api/auth, /api/auth/register and /api/auth/recover/verify.',
+          'Signed HttpOnly session cookie `<uid>.<exp>.<jti>.<hmac>`, 14 days, `Secure` in production. Set only by /api/auth and /api/auth/register; revocation is server-side (logout, credential change, administrator action).',
       },
     },
     parameters: {
@@ -364,6 +364,17 @@ export const openApiDocument = {
         },
         additionalProperties: false,
       },
+      LogoutRequest: {
+        type: 'object',
+        properties: {
+          all: {
+            type: 'boolean',
+            description:
+              'Revoke every session of the account, not only the current one.',
+          },
+        },
+        additionalProperties: false,
+      },
       ProfileUpdateRequest: {
         type: 'object',
         required: ['newUsername', 'newDisplayName'],
@@ -380,6 +391,11 @@ export const openApiDocument = {
           newRecoveryPhrase: {
             type: 'string',
             description: 'Empty string removes the phrase.',
+          },
+          currentPassword: {
+            type: 'string',
+            description:
+              'Required when `newPassword` is set: re-authentication before rotating the password.',
           },
         },
         additionalProperties: false,
@@ -846,10 +862,18 @@ export const openApiDocument = {
         tags: ['Authentication'],
         operationId: 'logout',
         summary: 'Log out',
-        description: 'Clears the session cookie.',
+        description:
+          'Deletes the server-side session record for the current `jti` and clears the cookie, so a copied cookie stops working immediately. Body `{ "all": true }` ends every session of the account («sign out everywhere»).',
         security: [],
+        requestBody: {
+          required: false,
+          content: jsonContent(ref('LogoutRequest')),
+        },
         responses: {
-          200: jsonResponse('Cookie cleared.', ref('SimpleSuccess')),
+          200: jsonResponse(
+            'Cookie cleared, session revoked.',
+            ref('SimpleSuccess'),
+          ),
         },
       },
     },
@@ -865,6 +889,7 @@ export const openApiDocument = {
           200: jsonResponse('Updated profile.', ref('AuthUserResponse')),
           400: { $ref: '#/components/responses/BadRequest' },
           401: { $ref: '#/components/responses/Unauthorized' },
+          403: errorResponse('Current password is incorrect.'),
           429: { $ref: '#/components/responses/RateLimited' },
           500: { $ref: '#/components/responses/ServerError' },
         },

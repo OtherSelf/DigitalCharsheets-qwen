@@ -15,6 +15,7 @@ import {
   normalizePhrase,
   recoveryPhraseMatches,
 } from './security/phrase';
+import { revokeAllSessionsForUser } from './security/sessions';
 import {
   consumeRecoveryToken,
   revokeRecoveryTokensForUser,
@@ -412,29 +413,81 @@ export function authenticateUser(
  * Смена логина меняет только user.json и индекс; каталог с листами остаётся
  * на месте.
  */
+export interface UpdateProfileOptions {
+  /**
+   * Текущий пароль. Обязателен при смене пароля: одной сессии для этого мало
+   * (unlocked-устройство не должно терять аккаунт одним запросом).
+   */
+  currentPassword?: string;
+}
+
+export interface UpdateProfileResult {
+  success: boolean;
+  user?: LocalUser;
+  error?: string;
+  reason?: 'not_found' | 'invalid_input' | 'invalid_password';
+}
+
 export function updateUserProfile(
   currentUserId: string,
   newUsername: string,
   newDisplayName: string,
   newPassword?: string,
   newRecoveryPhrase?: string,
-): { success: boolean; user?: LocalUser; error?: string } {
+  options: UpdateProfileOptions = {},
+): UpdateProfileResult {
   const stored = getStoredUser(currentUserId);
-  if (!stored) return { success: false, error: 'User not found.' };
+  if (!stored) {
+    return { success: false, reason: 'not_found', error: 'User not found.' };
+  }
 
-  if (newPassword && newPassword.trim() !== '') {
+  const changesPassword = !!newPassword && newPassword.trim() !== '';
+  if (changesPassword) {
     const policyError = passwordPolicyError(newPassword);
-    if (policyError) return { success: false, error: policyError };
+    if (policyError) {
+      return { success: false, reason: 'invalid_input', error: policyError };
+    }
   }
 
   const newLogin = normalizeLogin(newUsername);
-  if (!newLogin) return { success: false, error: 'Username is required.' };
+  if (!newLogin) {
+    return {
+      success: false,
+      reason: 'invalid_input',
+      error: 'Username is required.',
+    };
+  }
 
   const oldLogin = normalizeLogin(stored.username);
   const displayName = (newDisplayName || '').trim() || stored.displayName;
 
   try {
-    return withDataLock(() => {
+    return withDataLock((): UpdateProfileResult => {
+      // Перечитываем под локом: между проверкой и записью пароль мог сменить
+      // администратор, и сверять текущий пароль нужно с актуальным файлом.
+      const current = getStoredUser(currentUserId);
+      if (!current) {
+        return {
+          success: false,
+          reason: 'not_found',
+          error: 'User not found.',
+        };
+      }
+
+      if (changesPassword) {
+        const check = verifyPassword(
+          current.passwordHash,
+          options.currentPassword ?? '',
+        );
+        if (!check.valid) {
+          return {
+            success: false,
+            reason: 'invalid_password',
+            error: 'Current password is incorrect.',
+          };
+        }
+      }
+
       const index = readLoginIndexForUpdate();
 
       if (newLogin !== oldLogin) {
@@ -445,23 +498,22 @@ export function updateUserProfile(
       }
 
       const updated: StoredUser = {
-        ...stored,
+        ...current,
         schemaVersion: USER_SCHEMA_VERSION,
         uid: currentUserId,
         username: newLogin,
         displayName,
-        role: normalizeUserRole(stored.role),
-        isBlocked: !!stored.isBlocked,
-        passwordHash:
-          newPassword && newPassword.trim().length > 0
-            ? hashPassword(newPassword)
-            : stored.passwordHash,
+        role: normalizeUserRole(current.role),
+        isBlocked: !!current.isBlocked,
+        passwordHash: changesPassword
+          ? hashPassword(newPassword as string)
+          : current.passwordHash,
         updatedAt: new Date().toISOString(),
       };
 
       // Сменили сгенерированный стартовый пароль — предупреждение больше не
       // нужно.
-      if (newPassword && newPassword.trim().length > 0) {
+      if (changesPassword) {
         delete updated.mustChangePassword;
       }
 
@@ -577,12 +629,13 @@ export function deleteUserAccount(
       return { success: true };
     });
 
-    // Выданные токены восстановления пережили бы удаление профиля: гасим.
+    // Выданные токены и сессии пережили бы удаление профиля: гасим.
     if (result.success) {
       try {
         revokeRecoveryTokensForUser(uid);
+        revokeAllSessionsForUser(uid);
       } catch (e) {
-        console.error('Failed to revoke recovery tokens after deletion:', e);
+        console.error('Failed to revoke credentials after deletion:', e);
       }
     }
     return result;
@@ -788,12 +841,15 @@ export function resetCredentialsWithToken(
       return { success: true, uid: consumed.uid };
     });
 
-    // Остальные выданные токены этого аккаунта гасим: секреты уже сменились.
+    // Секреты сменились: гасим остальные токены и все живые сессии аккаунта.
+    // Восстановление доступа — это «вернуть контроль», а не «войти на устройстве
+    // злоумышленника»: создание сессии здесь и не предусмотрено.
     if (result.success) {
       try {
         revokeRecoveryTokensForUser(consumed.uid);
+        revokeAllSessionsForUser(consumed.uid);
       } catch (e) {
-        console.error('Failed to revoke recovery tokens:', e);
+        console.error('Failed to revoke recovery credentials:', e);
       }
     }
     return result;

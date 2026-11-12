@@ -10,5 +10,6 @@ export * from './paths';
 export * from './phrase';
 export * from './rate-limit';
 export * from './scrypt';
+export * from './sessions';
 export * from './timing';
 export * from './tokens';

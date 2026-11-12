@@ -64,7 +64,7 @@ docs/                  This documentation
 
 ```
 Browser
-  │  cookie: dcs_session=<uid>.<exp>.<hmac>
+  │  cookie: dcs_session=<uid>.<exp>.<jti>.<hmac>
   ▼
 Next.js route handler
   │  getSessionUid(request)  → verifies HMAC + expiry, reads user.json
@@ -91,9 +91,14 @@ src/lib/* (server-only)
 - The login (`username`) is a mutable attribute; the derived
   `index/logins.json` maps normalized login → uid and can be rebuilt by scanning
   `users/*/user.json`.
-- The session cookie contains `<uid>.<exp>.<hmac>`; the HMAC key comes from
-  `DCS_SESSION_SECRET` or `<data-dir>/.session-secret` (created with mode
-  `0600`). The cookie is `HttpOnly; SameSite=Lax`, valid for 30 days.
+- The session cookie contains `<uid>.<exp>.<jti>.<hmac>`; the HMAC key comes
+  from `DCS_SESSION_SECRET` or `<data-dir>/.session-secret` (created with mode
+  `0600`). The cookie is `HttpOnly; SameSite=Lax`, `Secure` in production, and
+  valid for 14 days.
+- `jti` points at a live record in `<data-dir>/sessions.json`
+  ([`src/lib/security/sessions.ts`](../src/lib/security/sessions.ts)). Logout,
+  password/phrase changes, recovery and administrator actions delete the record,
+  so the cookie stops working at once instead of at its expiry.
 - `getSessionUid()` also checks that the profile still exists and is not blocked.
   Blocking a user therefore invalidates their existing sessions on the next
   request.
