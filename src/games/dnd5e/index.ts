@@ -1,6 +1,6 @@
 import { CHARACTER_SCHEMA_VERSION } from '@/lib/character-version';
 
-import type { GameModule } from '../types';
+import type { ExportTranslate, GameExportConfig, GameModule } from '../types';
 import { createDnd5eDefaults } from './defaults';
 import { createDnd5eDemo } from './demo';
 import { buildDnd5eExcelSections } from './excel';
@@ -11,10 +11,35 @@ import { dnd5eCharacterSchema } from './schema';
 import type { DnD5eCharacter } from './types';
 
 /**
+ * ─── LANDMARK: DND5E ENTRY POINTS ─────────────────────────────────────────
+ * Именованные экспорты, на которые ссылается манифест `plugin.json`
+ * (`index.ts#createDemo`, `index.ts#toPortableJson`, …). Реестр плагинов
+ * генерируется из манифестов, поэтому точка входа должна быть отдельным
+ * экспортом, а не только полем объекта модуля; тест сверяет манифест с
+ * реальным набором экспортов.
+ */
+export const createDefaults = createDnd5eDefaults;
+export const createDemo = createDnd5eDemo;
+
+export function toPortableJson(
+  character: DnD5eCharacter,
+  config: GameExportConfig,
+): Record<string, unknown> {
+  return buildDnd5ePortableJson(character, config);
+}
+
+export function buildExcelSections(
+  character: DnD5eCharacter,
+  config: GameExportConfig,
+  translate: ExportTranslate,
+) {
+  return buildDnd5eExcelSections(character, config, translate);
+}
+
+/**
  * ─── LANDMARK: DND5E MODULE ────────────────────────────────────────────────
- * Модуль D&D 5e: метаданные для реестра и ленивые точки входа в UI. Пока
- * форма и лист лежат по старым путям (`src/components/...`); на шаге 1.4 они
- * переедут в `src/games/dnd5e/` и loader'ы поменяются без правок ядра.
+ * Модуль D&D 5e: метаданные для реестра и ленивые точки входа в UI.
+ * Лист, форма, секции и данные — собственные файлы модуля.
  */
 export const dnd5eModule: GameModule<DnD5eCharacter> = {
   id: 'dnd5e',
@@ -27,8 +52,8 @@ export const dnd5eModule: GameModule<DnD5eCharacter> = {
   schema: dnd5eCharacterSchema,
   i18n: { en: dnd5eEn, ru: dnd5eRu },
   capabilities: {},
-  createDefaults: createDnd5eDefaults,
-  createDemo: createDnd5eDemo,
+  createDefaults,
+  createDemo,
   components: {
     loadCreateForm: () =>
       import('./create-form').then((m) => ({
@@ -40,10 +65,8 @@ export const dnd5eModule: GameModule<DnD5eCharacter> = {
       })),
   },
   export: {
-    toPortableJson: (character, config) =>
-      buildDnd5ePortableJson(character, config),
-    buildExcelSections: (character, config, translate) =>
-      buildDnd5eExcelSections(character, config, translate),
+    toPortableJson,
+    buildExcelSections,
   },
   migrations: [],
 };

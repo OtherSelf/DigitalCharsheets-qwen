@@ -10,7 +10,10 @@ export fields, Excel sections, UI) lives in one module under
 ```text
 src/games/
   types.ts                  GameModule contract, SystemId/GameId, statuses
-  registry.ts               the single list of modules (createGameRegistry)
+  plugin-api.ts             plugin contract: manifests, entry points, UI slots
+  plugin.schema.json        JSON Schema of plugin.json (validated at build time)
+  registry.generated.ts     generated from plugin.json — never edited by hand
+  registry.ts               registry factory + helpers (createGameRegistry)
   games.ts                  game families (D&D, Dark Heresy) + order + i18n keys
   character-system.ts       systemId resolution and i18n name keys for UI
   i18n/{en,ru}.ts           registry/wizard metadata (games.*)
@@ -21,12 +24,14 @@ src/games/
     defaults.ts             readNumber/readString defaults helpers
     excel.ts                generic Excel section writer used by all modules
   dnd5e/
+    plugin.json             manifest: id, order, entry points, i18n, demo
     types.ts, schema.ts, defaults.ts, demo.ts
     export.ts, excel.ts, epic-boons.ts
     i18n/{en,ru}.ts
     create-form.tsx, sheet.tsx, index.ts
     sections/*.tsx          sheet sections (D&D moved here at plugin stage 0)
   dh1/                      fully self-contained edition module
+    plugin.json             manifest (own copy, not shared with dh2)
     types.ts, schemas.ts, schema.ts, defaults.ts, demo.ts
     capabilities.ts, stats.ts
     export.ts, excel.ts
@@ -39,6 +44,62 @@ src/games/
   dh2/                      independent copy of dh1, actualized separately
     (same file set; keys dh2.*)
 ```
+
+## Plugin manifest
+
+Every module folder has a `plugin.json` (`src/games/plugin.schema.json`):
+
+```json
+{
+  "manifestVersion": 1,
+  "pluginApi": "^1.0.0",
+  "id": "dh1",
+  "gameId": "darkHeresy",
+  "version": "1.0.0",
+  "order": 20,
+  "defaultStatus": "published",
+  "name": { "en": "Dark Heresy — 1st Edition", "ru": "Dark Heresy — 1-я редакция" },
+  "description": { "en": "…", "ru": "…" },
+  "tags": ["warhammer40k", "d100"],
+  "author": "Digital Character Sheets",
+  "license": "MIT",
+  "schemaVersion": 2,
+  "game": { "id": "darkHeresy", "order": 20, "name": { "en": "…", "ru": "…" } },
+  "dependencies": { "host": "^1.0.0", "plugins": {} },
+  "entry": { "module": "index.ts#dh1Module" },
+  "sheet": { "mode": "custom", "client": "sheet.tsx", "createForm": "create-form.tsx" },
+  "i18n": { "en": "i18n/en.ts", "ru": "i18n/ru.ts" },
+  "demo": { "entry": "index.ts#createDemo" },
+  "export": { "json": "index.ts#toPortableJson", "excel": "index.ts#buildExcelSections" },
+  "migrations": [],
+  "tests": { "conformance": ">=1" }
+}
+```
+
+Rules:
+
+- `id` equals the folder name and the sheet `systemId`; `version` is semver.
+- `name`/`description` are the display source (admin, creation wizard); other
+  strings stay in `i18n/*`.
+- `game` is the family block (D17): every edition of one `gameId` declares the
+  same `id`/`order`/`name`, and the generator fails if they differ.
+- `entry.module` is `<file>#<export>`; `demo`/`export`/`migrations` are entry
+  points too. The manifest member must be a real named export — the
+  `plugins-registry` test checks every reference against the module namespace.
+- `dependencies.plugins` is reserved (D14); `dependencies.host` is the Plugin
+  API range checked by the generator.
+- `pluginApi` is checked against the host version (`^`, `~`, `>=`, exact, `*`).
+- `migrations` order is the apply order; a non-empty chain must cover
+  `1 → … → schemaVersion` without gaps (the generator checks it). Migrations
+  still live in the core until stage 2, so all three manifests are empty today.
+- `import` (normalize/merge), `ui.slots` and `aliases` are declared in the
+  schema for stages 2–3 and are optional until then.
+
+`registry.generated.ts` is produced by `npm run plugins:generate` (also
+`predev`/`prebuild`) from the manifests; `npm run plugins:check` is part of
+`npm run verify` and fails if the file is stale. `registry.ts` no longer
+contains a hand-written list — it only re-exports the generated plugins and
+helpers (`gameRegistry`, `listGamePlugins`, `getPluginManifest`).
 
 ## Contract
 
@@ -78,9 +139,13 @@ src/games/
      and `dh3.*` keys.
    - `export.ts`, `excel.ts` — `buildDh3PortableJson` / `buildDh3ExcelSections`.
    - `create-form.tsx`, `sheet.tsx`, `sections/*` — own UI copies.
-   - `index.ts` — the `GameModule<DH3Character>` object.
-2. **Register** in `src/games/registry.ts` (`gameRegistry = createGameRegistry([...])`).
-   That is the only core edit.
+   - `index.ts` — the `GameModule<DH3Character>` object plus the named entry
+     points the manifest references (`createDefaults`, `createDemo`,
+     `toPortableJson`, `buildExcelSections`).
+   - `plugin.json` — the manifest (see *Plugin manifest*).
+2. **Manifest** — add `src/games/dh3/plugin.json` (see *Plugin manifest*
+   above) and run `npm run plugins:generate`. The registry is generated; no
+   core edit is needed.
 3. **Game metadata** — only if it is a new game family: add a `GameDefinition`
    to `src/games/games.ts` (id, order, name/description keys).
 4. **Translations** — the merge in `src/lib/i18n/index.ts` picks the module
@@ -90,11 +155,13 @@ src/games/
    [`src/lib/character-version.ts`](../src/lib/character-version.ts) (or write a
    `v2 → v3` migration step). Never drop fields silently: move values into
    `notes` and report them.
-6. **Visibility** — `defaultStatus` in the module is the default; admins can
+6. **Visibility** — `defaultStatus` in the manifest is the default; admins can
    override it in `settings/game-catalog.json` via `/admin` (Games & editions).
 7. **Tests**:
-   - registry test (`tests/unit/game-registry.test.ts`) — add the module id to
-     the expected sorted list; the contract test covers defaults vs schema;
+   - registry tests (`tests/unit/game-registry.test.ts` and
+     `tests/unit/plugins-registry.test.ts`) — add the module id to the expected
+     sorted list; the manifest↔module contract test then covers the new plugin
+     automatically (entry points, demo vs schema, i18n parity, migrations);
    - i18n parity (`tests/unit/translations.test.ts`) runs per module;
    - export tests — JSON round-trip and Excel sections for the new module;
    - migration test if legacy data exists;

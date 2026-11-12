@@ -41,8 +41,9 @@ src/
   components/          Host UI shell (header, sidebar, dialogs) + shadcn
                        primitives; game sheets/sections live in src/games
   context/             LocalAuthProvider, CharacterProvider, language
-  games/               Game modules (contract, registry, dnd5e/dh1/dh2):
-                       each module owns its sheet, form, sections and data
+  games/               Game plugins (contract, generated registry,
+                       dnd5e/dh1/dh2): a plugin folder owns its plugin.json,
+                       sheet, form, sections and data
   lib/                 Server auth/session, storage, export, OpenAPI, schema,
                        game catalog and module access
   instrumentation.ts   Runs startup maintenance when the server starts

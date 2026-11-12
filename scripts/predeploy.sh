@@ -9,8 +9,9 @@
 #    2/7 формат    — prettier --check .: стиль и порядок импортов
 #                    (аналог `black --check` / `isort --check`)
 #    3/7 линт      — eslint .: hooks, async, React/Next-правила
-#                    (next/core-web-vitals + next/typescript) и границы
+#                    (next/core-web-vitals + next/typescript), границы
 #                    импортов плагинов (scripts/plugins/check-boundaries.mjs)
+#                    и актуальность сгенерированного реестра (plugins:check)
 #    4/7 typecheck — tsc --noEmit (next.config.ts игнорирует ошибки TS при сборке,
 #                    поэтому проверяем отдельно)
 #    5/7 unit      — vitest: авторизация, файловое хранилище, экспорт/импорт,
@@ -242,6 +243,14 @@ step "3/7 границы плагинов (scripts/plugins/check-boundaries.mjs)
 node scripts/plugins/check-boundaries.mjs \
   || die "Нарушены границы импортов плагинов (см. вывод выше; правила — scripts/plugins/boundaries.json)"
 ok "границы плагинов соблюдены"
+
+# Реестр плагинов: `registry.generated.ts` обязан совпадать с манифестами.
+# Отдельная проверка нужна потому, что prebuild перегенерирует файл и молча
+# «починил» бы расхождение в рабочем дереве, а не в коммите.
+step "3/7 реестр плагинов (npm run plugins:check)"
+node scripts/plugins/generate.mjs --check \
+  || die "Реестр плагинов устарел: запустите npm run plugins:generate и закоммитьте src/games/registry.generated.ts"
+ok "реестр плагинов в синхроне"
 
 # ── 4. typecheck ────────────────────────────────────────────────────────────
 step "4/7 typecheck ($TSC --noEmit)"

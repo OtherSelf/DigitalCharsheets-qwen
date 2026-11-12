@@ -1,6 +1,6 @@
 import { CHARACTER_SCHEMA_VERSION } from '@/lib/character-version';
 
-import type { GameModule } from '../types';
+import type { ExportTranslate, GameExportConfig, GameModule } from '../types';
 import { createDh1Defaults } from './defaults';
 import { createDh1Demo } from './demo';
 import { buildDh1ExcelSections } from './excel';
@@ -9,6 +9,31 @@ import { en as dh1En } from './i18n/en';
 import { ru as dh1Ru } from './i18n/ru';
 import { dh1CharacterSchema } from './schema';
 import type { DH1Character } from './types';
+
+/**
+ * ─── LANDMARK: DH1 ENTRY POINTS ───────────────────────────────────────────
+ * Именованные экспорты для манифеста `plugin.json` (`index.ts#createDemo`,
+ * `index.ts#toPortableJson`, …). Реестр плагинов генерируется из
+ * манифестов, поэтому точки входа — отдельные экспорты, а не только поля
+ * объекта модуля; тест сверяет манифест с реальным набором экспортов.
+ */
+export const createDefaults = createDh1Defaults;
+export const createDemo = createDh1Demo;
+
+export function toPortableJson(
+  character: DH1Character,
+  config: GameExportConfig,
+): Record<string, unknown> {
+  return buildDh1PortableJson(character, config);
+}
+
+export function buildExcelSections(
+  character: DH1Character,
+  config: GameExportConfig,
+  translate: ExportTranslate,
+) {
+  return buildDh1ExcelSections(character, config, translate);
+}
 
 /**
  * ─── LANDMARK: DH1 MODULE ──────────────────────────────────────────────────
@@ -33,18 +58,16 @@ export const dh1Module: GameModule<DH1Character> = {
     plus30: false,
     fatigueField: 'fatigue1st',
   },
-  createDefaults: createDh1Defaults,
-  createDemo: createDh1Demo,
+  createDefaults,
+  createDemo,
   components: {
     loadCreateForm: () =>
       import('./create-form').then((m) => ({ default: m.Dh1CharacterForm })),
     loadSheet: () => import('./sheet').then((m) => ({ default: m.Dh1Sheet })),
   },
   export: {
-    toPortableJson: (character, config) =>
-      buildDh1PortableJson(character, config),
-    buildExcelSections: (character, config, translate) =>
-      buildDh1ExcelSections(character, config, translate),
+    toPortableJson,
+    buildExcelSections,
   },
   migrations: [],
 };
