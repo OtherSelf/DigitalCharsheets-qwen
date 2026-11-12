@@ -1,0 +1,56 @@
+{
+  "manifestVersion": 1,
+  "pluginApi": "^1.0.0",
+  "id": "dnd5e",
+  "gameId": "dnd",
+  "version": "1.0.0",
+  "order": 10,
+  "defaultStatus": "published",
+  "name": {
+    "en": "Dungeons & Dragons — 5th Edition",
+    "ru": "Dungeons & Dragons — 5-я редакция"
+  },
+  "description": {
+    "en": "The classic 5e sheet: six abilities, skills and saves, spells, companions, inspiration and epic boons.",
+    "ru": "Классический лист 5e: шесть характеристик, навыки и спасброски, заклинания, спутники, вдохновение и эпические дары."
+  },
+  "tags": ["d20", "fantasy", "5e"],
+  "author": "Digital Character Sheets",
+  "license": "MIT",
+  "schemaVersion": 2,
+  "game": {
+    "id": "dnd",
+    "order": 10,
+    "name": {
+      "en": "Dungeons & Dragons",
+      "ru": "Dungeons & Dragons"
+    }
+  },
+  "dependencies": {
+    "host": "^1.0.0",
+    "plugins": {}
+  },
+  "entry": {
+    "module": "index.ts#dnd5eModule"
+  },
+  "sheet": {
+    "mode": "custom",
+    "client": "sheet.tsx",
+    "createForm": "create-form.tsx"
+  },
+  "i18n": {
+    "en": "i18n/en.ts",
+    "ru": "i18n/ru.ts"
+  },
+  "demo": {
+    "entry": "index.ts#createDemo"
+  },
+  "export": {
+    "json": "index.ts#toPortableJson",
+    "excel": "index.ts#buildExcelSections"
+  },
+  "migrations": [],
+  "tests": {
+    "conformance": ">=1"
+  }
+}

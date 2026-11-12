@@ -1,0 +1,56 @@
+{
+  "manifestVersion": 1,
+  "pluginApi": "^1.0.0",
+  "id": "dh1",
+  "gameId": "darkHeresy",
+  "version": "1.0.0",
+  "order": 20,
+  "defaultStatus": "published",
+  "name": {
+    "en": "Dark Heresy — 1st Edition",
+    "ru": "Dark Heresy — 1-я редакция"
+  },
+  "description": {
+    "en": "Classic Dark Heresy: nine characteristics, first-edition fatigue and career ranks.",
+    "ru": "Классическая Dark Heresy: девять характеристик, усталость 1-й редакции и ранги карьеры."
+  },
+  "tags": ["warhammer40k", "d100", "grimdark"],
+  "author": "Digital Character Sheets",
+  "license": "MIT",
+  "schemaVersion": 2,
+  "game": {
+    "id": "darkHeresy",
+    "order": 20,
+    "name": {
+      "en": "Warhammer 40k: Dark Heresy",
+      "ru": "Warhammer 40k: Dark Heresy"
+    }
+  },
+  "dependencies": {
+    "host": "^1.0.0",
+    "plugins": {}
+  },
+  "entry": {
+    "module": "index.ts#dh1Module"
+  },
+  "sheet": {
+    "mode": "custom",
+    "client": "sheet.tsx",
+    "createForm": "create-form.tsx"
+  },
+  "i18n": {
+    "en": "i18n/en.ts",
+    "ru": "i18n/ru.ts"
+  },
+  "demo": {
+    "entry": "index.ts#createDemo"
+  },
+  "export": {
+    "json": "index.ts#toPortableJson",
+    "excel": "index.ts#buildExcelSections"
+  },
+  "migrations": [],
+  "tests": {
+    "conformance": ">=1"
+  }
+}

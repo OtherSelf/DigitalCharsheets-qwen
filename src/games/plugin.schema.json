@@ -1,0 +1,230 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://digitalcharsheets.local/plugin.schema.json",
+  "title": "Digital Character Sheets plugin manifest (v1)",
+  "description": "Манифест плагина игры: src/games/<id>/plugin.json. Валидируется scripts/plugins/generate.mjs (Ajv) при генерации реестра. Поля, которые ещё не реализованы (import, aliases, ui.slots), объявлены как опциональные и включаются по мере этапов плана.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "manifestVersion",
+    "pluginApi",
+    "id",
+    "gameId",
+    "version",
+    "order",
+    "defaultStatus",
+    "name",
+    "description",
+    "tags",
+    "author",
+    "license",
+    "schemaVersion",
+    "game",
+    "dependencies",
+    "entry",
+    "sheet",
+    "i18n",
+    "demo",
+    "export",
+    "migrations"
+  ],
+  "properties": {
+    "manifestVersion": {
+      "description": "Версия формата манифеста; хост понимает 1.",
+      "const": 1
+    },
+    "pluginApi": {
+      "description": "Совместимый диапазон Plugin API (^1.2.3, ~1.2.3, >=1.0.0, точная версия или *).",
+      "type": "string",
+      "pattern": "^(\\^|~|>=)?[0-9]+\\.[0-9]+\\.[0-9]+$|^\\*$"
+    },
+    "id": {
+      "description": "Машинный id плагина и systemId листа; совпадает с именем папки.",
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*$"
+    },
+    "gameId": {
+      "description": "Идентификатор семейства игр (редакции группируются по нему).",
+      "type": "string",
+      "pattern": "^[a-zA-Z][a-zA-Z0-9]*$"
+    },
+    "version": {
+      "description": "Версия плагина (semver).",
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "order": {
+      "description": "Порядок редакции внутри семейства; уникален среди плагинов.",
+      "type": "integer",
+      "minimum": 0
+    },
+    "defaultStatus": {
+      "description": "Видимость по умолчанию; runtime-переопределение — game-catalog.json.",
+      "enum": ["published", "test", "hidden"]
+    },
+    "name": { "$ref": "#/definitions/localizedText" },
+    "description": { "$ref": "#/definitions/localizedText" },
+    "tags": {
+      "description": "Теги хранятся в манифесте и админ-данных, в UI не выводятся (D15).",
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "uniqueItems": true
+    },
+    "author": { "type": "string", "minLength": 1 },
+    "license": { "type": "string", "minLength": 1 },
+    "schemaVersion": {
+      "description": "Версия схемы листа, которую пишет плагин.",
+      "type": "integer",
+      "minimum": 1
+    },
+    "game": {
+      "description": "Блок семейства игр (D17). У всех редакций одного gameId совпадает.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "order", "name"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-zA-Z][a-zA-Z0-9]*$" },
+        "order": { "type": "integer", "minimum": 0 },
+        "name": { "$ref": "#/definitions/localizedText" }
+      }
+    },
+    "dependencies": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["host", "plugins"],
+      "properties": {
+        "host": { "type": "string", "minLength": 1 },
+        "plugins": {
+          "description": "Зарезервировано (D14): граф зависимостей пока не реализован.",
+          "type": "object",
+          "additionalProperties": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "entry": {
+      "description": "Серверный entry-модуль и имя его экспорта (<файл>#<экспорт>).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["module"],
+      "properties": {
+        "module": { "$ref": "#/definitions/entryPointWithMember" }
+      }
+    },
+    "sheet": {
+      "description": "UI-часть плагина: кастомные React-лист и форма (D3).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "client", "createForm"],
+      "properties": {
+        "mode": { "const": "custom" },
+        "client": { "$ref": "#/definitions/relativeModulePath" },
+        "createForm": { "$ref": "#/definitions/relativeModulePath" }
+      }
+    },
+    "i18n": {
+      "description": "Словари плагина. До этапа 5 допускаются .ts, затем .json (D13).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["en", "ru"],
+      "properties": {
+        "en": { "$ref": "#/definitions/relativeModulePath" },
+        "ru": { "$ref": "#/definitions/relativeModulePath" }
+      }
+    },
+    "demo": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["entry"],
+      "properties": {
+        "entry": { "$ref": "#/definitions/entryPointWithMember" }
+      }
+    },
+    "export": {
+      "description": "Адаптер экспорта: JSON-поля и секции Excel.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["json", "excel"],
+      "properties": {
+        "json": { "$ref": "#/definitions/entryPointWithMember" },
+        "excel": { "$ref": "#/definitions/entryPointWithMember" }
+      }
+    },
+    "import": {
+      "description": "Нормализация и слияние импортированных данных (этап 2).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["normalize", "merge"],
+      "properties": {
+        "normalize": { "$ref": "#/definitions/entryPointWithMember" },
+        "merge": { "$ref": "#/definitions/entryPointWithMember" }
+      }
+    },
+    "migrations": {
+      "description": "Упорядоченная цепочка миграций; реализация — в модуле.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["from", "to", "entry"],
+        "properties": {
+          "from": { "type": "integer", "minimum": 1 },
+          "to": { "type": "integer", "minimum": 2 },
+          "entry": { "$ref": "#/definitions/entryPointWithMember" },
+          "description": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "tests": {
+      "description": "Метаданные conformance-набора; в рантайме не исполняются (D7).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["conformance"],
+      "properties": {
+        "conformance": { "type": "string", "minLength": 1 },
+        "fixtures": { "type": "string", "minLength": 1 }
+      }
+    },
+    "ui": {
+      "description": "Необязательные UI-слоты плагина (этап 3, D11).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["slots"],
+      "properties": {
+        "slots": {
+          "type": "array",
+          "items": {
+            "enum": ["HeaderActions", "CompactNav", "BulkEditor", "CardSummary"]
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+    "aliases": {
+      "description": "Legacy-имена (gameSystem/edition) для разрешения systemId (этап 2).",
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "uniqueItems": true
+    }
+  },
+  "definitions": {
+    "localizedText": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["en", "ru"],
+      "properties": {
+        "en": { "type": "string", "minLength": 1 },
+        "ru": { "type": "string", "minLength": 1 }
+      }
+    },
+    "relativeModulePath": {
+      "description": "Относительный путь внутри папки плагина к .ts/.tsx/.json.",
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_.-]+(/[A-Za-z0-9_.-]+)*\\.(ts|tsx|json)$"
+    },
+    "entryPointWithMember": {
+      "description": "Относительный путь и имя экспорта: index.ts#createDemo.",
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_.-]+(/[A-Za-z0-9_.-]+)*\\.(ts|tsx|json)#[A-Za-z_$][A-Za-z0-9_$]*$"
+    }
+  }
+}

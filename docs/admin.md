@@ -37,7 +37,7 @@ The API behind it is documented in [api.md](api.md).
 `/admin` has a **Games & editions** section backed by
 `GET/PUT /api/admin/games` (admin only). The current status of every module is
 stored in `<data-dir>/settings/game-catalog.json` and overrides the module's
-`defaultStatus` from `src/games/registry.ts`:
+`defaultStatus` from its `plugin.json` (see `src/games/registry.generated.ts`):
 
 | Status | Who sees it in `/new`, `/demo` and menus |
 | --- | --- |

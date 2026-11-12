@@ -1,14 +1,18 @@
-import { dh1Module } from './dh1';
-import { dh2Module } from './dh2';
-import { dnd5eModule } from './dnd5e';
 import { getGameDefinition, listGameDefinitions } from './games';
+import type { GeneratedPluginRegistration, PluginManifest } from './plugin-api';
+import { generatedPlugins } from './registry.generated';
 import type { GameDefinition, GameId, GameModule, SystemId } from './types';
 
 /**
  * ─── LANDMARK: GAME REGISTRY ───────────────────────────────────────────────
- * Единственный список модулей игр/редакций. Ядро (создание, лист, дашборд,
- * экспорт, админка) работает через этот реестр и не содержит
+ * Реестр модулей игр/редакций. Ядро (создание, лист, дашборд, экспорт,
+ * админка) работает через этот реестр и не содержит
  * `if (gameSystem === ...)`.
+ *
+ * Список плагинов больше не правится руками: он генерируется
+ * `scripts/plugins/generate.mjs` из манифестов `src/games/<id>/plugin.json` в
+ * `./registry.generated.ts`. Добавить игру = добавить папку с манифестом и
+ * пересобрать; убрать — удалить папку (реестр просто потеряет запись).
  *
  * Реестр — фабрика (`createGameRegistry`), поэтому тесты могут собрать
  * временный список с фиктивным модулем и доказать, что добавление редакции
@@ -76,15 +80,33 @@ export function createGameRegistry(
   };
 }
 
-/** Боевой реестр: единственное место, где перечислены все редакции. */
-export const gameRegistry = createGameRegistry([
-  dnd5eModule,
-  dh1Module,
-  dh2Module,
-]);
+/**
+ * Зарегистрированные плагины: манифест + модуль. Источник —
+ * сгенерированный реестр (`npm run plugins:generate`), не ручной список.
+ */
+export const gamePlugins: readonly GeneratedPluginRegistration[] =
+  generatedPlugins;
+
+/** Боевой реестр, собранный из сгенерированного списка плагинов. */
+export const gameRegistry = createGameRegistry(
+  gamePlugins.map((plugin) => plugin.module),
+);
 
 export const getGameModule = (id: SystemId): AnyGameModule | undefined =>
   gameRegistry.get(id);
+
+/** Плагин (манифест + модуль) по `systemId`. */
+export const getGamePlugin = (
+  id: SystemId,
+): GeneratedPluginRegistration | undefined =>
+  gamePlugins.find((plugin) => plugin.manifest.id === id);
+
+/** Манифест плагина по `systemId` — источник названий и порядка (D4). */
+export const getPluginManifest = (id: SystemId): PluginManifest | undefined =>
+  getGamePlugin(id)?.manifest;
+
+export const listGamePlugins = (): readonly GeneratedPluginRegistration[] =>
+  gamePlugins;
 
 export const listGameModules = (): readonly AnyGameModule[] =>
   gameRegistry.list();

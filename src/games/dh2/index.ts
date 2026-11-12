@@ -1,6 +1,6 @@
 import { CHARACTER_SCHEMA_VERSION } from '@/lib/character-version';
 
-import type { GameModule } from '../types';
+import type { ExportTranslate, GameExportConfig, GameModule } from '../types';
 import { createDh2Defaults } from './defaults';
 import { createDh2Demo } from './demo';
 import { buildDh2ExcelSections } from './excel';
@@ -9,6 +9,31 @@ import { en as dh2En } from './i18n/en';
 import { ru as dh2Ru } from './i18n/ru';
 import { dh2CharacterSchema } from './schema';
 import type { DH2Character } from './types';
+
+/**
+ * ─── LANDMARK: DH2 ENTRY POINTS ───────────────────────────────────────────
+ * Именованные экспорты для манифеста `plugin.json` (`index.ts#createDemo`,
+ * `index.ts#toPortableJson`, …). Реестр плагинов генерируется из
+ * манифестов, поэтому точки входа — отдельные экспорты, а не только поля
+ * объекта модуля; тест сверяет манифест с реальным набором экспортов.
+ */
+export const createDefaults = createDh2Defaults;
+export const createDemo = createDh2Demo;
+
+export function toPortableJson(
+  character: DH2Character,
+  config: GameExportConfig,
+): Record<string, unknown> {
+  return buildDh2PortableJson(character, config);
+}
+
+export function buildExcelSections(
+  character: DH2Character,
+  config: GameExportConfig,
+  translate: ExportTranslate,
+) {
+  return buildDh2ExcelSections(character, config, translate);
+}
 
 /**
  * ─── LANDMARK: DH2 MODULE ──────────────────────────────────────────────────
@@ -33,18 +58,16 @@ export const dh2Module: GameModule<DH2Character> = {
     plus30: true,
     fatigueField: 'fatigue2nd',
   },
-  createDefaults: createDh2Defaults,
-  createDemo: createDh2Demo,
+  createDefaults,
+  createDemo,
   components: {
     loadCreateForm: () =>
       import('./create-form').then((m) => ({ default: m.Dh2CharacterForm })),
     loadSheet: () => import('./sheet').then((m) => ({ default: m.Dh2Sheet })),
   },
   export: {
-    toPortableJson: (character, config) =>
-      buildDh2PortableJson(character, config),
-    buildExcelSections: (character, config, translate) =>
-      buildDh2ExcelSections(character, config, translate),
+    toPortableJson,
+    buildExcelSections,
   },
   migrations: [],
 };

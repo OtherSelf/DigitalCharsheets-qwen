@@ -1,0 +1,56 @@
+{
+  "manifestVersion": 1,
+  "pluginApi": "^1.0.0",
+  "id": "dh2",
+  "gameId": "darkHeresy",
+  "version": "1.0.0",
+  "order": 30,
+  "defaultStatus": "published",
+  "name": {
+    "en": "Dark Heresy — 2nd Edition",
+    "ru": "Dark Heresy — 2-я редакция"
+  },
+  "description": {
+    "en": "Dark Heresy 2e: influence, the +30 column and second-edition fatigue.",
+    "ru": "Dark Heresy 2e: влияние, колонка «+30» и усталость 2-й редакции."
+  },
+  "tags": ["warhammer40k", "d100", "grimdark"],
+  "author": "Digital Character Sheets",
+  "license": "MIT",
+  "schemaVersion": 2,
+  "game": {
+    "id": "darkHeresy",
+    "order": 20,
+    "name": {
+      "en": "Warhammer 40k: Dark Heresy",
+      "ru": "Warhammer 40k: Dark Heresy"
+    }
+  },
+  "dependencies": {
+    "host": "^1.0.0",
+    "plugins": {}
+  },
+  "entry": {
+    "module": "index.ts#dh2Module"
+  },
+  "sheet": {
+    "mode": "custom",
+    "client": "sheet.tsx",
+    "createForm": "create-form.tsx"
+  },
+  "i18n": {
+    "en": "i18n/en.ts",
+    "ru": "i18n/ru.ts"
+  },
+  "demo": {
+    "entry": "index.ts#createDemo"
+  },
+  "export": {
+    "json": "index.ts#toPortableJson",
+    "excel": "index.ts#buildExcelSections"
+  },
+  "migrations": [],
+  "tests": {
+    "conformance": ">=1"
+  }
+}
