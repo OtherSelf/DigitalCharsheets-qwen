@@ -46,7 +46,7 @@ Adding an endpoint without documenting it fails the unit tests.
 `commit`/`buildDate` on `/api/version` come from `DCS_GIT_COMMIT` (or
 `GIT_COMMIT` / `VERCEL_GIT_COMMIT_SHA`) and `DCS_BUILD_DATE`; without them the
 fields are `null`. `commitShort` is the first 7 characters of `commit`,
-lowercased — the form the UI shows in the profile menu (`v0.1.0 · a077aef`);
+lowercased — the form the UI shows in the profile menu (`v0.3.0 · a077aef`);
 it is `null` whenever `commit` is.
 
 The menu label is the only consumer: `src/components/layout/app-version.tsx`
