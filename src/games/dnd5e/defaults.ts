@@ -1,5 +1,4 @@
-import { CHARACTER_SCHEMA_VERSION } from '@/lib/character-version';
-
+import { CURRENT_SCHEMA_VERSION } from '../plugin-api';
 import { readNumber, readString, type DefaultsInput } from '../shared/defaults';
 import type {
   DnD5eCharacter,
@@ -114,7 +113,7 @@ export function createDnd5eDefaults(
     race: readString(input, 'race', 'Human'),
     background: readString(input, 'background', 'Acolyte'),
     alignment: readString(input, 'alignment', '') || 'Neutral',
-    schemaVersion: CHARACTER_SCHEMA_VERSION,
+    schemaVersion: CURRENT_SCHEMA_VERSION,
     systemId: 'dnd5e',
     gameSystem: 'Dungeons & Dragons',
     experiencePoints,

@@ -1,5 +1,4 @@
-import { CHARACTER_SCHEMA_VERSION } from '@/lib/character-version';
-
+import { CURRENT_SCHEMA_VERSION } from '../plugin-api';
 import { readNumber, readString, type DefaultsInput } from '../shared/defaults';
 import { calculateRank, RanksByCareer } from './dark-heresy-ranks';
 import { effectIdForDivination } from './divination-i18n';
@@ -69,7 +68,7 @@ export function createDarkHeresyBaseDefaults(
     name: readString(input, 'name', ''),
     characterClass: careerPath,
     gameSystem: 'Dark Heresy',
-    schemaVersion: CHARACTER_SCHEMA_VERSION,
+    schemaVersion: CURRENT_SCHEMA_VERSION,
     backstory: readString(input, 'backstory', ''),
     homeWorld: readHomeWorld(input),
     worldVariant: readString(input, 'worldVariant', ''),

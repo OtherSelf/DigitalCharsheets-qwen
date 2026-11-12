@@ -81,16 +81,23 @@ skipped rather than failing the whole list.
 
 `CharacterBase.schemaVersion` is `2`; legacy files without it are migrated on
 startup by `src/lib/character-schema.ts` and lazily on read/save by
-`normalizeCharacterRecord` (`src/lib/character-version.ts`). The migration is
-idempotent and writes a file only when it changes.
+`normalizeCharacterRecord` (`src/lib/character-version.ts`). The orchestrator
+resolves the edition and calls the plugin's `normalize`
+(`src/games/<id>/normalize.ts`); at startup/save it only remaps legacy fields
+and coerces types, while missing structures are filled with defaults only on
+import (`applyDefaults`). The migration is idempotent and writes a file only
+when it changes.
 
 ### Discriminant and editions
 
-`systemId` is the machine identifier of the sheet: `dnd5e`, `dh1` or `dh2`.
-The human-readable game name is resolved from the module registry and i18n and
-is not stored in the sheet. For compatibility with consumers that are still
-being migrated, `gameSystem` remains in v2 data as a legacy mirror; it will be
-removed once everything reads the registry.
+`systemId` is the machine identifier of the sheet, taken from the plugin
+folders (`dnd5e`, `dh1`, `dh2`). Legacy sheets without it are resolved by the
+aliases each plugin declares in `plugin.json#aliases`
+(`gameSystem`/`edition`), most specific match first. The human-readable game
+name is resolved from the registry/manifests and i18n and is not stored in the
+sheet. For compatibility with consumers that are still being migrated,
+`gameSystem` remains in v2 data as a legacy mirror; it will be removed once
+everything reads the registry.
 
 Dark Heresy editions are separate shapes, with no `edition` field and no fields
 of the other edition:
@@ -123,13 +130,11 @@ sentences:
 }
 ```
 
-Old files and 2.0 exports contain sentences (`"Mutation without..."`); the
-normalizer maps them to IDs via `src/lib/divination-i18n.ts`. Each edition also
-has its own copy (`src/games/dh1/divination-i18n.ts`,
-`src/games/dh2/divination-i18n.ts`) that its form and sections use, so the
-editions stay independent (D10); the shared normalizer keeps using the `lib`
-copy until migrations move into the plugins (stage 2). Unknown custom values are
-preserved and shown as-is. Files with a newer `schemaVersion` are
+Old files and 2.0 exports contain sentences (`"Mutation without..."`); each
+edition maps them to IDs in its own copy (`src/games/dh1/divination-i18n.ts`,
+`src/games/dh2/divination-i18n.ts`), which its `normalize.ts`, form and sections
+use, so the editions stay independent (D10). Unknown custom values are preserved
+and shown as-is. Files with a newer `schemaVersion` are
 reported but not rewritten.
 
 ### Backups

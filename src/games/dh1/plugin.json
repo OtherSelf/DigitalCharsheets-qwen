@@ -52,5 +52,14 @@
   "migrations": [],
   "tests": {
     "conformance": ">=1"
-  }
+  },
+  "aliases": [
+    {
+      "gameSystem": "Dark Heresy",
+      "edition": "1st"
+    },
+    {
+      "gameSystem": "Dark Heresy"
+    }
+  ]
 }
