@@ -13,10 +13,6 @@ const nextConfig: NextConfig = {
     'dcs-dev.thfree.space',
     'dcs.thfree.space',
   ],
-  /* config options here */
-  typescript: {
-    ignoreBuildErrors: true,
-  },
   images: {
     remotePatterns: [
       {
