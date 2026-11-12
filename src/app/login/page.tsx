@@ -37,7 +37,7 @@ interface AuthFailure {
 }
 
 export default function LoginPage() {
-  const { login, register, accountExists, restoreSession } = useLocalAuth();
+  const { login, register, accountExists } = useLocalAuth();
   const { t } = useTranslation();
   const router = useRouter();
 
@@ -51,15 +51,29 @@ export default function LoginPage() {
   const [displayName, setDisplayName] = useState('');
   const [recoveryPhrase, setRecoveryPhrase] = useState('');
 
-  // Поля восстановления доступа.
-  const [word1, setWord1] = useState('');
-  const [word2, setWord2] = useState('');
-  const [word3, setWord3] = useState('');
+  // Восстановление доступа: шаг 1 — проверка фразы, шаг 2 — новые пароль и
+  // фраза. Токен из шага 1 живёт только в состоянии страницы: сессия на
+  // проверке фразы не выдаётся.
   const [recoveryPhraseInput, setRecoveryPhraseInput] = useState('');
+  const [recoveryStep, setRecoveryStep] = useState<'verify' | 'update'>(
+    'verify',
+  );
+  const [recoveryToken, setRecoveryToken] = useState('');
+  const [newRecoveryPassword, setNewRecoveryPassword] = useState('');
+  const [newRecoveryPhrase, setNewRecoveryPhrase] = useState('');
+  const [notice, setNotice] = useState('');
 
   const switchMode = (next: AuthMode) => {
     setMode(next);
     setError('');
+    setNotice('');
+    // Уход из восстановления обнуляет токен: смена шага или логина не должна
+    // оставлять чужой/устаревший токен в состоянии.
+    setRecoveryStep('verify');
+    setRecoveryToken('');
+    setNewRecoveryPassword('');
+    setNewRecoveryPhrase('');
+    setRecoveryPhraseInput('');
   };
 
   const isFormLoading = isLoading;
@@ -116,19 +130,17 @@ export default function LoginPage() {
     return result.error || t('auth.registrationFailed');
   };
 
-  const mapRecoveryError = (message: string | undefined): string => {
-    const text = message || '';
-    const wordMatch = /The word "([^"]+)" was not found/.exec(text);
-    if (wordMatch)
-      return t('auth.wordNotFound').replace('{word}', wordMatch[1]);
-    if (/no account found/i.test(text)) return t('auth.noAccountFound');
-    if (/no recovery phrase/i.test(text)) return t('auth.noRecoveryPhrase');
-    if (/no character sheets/i.test(text)) return t('auth.noCharacterSheets');
-    if (/recovery phrase does not match/i.test(text))
-      return t('auth.phraseMismatch');
-    if (/provide valid words|required/i.test(text))
-      return t('auth.fillAllFields');
-    return text || t('auth.genericError');
+  /**
+   * Тексты для отказов восстановления. Сервер намеренно не различает «нет
+   * аккаунта» и «фраза не та» (SEC-9), поэтому и UI не подсказывает разницу:
+   * пользователь видит одну формулировку и не может перебирать логины.
+   */
+  const mapRecoveryError = (reason: string | undefined): string => {
+    if (reason === 'rate_limited') return t('auth.recoveryRateLimited');
+    if (reason === 'invalid_input') return t('auth.fillAllFields');
+    if (reason === 'invalid_token') return t('auth.recoveryTokenInvalid');
+    if (reason === 'recovery_failed') return t('auth.recoveryFailed');
+    return t('auth.genericError');
   };
 
   // ─── Вход: сначала проверяем существование аккаунта ───────────────────────
@@ -209,12 +221,13 @@ export default function LoginPage() {
     }
   };
 
-  // ─── Восстановление по словам из листов + фразе ───────────────────────────
+  // ─── Восстановление: шаг 1 — фраза, шаг 2 — новые пароль и фраза ──────────
   const handleRecoveryVerify = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setNotice('');
 
-    if (!username || !word1 || !word2 || !word3 || !recoveryPhraseInput) {
+    if (!username || !recoveryPhraseInput) {
       setError(t('auth.fillAllFields'));
       return;
     }
@@ -225,24 +238,20 @@ export default function LoginPage() {
       const res = await fetch('/api/auth/recover/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          username,
-          word1,
-          word2,
-          word3,
-          recoveryPhraseInput,
-        }),
+        body: JSON.stringify({ username, recoveryPhrase: recoveryPhraseInput }),
       });
 
       const data = await res.json().catch(() => null);
 
-      if (!res.ok || !data?.success || !data?.user) {
-        setError(mapRecoveryError(data?.error));
+      // Сессию проверка фразы не выдаёт: сервер отвечает одноразовым токеном,
+      // которым второй шаг и меняет пароль.
+      if (!res.ok || !data?.success || !data?.token) {
+        setError(mapRecoveryError(data?.reason));
         return;
       }
 
-      restoreSession(data.user);
-      router.push('/?recovery_mode=true');
+      setRecoveryToken(data.token);
+      setRecoveryStep('update');
     } catch (err) {
       console.error('[recovery] verification failed:', err);
       setError(t('auth.connectFailed'));
@@ -251,19 +260,80 @@ export default function LoginPage() {
     }
   };
 
+  const handleRecoveryUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setNotice('');
+
+    if (!newRecoveryPassword || !newRecoveryPhrase) {
+      setError(t('auth.fillAllFields'));
+      return;
+    }
+    if (newRecoveryPassword.length < 4) {
+      setError(t('common.passwordMinLength'));
+      return;
+    }
+    if (newRecoveryPhrase.trim().length < 5) {
+      setError(t('auth.phraseMinLength'));
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const res = await fetch('/api/auth/recover/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          token: recoveryToken,
+          newPassword: newRecoveryPassword,
+          newRecoveryPhrase,
+        }),
+      });
+
+      const data = await res.json().catch(() => null);
+
+      if (!res.ok || !data?.success) {
+        // Погашенный/просроченный токен возвращает на шаг проверки фразы.
+        if (data?.reason === 'invalid_token') {
+          setRecoveryStep('verify');
+          setRecoveryToken('');
+        }
+        setError(mapRecoveryError(data?.reason));
+        return;
+      }
+
+      // Логина в запросе нет — подставляем тот, с которым проверяли фразу.
+      switchMode('login');
+      setPassword('');
+      setNotice(t('auth.recoverySuccess'));
+    } catch (err) {
+      console.error('[recovery] credentials update failed:', err);
+      setError(t('auth.connectFailed'));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const isRecoveryUpdate = mode === 'recover' && recoveryStep === 'update';
+
   const modeTitle =
     mode === 'login'
       ? t('auth.loginTitle')
       : mode === 'register'
         ? t('auth.registerTitle')
-        : t('auth.recoverTitle');
+        : isRecoveryUpdate
+          ? t('auth.resetCredentialsTitle')
+          : t('auth.recoverTitle');
 
   const modeDescription =
     mode === 'login'
       ? t('auth.loginDesc')
       : mode === 'register'
         ? t('auth.registerDesc')
-        : t('auth.recoverDesc');
+        : isRecoveryUpdate
+          ? t('auth.resetCredentialsDesc')
+          : t('auth.recoverDesc');
 
   return (
     <div className="from-background via-background to-primary/5 flex h-dvh flex-col bg-gradient-to-br">
@@ -308,6 +378,12 @@ export default function LoginPage() {
             </CardHeader>
 
             <CardContent>
+              {notice && (
+                <Alert className="mb-4" data-testid="auth-notice">
+                  <AlertDescription>{notice}</AlertDescription>
+                </Alert>
+              )}
+
               {error && (
                 <Alert
                   variant="destructive"
@@ -522,7 +598,7 @@ export default function LoginPage() {
                 </form>
               )}
 
-              {mode === 'recover' && (
+              {mode === 'recover' && recoveryStep === 'verify' && (
                 <form onSubmit={handleRecoveryVerify} className="space-y-4">
                   <div className="space-y-2">
                     <label
@@ -544,40 +620,12 @@ export default function LoginPage() {
                     />
                   </div>
 
-                  <div className="space-y-3">
-                    <label className="flex items-center gap-2 text-sm font-medium">
-                      <KeyRound className="text-muted-foreground h-4 w-4" />
-                      {t('auth.threeWords')}
-                    </label>
-                    <Input
-                      value={word1}
-                      onChange={(e) => setWord1(e.target.value)}
-                      placeholder={t('auth.word1Placeholder')}
-                      required
-                      className="h-10"
-                    />
-                    <Input
-                      value={word2}
-                      onChange={(e) => setWord2(e.target.value)}
-                      placeholder={t('auth.word2Placeholder')}
-                      required
-                      className="h-10"
-                    />
-                    <Input
-                      value={word3}
-                      onChange={(e) => setWord3(e.target.value)}
-                      placeholder={t('auth.word3Placeholder')}
-                      required
-                      className="h-10"
-                    />
-                  </div>
-
                   <div className="space-y-2">
                     <label
                       htmlFor="recover-phrase"
                       className="flex items-center gap-2 text-sm font-medium"
                     >
-                      <Lock className="text-muted-foreground h-4 w-4" />
+                      <KeyRound className="text-muted-foreground h-4 w-4" />
                       {t('auth.yourRecoveryPhrase')}
                     </label>
                     <Input
@@ -585,6 +633,7 @@ export default function LoginPage() {
                       value={recoveryPhraseInput}
                       onChange={(e) => setRecoveryPhraseInput(e.target.value)}
                       placeholder={t('auth.recoveryPhrasePlaceholder')}
+                      autoComplete="off"
                       required
                       className="h-10"
                     />
@@ -613,6 +662,84 @@ export default function LoginPage() {
 
                   {/* LANDMARK: BACK_TO_LOGIN */}
                   {/* Возврат к входу тем же переключателем, что и в регистрации. */}
+                  <Button
+                    type="button"
+                    variant="link"
+                    className="w-full text-sm"
+                    onClick={() => switchMode('login')}
+                    data-testid="back-to-login"
+                  >
+                    {t('auth.backToLogin')}
+                  </Button>
+                </form>
+              )}
+
+              {mode === 'recover' && recoveryStep === 'update' && (
+                <form
+                  onSubmit={handleRecoveryUpdate}
+                  className="space-y-4"
+                  data-testid="recover-update-form"
+                >
+                  <div className="space-y-2">
+                    <label
+                      htmlFor="recover-new-password"
+                      className="flex items-center gap-2 text-sm font-medium"
+                    >
+                      <Lock className="text-muted-foreground h-4 w-4" />
+                      {t('common.newPassword')}
+                    </label>
+                    <Input
+                      id="recover-new-password"
+                      type="password"
+                      value={newRecoveryPassword}
+                      onChange={(e) => setNewRecoveryPassword(e.target.value)}
+                      placeholder={t('auth.passwordPlaceholder')}
+                      autoComplete="new-password"
+                      required
+                      className="h-10"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label
+                      htmlFor="recover-new-phrase"
+                      className="flex items-center gap-2 text-sm font-medium"
+                    >
+                      <KeyRound className="text-muted-foreground h-4 w-4" />
+                      {t('auth.phrase')}
+                    </label>
+                    <Input
+                      id="recover-new-phrase"
+                      value={newRecoveryPhrase}
+                      onChange={(e) => setNewRecoveryPhrase(e.target.value)}
+                      placeholder={t('auth.recoveryPhrasePlaceholder')}
+                      autoComplete="off"
+                      required
+                      className="h-10"
+                    />
+                    <p className="text-muted-foreground text-xs">
+                      {t('auth.phraseHint')}
+                    </p>
+                  </div>
+
+                  <Button
+                    type="submit"
+                    className="mt-2 h-10 w-full"
+                    disabled={isFormLoading}
+                  >
+                    {isFormLoading ? (
+                      <span className="flex items-center gap-2">
+                        <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                        {t('common.saving')}
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-2">
+                        <KeyRound className="h-4 w-4" />
+                        {t('auth.saveAndContinue')}
+                      </span>
+                    )}
+                  </Button>
+
                   <Button
                     type="button"
                     variant="link"

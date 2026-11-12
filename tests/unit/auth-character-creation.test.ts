@@ -17,6 +17,7 @@ import {
   normalizeCharacterRecord,
 } from '@/lib/character-version';
 import { isUid } from '@/lib/ids';
+import { isRecoveryPhraseHash } from '@/lib/security/phrase';
 
 import { readJson, removeDir, userPaths, useTempDataDir } from './helpers';
 
@@ -393,8 +394,10 @@ describe('авторизация: регистрация и вход', () => {
       username: 'auth.user',
       displayName: 'Auth Tester',
       passwordHash: sha256(PASSWORD),
-      recoveryPhrase: RECOVERY_PHRASE,
     });
+    // Фраза хранится хэшем и не восстанавливается из файла.
+    expect(isRecoveryPhraseHash(stored.recoveryPhrase)).toBe(true);
+    expect(stored.recoveryPhrase).not.toContain(RECOVERY_PHRASE);
   });
 
   it('повторный вход узнаёт владельца и не перезаписывает профиль', async () => {

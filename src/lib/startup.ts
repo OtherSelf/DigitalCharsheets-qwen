@@ -4,6 +4,10 @@ import {
   type NormalizeCharactersReport,
 } from './character-schema';
 import { getDataDir } from './data-dir';
+import {
+  hashLegacyRecoveryPhrases,
+  type HashLegacyPhrasesReport,
+} from './server-auth';
 import { rebuildLoginIndex } from './user-index';
 import {
   normalizeUserProfiles,
@@ -23,7 +27,9 @@ import {
  *      старые DH-пророчества sentence → стабильные ID (character-schema.ts);
  *   3. пересобрать производный индекс `index/logins.json`;
  *   4. если активного администратора нет — создать служебный аккаунт и
- *      вывести сгенерированный пароль в консоль + файл.
+ *      вывести сгенерированный пароль в консоль + файл;
+ *   5. перевести открытые recovery-фразы в хэши: копия `user.json` не должна
+ *      выдавать фразу восстановления (см. security/phrase.ts).
  *
  * Ошибки не пробрасываются: сервер должен подняться даже с частично битым
  * data-dir. Все проблемы уходят в лог и в отчёт (его используют тесты).
@@ -33,6 +39,7 @@ export interface StartupReport {
   dataDir: string;
   profiles: NormalizeProfilesReport | null;
   characters: NormalizeCharactersReport | null;
+  phrases: HashLegacyPhrasesReport | null;
   admin: ServiceAdminReport | null;
   errors: string[];
 }
@@ -111,6 +118,7 @@ export function runStartupMaintenance(
     dataDir,
     profiles: null,
     characters: null,
+    phrases: null,
     admin: null,
     errors: [],
   };
@@ -148,6 +156,22 @@ export function runStartupMaintenance(
     const message = error instanceof Error ? error.message : String(error);
     report.errors.push(`admin bootstrap failed: ${message}`);
     console.error('[dcs] startup: admin bootstrap failed:', error);
+  }
+
+  try {
+    report.phrases = hashLegacyRecoveryPhrases();
+    if (report.phrases.updated > 0) {
+      console.info(
+        `[dcs] startup: recovery-фразы переведены в хэши — ${report.phrases.updated}`,
+      );
+    }
+    for (const issue of report.phrases.issues) {
+      console.warn(`[dcs] startup: ${issue}`);
+    }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    report.errors.push(`recovery phrase migration failed: ${message}`);
+    console.error('[dcs] startup: recovery phrase migration failed:', error);
   }
 
   cachedDataDir = dataDir;

@@ -5,7 +5,17 @@ import { getUserDir, getUserFile } from './data-dir';
 import { withDataLock } from './data-lock';
 import { defaultDisplayName, isUid, newUid, normalizeLogin } from './ids';
 import { LocalUser } from './local-storage';
-import { getCharactersFromServer, resetWriteSeqGuard } from './server-storage';
+import {
+  hashRecoveryPhrase,
+  isRecoveryPhraseHash,
+  normalizePhrase,
+  recoveryPhraseMatches,
+} from './security/phrase';
+import {
+  consumeRecoveryToken,
+  revokeRecoveryTokensForUser,
+} from './security/tokens';
+import { resetWriteSeqGuard } from './server-storage';
 import {
   readLoginIndexForUpdate,
   rebuildLoginIndex,
@@ -15,6 +25,7 @@ import {
 import { normalizeUserRole, type UserRole } from './user-role';
 import {
   readStoredUser,
+  scanUserRecords,
   USER_SCHEMA_VERSION,
   writeStoredUser,
   type StoredUser,
@@ -72,20 +83,6 @@ export interface AuthenticateOptions {
 
 export function hashPassword(password: string): string {
   return crypto.createHash('sha256').update(password).digest('hex');
-}
-
-function normalizePhrase(phrase: string): string[] {
-  return phrase
-    .toLowerCase()
-    .trim()
-    .split(/\s+/)
-    .filter((w) => w.length > 0);
-}
-
-function checkPhraseMatch(storedPhrase: string, inputPhrase: string): boolean {
-  const storedWords = normalizePhrase(storedPhrase);
-  const inputWords = normalizePhrase(inputPhrase);
-  return inputWords.some((word) => storedWords.includes(word));
 }
 
 /**
@@ -221,7 +218,9 @@ function persistNewAccount(
   };
 
   if (recoveryPhrase !== undefined && recoveryPhrase.trim() !== '') {
-    user.recoveryPhrase = recoveryPhrase.toLowerCase().trim();
+    // На диск — только хэш: фраза доказывает владение аккаунтом (см.
+    // security/phrase.ts).
+    user.recoveryPhrase = hashRecoveryPhrase(recoveryPhrase);
   }
   if (options.mustChangePassword) {
     user.mustChangePassword = true;
@@ -410,7 +409,7 @@ export function updateUserProfile(
         if (newRecoveryPhrase.trim() === '') {
           delete updated.recoveryPhrase;
         } else {
-          updated.recoveryPhrase = newRecoveryPhrase.toLowerCase().trim();
+          updated.recoveryPhrase = hashRecoveryPhrase(newRecoveryPhrase);
         }
       }
 
@@ -478,21 +477,21 @@ export function deleteUserAccount(
   }
 
   try {
-    return withDataLock(() => {
+    const result = withDataLock((): DeleteAccountResult => {
       const stored = getStoredUser(uid);
       if (!stored) {
         return {
           success: false,
           error: 'User not found.',
           reason: 'not_found',
-        } as DeleteAccountResult;
+        };
       }
       if (stored.passwordHash !== hashPassword(password)) {
         return {
           success: false,
           error: 'Incorrect password.',
           reason: 'invalid_password',
-        } as DeleteAccountResult;
+        };
       }
 
       // Убираем из индекса все логины, указывающие на этот uid (обычно один).
@@ -515,8 +514,18 @@ export function deleteUserAccount(
       // In-memory карта порядка записей тоже не должна помнить удалённый лист.
       resetWriteSeqGuard(uid);
 
-      return { success: true } as DeleteAccountResult;
+      return { success: true };
     });
+
+    // Выданные токены восстановления пережили бы удаление профиля: гасим.
+    if (result.success) {
+      try {
+        revokeRecoveryTokensForUser(uid);
+      } catch (e) {
+        console.error('Failed to revoke recovery tokens after deletion:', e);
+      }
+    }
+    return result;
   } catch (e) {
     console.error('Error deleting user account:', e);
     return {
@@ -527,144 +536,269 @@ export function deleteUserAccount(
   }
 }
 
+/**
+ * Сохранить recovery-фразу. На диск уходит только хэш: сама фраза — секрет,
+ * доказывающий владение аккаунтом.
+ */
 export function setRecoveryPhrase(uid: string, phrase: string): boolean {
+  if (normalizePhrase(phrase) === '') {
+    console.error('Failed to set recovery phrase: empty phrase');
+    return false;
+  }
   try {
-    const stored = getStoredUser(uid);
-    if (!stored) {
-      console.error('Failed to set recovery phrase: user not found');
-      return false;
-    }
-    stored.recoveryPhrase = phrase.toLowerCase().trim();
-    stored.updatedAt = new Date().toISOString();
-    writeStoredUser(uid, stored);
-    return true;
+    return withDataLock(() => {
+      const stored = getStoredUser(uid);
+      if (!stored) {
+        console.error('Failed to set recovery phrase: user not found');
+        return false;
+      }
+      writeStoredUser(uid, {
+        ...stored,
+        recoveryPhrase: hashRecoveryPhrase(phrase),
+        updatedAt: new Date().toISOString(),
+      });
+      return true;
+    });
   } catch (e) {
     console.error('Error setting recovery phrase:', e);
     return false;
   }
 }
 
-function readByLogin(
-  username: string,
-):
-  | { success: false; error: string }
-  | { success: true; uid: string; user: StoredUser } {
-  const uid = resolveLogin(username);
-  if (!uid)
-    return {
-      success: false,
-      error: 'No account found with this username/email.',
-    };
-  const user = getStoredUser(uid);
-  if (!user) return { success: false, error: 'Failed to read user data.' };
-  return { success: true, uid, user };
-}
+/**
+ * ─── LANDMARK: RECOVERY VERIFY ──────────────────────────────────────────────
+ * Проверка recovery-фразы: фраза сравнивается целиком (состав и порядок слов),
+ * а не «хотя бы одно слово». Слова из листов персонажей фактором больше не
+ * являются: их знает любой, кто видел лист, а автор персонажа не обязательно
+ * владелец аккаунта.
+ *
+ * При успехе выдаётся НЕ сессия, а одноразовый токен (`security/tokens.ts`):
+ * пароль и фразу меняет только `recover/update`, и только по токену.
+ *
+ * Старый формат (фраза открытым текстом) принимается один раз: сразу после
+ * успешного совпадения значение перезаписывается хэшем.
+ */
+export type RecoveryFailureReason = 'no_account' | 'no_phrase' | 'mismatch';
 
-function checkOwnershipWords(user: StoredUser, words: string[]): string | null {
-  const characters = getCharactersFromServer(user.uid);
-  if (characters.length === 0) {
-    return 'No character sheets found on this server. Cannot verify ownership.';
-  }
-
-  const characterDataString = JSON.stringify(characters);
-  for (const word of words) {
-    const cleanWord = word.toLowerCase().trim();
-    if (!cleanWord) return 'Please provide valid words.';
-    const escapedWord = cleanWord.replace(/[.*+?^${}()|[\]]/g, '$&');
-    if (!new RegExp(`\\b${escapedWord}\\b`, 'i').test(characterDataString)) {
-      return `The word "${word}" was not found in any of your character sheets.`;
-    }
-  }
-  return null;
+export interface VerifyRecoveryResult {
+  success: boolean;
+  user?: LocalUser;
+  reason?: RecoveryFailureReason;
+  error?: string;
 }
 
 export function verifyRecovery(
   username: string,
-  words: string[],
   recoveryPhraseInput: string,
-): { success: boolean; user?: LocalUser; error?: string } {
-  const found = readByLogin(username);
-  if (!found.success) return { success: false, error: found.error };
-  const storedUser = found.user;
+): VerifyRecoveryResult {
+  const uid = resolveLogin(username);
+  if (!uid) {
+    return {
+      success: false,
+      reason: 'no_account',
+      error: 'No account found with this username/email.',
+    };
+  }
+  const storedUser = getStoredUser(uid);
+  if (!storedUser) {
+    return {
+      success: false,
+      reason: 'no_account',
+      error: 'No account found with this username/email.',
+    };
+  }
 
   if (!storedUser.recoveryPhrase) {
     return {
       success: false,
+      reason: 'no_phrase',
       error: 'No recovery phrase set for this account.',
     };
   }
 
-  const wordError = checkOwnershipWords(storedUser, words);
-  if (wordError) return { success: false, error: wordError };
-
-  if (!checkPhraseMatch(storedUser.recoveryPhrase, recoveryPhraseInput)) {
+  if (!recoveryPhraseMatches(storedUser.recoveryPhrase, recoveryPhraseInput)) {
     return {
       success: false,
-      error:
-        'Recovery phrase does not match. (At least one word must match, order does not matter).',
+      reason: 'mismatch',
+      error: 'Recovery phrase does not match.',
     };
+  }
+
+  // Легаси-фраза подтверждена — перезаписываем открытый текст хэшем.
+  if (!isRecoveryPhraseHash(storedUser.recoveryPhrase)) {
+    try {
+      withDataLock(() => {
+        const fresh = getStoredUser(uid);
+        if (
+          !fresh?.recoveryPhrase ||
+          isRecoveryPhraseHash(fresh.recoveryPhrase)
+        ) {
+          return;
+        }
+        writeStoredUser(uid, {
+          ...fresh,
+          recoveryPhrase: hashRecoveryPhrase(fresh.recoveryPhrase),
+          updatedAt: new Date().toISOString(),
+        });
+      });
+    } catch (e) {
+      // Не мешаем восстановлению: фраза совпала, миграция повторится позже
+      // (в том числе стартовой проверкой `hashLegacyRecoveryPhrases`).
+      console.error('Failed to migrate recovery phrase to a hash:', e);
+    }
   }
 
   return { success: true, user: toLocalUser(storedUser) };
 }
 
-export function updateRecoveryCredentials(
-  username: string,
-  newPassword: string,
-  newRecoveryPhrase: string,
-): { success: boolean; error?: string } {
-  const found = readByLogin(username);
-  if (!found.success) return { success: false, error: 'User not found.' };
+export type ResetWithTokenReason = 'invalid_token' | 'invalid_input' | 'failed';
 
-  try {
-    const storedUser = found.user;
-    storedUser.username = normalizeLogin(username);
-    storedUser.passwordHash = hashPassword(newPassword);
-    storedUser.recoveryPhrase = newRecoveryPhrase.toLowerCase().trim();
-    storedUser.updatedAt = new Date().toISOString();
-    if (storedUser.email) {
-      delete storedUser.email;
-    }
-    writeStoredUser(found.uid, storedUser);
-    return { success: true };
-  } catch (e) {
-    console.error('Error updating recovery credentials:', e);
-    return { success: false, error: 'Failed to update account.' };
-  }
+export interface ResetWithTokenResult {
+  success: boolean;
+  uid?: string;
+  reason?: ResetWithTokenReason;
+  error?: string;
 }
 
-export function recoverPasswordWithUsernameAndWords(
-  username: string,
-  words: string[],
+/**
+ * ─── LANDMARK: RESET BY TOKEN ───────────────────────────────────────────────
+ * Сменить пароль (и, если передана, фразу) по одноразовому токену из
+ * `recover/verify`. Логин здесь не принимается: он ничего не доказывает.
+ *
+ * Порядок: сначала гасим токен, затем пишем профиль. Если запись не удалась,
+ * токен уже сгорел — пользователь повторит проверку фразы (она ему известна)
+ * и получит новый. Обратный порядок был бы хуже: живой токен после смены
+ * пароля — это второй ключ к аккаунту.
+ */
+export function resetCredentialsWithToken(
+  token: string,
   newPassword: string,
-): { success: boolean; error?: string } {
-  const found = readByLogin(username);
-  if (!found.success) return { success: false, error: found.error };
-  const storedUser = found.user;
-
-  if (!storedUser.recoveryPhrase) {
+  newRecoveryPhrase?: string,
+): ResetWithTokenResult {
+  if (typeof newPassword !== 'string' || newPassword.trim() === '') {
     return {
       success: false,
-      error: 'No recovery phrase set for this account.',
+      reason: 'invalid_input',
+      error: 'New password is required.',
+    };
+  }
+  if (
+    newRecoveryPhrase !== undefined &&
+    newRecoveryPhrase.trim() !== '' &&
+    newRecoveryPhrase.trim().length < 5
+  ) {
+    return {
+      success: false,
+      reason: 'invalid_input',
+      error: 'Recovery phrase must be at least 5 characters.',
     };
   }
 
-  const wordError = checkOwnershipWords(storedUser, words);
-  if (wordError) return { success: false, error: wordError };
+  const consumed = consumeRecoveryToken(token);
+  if (!consumed.success) {
+    return {
+      success: false,
+      reason: 'invalid_token',
+      error: 'Recovery token is invalid or expired.',
+    };
+  }
 
   try {
-    storedUser.passwordHash = hashPassword(newPassword);
-    storedUser.updatedAt = new Date().toISOString();
-    if (storedUser.email) {
-      delete storedUser.email;
+    const result = withDataLock((): ResetWithTokenResult => {
+      const stored = getStoredUser(consumed.uid);
+      if (!stored) {
+        return {
+          success: false,
+          reason: 'invalid_token',
+          error: 'Recovery token is invalid or expired.',
+        };
+      }
+
+      const updated: StoredUser = {
+        ...stored,
+        passwordHash: hashPassword(newPassword),
+        updatedAt: new Date().toISOString(),
+      };
+      if (newRecoveryPhrase !== undefined && newRecoveryPhrase.trim() !== '') {
+        updated.recoveryPhrase = hashRecoveryPhrase(newRecoveryPhrase);
+      }
+      // `email` — legacy-поле логина: логин живёт в `username`.
+      delete updated.email;
+      // Временный пароль, выданный администратором, больше не действует.
+      delete updated.mustChangePassword;
+
+      writeStoredUser(consumed.uid, updated);
+      return { success: true, uid: consumed.uid };
+    });
+
+    // Остальные выданные токены этого аккаунта гасим: секреты уже сменились.
+    if (result.success) {
+      try {
+        revokeRecoveryTokensForUser(consumed.uid);
+      } catch (e) {
+        console.error('Failed to revoke recovery tokens:', e);
+      }
     }
-    storedUser.username = normalizeLogin(username);
-    writeStoredUser(found.uid, storedUser);
-    return { success: true };
+    return result;
   } catch (e) {
-    console.error('Error resetting password:', e);
-    return { success: false, error: 'Failed to reset password.' };
+    console.error('Error resetting credentials:', e);
+    return {
+      success: false,
+      reason: 'failed',
+      error: 'Failed to reset credentials.',
+    };
   }
+}
+
+export interface HashLegacyPhrasesReport {
+  total: number;
+  updated: number;
+  issues: string[];
+}
+
+/**
+ * Стартовая миграция: перевести открытые recovery-фразы в хэши.
+ *
+ * Без неё фразами, заданными до появления хэширования, можно «поделиться»
+ * вместе с копией `user.json` — а файл профиля уезжает в бэкапы и копии
+ * data-dir. Миграция идемпотентна: значения-хэши и отсутствующие фразы не
+ * трогаются.
+ */
+export function hashLegacyRecoveryPhrases(): HashLegacyPhrasesReport {
+  const { records, issues } = scanUserRecords();
+  const report: HashLegacyPhrasesReport = {
+    total: records.length,
+    updated: 0,
+    issues: [...issues],
+  };
+
+  for (const record of records) {
+    const phrase = record.user.recoveryPhrase;
+    if (!phrase || isRecoveryPhraseHash(phrase)) continue;
+
+    try {
+      withDataLock(() => {
+        const fresh = getStoredUser(record.uid);
+        if (
+          !fresh?.recoveryPhrase ||
+          isRecoveryPhraseHash(fresh.recoveryPhrase)
+        )
+          return;
+        writeStoredUser(record.uid, {
+          ...fresh,
+          recoveryPhrase: hashRecoveryPhrase(fresh.recoveryPhrase),
+          updatedAt: new Date().toISOString(),
+        });
+        report.updated += 1;
+      });
+    } catch (error) {
+      report.issues.push(
+        `users/${record.uid}: не удалось захешировать recovery-фразу (${error instanceof Error ? error.message : 'unknown'})`,
+      );
+    }
+  }
+
+  return report;
 }
 
 /**

@@ -5,6 +5,10 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { newUid } from '@/lib/ids';
 import {
+  isRecoveryPhraseHash,
+  recoveryPhraseMatches,
+} from '@/lib/security/phrase';
+import {
   authenticateUser,
   getStoredUser,
   updateUserProfile,
@@ -161,20 +165,26 @@ describe('updateUserProfile', () => {
 
     expect(result.success).toBe(true);
     expect(result.user?.hasRecoveryPhrase).toBe(true);
-    // Фраза нормализуется: нижний регистр и обрезка пробелов.
-    expect(readJson(userPaths(dataDir, uid).userFile).recoveryPhrase).toBe(
-      'альфа бета гамма',
-    );
+    // Фраза нормализуется (регистр/пробелы), но на диск уходит только хэш.
+    const stored = readJson(userPaths(dataDir, uid).userFile).recoveryPhrase;
+    expect(isRecoveryPhraseHash(stored)).toBe(true);
+    expect(stored).not.toContain('альфа');
+    expect(recoveryPhraseMatches(stored, 'альфа бета гамма')).toBe(true);
   });
 
   it('undefined сохраняет recovery-фразу, пустая строка — сбрасывает', () => {
     const uid = authenticateUser('phrase', 'pass1').user!.uid;
     updateUserProfile(uid, 'phrase', 'phrase', undefined, 'one two three');
 
+    const keptBefore = readJson(
+      userPaths(dataDir, uid).userFile,
+    ).recoveryPhrase;
     updateUserProfile(uid, 'phrase', 'phrase');
+    // Значение не перегенерируется: хэш тот же, фраза та же.
     expect(readJson(userPaths(dataDir, uid).userFile).recoveryPhrase).toBe(
-      'one two three',
+      keptBefore,
     );
+    expect(recoveryPhraseMatches(keptBefore, 'one two three')).toBe(true);
 
     const cleared = updateUserProfile(uid, 'phrase', 'phrase', undefined, '  ');
     expect(cleared.user?.hasRecoveryPhrase).toBe(false);
