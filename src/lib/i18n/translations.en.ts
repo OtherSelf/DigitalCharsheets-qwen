@@ -83,6 +83,9 @@ export const enTranslations: Record<string, string> = {
   'common.perception': 'Perception',
   'common.willpower': 'Willpower',
   'common.error': 'Error',
+  'common.sheetUnavailable': 'Sheet unavailable',
+  'common.sheetUnavailableHint':
+    'The game plugin failed to render. Your data is intact — JSON export is still available.',
   'common.saveFailed': 'Could not save changes',
   'common.saveFailedDesc':
     'The latest edits are not on the server. Check your connection — they will be resent automatically.',

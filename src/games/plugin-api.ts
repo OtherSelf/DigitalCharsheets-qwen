@@ -1,8 +1,9 @@
-import type { ComponentType, ReactNode } from 'react';
+import type { ComponentType } from 'react';
 
 import type { ZodType } from 'zod';
 
 import type {
+  CardSummary,
   CharacterMigration,
   CharacterRecord,
   CreateFormComponent,
@@ -10,12 +11,15 @@ import type {
   GameExportConfig,
   GameModule,
   GameModuleComponents,
+  GameUiSlots,
   LocalizedMessages,
   ModuleCapabilities,
   ModuleStatus,
   NormalizeOptions,
   NormalizeResult,
+  PluginNavItem,
   SheetComponent,
+  SheetHandle,
 } from './types';
 
 /**
@@ -100,9 +104,11 @@ export interface PluginSheetManifest {
 /** Именованные слоты UI, которые плагин может заполнить (этап 3, D11). */
 export const PLUGIN_UI_SLOTS = [
   'HeaderActions',
+  'HeaderSubtitle',
   'CompactNav',
   'BulkEditor',
   'CardSummary',
+  'HouseRulesDialog',
 ] as const;
 export type PluginUiSlot = (typeof PLUGIN_UI_SLOTS)[number];
 
@@ -255,37 +261,6 @@ function compareVersions(a: ParsedVersion, b: ParsedVersion): number {
   return a.major - b.major || a.minor - b.minor || a.patch - b.patch;
 }
 
-/** Пункт навигации мобильного сайдбара, который отдаёт плагин (D11). */
-export interface PluginNavItem {
-  /** Идентификатор секции; совпадает с `id` секции листа. */
-  readonly id: string;
-  /** i18n-ключ подписи. */
-  readonly labelKey: string;
-  readonly icon?: ReactNode;
-}
-
-/**
- * Пропсы слота `BulkEditor` (массовый редактор характеристик). Плагин
- * рисует таблицу; запись идёт через Host API, а не напрямую в data-dir.
- */
-export interface GameBulkEditorProps<TCharacter extends CharacterRecord> {
-  readonly characters: readonly TCharacter[];
-}
-
-/**
- * Необязательные UI-слоты плагина (этап 3). Хост рисует слот, если он
- * задан, и нейтральный вариант, если нет — так у ядра нет
- * `if (gameSystem === …)`.
- */
-export interface GameUiSlots<
-  TCharacter extends CharacterRecord = CharacterRecord,
-> {
-  readonly HeaderActions?: ComponentType<{ character: TCharacter }>;
-  readonly CompactNav?: (character: TCharacter) => readonly PluginNavItem[];
-  readonly BulkEditor?: ComponentType<GameBulkEditorProps<TCharacter>>;
-  readonly CardSummary?: (character: TCharacter) => string;
-}
-
 /**
  * Целевой контракт плагина (этап 2–3): метаданные из манифеста, схема,
  * фабрики, экспорт, миграции и UI-слоты в одном объекте.
@@ -364,6 +339,7 @@ export function hasUiSlot(
 }
 
 export type {
+  CardSummary,
   CharacterMigration,
   CharacterRecord,
   CreateFormComponent,
@@ -371,10 +347,13 @@ export type {
   GameExportConfig,
   GameModule,
   GameModuleComponents,
+  GameUiSlots,
   LocalizedMessages,
   ModuleCapabilities,
   ModuleStatus,
   NormalizeOptions,
   NormalizeResult,
+  PluginNavItem,
   SheetComponent,
+  SheetHandle,
 };

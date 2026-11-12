@@ -399,7 +399,7 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
                     className="bg-background flex min-w-0 flex-col items-center justify-center rounded border py-1"
                   >
                     <span className="text-muted-foreground w-full truncate px-0.5 text-center text-[8px] font-bold uppercase">
-                      {t(key).slice(0, 3).toUpperCase()}
+                      {t(`common.${key}`).slice(0, 3).toUpperCase()}
                     </span>
                     {isStatsEditing ? (
                       <Input

@@ -1,4 +1,4 @@
-import type { ComponentType, Ref } from 'react';
+import type { ComponentType, ReactNode, Ref } from 'react';
 
 import type { ZodType } from 'zod';
 
@@ -171,6 +171,15 @@ export interface CharacterMigration {
   migrate(raw: Readonly<Record<string, unknown>>): Record<string, unknown>;
 }
 
+/**
+ * Минимальный ref-контракт листа: сохранить всё, что сейчас в режиме
+ * правки. Ядро не знает, какие секции есть у редакции, — оно лишь дергает
+ * `saveAll()` перед переходом/выходом.
+ */
+export interface SheetHandle {
+  saveAll(): void;
+}
+
 /** Форма создания персонажа модуля (пропсов пока не требует). */
 export type CreateFormComponent = ComponentType<Record<string, never>>;
 
@@ -179,12 +188,87 @@ export interface GameSheetProps<TCharacter extends CharacterRecord> {
   character: TCharacter;
   isCompactView: boolean;
   activeCompactSection: string;
-  ref?: Ref<unknown>;
+  ref?: Ref<SheetHandle>;
 }
 
 export type SheetComponent<TCharacter extends CharacterRecord> = ComponentType<
   GameSheetProps<TCharacter>
 >;
+
+/** Пункт навигации мобильного сайдбара, который отдаёт плагин (D11). */
+export interface PluginNavItem {
+  /** Идентификатор секции; совпадает с `id` секции листа. */
+  readonly id: string;
+  /** i18n-ключ подписи (полный, с namespace). */
+  readonly labelKey: string;
+  readonly icon?: ReactNode;
+}
+
+/** Вариант бейджа карточки персонажа — часть оформления игры. */
+export type CardBadgeVariant =
+  'default' | 'secondary' | 'outline' | 'destructive';
+
+/**
+ * Сводка персонажа для карточки на дашборде: подпись и вариант бейджа.
+ * Раньше ядро знало «Wizard 5» / «Scholar Adept» и цвета бейджей; теперь
+ * это отдаёт плагин (этап 3).
+ */
+export interface CardSummary {
+  readonly text: string;
+  readonly badgeVariant?: CardBadgeVariant;
+}
+
+/** Пропсы слота `BulkEditor` (массовый редактор характеристик). */
+export interface GameBulkEditorProps<TCharacter extends CharacterRecord> {
+  readonly characters: readonly TCharacter[];
+}
+
+/** Пропсы слотов, которым нужен диалог домашних правил. */
+export interface GameHouseRulesDialogProps {
+  readonly characterId: string;
+  readonly open: boolean;
+  readonly onOpenChange: (open: boolean) => void;
+}
+
+/**
+ * ─── LANDMARK: GAME_UI_SLOTS ───────────────────────────────────────────────
+ * Необязательные UI-слоты плагина (этап 3, D11). Хост рисует слот, если он
+ * задан, и нейтральный вариант, если нет, — поэтому в ядре нет
+ * `if (gameSystem === …)`.
+ *
+ *   • `HeaderActions`      — правая/левая часть шапки листа (вдохновение,
+ *                            кнопка домашних правил);
+ *   • `HeaderSubtitle`     — однострочная подпись под именем в шапке;
+ *   • `CompactNav`         — пункты мобильного сайдбара;
+ *   • `BulkEditor`         — вкладка массового редактора (этап 3b);
+ *   • `CardSummary`        — подпись и бейдж карточки на дашборде;
+ *   • `HouseRulesDialog`   — содержимое диалога домашних правил: хост даёт
+ *                            кнопку/пункт меню, плагин — тело диалога.
+ *
+ * Плюс статическая `favicon` — иконка вкладки игры (раньше ядро угадывало её
+ * по словам в `gameSystem`).
+ */
+export interface GameUiSlots<
+  TCharacter extends CharacterRecord = CharacterRecord,
+> {
+  readonly HeaderActions?: ComponentType<{
+    character: TCharacter;
+    isCompactView: boolean;
+  }>;
+  readonly HeaderSubtitle?: (
+    character: TCharacter,
+    t: (key: string) => string,
+  ) => string;
+  readonly CompactNav?: (character: TCharacter) => readonly PluginNavItem[];
+  readonly BulkEditor?: ComponentType<GameBulkEditorProps<TCharacter>>;
+  readonly CardSummary?: (
+    character: TCharacter,
+    t: (key: string) => string,
+  ) => CardSummary;
+  readonly HouseRulesDialog?: ComponentType<GameHouseRulesDialogProps>;
+  /** Путь к иконке вкладки для игры (public/…). */
+  readonly favicon?: string;
+}
 
 /**
  * Ленивые точки входа в UI модуля. Функции возвращают `import()`-промис,
@@ -245,6 +329,9 @@ export interface GameModule<
 
   /** Цепочка миграций схемы листа (в порядке применения). */
   readonly migrations: readonly CharacterMigration[];
+
+  /** Необязательные UI-слоты плагина (этап 3, D11). */
+  readonly ui?: GameUiSlots<TCharacter>;
 
   /**
    * Привести legacy/импортированный лист к типу редакции: дефолты

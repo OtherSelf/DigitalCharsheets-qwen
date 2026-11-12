@@ -2,26 +2,15 @@
 'use client';
 
 import { useState } from 'react';
-import { useParams } from 'next/navigation';
 
 import {
-  Activity,
-  Backpack,
-  BookOpen,
   BookText,
   Eye,
   EyeOff,
-  Info,
-  PawPrint,
   Pencil,
   PencilLine,
   Scale,
   Scroll,
-  Shield,
-  Sparkles,
-  Star,
-  Swords,
-  TrendingUp,
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -33,83 +22,60 @@ import {
 } from '@/components/ui/tooltip';
 import { useCharacterContext } from '@/context/character-context';
 import { useTranslation } from '@/context/language-context';
-import { resolveCharacterSystemId } from '@/games/character-system';
-import { DhHouseRulesDialog as Dh1HouseRulesDialog } from '@/games/dh1/sections/dh-house-rules-dialog';
-import { DhHouseRulesDialog as Dh2HouseRulesDialog } from '@/games/dh2/sections/dh-house-rules-dialog';
-import { HouseRulesDialog } from '@/games/dnd5e/sections/house-rules-dialog';
-import { type GameSystem } from '@/lib/types';
+import { getCharacterModule } from '@/games/character-system';
+import { type Character } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
 import { LanguageToggle } from '../layout/language-toggle';
 import { Separator } from '../ui/separator';
 
 interface CompactSidebarProps {
-  gameSystem: GameSystem;
+  character: Character;
   activeSection: string;
   onSectionChange: (id: string) => void;
 }
 
+/**
+ * ─── LANDMARK: COMPACT SIDEBAR ─────────────────────────────────────────────
+ * Мобильный сайдбар листа. Список секций — это слот плагина `CompactNav`
+ * (этап 3): у D&D и DH разные наборы и разные i18n-ключи. Общие пункты
+ * «Заметки / Журнал / Домашние правила» рисует ядро; тело диалога правил
+ * приходит из слота `HouseRulesDialog`, поэтому игровых проверок здесь нет.
+ */
 export function CompactSidebar({
-  gameSystem,
+  character,
   activeSection,
   onSectionChange,
 }: CompactSidebarProps) {
   const { t } = useTranslation();
-  const params = useParams<{ id: string }>();
-  const {
-    getCharacter,
-    hideNotes,
-    setHideNotes,
-    showEditButtons,
-    setShowEditButtons,
-  } = useCharacterContext();
-  const character = params?.id ? getCharacter(params.id) : null;
-  const isLevel20 =
-    character?.gameSystem === 'Dungeons & Dragons' &&
-    (character as any).level === 20;
+  const { hideNotes, setHideNotes, showEditButtons, setShowEditButtons } =
+    useCharacterContext();
   const [isHouseRulesDialogOpen, setIsHouseRulesDialogOpen] = useState(false);
 
-  const dndItems = [
-    { label: 'common.info', id: 'info-section', icon: Info },
-    { label: 'dnd.abilityScores', id: 'stats-section', icon: Activity },
-    { label: 'dnd.combatStats', id: 'combat-section', icon: Swords },
-    {
-      label: 'common.inventoryAndAttunement',
-      id: 'inventory-section',
-      icon: Backpack,
-    },
-    { label: 'dnd.spells', id: 'spells-section', icon: Sparkles },
-    { label: 'dnd.companions', id: 'companion-section', icon: PawPrint },
-    ...(isLevel20
-      ? [{ label: 'dnd.divineBoons', id: 'boons-section', icon: Star }]
-      : []),
-  ];
-
-  const dhPrefix =
-    resolveCharacterSystemId(character ?? {}) === 'dh2' ? 'dh2' : 'dh1';
-  const dhItems = [
-    { label: 'common.info', id: 'info-section', icon: Info },
-    {
-      label: 'common.progression',
-      id: 'progression-section',
-      icon: TrendingUp,
-    },
-    { label: 'common.skills', id: 'skills-section', icon: BookOpen },
-    {
-      label: `${dhPrefix}.talentsAndTraits`,
-      id: 'talents-section',
-      icon: Star,
-    },
-    { label: `${dhPrefix}.equipment`, id: 'equipment-section', icon: Shield },
-    { label: 'common.inventory', id: 'inventory-section', icon: Backpack },
-  ];
-
-  const sidebarItems = gameSystem === 'Dungeons & Dragons' ? dndItems : dhItems;
+  const gameModule = getCharacterModule(character);
+  const navItems = gameModule?.ui?.CompactNav?.(character) ?? [];
+  const HouseRulesDialogSlot = gameModule?.ui?.HouseRulesDialog;
 
   const extraSidebarItems = [
-    { label: 'common.notes', id: 'notes-section', icon: BookText },
-    { label: 'common.questJournal', id: 'journal-section', icon: Scroll },
-    { label: 'common.houseRules', id: 'house-rules', icon: Scale },
+    {
+      labelKey: 'common.notes',
+      id: 'notes-section',
+      icon: <BookText className="h-5 w-5" />,
+    },
+    {
+      labelKey: 'common.questJournal',
+      id: 'journal-section',
+      icon: <Scroll className="h-5 w-5" />,
+    },
+    ...(HouseRulesDialogSlot
+      ? [
+          {
+            labelKey: 'common.houseRules',
+            id: 'house-rules',
+            icon: <Scale className="h-5 w-5" />,
+          },
+        ]
+      : []),
   ];
 
   return (
@@ -120,21 +86,21 @@ export function CompactSidebar({
           'w-16',
         )}
       >
-        {sidebarItems.map((item) => (
+        {navItems.map((item) => (
           <Tooltip key={item.id} delayDuration={0}>
             <TooltipTrigger asChild>
               <Button
                 variant={activeSection === item.id ? 'secondary' : 'ghost'}
                 onClick={() => onSectionChange(item.id)}
-                aria-label={t(item.label)}
+                aria-label={t(item.labelKey)}
                 className="w-full"
                 size="icon"
               >
-                <item.icon className="h-5 w-5" />
+                {item.icon}
               </Button>
             </TooltipTrigger>
             <TooltipContent side="right">
-              <p>{t(item.label)}</p>
+              <p>{t(item.labelKey)}</p>
             </TooltipContent>
           </Tooltip>
         ))}
@@ -153,15 +119,15 @@ export function CompactSidebar({
                     onSectionChange(item.id);
                   }
                 }}
-                aria-label={t(item.label)}
+                aria-label={t(item.labelKey)}
                 className="w-full"
                 size="icon"
               >
-                <item.icon className="h-5 w-5" />
+                {item.icon}
               </Button>
             </TooltipTrigger>
             <TooltipContent side="right">
-              <p>{t(item.label)}</p>
+              <p>{t(item.labelKey)}</p>
             </TooltipContent>
           </Tooltip>
         ))}
@@ -225,30 +191,13 @@ export function CompactSidebar({
           <LanguageToggle className="h-10 w-10" />
         </div>
 
-        {/* DH-HOUSE-RULES-SIDEBAR-MOUNT-START */}
-        {params?.id && gameSystem === 'Dungeons & Dragons' && (
-          <HouseRulesDialog
+        {HouseRulesDialogSlot && (
+          <HouseRulesDialogSlot
+            characterId={character.id}
             open={isHouseRulesDialogOpen}
             onOpenChange={setIsHouseRulesDialogOpen}
-            characterId={params.id}
           />
         )}
-        {params?.id &&
-          gameSystem === 'Dark Heresy' &&
-          (resolveCharacterSystemId(character ?? {}) === 'dh2' ? (
-            <Dh2HouseRulesDialog
-              open={isHouseRulesDialogOpen}
-              onOpenChange={setIsHouseRulesDialogOpen}
-              characterId={params.id}
-            />
-          ) : (
-            <Dh1HouseRulesDialog
-              open={isHouseRulesDialogOpen}
-              onOpenChange={setIsHouseRulesDialogOpen}
-              characterId={params.id}
-            />
-          ))}
-        {/* DH-HOUSE-RULES-SIDEBAR-MOUNT-END */}
       </nav>
     </TooltipProvider>
   );

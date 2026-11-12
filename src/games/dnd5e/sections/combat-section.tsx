@@ -1147,7 +1147,7 @@ export const DndCombatSection = React.forwardRef<
                             {t('common.notes')}:{' '}
                             {entry.ability === 'none'
                               ? t('dnd.spellcasting')
-                              : t(entry.ability)}
+                              : t(`common.${entry.ability}`)}
                           </Label>
                           <Textarea
                             defaultValue={entry.notes || ''}
@@ -1244,7 +1244,7 @@ export const DndCombatSection = React.forwardRef<
                     <span className="text-xs font-bold">
                       {entry.ability === 'none'
                         ? t('common.none')
-                        : t(entry.ability)}
+                        : t(`common.${entry.ability}`)}
                     </span>
                   )}
                 </div>
@@ -1391,7 +1391,7 @@ export const DndCombatSection = React.forwardRef<
                       <span className="text-xs font-bold">
                         {!atk.ability || atk.ability === 'none'
                           ? t('common.none')
-                          : t(atk.ability)}
+                          : t(`common.${atk.ability}`)}
                       </span>
                     )}
                   </div>

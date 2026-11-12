@@ -257,7 +257,7 @@ export function DndStatsSection({
             ].map((key) => (
               <StatBox
                 key={key}
-                label={t(key)}
+                label={t(`common.${key}`)}
                 value={stats[key as keyof DnDStats]}
                 editing={isStatsEditing}
                 onChange={(e) =>

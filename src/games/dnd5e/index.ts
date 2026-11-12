@@ -9,6 +9,13 @@ import { ru as dnd5eRu } from './i18n/ru';
 import { mergeDnd5eData } from './merge';
 import { normalizeDnd5e } from './normalize';
 import { dnd5eCharacterSchema } from './schema';
+import { dnd5eCardSummary } from './slots/card-summary';
+import { dnd5eCompactNav } from './slots/compact-nav';
+import {
+  dnd5eHeaderSubtitle,
+  DndHeaderActions,
+  DndHouseRulesDialogSlot,
+} from './slots/header';
 import type { DnD5eCharacter } from './types';
 
 /**
@@ -57,6 +64,14 @@ export const dnd5eModule: GameModule<DnD5eCharacter> = {
   createDemo,
   normalize: normalizeDnd5e,
   merge: mergeDnd5eData,
+  ui: {
+    HeaderActions: DndHeaderActions,
+    HeaderSubtitle: dnd5eHeaderSubtitle,
+    CompactNav: dnd5eCompactNav,
+    CardSummary: dnd5eCardSummary,
+    favicon: '/favicon-dnd.png',
+    HouseRulesDialog: DndHouseRulesDialogSlot,
+  },
   components: {
     loadCreateForm: () =>
       import('./create-form').then((m) => ({

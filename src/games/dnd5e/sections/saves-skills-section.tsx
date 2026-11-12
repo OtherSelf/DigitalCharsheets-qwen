@@ -16,24 +16,24 @@ import { cn } from '@/lib/utils';
 // Helper to map skill internal names to translation keys (with abbreviations)
 const getSkillTranslationKey = (name: string): string => {
   const map: Record<string, string> = {
-    acrobatics: 'skillAcrobatics',
-    animalHandling: 'skillAnimalHandling',
-    arcana: 'skillArcana',
-    athletics: 'skillAthletics',
-    deception: 'skillDeception',
-    history: 'skillHistory',
-    insight: 'skillInsight',
-    intimidation: 'skillIntimidation',
-    investigation: 'skillInvestigation',
-    medicine: 'skillMedicine',
-    nature: 'skillNature',
-    perception: 'skillPerception',
-    performance: 'skillPerformance',
-    persuasion: 'skillPersuasion',
-    religion: 'skillReligion',
-    sleightOfHand: 'skillSleightOfHand',
-    stealth: 'skillStealth',
-    survival: 'skillSurvival',
+    acrobatics: 'dnd.skillAcrobatics',
+    animalHandling: 'dnd.skillAnimalHandling',
+    arcana: 'dnd.skillArcana',
+    athletics: 'dnd.skillAthletics',
+    deception: 'dnd.skillDeception',
+    history: 'dnd.skillHistory',
+    insight: 'dnd.skillInsight',
+    intimidation: 'dnd.skillIntimidation',
+    investigation: 'dnd.skillInvestigation',
+    medicine: 'dnd.skillMedicine',
+    nature: 'dnd.skillNature',
+    perception: 'dnd.skillPerception',
+    performance: 'dnd.skillPerformance',
+    persuasion: 'dnd.skillPersuasion',
+    religion: 'dnd.skillReligion',
+    sleightOfHand: 'dnd.skillSleightOfHand',
+    stealth: 'dnd.skillStealth',
+    survival: 'dnd.skillSurvival',
   };
   return map[name] || name;
 };
@@ -41,12 +41,12 @@ const getSkillTranslationKey = (name: string): string => {
 // Helper to map saving throw internal names to translation keys
 const getSaveTranslationKey = (name: string): string => {
   const map: Record<string, string> = {
-    strength: 'saveStrength',
-    dexterity: 'saveDexterity',
-    constitution: 'saveConstitution',
-    intelligence: 'saveIntelligence',
-    wisdom: 'saveWisdom',
-    charisma: 'saveCharisma',
+    strength: 'dnd.saveStrength',
+    dexterity: 'dnd.saveDexterity',
+    constitution: 'dnd.saveConstitution',
+    intelligence: 'dnd.saveIntelligence',
+    wisdom: 'dnd.saveWisdom',
+    charisma: 'dnd.saveCharisma',
   };
   return map[name.toLowerCase()] || name;
 };

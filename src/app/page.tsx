@@ -72,7 +72,7 @@ export default function DashboardPage() {
 
   return (
     <>
-      <DynamicFavicon gameSystem="default" />
+      <DynamicFavicon />
       <div className="flex h-dvh flex-col">
         {/* LANDMARK: HEADER_WITH_MOBILE_ACTIONS */}
         <Header

@@ -83,6 +83,9 @@ export const ruTranslations: Record<string, string> = {
   'common.perception': 'Восприятие',
   'common.willpower': 'Сила воли',
   'common.error': 'Ошибка',
+  'common.sheetUnavailable': 'Лист недоступен',
+  'common.sheetUnavailableHint':
+    'Плагин игры не смог отрисовать лист. Данные не потеряны — JSON-экспорт по-прежнему доступен.',
   'common.saveFailed': 'Не удалось сохранить изменения',
   'common.saveFailedDesc':
     'Последние правки не попали на сервер. Проверьте соединение — отправка повторится автоматически.',

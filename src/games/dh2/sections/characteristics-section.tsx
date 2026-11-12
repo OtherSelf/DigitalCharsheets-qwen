@@ -325,7 +325,7 @@ export const CharacteristicsSection = React.forwardRef<
                   'influence',
                 ].includes(char.key)
                   ? `dh2.${char.key}`
-                  : char.key,
+                  : `common.${char.key}`,
               )}
               value={
                 isCharacteristicsEditing

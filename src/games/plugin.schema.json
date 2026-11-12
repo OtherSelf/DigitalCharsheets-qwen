@@ -259,7 +259,14 @@
         "slots": {
           "type": "array",
           "items": {
-            "enum": ["HeaderActions", "CompactNav", "BulkEditor", "CardSummary"]
+            "enum": [
+              "HeaderActions",
+              "HeaderSubtitle",
+              "CompactNav",
+              "BulkEditor",
+              "CardSummary",
+              "HouseRulesDialog"
+            ]
           },
           "uniqueItems": true
         }

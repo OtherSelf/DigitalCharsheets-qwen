@@ -506,7 +506,7 @@ export function DndSpellsSection({
                               {t('common.notes')}:{' '}
                               {entry.ability === 'none'
                                 ? t('dnd.spellcasting')
-                                : t(entry.ability)}
+                                : t(`common.${entry.ability}`)}
                             </Label>
                             <Textarea
                               defaultValue={entry.notes || ''}
@@ -569,7 +569,7 @@ export function DndSpellsSection({
                       <span className="text-xs font-bold">
                         {entry.ability === 'none'
                           ? t('common.none')
-                          : t(entry.ability)}
+                          : t(`common.${entry.ability}`)}
                       </span>
                     )}
                   </div>

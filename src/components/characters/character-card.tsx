@@ -28,45 +28,14 @@ import {
 } from '@/components/ui/card';
 import { useCharacterContext } from '@/context/character-context';
 import { useTranslation } from '@/context/language-context';
-import {
-  getCharacterModule,
-  resolveCharacterSystemId,
-} from '@/games/character-system';
+import { getCharacterModule } from '@/games/character-system';
 import { getGameDefinition } from '@/games/games';
-import { dhLocalizedKey, RANK_KEYS } from '@/lib/dark-heresy-data';
 import {
   DEFAULT_EXPORT_CONFIG,
   exportCharacterToExcel,
   exportCharacterToJSON,
 } from '@/lib/export-utils';
 import { type Character } from '@/lib/types';
-
-const CLASS_TRANSLATION_KEYS: Record<string, string> = {
-  Artificer: 'dnd.classArtificer',
-  Barbarian: 'dnd.classBarbarian',
-  Bard: 'dnd.classBard',
-  Cleric: 'dnd.classCleric',
-  Druid: 'dnd.classDruid',
-  Fighter: 'dnd.classFighter',
-  Monk: 'dnd.classMonk',
-  Paladin: 'dnd.classPaladin',
-  Ranger: 'dnd.classRanger',
-  Rogue: 'dnd.classRogue',
-  Sorcerer: 'dnd.classSorcerer',
-  Warlock: 'dnd.classWarlock',
-  Wizard: 'dnd.classWizard',
-};
-
-const CAREER_TRANSLATION_KEYS: Record<string, string> = {
-  Adept: 'dh.careerAdept',
-  Arbitrator: 'dh.careerArbitrator',
-  Assassin: 'dh.careerAssassin',
-  Cleric: 'dh.careerCleric',
-  Guardsman: 'dh.careerGuardsman',
-  'Imperial Psyker': 'dh.careerImperialPsyker',
-  Scum: 'dh.careerScum',
-  'Tech-Priest': 'dh.careerTechPriest',
-};
 
 type CharacterCardProps = {
   character: Character;
@@ -76,14 +45,15 @@ export function CharacterCard({ character }: CharacterCardProps) {
   const { t } = useTranslation();
   const { deleteCharacter, isCompactView, toast } = useCharacterContext();
 
-  const systemId = resolveCharacterSystemId(character);
   const gameModule = getCharacterModule(character);
   const gameDefinition = gameModule
     ? getGameDefinition(gameModule.gameId)
     : undefined;
-  const isDnd = gameModule?.gameId === 'dnd';
-  const isDarkHeresy = gameModule?.gameId === 'darkHeresy';
-  const badgeVariant = isDnd ? 'default' : 'secondary';
+  // Подпись и цвет бейджа — слот плагина (этап 3); у ядра остаётся
+  // нейтральный вариант, если слот не задан.
+  const summary = gameModule?.ui?.CardSummary?.(character, t);
+  const summaryText = summary?.text ?? '';
+  const badgeVariant = summary?.badgeVariant ?? 'secondary';
   // Бейдж «игра · редакция» целиком из реестра и i18n.
   const systemLabel =
     gameDefinition && gameModule
@@ -116,31 +86,6 @@ export function CharacterCard({ character }: CharacterCardProps) {
     }
   };
 
-  const getTranslatedClass = () => {
-    if (isDnd) {
-      return t(
-        CLASS_TRANSLATION_KEYS[character.characterClass] ||
-          character.characterClass,
-      );
-    }
-    return t(
-      dhLocalizedKey(
-        CAREER_TRANSLATION_KEYS[character.characterClass] ||
-          character.characterClass,
-        resolveCharacterSystemId(character) === 'dh2' ? 'dh2' : 'dh1',
-      ),
-    );
-  };
-
-  const getTranslatedRank = () => {
-    if ('rank' in character) {
-      return t(
-        RANK_KEYS[character.rank as keyof typeof RANK_KEYS] || character.rank,
-      );
-    }
-    return '';
-  };
-
   if (isCompactView) {
     return (
       <Card className="compact-mobile-card hover:shadow-primary/10 flex flex-row items-stretch overflow-hidden p-2 transition-shadow duration-300 hover:shadow-lg sm:flex-row">
@@ -151,10 +96,7 @@ export function CharacterCard({ character }: CharacterCardProps) {
             </CardTitle>
           </div>
           <CardDescription className="mt-0.5 line-clamp-1 text-xs break-words">
-            {isDnd &&
-              `${t('dnd.lvl')}${'level' in character ? character.level : ''} `}
-            {isDarkHeresy && `${getTranslatedRank()} `}
-            {getTranslatedClass()}
+            {summaryText}
           </CardDescription>
           <Badge
             variant={badgeVariant}
@@ -235,10 +177,7 @@ export function CharacterCard({ character }: CharacterCardProps) {
           {character.name}
         </CardTitle>
         <CardDescription className="text-xs break-words sm:text-sm">
-          {isDnd &&
-            `${t('dnd.lvl')}${'level' in character ? character.level : ''} `}
-          {isDarkHeresy && `${getTranslatedRank()} `}
-          {getTranslatedClass()}
+          {summaryText}
         </CardDescription>
       </CardContent>
       <CardFooter className="flex items-center justify-between gap-2 p-3 pt-0 sm:p-4">

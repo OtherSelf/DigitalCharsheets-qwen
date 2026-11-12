@@ -3,22 +3,13 @@
 
 import { useEffect } from 'react';
 
-export function DynamicFavicon({
-  gameSystem = 'default',
-}: {
-  gameSystem?: string;
-}) {
+/**
+ * Иконка вкладки выбранной игры. Путь приходит из слота плагина
+ * (`ui.favicon`): ядро больше не угадывает игру по словам в `gameSystem`.
+ */
+export function DynamicFavicon({ href }: { href?: string }) {
   useEffect(() => {
-    console.log('[FAVICON] Updating for:', gameSystem);
-
-    let iconHref = '/favicon-default.png';
-    const gs = (gameSystem || '').toLowerCase();
-
-    if (gs.includes('dungeon') || gs.includes('dnd')) {
-      iconHref = '/favicon-dnd.png';
-    } else if (gs.includes('heresy') || gs.includes('dark')) {
-      iconHref = '/favicon-dh.png';
-    }
+    const iconHref = href || '/favicon-default.png';
 
     // LANDMARK: AGGRESSIVE DOM UPDATE
     // 1. Remove ALL existing icon links to prevent browser caching conflicts
@@ -37,7 +28,7 @@ export function DynamicFavicon({
     document.head.appendChild(link);
 
     console.log('[FAVICON] Applied new href:', link.href);
-  }, [gameSystem]);
+  }, [href]);
 
   return null;
 }
