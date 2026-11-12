@@ -229,6 +229,18 @@ header, sidebar, dialogs and JSON export keep working.
   `scripts/plugins/boundaries.json` (`forbidden`, `allowed`, `legacy`) —
   see [Import boundaries](#import-boundaries).
 
+## Reference plugin (fixture)
+
+`tests/fixtures/example-plugin/` is a complete, hidden plugin with its own
+types, zod schema, defaults, demo, export/Excel, i18n and **custom React sheet
+and creation form**, plus `HeaderSubtitle`/`CompactNav`/`CardSummary` slots.
+`tests/unit/example-plugin.test.ts` copies it into a temporary `src/games/` and
+runs the same generator/conformance checks the shipped plugins go through.
+
+It is the executable form of "new game = folder + `plugin.json` + `sheet.tsx` +
+`create-form.tsx` + rebuild": the only core-facing API is
+`@/games/plugin-api`, `@/games/types`, the UI kit and the host contexts.
+
 ## Import boundaries
 
 `npm run plugins:boundaries` (also part of `npm run verify`) reads

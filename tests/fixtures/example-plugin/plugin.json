@@ -1,0 +1,60 @@
+{
+  "manifestVersion": 1,
+  "pluginApi": "^1.0.0",
+  "id": "example",
+  "gameId": "exampleGame",
+  "version": "0.1.0",
+  "order": 90,
+  "defaultStatus": "hidden",
+  "name": {
+    "en": "Example — Minimal Game",
+    "ru": "Пример — минимальная игра"
+  },
+  "description": {
+    "en": "Fixture plugin: a tiny custom React sheet, creation form, own i18n, demo and export. Never shipped to users (hidden).",
+    "ru": "Фикстура-плагин: маленький собственный React-лист, форма создания, свои словари, демо и экспорт. Пользователям не показывается (hidden)."
+  },
+  "tags": ["example", "fixture"],
+  "author": "tests",
+  "license": "MIT",
+  "schemaVersion": 2,
+  "game": {
+    "id": "exampleGame",
+    "order": 90,
+    "name": {
+      "en": "Example Game",
+      "ru": "Пример игры"
+    }
+  },
+  "dependencies": {
+    "host": "^1.0.0",
+    "plugins": {}
+  },
+  "entry": {
+    "module": "index.ts#exampleModule"
+  },
+  "sheet": {
+    "mode": "custom",
+    "client": "sheet.tsx",
+    "createForm": "create-form.tsx"
+  },
+  "i18n": {
+    "en": "i18n/en.ts",
+    "ru": "i18n/ru.ts"
+  },
+  "demo": {
+    "entry": "index.ts#createDemo"
+  },
+  "export": {
+    "json": "index.ts#toPortableJson",
+    "excel": "index.ts#buildExcelSections"
+  },
+  "migrations": [],
+  "tests": {
+    "conformance": ">=1"
+  },
+  "ui": {
+    "slots": ["HeaderSubtitle", "CompactNav", "CardSummary"]
+  },
+  "aliases": [{ "gameSystem": "Example Game" }]
+}
