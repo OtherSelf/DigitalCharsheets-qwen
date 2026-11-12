@@ -4,6 +4,7 @@ import path from 'path';
 
 import { NextResponse } from 'next/server';
 
+import { listGameModules } from '@/games/registry';
 import { normalizeCharacterRecord } from '@/lib/character-version';
 import { getCharactersDir, getDataDir } from '@/lib/data-dir';
 import { createImportedUser } from '@/lib/server-auth';
@@ -37,220 +38,6 @@ function hashPassword(password: string): string {
 
 function generateId(): string {
   return Date.now().toString(36) + Math.random().toString(36).substr(2);
-}
-
-// ─── CHARACTER NAME GENERATION ─────────────────────────────────────
-
-function generateCharacterName(raw: any, index: number): string {
-  const system = (raw.gameSystem || '').trim();
-
-  if (system.includes('Dark Heresy')) {
-    const career = (raw.careerPath || 'Unknown').trim();
-    const world = (raw.homeWorld || '').trim();
-    return world ? `${career} (${world})` : `${career} #${index + 1}`;
-  }
-
-  if (system.includes('Dungeons')) {
-    const cls = (raw.characterClass || 'Unknown').trim();
-    const level = raw.level || 1;
-    const bg = (raw.background || '').trim();
-    return bg
-      ? `Level ${level} ${cls} (${bg})`
-      : `Level ${level} ${cls} #${index + 1}`;
-  }
-
-  return `Character #${index + 1}`;
-}
-
-// ─── DARK HERESY CONVERTER ─────────────────────────────────────────
-
-function convertDarkHeresyCharacter(
-  raw: any,
-  userId: string,
-  name: string,
-): any {
-  // Clean equipment
-  const rawEquipment =
-    raw.equipment && raw.equipment !== 0 ? raw.equipment : {};
-  const armor = rawEquipment.armor || {};
-  const weapons = rawEquipment.weapons || {};
-
-  // Normalize armor (replace 0/null with proper null)
-  const armorParts = [
-    'Head',
-    'Right arm',
-    'Body',
-    'Left arm',
-    'Right leg',
-    'Left leg',
-  ];
-  const normalizedArmor: any = {};
-  for (const part of armorParts) {
-    normalizedArmor[part] =
-      armor[part] && armor[part] !== 0 ? armor[part] : null;
-  }
-
-  // Normalize weapons
-  const meleeWeapons = Array.isArray(weapons.melee) ? weapons.melee : [];
-  const rangedWeapons = Array.isArray(weapons.ranged) ? weapons.ranged : [];
-
-  // Normalize points
-  const wounds =
-    raw.wounds && raw.wounds !== 0
-      ? raw.wounds
-      : { current: 0, max: 0, notes: '' };
-  const fatePoints =
-    raw.fatePoints && raw.fatePoints !== 0
-      ? raw.fatePoints
-      : { current: 1, max: 1, notes: '' };
-  const insanityPoints =
-    raw.insanityPoints && raw.insanityPoints !== 0
-      ? raw.insanityPoints
-      : { total: 0, notes: '' };
-  const corruptionPoints =
-    raw.corruptionPoints && raw.corruptionPoints !== 0
-      ? raw.corruptionPoints
-      : { total: 0, notes: '' };
-
-  // Normalize inventory
-  const inventory = Array.isArray(raw.inventory) ? raw.inventory : [];
-
-  return {
-    id: generateId(),
-    userId,
-    gameSystem: 'Dark Heresy',
-    name,
-    careerPath: (raw.careerPath || '').trim(),
-    characterClass: (raw.characterClass || '').trim(),
-    homeWorld: (raw.homeWorld || '').trim(),
-    rank: 'Acolyte',
-    advancedPath:
-      raw.advancedPath && raw.advancedPath !== 0
-        ? String(raw.advancedPath).trim()
-        : null,
-    alternatePath:
-      raw.alternatePath && raw.alternatePath !== 0
-        ? String(raw.alternatePath).trim()
-        : null,
-    divination: (raw.divination || '').trim(),
-    divinationEffect: (raw.divinationEffect || '').trim(),
-    backstory: (raw.backstory || '').trim(),
-    age: (raw.age || '').trim(),
-    height: (raw.height || '').trim(),
-    weight: '',
-    hairColor: (raw.hairColor || '').trim(),
-    eyeColor: (raw.eyeColor || '').trim(),
-    skinColor: '',
-    quirk: '',
-    worldVariant: '',
-    stats: {
-      weaponSkill: 30,
-      ballisticSkill: 30,
-      strength: 30,
-      toughness: 30,
-      agility: 30,
-      intelligence: 30,
-      perception: 30,
-      willpower: 30,
-      fellowship: 30,
-      influence: 0,
-    },
-    statUpgrades: {},
-    statNotes: {},
-    skills: [],
-    talents: [],
-    movement: { walkHalf: 0, walkFull: 0, charge: 0, run: 0 },
-    wounds,
-    fatePoints,
-    insanityPoints,
-    corruptionPoints,
-    experience: raw.experience || 0,
-    totalExpSpent: raw.experience || 0,
-    equipment: {
-      armor: normalizedArmor,
-      weapons: { melee: meleeWeapons, ranged: rangedWeapons },
-    },
-    inventory,
-    wealth: { throneGelt: 0, monthlyIncome: 0 },
-  };
-}
-
-// ─── DND CONVERTER ─────────────────────────────────────────────────
-
-function convertDndCharacter(raw: any, userId: string, name: string): any {
-  const hitPoints =
-    raw.hitPoints && raw.hitPoints !== 0
-      ? raw.hitPoints
-      : { current: 0, max: 0 };
-  const currency =
-    raw.currency && raw.currency !== 0
-      ? raw.currency
-      : { cp: 0, sp: 0, ep: 0, gp: 0, pp: 0 };
-  const deathSaves =
-    raw.deathSaves && raw.deathSaves !== 0
-      ? raw.deathSaves
-      : { successes: 0, failures: 0 };
-
-  return {
-    id: generateId(),
-    userId,
-    gameSystem: 'Dungeons & Dragons',
-    name,
-    characterClass: (raw.characterClass || '').trim(),
-    background: (raw.background || '').trim(),
-    alignment: (raw.alignment || '').trim(),
-    level: raw.level || 1,
-    inspiration:
-      raw.inspiration === 'Yes' ||
-      raw.inspiration === '1' ||
-      raw.inspiration === 1
-        ? '1'
-        : '0',
-    backstory: (raw.backstory || '').trim(),
-    age: (raw.age || '').trim(),
-    height: (raw.height || '').trim(),
-    weight: '',
-    eyes: (raw.eyes || '').trim(),
-    hair: (raw.hair || '').trim(),
-    stats: {
-      strength: 10,
-      dexterity: 10,
-      constitution: 10,
-      intelligence: 10,
-      wisdom: 10,
-      charisma: 10,
-    },
-    armorClass: raw.armorClass || 10,
-    hitPoints,
-    hitDice: (raw.hitDice || '').trim(),
-    hitDiceUsed: raw.hitDiceUsed && raw.hitDiceUsed !== 0 ? raw.hitDiceUsed : 0,
-    speed: '30ft',
-    proficiencyBonus: 2,
-    initiative: 0,
-    experience: raw.experiencePoints || 0,
-    skills: [],
-    attacks: Array.isArray(raw.attacks) ? raw.attacks : [],
-    equipment: Array.isArray(raw.equipment) ? raw.equipment : [],
-    inventory: Array.isArray(raw.inventory) ? raw.inventory : [],
-    currency,
-    featuresAndTraits: Array.isArray(raw.featuresAndTraits)
-      ? raw.featuresAndTraits
-      : [],
-    companions: Array.isArray(raw.companions) ? raw.companions : [],
-    combatResources: Array.isArray(raw.combatResources)
-      ? raw.combatResources
-      : [],
-    attunementItems: Array.isArray(raw.attunementItems)
-      ? raw.attunementItems
-      : [],
-    bonds: Array.isArray(raw.bonds) ? raw.bonds : [],
-    ideals: Array.isArray(raw.ideals) ? raw.ideals : [],
-    flaws: Array.isArray(raw.flaws) ? raw.flaws : [],
-    deathSaves,
-    hpTracking: (raw.hpTracking || '').trim(),
-    isMulticlass: raw.isMulticlass === true,
-    spells: {},
-  };
 }
 
 // ─── IMPORT HANDLER (GET request - just visit the URL) ─────────────
@@ -327,22 +114,25 @@ export async function GET() {
       // Process each character
       const importedChars: any[] = [];
       chars.forEach((raw, index) => {
-        const system = (raw.gameSystem || '').trim();
-        const name = generateCharacterName(raw, index);
+        // Какая игра и как конвертировать legacy-запись — знает плагин
+        // (`matchesLegacyImport`/`legacyImportName`/`convertLegacyImport`).
+        const gameModule = listGameModules().find((module) =>
+          module.matchesLegacyImport?.(raw),
+        );
+        if (!gameModule?.convertLegacyImport) return; // неизвестная система
 
-        let character: any;
-        if (system.includes('Dark Heresy')) {
-          character = convertDarkHeresyCharacter(raw, localUserId, name);
-        } else if (system.includes('Dungeons')) {
-          character = convertDndCharacter(raw, localUserId, name);
-        } else {
-          return; // Skip unknown systems
-        }
+        const name =
+          gameModule.legacyImportName?.(raw, index) ??
+          `Character #${index + 1}`;
+        const converted = gameModule.convertLegacyImport(raw, {
+          userId: localUserId,
+          name,
+          createId: generateId,
+        });
+        if (!converted) return;
 
         // Write individual character file
-        character = normalizeCharacterRecord(
-          character as Record<string, unknown>,
-        ).character;
+        const character = normalizeCharacterRecord(converted).character;
         const charFile = path.join(charsDir, `${character.id}.json`);
         fs.writeFileSync(charFile, JSON.stringify(character, null, 2), 'utf8');
         importedChars.push({

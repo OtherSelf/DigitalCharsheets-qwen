@@ -4,8 +4,8 @@ import { dnd5eBulkEditor } from './bulk-editor';
 import { dnd5eCardSummary } from './slots/card-summary';
 import { dnd5eCompactNav } from './slots/compact-nav';
 import {
-  DndHeaderActions,
   dnd5eHeaderSubtitle,
+  DndHeaderActions,
   DndHouseRulesDialogSlot,
 } from './slots/header';
 import type { DnD5eCharacter } from './types';

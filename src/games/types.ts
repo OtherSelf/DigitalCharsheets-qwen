@@ -141,6 +141,14 @@ export interface NormalizeResult<TCharacter extends CharacterRecord> {
   readonly warnings?: readonly string[];
 }
 
+/** Контекст разового legacy-импорта (Firestore/2.x экспорт). */
+export interface LegacyImportContext {
+  readonly userId: string;
+  readonly name: string;
+  /** Генератор id листа (ядро не даёт плагину доступ к fs/crypto). */
+  readonly createId: () => string;
+}
+
 /**
  * ─── LANDMARK: GAME_EXPORT_ADAPTER ─────────────────────────────────────────
  * Адаптер экспорта модуля. Ядро (`src/lib/export-utils.ts`) знает только
@@ -402,6 +410,24 @@ export interface GameModule<
     raw: Readonly<Record<string, unknown>>,
     options?: NormalizeOptions,
   ): NormalizeResult<TCharacter>;
+
+  /** Узнаёт ли плагин legacy-запись (по её `gameSystem`/полям). */
+  matchesLegacyImport?(raw: Readonly<Record<string, unknown>>): boolean;
+
+  /** Имя для legacy-записи без имени (у каждой игры своя эвристика). */
+  legacyImportName?(
+    raw: Readonly<Record<string, unknown>>,
+    index: number,
+  ): string;
+
+  /**
+   * Конвертер legacy-записи в лист: ядро только пишет файл и нормализует
+   * результат. Раньше конвертеры D&D/DH жили в `app/api/import/route.ts`.
+   */
+  convertLegacyImport?(
+    raw: Readonly<Record<string, unknown>>,
+    context: LegacyImportContext,
+  ): Record<string, unknown> | undefined;
 
   /**
    * Найти вложенное в лист существо по его виртуальному id (например,

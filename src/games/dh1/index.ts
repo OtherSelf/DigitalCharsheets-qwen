@@ -6,6 +6,11 @@ import { buildDh1ExcelSections } from './excel';
 import { buildDh1PortableJson } from './export';
 import { en as dh1En } from './i18n/en';
 import { ru as dh1Ru } from './i18n/ru';
+import {
+  dh1ConvertLegacyImport,
+  dh1LegacyImportName,
+  dh1MatchesLegacyImport,
+} from './legacy-import';
 import { mergeDh1Data } from './merge';
 import { normalizeDh1 } from './normalize';
 import { dh1CharacterSchema } from './schema';
@@ -73,4 +78,7 @@ export const dh1Module: GameModule<DH1Character> = {
     buildExcelSections,
   },
   migrations: [],
+  matchesLegacyImport: dh1MatchesLegacyImport,
+  legacyImportName: dh1LegacyImportName,
+  convertLegacyImport: dh1ConvertLegacyImport,
 };
