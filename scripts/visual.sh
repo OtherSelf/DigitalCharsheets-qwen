@@ -22,14 +22,14 @@
 #                                        # один файл
 #    npm run test:visual -- --skip-build tests/visual/themes.spec.ts:70:7
 #                                        # один тест по строке
-#    ./scripts/visual.sh --base-url http://localhost:3000  # против живого сервера
+#    bash scripts/visual.sh --base-url http://localhost:3000  # против живого сервера
 #
 #  Любой аргумент, который скрипт не знает, уходит в `playwright test` как есть
 #  (--grep, --project, --last-failed, пути спек и т.д.), поэтому набор можно
-#  запускать точечно. Подробности и подводные камни — ./scripts/visual.sh --help.
+#  запускать точечно. Подробности и подводные камни — bash scripts/visual.sh --help.
 #
 #  Код возврата: 0 — эталоны совпали, 1 — есть отличия/падения.
-#  Флаги и проброс в Playwright: ./scripts/visual.sh --help
+#  Флаги и проброс в Playwright: bash scripts/visual.sh --help
 #  Связано: playwright.config.ts, tests/visual/, _TESTING_VISUAL.md
 # ============================================================================
 
@@ -63,7 +63,7 @@ usage() {
 ${C_BOLD}visual.sh${C_RESET} — визуальные тесты DigitalCharsheets (Playwright)
 
 ${C_BOLD}Использование:${C_RESET}
-  ./scripts/visual.sh [флаги] [аргументы playwright]
+  bash scripts/visual.sh [флаги] [аргументы playwright]
 
 ${C_BOLD}Флаги:${C_RESET}
   --skip-build           не собирать, использовать текущий .next/
@@ -101,7 +101,7 @@ ${C_BOLD}Примеры:${C_RESET}
   npm run test:visual -- --skip-build
   npm run test:visual -- --update-snapshots
   npm run test:visual -- --grep "mobile"
-  ./scripts/visual.sh --base-url http://127.0.0.1:3001
+  bash scripts/visual.sh --base-url http://127.0.0.1:3001
 
 ${C_BOLD}Где смотреть результат:${C_RESET}
   playwright-report/index.html   — HTML-отчёт с диффами

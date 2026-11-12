@@ -26,13 +26,13 @@
 #  Реальные ./data, запущенные серверы и открытые порты не затрагиваются.
 #
 #  Использование:
-#    ./scripts/predeploy.sh                  # полный прогон
-#    ./scripts/predeploy.sh --skip-build     # без шага 6/7, использовать готовый .next
-#    ./scripts/predeploy.sh --skip-smoke     # без шага 7/7
-#    ./scripts/predeploy.sh --base-url http://localhost:3001   # только smoke по стенду
-#    ./scripts/predeploy.sh --keep           # сохранить временные данные и лог сервера
+#    bash scripts/predeploy.sh                  # полный прогон
+#    bash scripts/predeploy.sh --skip-build     # без шага 6/7, использовать готовый .next
+#    bash scripts/predeploy.sh --skip-smoke     # без шага 7/7
+#    bash scripts/predeploy.sh --base-url http://localhost:3001   # только smoke по стенду
+#    bash scripts/predeploy.sh --keep           # сохранить временные данные и лог сервера
 #
-#  Флаги и сценарии: ./scripts/predeploy.sh --help
+#  Флаги и сценарии: bash scripts/predeploy.sh --help
 #  Код возврата: 0 — можно деплоить, 1 — есть падения.
 #  Связано: scripts/smoke.mjs, scripts/lib/fs-rename-fallback.cjs, tests/,
 #           _RUN_INSTRUCTIONS.md §2.5, _TESTING_UNIT.md
@@ -69,7 +69,7 @@ usage() {
 ${C_BOLD}predeploy.sh${C_RESET} — проверки перед деплоем DigitalCharsheets
 
 ${C_BOLD}Использование:${C_RESET}
-  ./scripts/predeploy.sh [флаги]
+  bash scripts/predeploy.sh [флаги]
 
 ${C_BOLD}Флаги:${C_RESET}
   --skip-build        не выполнять next build (нужен готовый .next/)
@@ -81,9 +81,9 @@ ${C_BOLD}Флаги:${C_RESET}
   -h, --help          эта справка
 
 ${C_BOLD}Типичные сценарии:${C_RESET}
-  ./scripts/predeploy.sh                                   # перед прод-деплоем
-  ./scripts/predeploy.sh --skip-build                      # быстрая перепроверка
-  ./scripts/predeploy.sh --base-url http://localhost:3001  # проверить дев-стенд
+  bash scripts/predeploy.sh                                   # перед прод-деплоем
+  bash scripts/predeploy.sh --skip-build                      # быстрая перепроверка
+  bash scripts/predeploy.sh --base-url http://localhost:3001  # проверить дев-стенд
 EOF
 }
 
