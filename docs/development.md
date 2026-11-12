@@ -92,6 +92,24 @@ npm run lint:fix       # eslint . --fix — safe autofixes only
 Markdown files are not formatted by Prettier (`*.md` is ignored). Keep docs
 readable manually and follow [docs/README.md](README.md).
 
+## Line endings and file modes
+
+Text is stored as **LF** in the repository and in every working tree;
+[`.gitattributes`](../.gitattributes) sets `text=auto eol=lf`, so `core.autocrlf`
+on Windows cannot produce CRLF-only diffs. `.editorconfig` makes editors keep
+LF, UTF-8 and a final newline.
+
+The repository does **not** track the executable bit: every file is `100644`,
+and scripts are started through their npm wrapper or explicitly
+(`bash scripts/predeploy.sh`, `node scripts/smoke.mjs`). A tracked `100755`
+entry on a Windows or network-share checkout shows up as a permanent
+mode-only `M` in VS Code even though the content matches.
+
+If a fresh checkout still reports files as modified, check `git diff`: a
+mode/EOL-only difference is clone noise, not an edit — `git checkout -- .`
+restores the stored version. To fix an old clone with CRLF files once, run
+`git add --renormalize .` and commit nothing if the diff is empty.
+
 ## Dependencies
 
 - Next.js 16 / React 19 / Tailwind CSS 4 / TypeScript 6.

@@ -1,0 +1,30 @@
+# Единые переводы строк: LF в индексе и в рабочем дереве на всех ОС.
+# Атрибуты сильнее core.autocrlf, поэтому Windows-редактор не создаёт
+# CRLF-only диффы.
+* text=auto eol=lf
+
+# Явно текстовые — страховка от бинарной эвристики.
+*.ts    text eol=lf
+*.tsx   text eol=lf
+*.mts   text eol=lf
+*.js    text eol=lf
+*.mjs   text eol=lf
+*.cjs   text eol=lf
+*.json  text eol=lf
+*.css   text eol=lf
+*.md    text eol=lf
+*.sh    text eol=lf
+*.yml   text eol=lf
+*.yaml  text eol=lf
+
+# Бинарные — без конвертации и текстового diff.
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.webp  binary
+*.ico   binary
+*.woff  binary
+*.woff2 binary
+*.xlsx  binary
+*.tgz   binary
