@@ -197,7 +197,9 @@ test.describe('создание персонажа — D&D 5e', () => {
     await page.getByRole('button', { name: 'Create Character' }).click();
 
     await expect(
-      page.getByText('Name must be at least 2 characters.'),
+      page
+        .getByTestId('create-step-form')
+        .getByText('Name must be at least 2 characters.'),
     ).toBeVisible();
     expect(new URL(page.url()).pathname, 'остаёмся в форме').toBe('/new');
     expect(await fetchCharacters(page), 'лист не создан').toEqual([]);

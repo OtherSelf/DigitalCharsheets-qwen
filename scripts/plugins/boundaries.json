@@ -74,7 +74,8 @@
     "@/lib/i18n",
     "@/lib/i18n/*",
     "@/lib/utils",
-    "@/games/plugin-host"
+    "@/games/plugin-host",
+    "@/lib/form-validation"
   ],
   "legacy": {}
 }

@@ -83,6 +83,8 @@ export const enTranslations: Record<string, string> = {
   'common.perception': 'Perception',
   'common.willpower': 'Willpower',
   'common.error': 'Error',
+  'common.fillRequiredFields': 'Fill in the required fields',
+  'common.checkFields': 'Check the highlighted fields.',
   'common.retry': 'Retry',
   'common.loadErrorTitle': 'Could not load characters',
   'common.loadErrorDesc':

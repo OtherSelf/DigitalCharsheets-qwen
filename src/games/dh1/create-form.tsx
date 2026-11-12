@@ -3,7 +3,7 @@
 import React from 'react';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm, type Resolver } from 'react-hook-form';
+import { useForm, type FieldErrors, type Resolver } from 'react-hook-form';
 import { z } from 'zod';
 
 import { Button } from '@/components/ui/button';
@@ -37,6 +37,10 @@ import {
   useToast,
   useTranslation,
 } from '@/games/plugin-host';
+import {
+  buildInvalidFormAlert,
+  focusFirstInvalidField,
+} from '@/lib/form-validation';
 
 import {
   ALL_QUIRKS,
@@ -127,6 +131,10 @@ export function DarkHeresyCreateForm({
     resolver: zodResolver(formSchema) as unknown as Resolver<
       z.infer<typeof formSchema>
     >,
+    // Фокус/скролл на первом невалидном поле делает handleInvalid: RHF умеет
+    // фокусировать только зарегистрированные refs, а кастомные Select на
+    // мобильном остаются вне экрана.
+    shouldFocusError: false,
     defaultValues: {
       name: '',
       worldVariant: '',
@@ -178,6 +186,24 @@ export function DarkHeresyCreateForm({
     form.setValue('worldVariant', '');
   }, [watchedHomeWorld, form]);
 
+  const handleInvalid = (errors: FieldErrors) => {
+    // RHF фокусирует только «нативные» поля; Select на мобильном может
+    // оказаться вне экрана — поэтому явно скроллим/фокусируем и показываем
+    // тост с первой ошибкой, чтобы нажатие «Создать» не выглядело немым.
+    // onInvalid вызывается до перерисовки ошибок: `aria-invalid` появится
+    // только в следующем кадре, поэтому фокус ставим после коммита React.
+    window.setTimeout(focusFirstInvalidField, 0);
+    const alert = buildInvalidFormAlert(errors, {
+      title: t('common.fillRequiredFields'),
+      fallback: t('common.checkFields'),
+    });
+    toast({
+      variant: 'destructive',
+      title: alert.title,
+      description: alert.description,
+    });
+  };
+
   async function onSubmit(values: z.infer<typeof formSchema>) {
     const newCharacter = createDh1Defaults(values);
 
@@ -198,7 +224,7 @@ export function DarkHeresyCreateForm({
         <CardTitle>{t('dh1.characterDetails')}</CardTitle>
       </CardHeader>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)}>
+        <form onSubmit={form.handleSubmit(onSubmit, handleInvalid)}>
           <CardContent className="space-y-6">
             <div className="space-y-2">
               <h3 className="text-base font-medium">
