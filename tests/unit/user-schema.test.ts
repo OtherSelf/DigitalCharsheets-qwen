@@ -176,6 +176,27 @@ describe('normalizeUserProfiles', () => {
     expect(second.updated).toBe(0);
   });
 
+  it('не понижает schemaVersion более нового профиля', () => {
+    const uid = newUid();
+    const futureVersion = USER_SCHEMA_VERSION + 1;
+    const paths = writeLegacyProfile(uid, {
+      schemaVersion: futureVersion,
+      uid,
+      username: 'future',
+      displayName: 'Future',
+      passwordHash: sha256('pass1'),
+      role: 'user',
+      isBlocked: false,
+      createdAt: '2025-01-01T00:00:00.000Z',
+      updatedAt: '2025-01-01T00:00:00.000Z',
+    });
+
+    // Более свежий инстанс мог дописать поля: понижать версию нельзя.
+    const report = normalizeUserProfiles();
+    expect(report.updated).toBe(0);
+    expect(readJson(paths.userFile).schemaVersion).toBe(futureVersion);
+  });
+
   it('не выдумывает passwordHash, но сообщает о нём', () => {
     const uid = newUid();
     const paths = writeLegacyProfile(uid, {
