@@ -105,8 +105,8 @@ export const DndAttunementSection = React.forwardRef<
       if (count >= 3) {
         toast({
           variant: 'destructive',
-          title: 'Limit Reached',
-          description: 'You can only attune up to 3 items.',
+          title: t('dnd.attunementLimitTitle'),
+          description: t('dnd.attunementLimitDesc'),
         });
         return;
       }

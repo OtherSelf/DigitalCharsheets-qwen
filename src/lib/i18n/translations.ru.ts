@@ -462,6 +462,36 @@ export const ruTranslations: Record<string, string> = {
     'Загрузите ранее экспортированный JSON-файл, чтобы создать нового персонажа.',
   'io.importSuccessDashboard': 'Персонаж успешно создан! Перенаправление...',
   'io.exportJSON': 'Выгрузить JSON-файл',
+  // ─── io.importError*: ошибки импорта, по reason-коду парсера ───
+  'io.importErrorBadFormat':
+    'Неизвестный файл: ожидался экспорт Digital Character Sheets.',
+  'io.importErrorNoMetadata':
+    'Неизвестный файл: нет metadata. Переэкспортируйте файл текущей версией приложения.',
+  'io.importErrorForeignFormat':
+    'Неизвестный формат файла: поддерживаются только файлы dcs-export.',
+  'io.importErrorForeignApp': 'Файл создан другим приложением, импорт отменён.',
+  'io.importErrorNoVersion': 'В файле не указана версия формата.',
+  'io.importErrorUnsupportedVersion':
+    'Неподдерживаемая версия формата. Переэкспортируйте файл текущей версией приложения.',
+  'io.importErrorNoKind':
+    'В файле не указан тип экспорта (персонаж или бэкап).',
+  'io.importErrorMissingCharacter':
+    'Экспорт помечен как персонаж, но данных персонажа в нём нет.',
+  'io.importErrorMissingCharacters':
+    'Экспорт помечен как бэкап, но персонажей в нём нет.',
+  'io.importErrorEmpty': 'Файл не содержит персонажей.',
+  'io.importErrorInvalidCharacter': 'Данные персонажа некорректны или неполны.',
+  'io.importErrorBadJson':
+    'Не удалось разобрать JSON. Убедитесь, что это валидный бэкап.',
+  'io.exportFailed': 'Не удалось выполнить экспорт.',
+  'io.unknownError': 'Неизвестная ошибка',
+  'io.importedCharacterName': 'Импортированный персонаж',
+  'io.unknownClass': 'Неизвестно',
+  'io.backupInCharacterImport':
+    'Файл содержит {count} персонажей — это бэкап. Импортируйте его через «Import» на дашборде.',
+  'io.noCharacterData': 'В файле нет данных персонажа.',
+  'io.gameSystemMismatch':
+    'Несовпадение игровой системы: файл для {file}, текущий персонаж — {current}.',
   // ─── io.excel: подписи Excel-выгрузки (ключи стабильны) ───
   'io.excel.exportTitle': 'Digital Character Sheets — экспорт персонажа',
   'io.excel.app': 'Приложение',

@@ -58,6 +58,8 @@
   "dnd.companion": "Спутник",
   "dnd.companions": "Спутники",
   "dnd.attunement": "Настройка",
+  "dnd.attunementLimitTitle": "Достигнут лимит",
+  "dnd.attunementLimitDesc": "Одновременно можно настроить не больше 3 предметов.",
   "dnd.companionProficiency": "Бонус мастерства спутника",
   "dnd.characterClass": "Класс персонажа",
   "dnd.spellcastingStats": "Параметры заклинаний",

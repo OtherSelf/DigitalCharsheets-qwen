@@ -57,19 +57,16 @@ export function DisplaySettingsModal({
         }}
       >
         <DialogHeader>
-          <DialogTitle>
-            {t('settings.displaySettings') || 'Display Settings'}
-          </DialogTitle>
+          <DialogTitle>{t('settings.displaySettings')}</DialogTitle>
           <DialogDescription>
-            {t('settings.adjustUiAppearance') ||
-              'Adjust text size and overall UI scale independently. Changes apply in real-time.'}
+            {t('settings.adjustUiAppearance')}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6 py-4">
           {/* LANDMARK: MODAL_TEXT_SIZE_CONTROLS */}
           <div className="space-y-3">
-            <Label>{t('settings.fontSize') || 'Text Size'}</Label>
+            <Label>{t('settings.fontSize')}</Label>
             <div className="flex items-center gap-3">
               <Button
                 type="button"
@@ -97,8 +94,7 @@ export function DisplaySettingsModal({
               </Button>
             </div>
             <p className="text-muted-foreground text-xs">
-              {t('settings.minFontSizeWarning') ||
-                'Minimum 8pt. Boxes, padding and spacing stay unchanged.'}
+              {t('settings.minFontSizeWarning')}
             </p>
           </div>
 
@@ -106,7 +102,7 @@ export function DisplaySettingsModal({
 
           {/* LANDMARK: MODAL_UI_SCALE_CONTROLS */}
           <div className="space-y-3">
-            <Label>{t('settings.uiScale') || 'UI Scale'}</Label>
+            <Label>{t('settings.uiScale')}</Label>
             <div className="flex items-center gap-3">
               <Button
                 type="button"
@@ -133,8 +129,7 @@ export function DisplaySettingsModal({
               </Button>
             </div>
             <p className="text-muted-foreground text-xs">
-              {t('settings.uiScaleWarning') ||
-                'Range: 50% to 150%. Scales the whole interface.'}
+              {t('settings.uiScaleWarning')}
             </p>
           </div>
 
@@ -146,7 +141,7 @@ export function DisplaySettingsModal({
               className="w-full"
             >
               <RotateCcw className="mr-2 h-4 w-4" />
-              {t('settings.resetToDefaults') || 'Reset to Defaults'}
+              {t('settings.resetToDefaults')}
             </Button>
           </div>
         </div>

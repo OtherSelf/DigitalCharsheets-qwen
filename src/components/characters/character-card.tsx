@@ -75,7 +75,7 @@ export function CharacterCard({ character }: CharacterCardProps) {
       toast({
         variant: 'destructive',
         title: t('common.error'),
-        description: result.error || 'Export failed.',
+        description: result.error || t('io.exportFailed'),
       });
     }
   };
@@ -86,7 +86,7 @@ export function CharacterCard({ character }: CharacterCardProps) {
       toast({
         variant: 'destructive',
         title: t('common.error'),
-        description: result.error || 'Export failed.',
+        description: result.error || t('io.exportFailed'),
       });
     }
   };
@@ -124,7 +124,7 @@ export function CharacterCard({ character }: CharacterCardProps) {
             size="icon"
             className="h-8 w-8 shrink-0 sm:h-9 sm:w-9"
             onClick={handleExportJSON}
-            title={t('io.exportJSON') || 'Export JSON'}
+            title={t('io.exportJSON')}
           >
             <FileJson className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
           </Button>
@@ -133,7 +133,7 @@ export function CharacterCard({ character }: CharacterCardProps) {
             size="icon"
             className="h-8 w-8 shrink-0 sm:h-9 sm:w-9"
             onClick={handleExportExcel}
-            title={t('io.exportSheet') || 'Export Excel'}
+            title={t('io.exportSheet')}
           >
             <FileDown className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
           </Button>
@@ -194,7 +194,7 @@ export function CharacterCard({ character }: CharacterCardProps) {
           size="icon"
           className="h-8 w-8 shrink-0 sm:h-9 sm:w-9"
           onClick={handleExportJSON}
-          title={t('io.exportJSON') || 'Export JSON'}
+          title={t('io.exportJSON')}
         >
           <FileJson className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
         </Button>
@@ -203,7 +203,7 @@ export function CharacterCard({ character }: CharacterCardProps) {
           size="icon"
           className="h-8 w-8 shrink-0 sm:h-9 sm:w-9"
           onClick={handleExportExcel}
-          title={t('io.exportSheet') || 'Export Excel'}
+          title={t('io.exportSheet')}
         >
           <FileDown className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
         </Button>

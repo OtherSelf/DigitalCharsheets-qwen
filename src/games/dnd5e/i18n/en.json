@@ -58,6 +58,8 @@
   "dnd.companion": "Companion",
   "dnd.companions": "Companions",
   "dnd.attunement": "Attunement",
+  "dnd.attunementLimitTitle": "Limit Reached",
+  "dnd.attunementLimitDesc": "You can only attune up to 3 items.",
   "dnd.companionProficiency": "Companion Proficiency Bonus",
   "dnd.characterClass": "Character Class",
   "dnd.spellcastingStats": "Spellcasting Stats",

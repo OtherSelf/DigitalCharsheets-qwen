@@ -72,7 +72,7 @@ interface HeaderProps {
   /**
    * Действие авторизации справа:
    *   auto  — `UserNav` (для гостя сам покажет «Войти»);
-   *   login — для гостя «Вход / Регистрация» (широкая кнопка как раньше);
+   *   login — для гостя «Вход / Регистрация» (широкая кнопка входа);
    *   none  — для гостя ничего (страница /login, где кнопка лишняя).
    */
   authAction?: 'auto' | 'login' | 'none';
@@ -203,7 +203,7 @@ export function Header({
               asChild
               className="h-9 w-9 shrink-0"
             >
-              <Link href={backHref} aria-label={t('common.back') || 'Back'}>
+              <Link href={backHref} aria-label={t('common.back')}>
                 <ArrowLeft className="h-5 w-5" />
               </Link>
             </Button>
@@ -212,7 +212,7 @@ export function Header({
           <Link
             href="/"
             className="flex min-w-0 items-center gap-2"
-            aria-label={t('common.backToDashboard') || 'Back to Dashboard'}
+            aria-label={t('common.backToDashboard')}
           >
             <Shield className="text-primary h-6 w-6 shrink-0" />
             {/*
@@ -225,7 +225,9 @@ export function Header({
             </span>
           </Link>
 
-          {/* ─── LANDMARK: HEADER_IDENTITY_CHARACTER_INFO (Now visible in Compact View with responsive sizing) ─── */}
+          {/* ─── LANDMARK: HEADER_IDENTITY_CHARACTER_INFO ─── */}
+          {/* Имя и система живут в одной строке и на десктопе, и в compact
+              view, поэтому размеры шрифта ужаты. */}
           {character ? (
             <>
               <Separator
@@ -276,7 +278,8 @@ export function Header({
 
         {/* ─── LANDMARK: HEADER_ACTIONS ─── */}
         <div className="header-actions flex flex-wrap items-center justify-end gap-2">
-          {/* LANDMARK: MOBILE_ACTIONS_MENU - Only visible on mobile */}
+          {/* LANDMARK: MOBILE_ACTIONS_MENU */}
+          {/* На sm+ те же действия уже стоят в строке шапки. */}
           {mobileActions && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

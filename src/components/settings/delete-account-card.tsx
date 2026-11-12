@@ -60,20 +60,12 @@ export function DeleteAccountCard() {
 
   const mapDeleteError = (reason?: string, message?: string) => {
     if (reason === 'invalid_password') {
-      return (
-        t('settings.deleteAccountIncorrectPassword') || 'Incorrect password.'
-      );
+      return t('settings.deleteAccountIncorrectPassword');
     }
     if (reason === 'invalid_input') {
-      return (
-        t('settings.deleteAccountPasswordRequired') || 'Enter your password.'
-      );
+      return t('settings.deleteAccountPasswordRequired');
     }
-    return (
-      message ||
-      t('settings.deleteAccountFailed') ||
-      'Failed to delete the account.'
-    );
+    return message || t('settings.deleteAccountFailed');
   };
 
   const handleDelete = async (event: React.FormEvent) => {
@@ -81,10 +73,7 @@ export function DeleteAccountCard() {
     if (!user || isDeleting) return;
 
     if (!password.trim()) {
-      setError(
-        t('settings.deleteAccountPasswordRequired') ||
-          'Enter your password to confirm.',
-      );
+      setError(t('settings.deleteAccountPasswordRequired'));
       return;
     }
 
@@ -110,17 +99,15 @@ export function DeleteAccountCard() {
         <CardHeader>
           <CardTitle className="text-destructive flex items-center gap-2">
             <AlertTriangle className="h-5 w-5" />
-            {t('settings.dangerZone') || 'Danger Zone'}
+            {t('settings.dangerZone')}
           </CardTitle>
           <CardDescription>
-            {t('settings.dangerZoneDescription') ||
-              'Irreversible actions. Read the warning carefully before continuing.'}
+            {t('settings.dangerZoneDescription')}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground mb-3 text-sm">
-            {t('settings.deleteAccountDescription') ||
-              'Permanently delete your profile and all of your character sheets.'}
+            {t('settings.deleteAccountDescription')}
           </p>
           <Button
             type="button"
@@ -129,7 +116,7 @@ export function DeleteAccountCard() {
             data-testid="delete-account-open"
           >
             <Trash2 className="mr-2 h-4 w-4" />
-            {t('settings.deleteAccount') || 'Delete Account'}
+            {t('settings.deleteAccount')}
           </Button>
         </CardContent>
       </Card>
@@ -145,29 +132,21 @@ export function DeleteAccountCard() {
           }}
         >
           <DialogHeader>
-            <DialogTitle>
-              {t('settings.deleteAccountConfirmTitle') ||
-                'Delete your account?'}
-            </DialogTitle>
+            <DialogTitle>{t('settings.deleteAccountConfirmTitle')}</DialogTitle>
             <DialogDescription>
-              {t('settings.deleteAccountIrreversible') ||
-                'This action cannot be undone. Your account will be permanently deleted.'}
+              {t('settings.deleteAccountIrreversible')}
             </DialogDescription>
           </DialogHeader>
 
           <div className="border-destructive/50 bg-destructive/10 flex gap-3 rounded-md border p-3 text-sm">
             <AlertTriangle className="text-destructive mt-0.5 h-4 w-4 shrink-0" />
-            <p>
-              {t('settings.deleteAccountWarning') ||
-                'Your profile, every character sheet and the recovery phrase of this account will be erased. This action cannot be undone.'}
-            </p>
+            <p>{t('settings.deleteAccountWarning')}</p>
           </div>
 
           <form onSubmit={handleDelete} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="delete-account-password">
-                {t('settings.deleteAccountPasswordLabel') ||
-                  'Confirm your password'}
+                {t('settings.deleteAccountPasswordLabel')}
               </Label>
               <Input
                 ref={passwordRef}
@@ -177,15 +156,11 @@ export function DeleteAccountCard() {
                 autoComplete="current-password"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
-                placeholder={
-                  t('settings.deleteAccountPasswordPlaceholder') ||
-                  'Enter your current password'
-                }
+                placeholder={t('settings.deleteAccountPasswordPlaceholder')}
                 disabled={isDeleting}
               />
               <p className="text-muted-foreground text-xs">
-                {t('settings.deleteAccountPasswordHint') ||
-                  'Enter your current password to confirm that this is your account.'}
+                {t('settings.deleteAccountPasswordHint')}
               </p>
             </div>
 
@@ -206,7 +181,7 @@ export function DeleteAccountCard() {
                 onClick={() => handleOpenChange(false)}
                 disabled={isDeleting}
               >
-                {t('common.cancel') || 'Cancel'}
+                {t('common.cancel')}
               </Button>
               <Button
                 type="submit"
@@ -215,9 +190,8 @@ export function DeleteAccountCard() {
                 data-testid="delete-account-confirm"
               >
                 {isDeleting
-                  ? t('settings.deleteAccountDeleting') || 'Deleting...'
-                  : t('settings.deleteAccountConfirmAction') ||
-                    'Delete Account Permanently'}
+                  ? t('settings.deleteAccountDeleting')
+                  : t('settings.deleteAccountConfirmAction')}
               </Button>
             </DialogFooter>
           </form>

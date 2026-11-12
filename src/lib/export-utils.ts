@@ -58,7 +58,7 @@ export const DEFAULT_EXPORT_CONFIG: ExportConfig = {
  *
  * Экспорт всегда пишет 3.0: в персонаже `systemId` (id плагина) и
  * `schemaVersion: 2`. Импорт принимает 3.0 нативно, а 2.0/2.1 — с миграцией
- * листа по правилам v2 (📌 D9). Старые файлы (просто массив листов, голый
+ * листа по правилам v2 (D9). Старые файлы (просто массив листов, голый
  * лист, конверт v1 без format/kind) импорт намеренно не принимает — при
  * попытке будет понятная ошибка «переэкспортируйте файл».
  */
@@ -257,6 +257,40 @@ export function buildBackupExport(
   };
 }
 
+/**
+ * Машинный код ошибки разбора файла. UI переводит его через i18n, а `error`
+ * остаётся человекочитаемой диагностикой (тесты и логи).
+ */
+export type ExportParseErrorReason =
+  | 'bad_format'
+  | 'no_metadata'
+  | 'foreign_format'
+  | 'foreign_app'
+  | 'no_version'
+  | 'unsupported_version'
+  | 'no_kind'
+  | 'missing_character'
+  | 'missing_characters'
+  | 'empty'
+  | 'invalid_character'
+  | 'bad_json';
+
+/** Reason-код ошибки импорта → i18n-ключ для UI (см. io.importError*). */
+export const IMPORT_ERROR_I18N_KEYS: Record<ExportParseErrorReason, string> = {
+  bad_format: 'io.importErrorBadFormat',
+  no_metadata: 'io.importErrorNoMetadata',
+  foreign_format: 'io.importErrorForeignFormat',
+  foreign_app: 'io.importErrorForeignApp',
+  no_version: 'io.importErrorNoVersion',
+  unsupported_version: 'io.importErrorUnsupportedVersion',
+  no_kind: 'io.importErrorNoKind',
+  missing_character: 'io.importErrorMissingCharacter',
+  missing_characters: 'io.importErrorMissingCharacters',
+  empty: 'io.importErrorEmpty',
+  invalid_character: 'io.importErrorInvalidCharacter',
+  bad_json: 'io.importErrorBadJson',
+};
+
 export type ParseExportResult =
   | {
       ok: true;
@@ -265,7 +299,7 @@ export type ParseExportResult =
       characters: Partial<Character>[];
       warnings: string[];
     }
-  | { ok: false; error: string };
+  | { ok: false; error: string; reason: ExportParseErrorReason };
 
 /**
  * Разобрать и проверить файл экспорта. Принимает только новый формат:
@@ -280,6 +314,7 @@ export function parseExportPayload(
   if (!data || typeof data !== 'object' || Array.isArray(data)) {
     return {
       ok: false,
+      reason: 'bad_format',
       error:
         'Неизвестный формат: ожидался объект экспорта DigitalCharsheets (metadata + character/characters).',
     };
@@ -290,6 +325,7 @@ export function parseExportPayload(
   if (!metadata || typeof metadata !== 'object' || Array.isArray(metadata)) {
     return {
       ok: false,
+      reason: 'no_metadata',
       error:
         'Неизвестный формат: нет metadata. Переэкспортируйте файл текущей версией приложения.',
     };
@@ -297,12 +333,14 @@ export function parseExportPayload(
   if (metadata.format !== EXPORT_FORMAT) {
     return {
       ok: false,
+      reason: 'foreign_format',
       error: `Неизвестный формат${metadata.format ? ` «${metadata.format}»` : ''}: поддерживается только ${EXPORT_FORMAT} v${EXPORT_FORMAT_MAJOR}.`,
     };
   }
   if (metadata.appName !== EXPORT_APP_NAME) {
     return {
       ok: false,
+      reason: 'foreign_app',
       error: `Файл создан другим приложением (${metadata.appName || 'неизвестно'}), импорт отменён.`,
     };
   }
@@ -310,13 +348,18 @@ export function parseExportPayload(
   const version = String(metadata.version ?? '');
   const major = Number.parseInt(version.split('.')[0], 10);
   if (!version || !Number.isFinite(major)) {
-    return { ok: false, error: 'В metadata не указана версия формата.' };
+    return {
+      ok: false,
+      reason: 'no_version',
+      error: 'В metadata не указана версия формата.',
+    };
   }
   const supported =
     major === EXPORT_FORMAT_MAJOR || LEGACY_EXPORT_MAJORS.includes(major);
   if (!supported) {
     return {
       ok: false,
+      reason: 'unsupported_version',
       error: `Неподдерживаемая версия формата ${version}: поддерживаются 2.0/2.1 (с миграцией) и ${EXPORT_FORMAT_MAJOR}.x.`,
     };
   }
@@ -325,6 +368,7 @@ export function parseExportPayload(
   if (kind !== 'character' && kind !== 'backup') {
     return {
       ok: false,
+      reason: 'no_kind',
       error: 'В metadata не указан тип экспорта (kind: character | backup).',
     };
   }
@@ -338,6 +382,7 @@ export function parseExportPayload(
     ) {
       return {
         ok: false,
+        reason: 'missing_character',
         error: 'Экспорт помечен как character, но поля character нет.',
       };
     }
@@ -346,13 +391,18 @@ export function parseExportPayload(
     if (!Array.isArray(obj.characters)) {
       return {
         ok: false,
+        reason: 'missing_characters',
         error: 'Экспорт помечен как backup, но поля characters нет.',
       };
     }
     rawCharacters = obj.characters;
   }
   if (rawCharacters.length === 0) {
-    return { ok: false, error: 'Файл не содержит персонажей.' };
+    return {
+      ok: false,
+      reason: 'empty',
+      error: 'Файл не содержит персонажей.',
+    };
   }
 
   const warnings: string[] = [];
@@ -374,7 +424,11 @@ export function parseExportPayload(
     ).character;
     const errors = validateCharacterPayload(normalized, index);
     if (errors.length > 0) {
-      return { ok: false, error: errors.join(' ') };
+      return {
+        ok: false,
+        reason: 'invalid_character',
+        error: errors.join(' '),
+      };
     }
     characters.push(normalized as Partial<Character>);
   }
@@ -411,6 +465,8 @@ export type ImportResult = {
   batchData?: Partial<Character>[];
   warnings?: string[];
   error?: string;
+  /** Машинный код: UI показывает перевод, `error` остаётся диагностикой. */
+  reason?: ExportParseErrorReason;
 };
 
 /**
@@ -491,7 +547,11 @@ export const importCharacterFromJSON = (file: File): Promise<ImportResult> => {
         const parsed = parseExportPayload(parsedJson);
 
         if (!parsed.ok) {
-          resolve({ success: false, error: parsed.error });
+          resolve({
+            success: false,
+            error: parsed.error,
+            reason: parsed.reason,
+          });
           return;
         }
 
@@ -519,6 +579,7 @@ export const importCharacterFromJSON = (file: File): Promise<ImportResult> => {
         console.error('Import parse error:', err);
         resolve({
           success: false,
+          reason: 'bad_json',
           error: 'Failed to parse JSON file. Ensure it is a valid backup.',
         });
       }
