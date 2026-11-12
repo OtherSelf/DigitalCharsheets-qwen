@@ -72,7 +72,9 @@ test.describe('login: вход, регистрация, восстановлен
     await expect(page.getByTestId('auth-card-title')).toHaveText(
       'Recover Account',
     );
-    await expect(page.getByText('Three words from your sheets')).toBeVisible();
+    await expect(page.getByLabel('Your Recovery Phrase')).toBeVisible();
+    // Слова из листов больше не нужны: второй фактор — только фраза.
+    await expect(page.getByText('Three words from your sheets')).toHaveCount(0);
 
     await screenshotPage(page, 'login-recovery-en.png');
   });
@@ -89,7 +91,9 @@ test.describe('login: вход, регистрация, восстановлен
     await expect(page.getByTestId('auth-card-title')).toHaveText(
       'Восстановление аккаунта',
     );
-    await expect(page.getByText('Три слова из ваших листов')).toBeVisible();
+    await expect(page.getByLabel('Ваша фраза восстановления')).toBeVisible();
+    // Слова из листов больше не нужны: второй фактор — только фраза.
+    await expect(page.getByText('Три слова из ваших листов')).toHaveCount(0);
 
     await screenshotPage(page, 'login-recovery-ru.png');
   });
