@@ -3,6 +3,10 @@ import type { ComponentType } from 'react';
 import type { ZodType } from 'zod';
 
 import type {
+  BulkEditorColumn,
+  BulkEditorTab,
+  BulkEditorTable,
+  BulkEditorValue,
   CardSummary,
   CharacterMigration,
   CharacterRecord,
@@ -339,6 +343,10 @@ export function hasUiSlot(
 }
 
 export type {
+  BulkEditorColumn,
+  BulkEditorTab,
+  BulkEditorTable,
+  BulkEditorValue,
   CardSummary,
   CharacterMigration,
   CharacterRecord,

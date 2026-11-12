@@ -42,14 +42,20 @@ describe('загрузка листа и формы через реестр', ()
 describe('слоты: манифест ↔ модуль', () => {
   it('перечисленные слоты реализованы, лишних нет', () => {
     for (const entry of gamePlugins) {
+      // Сравниваем в терминах имён слотов: в модуле BulkEditor — это
+      // данные (`bulkEditor`), остальные — компоненты/функции.
       const declared = [...(entry.manifest.ui?.slots ?? [])].sort();
+      const FIELD_TO_SLOT: Record<string, string> = {
+        bulkEditor: 'BulkEditor',
+      };
       const implemented = Object.entries(entry.module.ui ?? {})
         .filter(
           ([name, value]) =>
             value !== undefined &&
-            (PLUGIN_UI_SLOTS as readonly string[]).includes(name),
+            ((PLUGIN_UI_SLOTS as readonly string[]).includes(name) ||
+              FIELD_TO_SLOT[name] !== undefined),
         )
-        .map(([name]) => name)
+        .map(([name]) => FIELD_TO_SLOT[name] ?? name)
         .sort();
       expect(implemented, entry.manifest.id).toEqual(declared);
     }

@@ -129,6 +129,15 @@ The sheet itself is loaded lazily (`components.loadSheet`), so a render error in
 a plugin shows the *sheet unavailable* card instead of breaking the page; the
 header, sidebar, dialogs and JSON export keep working.
 
+`BulkEditor` is data, not a component: the plugin returns
+`BulkEditorTable[]` (`ui.bulkEditor`) and the host (`/stats-editor`) renders the
+tabs, table markup, edit state and save buttons. Each table declares its tab,
+title/description keys, grid template, columns (`key`, `labelKey`, `type`,
+`value(character)`) and `apply(character, values) -> Partial<T>` for the save
+patch. Tabs are merged across plugins: `stats` is shared, the vitals tabs come
+from the game/edition. This is what keeps `DH_STATS`, `isDh1/isDnd` and the
+per-game save handlers out of the page.
+
 ## Contract
 
 `GameModule<TCharacter>` ([`src/games/types.ts`](../src/games/types.ts)):
