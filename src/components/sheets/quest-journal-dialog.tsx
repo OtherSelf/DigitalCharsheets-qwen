@@ -297,8 +297,10 @@ export function QuestJournalSheet({
                         <div className="flex gap-2">
                           <Select
                             value={quest.priority || 'side'}
-                            onValueChange={(v: any) =>
-                              updateQuest(quest.id, { priority: v })
+                            onValueChange={(v: string) =>
+                              updateQuest(quest.id, {
+                                priority: v as Quest['priority'],
+                              })
                             }
                           >
                             <SelectTrigger className="h-8 w-32 text-xs">

@@ -166,7 +166,9 @@ export default function DashboardPage() {
                 {t('common.companionText')}
               </p>
             </div>
-            {/* LANDMARK: DESKTOP_BUTTON_GROUP - Hidden on mobile, visible on sm+ */}
+            {/* LANDMARK: DESKTOP_BUTTON_GROUP */}
+            {/* На мобильном те же действия живут в нижней панели, поэтому
+                здесь группа скрыта до sm. */}
             <div className="hidden w-auto flex-row gap-2 sm:flex">
               <Button
                 variant="outline"
@@ -266,7 +268,7 @@ export default function DashboardPage() {
   );
 }
 
-function downloadJSON(data: any, filename: string) {
+function downloadJSON(data: unknown, filename: string) {
   const blob = new Blob([JSON.stringify(data, null, 2)], {
     type: 'application/json',
   });

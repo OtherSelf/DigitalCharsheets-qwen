@@ -6,6 +6,7 @@ import {
   type WriteToken,
 } from '@/lib/server-storage';
 import { getSessionUid } from '@/lib/session';
+import type { Character } from '@/lib/types';
 
 /**
  * ─── LANDMARK: PUT /api/characters/[id] ─────────────────────────────────────
@@ -67,7 +68,9 @@ export async function PUT(
 
   let updated;
   try {
-    updated = updateCharacterOnServer(uid, id, patch as any, { writeToken });
+    updated = updateCharacterOnServer(uid, id, patch as Partial<Character>, {
+      writeToken,
+    });
   } catch (error) {
     console.error(`Failed to write character ${id} for ${uid}:`, error);
     return NextResponse.json(
