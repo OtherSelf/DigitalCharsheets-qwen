@@ -669,7 +669,13 @@ describe('/api/export', () => {
   });
 });
 
-describe('recovery-роуты', () => {
+/**
+ * CURRENT (insecure): сценарии, закрепляющие уязвимое поведение (SEC-1:
+ * `recover/update` меняет пароль по одному логину; SEC-4: `recover/verify`
+ * пускает по одному слову фразы и сразу выдаёт сессию). Оставлены зелёными до
+ * фикса и заменяются target-тестами из блока ниже.
+ */
+describe('CURRENT (insecure) recovery-роуты', () => {
   async function createUserWithCharacter(username = 'recover-api') {
     const result = authenticateUser(username, 'pass1');
     const uid = result.user!.uid;
@@ -788,6 +794,20 @@ describe('recovery-роуты', () => {
       authenticateUser('update-api', '12345').user?.hasRecoveryPhrase,
     ).toBe(true);
   });
+});
+
+/**
+ * TARGET (SEC-1, SEC-4): приёмочные критерии восстановления доступа.
+ * Заготовки перечисляют, что должно измениться после этапа 1; каждый пункт
+ * превращается в обычный тест при реализации.
+ */
+describe('TARGET (SEC-1, SEC-4): recovery-роуты', () => {
+  it.todo('POST /api/auth/recover/update без токена → 401');
+  it.todo('POST /api/auth/recover/update с чужим/просроченным токеном → 401');
+  it.todo('POST /api/auth/recover/update принимает только {token}');
+  it.todo('POST /api/auth/recover/verify с одним словом фразы → 400');
+  it.todo('POST /api/auth/recover/verify с "." или "(" → 400, не 500');
+  it.todo('POST /api/auth/recover/verify не ставит Set-Cookie');
 });
 
 describe('GET /api/import (разовый перенос из Firestore-экспорта)', () => {

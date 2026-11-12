@@ -9,6 +9,7 @@ import path from 'path';
  *   <data-dir>/users/<uid>/user.json          — профиль (uid неизменяем)
  *   <data-dir>/users/<uid>/characters/<id>.json
  *   <data-dir>/index/logins.json              — индекс «логин → uid» (производный)
+ *   <data-dir>/tokens.json                    — хэши одноразовых recovery-токенов
  *   <data-dir>/.session-secret                — ключ подписи cookie (0600)
  *   <data-dir>/.lock                          — каталог-мьютекс для операций записи
  *
@@ -82,4 +83,13 @@ export function getGameCatalogFile(): string {
 /** Ключ подписи сессионных cookie: `<data-dir>/.session-secret`. */
 export function getSessionSecretFile(): string {
   return path.join(getDataDir(), '.session-secret');
+}
+
+/**
+ * Одноразовые токены восстановления: `<data-dir>/tokens.json`.
+ * Ключ записи — хэш токена, сам токен на диске не хранится (см.
+ * `src/lib/security/tokens.ts`).
+ */
+export function getRecoveryTokensFile(): string {
+  return path.join(getDataDir(), 'tokens.json');
 }
