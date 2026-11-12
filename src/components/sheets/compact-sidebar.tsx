@@ -36,12 +36,12 @@ import { useTranslation } from '@/context/language-context';
 import { resolveCharacterSystemId } from '@/games/character-system';
 import { DhHouseRulesDialog as Dh1HouseRulesDialog } from '@/games/dh1/sections/dh-house-rules-dialog';
 import { DhHouseRulesDialog as Dh2HouseRulesDialog } from '@/games/dh2/sections/dh-house-rules-dialog';
+import { HouseRulesDialog } from '@/games/dnd5e/sections/house-rules-dialog';
 import { type GameSystem } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
 import { LanguageToggle } from '../layout/language-toggle';
 import { Separator } from '../ui/separator';
-import { HouseRulesDialog } from './dnd-sections/house-rules-dialog';
 
 interface CompactSidebarProps {
   gameSystem: GameSystem;

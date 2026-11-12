@@ -38,9 +38,11 @@ src/
   app/                 Next.js App Router: pages + API route handlers
     api/               HTTP API (auth, characters, admin, docs)
     admin/             Admin panel page
-  components/          UI (sheet sections, admin dialogs, shadcn primitives)
+  components/          Host UI shell (header, sidebar, dialogs) + shadcn
+                       primitives; game sheets/sections live in src/games
   context/             LocalAuthProvider, CharacterProvider, language
-  games/               Game modules (registry, contract, dnd5e/dh1/dh2)
+  games/               Game modules (contract, registry, dnd5e/dh1/dh2):
+                       each module owns its sheet, form, sections and data
   lib/                 Server auth/session, storage, export, OpenAPI, schema,
                        game catalog and module access
   instrumentation.ts   Runs startup maintenance when the server starts
@@ -49,6 +51,7 @@ tests/
   unit/                Vitest: lib/API/storage/OpenAPI
   visual/              Playwright screenshot regression + baselines
 scripts/               smoke / visual / predeploy / dev helpers
+scripts/plugins/       plugin import-boundary check + its allowlist
 docs/                  This documentation
 ```
 

@@ -27,7 +27,7 @@ import { readJson, removeDir, userPaths, useTempDataDir } from './helpers';
  * Отличие от tests/unit/api-routes.test.ts: там роуты проверяются по одному на
  * минимальных данных, а здесь каждый сценарий проходит путь целиком и с теми
  * payload'ами, которые реально собирают формы создания
- * (src/components/characters/forms/*-character-form.tsx): те же поля, те же
+ * (src/games/<id>/create-form.tsx): те же поля, те же
  * дефолты, те же системные ветки D&D/DH. Если форма перестанет класть
  * системное поле (spells, fatePoints, statUpgrades…), эти тесты упадут.
  */

@@ -23,6 +23,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useCharacterContext } from '@/context/character-context';
 import { useTranslation } from '@/context/language-context';
+import { cn } from '@/lib/utils';
+
 import {
   CAREER_KEYS,
   dhLocalizedKey,
@@ -31,17 +33,15 @@ import {
   RANK_KEYS,
   VARIANT_KEYS,
   WORLD_VARIANT_LABELS,
-} from '@/lib/dark-heresy-data';
+} from '../dark-heresy-data';
 import {
   ADVANCED_RANK_THRESHOLD,
   AdvancedPathsByCareer,
   calculateRank,
   RanksByCareer,
   type AdvancedPath,
-} from '@/lib/dark-heresy-ranks';
-import { divinationEffectLabel, divinationLabel } from '@/lib/divination-i18n';
-import { cn } from '@/lib/utils';
-
+} from '../dark-heresy-ranks';
+import { divinationEffectLabel, divinationLabel } from '../divination-i18n';
 import { type DarkHeresyCareerPath, type DH2Character } from '../types';
 import { EditSaveButton } from './dh-ui-helpers';
 

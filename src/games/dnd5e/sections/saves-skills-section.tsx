@@ -4,15 +4,14 @@ import * as React from 'react';
 
 import { Edit, RefreshCw, Save } from 'lucide-react';
 
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
 import { useCharacterContext } from '@/context/character-context';
 import { useTranslation } from '@/context/language-context';
 import { type DnDSavingThrow, type DnDSkill } from '@/lib/types';
 import { cn } from '@/lib/utils';
-
-import { Button } from '../../ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
-import { Checkbox } from '../../ui/checkbox';
-import { Input } from '../../ui/input';
 
 // Helper to map skill internal names to translation keys (with abbreviations)
 const getSkillTranslationKey = (name: string): string => {

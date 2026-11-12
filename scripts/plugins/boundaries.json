@@ -1,0 +1,110 @@
+{
+  "$comment": "Границы импортов игровых плагинов. Читается scripts/plugins/check-boundaries.mjs, проверяется в npm run verify. Описание — docs/game-modules.md § Rules, план — _NEW_FUTURE2_PROMPT.md § 5.1.",
+  "forbidden": [
+    {
+      "pattern": "@/app",
+      "hint": "ядро App Router недоступно плагину: страницы и роуты — ответственность хоста"
+    },
+    {
+      "pattern": "@/app/*",
+      "hint": "ядро App Router недоступно плагину: страницы и роуты — ответственность хоста"
+    },
+    {
+      "pattern": "@/instrumentation",
+      "hint": "старт приложения — ответственность хоста, не плагина"
+    },
+    {
+      "pattern": "fs",
+      "hint": "плагин не читает и не пишет файлы: сохранение идёт через host API"
+    },
+    {
+      "pattern": "node:fs",
+      "hint": "плагин не читает и не пишет файлы: сохранение идёт через host API"
+    },
+    {
+      "pattern": "fs/promises",
+      "hint": "плагин не читает и не пишет файлы: сохранение идёт через host API"
+    },
+    {
+      "pattern": "node:fs/promises",
+      "hint": "плагин не читает и не пишет файлы: сохранение идёт через host API"
+    },
+    {
+      "pattern": "path",
+      "hint": "работа с путями — только в ядре (data-dir принадлежит хосту)"
+    },
+    {
+      "pattern": "node:path",
+      "hint": "работа с путями — только в ядре (data-dir принадлежит хосту)"
+    },
+    {
+      "pattern": "child_process",
+      "hint": "плагин не запускает процессы"
+    },
+    {
+      "pattern": "node:child_process",
+      "hint": "плагин не запускает процессы"
+    },
+    {
+      "pattern": "os",
+      "hint": "окружение сервера не дело плагина"
+    },
+    {
+      "pattern": "node:os",
+      "hint": "окружение сервера не дело плагина"
+    }
+  ],
+  "allowed": [
+    "react",
+    "react-dom",
+    "zod",
+    "react-hook-form",
+    "@hookform/resolvers/*",
+    "lucide-react",
+    "@radix-ui/*",
+    "class-variance-authority",
+    "clsx",
+    "tailwind-merge",
+    "date-fns",
+    "@/components/ui",
+    "@/components/ui/*",
+    "@/games/plugin-api",
+    "@/games/types",
+    "@/games/shared/*",
+    "@/lib/i18n",
+    "@/lib/i18n/*",
+    "@/lib/utils"
+  ],
+  "legacy": {
+    "@/context/character-context": {
+      "files": 30,
+      "removeBy": "этап 3",
+      "why": "чтение/запись листа идёт через состояние хоста; в Plugin API станет частью Host API (character state) и переедет в allowed"
+    },
+    "@/context/language-context": {
+      "files": 34,
+      "removeBy": "этап 3",
+      "why": "хук переводов хоста; после Plugin API плагин получает t()/useI18n от хоста, а не импортирует контекст"
+    },
+    "@/hooks/use-toast": {
+      "files": 4,
+      "removeBy": "этап 3",
+      "why": "тосты хоста; станут частью Plugin API (host ui)"
+    },
+    "@/lib/character-version": {
+      "files": 6,
+      "removeBy": "этап 2",
+      "why": "CHARACTER_SCHEMA_VERSION берётся из манифеста плагина, миграции — из цепочки плагина (этап 2)"
+    },
+    "@/lib/types": {
+      "files": 13,
+      "removeBy": "этап 2",
+      "why": "фасад конкретных типов ядра; плагин владеет своими типами, ядро оставляет CharacterRecord + generics (этап 2)"
+    },
+    "next/navigation": {
+      "files": 3,
+      "removeBy": "этап 3",
+      "why": "форма создания сама делает router.push; навигацию после создания должен делать хост (контракт createForm, этап 3)"
+    }
+  }
+}

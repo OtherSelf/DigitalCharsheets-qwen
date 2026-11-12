@@ -20,6 +20,7 @@
     "test:smoke": "node scripts/smoke.mjs",
     "test:dev": "node scripts/dev-smoke.mjs",
     "verify": "bash scripts/predeploy.sh",
+    "plugins:boundaries": "node scripts/plugins/check-boundaries.mjs",
     "test:visual": "bash scripts/visual.sh",
     "test:visual:full": "bash scripts/visual.sh",
     "test:visual:changed": "node scripts/visual-changed.mjs",

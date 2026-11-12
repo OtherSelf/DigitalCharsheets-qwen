@@ -23,7 +23,8 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { useTranslation } from '@/context/language-context';
-import { EPIC_BOON_KEYS, type EpicBoonKey } from '@/lib/epic-boons';
+
+import { EPIC_BOON_KEYS, type EpicBoonKey } from '../epic-boons';
 
 interface DivineBoonsDialogProps {
   open: boolean;

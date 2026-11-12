@@ -4,6 +4,7 @@ import * as React from 'react';
 
 import { ChevronDown, ChevronUp, Plus } from 'lucide-react';
 
+import { Button } from '@/components/ui/button';
 import {
   Collapsible,
   CollapsibleContent,
@@ -14,7 +15,6 @@ import { useTranslation } from '@/context/language-context';
 import { type DnDCompanion } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
-import { Button } from '../../ui/button';
 import { CompanionSheet } from './companion-sheet';
 
 interface CompanionsSectionProps {

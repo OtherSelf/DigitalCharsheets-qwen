@@ -17,6 +17,10 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -29,11 +33,6 @@ import { useCharacterContext } from '@/context/character-context';
 import { useTranslation } from '@/context/language-context';
 import { type DnDMulticlass } from '@/lib/types';
 import { cn } from '@/lib/utils';
-
-import { Button } from '../../ui/button';
-import { Card, CardContent, CardHeader } from '../../ui/card';
-import { Checkbox } from '../../ui/checkbox';
-import { Input } from '../../ui/input';
 
 // MULTICLASS REQUIREMENTS LANDMARK: Define stats type and requirements
 type DnDStats = {
