@@ -10,9 +10,15 @@ import {
   QUIRKS_BY_HOMEWORLD,
   VARIANT_KEYS,
   WORLD_VARIANTS_BY_HOMEWORLD,
-} from '@/lib/dark-heresy-data';
-import { AdvancedPathsByCareer, RanksByCareer } from '@/lib/dark-heresy-ranks';
-import { divinationEffectKey, divinationKey } from '@/lib/divination-i18n';
+} from '@/games/dh1/dark-heresy-data';
+import {
+  AdvancedPathsByCareer,
+  RanksByCareer,
+} from '@/games/dh1/dark-heresy-ranks';
+import {
+  divinationEffectKey,
+  divinationKey,
+} from '@/games/dh1/divination-i18n';
 import { translations } from '@/lib/i18n';
 import { DarkHeresyCareerPaths, DarkHeresyHomeWorlds } from '@/lib/types';
 

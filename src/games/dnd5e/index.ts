@@ -1,5 +1,4 @@
-import { CHARACTER_SCHEMA_VERSION } from '@/lib/character-version';
-
+import { CURRENT_SCHEMA_VERSION } from '../plugin-api';
 import type { ExportTranslate, GameExportConfig, GameModule } from '../types';
 import { createDnd5eDefaults } from './defaults';
 import { createDnd5eDemo } from './demo';
@@ -7,6 +6,8 @@ import { buildDnd5eExcelSections } from './excel';
 import { buildDnd5ePortableJson } from './export';
 import { en as dnd5eEn } from './i18n/en';
 import { ru as dnd5eRu } from './i18n/ru';
+import { mergeDnd5eData } from './merge';
+import { normalizeDnd5e } from './normalize';
 import { dnd5eCharacterSchema } from './schema';
 import type { DnD5eCharacter } from './types';
 
@@ -48,12 +49,14 @@ export const dnd5eModule: GameModule<DnD5eCharacter> = {
   defaultStatus: 'published',
   nameKey: 'games.dnd5e.name',
   descriptionKey: 'games.dnd5e.description',
-  schemaVersion: CHARACTER_SCHEMA_VERSION,
+  schemaVersion: CURRENT_SCHEMA_VERSION,
   schema: dnd5eCharacterSchema,
   i18n: { en: dnd5eEn, ru: dnd5eRu },
   capabilities: {},
   createDefaults,
   createDemo,
+  normalize: normalizeDnd5e,
+  merge: mergeDnd5eData,
   components: {
     loadCreateForm: () =>
       import('./create-form').then((m) => ({

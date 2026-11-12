@@ -121,6 +121,27 @@ export interface ExcelSection {
 }
 
 /**
+ * Режим нормализации листа.
+ *
+ *   • `applyDefaults: false` (по умолчанию) — старт/запись: только перенос
+ *     legacy-полей и приведение типов, без добавления структур;
+ *   • `applyDefaults: true` — импорт/создание: отсутствующие структуры
+ *     заполняются дефолтами редакции.
+ */
+export interface NormalizeOptions {
+  readonly applyDefaults?: boolean;
+}
+
+/**
+ * Результат нормализации импортированного/legacy-листа.
+ * `warnings` — что не удалось перенести; их показывают пользователю.
+ */
+export interface NormalizeResult<TCharacter extends CharacterRecord> {
+  readonly character: TCharacter;
+  readonly warnings?: readonly string[];
+}
+
+/**
  * ─── LANDMARK: GAME_EXPORT_ADAPTER ─────────────────────────────────────────
  * Адаптер экспорта модуля. Ядро (`src/lib/export-utils.ts`) знает только
  * конверт `dcs-export`, переносимые поля и сборку файла; набор полей JSON и
@@ -224,4 +245,24 @@ export interface GameModule<
 
   /** Цепочка миграций схемы листа (в порядке применения). */
   readonly migrations: readonly CharacterMigration[];
+
+  /**
+   * Привести legacy/импортированный лист к типу редакции: дефолты
+   * отсутствующих структур, канонизация значений, перенос полей между
+   * редакциями. Идемпотентна — вызывается и при старте, и при импорте (этап 2).
+   */
+  normalize?(
+    raw: Readonly<Record<string, unknown>>,
+    options?: NormalizeOptions,
+  ): NormalizeResult<TCharacter>;
+
+  /**
+   * Слить импортированные данные в существующий лист. Раньше это делала
+   * `mergeImportedData` ветками `isDnd/isDh1/isDh2`; теперь — модуль (этап 2).
+   */
+  merge?(
+    target: TCharacter,
+    source: Readonly<Record<string, unknown>>,
+    config: GameExportConfig,
+  ): TCharacter;
 }

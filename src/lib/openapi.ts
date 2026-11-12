@@ -1,3 +1,18 @@
+/**
+ * ─── LANDMARK: OPENAPI DOCUMENT ────────────────────────────────────────────
+ * Источник истины для /api/docs (Scalar) и /api/openapi.json.
+ *
+ * Спека написана вручную: API-роуты используют обычные NextResponse и
+ * серверные функции, а не zod-схемы, поэтому генерация «из кода» дала бы
+ * больше магии, чем пользы. Зато tests/unit/openapi.test.ts сверяет спеку с
+ * реальными route.ts: если добавить/удалить метод и забыть доку, тест упадёт.
+ *
+ * Cookie-сессия описана как apiKey в cookie: Swagger/Scalar показывают замок,
+ * но HttpOnly-cookie выставляется только после логина, вручную её не ввести.
+ */
+import { CURRENT_SCHEMA_VERSION } from '@/games/plugin-api';
+import { listGameModules, listGamePlugins } from '@/games/registry';
+
 const jsonContent = (schema: unknown) => ({
   'application/json': { schema },
 });
@@ -23,24 +38,36 @@ const jsonBody = (schema: unknown, required = true) => ({
 });
 
 /**
- * ─── LANDMARK: OPENAPI DOCUMENT ────────────────────────────────────────────
- * Источник истины для /api/docs (Scalar) и /api/openapi.json.
- *
- * Спека написана вручную: API-роуты используют обычные NextResponse и
- * серверные функции, а не zod-схемы, поэтому генерация «из кода» дала бы
- * больше магии, чем пользы. Зато tests/unit/openapi.test.ts сверяет спеку с
- * реальными route.ts: если добавить/удалить метод и забыть доку, тест упадёт.
- *
- * Cookie-сессия описана как apiKey в cookie: Swagger/Scalar показывают замок,
- * но HttpOnly-cookie выставляется только после логина, вручную её не ввести.
+ * Значения для схем берутся из реестра и манифестов (этап 2): новая игра
+ * появляется в OpenAPI без правок этого файла, а legacy-имена `gameSystem` —
+ * из `plugin.json#aliases`.
  */
+const SYSTEM_IDS = listGameModules().map((gameModule) => gameModule.id);
+const GAME_SYSTEM_NAMES = [
+  ...new Set(
+    listGamePlugins().flatMap((plugin) =>
+      (plugin.manifest.aliases ?? [])
+        .map((alias) => alias.gameSystem)
+        .filter((value): value is string => Boolean(value)),
+    ),
+  ),
+];
+const GAME_TITLES = [
+  ...new Map(
+    listGamePlugins().map((plugin) => [
+      plugin.manifest.game.id,
+      plugin.manifest.game.name.en,
+    ]),
+  ).values(),
+];
+
 export const openApiDocument = {
   openapi: '3.1.0',
   info: {
     title: 'Digital Character Sheets API',
     version: '1.0.0',
     description: [
-      'REST API for Digital Character Sheets — D&D 5e and Dark Heresy sheets.',
+      `REST API for Digital Character Sheets — ${GAME_TITLES.join(' and ')} sheets.`,
       '',
       'Authentication uses the HttpOnly `dcs_session` cookie. Obtain it via',
       '`POST /api/auth` (login) or `POST /api/auth/register`, then send it with',
@@ -414,16 +441,16 @@ export const openApiDocument = {
           userId: { type: 'string', format: 'uuid' },
           systemId: {
             type: 'string',
-            enum: ['dnd5e', 'dh1', 'dh2'],
+            enum: SYSTEM_IDS,
             description: 'Machine game/edition id; discriminant of the sheet.',
           },
           schemaVersion: {
             type: 'integer',
-            description: 'Character sheet schema version (2).',
+            description: `Character sheet schema version (${CURRENT_SCHEMA_VERSION}).`,
           },
           gameSystem: {
             type: 'string',
-            enum: ['Dungeons & Dragons', 'Dark Heresy'],
+            enum: GAME_SYSTEM_NAMES,
             description: 'Legacy human-readable mirror of systemId.',
           },
           name: { type: 'string' },
@@ -442,16 +469,16 @@ export const openApiDocument = {
         properties: {
           systemId: {
             type: 'string',
-            enum: ['dnd5e', 'dh1', 'dh2'],
+            enum: SYSTEM_IDS,
             description: 'Machine game/edition id; discriminant of the sheet.',
           },
           schemaVersion: {
             type: 'integer',
-            description: 'Character sheet schema version (2).',
+            description: `Character sheet schema version (${CURRENT_SCHEMA_VERSION}).`,
           },
           gameSystem: {
             type: 'string',
-            enum: ['Dungeons & Dragons', 'Dark Heresy'],
+            enum: GAME_SYSTEM_NAMES,
             description: 'Legacy mirror; systemId is preferred.',
           },
           name: { type: 'string' },
@@ -478,16 +505,16 @@ export const openApiDocument = {
           id: { type: 'string' },
           systemId: {
             type: 'string',
-            enum: ['dnd5e', 'dh1', 'dh2'],
+            enum: SYSTEM_IDS,
             description: 'Machine game/edition id; discriminant of the sheet.',
           },
           schemaVersion: {
             type: 'integer',
-            description: 'Character sheet schema version (2).',
+            description: `Character sheet schema version (${CURRENT_SCHEMA_VERSION}).`,
           },
           gameSystem: {
             type: 'string',
-            enum: ['Dungeons & Dragons', 'Dark Heresy'],
+            enum: GAME_SYSTEM_NAMES,
             description: 'Legacy mirror of systemId.',
           },
           name: { type: 'string' },
@@ -1015,7 +1042,7 @@ export const openApiDocument = {
           properties: {
             systemId: {
               type: 'string',
-              enum: ['dnd5e', 'dh1', 'dh2'],
+              enum: SYSTEM_IDS,
             },
             status: {
               type: 'string',

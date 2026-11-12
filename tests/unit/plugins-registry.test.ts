@@ -227,6 +227,29 @@ describe('сгенерированный реестр', () => {
     },
   );
 
+  it('каждый плагин реализует normalize и merge (этап 2)', () => {
+    for (const plugin of gamePlugins) {
+      expect(typeof plugin.module.normalize, plugin.manifest.id).toBe(
+        'function',
+      );
+      expect(typeof plugin.module.merge, plugin.manifest.id).toBe('function');
+    }
+  });
+
+  it.each([['dnd5e'], ['dh1'], ['dh2']])(
+    'normalize плагина %s идемпотентен и молчит на дефолтах',
+    (id) => {
+      const plugin = gamePlugins.find((entry) => entry.manifest.id === id);
+      const normalize = plugin?.module.normalize;
+      expect(normalize).toBeTypeOf('function');
+      const draft = { ...plugin!.module.createDefaults(), id: 'fixture' };
+      const first = normalize!(draft);
+      const second = normalize!(first.character);
+      expect(second.character).toEqual(first.character);
+      expect(second.warnings ?? []).toEqual([]);
+    },
+  );
+
   it('словари плагинов имеют паритет en/ru', () => {
     for (const plugin of gamePlugins) {
       const { en, ru } = plugin.module.i18n;

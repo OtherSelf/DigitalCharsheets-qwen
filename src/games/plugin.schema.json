@@ -62,16 +62,29 @@
       "description": "Видимость по умолчанию; runtime-переопределение — game-catalog.json.",
       "enum": ["published", "test", "hidden"]
     },
-    "name": { "$ref": "#/definitions/localizedText" },
-    "description": { "$ref": "#/definitions/localizedText" },
+    "name": {
+      "$ref": "#/definitions/localizedText"
+    },
+    "description": {
+      "$ref": "#/definitions/localizedText"
+    },
     "tags": {
       "description": "Теги хранятся в манифесте и админ-данных, в UI не выводятся (D15).",
       "type": "array",
-      "items": { "type": "string", "minLength": 1 },
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
       "uniqueItems": true
     },
-    "author": { "type": "string", "minLength": 1 },
-    "license": { "type": "string", "minLength": 1 },
+    "author": {
+      "type": "string",
+      "minLength": 1
+    },
+    "license": {
+      "type": "string",
+      "minLength": 1
+    },
     "schemaVersion": {
       "description": "Версия схемы листа, которую пишет плагин.",
       "type": "integer",
@@ -83,9 +96,17 @@
       "additionalProperties": false,
       "required": ["id", "order", "name"],
       "properties": {
-        "id": { "type": "string", "pattern": "^[a-zA-Z][a-zA-Z0-9]*$" },
-        "order": { "type": "integer", "minimum": 0 },
-        "name": { "$ref": "#/definitions/localizedText" }
+        "id": {
+          "type": "string",
+          "pattern": "^[a-zA-Z][a-zA-Z0-9]*$"
+        },
+        "order": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "name": {
+          "$ref": "#/definitions/localizedText"
+        }
       }
     },
     "dependencies": {
@@ -93,11 +114,17 @@
       "additionalProperties": false,
       "required": ["host", "plugins"],
       "properties": {
-        "host": { "type": "string", "minLength": 1 },
+        "host": {
+          "type": "string",
+          "minLength": 1
+        },
         "plugins": {
           "description": "Зарезервировано (D14): граф зависимостей пока не реализован.",
           "type": "object",
-          "additionalProperties": { "type": "string", "minLength": 1 }
+          "additionalProperties": {
+            "type": "string",
+            "minLength": 1
+          }
         }
       }
     },
@@ -107,7 +134,9 @@
       "additionalProperties": false,
       "required": ["module"],
       "properties": {
-        "module": { "$ref": "#/definitions/entryPointWithMember" }
+        "module": {
+          "$ref": "#/definitions/entryPointWithMember"
+        }
       }
     },
     "sheet": {
@@ -116,9 +145,15 @@
       "additionalProperties": false,
       "required": ["mode", "client", "createForm"],
       "properties": {
-        "mode": { "const": "custom" },
-        "client": { "$ref": "#/definitions/relativeModulePath" },
-        "createForm": { "$ref": "#/definitions/relativeModulePath" }
+        "mode": {
+          "const": "custom"
+        },
+        "client": {
+          "$ref": "#/definitions/relativeModulePath"
+        },
+        "createForm": {
+          "$ref": "#/definitions/relativeModulePath"
+        }
       }
     },
     "i18n": {
@@ -127,8 +162,12 @@
       "additionalProperties": false,
       "required": ["en", "ru"],
       "properties": {
-        "en": { "$ref": "#/definitions/relativeModulePath" },
-        "ru": { "$ref": "#/definitions/relativeModulePath" }
+        "en": {
+          "$ref": "#/definitions/relativeModulePath"
+        },
+        "ru": {
+          "$ref": "#/definitions/relativeModulePath"
+        }
       }
     },
     "demo": {
@@ -136,7 +175,9 @@
       "additionalProperties": false,
       "required": ["entry"],
       "properties": {
-        "entry": { "$ref": "#/definitions/entryPointWithMember" }
+        "entry": {
+          "$ref": "#/definitions/entryPointWithMember"
+        }
       }
     },
     "export": {
@@ -145,8 +186,12 @@
       "additionalProperties": false,
       "required": ["json", "excel"],
       "properties": {
-        "json": { "$ref": "#/definitions/entryPointWithMember" },
-        "excel": { "$ref": "#/definitions/entryPointWithMember" }
+        "json": {
+          "$ref": "#/definitions/entryPointWithMember"
+        },
+        "excel": {
+          "$ref": "#/definitions/entryPointWithMember"
+        }
       }
     },
     "import": {
@@ -155,8 +200,12 @@
       "additionalProperties": false,
       "required": ["normalize", "merge"],
       "properties": {
-        "normalize": { "$ref": "#/definitions/entryPointWithMember" },
-        "merge": { "$ref": "#/definitions/entryPointWithMember" }
+        "normalize": {
+          "$ref": "#/definitions/entryPointWithMember"
+        },
+        "merge": {
+          "$ref": "#/definitions/entryPointWithMember"
+        }
       }
     },
     "migrations": {
@@ -167,10 +216,21 @@
         "additionalProperties": false,
         "required": ["from", "to", "entry"],
         "properties": {
-          "from": { "type": "integer", "minimum": 1 },
-          "to": { "type": "integer", "minimum": 2 },
-          "entry": { "$ref": "#/definitions/entryPointWithMember" },
-          "description": { "type": "string", "minLength": 1 }
+          "from": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "to": {
+            "type": "integer",
+            "minimum": 2
+          },
+          "entry": {
+            "$ref": "#/definitions/entryPointWithMember"
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1
+          }
         }
       }
     },
@@ -180,8 +240,14 @@
       "additionalProperties": false,
       "required": ["conformance"],
       "properties": {
-        "conformance": { "type": "string", "minLength": 1 },
-        "fixtures": { "type": "string", "minLength": 1 }
+        "conformance": {
+          "type": "string",
+          "minLength": 1
+        },
+        "fixtures": {
+          "type": "string",
+          "minLength": 1
+        }
       }
     },
     "ui": {
@@ -200,10 +266,23 @@
       }
     },
     "aliases": {
-      "description": "Legacy-имена (gameSystem/edition) для разрешения systemId (этап 2).",
+      "description": "Legacy-имена листа (gameSystem/edition) для разрешения systemId (этап 2). Самое специфичное правило выигрывает.",
       "type": "array",
-      "items": { "type": "string", "minLength": 1 },
-      "uniqueItems": true
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "gameSystem": {
+            "type": "string",
+            "minLength": 1
+          },
+          "edition": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "minProperties": 1
+      }
     }
   },
   "definitions": {
@@ -212,8 +291,14 @@
       "additionalProperties": false,
       "required": ["en", "ru"],
       "properties": {
-        "en": { "type": "string", "minLength": 1 },
-        "ru": { "type": "string", "minLength": 1 }
+        "en": {
+          "type": "string",
+          "minLength": 1
+        },
+        "ru": {
+          "type": "string",
+          "minLength": 1
+        }
       }
     },
     "relativeModulePath": {

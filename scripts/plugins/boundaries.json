@@ -91,11 +91,6 @@
       "removeBy": "этап 3",
       "why": "тосты хоста; станут частью Plugin API (host ui)"
     },
-    "@/lib/character-version": {
-      "files": 6,
-      "removeBy": "этап 2",
-      "why": "CHARACTER_SCHEMA_VERSION берётся из манифеста плагина, миграции — из цепочки плагина (этап 2)"
-    },
     "@/lib/types": {
       "files": 13,
       "removeBy": "этап 2",

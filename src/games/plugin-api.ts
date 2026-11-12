@@ -13,6 +13,8 @@ import type {
   LocalizedMessages,
   ModuleCapabilities,
   ModuleStatus,
+  NormalizeOptions,
+  NormalizeResult,
   SheetComponent,
 } from './types';
 
@@ -43,6 +45,13 @@ export const PLUGIN_MANIFEST_VERSION = 1 as const;
 
 /** Версия Plugin API; манифест объявляет совместимый диапазон. */
 export const PLUGIN_API_VERSION = '1.0.0' as const;
+
+/**
+ * Версия схемы листа, с которой работает хост по умолчанию. Основной
+ * источник — `schemaVersion` манифеста; константа нужна модулям для
+ * фабрик/схем и ядру до того, как известен `systemId`.
+ */
+export const CURRENT_SCHEMA_VERSION = 2 as const;
 
 /** Языки, на которых обязаны быть названия и описания в манифесте. */
 export const PLUGIN_LOCALES = ['en', 'ru'] as const;
@@ -143,10 +152,18 @@ export interface PluginManifest {
     readonly slots: readonly PluginUiSlot[];
   };
   /**
-   * Legacy-имена (`gameSystem`/`edition`) → `systemId` (этап 2). Пока
-   * разрешение делает `src/games/character-system.ts`.
+   * Legacy-имена листа (`gameSystem`/`edition`), по которым разрешается
+   * `systemId` (этап 2). Чем больше полей совпало, тем специфичнее правило:
+   * `{gameSystem:'Dark Heresy', edition:'2nd'}` выигрывает у
+   * `{gameSystem:'Dark Heresy'}`.
    */
-  readonly aliases?: readonly string[];
+  readonly aliases?: readonly PluginAlias[];
+}
+
+/** Правило сопоставления legacy-полей листа с плагином. */
+export interface PluginAlias {
+  readonly gameSystem?: string;
+  readonly edition?: string;
 }
 
 /** Разобранная точка входа `"index.ts#createDemo"`. */
@@ -270,15 +287,6 @@ export interface GameUiSlots<
 }
 
 /**
- * Результат нормализации импортированного/legacy-листа.
- * `warnings` — что не удалось перенести; их показывают пользователю.
- */
-export interface NormalizeResult<TCharacter extends CharacterRecord> {
-  readonly character: TCharacter;
-  readonly warnings?: readonly string[];
-}
-
-/**
  * Целевой контракт плагина (этап 2–3): метаданные из манифеста, схема,
  * фабрики, экспорт, миграции и UI-слоты в одном объекте.
  *
@@ -300,6 +308,7 @@ export interface GamePlugin<
   readonly export: GameExportAdapter<TCharacter>;
   normalize?(
     raw: Readonly<Record<string, unknown>>,
+    options?: NormalizeOptions,
   ): NormalizeResult<TCharacter>;
   merge?(
     target: TCharacter,
@@ -365,5 +374,7 @@ export type {
   LocalizedMessages,
   ModuleCapabilities,
   ModuleStatus,
+  NormalizeOptions,
+  NormalizeResult,
   SheetComponent,
 };

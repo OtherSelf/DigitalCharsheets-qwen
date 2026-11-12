@@ -11,6 +11,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { CharacterProvider } from '@/context/character-context';
 import { LanguageProvider } from '@/context/language-context';
 import { LocalAuthProvider } from '@/context/local-auth-context';
+import { listGamePlugins } from '@/games/registry';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 const spaceGrotesk = Space_Grotesk({
@@ -18,9 +19,14 @@ const spaceGrotesk = Space_Grotesk({
   variable: '--font-space-grotesk',
 });
 
+// Названия игр — из манифестов: новая игра не требует правок layout (этап 2).
+const GAME_TITLES = [
+  ...new Set(listGamePlugins().map((plugin) => plugin.manifest.game.name.en)),
+];
+
 export const metadata: Metadata = {
   title: 'Digital Character Sheets',
-  description: 'Character sheets for DnD 5e and Dark Heresy',
+  description: `Character sheets for ${GAME_TITLES.join(', ')}`,
 };
 
 export const viewport: Viewport = {

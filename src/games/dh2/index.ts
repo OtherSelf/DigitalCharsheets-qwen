@@ -1,5 +1,4 @@
-import { CHARACTER_SCHEMA_VERSION } from '@/lib/character-version';
-
+import { CURRENT_SCHEMA_VERSION } from '../plugin-api';
 import type { ExportTranslate, GameExportConfig, GameModule } from '../types';
 import { createDh2Defaults } from './defaults';
 import { createDh2Demo } from './demo';
@@ -7,6 +6,8 @@ import { buildDh2ExcelSections } from './excel';
 import { buildDh2PortableJson } from './export';
 import { en as dh2En } from './i18n/en';
 import { ru as dh2Ru } from './i18n/ru';
+import { mergeDh2Data } from './merge';
+import { normalizeDh2 } from './normalize';
 import { dh2CharacterSchema } from './schema';
 import type { DH2Character } from './types';
 
@@ -50,7 +51,7 @@ export const dh2Module: GameModule<DH2Character> = {
   defaultStatus: 'published',
   nameKey: 'games.dh2.name',
   descriptionKey: 'games.dh2.description',
-  schemaVersion: CHARACTER_SCHEMA_VERSION,
+  schemaVersion: CURRENT_SCHEMA_VERSION,
   schema: dh2CharacterSchema,
   i18n: { en: dh2En, ru: dh2Ru },
   capabilities: {
@@ -60,6 +61,8 @@ export const dh2Module: GameModule<DH2Character> = {
   },
   createDefaults,
   createDemo,
+  normalize: normalizeDh2,
+  merge: mergeDh2Data,
   components: {
     loadCreateForm: () =>
       import('./create-form').then((m) => ({ default: m.Dh2CharacterForm })),

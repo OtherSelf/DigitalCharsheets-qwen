@@ -26,6 +26,7 @@ src/games/
   dnd5e/
     plugin.json             manifest: id, order, entry points, i18n, demo
     types.ts, schema.ts, defaults.ts, demo.ts
+    normalize.ts, merge.ts   legacy normalization + import merge
     export.ts, excel.ts, epic-boons.ts
     i18n/{en,ru}.ts
     create-form.tsx, sheet.tsx, index.ts
@@ -33,6 +34,7 @@ src/games/
   dh1/                      fully self-contained edition module
     plugin.json             manifest (own copy, not shared with dh2)
     types.ts, schemas.ts, schema.ts, defaults.ts, demo.ts
+    normalize.ts, merge.ts   legacy normalization + import merge (own copies)
     capabilities.ts, stats.ts
     export.ts, excel.ts
     dark-heresy-data.ts, dark-heresy-ranks.ts, divination-i18n.ts
@@ -89,6 +91,8 @@ Rules:
 - `dependencies.plugins` is reserved (D14); `dependencies.host` is the Plugin
   API range checked by the generator.
 - `pluginApi` is checked against the host version (`^`, `~`, `>=`, exact, `*`).
+- `aliases` maps legacy `gameSystem`/`edition` values to the plugin; the most
+  specific alias wins (`{gameSystem, edition:'2nd'}` beats `{gameSystem}`).
 - `migrations` order is the apply order; a non-empty chain must cover
   `1 → … → schemaVersion` without gaps (the generator checks it). Migrations
   still live in the core until stage 2, so all three manifests are empty today.
@@ -121,7 +125,9 @@ helpers (`gameRegistry`, `listGamePlugins`, `getPluginManifest`).
 | `components.loadCreateForm` / `loadSheet` | Lazy UI entry points (dynamic import). |
 | `export.toPortableJson` | JSON field selection for export 3.0. |
 | `export.buildExcelSections` | Localized Excel sections. |
-| `migrations` | Per-module chain placeholder; data migration lives in `character-version.ts`. |
+| `normalize(raw, options?)` | Legacy normalization: remaps fields per edition and (with `applyDefaults`) fills missing structures. Replaces the core's `normalizeCharacter`/`normalizeCharacterRecord` branches (stage 2). |
+| `merge(target, source, config)` | Import merge; replaces the core's `isDnd/isDh1/isDh2` branches (stage 2). |
+| `migrations` | Per-module chain; the v1→v2 transformation itself lives in `normalize` (idempotent), the explicit chain runner is stage 4. |
 
 ## Adding a new edition (example: `dh3`)
 
@@ -150,11 +156,12 @@ helpers (`gameRegistry`, `listGamePlugins`, `getPluginManifest`).
    to `src/games/games.ts` (id, order, name/description keys).
 4. **Translations** — the merge in `src/lib/i18n/index.ts` picks the module
    dictionaries up automatically. Add the same keys to `en` and `ru`.
-5. **Data** — if the new system is not covered by the v2 migration, extend
-   `resolveSystemId`/`normalizeCharacterRecord` in
-   [`src/lib/character-version.ts`](../src/lib/character-version.ts) (or write a
-   `v2 → v3` migration step). Never drop fields silently: move values into
-   `notes` and report them.
+5. **Data** — the edition owns its normalization: `normalize.ts` (defaults,
+   field remapping) and `merge.ts` (import merge). Legacy identifiers are
+   declared in `plugin.json#aliases`; the core
+   [`src/lib/character-version.ts`](../src/lib/character-version.ts) only
+   orchestrates. Never drop fields silently: move values into `notes` and
+   return them as warnings.
 6. **Visibility** — `defaultStatus` in the manifest is the default; admins can
    override it in `settings/game-catalog.json` via `/admin` (Games & editions).
 7. **Tests**:

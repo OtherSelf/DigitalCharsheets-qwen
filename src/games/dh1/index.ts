@@ -1,5 +1,4 @@
-import { CHARACTER_SCHEMA_VERSION } from '@/lib/character-version';
-
+import { CURRENT_SCHEMA_VERSION } from '../plugin-api';
 import type { ExportTranslate, GameExportConfig, GameModule } from '../types';
 import { createDh1Defaults } from './defaults';
 import { createDh1Demo } from './demo';
@@ -7,6 +6,8 @@ import { buildDh1ExcelSections } from './excel';
 import { buildDh1PortableJson } from './export';
 import { en as dh1En } from './i18n/en';
 import { ru as dh1Ru } from './i18n/ru';
+import { mergeDh1Data } from './merge';
+import { normalizeDh1 } from './normalize';
 import { dh1CharacterSchema } from './schema';
 import type { DH1Character } from './types';
 
@@ -50,7 +51,7 @@ export const dh1Module: GameModule<DH1Character> = {
   defaultStatus: 'published',
   nameKey: 'games.dh1.name',
   descriptionKey: 'games.dh1.description',
-  schemaVersion: CHARACTER_SCHEMA_VERSION,
+  schemaVersion: CURRENT_SCHEMA_VERSION,
   schema: dh1CharacterSchema,
   i18n: { en: dh1En, ru: dh1Ru },
   capabilities: {
@@ -60,6 +61,8 @@ export const dh1Module: GameModule<DH1Character> = {
   },
   createDefaults,
   createDemo,
+  normalize: normalizeDh1,
+  merge: mergeDh1Data,
   components: {
     loadCreateForm: () =>
       import('./create-form').then((m) => ({ default: m.Dh1CharacterForm })),

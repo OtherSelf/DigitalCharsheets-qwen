@@ -52,5 +52,10 @@
   "migrations": [],
   "tests": {
     "conformance": ">=1"
-  }
+  },
+  "aliases": [
+    {
+      "gameSystem": "Dungeons & Dragons"
+    }
+  ]
 }

@@ -115,100 +115,13 @@ export const sanitizeData = (data: any): any => {
   return data;
 };
 
-const normalizeCharacter = (char: any): any => {
-  if (char.gameSystem === 'Dark Heresy') {
-    return {
-      ...char,
-      stats: char.stats || {
-        weaponSkill: 0,
-        ballisticSkill: 0,
-        strength: 0,
-        toughness: 0,
-        agility: 0,
-        intelligence: 0,
-        perception: 0,
-        willpower: 0,
-        fellowship: 0,
-        influence: 0,
-      },
-      statUpgrades: char.statUpgrades || {
-        weaponSkill: [false, false, false, false],
-        ballisticSkill: [false, false, false, false],
-        strength: [false, false, false, false],
-        toughness: [false, false, false, false],
-        agility: [false, false, false, false],
-        intelligence: [false, false, false, false],
-        perception: [false, false, false, false],
-        willpower: [false, false, false, false],
-        fellowship: [false, false, false, false],
-        influence: [false, false, false, false],
-      },
-      movement: char.movement || {
-        walkHalf: 0,
-        walkFull: 0,
-        charge: 0,
-        run: 0,
-      },
-      wounds: char.wounds || { current: 0, max: 0, notes: '' },
-      fatePoints: char.fatePoints || { current: 0, max: 0, notes: '' },
-      insanityPoints: char.insanityPoints || { total: 0, notes: '' },
-      corruptionPoints: char.corruptionPoints || { total: 0, notes: '' },
-      wealth: char.wealth || { throneGelt: 0, monthlyIncome: 0, notes: '' },
-      equipment: char.equipment || {
-        armor: {
-          Head: null,
-          Body: null,
-          'Left arm': null,
-          'Right arm': null,
-          'Left leg': null,
-          'Right leg': null,
-        },
-        weapons: { melee: [], ranged: [] },
-      },
-      skills: char.skills || [],
-      talents: char.talents || [],
-    };
-  }
-
-  if (char.gameSystem === 'Dungeons & Dragons') {
-    return {
-      ...char,
-      stats: char.stats || {
-        strength: 10,
-        dexterity: 10,
-        constitution: 10,
-        intelligence: 10,
-        wisdom: 10,
-        charisma: 10,
-      },
-      savingThrows: char.savingThrows || [],
-      skills: char.skills || [],
-      hitPoints: char.hitPoints || { current: 0, max: 0 },
-      deathSaves: char.deathSaves || { successes: 0, failures: 0 },
-      currency: char.currency || { cp: 0, sp: 0, gp: 0, pp: 0, ep: 0 },
-      equipment: char.equipment || [],
-      inventory: char.inventory || [],
-      spells: char.spells || [],
-      spellSlots: char.spellSlots || {},
-    };
-  }
-
-  return char;
-};
-
-const SUPPORTED_EXPORT_SYSTEMS = ['Dungeons & Dragons', 'Dark Heresy'] as const;
-const SUPPORTED_SYSTEM_IDS = ['dnd5e', 'dh1', 'dh2'] as const;
-
 function validateCharacterPayload(character: any, index: number): string[] {
   const label = `Персонаж #${index + 1}`;
   if (!character || typeof character !== 'object' || Array.isArray(character)) {
     return [`${label}: ожидался объект.`];
   }
   const errors: string[] = [];
-  const knownSystem =
-    SUPPORTED_SYSTEM_IDS.includes(character.systemId) ||
-    SUPPORTED_EXPORT_SYSTEMS.includes(character.gameSystem);
-  if (!knownSystem) {
+  if (!resolveCharacterSystemId(character)) {
     errors.push(
       `${label}: неизвестная игровая система ${JSON.stringify(
         character.systemId ?? character.gameSystem,
@@ -447,9 +360,9 @@ export function parseExportPayload(
 
   const characters: Partial<Character>[] = [];
   for (let index = 0; index < rawCharacters.length; index += 1) {
-    const baseline = normalizeCharacter(rawCharacters[index]);
     const normalized = normalizeCharacterRecord(
-      baseline as Record<string, unknown>,
+      rawCharacters[index] as Record<string, unknown>,
+      { applyDefaults: true },
     ).character;
     const errors = validateCharacterPayload(normalized, index);
     if (errors.length > 0) {
@@ -606,6 +519,12 @@ export const importCharacterFromJSON = (file: File): Promise<ImportResult> => {
   });
 };
 
+/**
+ * ─── LANDMARK: IMPORT MERGE ────────────────────────────────────────────────
+ * Ядро только нормализует обе стороны и проверяет, что редакции совпадают;
+ * какие поля сливать — решает плагин (`module.merge`, этап 2). Так в ядре
+ * больше нет `isDnd/isDh1/isDh2`.
+ */
 export const mergeImportedData = (
   targetCharacter: Character,
   importedData: ExportData,
@@ -613,11 +532,12 @@ export const mergeImportedData = (
 ): Character => {
   const target = normalizeCharacterRecord(
     targetCharacter as unknown as Record<string, unknown>,
+    { applyDefaults: true },
   ).character;
   const source = normalizeCharacterRecord(
     (importedData.character ?? {}) as unknown as Record<string, unknown>,
-  ).character as any;
-  const merged = { ...(target as any) } as any;
+    { applyDefaults: true },
+  ).character;
   const targetSystemId = resolveCharacterSystemId(target);
   const sourceSystemId = resolveCharacterSystemId(source);
 
@@ -627,205 +547,18 @@ export const mergeImportedData = (
     );
   }
 
-  const isDnd = targetSystemId === 'dnd5e';
-  const isDh1 = targetSystemId === 'dh1';
-  const isDh2 = targetSystemId === 'dh2';
-
-  if (importConfig.includeBasicInfo) {
-    if (source.name !== undefined) merged.name = source.name;
-    if (source.characterClass !== undefined) {
-      merged.characterClass = source.characterClass;
-    }
-    if (isDnd) {
-      for (const key of [
-        'race',
-        'background',
-        'alignment',
-        'age',
-        'height',
-        'weight',
-        'eyes',
-        'skin',
-        'hair',
-        'proficiencyBonus',
-      ]) {
-        if (source[key] !== undefined) merged[key] = source[key];
-      }
-    } else {
-      for (const key of [
-        'homeWorld',
-        'worldVariant',
-        'careerPath',
-        'rank',
-        'divination',
-        'divinationEffect',
-        'quirk',
-        'height',
-        'weight',
-        'age',
-        'skinColor',
-        'hairColor',
-        'eyeColor',
-      ]) {
-        if (source[key] !== undefined) merged[key] = source[key];
-      }
-    }
+  const gameModule = getCharacterModule(target);
+  if (typeof gameModule?.merge !== 'function') {
+    throw new Error(
+      `Плагин "${targetSystemId ?? 'неизвестно'}" не умеет сливать импортированные данные.`,
+    );
   }
 
-  if (importConfig.includeStats) {
-    if (source.stats) {
-      const stats = { ...source.stats };
-      // Чужие редакции не протекают: dh1 без influence, dh2 — с ним.
-      if (isDh1) delete stats.influence;
-      if (isDh2) stats.influence = stats.influence ?? 30;
-      merged.stats = { ...merged.stats, ...stats };
-    }
-    if (source.statNotes) merged.statNotes = source.statNotes;
-    if ((isDh1 || isDh2) && source.statUpgrades) {
-      merged.statUpgrades = source.statUpgrades;
-    }
-  }
-
-  if (importConfig.includeCombat) {
-    if (isDnd) {
-      for (const key of [
-        'armorClass',
-        'speed',
-        'hpTracking',
-        'hitPointsNotes',
-        'temporaryHitPoints',
-        'hitDice',
-        'exhaustion',
-        'savingThrows',
-        'skills',
-        'attacks',
-        'combatResources',
-      ]) {
-        if (source[key] !== undefined) merged[key] = source[key];
-      }
-      if (source.hitPoints) {
-        merged.hitPoints = { ...merged.hitPoints, ...source.hitPoints };
-      }
-      if (source.hitDiceUsed) {
-        merged.hitDiceUsed = { ...merged.hitDiceUsed, ...source.hitDiceUsed };
-      }
-      if (source.deathSaves) {
-        merged.deathSaves = { ...merged.deathSaves, ...source.deathSaves };
-      }
-    } else {
-      for (const key of [
-        'wounds',
-        'fatePoints',
-        'insanityPoints',
-        'corruptionPoints',
-        'movement',
-        'criticalConditions',
-        'customResources',
-        'skills',
-        'talents',
-      ]) {
-        const value = source[key];
-        if (value === undefined) continue;
-        merged[key] =
-          value && typeof value === 'object' && !Array.isArray(value)
-            ? { ...(merged[key] || {}), ...value }
-            : value;
-      }
-      // Усталость — только существующее у редакции поле.
-      if (isDh1 && source.fatigue1st && merged.fatigue1st !== undefined) {
-        merged.fatigue1st = { ...merged.fatigue1st, ...source.fatigue1st };
-      }
-      if (isDh2 && source.fatigue2nd && merged.fatigue2nd !== undefined) {
-        merged.fatigue2nd = { ...merged.fatigue2nd, ...source.fatigue2nd };
-      }
-    }
-  }
-
-  if (importConfig.includeEquipment && source.equipment) {
-    merged.equipment = source.equipment;
-  }
-
-  if (importConfig.includeInventory) {
-    if (source.inventory) merged.inventory = source.inventory;
-    if (isDnd) {
-      if (source.currency) {
-        merged.currency = { ...merged.currency, ...source.currency };
-      }
-      if (source.attunementItems !== undefined) {
-        merged.attunementItems = source.attunementItems;
-      }
-    } else if (source.wealth) {
-      merged.wealth = { ...merged.wealth, ...source.wealth };
-    }
-  }
-
-  if (importConfig.includeSpells && isDnd) {
-    for (const key of [
-      'spells',
-      'spellSlots',
-      'spellcastingAbility',
-      'spellAttackBonus',
-      'spellSaveDifficulty',
-      'spellcastingEntries',
-    ]) {
-      if (source[key] !== undefined) merged[key] = source[key];
-    }
-  }
-
-  if (importConfig.includeNarrative) {
-    for (const key of [
-      'backstory',
-      'notes',
-      'otherProficienciesAndLanguages',
-      'personalityTraits',
-      'ideals',
-      'bonds',
-      'flaws',
-      'featuresAndTraits',
-    ]) {
-      if (source[key] !== undefined) merged[key] = source[key];
-    }
-  }
-
-  if (importConfig.includeProgression) {
-    if (isDnd) {
-      for (const key of [
-        'level',
-        'experiencePoints',
-        'isMulticlass',
-        'multiclasses',
-        'divineBoons',
-        'allowDivineBoonsBeforeLevel20',
-        'inspiration',
-        'allowInspirationHomeRule',
-      ]) {
-        if (source[key] !== undefined) merged[key] = source[key];
-      }
-    } else {
-      for (const key of [
-        'experience',
-        'totalExpSpent',
-        'alternatePath',
-        'advancedPath',
-      ]) {
-        if (source[key] !== undefined) merged[key] = source[key];
-      }
-    }
-  }
-
-  if (importConfig.includeCompanions && isDnd && source.companions) {
-    merged.companions = source.companions;
-  }
-
-  if (importConfig.includeQuestLog && source.questLog) {
-    merged.questLog = source.questLog;
-  }
-
-  if (importConfig.includeCustomHouseRules && source.customHouseRules) {
-    merged.customHouseRules = source.customHouseRules;
-  }
-
-  return merged as Character;
+  return gameModule.merge(
+    target,
+    source as unknown as Record<string, unknown>,
+    importConfig,
+  ) as Character;
 };
 
 // LANDMARK: EXCEL_LEDGER
