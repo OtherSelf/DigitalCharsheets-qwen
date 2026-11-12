@@ -218,9 +218,67 @@ export interface CardSummary {
   readonly badgeVariant?: CardBadgeVariant;
 }
 
-/** Пропсы слота `BulkEditor` (массовый редактор характеристик). */
-export interface GameBulkEditorProps<TCharacter extends CharacterRecord> {
-  readonly characters: readonly TCharacter[];
+/** Значение ячейки массового редактора. */
+export type BulkEditorValue = number | string;
+
+/** Колонка таблицы массового редактора (`/stats-editor`). */
+export interface BulkEditorColumn<TCharacter extends CharacterRecord> {
+  readonly key: string;
+  /** Полный i18n-ключ подписи колонки. */
+  readonly labelKey: string;
+  readonly type?: 'number' | 'text';
+  readonly min?: number;
+  readonly max?: number;
+  /** Текущее значение листа (для инициализации ячейки). */
+  readonly value: (character: TCharacter) => BulkEditorValue;
+}
+
+/**
+ * Вкладка массового редактора. Вкладка `stats` общая для всех плагинов
+ * (карточки идут отдельными блоками), вкладки жизненных показателей —
+ * свои у каждой игры/редакции.
+ */
+export interface BulkEditorTab {
+  readonly id: string;
+  readonly labelKey: string;
+  readonly order: number;
+  /** Показывать количество персонажей в подписи вкладки. */
+  readonly showCount?: boolean;
+  /** Ключ подписи кнопки Save All («Сохранить все …»). */
+  readonly saveAllLabelKey: string;
+  /** Ключ сообщения после Save All («Все … сохранены»). */
+  readonly saveAllDoneKey: string;
+  /** Ключ пустого состояния вкладки (если строк нет). */
+  readonly emptyKey?: string;
+}
+
+/**
+ * Таблица массового редактора, которую отдаёт плагин (слот `BulkEditor`).
+ * Хост рисует разметку и хранит состояние, плагин — колонки, значения по
+ * умолчанию и сборку патча для сохранения. Так в `/stats-editor` не остаётся
+ * `if (gameSystem === …)`.
+ */
+export interface BulkEditorTable<TCharacter extends CharacterRecord> {
+  readonly id: string;
+  readonly tab: BulkEditorTab;
+  /** Порядок карточек внутри вкладки (не совпадает с порядком вкладок). */
+  readonly order: number;
+  readonly titleKey: string;
+  readonly descriptionKey: string;
+  /** Добавить к заголовку имя редакции (`games.dh1.name`) через `·`. */
+  readonly editionNameKey?: string;
+  readonly minWidth: number;
+  /** CSS grid-template-columns; по умолчанию гибкие колонки под count. */
+  readonly gridTemplate?: string;
+  readonly gap?: 1 | 2;
+  /** Ключ сообщения «сохранены статы/показатели для …». */
+  readonly saveOneKey: string;
+  readonly columns: readonly BulkEditorColumn<TCharacter>[];
+  /** Патч листа по значениям строки. */
+  apply: (
+    character: TCharacter,
+    values: Readonly<Record<string, BulkEditorValue>>,
+  ) => Partial<TCharacter>;
 }
 
 /** Пропсы слотов, которым нужен диалог домашних правил. */
@@ -240,7 +298,8 @@ export interface GameHouseRulesDialogProps {
  *                            кнопка домашних правил);
  *   • `HeaderSubtitle`     — однострочная подпись под именем в шапке;
  *   • `CompactNav`         — пункты мобильного сайдбара;
- *   • `BulkEditor`         — вкладка массового редактора (этап 3b);
+ *   • `BulkEditor`         — таблицы массового редактора (этап 3b): плагин
+ *                            описывает колонки и патч, хост рисует разметку;
  *   • `CardSummary`        — подпись и бейдж карточки на дашборде;
  *   • `HouseRulesDialog`   — содержимое диалога домашних правил: хост даёт
  *                            кнопку/пункт меню, плагин — тело диалога.
@@ -260,7 +319,8 @@ export interface GameUiSlots<
     t: (key: string) => string,
   ) => string;
   readonly CompactNav?: (character: TCharacter) => readonly PluginNavItem[];
-  readonly BulkEditor?: ComponentType<GameBulkEditorProps<TCharacter>>;
+  /** Таблицы массового редактора `/stats-editor` (слот `BulkEditor`). */
+  readonly bulkEditor?: readonly BulkEditorTable<TCharacter>[];
   readonly CardSummary?: (
     character: TCharacter,
     t: (key: string) => string,

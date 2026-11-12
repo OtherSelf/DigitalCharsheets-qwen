@@ -68,7 +68,8 @@
       "HeaderSubtitle",
       "CompactNav",
       "CardSummary",
-      "HouseRulesDialog"
+      "HouseRulesDialog",
+      "BulkEditor"
     ]
   }
 }

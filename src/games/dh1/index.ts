@@ -1,5 +1,6 @@
 import { CURRENT_SCHEMA_VERSION } from '../plugin-api';
 import type { ExportTranslate, GameExportConfig, GameModule } from '../types';
+import { dh1BulkEditor } from './bulk-editor';
 import { createDh1Defaults } from './defaults';
 import { createDh1Demo } from './demo';
 import { buildDh1ExcelSections } from './excel';
@@ -71,6 +72,7 @@ export const dh1Module: GameModule<DH1Character> = {
   normalize: normalizeDh1,
   merge: mergeDh1Data,
   ui: {
+    bulkEditor: dh1BulkEditor,
     HeaderActions: Dh1HeaderActions,
     HeaderSubtitle: dh1HeaderSubtitle,
     CompactNav: dh1CompactNav,

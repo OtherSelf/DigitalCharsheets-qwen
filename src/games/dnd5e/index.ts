@@ -1,5 +1,6 @@
 import { CURRENT_SCHEMA_VERSION } from '../plugin-api';
 import type { ExportTranslate, GameExportConfig, GameModule } from '../types';
+import { dnd5eBulkEditor } from './bulk-editor';
 import { createDnd5eDefaults } from './defaults';
 import { createDnd5eDemo } from './demo';
 import { buildDnd5eExcelSections } from './excel';
@@ -65,6 +66,7 @@ export const dnd5eModule: GameModule<DnD5eCharacter> = {
   normalize: normalizeDnd5e,
   merge: mergeDnd5eData,
   ui: {
+    bulkEditor: dnd5eBulkEditor,
     HeaderActions: DndHeaderActions,
     HeaderSubtitle: dnd5eHeaderSubtitle,
     CompactNav: dnd5eCompactNav,
