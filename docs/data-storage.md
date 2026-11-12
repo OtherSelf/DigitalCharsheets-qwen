@@ -42,7 +42,7 @@ directory and sheets stay where they are.
   "uid": "9d1f0d4e-2c0f-4b5e-9f8a-4a1b2c3d4e5f",
   "username": "hero@example.com",
   "displayName": "Hero",
-  "passwordHash": "<sha256 hex>",
+  "passwordHash": "scrypt$16384$8$1$<salt>$<hash>",
   "role": "user",
   "isBlocked": false,
   "lastLoginAt": "2026-01-01T00:00:00.000Z",
@@ -57,7 +57,7 @@ directory and sheets stay where they are.
 | `uid` | Immutable UUID; also the directory name. |
 | `username` | Normalized login (lowercase, trimmed). The login index key. |
 | `displayName` | Human-readable name shown in the UI. |
-| `passwordHash` | SHA-256 hash of the password. |
+| `passwordHash` | Salted `scrypt` hash (`scrypt$N$r$p$<salt>$<hash>`, see [`src/lib/security/scrypt.ts`](../src/lib/security/scrypt.ts)). Unsalted SHA-256 values written by older versions are verified once and transparently replaced on the next successful login. |
 | `role` | `user`, `tester` or `admin`. Missing/invalid values are treated as `user` (fail-closed). `tester` sees `test` editions but has no access to `/admin` or admin API. |
 | `isBlocked` | When true, login is refused and existing sessions stop working. |
 | `blockedAt` | Timestamp set while blocked; removed on unblock. |

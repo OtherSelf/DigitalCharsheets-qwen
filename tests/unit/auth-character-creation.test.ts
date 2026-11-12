@@ -17,7 +17,9 @@ import {
   normalizeCharacterRecord,
 } from '@/lib/character-version';
 import { isUid } from '@/lib/ids';
+import { verifyPassword } from '@/lib/security/password';
 import { isRecoveryPhraseHash } from '@/lib/security/phrase';
+import { isScryptHash } from '@/lib/security/scrypt';
 
 import { readJson, removeDir, userPaths, useTempDataDir } from './helpers';
 
@@ -41,7 +43,7 @@ const PHRASE_URL = 'http://localhost/api/auth/phrase';
 const CHARACTERS_URL = 'http://localhost/api/characters';
 const EXPORT_URL = 'http://localhost/api/export';
 
-const PASSWORD = 'secret-pass';
+const PASSWORD = 'secret-pass-1234';
 const RECOVERY_PHRASE = 'amber cobalt lantern';
 
 const jsonRequest = (
@@ -393,8 +395,13 @@ describe('авторизация: регистрация и вход', () => {
     expect(stored).toMatchObject({
       username: 'auth.user',
       displayName: 'Auth Tester',
-      passwordHash: sha256(PASSWORD),
     });
+    // Пароль лежит scrypt-хэшем с солью, а не sha256 без соли.
+    expect(isScryptHash(stored.passwordHash)).toBe(true);
+    expect(verifyPassword(stored.passwordHash, PASSWORD).valid).toBe(true);
+    expect(verifyPassword(stored.passwordHash, `${PASSWORD}x`).valid).toBe(
+      false,
+    );
     // Фраза хранится хэшем и не восстанавливается из файла.
     expect(isRecoveryPhraseHash(stored.recoveryPhrase)).toBe(true);
     expect(stored.recoveryPhrase).not.toContain(RECOVERY_PHRASE);
@@ -436,7 +443,7 @@ describe('авторизация: регистрация и вход', () => {
     );
   });
 
-  it('валидирует пустые поля и слишком короткий пароль', async () => {
+  it('валидирует пустые поля; длину пароля проверяет регистрация', async () => {
     const noPassword = await login('someone', '');
     expect(noPassword.status).toBe(400);
     expect(noPassword.body.error).toMatch(/required/i);
@@ -444,9 +451,21 @@ describe('авторизация: регистрация и вход', () => {
     const noUsername = await login('', PASSWORD);
     expect(noUsername.status).toBe(400);
 
-    const shortPassword = await login('someone', '123');
-    expect(shortPassword.status).toBe(400);
-    expect(shortPassword.body.error).toMatch(/4 characters/i);
+    // Вход длину не проверяет: короткий пароль — просто неверный, аккаунта нет.
+    const shortOnLogin = await login('someone', '123');
+    expect(shortOnLogin.status).toBe(404);
+
+    // Регистрация с коротким паролем отклоняется политикой (12 символов).
+    const shortOnRegister = await registerRoute(
+      jsonRequest(REGISTER_URL, {
+        username: `short-pass-${Date.now()}`,
+        password: '123',
+        displayName: 'Short',
+        recoveryPhrase: 'amber cobalt',
+      }),
+    );
+    expect(shortOnRegister.status).toBe(400);
+    expect((await shortOnRegister.json()).error).toMatch(/at least 12/i);
 
     // Неудачные попытки не должны создавать аккаунты.
     expect(fs.existsSync(path.join(dataDir, 'users'))).toBe(false);

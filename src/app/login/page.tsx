@@ -28,6 +28,7 @@ import { Input } from '@/components/ui/input';
 import { useTranslation } from '@/context/language-context';
 import { useLocalAuth } from '@/context/local-auth-context';
 import { PENDING_CHARACTER_KEY } from '@/lib/pending-draft';
+import { MIN_PASSWORD_LENGTH } from '@/lib/security/password';
 
 type AuthMode = 'login' | 'register' | 'recover';
 
@@ -186,7 +187,7 @@ export default function LoginPage() {
       setError(t('auth.fillAllFields'));
       return;
     }
-    if (password.length < 4) {
+    if (password.length < MIN_PASSWORD_LENGTH) {
       setError(t('common.passwordMinLength'));
       return;
     }
@@ -269,7 +270,7 @@ export default function LoginPage() {
       setError(t('auth.fillAllFields'));
       return;
     }
-    if (newRecoveryPassword.length < 4) {
+    if (newRecoveryPassword.length < MIN_PASSWORD_LENGTH) {
       setError(t('common.passwordMinLength'));
       return;
     }

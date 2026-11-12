@@ -25,6 +25,7 @@ import {
 import { useTranslation } from '@/context/language-context';
 import { useToast } from '@/hooks/use-toast';
 import type { AdminUserSummary } from '@/lib/admin-types';
+import { MIN_PASSWORD_LENGTH } from '@/lib/security/password';
 import type { UserRole } from '@/lib/user-role';
 
 import { adminReasonMessage } from './admin-helpers';
@@ -85,7 +86,7 @@ export function UserEditDialog({
       setError(t('admin.loginRequired'));
       return;
     }
-    if (password && password.length < 4) {
+    if (password && password.length < MIN_PASSWORD_LENGTH) {
       setError(t('admin.passwordShort'));
       return;
     }

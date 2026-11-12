@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 
+import { passwordPolicyError } from '@/lib/security/password';
 import {
   getAuthRateLimiter,
   rateLimitKey,
@@ -65,13 +66,10 @@ export async function POST(request: Request) {
       );
     }
 
-    if (newPassword.length < 4) {
+    const policyError = passwordPolicyError(newPassword);
+    if (policyError) {
       return NextResponse.json(
-        {
-          success: false,
-          error: 'New password must be at least 4 characters.',
-          reason: 'invalid_input',
-        },
+        { success: false, error: policyError, reason: 'invalid_input' },
         { status: 400 },
       );
     }

@@ -1,5 +1,11 @@
 import { NextResponse } from 'next/server';
 
+import { passwordPolicyError } from '@/lib/security/password';
+import {
+  getAuthRateLimiter,
+  rateLimitKey,
+  REGISTER_RATE_LIMIT,
+} from '@/lib/security/rate-limit';
 import { registerUser } from '@/lib/server-auth';
 import { sessionCookieHeader } from '@/lib/session';
 
@@ -12,7 +18,8 @@ import { sessionCookieHeader } from '@/lib/session';
  * вести пользователя на дашборд без модалки «настройте фразу». Сессия
  * ставится той же httpOnly-cookie, что и при входе.
  *
- * Статусы: 400 — невалидные поля; 409 — логин уже занят; 200 — аккаунт создан.
+ * Статусы: 400 — невалидные поля (в т.ч. пароль короче 12 символов);
+ * 409 — логин уже занят; 429 — превышен лимит регистраций; 200 — аккаунт создан.
  */
 export async function POST(request: Request) {
   try {
@@ -26,9 +33,28 @@ export async function POST(request: Request) {
       );
     }
 
-    if (password.length < 4) {
+    const limiter = getAuthRateLimiter().check(
+      rateLimitKey('register', request, String(username)),
+      REGISTER_RATE_LIMIT,
+    );
+    if (!limiter.allowed) {
       return NextResponse.json(
-        { success: false, error: 'Password must be at least 4 characters.' },
+        {
+          success: false,
+          error: 'Too many registrations. Try again later.',
+          reason: 'rate_limited',
+        },
+        {
+          status: 429,
+          headers: { 'Retry-After': String(limiter.retryAfterSeconds) },
+        },
+      );
+    }
+
+    const policyError = passwordPolicyError(password);
+    if (policyError) {
+      return NextResponse.json(
+        { success: false, error: policyError, reason: 'invalid_input' },
         { status: 400 },
       );
     }

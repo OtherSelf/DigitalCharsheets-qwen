@@ -529,12 +529,23 @@ await check('POST /api/auth → 400 без пароля', async () => {
   assertStatus(res, 400, 'без пароля');
 });
 
-await check('POST /api/auth → 400 на пароль короче 4 символов', async () => {
-  const res = await api('/auth', {
+await check('POST /api/auth/register → 400 на пароль короче 12', async () => {
+  const res = await api('/auth/register', {
     method: 'POST',
-    body: { username: `${username}2`, password: '123' },
+    body: {
+      username: `${username}-short`,
+      password: '123',
+      displayName: 'Short',
+      recoveryPhrase: 'amber cobalt lantern',
+    },
+    auth: false,
   });
-  assertStatus(res, 400, 'короткий пароль');
+  assertStatus(res, 400, 'короткий пароль при регистрации');
+  const body = assertJson(res, 'короткий пароль при регистрации');
+  assert(
+    /at least 12/i.test(body.error || ''),
+    `регистрация: error = ${body.error}, ожидали «at least 12»`,
+  );
 });
 
 // 3. Лист персонажа: создание/чтение/правка/удаление
@@ -643,7 +654,7 @@ if (opts.dataDir) {
   const characterFile = path.join(userDir, 'characters', `${characterId}.json`);
 
   await check(
-    'на диске есть data/users/<uid>/user.json с sha256-хешем пароля',
+    'на диске есть data/users/<uid>/user.json со scrypt-хешем пароля',
     async () => {
       const userFile = path.join(userDir, 'user.json');
       assert(fs.existsSync(userFile), `нет файла ${userFile}`);
@@ -665,8 +676,13 @@ if (opts.dataDir) {
         `user.json: username = ${parsed.username}`,
       );
       assert(
-        parsed.passwordHash === sha256(password),
-        'user.json: passwordHash не соответствует sha256(password)',
+        typeof parsed.passwordHash === 'string' &&
+          parsed.passwordHash.startsWith('scrypt$'),
+        `user.json: passwordHash = ${String(parsed.passwordHash).slice(0, 24)}…, ожидали scrypt$…`,
+      );
+      assert(
+        parsed.passwordHash !== sha256(password),
+        'user.json: passwordHash всё ещё несолёный sha256',
       );
       assert(
         !raw.includes(password),
@@ -906,6 +922,30 @@ if (opts.dataDir) {
     },
   );
 }
+
+// 6.1 Лимит попыток входа (SEC-7)
+await check('11-я неудачная попытка входа → 429 с Retry-After', async () => {
+  const probe = `brute-${stamp}-${Math.random().toString(36).slice(2, 7)}`;
+  const statuses = [];
+  let retryAfter = null;
+
+  for (let attempt = 1; attempt <= 11; attempt += 1) {
+    const res = await api('/auth', {
+      method: 'POST',
+      body: { username: probe, password: 'wrong-pass-1234' },
+      auth: false,
+    });
+    statuses.push(res.status);
+    if (attempt === 11) retryAfter = res.headers.get('retry-after');
+  }
+
+  assert(
+    statuses.slice(0, 10).every((status) => status === 404),
+    `первые 10 попыток: ${statuses.join(', ')}, ожидали 404`,
+  );
+  assert(statuses[10] === 429, `11-я попытка: ${statuses[10]}, ожидали 429`);
+  assert(Number(retryAfter) > 0, `Retry-After = ${retryAfter}`);
+});
 
 // 7. Уборка
 if (opts.dataDir && userId) {

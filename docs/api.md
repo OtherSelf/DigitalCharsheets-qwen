@@ -62,9 +62,9 @@ contract version in [`src/lib/openapi.ts`](../src/lib/openapi.ts)
 
 | Method | Path | Auth | Purpose |
 | --- | --- | --- | --- |
-| `POST` | `/api/auth` | — | Log in; unknown login → 404, blocked → 403. |
-| `POST` | `/api/auth/register` | — | Create an account with a recovery phrase and sign in. |
-| `POST` | `/api/auth/exists` | — | Check whether a login is taken. |
+| `POST` | `/api/auth` | — | Log in; unknown login → 404, wrong password → 401, blocked → 403, too many attempts → 429. Password length is not checked here. |
+| `POST` | `/api/auth/register` | — | Create an account with a recovery phrase and sign in; password policy 12–128 characters. |
+| `POST` | `/api/auth/exists` | — | Check whether a login is taken (rate limited: 20 / 10 minutes per IP + login). |
 | `GET` | `/api/auth/session` | cookie | Current profile snapshot (role, block state, etc.). |
 | `GET` | `/api/games` | optional cookie | Games/editions visible to the current role; also the site-title override. |
 | `POST` | `/api/auth/logout` | — | Clear the session cookie. |
@@ -137,7 +137,12 @@ Rules and invariants: [admin.md](admin.md).
   routes may use `{ "error": "..." }`.
 - Common status codes: `400` invalid input, `401` no/expired/blocked session,
   `403` wrong role or wrong password, `404` not found, `409` conflict (taken
-  login, last administrator), `500` unexpected server error.
+  login, last administrator), `429` rate limited (with `Retry-After`),
+  `500` unexpected server error.
+- Passwords: stored as salted `scrypt`; the policy is **12–128 characters** and
+  applies when a password is set (registration, recovery, profile, admin).
+  Login accepts any non-empty password and only checks the credential, so
+  accounts created before the policy keep working.
 - The exact schemas live in `/api/openapi.json`.
 
 ## Related

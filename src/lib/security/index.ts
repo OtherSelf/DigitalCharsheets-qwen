@@ -5,8 +5,10 @@
  * импортировать отсюда: границы доверия сосредоточены в одном каталоге.
  */
 
+export * from './password';
 export * from './paths';
 export * from './phrase';
 export * from './rate-limit';
+export * from './scrypt';
 export * from './timing';
 export * from './tokens';

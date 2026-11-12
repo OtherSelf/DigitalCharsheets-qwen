@@ -1,10 +1,14 @@
-import crypto from 'crypto';
 import fs from 'fs';
 
 import { getUserDir, getUserFile } from './data-dir';
 import { withDataLock } from './data-lock';
 import { defaultDisplayName, isUid, newUid, normalizeLogin } from './ids';
 import { LocalUser } from './local-storage';
+import {
+  hashPassword,
+  passwordPolicyError,
+  verifyPassword,
+} from './security/password';
 import {
   hashRecoveryPhrase,
   isRecoveryPhraseHash,
@@ -81,9 +85,11 @@ export interface AuthenticateOptions {
   allowRegistration?: boolean;
 }
 
-export function hashPassword(password: string): string {
-  return crypto.createHash('sha256').update(password).digest('hex');
-}
+/**
+ * Хэш пароля живёт в `security/password.ts` (scrypt + соль); реэкспорт нужен,
+ * чтобы админка и служебные скрипты не тянули приватный путь модуля.
+ */
+export { hashPassword } from './security/password';
 
 /**
  * Публичный снимок профиля для UI. `role`/`isBlocked` нужны клиенту, чтобы
@@ -115,7 +121,47 @@ export function getStoredUser(uid: string): StoredUser | null {
   return readStoredUser(uid);
 }
 
-function authenticateExisting(uid: string, passwordHash: string): AuthResult {
+/**
+ * Перезаписать устаревший хэш пароля (sha256 → scrypt). Вызывается только
+ * после успешной проверки, поэтому пароль уже известен.
+ *
+ * `locked` — вызывающий уже держит `withDataLock` (вход по «протухшему»
+ * индексу рождается внутри лока): вложенный лок — это взаимоблокировка.
+ */
+function rehashPassword(
+  stored: StoredUser,
+  password: string,
+  options: { locked: boolean },
+): StoredUser {
+  const write = (): StoredUser => {
+    const fresh = readStoredUser(stored.uid) ?? stored;
+    // Пока проверялся пароль, его могли сменить: перезаписываем только если
+    // на диске всё ещё старый хэш от этого же пароля.
+    if (!verifyPassword(fresh.passwordHash, password).needsRehash) return fresh;
+    const updated: StoredUser = {
+      ...fresh,
+      passwordHash: hashPassword(password),
+      updatedAt: new Date().toISOString(),
+    };
+    writeStoredUser(stored.uid, updated);
+    return updated;
+  };
+
+  try {
+    return options.locked ? write() : withDataLock(write);
+  } catch (e) {
+    // Вход не должен падать из-за оптимизации хранения: следующий вход
+    // попробует миграцию снова.
+    console.error('Failed to migrate password hash:', e);
+    return stored;
+  }
+}
+
+function authenticateExisting(
+  uid: string,
+  password: string,
+  options: { locked?: boolean } = {},
+): AuthResult {
   let stored = getStoredUser(uid);
   if (!stored) {
     // Индекс мог устареть (например, каталог удалили руками) — пересобираем.
@@ -129,7 +175,9 @@ function authenticateExisting(uid: string, passwordHash: string): AuthResult {
       reason: 'no_account',
     };
   }
-  if (stored.passwordHash !== passwordHash) {
+
+  const check = verifyPassword(stored.passwordHash, password);
+  if (!check.valid) {
     return {
       success: false,
       error: 'Incorrect password.',
@@ -144,6 +192,11 @@ function authenticateExisting(uid: string, passwordHash: string): AuthResult {
       error: 'This account is blocked by an administrator.',
       reason: 'blocked',
     };
+  }
+  if (check.needsRehash) {
+    stored = rehashPassword(stored, password, {
+      locked: options.locked === true,
+    });
   }
   return {
     success: true,
@@ -261,10 +314,11 @@ export function registerUser(
       reason: 'invalid_input',
     };
   }
-  if (!password || password.length < 4) {
+  const policyError = passwordPolicyError(password);
+  if (policyError) {
     return {
       success: false,
-      error: 'Password must be at least 4 characters.',
+      error: policyError,
       reason: 'invalid_input',
     };
   }
@@ -319,7 +373,6 @@ export function authenticateUser(
   options: AuthenticateOptions = {},
 ): AuthResult {
   const login = normalizeLogin(username);
-  const passwordHash = hashPassword(password);
 
   if (!login) {
     return {
@@ -330,7 +383,7 @@ export function authenticateUser(
   }
 
   const existingUid = resolveLogin(login);
-  if (existingUid) return authenticateExisting(existingUid, passwordHash);
+  if (existingUid) return authenticateExisting(existingUid, password);
 
   if (options.allowRegistration === false) {
     return {
@@ -346,9 +399,11 @@ export function authenticateUser(
   return withDataLock(() => {
     const index = readLoginIndexForUpdate();
     const racedUid = index.logins[login];
-    if (racedUid) return authenticateExisting(racedUid, passwordHash);
+    // Лок уже взят: миграция хэша должна писать без вложенного лока.
+    if (racedUid)
+      return authenticateExisting(racedUid, password, { locked: true });
 
-    return persistNewAccount(login, passwordHash, displayName);
+    return persistNewAccount(login, hashPassword(password), displayName);
   });
 }
 
@@ -366,6 +421,11 @@ export function updateUserProfile(
 ): { success: boolean; user?: LocalUser; error?: string } {
   const stored = getStoredUser(currentUserId);
   if (!stored) return { success: false, error: 'User not found.' };
+
+  if (newPassword && newPassword.trim() !== '') {
+    const policyError = passwordPolicyError(newPassword);
+    if (policyError) return { success: false, error: policyError };
+  }
 
   const newLogin = normalizeLogin(newUsername);
   if (!newLogin) return { success: false, error: 'Username is required.' };
@@ -486,7 +546,7 @@ export function deleteUserAccount(
           reason: 'not_found',
         };
       }
-      if (stored.passwordHash !== hashPassword(password)) {
+      if (!verifyPassword(stored.passwordHash, password).valid) {
         return {
           success: false,
           error: 'Incorrect password.',
@@ -675,12 +735,9 @@ export function resetCredentialsWithToken(
   newPassword: string,
   newRecoveryPhrase?: string,
 ): ResetWithTokenResult {
-  if (typeof newPassword !== 'string' || newPassword.trim() === '') {
-    return {
-      success: false,
-      reason: 'invalid_input',
-      error: 'New password is required.',
-    };
+  const policyError = passwordPolicyError(newPassword);
+  if (policyError) {
+    return { success: false, reason: 'invalid_input', error: policyError };
   }
   if (
     newRecoveryPhrase !== undefined &&
@@ -878,10 +935,11 @@ export function createServiceAdmin(
       reason: 'invalid_input',
     };
   }
-  if (!password || password.length < 4) {
+  const policyError = passwordPolicyError(password);
+  if (policyError) {
     return {
       success: false,
-      error: 'Password must be at least 4 characters.',
+      error: policyError,
       reason: 'invalid_input',
     };
   }
