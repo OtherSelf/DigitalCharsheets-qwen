@@ -14,7 +14,11 @@
     "en": "The classic 5e sheet: six abilities, skills and saves, spells, companions, inspiration and epic boons.",
     "ru": "Классический лист 5e: шесть характеристик, навыки и спасброски, заклинания, спутники, вдохновение и эпические дары."
   },
-  "tags": ["d20", "fantasy", "5e"],
+  "tags": [
+    "d20",
+    "fantasy",
+    "5e"
+  ],
   "author": "Digital Character Sheets",
   "license": "MIT",
   "schemaVersion": 2,
@@ -66,6 +70,7 @@
       "CardSummary",
       "HouseRulesDialog",
       "BulkEditor"
-    ]
+    ],
+    "entry": "ui.ts"
   }
 }

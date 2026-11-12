@@ -113,17 +113,22 @@ re-exports the generated plugins and helpers (`gameRegistry`,
 registry is initialised (language context is imported by plugin UI slots); it
 contains only dictionaries, no modules or UI.
 
-UI slots are part of the module object (`ui`). The host components read them
-through the registry:
+UI slots live in a separate file (`ui.ts`, `plugin.json#ui.entry`) and are
+loaded lazily through the registry — the module object itself stays free of
+React components and host context, so the shared bundle/import graph is not
+pulled into every page:
 
 ```tsx
-const plugin = getCharacterModule(character);
-plugin?.ui?.HeaderSubtitle?.(character, t);
-plugin?.ui?.CardSummary?.(character, t);
-{plugin?.ui?.HeaderActions && (
-  <plugin.ui.HeaderActions character={character} isCompactView={isCompactView} />
+const slots = useGameUiSlots(systemId);
+slots?.HeaderSubtitle?.(character, t);
+slots?.CardSummary?.(character, t);
+{slots?.HeaderActions && (
+  <slots.HeaderActions character={character} isCompactView={isCompactView} />
 )}
 ```
+
+`loadGameUiSlots(systemId)` caches the loaded object; if the chunk fails the
+host keeps the neutral fallbacks (and logs the error).
 
 The sheet itself is loaded lazily (`components.loadSheet`), so a render error in
 a plugin shows the *sheet unavailable* card instead of breaking the page; the

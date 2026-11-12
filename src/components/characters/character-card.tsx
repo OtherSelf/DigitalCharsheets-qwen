@@ -28,8 +28,12 @@ import {
 } from '@/components/ui/card';
 import { useCharacterContext } from '@/context/character-context';
 import { useTranslation } from '@/context/language-context';
-import { getCharacterModule } from '@/games/character-system';
+import {
+  getCharacterModule,
+  resolveCharacterSystemId,
+} from '@/games/character-system';
 import { getGameDefinition } from '@/games/games';
+import { useGameUiSlots } from '@/hooks/use-game-ui-slots';
 import {
   DEFAULT_EXPORT_CONFIG,
   exportCharacterToExcel,
@@ -50,8 +54,9 @@ export function CharacterCard({ character }: CharacterCardProps) {
     ? getGameDefinition(gameModule.gameId)
     : undefined;
   // Подпись и цвет бейджа — слот плагина (этап 3); у ядра остаётся
-  // нейтральный вариант, если слот не задан.
-  const summary = gameModule?.ui?.CardSummary?.(character, t);
+  // нейтральный вариант, если слот не загрузился/не задан.
+  const uiSlots = useGameUiSlots(resolveCharacterSystemId(character));
+  const summary = uiSlots?.CardSummary?.(character, t);
   const summaryText = summary?.text ?? '';
   const badgeVariant = summary?.badgeVariant ?? 'secondary';
   // Бейдж «игра · редакция» целиком из реестра и i18n.

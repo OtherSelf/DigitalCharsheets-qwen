@@ -23,8 +23,9 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useCharacterContext } from '@/context/character-context';
 import { useTranslation } from '@/context/language-context';
-import { getCharacterModule } from '@/games/character-system';
+import { resolveCharacterSystemId } from '@/games/character-system';
 import type { SheetHandle } from '@/games/types';
+import { useGameUiSlots } from '@/hooks/use-game-ui-slots';
 import { cn } from '@/lib/utils';
 
 export default function CharacterPage() {
@@ -46,6 +47,8 @@ export default function CharacterPage() {
   const sheetRef = useRef<SheetHandle | null>(null);
 
   const character = getCharacter(params.id);
+  const systemId = character ? resolveCharacterSystemId(character) : undefined;
+  const uiSlots = useGameUiSlots(systemId);
 
   useEffect(() => {
     if (isLoaded && !character) {
@@ -116,13 +119,11 @@ export default function CharacterPage() {
     return <Loading />;
   }
 
-  const gameModule = getCharacterModule(character);
-
   return (
     <>
       {/* LANDMARK: DYNAMIC SHEET FAVICON INJECTION */}
 
-      <DynamicFavicon href={gameModule?.ui?.favicon} />
+      <DynamicFavicon href={uiSlots?.favicon} />
 
       <div className="flex h-full flex-col">
         <Header

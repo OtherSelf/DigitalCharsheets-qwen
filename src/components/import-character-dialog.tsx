@@ -66,7 +66,6 @@ export function ImportCharacterDialog({
         for (const charData of result.batchData) {
           const safeCharacterData = {
             name: charData.name || 'Imported Character',
-            gameSystem: charData.gameSystem || 'Dungeons & Dragons',
             characterClass: charData.characterClass || 'Unknown',
             backstory: charData.backstory || '',
             notes: charData.notes || '',
@@ -82,10 +81,9 @@ export function ImportCharacterDialog({
       }
       // [LANDMARK: SINGLE IMPORT FALLBACK]
       else if (result.data) {
-        const { id, gameSystem, ...characterData } = result.data.character;
+        const { id: _id, ...characterData } = result.data.character;
         const safeCharacterData = {
           name: characterData.name || 'Imported Character',
-          gameSystem: gameSystem || 'Dungeons & Dragons',
           characterClass: characterData.characterClass || 'Unknown',
           backstory: characterData.backstory || '',
           notes: characterData.notes || '',

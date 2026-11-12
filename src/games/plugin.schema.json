@@ -254,7 +254,7 @@
       "description": "Необязательные UI-слоты плагина (этап 3, D11).",
       "type": "object",
       "additionalProperties": false,
-      "required": ["slots"],
+      "required": ["slots", "entry"],
       "properties": {
         "slots": {
           "type": "array",
@@ -269,6 +269,11 @@
             ]
           },
           "uniqueItems": true
+        },
+        "entry": {
+          "description": "Модуль, экспортирующий `uiSlots: GameUiSlots` (грузится лениво).",
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_.-]+(/[A-Za-z0-9_.-]+)*\\.(ts|tsx)$"
         }
       }
     },

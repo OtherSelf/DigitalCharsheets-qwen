@@ -54,7 +54,12 @@
     "conformance": ">=1"
   },
   "ui": {
-    "slots": ["HeaderSubtitle", "CompactNav", "CardSummary"]
+    "slots": ["HeaderSubtitle", "CompactNav", "CardSummary"],
+    "entry": "ui.ts"
   },
-  "aliases": [{ "gameSystem": "Example Game" }]
+  "aliases": [
+    {
+      "gameSystem": "Example Game"
+    }
+  ]
 }

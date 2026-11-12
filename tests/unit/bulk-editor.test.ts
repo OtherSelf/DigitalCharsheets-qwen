@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
+import { dh1BulkEditor } from '@/games/dh1/bulk-editor';
+import { dh2BulkEditor } from '@/games/dh2/bulk-editor';
+import { dnd5eBulkEditor } from '@/games/dnd5e/bulk-editor';
 import { gamePlugins } from '@/games/registry';
 import type { BulkEditorTable } from '@/games/types';
 import { translations } from '@/lib/i18n';
@@ -17,8 +20,15 @@ function plugin(id: string) {
   return entry;
 }
 
+const BULK_TABLES: Record<string, readonly BulkEditorTable<any>[]> = {
+  dnd5e: dnd5eBulkEditor,
+  dh1: dh1BulkEditor,
+  dh2: dh2BulkEditor,
+};
+
 function tables(id: string): readonly BulkEditorTable<any>[] {
-  return plugin(id).module.ui?.bulkEditor ?? [];
+  plugin(id);
+  return BULK_TABLES[id] ?? [];
 }
 
 function tableOf(id: string, tableId: string): BulkEditorTable<any> {

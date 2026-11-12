@@ -12,6 +12,7 @@ import { en as exampleEn } from '../fixtures/example-plugin/i18n/en';
 import { ru as exampleRu } from '../fixtures/example-plugin/i18n/ru';
 import exampleManifest from '../fixtures/example-plugin/plugin.json';
 import type { ExampleCharacter } from '../fixtures/example-plugin/types';
+import { uiSlots as exampleUiSlots } from '../fixtures/example-plugin/ui';
 
 /**
  * ─── LANDMARK: EXAMPLE PLUGIN CONFORMANCE ─────────────────────────────────
@@ -84,6 +85,13 @@ describe('эталонный плагин: манифест', () => {
     expect(plugins.map((plugin) => plugin.id)).toEqual(['example']);
     expect(content).toContain("import { exampleModule } from './example';");
     expect(content).toContain('module: exampleModule');
+  });
+
+  it('UI-слоты объявлены в манифесте и лежат в ui.ts', () => {
+    expect(exampleManifest.ui?.entry).toBe('ui.ts');
+    expect([...(exampleManifest.ui?.slots ?? [])].sort()).toEqual(
+      Object.keys(exampleUiSlots).sort(),
+    );
   });
 
   it('объявляет API, версию схемы и скрытую видимость', () => {
@@ -201,14 +209,12 @@ describe('эталонный плагин: модуль', () => {
       id: 'fixture',
     } as ExampleCharacter;
 
-    expect(example.exampleModule.ui?.HeaderSubtitle?.(character, t)).toBe(
-      'Rank: Veteran',
-    );
-    expect(example.exampleModule.ui?.CardSummary?.(character, t)).toEqual({
+    expect(exampleUiSlots.HeaderSubtitle?.(character, t)).toBe('Rank: Veteran');
+    expect(exampleUiSlots.CardSummary?.(character, t)).toEqual({
       text: 'Rank Veteran',
       badgeVariant: 'outline',
     });
-    expect(example.exampleModule.ui?.CompactNav?.(character)).toEqual([
+    expect(exampleUiSlots.CompactNav?.(character)).toEqual([
       { labelKey: 'example.sheetTitle', id: 'info-section' },
     ]);
   });
