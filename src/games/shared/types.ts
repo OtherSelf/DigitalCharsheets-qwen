@@ -16,7 +16,11 @@ import type { SystemId } from '../types';
  * читается только миграцией и не пишется в новые файлы. До этапа 3 UI
  * продолжает на него опираться — поэтому поле пока обязательно.
  */
-export type GameSystem = 'Dungeons & Dragons' | 'Dark Heresy';
+/**
+ * Legacy-значение `gameSystem` из файлов v1. Список игр не хардкодится:
+ * допустимые значения задают плагины, а валидацию делает их normalize.
+ */
+export type GameSystem = string;
 
 /** Общая часть любого листа. */
 export interface CharacterBase {
@@ -25,7 +29,7 @@ export interface CharacterBase {
   characterClass: string;
   /** Legacy-дискриминант v1; в v2 заменяется на `systemId` (📌 D4). */
   gameSystem: GameSystem;
-  /** Машинный ID редакции (`dnd5e`, `dh1`, `dh2`); появляется в v2. */
+  /** Машинный ID редакции (значение `plugin.json#id`); появляется в v2. */
   systemId?: SystemId;
   backstory: string;
   notes: string;

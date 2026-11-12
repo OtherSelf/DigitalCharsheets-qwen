@@ -1,4 +1,5 @@
-import type { DH1Character, DnD5eCharacter } from '../../src/lib/types';
+import type { DH1Character } from '../../src/games/dh1/types';
+import type { DnD5eCharacter } from '../../src/games/dnd5e/types';
 
 /**
  * Фикстуры для визуальных тестов.
