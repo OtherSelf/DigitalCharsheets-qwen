@@ -26,10 +26,10 @@ Status: **v1**, manifest `manifestVersion: 1`, `pluginApi: ^1.0.0`.
 7. **Generate and check**:
    ```bash
    npm run plugins:generate     # registry.generated.ts + i18n.generated.ts
-   npm run plugins:check        # манифесты ↔ реестр
-   npm run plugins:boundaries   # правила импортов
-   npm run plugins:conformance  # контракт плагина (unit-набор)
-   npm run verify               # всё вместе
+   npm run plugins:check        # manifests ↔ registry
+   npm run plugins:boundaries   # import rules
+   npm run plugins:conformance  # plugin contract (unit set)
+   npm run verify               # everything together
    ```
    The plugin appears in `/new`, `/demo`, `/admin` (per catalog/F) and its
    sheets open via `/api/...` and `/<characterId>`.
