@@ -33,6 +33,7 @@ import {
   makeDndCharacter,
   readJson,
   removeDir,
+  sessionCookie,
   sessionHeaders,
   userPaths,
   useTempDataDir,
@@ -249,6 +250,41 @@ describe('GET /api/admin/users', () => {
       characterCount: 2,
     });
     expect(target.lastLoginAt).toBeNull();
+  });
+});
+
+describe('PATCH /api/admin/users/[uid] (SEC-6)', () => {
+  it('смена пароля администратором гасит сессии пользователя', async () => {
+    const admin = seedAdmin();
+    const user = seedUser();
+
+    // У пользователя есть живая сессия (телефон/браузер). Cookie берём один
+    // раз: каждый вызов sessionHeaders заводит новую сессию.
+    const userCookie = { cookie: sessionCookie(user.uid) };
+    const before = await charactersGet(
+      new Request('http://localhost/api/characters', {
+        method: 'GET',
+        headers: userCookie,
+      }),
+    );
+    expect(before.status).toBe(200);
+
+    const res = await adminUserPatch(
+      patch({ password: 'admin-set-pass-1234' }, sessionHeaders(admin.uid)),
+      params(user.uid),
+    );
+    expect(res.status).toBe(200);
+
+    // Старый пароль не действует — и сессии тоже (иначе старый вход жил бы).
+    const after = await charactersGet(
+      new Request('http://localhost/api/characters', {
+        method: 'GET',
+        headers: userCookie,
+      }),
+    );
+    expect(after.status).toBe(401);
+    expect(authenticateUser('hero', 'admin-set-pass-1234').success).toBe(true);
+    expect(authenticateUser('hero', 'user-pass-1234').success).toBe(false);
   });
 });
 

@@ -23,7 +23,8 @@ dependencies and the generated `.next/` directory.
 | --- | --- | --- |
 | `DCS_DATA_DIR` | `./data` | Directory with users, sheets and the login index. Must be writable. |
 | `DCS_SESSION_SECRET` | `<data-dir>/.session-secret` | HMAC key for session cookies. Set explicitly if several instances/processes share one data dir or if the data dir is ephemeral. |
-| `DCS_COOKIE_SECURE` | unset | Set to `1` behind HTTPS so the session cookie gets the `Secure` flag. |
+| `DCS_COOKIE_SECURE` | unset | `1` forces the `Secure` flag on the session cookie. It is already on by default in production; this variable is a compatible way to enable it in development. |
+| `DCS_COOKIE_INSECURE` | unset | `1` explicitly disables the `Secure` flag (local plain-HTTP development only). |
 | `DCS_ADMIN_USERNAME` | `admin` | Preferred login for the bootstrap administrator; `admin-2`, … if taken. |
 | `DCS_GIT_COMMIT` | unset | Commit shown by `/api/version`; falls back to `GIT_COMMIT` / `VERCEL_GIT_COMMIT_SHA`. |
 | `DCS_BUILD_DATE` | unset | ISO build date shown by `/api/version`. |
@@ -91,7 +92,8 @@ The app does not terminate TLS itself. Run it behind a reverse proxy (nginx,
 Caddy, Traefik, …) and:
 
 - forward `Host` and `X-Forwarded-Proto`;
-- set `DCS_COOKIE_SECURE=1` so the session cookie is `Secure`;
+- keep `NODE_ENV=production` so the session cookie is `Secure` (`DCS_COOKIE_SECURE=1`
+  is equivalent, `DCS_COOKIE_INSECURE=1` is for local development only);
 - proxy with **HTTP/1.1** and pass `Upgrade`/`Connection`;
 - allow long-lived responses (long `proxy_read_timeout`).
 

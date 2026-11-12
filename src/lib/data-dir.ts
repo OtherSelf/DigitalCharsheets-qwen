@@ -10,6 +10,7 @@ import path from 'path';
  *   <data-dir>/users/<uid>/characters/<id>.json
  *   <data-dir>/index/logins.json              — индекс «логин → uid» (производный)
  *   <data-dir>/tokens.json                    — хэши одноразовых recovery-токенов
+ *   <data-dir>/sessions.json                  — серверный реестр сессий (jti)
  *   <data-dir>/.session-secret                — ключ подписи cookie (0600)
  *   <data-dir>/.lock                          — каталог-мьютекс для операций записи
  *
@@ -92,4 +93,13 @@ export function getSessionSecretFile(): string {
  */
 export function getRecoveryTokensFile(): string {
   return path.join(getDataDir(), 'tokens.json');
+}
+
+/**
+ * Серверный реестр сессий: `<data-dir>/sessions.json`.
+ * Cookie хранит только `jti`, а запись можно отозвать (logout, смена пароля,
+ * «выйти на всех устройствах»); см. `src/lib/security/sessions.ts`.
+ */
+export function getSessionsFile(): string {
+  return path.join(getDataDir(), 'sessions.json');
 }

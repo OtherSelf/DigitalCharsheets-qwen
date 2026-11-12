@@ -75,6 +75,8 @@ interface LocalAuthContextType {
    */
   deleteAccount: (password: string) => Promise<LoginResult>;
   logout: () => void;
+  /** Выход на всех устройствах: гасит все сессии uid на сервере. */
+  logoutEverywhere: () => Promise<boolean>;
   // LANDMARK: RESTORE_SESSION
   // Пишет сессию в оба состояния; используется и восстановлением по фразе.
   restoreSession: (user: LocalUser) => void;
@@ -308,6 +310,26 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
     setLastAuthKind(null);
   }, []);
 
+  const logoutEverywhere = useCallback(async () => {
+    let ok = false;
+    try {
+      const res = await fetch('/api/auth/logout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ all: true }),
+      });
+      ok = res.ok;
+    } catch {
+      // Сеть недоступна: локальный снимок всё равно чистим, но честно
+      // сообщаем, что сервер не подтвердил отзыв сессий.
+      ok = false;
+    }
+    clearLocalUser();
+    setUser(null);
+    setLastAuthKind(null);
+    return ok;
+  }, []);
+
   const updateUserPhrase = useCallback(
     (hasPhrase: boolean) => {
       const current = user ?? getLocalUser();
@@ -331,6 +353,7 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
         accountExists,
         deleteAccount,
         logout,
+        logoutEverywhere,
         restoreSession,
         updateUser,
         updateUserPhrase,

@@ -24,7 +24,9 @@ Adding an endpoint without documenting it fails the unit tests.
 ## Authentication
 
 - `POST /api/auth` (login) and `POST /api/auth/register` set the
-  `dcs_session` cookie: `<uid>.<exp>.<hmac>`, `HttpOnly; SameSite=Lax`, 30 days.
+  `dcs_session` cookie: `<uid>.<exp>.<jti>.<hmac>`, `HttpOnly; SameSite=Lax`,
+  `Secure` in production, 14 days. `jti` names a server-side session record, so
+  logout and credential changes revoke the cookie immediately.
 - Send the cookie with every request that touches user data. The browser does
   this automatically for same-origin requests.
 - The server resolves the uid from the cookie only; `userId` in a query/body is
@@ -67,8 +69,8 @@ contract version in [`src/lib/openapi.ts`](../src/lib/openapi.ts)
 | `POST` | `/api/auth/exists` | — | Check whether a login is taken (rate limited: 20 / 10 minutes per IP + login). |
 | `GET` | `/api/auth/session` | cookie | Current profile snapshot (role, block state, etc.). |
 | `GET` | `/api/games` | optional cookie | Games/editions visible to the current role; also the site-title override. |
-| `POST` | `/api/auth/logout` | — | Clear the session cookie. |
-| `PUT` | `/api/auth/profile` | cookie | Update own login, display name, password, recovery phrase. |
+| `POST` | `/api/auth/logout` | optional cookie | Revoke the current session and clear the cookie. Body `{ "all": true }` revokes every session of the account («sign out everywhere»). |
+| `PUT` | `/api/auth/profile` | cookie | Update own login, display name, password, recovery phrase. Changing the password requires `currentPassword` (`403 invalid_password` otherwise) and revokes the account's other sessions. |
 | `DELETE` | `/api/auth/profile` | cookie | Delete own account and all sheets; requires the current password. |
 | `POST` | `/api/auth/phrase` | cookie | Set own recovery phrase. |
 | `POST` | `/api/auth/recover/verify` | — | Check the whole recovery phrase; on success return a single-use token (`{token, expiresAt}`). No session cookie is set. |

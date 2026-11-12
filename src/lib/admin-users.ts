@@ -14,6 +14,7 @@ import { getCharactersDir, getUserDir } from './data-dir';
 import { withDataLock } from './data-lock';
 import { isUid, normalizeLogin } from './ids';
 import { passwordPolicyError } from './security/password';
+import { revokeAllSessionsForUser } from './security/sessions';
 import { hashPassword, type StoredUser } from './server-auth';
 import { resetWriteSeqGuard } from './server-storage';
 import {
@@ -191,14 +192,17 @@ export function updateUserByAdmin(
   }
 
   try {
-    return withDataLock(() => {
+    // Флаг нужен снаружи лока: после записи профиля гасим сессии, уже не
+    // держа файловый мьютекс.
+    let passwordChanged = false;
+    const result = withDataLock((): AdminActionResponse => {
       const stored = readStoredUser(targetUid);
       if (!stored) {
         return {
           success: false,
           error: 'User not found.',
           reason: 'not_found',
-        } as AdminActionResponse;
+        };
       }
 
       const updated: StoredUser = { ...stored };
@@ -248,6 +252,7 @@ export function updateUserByAdmin(
         updated.passwordHash = hashPassword(patch.password);
         // Стартовый пароль сменён — предупреждение больше не актуально.
         delete updated.mustChangePassword;
+        passwordChanged = true;
         hasChanges = true;
       }
 
@@ -335,8 +340,22 @@ export function updateUserByAdmin(
       return {
         success: true,
         user: toSummary(updated, countCharacterFiles(targetUid)),
-      } as AdminActionResponse;
+      };
     });
+
+    // Пароль сменил администратор: все живые сессии пользователя гасим —
+    // старый пароль больше не действует, значит и старые сессии не должны.
+    if (result.success && passwordChanged) {
+      try {
+        revokeAllSessionsForUser(targetUid);
+      } catch (e) {
+        console.error(
+          'Failed to revoke sessions after admin password change:',
+          e,
+        );
+      }
+    }
+    return result;
   } catch (error) {
     console.error('Admin user update failed:', error);
     return {

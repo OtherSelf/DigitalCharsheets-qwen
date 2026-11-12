@@ -139,7 +139,36 @@ describe('updateUserProfile', () => {
   it('меняет пароль: старый перестаёт работать, новый — работает', () => {
     const uid = authenticateUser('pwuser', 'old-pass-1234').user!.uid;
 
-    const result = updateUserProfile(uid, 'pwuser', 'pwuser', 'new-pass-1234');
+    // Смена пароля требует текущий пароль (повторная аутентификация).
+    const withoutCurrent = updateUserProfile(
+      uid,
+      'pwuser',
+      'pwuser',
+      'new-pass-1234',
+    );
+    expect(withoutCurrent.success).toBe(false);
+    expect(withoutCurrent.reason).toBe('invalid_password');
+    expect(authenticateUser('pwuser', 'old-pass-1234').success).toBe(true);
+
+    const wrongCurrent = updateUserProfile(
+      uid,
+      'pwuser',
+      'pwuser',
+      'new-pass-1234',
+      undefined,
+      { currentPassword: 'not-my-pass-1234' },
+    );
+    expect(wrongCurrent.success).toBe(false);
+    expect(wrongCurrent.reason).toBe('invalid_password');
+
+    const result = updateUserProfile(
+      uid,
+      'pwuser',
+      'pwuser',
+      'new-pass-1234',
+      undefined,
+      { currentPassword: 'old-pass-1234' },
+    );
 
     expect(result.success).toBe(true);
     expect(authenticateUser('pwuser', 'old-pass-1234').success).toBe(false);

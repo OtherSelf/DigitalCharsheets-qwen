@@ -25,6 +25,7 @@ JSON files, written through small, synchronous helpers in `src/lib/`.
   index/
     logins.json                 derived: normalized login → uid
   tokens.json                   single-use recovery tokens (hashed)
+  sessions.json                 live session records (uid per `jti`)
   .session-secret               HMAC key for session cookies (0600)
   .lock/                        short-lived directory mutex
   .initial-admin.txt            generated bootstrap admin (0600, optional)
@@ -66,6 +67,13 @@ directory and sheets stay where they are.
 | `recoveryPhrase` | Salted `scrypt` hash of the normalized phrase (`src/lib/security/phrase.ts`). The phrase itself is never stored; older plaintext values are re-hashed on the first successful verification and by the startup pass. |
 | `createdAt`/`updatedAt` | ISO timestamps; missing values are filled from file mtime. |
 | `originalFirebaseId` | Present only on accounts imported from the old Firebase export. |
+
+`sessions.json` maps each live session `jti` to `{ uid, createdAt, expiresAt }`.
+A record exists only while the session is valid: logout, password/phrase change,
+administrator password change, recovery and account deletion delete it, so a
+stolen cookie stops working immediately. Expired records are pruned on every
+write. The file holds no secret — the signature lives in the cookie and is
+verified with `.session-secret`.
 
 `tokens.json` holds hashes (never the tokens) of single-use recovery tokens,
 keyed by the SHA-256 of the value handed to the client: `{ "version": 1,

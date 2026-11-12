@@ -9,6 +9,7 @@ import { AlertCircle, Minus, Plus, RotateCcw, Save } from 'lucide-react';
 
 import { Header } from '@/components/header';
 import { DeleteAccountCard } from '@/components/settings/delete-account-card';
+import { SessionsCard } from '@/components/settings/sessions-card';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -325,6 +326,8 @@ export default function ProfileSettingsPage() {
               </CardFooter>
             </Card>
           </form>
+
+          <SessionsCard />
 
           {/* LANDMARK: DANGER_ZONE_OUTSIDE_PROFILE_FORM
               Вне <form>: у карточки свой диалог со своей формой; вложенные
