@@ -3,8 +3,9 @@ import type { LegacyImportContext } from '@/games/types';
 /**
  * ─── LANDMARK: DH1 LEGACY IMPORT ──────────────────────────────────────────
  * Разовый перенос листов Dark Heresy из Firestore-экспорта (записи с
- * `gameSystem: 'Dark Heresy'` без `edition` → 1-я редакция). Раньше конвертер
- * жил в `src/app/api/import/route.ts`; теперь — данные плагина (этап 3).
+ * `gameSystem: 'Dark Heresy'` без `edition` → 1-я редакция). Конвертер —
+ * данные плагина, поэтому ядро не знает про конкретную игру (этап 3); сам
+ * перенос выполняется офлайн-скриптом, рантайм-роута импорта нет.
  */
 type RawRow = Record<string, any>;
 

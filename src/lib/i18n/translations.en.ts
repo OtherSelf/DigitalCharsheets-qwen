@@ -268,6 +268,7 @@ export const enTranslations: Record<string, string> = {
     'No account found with this login. Create an account first.',
   'auth.accountExists':
     'An account with this login already exists. Sign in instead.',
+  'auth.invalidCredentials': 'Invalid login or password.',
   'auth.incorrectPassword': 'Incorrect password.',
   'auth.loginFailed': 'Login failed.',
   'auth.registrationFailed': 'Registration failed.',

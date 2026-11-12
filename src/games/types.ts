@@ -424,7 +424,7 @@ export interface GameModule<
 
   /**
    * Конвертер legacy-записи в лист: ядро только пишет файл и нормализует
-   * результат. Раньше конвертеры D&D/DH жили в `app/api/import/route.ts`.
+   * результат, поэтому конвертеры D&D/DH живут в плагинах, а не в ядре.
    */
   convertLegacyImport?(
     raw: Readonly<Record<string, unknown>>,

@@ -3,9 +3,9 @@ import type { LegacyImportContext } from '@/games/types';
 /**
  * ─── LANDMARK: DND5E LEGACY IMPORT ────────────────────────────────────────
  * Разовый перенос листов из Firestore-экспорта (записи с `gameSystem:
- * 'Dungeons & Dragons'`). Раньше конвертер и генератор имени жили в
- * `src/app/api/import/route.ts` с проверками `system.includes('Dungeons')`;
- * теперь это данные плагина (этап 3).
+ * 'Dungeons & Dragons'`). Конвертер и генератор имени — данные плагина
+ * (этап 3), поэтому ядро не содержит проверок `system.includes('Dungeons')`;
+ * сам перенос выполняется офлайн-скриптом, рантайм-роута импорта нет.
  */
 type RawRow = Record<string, any>;
 

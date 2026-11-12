@@ -86,7 +86,8 @@ export const openApiDocument = {
     },
     {
       name: 'Import/Export',
-      description: 'Portable JSON export and legacy Firestore import.',
+      description:
+        'Portable JSON export. The legacy Firestore import is an offline migration and is not part of the runtime API.',
     },
     {
       name: 'Admin',
@@ -595,46 +596,6 @@ export const openApiDocument = {
         description:
           'An array (all sheets) or a single sheet when `characterId` is provided.',
       },
-      ImportUser: {
-        type: 'object',
-        required: [
-          'localUserId',
-          'username',
-          'password',
-          'charactersImported',
-          'characters',
-        ],
-        properties: {
-          localUserId: { type: 'string', format: 'uuid' },
-          username: { type: 'string' },
-          password: { type: 'string' },
-          charactersImported: { type: 'integer' },
-          characters: {
-            type: 'array',
-            items: {
-              type: 'object',
-              properties: {
-                name: { type: 'string' },
-                system: { type: 'string' },
-              },
-              additionalProperties: true,
-            },
-          },
-        },
-        additionalProperties: true,
-      },
-      ImportResponse: {
-        type: 'object',
-        required: ['success', 'message', 'users'],
-        properties: {
-          success: { type: 'boolean' },
-          message: { type: 'string' },
-          defaultPassword: { type: 'string' },
-          users: { type: 'array', items: ref('ImportUser') },
-          note: { type: 'string' },
-        },
-        additionalProperties: true,
-      },
       AdminUser: {
         type: 'object',
         required: [
@@ -1060,23 +1021,6 @@ export const openApiDocument = {
           200: jsonResponse('One sheet or an array.', ref('ExportResponse')),
           401: { $ref: '#/components/responses/Unauthorized' },
           404: { $ref: '#/components/responses/NotFound' },
-        },
-      },
-    },
-    '/api/import': {
-      get: {
-        tags: ['Import/Export'],
-        operationId: 'importLegacyData',
-        summary: 'Import a legacy Firestore export',
-        description:
-          'Legacy maintenance endpoint. Reads `<data-dir>/import-source.json`, creates local accounts and converts sheets. Deletes the import file on success.',
-        deprecated: true,
-        security: [],
-        responses: {
-          200: jsonResponse('Import summary.', ref('ImportResponse')),
-          400: { $ref: '#/components/responses/BadRequest' },
-          404: errorResponse('`data/import-source.json` not found.'),
-          500: { $ref: '#/components/responses/ServerError' },
         },
       },
     },

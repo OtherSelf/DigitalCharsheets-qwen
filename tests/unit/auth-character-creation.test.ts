@@ -428,9 +428,10 @@ describe('авторизация: регистрация и вход', () => {
 
     const bad = await login('wrong-pass-user', 'not-my-password');
     expect(bad.status).toBe(401);
+    // Текст нейтральный: он не должен подсказывать, есть ли такой аккаунт.
     expect(bad.body).toMatchObject({
       success: false,
-      error: 'Incorrect password.',
+      reason: 'invalid_credentials',
     });
 
     // Каталог пользователя ровно один, user.json не тронут.
@@ -451,9 +452,10 @@ describe('авторизация: регистрация и вход', () => {
     const noUsername = await login('', PASSWORD);
     expect(noUsername.status).toBe(400);
 
-    // Вход длину не проверяет: короткий пароль — просто неверный, аккаунта нет.
+    // Вход длину не проверяет: короткий пароль — просто неверный.
     const shortOnLogin = await login('someone', '123');
-    expect(shortOnLogin.status).toBe(404);
+    expect(shortOnLogin.status).toBe(401);
+    expect(shortOnLogin.body.reason).toBe('invalid_credentials');
 
     // Регистрация с коротким паролем отклоняется политикой (12 символов).
     const shortOnRegister = await registerRoute(

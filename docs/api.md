@@ -64,7 +64,7 @@ contract version in [`src/lib/openapi.ts`](../src/lib/openapi.ts)
 
 | Method | Path | Auth | Purpose |
 | --- | --- | --- | --- |
-| `POST` | `/api/auth` | — | Log in; unknown login → 404, wrong password → 401, blocked → 403, too many attempts → 429. Password length is not checked here. |
+| `POST` | `/api/auth` | — | Log in; unknown login and wrong password share one `401` (no account enumeration), blocked → 403, too many attempts → 429. Password length is not checked here. |
 | `POST` | `/api/auth/register` | — | Create an account with a recovery phrase and sign in; password policy 12–128 characters. |
 | `POST` | `/api/auth/exists` | — | Check whether a login is taken (rate limited: 20 / 10 minutes per IP + login). |
 | `GET` | `/api/auth/session` | cookie | Current profile snapshot (role, block state, etc.). |
@@ -106,14 +106,16 @@ Both endpoints are rate limited per IP + login: 5 attempts per 15 minutes, then
 `..%2Fuser`) is rejected with `400` before the file system is touched. See
 [security.md](security.md) § Invariants.
 
-### Import / export
+### Export
 
 | Method | Path | Auth | Purpose |
 | --- | --- | --- | --- |
 | `GET` | `/api/export` | cookie | Portable JSON of one sheet (`?characterId=…`) or all sheets. |
-| `GET` | `/api/import` | — | Legacy Firestore import from `<data-dir>/import-source.json`. |
 
-Export/import format: [export-format.md](export-format.md).
+The legacy Firestore import (`GET /api/import`) was an unauthenticated runtime
+endpoint that created accounts with a shared default password; it is **removed**
+(the path answers `404`) and migration is done offline. Export format:
+[export-format.md](export-format.md).
 
 ### Admin
 

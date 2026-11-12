@@ -234,11 +234,12 @@ Per-user JSON/Excel exports are a separate feature; see
 ## Legacy data
 
 The project started as a Firebase Studio app. Firebase itself is gone — no SDK,
-no `firebase/` directory — but `GET /api/import` still understands a Firestore
-export from `<data-dir>/import-source.json`. The original entity schema is
-reproduced here for reference; the import code is the source of truth
-([`src/app/api/import/route.ts`](../src/app/api/import/route.ts), plus
-`matchesLegacyImport` / `convertLegacyImport` in each game plugin).
+no `firebase/` directory. Migrating a Firestore export is an **offline**
+operation: the former unauthenticated `GET /api/import` endpoint was removed
+because it created accounts with a shared default password. Plugins still carry
+the converters (`matchesLegacyImport` / `convertLegacyImport`), so the
+migration can be re-run as a script. The original entity schema is reproduced
+here for reference.
 
 Firestore paths:
 

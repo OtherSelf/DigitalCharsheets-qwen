@@ -270,6 +270,7 @@ export const ruTranslations: Record<string, string> = {
     'Аккаунт с таким логином не найден. Сначала создайте аккаунт.',
   'auth.accountExists':
     'Аккаунт с таким логином уже существует. Войдите в него.',
+  'auth.invalidCredentials': 'Неверный логин или пароль.',
   'auth.incorrectPassword': 'Неверный пароль.',
   'auth.loginFailed': 'Не удалось войти.',
   'auth.registrationFailed': 'Не удалось зарегистрироваться.',

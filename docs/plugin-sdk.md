@@ -157,7 +157,8 @@ Rules:
 - `findEmbedded` / `updateEmbedded` — optional nested entities (D&D companions)
   addressed by a virtual id (`companion-*`); the core only knows the id format.
 - `matchesLegacyImport` / `legacyImportName` / `convertLegacyImport` — optional
-  Firestore/2.x importer for your game (`/api/import`).
+  Firestore/2.x converter for your game, used by the offline migration (the old
+  `/api/import` endpoint was removed).
 - `ui` is not set on the module object anymore — slots live in `ui.ts`.
 
 ## UI slots
