@@ -14,7 +14,8 @@ deploying lives here, one topic per page.
 | [game-modules.md](game-modules.md) | How a game/edition module is added, the registry contract and module layout |
 | [data-storage.md](data-storage.md) | On-disk data layout, user schema, locks, atomic writes, backups, legacy Firebase schema |
 | [api.md](api.md) | HTTP API, OpenAPI/Scalar docs, auth, endpoint map |
-| [security.md](security.md) | Threat model, trust boundaries, session/recovery/path invariants |
+| [security.md](security.md) | Threat model, trust boundaries, session/recovery/path invariants, limits, runbook |
+| [adr/0001-credentials-and-sessions.md](adr/0001-credentials-and-sessions.md) | ADR: password/phrase hashing, sessions with `jti`, recovery tokens, password policy |
 | [admin.md](admin.md) | `/admin`, roles, first administrator, profile checks, block/delete rules |
 | [export-format.md](export-format.md) | Portable JSON/Excel export envelope and import rules |
 | [development.md](development.md) | Local setup, npm scripts, code style, formatting, lint, typecheck |
