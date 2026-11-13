@@ -299,7 +299,7 @@ await check('GET /api/openapi.json → 200 (OpenAPI 3.x)', async () => {
   return body.openapi;
 });
 
-await check('GET /api/docs → 200 (Scalar HTML)', async () => {
+await check('GET /api/docs → 200 (Scalar HTML со своим бандлом)', async () => {
   const res = await request('/api/docs', { auth: false });
   assertStatus(res, 200, 'GET /api/docs');
   assert(
@@ -310,6 +310,27 @@ await check('GET /api/docs → 200 (Scalar HTML)', async () => {
     res.text.replace(/\\\//g, '/').includes('/api/openapi.json'),
     'GET /api/docs: HTML не ссылается на /api/openapi.json',
   );
+
+  // CSP приложения — `script-src 'self'`: бандл с чужого хоста браузер не
+  // загрузит, и страница молча останется пустой. Поэтому проверяем и то, что
+  // src относительный, и то, что файл действительно отдаётся нашим сервером.
+  const src =
+    (res.text.replace(/\\\//g, '/').match(/<script[^>]+src="([^"]+)"/) ||
+      [])[1] || '';
+  assert(
+    src.startsWith('/'),
+    `GET /api/docs: бандл Scalar не со своего origin (${truncate(src)})`,
+  );
+  const bundle = await fetch(`${opts.baseUrl}${src}`, {
+    method: 'HEAD',
+    signal: AbortSignal.timeout(opts.timeout),
+  });
+  assertStatus(
+    { status: bundle.status, text: '' },
+    200,
+    `HEAD ${src} (бандл Scalar)`,
+  );
+  return src;
 });
 
 await check('GET /api/health → 200 (JSON, без сессии)', async () => {

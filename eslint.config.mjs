@@ -19,6 +19,7 @@ const eslintConfig = [
       '.chromium-deps/**',
       '.playwright-browsers/**',
       '.npm-cache/**',
+      'public/vendor/**',
     ],
   },
   ...nextVitals,
