@@ -343,6 +343,113 @@ export const openApiDocument = {
         },
         additionalProperties: false,
       },
+      HistoryChange: {
+        type: 'object',
+        required: ['kind', 'path'],
+        properties: {
+          kind: {
+            type: 'string',
+            enum: [
+              'changed',
+              'added',
+              'removed',
+              'array-add',
+              'array-remove',
+              'bulk',
+            ],
+          },
+          path: {
+            type: 'string',
+            description:
+              'Field path (`stats.strength`) or collection path for a keyed item.',
+          },
+          key: { type: 'string' },
+          label: { type: 'string' },
+          field: { type: 'string' },
+          before: { type: 'object', additionalProperties: true },
+          after: { type: 'object', additionalProperties: true },
+          values: { type: 'array', items: { type: 'object' } },
+          beforeCount: { type: 'integer' },
+          afterCount: { type: 'integer' },
+          count: { type: 'integer' },
+        },
+        additionalProperties: true,
+      },
+      HistorySession: {
+        type: 'object',
+        required: [
+          'id',
+          'startedAt',
+          'endedAt',
+          'revisionCount',
+          'changes',
+          'markers',
+          'truncated',
+        ],
+        properties: {
+          id: { type: 'string' },
+          startedAt: { type: 'string', format: 'date-time' },
+          endedAt: { type: 'string', format: 'date-time' },
+          revisionCount: { type: 'integer' },
+          changes: {
+            type: 'array',
+            items: ref('HistoryChange'),
+          },
+          markers: {
+            type: 'array',
+            items: {
+              type: 'object',
+              required: ['source', 'at'],
+              properties: {
+                source: { type: 'string', enum: ['create', 'migration'] },
+                at: { type: 'string', format: 'date-time' },
+              },
+              additionalProperties: false,
+            },
+          },
+          truncated: { type: 'boolean' },
+        },
+        additionalProperties: false,
+      },
+      HistoryPage: {
+        type: 'object',
+        required: [
+          'sessions',
+          'nextCursor',
+          'totalSessions',
+          'totalRevisions',
+          'storage',
+        ],
+        properties: {
+          sessions: {
+            type: 'array',
+            items: ref('HistorySession'),
+          },
+          nextCursor: { type: ['string', 'null'] },
+          totalSessions: { type: 'integer' },
+          totalRevisions: { type: 'integer' },
+          storage: {
+            type: 'object',
+            required: ['bytes', 'truncated', 'oldestAt'],
+            properties: {
+              bytes: { type: 'integer' },
+              truncated: { type: 'boolean' },
+              oldestAt: { type: ['string', 'null'], format: 'date-time' },
+            },
+            additionalProperties: false,
+          },
+        },
+        additionalProperties: false,
+      },
+      HistoryClearResult: {
+        type: 'object',
+        required: ['success', 'deleted'],
+        properties: {
+          success: { type: 'boolean' },
+          deleted: { type: 'boolean' },
+        },
+        additionalProperties: false,
+      },
       MessageResponse: {
         type: 'object',
         required: ['success', 'message'],
@@ -1121,6 +1228,55 @@ export const openApiDocument = {
           200: jsonResponse('Link revoked.', ref('SimpleSuccess')),
           400: { $ref: '#/components/responses/BadRequest' },
           401: { $ref: '#/components/responses/Unauthorized' },
+          500: { $ref: '#/components/responses/ServerError' },
+        },
+      },
+    },
+    '/api/characters/{id}/history': {
+      get: {
+        tags: ['Characters'],
+        operationId: 'getCharacterHistory',
+        summary: 'Read the character change history',
+        description:
+          'Owner-only. Returns sessions grouped by a 30-minute gap, newest first, with a `before` cursor for the next page. The response is capped at 50 sessions and about 2000 changes.',
+        parameters: [
+          paramRef('CharacterId'),
+          {
+            name: 'limit',
+            in: 'query',
+            required: false,
+            description: 'Sessions per page, 1…100.',
+            schema: { type: 'integer', minimum: 1, maximum: 100, default: 50 },
+          },
+          {
+            name: 'before',
+            in: 'query',
+            required: false,
+            description:
+              'ISO timestamp of the oldest session on the previous page.',
+            schema: { type: 'string', format: 'date-time' },
+          },
+        ],
+        responses: {
+          200: jsonResponse('History page.', ref('HistoryPage')),
+          400: { $ref: '#/components/responses/BadRequest' },
+          401: { $ref: '#/components/responses/Unauthorized' },
+          404: { $ref: '#/components/responses/NotFound' },
+          500: { $ref: '#/components/responses/ServerError' },
+        },
+      },
+      delete: {
+        tags: ['Characters'],
+        operationId: 'deleteCharacterHistory',
+        summary: 'Clear the character change history',
+        description:
+          'Owner-only and irreversible: removes the JSONL log, not the sheet. Idempotent when the log is already gone.',
+        parameters: [paramRef('CharacterId')],
+        responses: {
+          200: jsonResponse('History cleared.', ref('HistoryClearResult')),
+          400: { $ref: '#/components/responses/BadRequest' },
+          401: { $ref: '#/components/responses/Unauthorized' },
+          404: { $ref: '#/components/responses/NotFound' },
           500: { $ref: '#/components/responses/ServerError' },
         },
       },

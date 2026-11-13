@@ -67,6 +67,7 @@ docs/                  This documentation
 | `/` | Dashboard for a signed-in user, demo landing for a guest |
 | `/character/<id>` | One character sheet (id is the file name, `[A-Za-z0-9_-]{1,64}`) |
 | `/share/<token>` | Public read-only sheet from a bearer share link; no session, `noindex`/`no-store` |
+| `/character/<id>/history` | Owner-only change history for one sheet |
 | `/new`, `/new/manual` | Creation wizard (catalog pick / manual sheet) |
 | `/login` | Sign in, registration and the two-step recovery |
 | `/settings` | Profile, sessions («sign out everywhere»), account deletion |

@@ -486,10 +486,10 @@ describe('разбор точек входа и версий API', () => {
     expect(isHostApiCompatible('^1.0.0')).toBe(true);
     expect(isHostApiCompatible('^1.5.0')).toBe(false);
     expect(isHostApiCompatible('^2.0.0')).toBe(false);
-    expect(isHostApiCompatible('~1.0.0')).toBe(true);
-    expect(isHostApiCompatible('~1.1.0')).toBe(false);
+    expect(isHostApiCompatible('~1.0.0')).toBe(false);
+    expect(isHostApiCompatible('~1.1.0')).toBe(true);
     expect(isHostApiCompatible('>=1.0.0')).toBe(true);
-    expect(isHostApiCompatible('1.0.0')).toBe(true);
+    expect(isHostApiCompatible('1.0.0')).toBe(false);
     expect(isHostApiCompatible('0.9.0')).toBe(false);
     expect(isHostApiCompatible('*')).toBe(true);
     expect(isHostApiCompatible('not-a-version')).toBe(false);

@@ -49,6 +49,7 @@ const PAGE_PREFIXES = [
   'new',
   'sheet',
   'dialog',
+  'history',
 ].sort((a, b) => b.length - a.length);
 
 function parseName(name: string): ParsedName {

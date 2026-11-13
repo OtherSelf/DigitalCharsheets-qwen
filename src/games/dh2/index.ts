@@ -4,6 +4,7 @@ import { createDh2Defaults } from './defaults';
 import { createDh2Demo } from './demo';
 import { buildDh2ExcelSections } from './excel';
 import { buildDh2PortableJson } from './export';
+import { dh2History } from './history';
 import dh2En from './i18n/en.json';
 import dh2Ru from './i18n/ru.json';
 import { mergeDh2Data } from './merge';
@@ -73,4 +74,5 @@ export const dh2Module: GameModule<DH2Character> = {
     buildExcelSections,
   },
   migrations: [],
+  history: dh2History,
 };

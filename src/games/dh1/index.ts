@@ -4,6 +4,7 @@ import { createDh1Defaults } from './defaults';
 import { createDh1Demo } from './demo';
 import { buildDh1ExcelSections } from './excel';
 import { buildDh1PortableJson } from './export';
+import { dh1History } from './history';
 import dh1En from './i18n/en.json';
 import dh1Ru from './i18n/ru.json';
 import {
@@ -78,6 +79,7 @@ export const dh1Module: GameModule<DH1Character> = {
     buildExcelSections,
   },
   migrations: [],
+  history: dh1History,
   matchesLegacyImport: dh1MatchesLegacyImport,
   legacyImportName: dh1LegacyImportName,
   convertLegacyImport: dh1ConvertLegacyImport,

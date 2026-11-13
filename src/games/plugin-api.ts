@@ -14,6 +14,7 @@ import type {
   CreateFormProps,
   GameExportAdapter,
   GameExportConfig,
+  GameHistoryConfig,
   GameModule,
   GameModuleComponents,
   GameUiSlots,
@@ -54,7 +55,7 @@ import type {
 export const PLUGIN_MANIFEST_VERSION = 1 as const;
 
 /** Версия Plugin API; манифест объявляет совместимый диапазон. */
-export const PLUGIN_API_VERSION = '1.0.0' as const;
+export const PLUGIN_API_VERSION = '1.1.0' as const;
 
 /**
  * Версия схемы листа, с которой работает хост по умолчанию. Основной
@@ -316,6 +317,9 @@ export interface GamePlugin<
     data: Readonly<Record<string, unknown>>,
   ): { character: TCharacter; patch: Partial<TCharacter> } | undefined;
   readonly ui?: GameUiSlots<TCharacter>;
+
+  /** Необязательные подписи полей для экрана истории (SDK 1.1). */
+  readonly history?: GameHistoryConfig;
 }
 
 /**
@@ -374,6 +378,7 @@ export type {
   CreateFormProps,
   GameExportAdapter,
   GameExportConfig,
+  GameHistoryConfig,
   GameModule,
   GameModuleComponents,
   GameUiSlots,

@@ -2,7 +2,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 
 import Loading from '@/app/loading';
 import { DynamicFavicon } from '@/components/dynamic-favicon';
@@ -34,9 +34,11 @@ import {
 } from '@/games/character-system';
 import type { SheetHandle } from '@/games/types';
 import { useGameUiSlots } from '@/hooks/use-game-ui-slots';
+import { historyPath } from '@/lib/routes';
 
 export default function CharacterPage() {
   const params = useParams<{ id: string }>();
+  const router = useRouter();
   const {
     getCharacter,
     isLoaded,
@@ -180,6 +182,16 @@ export default function CharacterPage() {
           onNotesClick={isReadOnly ? undefined : () => setNotesOpen(true)}
           onJournalClick={isReadOnly ? undefined : () => setJournalOpen(true)}
           onShareClick={isReadOnly ? undefined : () => setShareOpen(true)}
+          onHistoryClick={
+            isReadOnly
+              ? undefined
+              : () => {
+                  sheetRef.current?.saveAll();
+                  void flushSaves().then(() =>
+                    router.push(historyPath(character.id)),
+                  );
+                }
+          }
         />
         <div className="flex flex-1 overflow-hidden">
           {isCompactView && !isReadOnly && (

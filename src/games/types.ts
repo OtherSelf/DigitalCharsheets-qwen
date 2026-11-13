@@ -341,6 +341,20 @@ export interface GameUiSlots<
 }
 
 /**
+ * Необязательные подписи для экрана истории изменений. Ядро не знает игр:
+ * путь поля → i18n-ключ отдаёт плагин, а при отсутствии записи UI показывает
+ * человекочитаемый путь. Ключи обязаны существовать в словарях плагина.
+ */
+export interface GameHistoryConfig {
+  /** Точный путь поля (`stats.strength`) → i18n-ключ. */
+  readonly labels?: Readonly<Record<string, string>>;
+  /** Путь коллекции (`inventory`) → i18n-ключ заголовка. */
+  readonly collections?: Readonly<Record<string, string>>;
+  /** Поля, из которых брать подпись элемента; по умолчанию name/title/description. */
+  readonly itemLabelFields?: readonly string[];
+}
+
+/**
  * Ленивые точки входа в UI модуля. Функции возвращают `import()`-промис,
  * поэтому реестр можно импортировать на сервере, не втягивая клиентские
  * бандлы форм и листов.
@@ -402,6 +416,9 @@ export interface GameModule<
 
   /** Необязательные UI-слоты плагина (этап 3, D11). */
   readonly ui?: GameUiSlots<TCharacter>;
+
+  /** Необязательные подписи полей для экрана истории. */
+  readonly history?: GameHistoryConfig;
 
   /**
    * Привести legacy/импортированный лист к типу редакции: дефолты

@@ -98,7 +98,7 @@ describe('эталонный плагин: манифест', () => {
     expect(exampleManifest.pluginApi).toBe('^1.0.0');
     expect(exampleManifest.schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
     expect(exampleManifest.defaultStatus).toBe('hidden');
-    expect(PLUGIN_API_VERSION).toBe('1.0.0');
+    expect(PLUGIN_API_VERSION).toBe('1.1.0');
     // Фикстура не попадает в боевой реестр.
     expect(gamePlugins.some((plugin) => plugin.manifest.id === 'example')).toBe(
       false,
