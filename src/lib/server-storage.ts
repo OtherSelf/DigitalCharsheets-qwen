@@ -129,6 +129,28 @@ export function getCharactersFromServer(userId: string): Character[] {
   return characters;
 }
 
+/**
+ * ЧТЕНИЕ одного листа. `null` — файла нет, id небезопасен или файл битый.
+ * Нужен PUT-роуту: валидировать патч можно только поверх текущего листа.
+ */
+export function getCharacterFromServer(
+  userId: string,
+  characterId: string,
+): Character | null {
+  const filePath = resolveCharacterFile(getCharactersDir(userId), characterId);
+  if (!filePath || !fs.existsSync(filePath)) return null;
+
+  try {
+    const content = fs.readFileSync(filePath, 'utf8');
+    return normalizeCharacterRecord(
+      JSON.parse(content) as Record<string, unknown>,
+    ).character;
+  } catch (e) {
+    console.error(`Character file ${characterId} is corrupted:`, e);
+    return null;
+  }
+}
+
 // ЗАПИСЬ: лист всегда живёт в своём файле, поэтому конфликтов между
 // листами нет.
 export function saveCharacterToServer(

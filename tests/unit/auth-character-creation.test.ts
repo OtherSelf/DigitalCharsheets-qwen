@@ -12,6 +12,7 @@ import {
   POST as charactersPost,
 } from '@/app/api/characters/route';
 import { GET as exportGet } from '@/app/api/export/route';
+import { getGameModule } from '@/games/registry';
 import {
   CHARACTER_SCHEMA_VERSION,
   normalizeCharacterRecord,
@@ -194,6 +195,7 @@ function dndPayload(overrides: AnyCharacter = {}): AnyCharacter {
         name: 'perception',
         label: 'Perception (Wis)',
         proficient: false,
+        expertise: false,
         value: 1,
       },
     ],
@@ -550,8 +552,6 @@ describe.each(SYSTEMS)(
     it('POST создаёт лист (201) и не теряет ни одного поля', async () => {
       const user = await register(`gm-${slug}`);
       const payload = build();
-      // Сервер нормализует лист до v2 (systemId, разделение DH-полей).
-      const expectedPayload = normalizeCharacterRecord(payload).character;
 
       const { status, body } = await createCharacter(user.uid, payload);
 
@@ -561,7 +561,15 @@ describe.each(SYSTEMS)(
       expect(body.gameSystem).toBe(name);
       expect(body.name).toBe(payload.name);
 
-      // Файл на диске — ровно то, что отправили, плюс id/userId от сервера.
+      // Сервер заполняет недостающие поля значениями редакции
+      // (`createDefaults`), добавляет id/userId и нормализует лист до v2.
+      const gameModule = getGameModule(body.systemId)!;
+      const expectedPayload = normalizeCharacterRecord({
+        ...(gameModule.createDefaults() as Record<string, unknown>),
+        ...payload,
+      }).character;
+
+      // Файл на диске — данные клиента поверх полей редакции.
       const filePath = path.join(
         userPaths(dataDir, user.uid).charactersDir,
         `${body.id}.json`,
@@ -587,8 +595,11 @@ describe.each(SYSTEMS)(
         ),
       );
 
-      const expected = normalizeCharacterRecord(payload)
-        .character as unknown as Record<string, unknown>;
+      const gameModule = getGameModule(body.systemId)!;
+      const expected = normalizeCharacterRecord({
+        ...(gameModule.createDefaults() as Record<string, unknown>),
+        ...payload,
+      }).character as unknown as Record<string, unknown>;
       for (const field of ownFields) {
         expect(stored, `поле ${field} должно быть у ${name}`).toHaveProperty(
           field,
@@ -610,8 +621,13 @@ describe.each(SYSTEMS)(
     it('лист попадает в список и доступен через /api/export?characterId', async () => {
       const user = await register(`export-${slug}`);
       const payload = build();
-      const expectedPayload = normalizeCharacterRecord(payload).character;
       const { body: created } = await createCharacter(user.uid, payload);
+
+      const gameModule = getGameModule(created.systemId)!;
+      const expectedPayload = normalizeCharacterRecord({
+        ...(gameModule.createDefaults() as Record<string, unknown>),
+        ...payload,
+      }).character;
 
       const list = await listCharacters(user.uid);
       expect(list.map((c) => c.id)).toContain(created.id);

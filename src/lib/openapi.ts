@@ -527,6 +527,8 @@ export const openApiDocument = {
       CharacterInput: {
         type: 'object',
         required: ['name', 'characterClass'],
+        description:
+          'Validated against the edition schema (`module.schema`). Server-owned fields (`id`, `userId`, `systemId`) and fields outside the schema are ignored, missing fields are filled from the edition defaults, and a payload that does not match the schema is rejected with `400` and a list of `issues`. Maximum body size: 1 MiB (`413`).',
         properties: {
           systemId: {
             type: 'string',
@@ -549,8 +551,6 @@ export const openApiDocument = {
           questLog: { type: 'array', items: ref('Quest') },
         },
         additionalProperties: true,
-        description:
-          'Character payload. `id`/`userId` are assigned by the server.',
       },
       PortableCharacter: {
         type: 'object',
@@ -963,11 +963,13 @@ export const openApiDocument = {
         operationId: 'createCharacter',
         summary: 'Create a character sheet',
         description:
-          'The server assigns `id` and `userId`; other fields are stored as-is.',
+          'The server assigns `id` and `userId`. The payload is validated by the edition schema: unknown fields are dropped, missing ones are filled from the edition defaults, and invalid structures are rejected.',
         requestBody: jsonBody(ref('CharacterInput')),
         responses: {
           201: jsonResponse('Created sheet.', ref('Character')),
+          400: { $ref: '#/components/responses/BadRequest' },
           401: { $ref: '#/components/responses/Unauthorized' },
+          413: errorResponse('Request body exceeds 1 MiB.'),
         },
       },
     },
@@ -977,7 +979,7 @@ export const openApiDocument = {
         operationId: 'updateCharacter',
         summary: 'Update a character sheet',
         description:
-          'Partial update. Optional `__page`/`__seq` fields let the server discard a late write.',
+          'Partial update, validated against the edition schema on top of the current sheet: unknown fields and `id`/`userId` are dropped, an invalid structure is rejected with `400` and `issues`. Optional `__page`/`__seq` fields let the server discard a late write.',
         parameters: [paramRef('CharacterId')],
         requestBody: jsonBody(
           {
@@ -995,6 +997,7 @@ export const openApiDocument = {
           400: { $ref: '#/components/responses/BadRequest' },
           401: { $ref: '#/components/responses/Unauthorized' },
           404: { $ref: '#/components/responses/NotFound' },
+          413: errorResponse('Request body exceeds 1 MiB.'),
           500: { $ref: '#/components/responses/ServerError' },
         },
       },

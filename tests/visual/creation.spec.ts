@@ -106,7 +106,7 @@ test.describe('авторизация через UI', () => {
     await page.getByLabel('Password', { exact: true }).fill('definitely-wrong');
     await page.getByRole('button', { name: 'Sign In', exact: true }).click();
 
-    await expect(page.getByText('Incorrect password.')).toBeVisible();
+    await expect(page.getByText('Invalid login or password.')).toBeVisible();
     expect(new URL(page.url()).pathname, 'остаёмся на /login').toBe('/login');
     expect(
       await page.evaluate(() =>

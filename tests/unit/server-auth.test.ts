@@ -690,17 +690,30 @@ describe('пароли: миграция хэшей и политика (SEC-7)'
   it('resolveLogin пересобирает индекс не чаще раза в минуту', () => {
     authenticateUser('index-known', 'valid-pass-1234');
     resetLoginIndexRebuildCooldown();
-    const indexFile = loginIndexPath(dataDir);
-    const mtimeNs = () => fs.statSync(indexFile, { bigint: true }).mtimeNs;
-    const before = mtimeNs();
 
-    // Первый промах — пересборка разрешена и пишет индекс.
+    // Первый промах — пересборка разрешена (индекс перечитывается с диска).
     expect(resolveLogin('ghost-one')).toBeNull();
-    const afterRebuild = mtimeNs();
-    expect(afterRebuild).not.toBe(before);
 
-    // Второй промах в пределах cooldown — без скана каталогов и записи.
-    expect(resolveLogin('ghost-two')).toBeNull();
-    expect(mtimeNs()).toBe(afterRebuild);
+    // Новый профиль, о котором индекс ещё не знает.
+    const lateUid = newUid();
+    const latePaths = userPaths(dataDir, lateUid);
+    fs.mkdirSync(latePaths.userDir, { recursive: true });
+    fs.writeFileSync(
+      latePaths.userFile,
+      JSON.stringify({
+        uid: lateUid,
+        username: 'late-user',
+        displayName: 'Late',
+        passwordHash: sha256('valid-pass-1234'),
+      }),
+    );
+
+    // В пределах cooldown пересборки нет, поэтому промах остаётся промахом.
+    expect(resolveLogin('late-user')).toBeNull();
+
+    // После сброса троттлинга тот же логин находится: значит, дело было
+    // именно в пропущенном скане, а не в отсутствии данных.
+    resetLoginIndexRebuildCooldown();
+    expect(resolveLogin('late-user')).toBe(lateUid);
   });
 });

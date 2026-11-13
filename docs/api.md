@@ -98,13 +98,19 @@ Both endpoints are rate limited per IP + login: 5 attempts per 15 minutes, then
 | Method | Path | Auth | Purpose |
 | --- | --- | --- | --- |
 | `GET` | `/api/characters` | cookie | List the current user's sheets. |
-| `POST` | `/api/characters` | cookie | Create a sheet; the server assigns `id`/`userId`. |
+| `POST` | `/api/characters` | cookie | Create a sheet; the server assigns `id`/`userId`, fills missing fields from the edition defaults and validates the payload by the edition schema. |
 | `PUT` | `/api/characters/{id}` | cookie | Partial update; optional `__page`/`__seq` tokens drop late writes. |
 | `DELETE` | `/api/characters/{id}` | cookie | Delete a sheet. |
 
 `{id}` must match `^[A-Za-z0-9_-]{1,64}$`; any other value (for example
 `..%2Fuser`) is rejected with `400` before the file system is touched. See
 [security.md](security.md) § Invariants.
+
+Request bodies for sheets are validated against the edition schema
+(`src/games/<id>/schema.ts`): server-owned fields (`id`, `userId`, `systemId`)
+and fields the schema does not declare are ignored, an invalid structure answers
+`400 { reason: "invalid_payload", issues: [...] }`, and a body larger than
+**1 MiB** answers `413 { reason: "payload_too_large" }`.
 
 ### Export
 

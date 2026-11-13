@@ -44,10 +44,10 @@ export async function POST(request: Request) {
           ? body.recoveryPhraseInput
           : '';
 
-    const limiter = getAuthRateLimiter().check(
-      rateLimitKey('recover-verify', request, username),
-      RECOVERY_RATE_LIMIT,
-    );
+    // Успешная проверка сбрасывает счётчик: окно считает неудачные попытки,
+    // а не любые.
+    const verifyKey = rateLimitKey('recover-verify', request, username);
+    const limiter = getAuthRateLimiter().check(verifyKey, RECOVERY_RATE_LIMIT);
     if (!limiter.allowed) {
       return NextResponse.json(
         {
@@ -89,6 +89,8 @@ export async function POST(request: Request) {
         { status: 400 },
       );
     }
+
+    getAuthRateLimiter().reset(verifyKey);
 
     const { token, expiresAt } = issueRecoveryToken(result.user.uid);
     return NextResponse.json({ success: true, token, expiresAt });

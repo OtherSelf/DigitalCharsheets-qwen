@@ -36,10 +36,11 @@ export async function POST(request: Request) {
       );
     }
 
-    const limiter = getAuthRateLimiter().check(
-      rateLimitKey('login', request, String(username)),
-      LOGIN_RATE_LIMIT,
-    );
+    // Ключ окна — IP + логин. Считаются неудачные попытки: успешный вход
+    // сбрасывает окно, иначе человек, который несколько раз переключался
+    // между аккаунтами (или ждал в очереди с общим NAT), упирался бы в 429.
+    const loginKey = rateLimitKey('login', request, String(username));
+    const limiter = getAuthRateLimiter().check(loginKey, LOGIN_RATE_LIMIT);
     if (!limiter.allowed) {
       return NextResponse.json(
         {
@@ -97,6 +98,9 @@ export async function POST(request: Request) {
         { status },
       );
     }
+
+    // Успешный вход обнуляет счётчик неудач для этой пары IP+логин.
+    getAuthRateLimiter().reset(loginKey);
 
     // Сессия — подписанная httpOnly-cookie; дальше uid берётся только из неё.
     const response = NextResponse.json({

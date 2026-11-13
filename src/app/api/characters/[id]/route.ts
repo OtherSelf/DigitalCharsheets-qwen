@@ -1,8 +1,12 @@
 import { NextResponse } from 'next/server';
 
+import { getCharacterModule } from '@/games/character-system';
+import { validateCharacterPatch } from '@/lib/character-payload';
 import { isSafeId } from '@/lib/security/paths';
+import { readJsonObject } from '@/lib/security/payload';
 import {
   deleteCharacterFromServer,
+  getCharacterFromServer,
   updateCharacterOnServer,
   type WriteToken,
 } from '@/lib/server-storage';
@@ -23,6 +27,11 @@ import type { Character } from '@/lib/types';
  * проверяется до любых обращений к диску: `..%2Fuser` и подобное — `400`, а не
  * запись в чужой профиль.
  *
+ * Патч валидируется схемой редакции поверх текущего листа
+ * ([`src/lib/character-payload.ts`](../../../../lib/character-payload.ts)):
+ * служебные поля и ключи вне схемы отбрасываются, неверная структура даёт
+ * `400` со списком полей, тело больше 1 МБ — `413`.
+ *
  * `__page`/`__seq` позволяют отбросить запоздавшую запись: при уходе со
  * страницы keepalive-досылка со свежим снимком и обычный PUT со старыми
  * данными могут прийти в любом порядке, и раньше «побеждал» тот, кто пришёл
@@ -30,9 +39,10 @@ import type { Character } from '@/lib/types';
  *
  * Коды ответа:
  *   200 — записано (в т.ч. если запись отброшена как устаревшая);
- *   400 — битое тело или недопустимый id;
+ *   400 — битое тело, недопустимый id или данные не по схеме;
  *   401 — нет/просрочена сессия;
  *   404 — листа нет;
+ *   413 — тело больше лимита;
  *   500 — ошибка чтения/записи файла (клиент повторит: 5xx ретраится).
  */
 export async function PUT(
@@ -55,15 +65,17 @@ export async function PUT(
 
   // keepalive-запрос при уходе со страницы может прийти без тела —
   // это не повод для 500 со стектрейсом, отвечаем понятным 400.
-  let body: Record<string, unknown>;
-  try {
-    body = await request.json();
-  } catch {
+  const parsedBody = await readJsonObject(request);
+  if (!parsedBody.ok) {
     return NextResponse.json(
-      { error: 'Invalid or empty JSON body' },
-      { status: 400 },
+      {
+        error: parsedBody.error,
+        reason: parsedBody.reason,
+      },
+      { status: parsedBody.status },
     );
   }
+  const body = parsedBody.body;
 
   const rawPage = body.__page;
   const rawSeq = body.__seq;
@@ -78,11 +90,45 @@ export async function PUT(
   // старых клиентов — тоже выбрасываем: владелец берётся из сессии.
   const { __page: _page, __seq: _seq, userId: _ignoredUserId, ...patch } = body;
 
+  const current = getCharacterFromServer(uid, id);
+  if (!current) {
+    return NextResponse.json({ error: 'Character not found' }, { status: 404 });
+  }
+
+  const gameModule = getCharacterModule(
+    current as unknown as Record<string, string>,
+  );
+  if (!gameModule) {
+    return NextResponse.json(
+      { error: 'Unknown game module for this sheet', reason: 'unknown_system' },
+      { status: 400 },
+    );
+  }
+
+  const validatedPatch = validateCharacterPatch(
+    gameModule,
+    current as unknown as Record<string, unknown>,
+    patch,
+  );
+  if (!validatedPatch.ok) {
+    return NextResponse.json(
+      {
+        error: 'Character data does not match the game schema.',
+        reason: 'invalid_payload',
+        issues: validatedPatch.issues,
+      },
+      { status: 400 },
+    );
+  }
+
   let updated;
   try {
-    updated = updateCharacterOnServer(uid, id, patch as Partial<Character>, {
-      writeToken,
-    });
+    updated = updateCharacterOnServer(
+      uid,
+      id,
+      validatedPatch.data as Partial<Character>,
+      { writeToken },
+    );
   } catch (error) {
     console.error(`Failed to write character ${id} for ${uid}:`, error);
     return NextResponse.json(
