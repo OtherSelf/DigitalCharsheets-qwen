@@ -43,7 +43,7 @@ export const I18N_REGISTRY_PATH = join(GAMES_DIR, 'i18n.generated.ts');
 export const MANIFEST_FILE = 'plugin.json';
 
 /** Версия Plugin API, с которой сверяется `pluginApi` манифестов. */
-export const PLUGIN_API_VERSION = '1.0.0';
+export const PLUGIN_API_VERSION = '1.1.0';
 /** Версия формата манифеста, которую понимает генератор. */
 export const PLUGIN_MANIFEST_VERSION = 1;
 

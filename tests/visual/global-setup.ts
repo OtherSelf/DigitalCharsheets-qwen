@@ -576,6 +576,104 @@ function shareTokenFor(index: number): string {
   return (prefix + 'A'.repeat(43)).slice(0, 43);
 }
 
+/**
+ * Детерминированная история для снимков `/character/<id>/history`: фиксированные
+ * даты, две сессии, создание, правки характеристик/инвентаря/заметок. Пишем
+ * JSONL напрямую в data-dir, чтобы PNG не зависели от текущего времени.
+ */
+function seedHistoryFixtures(workers: VisualAccount[]): void {
+  const dataDir = process.env.DCS_VISUAL_DATA_DIR;
+  if (!dataDir) {
+    console.log(
+      '[visual] /history: DCS_VISUAL_DATA_DIR не задан — снимки истории пропущены',
+    );
+    return;
+  }
+
+  for (const worker of workers) {
+    if (!worker.dndId) continue;
+    const dir = path.join(dataDir, 'users', worker.user.uid, 'history');
+    fs.mkdirSync(dir, { recursive: true });
+    const records = [
+      {
+        v: 1,
+        id: 'visual-history-create',
+        at: '2026-01-10T17:55:00.000Z',
+        source: 'create',
+        changes: [],
+        summary: { changed: 0, added: 0, removed: 0, bulk: 0 },
+      },
+      {
+        v: 1,
+        id: 'visual-history-1',
+        at: '2026-01-10T18:00:00.000Z',
+        source: 'save',
+        changes: [
+          {
+            kind: 'changed',
+            path: 'stats.strength',
+            before: { value: 10 },
+            after: { value: 12 },
+          },
+        ],
+        summary: { changed: 1, added: 0, removed: 0, bulk: 0 },
+      },
+      {
+        v: 1,
+        id: 'visual-history-2',
+        at: '2026-01-10T18:05:00.000Z',
+        source: 'save',
+        changes: [
+          {
+            kind: 'changed',
+            path: 'inventory',
+            key: 'visual-sword',
+            label: 'Longsword',
+            field: 'notes',
+            before: { value: '' },
+            after: { value: 'Notched after the crypt.' },
+          },
+          {
+            kind: 'added',
+            path: 'inventory',
+            key: 'visual-potion',
+            label: 'Potion of Healing',
+            after: {
+              value: {
+                id: 'visual-potion',
+                name: 'Potion of Healing',
+                status: 'default',
+                notes: '',
+              },
+            },
+          },
+        ],
+        summary: { changed: 1, added: 1, removed: 0, bulk: 0 },
+      },
+      {
+        v: 1,
+        id: 'visual-history-3',
+        at: '2026-02-14T19:00:00.000Z',
+        source: 'save',
+        changes: [
+          {
+            kind: 'changed',
+            path: 'notes',
+            before: { value: 'The old road was quiet.' },
+            after: { value: 'The old road was quiet. We found the seal.' },
+          },
+        ],
+        summary: { changed: 1, added: 0, removed: 0, bulk: 0 },
+      },
+    ];
+    fs.writeFileSync(
+      path.join(dir, `${worker.dndId}.jsonl`),
+      `${records.map((record) => JSON.stringify(record)).join('\n')}\n`,
+      'utf8',
+    );
+  }
+}
+
 export default async function globalSetup(config: FullConfig): Promise<void> {
   const baseURL =
     process.env.DCS_VISUAL_BASE_URL ||
@@ -602,6 +700,7 @@ export default async function globalSetup(config: FullConfig): Promise<void> {
   }
 
   seedShareFixtures(workers);
+  seedHistoryFixtures(workers);
 
   const admin = await seedAdminFixtures(baseURL);
 

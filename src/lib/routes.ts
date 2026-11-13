@@ -21,3 +21,8 @@ export function characterPath(characterId: string): string {
 export function sharePath(token: string): string {
   return `${SHARE_ROUTE}/${encodeURIComponent(token)}`;
 }
+
+/** URL истории изменений листа. */
+export function historyPath(characterId: string): string {
+  return `${characterPath(characterId)}/history`;
+}

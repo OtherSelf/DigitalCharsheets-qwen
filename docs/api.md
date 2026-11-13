@@ -111,6 +111,8 @@ Both endpoints are rate limited per IP + login: 5 attempts per 15 minutes, then
 | `GET` | `/api/characters/{id}/share` | cookie | Status of the read-only link, without the token (`active`, `createdAt`, `expiresAt`). |
 | `POST` | `/api/characters/{id}/share` | cookie | Create or rotate the read-only link. Body `{ "expiresInDays": 7/30/90/null }`; the token is returned once and only its hash is stored. |
 | `DELETE` | `/api/characters/{id}/share` | cookie | Revoke the link; idempotent. |
+| `GET` | `/api/characters/{id}/history` | cookie | Change-history sessions, newest first (`limit`, `before` cursor). |
+| `DELETE` | `/api/characters/{id}/history` | cookie | Clear the change log; the sheet is untouched. |
 
 `{id}` must match `^[A-Za-z0-9_-]{1,64}$`; any other value (for example
 `..%2Fuser`) is rejected with `400` before the file system is touched. See

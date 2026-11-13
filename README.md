@@ -19,6 +19,9 @@ data directory on the host you control.
 - **Read-only guest links:** share one sheet with a game master or friend; the
   link needs no account, is revocable and expires, and the sheet cannot be
   edited. See [docs/sharing.md](docs/sharing.md).
+- **Change history:** every save leaves a readable diff, grouped by game
+  sessions, for long campaigns. It is owner-only and bounded; see
+  [docs/character-history.md](docs/character-history.md).
 - Admin panel at `/admin`: users, roles, password resets, blocking, deletion, a
   read-only list of a user's sheets, and plugin management (visibility,
   enabled, versions, conformance, demo links).

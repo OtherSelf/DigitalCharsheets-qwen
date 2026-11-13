@@ -5,6 +5,7 @@ import { createDnd5eDemo } from './demo';
 import { dnd5eFindEmbedded, dnd5eUpdateEmbedded } from './embedded';
 import { buildDnd5eExcelSections } from './excel';
 import { buildDnd5ePortableJson } from './export';
+import { dnd5eHistory } from './history';
 import dnd5eEn from './i18n/en.json';
 import dnd5eRu from './i18n/ru.json';
 import {
@@ -80,6 +81,7 @@ export const dnd5eModule: GameModule<DnD5eCharacter> = {
     buildExcelSections,
   },
   migrations: [],
+  history: dnd5eHistory,
   matchesLegacyImport: dnd5eMatchesLegacyImport,
   legacyImportName: dnd5eLegacyImportName,
   convertLegacyImport: dnd5eConvertLegacyImport,

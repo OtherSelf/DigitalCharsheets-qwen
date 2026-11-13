@@ -46,8 +46,9 @@ empty), `npm run plugins:check` fails when the generated files are stale.
   (JSON and Excel), the game registry/module contract, game catalog visibility
   and module-access matrix, translations parity and hardcoded-UI checks,
   OpenAPI document and route coverage, admin API and bootstrap, health/version,
-  and the read-only share registry/API (`shares.json`, rotation, expiry,
-  revocation, cleanup).
+  the read-only share registry/API (`shares.json`, rotation, expiry,
+  revocation, cleanup), and the character history (diff engine, JSONL store,
+  compaction, recording, owner-only API, labels).
 - `tests/unit/openapi.test.ts` compares the OpenAPI spec with every
   `src/app/api/**/route.ts`; a new endpoint without documentation fails it.
 
@@ -64,8 +65,8 @@ node scripts/smoke.mjs -u http://127.0.0.1:3001 --data-dir /path/to/data
 It checks pages, login/registration, character CRUD, export, recovery, account
 deletion, admin role enforcement, OpenAPI/docs availability, `/api/health`,
 `/api/version`, the guest share link (create, open without a cookie, headers,
-hashed token on disk, revoke), and — with `--data-dir` — the on-disk
-`user.json`, login index
+hashed token on disk, revoke), the history API (read, clear, owner-only), and —
+with `--data-dir` — the on-disk `user.json`, login index
 and sheet files. It creates a disposable `smoke-*` account and removes it
 afterwards.
 
@@ -109,6 +110,9 @@ theme × language × mode × viewport cross-product:
   link and the owner dialog. Its link is seeded directly into the temporary
   data directory; with `--base-url` there is no data directory, so the share
   screenshots are skipped like the admin ones.
+- `history.spec.ts` covers the owner timeline (desktop/mobile) and the empty
+  state after clearing. History fixtures are written into the temporary data
+  directory with fixed dates, so PNGs do not drift.
 
 `test:visual:changed` maps the current diff (committed vs `--base`, plus
 staged/unstaged/untracked files) to specs. It is deliberately conservative:

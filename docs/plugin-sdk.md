@@ -1,11 +1,12 @@
-# Plugin SDK (v1)
+# Plugin SDK (v1.1)
 
 How to add a game or an edition to Digital Character Sheets. Everything
 game-specific lives in one folder under `src/games/<id>/`; the core only talks
 to the generated registry and the plugin contracts. A plugin is a folder plus a
 manifest plus a rebuild — no runtime code loading (D1), no ZIP/upload (D5).
 
-Status: **v1**, manifest `manifestVersion: 1`, `pluginApi: ^1.0.0`.
+Status: **v1.1**, manifest `manifestVersion: 1`, `pluginApi: ^1.0.0`
+(additive: the 1.1 host adds optional history labels).
 
 ## Quick start (new plugin in an evening)
 
@@ -160,6 +161,9 @@ Rules:
   Firestore/2.x converter for your game, used by the offline migration (the old
   `/api/import` endpoint was removed).
 - `ui` is not set on the module object anymore — slots live in `ui.ts`.
+- `history` (SDK 1.1, optional) — `labels` (`path → i18n key`), `collections`
+  (array path → title key) and `itemLabelFields` used by the owner-only change
+  history screen; unknown paths fall back to a humanised path.
 
 ## UI slots
 
@@ -284,7 +288,9 @@ page uses it to switch to read-only mode.
 
 - `manifestVersion` — the manifest format understood by the host (1).
 - `pluginApi` — compatible Plugin API range (`^1.2.3`, `~1.2.3`, `>=1.0.0`,
-  exact, `*`); the host checks it at generation time.
+  exact, `*`); the host checks it at generation time. Host **1.1** remains
+  compatible with a `^1.0.0` manifest; the optional `history` labels are
+  additive and do not change the manifest.
 - `schemaVersion` — the sheet format written by the plugin; bump it together
   with a migration step when the sheet shape changes.
 - `version` — the plugin's own semver, shown in admin.

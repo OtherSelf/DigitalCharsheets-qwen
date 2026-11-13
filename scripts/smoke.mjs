@@ -902,6 +902,40 @@ await check('PUT /api/characters/<id> → правка сохраняется', 
   );
 });
 
+await check(
+  'GET /api/characters/<id>/history → 200 и правка имени',
+  async () => {
+    const res = await api(
+      `/characters/${encodeURIComponent(characterId)}/history`,
+    );
+    assertStatus(res, 200, 'GET history');
+    assert(
+      res.headers.get('cache-control') === 'no-store',
+      'GET history: нет Cache-Control: no-store',
+    );
+    const body = assertJson(res, 'GET history');
+    assert(
+      body.totalRevisions >= 2,
+      `history: ${body.totalRevisions} ревизий, ожидали >= 2`,
+    );
+    const changes = (body.sessions || []).flatMap(
+      (session) => session.changes || [],
+    );
+    assert(
+      changes.some((change) => change.path === 'name'),
+      'history: нет изменения name после PUT',
+    );
+  },
+);
+
+await check('GET history без cookie → 401', async () => {
+  const res = await api(
+    `/characters/${encodeURIComponent(characterId)}/history`,
+    { auth: false },
+  );
+  assertStatus(res, 401, 'GET history без сессии');
+});
+
 await check('PUT /api/characters/<нет такого> → 404', async () => {
   const res = await api('/characters/missing-id', {
     method: 'PUT',
@@ -1031,6 +1065,29 @@ if (opts.dataDir) {
     );
   });
 }
+
+await check(
+  'DELETE /api/characters/<id>/history → 200 и история пуста',
+  async () => {
+    const res = await api(
+      `/characters/${encodeURIComponent(characterId)}/history`,
+      { method: 'DELETE' },
+    );
+    assertStatus(res, 200, 'DELETE history');
+    const body = assertJson(res, 'DELETE history');
+    assert(body.success === true, 'DELETE history: success !== true');
+
+    const after = await api(
+      `/characters/${encodeURIComponent(characterId)}/history`,
+    );
+    assertStatus(after, 200, 'GET history после очистки');
+    const page = assertJson(after, 'GET history после очистки');
+    assert(
+      page.totalRevisions === 0,
+      `history после очистки: ${page.totalRevisions} ревизий`,
+    );
+  },
+);
 
 await check('DELETE /api/characters/<id> → 200', async () => {
   const res = await api(`/characters/${encodeURIComponent(characterId)}`, {

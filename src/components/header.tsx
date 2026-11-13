@@ -9,6 +9,7 @@ import {
   BookText,
   Eye,
   EyeOff,
+  History as HistoryIcon,
   LogIn,
   Menu,
   Monitor,
@@ -71,6 +72,8 @@ interface HeaderProps {
   onJournalClick?: () => void;
   /** Открыть диалог гостевой ссылки (только владелец, не read-only). */
   onShareClick?: () => void;
+  /** Открыть историю изменений листа. */
+  onHistoryClick?: () => void;
   mobileActions?: React.ReactNode;
   /**
    * Гостевая страница живёт по токену: `useParams().id` там не id листа.
@@ -103,6 +106,7 @@ export function Header({
   onNotesClick,
   onJournalClick,
   onShareClick,
+  onHistoryClick,
   mobileActions,
   characterOverride,
   hideCompactToggle = false,
@@ -395,6 +399,27 @@ export function Header({
                   </Tooltip>
                 </div>
               )}
+              {onHistoryClick && (
+                <div className="flex items-center gap-1.5 md:gap-2">
+                  <Tooltip delayDuration={0}>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={onHistoryClick}
+                        aria-label={t('history.button')}
+                        data-testid="history-button"
+                        className="h-8 w-8 md:h-9 md:w-9"
+                      >
+                        <HistoryIcon className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom">
+                      <p>{t('history.button')}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+              )}
               <div className="flex items-center gap-1.5 md:gap-2 md:border-r md:border-l md:px-2">
                 <Tooltip delayDuration={0}>
                   <TooltipTrigger asChild>
@@ -479,6 +504,27 @@ export function Header({
                 </TooltipContent>
               </Tooltip>
             )}
+            {isSmallScreen &&
+              displayCharacter &&
+              !readOnly &&
+              onHistoryClick && (
+                <Tooltip delayDuration={0}>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={onHistoryClick}
+                      aria-label={t('history.button')}
+                      data-testid="history-button"
+                    >
+                      <HistoryIcon className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">
+                    <p>{t('history.button')}</p>
+                  </TooltipContent>
+                </Tooltip>
+              )}
             {!isSmallScreen && !hideCompactToggle && (
               <Button
                 variant="outline"

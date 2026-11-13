@@ -16,6 +16,7 @@ deploying lives here, one topic per page.
 | [api.md](api.md) | HTTP API, OpenAPI/Scalar docs, auth, endpoint map |
 | [security.md](security.md) | Threat model, trust boundaries, session/recovery/path invariants, limits, runbook |
 | [sharing.md](sharing.md) | Read-only guest links: owner flow, token model, public page, privacy |
+| [character-history.md](character-history.md) | Change log: diff model, JSONL storage, history API and screen |
 | [adr/0001-credentials-and-sessions.md](adr/0001-credentials-and-sessions.md) | ADR: password/phrase hashing, sessions with `jti`, recovery tokens, password policy |
 | [adr/0002-legacy-migration-tooling.md](adr/0002-legacy-migration-tooling.md) | ADR: legacy migration tooling in the repo, no data dumps in git |
 | [admin.md](admin.md) | `/admin`, roles, first administrator, profile checks, block/delete rules |
