@@ -8,7 +8,8 @@ import { useTranslation } from '@/context/language-context';
 
 /**
  * ─── LANDMARK: APP_VERSION_FOOTER ───────────────────────────────────────────
- * Строка «v0.3.0 · a077aef» в подвале меню профиля (над «Выйти»).
+ * Строка «v0.5.1 · a077aef» в подвале меню профиля (над «Выйти»), на /login
+ * и /demo: по ней видно, какая сборка запущена, не открывая терминал.
  *
  * Источник ровно один — `GET /api/version` (`src/lib/app-info.ts`). Дублировать
  * версию в клиентский бандл через `NEXT_PUBLIC_*` нельзя: после обновления без
@@ -27,6 +28,7 @@ interface VersionInfo {
   version: string;
   commit: string | null;
   commitShort: string | null;
+  branch: string | null;
   buildDate: string | null;
 }
 
@@ -52,6 +54,7 @@ function pickVersionInfo(raw: unknown): VersionInfo | null {
     version,
     commit: nonEmptyString(data.commit),
     commitShort: nonEmptyString(data.commitShort),
+    branch: nonEmptyString(data.branch),
     buildDate: nonEmptyString(data.buildDate),
   };
 }
@@ -101,9 +104,10 @@ export function AppVersion() {
   const short =
     info.commitShort ?? info.commit?.slice(0, 7).toLowerCase() ?? null;
   const label = short ? `${version} · ${short}` : version;
-  // Полный commit и дата сборки — только в подсказке: в самой строке они
-  // превратили бы её в шум.
-  const details = [version, info.commit, info.buildDate]
+  // Ветка, полный commit и дата сборки — только в подсказке: в самой строке
+  // они превратили бы её в шум. Ветка помогает отличить dev-копию из `.git`
+  // от сборки из образа, где её нет.
+  const details = [version, info.branch, info.commit, info.buildDate]
     .filter(Boolean)
     .join(' · ');
 
@@ -111,6 +115,7 @@ export function AppVersion() {
     <p
       className="text-muted-foreground/70 px-2 pt-1 pb-1.5 font-mono text-[10px] leading-none tracking-tight tabular-nums"
       title={details}
+      data-testid="app-version"
     >
       <span className="sr-only">{t('common.appVersion')}: </span>
       {label}

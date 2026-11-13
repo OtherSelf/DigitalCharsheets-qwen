@@ -237,11 +237,14 @@ else
   mkdir -p "$DATA_DIR"
 
   step "2/3 временный сервер на $BASE_URL"
-  # DCS_GIT_COMMIT/DCS_BUILD_DATE гасим явно: снимки не должны зависеть от
-  # того, что экспортировано в шелле разработчика. В тестовом окружении
-  # /api/version отдаёт commit: null, и подпись в меню — только «vX.Y.Z».
+  # Подпись версии в снимках должна быть одинаковой при каждом прогоне, а
+  # /api/version иначе назвал бы реальный коммит (из env или из `.git`).
+  # Поэтому задаём фиктивные значения явно, а не гасим переменные: «пусто»
+  # теперь означает «прочитать .git», и снимки менялись бы после каждого
+  # коммита. Ожидаемая подпись на снимках: «vX.Y.Z · 0000000».
   DCS_DATA_DIR="$DATA_DIR" NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 \
-    DCS_GIT_COMMIT= DCS_BUILD_DATE= GIT_COMMIT= VERCEL_GIT_COMMIT_SHA= \
+    DCS_GIT_COMMIT=0000000 DCS_GIT_BRANCH=visual DCS_BUILD_DATE= \
+    GIT_COMMIT= VERCEL_GIT_COMMIT_SHA= \
     ./node_modules/.bin/next start -H 127.0.0.1 -p "$PORT" >"$SERVER_LOG" 2>&1 &
   SERVER_PID=$!
 

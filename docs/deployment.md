@@ -22,6 +22,9 @@ dependencies and the generated `.next/` directory.
 | Variable | Default | Purpose |
 | --- | --- | --- |
 | `DCS_DATA_DIR` | `./data` | Directory with users, sheets and the login index. Must be writable. |
+| `DCS_GIT_COMMIT` | local `.git` (HEAD) | Commit SHA shown by `/api/version` and the UI version line. `GIT_COMMIT` / `VERCEL_GIT_COMMIT_SHA` are accepted too. Without env the local checkout is read, so a plain `next start` from a clone already reports its commit; in an image without `.git` set this explicitly at build time. |
+| `DCS_GIT_BRANCH` | `.git` HEAD branch | Branch shown in the version tooltip (`GIT_BRANCH` / `VERCEL_GIT_COMMIT_REF` are accepted). Only the tooltip displays it. |
+| `DCS_BUILD_DATE` | unset | Build date shown in the version tooltip (`null` when unset). |
 | `DCS_SESSION_SECRET` | `<data-dir>/.session-secret` | HMAC key for session cookies. Set explicitly if several instances/processes share one data dir or if the data dir is ephemeral. |
 | `DCS_COOKIE_SECURE` | unset | `1` forces the `Secure` flag on the session cookie. It is already on by default in production; this variable is a compatible way to enable it in development. |
 | `DCS_COOKIE_INSECURE` | unset | `1` explicitly disables the `Secure` flag (local plain-HTTP development only). |

@@ -9,6 +9,18 @@ import { APP_NAME, APP_VERSION, shortenCommit } from '@/lib/app-info';
 import { removeDir, useTempDataDir } from './helpers';
 
 /**
+ * /api/version в этих тестах не должен зависеть от того, запущен ли набор из
+ * рабочей копии: `.git` мокаем как «нет клона», а чтение `.git` проверяется
+ * отдельно — `tests/unit/git-commit.test.ts`.
+ */
+vi.mock('@/lib/git-commit', () => ({
+  getGitCheckoutInfo: () => null,
+  readGitCheckout: () => null,
+  findGitDir: () => null,
+  resetGitCheckoutCache: () => undefined,
+}));
+
+/**
  * /api/health и /api/version.
  *
  * Покрыто: 200/503 и вид проверок health, отсутствие путей/секретов в ответе,
@@ -66,11 +78,12 @@ describe('GET /api/health', () => {
 });
 
 describe('GET /api/version', () => {
-  it('отдаёт имя, версию, commit/buildDate, commitShort и runtime', async () => {
+  it('отдаёт имя, версию, commit/ветку/buildDate, commitShort и runtime', async () => {
     // Полный SHA в верхнем регистре — как приходит VERCEL_GIT_COMMIT_SHA:
     // в ответе commit остаётся как есть, а commitShort уже обрезан и в нижнем.
     const sha = 'A077AEF1234567890ABCDEF1234567890ABCDEF';
     vi.stubEnv('DCS_GIT_COMMIT', sha);
+    vi.stubEnv('DCS_GIT_BRANCH', 'release/0.5');
     vi.stubEnv('DCS_BUILD_DATE', '2026-01-01T00:00:00.000Z');
 
     const response = versionRoute();
@@ -83,21 +96,26 @@ describe('GET /api/version', () => {
       version: APP_VERSION,
       commit: sha,
       commitShort: 'a077aef',
+      branch: 'release/0.5',
       buildDate: '2026-01-01T00:00:00.000Z',
       runtime: { node: process.version },
     });
     expect(JSON.stringify(body)).not.toContain(dataDir);
   });
 
-  it('не выдумывает commit/buildDate/commitShort, если переменные пусты', async () => {
+  it('не выдумывает commit/ветку/buildDate, если нет ни env, ни .git', async () => {
     vi.stubEnv('DCS_GIT_COMMIT', '');
     vi.stubEnv('GIT_COMMIT', '');
     vi.stubEnv('VERCEL_GIT_COMMIT_SHA', '');
+    vi.stubEnv('DCS_GIT_BRANCH', '');
+    vi.stubEnv('GIT_BRANCH', '');
+    vi.stubEnv('VERCEL_GIT_COMMIT_REF', '');
     vi.stubEnv('DCS_BUILD_DATE', '');
 
     const body = await versionRoute().json();
     expect(body.commit).toBeNull();
     expect(body.commitShort).toBeNull();
+    expect(body.branch).toBeNull();
     expect(body.buildDate).toBeNull();
   });
 });

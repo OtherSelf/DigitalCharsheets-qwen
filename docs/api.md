@@ -47,15 +47,20 @@ Adding an endpoint without documenting it fails the unit tests.
 | `GET` | `/api/health` | — | Liveness/readiness for Docker, reverse proxies and monitoring. `200` when the data directory is writable, `503` with `status: degraded` otherwise. No paths or secrets; `Cache-Control: no-store`. |
 | `GET` | `/api/version` | — | Application name, version, commit/build date (from env, otherwise `null`), 7-character `commitShort` and Node runtime. No dependency list. |
 
-`commit`/`buildDate` on `/api/version` come from `DCS_GIT_COMMIT` (or
-`GIT_COMMIT` / `VERCEL_GIT_COMMIT_SHA`) and `DCS_BUILD_DATE`; without them the
-fields are `null`. `commitShort` is the first 7 characters of `commit`,
+`commit`/`branch` on `/api/version` come from `DCS_GIT_COMMIT` /
+`DCS_GIT_BRANCH` (or `GIT_COMMIT` / `VERCEL_GIT_COMMIT_SHA` and
+`GIT_BRANCH` / `VERCEL_GIT_COMMIT_REF`). When the commit env is absent and the
+application runs from a checkout, they are read from the local `.git`: `HEAD` →
+`refs/heads/<branch>` (or `packed-refs`, or a detached SHA, or a
+`gitdir:`-file of a worktree). `buildDate` comes from `DCS_BUILD_DATE`; without
+any source the fields are `null`. `commitShort` is the first 7 characters of `commit`,
 lowercased — the form the UI shows in the profile menu (`v0.3.0 · a077aef`);
 it is `null` whenever `commit` is.
 
-The menu label is the only consumer: `src/components/layout/app-version.tsx`
-fetches `/api/version` once per session and renders nothing if the request
-fails, so a broken API never produces a half-empty badge.
+The label (`v0.5.1 · a077aef`) is rendered in the profile menu and on `/login`
+and `/demo`; `src/components/layout/app-version.tsx` fetches `/api/version` once
+per tab and renders nothing if the request fails, so a broken API never produces
+a half-empty badge. The full commit, branch and build date live in the tooltip.
 
 The application `version` comes from the root `package.json`
 (`APP_VERSION` in [`src/lib/app-info.ts`](../src/lib/app-info.ts)). The OpenAPI
