@@ -161,9 +161,21 @@ default is in-process memory, which is correct for the single-process
 deployment and can be swapped for a file-backed store when several instances
 share a data directory.
 
-Current windows: login 10 attempts / 10 minutes, recovery 5 attempts /
-15 minutes. Exceeding one answers `429` with `Retry-After`, never with a hint
-about the password; [api.md](api.md) lists the contract per endpoint.
+Current windows (sliding, per `IP + login`; a successful attempt clears the
+window, so only failures count):
+
+| Endpoint | Limit | On excess |
+| --- | --- | --- |
+| `POST /api/auth` | 10 failures / 10 min | `429`, `Retry-After` |
+| `POST /api/auth/register` | 10 / 10 min | `429`, `Retry-After` |
+| `POST /api/auth/exists` | 20 / 10 min | `429`, `Retry-After` |
+| `POST /api/auth/recover/verify` | 5 failures / 15 min | `429`, `Retry-After` |
+| `POST /api/auth/recover/update` | 5 / 15 min | `429`, `Retry-After` |
+| `PUT /api/auth/profile`, `POST /api/auth/phrase` | 10 / 10 min | `429`, `Retry-After` |
+
+The client IP is taken from `x-forwarded-for` / `x-real-ip`; behind nginx the
+proxy must overwrite those headers, otherwise everyone shares one bucket.
+[api.md](api.md) lists the contract per endpoint.
 
 ## Browser-side boundaries
 
@@ -181,6 +193,34 @@ Every response carries the headers from `next.config.ts`:
 off (`images: { unoptimized: true }`): with no `next/image` in the app the
 `/_next/image` endpoint was an unused way to make the server fetch third-party
 URLs.
+
+## Secret rotation and incident response
+
+Secrets and where they live:
+
+| Secret | Location | Rotate by |
+| --- | --- | --- |
+| Session signing key | `DCS_SESSION_SECRET` or `<data-dir>/.session-secret` | Replace the value/file and restart: every cookie and every `sessions.json` record becomes unusable (users sign in again) |
+| Account passwords | `users/<uid>/user.json` (`passwordHash`) | `PUT /api/auth/profile` (current password required), recovery flow, or the administrator |
+| Recovery phrases | `users/<uid>/user.json` (`recoveryPhrase`) | Profile/phrase endpoints or the recovery flow (both rotate the hash and revoke other sessions) |
+| Recovery tokens | `<data-dir>/tokens.json` | `recover/update` burns the used token; `revokeRecoveryTokensForUser` / password reset kills the rest; deleting the file is always safe |
+| Sessions | `<data-dir>/sessions.json` | Logout (`{ "all": true }`), password/phrase change, admin password change; deleting the file logs everyone out |
+
+If an account may be compromised:
+
+1. Sign in and use «Sign out everywhere» on `/settings` (or change the
+   password — both revoke every session of the account).
+2. Change the recovery phrase.
+3. Check `/admin` for unexpected role/block changes; `lastLoginAt` shows the
+   latest successful login.
+4. If the sign-in key itself leaked, rotate `DCS_SESSION_SECRET` (all sessions
+   are invalidated) and restart.
+5. A leaked `data/` copy contains profile fields and password/phrase hashes:
+   rotate both kinds of credentials; the hashes are salted `scrypt`, so they
+   cannot be used directly, but user e-mails are exposed.
+
+Startup logs report profile/password-hash migrations and recovery-phrase
+re-hashing; anything unexpected there is worth reading after an upgrade.
 
 ## Data directory privacy
 
