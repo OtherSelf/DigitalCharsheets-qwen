@@ -1,0 +1,2967 @@
+[
+  {
+    "Document ID": "/users/exampleUid01/characterSheets/exampleSheet084",
+    "name": "Example name",
+    "characterClass": "Example class",
+    "gameSystem": "Dark Heresy",
+    "avatar": "",
+    "backstory": "Example backstory.",
+    "homeWorld": "Example world",
+    "careerPath": "Example career",
+    "rank": "Example rank",
+    "divination": "Example divination.",
+    "divinationEffect": "Example divination effect.",
+    "quirk": "Example quirk.",
+    "height": "180",
+    "weight": "75",
+    "age": "30",
+    "skinColor": "grey",
+    "hairColor": "grey",
+    "eyeColor": "grey",
+    "alternatePath": null,
+    "userId": "exampleUid01",
+    "insanityPoints": {
+      "total": null,
+      "notes": "Example note."
+    },
+    "corruptionPoints": {
+      "total": null,
+      "notes": "Example note."
+    },
+    "movement": {
+      "walkHalf": null,
+      "charge": null,
+      "walkFull": null,
+      "run": null
+    },
+    "advancedPath": "Example path",
+    "stats": {
+      "agility": null,
+      "toughness": null,
+      "strength": null,
+      "perception": null,
+      "intelligence": null,
+      "willpower": null,
+      "fellowship": null,
+      "ballisticSkill": null,
+      "influence": null,
+      "weaponSkill": null
+    },
+    "wealth": {
+      "throneGelt": null,
+      "monthlyIncome": null
+    },
+    "statNotes": {
+      "agility": "Example text.",
+      "willpower": "Example text.",
+      "influence": "Example text."
+    },
+    "notes": "Example note.",
+    "fatePoints": {
+      "current": null,
+      "max": null,
+      "notes": "Example note."
+    },
+    "statUpgrades": {
+      "strength": [null, null, null, null],
+      "ballisticSkill": [null, null, null, null],
+      "perception": [null, null, null, null],
+      "weaponSkill": [null, null, null, null],
+      "influence": [null, null, null, null],
+      "intelligence": [null, null, null, null],
+      "agility": [null, null, null, null],
+      "toughness": [null, null, null, null],
+      "fellowship": [null, null, null, null],
+      "willpower": [null, null, null, null]
+    },
+    "totalExpSpent": null,
+    "skills": [
+      {
+        "id": "exampleSheet001",
+        "training": {
+          "skilled": null,
+          "plus20": null,
+          "plus10": null
+        },
+        "name": "Example name",
+        "type": "basic",
+        "notes": "Example note."
+      },
+      {
+        "notes": "Example note.",
+        "id": "exampleSheet002",
+        "name": "Example name",
+        "type": "basic",
+        "training": {
+          "plus10": null,
+          "skilled": null,
+          "plus20": null
+        }
+      },
+      {
+        "id": "exampleSheet003",
+        "type": "basic",
+        "notes": "Example note.",
+        "name": "Example name",
+        "training": {
+          "plus20": null,
+          "plus10": null,
+          "skilled": null
+        }
+      },
+      {
+        "id": "exampleSheet004",
+        "notes": "Example note.",
+        "type": "basic",
+        "name": "Example name",
+        "training": {
+          "skilled": null,
+          "plus10": null,
+          "plus20": null
+        }
+      },
+      {
+        "name": "Example name",
+        "type": "basic",
+        "notes": "Example note.",
+        "id": "exampleSheet005",
+        "training": {
+          "plus10": null,
+          "skilled": null,
+          "plus20": null
+        }
+      },
+      {
+        "notes": "Example note.",
+        "type": "basic",
+        "name": "Example name",
+        "training": {
+          "plus20": null,
+          "plus10": null,
+          "skilled": null
+        },
+        "id": "exampleSheet006"
+      },
+      {
+        "notes": "Example note.",
+        "id": "exampleSheet007",
+        "training": {
+          "skilled": null,
+          "plus20": null,
+          "plus10": null
+        },
+        "name": "Example name",
+        "type": "basic"
+      },
+      {
+        "training": {
+          "plus10": null,
+          "skilled": null,
+          "plus20": null
+        },
+        "notes": "Example note.",
+        "type": "basic",
+        "name": "Example name",
+        "id": "exampleSheet008"
+      },
+      {
+        "name": "Example name",
+        "type": "basic",
+        "notes": "Example note.",
+        "training": {
+          "plus10": null,
+          "skilled": null,
+          "plus20": null
+        },
+        "id": "exampleSheet009"
+      },
+      {
+        "training": {
+          "skilled": null,
+          "plus20": null,
+          "plus10": null
+        },
+        "id": "exampleSheet010",
+        "notes": "Example note.",
+        "name": "Example name",
+        "type": "basic"
+      },
+      {
+        "notes": "Example note.",
+        "id": "exampleSheet011",
+        "training": {
+          "skilled": null,
+          "plus10": null,
+          "plus20": null
+        },
+        "type": "basic",
+        "name": "Example name"
+      },
+      {
+        "id": "exampleSheet012",
+        "training": {
+          "plus10": null,
+          "skilled": null,
+          "plus20": null
+        },
+        "name": "Example name",
+        "type": "basic",
+        "notes": "Example note."
+      },
+      {
+        "name": "Example name",
+        "type": "basic",
+        "id": "exampleSheet013",
+        "training": {
+          "plus10": null,
+          "plus20": null,
+          "skilled": null
+        },
+        "notes": "Example note."
+      },
+      {
+        "id": "exampleSheet014",
+        "type": "basic",
+        "name": "Example name",
+        "notes": "Example note.",
+        "training": {
+          "plus20": null,
+          "skilled": null,
+          "plus10": null
+        }
+      },
+      {
+        "id": "exampleSheet015",
+        "training": {
+          "plus10": null,
+          "skilled": null,
+          "plus20": null
+        },
+        "name": "Example name",
+        "type": "basic",
+        "notes": "Example note."
+      },
+      {
+        "id": "exampleSheet016",
+        "notes": "Example note.",
+        "type": "basic",
+        "name": "Example name",
+        "training": {
+          "plus10": null,
+          "skilled": null,
+          "plus20": null
+        }
+      },
+      {
+        "training": {
+          "plus10": null,
+          "skilled": null,
+          "plus20": null
+        },
+        "id": "exampleSheet017",
+        "notes": "Example note.",
+        "name": "Example name",
+        "type": "basic"
+      },
+      {
+        "notes": "Example note.",
+        "id": "exampleSheet018",
+        "type": "basic",
+        "name": "Example name",
+        "training": {
+          "plus20": null,
+          "skilled": null,
+          "plus10": null
+        }
+      },
+      {
+        "training": {
+          "plus20": null,
+          "skilled": null,
+          "plus10": null
+        },
+        "id": "exampleSheet019",
+        "notes": "Example note.",
+        "type": "basic",
+        "name": "Example name"
+      },
+      {
+        "name": "Example name",
+        "type": "basic",
+        "id": "exampleSheet020",
+        "notes": "Example note.",
+        "training": {
+          "plus10": null,
+          "plus20": null,
+          "skilled": null
+        }
+      },
+      {
+        "notes": "Example note.",
+        "training": {
+          "plus10": null,
+          "skilled": null,
+          "plus20": null
+        },
+        "type": "basic",
+        "name": "Example name",
+        "id": "exampleSheet021"
+      },
+      {
+        "training": {
+          "plus20": null,
+          "plus10": null,
+          "skilled": null
+        },
+        "notes": "Example note.",
+        "type": "basic",
+        "name": "Example name",
+        "id": "exampleSheet022"
+      },
+      {
+        "training": {
+          "plus20": null,
+          "skilled": null,
+          "plus10": null
+        },
+        "id": "exampleSheet023",
+        "notes": "Example note.",
+        "name": "Example name",
+        "type": "basic"
+      },
+      {
+        "id": "exampleSheet024",
+        "training": {
+          "skilled": null,
+          "plus20": null,
+          "plus10": null
+        },
+        "name": "Example name",
+        "type": "advanced",
+        "notes": "Example note."
+      },
+      {
+        "training": {
+          "plus20": null,
+          "skilled": null,
+          "plus10": null
+        },
+        "id": "exampleSheet025",
+        "notes": "Example note.",
+        "name": "Example name",
+        "type": "advanced"
+      },
+      {
+        "training": {
+          "plus10": null,
+          "plus20": null,
+          "skilled": null
+        },
+        "type": "advanced",
+        "notes": "Example note.",
+        "name": "Example name",
+        "id": "exampleSheet026"
+      },
+      {
+        "notes": "Example note.",
+        "training": {
+          "plus20": null,
+          "skilled": null,
+          "plus10": null
+        },
+        "type": "advanced",
+        "name": "Example name",
+        "id": "exampleSheet027"
+      },
+      {
+        "notes": "Example note.",
+        "id": "exampleSheet028",
+        "training": {
+          "plus10": null,
+          "plus20": null,
+          "skilled": null
+        },
+        "name": "Example name",
+        "type": "advanced"
+      },
+      {
+        "notes": "Example note.",
+        "id": "exampleSheet029",
+        "training": {
+          "skilled": null,
+          "plus20": null,
+          "plus10": null
+        },
+        "type": "advanced",
+        "name": "Example name"
+      },
+      {
+        "id": "exampleSheet030",
+        "type": "advanced",
+        "name": "Example name",
+        "notes": "Example note.",
+        "training": {
+          "plus10": null,
+          "skilled": null,
+          "plus20": null
+        }
+      },
+      {
+        "id": "exampleSheet031",
+        "training": {
+          "plus10": null,
+          "skilled": null,
+          "plus20": null
+        },
+        "type": "advanced",
+        "name": "Example name",
+        "notes": "Example note."
+      },
+      {
+        "training": {
+          "plus20": null,
+          "skilled": null,
+          "plus10": null
+        },
+        "name": "Example name",
+        "type": "advanced",
+        "notes": "Example note.",
+        "id": "exampleSheet032"
+      },
+      {
+        "id": "exampleSheet033",
+        "name": "Example name",
+        "type": "advanced",
+        "notes": "Example note.",
+        "training": {
+          "plus10": null,
+          "skilled": null,
+          "plus20": null
+        }
+      },
+      {
+        "training": {
+          "plus10": null,
+          "skilled": null,
+          "plus20": null
+        },
+        "id": "exampleSheet034",
+        "notes": "Example note.",
+        "name": "Example name",
+        "type": "advanced"
+      },
+      {
+        "notes": "Example note.",
+        "id": "exampleSheet035",
+        "type": "basic",
+        "training": {
+          "plus10": null,
+          "skilled": null,
+          "plus20": null
+        },
+        "name": "Example name"
+      }
+    ],
+    "inventory": [
+      {
+        "notes": "Example note.",
+        "name": "Example name",
+        "id": "exampleSheet036",
+        "status": "default"
+      },
+      {
+        "name": "Example name",
+        "id": "exampleSheet037",
+        "notes": "Example note.",
+        "status": "default"
+      },
+      {
+        "id": "exampleSheet038",
+        "notes": "Example note.",
+        "status": "default",
+        "name": "Example name"
+      },
+      {
+        "status": "default",
+        "name": "Example name",
+        "id": "exampleSheet039",
+        "notes": "Example note."
+      },
+      {
+        "id": "exampleSheet040",
+        "status": "default",
+        "name": "Example name",
+        "notes": "Example note."
+      },
+      {
+        "notes": "Example note.",
+        "name": "Example name",
+        "status": "default",
+        "id": "exampleSheet041"
+      },
+      {
+        "id": "exampleSheet042",
+        "notes": "Example note.",
+        "status": "default",
+        "name": "Example name"
+      },
+      {
+        "notes": "Example note.",
+        "id": "exampleSheet043",
+        "name": "Example name",
+        "status": "default"
+      },
+      {
+        "id": "exampleSheet044",
+        "notes": "Example note.",
+        "status": "default",
+        "name": "Example name"
+      },
+      {
+        "id": "exampleSheet045",
+        "status": "default",
+        "notes": "Example note.",
+        "name": "Example name"
+      },
+      {
+        "notes": "Example note.",
+        "status": "default",
+        "id": "exampleSheet046",
+        "name": "Example name"
+      },
+      {
+        "status": "default",
+        "notes": "Example note.",
+        "name": "Example name",
+        "id": "exampleSheet047"
+      },
+      {
+        "id": "exampleSheet048",
+        "name": "Example name",
+        "status": "default",
+        "notes": "Example note."
+      },
+      {
+        "notes": "Example note.",
+        "name": "Example name",
+        "status": "default",
+        "id": "exampleSheet049"
+      }
+    ],
+    "talents": [
+      {
+        "notes": "Example note.",
+        "name": "Example name",
+        "id": "exampleSheet050"
+      },
+      {
+        "notes": "Example note.",
+        "name": "Example name",
+        "id": "exampleSheet051"
+      },
+      {
+        "notes": "Example note.",
+        "id": "exampleSheet052",
+        "name": "Example name"
+      },
+      {
+        "notes": "Example note.",
+        "name": "Example name",
+        "id": "exampleSheet053"
+      },
+      {
+        "name": "Example name",
+        "notes": "Example note.",
+        "id": "exampleSheet054"
+      },
+      {
+        "id": "exampleSheet055",
+        "name": "Example name",
+        "notes": "Example note."
+      },
+      {
+        "name": "Example name",
+        "notes": "Example note.",
+        "id": "exampleSheet056"
+      },
+      {
+        "name": "Example name",
+        "notes": "Example note.",
+        "id": "exampleSheet057"
+      },
+      {
+        "notes": "Example note.",
+        "id": "exampleSheet058",
+        "name": "Example name"
+      },
+      {
+        "id": "exampleSheet059",
+        "notes": "Example note.",
+        "name": "Example name"
+      },
+      {
+        "id": "exampleSheet060",
+        "notes": "Example note.",
+        "name": "Example name"
+      },
+      {
+        "notes": "Example note.",
+        "id": "exampleSheet061",
+        "name": "Example name"
+      },
+      {
+        "notes": "Example note.",
+        "name": "Example name",
+        "id": "exampleSheet062"
+      },
+      {
+        "notes": "Example note.",
+        "name": "Example name",
+        "id": "exampleSheet063"
+      },
+      {
+        "id": "exampleSheet064",
+        "notes": "Example note.",
+        "name": "Example name"
+      },
+      {
+        "id": "exampleSheet065",
+        "notes": "Example note.",
+        "name": "Example name"
+      },
+      {
+        "name": "Example name",
+        "id": "exampleSheet066",
+        "notes": "Example note."
+      },
+      {
+        "id": "exampleSheet067",
+        "notes": "Example note.",
+        "name": "Example name"
+      },
+      {
+        "notes": "Example note.",
+        "id": "exampleSheet068",
+        "name": "Example name"
+      },
+      {
+        "notes": "Example note.",
+        "id": "exampleSheet069",
+        "name": "Example name"
+      },
+      {
+        "id": "exampleSheet070",
+        "notes": "Example note.",
+        "name": "Example name"
+      },
+      {
+        "notes": "Example note.",
+        "id": "exampleSheet071",
+        "name": "Example name"
+      },
+      {
+        "notes": "Example note.",
+        "id": "exampleSheet072",
+        "name": "Example name"
+      },
+      {
+        "id": "exampleSheet073",
+        "notes": "Example note.",
+        "name": "Example name"
+      },
+      {
+        "name": "Example name",
+        "id": "exampleSheet074",
+        "notes": "Example note."
+      },
+      {
+        "notes": "Example note.",
+        "id": "exampleSheet075",
+        "name": "Example name"
+      },
+      {
+        "id": "exampleSheet076",
+        "name": "Example name",
+        "notes": "Example note."
+      }
+    ],
+    "equipment": {
+      "armor": {
+        "Right leg": {
+          "quality": "Инквизиторская",
+          "ap": null,
+          "mods": "",
+          "type": "Flack"
+        },
+        "Left leg": {
+          "quality": "Инквизиторская",
+          "mods": "",
+          "ap": null,
+          "type": "Flack"
+        },
+        "Head": {
+          "type": "Flack",
+          "quality": "Инквизиторская",
+          "ap": null,
+          "mods": ""
+        },
+        "Left arm": {
+          "quality": "Инквизиторская",
+          "mods": "",
+          "ap": null,
+          "type": "Flack"
+        },
+        "Right arm": {
+          "ap": null,
+          "mods": "",
+          "type": "Flack",
+          "quality": "Инквизиторская"
+        },
+        "Body": {
+          "quality": "Инквизиторская",
+          "type": "Flack",
+          "ap": null,
+          "mods": ""
+        }
+      },
+      "weapons": {
+        "ranged": [
+          {
+            "rof": "0/-/-",
+            "clip": null,
+            "range": "30",
+            "type": "",
+            "clipSize": null,
+            "damage": "1d10+3",
+            "id": "exampleSheet077",
+            "reload": "2 раунда",
+            "name": "Example name",
+            "notes": "Example note.",
+            "traits": "Надежное, лазерный прицел",
+            "equipped": null
+          },
+          {
+            "range": "30",
+            "clip": null,
+            "damage": "1d10+3",
+            "type": "",
+            "equipped": null,
+            "rof": "0/-/-",
+            "reload": "2 раунда",
+            "id": "exampleSheet078",
+            "notes": "Example note.",
+            "name": "Example name",
+            "traits": "Надежное, лазерный прицел",
+            "clipSize": null
+          },
+          {
+            "damage": "1d10+5взрыв",
+            "equipped": null,
+            "name": "Example name",
+            "notes": "Example note.",
+            "traits": "Pen 4",
+            "rof": "0/2/-",
+            "clipSize": null,
+            "clip": null,
+            "id": "exampleSheet079",
+            "type": "Болтерное",
+            "reload": "Full",
+            "range": "30"
+          },
+          {
+            "name": "Example name",
+            "reload": "1 раунд",
+            "range": "30",
+            "id": "exampleSheet080",
+            "clipSize": null,
+            "traits": "Гуд квалити, с гравировкой с моим именем, токсичное, точное",
+            "rof": "1/-/-",
+            "type": "Экзотическое",
+            "clip": null,
+            "notes": "Example note.",
+            "damage": "1д10р",
+            "equipped": null
+          },
+          {
+            "damage": "Ракета",
+            "name": "Example name",
+            "notes": "Example note.",
+            "clipSize": null,
+            "traits": "Ракета",
+            "id": "exampleSheet081",
+            "rof": "1/-/-",
+            "clip": null,
+            "reload": "Full",
+            "equipped": null,
+            "type": "Heavy",
+            "range": "300"
+          }
+        ],
+        "melee": [
+          {
+            "name": "Example name",
+            "penetration": "2",
+            "traits": "Balanced",
+            "range": "-",
+            "equipped": null,
+            "type": "Примит",
+            "damage": "1d10",
+            "id": "exampleSheet082",
+            "notes": "Example note."
+          },
+          {
+            "id": "exampleSheet083",
+            "traits": "75% сломать оружие, балансовое",
+            "name": "Example name",
+            "notes": "Example note.",
+            "type": "Power",
+            "damage": "1d10+5э",
+            "equipped": null,
+            "range": "-",
+            "penetration": "6"
+          }
+        ]
+      }
+    },
+    "wounds": {
+      "current": null,
+      "max": null,
+      "notes": "Example note."
+    },
+    "experience": null,
+    "questLog": []
+  },
+  {
+    "Document ID": "/users/exampleUid02/characterSheets/exampleSheet085",
+    "name": "Example name",
+    "characterClass": "Example class",
+    "gameSystem": "Dark Heresy",
+    "avatar": "",
+    "backstory": "Example backstory.",
+    "homeWorld": "Example world",
+    "worldVariant": "Example variant",
+    "careerPath": "Example career",
+    "rank": "Example rank",
+    "divination": "Example divination.",
+    "divinationEffect": "Example divination effect.",
+    "quirk": "Example quirk.",
+    "height": "180",
+    "weight": "75",
+    "age": "30",
+    "skinColor": "grey",
+    "hairColor": "grey",
+    "eyeColor": "grey",
+    "experience": null,
+    "totalExpSpent": null,
+    "alternatePath": null,
+    "advancedPath": null,
+    "notes": "Example note.",
+    "stats": {
+      "weaponSkill": null,
+      "ballisticSkill": null,
+      "strength": null,
+      "toughness": null,
+      "agility": null,
+      "intelligence": null,
+      "perception": null,
+      "willpower": null,
+      "fellowship": null,
+      "influence": null
+    },
+    "statUpgrades": {
+      "weaponSkill": [null, null, null, null],
+      "ballisticSkill": [null, null, null, null],
+      "strength": [null, null, null, null],
+      "toughness": [null, null, null, null],
+      "agility": [null, null, null, null],
+      "intelligence": [null, null, null, null],
+      "perception": [null, null, null, null],
+      "willpower": [null, null, null, null],
+      "fellowship": [null, null, null, null],
+      "influence": [null, null, null, null]
+    },
+    "statNotes": {},
+    "wounds": {
+      "current": null,
+      "max": null
+    },
+    "fatePoints": {
+      "current": null,
+      "max": null
+    },
+    "insanityPoints": {
+      "total": null,
+      "notes": "Example note."
+    },
+    "corruptionPoints": {
+      "total": null,
+      "notes": "Example note."
+    },
+    "wealth": {
+      "throneGelt": null,
+      "monthlyIncome": null
+    },
+    "movement": {
+      "walkHalf": null,
+      "walkFull": null,
+      "charge": null,
+      "run": null
+    },
+    "equipment": {
+      "armor": {
+        "Head": null,
+        "Body": null,
+        "Left arm": null,
+        "Right arm": null,
+        "Left leg": null,
+        "Right leg": null
+      },
+      "weapons": {
+        "melee": [],
+        "ranged": []
+      }
+    },
+    "userId": "exampleUid02",
+    "questLog": [],
+    "inventory": [],
+    "skills": [],
+    "talents": []
+  },
+  {
+    "Document ID": "/users/exampleUid03/characterSheets/exampleSheet154",
+    "name": "Example name",
+    "eyeColor": "grey",
+    "alternatePath": null,
+    "notes": "Example note.",
+    "height": "180",
+    "careerPath": "Example career",
+    "hairColor": "grey",
+    "characterClass": "Example class",
+    "avatar": "",
+    "divination": "Example divination.",
+    "weight": "75",
+    "skinColor": "grey",
+    "worldVariant": "Example variant",
+    "quirk": "Example quirk.",
+    "homeWorld": "Example world",
+    "age": "30",
+    "gameSystem": "Dark Heresy",
+    "divinationEffect": "Example divination effect.",
+    "backstory": "Example backstory.",
+    "insanityPoints": {
+      "notes": "Example note.",
+      "total": null
+    },
+    "rank": "Example rank",
+    "userId": "exampleUid03",
+    "questLog": [
+      {
+        "id": "exampleSheet086",
+        "title": "Example quest.",
+        "description": "Example description.",
+        "status": "active",
+        "createdAt": "2026-04-19T11:11:11.177Z",
+        "updatedAt": "2026-04-19T12:16:51.408Z"
+      },
+      {
+        "updatedAt": "2026-04-19T11:08:52.182Z",
+        "id": "exampleSheet087",
+        "status": "completed",
+        "title": "Example quest.",
+        "createdAt": "2026-03-02T18:36:43.165Z",
+        "description": "Example description."
+      }
+    ],
+    "stats": {
+      "weaponSkill": null,
+      "perception": null,
+      "strength": null,
+      "willpower": null,
+      "toughness": null,
+      "fellowship": null,
+      "influence": null,
+      "agility": null,
+      "ballisticSkill": null,
+      "intelligence": null
+    },
+    "statNotes": {
+      "toughness": "Example text.",
+      "willpower": "Example text.",
+      "strength": "Example text.",
+      "perception": "Example text.",
+      "weaponSkill": "Example text.",
+      "ballisticSkill": "Example text.",
+      "agility": "Example text.",
+      "intelligence": "Example text.",
+      "fellowship": "Example text."
+    },
+    "talents": [
+      {
+        "name": "Example name",
+        "notes": "Example note.",
+        "id": "exampleSheet088"
+      },
+      {
+        "id": "exampleSheet089",
+        "notes": "Example note.",
+        "name": "Example name"
+      },
+      {
+        "id": "exampleSheet090",
+        "notes": "Example note.",
+        "name": "Example name"
+      },
+      {
+        "name": "Example name",
+        "notes": "Example note.",
+        "id": "exampleSheet091"
+      },
+      {
+        "id": "exampleSheet092",
+        "notes": "Example note.",
+        "name": "Example name"
+      },
+      {
+        "name": "Example name",
+        "id": "exampleSheet093",
+        "notes": "Example note."
+      },
+      {
+        "notes": "Example note.",
+        "id": "exampleSheet094",
+        "name": "Example name"
+      },
+      {
+        "name": "Example name",
+        "notes": "Example note.",
+        "id": "exampleSheet095"
+      },
+      {
+        "id": "exampleSheet096",
+        "notes": "Example note.",
+        "name": "Example name"
+      },
+      {
+        "id": "exampleSheet097",
+        "notes": "Example note.",
+        "name": "Example name"
+      },
+      {
+        "notes": "Example note.",
+        "name": "Example name",
+        "id": "exampleSheet098"
+      },
+      {
+        "notes": "Example note.",
+        "name": "Example name",
+        "id": "exampleSheet099"
+      },
+      {
+        "notes": "Example note.",
+        "name": "Example name",
+        "id": "exampleSheet100"
+      },
+      {
+        "notes": "Example note.",
+        "id": "exampleSheet101",
+        "name": "Example name"
+      },
+      {
+        "id": "exampleSheet102",
+        "notes": "Example note.",
+        "name": "Example name"
+      },
+      {
+        "notes": "Example note.",
+        "id": "exampleSheet103",
+        "name": "Example name"
+      },
+      {
+        "id": "exampleSheet104",
+        "notes": "Example note.",
+        "name": "Example name"
+      },
+      {
+        "notes": "Example note.",
+        "id": "exampleSheet105",
+        "name": "Example name"
+      },
+      {
+        "id": "exampleSheet106",
+        "name": "Example name",
+        "notes": "Example note."
+      },
+      {
+        "id": "exampleSheet107",
+        "name": "Example name",
+        "notes": "Example note."
+      },
+      {
+        "notes": "Example note.",
+        "id": "exampleSheet108",
+        "name": "Example name"
+      },
+      {
+        "notes": "Example note.",
+        "name": "Example name",
+        "id": "exampleSheet109"
+      },
+      {
+        "name": "Example name",
+        "id": "exampleSheet110",
+        "notes": "Example note."
+      },
+      {
+        "id": "exampleSheet111",
+        "name": "Example name",
+        "notes": "Example note."
+      }
+    ],
+    "advancedPath": "Example path",
+    "wealth": {
+      "throneGelt": null,
+      "monthlyIncome": null
+    },
+    "corruptionPoints": {
+      "total": null,
+      "notes": "Example note."
+    },
+    "fatePoints": {
+      "current": null,
+      "max": null,
+      "notes": "Example note."
+    },
+    "wounds": {
+      "current": null,
+      "max": null,
+      "notes": "Example note."
+    },
+    "statUpgrades": {
+      "ballisticSkill": [null, null, null, null],
+      "agility": [null, null, null, null],
+      "strength": [null, null, null, null],
+      "perception": [null, null, null, null],
+      "influence": [null, null, null, null],
+      "fellowship": [null, null, null, null],
+      "intelligence": [null, null, null, null],
+      "willpower": [null, null, null, null],
+      "weaponSkill": [null, null, null, null],
+      "toughness": [null, null, null, null]
+    },
+    "totalExpSpent": null,
+    "movement": {
+      "charge": null,
+      "walkHalf": null,
+      "walkFull": null,
+      "run": null
+    },
+    "skills": [
+      {
+        "type": "basic",
+        "name": "Example name",
+        "training": {
+          "plus20": null,
+          "plus10": null,
+          "skilled": null
+        },
+        "notes": "Example note.",
+        "id": "exampleSheet112"
+      },
+      {
+        "notes": "Example note.",
+        "id": "exampleSheet113",
+        "name": "Example name",
+        "training": {
+          "plus20": null,
+          "plus10": null,
+          "skilled": null
+        },
+        "type": "basic"
+      },
+      {
+        "id": "exampleSheet114",
+        "notes": "Example note.",
+        "name": "Example name",
+        "training": {
+          "skilled": null,
+          "plus20": null,
+          "plus10": null
+        },
+        "type": "basic"
+      },
+      {
+        "name": "Example name",
+        "type": "basic",
+        "training": {
+          "skilled": null,
+          "plus20": null,
+          "plus10": null
+        },
+        "notes": "Example note.",
+        "id": "exampleSheet115"
+      },
+      {
+        "id": "exampleSheet116",
+        "name": "Example name",
+        "type": "basic",
+        "notes": "Example note.",
+        "training": {
+          "plus10": null,
+          "plus20": null,
+          "skilled": null
+        }
+      },
+      {
+        "training": {
+          "plus10": null,
+          "skilled": null,
+          "plus20": null
+        },
+        "id": "exampleSheet117",
+        "notes": "Example note.",
+        "name": "Example name",
+        "type": "basic"
+      },
+      {
+        "name": "Example name",
+        "training": {
+          "skilled": null,
+          "plus10": null,
+          "plus20": null
+        },
+        "type": "basic",
+        "notes": "Example note.",
+        "id": "exampleSheet118"
+      },
+      {
+        "id": "exampleSheet119",
+        "training": {
+          "skilled": null,
+          "plus20": null,
+          "plus10": null
+        },
+        "notes": "Example note.",
+        "name": "Example name",
+        "type": "basic"
+      },
+      {
+        "notes": "Example note.",
+        "training": {
+          "skilled": null,
+          "plus20": null,
+          "plus10": null
+        },
+        "id": "exampleSheet120",
+        "type": "basic",
+        "name": "Example name"
+      },
+      {
+        "notes": "Example note.",
+        "type": "basic",
+        "name": "Example name",
+        "training": {
+          "plus10": null,
+          "plus20": null,
+          "skilled": null
+        },
+        "id": "exampleSheet121"
+      },
+      {
+        "notes": "Example note.",
+        "training": {
+          "plus20": null,
+          "skilled": null,
+          "plus10": null
+        },
+        "type": "basic",
+        "name": "Example name",
+        "id": "exampleSheet122"
+      },
+      {
+        "notes": "Example note.",
+        "id": "exampleSheet123",
+        "name": "Example name",
+        "type": "basic",
+        "training": {
+          "skilled": null,
+          "plus20": null,
+          "plus10": null
+        }
+      },
+      {
+        "training": {
+          "plus10": null,
+          "plus20": null,
+          "skilled": null
+        },
+        "name": "Example name",
+        "type": "basic",
+        "id": "exampleSheet124",
+        "notes": "Example note."
+      },
+      {
+        "training": {
+          "skilled": null,
+          "plus20": null,
+          "plus10": null
+        },
+        "id": "exampleSheet125",
+        "type": "basic",
+        "notes": "Example note.",
+        "name": "Example name"
+      },
+      {
+        "name": "Example name",
+        "training": {
+          "plus10": null,
+          "plus20": null,
+          "skilled": null
+        },
+        "type": "basic",
+        "id": "exampleSheet126",
+        "notes": "Example note."
+      },
+      {
+        "notes": "Example note.",
+        "name": "Example name",
+        "id": "exampleSheet127",
+        "training": {
+          "skilled": null,
+          "plus10": null,
+          "plus20": null
+        },
+        "type": "basic"
+      },
+      {
+        "training": {
+          "plus20": null,
+          "plus10": null,
+          "skilled": null
+        },
+        "id": "exampleSheet128",
+        "notes": "Example note.",
+        "name": "Example name",
+        "type": "basic"
+      },
+      {
+        "notes": "Example note.",
+        "name": "Example name",
+        "id": "exampleSheet129",
+        "training": {
+          "plus20": null,
+          "skilled": null,
+          "plus10": null
+        },
+        "type": "basic"
+      },
+      {
+        "id": "exampleSheet130",
+        "training": {
+          "plus20": null,
+          "plus10": null,
+          "skilled": null
+        },
+        "notes": "Example note.",
+        "name": "Example name",
+        "type": "basic"
+      },
+      {
+        "id": "exampleSheet131",
+        "training": {
+          "skilled": null,
+          "plus20": null,
+          "plus10": null
+        },
+        "type": "basic",
+        "notes": "Example note.",
+        "name": "Example name"
+      },
+      {
+        "type": "basic",
+        "id": "exampleSheet132",
+        "name": "Example name",
+        "training": {
+          "plus10": null,
+          "skilled": null,
+          "plus20": null
+        },
+        "notes": "Example note."
+      },
+      {
+        "training": {
+          "skilled": null,
+          "plus10": null,
+          "plus20": null
+        },
+        "id": "exampleSheet133",
+        "notes": "Example note.",
+        "name": "Example name",
+        "type": "basic"
+      },
+      {
+        "type": "basic",
+        "name": "Example name",
+        "notes": "Example note.",
+        "id": "exampleSheet134",
+        "training": {
+          "plus10": null,
+          "plus20": null,
+          "skilled": null
+        }
+      },
+      {
+        "name": "Example name",
+        "training": {
+          "skilled": null,
+          "plus20": null,
+          "plus10": null
+        },
+        "notes": "Example note.",
+        "type": "basic",
+        "id": "exampleSheet135"
+      },
+      {
+        "training": {
+          "skilled": null,
+          "plus10": null,
+          "plus20": null
+        },
+        "id": "exampleSheet136",
+        "notes": "Example note.",
+        "name": "Example name",
+        "type": "advanced"
+      },
+      {
+        "training": {
+          "skilled": null,
+          "plus20": null,
+          "plus10": null
+        },
+        "type": "advanced",
+        "name": "Example name",
+        "id": "exampleSheet137",
+        "notes": "Example note."
+      },
+      {
+        "type": "advanced",
+        "name": "Example name",
+        "notes": "Example note.",
+        "training": {
+          "skilled": null,
+          "plus20": null,
+          "plus10": null
+        },
+        "id": "exampleSheet138"
+      },
+      {
+        "name": "Example name",
+        "type": "advanced",
+        "training": {
+          "plus20": null,
+          "plus10": null,
+          "skilled": null
+        },
+        "notes": "Example note.",
+        "id": "exampleSheet139"
+      },
+      {
+        "name": "Example name",
+        "notes": "Example note.",
+        "id": "exampleSheet140",
+        "training": {
+          "skilled": null,
+          "plus20": null,
+          "plus10": null
+        },
+        "type": "advanced"
+      },
+      {
+        "type": "advanced",
+        "name": "Example name",
+        "id": "exampleSheet141",
+        "training": {
+          "skilled": null,
+          "plus10": null,
+          "plus20": null
+        },
+        "notes": "Example note."
+      },
+      {
+        "id": "exampleSheet142",
+        "training": {
+          "skilled": null,
+          "plus10": null,
+          "plus20": null
+        },
+        "type": "basic",
+        "name": "Example name",
+        "notes": "Example note."
+      }
+    ],
+    "inventory": [
+      {
+        "id": "exampleSheet143",
+        "name": "Example name",
+        "status": "default",
+        "notes": "Example note."
+      },
+      {
+        "id": "exampleSheet144",
+        "name": "Example name",
+        "status": "default",
+        "notes": "Example note."
+      },
+      {
+        "id": "exampleSheet145",
+        "name": "Example name",
+        "status": "default",
+        "notes": "Example note."
+      },
+      {
+        "id": "exampleSheet146",
+        "name": "Example name",
+        "status": "default",
+        "notes": "Example note."
+      }
+    ],
+    "equipment": {
+      "weapons": {
+        "melee": [
+          {
+            "traits": "Custom Grip (+5 accuracy)",
+            "type": "Primitive",
+            "name": "Example name",
+            "damage": "1d5+1",
+            "penetration": "1",
+            "equipped": null,
+            "id": "exampleSheet147",
+            "range": "-",
+            "notes": "Example note."
+          },
+          {
+            "id": "exampleSheet148",
+            "traits": "Mono, balanced (+10 parry), Custom Grip (+5 accuracy)",
+            "type": "Primitive",
+            "name": "Example name",
+            "damage": "1d10R",
+            "equipped": null,
+            "penetration": "2",
+            "range": "",
+            "notes": "Example note."
+          },
+          {
+            "equipped": null,
+            "range": "-",
+            "notes": "Example note.",
+            "penetration": "5",
+            "damage": "1d10+2R",
+            "id": "exampleSheet149",
+            "type": "Chain",
+            "name": "Example name",
+            "traits": "Balanced (+10 Parry), Tearing (Roll 2d, choose highest), Custom Grip (+5 WS)"
+          }
+        ],
+        "ranged": [
+          {
+            "clip": null,
+            "reload": "FA",
+            "equipped": null,
+            "type": "",
+            "damage": "1d10+4",
+            "name": "Example name",
+            "notes": "Example note.",
+            "traits": "+10 optic, +1d5 bayonet (mono knife), Extended Magazine (8 clip), Fire Selector, Accurate (+10 aim, 1-2d10 for 1-2 deg.suc.)",
+            "range": "160",
+            "id": "exampleSheet150",
+            "rof": "",
+            "clipSize": null
+          },
+          {
+            "id": "exampleSheet151",
+            "traits": "Accurate, Custom Grip (+5 accuracy)",
+            "rof": "1",
+            "reload": "HA",
+            "clip": null,
+            "type": "Primitive",
+            "name": "Example name",
+            "damage": "1d10+2R",
+            "clipSize": null,
+            "equipped": null,
+            "range": "40",
+            "notes": "Example note."
+          },
+          {
+            "equipped": null,
+            "clip": null,
+            "type": "Primitive",
+            "id": "exampleSheet152",
+            "name": "Example name",
+            "notes": "Example note.",
+            "range": "",
+            "reload": "HA",
+            "rof": "",
+            "damage": "1d10+4",
+            "clipSize": null,
+            "traits": "Accurate"
+          },
+          {
+            "notes": "Example note.",
+            "damage": "Rocket",
+            "equipped": null,
+            "reload": "FA",
+            "range": "300",
+            "traits": "Two handed (3 crack 3d10+8 pen8 concussive 3 proven 2; 3 frag 2d10+2 pen2 AoE 5m)",
+            "type": "Heavy",
+            "name": "Example name",
+            "clip": null,
+            "rof": "1",
+            "clipSize": null,
+            "id": "exampleSheet153"
+          }
+        ]
+      },
+      "armor": {
+        "Right arm": {
+          "quality": "Common",
+          "mods": "",
+          "type": "Flack",
+          "ap": null
+        },
+        "Right leg": {
+          "type": "Flack",
+          "quality": "Common",
+          "ap": null,
+          "mods": ""
+        },
+        "Left arm": {
+          "type": "Flack",
+          "quality": "Common",
+          "mods": "",
+          "ap": null
+        },
+        "Left leg": {
+          "mods": "",
+          "quality": "Common",
+          "ap": null,
+          "type": "Flack"
+        },
+        "Body": {
+          "type": "Flack",
+          "quality": "Common",
+          "ap": null,
+          "mods": "Bionic stomach AP+2, body stun ignore"
+        },
+        "Head": {
+          "quality": "Common",
+          "mods": "",
+          "type": "Flack",
+          "ap": null
+        }
+      }
+    },
+    "experience": null
+  },
+  {
+    "Document ID": "/users/exampleUid03/characterSheets/exampleSheet172",
+    "name": "Example name",
+    "level": null,
+    "characterClass": "Example class",
+    "gameSystem": "Dungeons & Dragons",
+    "avatar": "",
+    "race": "Example race",
+    "background": "Example background",
+    "alignment": "Example alignment",
+    "experiencePoints": null,
+    "isMulticlass": null,
+    "inspiration": "Yes",
+    "proficiencyBonus": null,
+    "age": "30",
+    "eyes": "grey",
+    "skin": "grey",
+    "height": "180",
+    "weight": "75",
+    "hair": "grey",
+    "stats": {
+      "strength": null,
+      "dexterity": null,
+      "constitution": null,
+      "intelligence": null,
+      "wisdom": null,
+      "charisma": null
+    },
+    "savingThrows": [
+      {
+        "name": "Example name",
+        "proficient": null,
+        "value": null
+      },
+      {
+        "name": "Example name",
+        "proficient": null,
+        "value": null
+      },
+      {
+        "name": "Example name",
+        "proficient": null,
+        "value": null
+      },
+      {
+        "name": "Example name",
+        "proficient": null,
+        "value": null
+      },
+      {
+        "name": "Example name",
+        "proficient": null,
+        "value": null
+      },
+      {
+        "name": "Example name",
+        "proficient": null,
+        "value": null
+      }
+    ],
+    "skills": [
+      {
+        "name": "Example name",
+        "label": "Acrobatics (Dex)",
+        "proficient": null,
+        "expertise": null,
+        "value": null
+      },
+      {
+        "name": "Example name",
+        "label": "Animal Handling (Wis)",
+        "proficient": null,
+        "expertise": null,
+        "value": null
+      },
+      {
+        "name": "Example name",
+        "label": "Arcana (Int)",
+        "proficient": null,
+        "expertise": null,
+        "value": null
+      },
+      {
+        "name": "Example name",
+        "label": "Athletics (Str)",
+        "proficient": null,
+        "expertise": null,
+        "value": null
+      },
+      {
+        "name": "Example name",
+        "label": "Deception (Cha)",
+        "proficient": null,
+        "expertise": null,
+        "value": null
+      },
+      {
+        "name": "Example name",
+        "label": "History (Int)",
+        "proficient": null,
+        "expertise": null,
+        "value": null
+      },
+      {
+        "name": "Example name",
+        "label": "Insight (Wis)",
+        "proficient": null,
+        "expertise": null,
+        "value": null
+      },
+      {
+        "name": "Example name",
+        "label": "Intimidation (Cha)",
+        "proficient": null,
+        "expertise": null,
+        "value": null
+      },
+      {
+        "name": "Example name",
+        "label": "Investigation (Int)",
+        "proficient": null,
+        "expertise": null,
+        "value": null
+      },
+      {
+        "name": "Example name",
+        "label": "Medicine (Wis)",
+        "proficient": null,
+        "expertise": null,
+        "value": null
+      },
+      {
+        "name": "Example name",
+        "label": "Nature (Int)",
+        "proficient": null,
+        "expertise": null,
+        "value": null
+      },
+      {
+        "name": "Example name",
+        "label": "Perception (Wis)",
+        "proficient": null,
+        "expertise": null,
+        "value": null
+      },
+      {
+        "name": "Example name",
+        "label": "Performance (Cha)",
+        "proficient": null,
+        "expertise": null,
+        "value": null
+      },
+      {
+        "name": "Example name",
+        "label": "Persuasion (Cha)",
+        "proficient": null,
+        "expertise": null,
+        "value": null
+      },
+      {
+        "name": "Example name",
+        "label": "Religion (Int)",
+        "proficient": null,
+        "expertise": null,
+        "value": null
+      },
+      {
+        "name": "Example name",
+        "label": "Sleight of Hand (Dex)",
+        "proficient": null,
+        "expertise": null,
+        "value": null
+      },
+      {
+        "name": "Example name",
+        "label": "Stealth (Dex)",
+        "proficient": null,
+        "expertise": null,
+        "value": null
+      },
+      {
+        "name": "Example name",
+        "label": "Survival (Wis)",
+        "proficient": null,
+        "expertise": null,
+        "value": null
+      }
+    ],
+    "armorClass": null,
+    "speed": null,
+    "hitPoints": {
+      "current": null,
+      "max": null
+    },
+    "temporaryHitPoints": null,
+    "hpTracking": "Took 10 necrotic damage from the wraith.",
+    "hitDice": "5d8",
+    "deathSaves": {
+      "successes": null,
+      "failures": null
+    },
+    "exhaustion": null,
+    "otherProficienciesAndLanguages": [
+      "Example proficiency",
+      "Example proficiency",
+      "Example proficiency"
+    ],
+    "attacks": [
+      {
+        "id": "exampleSheet155",
+        "name": "Example name",
+        "atkBonus": "+6",
+        "damageType": "1d8+3 B"
+      }
+    ],
+    "spellAttackBonus": "+7",
+    "spellSaveDifficulty": null,
+    "spellcastingAbility": "wisdom",
+    "spellcastingEntries": [
+      {
+        "id": "exampleSheet156",
+        "ability": "wisdom",
+        "attackBonus": "Example text.",
+        "saveDC": null
+      }
+    ],
+    "combatResources": [
+      {
+        "id": "exampleSheet157",
+        "description": "Example description.",
+        "current": null,
+        "max": null
+      }
+    ],
+    "personalityTraits": ["Example trait", "Example trait"],
+    "ideals": ["Example ideal"],
+    "bonds": ["Example bond"],
+    "flaws": ["Example flaw"],
+    "featuresAndTraits": ["Example feature", "Example feature"],
+    "equipment": [
+      {
+        "id": "exampleSheet158",
+        "name": "Example name",
+        "status": "default",
+        "notes": "Example note."
+      },
+      {
+        "id": "exampleSheet159",
+        "name": "Example name",
+        "status": "default",
+        "notes": "Example note."
+      },
+      {
+        "id": "exampleSheet160",
+        "name": "Example name",
+        "status": "default",
+        "notes": "Example note."
+      }
+    ],
+    "attunementItems": [
+      {
+        "id": "exampleSheet161",
+        "description": "Example description.",
+        "attuned": null
+      }
+    ],
+    "currency": {
+      "cp": null,
+      "sp": null,
+      "ep": null,
+      "gp": null,
+      "pp": null
+    },
+    "inventory": [
+      {
+        "id": "exampleSheet162",
+        "name": "Example name",
+        "status": "lost",
+        "notes": "Example note."
+      },
+      {
+        "id": "exampleSheet163",
+        "name": "Example name",
+        "status": "default",
+        "notes": "Example note."
+      }
+    ],
+    "spells": [
+      {
+        "id": "exampleSheet164",
+        "name": "Example name",
+        "notes": "Example note.",
+        "level": null
+      },
+      {
+        "id": "exampleSheet165",
+        "name": "Example name",
+        "notes": "Example note.",
+        "level": null
+      },
+      {
+        "id": "exampleSheet166",
+        "name": "Example name",
+        "notes": "Example note.",
+        "level": null
+      },
+      {
+        "id": "exampleSheet167",
+        "name": "Example name",
+        "notes": "Example note.",
+        "level": null
+      },
+      {
+        "id": "exampleSheet168",
+        "name": "Example name",
+        "notes": "Example note.",
+        "level": null
+      }
+    ],
+    "notes": "Example note.",
+    "questLog": [
+      {
+        "id": "exampleSheet169",
+        "title": "Example quest.",
+        "status": "active",
+        "description": "Example description.",
+        "createdAt": "2023-10-26T10:00:00Z",
+        "updatedAt": "2023-10-27T14:30:00Z"
+      },
+      {
+        "id": "exampleSheet170",
+        "title": "Example quest.",
+        "status": "completed",
+        "description": "Example description.",
+        "createdAt": "2023-10-25T09:00:00Z",
+        "updatedAt": "2023-10-26T11:00:00Z"
+      }
+    ],
+    "userId": "exampleUid03",
+    "spellSlots": {
+      "1": {
+        "max": null,
+        "current": null
+      },
+      "2": {
+        "max": null,
+        "current": null
+      },
+      "3": {
+        "max": null,
+        "current": null
+      },
+      "4": {
+        "max": null,
+        "current": null
+      },
+      "5": {
+        "max": null,
+        "current": null
+      },
+      "6": {
+        "max": null,
+        "current": null
+      },
+      "7": {
+        "max": null,
+        "current": null
+      },
+      "8": {
+        "max": null,
+        "current": null
+      },
+      "9": {
+        "max": null,
+        "current": null
+      }
+    },
+    "companions": [
+      {
+        "id": "exampleSheet171",
+        "name": "Example name",
+        "type": "gh",
+        "size": "gg",
+        "armorClass": null,
+        "initiative": null,
+        "speed": "30ft",
+        "proficiencyBonus": "0",
+        "stats": {
+          "strength": null,
+          "dexterity": null,
+          "constitution": null,
+          "intelligence": null,
+          "wisdom": null,
+          "charisma": null
+        },
+        "hitPoints": {
+          "current": null,
+          "max": null
+        },
+        "skills": [],
+        "actions": [],
+        "features": []
+      }
+    ],
+    "multiclasses": [],
+    "divineBoons": []
+  },
+  {
+    "Document ID": "/users/exampleUid03/characterSheets/exampleSheet180",
+    "name": "Example name",
+    "level": null,
+    "characterClass": "Example class",
+    "gameSystem": "Dungeons & Dragons",
+    "avatar": "",
+    "race": "Example race",
+    "background": "Example background",
+    "alignment": "Example alignment",
+    "experiencePoints": null,
+    "isMulticlass": null,
+    "inspiration": "",
+    "proficiencyBonus": null,
+    "age": "30",
+    "eyes": "grey",
+    "skin": "grey",
+    "height": "180",
+    "weight": "75",
+    "hair": "grey",
+    "stats": {
+      "strength": null,
+      "dexterity": null,
+      "constitution": null,
+      "intelligence": null,
+      "wisdom": null,
+      "charisma": null
+    },
+    "savingThrows": [
+      {
+        "name": "Example name",
+        "proficient": null,
+        "value": null
+      },
+      {
+        "name": "Example name",
+        "proficient": null,
+        "value": null
+      },
+      {
+        "name": "Example name",
+        "proficient": null,
+        "value": null
+      },
+      {
+        "name": "Example name",
+        "proficient": null,
+        "value": null
+      },
+      {
+        "name": "Example name",
+        "proficient": null,
+        "value": null
+      },
+      {
+        "name": "Example name",
+        "proficient": null,
+        "value": null
+      }
+    ],
+    "skills": [
+      {
+        "name": "Example name",
+        "label": "Acrobatics (Dex)",
+        "proficient": null,
+        "expertise": null,
+        "value": null
+      },
+      {
+        "name": "Example name",
+        "label": "Animal Handling (Wis)",
+        "proficient": null,
+        "expertise": null,
+        "value": null
+      },
+      {
+        "name": "Example name",
+        "label": "Arcana (Int)",
+        "proficient": null,
+        "expertise": null,
+        "value": null
+      },
+      {
+        "name": "Example name",
+        "label": "Athletics (Str)",
+        "proficient": null,
+        "expertise": null,
+        "value": null
+      },
+      {
+        "name": "Example name",
+        "label": "Deception (Cha)",
+        "proficient": null,
+        "expertise": null,
+        "value": null
+      },
+      {
+        "name": "Example name",
+        "label": "History (Int)",
+        "proficient": null,
+        "expertise": null,
+        "value": null
+      },
+      {
+        "name": "Example name",
+        "label": "Insight (Wis)",
+        "proficient": null,
+        "expertise": null,
+        "value": null
+      },
+      {
+        "name": "Example name",
+        "label": "Intimidation (Cha)",
+        "proficient": null,
+        "expertise": null,
+        "value": null
+      },
+      {
+        "name": "Example name",
+        "label": "Investigation (Int)",
+        "proficient": null,
+        "expertise": null,
+        "value": null
+      },
+      {
+        "name": "Example name",
+        "label": "Medicine (Wis)",
+        "proficient": null,
+        "expertise": null,
+        "value": null
+      },
+      {
+        "name": "Example name",
+        "label": "Nature (Int)",
+        "proficient": null,
+        "expertise": null,
+        "value": null
+      },
+      {
+        "name": "Example name",
+        "label": "Perception (Wis)",
+        "proficient": null,
+        "expertise": null,
+        "value": null
+      },
+      {
+        "name": "Example name",
+        "label": "Performance (Cha)",
+        "proficient": null,
+        "expertise": null,
+        "value": null
+      },
+      {
+        "name": "Example name",
+        "label": "Persuasion (Cha)",
+        "proficient": null,
+        "expertise": null,
+        "value": null
+      },
+      {
+        "name": "Example name",
+        "label": "Religion (Int)",
+        "proficient": null,
+        "expertise": null,
+        "value": null
+      },
+      {
+        "name": "Example name",
+        "label": "Sleight of Hand (Dex)",
+        "proficient": null,
+        "expertise": null,
+        "value": null
+      },
+      {
+        "name": "Example name",
+        "label": "Stealth (Dex)",
+        "proficient": null,
+        "expertise": null,
+        "value": null
+      },
+      {
+        "name": "Example name",
+        "label": "Survival (Wis)",
+        "proficient": null,
+        "expertise": null,
+        "value": null
+      }
+    ],
+    "armorClass": null,
+    "speed": null,
+    "hitPoints": {
+      "current": null,
+      "max": null
+    },
+    "temporaryHitPoints": null,
+    "hitDice": "5d8",
+    "deathSaves": {
+      "successes": null,
+      "failures": null
+    },
+    "exhaustion": null,
+    "otherProficienciesAndLanguages": [
+      "Example proficiency",
+      "Example proficiency",
+      "Example proficiency"
+    ],
+    "attacks": [
+      {
+        "id": "exampleSheet173",
+        "name": "Example name",
+        "atkBonus": "+7",
+        "damageType": "1d8+5 P"
+      }
+    ],
+    "spellAttackBonus": "",
+    "spellSaveDifficulty": null,
+    "spellcastingAbility": "none",
+    "spellcastingEntries": [
+      {
+        "id": "exampleSheet156",
+        "ability": "none",
+        "attackBonus": "Example text.",
+        "saveDC": null
+      }
+    ],
+    "combatResources": [
+      {
+        "id": "exampleSheet174",
+        "description": "Example description.",
+        "current": null,
+        "max": null
+      }
+    ],
+    "featuresAndTraits": ["Example feature", "Example feature"],
+    "backstory": "Example backstory.",
+    "equipment": [
+      {
+        "id": "exampleSheet175",
+        "name": "Example name",
+        "status": "default",
+        "notes": "Example note."
+      },
+      {
+        "id": "exampleSheet176",
+        "name": "Example name",
+        "status": "default",
+        "notes": "Example note."
+      },
+      {
+        "id": "exampleSheet177",
+        "name": "Example name",
+        "status": "default",
+        "notes": "Example note."
+      }
+    ],
+    "currency": {
+      "cp": null,
+      "sp": null,
+      "gp": null,
+      "pp": null,
+      "ep": null
+    },
+    "inventory": [
+      {
+        "id": "exampleSheet178",
+        "name": "Example name",
+        "status": "default",
+        "notes": "Example note."
+      }
+    ],
+    "notes": "Example note.",
+    "userId": "exampleUid03",
+    "companions": [
+      {
+        "id": "exampleSheet179",
+        "name": "Example name",
+        "type": "",
+        "size": "",
+        "armorClass": null,
+        "initiative": null,
+        "speed": "30ft",
+        "proficiencyBonus": "0",
+        "stats": {
+          "strength": null,
+          "dexterity": null,
+          "constitution": null,
+          "intelligence": null,
+          "wisdom": null,
+          "charisma": null
+        },
+        "skills": [
+          {
+            "name": "Example name",
+            "label": "Acrobatics (Dex)",
+            "proficient": null,
+            "expertise": null,
+            "value": null
+          },
+          {
+            "name": "Example name",
+            "label": "Animal Handling (Wis)",
+            "proficient": null,
+            "expertise": null,
+            "value": null
+          },
+          {
+            "name": "Example name",
+            "label": "Arcana (Int)",
+            "proficient": null,
+            "expertise": null,
+            "value": null
+          },
+          {
+            "name": "Example name",
+            "label": "Athletics (Str)",
+            "proficient": null,
+            "expertise": null,
+            "value": null
+          },
+          {
+            "name": "Example name",
+            "label": "Deception (Cha)",
+            "proficient": null,
+            "expertise": null,
+            "value": null
+          },
+          {
+            "name": "Example name",
+            "label": "History (Int)",
+            "proficient": null,
+            "expertise": null,
+            "value": null
+          },
+          {
+            "name": "Example name",
+            "label": "Insight (Wis)",
+            "proficient": null,
+            "expertise": null,
+            "value": null
+          },
+          {
+            "name": "Example name",
+            "label": "Intimidation (Cha)",
+            "proficient": null,
+            "expertise": null,
+            "value": null
+          },
+          {
+            "name": "Example name",
+            "label": "Investigation (Int)",
+            "proficient": null,
+            "expertise": null,
+            "value": null
+          },
+          {
+            "name": "Example name",
+            "label": "Medicine (Wis)",
+            "proficient": null,
+            "expertise": null,
+            "value": null
+          },
+          {
+            "name": "Example name",
+            "label": "Nature (Int)",
+            "proficient": null,
+            "expertise": null,
+            "value": null
+          },
+          {
+            "name": "Example name",
+            "label": "Perception (Wis)",
+            "proficient": null,
+            "expertise": null,
+            "value": null
+          },
+          {
+            "name": "Example name",
+            "label": "Performance (Cha)",
+            "proficient": null,
+            "expertise": null,
+            "value": null
+          },
+          {
+            "name": "Example name",
+            "label": "Persuasion (Cha)",
+            "proficient": null,
+            "expertise": null,
+            "value": null
+          },
+          {
+            "name": "Example name",
+            "label": "Religion (Int)",
+            "proficient": null,
+            "expertise": null,
+            "value": null
+          },
+          {
+            "name": "Example name",
+            "label": "Sleight of Hand (Dex)",
+            "proficient": null,
+            "expertise": null,
+            "value": null
+          },
+          {
+            "name": "Example name",
+            "label": "Stealth (Dex)",
+            "proficient": null,
+            "expertise": null,
+            "value": null
+          },
+          {
+            "name": "Example name",
+            "label": "Survival (Wis)",
+            "proficient": null,
+            "expertise": null,
+            "value": null
+          }
+        ],
+        "hitPoints": {
+          "current": null,
+          "max": null
+        },
+        "actions": [],
+        "features": []
+      }
+    ],
+    "multiclasses": [],
+    "divineBoons": [],
+    "personalityTraits": [],
+    "ideals": [],
+    "bonds": [],
+    "flaws": [],
+    "attunementItems": [],
+    "spells": [],
+    "questLog": []
+  },
+  {
+    "Document ID": "/users/exampleUid04/characterSheets/exampleSheet186",
+    "name": "Example name",
+    "characterClass": "Example class",
+    "race": "Example race",
+    "background": "Example background",
+    "alignment": "Example alignment",
+    "gameSystem": "Dungeons & Dragons",
+    "avatar": "",
+    "backstory": "Example backstory.",
+    "notes": "Example note.",
+    "speed": null,
+    "hitPoints": {
+      "current": null,
+      "max": null
+    },
+    "userId": "exampleUid04",
+    "isMulticlass": null,
+    "proficiencyBonus": null,
+    "inspiration": "0",
+    "armorClass": null,
+    "level": null,
+    "experiencePoints": null,
+    "attacks": [
+      {
+        "id": "exampleSheet181",
+        "name": "Example name",
+        "atkBonus": "+0",
+        "damageType": "1d6",
+        "notes": "Example note."
+      }
+    ],
+    "featuresAndTraits": ["Example feature"],
+    "companions": [
+      {
+        "id": "exampleSheet182",
+        "name": "Example name",
+        "type": "",
+        "size": "",
+        "armorClass": null,
+        "initiative": null,
+        "speed": "30ft",
+        "proficiencyBonus": "0",
+        "stats": {
+          "strength": null,
+          "dexterity": null,
+          "constitution": null,
+          "intelligence": null,
+          "wisdom": null,
+          "charisma": null
+        },
+        "skills": [
+          {
+            "name": "Example name",
+            "label": "Acrobatics (Dex)",
+            "proficient": null,
+            "expertise": null,
+            "value": null
+          },
+          {
+            "name": "Example name",
+            "label": "Animal Handling (Wis)",
+            "proficient": null,
+            "expertise": null,
+            "value": null
+          },
+          {
+            "name": "Example name",
+            "label": "Arcana (Int)",
+            "proficient": null,
+            "expertise": null,
+            "value": null
+          },
+          {
+            "name": "Example name",
+            "label": "Athletics (Str)",
+            "proficient": null,
+            "expertise": null,
+            "value": null
+          },
+          {
+            "name": "Example name",
+            "label": "Deception (Cha)",
+            "proficient": null,
+            "expertise": null,
+            "value": null
+          },
+          {
+            "name": "Example name",
+            "label": "History (Int)",
+            "proficient": null,
+            "expertise": null,
+            "value": null
+          },
+          {
+            "name": "Example name",
+            "label": "Insight (Wis)",
+            "proficient": null,
+            "expertise": null,
+            "value": null
+          },
+          {
+            "name": "Example name",
+            "label": "Intimidation (Cha)",
+            "proficient": null,
+            "expertise": null,
+            "value": null
+          },
+          {
+            "name": "Example name",
+            "label": "Investigation (Int)",
+            "proficient": null,
+            "expertise": null,
+            "value": null
+          },
+          {
+            "name": "Example name",
+            "label": "Medicine (Wis)",
+            "proficient": null,
+            "expertise": null,
+            "value": null
+          },
+          {
+            "name": "Example name",
+            "label": "Nature (Int)",
+            "proficient": null,
+            "expertise": null,
+            "value": null
+          },
+          {
+            "name": "Example name",
+            "label": "Perception (Wis)",
+            "proficient": null,
+            "expertise": null,
+            "value": null
+          },
+          {
+            "name": "Example name",
+            "label": "Performance (Cha)",
+            "proficient": null,
+            "expertise": null,
+            "value": null
+          },
+          {
+            "name": "Example name",
+            "label": "Persuasion (Cha)",
+            "proficient": null,
+            "expertise": null,
+            "value": null
+          },
+          {
+            "name": "Example name",
+            "label": "Religion (Int)",
+            "proficient": null,
+            "expertise": null,
+            "value": null
+          },
+          {
+            "name": "Example name",
+            "label": "Sleight of Hand (Dex)",
+            "proficient": null,
+            "expertise": null,
+            "value": null
+          },
+          {
+            "name": "Example name",
+            "label": "Stealth (Dex)",
+            "proficient": null,
+            "expertise": null,
+            "value": null
+          },
+          {
+            "name": "Example name",
+            "label": "Survival (Wis)",
+            "proficient": null,
+            "expertise": null,
+            "value": null
+          }
+        ],
+        "hitPoints": {
+          "current": null,
+          "max": null
+        },
+        "actions": [],
+        "features": []
+      }
+    ],
+    "inventory": [
+      {
+        "id": "exampleSheet183",
+        "name": "Example name",
+        "status": "default"
+      }
+    ],
+    "equipment": [
+      {
+        "id": "exampleSheet184",
+        "name": "Example name",
+        "status": "default"
+      }
+    ],
+    "multiclasses": [
+      {
+        "class": "Fighter",
+        "level": null
+      },
+      {
+        "class": "Barbarian",
+        "level": null
+      }
+    ],
+    "hair": "grey",
+    "skin": "grey",
+    "weight": "75",
+    "eyes": "grey",
+    "age": "30",
+    "height": "180",
+    "stats": {
+      "charisma": null,
+      "wisdom": null,
+      "strength": null,
+      "constitution": null,
+      "intelligence": null,
+      "dexterity": null
+    },
+    "spells": [
+      {
+        "id": "exampleSheet185",
+        "name": "Example name",
+        "level": null,
+        "notes": "Example note."
+      }
+    ],
+    "spellSlots": {
+      "1": {
+        "max": null,
+        "current": null
+      },
+      "2": {
+        "max": null,
+        "current": null
+      },
+      "3": {
+        "max": null,
+        "current": null
+      },
+      "4": {
+        "max": null,
+        "current": null
+      },
+      "5": {
+        "max": null,
+        "current": null
+      },
+      "6": {
+        "max": null,
+        "current": null
+      },
+      "7": {
+        "max": null,
+        "current": null
+      },
+      "8": {
+        "max": null,
+        "current": null
+      },
+      "9": {
+        "max": null,
+        "current": null
+      }
+    },
+    "deathSaves": {
+      "successes": null,
+      "failures": null
+    },
+    "currency": {
+      "cp": null,
+      "sp": null,
+      "ep": null,
+      "gp": null,
+      "pp": null
+    },
+    "skills": [
+      {
+        "expertise": null,
+        "label": "Acrobatics (Dex)",
+        "value": null,
+        "name": "Example name",
+        "proficient": null
+      },
+      {
+        "expertise": null,
+        "label": "Animal Handling (Wis)",
+        "value": null,
+        "name": "Example name",
+        "proficient": null
+      },
+      {
+        "proficient": null,
+        "name": "Example name",
+        "value": null,
+        "label": "Arcana (Int)",
+        "expertise": null
+      },
+      {
+        "value": null,
+        "label": "Athletics (Str)",
+        "proficient": null,
+        "name": "Example name",
+        "expertise": null
+      },
+      {
+        "name": "Example name",
+        "proficient": null,
+        "label": "Deception (Cha)",
+        "value": null,
+        "expertise": null
+      },
+      {
+        "label": "History (Int)",
+        "value": null,
+        "name": "Example name",
+        "proficient": null,
+        "expertise": null
+      },
+      {
+        "expertise": null,
+        "name": "Example name",
+        "proficient": null,
+        "label": "Insight (Wis)",
+        "value": null
+      },
+      {
+        "label": "Intimidation (Cha)",
+        "value": null,
+        "name": "Example name",
+        "proficient": null,
+        "expertise": null
+      },
+      {
+        "name": "Example name",
+        "proficient": null,
+        "label": "Investigation (Int)",
+        "value": null,
+        "expertise": null
+      },
+      {
+        "expertise": null,
+        "proficient": null,
+        "name": "Example name",
+        "value": null,
+        "label": "Medicine (Wis)"
+      },
+      {
+        "expertise": null,
+        "name": "Example name",
+        "proficient": null,
+        "label": "Nature (Int)",
+        "value": null
+      },
+      {
+        "proficient": null,
+        "name": "Example name",
+        "value": null,
+        "label": "Perception (Wis)",
+        "expertise": null
+      },
+      {
+        "expertise": null,
+        "proficient": null,
+        "name": "Example name",
+        "value": null,
+        "label": "Performance (Cha)"
+      },
+      {
+        "label": "Persuasion (Cha)",
+        "value": null,
+        "name": "Example name",
+        "proficient": null,
+        "expertise": null
+      },
+      {
+        "expertise": null,
+        "name": "Example name",
+        "proficient": null,
+        "label": "Religion (Int)",
+        "value": null
+      },
+      {
+        "expertise": null,
+        "proficient": null,
+        "name": "Example name",
+        "value": null,
+        "label": "Sleight of Hand (Dex)"
+      },
+      {
+        "expertise": null,
+        "value": null,
+        "label": "Stealth (Dex)",
+        "proficient": null,
+        "name": "Example name"
+      },
+      {
+        "expertise": null,
+        "name": "Example name",
+        "proficient": null,
+        "label": "Survival (Wis)",
+        "value": null
+      }
+    ],
+    "savingThrows": [
+      {
+        "proficient": null,
+        "name": "Example name",
+        "value": null
+      },
+      {
+        "value": null,
+        "name": "Example name",
+        "proficient": null
+      },
+      {
+        "name": "Example name",
+        "proficient": null,
+        "value": null
+      },
+      {
+        "proficient": null,
+        "name": "Example name",
+        "value": null
+      },
+      {
+        "name": "Example name",
+        "proficient": null,
+        "value": null
+      },
+      {
+        "value": null,
+        "proficient": null,
+        "name": "Example name"
+      }
+    ],
+    "spellcastingEntries": [
+      {
+        "attackBonus": "Example text.",
+        "ability": "intelligence",
+        "id": "exampleSheet156",
+        "saveDC": null
+      }
+    ],
+    "questLog": [],
+    "divineBoons": [],
+    "flaws": [],
+    "bonds": [],
+    "personalityTraits": [],
+    "attunementItems": [],
+    "otherProficienciesAndLanguages": [],
+    "ideals": [],
+    "combatResources": []
+  }
+]

@@ -32,3 +32,6 @@
 # Вендорные минифицированные бандлы: одна строка в несколько мегабайт,
 # поэтому без EOL-конверсии и без текстового diff (провенанс — README рядом).
 public/vendor/**/*.js binary
+
+# Фикстура Firestore-экспорта: бинарный LevelDB-лог, без EOL-конверсии и diff.
+scripts/legacy-migration/examples/firestore-export/** binary

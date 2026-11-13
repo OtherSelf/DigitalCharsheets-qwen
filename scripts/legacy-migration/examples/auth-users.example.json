@@ -1,0 +1,136 @@
+{
+  "users": [
+    {
+      "localId": "exampleUid01",
+      "email": "player1@verse-scribe.app",
+      "emailVerified": false,
+      "passwordHash": "738e8a2194c6076100be9e45ff68d964c8d6d13290087cdc2ff2f4e0e37d24c5",
+      "salt": "exampleSalt0001",
+      "displayName": "Player 1",
+      "lastSignedInAt": "1779728432318",
+      "createdAt": "1772468645147",
+      "providerUserInfo": []
+    },
+    {
+      "localId": "exampleUid05",
+      "email": "player2@verse-scribe.app",
+      "emailVerified": true,
+      "passwordHash": "169d1af4ca8f7555bd7221450fd1f54fbd1538ab7bb5220c96b26809748f883c",
+      "salt": "exampleSalt0002",
+      "displayName": "Player 2",
+      "lastSignedInAt": "1777247309945",
+      "createdAt": "1773625310085",
+      "providerUserInfo": []
+    },
+    {
+      "localId": "exampleUid02",
+      "email": "player3@verse-scribe.app",
+      "emailVerified": false,
+      "passwordHash": "65db4f8084445adebae79cc14005f5893a0e72c721cd317b838b3ce51fc65fc9",
+      "salt": "exampleSalt0003",
+      "displayName": "Player 3",
+      "lastSignedInAt": "1786688871454",
+      "createdAt": "1786688871454",
+      "providerUserInfo": []
+    },
+    {
+      "localId": "exampleUid06",
+      "email": "player4@verse-scribe.app",
+      "emailVerified": true,
+      "passwordHash": "07607a6eb1cb766c766d8b5670339fdac568eeb040cf040ec231fa67297190c6",
+      "salt": "exampleSalt0004",
+      "displayName": "Player 4",
+      "lastSignedInAt": "1771450730380",
+      "createdAt": "1771450730380",
+      "providerUserInfo": []
+    },
+    {
+      "localId": "exampleUid03",
+      "email": "player5@verse-scribe.app",
+      "emailVerified": true,
+      "passwordHash": "9d5f10472a45c31d874a6918abde5631bdff8e796f5d392e9362e327fb853077",
+      "salt": "exampleSalt0005",
+      "displayName": "Player 5",
+      "lastSignedInAt": "1793546147665",
+      "createdAt": "1773625347265",
+      "providerUserInfo": []
+    },
+    {
+      "localId": "exampleUid07",
+      "email": "player6@verse-scribe.app",
+      "emailVerified": false,
+      "passwordHash": "7bfa40c73b72ea2662a9e0c35914b147113311d8655496ecd4c8dddba15a2898",
+      "salt": "exampleSalt0006",
+      "displayName": "Player 6",
+      "lastSignedInAt": "1780998935234",
+      "createdAt": "1772544530154",
+      "providerUserInfo": []
+    },
+    {
+      "localId": "exampleUid08",
+      "email": "player7@verse-scribe.app",
+      "emailVerified": false,
+      "passwordHash": "7fed8cfd17c95476fe4552072cd8667adfb4a4edf725d1ce199252dd1143f687",
+      "salt": "exampleSalt0007",
+      "displayName": "Player 7",
+      "lastSignedInAt": "1771942788568",
+      "createdAt": "1771942773003",
+      "providerUserInfo": []
+    },
+    {
+      "localId": "exampleUid09",
+      "email": "player8@verse-scribe.app",
+      "emailVerified": true,
+      "passwordHash": "7b3934747e58d6a7c5846bb223df1177ed0f9f9d21327086d6624f4c4a3927ed",
+      "salt": "exampleSalt0008",
+      "displayName": "Player 8",
+      "lastSignedInAt": "1777572555976",
+      "createdAt": "1777572555976",
+      "providerUserInfo": []
+    },
+    {
+      "localId": "exampleUid04",
+      "email": "player9@verse-scribe.app",
+      "emailVerified": true,
+      "passwordHash": "0a2c1b8c17956a5bf1c6b3811b08b2b26b3fc844eede23708265eec79da391f5",
+      "salt": "exampleSalt0009",
+      "displayName": "Player 9",
+      "lastSignedInAt": "1771449489360",
+      "createdAt": "1771449489360",
+      "providerUserInfo": []
+    },
+    {
+      "localId": "exampleUid10",
+      "email": "player10@verse-scribe.app",
+      "emailVerified": false,
+      "passwordHash": "1abc4ca7591a92fb2f08faf108c94fa96ddd1e0dd14c5a85601f3c17368dae37",
+      "salt": "exampleSalt0010",
+      "displayName": "Player 10",
+      "lastSignedInAt": "1777249026697",
+      "createdAt": "1777249026697",
+      "providerUserInfo": []
+    },
+    {
+      "localId": "exampleUid11",
+      "email": "player11@verse-scribe.app",
+      "emailVerified": false,
+      "passwordHash": "02172278d9a8c0607695865b7e3b07cf7fc546a7fb22dc993826501c9f642c4b",
+      "salt": "exampleSalt0011",
+      "displayName": "Player 11",
+      "lastSignedInAt": "1776211242047",
+      "createdAt": "1771814743412",
+      "providerUserInfo": []
+    },
+    {
+      "localId": "exampleUid12",
+      "email": "player12@verse-scribe.app",
+      "emailVerified": true,
+      "passwordHash": "0cabea8589a6e2a291ac839b573fdef30e653fd76951254fe22d4aa0b00ad47e",
+      "salt": "exampleSalt0012",
+      "displayName": "Player 12",
+      "lastSignedInAt": "1790881774085",
+      "createdAt": "1790881774085",
+      "providerUserInfo": []
+    }
+  ]
+}
