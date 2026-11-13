@@ -55,6 +55,7 @@ updating, so `git reset` does not rewrite the script while it runs.
 | `DCS_GIT_BRANCH` | `.git` HEAD branch | Branch shown in the version tooltip (`GIT_BRANCH` / `VERCEL_GIT_COMMIT_REF` are accepted). Only the tooltip displays it. |
 | `DCS_BUILD_DATE` | unset | Build date shown in the version tooltip (`null` when unset). |
 | `DCS_SESSION_SECRET` | `<data-dir>/.session-secret` | HMAC key for session cookies. Set explicitly if several instances/processes share one data dir or if the data dir is ephemeral. |
+| `DCS_HISTORY_MAX_BYTES` | `2097152` (2 MiB) | Per-sheet history limit, clamped to 64 KiB … 64 MiB. Older revisions are dropped with a truncation marker. |
 | `DCS_COOKIE_SECURE` | unset | `1` forces the `Secure` flag on the session cookie. It is already on by default in production; this variable is a compatible way to enable it in development. |
 | `DCS_COOKIE_INSECURE` | unset | `1` explicitly disables the `Secure` flag (local plain-HTTP development only). |
 | `DCS_ADMIN_USERNAME` | `admin` | Preferred login for the bootstrap administrator; `admin-2`, … if taken. |
