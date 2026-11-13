@@ -11,6 +11,7 @@ import path from 'path';
  *   <data-dir>/index/logins.json              — индекс «логин → uid» (производный)
  *   <data-dir>/tokens.json                    — хэши одноразовых recovery-токенов
  *   <data-dir>/sessions.json                  — серверный реестр сессий (jti)
+ *   <data-dir>/shares.json                    — хэши токенов гостевых ссылок
  *   <data-dir>/.session-secret                — ключ подписи cookie (0600)
  *   <data-dir>/.lock                          — каталог-мьютекс для операций записи
  *
@@ -102,4 +103,13 @@ export function getRecoveryTokensFile(): string {
  */
 export function getSessionsFile(): string {
   return path.join(getDataDir(), 'sessions.json');
+}
+
+/**
+ * Реестр гостевых ссылок: `<data-dir>/shares.json`.
+ * Ключ записи — хэш токена, сам токен на диске не хранится (см.
+ * `src/lib/shares.ts`). Одна запись на пару `uid + characterId`.
+ */
+export function getSharesFile(): string {
+  return path.join(getDataDir(), 'shares.json');
 }

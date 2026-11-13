@@ -26,6 +26,7 @@ JSON files, written through small, synchronous helpers in `src/lib/`.
     logins.json                 derived: normalized login → uid
   tokens.json                   single-use recovery tokens (hashed)
   sessions.json                 live session records (uid per `jti`)
+  shares.json                   read-only share links (hashed tokens)
   .session-secret               HMAC key for session cookies (0600)
   .lock/                        short-lived directory mutex
   .initial-admin.txt            generated bootstrap admin (0600, optional)
@@ -80,6 +81,14 @@ keyed by the SHA-256 of the value handed to the client: `{ "version": 1,
 "tokens": { "<sha256>": { "uid", "createdAt", "expiresAt" } } }`. An entry is
 deleted when exchanged and dropped after 15 minutes, so a copied data directory
 cannot be used to reset a password.
+
+`shares.json` is the read-only share registry: `{ "version": 1, "shares":
+{ "<sha256>": { "uid", "characterId", "createdAt", "expiresAt",
+"includeHistory" } } }`. The token itself is never stored, only its SHA-256; one
+active record exists per `uid + characterId`, and issuing a new link replaces the
+old one. `expiresAt: null` means “until revoked”. Expired records are pruned on
+the next write; deleting a sheet revokes its link, and deleting an account
+removes all of its records.
 
 Startup normalization (`src/lib/user-schema.ts`) fills missing v4 fields without
 overwriting existing values (including an existing `tester` role). A profile

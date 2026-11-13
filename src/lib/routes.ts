@@ -10,8 +10,14 @@
  */
 
 export const CHARACTERS_ROUTE = '/character';
+export const SHARE_ROUTE = '/share';
 
 /** URL листа персонажа по его id. */
 export function characterPath(characterId: string): string {
   return `${CHARACTERS_ROUTE}/${encodeURIComponent(characterId)}`;
+}
+
+/** URL гостевой ссылки по токену; id листа в адрес не попадает. */
+export function sharePath(token: string): string {
+  return `${SHARE_ROUTE}/${encodeURIComponent(token)}`;
 }

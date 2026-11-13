@@ -21,6 +21,7 @@ import {
   revokeRecoveryTokensForUser,
 } from './security/tokens';
 import { resetWriteSeqGuard } from './server-storage';
+import { revokeSharesForUser } from './shares';
 import {
   readLoginIndexForUpdate,
   rebuildLoginIndex,
@@ -629,11 +630,13 @@ export function deleteUserAccount(
       return { success: true };
     });
 
-    // Выданные токены и сессии пережили бы удаление профиля: гасим.
+    // Выданные токены, сессии и гостевые ссылки пережили бы удаление профиля:
+    // гасим. Ссылки лежат в общем shares.json, а не в каталоге пользователя.
     if (result.success) {
       try {
         revokeRecoveryTokensForUser(uid);
         revokeAllSessionsForUser(uid);
+        revokeSharesForUser(uid);
       } catch (e) {
         console.error('Failed to revoke credentials after deletion:', e);
       }

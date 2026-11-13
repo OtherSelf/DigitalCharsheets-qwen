@@ -108,6 +108,9 @@ Both endpoints are rate limited per IP + login: 5 attempts per 15 minutes, then
 | `POST` | `/api/characters` | cookie | Create a sheet; the server assigns `id`/`userId`, fills missing fields from the edition defaults and validates the payload by the edition schema. |
 | `PUT` | `/api/characters/{id}` | cookie | Partial update; optional `__page`/`__seq` tokens drop late writes. |
 | `DELETE` | `/api/characters/{id}` | cookie | Delete a sheet. |
+| `GET` | `/api/characters/{id}/share` | cookie | Status of the read-only link, without the token (`active`, `createdAt`, `expiresAt`). |
+| `POST` | `/api/characters/{id}/share` | cookie | Create or rotate the read-only link. Body `{ "expiresInDays": 7/30/90/null }`; the token is returned once and only its hash is stored. |
+| `DELETE` | `/api/characters/{id}/share` | cookie | Revoke the link; idempotent. |
 
 `{id}` must match `^[A-Za-z0-9_-]{1,64}$`; any other value (for example
 `..%2Fuser`) is rejected with `400` before the file system is touched. See
@@ -118,6 +121,14 @@ Request bodies for sheets are validated against the edition schema
 and fields the schema does not declare are ignored, an invalid structure answers
 `400 { reason: "invalid_payload", issues: [...] }`, and a body larger than
 **1 MiB** answers `413 { reason: "payload_too_large" }`.
+
+A share link is a bearer token for read-only viewing: anyone with
+`/share/<token>` can open the sheet without a session, so treat the URL as
+sensitive. The token is 32 random bytes (43 base64url characters), shown once by
+`POST`; `GET` cannot recover it. One active link exists per sheet, the default
+lifetime is 30 days, and revocation, expiry, a blocked/deleted owner or a deleted
+sheet make it invalid. Link management always uses the owner's session; the
+public page itself is not part of the JSON API.
 
 ### Export
 
