@@ -76,6 +76,9 @@ Read-only is enforced at two levels:
   unblock it works again unless it expired or was revoked. Deleting the account
   or the sheet revokes it permanently.
 - There is no password on the link (Q9 in the plan) and no view counter in v1.
+- The guest page shows the current sheet only. Change history is owner-only and
+  is not included in a guest link; the optional `includeHistory` flag was not
+  implemented, so old notes cannot leak through `/share/*`.
 
 ## Related
 
