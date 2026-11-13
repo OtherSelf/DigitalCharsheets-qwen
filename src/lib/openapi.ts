@@ -286,6 +286,63 @@ export const openApiDocument = {
         properties: { success: { type: 'boolean' } },
         additionalProperties: true,
       },
+      ShareCreateRequest: {
+        type: 'object',
+        properties: {
+          expiresInDays: {
+            type: ['integer', 'null'],
+            enum: [7, 30, 90, null],
+            default: 30,
+            description:
+              'Lifetime in days, or `null` for a link that lives until revoked. Unsupported values are rejected with `400 reason: invalid_expiry`.',
+          },
+        },
+        additionalProperties: false,
+      },
+      ShareStatus: {
+        type: 'object',
+        required: ['success', 'active'],
+        properties: {
+          success: { type: 'boolean' },
+          active: {
+            type: 'boolean',
+            description:
+              'Whether an unexpired link exists. The token itself is never returned here — only the POST response shows it once.',
+          },
+          createdAt: { type: 'string', format: 'date-time' },
+          expiresAt: {
+            type: ['string', 'null'],
+            format: 'date-time',
+            description: '`null` means the link lives until revoked.',
+          },
+          includeHistory: {
+            type: 'boolean',
+            description:
+              'Reserved: whether the shared page may show the change history. Always false until the optional stage is enabled.',
+          },
+        },
+        additionalProperties: false,
+      },
+      ShareCreated: {
+        type: 'object',
+        required: ['success', 'token', 'path', 'createdAt', 'expiresAt'],
+        properties: {
+          success: { type: 'boolean' },
+          token: {
+            type: 'string',
+            pattern: '^[A-Za-z0-9_-]{43}$',
+            description:
+              'Bearer token for `/share/<token>`. Shown only once; only its SHA-256 is stored.',
+          },
+          path: {
+            type: 'string',
+            description: 'Relative share URL, e.g. `/share/<token>`.',
+          },
+          createdAt: { type: 'string', format: 'date-time' },
+          expiresAt: { type: ['string', 'null'], format: 'date-time' },
+        },
+        additionalProperties: false,
+      },
       MessageResponse: {
         type: 'object',
         required: ['success', 'message'],
@@ -1017,6 +1074,54 @@ export const openApiDocument = {
           400: { $ref: '#/components/responses/BadRequest' },
           401: { $ref: '#/components/responses/Unauthorized' },
           404: { $ref: '#/components/responses/NotFound' },
+        },
+      },
+    },
+    '/api/characters/{id}/share': {
+      get: {
+        tags: ['Characters'],
+        operationId: 'getCharacterShare',
+        summary: 'Current read-only link for a sheet',
+        description:
+          'Returns link metadata without the token: the token is stored only as a hash and is shown once by POST. A missing or expired link answers `200 { active: false }`.',
+        parameters: [paramRef('CharacterId')],
+        responses: {
+          200: jsonResponse('Link status.', ref('ShareStatus')),
+          400: { $ref: '#/components/responses/BadRequest' },
+          401: { $ref: '#/components/responses/Unauthorized' },
+          404: { $ref: '#/components/responses/NotFound' },
+          500: { $ref: '#/components/responses/ServerError' },
+        },
+      },
+      post: {
+        tags: ['Characters'],
+        operationId: 'createCharacterShare',
+        summary: 'Create or rotate a read-only link',
+        description:
+          'Creates one active link per sheet and revokes the previous one. The token is returned exactly once; only its SHA-256 is stored. The link grants read-only access to the sheet without a session.',
+        parameters: [paramRef('CharacterId')],
+        requestBody: jsonBody(ref('ShareCreateRequest')),
+        responses: {
+          201: jsonResponse('Link created; copy it now.', ref('ShareCreated')),
+          400: { $ref: '#/components/responses/BadRequest' },
+          401: { $ref: '#/components/responses/Unauthorized' },
+          404: { $ref: '#/components/responses/NotFound' },
+          413: errorResponse('Request body exceeds 1 MiB.'),
+          500: { $ref: '#/components/responses/ServerError' },
+        },
+      },
+      delete: {
+        tags: ['Characters'],
+        operationId: 'deleteCharacterShare',
+        summary: 'Revoke the read-only link',
+        description:
+          'Idempotent: succeeds even when the link is already gone or the sheet was deleted.',
+        parameters: [paramRef('CharacterId')],
+        responses: {
+          200: jsonResponse('Link revoked.', ref('SimpleSuccess')),
+          400: { $ref: '#/components/responses/BadRequest' },
+          401: { $ref: '#/components/responses/Unauthorized' },
+          500: { $ref: '#/components/responses/ServerError' },
         },
       },
     },

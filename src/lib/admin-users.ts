@@ -17,6 +17,7 @@ import { passwordPolicyError } from './security/password';
 import { revokeAllSessionsForUser } from './security/sessions';
 import { hashPassword, type StoredUser } from './server-auth';
 import { resetWriteSeqGuard } from './server-storage';
+import { revokeSharesForUser } from './shares';
 import {
   readLoginIndexForUpdate,
   rebuildLoginIndex,
@@ -383,7 +384,7 @@ export function deleteUserByAdmin(
   }
 
   try {
-    return withDataLock(() => {
+    const result = withDataLock((): AdminActionResponse => {
       const stored = readStoredUser(targetUid);
       if (!stored) {
         return {
@@ -420,6 +421,20 @@ export function deleteUserByAdmin(
 
       return { success: true } as AdminActionResponse;
     });
+
+    // Гостевые ссылки лежат в общем shares.json, а не в каталоге пользователя:
+    // после rm -rf их нужно погасить отдельно и уже вне withDataLock.
+    if (result.success) {
+      try {
+        revokeSharesForUser(targetUid);
+      } catch (error) {
+        console.error(
+          'Failed to revoke share links after admin delete:',
+          error,
+        );
+      }
+    }
+    return result;
   } catch (error) {
     console.error('Admin user deletion failed:', error);
     return {

@@ -5,6 +5,7 @@ import { normalizeCharacterRecord } from './character-version';
 import { getCharactersDir, getUserDir } from './data-dir';
 import { writeJsonAtomic } from './fs-atomic';
 import { resolveCharacterFile } from './security/paths';
+import { revokeShareForCharacter } from './shares';
 import { Character } from './types';
 
 // Каталог пользователя создаётся при первой записи: профиль и листы
@@ -259,6 +260,16 @@ export function deleteCharacterFromServer(
   try {
     fs.unlinkSync(filePath);
     resetWriteSeqGuard(userId, characterId);
+    // Ссылка на удалённый лист не должна пережить сам лист. Ошибка реестра
+    // ссылок не должна отменять уже состоявшееся удаление файла.
+    try {
+      revokeShareForCharacter(userId, characterId);
+    } catch (shareError) {
+      console.error(
+        `Failed to revoke share link for deleted character ${characterId}:`,
+        shareError,
+      );
+    }
     return true;
   } catch (e) {
     console.error(`Error deleting character ${characterId}:`, e);
