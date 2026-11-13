@@ -238,8 +238,13 @@ no `firebase/` directory. Migrating a Firestore export is an **offline**
 operation: the former unauthenticated `GET /api/import` endpoint was removed
 because it created accounts with a shared default password. Plugins still carry
 the converters (`matchesLegacyImport` / `convertLegacyImport`), so the
-migration can be re-run as a script. The original entity schema is reproduced
-here for reference.
+migration can be re-run as a script — the published one lives in
+[`scripts/legacy-migration/`](../scripts/legacy-migration/README.md)
+(`dcs-migrate.py` converts a dump, `dcs-migrate-check.py` verifies the result
+against `src/lib/types.ts`). It is operator tooling, not part of the running
+application; dumps and credentials are never committed
+([ADR 0002](adr/0002-legacy-migration-tooling.md)). The original entity schema
+is reproduced here for reference.
 
 Firestore paths:
 
