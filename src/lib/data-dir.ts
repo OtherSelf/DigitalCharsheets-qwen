@@ -1,5 +1,7 @@
 import path from 'path';
 
+import { isSafeId, resolveInside } from './security/paths';
+
 /**
  * Каталог, в котором лежат аккаунты и листы персонажей.
  *
@@ -8,6 +10,7 @@ import path from 'path';
  *
  *   <data-dir>/users/<uid>/user.json          — профиль (uid неизменяем)
  *   <data-dir>/users/<uid>/characters/<id>.json
+ *   <data-dir>/users/<uid>/history/<id>.jsonl  — изменения листа (append-only)
  *   <data-dir>/index/logins.json              — индекс «логин → uid» (производный)
  *   <data-dir>/tokens.json                    — хэши одноразовых recovery-токенов
  *   <data-dir>/sessions.json                  — серверный реестр сессий (jti)
@@ -55,6 +58,23 @@ export function getUserFile(uid: string): string {
 /** Каталог листов: `<data-dir>/users/<uid>/characters`. */
 export function getCharactersDir(uid: string): string {
   return path.join(getUserDir(uid), 'characters');
+}
+
+/** Каталог истории листов: `<data-dir>/users/<uid>/history`. */
+export function getHistoryDir(uid: string): string {
+  return path.join(getUserDir(uid), 'history');
+}
+
+/**
+ * Файл истории одного листа: `history/<id>.jsonl`. `null` — id небезопасен
+ * или путь вышел за каталог истории (та же защита, что у листа).
+ */
+export function getHistoryFile(
+  uid: string,
+  characterId: string,
+): string | null {
+  if (!isSafeId(characterId)) return null;
+  return resolveInside(getHistoryDir(uid), `${characterId}.jsonl`);
 }
 
 /** Каталог индексов: `<data-dir>/index`. */

@@ -1008,6 +1008,28 @@ if (opts.dataDir) {
       );
     },
   );
+
+  await check('история листа лежит в history/<id>.jsonl', async () => {
+    const historyFile = path.join(userDir, 'history', `${characterId}.jsonl`);
+    assert(fs.existsSync(historyFile), `нет файла ${historyFile}`);
+    const lines = fs
+      .readFileSync(historyFile, 'utf8')
+      .trim()
+      .split('\n')
+      .filter(Boolean)
+      .map((line) => JSON.parse(line));
+    assert(lines.length >= 2, `history: ${lines.length} строк, ожидали >= 2`);
+    assert(
+      lines.some((record) => record.source === 'create'),
+      'history: нет маркера create',
+    );
+    assert(
+      lines.some(
+        (record) => record.source === 'save' && Array.isArray(record.changes),
+      ),
+      'history: нет сохранения с changes',
+    );
+  });
 }
 
 await check('DELETE /api/characters/<id> → 200', async () => {

@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 
+import { appendMigrationMarker } from './character-history';
 import {
   normalizeCharacterRecord,
   type ParsedCharacterRecord,
@@ -96,6 +97,18 @@ export function normalizeAllCharacters(): NormalizeCharactersReport {
         }
         withDataLock(() => writeJsonAtomic(full, normalized.character));
         report.updated += 1;
+        // Маркер пишется после лока: appendHistory при компакции берёт тот же
+        // data-lock, вложенный лок — взаимоблокировка.
+        if (normalized.migrationsApplied > 0) {
+          try {
+            appendMigrationMarker(userEntry.name, file.slice(0, -5));
+          } catch (historyError) {
+            console.warn(
+              `Failed to append migration marker for ${file}:`,
+              historyError,
+            );
+          }
+        }
       } catch (error) {
         report.issues.push(
           `users/${userEntry.name}/characters/${file}: не удалось записать (${error instanceof Error ? error.message : 'unknown'})`,

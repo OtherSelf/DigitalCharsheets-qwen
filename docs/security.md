@@ -30,6 +30,7 @@ current code.
 | Account credentials (`passwordHash`, `recoveryPhrase`) | `users/<uid>/user.json` | Account takeover |
 | Session signing key | `DCS_SESSION_SECRET` or `<data-dir>/.session-secret` | Forgery of any session |
 | Character sheets | `users/<uid>/characters/<id>.json` | Private game data of every player |
+| Character history | `users/<uid>/history/<id>.jsonl` | Old values can include notes/backstory that were later deleted from the sheet |
 | Read-only share links | `<data-dir>/shares.json` (SHA-256 only) | Bearer access to one sheet without a session; the raw tokens live only in the owner's dialog/browser |
 | Login index | `index/logins.json` | Maps a login to a uid (the uid is the file path) |
 | Ability to sign in as another user | `/api/auth*` | Everything else follows |
@@ -242,8 +243,11 @@ re-hashing; anything unexpected there is worth reading after an upgrade.
 
 ## Data directory privacy
 
-- Commit only code. `<data-dir>` — profiles, sheets, indexes, secrets — is
-  runtime state and is never versioned.
+- Commit only code. `<data-dir>` — profiles, sheets, history logs, indexes,
+  secrets — is runtime state and is never versioned.
+- History files keep old values even after the owner removes them from the
+  current sheet; the owner-only history screen has an explicit “clear history”
+  action, and deleting the sheet/account removes the log.
 - Backups copy `<data-dir>` as a whole and are stored with the same care as
   credentials.
 - Rotating `.session-secret` (or `DCS_SESSION_SECRET`) invalidates every

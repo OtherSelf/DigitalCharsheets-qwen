@@ -111,6 +111,19 @@ export interface HistoryTruncationMarker {
 /** Что можно встретить в JSONL. */
 export type HistoryRecord = HistoryRevision | HistoryTruncationMarker;
 
+/** Результат чтения файла истории (до группировки в сессии). */
+export interface HistoryReadResult {
+  revisions: HistoryRevision[];
+  /** true — в начале файла есть маркер компакции. */
+  truncated: boolean;
+  /** Сколько ревизий удалено компакцией. */
+  dropped: number;
+  bytes: number;
+  oldestAt: string | null;
+  /** Сколько строк не разобралось (битый хвост/чужая запись). */
+  parseErrors: number;
+}
+
 /** Метка создания/миграции внутри сессии — без before/after. */
 export interface HistoryMarker {
   source: HistorySource;
