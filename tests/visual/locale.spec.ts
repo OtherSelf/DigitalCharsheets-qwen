@@ -8,6 +8,7 @@ import {
   prepare,
   screenshotElement,
   screenshotPage,
+  sheetPath,
 } from './helpers';
 
 /**
@@ -55,7 +56,7 @@ test.describe('D&D — русская локаль', () => {
     { tag: '@desktop' },
     async ({ page, context }) => {
       await prepare(context, { language: 'ru' });
-      await openApp(page, `/${getState().dndId}`);
+      await openApp(page, sheetPath(getState().dndId));
 
       await expect(
         page.getByText('Характеристики', { exact: true }).first(),
@@ -89,7 +90,7 @@ test.describe('D&D — русская локаль', () => {
     async ({ page, context }) => {
       await page.setViewportSize({ width: 1920, height: 1600 });
       await prepare(context, { language: 'ru' });
-      await openApp(page, `/${getState().dndId}`);
+      await openApp(page, sheetPath(getState().dndId));
 
       const stats = page.locator('#stats-card:visible').first();
       await startEditing(stats);
@@ -125,7 +126,7 @@ test.describe('D&D — русская локаль', () => {
     { tag: '@mobile' },
     async ({ page, context }) => {
       await prepare(context, { language: 'ru' });
-      await openApp(page, `/${getState().dndId}`);
+      await openApp(page, sheetPath(getState().dndId));
 
       await expect(
         page
@@ -153,7 +154,7 @@ test.describe('D&D — русская локаль', () => {
     { tag: '@mobile' },
     async ({ page, context }) => {
       await prepare(context, { language: 'ru' });
-      await openApp(page, `/${getState().dndId}`);
+      await openApp(page, sheetPath(getState().dndId));
 
       const statsBar = page.getByTestId('compact-stats-bar');
       await statsBar.getByTestId('compact-stats-edit-button').click();
@@ -187,7 +188,7 @@ test.describe('Dark Heresy — русская локаль', () => {
     { tag: '@desktop' },
     async ({ page, context }) => {
       await prepare(context, { language: 'ru' });
-      await openApp(page, `/${getState().dhId}`);
+      await openApp(page, sheetPath(getState().dhId));
 
       await expect(
         page.getByText('Снаряжение', { exact: true }).first(),
@@ -218,7 +219,7 @@ test.describe('Dark Heresy — русская локаль', () => {
     async ({ page, context }) => {
       await page.setViewportSize({ width: 1920, height: 1600 });
       await prepare(context, { language: 'ru' });
-      await openApp(page, `/${getState().dhId}`);
+      await openApp(page, sheetPath(getState().dhId));
 
       const characteristics = page
         .locator('#characteristics-card:visible')
@@ -254,7 +255,7 @@ test.describe('Dark Heresy — русская локаль', () => {
     { tag: '@mobile' },
     async ({ page, context }) => {
       await prepare(context, { language: 'ru' });
-      await openApp(page, `/${getState().dhId}`);
+      await openApp(page, sheetPath(getState().dhId));
 
       await expect(
         page.getByText('Характеристики', { exact: true }).first(),
@@ -279,7 +280,7 @@ test.describe('Dark Heresy — русская локаль', () => {
     { tag: '@mobile' },
     async ({ page, context }) => {
       await prepare(context, { language: 'ru' });
-      await openApp(page, `/${getState().dhId}`);
+      await openApp(page, sheetPath(getState().dhId));
 
       const characteristics = page.getByTestId('characteristics-compact');
       await startEditing(characteristics);

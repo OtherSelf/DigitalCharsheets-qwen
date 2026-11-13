@@ -1,6 +1,12 @@
 import { expect, test } from '@playwright/test';
 
-import { expectNoRawI18nKeys, getState, openApp, prepare } from './helpers';
+import {
+  expectNoRawI18nKeys,
+  getState,
+  openApp,
+  prepare,
+  sheetPath,
+} from './helpers';
 
 /**
  * ─── LANDMARK: RESILIENCE UI ──────────────────────────────────────────────
@@ -18,7 +24,7 @@ test.describe('устойчивость загрузки', () => {
     context,
   }) => {
     await prepare(context, { language: 'ru' });
-    await openApp(page, '/this-character-does-not-exist');
+    await openApp(page, sheetPath('this-character-does-not-exist'));
 
     const state = page.getByTestId('sheet-not-found');
     await expect(state).toBeVisible();
@@ -74,7 +80,7 @@ test.describe('устойчивость загрузки', () => {
       await route.continue();
     });
 
-    await openApp(page, `/${getState().dndId}`);
+    await openApp(page, sheetPath(getState().dndId));
     const errorState = page.getByTestId('sheet-load-error');
     await expect(errorState).toBeVisible();
     await expect(

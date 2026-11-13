@@ -712,10 +712,20 @@ await check('GET /api/characters → созданный лист в списке
   );
 });
 
-await check('GET /<id> → 200 (страница листа)', async () => {
-  const res = await request(`/${encodeURIComponent(characterId)}`);
-  assertStatus(res, 200, `GET /${characterId}`);
+await check('GET /character/<id> → 200 (страница листа)', async () => {
+  const res = await request(`/character/${encodeURIComponent(characterId)}`);
+  assertStatus(res, 200, `GET /character/${characterId}`);
 });
+
+// Старый корневой маршрут листа удалён осознанно (без редиректа):
+// `/character/...` — единственный адрес листа, прочие пути дают 404.
+await check(
+  'GET /<id> → 404 (старый корневой маршрут листа удалён)',
+  async () => {
+    const res = await request(`/${encodeURIComponent(characterId)}`);
+    assertStatus(res, 404, `GET /${characterId} (legacy)`);
+  },
+);
 
 await check('GET /api/export?characterId → JSON персонажа', async () => {
   const res = await api(

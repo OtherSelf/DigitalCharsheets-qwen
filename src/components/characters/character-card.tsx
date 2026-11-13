@@ -39,6 +39,7 @@ import {
   exportCharacterToExcel,
   exportCharacterToJSON,
 } from '@/lib/export-utils';
+import { characterPath } from '@/lib/routes';
 import { type Character } from '@/lib/types';
 
 type CharacterCardProps = {
@@ -113,7 +114,7 @@ export function CharacterCard({ character }: CharacterCardProps) {
         <div className="actions-wrapper flex min-w-0 flex-1 items-center justify-end gap-1 p-2 sm:gap-2">
           <Button asChild size="sm" className="h-8 min-w-0 flex-1 px-2 sm:h-9">
             <Link
-              href={`/${character.id}`}
+              href={characterPath(character.id)}
               className="block w-full truncate text-center"
             >
               {t('common.view')}
@@ -187,7 +188,9 @@ export function CharacterCard({ character }: CharacterCardProps) {
       </CardContent>
       <CardFooter className="flex items-center justify-between gap-2 p-3 pt-0 sm:p-4">
         <Button asChild className="w-full text-xs sm:text-sm">
-          <Link href={`/${character.id}`}>{t('common.viewSheet')}</Link>
+          <Link href={characterPath(character.id)}>
+            {t('common.viewSheet')}
+          </Link>
         </Button>
         <Button
           variant="outline"

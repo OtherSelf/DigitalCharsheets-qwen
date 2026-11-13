@@ -7,6 +7,7 @@ import {
   openDialog,
   prepare,
   screenshotPage,
+  sheetPath,
   waitForScrollSettled,
 } from './helpers';
 
@@ -37,7 +38,7 @@ test.describe('планшет 1024x768', () => {
 
   test('лист D&D — верх (en)', { tag: '@fast' }, async ({ page, context }) => {
     await prepare(context);
-    await openApp(page, `/${getState().dndId}`);
+    await openApp(page, sheetPath(getState().dndId));
     await expect(
       page.getByRole('heading', { name: 'Seraphina Vael' }),
     ).toBeVisible();
@@ -56,7 +57,7 @@ test.describe('планшет 1024x768', () => {
     { tag: '@fast' },
     async ({ page, context }) => {
       await prepare(context);
-      await openApp(page, `/${getState().dhId}`);
+      await openApp(page, sheetPath(getState().dhId));
       await expect(
         page.getByRole('heading', { name: 'Lucius Varn' }),
       ).toBeVisible();
@@ -70,7 +71,7 @@ test.describe('планшет 1024x768', () => {
     { tag: '@fast' },
     async ({ page, context }) => {
       await prepare(context);
-      await openApp(page, `/${getState().dhId}`);
+      await openApp(page, sheetPath(getState().dhId));
 
       // Компактный вид на планшете включается переключателем в шапке:
       // появляется левое меню, лист получает `is-compact`, видна одна секция.
@@ -104,7 +105,7 @@ test.describe('планшет 1024x768', () => {
     { tag: '@fast' },
     async ({ page, context }) => {
       await prepare(context);
-      await openApp(page, `/${getState().dndId}`);
+      await openApp(page, sheetPath(getState().dndId));
 
       await page
         .getByTestId('app-header')
@@ -162,7 +163,7 @@ test.describe('планшет 1024x768', () => {
     { tag: '@fast' },
     async ({ page, context }) => {
       await prepare(context);
-      await openApp(page, `/${getState().dhId}`);
+      await openApp(page, sheetPath(getState().dhId));
       const dialog = await openDialog(page, 'Notes', false);
       await expect(
         dialog.getByRole('heading', { name: 'Character Notes' }),

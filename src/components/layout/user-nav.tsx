@@ -49,7 +49,7 @@ export function UserNav() {
   // С дашборда возврат и так ведёт на «/», поэтому `from` не нужен: URL
   // остаётся чистым (/settings). С листа персонажа параметр сохраняем, чтобы
   // стрелка «назад» вернула именно туда. Слэш в query не кодируем — строка
-  // читается как /settings?from=/<id>, без %2F. На самой /settings повторный
+  // читается как /settings?from=/character/<id>, без %2F. На самой /settings повторный
   // переход из меню не должен делать `from=/settings`.
   const settingsHref =
     pathname && pathname !== '/' && pathname !== '/settings'

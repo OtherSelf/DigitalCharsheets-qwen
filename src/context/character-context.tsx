@@ -21,6 +21,7 @@ import {
   resolvePendingUpdate,
   type DraftCharacter,
 } from '@/lib/pending-draft';
+import { characterPath } from '@/lib/routes';
 import {
   createSaveQueue,
   type SaveMeta,
@@ -559,7 +560,7 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
             const needsSetup = !user.hasRecoveryPhrase
               ? '?setup_phrase=true'
               : '';
-            router.push(`/${newCharacter.id}${needsSetup}`);
+            router.push(`${characterPath(newCharacter.id)}${needsSetup}`);
             // Список аккаунта всё равно грузим: дашборд не должен врать.
             loadCharacters();
           })
@@ -741,7 +742,7 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
       setPendingDraft(null);
       applyCharacters((prev) => [...prev, newCharacter]);
       const needsSetup = !user.hasRecoveryPhrase ? '?setup_phrase=true' : '';
-      router.push(`/${newCharacter.id}${needsSetup}`);
+      router.push(`${characterPath(newCharacter.id)}${needsSetup}`);
     } catch (error) {
       console.error('Failed to create pending character:', error);
       toast({

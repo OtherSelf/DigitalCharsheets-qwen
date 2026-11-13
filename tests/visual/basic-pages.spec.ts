@@ -9,6 +9,7 @@ import {
   openDialog,
   openMobileSection,
   prepare,
+  sheetPath,
   signInViaUI,
 } from './helpers';
 
@@ -249,8 +250,8 @@ test.describe('адаптивность', () => {
 
     for (const path of [
       ...PAGES,
-      `/${getState().dndId}`,
-      `/${getState().dhId}`,
+      sheetPath(getState().dndId),
+      sheetPath(getState().dhId),
     ]) {
       await openApp(page, path);
       await expectNoHorizontalOverflow(page);
@@ -278,8 +279,8 @@ test.describe('адаптивность', () => {
 
     for (const path of [
       ...PAGES,
-      `/${getState().dndId}`,
-      `/${getState().dhId}`,
+      sheetPath(getState().dndId),
+      sheetPath(getState().dhId),
     ]) {
       await openApp(page, path);
       await expectNoHorizontalOverflow(page);
@@ -352,7 +353,7 @@ test.describe('адаптивность', () => {
     { tag: ['@fast', '@desktop'] },
     async ({ page, context }) => {
       await prepare(context);
-      await openApp(page, `/${getState().dhId}`);
+      await openApp(page, sheetPath(getState().dhId));
 
       const header = page.locator('header.app-header');
       const sheetActions = header.locator('.header-sheet-actions');
@@ -493,7 +494,7 @@ test.describe('адаптивность', () => {
     context,
   }) => {
     await prepare(context);
-    await openApp(page, `/${getState().dndId}`);
+    await openApp(page, sheetPath(getState().dndId));
 
     const nav = page.getByRole('navigation');
     if (isMobile()) {
@@ -512,7 +513,7 @@ test.describe('адаптивность', () => {
     { tag: '@mobile' },
     async ({ page, context }) => {
       await prepare(context);
-      await openApp(page, `/${getState().dndId}`);
+      await openApp(page, sheetPath(getState().dndId));
 
       for (const [label, selector] of [
         ['Ability Scores', '#saving-throws-card'],
@@ -531,7 +532,7 @@ test.describe('адаптивность', () => {
     { tag: '@mobile' },
     async ({ page, context }) => {
       await prepare(context);
-      await openApp(page, `/${getState().dhId}`);
+      await openApp(page, sheetPath(getState().dhId));
 
       for (const [label, selector, sectionId] of [
         ['Skills', 'main', undefined],
@@ -573,7 +574,7 @@ test.describe('адаптивность', () => {
     { tag: '@desktop' },
     async ({ page, context }) => {
       await prepare(context);
-      await openApp(page, `/${getState().dhId}`);
+      await openApp(page, sheetPath(getState().dhId));
 
       const header = page.getByTestId('app-header');
       const notes = header.getByRole('button', { name: 'Notes', exact: true });
@@ -629,7 +630,7 @@ test.describe('адаптивность', () => {
     { tag: '@mobile' },
     async ({ page, context }) => {
       await prepare(context);
-      await openApp(page, `/${getState().dhId}`);
+      await openApp(page, sheetPath(getState().dhId));
 
       // Ровно путь пользователя: профиль → Display Settings → UI Scale 80%.
       // Пока диалог открыт, Radix ставит body.style.overflow = 'hidden'
@@ -731,7 +732,7 @@ test.describe('адаптивность', () => {
             /* storage недоступен — не критично */
           }
         }, scale);
-        await openApp(page, `/${getState().dhId}`);
+        await openApp(page, sheetPath(getState().dhId));
         await page.waitForFunction(
           (value) =>
             getComputedStyle(document.documentElement)
@@ -849,8 +850,8 @@ test(
       await page.setViewportSize({ width, height: 900 });
       for (const path of [
         ...PAGES,
-        `/${getState().dndId}`,
-        `/${getState().dhId}`,
+        sheetPath(getState().dndId),
+        sheetPath(getState().dhId),
       ]) {
         await openApp(page, path);
         await expectNoHorizontalOverflow(page);
@@ -886,8 +887,8 @@ test('нет дублей id на страницах', async ({ page, context })
   // префикс `companion-`.
   for (const path of [
     '/',
-    `/${getState().dndId}`,
-    `/${getState().dhId}`,
+    sheetPath(getState().dndId),
+    sheetPath(getState().dhId),
     '/settings',
     '/stats-editor',
   ]) {
@@ -898,7 +899,7 @@ test('нет дублей id на страницах', async ({ page, context })
 
   // И с открытым диалогом поверх листа (на телефоне он открывается из
   // компактного сайдбара, на десктопе — из шапки; helper умеет оба пути).
-  await openApp(page, `/${getState().dhId}`);
+  await openApp(page, sheetPath(getState().dhId));
   await openDialog(page, 'Notes', isMobile());
   await page.waitForTimeout(300);
   expect(await duplicates(), 'лист с открытым диалогом: дубли id').toEqual([]);
@@ -909,7 +910,7 @@ test(
   { tag: '@desktop' },
   async ({ page, context }) => {
     await prepare(context);
-    await openApp(page, `/${getState().dhId}`);
+    await openApp(page, sheetPath(getState().dhId));
 
     const header = page.getByTestId('app-header');
     const toggle = header.getByRole('button', {
@@ -999,7 +1000,7 @@ test(
 
     for (const width of [768, 1024, 1280]) {
       await page.setViewportSize({ width, height: 900 });
-      await openApp(page, `/${id}`);
+      await openApp(page, sheetPath(id));
 
       const header = page.locator('header.app-header');
       await expect
@@ -1021,7 +1022,7 @@ test.describe('вид листа: компактный и обычный', () =>
     { tag: ['@fast', '@desktop'] },
     async ({ page, context }) => {
       await prepare(context);
-      await openApp(page, `/${getState().dhId}`);
+      await openApp(page, sheetPath(getState().dhId));
 
       const toggle = page
         .getByTestId('app-header')
@@ -1078,7 +1079,7 @@ test.describe('вид листа: компактный и обычный', () =>
     async ({ page, context }) => {
       await prepare(context);
       await page.setViewportSize({ width: 1024, height: 900 });
-      await openApp(page, `/${getState().dndId}`);
+      await openApp(page, sheetPath(getState().dndId));
 
       await page
         .getByTestId('app-header')
@@ -1155,7 +1156,7 @@ test.describe('вид листа: компактный и обычный', () =>
             .map(([dupId, count]) => `${dupId} x${count}`);
         });
 
-      await openApp(page, `/${id}`);
+      await openApp(page, sheetPath(id));
       await page.waitForTimeout(600);
       expect(await duplicates(), 'обычный вид: дубли id').toEqual([]);
 
@@ -1237,7 +1238,7 @@ test.describe('синхронизация между вкладками', () => 
     expect([200, 201], 'первый персонаж').toContain(first.status());
     const { id: firstId } = (await first.json()) as { id: string };
 
-    await page.goto(`/${firstId}`, { waitUntil: 'domcontentloaded' });
+    await page.goto(sheetPath(firstId), { waitUntil: 'domcontentloaded' });
     await expect(
       page.getByRole('heading', { name: 'First Tab Character' }),
     ).toBeVisible();
@@ -1290,7 +1291,7 @@ test.describe('синхронизация между вкладками', () => 
 test.describe('содержимое листа', () => {
   test('D&D: ключевые значения на месте', async ({ page, context }) => {
     await prepare(context);
-    await openApp(page, `/${getState().dndId}`);
+    await openApp(page, sheetPath(getState().dndId));
 
     await expectNoHorizontalOverflow(page);
     if (!isMobile()) {
@@ -1313,7 +1314,7 @@ test.describe('содержимое листа', () => {
 
   test('Dark Heresy: ключевые значения на месте', async ({ page, context }) => {
     await prepare(context);
-    await openApp(page, `/${getState().dhId}`);
+    await openApp(page, sheetPath(getState().dhId));
 
     await expectNoHorizontalOverflow(page);
     if (!isMobile()) {

@@ -6,6 +6,7 @@ import {
   openDialog,
   prepare,
   screenshotPage,
+  sheetPath,
 } from './helpers';
 
 const isMobile = () => test.info().project.name === 'mobile';
@@ -21,7 +22,7 @@ const isMobile = () => test.info().project.name === 'mobile';
 test.describe('диалоги — журнал заданий', () => {
   test('D&D — en', async ({ page, context }) => {
     await prepare(context);
-    await openApp(page, `/${getState().dndId}`);
+    await openApp(page, sheetPath(getState().dndId));
 
     const dialog = await openDialog(page, 'Quest Journal', isMobile());
     await expect(
@@ -34,7 +35,7 @@ test.describe('диалоги — журнал заданий', () => {
 
   test('Dark Heresy — en', async ({ page, context }) => {
     await prepare(context);
-    await openApp(page, `/${getState().dhId}`);
+    await openApp(page, sheetPath(getState().dhId));
 
     const dialog = await openDialog(page, 'Quest Journal', isMobile());
     await expect(
@@ -49,7 +50,7 @@ test.describe('диалоги — журнал заданий', () => {
 
   test('D&D — ru', { tag: '@desktop' }, async ({ page, context }) => {
     await prepare(context, { language: 'ru' });
-    await openApp(page, `/${getState().dndId}`);
+    await openApp(page, sheetPath(getState().dndId));
 
     const dialog = await openDialog(page, 'Журнал заданий', false);
     await expect(dialog.getByText('The Missing Ninth Page')).toBeVisible();
@@ -59,7 +60,7 @@ test.describe('диалоги — журнал заданий', () => {
 
   test('Dark Heresy — ru', { tag: '@desktop' }, async ({ page, context }) => {
     await prepare(context, { language: 'ru' });
-    await openApp(page, `/${getState().dhId}`);
+    await openApp(page, sheetPath(getState().dhId));
 
     const dialog = await openDialog(page, 'Журнал заданий', false);
     await expect(
@@ -73,7 +74,7 @@ test.describe('диалоги — журнал заданий', () => {
 test.describe('диалоги — домашние правила', () => {
   test('D&D — en (desktop)', { tag: '@desktop' }, async ({ page, context }) => {
     await prepare(context);
-    await openApp(page, `/${getState().dndId}`);
+    await openApp(page, sheetPath(getState().dndId));
 
     const dialog = await openDialog(page, 'House Rules', false);
     await expect(
@@ -92,7 +93,7 @@ test.describe('диалоги — домашние правила', () => {
     { tag: '@desktop' },
     async ({ page, context }) => {
       await prepare(context);
-      await openApp(page, `/${getState().dhId}`);
+      await openApp(page, sheetPath(getState().dhId));
 
       const dialog = await openDialog(page, 'House Rules', false);
       await expect(dialog.getByText('Critical hits on 96–00')).toBeVisible();
@@ -103,7 +104,7 @@ test.describe('диалоги — домашние правила', () => {
 
   test('D&D — en (mobile)', { tag: '@mobile' }, async ({ page, context }) => {
     await prepare(context);
-    await openApp(page, `/${getState().dndId}`);
+    await openApp(page, sheetPath(getState().dndId));
 
     const dialog = await openDialog(page, 'House Rules', true);
     await dialog.getByRole('tab', { name: 'Custom Rules' }).click();
@@ -119,7 +120,7 @@ test.describe('диалоги — домашние правила', () => {
     { tag: '@mobile' },
     async ({ page, context }) => {
       await prepare(context);
-      await openApp(page, `/${getState().dhId}`);
+      await openApp(page, sheetPath(getState().dhId));
 
       const dialog = await openDialog(page, 'House Rules', true);
       await expect(dialog.getByText('Critical hits on 96–00')).toBeVisible();
@@ -130,7 +131,7 @@ test.describe('диалоги — домашние правила', () => {
 
   test('D&D — ru', { tag: '@desktop' }, async ({ page, context }) => {
     await prepare(context, { language: 'ru' });
-    await openApp(page, `/${getState().dndId}`);
+    await openApp(page, sheetPath(getState().dndId));
 
     const dialog = await openDialog(page, 'Домашние правила', false);
     await dialog.getByRole('tab', { name: 'Собственные правила' }).click();
@@ -145,7 +146,7 @@ test.describe('диалоги — домашние правила', () => {
 test.describe('диалоги — заметки', () => {
   test('D&D — en (desktop)', { tag: '@desktop' }, async ({ page, context }) => {
     await prepare(context);
-    await openApp(page, `/${getState().dndId}`);
+    await openApp(page, sheetPath(getState().dndId));
 
     const dialog = await openDialog(page, 'Notes', false);
     await expect(
@@ -163,7 +164,7 @@ test.describe('диалоги — заметки', () => {
     { tag: '@desktop' },
     async ({ page, context }) => {
       await prepare(context);
-      await openApp(page, `/${getState().dhId}`);
+      await openApp(page, sheetPath(getState().dhId));
 
       const dialog = await openDialog(page, 'Notes', false);
       await expect(dialog.locator('textarea')).toHaveValue(
@@ -176,7 +177,7 @@ test.describe('диалоги — заметки', () => {
 
   test('D&D — en (mobile)', { tag: '@mobile' }, async ({ page, context }) => {
     await prepare(context);
-    await openApp(page, `/${getState().dndId}`);
+    await openApp(page, sheetPath(getState().dndId));
 
     const dialog = await openDialog(page, 'Notes', true);
     await expect(dialog.locator('textarea')).toHaveValue(
@@ -191,7 +192,7 @@ test.describe('диалоги — заметки', () => {
     { tag: '@mobile' },
     async ({ page, context }) => {
       await prepare(context);
-      await openApp(page, `/${getState().dhId}`);
+      await openApp(page, sheetPath(getState().dhId));
 
       const dialog = await openDialog(page, 'Notes', true);
       await expect(dialog.locator('textarea')).toHaveValue(
@@ -204,7 +205,7 @@ test.describe('диалоги — заметки', () => {
 
   test('Dark Heresy — ru', { tag: '@desktop' }, async ({ page, context }) => {
     await prepare(context, { language: 'ru' });
-    await openApp(page, `/${getState().dhId}`);
+    await openApp(page, sheetPath(getState().dhId));
 
     const dialog = await openDialog(page, 'Заметки', false);
     await expect(
@@ -218,7 +219,7 @@ test.describe('диалоги — заметки', () => {
 test.describe('диалоги — божественные дары (только D&D)', () => {
   test('desktop — en', { tag: '@desktop' }, async ({ page, context }) => {
     await prepare(context);
-    await openApp(page, `/${getState().dndId}`);
+    await openApp(page, sheetPath(getState().dndId));
 
     await page.getByTestId('add-boon-button').click();
     const dialog = page.getByRole('dialog');
@@ -231,7 +232,7 @@ test.describe('диалоги — божественные дары (тольк�
 
   test('mobile — en', { tag: '@mobile' }, async ({ page, context }) => {
     await prepare(context);
-    await openApp(page, `/${getState().dndId}`);
+    await openApp(page, sheetPath(getState().dndId));
 
     await page.getByTestId('add-boon-button').click();
     const dialog = page.getByRole('dialog');
@@ -244,7 +245,7 @@ test.describe('диалоги — божественные дары (тольк�
 
   test('desktop — ru', { tag: '@desktop' }, async ({ page, context }) => {
     await prepare(context, { language: 'ru' });
-    await openApp(page, `/${getState().dndId}`);
+    await openApp(page, sheetPath(getState().dndId));
 
     await page.getByTestId('add-boon-button').click();
     const dialog = page.getByRole('dialog');

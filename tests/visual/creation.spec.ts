@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 
-import { prepare, registerViaUI, signInViaUI } from './helpers';
+import { prepare, registerViaUI, sheetIdFromUrl, signInViaUI } from './helpers';
 
 /**
  * Функциональные (без эталонных PNG) сценарии «авторизация → создание
@@ -86,7 +86,7 @@ async function waitForSheetRedirect(page: Page): Promise<string> {
   await page.waitForURL((url) => !url.pathname.startsWith('/new'), {
     timeout: 30_000,
   });
-  const id = new URL(page.url()).pathname.replace(/^\//, '');
+  const id = sheetIdFromUrl(page);
   expect(id, 'после создания открывается лист /<id>').not.toBe('');
   return id;
 }
@@ -395,7 +395,7 @@ test.describe('черновик гостя и вход в аккаунт', () =>
       (url) => url.pathname !== '/' && !url.pathname.startsWith('/new'),
       { timeout: 30_000 },
     );
-    const createdId = new URL(page.url()).pathname.replace(/^\//, '');
+    const createdId = sheetIdFromUrl(page);
     expect(createdId, 'после кнопки открывается лист /<id>').not.toBe('');
 
     const characters = await fetchCharacters(page);
@@ -456,7 +456,7 @@ test.describe('черновик гостя и вход в аккаунт', () =>
       recoveryPhrase: GUEST_PHRASE,
     });
 
-    const createdId = new URL(page.url()).pathname.replace(/^\//, '');
+    const createdId = sheetIdFromUrl(page);
     expect(
       createdId,
       'после регистрации открывается лист черновика, а не дашборд',

@@ -1,6 +1,12 @@
 import { expect, test } from '@playwright/test';
 
-import { getState, openApp, prepare, screenshotPage } from './helpers';
+import {
+  getState,
+  openApp,
+  prepare,
+  screenshotPage,
+  sheetPath,
+} from './helpers';
 
 /**
  * Темы проверяются по представителю, а не по полной матрице
@@ -74,7 +80,7 @@ test.describe('темы', () => {
     { tag: '@desktop' },
     async ({ page, context }) => {
       await prepare(context, { theme: 'dark' });
-      await openApp(page, `/${getState().dndId}`);
+      await openApp(page, sheetPath(getState().dndId));
 
       await expect(
         page.getByRole('heading', { name: 'Seraphina Vael' }),
@@ -88,7 +94,7 @@ test.describe('темы', () => {
     { tag: '@desktop' },
     async ({ page, context }) => {
       await prepare(context, { theme: 'warm' });
-      await openApp(page, `/${getState().dndId}`);
+      await openApp(page, sheetPath(getState().dndId));
 
       await expect(
         page.getByRole('heading', { name: 'Seraphina Vael' }),
@@ -102,7 +108,7 @@ test.describe('темы', () => {
     { tag: '@desktop' },
     async ({ page, context }) => {
       await prepare(context, { theme: 'dark' });
-      await openApp(page, `/${getState().dhId}`);
+      await openApp(page, sheetPath(getState().dhId));
 
       await expect(
         page.getByRole('heading', { name: 'Lucius Varn' }),
@@ -116,7 +122,7 @@ test.describe('темы', () => {
     { tag: '@desktop' },
     async ({ page, context }) => {
       await prepare(context, { theme: 'warm' });
-      await openApp(page, `/${getState().dhId}`);
+      await openApp(page, sheetPath(getState().dhId));
 
       await expect(
         page.getByRole('heading', { name: 'Lucius Varn' }),
@@ -130,7 +136,7 @@ test.describe('темы', () => {
     { tag: '@mobile' },
     async ({ page, context }) => {
       await prepare(context, { theme: 'dark' });
-      await openApp(page, `/${getState().dndId}`);
+      await openApp(page, sheetPath(getState().dndId));
 
       await screenshotPage(page, 'sheet-dnd-mobile-dark-en.png');
     },
@@ -141,7 +147,7 @@ test.describe('темы', () => {
     { tag: '@mobile' },
     async ({ page, context }) => {
       await prepare(context, { theme: 'warm' });
-      await openApp(page, `/${getState().dndId}`);
+      await openApp(page, sheetPath(getState().dndId));
 
       await screenshotPage(page, 'sheet-dnd-mobile-warm-en.png');
     },
