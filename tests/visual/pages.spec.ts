@@ -242,7 +242,8 @@ test.describe('login: вход, регистрация, восстановлен
     const relogin = await context.request.post('/api/auth', {
       data: { username: account.username, password: account.password },
     });
-    expect(relogin.status(), 'удалённый аккаунт не должен входить').toBe(404);
+    // Ответ неотличим от «неверный пароль»: аккаунта нет, но и подсказки нет.
+    expect(relogin.status(), 'удалённый аккаунт не должен входить').toBe(401);
     expect(errors, 'ошибки JS при удалении аккаунта').toEqual([]);
   });
 });

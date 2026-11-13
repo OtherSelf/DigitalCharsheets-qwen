@@ -1,9 +1,15 @@
 import { NextResponse } from 'next/server';
 
+import { getGameModule } from '@/games/registry';
+import {
+  prepareNewCharacter,
+  sanitizeCharacterPayload,
+} from '@/lib/character-payload';
 import {
   requireModuleAccess,
   resolveRequestedSystemId,
 } from '@/lib/module-access';
+import { readJsonObject } from '@/lib/security/payload';
 import {
   getCharactersFromServer,
   saveCharacterToServer,
@@ -17,9 +23,10 @@ import { Character } from '@/lib/types';
  * знал логин, мог прочитать чужие листы. Теперь uid берётся из подписанной
  * cookie, а `userId` из запроса игнорируется.
  *
- * POST дополнительно проверяет видимость редакции для роли (этап 6):
- * user не может создать test/hidden даже прямым запросом; tester — test;
- * admin — любую.
+ * POST проверяет видимость редакции для роли (user не может создать
+ * test/hidden даже прямым запросом; tester — test; admin — любую) и валидирует
+ * тело схемой модуля (`module.schema`): лишние поля отбрасываются, неверная
+ * структура даёт `400` со списком полей, тело больше 1 МБ — `413`.
  */
 
 // Список листов текущего пользователя; uid — только из сессии.
@@ -35,16 +42,14 @@ export async function GET(request: Request) {
 
 // Создание листа: владелец — из сессии, доступ к редакции — по роли.
 export async function POST(request: Request) {
-  const body = (await request.json().catch(() => null)) as Record<
-    string,
-    unknown
-  > | null;
-  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+  const parsedBody = await readJsonObject(request);
+  if (!parsedBody.ok) {
     return NextResponse.json(
-      { success: false, error: 'Invalid JSON body.', reason: 'bad_request' },
-      { status: 400 },
+      { success: false, error: parsedBody.error, reason: parsedBody.reason },
+      { status: parsedBody.status },
     );
   }
+  const body = parsedBody.body;
 
   const access = requireModuleAccess(request, resolveRequestedSystemId(body));
   if (!access.ok) {
@@ -54,13 +59,43 @@ export async function POST(request: Request) {
     );
   }
 
-  const newCharacter: Character = {
-    ...body,
+  const gameModule = getGameModule(access.systemId);
+  if (!gameModule) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Не удалось определить игру/редакцию персонажа.',
+        reason: 'unknown_system',
+      },
+      { status: 400 },
+    );
+  }
+
+  // Служебные поля (id/userId/systemId/__*) и ключи вне схемы модуля в файл не
+  // попадают: сервер сам выдаёт id и владельца.
+  const { data } = sanitizeCharacterPayload(gameModule, body);
+
+  // Недостающие поля заполняет сама редакция (`createDefaults`): клиент может
+  // прислать частичный лист (черновик), а на диске должен лежать полный по
+  // схеме, иначе рендер упадёт на первом же отсутствующем поле.
+  const prepared = prepareNewCharacter(gameModule, data, {
     systemId: access.systemId,
     id: Date.now().toString(36) + Math.random().toString(36).substr(2),
     userId: access.uid,
-  } as unknown as Character;
+  });
+  if (!prepared.ok) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Character data does not match the game schema.',
+        reason: 'invalid_payload',
+        issues: prepared.issues,
+      },
+      { status: 400 },
+    );
+  }
 
-  saveCharacterToServer(access.uid, newCharacter);
-  return NextResponse.json(newCharacter, { status: 201 });
+  const character = prepared.character as unknown as Character;
+  saveCharacterToServer(access.uid, character);
+  return NextResponse.json(character, { status: 201 });
 }

@@ -676,6 +676,47 @@ await check('GET /api/import → 404 (маршрут удалён)', async () =>
   assertStatus(res, 404, 'GET /api/import');
 });
 
+// SEC-10: тело листа проверяется схемой редакции и ограничено по размеру.
+await check('PUT /api/characters/<id> с `stats` строкой → 400', async () => {
+  const res = await api(`/characters/${encodeURIComponent(characterId)}`, {
+    method: 'PUT',
+    body: { stats: 'строка вместо блока' },
+  });
+  assertStatus(res, 400, 'PUT /api/characters/<id> (неверная структура)');
+  const body = assertJson(res, 'PUT /api/characters/<id> (неверная структура)');
+  assert(
+    body.reason === 'invalid_payload',
+    `PUT: reason = ${body.reason}, ожидали invalid_payload`,
+  );
+});
+
+await check(
+  'PUT /api/characters/<id> с лишним полем → 200, поле не сохранено',
+  async () => {
+    const res = await api(`/characters/${encodeURIComponent(characterId)}`, {
+      method: 'PUT',
+      body: { evil: 'pwned', userId: 'someone-else' },
+    });
+    assertStatus(res, 200, 'PUT /api/characters/<id> (лишнее поле)');
+    const body = assertJson(res, 'PUT /api/characters/<id> (лишнее поле)');
+    assert(body.evil === undefined, 'PUT: лишнее поле попало в лист');
+    assert(body.userId === userId, `PUT: userId = ${body.userId}`);
+  },
+);
+
+await check('PUT /api/characters/<id> с телом > 1 МБ → 413', async () => {
+  const res = await api(`/characters/${encodeURIComponent(characterId)}`, {
+    method: 'PUT',
+    body: { backstory: 'x'.repeat(1_100_000) },
+  });
+  assertStatus(res, 413, 'PUT /api/characters/<id> (тело > 1 МБ)');
+  const body = assertJson(res, 'PUT /api/characters/<id> (тело > 1 МБ)');
+  assert(
+    body.reason === 'payload_too_large',
+    `PUT: reason = ${body.reason}, ожидали payload_too_large`,
+  );
+});
+
 await check('PUT /api/characters/<id> → правка сохраняется', async () => {
   const res = await api(`/characters/${encodeURIComponent(characterId)}`, {
     method: 'PUT',
