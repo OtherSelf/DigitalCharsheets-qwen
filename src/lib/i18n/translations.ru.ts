@@ -640,4 +640,46 @@ export const ruTranslations: Record<string, string> = {
   'admin.siteTitleReset': 'Сбросить',
   // ─── settings: роль в профиле ───
   'settings.role': 'Роль',
+  // ─── share: гостевая ссылка только для просмотра ───
+  'share.button': 'Ссылка для просмотра',
+  'share.dialogTitle': 'Ссылка только для просмотра',
+  'share.dialogDescription':
+    'Любой, у кого есть ссылка, увидит лист без входа. Редактирование остаётся у вас.',
+  'share.create': 'Создать ссылку',
+  'share.regenerate': 'Перевыпустить ссылку',
+  'share.revoke': 'Отозвать ссылку',
+  'share.revokeConfirmTitle': 'Отозвать ссылку?',
+  'share.revokeConfirmDesc':
+    'Старый адрес сразу перестанет работать. Новую ссылку можно выпустить позже.',
+  'share.regenerateConfirmTitle': 'Перевыпустить ссылку?',
+  'share.regenerateConfirmDesc':
+    'Текущий адрес сразу перестанет работать. Не забудьте скопировать новую ссылку.',
+  'share.copy': 'Копировать ссылку',
+  'share.copied': 'Ссылка скопирована',
+  'share.copyFailed': 'Не удалось скопировать. Выделите ссылку вручную.',
+  'share.statusActive': 'Активна',
+  'share.statusInactive': 'Активной ссылки нет',
+  'share.active': 'Ссылка активна.',
+  'share.noActive': 'Активной ссылки пока нет.',
+  'share.createdAt': 'Создана',
+  'share.expiresAt': 'Истекает',
+  'share.expiryLabel': 'Срок',
+  'share.expires7': '7 дней',
+  'share.expires30': '30 дней',
+  'share.expires90': '90 дней',
+  'share.expiresNever': 'До отзыва',
+  'share.linkOnce':
+    'Ссылка показывается один раз. Если потеряли — перевыпустите: старая перестанет работать.',
+  'share.warning':
+    'По ссылке виден весь лист, включая заметки, предысторию и журнал заданий.',
+  'share.readOnlyTitle': 'Просмотр по ссылке',
+  'share.readOnlyHint':
+    'Вы смотрите лист, которым поделились. Изменения не сохраняются.',
+  'share.invalidTitle': 'Ссылка недействительна',
+  'share.invalidDesc':
+    'Ссылка неизвестна, истекла или отозвана. Попросите владельца выпустить новую.',
+  'share.loadError': 'Не удалось загрузить статус ссылки.',
+  'share.createError': 'Не удалось создать ссылку.',
+  'share.revokeError': 'Не удалось отозвать ссылку.',
+  'share.expiryError': 'Выберите допустимый срок.',
 };

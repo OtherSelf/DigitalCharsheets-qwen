@@ -7,6 +7,7 @@ import { useParams } from 'next/navigation';
 import Loading from '@/app/loading';
 import { DynamicFavicon } from '@/components/dynamic-favicon';
 import { Header } from '@/components/header';
+import { ShareDialog } from '@/components/share/share-dialog';
 import { CharacterSheet } from '@/components/sheets/character-sheet';
 import { CompactSidebar } from '@/components/sheets/compact-sidebar';
 import { NotesDialog } from '@/components/sheets/notes-dialog';
@@ -33,7 +34,6 @@ import {
 } from '@/games/character-system';
 import type { SheetHandle } from '@/games/types';
 import { useGameUiSlots } from '@/hooks/use-game-ui-slots';
-import { cn } from '@/lib/utils';
 
 export default function CharacterPage() {
   const params = useParams<{ id: string }>();
@@ -45,12 +45,14 @@ export default function CharacterPage() {
     isCompactView,
     hasUnsavedChanges,
     setHasUnsavedChanges,
+    flushSaves,
   } = useCharacterContext();
   const { t } = useTranslation();
   const [activeCompactSection, setActiveCompactSection] =
     useState('info-section');
   const [notesOpen, setNotesOpen] = useState(false);
   const [journalOpen, setJournalOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
   const [pendingSectionId, setPendingSectionId] = useState<string | null>(null);
   const sheetRef = useRef<SheetHandle | null>(null);
 
@@ -177,6 +179,7 @@ export default function CharacterPage() {
           readOnly={isReadOnly}
           onNotesClick={isReadOnly ? undefined : () => setNotesOpen(true)}
           onJournalClick={isReadOnly ? undefined : () => setJournalOpen(true)}
+          onShareClick={isReadOnly ? undefined : () => setShareOpen(true)}
         />
         <div className="flex flex-1 overflow-hidden">
           {isCompactView && !isReadOnly && (
@@ -218,6 +221,15 @@ export default function CharacterPage() {
               character={character}
               open={journalOpen}
               onOpenChange={setJournalOpen}
+            />
+            <ShareDialog
+              characterId={character.id}
+              open={shareOpen}
+              onOpenChange={setShareOpen}
+              onBeforeCreate={async () => {
+                sheetRef.current?.saveAll();
+                await flushSaves();
+              }}
             />
           </>
         )}

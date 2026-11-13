@@ -751,6 +751,97 @@ await check('GET /api/import → 404 (маршрут удалён)', async () =>
   assertStatus(res, 404, 'GET /api/import');
 });
 
+// Гостевая ссылка: владелец выдаёт её под cookie, а страница открывается
+// полностью без сессии. Токен на диске не хранится в открытом виде.
+let shareToken = '';
+let shareUrl = '';
+await check('POST /api/characters/<id>/share → 201 и токен', async () => {
+  const res = await api(
+    `/characters/${encodeURIComponent(characterId)}/share`,
+    {
+      method: 'POST',
+      body: { expiresInDays: 30 },
+    },
+  );
+  assertStatus(res, 201, 'POST share');
+  const body = assertJson(res, 'POST share');
+  assert(body.success === true, 'POST share: success !== true');
+  assert(typeof body.token === 'string', 'POST share: нет token');
+  assert(
+    /^[A-Za-z0-9_-]{43}$/.test(body.token),
+    'POST share: token неверной формы',
+  );
+  assert(
+    body.path === `/share/${body.token}`,
+    'POST share: path не совпадает с токеном',
+  );
+  shareToken = body.token;
+  shareUrl = body.path;
+  return `token=${shareToken.slice(0, 6)}…`;
+});
+
+await check('GET /api/characters/<id>/share → статус без токена', async () => {
+  const res = await api(`/characters/${encodeURIComponent(characterId)}/share`);
+  assertStatus(res, 200, 'GET share');
+  const body = assertJson(res, 'GET share');
+  assert(body.active === true, 'GET share: ссылка не активна');
+  assert(body.token === undefined, 'GET share: токен не должен возвращаться');
+});
+
+await check('GET /share/<token> без cookie → 200, лист и баннер', async () => {
+  const res = await request(shareUrl, { auth: false });
+  assertStatus(res, 200, 'GET /share/<token>');
+  assert(
+    res.text.includes(dndCharacter.name),
+    'GET /share: в HTML нет имени персонажа',
+  );
+  assert(!res.text.includes(userId), 'GET /share: в HTML утёк userId');
+  assert(!res.text.includes(username), 'GET /share: в HTML утёк логин');
+  assert(
+    (res.headers.get('x-robots-tag') || '').includes('noindex'),
+    'GET /share: нет X-Robots-Tag noindex',
+  );
+  assert(
+    res.headers.get('cache-control') === 'no-store',
+    'GET /share: нет Cache-Control: no-store',
+  );
+  assert(
+    res.headers.get('referrer-policy') === 'no-referrer',
+    'GET /share: нет Referrer-Policy: no-referrer',
+  );
+});
+
+await check('shares.json хранит хэш, а не токен', async () => {
+  if (!opts.dataDir) return 'без --data-dir пропущено';
+  const sharesFile = path.join(opts.dataDir, 'shares.json');
+  assert(fs.existsSync(sharesFile), 'нет файла shares.json');
+  const raw = fs.readFileSync(sharesFile, 'utf8');
+  assert(!raw.includes(shareToken), 'shares.json: открытый токен на диске');
+});
+
+await check(
+  'DELETE /api/characters/<id>/share → 200 и заглушка у ссылки',
+  async () => {
+    const res = await api(
+      `/characters/${encodeURIComponent(characterId)}/share`,
+      {
+        method: 'DELETE',
+      },
+    );
+    assertStatus(res, 200, 'DELETE share');
+    const page = await request(shareUrl, { auth: false });
+    assertStatus(page, 200, 'GET /share после отзыва');
+    assert(
+      page.text.includes('shared-link-unavailable'),
+      'GET /share после отзыва: нет экрана недействительной ссылки',
+    );
+    assert(
+      !page.text.includes(dndCharacter.name),
+      'GET /share после отзыва: имя персонажа всё ещё в HTML',
+    );
+  },
+);
+
 // SEC-10: тело листа проверяется схемой редакции и ограничено по размеру.
 await check('PUT /api/characters/<id> с `stats` строкой → 400', async () => {
   const res = await api(`/characters/${encodeURIComponent(characterId)}`, {

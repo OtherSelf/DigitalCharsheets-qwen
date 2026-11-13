@@ -1,3 +1,4 @@
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -519,6 +520,62 @@ async function seedAdminFixtures(
   }
 }
 
+/**
+ * Гостевые ссылки для снимков `/share/*`. Публичная страница не требует
+ * логина, поэтому токен можно зафиксировать: он попадает в state и не меняет
+ * PNG от прогона к прогону. В `shares.json` лежит только SHA-256, как в
+ * приложении.
+ */
+function seedShareFixtures(workers: VisualAccount[]): void {
+  const dataDir = process.env.DCS_VISUAL_DATA_DIR;
+  if (!dataDir) {
+    console.log(
+      '[visual] /share: DCS_VISUAL_DATA_DIR не задан — снимки ссылки пропущены',
+    );
+    return;
+  }
+
+  const shares: Record<
+    string,
+    {
+      uid: string;
+      characterId: string;
+      createdAt: string;
+      expiresAt: null;
+      includeHistory: boolean;
+    }
+  > = {};
+
+  workers.forEach((worker, index) => {
+    if (!worker.dndId) return;
+    const token = shareTokenFor(index);
+    const hash = crypto
+      .createHash('sha256')
+      .update(token, 'utf8')
+      .digest('hex');
+    shares[hash] = {
+      uid: worker.user.uid,
+      characterId: worker.dndId,
+      createdAt: '2026-01-10T10:00:00.000Z',
+      expiresAt: null,
+      includeHistory: false,
+    };
+    worker.share = { token, characterId: worker.dndId };
+  });
+
+  fs.writeFileSync(
+    path.join(dataDir, 'shares.json'),
+    JSON.stringify({ version: 1, shares }, null, 2),
+    'utf8',
+  );
+}
+
+/** 43 символа base64url, уникальные на воркера. */
+function shareTokenFor(index: number): string {
+  const prefix = `visualshare${index.toString(36)}`;
+  return (prefix + 'A'.repeat(43)).slice(0, 43);
+}
+
 export default async function globalSetup(config: FullConfig): Promise<void> {
   const baseURL =
     process.env.DCS_VISUAL_BASE_URL ||
@@ -543,6 +600,8 @@ export default async function globalSetup(config: FullConfig): Promise<void> {
       }),
     );
   }
+
+  seedShareFixtures(workers);
 
   const admin = await seedAdminFixtures(baseURL);
 

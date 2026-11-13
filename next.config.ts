@@ -77,6 +77,19 @@ const nextConfig: NextConfig = {
         source: '/:path*',
         headers: securityHeaders,
       },
+      {
+        /*
+          Токен гостевой ссылки живёт в URL: его нельзя индексировать,
+          кэшировать и отдавать во внешний Referer. Правило идёт после общего,
+          чтобы переопределить Referrer-Policy именно на /share/*.
+        */
+        source: '/share/:path*',
+        headers: [
+          { key: 'X-Robots-Tag', value: 'noindex, nofollow, noarchive' },
+          { key: 'Cache-Control', value: 'no-store' },
+          { key: 'Referrer-Policy', value: 'no-referrer' },
+        ],
+      },
     ];
   },
 };

@@ -640,4 +640,46 @@ export const enTranslations: Record<string, string> = {
   'admin.siteTitleReset': 'Reset',
   // ─── settings: role in the profile ───
   'settings.role': 'Role',
+  // ─── share: read-only guest link ───
+  'share.button': 'Share read-only link',
+  'share.dialogTitle': 'Read-only link',
+  'share.dialogDescription':
+    'Anyone with this link can view the sheet without signing in. Editing stays with you.',
+  'share.create': 'Create link',
+  'share.regenerate': 'Issue a new link',
+  'share.revoke': 'Revoke link',
+  'share.revokeConfirmTitle': 'Revoke the link?',
+  'share.revokeConfirmDesc':
+    'The old URL will stop working immediately. You can issue a new link later.',
+  'share.regenerateConfirmTitle': 'Issue a new link?',
+  'share.regenerateConfirmDesc':
+    'The current URL will stop working immediately. Copy the new link after it is created.',
+  'share.copy': 'Copy link',
+  'share.copied': 'Link copied',
+  'share.copyFailed': 'Could not copy the link. Select it manually.',
+  'share.statusActive': 'Active',
+  'share.statusInactive': 'No active link',
+  'share.active': 'The link is active.',
+  'share.noActive': 'There is no active link yet.',
+  'share.createdAt': 'Created',
+  'share.expiresAt': 'Expires',
+  'share.expiryLabel': 'Lifetime',
+  'share.expires7': '7 days',
+  'share.expires30': '30 days',
+  'share.expires90': '90 days',
+  'share.expiresNever': 'Until revoked',
+  'share.linkOnce':
+    'The link is shown only once. If you lose it, issue a new one — the old link will stop working.',
+  'share.warning':
+    'The link shows the whole sheet, including notes, backstory and the quest journal.',
+  'share.readOnlyTitle': 'Read-only view',
+  'share.readOnlyHint':
+    'You are viewing a shared character sheet. Changes are not saved.',
+  'share.invalidTitle': 'Link is invalid',
+  'share.invalidDesc':
+    'This link is unknown, expired or revoked. Ask the owner for a new one.',
+  'share.loadError': 'Failed to load the link status.',
+  'share.createError': 'Failed to create the link.',
+  'share.revokeError': 'Failed to revoke the link.',
+  'share.expiryError': 'Choose a valid lifetime.',
 };

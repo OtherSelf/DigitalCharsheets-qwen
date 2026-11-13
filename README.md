@@ -16,6 +16,9 @@ data directory on the host you control.
   React sheet/form, discovered at build time. Adding one needs no core edits —
   see [docs/plugin-sdk.md](docs/plugin-sdk.md).
 - Local accounts with a recovery phrase, password change and account deletion.
+- **Read-only guest links:** share one sheet with a game master or friend; the
+  link needs no account, is revocable and expires, and the sheet cannot be
+  edited. See [docs/sharing.md](docs/sharing.md).
 - Admin panel at `/admin`: users, roles, password resets, blocking, deletion, a
   read-only list of a user's sheets, and plugin management (visibility,
   enabled, versions, conformance, demo links).

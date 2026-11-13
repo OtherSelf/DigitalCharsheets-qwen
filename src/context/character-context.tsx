@@ -35,7 +35,7 @@ import { useLocalAuth } from './local-auth-context';
 export const MOBILE_BREAKPOINT = 768;
 export const DESKTOP_BREAKPOINT = 1300;
 
-interface CharacterContextType {
+export interface CharacterContextType {
   characters: Character[];
   getCharacter: (id: string) => Character | undefined;
   addCharacter: (
@@ -77,9 +77,15 @@ interface CharacterContextType {
   setHideNotes: (val: boolean) => void;
   showEditButtons: boolean;
   setShowEditButtons: (val: boolean) => void;
+  /**
+   * Дождаться сохранения того, что уже в очереди. Нужно перед действиями,
+   * которые читают лист с сервера (создание гостевой ссылки, переход в
+   * историю): иначе они увидят версию до последней правки.
+   */
+  flushSaves: () => Promise<void>;
 }
 
-const CharacterContext = createContext<CharacterContextType | undefined>(
+export const CharacterContext = createContext<CharacterContextType | undefined>(
   undefined,
 );
 
@@ -507,6 +513,14 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
       })
         .then((res) => {
           if (res.status === 401) {
+            // На /share/* сессии нет по определению: это публичная страница,
+            // и просроченный localStorage-снимок не должен уводить на /login.
+            if (
+              typeof window !== 'undefined' &&
+              window.location.pathname.startsWith('/share/')
+            ) {
+              return null;
+            }
             // Сессия истекла или отозвана — локальный профиль недействителен.
             logout();
             router.push('/login');
@@ -801,6 +815,21 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
     [characters],
   );
 
+  /**
+   * Дождаться, пока очередь сохранений опустеет. Сначала снимаем фокус:
+   * часть полей пишет данные только по onBlur, и без blur последняя правка
+   * не попадёт даже в очередь.
+   */
+  const flushSaves = useCallback(async () => {
+    if (typeof document !== 'undefined') {
+      const active = document.activeElement;
+      if (active instanceof HTMLElement) active.blur();
+    }
+    // Дать обработчикам onBlur положить данные в очередь в текущем тике.
+    await new Promise<void>((resolve) => setTimeout(resolve, 0));
+    await saveQueueRef.current?.idle();
+  }, []);
+
   const value = {
     characters,
     getCharacter,
@@ -825,6 +854,7 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
     setHideNotes,
     showEditButtons,
     setShowEditButtons,
+    flushSaves,
   };
 
   return (
