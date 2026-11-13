@@ -133,7 +133,11 @@ http_ok() {
 }
 
 session_running() {
-  screen -ls 2>/dev/null | grep -Eq "[0-9]+\.${SESSION}[[:space:]]"
+  # Через `| grep -q` под pipefail screen получал SIGPIPE (141) и сессия
+  # ложно считалась мёртвой; поэтому сначала забираем вывод, потом сверяем.
+  local out
+  out=$(screen -ls 2>/dev/null || true)
+  [[ $out =~ [0-9]+[.]${SESSION}[[:space:]] ]]
 }
 
 # Убить процессы next из каталога приложения (надёжнее, чем поиск по порту:

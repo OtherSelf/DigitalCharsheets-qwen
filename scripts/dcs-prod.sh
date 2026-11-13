@@ -105,7 +105,9 @@ current_branch() { git_repo rev-parse --abbrev-ref HEAD 2>/dev/null || echo ""; 
 is_dirty() { [ -n "$(git_repo status --porcelain 2>/dev/null)" ]; }
 
 unit_exists() {
-  systemctl list-unit-files --type=service 2>/dev/null | grep -q "^$SERVICE\.service"
+  # `... | grep -q` под pipefail падал: grep закрывал пайп, systemctl получал
+  # SIGPIPE (141) и проверка считалась проваленной. Спрашиваем LoadState.
+  [ "$(systemctl show -p LoadState --value "$SERVICE" 2>/dev/null || true)" = "loaded" ]
 }
 
 service_state() { systemctl is-active "$SERVICE" 2>/dev/null || true; }
@@ -250,7 +252,7 @@ guard_self_update() {
   cp -p "$self_path" "$tmp" || die "не удалось скопировать скрипт в $tmp"
   chmod 700 "$tmp"
   dim "скрипт лежит внутри $APP_DIR — работаю из копии $tmp, чтобы обновление не переписало его на ходу"
-  if DCS_PROD_SELF_COPY=1 bash "$tmp" "${ORIG_ARGS[@]}"; then
+  if DCS_PROD_DIR="$APP_DIR" DCS_PROD_SELF_COPY=1 bash "$tmp" "${ORIG_ARGS[@]}"; then
     rc=0
   else
     rc=$?
