@@ -165,6 +165,23 @@ Current windows: login 10 attempts / 10 minutes, recovery 5 attempts /
 15 minutes. Exceeding one answers `429` with `Retry-After`, never with a hint
 about the password; [api.md](api.md) lists the contract per endpoint.
 
+## Browser-side boundaries
+
+Every response carries the headers from `next.config.ts`:
+
+| Header | Value | Why |
+| --- | --- | --- |
+| `Content-Security-Policy` | `default-src 'self'`, inline styles/scripts for Next, `object-src 'none'`, `base-uri 'self'`, `form-action 'self'`, `frame-ancestors 'none'` | XSS containment: no third-party script host, no plugin objects, no form posts elsewhere |
+| `X-Frame-Options` | `DENY` | Clickjacking: the app cannot be embedded in someone else's page |
+| `X-Content-Type-Options` | `nosniff` | No MIME sniffing of uploads/responses |
+| `Referrer-Policy` | `strict-origin-when-cross-origin` | No full URL (and no sheet ids) leaks to external hosts |
+| `Permissions-Policy` | camera/microphone/geolocation/payment/usb disabled | The app needs none of them |
+
+`X-Powered-By` is disabled (`poweredByHeader: false`) and the image optimizer is
+off (`images: { unoptimized: true }`): with no `next/image` in the app the
+`/_next/image` endpoint was an unused way to make the server fetch third-party
+URLs.
+
 ## Data directory privacy
 
 - Commit only code. `<data-dir>` — profiles, sheets, indexes, secrets — is

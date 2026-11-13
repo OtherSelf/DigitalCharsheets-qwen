@@ -357,6 +357,50 @@ await check('GET /api/version → 200 (JSON, без сессии)', async () => 
   return `${body.name} ${body.version}`;
 });
 
+// 1.1 Браузерные границы (SEC-11)
+await check('GET /login → заголовки безопасности', async () => {
+  const res = await request('/login', { auth: false });
+  assertStatus(res, 200, 'GET /login (заголовки)');
+
+  const csp = res.headers.get('content-security-policy') || '';
+  assert(
+    /frame-ancestors 'none'/.test(csp),
+    `CSP без frame-ancestors: ${truncate(csp)}`,
+  );
+  assert(/object-src 'none'/.test(csp), `CSP без object-src: ${truncate(csp)}`);
+  assert(
+    res.headers.get('x-frame-options') === 'DENY',
+    `X-Frame-Options = ${res.headers.get('x-frame-options')}`,
+  );
+  assert(
+    res.headers.get('x-content-type-options') === 'nosniff',
+    `X-Content-Type-Options = ${res.headers.get('x-content-type-options')}`,
+  );
+  assert(
+    res.headers.get('referrer-policy') === 'strict-origin-when-cross-origin',
+    `Referrer-Policy = ${res.headers.get('referrer-policy')}`,
+  );
+  assert(!!res.headers.get('permissions-policy'), 'нет Permissions-Policy');
+  assert(
+    !res.headers.get('x-powered-by'),
+    `X-Powered-By присутствует: ${res.headers.get('x-powered-by')}`,
+  );
+});
+
+await check(
+  'GET /_next/image → выключен (нет открытого оптимизатора)',
+  async () => {
+    const res = await request(
+      '/_next/image?url=https%3A%2F%2Fplacehold.co%2F10x10.png&w=64&q=75',
+      { auth: false },
+    );
+    assert(
+      res.status === 404 || res.status === 400,
+      `GET /_next/image: ${res.status}, ожидали 404/400 (оптимизатор выключен)`,
+    );
+  },
+);
+
 // 2. Аутентификация
 await check('POST /api/auth/exists → свободный логин', async () => {
   const res = await api('/auth/exists', {

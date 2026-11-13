@@ -97,6 +97,11 @@ Caddy, Traefik, …) and:
 - proxy with **HTTP/1.1** and pass `Upgrade`/`Connection`;
 - allow long-lived responses (long `proxy_read_timeout`).
 
+Security headers (CSP, `X-Frame-Options`, `nosniff`, `Referrer-Policy`,
+`Permissions-Policy`) are set by the application (`next.config.ts`). Do not add
+conflicting copies in nginx: a second `Content-Security-Policy` header is
+intersected by browsers and can silently break the UI.
+
 ### nginx (Next 16)
 
 Next serves pages as a stream (RSC/HTML + client chunks). With the default
