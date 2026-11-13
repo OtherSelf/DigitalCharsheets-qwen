@@ -44,6 +44,7 @@ NO_HEALTH=0
 ALLOW_DIRTY=0
 COMMAND=""
 LOG_LINES=100
+ORIG_ARGS=("$@")
 
 # ── вывод ───────────────────────────────────────────────────────────────────
 if [ -t 1 ] && [ -z "${NO_COLOR:-}" ]; then
@@ -229,7 +230,37 @@ print_summary() {
   dim "  bash scripts/dcs-prod.sh restart  — перезапуск без git/build"
 }
 
+# Скрипт лежит в том же каталоге, который обновляет: `git merge --ff-only`
+# переписывает и его. Если файл внутри APP_DIR, работаем из временной копии,
+# иначе bash может дочитать уже изменённый файл на середине.
+guard_self_update() {
+  [ "$SKIP_PULL" -eq 1 ] && return 0
+  [ -n "${DCS_PROD_SELF_COPY:-}" ] && return 0
+  local self_path self_dir app_real tmp rc
+  self_path="${BASH_SOURCE[0]}"
+  self_dir=$(cd "$(dirname "$self_path")" 2>/dev/null && pwd -P) || return 0
+  app_real=$(cd "$APP_DIR" 2>/dev/null && pwd -P) || return 0
+  [ -n "$app_real" ] || return 0
+  case "$self_dir/" in
+    "$app_real"/*) ;;
+    *) return 0 ;;
+  esac
+  tmp=$(mktemp "${TMPDIR:-/tmp}/dcs-prod.XXXXXX.sh") \
+    || die "не удалось создать временную копию скрипта (TMPDIR=${TMPDIR:-/tmp})"
+  cp -p "$self_path" "$tmp" || die "не удалось скопировать скрипт в $tmp"
+  chmod 700 "$tmp"
+  dim "скрипт лежит внутри $APP_DIR — работаю из копии $tmp, чтобы обновление не переписало его на ходу"
+  if DCS_PROD_SELF_COPY=1 bash "$tmp" "${ORIG_ARGS[@]}"; then
+    rc=0
+  else
+    rc=$?
+  fi
+  rm -f "$tmp"
+  exit "$rc"
+}
+
 cmd_deploy() {
+  guard_self_update
   preflight
   if is_dirty && [ "$ALLOW_DIRTY" -eq 0 ]; then
     die "в $APP_DIR есть незакоммиченные изменения:
