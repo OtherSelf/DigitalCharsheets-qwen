@@ -10,6 +10,8 @@
 #    5. умеет останавливать/перезапускать и стирать созданные данные (data/)
 #
 #  По умолчанию: каталог /opt/dcs-dev, порт 3001, сессия screen dcs-dev-3001
+#  Запускать можно из любого чекаута, в том числе из самого /opt/dcs-dev: тогда
+#  скрипт перезапустится из временной копии, чтобы обновление не переписало файл.
 #
 #  Примеры:
 #    sudo bash scripts/dcs-dev.sh deploy                       # обновить main и запустить
@@ -46,6 +48,7 @@ RESET_DATA=0
 ASSUME_YES=0
 NO_UPDATE=0
 COMMAND=""
+ORIG_ARGS=("$@")
 
 # ── вывод ───────────────────────────────────────────────────────────────────
 if [ -t 1 ] && [ -z "${NO_COLOR:-}" ]; then
@@ -220,9 +223,13 @@ ensure_repo() {
     local remote
     remote=$(git -C "$APP_DIR" remote get-url origin 2>/dev/null || echo "")
     if [ "$remote" != "$REPO_URL" ]; then
-      warn "в $APP_DIR другой origin: $remote"
+      warn "в $APP_DIR другой origin: ${remote:-нет}"
       warn "переключаю origin на $REPO_URL"
-      git -C "$APP_DIR" remote set-url origin "$REPO_URL"
+      if [ -n "$remote" ]; then
+        git -C "$APP_DIR" remote set-url origin "$REPO_URL"
+      else
+        git -C "$APP_DIR" remote add origin "$REPO_URL"
+      fi
     fi
     return 0
   fi
@@ -452,20 +459,34 @@ start_server() {
 }
 
 # ── команды ─────────────────────────────────────────────────────────────────
-# Скрипт живёт в репозитории, а деплой-каталог — отдельный клон. Если его всё же
-# запустили из самого APP_DIR, `git reset --hard` перепишет файл на ходу:
-# запрещаем такой запуск, нужен отдельный чекаут или --no-update.
+# Скрипт живёт в репозитории, а деплой-каталог — обычно отдельный клон. Но если
+# его запустили прямо из APP_DIR (частый случай на сервере), `git reset --hard`
+# перепишет файл, который сейчас читает bash. Поэтому в таком случае работаем из
+# временной копии: репозиторий обновляется как обычно, а выполнение не рвётся.
 guard_self_deploy() {
   [ "$NO_UPDATE" -eq 1 ] && return 0
-  local self_dir app_real
-  self_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd -P) || return 0
+  [ -n "${DCS_DEV_SELF_COPY:-}" ] && return 0
+  local self_path self_dir app_real tmp rc
+  self_path="${BASH_SOURCE[0]}"
+  self_dir=$(cd "$(dirname "$self_path")" 2>/dev/null && pwd -P) || return 0
   app_real=$(cd "$APP_DIR" 2>/dev/null && pwd -P) || return 0
   [ -n "$app_real" ] || return 0
   case "$self_dir/" in
-    "$app_real"/*)
-      die "скрипт запущен из деплой-каталога $APP_DIR: git reset перезапишет его на ходу.
-Запустите из другого чекаута репозитория или с --no-update." ;;
+    "$app_real"/*) ;;
+    *) return 0 ;;
   esac
+  tmp=$(mktemp "${TMPDIR:-/tmp}/dcs-dev.XXXXXX.sh") \
+    || die "не удалось создать временную копию скрипта (TMPDIR=${TMPDIR:-/tmp})"
+  cp -p "$self_path" "$tmp" || die "не удалось скопировать скрипт в $tmp"
+  chmod 700 "$tmp"
+  dim "скрипт лежит внутри $APP_DIR — работаю из копии $tmp, чтобы git reset не оборвал выполнение"
+  if DCS_DEV_SELF_COPY=1 bash "$tmp" "${ORIG_ARGS[@]}"; then
+    rc=0
+  else
+    rc=$?
+  fi
+  rm -f "$tmp"
+  exit "$rc"
 }
 
 cmd_deploy() {

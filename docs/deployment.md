@@ -39,8 +39,9 @@ manual command chains and print what they did and what failed.
 `scripts/dcs-dev.sh` keeps the test bench in a `screen` session: it
 clones/updates a separate checkout (`/opt/dcs-dev`, port `3001` by default), runs
 `npm run dev`, and can stop, restart, show logs, reset data and run smoke tests
-against the bench. Run it from a checkout that is **not** the bench directory
-itself — it refuses to update its own directory in place.
+against the bench. It can be started from any checkout, including the bench
+directory itself: in that case it copies itself to a temporary file before
+updating, so `git reset` does not rewrite the script while it runs.
 
 ## Environment variables
 
