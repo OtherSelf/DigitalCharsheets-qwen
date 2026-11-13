@@ -144,6 +144,20 @@ export async function prepare(
 }
 
 /** Открывает страницу и ждёт, пока приложение закончит первичную загрузку. */
+/**
+ * URL листа персонажа: маршрут собирается в одном месте, чтобы переезд
+ * (`/[id]` → `/character/[id]`) не правил каждый спек отдельно.
+ */
+export function sheetPath(characterId: string): string {
+  return `/character/${encodeURIComponent(characterId)}`;
+}
+
+/** id листа из текущего URL: последний сегмент пути. */
+export function sheetIdFromUrl(page: Page): string {
+  const segments = new URL(page.url()).pathname.split('/').filter(Boolean);
+  return segments.pop() ?? '';
+}
+
 export async function openApp(page: Page, path = '/'): Promise<void> {
   await page.goto(path, { waitUntil: 'domcontentloaded' });
   await page.waitForLoadState('networkidle');

@@ -8,6 +8,7 @@ import {
   prepare,
   screenshotElement,
   screenshotPage,
+  sheetPath,
 } from './helpers';
 
 /**
@@ -63,7 +64,7 @@ test.describe('редактирование D&D', () => {
       // (статы, навыки, характеристики DH) снимались целиком.
       await page.setViewportSize({ width: 1920, height: 1600 });
       await prepare(context);
-      await openApp(page, `/${getState().dndId}`);
+      await openApp(page, sheetPath(getState().dndId));
 
       const progression = page.locator('#progression-section:visible').first();
       await startEditing(progression);
@@ -109,7 +110,7 @@ test.describe('редактирование D&D', () => {
     async ({ page, context }) => {
       await page.setViewportSize({ width: 1920, height: 1600 });
       await prepare(context);
-      await openApp(page, `/${getState().dndId}`);
+      await openApp(page, sheetPath(getState().dndId));
 
       const combat = page.locator('#hit-points-card:visible').first();
       await startEditing(combat);
@@ -155,7 +156,7 @@ test.describe('редактирование D&D', () => {
     async ({ page, context }) => {
       await page.setViewportSize({ width: 1920, height: 1600 });
       await prepare(context);
-      await openApp(page, `/${getState().dndId}`);
+      await openApp(page, sheetPath(getState().dndId));
 
       const spells = page.locator('#spells-section:visible').first();
       await startEditingAll(spells);
@@ -182,7 +183,7 @@ test.describe('редактирование D&D', () => {
     { tag: '@mobile' },
     async ({ page, context }) => {
       await prepare(context);
-      await openApp(page, `/${getState().dndId}`);
+      await openApp(page, sheetPath(getState().dndId));
 
       // Компактная плашка статов: карандаш в правом верхнем углу.
       const statsBar = page.getByTestId('compact-stats-bar');
@@ -223,7 +224,7 @@ test.describe('редактирование Dark Heresy', () => {
     async ({ page, context }) => {
       await page.setViewportSize({ width: 1920, height: 1600 });
       await prepare(context);
-      await openApp(page, `/${getState().dhId}`);
+      await openApp(page, sheetPath(getState().dhId));
 
       const info = page.locator('#info-section:visible').first();
       await startEditing(info);
@@ -257,7 +258,7 @@ test.describe('редактирование Dark Heresy', () => {
     async ({ page, context }) => {
       await page.setViewportSize({ width: 1920, height: 1600 });
       await prepare(context);
-      await openApp(page, `/${getState().dhId}`);
+      await openApp(page, sheetPath(getState().dhId));
 
       // Навыки: имена и тренировки открываются в виде полей ввода.
       const skills = page.locator('#skills-talents-panel:visible').first();
@@ -313,7 +314,7 @@ test.describe('редактирование Dark Heresy', () => {
     { tag: '@mobile' },
     async ({ page, context }) => {
       await prepare(context);
-      await openApp(page, `/${getState().dhId}`);
+      await openApp(page, sheetPath(getState().dhId));
 
       const characteristics = page.getByTestId('characteristics-compact');
       await startEditing(characteristics);

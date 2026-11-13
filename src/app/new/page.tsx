@@ -25,6 +25,7 @@ import {
 import { useTranslation } from '@/context/language-context';
 import { listCatalog } from '@/games/character-system';
 import { getGameModule, listGameModules } from '@/games/registry';
+import { characterPath } from '@/lib/routes';
 
 /**
  * ─── LANDMARK: CREATE WIZARD ───────────────────────────────────────────────
@@ -297,7 +298,9 @@ export default function ManualCharacterCreationPage() {
               </div>
               {Form ? (
                 <Form
-                  onCreated={(characterId) => router.push(`/${characterId}`)}
+                  onCreated={(characterId) =>
+                    router.push(characterPath(characterId))
+                  }
                 />
               ) : (
                 <p className="text-destructive text-sm">{t('common.error')}</p>

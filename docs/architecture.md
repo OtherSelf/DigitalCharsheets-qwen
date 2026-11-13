@@ -60,6 +60,23 @@ scripts/plugins/       plugin manifest validation, registry/i18n generation and
 docs/                  This documentation
 ```
 
+### Pages
+
+| Path | What |
+| --- | --- |
+| `/` | Dashboard for a signed-in user, demo landing for a guest |
+| `/character/<id>` | One character sheet (id is the file name, `[A-Za-z0-9_-]{1,64}`) |
+| `/new`, `/new/manual` | Creation wizard (catalog pick / manual sheet) |
+| `/login` | Sign in, registration and the two-step recovery |
+| `/settings` | Profile, sessions («sign out everywhere»), account deletion |
+| `/admin` | Administrator panel (HTML shell; data via `/api/admin/*`) |
+| `/demo` | Demo landing, always the guest view |
+| `/stats-editor` | Bulk stats editor |
+
+Sheet URLs are built by `characterPath()` in
+[`src/lib/routes.ts`](../src/lib/routes.ts); there is deliberately no redirect
+from the old root `/<id>` route, so bookmarks of that form now answer `404`.
+
 ## Request flow
 
 ```

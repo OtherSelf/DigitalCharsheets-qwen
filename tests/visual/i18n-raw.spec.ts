@@ -1,6 +1,12 @@
 import { expect, test } from '@playwright/test';
 
-import { expectNoRawI18nKeys, getState, openApp, prepare } from './helpers';
+import {
+  expectNoRawI18nKeys,
+  getState,
+  openApp,
+  prepare,
+  sheetPath,
+} from './helpers';
 
 /**
  * ─── LANDMARK: RAW I18N KEYS GUARD ────────────────────────────────────────
@@ -38,7 +44,7 @@ test.describe('нет сырых i18n-ключей', () => {
         [state.dndId, 'лист D&D', 'Seraphina Vael'],
         [state.dhId, 'лист DH', 'Lucius Varn'],
       ] as const) {
-        await openApp(page, `/${id}`);
+        await openApp(page, sheetPath(id));
         await expect(page.getByRole('heading', { name })).toBeVisible();
         await expectNoRawI18nKeys(page, `${label} ${suffix}`);
       }

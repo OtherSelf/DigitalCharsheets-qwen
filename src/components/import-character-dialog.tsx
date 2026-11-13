@@ -23,6 +23,7 @@ import {
   IMPORT_ERROR_I18N_KEYS,
   importCharacterFromJSON,
 } from '@/lib/export-utils';
+import { characterPath } from '@/lib/routes';
 import { Character } from '@/lib/types';
 
 interface ImportCharacterDialogProps {
@@ -118,7 +119,7 @@ export function ImportCharacterDialog({
           setImportSuccess(false);
           if (fileInputRef.current) fileInputRef.current.value = '';
           if (lastCreatedCharId) {
-            router.push(`/${lastCreatedCharId}`);
+            router.push(characterPath(lastCreatedCharId));
           }
         }, 1500);
       } else {

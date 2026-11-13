@@ -8,6 +8,7 @@ import {
   prepare,
   screenshotElement,
   screenshotPage,
+  sheetPath,
 } from './helpers';
 
 /**
@@ -28,7 +29,7 @@ test.describe('лист D&D — чтение', () => {
     { tag: ['@fast', '@desktop'] },
     async ({ page, context }) => {
       await prepare(context);
-      await openApp(page, `/${getState().dndId}`);
+      await openApp(page, sheetPath(getState().dndId));
 
       await expect(
         page.getByRole('heading', { name: 'Seraphina Vael' }),
@@ -72,7 +73,7 @@ test.describe('лист D&D — чтение', () => {
     { tag: '@desktop' },
     async ({ page, context }) => {
       await prepare(context);
-      await openApp(page, `/${getState().dndId}`);
+      await openApp(page, sheetPath(getState().dndId));
 
       await screenshotElement(
         page.locator('#inventory-box:visible').first(),
@@ -105,7 +106,7 @@ test.describe('лист D&D — чтение', () => {
     { tag: '@mobile' },
     async ({ page, context }) => {
       await prepare(context);
-      await openApp(page, `/${getState().dndId}`);
+      await openApp(page, sheetPath(getState().dndId));
 
       await screenshotPage(page, 'sheet-dnd-mobile-info-en.png');
 
@@ -146,7 +147,7 @@ test.describe('лист Dark Heresy — чтение', () => {
     { tag: ['@fast', '@desktop'] },
     async ({ page, context }) => {
       await prepare(context);
-      await openApp(page, `/${getState().dhId}`);
+      await openApp(page, sheetPath(getState().dhId));
 
       await expect(
         page.getByRole('heading', { name: 'Lucius Varn' }),
@@ -174,7 +175,7 @@ test.describe('лист Dark Heresy — чтение', () => {
     { tag: '@desktop' },
     async ({ page, context }) => {
       await prepare(context);
-      await openApp(page, `/${getState().dhId}`);
+      await openApp(page, sheetPath(getState().dhId));
 
       await screenshotElement(
         page.locator('#skills-talents-panel:visible').first(),
@@ -200,7 +201,7 @@ test.describe('лист Dark Heresy — чтение', () => {
     { tag: '@mobile' },
     async ({ page, context }) => {
       await prepare(context);
-      await openApp(page, `/${getState().dhId}`);
+      await openApp(page, sheetPath(getState().dhId));
 
       await screenshotPage(page, 'sheet-dh-mobile-info-en.png');
 
