@@ -247,7 +247,9 @@ re-hashing; anything unexpected there is worth reading after an upgrade.
   secrets — is runtime state and is never versioned.
 - History files keep old values even after the owner removes them from the
   current sheet; the owner-only history screen has an explicit “clear history”
-  action, and deleting the sheet/account removes the log.
+  action, and deleting the sheet/account removes the log. A share link with
+  `includeHistory` exposes those old values (bounded and sanitized) to anyone
+  holding the link; it is off by default.
 - Backups copy `<data-dir>` as a whole and are stored with the same care as
   credentials.
 - Rotating `.session-secret` (or `DCS_SESSION_SECRET`) invalidates every

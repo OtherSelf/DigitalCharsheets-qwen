@@ -706,6 +706,15 @@ export const ruTranslations: Record<string, string> = {
   'share.expiresNever': 'До отзыва',
   'share.linkOnce':
     'Ссылка показывается один раз. Если потеряли — перевыпустите: старая перестанет работать.',
+  'share.includeHistory': 'Показывать историю изменений',
+  'share.includeHistoryHint':
+    'Гость увидит старые значения, включая заметки и предысторию, которых уже нет в текущем листе.',
+  'share.historyIncluded': 'История включена в эту ссылку.',
+  'share.historyNotIncluded': 'История не включена в эту ссылку.',
+  'share.sheetTab': 'Лист',
+  'share.historyTab': 'История',
+  'share.historyReadOnly':
+    'Журнал изменений только для чтения. Это не бэкап, откатить лист нельзя.',
   'share.warning':
     'По ссылке виден весь лист, включая заметки, предысторию и журнал заданий.',
   'share.readOnlyTitle': 'Просмотр по ссылке',

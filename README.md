@@ -18,7 +18,8 @@ data directory on the host you control.
 - Local accounts with a recovery phrase, password change and account deletion.
 - **Read-only guest links:** share one sheet with a game master or friend; the
   link needs no account, is revocable and expires, and the sheet cannot be
-  edited. See [docs/sharing.md](docs/sharing.md).
+  edited. History can be included per link (off by default). See
+  [docs/sharing.md](docs/sharing.md).
 - **Change history:** every save leaves a readable diff, grouped by game
   sessions, for long campaigns. It is owner-only and bounded; see
   [docs/character-history.md](docs/character-history.md).

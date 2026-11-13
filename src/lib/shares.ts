@@ -67,6 +67,8 @@ export interface ResolvedShare extends ShareMetadata {
 
 export interface IssueShareOptions {
   expiresInDays?: ShareExpiryDays;
+  /** Показывать гостю историю изменений; по умолчанию выключено. */
+  includeHistory?: boolean;
   /** Часы (тесты подставляют управляемое время). */
   nowMs?: number;
 }
@@ -261,7 +263,7 @@ export function issueShareToken(
       characterId,
       createdAt,
       expiresAt,
-      includeHistory: false,
+      includeHistory: options.includeHistory === true,
     };
     writeSharesFile({
       version: SHARES_FILE_VERSION,

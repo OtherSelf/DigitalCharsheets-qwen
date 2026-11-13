@@ -36,7 +36,7 @@ export interface VisualAccount {
    * Гостевая ссылка на dndId, если global-setup имел доступ к data-dir.
    * Публичная страница /share/<token> не требует логина.
    */
-  share?: { token: string; characterId: string };
+  share?: { token: string; historyToken?: string; characterId: string };
 }
 
 export interface VisualState extends VisualAccount {

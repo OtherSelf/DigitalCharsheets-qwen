@@ -106,8 +106,8 @@ theme × language × mode × viewport cross-product:
 - Tests that only make sense in one project are tagged `@desktop`/`@mobile`;
   `playwright.config.ts` filters them with `grepInvert`, so there are no
   skipped duplicates in the report.
-- `share.spec.ts` covers the public read-only link (desktop/mobile), the invalid
-  link and the owner dialog. Its link is seeded directly into the temporary
+- `share.spec.ts` covers the public read-only link (desktop/mobile), the optional
+  history tab (`includeHistory`), the invalid link and the owner dialog. Its link is seeded directly into the temporary
   data directory; with `--base-url` there is no data directory, so the share
   screenshots are skipped like the admin ones.
 - `history.spec.ts` covers the owner timeline (desktop/mobile) and the empty

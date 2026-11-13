@@ -548,10 +548,15 @@ function seedShareFixtures(workers: VisualAccount[]): void {
 
   workers.forEach((worker, index) => {
     if (!worker.dndId) return;
-    const token = shareTokenFor(index);
+    const token = shareTokenFor(index, 'plain');
+    const historyToken = shareTokenFor(index, 'history');
     const hash = crypto
       .createHash('sha256')
       .update(token, 'utf8')
+      .digest('hex');
+    const historyHash = crypto
+      .createHash('sha256')
+      .update(historyToken, 'utf8')
       .digest('hex');
     shares[hash] = {
       uid: worker.user.uid,
@@ -560,7 +565,18 @@ function seedShareFixtures(workers: VisualAccount[]): void {
       expiresAt: null,
       includeHistory: false,
     };
-    worker.share = { token, characterId: worker.dndId };
+    shares[historyHash] = {
+      uid: worker.user.uid,
+      characterId: worker.dndId,
+      createdAt: '2026-01-10T10:01:00.000Z',
+      expiresAt: null,
+      includeHistory: true,
+    };
+    worker.share = {
+      token,
+      historyToken,
+      characterId: worker.dndId,
+    };
   });
 
   fs.writeFileSync(
@@ -571,8 +587,8 @@ function seedShareFixtures(workers: VisualAccount[]): void {
 }
 
 /** 43 символа base64url, уникальные на воркера. */
-function shareTokenFor(index: number): string {
-  const prefix = `visualshare${index.toString(36)}`;
+function shareTokenFor(index: number, variant: 'plain' | 'history'): string {
+  const prefix = `visual${variant}${index.toString(36)}`;
   return (prefix + 'A'.repeat(43)).slice(0, 43);
 }
 

@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 
 import { SharedLinkUnavailable } from '@/components/share/shared-link-unavailable';
 import { SharedSheetView } from '@/components/sheets/shared-sheet-view';
-import { resolveSharedCharacter } from '@/lib/shared-character';
+import { resolveSharedSheet } from '@/lib/shared-character';
 
 /**
  * ─── LANDMARK: PUBLIC SHARE PAGE (/share/<token>) ───────────────────────────
@@ -23,9 +23,7 @@ import { resolveSharedCharacter } from '@/lib/shared-character';
  */
 export const dynamic = 'force-dynamic';
 
-const resolveShared = cache(async (token: string) =>
-  resolveSharedCharacter(token),
-);
+const resolveShared = cache(async (token: string) => resolveSharedSheet(token));
 
 export async function generateMetadata({
   params,
@@ -33,7 +31,8 @@ export async function generateMetadata({
   params: Promise<{ token: string }>;
 }): Promise<Metadata> {
   const { token } = await params;
-  const character = await resolveShared(token);
+  const shared = await resolveShared(token);
+  const character = shared?.character;
 
   return {
     title: character
@@ -50,8 +49,10 @@ export default async function SharePage({
   params: Promise<{ token: string }>;
 }) {
   const { token } = await params;
-  const character = await resolveShared(token);
-  if (!character) return <SharedLinkUnavailable />;
+  const shared = await resolveShared(token);
+  if (!shared) return <SharedLinkUnavailable />;
 
-  return <SharedSheetView character={character} />;
+  return (
+    <SharedSheetView character={shared.character} history={shared.history} />
+  );
 }

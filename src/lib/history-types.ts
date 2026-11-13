@@ -157,6 +157,20 @@ export interface HistoryPage {
   storage: HistoryStorageInfo;
 }
 
+/**
+ * Урезанная история для гостевой ссылки: без байтов файла и без курсора,
+ * только последние сессии. Значения уже прошли sanitize.
+ */
+export interface SharedHistoryPage {
+  sessions: HistorySession[];
+  totalSessions: number;
+  totalRevisions: number;
+  storage: {
+    truncated: boolean;
+    oldestAt: string | null;
+  };
+}
+
 /** Пустые счётчики — чтобы не собирать объект по месту. */
 export function emptyHistorySummary(): HistorySummary {
   return { changed: 0, added: 0, removed: 0, bulk: 0 };

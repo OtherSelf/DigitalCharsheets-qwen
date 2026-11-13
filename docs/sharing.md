@@ -64,6 +64,23 @@ Read-only is enforced at two levels:
 - server: there is no public mutation API, and every owner endpoint requires the
   session cookie.
 
+## Optional history
+
+The owner can tick **Show the change history** when creating a link; the flag is
+off by default. It is stored as `includeHistory` in `shares.json`, and rotating
+the link copies the current choice.
+
+The guest gets a second tab with the same timeline: sessions, old/new values,
+added/removed entries and plugin labels. The link carries only the latest
+**20 sessions / ~500 changes**; there is no “Show more”, no clear button and no
+link back to the owner's account. Values are sanitized like the sheet
+(`userId`/`__*` removed, including inside truncated JSON previews), so the guest
+never receives the owner's uid.
+
+Enabling the flag exposes **old values**, including notes or backstory removed
+from the current sheet. Revoking the link or deleting the sheet removes access;
+the owner still controls the log from `/character/<id>/history`.
+
 ## Privacy and security notes
 
 - The token is in the URL: it may appear in browser history, proxy access logs
@@ -76,9 +93,8 @@ Read-only is enforced at two levels:
   unblock it works again unless it expired or was revoked. Deleting the account
   or the sheet revokes it permanently.
 - There is no password on the link (Q9 in the plan) and no view counter in v1.
-- The guest page shows the current sheet only. Change history is owner-only and
-  is not included in a guest link; the optional `includeHistory` flag was not
-  implemented, so old notes cannot leak through `/share/*`.
+- Change history is opt-in per link (see below); by default the guest sees only
+  the current sheet.
 
 ## Related
 

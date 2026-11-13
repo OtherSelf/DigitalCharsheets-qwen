@@ -1,10 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
+import { appendHistory } from '@/lib/character-history';
+import type { HistorySession } from '@/lib/history-types';
 import { newUid } from '@/lib/ids';
 import { createUserFolder, saveCharacterToServer } from '@/lib/server-storage';
 import {
   resolveSharedCharacter,
+  resolveSharedSheet,
   sanitizeCharacterForShare,
+  sanitizeHistoryForShare,
 } from '@/lib/shared-character';
 import { issueShareToken } from '@/lib/shares';
 import type { Character } from '@/lib/types';
@@ -65,5 +69,116 @@ describe('resolveSharedCharacter', () => {
   it('возвращает null для неизвестного или неверного токена', () => {
     expect(resolveSharedCharacter('')).toBeNull();
     expect(resolveSharedCharacter('a'.repeat(43))).toBeNull();
+  });
+});
+
+describe('shared history', () => {
+  it('рекурсивно вычищает uid и __* из значений до/после', () => {
+    const sessions = [
+      {
+        id: 's1',
+        startedAt: '2026-05-12T18:00:00.000Z',
+        endedAt: '2026-05-12T18:00:00.000Z',
+        revisionCount: 1,
+        truncated: false,
+        markers: [],
+        changes: [
+          {
+            kind: 'changed',
+            path: 'inventory',
+            key: 'i1',
+            label: 'Sword',
+            field: 'notes',
+            before: {
+              value: { name: 'Sword', userId: 'owner-1', __page: 1 },
+            },
+            after: {
+              value: { name: 'Sword', userId: 'owner-1', __page: 2 },
+            },
+            values: [{ value: { userId: 'owner-1', __seq: 3 } }],
+          },
+        ],
+      },
+    ] as unknown as HistorySession[];
+
+    const sanitized = sanitizeHistoryForShare(sessions);
+    const value = sanitized[0].changes[0].after?.value as Record<
+      string,
+      unknown
+    >;
+    expect(value.userId).toBeUndefined();
+    expect(value.__page).toBeUndefined();
+    expect(value.name).toBe('Sword');
+    expect(
+      (sanitized[0].changes[0].values?.[0].value as Record<string, unknown>)
+        .userId,
+    ).toBeUndefined();
+  });
+
+  it('вырезает uid и __* из обрезанного preview', () => {
+    const sessions = [
+      {
+        id: 's1',
+        startedAt: '2026-05-12T18:00:00.000Z',
+        endedAt: '2026-05-12T18:00:00.000Z',
+        revisionCount: 1,
+        truncated: false,
+        markers: [],
+        changes: [
+          {
+            kind: 'changed',
+            path: 'notes',
+            before: {
+              truncated: true,
+              preview:
+                '{"userId":"owner-1","__page":2,"name":"Sword","notes":"long',
+              length: 1000,
+            },
+          },
+        ],
+      },
+    ] as unknown as HistorySession[];
+
+    const preview =
+      sanitizeHistoryForShare(sessions)[0].changes[0].before?.preview;
+    expect(preview).not.toContain('owner-1');
+    expect(preview).not.toContain('"__page":2');
+    expect(preview).toContain('"name":"Sword"');
+  });
+
+  it('показывает историю только при includeHistory и без uid', () => {
+    const uid = newUid();
+    createUserFolder(uid, 'shared-history', 'Shared History');
+    saveCharacterToServer(uid, makeDndCharacter({ id: 'char-1' }));
+    appendHistory(
+      uid,
+      'char-1',
+      {
+        changes: [
+          {
+            kind: 'changed',
+            path: 'notes',
+            before: { value: { text: 'old', userId: uid } },
+            after: { value: { text: 'new', userId: uid } },
+          },
+        ],
+        summary: { changed: 1, added: 0, removed: 0, bulk: 0 },
+      },
+      { nowMs: Date.parse('2026-05-12T18:00:00.000Z') },
+    );
+
+    const without = issueShareToken(uid, 'char-1');
+    expect(resolveSharedSheet(without.token)?.history).toBeNull();
+
+    const withHistory = issueShareToken(uid, 'char-1', {
+      includeHistory: true,
+    });
+    const shared = resolveSharedSheet(withHistory.token);
+    const changes = shared?.history?.sessions.flatMap(
+      (session) => session.changes,
+    );
+    expect(changes).toHaveLength(1);
+    expect(changes?.[0].after?.value).toEqual({ text: 'new' });
+    expect(JSON.stringify(shared?.history)).not.toContain(uid);
   });
 });

@@ -64,7 +64,9 @@ response also carries `totalSessions`, `totalRevisions` and storage info
 
 The page is owner-only. Labels come from the edition plugin
 (`GameHistoryConfig.labels` / `collections`); unknown fields fall back to a
-humanised path. The page is not linked from a public share link.
+humanised path. A guest link may optionally expose a read-only tab with the
+latest 20 sessions (`includeHistory`, off by default); it has no clear action
+and its values are sanitized.
 
 ## Limits and privacy
 

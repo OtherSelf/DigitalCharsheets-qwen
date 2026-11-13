@@ -88,7 +88,8 @@ cannot be used to reset a password.
 { "<sha256>": { "uid", "characterId", "createdAt", "expiresAt",
 "includeHistory" } } }`. The token itself is never stored, only its SHA-256; one
 active record exists per `uid + characterId`, and issuing a new link replaces the
-old one. `expiresAt: null` means “until revoked”. Expired records are pruned on
+old one. `includeHistory` is `false` unless the owner opted in. `expiresAt: null`
+means “until revoked”. Expired records are pruned on
 the next write; deleting a sheet revokes its link, and deleting an account
 removes all of its records.
 

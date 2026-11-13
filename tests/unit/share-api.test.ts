@@ -160,6 +160,37 @@ describe('GET/POST/DELETE /api/characters/[id]/share', () => {
     expect(JSON.stringify(statusBody)).not.toContain(body.token);
   });
 
+  it('включает историю по флагу и отвергает не-boolean', async () => {
+    const invalid = await sharePost(
+      request('POST', { includeHistory: 'yes' }),
+      params(),
+    );
+    expect(invalid.status).toBe(400);
+    expect(await invalid.json()).toMatchObject({
+      reason: 'invalid_include_history',
+    });
+
+    const created = await sharePost(
+      request('POST', { includeHistory: true }),
+      params(),
+    );
+    expect(created.status).toBe(201);
+    const body = (await created.json()) as {
+      token: string;
+      includeHistory: boolean;
+    };
+    expect(body.includeHistory).toBe(true);
+    expect(await resolveShareToken(body.token)).toMatchObject({
+      includeHistory: true,
+    });
+
+    const status = await shareGet(request('GET'), params());
+    expect(await status.json()).toMatchObject({
+      active: true,
+      includeHistory: true,
+    });
+  });
+
   it('перевыпуск убивает старую ссылку и оставляет одну запись', async () => {
     const first = (await (
       await sharePost(request('POST', {}), params())

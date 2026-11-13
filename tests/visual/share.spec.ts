@@ -34,6 +34,7 @@ test.describe('гостевая ссылка', () => {
         page.getByRole('heading', { name: 'Seraphina Vael' }),
       ).toBeVisible();
       await expect(page.getByTestId('share-button')).toHaveCount(0);
+      await expect(page.getByTestId('shared-tab-history')).toHaveCount(0);
       await expectNoRawI18nKeys(page, 'гостевая ссылка (en)');
       await screenshotPage(page, 'share-sheet-en.png');
     },
@@ -52,6 +53,29 @@ test.describe('гостевая ссылка', () => {
       await expect(page.getByTestId('shared-read-only-banner')).toBeVisible();
       await expectNoRawI18nKeys(page, 'гостевая ссылка mobile (en)');
       await screenshotPage(page, 'share-sheet-mobile-en.png');
+    },
+  );
+
+  test(
+    'desktop: история в гостевой ссылке (en)',
+    { tag: '@desktop' },
+    async ({ page, context }) => {
+      const share = getState().share;
+      test.skip(
+        !share?.historyToken,
+        'нет ссылки с историей: данные не засеяны',
+      );
+
+      await prepare(context, { authenticated: false, language: 'en' });
+      await openApp(page, `/share/${share!.historyToken}`);
+
+      await expect(page.getByTestId('shared-tab-history')).toBeVisible();
+      await page.getByTestId('shared-tab-history').click();
+      await expect(page.getByTestId('shared-history')).toBeVisible();
+      await expect(page.getByTestId('history-session')).toHaveCount(2);
+      await expect(page.getByTestId('history-clear')).toHaveCount(0);
+      await expectNoRawI18nKeys(page, 'история гостевой ссылки (en)');
+      await screenshotPage(page, 'share-sheet-history-en.png');
     },
   );
 

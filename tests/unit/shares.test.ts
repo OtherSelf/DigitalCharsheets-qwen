@@ -91,6 +91,26 @@ describe('issueShareToken', () => {
     ).toMatchObject({ uid, characterId: CHARACTER_ID });
   });
 
+  it('включает историю только по явному флагу', () => {
+    const without = issueShareToken(uid, CHARACTER_ID, { nowMs: NOW });
+    expect(
+      getShareForCharacter(uid, CHARACTER_ID, { nowMs: NOW })?.includeHistory,
+    ).toBe(false);
+
+    const withHistory = issueShareToken(uid, CHARACTER_ID, {
+      nowMs: NOW + 1000,
+      includeHistory: true,
+    });
+    expect(resolveShareToken(without.token, { nowMs: NOW + 2000 })).toBeNull();
+    expect(
+      resolveShareToken(withHistory.token, { nowMs: NOW + 2000 }),
+    ).toMatchObject({ includeHistory: true });
+    expect(
+      getShareForCharacter(uid, CHARACTER_ID, { nowMs: NOW + 2000 })
+        ?.includeHistory,
+    ).toBe(true);
+  });
+
   it('поддерживает срок «до отзыва»', () => {
     const { token, expiresAt } = issueShareToken(uid, CHARACTER_ID, {
       expiresInDays: null,

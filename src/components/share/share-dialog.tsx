@@ -15,6 +15,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Dialog,
   DialogContent,
@@ -63,6 +64,7 @@ interface ShareCreatedResponse {
   path: string;
   createdAt: string;
   expiresAt: string | null;
+  includeHistory?: boolean;
 }
 
 type ExpiryValue = '7' | '30' | '90' | 'never';
@@ -80,6 +82,7 @@ export function ShareDialog({
     (ShareCreatedResponse & { url: string }) | null
   >(null);
   const [expiry, setExpiry] = useState<ExpiryValue>('30');
+  const [includeHistory, setIncludeHistory] = useState(false);
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -100,7 +103,10 @@ export function ShareDialog({
           .json()
           .catch(() => null)) as ShareStatusResponse | null;
         if (!res.ok || !body) throw new Error('share_status_failed');
-        if (active) setStatus(body);
+        if (active) {
+          setStatus(body);
+          setIncludeHistory(body.includeHistory === true);
+        }
       })
       .catch(() => {
         if (active) setError(t('share.loadError'));
@@ -123,6 +129,7 @@ export function ShareDialog({
       setCreated(null);
       setCopied(false);
       setError(null);
+      setIncludeHistory(false);
       setConfirmAction(null);
     }
     onOpenChange(isOpen);
@@ -151,7 +158,10 @@ export function ShareDialog({
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ expiresInDays: expiresInDays() }),
+          body: JSON.stringify({
+            expiresInDays: expiresInDays(),
+            includeHistory,
+          }),
         },
       );
       const body = (await res.json().catch(() => null)) as
@@ -170,6 +180,7 @@ export function ShareDialog({
         path: body.path ?? sharePath(body.token),
         createdAt: body.createdAt ?? new Date().toISOString(),
         expiresAt: body.expiresAt ?? null,
+        includeHistory: body.includeHistory === true,
         url: '',
       };
       result.url =
@@ -181,7 +192,7 @@ export function ShareDialog({
         active: true,
         createdAt: result.createdAt,
         expiresAt: result.expiresAt,
-        includeHistory: false,
+        includeHistory: result.includeHistory === true,
       });
 
       try {
@@ -297,6 +308,11 @@ export function ShareDialog({
                   </Button>
                 </div>
                 <p className="text-muted-foreground text-xs">
+                  {created?.includeHistory
+                    ? t('share.historyIncluded')
+                    : t('share.historyNotIncluded')}
+                </p>
+                <p className="text-muted-foreground text-xs">
                   {t('share.linkOnce')}
                 </p>
                 {created?.expiresAt && (
@@ -337,6 +353,11 @@ export function ShareDialog({
                 )}
                 <p className="text-muted-foreground text-sm">
                   {t('share.expiresAt')}: {formatDate(status.expiresAt)}
+                </p>
+                <p className="text-muted-foreground text-xs">
+                  {status.includeHistory
+                    ? t('share.historyIncluded')
+                    : t('share.historyNotIncluded')}
                 </p>
                 <p className="text-muted-foreground text-xs">
                   {t('share.linkOnce')}
@@ -390,6 +411,28 @@ export function ShareDialog({
                       </SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+                <div className="flex items-start gap-2 rounded-md border p-3">
+                  <Checkbox
+                    id="share-include-history"
+                    checked={includeHistory}
+                    onCheckedChange={(value) =>
+                      setIncludeHistory(value === true)
+                    }
+                    disabled={busy}
+                    data-testid="share-include-history"
+                  />
+                  <div className="space-y-1">
+                    <label
+                      htmlFor="share-include-history"
+                      className="text-sm font-medium"
+                    >
+                      {t('share.includeHistory')}
+                    </label>
+                    <p className="text-muted-foreground text-xs">
+                      {t('share.includeHistoryHint')}
+                    </p>
+                  </div>
                 </div>
                 <Button
                   type="button"
