@@ -34,7 +34,10 @@ manual command chains and print what they did and what failed.
   resulting branch, commit, unit state and health;
 - flags `--dir`, `--branch`, `--service`, `--health-url`, `--skip-pull`,
   `--skip-build`, `--no-restart`, `--no-health`, `--allow-dirty`; commands
-  `deploy`, `status`, `logs [N]`, `restart`.
+  `deploy`, `status`, `logs [N]`, `restart`;
+- it may be started from the production checkout itself: when the script file
+  sits inside the updated tree, it copies itself to a temporary file first, so
+  the merge cannot rewrite the script while it runs.
 
 `scripts/dcs-dev.sh` keeps the test bench in a `screen` session: it
 clones/updates a separate checkout (`/opt/dcs-dev`, port `3001` by default), runs
