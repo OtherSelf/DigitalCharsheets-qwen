@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 
 import { Header } from '@/components/header';
+import { AppVersion } from '@/components/layout/app-version';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
@@ -762,6 +763,12 @@ export default function LoginPage() {
               <p className="text-muted-foreground mt-4 text-center text-xs">
                 {t('auth.localDataNote')}
               </p>
+
+              {/* Какая сборка запущена — видно и до входа: снимок экрана или
+                  багрепорт сразу называют версию и коммит. */}
+              <div className="mt-1 flex justify-center">
+                <AppVersion />
+              </div>
             </CardContent>
           </Card>
         </div>

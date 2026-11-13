@@ -2,6 +2,7 @@
 
 import { DemoLanding } from '@/components/demo-landing';
 import { Header } from '@/components/header';
+import { AppVersion } from '@/components/layout/app-version';
 
 /**
  * ─── LANDMARK: SHARED_DEMO_LANDING_VIEW ────────────────────────────────────
@@ -23,6 +24,9 @@ export function DemoLandingView() {
       <main className="safe-area-bottom flex-1 overflow-y-auto px-4 py-8 pb-20">
         <div className="container mx-auto max-w-6xl">
           <DemoLanding createHref="/new" />
+          <div className="mt-8 flex justify-center">
+            <AppVersion />
+          </div>
         </div>
       </main>
     </div>

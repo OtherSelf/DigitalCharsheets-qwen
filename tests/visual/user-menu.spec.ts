@@ -55,8 +55,10 @@ test.describe('profile menu', () => {
     await expect(
       menu.getByRole('menuitem', { name: 'Administration' }),
     ).toHaveCount(0);
-    // Подпись версии в подвале меню. В тестовом окружении /api/version отдаёт
-    // commit: null, поэтому видна только версия из package.json.
+    // Подпись версии в подвале меню. Визуальный стенд задаёт фиктивный коммит
+    // (DCS_GIT_COMMIT=0000000), поэтому форма — «vX.Y.Z · 0000000»; регэксп
+    // намеренно свободный, чтобы работал и режим --base-url против чужого
+    // сервера.
     await expect(menu.getByText(/v\d+\.\d+\.\d+/)).toBeVisible();
 
     await screenshotPage(page, 'profile-menu-en.png');

@@ -333,6 +333,7 @@ export const openApiDocument = {
           'version',
           'commit',
           'commitShort',
+          'branch',
           'buildDate',
           'runtime',
         ],
@@ -342,12 +343,17 @@ export const openApiDocument = {
           commit: {
             type: ['string', 'null'],
             description:
-              'Build commit from DCS_GIT_COMMIT / GIT_COMMIT / VERCEL_GIT_COMMIT_SHA.',
+              'Commit SHA from DCS_GIT_COMMIT / GIT_COMMIT / VERCEL_GIT_COMMIT_SHA, otherwise read from the local `.git` checkout (HEAD). `null` in an image without `.git` and without env.',
           },
           commitShort: {
             type: ['string', 'null'],
             description:
               'First 7 characters of `commit`, lowercased — the form shown in the UI. `null` when `commit` is `null`.',
+          },
+          branch: {
+            type: ['string', 'null'],
+            description:
+              'Branch name from DCS_GIT_BRANCH / GIT_BRANCH / VERCEL_GIT_COMMIT_REF, otherwise the HEAD branch of the local checkout. `null` for a detached HEAD, an image without `.git` or env without a branch. Shown only in the version tooltip.',
           },
           buildDate: {
             type: ['string', 'null'],

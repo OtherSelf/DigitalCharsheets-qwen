@@ -1,18 +1,20 @@
 import packageJson from '../../package.json';
+import { getGitCheckoutInfo } from './git-commit';
 
 /**
  * ─── LANDMARK: APP INFO ─────────────────────────────────────────────────────
  * Общие данные для /api/version и /api/health.
  *
- * `commit`/`buildDate` приходят из окружения сборки/деплоя, а не угадываются:
- * без них поля просто `null`. Версия берётся из package.json, имя — из
- * человекочитаемой константы (`package.json.name` — машинное kebab-case имя,
- * для UI и публичного API оно не подходит).
+ * `commit`/`branch` берутся из окружения сборки/деплоя (`DCS_GIT_COMMIT`,
+ * `GIT_COMMIT`, `VERCEL_GIT_COMMIT_SHA`), а если переменных нет — из `.git`
+ * рядом с приложением: при запуске из рабочей копии версия называет свой
+ * коммит сама, без обвязки в деплой-скрипте. В Docker-образе `.git` нет, и
+ * поведение прежнее: коммит остаётся `null`.
  *
- * `commitShort` — та же строка, но в виде, который можно показать человеку
- * («v0.3.0 · a077aef»). Обрезка живёт здесь, а не в UI: иначе каждый
- * потребитель обрезал бы по-своему, а `VERCEL_GIT_COMMIT_SHA` (40 символов)
- * и локальный `git rev-parse --short` (7) давали разные значения.
+ * `commitShort` — та же строка в виде, который можно показать человеку
+ * («v0.5.1 · a077aef»). Обрезка живёт здесь, а не в UI: иначе каждый
+ * потребитель обрезал бы по-своему, а `VERCEL_GIT_COMMIT_SHA` (40 символов) и
+ * локальный SHA (полный) давали разные значения.
  */
 export const APP_NAME = 'Digital Character Sheets';
 export const APP_VERSION = packageJson.version;
@@ -26,8 +28,15 @@ export interface AppInfo {
   commit: string | null;
   /** Первые 7 символов `commit` в нижнем регистре; `null`, если commit нет. */
   commitShort: string | null;
+  /** Имя ветки; `null` — detached HEAD, env без ветки или не клон. */
+  branch: string | null;
   buildDate: string | null;
   runtime: { node: string };
+}
+
+export interface AppInfoOptions {
+  /** Каталог, от которого искать `.git` (тесты). По умолчанию `process.cwd()`. */
+  cwd?: string;
 }
 
 function firstNonEmpty(...values: (string | undefined)[]): string | null {
@@ -47,18 +56,32 @@ export function shortenCommit(commit: string | null): string | null {
   return commit.slice(0, SHORT_COMMIT_LENGTH).toLowerCase();
 }
 
-export function getAppInfo(): AppInfo {
-  const commit = firstNonEmpty(
+export function getAppInfo(options: AppInfoOptions = {}): AppInfo {
+  const fromEnv = firstNonEmpty(
     process.env.DCS_GIT_COMMIT,
     process.env.GIT_COMMIT,
     process.env.VERCEL_GIT_COMMIT_SHA,
   );
+  const branchFromEnv = firstNonEmpty(
+    process.env.DCS_GIT_BRANCH,
+    process.env.GIT_BRANCH,
+    process.env.VERCEL_GIT_COMMIT_REF,
+  );
+
+  // `.git` читаем только если окружение не дало коммит: в образе без `.git`
+  // это лишний обход дерева на первый запрос.
+  const checkout = fromEnv
+    ? null
+    : getGitCheckoutInfo(options.cwd ?? process.cwd());
+
+  const commit = fromEnv ?? checkout?.commit ?? null;
 
   return {
     name: APP_NAME,
     version: APP_VERSION,
     commit,
     commitShort: shortenCommit(commit),
+    branch: branchFromEnv ?? checkout?.branch ?? null,
     buildDate: firstNonEmpty(process.env.DCS_BUILD_DATE),
     runtime: { node: process.version },
   };
