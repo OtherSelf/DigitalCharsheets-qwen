@@ -158,7 +158,7 @@ function ChangeRow({
   );
 }
 
-function SessionCard({
+export function SessionCard({
   session,
   historyConfig,
 }: {

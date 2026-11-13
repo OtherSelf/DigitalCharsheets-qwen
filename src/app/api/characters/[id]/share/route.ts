@@ -97,8 +97,24 @@ export async function POST(
     );
   }
 
+  const rawIncludeHistory = parsedBody.body.includeHistory;
+  if (
+    rawIncludeHistory !== undefined &&
+    typeof rawIncludeHistory !== 'boolean'
+  ) {
+    return error(
+      400,
+      'includeHistory must be a boolean.',
+      'invalid_include_history',
+    );
+  }
+  const includeHistory = rawIncludeHistory === true;
+
   try {
-    const share = issueShareToken(uid, id, { expiresInDays });
+    const share = issueShareToken(uid, id, {
+      expiresInDays,
+      includeHistory,
+    });
     return NextResponse.json(
       {
         success: true,
@@ -106,6 +122,7 @@ export async function POST(
         path: sharePath(share.token),
         createdAt: share.createdAt,
         expiresAt: share.expiresAt,
+        includeHistory,
       },
       { status: 201, headers: NO_STORE },
     );

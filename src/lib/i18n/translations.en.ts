@@ -707,6 +707,15 @@ export const enTranslations: Record<string, string> = {
   'share.expiresNever': 'Until revoked',
   'share.linkOnce':
     'The link is shown only once. If you lose it, issue a new one — the old link will stop working.',
+  'share.includeHistory': 'Show the change history',
+  'share.includeHistoryHint':
+    'The guest will see old values, including notes and backstory that are no longer on the current sheet.',
+  'share.historyIncluded': 'History is included in this link.',
+  'share.historyNotIncluded': 'History is not included in this link.',
+  'share.sheetTab': 'Sheet',
+  'share.historyTab': 'History',
+  'share.historyReadOnly':
+    'Read-only change log. This is not a backup and cannot be rolled back.',
   'share.warning':
     'The link shows the whole sheet, including notes, backstory and the quest journal.',
   'share.readOnlyTitle': 'Read-only view',

@@ -760,13 +760,17 @@ await check('POST /api/characters/<id>/share → 201 и токен', async () =>
     `/characters/${encodeURIComponent(characterId)}/share`,
     {
       method: 'POST',
-      body: { expiresInDays: 30 },
+      body: { expiresInDays: 30, includeHistory: true },
     },
   );
   assertStatus(res, 201, 'POST share');
   const body = assertJson(res, 'POST share');
   assert(body.success === true, 'POST share: success !== true');
   assert(typeof body.token === 'string', 'POST share: нет token');
+  assert(
+    body.includeHistory === true,
+    'POST share: includeHistory не сохранился в ответе',
+  );
   assert(
     /^[A-Za-z0-9_-]{43}$/.test(body.token),
     'POST share: token неверной формы',
@@ -785,6 +789,7 @@ await check('GET /api/characters/<id>/share → статус без токена
   assertStatus(res, 200, 'GET share');
   const body = assertJson(res, 'GET share');
   assert(body.active === true, 'GET share: ссылка не активна');
+  assert(body.includeHistory === true, 'GET share: includeHistory потерялся');
   assert(body.token === undefined, 'GET share: токен не должен возвращаться');
 });
 
@@ -794,6 +799,14 @@ await check('GET /share/<token> без cookie → 200, лист и баннер'
   assert(
     res.text.includes(dndCharacter.name),
     'GET /share: в HTML нет имени персонажа',
+  );
+  assert(
+    res.text.includes('shared-tab-history'),
+    'GET /share: нет вкладки истории при includeHistory',
+  );
+  assert(
+    !res.text.includes('history-clear'),
+    'GET /share: гостю показана кнопка очистки истории',
   );
   assert(!res.text.includes(userId), 'GET /share: в HTML утёк userId');
   assert(!res.text.includes(username), 'GET /share: в HTML утёк логин');

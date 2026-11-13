@@ -109,7 +109,7 @@ Both endpoints are rate limited per IP + login: 5 attempts per 15 minutes, then
 | `PUT` | `/api/characters/{id}` | cookie | Partial update; optional `__page`/`__seq` tokens drop late writes. |
 | `DELETE` | `/api/characters/{id}` | cookie | Delete a sheet. |
 | `GET` | `/api/characters/{id}/share` | cookie | Status of the read-only link, without the token (`active`, `createdAt`, `expiresAt`). |
-| `POST` | `/api/characters/{id}/share` | cookie | Create or rotate the read-only link. Body `{ "expiresInDays": 7/30/90/null }`; the token is returned once and only its hash is stored. |
+| `POST` | `/api/characters/{id}/share` | cookie | Create or rotate the read-only link. Body `{ "expiresInDays": 7/30/90/null, "includeHistory": false }`; the token is returned once and only its hash is stored. `includeHistory` is opt-in and defaults to `false`. |
 | `DELETE` | `/api/characters/{id}/share` | cookie | Revoke the link; idempotent. |
 | `GET` | `/api/characters/{id}/history` | cookie | Change-history sessions, newest first (`limit`, `before` cursor). |
 | `DELETE` | `/api/characters/{id}/history` | cookie | Clear the change log; the sheet is untouched. |
@@ -129,8 +129,10 @@ A share link is a bearer token for read-only viewing: anyone with
 sensitive. The token is 32 random bytes (43 base64url characters), shown once by
 `POST`; `GET` cannot recover it. One active link exists per sheet, the default
 lifetime is 30 days, and revocation, expiry, a blocked/deleted owner or a deleted
-sheet make it invalid. Link management always uses the owner's session; the
-public page itself is not part of the JSON API.
+sheet make it invalid. `includeHistory` is opt-in per link and defaults to
+`false`; when set, the guest page shows the bounded, sanitized history. Link
+management always uses the owner's session; the public page itself is not part
+of the JSON API.
 
 ### Export
 

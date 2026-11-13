@@ -1,10 +1,14 @@
 'use client';
 
+import { useState } from 'react';
+
 import { DynamicFavicon } from '@/components/dynamic-favicon';
 import { Header } from '@/components/header';
+import { SharedHistoryView } from '@/components/history/shared-history-view';
 import { CharacterSheet } from '@/components/sheets/character-sheet';
 import { SheetStateBanner } from '@/components/sheets/sheet-state-banner';
 import { UnknownSheetView } from '@/components/sheets/unknown-sheet-view';
+import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/context/language-context';
 import { SharedCharacterProvider } from '@/context/shared-character-context';
 import {
@@ -12,6 +16,7 @@ import {
   resolveCharacterSystemId,
 } from '@/games/character-system';
 import { useGameUiSlots } from '@/hooks/use-game-ui-slots';
+import type { SharedHistoryPage } from '@/lib/history-types';
 import type { Character } from '@/lib/types';
 
 /**
@@ -23,11 +28,19 @@ import type { Character } from '@/lib/types';
  * Это UX-защита: запись всё равно невозможна, потому что у гостя нет cookie,
  * а owner-API отвечает 401.
  */
-export function SharedSheetView({ character }: { character: Character }) {
+export function SharedSheetView({
+  character,
+  history,
+}: {
+  character: Character;
+  history?: SharedHistoryPage | null;
+}) {
   const { t } = useTranslation();
+  const [tab, setTab] = useState<'sheet' | 'history'>('sheet');
   const systemId = resolveCharacterSystemId(character);
   const gameModule = getCharacterModule(character);
   const uiSlots = useGameUiSlots(systemId);
+  const historyConfig = gameModule?.history;
 
   return (
     <SharedCharacterProvider character={character}>
@@ -48,7 +61,43 @@ export function SharedSheetView({ character }: { character: Character }) {
             hint={t('share.readOnlyHint')}
           />
 
-          {gameModule ? (
+          {history && (
+            <div
+              role="tablist"
+              aria-label={t('share.historyTab')}
+              className="mb-3 flex flex-wrap gap-2"
+            >
+              <Button
+                type="button"
+                role="tab"
+                aria-selected={tab === 'sheet'}
+                variant={tab === 'sheet' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setTab('sheet')}
+                data-testid="shared-tab-sheet"
+              >
+                {t('share.sheetTab')}
+              </Button>
+              <Button
+                type="button"
+                role="tab"
+                aria-selected={tab === 'history'}
+                variant={tab === 'history' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setTab('history')}
+                data-testid="shared-tab-history"
+              >
+                {t('share.historyTab')}
+              </Button>
+            </div>
+          )}
+
+          {tab === 'history' && history ? (
+            <SharedHistoryView
+              history={history}
+              historyConfig={historyConfig}
+            />
+          ) : gameModule ? (
             <div inert data-testid="shared-sheet-inert">
               <CharacterSheet
                 character={character}

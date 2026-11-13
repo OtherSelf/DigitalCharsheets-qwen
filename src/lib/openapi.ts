@@ -296,6 +296,12 @@ export const openApiDocument = {
             description:
               'Lifetime in days, or `null` for a link that lives until revoked. Unsupported values are rejected with `400 reason: invalid_expiry`.',
           },
+          includeHistory: {
+            type: 'boolean',
+            default: false,
+            description:
+              'Show the read-only change history to the guest. The API copies no owner identifiers; unsupported values are rejected with `400 reason: invalid_include_history`.',
+          },
         },
         additionalProperties: false,
       },
@@ -318,7 +324,7 @@ export const openApiDocument = {
           includeHistory: {
             type: 'boolean',
             description:
-              'Reserved: whether the shared page may show the change history. Always false until the optional stage is enabled.',
+              'Whether the shared page shows the read-only change history. Off by default.',
           },
         },
         additionalProperties: false,
@@ -340,6 +346,7 @@ export const openApiDocument = {
           },
           createdAt: { type: 'string', format: 'date-time' },
           expiresAt: { type: ['string', 'null'], format: 'date-time' },
+          includeHistory: { type: 'boolean' },
         },
         additionalProperties: false,
       },
