@@ -11,11 +11,13 @@ over the same origin as the UI and authenticates with a signed HttpOnly cookie.
 | **`/api/openapi.json`** | The OpenAPI 3.1 document itself. |
 
 The source of truth is [`src/lib/openapi.ts`](../src/lib/openapi.ts). The Scalar
-UI is served by [`src/app/api/docs/route.ts`](../src/app/api/docs/route.ts); its
-bundle is loaded from jsDelivr at a pinned version
-(`@scalar/api-reference@1.78.0`). The API is served by the same self-hosted app.
-For an offline/air-gapped setup, vendor the bundle into `public/` and point
-`cdn` at it.
+UI is served by [`src/app/api/docs/route.ts`](../src/app/api/docs/route.ts) and
+builds itself in the browser from a pinned bundle vendored in
+[`public/vendor/scalar/`](../public/vendor/scalar/README.md)
+(`@scalar/api-reference@1.78.0`). It is served from the app's own origin because
+the CSP allows scripts only from `'self'`, and the same choice keeps `/api/docs`
+working in an air-gapped installation. Update instructions live in the vendor
+README.
 
 `tests/unit/openapi.test.ts` validates the document (refs, `operationId`s,
 responses) and compares its paths/methods with every `src/app/api/**/route.ts`.

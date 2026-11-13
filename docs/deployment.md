@@ -165,10 +165,11 @@ log for warnings.
 
 ## API documentation
 
-`/api/docs` and `/api/openapi.json` are served by the same app. The Scalar UI
-bundle is loaded from jsDelivr at a pinned version; for an offline installation,
-vendor the bundle into `public/` and point `cdn` in
-`src/app/api/docs/route.ts` at it. See [api.md](api.md).
+`/api/docs` and `/api/openapi.json` are served by the same app. The Scalar UI is
+built in the browser from a pinned bundle vendored in
+[`public/vendor/scalar/`](../public/vendor/scalar/README.md) and served from our
+own origin, so an offline installation needs no extra step. See
+[api.md](api.md).
 
 ## Related
 

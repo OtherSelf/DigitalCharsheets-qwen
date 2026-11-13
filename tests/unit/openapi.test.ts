@@ -188,6 +188,15 @@ describe('GET /api/docs', () => {
     const html = (await response.text()).replace(/\\\//g, '/');
     expect(html).toContain('/api/openapi.json');
     expect(html).toContain('Digital Character Sheets API');
-    expect(html).toContain('@scalar/api-reference@1.78.0');
+  });
+
+  it('грузит бандл Scalar со своего origin — CSP запрещает чужие скрипты', async () => {
+    const html = (await docsRoute().text()).replace(/\\\//g, '/');
+    // script-src 'self' в next.config.ts: бандл с CDN браузер не загрузит,
+    // поэтому файл вендорится в public/vendor/scalar и отдаётся нами.
+    expect(html).toMatch(
+      /src="\/vendor\/scalar\/api-reference-\d+\.\d+\.\d+\.js"/,
+    );
+    expect(html).not.toContain('cdn.jsdelivr.net');
   });
 });
