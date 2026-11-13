@@ -17,6 +17,31 @@ The server listens on port `3000` by default; set `PORT` to change it.
 The build needs the dev dependencies; the runtime needs the production
 dependencies and the generated `.next/` directory.
 
+## Deploy scripts
+
+Two operator scripts live in `scripts/` and are versioned with the code; run them
+as `bash scripts/<name>.sh` (scripts carry no executable bit). They replace the
+manual command chains and print what they did and what failed.
+
+`scripts/dcs-prod.sh` automates the production update that used to be
+`git pull && npm ci && npm run build && sudo systemctl restart dcs-prod`:
+
+- refuses a dirty checkout (`--allow-dirty` overrides) and only fast-forwards
+  (`git merge --ff-only`), so production history is never rewritten;
+- if `npm ci` or `npm run build` fails, the service is **not** restarted and the
+  previous version keeps serving;
+- after `systemctl restart` it waits for `200` from `/api/health` and prints the
+  resulting branch, commit, unit state and health;
+- flags `--dir`, `--branch`, `--service`, `--health-url`, `--skip-pull`,
+  `--skip-build`, `--no-restart`, `--no-health`, `--allow-dirty`; commands
+  `deploy`, `status`, `logs [N]`, `restart`.
+
+`scripts/dcs-dev.sh` keeps the test bench in a `screen` session: it
+clones/updates a separate checkout (`/opt/dcs-dev`, port `3001` by default), runs
+`npm run dev`, and can stop, restart, show logs, reset data and run smoke tests
+against the bench. Run it from a checkout that is **not** the bench directory
+itself — it refuses to update its own directory in place.
+
 ## Environment variables
 
 | Variable | Default | Purpose |
