@@ -66,6 +66,7 @@ docs/                  This documentation
 | --- | --- |
 | `/` | Dashboard for a signed-in user, demo landing for a guest |
 | `/character/<id>` | One character sheet (id is the file name, `[A-Za-z0-9_-]{1,64}`) |
+| `/share/<token>` | Public read-only sheet from a bearer share link; no session, `noindex`/`no-store` |
 | `/new`, `/new/manual` | Creation wizard (catalog pick / manual sheet) |
 | `/login` | Sign in, registration and the two-step recovery |
 | `/settings` | Profile, sessions («sign out everywhere»), account deletion |
@@ -74,8 +75,9 @@ docs/                  This documentation
 | `/stats-editor` | Bulk stats editor |
 
 Sheet URLs are built by `characterPath()` in
-[`src/lib/routes.ts`](../src/lib/routes.ts); there is deliberately no redirect
-from the old root `/<id>` route, so bookmarks of that form now answer `404`.
+[`src/lib/routes.ts`](../src/lib/routes.ts); share URLs use `sharePath()`. There
+is deliberately no redirect from the old root `/<id>` route, so bookmarks of
+that form now answer `404`.
 
 ## Request flow
 
@@ -126,6 +128,9 @@ src/lib/* (server-only)
 - All API routes that touch user data take the uid from the session, never from
   the query or body. Creating a sheet additionally checks that the role may see
   the requested edition (403 otherwise).
+- The public `/share/<token>` page is the one deliberate exception: it derives
+  the owner from the hashed bearer token and renders one sheet read-only. The
+  uid still never comes from the request; see [sharing.md](sharing.md).
 
 See [admin.md](admin.md) for the admin invariants and
 [data-storage.md](data-storage.md) for the file layout.

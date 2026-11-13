@@ -66,3 +66,20 @@ describe('next.config: заголовки безопасности (SEC-11)', ()
     expect(nextConfig.images).toEqual({ unoptimized: true });
   });
 });
+
+describe('next.config: приватность гостевой ссылки', () => {
+  const getShareHeaders = async () => {
+    const headers = await nextConfig.headers?.();
+    const entry = headers!.find((item) => item.source === '/share/:path*');
+    expect(entry, 'нет правила для /share/:path*').toBeTruthy();
+    return new Map(entry!.headers.map((header) => [header.key, header.value]));
+  };
+
+  it('запрещает индексацию и кэш токена в URL', async () => {
+    const headers = await getShareHeaders();
+
+    expect(headers.get('X-Robots-Tag')).toContain('noindex');
+    expect(headers.get('Cache-Control')).toBe('no-store');
+    expect(headers.get('Referrer-Policy')).toBe('no-referrer');
+  });
+});

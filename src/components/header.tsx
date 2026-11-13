@@ -15,6 +15,7 @@ import {
   Pencil,
   PencilLine,
   Scroll,
+  Share2,
   Shield,
   Smartphone,
 } from 'lucide-react';
@@ -68,7 +69,16 @@ import {
 interface HeaderProps {
   onNotesClick?: () => void;
   onJournalClick?: () => void;
+  /** Открыть диалог гостевой ссылки (только владелец, не read-only). */
+  onShareClick?: () => void;
   mobileActions?: React.ReactNode;
+  /**
+   * Гостевая страница живёт по токену: `useParams().id` там не id листа.
+   * Готовый персонаж передаётся явно, чтобы шапка показала имя и систему.
+   */
+  characterOverride?: Character;
+  /** В гостевом режиме компактный вид не переключается — кнопку скрываем. */
+  hideCompactToggle?: boolean;
   /**
    * Действие авторизации справа:
    *   auto  — `UserNav` (для гостя сам покажет «Войти»);
@@ -92,7 +102,10 @@ interface HeaderProps {
 export function Header({
   onNotesClick,
   onJournalClick,
+  onShareClick,
   mobileActions,
+  characterOverride,
+  hideCompactToggle = false,
   authAction = 'auto',
   title,
   subtitle,
@@ -109,7 +122,6 @@ export function Header({
     setHideNotes,
     showEditButtons,
     setShowEditButtons,
-    updateCharacter,
   } = useCharacterContext();
   const { t } = useTranslation();
   const siteTitle = useSiteTitle();
@@ -125,14 +137,22 @@ export function Header({
     }
   }, [isLoaded, params.id, getCharacter]);
 
+  // На гостевой странице id в адресе — это токен, а не лист: override важнее
+  // поиска по контексту. На обычном листе override не задан.
+  const displayCharacter = characterOverride ?? character;
+
   // Игровые подпись и действия в шапке приходят из слота плагина (этап 3):
   // в ядре не остаётся ни одной проверки на конкретную игру.
-  const systemId = character ? resolveCharacterSystemId(character) : undefined;
-  const gameModule = character ? getCharacterModule(character) : undefined;
+  const systemId = displayCharacter
+    ? resolveCharacterSystemId(displayCharacter)
+    : undefined;
+  const gameModule = displayCharacter
+    ? getCharacterModule(displayCharacter)
+    : undefined;
   const uiSlots = useGameUiSlots(systemId);
   const HeaderActions = uiSlots?.HeaderActions;
-  const characterSubtitle = character
-    ? (uiSlots?.HeaderSubtitle?.(character, t) ??
+  const characterSubtitle = displayCharacter
+    ? (uiSlots?.HeaderSubtitle?.(displayCharacter, t) ??
       (gameModule ? t(gameModule.nameKey) : ''))
     : undefined;
 
@@ -146,7 +166,11 @@ export function Header({
   // только на телефоне: там рядом стоит заголовок страницы.
   const brandTextClass = cn(
     'truncate font-headline font-bold leading-tight',
-    character ? 'hidden' : title ? 'hidden text-base md:inline' : 'text-lg',
+    displayCharacter
+      ? 'hidden'
+      : title
+        ? 'hidden text-base md:inline'
+        : 'text-lg',
   );
 
   const compactLabel = isCompactView
@@ -228,7 +252,7 @@ export function Header({
           {/* ─── LANDMARK: HEADER_IDENTITY_CHARACTER_INFO ─── */}
           {/* Имя и система живут в одной строке и на десктопе, и в compact
               view, поэтому размеры шрифта ужаты. */}
-          {character ? (
+          {displayCharacter ? (
             <>
               <Separator
                 orientation="vertical"
@@ -237,9 +261,9 @@ export function Header({
               <div className="flex min-w-0 flex-col gap-0">
                 <h2
                   className={`font-headline truncate font-bold tracking-tight ${isCompactView ? 'text-sm md:text-base lg:text-lg' : 'text-lg xl:text-xl'}`}
-                  title={character.name}
+                  title={displayCharacter.name}
                 >
-                  {character.name}
+                  {displayCharacter.name}
                 </h2>
                 <p
                   className={`text-muted-foreground truncate ${isCompactView ? 'text-[10px] md:text-xs' : 'text-xs xl:text-sm'}`}
@@ -268,9 +292,9 @@ export function Header({
           ) : null}
           {/* ─── END LANDMARK: HEADER_IDENTITY_CHARACTER_INFO ─── */}
 
-          {character && HeaderActions && !readOnly && (
+          {displayCharacter && HeaderActions && !readOnly && (
             <HeaderActions
-              character={character}
+              character={displayCharacter}
               isCompactView={isCompactView}
             />
           )}
@@ -308,7 +332,7 @@ export function Header({
             Раньше подписи занимали до 310 px, и на планшете (768–1299 px)
             шапка переносилась на две строки. На планшете эта группа остаётся
             слева, а иконки приложения справа. */}
-          {character && !isSmallScreen && !readOnly && (
+          {displayCharacter && !isSmallScreen && !readOnly && (
             <div className="header-sheet-actions flex flex-wrap items-center gap-2">
               {(onNotesClick || onJournalClick) && (
                 <div className="flex items-center gap-1.5 md:gap-2">
@@ -348,6 +372,27 @@ export function Header({
                       </TooltipContent>
                     </Tooltip>
                   )}
+                </div>
+              )}
+              {onShareClick && (
+                <div className="flex items-center gap-1.5 md:gap-2">
+                  <Tooltip delayDuration={0}>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={onShareClick}
+                        aria-label={t('share.button')}
+                        data-testid="share-button"
+                        className="h-8 w-8 md:h-9 md:w-9"
+                      >
+                        <Share2 className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom">
+                      <p>{t('share.button')}</p>
+                    </TooltipContent>
+                  </Tooltip>
                 </div>
               )}
               <div className="flex items-center gap-1.5 md:gap-2 md:border-r md:border-l md:px-2">
@@ -416,7 +461,25 @@ export function Header({
           {/* ─── LANDMARK: HEADER_VIEW_ACTIONS ───
             Иконки приложения: компактный вид, язык, тема, профиль. */}
           <div className="header-view-actions flex items-center gap-2">
-            {!isSmallScreen && (
+            {isSmallScreen && displayCharacter && !readOnly && onShareClick && (
+              <Tooltip delayDuration={0}>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={onShareClick}
+                    aria-label={t('share.button')}
+                    data-testid="share-button"
+                  >
+                    <Share2 className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">
+                  <p>{t('share.button')}</p>
+                </TooltipContent>
+              </Tooltip>
+            )}
+            {!isSmallScreen && !hideCompactToggle && (
               <Button
                 variant="outline"
                 size="icon"
@@ -434,7 +497,7 @@ export function Header({
               </Button>
             )}
             {/* LANDMARK: SMART_LANGUAGE_TOGGLE */}
-            {(!character || !isCompactView) && <LanguageToggle />}
+            {(!displayCharacter || !isCompactView) && <LanguageToggle />}
             <ThemeToggle />
             {authControls}
           </div>

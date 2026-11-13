@@ -24,7 +24,14 @@ import { type Character } from '@/lib/types';
  * Плагин листа удалён из сборки: рендерить нечем (D9). Показываем данные как
  * JSON и даём экспорт — лист не теряется и остаётся выгружаемым.
  */
-export function UnknownSheetView({ character }: { character: Character }) {
+export function UnknownSheetView({
+  character,
+  hideActions = false,
+}: {
+  character: Character;
+  /** Гостю оставляем только просмотр: без копирования и экспорта файла. */
+  hideActions?: boolean;
+}) {
   const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
   const json = JSON.stringify(character, null, 2);
@@ -50,23 +57,31 @@ export function UnknownSheetView({ character }: { character: Character }) {
           {json}
         </pre>
         <div className="flex flex-wrap gap-2">
-          <Button variant="outline" size="sm" onClick={() => void copyJson()}>
-            {copied ? (
-              <Check className="mr-2 h-4 w-4" />
-            ) : (
-              <Copy className="mr-2 h-4 w-4" />
-            )}
-            {copied ? t('common.jsonCopied') : t('common.copyJson')}
-          </Button>
-          <Button
-            size="sm"
-            onClick={() =>
-              exportCharacterToJSON(character, DEFAULT_EXPORT_CONFIG)
-            }
-          >
-            <FileJson className="mr-2 h-4 w-4" />
-            {t('io.exportJSON')}
-          </Button>
+          {!hideActions && (
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => void copyJson()}
+              >
+                {copied ? (
+                  <Check className="mr-2 h-4 w-4" />
+                ) : (
+                  <Copy className="mr-2 h-4 w-4" />
+                )}
+                {copied ? t('common.jsonCopied') : t('common.copyJson')}
+              </Button>
+              <Button
+                size="sm"
+                onClick={() =>
+                  exportCharacterToJSON(character, DEFAULT_EXPORT_CONFIG)
+                }
+              >
+                <FileJson className="mr-2 h-4 w-4" />
+                {t('io.exportJSON')}
+              </Button>
+            </>
+          )}
         </div>
       </CardContent>
     </Card>

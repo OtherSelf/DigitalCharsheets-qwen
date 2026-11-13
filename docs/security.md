@@ -30,6 +30,7 @@ current code.
 | Account credentials (`passwordHash`, `recoveryPhrase`) | `users/<uid>/user.json` | Account takeover |
 | Session signing key | `DCS_SESSION_SECRET` or `<data-dir>/.session-secret` | Forgery of any session |
 | Character sheets | `users/<uid>/characters/<id>.json` | Private game data of every player |
+| Read-only share links | `<data-dir>/shares.json` (SHA-256 only) | Bearer access to one sheet without a session; the raw tokens live only in the owner's dialog/browser |
 | Login index | `index/logins.json` | Maps a login to a uid (the uid is the file path) |
 | Ability to sign in as another user | `/api/auth*` | Everything else follows |
 
@@ -68,6 +69,8 @@ src/lib (session, storage, auth)    ← path and format validation
 | Online password guessing | Shared limiter per IP + login, `429` with `Retry-After` ([`src/lib/security/rate-limit.ts`](../src/lib/security/rate-limit.ts)) |
 | Account enumeration (login / `exists`) | Identical status and text for «no account» and «wrong password»; existence checks are rate limited |
 | Stolen session cookie replayed after logout or password change | Sessions carry a `jti` that is stored (and revocable) server-side |
+| Guessed or leaked share link replayed after revoke, expiry, block or account deletion | The link is a 256-bit token stored only as SHA-256; every open re-checks expiry, the owner profile and the block state; deleting a sheet/account revokes the record ([`src/lib/shares.ts`](../src/lib/shares.ts)) |
+| Share page leaking the owner or becoming editable | The public page derives the owner from the token, strips `userId`/`__*`, has no public write API, and renders through a no-op read-only context |
 | Cross-site scripting and framing | CSP, `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy`, no third-party image optimizer |
 | Import route abused to create accounts | The Firestore import is not part of the public runtime |
 | Oversized or malformed JSON breaking a sheet | Module schema validation on write, request body limit |
@@ -79,7 +82,9 @@ src/lib (session, storage, auth)    ← path and format validation
 1. **uid is never taken from a request.** `?userId=`, `body.userId` and
    `body.username`-derived uids are ignored; the only source is
    [`getSessionUid`](../src/lib/session.ts). Profiles are only reachable through
-   a UUID-shaped uid (`isUid` in [`src/lib/ids.ts`](../src/lib/ids.ts)).
+   a UUID-shaped uid (`isUid` in [`src/lib/ids.ts`](../src/lib/ids.ts)). The one
+   exception is the public share page: it derives the uid from a hashed bearer
+   token, never from a request field.
 2. **Roles are checked on the server.** `requireAdmin`
    ([`src/lib/admin-auth.ts`](../src/lib/admin-auth.ts)) guards every `/api/admin`
    route and the admin page.
@@ -94,11 +99,16 @@ src/lib (session, storage, auth)    ← path and format validation
    its base directory.
 6. **Secrets are never in the repository** and never in an API response:
    `passwordHash`, `recoveryPhrase`, `DCS_SESSION_SECRET` and the generated
-   session secret are data-dir/server-only.
+   session secret are data-dir/server-only. A share token is shown once by
+   `POST`; `GET` and the data directory expose only its hash.
 7. **Writes are atomic and profile mutations are locked.**
    [`writeJsonAtomic`](../src/lib/fs-atomic.ts) and `withDataLock`
    ([`src/lib/data-lock.ts`](../src/lib/data-lock.ts)) keep truncated JSON and
    lost index entries out of the data directory.
+8. **A share link is read-only and revocable.** It never grants writes, never
+   exposes `userId`, and stops working on revoke, expiry, blocked/deleted owner,
+   deleted sheet or deleted account. The public page is `noindex`, `no-store`
+   and `no-referrer`.
 
 ## Authentication
 
@@ -188,11 +198,18 @@ Every response carries the headers from `next.config.ts`:
 | `X-Content-Type-Options` | `nosniff` | No MIME sniffing of uploads/responses |
 | `Referrer-Policy` | `strict-origin-when-cross-origin` | No full URL (and no sheet ids) leaks to external hosts |
 | `Permissions-Policy` | camera/microphone/geolocation/payment/usb disabled | The app needs none of them |
+| `X-Robots-Tag` on `/share/*` | `noindex, nofollow, noarchive` | The share token is in the URL; it must not enter search indexes |
+| `Cache-Control` on `/share/*` | `no-store` | Revocation takes effect immediately; no CDN/proxy copy of a sheet |
+| `Referrer-Policy` on `/share/*` | `no-referrer` | The token must not leak to an external host through a referer |
 
 `X-Powered-By` is disabled (`poweredByHeader: false`) and the image optimizer is
 off (`images: { unoptimized: true }`): with no `next/image` in the app the
 `/_next/image` endpoint was an unused way to make the server fetch third-party
 URLs.
+
+`/share/*` gets stricter values on top of the global headers (`noindex`,
+`no-store`, `no-referrer`), because the bearer token is part of the URL. See
+[sharing.md](sharing.md) and [`next.config.ts`](../next.config.ts).
 
 ## Secret rotation and incident response
 
@@ -205,6 +222,7 @@ Secrets and where they live:
 | Recovery phrases | `users/<uid>/user.json` (`recoveryPhrase`) | Profile/phrase endpoints or the recovery flow (both rotate the hash and revoke other sessions) |
 | Recovery tokens | `<data-dir>/tokens.json` | `recover/update` burns the used token; `revokeRecoveryTokensForUser` / password reset kills the rest; deleting the file is always safe |
 | Sessions | `<data-dir>/sessions.json` | Logout (`{ "all": true }`), password/phrase change, admin password change; deleting the file logs everyone out |
+| Share links | `<data-dir>/shares.json` (hashes only) | `DELETE /api/characters/{id}/share` (owner), deleting the sheet/account, or deleting the file revokes every link |
 
 If an account may be compromised:
 

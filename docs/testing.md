@@ -45,7 +45,9 @@ empty), `npm run plugins:check` fails when the generated files are stale.
   storage/locks/atomic writes, character schema v2 migration, export/import 3.0
   (JSON and Excel), the game registry/module contract, game catalog visibility
   and module-access matrix, translations parity and hardcoded-UI checks,
-  OpenAPI document and route coverage, admin API and bootstrap, health/version.
+  OpenAPI document and route coverage, admin API and bootstrap, health/version,
+  and the read-only share registry/API (`shares.json`, rotation, expiry,
+  revocation, cleanup).
 - `tests/unit/openapi.test.ts` compares the OpenAPI spec with every
   `src/app/api/**/route.ts`; a new endpoint without documentation fails it.
 
@@ -61,7 +63,9 @@ node scripts/smoke.mjs -u http://127.0.0.1:3001 --data-dir /path/to/data
 
 It checks pages, login/registration, character CRUD, export, recovery, account
 deletion, admin role enforcement, OpenAPI/docs availability, `/api/health`,
-`/api/version`, and — with `--data-dir` — the on-disk `user.json`, login index
+`/api/version`, the guest share link (create, open without a cookie, headers,
+hashed token on disk, revoke), and — with `--data-dir` — the on-disk
+`user.json`, login index
 and sheet files. It creates a disposable `smoke-*` account and removes it
 afterwards.
 
@@ -101,6 +105,10 @@ theme × language × mode × viewport cross-product:
 - Tests that only make sense in one project are tagged `@desktop`/`@mobile`;
   `playwright.config.ts` filters them with `grepInvert`, so there are no
   skipped duplicates in the report.
+- `share.spec.ts` covers the public read-only link (desktop/mobile), the invalid
+  link and the owner dialog. Its link is seeded directly into the temporary
+  data directory; with `--base-url` there is no data directory, so the share
+  screenshots are skipped like the admin ones.
 
 `test:visual:changed` maps the current diff (committed vs `--base`, plus
 staged/unstaged/untracked files) to specs. It is deliberately conservative:
