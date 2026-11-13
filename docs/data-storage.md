@@ -20,6 +20,8 @@ JSON files, written through small, synchronous helpers in `src/lib/`.
       user.json                 profile (schema v4, source of truth)
       characters/
         <character-id>.json     one file per character sheet (schema v2)
+      history/
+        <character-id>.jsonl    append-only change log (one revision per line)
   settings/
     game-catalog.json           runtime visibility/statuses + site title
   index/
@@ -166,6 +168,28 @@ reported but not rewritten.
 A backup is a copy of the whole data directory (or of the JSON export envelope,
 `docs/export-format.md`). Because migrations rewrite files in place, take a copy
 before upgrading a production data directory.
+
+## Character history (change log)
+
+Each sheet may have an append-only JSONL log at
+`users/<uid>/history/<character-id>.jsonl`. One line is one revision:
+
+```json
+{"v":1,"id":"m3k2-7f3c","at":"2026-05-12T18:04:11.000Z","source":"save","changes":[...],"summary":{"changed":1,"added":1,"removed":0,"bulk":0}}
+```
+
+- `source` is `save`, `create` or `migration`; markers have no field diff.
+- `changes` are structured before/after entries produced by the core diff
+  engine; keyed arrays (inventory, spells, quests) are compared by `id`/`name`.
+- Long values are truncated to a preview; the full value is not stored.
+- The log is best-effort: a failed history write is logged, the sheet still
+  saves. A late/empty save does not create a revision.
+- The default limit is **2 MiB per sheet**, overridable with
+  `DCS_HISTORY_MAX_BYTES` (64 KiB … 64 MiB). When it is exceeded, the oldest
+  revisions are dropped and a `{"kind":"truncated"}` marker records how many.
+- Deleting the sheet deletes its log; deleting the account removes the whole
+  user directory. The log is owner-only and is **not** a backup: it stores no
+  full snapshots and cannot restore a sheet.
 
 ## `settings/game-catalog.json`
 

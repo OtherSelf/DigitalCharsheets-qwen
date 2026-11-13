@@ -1,9 +1,16 @@
 import fs from 'fs';
 import path from 'path';
 
+import {
+  appendCreateMarker,
+  appendHistory,
+  deleteCharacterHistory,
+} from './character-history';
 import { normalizeCharacterRecord } from './character-version';
 import { getCharactersDir, getUserDir } from './data-dir';
 import { writeJsonAtomic } from './fs-atomic';
+import { diffCharacterRecords } from './history-diff';
+import { isUid } from './ids';
 import { resolveCharacterFile } from './security/paths';
 import { revokeShareForCharacter } from './shares';
 import { Character } from './types';
@@ -166,11 +173,27 @@ export function saveCharacterToServer(
     throw new Error(`Unsafe character id: ${String(character.id)}`);
   }
   ensureCharactersDir(userId);
+  const existed = fs.existsSync(filePath);
   writeJsonAtomic(
     filePath,
     normalizeCharacterRecord(character as unknown as Record<string, unknown>)
       .character,
   );
+  if (!existed) {
+    // Маркер «лист создан» — без полного diff. История best-effort: её сбой
+    // не должен отменять создание листа. Не-UUID (старые тесты/fixtures)
+    // пропускаем: боевой uid всегда UUID.
+    if (isUid(userId)) {
+      try {
+        appendCreateMarker(userId, character.id);
+      } catch (historyError) {
+        console.error(
+          `Failed to append create marker for ${character.id}:`,
+          historyError,
+        );
+      }
+    }
+  }
 }
 
 // ЗАПИСЬ: пачка листов (импорт/массовые операции) — по файлу на лист.
@@ -234,6 +257,13 @@ export function updateCharacterOnServer(
     ...data,
   } as Record<string, unknown>).character;
 
+  // Считаем diff до записи и до добавления userId владельца: служебные поля
+  // в историю не попадают, а сравнение идёт по содержанию листа.
+  const diff = diffCharacterRecords(
+    character as unknown as Record<string, unknown>,
+    updated as unknown as Record<string, unknown>,
+  );
+
   // Привязка к владельцу. Поле не входит в тип Character (это метаданные,
   // авторизация — по каталогу и cookie), но на диске оно должно быть: так
   // «плоский» бэкап и диагностика видят, чей это лист. Дописываем, если лист
@@ -244,6 +274,19 @@ export function updateCharacterOnServer(
   }
 
   writeJsonAtomic(filePath, updated);
+
+  if (diff && isUid(userId)) {
+    // Журнал не должен ломать сохранение: лист уже записан, ошибку только
+    // логируем.
+    try {
+      appendHistory(userId, characterId, diff);
+    } catch (historyError) {
+      console.error(
+        `Failed to append history for ${userId}/${characterId}:`,
+        historyError,
+      );
+    }
+  }
   return updated;
 }
 
@@ -260,8 +303,8 @@ export function deleteCharacterFromServer(
   try {
     fs.unlinkSync(filePath);
     resetWriteSeqGuard(userId, characterId);
-    // Ссылка на удалённый лист не должна пережить сам лист. Ошибка реестра
-    // ссылок не должна отменять уже состоявшееся удаление файла.
+    // Ссылка и журнал относятся к удалённому листу: убираем их best-effort,
+    // чтобы не оставлять сирот и не отменять уже состоявшееся удаление файла.
     try {
       revokeShareForCharacter(userId, characterId);
     } catch (shareError) {
@@ -270,6 +313,7 @@ export function deleteCharacterFromServer(
         shareError,
       );
     }
+    deleteCharacterHistory(userId, characterId);
     return true;
   } catch (e) {
     console.error(`Error deleting character ${characterId}:`, e);
