@@ -35,7 +35,7 @@
 #  Флаги и сценарии: bash scripts/predeploy.sh --help
 #  Код возврата: 0 — можно деплоить, 1 — есть падения.
 #  Связано: scripts/smoke.mjs, scripts/lib/fs-rename-fallback.cjs, tests/,
-#           _RUN_INSTRUCTIONS.md §2.5, _TESTING_UNIT.md
+#           _RUN_INSTRUCTIONS.md §2.5, docs/testing.md
 # ============================================================================
 
 set -Eeuo pipefail
