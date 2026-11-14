@@ -30,7 +30,7 @@
 #
 #  Код возврата: 0 — эталоны совпали, 1 — есть отличия/падения.
 #  Флаги и проброс в Playwright: bash scripts/visual.sh --help
-#  Связано: playwright.config.ts, tests/visual/, _TESTING_VISUAL.md
+#  Связано: playwright.config.ts, tests/visual/, docs/testing.md
 # ============================================================================
 
 set -Eeuo pipefail
