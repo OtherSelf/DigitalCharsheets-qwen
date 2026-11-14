@@ -20,7 +20,7 @@
 //        --verbose        печатать тела ответов при падениях (и так печатаются)
 //
 //  Код возврата: 0 — все проверки прошли, 1 — были падения, 2 — ошибка в аргументах.
-//  Связано: scripts/predeploy.sh (шаг 5/5), dcs-dev.sh test, _RUN_INSTRUCTIONS.md §2.5.
+//  Связано: scripts/predeploy.sh (шаг 5/5), scripts/dcs-dev.sh test, docs/testing.md.
 //
 //  Скрипт создаёт «мусорный» аккаунт `smoke-<timestamp>-<rand>` и одного
 //  персонажа; с --data-dir всё это удаляется в конце (аккаунт + лист).

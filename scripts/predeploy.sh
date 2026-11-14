@@ -35,7 +35,7 @@
 #  Флаги и сценарии: bash scripts/predeploy.sh --help
 #  Код возврата: 0 — можно деплоить, 1 — есть падения.
 #  Связано: scripts/smoke.mjs, scripts/lib/fs-rename-fallback.cjs, tests/,
-#           _RUN_INSTRUCTIONS.md §2.5, docs/testing.md
+#           docs/testing.md
 # ============================================================================
 
 set -Eeuo pipefail
@@ -305,7 +305,7 @@ fi
 # напомнит, что шим scripts/lib/fs-rename-fallback.cjs больше не нужен.
 for page in 404 500; do
   [ -s ".next/server/pages/$page.html" ] \
-    || die "Нет .next/server/pages/$page.html — сборка не доехала до конца (EXDEV? см. _RUN_INSTRUCTIONS.md §5.2)"
+    || die "Нет .next/server/pages/$page.html — сборка не доехала до конца (EXDEV? см. _RUN_INSTRUCTIONS.md, раздел «EXDEV при next build» и docs/data-storage.md)"
 done
 ok "артефакты .next/server/pages/{404,500}.html на месте"
 
