@@ -61,7 +61,8 @@ The user-facing import accepts only the `dcs-export` format and validates
 `appName`, `format`, version, `kind`, character fields and `characterCount`.
 
 Exports always use format **3.0**. Each character has a machine `systemId`
-(`dnd5e`, `dh1`, `dh2`), `schemaVersion: 2`, and the legacy `gameSystem` mirror
+(`dnd5e`, `dh1`, `dh2`), the module `schemaVersion` (`2` for `dnd5e`, `3` for
+Dark Heresy), and the legacy `gameSystem` mirror
 that is kept for consumers still being migrated. Dark Heresy divination fields
 are stable IDs (`"divination": "mutationWithout"`,
 `"divinationEffect": "minorMutation"`).
