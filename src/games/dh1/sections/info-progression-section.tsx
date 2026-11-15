@@ -91,6 +91,37 @@ const DetailField = ({
   </div>
 );
 
+/** Список свободных строк (черты, мутации, силы) ↔ строка через запятую. */
+function formatNames(entries?: { name: string }[]): string {
+  return (entries ?? []).map((entry) => entry.name).join(', ');
+}
+
+function parseNames(value: string) {
+  return value
+    .split(',')
+    .map((name) => name.trim())
+    .filter(Boolean)
+    .map((name, index) => ({ id: `entry-${index + 1}`, name }));
+}
+
+/** Компактный блок полей листа: заголовок + сетка DetailField. */
+const MetaBlock = ({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) => (
+  <div className="space-y-2">
+    <h4 className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+      {title}
+    </h4>
+    <div className="grid grid-cols-2 gap-x-4 gap-y-3 md:grid-cols-3">
+      {children}
+    </div>
+  </div>
+);
+
 interface SectionProps {
   character: DH1Character;
   isCompactView: boolean;
@@ -328,6 +359,317 @@ export const InfoSection = ({
             isCompactView={isCompactView}
           />
         </div>
+
+        <div className="mt-6 space-y-5">
+          <MetaBlock title={t('dh1.identity')}>
+            <DetailField
+              label={t('dh1.playerName')}
+              value={character.identity?.playerName ?? ''}
+              editing={isInfoEditing}
+              onBlur={(e) =>
+                updateCharacter(character.id, {
+                  identity: {
+                    ...character.identity,
+                    playerName: e.target.value,
+                  },
+                })
+              }
+              isCompactView={isCompactView}
+            />
+            <DetailField
+              label={t('dh1.gender')}
+              value={character.identity?.gender ?? ''}
+              editing={isInfoEditing}
+              onBlur={(e) =>
+                updateCharacter(character.id, {
+                  identity: { ...character.identity, gender: e.target.value },
+                })
+              }
+              isCompactView={isCompactView}
+            />
+            <DetailField
+              label={t('dh1.build')}
+              value={character.identity?.build ?? ''}
+              editing={isInfoEditing}
+              onBlur={(e) =>
+                updateCharacter(character.id, {
+                  identity: { ...character.identity, build: e.target.value },
+                })
+              }
+              isCompactView={isCompactView}
+            />
+            <DetailField
+              label={t('dh1.handedness')}
+              value={character.identity?.handedness ?? ''}
+              editing={isInfoEditing}
+              onBlur={(e) =>
+                updateCharacter(character.id, {
+                  identity: {
+                    ...character.identity,
+                    handedness: e.target.value,
+                  },
+                })
+              }
+              isCompactView={isCompactView}
+            />
+          </MetaBlock>
+
+          {(character.psy || character.careerPath === 'Imperial Psyker') && (
+            <MetaBlock title={t('dh1.psySection')}>
+              <DetailField
+                label={t('dh1.psyRating')}
+                value={character.psy?.rating ?? ''}
+                editing={isInfoEditing}
+                type="number"
+                onBlur={(e) => {
+                  const parsed = Number.parseInt(e.target.value, 10);
+                  updateCharacter(character.id, {
+                    psy: {
+                      ...character.psy,
+                      rating: Number.isFinite(parsed) ? parsed : undefined,
+                    },
+                  });
+                }}
+                isCompactView={isCompactView}
+              />
+              <DetailField
+                label={t('dh1.discipline')}
+                value={character.psy?.discipline ?? ''}
+                editing={isInfoEditing}
+                onBlur={(e) =>
+                  updateCharacter(character.id, {
+                    psy: { ...character.psy, discipline: e.target.value },
+                  })
+                }
+                isCompactView={isCompactView}
+              />
+              <DetailField
+                label={t('dh1.psychicPowers')}
+                value={formatNames(character.psy?.powers)}
+                editing={isInfoEditing}
+                onBlur={(e) =>
+                  updateCharacter(character.id, {
+                    psy: {
+                      ...character.psy,
+                      powers: parseNames(e.target.value),
+                    },
+                  })
+                }
+                isCompactView={isCompactView}
+              />
+              <DetailField
+                label={t('dh1.testedAgainst')}
+                value={character.psy?.testedAgainst ?? ''}
+                editing={isInfoEditing}
+                onBlur={(e) =>
+                  updateCharacter(character.id, {
+                    psy: { ...character.psy, testedAgainst: e.target.value },
+                  })
+                }
+                isCompactView={isCompactView}
+              />
+            </MetaBlock>
+          )}
+
+          <MetaBlock title={t('dh1.condition')}>
+            <DetailField
+              label={t('dh1.traits')}
+              value={formatNames(character.traits)}
+              editing={isInfoEditing}
+              onBlur={(e) =>
+                updateCharacter(character.id, {
+                  traits: parseNames(e.target.value),
+                })
+              }
+              isCompactView={isCompactView}
+            />
+            <DetailField
+              label={t('dh1.mutations')}
+              value={formatNames(character.mutations)}
+              editing={isInfoEditing}
+              onBlur={(e) =>
+                updateCharacter(character.id, {
+                  mutations: parseNames(e.target.value),
+                })
+              }
+              isCompactView={isCompactView}
+            />
+            <DetailField
+              label={t('dh1.eliteAdvances')}
+              value={formatNames(character.eliteAdvances)}
+              editing={isInfoEditing}
+              onBlur={(e) =>
+                updateCharacter(character.id, {
+                  eliteAdvances: parseNames(e.target.value),
+                })
+              }
+              isCompactView={isCompactView}
+            />
+            <DetailField
+              label={t('dh1.insanityDegree')}
+              value={character.insanityDetails?.degree ?? ''}
+              editing={isInfoEditing}
+              onBlur={(e) =>
+                updateCharacter(character.id, {
+                  insanityDetails: {
+                    ...character.insanityDetails,
+                    degree: e.target.value,
+                  },
+                })
+              }
+              isCompactView={isCompactView}
+            />
+            <DetailField
+              label={t('dh1.traumaModifier')}
+              value={character.insanityDetails?.traumaModifier ?? ''}
+              editing={isInfoEditing}
+              onBlur={(e) =>
+                updateCharacter(character.id, {
+                  insanityDetails: {
+                    ...character.insanityDetails,
+                    traumaModifier: e.target.value,
+                  },
+                })
+              }
+              isCompactView={isCompactView}
+            />
+            <DetailField
+              label={t('dh1.disorders')}
+              value={character.insanityDetails?.disorders ?? ''}
+              editing={isInfoEditing}
+              onBlur={(e) =>
+                updateCharacter(character.id, {
+                  insanityDetails: {
+                    ...character.insanityDetails,
+                    disorders: e.target.value,
+                  },
+                })
+              }
+              isCompactView={isCompactView}
+            />
+            <DetailField
+              label={t('dh1.severity')}
+              value={character.insanityDetails?.severity ?? ''}
+              editing={isInfoEditing}
+              onBlur={(e) =>
+                updateCharacter(character.id, {
+                  insanityDetails: {
+                    ...character.insanityDetails,
+                    severity: e.target.value,
+                  },
+                })
+              }
+              isCompactView={isCompactView}
+            />
+            <DetailField
+              label={t('dh1.corruptionDegree')}
+              value={character.corruptionDetails?.degree ?? ''}
+              editing={isInfoEditing}
+              onBlur={(e) =>
+                updateCharacter(character.id, {
+                  corruptionDetails: {
+                    ...character.corruptionDetails,
+                    degree: e.target.value,
+                  },
+                })
+              }
+              isCompactView={isCompactView}
+            />
+            <DetailField
+              label={t('dh1.corruptionTest')}
+              value={character.corruptionDetails?.test ?? ''}
+              editing={isInfoEditing}
+              onBlur={(e) =>
+                updateCharacter(character.id, {
+                  corruptionDetails: {
+                    ...character.corruptionDetails,
+                    test: e.target.value,
+                  },
+                })
+              }
+              isCompactView={isCompactView}
+            />
+            <DetailField
+              label={t('dh1.defilements')}
+              value={character.corruptionDetails?.defilements ?? ''}
+              editing={isInfoEditing}
+              onBlur={(e) =>
+                updateCharacter(character.id, {
+                  corruptionDetails: {
+                    ...character.corruptionDetails,
+                    defilements: e.target.value,
+                  },
+                })
+              }
+              isCompactView={isCompactView}
+            />
+          </MetaBlock>
+
+          <MetaBlock title={t('dh1.carrySection')}>
+            <DetailField
+              label={t('dh1.totalCarriedWeight')}
+              value={character.carry?.totalCarriedWeight ?? ''}
+              editing={isInfoEditing}
+              onBlur={(e) =>
+                updateCharacter(character.id, {
+                  carry: {
+                    ...character.carry,
+                    totalCarriedWeight: e.target.value,
+                  },
+                })
+              }
+              isCompactView={isCompactView}
+            />
+            <DetailField
+              label={t('dh1.carryWeight')}
+              value={character.carry?.carry ?? ''}
+              editing={isInfoEditing}
+              onBlur={(e) =>
+                updateCharacter(character.id, {
+                  carry: { ...character.carry, carry: e.target.value },
+                })
+              }
+              isCompactView={isCompactView}
+            />
+            <DetailField
+              label={t('dh1.liftWeight')}
+              value={character.carry?.lift ?? ''}
+              editing={isInfoEditing}
+              onBlur={(e) =>
+                updateCharacter(character.id, {
+                  carry: { ...character.carry, lift: e.target.value },
+                })
+              }
+              isCompactView={isCompactView}
+            />
+            <DetailField
+              label={t('dh1.pushWeight')}
+              value={character.carry?.push ?? ''}
+              editing={isInfoEditing}
+              onBlur={(e) =>
+                updateCharacter(character.id, {
+                  carry: { ...character.carry, push: e.target.value },
+                })
+              }
+              isCompactView={isCompactView}
+            />
+            <DetailField
+              label={t('dh1.armourWeight')}
+              value={character.equipment.armorWeight ?? ''}
+              editing={isInfoEditing}
+              onBlur={(e) =>
+                updateCharacter(character.id, {
+                  equipment: {
+                    ...character.equipment,
+                    armorWeight: e.target.value,
+                  },
+                })
+              }
+              isCompactView={isCompactView}
+            />
+          </MetaBlock>
+        </div>
+
         <div className="mt-4 grid grid-cols-1 gap-4">
           <Collapsible
             open={isBackstoryOpen}

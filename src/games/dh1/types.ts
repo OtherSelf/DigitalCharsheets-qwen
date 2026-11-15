@@ -135,6 +135,8 @@ export interface DarkHeresyWeapons {
 export interface DarkHeresyEquipment {
   armor: Armor;
   weapons: DarkHeresyWeapons;
+  /** Общий вес брони по листу (свободная строка). */
+  armorWeight?: string;
 }
 
 /**

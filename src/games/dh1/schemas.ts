@@ -181,6 +181,7 @@ const equipmentSchema = z.looseObject({
     melee: z.array(meleeWeaponSchema),
     ranged: z.array(rangedWeaponSchema),
   }),
+  armorWeight: z.string().optional(),
 });
 
 /**
