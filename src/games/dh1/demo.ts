@@ -1,3 +1,4 @@
+import { calculateRank, RanksByCareer } from './dark-heresy-ranks';
 import type { DH1CharacterDraft } from './defaults';
 
 /**
@@ -5,6 +6,7 @@ import type { DH1CharacterDraft } from './defaults';
  * без `influence` и `fatigue2nd`.
  */
 export function createDh1Demo(): DH1CharacterDraft {
+  const totalExpSpent = 500;
   return {
     name: 'Inquisitor Vane',
     characterClass: 'Acolyte',
@@ -15,32 +17,33 @@ export function createDh1Demo(): DH1CharacterDraft {
     notes: 'Demo character for preview purposes.',
     questLog: [],
     homeWorld: 'Hive World',
-    worldVariant: 'Scintilla',
+    worldVariant: 'Middle Hive',
     careerPath: 'Guardsman',
-    rank: 'Rank 1',
-    divination: 'The Emperor Protects',
-    divinationEffect: '+10 to next test',
-    quirk: 'Always cleans their weapon',
+    rank: calculateRank(RanksByCareer.Guardsman, totalExpSpent, null, null),
+    divination: 'painOfBullet',
+    divinationEffect: 'toughness1',
+    quirk: 'Pallid',
     height: '180 cm',
     weight: '75 kg',
     age: '28',
     skinColor: 'Pale',
     hairColor: 'Black',
     eyeColor: 'Grey',
-    experience: 500,
-    totalExpSpent: 500,
+    experience: totalExpSpent,
+    totalExpSpent,
     alternatePath: null,
     advancedPath: null,
+    // Hive World: база 20/20/20/15/20/20/20/20/25 + 2d10, не выше базы +20.
     stats: {
       weaponSkill: 35,
       ballisticSkill: 30,
-      strength: 35,
-      toughness: 40,
-      agility: 35,
-      intelligence: 40,
-      perception: 45,
-      willpower: 40,
-      fellowship: 35,
+      strength: 30,
+      toughness: 30,
+      agility: 30,
+      intelligence: 35,
+      perception: 30,
+      willpower: 30,
+      fellowship: 30,
     },
     statUpgrades: {
       weaponSkill: [false, false, false, false],
@@ -59,7 +62,7 @@ export function createDh1Demo(): DH1CharacterDraft {
     insanityPoints: { total: 5 },
     corruptionPoints: { total: 0 },
     wealth: { throneGelt: 50, monthlyIncome: 10 },
-    movement: { walkHalf: 2, walkFull: 4, charge: 8, run: 12 },
+    movement: { walkHalf: 3, walkFull: 6, charge: 9, run: 18 },
     equipment: {
       armor: {
         Head: { ap: 3, type: 'Flak', mods: '', quality: 'Common' },
