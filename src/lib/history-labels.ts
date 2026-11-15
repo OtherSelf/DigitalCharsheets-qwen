@@ -35,6 +35,36 @@ function humanizeField(field: string): string {
 }
 
 /**
+ * Последний сегмент пути подписывается отдельно, а родитель — по самой
+ * длинной известной подписи/коллекции. Так `equipment.armor.Head.ap`
+ * превращается в «Броня · AP», а не в английский путь целиком.
+ */
+function resolveBySegments(
+  fieldPath: string,
+  config: GameHistoryConfig | undefined,
+  t: (key: string) => string,
+): string {
+  const segments = fieldPath.split('.').filter(Boolean);
+  const last = segments.pop() ?? '';
+  const parent = segments.join('.');
+  let parentText = '';
+  if (parent) {
+    for (let index = segments.length; index > 0; index -= 1) {
+      const key = segments.slice(0, index).join('.');
+      const label = config?.labels?.[key] ?? config?.collections?.[key];
+      if (label) {
+        parentText = t(label);
+        break;
+      }
+    }
+    if (!parentText) parentText = humanizeHistoryPath(parent);
+  }
+  const lastLabel = config?.labels?.[last];
+  const lastText = lastLabel ? t(lastLabel) : humanizeField(last);
+  return [parentText, lastText].filter(Boolean).join(' · ');
+}
+
+/**
  * Подпись одного изменения. Для элемента массива собирает
  * «Коллекция · Элемент · поле»; если плагин дал точную подпись поля, она
  * используется вместо человекочитаемого сегмента.
@@ -53,7 +83,8 @@ export function resolveHistoryLabel(
     : change.path;
 
   if (change.key !== undefined) {
-    const collectionKey = config?.collections?.[change.path];
+    const collectionKey =
+      config?.collections?.[change.path] ?? config?.labels?.[change.path];
     const base = collectionKey
       ? t(collectionKey)
       : humanizeHistoryPath(change.path);
@@ -78,7 +109,7 @@ export function resolveHistoryLabel(
   const collectionKey = config?.collections?.[change.path];
   if (collectionKey) return t(collectionKey);
 
-  return humanizeHistoryPath(fieldPath);
+  return resolveBySegments(fieldPath, config, t);
 }
 
 /** Текстовое представление значения для строки «было/стало». */

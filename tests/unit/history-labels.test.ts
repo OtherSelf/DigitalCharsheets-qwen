@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
+import { dh1History } from '@/games/dh1/history';
+import { dh2History } from '@/games/dh2/history';
 import { listGameModules } from '@/games/registry';
 import {
   formatHistoryDate,
@@ -76,6 +78,66 @@ describe('history labels', () => {
         t,
       ),
     ).toBe('common.inventory · Sword · common.notes');
+  });
+
+  it('подписывает вложенные пути DH точной картой плагина', () => {
+    const tKey = (key: string) => key;
+    expect(
+      resolveHistoryLabel(
+        {
+          kind: 'changed',
+          path: 'identity.gender',
+          before: { value: '' },
+          after: { value: 'f' },
+        },
+        dh1History,
+        tKey,
+      ),
+    ).toBe('dh1.gender');
+    expect(
+      resolveHistoryLabel(
+        {
+          kind: 'changed',
+          path: 'aptitudes.profile',
+          before: { value: [] },
+          after: { value: ['toughness'] },
+        },
+        dh2History,
+        tKey,
+      ),
+    ).toBe('dh2.aptitudes');
+  });
+
+  it('подписывает последний сегмент пути и элемент коллекции', () => {
+    const tKey = (key: string) => key;
+    expect(
+      resolveHistoryLabel(
+        {
+          kind: 'changed',
+          path: 'equipment.armor.Head.ap',
+          before: { value: 2 },
+          after: { value: 3 },
+        },
+        dh1History,
+        tKey,
+      ),
+    ).toBe('dh1.equipment.armor · dh1.armorAp');
+
+    expect(
+      resolveHistoryLabel(
+        {
+          kind: 'changed',
+          path: 'equipment.armor',
+          key: 'Head',
+          label: 'Head',
+          field: 'ap',
+          before: { value: 2 },
+          after: { value: 3 },
+        },
+        dh1History,
+        tKey,
+      ),
+    ).toBe('dh1.equipment.armor · Head · dh1.armorAp');
   });
 
   it('падает в человекочитаемый путь без подписей', () => {
