@@ -929,6 +929,21 @@ export const EquipmentInventorySection = React.forwardRef<
                                     className="h-7 text-xs"
                                   />{' '}
                                 </div>
+                                <div className="space-y-1">
+                                  {' '}
+                                  <Label>{t('dh1.weaponWeight')}</Label>{' '}
+                                  <Input
+                                    defaultValue={weapon.weight ?? ''}
+                                    onChange={(e) =>
+                                      handleMeleeWeaponChange(
+                                        weapon.id,
+                                        'weight',
+                                        e.target.value,
+                                      )
+                                    }
+                                    className="h-7 text-xs"
+                                  />{' '}
+                                </div>
                                 <div className="col-span-2 space-y-1">
                                   {' '}
                                   <Label>{t('dh1.weaponTraits')}</Label>{' '}
@@ -970,6 +985,12 @@ export const EquipmentInventorySection = React.forwardRef<
                                     {t('dh1.weaponPenetration')}:
                                   </strong>{' '}
                                   {weapon.penetration || '-'}
+                                </div>
+                                <div>
+                                  <strong className="text-muted-foreground">
+                                    {t('dh1.weaponWeight')}:
+                                  </strong>{' '}
+                                  {weapon.weight || '-'}
                                 </div>
                                 <div className="col-span-2">
                                   <strong className="text-muted-foreground">
@@ -1481,6 +1502,38 @@ export const EquipmentInventorySection = React.forwardRef<
                                 </div>
                                 <div className="space-y-1">
                                   {' '}
+                                  <Label>
+                                    {t('dh1.weaponPenetration')}
+                                  </Label>{' '}
+                                  <Input
+                                    defaultValue={weapon.penetration ?? ''}
+                                    onChange={(e) =>
+                                      handleRangedWeaponChange(
+                                        weapon.id,
+                                        'penetration',
+                                        e.target.value,
+                                      )
+                                    }
+                                    className="h-7 text-xs"
+                                  />{' '}
+                                </div>
+                                <div className="space-y-1">
+                                  {' '}
+                                  <Label>{t('dh1.weaponWeight')}</Label>{' '}
+                                  <Input
+                                    defaultValue={weapon.weight ?? ''}
+                                    onChange={(e) =>
+                                      handleRangedWeaponChange(
+                                        weapon.id,
+                                        'weight',
+                                        e.target.value,
+                                      )
+                                    }
+                                    className="h-7 text-xs"
+                                  />{' '}
+                                </div>
+                                <div className="space-y-1">
+                                  {' '}
                                   <Label>{t('dh1.weaponClip')}</Label>{' '}
                                   <Input
                                     type="number"
@@ -1573,6 +1626,18 @@ export const EquipmentInventorySection = React.forwardRef<
                                     {t('dh1.weaponDamage')}:
                                   </strong>{' '}
                                   {weapon.damage || '-'}
+                                </div>
+                                <div>
+                                  <strong className="text-muted-foreground">
+                                    {t('dh1.weaponPenetration')}:
+                                  </strong>{' '}
+                                  {weapon.penetration || '-'}
+                                </div>
+                                <div>
+                                  <strong className="text-muted-foreground">
+                                    {t('dh1.weaponWeight')}:
+                                  </strong>{' '}
+                                  {weapon.weight || '-'}
                                 </div>
                                 <div>
                                   <strong className="text-muted-foreground">

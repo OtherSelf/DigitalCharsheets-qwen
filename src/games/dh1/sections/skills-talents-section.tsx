@@ -336,7 +336,7 @@ export const SkillsTalentsSection = React.forwardRef<
                   {/* BASIC SKILLS */}
                   <div>
                     <h4 className="text-muted-foreground mb-2 font-semibold">
-                      {t('dh1.basic')}
+                      {t('dh1.basic')} ({basicSkills.length})
                     </h4>
                     <div className="overflow-hidden rounded-lg border">
                       <Table>
@@ -607,7 +607,7 @@ export const SkillsTalentsSection = React.forwardRef<
                   {/* ADVANCED SKILLS */}
                   <div>
                     <h4 className="text-muted-foreground mb-2 font-semibold">
-                      {t('dh1.advanced')}
+                      {t('dh1.advanced')} ({advancedSkills.length})
                     </h4>
                     <div className="overflow-hidden rounded-lg border">
                       <Table>
