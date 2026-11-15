@@ -770,5 +770,8 @@
   "dh2.experienceKind.psychic-power": "Психосила",
   "dh2.experienceKind.psy-rating": "Пси-рейтинг",
   "dh2.experienceKind.elite-advance": "Элитное продвижение",
-  "dh2.acolyte": "Послушник"
+  "dh2.acolyte": "Послушник",
+  "dh2.buyStep": "Купить следующую ступень",
+  "dh2.xpWarning": "Не хватает опыта",
+  "dh2.xpWarningNegative": "Покупка дороже свободного опыта; лист разрешает её для домашних правил, но проверьте баланс."
 }
