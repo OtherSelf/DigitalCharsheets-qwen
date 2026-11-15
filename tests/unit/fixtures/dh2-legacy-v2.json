@@ -1,0 +1,107 @@
+{
+  "id": "fixture-dh2-legacy-v2",
+  "name": "Legacy Acolyte",
+  "gameSystem": "Dark Heresy",
+  "systemId": "dh2",
+  "schemaVersion": 2,
+  "characterClass": "Adept",
+  "backstory": "Писарь из Архива Сцинтиллы, попавший в свиту инквизитора после дела о поддельных титулах.",
+  "homeWorld": "Imperial World",
+  "worldVariant": "Agri World",
+  "careerPath": "Adept",
+  "rank": "Rank 2",
+  "divination": "",
+  "divinationEffect": "minorMutation",
+  "quirk": "Tribal taboos",
+  "height": "180",
+  "weight": "78",
+  "age": "34",
+  "skinColor": "Бледная",
+  "hairColor": "Тёмные",
+  "eyeColor": "Серые",
+  "experience": 1500,
+  "totalExpSpent": 900,
+  "alternatePath": null,
+  "advancedPath": null,
+  "notes": "",
+  "questLog": [],
+  "wounds": { "current": 10, "max": 10 },
+  "fatePoints": { "current": 2, "max": 3 },
+  "insanityPoints": { "total": 3, "notes": "" },
+  "corruptionPoints": { "total": 1, "notes": "" },
+  "wealth": { "throneGelt": 120, "monthlyIncome": 50 },
+  "movement": { "walkHalf": 3, "walkFull": 6, "charge": 9, "run": 18 },
+  "fatigue2nd": { "current": 1, "notes": "" },
+  "stats": {
+    "weaponSkill": 31,
+    "ballisticSkill": 35,
+    "strength": 28,
+    "toughness": 33,
+    "agility": 34,
+    "intelligence": 42,
+    "perception": 36,
+    "willpower": 38,
+    "fellowship": 30,
+    "influence": 27
+  },
+  "statUpgrades": {
+    "weaponSkill": [false, false, false, false],
+    "ballisticSkill": [false, false, false, false],
+    "strength": [false, false, false, false],
+    "toughness": [false, false, false, false],
+    "agility": [false, false, false, false],
+    "intelligence": [true, false, false, false],
+    "perception": [true, true, false, false],
+    "willpower": [false, false, false, false],
+    "fellowship": [false, false, false, false],
+    "influence": [false, false, false, false]
+  },
+  "equipment": {
+    "armor": {
+      "Head": null,
+      "Body": null,
+      "Left arm": null,
+      "Right arm": null,
+      "Left leg": null,
+      "Right leg": null
+    },
+    "weapons": {
+      "melee": [],
+      "ranged": []
+    }
+  },
+  "inventory": [],
+  "skills": [
+    {
+      "id": "awareness",
+      "name": "Awareness",
+      "notes": "",
+      "type": "basic",
+      "training": {
+        "skilled": true,
+        "plus10": true,
+        "plus20": false,
+        "plus30": false
+      }
+    },
+    {
+      "id": "logic",
+      "name": "Logic",
+      "notes": "",
+      "type": "basic",
+      "training": {
+        "skilled": true,
+        "plus10": false,
+        "plus20": false,
+        "plus30": false
+      }
+    }
+  ],
+  "talents": [
+    { "id": "jaded", "name": "Jaded", "notes": "" },
+    { "id": "peer-administratum", "name": "Peer (Administratum)", "notes": "" }
+  ],
+  "criticalConditions": [],
+  "customHouseRules": [],
+  "customResources": []
+}
