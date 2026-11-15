@@ -1,7 +1,7 @@
-import { CURRENT_SCHEMA_VERSION } from '../plugin-api';
 import { readNumber, readString, type DefaultsInput } from '../shared/defaults';
 import { calculateRank, RanksByCareer } from './dark-heresy-ranks';
 import { effectIdForDivination } from './divination-i18n';
+import { DH1_SCHEMA_VERSION } from './schema-version';
 import {
   DARK_HERESY_CORE_STATS,
   DarkHeresyCareerPaths,
@@ -64,7 +64,7 @@ export function createDarkHeresyBaseDefaults(
     name: readString(input, 'name', ''),
     characterClass: careerPath,
     gameSystem: 'Dark Heresy',
-    schemaVersion: CURRENT_SCHEMA_VERSION,
+    schemaVersion: DH1_SCHEMA_VERSION,
     backstory: readString(input, 'backstory', ''),
     homeWorld: readHomeWorld(input),
     worldVariant: readString(input, 'worldVariant', ''),
@@ -92,8 +92,8 @@ export function createDarkHeresyBaseDefaults(
       current: readNumber(input, 'fatePoints', 1),
       max: readNumber(input, 'fatePoints', 1),
     },
-    insanityPoints: { total: 0, notes: '' },
-    corruptionPoints: { total: 0, notes: '' },
+    insanityPoints: { total: readNumber(input, 'insanity', 0), notes: '' },
+    corruptionPoints: { total: readNumber(input, 'corruption', 0), notes: '' },
     wealth: {
       throneGelt: readNumber(input, 'throneGelt', 0),
       monthlyIncome: 0,
@@ -128,6 +128,7 @@ export function createDh1Defaults(
   input: DefaultsInput = {},
 ): DH1CharacterDraft {
   const base = createDarkHeresyBaseDefaults(input);
+  const identity = { gender: readString(input, 'gender', '') };
   const stats = Object.fromEntries(
     DARK_HERESY_CORE_STATS.map((stat) => [stat, readNumber(input, stat, 30)]),
   ) as DarkHeresyCoreStats;
@@ -141,6 +142,7 @@ export function createDh1Defaults(
   return {
     ...base,
     systemId: 'dh1',
+    identity,
     stats,
     statUpgrades,
     statNotes: {},

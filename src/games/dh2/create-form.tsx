@@ -57,6 +57,8 @@ import {
   divinationLabel,
   homeWorldLabel,
   roleLabel,
+  skillLabel,
+  talentLabel,
 } from './dh2e-labels';
 
 const CHARACTERISTIC_FIELDS = [
@@ -106,6 +108,9 @@ export function DarkHeresyCreateForm({ onCreated }: CreateFormProps) {
     background: z.string({ error: t('dh2.selectBackgroundError') }),
     role: z.string({ error: t('dh2.selectRoleError') }),
     divination: z.string().optional(),
+    gender: z.string().optional(),
+    insanity: z.coerce.number().int().min(0).optional(),
+    corruption: z.coerce.number().int().min(0).optional(),
     backstory: z.string().optional(),
     height: z.string().optional(),
     weight: z.string().optional(),
@@ -140,6 +145,9 @@ export function DarkHeresyCreateForm({ onCreated }: CreateFormProps) {
       background: '',
       role: '',
       divination: '',
+      gender: '',
+      insanity: 0,
+      corruption: 0,
       weaponSkill: 30,
       ballisticSkill: 30,
       strength: 30,
@@ -402,6 +410,50 @@ export function DarkHeresyCreateForm({ onCreated }: CreateFormProps) {
                   {aptitudeLabels(aptitudes.profile, t) || '—'}
                 </span>
               </p>
+
+              {(background || role) && (
+                <div className="space-y-2 rounded-md border p-3 text-sm">
+                  <h4 className="text-sm font-medium">
+                    {t('dh2.startingPackage')}
+                  </h4>
+                  {background && (
+                    <>
+                      <GrantList
+                        title={t('dh2.startingSkills')}
+                        items={background.startingSkills}
+                      />
+                      <GrantList
+                        title={t('dh2.startingTalents')}
+                        items={background.startingTalents}
+                      />
+                      {background.bonusKeys.map((key) => (
+                        <p key={key} className="text-muted-foreground text-xs">
+                          {t(key)}
+                        </p>
+                      ))}
+                      <p className="text-xs">
+                        {t('dh2.startingAptitude')}:{' '}
+                        {background.aptitudeChoice
+                          .map((id) => t(`dh2.catalog.aptitude.${id}`))
+                          .join(' / ')}
+                      </p>
+                    </>
+                  )}
+                  {role && (
+                    <>
+                      <p className="text-xs">
+                        {t('dh2.roleTalent')}:{' '}
+                        {role.talentChoice.of
+                          .map((id) => talentLabel(id, t))
+                          .join(' / ')}
+                      </p>
+                      <p className="text-muted-foreground text-xs">
+                        {t(role.bonusKey)}
+                      </p>
+                    </>
+                  )}
+                </div>
+              )}
             </section>
 
             <section className="space-y-3">
@@ -448,34 +500,6 @@ export function DarkHeresyCreateForm({ onCreated }: CreateFormProps) {
                     />
                   );
                 })}
-              </div>
-              <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-                <FormField
-                  control={form.control}
-                  name="wounds"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t('dh2.wounds')}</FormLabel>
-                      <FormControl>
-                        <Input type="number" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="fatePoints"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t('dh2.fate')}</FormLabel>
-                      <FormControl>
-                        <Input type="number" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
               </div>
             </section>
 
@@ -536,16 +560,27 @@ export function DarkHeresyCreateForm({ onCreated }: CreateFormProps) {
             </section>
 
             <section className="space-y-3">
-              <h3 className="text-base font-medium">{t('dh2.stageDetails')}</h3>
+              <h3 className="text-base font-medium">{t('dh2.otherStats')}</h3>
               <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+                <FormField
+                  control={form.control}
+                  name="gender"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('dh2.gender')}</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                 {(
                   [
-                    ['height', 'common.height'],
-                    ['weight', 'common.weight'],
-                    ['age', 'common.age'],
-                    ['skinColor', 'dh2.skinColor'],
-                    ['hairColor', 'dh2.hairColor'],
-                    ['eyeColor', 'dh2.eyeColor'],
+                    ['wounds', 'dh2.wounds'],
+                    ['fatePoints', 'dh2.fate'],
+                    ['insanity', 'dh2.insanity'],
+                    ['corruption', 'dh2.corruption'],
                     ['experience', 'dh2.experience'],
                     ['totalExpSpent', 'dh2.totalExpSpent'],
                   ] as const
@@ -559,6 +594,37 @@ export function DarkHeresyCreateForm({ onCreated }: CreateFormProps) {
                         <FormLabel>{t(labelKey)}</FormLabel>
                         <FormControl>
                           <Input type="number" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                ))}
+              </div>
+            </section>
+
+            <section className="space-y-3">
+              <h3 className="text-base font-medium">{t('dh2.stageDetails')}</h3>
+              <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+                {(
+                  [
+                    ['height', 'common.height'],
+                    ['weight', 'common.weight'],
+                    ['age', 'common.age'],
+                    ['skinColor', 'dh2.skinColor'],
+                    ['hairColor', 'dh2.hairColor'],
+                    ['eyeColor', 'dh2.eyeColor'],
+                  ] as const
+                ).map(([key, labelKey]) => (
+                  <FormField
+                    key={key}
+                    control={form.control}
+                    name={key}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t(labelKey)}</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -598,3 +664,46 @@ function characteristicId(key: string): string {
 
 /** Имя компонента из `plugin.json#sheet.createForm` (историческое). */
 export const Dh2CharacterForm = DarkHeresyCreateForm;
+
+/** Список стартовых навыков/талантов: варианты «одно из» показывает через « / ». */
+function GrantList({
+  title,
+  items,
+}: {
+  title: string;
+  items: readonly object[];
+}) {
+  const { t } = useTranslation();
+  if (items.length === 0) return null;
+  const text = items
+    .map((item) => {
+      const entry = item as {
+        skillId?: string;
+        talentId?: string;
+        specialisation?: string;
+        choose?: number;
+        of?: readonly object[];
+      };
+      if (entry.choose && entry.of) {
+        return entry.of
+          .map((option) => {
+            const inner = option as { skillId?: string; talentId?: string };
+            return inner.skillId
+              ? skillLabel(inner.skillId, t)
+              : talentLabel(inner.talentId ?? '', t);
+          })
+          .join(' / ');
+      }
+      const base = entry.skillId
+        ? skillLabel(entry.skillId, t)
+        : talentLabel(entry.talentId ?? '', t);
+      return entry.specialisation ? `${base} (${entry.specialisation})` : base;
+    })
+    .join(', ');
+  return (
+    <p className="text-xs">
+      <span className="text-muted-foreground">{title}: </span>
+      {text}
+    </p>
+  );
+}

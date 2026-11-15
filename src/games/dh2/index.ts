@@ -1,4 +1,3 @@
-import { CURRENT_SCHEMA_VERSION } from '../plugin-api';
 import type { ExportTranslate, GameExportConfig, GameModule } from '../types';
 import { createDh2Defaults } from './defaults';
 import { createDh2Demo } from './demo';
@@ -10,6 +9,7 @@ import dh2Ru from './i18n/ru.json';
 import { mergeDh2Data } from './merge';
 import { normalizeDh2 } from './normalize';
 import { dh2CharacterSchema } from './schema';
+import { DH2_SCHEMA_VERSION } from './schema-version';
 import type { DH2Character } from './types';
 
 /**
@@ -52,7 +52,7 @@ export const dh2Module: GameModule<DH2Character> = {
   defaultStatus: 'published',
   nameKey: 'games.dh2.name',
   descriptionKey: 'games.dh2.description',
-  schemaVersion: CURRENT_SCHEMA_VERSION,
+  schemaVersion: DH2_SCHEMA_VERSION,
   schema: dh2CharacterSchema,
   i18n: { en: dh2En, ru: dh2Ru },
   capabilities: {

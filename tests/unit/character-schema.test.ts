@@ -3,6 +3,7 @@ import path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
+import { DH1_SCHEMA_VERSION } from '@/games/dh1/schema-version';
 import type { DH1Character } from '@/games/dh1/types';
 import type { DH2Character } from '@/games/dh2/types';
 import {
@@ -51,7 +52,7 @@ describe('character schema v1', () => {
     // В legacy-листе было influence=5 — это поле 2e, оно уходит в notes.
     expect(issues.join(' ')).toContain('поля 2e перенесены');
     expect(dh.notes).toContain('[migration v2]');
-    expect(character.schemaVersion).toBe(CHARACTER_SCHEMA_VERSION);
+    expect(character.schemaVersion).toBe(DH1_SCHEMA_VERSION);
     expect(dh.divination).toBe('mutationWithout');
     expect((dh as DH1Character).divinationEffect).toBe('minorMutation');
   });
@@ -81,7 +82,7 @@ describe('character schema v1', () => {
     );
     const dh = character as unknown as DH1Character | DH2Character;
     expect(dh.divination).toBe('Knowledge is power, guard it well.');
-    expect(character.schemaVersion).toBe(CHARACTER_SCHEMA_VERSION);
+    expect(character.schemaVersion).toBe(DH1_SCHEMA_VERSION);
     expect(issues.join(' ')).toContain('неизвестное пророчество');
   });
 
@@ -105,7 +106,7 @@ describe('character schema v1', () => {
     if (!parsed.ok) return;
     const imported = parsed.characters[0] as unknown as
       DH1Character | DH2Character;
-    expect(imported.schemaVersion).toBe(CHARACTER_SCHEMA_VERSION);
+    expect(imported.schemaVersion).toBe(DH1_SCHEMA_VERSION);
     expect(imported.divination).toBe('trustYourFear');
     expect((imported as unknown as DH1Character).divinationEffect).toBe(
       'agility2Fate1',
@@ -144,7 +145,7 @@ describe('character schema v1', () => {
     // В файле был influence из старой формы — миграция сообщает об этом.
     expect(first.issues.join(' ')).toContain('поля 2e перенесены');
     const stored = JSON.parse(fs.readFileSync(file, 'utf8'));
-    expect(stored.schemaVersion).toBe(CHARACTER_SCHEMA_VERSION);
+    expect(stored.schemaVersion).toBe(DH1_SCHEMA_VERSION);
     expect(stored.divination).toBe('sinsHidden');
     expect((stored as unknown as DH1Character).divinationEffect).toBe(
       'corruption3',
@@ -160,7 +161,7 @@ describe('character schema v1', () => {
     fs.mkdirSync(charsDir, { recursive: true });
     const file = path.join(charsDir, 'future.json');
     const future = makeDhCharacter({
-      schemaVersion: CHARACTER_SCHEMA_VERSION + 1,
+      schemaVersion: DH1_SCHEMA_VERSION + 1,
       divination: 'mutationWithout',
       divinationEffect: 'minorMutation',
     });

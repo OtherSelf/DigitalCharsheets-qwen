@@ -20,6 +20,7 @@ export function buildDh2PortableJson(
       background: character.background,
       role: character.role,
       divination: character.divination,
+      gender: character.gender,
       height: character.height,
       weight: character.weight,
       age: character.age,

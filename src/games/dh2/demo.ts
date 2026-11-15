@@ -31,6 +31,7 @@ export function createDh2Demo(): DH2CharacterDraft {
       })(),
     },
     divination: 'd100-10',
+    gender: 'Male',
     eliteAdvances: [],
     psy: { rating: 0, disciplines: [], powers: [] },
     experienceLog: [],

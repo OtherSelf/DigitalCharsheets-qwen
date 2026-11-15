@@ -136,6 +136,9 @@ export function DarkHeresyCreateForm({
     influence: z.coerce.number().int(),
     wounds: z.coerce.number().int(),
     fatePoints: z.coerce.number().int(),
+    insanity: z.coerce.number().int().min(0).optional(),
+    corruption: z.coerce.number().int().min(0).optional(),
+    gender: z.string().optional(),
     throneGelt: z.coerce.number().int().optional(),
   });
 
@@ -165,6 +168,9 @@ export function DarkHeresyCreateForm({
       influence: 30,
       wounds: 10,
       fatePoints: 1,
+      insanity: 0,
+      corruption: 0,
+      gender: '',
       throneGelt: 0,
       divination: '',
       quirk: '',
@@ -902,6 +908,45 @@ export function DarkHeresyCreateForm({
                       <FormLabel>{t('dh1.fatePoints')}</FormLabel>
                       <FormControl>
                         <Input type="number" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="insanity"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('dh1.insanity')}</FormLabel>
+                      <FormControl>
+                        <Input type="number" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="corruption"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('dh1.corruption')}</FormLabel>
+                      <FormControl>
+                        <Input type="number" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="gender"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('dh1.gender')}</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
