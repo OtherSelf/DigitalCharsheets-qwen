@@ -59,7 +59,7 @@ export function resolveHistoryLabel(
       : humanizeHistoryPath(change.path);
     const item = change.label ?? change.key;
     const fieldKey = change.field
-      ? (config?.labels?.[fieldPath] ?? null)
+      ? (config?.labels?.[fieldPath] ?? config?.labels?.[change.field] ?? null)
       : null;
     const field = change.field
       ? fieldKey
@@ -69,7 +69,10 @@ export function resolveHistoryLabel(
     return [base, item, field].filter(Boolean).join(' · ');
   }
 
-  const exact = config?.labels?.[fieldPath] ?? config?.labels?.[change.path];
+  const exact =
+    config?.labels?.[fieldPath] ??
+    config?.labels?.[change.path] ??
+    (change.field ? config?.labels?.[change.field] : undefined);
   if (exact) return t(exact);
 
   const collectionKey = config?.collections?.[change.path];

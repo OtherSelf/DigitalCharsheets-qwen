@@ -18,6 +18,8 @@ export const ruTranslations: Record<string, string> = {
     'Это действие нельзя отменить. Это навсегда удалит лист вашего персонажа для',
   'common.cancel': 'Отмена',
   'common.notes': 'Заметки',
+
+  'common.quantity': 'Количество',
   'common.questJournal': 'Журнал заданий',
   'common.info': 'Информация',
   'common.progression': 'Прогресс',
