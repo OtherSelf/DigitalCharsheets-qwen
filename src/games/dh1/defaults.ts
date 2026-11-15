@@ -142,5 +142,16 @@ export function createDh1Defaults(
     statUpgrades,
     statNotes: {},
     fatigue1st: { current: readNumber(input, 'fatigue1st', 0) },
+    // Псайкер начинает с Пси-рейтингом 1 (Таблица 1-18/Глава VI).
+    ...(base.careerPath === 'Imperial Psyker'
+      ? {
+          psy: {
+            rating: 1,
+            discipline: '',
+            powers: [],
+            testedAgainst: '',
+          },
+        }
+      : {}),
   };
 }

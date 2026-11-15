@@ -8,8 +8,11 @@ import {
   HOME_WORLD_KEYS,
   QUIRK_KEYS,
   QUIRKS_BY_HOMEWORLD,
+  STARTING_EXPERIENCE,
+  STARTING_WEALTH,
   VARIANT_KEYS,
   WORLD_FEATURES,
+  WORLD_STARTING_PROFILE,
   WORLD_VARIANT_LABELS,
   WORLD_VARIANTS_BY_HOMEWORLD,
 } from '@/games/dh1/dark-heresy-data';
@@ -181,6 +184,20 @@ describe('Dark Heresy: справочные данные против базов
       const key = WORLD_VARIANT_LABELS[world];
       expect(key, `мир «${world}» без WORLD_VARIANT_LABELS`).toBeTruthy();
       expectTranslation(key, world);
+    }
+  });
+
+  it('стартовые таблицы: профиль 8 миров, богатство 8 профессий, опыт 400', () => {
+    expect(STARTING_EXPERIENCE).toBe(400);
+    expect(Object.keys(STARTING_WEALTH).sort()).toEqual(
+      [...DarkHeresyCareerPaths].sort(),
+    );
+    for (const world of DarkHeresyHomeWorlds) {
+      const profile = WORLD_STARTING_PROFILE[world];
+      expect(profile, `нет стартового профиля для «${world}»`).toBeTruthy();
+      expect(Object.keys(profile.characteristics)).toHaveLength(9);
+      expect(profile.wounds).toMatch(/^1d5\+\d+$/);
+      expect(profile.fate.trim()).toBeTruthy();
     }
   });
 

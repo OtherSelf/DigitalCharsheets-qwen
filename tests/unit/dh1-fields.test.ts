@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { createDh1Defaults } from '@/games/dh1/defaults';
 import { dh1CharacterSchema } from '@/games/dh1/schema';
 import { DarkHeresyHomeWorlds } from '@/games/dh1/types';
 
@@ -168,6 +169,14 @@ describe('DH1: аддитивные поля листа', () => {
       },
     });
     expect(() => dh1CharacterSchema.parse(character)).not.toThrow();
+  });
+
+  it('Псайкер начинает с Пси-рейтингом 1, остальные — без psy', () => {
+    const psyker = createDh1Defaults({ careerPath: 'Imperial Psyker' });
+    expect(psyker.psy?.rating).toBe(1);
+    expect(psyker.psy?.powers).toEqual([]);
+    const guardsman = createDh1Defaults({ careerPath: 'Guardsman' });
+    expect(guardsman.psy).toBeUndefined();
   });
 
   it('принимает все восемь родных миров, включая IH', () => {

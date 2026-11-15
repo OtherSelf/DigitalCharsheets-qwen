@@ -50,9 +50,16 @@ import {
   getQuirksForHomeWorld,
   HOME_WORLD_KEYS,
   QUIRK_KEYS,
+  RANK_KEYS,
+  STARTING_EXPERIENCE,
+  STARTING_WEALTH,
   VARIANT_KEYS,
+  WORLD_FEATURES,
+  WORLD_STARTING_PROFILE,
+  WORLD_VARIANT_LABELS,
   WORLD_VARIANTS_BY_HOMEWORLD,
 } from './dark-heresy-data';
+import { RanksByCareer } from './dark-heresy-ranks';
 import { createDh1Defaults } from './defaults';
 import {
   divinationEffectKey,
@@ -61,13 +68,18 @@ import {
 } from './divination-i18n';
 import { DarkHeresyCareerPaths, DarkHeresyHomeWorlds } from './types';
 
-const VARIANT_LABEL_KEYS: Record<string, string> = {
-  'Feral World': 'dh1.tribalTaboos',
-  'Hive World': 'dh1.hiveClass',
-  'Imperial World': 'dh1.birthPlanet',
-  'Void Born': 'dh1.shipTradition',
-  'Forge World': 'dh1.placeOfBirth',
-};
+/** Порядок характеристик в подсказке стартового профиля (Таблица 1-3). */
+const STARTING_STAT_KEYS = [
+  ['weaponSkill', 'weaponSkillAbbr'],
+  ['ballisticSkill', 'ballisticSkillAbbr'],
+  ['strength', 'strengthAbbr'],
+  ['toughness', 'toughnessAbbr'],
+  ['agility', 'agilityAbbr'],
+  ['intelligence', 'intelligenceAbbr'],
+  ['perception', 'perceptionAbbr'],
+  ['willpower', 'willpowerAbbr'],
+  ['fellowship', 'fellowshipAbbr'],
+] as const;
 
 export type DarkHeresyFormVariant = 'dh1';
 
@@ -159,13 +171,23 @@ export function DarkHeresyCreateForm({
       skinColor: '',
       hairColor: '',
       eyeColor: '',
-      experience: 0,
+      experience: STARTING_EXPERIENCE,
       totalExpSpent: 0,
     },
   });
 
   const watchedDivination = form.watch('divination');
   const watchedHomeWorld = form.watch('homeWorld');
+  const watchedCareer = form.watch('careerPath');
+  const watchedProfile = React.useMemo(
+    () => (watchedHomeWorld ? WORLD_STARTING_PROFILE[watchedHomeWorld] : null),
+    [watchedHomeWorld],
+  );
+  const startingRank = React.useMemo(() => {
+    if (!watchedCareer) return null;
+    const rank = RanksByCareer[watchedCareer].standard[0]?.name;
+    return rank ? (RANK_KEYS[rank] ?? rank) : null;
+  }, [watchedCareer]);
 
   const divinationEffect = React.useMemo(() => {
     return effectIdForDivination(watchedDivination);
@@ -289,7 +311,7 @@ export function DarkHeresyCreateForm({
                     <FormItem>
                       <FormLabel>
                         {t(
-                          VARIANT_LABEL_KEYS[watchedHomeWorld] ||
+                          WORLD_VARIANT_LABELS[watchedHomeWorld] ||
                             'dh1.worldVariant',
                         )}
                       </FormLabel>
@@ -355,6 +377,83 @@ export function DarkHeresyCreateForm({
                 />
               </div>
             </div>
+
+            {watchedHomeWorld && (
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div className="space-y-2 rounded-md border p-3">
+                  <h4 className="text-sm font-medium">
+                    {t('dh1.worldFeatures')}
+                  </h4>
+                  <ul className="text-muted-foreground space-y-1 text-sm">
+                    {WORLD_FEATURES[watchedHomeWorld].map((feature) => (
+                      <li key={feature.name}>
+                        <span className="text-foreground font-medium">
+                          {t(feature.labelKey)}
+                        </span>
+                        {' — '}
+                        {t(feature.effectKey)}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                {watchedProfile && (
+                  <div className="space-y-2 rounded-md border p-3">
+                    <h4 className="text-sm font-medium">
+                      {t('dh1.startingProfile')}
+                    </h4>
+                    <p className="text-muted-foreground text-sm">
+                      {t('dh1.startingWounds')}: {watchedProfile.wounds}
+                    </p>
+                    <p className="text-muted-foreground text-sm">
+                      {t('dh1.startingFate')}: {watchedProfile.fate}
+                    </p>
+                    <div className="grid grid-cols-3 gap-1 text-xs">
+                      {STARTING_STAT_KEYS.map(([statKey, abbrKey]) => (
+                        <div
+                          key={statKey}
+                          className="flex justify-between gap-2"
+                        >
+                          <span className="text-muted-foreground">
+                            {t(`dh1.${abbrKey}`)}
+                          </span>
+                          <span className="font-medium">
+                            {watchedProfile.characteristics[statKey]}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {watchedCareer && (
+              <div className="space-y-1 rounded-md border p-3 text-sm">
+                <p>
+                  <span className="text-muted-foreground">
+                    {t('dh1.startingRank')}:{' '}
+                  </span>
+                  {startingRank ? t(startingRank) : '-'}
+                </p>
+                <p>
+                  <span className="text-muted-foreground">
+                    {t('dh1.startingWealth')}:{' '}
+                  </span>
+                  {STARTING_WEALTH[watchedCareer] ?? '-'}
+                </p>
+                <p>
+                  <span className="text-muted-foreground">
+                    {t('dh1.startingExperience')}:{' '}
+                  </span>
+                  {STARTING_EXPERIENCE}
+                </p>
+                {watchedCareer === 'Imperial Psyker' && (
+                  <p className="text-muted-foreground pt-1">
+                    {t('dh1.psykerStartHint')}
+                  </p>
+                )}
+              </div>
+            )}
 
             <div className="space-y-2">
               <h3 className="text-base font-medium">
