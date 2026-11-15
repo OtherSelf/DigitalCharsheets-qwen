@@ -836,3 +836,167 @@ export const RANK_KEYS: Record<string, string> = {
   Omniprophet: 'dh1.rankOmniprophet',
   'Magos Errant': 'dh1.rankMagosErrant',
 };
+
+/**
+ * Стартовые данные создания персонажа 1e.
+ *
+ * Значения — из Таблиц 1-3 (напыление характеристик), 1-6 (раны), 1-7
+ * (судьба) и 1-9 (богатство). Приложение показывает их как подсказку:
+ * бросок делает игрок, автогенерации нет (D2 DH1APP).
+ */
+export interface WorldStartingProfile {
+  /** База характеристик из Таблицы 1-3. */
+  characteristics: {
+    weaponSkill: number;
+    ballisticSkill: number;
+    strength: number;
+    toughness: number;
+    agility: number;
+    intelligence: number;
+    perception: number;
+    willpower: number;
+    fellowship: number;
+  };
+  /** Формула ран из Таблицы 1-6. */
+  wounds: string;
+  /** Диапазоны Очков Судьбы из Таблицы 1-7. */
+  fate: string;
+}
+
+export const WORLD_STARTING_PROFILE: Record<string, WorldStartingProfile> = {
+  'Feral World': {
+    characteristics: {
+      weaponSkill: 20,
+      ballisticSkill: 20,
+      strength: 25,
+      toughness: 25,
+      agility: 20,
+      intelligence: 20,
+      perception: 20,
+      willpower: 15,
+      fellowship: 15,
+    },
+    wounds: '1d5+9',
+    fate: '1–4: 1, 5–8: 2, 9–10: 2',
+  },
+  'Hive World': {
+    characteristics: {
+      weaponSkill: 20,
+      ballisticSkill: 20,
+      strength: 20,
+      toughness: 15,
+      agility: 20,
+      intelligence: 20,
+      perception: 20,
+      willpower: 20,
+      fellowship: 25,
+    },
+    wounds: '1d5+8',
+    fate: '1–4: 1, 5–8: 2, 9–10: 3',
+  },
+  'Imperial World': {
+    characteristics: {
+      weaponSkill: 20,
+      ballisticSkill: 20,
+      strength: 20,
+      toughness: 20,
+      agility: 20,
+      intelligence: 20,
+      perception: 20,
+      willpower: 20,
+      fellowship: 20,
+    },
+    wounds: '1d5+8',
+    fate: '1–4: 2, 5–8: 2, 9–10: 3',
+  },
+  'Void Born': {
+    characteristics: {
+      weaponSkill: 20,
+      ballisticSkill: 20,
+      strength: 15,
+      toughness: 20,
+      agility: 20,
+      intelligence: 20,
+      perception: 20,
+      willpower: 25,
+      fellowship: 20,
+    },
+    wounds: '1d5+6',
+    fate: '1–4: 2, 5–8: 3, 9–10: 3',
+  },
+  'Forge World': {
+    characteristics: {
+      weaponSkill: 15,
+      ballisticSkill: 20,
+      strength: 20,
+      toughness: 20,
+      agility: 20,
+      intelligence: 25,
+      perception: 20,
+      willpower: 20,
+      fellowship: 20,
+    },
+    wounds: '1d5+7',
+    fate: '1–5: 1, 6–9: 2, 10: 3',
+  },
+  'Schola Progenium': {
+    characteristics: {
+      weaponSkill: 20,
+      ballisticSkill: 20,
+      strength: 20,
+      toughness: 20,
+      agility: 20,
+      intelligence: 20,
+      perception: 20,
+      willpower: 20,
+      fellowship: 20,
+    },
+    wounds: '1d5+8',
+    fate: '1–2: 1, 3–7: 2, 8–10: 3',
+  },
+  'Noble Born': {
+    characteristics: {
+      weaponSkill: 20,
+      ballisticSkill: 20,
+      strength: 20,
+      toughness: 20,
+      agility: 20,
+      intelligence: 20,
+      perception: 20,
+      willpower: 15,
+      fellowship: 25,
+    },
+    wounds: '1d5+8',
+    fate: '1–4: 1, 5–8: 2, 9–10: 3',
+  },
+  'Mind-Cleared': {
+    characteristics: {
+      weaponSkill: 20,
+      ballisticSkill: 20,
+      strength: 20,
+      toughness: 20,
+      agility: 20,
+      intelligence: 20,
+      perception: 20,
+      willpower: 25,
+      fellowship: 15,
+    },
+    wounds: '1d5+8',
+    fate: '1–3: 2, 4–9: 3, 10: 4',
+  },
+};
+
+/** Стартовый опыт всех персонажей 1e (Таблица 1-9, стр. 43). */
+export const STARTING_EXPERIENCE = 400;
+
+/** Стартовое богатство по профессии (Таблица 1-9, стр. 43). */
+export const STARTING_WEALTH: Record<string, string> = {
+  Adept: '100+1d10',
+  Arbitrator: '50+2d10',
+  Assassin: '120+3d10',
+  Cleric: '300+5d10',
+  Guardsman: '70+1d10',
+  'Imperial Psyker': '50+1d5',
+  Scum: '10+1d5',
+  'Tech-Priest': '150+1d10',
+};
