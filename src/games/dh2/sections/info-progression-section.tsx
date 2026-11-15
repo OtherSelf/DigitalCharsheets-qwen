@@ -2,6 +2,8 @@
 
 import * as React from 'react';
 
+import { Trash2 } from 'lucide-react';
+
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -332,9 +334,10 @@ export const ProgressionSection = ({
   onEditingChange,
 }: SectionProps) => {
   const { updateCharacter, showEditButtons } = useCharacterContext();
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const [isProgressionEditing, setIsProgressionEditing] = React.useState(false);
   const [isSpendOpen, setIsSpendOpen] = React.useState(false);
+  const [isJournalOpen, setIsJournalOpen] = React.useState(false);
   const [spendAmount, setSpendAmount] = React.useState(0);
   const [spendWhat, setSpendWhat] = React.useState('');
 
@@ -344,6 +347,17 @@ export const ProgressionSection = ({
 
   const available =
     (character.experience ?? 0) - (character.totalExpSpent ?? 0);
+
+  const handleDeleteExperience = (entryId: string) => {
+    const entry = character.experienceLog.find((item) => item.id === entryId);
+    if (!entry) return;
+    updateCharacter(character.id, {
+      totalExpSpent: Math.max(0, character.totalExpSpent - entry.cost),
+      experienceLog: character.experienceLog.filter(
+        (item) => item.id !== entryId,
+      ),
+    });
+  };
 
   const handleSpend = () => {
     if (spendAmount <= 0) return;
@@ -394,6 +408,14 @@ export const ProgressionSection = ({
             onClick={() => setIsSpendOpen(true)}
           >
             {t('dh2.spendExp')}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setIsJournalOpen(true)}
+          >
+            {t('dh2.experienceLog')}
           </Button>
           {(showEditButtons || isProgressionEditing) && (
             <EditSaveButton
@@ -459,25 +481,6 @@ export const ProgressionSection = ({
             <p className="text-sm font-medium">{character.psy.rating || '-'}</p>
           </div>
         </div>
-        {character.experienceLog.length > 0 && (
-          <div className="space-y-1">
-            <Label className="text-muted-foreground text-xs">
-              {t('dh2.experienceLog')}
-            </Label>
-            <ul className="space-y-1 text-xs">
-              {character.experienceLog.slice(-10).map((entry) => (
-                <li key={entry.id} className="flex justify-between gap-2">
-                  <span className="truncate">
-                    {t(`dh2.experienceKind.${entry.kind}`)}: {entry.ref}
-                  </span>
-                  <span className="text-muted-foreground shrink-0">
-                    {entry.cost}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
       </CardContent>
       <Dialog open={isSpendOpen} onOpenChange={setIsSpendOpen}>
         <DialogContent>
@@ -512,6 +515,52 @@ export const ProgressionSection = ({
               {t('dh2.spendConfirm')}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isJournalOpen} onOpenChange={setIsJournalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('dh2.experienceLog')}</DialogTitle>
+            <DialogDescription>{t('dh2.experienceLogHint')}</DialogDescription>
+          </DialogHeader>
+          <div className="max-h-[60vh] space-y-2 overflow-y-auto">
+            {character.experienceLog.length === 0 && (
+              <p className="text-muted-foreground text-sm">
+                {t('dh2.experienceLogEmpty')}
+              </p>
+            )}
+            {character.experienceLog.map((entry) => (
+              <div
+                key={entry.id}
+                className="flex items-center justify-between gap-2 rounded-md border p-2 text-sm"
+              >
+                <div className="min-w-0">
+                  <p className="truncate font-medium">{entry.ref}</p>
+                  <p className="text-muted-foreground text-xs">
+                    {t(`dh2.experienceKind.${entry.kind}`)} ·{' '}
+                    {new Date(entry.createdAt).toLocaleDateString(
+                      language === 'ru' ? 'ru-RU' : 'en-GB',
+                    )}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-primary font-semibold">
+                    {entry.cost}
+                  </span>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    aria-label={t('dh2.deleteExperienceEntry')}
+                    onClick={() => handleDeleteExperience(entry.id)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
         </DialogContent>
       </Dialog>
     </Card>

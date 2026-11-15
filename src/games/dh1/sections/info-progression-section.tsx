@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 
-import { ChevronDown, ChevronRight, Minus, Plus } from 'lucide-react';
+import { ChevronDown, ChevronRight, Trash2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,6 +15,7 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
@@ -757,7 +758,7 @@ export const ProgressionSection = ({
   onEditingChange,
 }: SectionProps) => {
   const { updateCharacter, showEditButtons } = useCharacterContext();
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const [isProgressionEditing, setIsProgressionEditing] = React.useState(false);
 
   React.useEffect(() => {
@@ -776,7 +777,10 @@ export const ProgressionSection = ({
   const [editableAlternatePath, setEditableAlternatePath] = React.useState(
     character.alternatePath ?? null,
   );
-  const [amountToSpend, setAmountToSpend] = React.useState(0);
+  const [isSpendOpen, setIsSpendOpen] = React.useState(false);
+  const [isJournalOpen, setIsJournalOpen] = React.useState(false);
+  const [spendAmount, setSpendAmount] = React.useState(0);
+  const [spendWhat, setSpendWhat] = React.useState('');
   const expInputRef = React.useRef<HTMLInputElement>(null);
 
   // ─── LANDMARK: SYNC CURRENT EXP ───
@@ -861,23 +865,46 @@ export const ProgressionSection = ({
   };
 
   const handleSpendExp = () => {
-    if (amountToSpend > 0 && amountToSpend <= editableExperience) {
-      const newCurrentExp = editableExperience - amountToSpend;
-      const newTotalExp = editableTotalExpSpent + amountToSpend;
-      setEditableExperience(newCurrentExp);
-      setEditableTotalExpSpent(newTotalExp);
-      if (newTotalExp < advancedPathThreshold) setEditableAdvancedPath(null);
-      updateCharacter(character.id, {
-        experience: newCurrentExp,
-        totalExpSpent: newTotalExp,
-        advancedPath:
-          newTotalExp < advancedPathThreshold
-            ? (editableAdvancedPath ?? null)
-            : (editableAdvancedPath ?? character.advancedPath ?? null),
-        alternatePath: editableAlternatePath ?? character.alternatePath ?? null,
-      });
-      setAmountToSpend(0);
-    }
+    if (spendAmount <= 0) return;
+    const label = spendWhat.trim() || t('dh1.manualPurchase');
+    const newTotalExp = editableTotalExpSpent + spendAmount;
+    setEditableTotalExpSpent(newTotalExp);
+    if (newTotalExp < advancedPathThreshold) setEditableAdvancedPath(null);
+    updateCharacter(character.id, {
+      totalExpSpent: newTotalExp,
+      experienceLog: [
+        ...(character.experienceLog ?? []),
+        {
+          id: `xp:${Date.now()}`,
+          label,
+          cost: spendAmount,
+          createdAt: new Date().toISOString(),
+        },
+      ],
+      advancedPath:
+        newTotalExp < advancedPathThreshold
+          ? (editableAdvancedPath ?? null)
+          : (editableAdvancedPath ?? character.advancedPath ?? null),
+      alternatePath: editableAlternatePath ?? character.alternatePath ?? null,
+    });
+    setSpendAmount(0);
+    setSpendWhat('');
+    setIsSpendOpen(false);
+  };
+
+  const handleDeleteExperience = (entryId: string) => {
+    const entry = (character.experienceLog ?? []).find(
+      (item) => item.id === entryId,
+    );
+    if (!entry) return;
+    const newTotalExp = Math.max(0, editableTotalExpSpent - entry.cost);
+    setEditableTotalExpSpent(newTotalExp);
+    updateCharacter(character.id, {
+      totalExpSpent: newTotalExp,
+      experienceLog: (character.experienceLog ?? []).filter(
+        (item) => item.id !== entryId,
+      ),
+    });
   };
 
   // ─── LANDMARK: CURRENT_EXP_AUTOSAVE ───
@@ -925,16 +952,34 @@ export const ProgressionSection = ({
           >
             {t('common.progression')}
           </CardTitle>
-          {(showEditButtons || isProgressionEditing) && (
-            <EditSaveButton
-              editing={isProgressionEditing}
-              onEdit={() => setIsProgressionEditing(true)}
-              onSave={() => {
-                handleSaveTotalExp();
-                setIsProgressionEditing(false);
-              }}
-            />
-          )}
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setIsSpendOpen(true)}
+            >
+              {t('dh1.spendExp')}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setIsJournalOpen(true)}
+            >
+              {t('dh1.experienceLog')}
+            </Button>
+            {(showEditButtons || isProgressionEditing) && (
+              <EditSaveButton
+                editing={isProgressionEditing}
+                onEdit={() => setIsProgressionEditing(true)}
+                onSave={() => {
+                  handleSaveTotalExp();
+                  setIsProgressionEditing(false);
+                }}
+              />
+            )}
+          </div>
         </CardHeader>
         <CardContent className="pt-0">
           <div className="flex flex-col space-y-4">
@@ -955,49 +1000,6 @@ export const ProgressionSection = ({
                 className="h-9"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="spend-exp-amount">{t('dh1.spendExp')}</Label>
-              <div className="flex items-center gap-2">
-                <Button
-                  size="icon"
-                  variant="outline"
-                  className="h-9 w-9 shrink-0"
-                  onClick={() =>
-                    setAmountToSpend(Math.max(0, amountToSpend - 50))
-                  }
-                >
-                  <Minus className="h-4 w-4" />
-                </Button>
-                <Input
-                  id="spend-exp-amount"
-                  type="number"
-                  value={amountToSpend === 0 ? '' : amountToSpend}
-                  onChange={(e) =>
-                    setAmountToSpend(
-                      Math.max(0, parseInt(e.target.value, 10) || 0),
-                    )
-                  }
-                  className="h-9 text-center"
-                />
-                <Button
-                  size="icon"
-                  variant="outline"
-                  className="h-9 w-9 shrink-0"
-                  onClick={() => setAmountToSpend(amountToSpend + 50)}
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-            <Button
-              onClick={handleSpendExp}
-              disabled={
-                amountToSpend <= 0 || amountToSpend > editableExperience
-              }
-              className="w-full"
-            >
-              {t('dh1.spendExp')}
-            </Button>
             <div className="space-y-1">
               <Label
                 htmlFor="total-exp-edit"
@@ -1170,6 +1172,87 @@ export const ProgressionSection = ({
             >
               {t('dh1.choose')} {t('dh1.rankChirurgeon')}
             </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isSpendOpen} onOpenChange={setIsSpendOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('dh1.spendExp')}</DialogTitle>
+            <DialogDescription>{t('dh1.spendHint')}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="space-y-1">
+              <Label htmlFor="spend-amount">{t('dh1.spendAmount')}</Label>
+              <Input
+                id="spend-amount"
+                type="number"
+                min={0}
+                defaultValue={0}
+                onChange={(e) =>
+                  setSpendAmount(parseInt(e.target.value, 10) || 0)
+                }
+              />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="spend-what">{t('dh1.spendWhat')}</Label>
+              <Input
+                id="spend-what"
+                defaultValue=""
+                onChange={(e) => setSpendWhat(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="button" onClick={handleSpendExp}>
+              {t('dh1.spendConfirm')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isJournalOpen} onOpenChange={setIsJournalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('dh1.experienceLog')}</DialogTitle>
+            <DialogDescription>{t('dh1.experienceLogHint')}</DialogDescription>
+          </DialogHeader>
+          <div className="max-h-[60vh] space-y-2 overflow-y-auto">
+            {(character.experienceLog ?? []).length === 0 && (
+              <p className="text-muted-foreground text-sm">
+                {t('dh1.experienceLogEmpty')}
+              </p>
+            )}
+            {(character.experienceLog ?? []).map((entry) => (
+              <div
+                key={entry.id}
+                className="flex items-center justify-between gap-2 rounded-md border p-2 text-sm"
+              >
+                <div className="min-w-0">
+                  <p className="truncate font-medium">{entry.label}</p>
+                  <p className="text-muted-foreground text-xs">
+                    {new Date(entry.createdAt).toLocaleDateString(
+                      language === 'ru' ? 'ru-RU' : 'en-GB',
+                    )}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-primary font-semibold">
+                    {entry.cost}
+                  </span>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    aria-label={t('dh1.deleteExperienceEntry')}
+                    onClick={() => handleDeleteExperience(entry.id)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            ))}
           </div>
         </DialogContent>
       </Dialog>

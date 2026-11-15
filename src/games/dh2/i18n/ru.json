@@ -9,9 +9,9 @@
   "dh2.skinColor": "Цвет кожи",
   "dh2.hairColor": "Цвет волос",
   "dh2.eyeColor": "Цвет глаз",
-  "dh2.currentExp": "Текущий ОП",
+  "dh2.currentExp": "Всего опыта",
   "dh2.spendExp": "Потратить ОП",
-  "dh2.totalExpSpent": "Всего потрачено ОП",
+  "dh2.totalExpSpent": "Потрачено опыта",
   "dh2.wounds": "Раны",
   "dh2.fate": "Судьба",
   "dh2.insanity": "Безумие",
@@ -763,7 +763,7 @@
   "dh2.characteristicsHint": "Бросьте 2d10+20 на каждую характеристику за столом и введите результат. Мир помечает, какие характеристики бросают 3d10 (лучшие или худшие два).",
   "dh2.divinationHint": "Бросьте 1d100 за столом и выберите строку таблицы 2-9.",
   "dh2.availableExp": "Свободный опыт",
-  "dh2.experienceLog": "Покупки опыта",
+  "dh2.experienceLog": "Журнал опыта",
   "dh2.experienceKind.characteristic": "Продвижение характеристики",
   "dh2.experienceKind.skill": "Продвижение навыка",
   "dh2.experienceKind.talent": "Талант",
@@ -803,5 +803,8 @@
   "dh2.spendAmount": "Сколько ОП",
   "dh2.spendWhat": "Что куплено",
   "dh2.spendConfirm": "Потратить",
-  "dh2.spendHint": "Цену вводит игрок: приложение не проверяет легальность (это решают книга и ГМ)."
+  "dh2.spendHint": "Цену вводит игрок: приложение не проверяет легальность (это решают книга и ГМ).",
+  "dh2.experienceLogHint": "Покупки, записанные игроком; записи можно удалять.",
+  "dh2.experienceLogEmpty": "Покупок пока нет.",
+  "dh2.deleteExperienceEntry": "Удалить запись"
 }

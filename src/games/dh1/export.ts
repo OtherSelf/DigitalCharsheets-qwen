@@ -79,6 +79,7 @@ export function buildDh1PortableJson(
     Object.assign(result, {
       experience: character.experience,
       totalExpSpent: character.totalExpSpent,
+      experienceLog: character.experienceLog,
       alternatePath: character.alternatePath,
       advancedPath: character.advancedPath,
     });
