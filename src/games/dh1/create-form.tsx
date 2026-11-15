@@ -66,6 +66,7 @@ import {
   divinationKey,
   effectIdForDivination,
 } from './divination-i18n';
+import { STARTING_PACKAGES } from './starting-packages';
 import { DarkHeresyCareerPaths, DarkHeresyHomeWorlds } from './types';
 
 /** Порядок характеристик в подсказке стартового профиля (Таблица 1-3). */
@@ -452,6 +453,39 @@ export function DarkHeresyCreateForm({
                     {t('dh1.psykerStartHint')}
                   </p>
                 )}
+              </div>
+            )}
+
+            {watchedCareer && STARTING_PACKAGES[watchedCareer] && (
+              <div className="space-y-2 rounded-md border p-3 text-sm">
+                <h4 className="text-sm font-medium">
+                  {t('dh1.startingPackage')}
+                </h4>
+                {(
+                  [
+                    ['skills', 'dh1.startingSkills'],
+                    ['talents', 'dh1.startingTalents'],
+                    ['gear', 'dh1.startingGear'],
+                    ['traits', 'dh1.startingTraits'],
+                  ] as const
+                ).map(([field, labelKey]) => {
+                  const groups = STARTING_PACKAGES[watchedCareer][field];
+                  if (!groups || groups.length === 0) return null;
+                  return (
+                    <div key={field} className="space-y-1">
+                      <span className="text-muted-foreground text-xs">
+                        {t(labelKey)}
+                      </span>
+                      <ul className="list-disc pl-4 text-sm">
+                        {groups.map((group, index) => (
+                          <li key={`${field}-${index}`}>
+                            {group.map((key) => t(key)).join(' / ')}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  );
+                })}
               </div>
             )}
 

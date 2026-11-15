@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 
 import * as dh1Data from '@/games/dh1/dark-heresy-data';
 import { dh1CardSummary } from '@/games/dh1/slots/card-summary';
+import { STARTING_PACKAGES } from '@/games/dh1/starting-packages';
 import {
   DH2E_APTITUDES,
   DH2E_BACKGROUNDS,
@@ -75,6 +76,16 @@ const DH1_FEATURE_KEYS: readonly string[] = Object.values(
   .flat()
   .flatMap((feature) => [feature.labelKey, feature.effectKey]);
 
+/** Стартовые пакеты 1e: каждый пункт — ключ из словаря. */
+const DH1_PACKAGE_KEYS: readonly string[] = Object.values(
+  STARTING_PACKAGES,
+).flatMap((pkg) => [
+  ...pkg.skills.flat(),
+  ...pkg.talents.flat(),
+  ...pkg.gear.flat(),
+  ...(pkg.traits ?? []).flat(),
+]);
+
 describe('Dark Heresy: ключи справочных данных', () => {
   it('в src/games нет литералов виртуального домена dh.*', () => {
     const offenders: string[] = [];
@@ -106,6 +117,18 @@ describe('Dark Heresy: ключи справочных данных', () => {
   it('каждый ключ особенностей мира есть в en и ru словарях', () => {
     const missing: string[] = [];
     for (const key of DH1_FEATURE_KEYS) {
+      for (const lang of ['en', 'ru'] as const) {
+        if (!(key in translations[lang])) {
+          missing.push(`${key} (${lang})`);
+        }
+      }
+    }
+    expect(missing).toEqual([]);
+  });
+
+  it('каждый ключ стартовых пакетов есть в en и ru словарях', () => {
+    const missing: string[] = [];
+    for (const key of DH1_PACKAGE_KEYS) {
       for (const lang of ['en', 'ru'] as const) {
         if (!(key in translations[lang])) {
           missing.push(`${key} (${lang})`);
