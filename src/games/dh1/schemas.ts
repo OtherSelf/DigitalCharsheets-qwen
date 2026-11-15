@@ -131,6 +131,7 @@ const armorPieceSchema = z.looseObject({
   type: z.string(),
   mods: z.string(),
   quality: z.string(),
+  weight: z.string().optional(),
 });
 
 const bodyPartSchema = z.enum([
@@ -152,6 +153,7 @@ const meleeWeaponSchema = z.looseObject({
   penetration: z.string(),
   damage: z.string(),
   traits: z.string(),
+  weight: z.string().optional(),
   equipped: z.boolean().optional(),
   notes: z.string().optional(),
 });
@@ -163,10 +165,12 @@ const rangedWeaponSchema = z.looseObject({
   range: z.string(),
   rof: z.string(),
   damage: z.string(),
+  penetration: z.string().optional(),
   clip: z.number(),
   clipSize: z.number(),
   reload: z.string(),
   traits: z.string(),
+  weight: z.string().optional(),
   equipped: z.boolean().optional(),
   notes: z.string().optional(),
 });
@@ -178,6 +182,60 @@ const equipmentSchema = z.looseObject({
     ranged: z.array(rangedWeaponSchema),
   }),
 });
+
+/**
+ * Блоки DH1, добавленные аддитивно (D3 DH1APP): все опциональные, поэтому
+ * legacy-листы проходят без миграции. Поля — свободные строки/числа, потому
+ * что лист официально допускает ручной ввод.
+ */
+const listEntrySchema = z.looseObject({
+  id: z.string(),
+  name: z.string(),
+  notes: z.string().optional(),
+});
+
+const psyPowerSchema = z.looseObject({
+  id: z.string(),
+  name: z.string(),
+  threshold: z.string().optional(),
+  notes: z.string().optional(),
+});
+
+export const dh1IdentitySchema = z.looseObject({
+  playerName: z.string().optional(),
+  gender: z.string().optional(),
+  build: z.string().optional(),
+  handedness: z.string().optional(),
+});
+
+export const dh1CarrySchema = z.looseObject({
+  totalCarriedWeight: z.string().optional(),
+  carry: z.string().optional(),
+  lift: z.string().optional(),
+  push: z.string().optional(),
+});
+
+export const dh1PsySchema = z.looseObject({
+  rating: z.number().optional(),
+  discipline: z.string().optional(),
+  powers: z.array(psyPowerSchema).optional(),
+  testedAgainst: z.string().optional(),
+});
+
+export const dh1InsanityDetailsSchema = z.looseObject({
+  degree: z.string().optional(),
+  traumaModifier: z.string().optional(),
+  disorders: z.string().optional(),
+  severity: z.string().optional(),
+});
+
+export const dh1CorruptionDetailsSchema = z.looseObject({
+  degree: z.string().optional(),
+  test: z.string().optional(),
+  defilements: z.string().optional(),
+});
+
+export const dh1ListEntrySchema = listEntrySchema;
 
 const resourceSchema = z.looseObject({
   id: z.string(),

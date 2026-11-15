@@ -5,6 +5,12 @@ import {
   darkHeresyCoreStatNotesSchema,
   darkHeresyCoreStatsSchema,
   darkHeresyCoreStatUpgradesSchema,
+  dh1CarrySchema,
+  dh1CorruptionDetailsSchema,
+  dh1IdentitySchema,
+  dh1InsanityDetailsSchema,
+  dh1ListEntrySchema,
+  dh1PsySchema,
   fatigueSchema,
 } from './schemas';
 import type { DH1Character } from './types';
@@ -14,6 +20,9 @@ import type { DH1Character } from './types';
  * Схема листа DH 1-й редакции: общая база + девять характеристик +
  * `fatigue1st`. Полей `influence`, `fatigue2nd` и `edition` нет — их не
  * должно быть и в данных после миграции v2.
+ *
+ * Блоки ниже опциональны: лист 1e разрешает ручной ввод, а legacy-файлы не
+ * должны требовать миграции (D3 DH1APP).
  */
 export const dh1CharacterSchema: z.ZodType<DH1Character> = z.looseObject({
   ...darkHeresyBaseFields,
@@ -22,4 +31,12 @@ export const dh1CharacterSchema: z.ZodType<DH1Character> = z.looseObject({
   statUpgrades: darkHeresyCoreStatUpgradesSchema,
   statNotes: darkHeresyCoreStatNotesSchema.optional(),
   fatigue1st: fatigueSchema,
+  identity: dh1IdentitySchema.optional(),
+  carry: dh1CarrySchema.optional(),
+  traits: z.array(dh1ListEntrySchema).optional(),
+  mutations: z.array(dh1ListEntrySchema).optional(),
+  eliteAdvances: z.array(dh1ListEntrySchema).optional(),
+  psy: dh1PsySchema.optional(),
+  insanityDetails: dh1InsanityDetailsSchema.optional(),
+  corruptionDetails: dh1CorruptionDetailsSchema.optional(),
 });

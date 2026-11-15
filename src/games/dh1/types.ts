@@ -85,6 +85,8 @@ export interface ArmorPiece {
   type: string;
   mods: string;
   quality: string;
+  /** Вес предмета по листу (свободная строка: «6 кг», «1,5»). */
+  weight?: string;
 }
 
 export type BodyPart =
@@ -100,6 +102,8 @@ export interface MeleeWeapon {
   penetration: string;
   damage: string;
   traits: string;
+  /** Вес по листу; необязателен для legacy-листов. */
+  weight?: string;
   equipped?: boolean;
   notes?: string;
 }
@@ -111,10 +115,14 @@ export interface RangedWeapon {
   range: string;
   rof: string;
   damage: string;
+  /** Бронебойность (Бро.) по таблице оружия; в legacy-листах отсутствует. */
+  penetration?: string;
   clip: number;
   clipSize: number;
   reload: string;
   traits: string;
+  /** Вес по листу; необязателен для legacy-листов. */
+  weight?: string;
   equipped?: boolean;
   notes?: string;
 }
@@ -180,12 +188,70 @@ export interface DH1Fatigue {
   notes?: string;
 }
 
+/** Свободная строка списка (черта, мутация, элитное улучшение). */
+export interface DH1ListEntry {
+  id: string;
+  name: string;
+  notes?: string;
+}
+
+/** Психосила в листе: имя и порог; справочник сил — отдельная задача. */
+export interface DH1PsyPower {
+  id: string;
+  name: string;
+  threshold?: string;
+  notes?: string;
+}
+
+/** Идентичность игрока и персонажа (поля листа «Личные данные»). */
+export interface DH1Identity {
+  playerName?: string;
+  gender?: string;
+  build?: string;
+  /** Ведущая рука: строка, чтобы не ломать ввод мастером. */
+  handedness?: string;
+}
+
+/** Переносимый вес и производные от Силы (свободные строки). */
+export interface DH1Carry {
+  totalCarriedWeight?: string;
+  carry?: string;
+  lift?: string;
+  push?: string;
+}
+
+/** Пси-блок листа: рейтинг, дисциплина, силы, «Испытываемы Против». */
+export interface DH1Psy {
+  rating?: number;
+  discipline?: string;
+  powers?: DH1PsyPower[];
+  testedAgainst?: string;
+}
+
+/** Детали Безумия (степень, травма, расстройства, серьёзность). */
+export interface DH1InsanityDetails {
+  degree?: string;
+  traumaModifier?: string;
+  disorders?: string;
+  severity?: string;
+}
+
+/** Детали Порчи (степень, тест на Осквернение, Осквернения). */
+export interface DH1CorruptionDetails {
+  degree?: string;
+  test?: string;
+  defilements?: string;
+}
+
 /**
  * Лист Dark Heresy 1-й редакции. Только 1e-поля:
  *   • девять характеристик без `influence`;
  *   • усталость — `fatigue1st` (`fatigue2nd` не существует);
  *   • `+30` в навыках не используется в UI;
  *   • `edition` отсутствует: редакция задаётся модулем/`systemId` (D3).
+ *
+ * Поля ниже добавлены аддитивно (D3 DH1APP): старые листы читаются без
+ * миграции, отсутствие любого блока означает «не заполнено».
  */
 export interface DH1Character extends DarkHeresyBase {
   systemId?: 'dh1';
@@ -193,4 +259,12 @@ export interface DH1Character extends DarkHeresyBase {
   statUpgrades: DarkHeresyCoreStatUpgrades;
   statNotes?: DarkHeresyCoreStatNotes;
   fatigue1st: DH1Fatigue;
+  identity?: DH1Identity;
+  carry?: DH1Carry;
+  traits?: DH1ListEntry[];
+  mutations?: DH1ListEntry[];
+  eliteAdvances?: DH1ListEntry[];
+  psy?: DH1Psy;
+  insanityDetails?: DH1InsanityDetails;
+  corruptionDetails?: DH1CorruptionDetails;
 }
