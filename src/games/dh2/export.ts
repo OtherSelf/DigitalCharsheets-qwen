@@ -17,12 +17,9 @@ export function buildDh2PortableJson(
       name: character.name,
       characterClass: character.characterClass,
       homeWorld: character.homeWorld,
-      worldVariant: character.worldVariant,
-      careerPath: character.careerPath,
-      rank: character.rank,
+      background: character.background,
+      role: character.role,
       divination: character.divination,
-      divinationEffect: character.divinationEffect,
-      quirk: character.quirk,
       height: character.height,
       weight: character.weight,
       age: character.age,
@@ -33,6 +30,9 @@ export function buildDh2PortableJson(
   }
 
   if (config.includeStats) {
+    result.aptitudes = character.aptitudes;
+    result.eliteAdvances = character.eliteAdvances;
+    result.psy = character.psy;
     result.stats = character.stats;
     result.statNotes = character.statNotes;
     result.statUpgrades = character.statUpgrades;
@@ -69,8 +69,7 @@ export function buildDh2PortableJson(
     Object.assign(result, {
       experience: character.experience,
       totalExpSpent: character.totalExpSpent,
-      alternatePath: character.alternatePath,
-      advancedPath: character.advancedPath,
+      experienceLog: character.experienceLog,
     });
   }
 

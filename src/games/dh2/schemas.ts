@@ -16,22 +16,6 @@ import type {
  * набор полей, из которого схема редакции собирает свой лист.
  */
 
-/** Мир: id 2e (`feral-world`) или старое DH1-название до миграции. */
-const homeWorldSchema = z.string();
-const careerPathSchema = z.union([
-  z.enum([
-    'Adept',
-    'Arbitrator',
-    'Assassin',
-    'Cleric',
-    'Guardsman',
-    'Imperial Psyker',
-    'Scum',
-    'Tech-Priest',
-  ]),
-  z.literal(''),
-]);
-
 const upgradeSchema = z.tuple([
   z.boolean(),
   z.boolean(),
@@ -190,15 +174,10 @@ export const darkHeresyBaseFields = {
   notes: z.string(),
   questLog: z.array(questSchema),
   schemaVersion: z.number().int().optional(),
-  homeWorld: homeWorldSchema,
-  worldVariant: z.string(),
-  careerPath: careerPathSchema,
-  rank: z.string(),
-  divination: z.string(),
-  divinationEffect: z.string(),
-  quirk: z.string(),
+  homeWorld: z.string(),
   background: z.string(),
   role: z.string(),
+  divination: z.string(),
   aptitudes: z.looseObject({
     profile: z.array(z.string()),
     chosen: z.record(z.string(), z.string()),
@@ -234,8 +213,6 @@ export const darkHeresyBaseFields = {
   eyeColor: z.string(),
   experience: z.number(),
   totalExpSpent: z.number(),
-  alternatePath: z.string().nullable(),
-  advancedPath: z.string().nullable(),
   wounds: z.looseObject({
     current: z.number(),
     max: z.number(),

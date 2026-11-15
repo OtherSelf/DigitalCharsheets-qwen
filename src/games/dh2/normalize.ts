@@ -1,29 +1,41 @@
 import type { NormalizeOptions, NormalizeResult } from '../types';
-import {
-  effectIdForDivination,
-  resolveDivinationEffectId,
-  resolveDivinationId,
-} from './divination-i18n';
+import { deriveAptitudes } from './dh2e-aptitudes';
+import { DH2E_BACKGROUNDS, DH2E_HOMEWORLDS, DH2E_ROLES } from './dh2e-data';
+import { resolveDivinationId } from './dh2e-divinations';
 import type { DH2Character } from './types';
 
 /**
  * ─── LANDMARK: DH2 NORMALIZE ───────────────────────────────────────────────
- * Приведение legacy/импортированного листа к dh2. Логика принадлежит
- * редакции: ядро не ветвится по `systemId`, dh2 сам знает свои поля и
- * правила (D10).
+ * Приведение legacy/импортированного листа к dh2 2-й редакции. Логика
+ * принадлежит редакции: ядро не ветвится по `systemId` (D10).
  *
- * Правила (D3/D8):
+ * Правила (D2, D3):
  *   • отсутствующие структуры заполняются дефолтами dh2;
- *   • пророчества из английских фраз превращаются в стабильные ID;
- *   • усталости 1-й редакции (`fatigue1st`) в dh2 нет, значимые значения
- *     не теряются — уходят в `notes` блоком `[migration v2]`;
- *   • у навыка тренировка всегда имеет `plus30`;
+ *   • поля DH1 (`careerPath`, `rank`, `quirk`, `worldVariant`, `alternatePath`,
+ *     `advancedPath`, `divinationEffect`) удаляются, их значения — в `notes`:
+ *     лист 2e не должен показывать карьеру и ранг;
+ *   • мир DH1 → id 2e, `Imperial World` остаётся только в `notes`;
+ *   • пророчество DH1 → строка 2-9, неизвестное — в `notes`;
+ *   • у характеристики пять ступеней (4-й флаг DH1 сохраняется, 5-й = false);
+ *   • профиль аптитюд пересобирается из мира/бэкграунда/роли, если пуст;
  *   • функция идемпотентна: повторный прогон не меняет лист.
  */
 
 const MIGRATION_NOTE_MARKER = '[migration v2]';
 
 type RawRecord = Record<string, unknown>;
+
+const DEFAULT_EQUIPMENT = {
+  armor: {
+    Head: null,
+    Body: null,
+    'Left arm': null,
+    'Right arm': null,
+    'Left leg': null,
+    'Right leg': null,
+  },
+  weapons: { melee: [], ranged: [] },
+};
 
 function isRecord(value: unknown): value is RawRecord {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -45,7 +57,6 @@ const CORE_STAT_KEYS = [
   'fellowship',
 ] as const;
 
-/** Дефолты dh2: девять характеристик + влияние (у dh1 его нет). */
 const DEFAULT_STATS: RawRecord = {
   ...Object.fromEntries(CORE_STAT_KEYS.map((key) => [key, 0])),
   influence: 0,
@@ -58,6 +69,42 @@ const DEFAULT_UPGRADES: RawRecord = {
   influence: [false, false, false, false, false],
 };
 
+/** Миры DH1, у которых есть прямой аналог 2e. `Imperial World` аналога не имеет. */
+const LEGACY_HOME_WORLDS: Readonly<Record<string, string>> = {
+  'Feral World': 'feral-world',
+  'Hive World': 'hive-world',
+  'Forge World': 'forge-world',
+  'Void Born': 'voidborn',
+};
+
+const HOME_WORLD_IDS = new Set(DH2E_HOMEWORLDS.map((world) => world.id));
+const BACKGROUND_IDS = new Set(DH2E_BACKGROUNDS.map((bg) => bg.id));
+const ROLE_IDS = new Set(DH2E_ROLES.map((role) => role.id));
+
+/** Поля DH1, которых в листе 2e нет; значения переносим в `notes`. */
+const LEGACY_FIELDS: Readonly<Record<string, string>> = {
+  careerPath: 'карьера DH1',
+  rank: 'ранг DH1',
+  worldVariant: 'вариант мира DH1',
+  quirk: 'примета DH1',
+  alternatePath: 'альтернативный путь DH1',
+  advancedPath: 'продвинутый путь DH1',
+  divinationEffect: 'эффект пророчества DH1',
+};
+
+function appendMigrationNote(raw: RawRecord, line: string): void {
+  const notes = typeof raw.notes === 'string' ? raw.notes : '';
+  if (notes.includes(line)) return;
+  const block = `${MIGRATION_NOTE_MARKER} ${line}`;
+  raw.notes = notes.trim() ? `${notes.trimEnd()}\n\n${block}` : block;
+}
+
+function hasMeaningfulValue(value: unknown): boolean {
+  if (value === undefined || value === null || value === '') return false;
+  if (typeof value === 'object') return Object.keys(value).length > 0;
+  return true;
+}
+
 /**
  * Ступеней характеристик в 2e пять (Simple…Expert), в листах DH1-стиля было
  * четыре. Лишние флаги отбрасываем, недостающие добиваем `false`: иначе
@@ -68,65 +115,44 @@ function toFiveFlags(value: unknown): boolean[] {
   return Array.from({ length: 5 }, (_, index) => Boolean(source[index]));
 }
 
-const DEFAULT_EQUIPMENT = {
-  armor: {
-    Head: null,
-    Body: null,
-    'Left arm': null,
-    'Right arm': null,
-    'Left leg': null,
-    'Right leg': null,
-  },
-  weapons: { melee: [], ranged: [] },
-};
-
-function hasMeaningfulValue(value: unknown): boolean {
-  if (value === undefined || value === null) return false;
-  if (typeof value === 'boolean') return value;
-  if (typeof value === 'number') return value !== 0;
-  if (typeof value === 'string') return value.trim() !== '';
-  if (Array.isArray(value)) return value.some(hasMeaningfulValue);
-  if (isRecord(value)) return Object.values(value).some(hasMeaningfulValue);
-  return true;
-}
-
-/** Влияние по умолчанию (30) не считается потерей: так писал старый тип. */
-function hasMeaningfulInfluence(value: unknown): boolean {
-  return typeof value === 'number' && value !== 30 && value !== 0;
-}
-
-/** Добавить строку миграции в `notes` один раз (идемпотентность). */
-function appendMigrationNote(raw: RawRecord, line: string): void {
-  const notes = typeof raw.notes === 'string' ? raw.notes : '';
-  if (notes.includes(line)) return;
-  const block = `${MIGRATION_NOTE_MARKER} ${line}`;
-  raw.notes = notes.trim() ? `${notes.trimEnd()}\n\n${block}` : block;
-}
-
-/** Пророчества и эффекты хранятся ID; старые фразы → ID (v1). */
-function normalizeDivination(raw: RawRecord, warnings: string[]): void {
-  const divinationRaw =
-    typeof raw.divination === 'string' ? raw.divination : '';
-  const effectRaw =
-    typeof raw.divinationEffect === 'string' ? raw.divinationEffect : '';
-
-  const divinationId = resolveDivinationId(divinationRaw);
-  if (divinationId) {
-    raw.divination = divinationId;
-    const canonicalEffect = effectIdForDivination(divinationId);
-    if (canonicalEffect) raw.divinationEffect = canonicalEffect;
-  } else if (divinationRaw) {
-    warnings.push(
-      `неизвестное пророчество оставлено как есть: ${divinationRaw}`,
-    );
-    raw.divination = divinationRaw;
+function migrateLegacyFields(character: RawRecord, warnings: string[]): void {
+  const moved: string[] = [];
+  for (const [key, label] of Object.entries(LEGACY_FIELDS)) {
+    const value = character[key];
+    if (hasMeaningfulValue(value)) {
+      moved.push(`${label}: ${String(value)}`);
+    }
+    delete character[key];
   }
 
-  const resolvedEffect = resolveDivinationEffectId(effectRaw);
-  if (resolvedEffect) {
-    if (!divinationId) raw.divinationEffect = resolvedEffect;
-  } else if (effectRaw) {
-    raw.divinationEffect = effectRaw;
+  const homeWorld =
+    typeof character.homeWorld === 'string' ? character.homeWorld : '';
+  if (homeWorld && !HOME_WORLD_IDS.has(homeWorld)) {
+    const mapped = LEGACY_HOME_WORLDS[homeWorld];
+    if (mapped) {
+      character.homeWorld = mapped;
+    } else {
+      moved.push(`родной мир DH1: ${homeWorld}`);
+      character.homeWorld = '';
+    }
+  }
+
+  const divination =
+    typeof character.divination === 'string' ? character.divination : '';
+  if (divination) {
+    const mapped = resolveDivinationId(divination);
+    if (mapped) {
+      character.divination = mapped;
+    } else {
+      moved.push(`пророчество DH1: ${divination}`);
+      character.divination = '';
+      warnings.push('dh2: пророчество DH1 не сопоставлено с таблицей 2-9');
+    }
+  }
+
+  if (moved.length > 0) {
+    appendMigrationNote(character, `поля DH1: ${moved.join('; ')}`);
+    warnings.push('dh2: поля DH1 перенесены в notes');
   }
 }
 
@@ -173,11 +199,13 @@ function enforceDh2Fields(character: RawRecord, warnings: string[]): void {
   // Влияние в dh2 обязательно; значение по умолчанию — 30.
   nextStats.influence =
     typeof stats.influence === 'number' ? stats.influence : 30;
+
   const nextUpgrades: RawRecord = { ...upgrades };
   for (const key of CORE_STAT_KEYS) {
     nextUpgrades[key] = toFiveFlags(upgrades[key]);
   }
   nextUpgrades.influence = toFiveFlags(upgrades.influence);
+
   const nextNotes: RawRecord = { ...notes };
   if (typeof notes.influence === 'string') {
     nextNotes.influence = notes.influence;
@@ -190,9 +218,7 @@ function enforceDh2Fields(character: RawRecord, warnings: string[]): void {
       character,
       `усталость 1-й редакции сохранена здесь: ${JSON.stringify(legacyFatigue)}`,
     );
-    warnings.push(
-      'dh2: fatigue1st перенесена в notes (поля в листе больше нет)',
-    );
+    warnings.push('dh2: fatigue1st перенесена в notes (поля в листе нет)');
   }
   delete character.fatigue1st;
   if (!isRecord(character.fatigue2nd)) character.fatigue2nd = { current: 0 };
@@ -201,15 +227,48 @@ function enforceDh2Fields(character: RawRecord, warnings: string[]): void {
   character.statUpgrades = nextUpgrades;
   character.statNotes = nextNotes;
 
-  // Поля генерации 2e: мир/бэкграунд/роль, аптитюды, пси, элитные, журнал.
+  if (typeof character.homeWorld !== 'string') character.homeWorld = '';
   if (typeof character.background !== 'string') character.background = '';
   if (typeof character.role !== 'string') character.role = '';
+  if (!BACKGROUND_IDS.has(String(character.background))) {
+    if (hasMeaningfulValue(character.background)) {
+      appendMigrationNote(
+        character,
+        `бэкграунд не из 2e: ${String(character.background)}`,
+      );
+    }
+    character.background = '';
+  }
+  if (!ROLE_IDS.has(String(character.role))) {
+    if (hasMeaningfulValue(character.role)) {
+      appendMigrationNote(
+        character,
+        `роль не из 2e: ${String(character.role)}`,
+      );
+    }
+    character.role = '';
+  }
+
   const aptitudes = asRecord(character.aptitudes);
+  const chosen = asRecord(aptitudes.chosen);
+  const profile = Array.isArray(aptitudes.profile) ? aptitudes.profile : [];
+  const derived =
+    profile.length > 0
+      ? { profile: profile as string[] }
+      : deriveAptitudes(
+          {
+            homeWorld: String(character.homeWorld),
+            background: String(character.background),
+            role: String(character.role),
+          },
+          chosen as Record<string, string>,
+        );
   character.aptitudes = {
-    profile: Array.isArray(aptitudes.profile) ? aptitudes.profile : [],
-    chosen: asRecord(aptitudes.chosen),
+    profile: derived.profile,
+    chosen,
     extra: Array.isArray(aptitudes.extra) ? aptitudes.extra : [],
   };
+
   if (!Array.isArray(character.eliteAdvances)) character.eliteAdvances = [];
   const psy = asRecord(character.psy);
   character.psy = {
@@ -218,6 +277,7 @@ function enforceDh2Fields(character: RawRecord, warnings: string[]): void {
     powers: Array.isArray(psy.powers) ? psy.powers : [],
   };
   if (!Array.isArray(character.experienceLog)) character.experienceLog = [];
+  if (typeof character.divination !== 'string') character.divination = '';
 
   // Тренировка навыка: `plus30` стало обязательным в типе v2.
   if (Array.isArray(character.skills)) {
@@ -245,7 +305,7 @@ export function normalizeDh2(
   const warnings: string[] = [];
 
   if (options.applyDefaults) fillDefaults(character);
-  normalizeDivination(character, warnings);
+  migrateLegacyFields(character, warnings);
   enforceDh2Fields(character, warnings);
 
   return {

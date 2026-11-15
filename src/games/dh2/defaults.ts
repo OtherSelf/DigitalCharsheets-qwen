@@ -1,14 +1,11 @@
 import { CURRENT_SCHEMA_VERSION } from '../plugin-api';
 import { readNumber, readString, type DefaultsInput } from '../shared/defaults';
+import { deriveAptitudes } from './dh2e-aptitudes';
 import { DH2E_BACKGROUNDS, DH2E_HOMEWORLDS, DH2E_ROLES } from './dh2e-data';
-import { calculateRank, RanksByCareer } from './dark-heresy-ranks';
-import { effectIdForDivination } from './divination-i18n';
+import { isDivinationId } from './dh2e-divinations';
 import {
   DARK_HERESY_CORE_STATS,
-  DarkHeresyCareerPaths,
-  DarkHeresyHomeWorlds,
   type DarkHeresyBase,
-  type DarkHeresyCareerPath,
   type DarkHeresyCoreStatNotes,
   type DarkHeresyCoreStats,
   type DarkHeresyCoreStatUpgrades,
@@ -21,12 +18,9 @@ import {
 
 /**
  * ─── LANDMARK: DARK_HERESY BASE DEFAULTS ──────────────────────────────────
- * Базовая часть фабрики персонажа Dark Heresy внутри модуля.
- * Редакция добавляет характеристики и усталость ниже.
- *
- * Раньше весь объект собирался в `dark-heresy-character-form.tsx`; теперь
- * правила (ранг по опыту, эффект пророчества, движение от Agility) живут
- * здесь и переиспользуются тестами.
+ * Фабрика персонажа 2-й редакции: мир, бэкграунд, роль, аптитюды, десять
+ * характеристик и усталость. Значения характеристик вводит игрок (броски
+ * кубиков за столом), поэтому дефолт — 30 и никакого RNG (D5).
  */
 
 export type DarkHeresyBaseDraft = Omit<DarkHeresyBase, 'id'>;
@@ -35,81 +29,76 @@ const HOME_WORLD_IDS = new Set(DH2E_HOMEWORLDS.map((world) => world.id));
 const BACKGROUND_IDS = new Set(DH2E_BACKGROUNDS.map((bg) => bg.id));
 const ROLE_IDS = new Set(DH2E_ROLES.map((role) => role.id));
 
-function readHomeWorld(input: DefaultsInput): string {
-  const raw = readString(input, 'homeWorld', '');
-  if (HOME_WORLD_IDS.has(raw)) return raw;
-  return (DarkHeresyHomeWorlds as readonly string[]).includes(raw) ? raw : '';
-}
-
 function readKnownId(input: DefaultsInput, key: string, known: Set<string>) {
   const raw = readString(input, key, '');
   return known.has(raw) ? raw : '';
 }
 
-function readCareerPath(input: DefaultsInput): DarkHeresyCareerPath | '' {
-  const raw = readString(input, 'careerPath', '');
-  return (DarkHeresyCareerPaths as readonly string[]).includes(raw)
-    ? (raw as DarkHeresyCareerPath)
-    : '';
+function readChosen(input: DefaultsInput): Record<string, string> {
+  const value = input.chosen;
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
+  const result: Record<string, string> = {};
+  for (const [key, picked] of Object.entries(value)) {
+    if (typeof picked === 'string' && picked) result[key] = picked;
+  }
+  return result;
 }
 
-function readNullableString(input: DefaultsInput, key: string): string | null {
-  const value = input[key];
-  return typeof value === 'string' ? value : null;
+/** Раны мира 2e: `9+1d5` → 10 при «среднем» значении кубика. */
+function defaultWounds(homeWorld: string): number {
+  const world = DH2E_HOMEWORLDS.find((item) => item.id === homeWorld);
+  const match = world?.wounds.match(/^(\d+)\+1d5$/);
+  return match ? Number(match[1]) + 1 : 10;
 }
 
-export function createDarkHeresyBaseDefaults(
+function defaultFate(homeWorld: string): number {
+  const world = DH2E_HOMEWORLDS.find((item) => item.id === homeWorld);
+  return world?.fateThreshold ?? 1;
+}
+
+export function createDh2BaseDefaults(
   input: DefaultsInput = {},
 ): DarkHeresyBaseDraft {
-  const careerPath = readCareerPath(input);
-  const careerRanks = careerPath ? RanksByCareer[careerPath] : null;
-  const totalExpSpent = readNumber(input, 'totalExpSpent', 0);
-  const rank = careerRanks
-    ? calculateRank(careerRanks, totalExpSpent, null, null)
-    : readString(input, 'rank', 'N/A');
-  const divination = readString(input, 'divination', '');
+  const homeWorld = readKnownId(input, 'homeWorld', HOME_WORLD_IDS);
+  const background = readKnownId(input, 'background', BACKGROUND_IDS);
+  const role = readKnownId(input, 'role', ROLE_IDS);
+  const chosen = readChosen(input);
+  const aptitudes = deriveAptitudes({ homeWorld, background, role }, chosen);
+
+  const divinationRaw = readString(input, 'divination', '');
+  const divination = isDivinationId(divinationRaw) ? divinationRaw : '';
+
   const agility = readNumber(input, 'agility', 30);
   const agilityBonus = Math.floor(agility / 10);
-  const wounds = readNumber(input, 'wounds', 10);
+  const wounds = readNumber(input, 'wounds', defaultWounds(homeWorld));
+  const fatePoints = readNumber(input, 'fatePoints', defaultFate(homeWorld));
 
   return {
     name: readString(input, 'name', ''),
-    characterClass: careerPath,
+    characterClass: role || background,
     gameSystem: 'Dark Heresy',
     schemaVersion: CURRENT_SCHEMA_VERSION,
     backstory: readString(input, 'backstory', ''),
-    homeWorld: readHomeWorld(input),
-    worldVariant: readString(input, 'worldVariant', ''),
-    careerPath,
-    rank,
-    divination,
-    divinationEffect:
-      effectIdForDivination(divination) ||
-      readString(input, 'divinationEffect', ''),
-    quirk: readString(input, 'quirk', ''),
-    background: readKnownId(input, 'background', BACKGROUND_IDS),
-    role: readKnownId(input, 'role', ROLE_IDS),
-    aptitudes: { profile: [], chosen: {}, extra: [] },
+    homeWorld,
+    background,
+    role,
+    aptitudes: { profile: aptitudes.profile, chosen, extra: [] },
     eliteAdvances: [],
+    divination,
     psy: { rating: 0, disciplines: [], powers: [] },
-    experienceLog: [],
     height: readString(input, 'height', ''),
     weight: readString(input, 'weight', ''),
     age: readString(input, 'age', ''),
     skinColor: readString(input, 'skinColor', ''),
     hairColor: readString(input, 'hairColor', ''),
     eyeColor: readString(input, 'eyeColor', ''),
-    experience: readNumber(input, 'experience', 0),
-    totalExpSpent,
-    alternatePath: readNullableString(input, 'alternatePath'),
-    advancedPath: readNullableString(input, 'advancedPath'),
+    experience: readNumber(input, 'experience', 1000),
+    totalExpSpent: readNumber(input, 'totalExpSpent', 0),
+    experienceLog: [],
     notes: '',
     questLog: [],
     wounds: { current: wounds, max: wounds },
-    fatePoints: {
-      current: readNumber(input, 'fatePoints', 1),
-      max: readNumber(input, 'fatePoints', 1),
-    },
+    fatePoints: { current: fatePoints, max: fatePoints },
     insanityPoints: { total: 0, notes: '' },
     corruptionPoints: { total: 0, notes: '' },
     wealth: { throneGelt: 0, monthlyIncome: 0 },
@@ -142,7 +131,7 @@ export type DH2CharacterDraft = Omit<DH2Character, 'id'>;
 export function createDh2Defaults(
   input: DefaultsInput = {},
 ): DH2CharacterDraft {
-  const base = createDarkHeresyBaseDefaults(input);
+  const base = createDh2BaseDefaults(input);
   const stats = {
     ...(Object.fromEntries(
       DARK_HERESY_CORE_STATS.map((stat) => [stat, readNumber(input, stat, 30)]),
