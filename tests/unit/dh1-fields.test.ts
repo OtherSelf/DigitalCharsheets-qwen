@@ -173,6 +173,14 @@ describe('DH1: аддитивные поля листа', () => {
     expect(() => dh1CharacterSchema.parse(character)).not.toThrow();
   });
 
+  it('стартовое богатство попадает в лист из формы', () => {
+    const created = createDh1Defaults({
+      careerPath: 'Guardsman',
+      throneGelt: 75,
+    });
+    expect(created.wealth.throneGelt).toBe(75);
+  });
+
   it('Псайкер начинает с Пси-рейтингом 1, остальные — без psy', () => {
     const psyker = createDh1Defaults({ careerPath: 'Imperial Psyker' });
     expect(psyker.psy?.rating).toBe(1);
