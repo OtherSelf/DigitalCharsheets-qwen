@@ -117,12 +117,7 @@ export const InfoSection = ({
   const worldVariantLabel = React.useMemo(() => {
     if (!character.homeWorld) return t('dh1.waitingHomeWorld');
     const key = WORLD_VARIANT_LABELS[character.homeWorld];
-    if (key === 'Tribal Taboos') return t('dh1.tribalTaboos');
-    if (key === 'Hive Class') return t('dh1.hiveClass');
-    if (key === 'Birth Planet') return t('dh1.birthPlanet');
-    if (key === 'Ship Tradition') return t('dh1.shipTradition');
-    if (key === 'Place of Birth') return t('dh1.placeOfBirth');
-    return t('dh1.worldVariant');
+    return key ? t(key) : t('dh1.worldVariant');
   }, [character.homeWorld, t]);
 
   const showInfo = !isCompactView || activeCompactSection === 'info-section';

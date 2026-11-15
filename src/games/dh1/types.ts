@@ -13,6 +13,9 @@ export const DarkHeresyHomeWorlds = [
   'Imperial World',
   'Void Born',
   'Forge World',
+  'Schola Progenium',
+  'Noble Born',
+  'Mind-Cleared',
 ] as const;
 export type DarkHeresyHomeWorld = (typeof DarkHeresyHomeWorlds)[number];
 
