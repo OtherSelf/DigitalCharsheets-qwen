@@ -363,20 +363,6 @@ export const InfoSection = ({
         <div className="mt-6 space-y-5">
           <MetaBlock title={t('dh1.identity')}>
             <DetailField
-              label={t('dh1.playerName')}
-              value={character.identity?.playerName ?? ''}
-              editing={isInfoEditing}
-              onBlur={(e) =>
-                updateCharacter(character.id, {
-                  identity: {
-                    ...character.identity,
-                    playerName: e.target.value,
-                  },
-                })
-              }
-              isCompactView={isCompactView}
-            />
-            <DetailField
               label={t('dh1.gender')}
               value={character.identity?.gender ?? ''}
               editing={isInfoEditing}
@@ -1028,6 +1014,15 @@ export const ProgressionSection = ({
                 disabled={!isProgressionEditing}
                 className="h-9"
               />
+            </div>
+
+            <div className="space-y-1">
+              <Label className="text-muted-foreground text-xs">
+                {t('dh1.availableExp')}
+              </Label>
+              <p className="text-primary text-sm font-semibold">
+                {editableExperience - editableTotalExpSpent}
+              </p>
             </div>
 
             {/* ========== RANK DISPLAY SECTION START ========== */}

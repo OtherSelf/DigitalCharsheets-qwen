@@ -166,6 +166,8 @@ export interface DarkHeresyBase extends CharacterBase {
   psy: DH2PsyProfile;
   /** Пророчество 2e: id строки таблицы 2-9 (`d100-10`), не текст. */
   divination: string;
+  /** Пол персонажа: свободная строка (правила редакции его не ограничивают). */
+  gender: string;
   /** Журнал покупок опыта 2e. */
   experienceLog: DH2ExperienceEntry[];
   height: string;

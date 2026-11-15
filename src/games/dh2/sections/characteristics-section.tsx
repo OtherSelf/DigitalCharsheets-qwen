@@ -16,20 +16,11 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  useCharacterContext,
-  useToast,
-  useTranslation,
-} from '@/games/plugin-host';
+import { useCharacterContext, useTranslation } from '@/games/plugin-host';
 import { cn } from '@/lib/utils';
 
 import { getDarkHeresyCapabilities } from '../capabilities';
 import { DH2E_STAT_STEPS } from '../dh2e-rules';
-import {
-  characteristicMatches,
-  characteristicStepCost,
-  purchaseCharacteristicStep,
-} from '../dh2e-xp';
 import {
   EMPTY_STAT_UPGRADE,
   pickAllowedStats,
@@ -49,8 +40,6 @@ const CharacteristicStat = ({
   value,
   upgrades,
   upgradeTitles,
-  nextCost,
-  onPurchase,
   editing,
   onValueChange,
   onUpgradeChange,
@@ -66,8 +55,6 @@ const CharacteristicStat = ({
   value: number;
   upgrades: boolean[];
   upgradeTitles: readonly string[];
-  nextCost: number | null;
-  onPurchase: () => void;
   editing: boolean;
   onValueChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onUpgradeChange: (index: number, checked: boolean) => void;
@@ -146,16 +133,6 @@ const CharacteristicStat = ({
               className="h-3 w-3"
             />
           ))}
-          {!editing && nextCost !== null && (
-            <button
-              type="button"
-              onClick={onPurchase}
-              className="text-muted-foreground hover:text-primary text-[9px] leading-none font-semibold"
-              title={upgradeTitles[currentUpgrades.filter(Boolean).length]}
-            >
-              +5 · {nextCost}
-            </button>
-          )}
         </div>
       </div>
     </div>
@@ -186,7 +163,6 @@ export const CharacteristicsSection = React.forwardRef<
   ) => {
     const { updateCharacter, hideNotes, showEditButtons } =
       useCharacterContext();
-    const { toast } = useToast();
     const { t, language } = useTranslation();
     const capabilities = getDarkHeresyCapabilities(character);
     const [isCharacteristicsEditing, setIsCharacteristicsEditing] =
@@ -279,19 +255,6 @@ export const CharacteristicsSection = React.forwardRef<
       }),
       [isCharacteristicsEditing, handleSaveCharacteristics],
     );
-
-    const handlePurchase = (statKey: DarkHeresyStatKey) => {
-      const result = purchaseCharacteristicStep(character, statKey);
-      if (!result) return;
-      updateCharacter(character.id, result.patch as Partial<Character>);
-      if (result.warning) {
-        toast({
-          variant: 'destructive',
-          title: t('dh2.xpWarning'),
-          description: t(result.warning),
-        });
-      }
-    };
 
     const handleUpgradeChange = (
       statKey: DarkHeresyStatKey,
@@ -388,16 +351,6 @@ export const CharacteristicsSection = React.forwardRef<
                   : currentUpgrades[char.key]
               }
               upgradeTitles={upgradeTitles}
-              nextCost={
-                (currentUpgrades[char.key] ?? []).filter(Boolean).length >=
-                DH2E_STAT_STEPS.length
-                  ? null
-                  : characteristicStepCost(
-                      characteristicMatches(character, char.key),
-                      (currentUpgrades[char.key] ?? []).filter(Boolean).length,
-                    )
-              }
-              onPurchase={() => handlePurchase(char.key)}
               editing={isCharacteristicsEditing}
               onValueChange={(e) =>
                 setEditableStats((prev) => ({

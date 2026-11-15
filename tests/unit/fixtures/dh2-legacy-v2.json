@@ -6,11 +6,11 @@
   "schemaVersion": 2,
   "characterClass": "Adept",
   "backstory": "Писарь из Архива Сцинтиллы, попавший в свиту инквизитора после дела о поддельных титулах.",
-  "homeWorld": "Imperial World",
+  "homeWorld": "Hive World",
   "worldVariant": "Agri World",
   "careerPath": "Adept",
   "rank": "Rank 2",
-  "divination": "",
+  "divination": "mutationWithout",
   "divinationEffect": "minorMutation",
   "quirk": "Tribal taboos",
   "height": "180",
@@ -25,13 +25,36 @@
   "advancedPath": null,
   "notes": "",
   "questLog": [],
-  "wounds": { "current": 10, "max": 10 },
-  "fatePoints": { "current": 2, "max": 3 },
-  "insanityPoints": { "total": 3, "notes": "" },
-  "corruptionPoints": { "total": 1, "notes": "" },
-  "wealth": { "throneGelt": 120, "monthlyIncome": 50 },
-  "movement": { "walkHalf": 3, "walkFull": 6, "charge": 9, "run": 18 },
-  "fatigue2nd": { "current": 1, "notes": "" },
+  "wounds": {
+    "current": 10,
+    "max": 10
+  },
+  "fatePoints": {
+    "current": 2,
+    "max": 3
+  },
+  "insanityPoints": {
+    "total": 3,
+    "notes": ""
+  },
+  "corruptionPoints": {
+    "total": 1,
+    "notes": ""
+  },
+  "wealth": {
+    "throneGelt": 120,
+    "monthlyIncome": 50
+  },
+  "movement": {
+    "walkHalf": 3,
+    "walkFull": 6,
+    "charge": 9,
+    "run": 18
+  },
+  "fatigue2nd": {
+    "current": 1,
+    "notes": ""
+  },
   "stats": {
     "weaponSkill": 31,
     "ballisticSkill": 35,
@@ -98,8 +121,16 @@
     }
   ],
   "talents": [
-    { "id": "jaded", "name": "Jaded", "notes": "" },
-    { "id": "peer-administratum", "name": "Peer (Administratum)", "notes": "" }
+    {
+      "id": "jaded",
+      "name": "Jaded",
+      "notes": ""
+    },
+    {
+      "id": "peer-administratum",
+      "name": "Peer (Administratum)",
+      "notes": ""
+    }
   ],
   "criticalConditions": [],
   "customHouseRules": [],

@@ -17,7 +17,7 @@
   "tags": ["warhammer40k", "d100", "grimdark"],
   "author": "Digital Character Sheets",
   "license": "MIT",
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "game": {
     "id": "darkHeresy",
     "order": 20,

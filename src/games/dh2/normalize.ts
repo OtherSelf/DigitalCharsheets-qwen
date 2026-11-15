@@ -278,6 +278,7 @@ function enforceDh2Fields(character: RawRecord, warnings: string[]): void {
   };
   if (!Array.isArray(character.experienceLog)) character.experienceLog = [];
   if (typeof character.divination !== 'string') character.divination = '';
+  if (typeof character.gender !== 'string') character.gender = '';
 
   // Тренировка навыка: `plus30` стало обязательным в типе v2.
   if (Array.isArray(character.skills)) {

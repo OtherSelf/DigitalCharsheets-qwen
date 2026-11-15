@@ -579,7 +579,7 @@ describe.each(SYSTEMS)(
         ...expectedPayload,
         id: body.id,
         userId: user.uid,
-        schemaVersion: CHARACTER_SCHEMA_VERSION,
+        schemaVersion: gameModule.schemaVersion,
       });
     });
 
@@ -645,7 +645,7 @@ describe.each(SYSTEMS)(
       expect(exported).toEqual({
         ...expectedPayload,
         id: created.id,
-        schemaVersion: CHARACTER_SCHEMA_VERSION,
+        schemaVersion: gameModule.schemaVersion,
       });
     });
 

@@ -1,0 +1,103 @@
+{
+  "id": "fixture-dh1-legacy-v2",
+  "name": "Legacy Acolyte",
+  "gameSystem": "Dark Heresy",
+  "systemId": "dh1",
+  "schemaVersion": 2,
+  "characterClass": "Adept",
+  "backstory": "Писарь из Архива Сцинтиллы.",
+  "notes": "",
+  "questLog": [],
+  "homeWorld": "Hive World",
+  "worldVariant": "Scintilla",
+  "careerPath": "Adept",
+  "rank": "Scholar",
+  "divination": "",
+  "divinationEffect": "+2 Agility, +1 Fate Point.",
+  "quirk": "Suspicious of psykers.",
+  "height": "1.80 m",
+  "weight": "78 kg",
+  "age": "34",
+  "skinColor": "Бледная",
+  "hairColor": "Тёмные",
+  "eyeColor": "Серые",
+  "experience": 1500,
+  "totalExpSpent": 900,
+  "alternatePath": null,
+  "advancedPath": null,
+  "wounds": { "current": 10, "max": 10 },
+  "fatePoints": { "current": 2, "max": 3 },
+  "insanityPoints": { "total": 3, "notes": "" },
+  "corruptionPoints": { "total": 1, "notes": "" },
+  "wealth": { "throneGelt": 120, "monthlyIncome": 50 },
+  "movement": { "walkHalf": 3, "walkFull": 6, "charge": 9, "run": 18 },
+  "fatigue1st": { "current": 1 },
+  "stats": {
+    "weaponSkill": 31,
+    "ballisticSkill": 35,
+    "strength": 28,
+    "toughness": 33,
+    "agility": 34,
+    "intelligence": 42,
+    "perception": 36,
+    "willpower": 38,
+    "fellowship": 30
+  },
+  "statUpgrades": {
+    "weaponSkill": [false, false, false, false],
+    "ballisticSkill": [false, false, false, false],
+    "strength": [false, false, false, false],
+    "toughness": [false, false, false, false],
+    "agility": [true, false, false, false],
+    "intelligence": [true, true, false, false],
+    "perception": [false, false, false, false],
+    "willpower": [false, false, false, false],
+    "fellowship": [false, false, false, false]
+  },
+  "identity": { "playerName": "Игрок", "gender": "Мужской", "build": "Сухой" },
+  "carry": {
+    "totalCarriedWeight": "27 кг",
+    "carry": "27",
+    "lift": "54",
+    "push": "108"
+  },
+  "traits": [{ "id": "t-1", "name": "Dark Sight", "notes": "" }],
+  "mutations": [],
+  "eliteAdvances": [],
+  "psy": { "rating": 0, "discipline": "", "powers": [], "testedAgainst": "" },
+  "insanityDetails": {
+    "degree": "1",
+    "traumaModifier": "",
+    "disorders": "",
+    "severity": ""
+  },
+  "corruptionDetails": { "degree": "0", "test": "", "defilements": "" },
+  "equipment": {
+    "armor": {
+      "Head": null,
+      "Body": { "ap": 3, "type": "Flack", "mods": "", "quality": "Common" },
+      "Left arm": null,
+      "Right arm": null,
+      "Left leg": null,
+      "Right leg": null
+    },
+    "weapons": { "melee": [], "ranged": [] }
+  },
+  "inventory": [],
+  "skills": [
+    {
+      "id": "awareness",
+      "name": "Awareness",
+      "notes": "",
+      "type": "basic",
+      "training": {
+        "skilled": true,
+        "plus10": true,
+        "plus20": false,
+        "plus30": false
+      }
+    }
+  ],
+  "talents": [{ "id": "jaded", "name": "Jaded", "notes": "" }],
+  "criticalConditions": []
+}

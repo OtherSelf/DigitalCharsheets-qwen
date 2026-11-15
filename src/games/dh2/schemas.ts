@@ -178,6 +178,7 @@ export const darkHeresyBaseFields = {
   background: z.string(),
   role: z.string(),
   divination: z.string(),
+  gender: z.string(),
   aptitudes: z.looseObject({
     profile: z.array(z.string()),
     chosen: z.record(z.string(), z.string()),

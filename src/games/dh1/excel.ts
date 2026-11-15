@@ -50,7 +50,6 @@ export function buildDh1ExcelSections(
     w.row('dh1.skinColor', character.skinColor);
     w.row('dh1.hairColor', character.hairColor);
     w.row('dh1.eyeColor', character.eyeColor);
-    w.row('dh1.playerName', character.identity?.playerName ?? '');
     w.row('dh1.gender', character.identity?.gender ?? '');
     w.row('dh1.build', character.identity?.build ?? '');
     w.row('dh1.handedness', character.identity?.handedness ?? '');

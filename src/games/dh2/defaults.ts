@@ -1,8 +1,8 @@
-import { CURRENT_SCHEMA_VERSION } from '../plugin-api';
 import { readNumber, readString, type DefaultsInput } from '../shared/defaults';
 import { deriveAptitudes } from './dh2e-aptitudes';
 import { DH2E_BACKGROUNDS, DH2E_HOMEWORLDS, DH2E_ROLES } from './dh2e-data';
 import { isDivinationId } from './dh2e-divinations';
+import { DH2_SCHEMA_VERSION } from './schema-version';
 import {
   DARK_HERESY_CORE_STATS,
   type DarkHeresyBase,
@@ -77,7 +77,7 @@ export function createDh2BaseDefaults(
     name: readString(input, 'name', ''),
     characterClass: role || background,
     gameSystem: 'Dark Heresy',
-    schemaVersion: CURRENT_SCHEMA_VERSION,
+    schemaVersion: DH2_SCHEMA_VERSION,
     backstory: readString(input, 'backstory', ''),
     homeWorld,
     background,
@@ -85,6 +85,7 @@ export function createDh2BaseDefaults(
     aptitudes: { profile: aptitudes.profile, chosen, extra: [] },
     eliteAdvances: [],
     divination,
+    gender: readString(input, 'gender', ''),
     psy: { rating: 0, disciplines: [], powers: [] },
     height: readString(input, 'height', ''),
     weight: readString(input, 'weight', ''),
@@ -99,8 +100,8 @@ export function createDh2BaseDefaults(
     questLog: [],
     wounds: { current: wounds, max: wounds },
     fatePoints: { current: fatePoints, max: fatePoints },
-    insanityPoints: { total: 0, notes: '' },
-    corruptionPoints: { total: 0, notes: '' },
+    insanityPoints: { total: readNumber(input, 'insanity', 0), notes: '' },
+    corruptionPoints: { total: readNumber(input, 'corruption', 0), notes: '' },
     wealth: { throneGelt: 0, monthlyIncome: 0 },
     movement: {
       walkHalf: agilityBonus,

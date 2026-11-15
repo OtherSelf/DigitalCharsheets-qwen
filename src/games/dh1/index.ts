@@ -1,4 +1,3 @@
-import { CURRENT_SCHEMA_VERSION } from '../plugin-api';
 import type { ExportTranslate, GameExportConfig, GameModule } from '../types';
 import { createDh1Defaults } from './defaults';
 import { createDh1Demo } from './demo';
@@ -15,6 +14,7 @@ import {
 import { mergeDh1Data } from './merge';
 import { normalizeDh1 } from './normalize';
 import { dh1CharacterSchema } from './schema';
+import { DH1_SCHEMA_VERSION } from './schema-version';
 import type { DH1Character } from './types';
 
 /**
@@ -57,7 +57,7 @@ export const dh1Module: GameModule<DH1Character> = {
   defaultStatus: 'published',
   nameKey: 'games.dh1.name',
   descriptionKey: 'games.dh1.description',
-  schemaVersion: CURRENT_SCHEMA_VERSION,
+  schemaVersion: DH1_SCHEMA_VERSION,
   schema: dh1CharacterSchema,
   i18n: { en: dh1En, ru: dh1Ru },
   capabilities: {
