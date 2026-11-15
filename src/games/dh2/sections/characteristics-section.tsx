@@ -20,6 +20,7 @@ import { useCharacterContext, useTranslation } from '@/games/plugin-host';
 import { cn } from '@/lib/utils';
 
 import { getDarkHeresyCapabilities } from '../capabilities';
+import { DH2E_STAT_STEPS } from '../dh2e-rules';
 import {
   EMPTY_STAT_UPGRADE,
   pickAllowedStats,
@@ -38,6 +39,7 @@ const CharacteristicStat = ({
   fullName,
   value,
   upgrades,
+  upgradeTitles,
   editing,
   onValueChange,
   onUpgradeChange,
@@ -52,6 +54,7 @@ const CharacteristicStat = ({
   fullName: string;
   value: number;
   upgrades: boolean[];
+  upgradeTitles: readonly string[];
   editing: boolean;
   onValueChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onUpgradeChange: (index: number, checked: boolean) => void;
@@ -64,9 +67,9 @@ const CharacteristicStat = ({
 }) => {
   const currentUpgrades = (
     Array.isArray(upgrades)
-      ? [...upgrades, ...Array(4 - upgrades.length).fill(false)]
-      : [false, false, false, false]
-  ).slice(0, 4) as [boolean, boolean, boolean, boolean];
+      ? [...upgrades, ...Array(5 - upgrades.length).fill(false)]
+      : [false, false, false, false, false]
+  ).slice(0, 5);
   const bonus = currentUpgrades.filter(Boolean).length * 5;
   const displayValue = value + bonus;
   const isCheckboxDisabled = (index: number) => {
@@ -125,6 +128,8 @@ const CharacteristicStat = ({
               checked={checked}
               disabled={isCheckboxDisabled(index)}
               onCheckedChange={(c) => onUpgradeChange(index, !!c)}
+              title={upgradeTitles[index]}
+              aria-label={upgradeTitles[index]}
               className="h-3 w-3"
             />
           ))}
@@ -191,6 +196,11 @@ export const CharacteristicsSection = React.forwardRef<
     // ─── END SYNC EDITABLE STATE ───
 
     // ─── LANDMARK: DYNAMIC CHARACTERISTICS BASED ON CAPABILITIES ───
+    const upgradeTitles = React.useMemo(
+      () => DH2E_STAT_STEPS.map((step) => t(step.labelKey)),
+      [t],
+    );
+
     const characteristics = React.useMemo(() => {
       const base = [
         { key: 'weaponSkill', label: 'WS', fullName: 'Weapon Skill' },
@@ -255,7 +265,9 @@ export const CharacteristicsSection = React.forwardRef<
         upgrades: Record<DarkHeresyStatKey, DarkHeresyStatUpgrade>,
       ) => {
         const next = { ...upgrades };
-        const specific = [...(next[statKey] || [false, false, false, false])];
+        const specific = [
+          ...(next[statKey] || [false, false, false, false, false]),
+        ];
         specific[index] = isChecked;
         if (!isChecked)
           for (let i = index + 1; i < specific.length; i++) specific[i] = false;
@@ -338,6 +350,7 @@ export const CharacteristicsSection = React.forwardRef<
                   ? editableStatUpgrades[char.key]
                   : currentUpgrades[char.key]
               }
+              upgradeTitles={upgradeTitles}
               editing={isCharacteristicsEditing}
               onValueChange={(e) =>
                 setEditableStats((prev) => ({

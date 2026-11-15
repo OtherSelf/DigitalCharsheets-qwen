@@ -16,16 +16,8 @@ import type {
  * набор полей, из которого схема редакции собирает свой лист.
  */
 
-const homeWorldSchema = z.union([
-  z.enum([
-    'Feral World',
-    'Hive World',
-    'Imperial World',
-    'Void Born',
-    'Forge World',
-  ]),
-  z.literal(''),
-]);
+/** Мир: id 2e (`feral-world`) или старое DH1-название до миграции. */
+const homeWorldSchema = z.string();
 const careerPathSchema = z.union([
   z.enum([
     'Adept',
@@ -41,6 +33,7 @@ const careerPathSchema = z.union([
 ]);
 
 const upgradeSchema = z.tuple([
+  z.boolean(),
   z.boolean(),
   z.boolean(),
   z.boolean(),
@@ -204,6 +197,35 @@ export const darkHeresyBaseFields = {
   divination: z.string(),
   divinationEffect: z.string(),
   quirk: z.string(),
+  background: z.string(),
+  role: z.string(),
+  aptitudes: z.looseObject({
+    profile: z.array(z.string()),
+    chosen: z.record(z.string(), z.string()),
+    extra: z.array(z.string()),
+  }),
+  eliteAdvances: z.array(z.string()),
+  psy: z.looseObject({
+    rating: z.number(),
+    disciplines: z.array(z.string()),
+    powers: z.array(z.string()),
+  }),
+  experienceLog: z.array(
+    z.looseObject({
+      id: z.string(),
+      kind: z.enum([
+        'characteristic',
+        'skill',
+        'talent',
+        'psychic-power',
+        'psy-rating',
+        'elite-advance',
+      ]),
+      ref: z.string(),
+      cost: z.number(),
+      createdAt: z.string(),
+    }),
+  ),
   height: z.string(),
   weight: z.string(),
   age: z.string(),

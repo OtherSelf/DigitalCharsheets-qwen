@@ -1,5 +1,6 @@
 import { CURRENT_SCHEMA_VERSION } from '../plugin-api';
 import { readNumber, readString, type DefaultsInput } from '../shared/defaults';
+import { DH2E_BACKGROUNDS, DH2E_HOMEWORLDS, DH2E_ROLES } from './dh2e-data';
 import { calculateRank, RanksByCareer } from './dark-heresy-ranks';
 import { effectIdForDivination } from './divination-i18n';
 import {
@@ -11,7 +12,6 @@ import {
   type DarkHeresyCoreStatNotes,
   type DarkHeresyCoreStats,
   type DarkHeresyCoreStatUpgrades,
-  type DarkHeresyHomeWorld,
   type DarkHeresyStatUpgrade,
   type DH2Character,
   type DH2StatNotes,
@@ -31,11 +31,19 @@ import {
 
 export type DarkHeresyBaseDraft = Omit<DarkHeresyBase, 'id'>;
 
-function readHomeWorld(input: DefaultsInput): DarkHeresyHomeWorld | '' {
+const HOME_WORLD_IDS = new Set(DH2E_HOMEWORLDS.map((world) => world.id));
+const BACKGROUND_IDS = new Set(DH2E_BACKGROUNDS.map((bg) => bg.id));
+const ROLE_IDS = new Set(DH2E_ROLES.map((role) => role.id));
+
+function readHomeWorld(input: DefaultsInput): string {
   const raw = readString(input, 'homeWorld', '');
-  return (DarkHeresyHomeWorlds as readonly string[]).includes(raw)
-    ? (raw as DarkHeresyHomeWorld)
-    : '';
+  if (HOME_WORLD_IDS.has(raw)) return raw;
+  return (DarkHeresyHomeWorlds as readonly string[]).includes(raw) ? raw : '';
+}
+
+function readKnownId(input: DefaultsInput, key: string, known: Set<string>) {
+  const raw = readString(input, key, '');
+  return known.has(raw) ? raw : '';
 }
 
 function readCareerPath(input: DefaultsInput): DarkHeresyCareerPath | '' {
@@ -79,6 +87,12 @@ export function createDarkHeresyBaseDefaults(
       effectIdForDivination(divination) ||
       readString(input, 'divinationEffect', ''),
     quirk: readString(input, 'quirk', ''),
+    background: readKnownId(input, 'background', BACKGROUND_IDS),
+    role: readKnownId(input, 'role', ROLE_IDS),
+    aptitudes: { profile: [], chosen: {}, extra: [] },
+    eliteAdvances: [],
+    psy: { rating: 0, disciplines: [], powers: [] },
+    experienceLog: [],
     height: readString(input, 'height', ''),
     weight: readString(input, 'weight', ''),
     age: readString(input, 'age', ''),
@@ -139,10 +153,10 @@ export function createDh2Defaults(
     ...(Object.fromEntries(
       DARK_HERESY_CORE_STATS.map((stat) => [
         stat,
-        [false, false, false, false] as DarkHeresyStatUpgrade,
+        [false, false, false, false, false] as DarkHeresyStatUpgrade,
       ]),
     ) as DarkHeresyCoreStatUpgrades),
-    influence: [false, false, false, false] as DarkHeresyStatUpgrade,
+    influence: [false, false, false, false, false] as DarkHeresyStatUpgrade,
   } satisfies DH2StatUpgrades;
   const statNotes = {} as DarkHeresyCoreStatNotes;
 

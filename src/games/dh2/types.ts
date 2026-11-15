@@ -46,7 +46,13 @@ export const DARK_HERESY_CORE_STATS = [
 export type DarkHeresyCoreStat = (typeof DARK_HERESY_CORE_STATS)[number];
 
 export type DarkHeresyCoreStats = Record<DarkHeresyCoreStat, number>;
-export type DarkHeresyStatUpgrade = [boolean, boolean, boolean, boolean];
+export type DarkHeresyStatUpgrade = [
+  boolean,
+  boolean,
+  boolean,
+  boolean,
+  boolean,
+];
 export type DarkHeresyCoreStatUpgrades = Record<
   DarkHeresyCoreStat,
   DarkHeresyStatUpgrade
@@ -54,6 +60,41 @@ export type DarkHeresyCoreStatUpgrades = Record<
 export type DarkHeresyCoreStatNotes = Partial<
   Record<DarkHeresyCoreStat, string>
 >;
+
+/**
+ * Профиль аптитюд 2e: `profile` выводится из мира, бэкграунда и роли,
+ * `chosen` разрешает дубли (игрок берёт другую аптитюду характеристики),
+ * `extra` — ручные правки владельца. Значения — смысловые id аптитюд.
+ */
+export interface DH2AptitudeProfile {
+  profile: string[];
+  chosen: Record<string, string>;
+  extra: string[];
+}
+
+/** Пси-профиль 2e: рейтинг, известные дисциплины и силы. */
+export interface DH2PsyProfile {
+  rating: number;
+  disciplines: string[];
+  powers: string[];
+}
+
+export type DH2ExperienceKind =
+  | 'characteristic'
+  | 'skill'
+  | 'talent'
+  | 'psychic-power'
+  | 'psy-rating'
+  | 'elite-advance';
+
+/** Строка журнала покупок: цена по таблицам 2-2/2-4/2-6 и ссылка на покупку. */
+export interface DH2ExperienceEntry {
+  id: string;
+  kind: DH2ExperienceKind;
+  ref: string;
+  cost: number;
+  createdAt: string;
+}
 
 /** Навык DH: тренировки `skilled`/`+10`/`+20`; `+30` использует только dh2. */
 export interface Skill {
@@ -132,7 +173,8 @@ export interface DarkHeresyEquipment {
  */
 export interface DarkHeresyBase extends CharacterBase {
   gameSystem: 'Dark Heresy';
-  homeWorld: DarkHeresyHomeWorld | '';
+  /** Мир: смысловой id 2e (`feral-world`) либо DH1-название до миграции. */
+  homeWorld: string;
   worldVariant: string;
   careerPath: DarkHeresyCareerPath | '';
   rank: string;
@@ -141,6 +183,18 @@ export interface DarkHeresyBase extends CharacterBase {
   /** Стабильный ID эффекта (`insanity2`), не текст. */
   divinationEffect: string;
   quirk: string;
+  /** Бэкграунд 2e: смысловой id (`adeptus-arbites`). */
+  background: string;
+  /** Роль 2e: смысловой id (`assassin`). */
+  role: string;
+  /** Профиль аптитюд 2e. */
+  aptitudes: DH2AptitudeProfile;
+  /** Элитные продвижения 2e: `psyker`, `untouchable`, `inquisitor`. */
+  eliteAdvances: string[];
+  /** Пси-профиль 2e. */
+  psy: DH2PsyProfile;
+  /** Журнал покупок опыта 2e. */
+  experienceLog: DH2ExperienceEntry[];
   height: string;
   weight: string;
   age: string;
