@@ -94,7 +94,10 @@ export function createDarkHeresyBaseDefaults(
     },
     insanityPoints: { total: 0, notes: '' },
     corruptionPoints: { total: 0, notes: '' },
-    wealth: { throneGelt: 0, monthlyIncome: 0 },
+    wealth: {
+      throneGelt: readNumber(input, 'throneGelt', 0),
+      monthlyIncome: 0,
+    },
     movement: {
       walkHalf: agilityBonus,
       walkFull: agilityBonus * 2,

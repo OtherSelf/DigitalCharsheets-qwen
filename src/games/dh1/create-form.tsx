@@ -136,6 +136,7 @@ export function DarkHeresyCreateForm({
     influence: z.coerce.number().int(),
     wounds: z.coerce.number().int(),
     fatePoints: z.coerce.number().int(),
+    throneGelt: z.coerce.number().int().optional(),
   });
 
   // zod 4 разделяет типы входа и выхода (z.input/z.output, например из-за
@@ -164,6 +165,7 @@ export function DarkHeresyCreateForm({
       influence: 30,
       wounds: 10,
       fatePoints: 1,
+      throneGelt: 0,
       divination: '',
       quirk: '',
       height: '',
@@ -399,9 +401,26 @@ export function DarkHeresyCreateForm({
                 </div>
                 {watchedProfile && (
                   <div className="space-y-2 rounded-md border p-3">
-                    <h4 className="text-sm font-medium">
-                      {t('dh1.startingProfile')}
-                    </h4>
+                    <div className="flex items-center justify-between gap-2">
+                      <h4 className="text-sm font-medium">
+                        {t('dh1.startingProfile')}
+                      </h4>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          for (const [statKey] of STARTING_STAT_KEYS) {
+                            form.setValue(
+                              statKey,
+                              watchedProfile.characteristics[statKey],
+                            );
+                          }
+                        }}
+                      >
+                        {t('dh1.applyBaseStats')}
+                      </Button>
+                    </div>
                     <p className="text-muted-foreground text-sm">
                       {t('dh1.startingWounds')}: {watchedProfile.wounds}
                     </p>
@@ -881,6 +900,19 @@ export function DarkHeresyCreateForm({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>{t('dh1.fatePoints')}</FormLabel>
+                      <FormControl>
+                        <Input type="number" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="throneGelt"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('dh1.startingWealthThrones')}</FormLabel>
                       <FormControl>
                         <Input type="number" {...field} />
                       </FormControl>
