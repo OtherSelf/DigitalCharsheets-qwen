@@ -98,7 +98,7 @@ overwriting existing values (including an existing `tester` role). A profile
 without `passwordHash` is reported but cannot be logged into; an administrator
 can set a password from `/admin`.
 
-## Character sheets (schema v2)
+## Character sheets (schema v2/v3)
 
 One file per sheet: `users/<uid>/characters/<character-id>.json`. The content is
 the `Character` object from `src/lib/types.ts` (D&D 5e, Dark Heresy 1e or Dark
@@ -106,9 +106,13 @@ Heresy 2e). The file name is the sheet `id`. `GET /api/characters` reads and
 parses every `*.json` in the user's `characters/` directory; a broken file is
 skipped rather than failing the whole list.
 
-`CharacterBase.schemaVersion` is `2`; legacy files without it are migrated on
-startup by `src/lib/character-schema.ts` and lazily on read/save by
-`normalizeCharacterRecord` (`src/lib/character-version.ts`). The orchestrator
+`CharacterBase.schemaVersion` is per module: `dnd5e` stays at `2`, Dark Heresy
+modules write `3` (`src/games/dh1/schema-version.ts`,
+`src/games/dh2/schema-version.ts`) after the DH1APP and 2e-generation field sets.
+Legacy files without the field or with `2` are migrated on startup by
+`src/lib/character-schema.ts` and lazily on read/save by
+`normalizeCharacterRecord` (`src/lib/character-version.ts`); the file is
+rewritten once with the module version. The orchestrator
 resolves the edition and calls the plugin's `normalize`
 (`src/games/<id>/normalize.ts`); at startup/save it only remaps legacy fields
 and coerces types, while missing structures are filled with defaults only on
