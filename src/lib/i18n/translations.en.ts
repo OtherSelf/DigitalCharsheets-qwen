@@ -18,6 +18,8 @@ export const enTranslations: Record<string, string> = {
     'This action cannot be undone. This will permanently delete your character sheet for',
   'common.cancel': 'Cancel',
   'common.notes': 'Notes',
+
+  'common.quantity': 'Quantity',
   'common.questJournal': 'Quest Journal',
   'common.info': 'Info',
   'common.progression': 'Progression',
