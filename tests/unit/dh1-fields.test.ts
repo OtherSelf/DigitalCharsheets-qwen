@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
 import { createDh1Defaults } from '@/games/dh1/defaults';
+import { buildDh1PortableJson } from '@/games/dh1/export';
 import { dh1CharacterSchema } from '@/games/dh1/schema';
 import { DarkHeresyHomeWorlds } from '@/games/dh1/types';
+import type { GameExportConfig } from '@/games/types';
 
 import { makeDhCharacter } from './helpers';
 
@@ -184,5 +186,63 @@ describe('DH1: аддитивные поля листа', () => {
       const character = baseDh1({ homeWorld: world });
       expect(() => dh1CharacterSchema.parse(character)).not.toThrow();
     }
+  });
+});
+
+const EXPORT_ALL: GameExportConfig = {
+  includeBasicInfo: true,
+  includeStats: true,
+  includeCombat: true,
+  includeEquipment: true,
+  includeInventory: true,
+  includeSpells: true,
+  includeNarrative: true,
+  includeProgression: true,
+  includeCompanions: true,
+  includeQuestLog: true,
+  includeCustomHouseRules: true,
+};
+
+describe('DH1: новые блоки в JSON-экспорте', () => {
+  it('экспортирует идентичность, пси, черты, мутации, безумие, порчу и груз', () => {
+    const character = baseDh1({
+      identity: { playerName: 'Анна', gender: 'Ж', build: 'Сухое' },
+      traits: [{ id: 't1', name: 'Железное Нутро' }],
+      mutations: [{ id: 'm1', name: 'Третья рука' }],
+      eliteAdvances: [{ id: 'e1', name: 'Присяга Радикала' }],
+      psy: { rating: 2, discipline: 'Биомантия', powers: [] },
+      insanityDetails: { degree: '1' },
+      corruptionDetails: { degree: '0' },
+      carry: { push: '108 кг' },
+      equipment: {
+        armor: {
+          Head: null,
+          'Right arm': null,
+          Body: null,
+          'Left arm': null,
+          'Right leg': null,
+          'Left leg': null,
+        },
+        weapons: { melee: [], ranged: [] },
+        armorWeight: '6 кг',
+      },
+    });
+    const exported = buildDh1PortableJson(
+      character as never,
+      EXPORT_ALL,
+    ) as Record<string, { playerName?: string; armorWeight?: string }>;
+    expect((exported.identity as { playerName?: string }).playerName).toBe(
+      'Анна',
+    );
+    expect((exported.psy as { rating?: number }).rating).toBe(2);
+    expect(Array.isArray(exported.traits)).toBe(true);
+    expect((exported.insanityDetails as { degree?: string }).degree).toBe('1');
+    expect((exported.corruptionDetails as { degree?: string }).degree).toBe(
+      '0',
+    );
+    expect((exported.carry as { push?: string }).push).toBe('108 кг');
+    expect((exported.equipment as { armorWeight?: string }).armorWeight).toBe(
+      '6 кг',
+    );
   });
 });
