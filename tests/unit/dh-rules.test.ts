@@ -25,6 +25,7 @@ import {
   divinationEffectKey,
   divinationKey,
 } from '@/games/dh1/divination-i18n';
+import { STARTING_PACKAGES } from '@/games/dh1/starting-packages';
 import { DarkHeresyCareerPaths, DarkHeresyHomeWorlds } from '@/games/dh1/types';
 import { translations } from '@/lib/i18n';
 
@@ -185,6 +186,25 @@ describe('Dark Heresy: справочные данные против базов
       const key = WORLD_VARIANT_LABELS[world];
       expect(key, `мир «${world}» без WORLD_VARIANT_LABELS`).toBeTruthy();
       expectTranslation(key, world);
+    }
+  });
+
+  it('стартовые пакеты: 8 профессий, пакеты непустые, ключи переведены', () => {
+    expect(Object.keys(STARTING_PACKAGES).sort()).toEqual(
+      [...DarkHeresyCareerPaths].sort(),
+    );
+    for (const career of DarkHeresyCareerPaths) {
+      const pkg = STARTING_PACKAGES[career];
+      expect(pkg, `нет стартового пакета для «${career}»`).toBeTruthy();
+      for (const field of ['skills', 'talents', 'gear'] as const) {
+        expect(
+          pkg[field].length,
+          `пустой раздел ${field} у «${career}»`,
+        ).toBeGreaterThan(0);
+        for (const group of pkg[field]) {
+          for (const key of group) expectTranslation(key, `${career}/${field}`);
+        }
+      }
     }
   });
 
