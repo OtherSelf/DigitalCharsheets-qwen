@@ -196,10 +196,6 @@ export function buildDh2ExcelSections(
   if (config.includeInventory) {
     w.sub('io.excel.inventory');
     w.raw(`    ${w.list(character.inventory ?? [])}`);
-    w.sub('io.excel.wealth');
-    w.row('dh2.throneGelt', character.wealth.throneGelt);
-    w.row('dh2.monthlyIncome', character.wealth.monthlyIncome);
-    w.row('io.excel.wealthNotes', character.wealth.notes);
   }
 
   if (config.includeNarrative) {

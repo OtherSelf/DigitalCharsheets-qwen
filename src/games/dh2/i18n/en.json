@@ -798,5 +798,10 @@
   "dh2.startingSkills": "Starting skills",
   "dh2.startingTalents": "Starting talents",
   "dh2.startingAptitude": "Aptitude from background",
-  "dh2.roleTalent": "Role talent"
+  "dh2.roleTalent": "Role talent",
+  "dh2.experienceKind.other": "Manual purchase",
+  "dh2.spendAmount": "XP amount",
+  "dh2.spendWhat": "What was bought",
+  "dh2.spendConfirm": "Spend",
+  "dh2.spendHint": "The price is entered by the player: the app does not check legality (book and GM decide)."
 }

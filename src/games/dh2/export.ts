@@ -58,7 +58,6 @@ export function buildDh2PortableJson(
   if (config.includeEquipment) result.equipment = character.equipment;
   if (config.includeInventory) {
     result.inventory = character.inventory;
-    result.wealth = character.wealth;
   }
 
   if (config.includeNarrative) {

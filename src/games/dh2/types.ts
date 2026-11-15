@@ -64,7 +64,9 @@ export type DH2ExperienceKind =
   | 'talent'
   | 'psychic-power'
   | 'psy-rating'
-  | 'elite-advance';
+  | 'elite-advance'
+  /** Ручная покупка: цена и назначение вводит игрок (D4). */
+  | 'other';
 
 /** Строка журнала покупок: цена по таблицам 2-2/2-4/2-6 и ссылка на покупку. */
 export interface DH2ExperienceEntry {

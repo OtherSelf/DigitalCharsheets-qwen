@@ -8,17 +8,14 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  useCharacterContext,
-  useToast,
-  useTranslation,
-} from '@/games/plugin-host';
+import { useCharacterContext, useTranslation } from '@/games/plugin-host';
 import { cn } from '@/lib/utils';
 
 import {
@@ -336,8 +333,10 @@ export const ProgressionSection = ({
 }: SectionProps) => {
   const { updateCharacter, showEditButtons } = useCharacterContext();
   const { t } = useTranslation();
-  const { toast } = useToast();
   const [isProgressionEditing, setIsProgressionEditing] = React.useState(false);
+  const [isSpendOpen, setIsSpendOpen] = React.useState(false);
+  const [spendAmount, setSpendAmount] = React.useState(0);
+  const [spendWhat, setSpendWhat] = React.useState('');
 
   React.useEffect(() => {
     onEditingChange?.(isProgressionEditing);
@@ -345,6 +344,27 @@ export const ProgressionSection = ({
 
   const available =
     (character.experience ?? 0) - (character.totalExpSpent ?? 0);
+
+  const handleSpend = () => {
+    if (spendAmount <= 0) return;
+    const note = spendWhat.trim();
+    updateCharacter(character.id, {
+      totalExpSpent: character.totalExpSpent + spendAmount,
+      experienceLog: [
+        ...character.experienceLog,
+        {
+          id: `manual:${Date.now()}`,
+          kind: 'other',
+          ref: note || t('dh2.experienceKind.other'),
+          cost: spendAmount,
+          createdAt: new Date().toISOString(),
+        },
+      ],
+    });
+    setSpendAmount(0);
+    setSpendWhat('');
+    setIsSpendOpen(false);
+  };
 
   const showProgression =
     !isCompactView || activeCompactSection === 'progression-section';
@@ -366,13 +386,23 @@ export const ProgressionSection = ({
         >
           {t('dh2.experience')}
         </CardTitle>
-        {(showEditButtons || isProgressionEditing) && (
-          <EditSaveButton
-            editing={isProgressionEditing}
-            onEdit={() => setIsProgressionEditing(true)}
-            onSave={() => setIsProgressionEditing(false)}
-          />
-        )}
+        <div className="flex items-center gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setIsSpendOpen(true)}
+          >
+            {t('dh2.spendExp')}
+          </Button>
+          {(showEditButtons || isProgressionEditing) && (
+            <EditSaveButton
+              editing={isProgressionEditing}
+              onEdit={() => setIsProgressionEditing(true)}
+              onSave={() => setIsProgressionEditing(false)}
+            />
+          )}
+        </div>
       </CardHeader>
       <CardContent className="space-y-4 pt-0">
         <div className="grid grid-cols-2 gap-4">
@@ -449,6 +479,41 @@ export const ProgressionSection = ({
           </div>
         )}
       </CardContent>
+      <Dialog open={isSpendOpen} onOpenChange={setIsSpendOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('dh2.spendExp')}</DialogTitle>
+            <DialogDescription>{t('dh2.spendHint')}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="space-y-1">
+              <Label htmlFor="spend-amount">{t('dh2.spendAmount')}</Label>
+              <Input
+                id="spend-amount"
+                type="number"
+                min={0}
+                defaultValue={0}
+                onChange={(e) =>
+                  setSpendAmount(parseInt(e.target.value, 10) || 0)
+                }
+              />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="spend-what">{t('dh2.spendWhat')}</Label>
+              <Input
+                id="spend-what"
+                defaultValue=""
+                onChange={(e) => setSpendWhat(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="button" onClick={handleSpend}>
+              {t('dh2.spendConfirm')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };

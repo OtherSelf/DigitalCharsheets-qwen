@@ -100,7 +100,6 @@ export const EquipmentInventorySection = React.forwardRef<
       useCharacterContext();
     const { t } = useTranslation();
 
-    const [isWealthEditing, setIsWealthEditing] = React.useState(false);
     const [isArmorEditing, setIsArmorEditing] = React.useState(false);
     const [isMeleeWeaponsEditing, setIsMeleeWeaponsEditing] =
       React.useState(false);
@@ -113,11 +112,6 @@ export const EquipmentInventorySection = React.forwardRef<
       React.useState(true);
     const [isArmorExpanded, setIsArmorExpanded] = React.useState(false);
 
-    const [editableWealth, setEditableWealth] = React.useState({
-      throneGelt: character.wealth?.throneGelt ?? 0,
-      monthlyIncome: character.wealth?.monthlyIncome ?? 0,
-      notes: character.wealth?.notes ?? '',
-    });
     const [editableEquipment, setEditableEquipment] = React.useState(
       character.equipment ?? defaultEquipment,
     );
@@ -126,10 +120,6 @@ export const EquipmentInventorySection = React.forwardRef<
     );
     const [newInventoryItem, setNewInventoryItem] = React.useState('');
 
-    const handleSaveWealth = React.useCallback(() => {
-      updateCharacter(character.id, { wealth: editableWealth });
-      setIsWealthEditing(false);
-    }, [character.id, editableWealth, updateCharacter]);
     const handleSaveArmor = React.useCallback(() => {
       updateCharacter(character.id, {
         equipment: { ...editableEquipment, armor: editableEquipment.armor },
@@ -150,7 +140,6 @@ export const EquipmentInventorySection = React.forwardRef<
     }, [character.id, editableInventory, updateCharacter]);
 
     const isAnyEditing =
-      isWealthEditing ||
       isArmorEditing ||
       isMeleeWeaponsEditing ||
       isRangedWeaponsEditing ||
@@ -163,7 +152,6 @@ export const EquipmentInventorySection = React.forwardRef<
       ref,
       () => ({
         saveAll: () => {
-          if (isWealthEditing) handleSaveWealth();
           if (isArmorEditing) handleSaveArmor();
           if (isMeleeWeaponsEditing) handleSaveMeleeWeapons();
           if (isRangedWeaponsEditing) handleSaveRangedWeapons();
@@ -171,12 +159,10 @@ export const EquipmentInventorySection = React.forwardRef<
         },
       }),
       [
-        isWealthEditing,
         isArmorEditing,
         isMeleeWeaponsEditing,
         isRangedWeaponsEditing,
         isInventoryEditing,
-        handleSaveWealth,
         handleSaveArmor,
         handleSaveMeleeWeapons,
         handleSaveRangedWeapons,
@@ -2027,108 +2013,6 @@ export const EquipmentInventorySection = React.forwardRef<
             </div>
             <CollapsibleContent>
               <div className={cn('space-y-8', isCompactView ? 'p-3' : 'p-6')}>
-                <div className="bg-card rounded-lg border p-4 shadow-sm">
-                  <div className="mb-4 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <h4 className="text-primary text-lg font-semibold">
-                        {t('dh2.wealth')}
-                      </h4>
-                      {!hideNotes && (
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <Button
-                              variant={
-                                character.wealth?.notes ? 'secondary' : 'ghost'
-                              }
-                              size="icon"
-                              className="h-6 w-6 shrink-0"
-                            >
-                              <InfoIcon className="h-4 w-4" />
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-64">
-                            <Label className="mb-2 block text-xs">
-                              {t('dh2.wealthNotes')}
-                            </Label>
-                            <Textarea
-                              defaultValue={character.wealth?.notes || ''}
-                              onBlur={(e) =>
-                                updateCharacter(character.id, {
-                                  wealth: {
-                                    ...editableWealth,
-                                    notes: e.target.value,
-                                  },
-                                })
-                              }
-                              placeholder={t('dh2.wealthNotesPlaceholder')}
-                              className="min-h-[100px] text-sm"
-                            />
-                          </PopoverContent>
-                        </Popover>
-                      )}
-                    </div>
-                    {(showEditButtons || isWealthEditing) && (
-                      <EditSaveButton
-                        editing={isWealthEditing}
-                        onEdit={() => setIsWealthEditing(true)}
-                        onSave={handleSaveWealth}
-                      />
-                    )}
-                  </div>
-                  {isWealthEditing ? (
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                      <div className="space-y-1">
-                        <Label>{t('dh2.throneGelt')}</Label>
-                        <Input
-                          type="number"
-                          value={
-                            editableWealth.throneGelt === 0
-                              ? ''
-                              : editableWealth.throneGelt
-                          }
-                          onChange={(e) =>
-                            setEditableWealth((prev) => ({
-                              ...prev,
-                              throneGelt: parseInt(e.target.value, 10) || 0,
-                            }))
-                          }
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <Label>{t('dh2.monthlyIncome')}</Label>
-                        <Input
-                          type="number"
-                          value={
-                            editableWealth.monthlyIncome === 0
-                              ? ''
-                              : editableWealth.monthlyIncome
-                          }
-                          onChange={(e) =>
-                            setEditableWealth((prev) => ({
-                              ...prev,
-                              monthlyIncome: parseInt(e.target.value, 10) || 0,
-                            }))
-                          }
-                        />
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 gap-4 text-sm font-medium md:grid-cols-2">
-                      <div className="bg-background flex items-center justify-between rounded border p-2">
-                        <span>{t('dh2.throneGelt')}:</span>{' '}
-                        <span className="text-primary font-bold">
-                          {character.wealth?.throneGelt ?? 0}
-                        </span>
-                      </div>
-                      <div className="bg-background flex items-center justify-between rounded border p-2">
-                        <span>{t('dh2.monthlyIncome')}:</span>{' '}
-                        <span className="text-primary font-bold">
-                          {character.wealth?.monthlyIncome ?? 0}
-                        </span>
-                      </div>
-                    </div>
-                  )}
-                </div>
                 <div className="bg-card space-y-4 rounded-lg border p-4 shadow-sm">
                   <div className="flex items-center justify-between border-b pb-2">
                     <h4 className="text-lg font-semibold">

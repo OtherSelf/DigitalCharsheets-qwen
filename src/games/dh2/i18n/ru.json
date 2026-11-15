@@ -798,5 +798,10 @@
   "dh2.startingSkills": "Стартовые навыки",
   "dh2.startingTalents": "Стартовые таланты",
   "dh2.startingAptitude": "Аптитюда бэкграунда",
-  "dh2.roleTalent": "Талант роли"
+  "dh2.roleTalent": "Талант роли",
+  "dh2.experienceKind.other": "Ручная покупка",
+  "dh2.spendAmount": "Сколько ОП",
+  "dh2.spendWhat": "Что куплено",
+  "dh2.spendConfirm": "Потратить",
+  "dh2.spendHint": "Цену вводит игрок: приложение не проверяет легальность (это решают книга и ГМ)."
 }
