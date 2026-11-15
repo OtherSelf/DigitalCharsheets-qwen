@@ -9,9 +9,9 @@
   "dh1.skinColor": "Skin Color",
   "dh1.hairColor": "Hair Color",
   "dh1.eyeColor": "Eye Color",
-  "dh1.currentExp": "Current EXP",
+  "dh1.currentExp": "Total XP",
   "dh1.spendExp": "Spend EXP",
-  "dh1.totalExpSpent": "Total EXP Spent",
+  "dh1.totalExpSpent": "XP spent",
   "dh1.wounds": "Wounds",
   "dh1.fate": "Fate",
   "dh1.insanity": "Insanity",
@@ -679,5 +679,14 @@
   "dh1.statNotes": "Characteristic notes",
   "dh1.equipment.armor": "Armor",
   "dh1.equipment.weapons": "Weapons",
-  "dh1.availableExp": "Available XP"
+  "dh1.availableExp": "Available XP",
+  "dh1.spendAmount": "XP amount",
+  "dh1.spendWhat": "What was bought",
+  "dh1.spendConfirm": "Spend",
+  "dh1.spendHint": "The price is entered by the player: the app does not check legality.",
+  "dh1.experienceLog": "XP log",
+  "dh1.experienceLogHint": "Purchases recorded by the player; entries can be deleted.",
+  "dh1.experienceLogEmpty": "No purchases yet.",
+  "dh1.manualPurchase": "Manual purchase",
+  "dh1.deleteExperienceEntry": "Delete entry"
 }

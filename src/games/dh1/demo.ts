@@ -30,6 +30,7 @@ export function createDh1Demo(): DH1CharacterDraft {
     hairColor: 'Black',
     eyeColor: 'Grey',
     experience: totalExpSpent,
+    experienceLog: [],
     totalExpSpent,
     alternatePath: null,
     advancedPath: null,

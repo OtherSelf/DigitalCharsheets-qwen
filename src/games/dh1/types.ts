@@ -230,6 +230,14 @@ export interface DH1Psy {
   testedAgainst?: string;
 }
 
+/** Строка журнала опыта DH1: что куплено, сколько потрачено, когда. */
+export interface DH1ExperienceEntry {
+  id: string;
+  label: string;
+  cost: number;
+  createdAt: string;
+}
+
 /** Детали Безумия (степень, травма, расстройства, серьёзность). */
 export interface DH1InsanityDetails {
   degree?: string;
@@ -269,4 +277,6 @@ export interface DH1Character extends DarkHeresyBase {
   psy?: DH1Psy;
   insanityDetails?: DH1InsanityDetails;
   corruptionDetails?: DH1CorruptionDetails;
+  /** Журнал покупок опыта: ведёт игрок (D4), допускает удаление записей. */
+  experienceLog?: DH1ExperienceEntry[];
 }

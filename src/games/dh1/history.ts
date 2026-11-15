@@ -20,6 +20,7 @@ export const dh1History: GameHistoryConfig = {
     divinationEffect: 'dh1.divinationEffect',
     quirk: 'dh1.quirk',
     experience: 'dh1.experience',
+    experienceLog: 'dh1.experienceLog',
     totalExpSpent: 'dh1.totalExpSpent',
     alternatePath: 'dh1.alternatePath',
     advancedPath: 'dh1.advancedPath',
@@ -105,6 +106,7 @@ export const dh1History: GameHistoryConfig = {
     eliteAdvances: 'dh1.eliteAdvances',
     questLog: 'common.questJournal',
     customResources: 'common.statsTab',
+    experienceLog: 'dh1.experienceLog',
   },
   itemLabelFields: ['name', 'title', 'description'],
 };

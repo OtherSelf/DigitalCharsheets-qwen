@@ -142,6 +142,7 @@ export function createDh1Defaults(
   return {
     ...base,
     systemId: 'dh1',
+    experienceLog: [],
     identity,
     stats,
     statUpgrades,

@@ -39,4 +39,14 @@ export const dh1CharacterSchema: z.ZodType<DH1Character> = z.looseObject({
   psy: dh1PsySchema.optional(),
   insanityDetails: dh1InsanityDetailsSchema.optional(),
   corruptionDetails: dh1CorruptionDetailsSchema.optional(),
+  experienceLog: z
+    .array(
+      z.looseObject({
+        id: z.string(),
+        label: z.string(),
+        cost: z.number(),
+        createdAt: z.string(),
+      }),
+    )
+    .optional(),
 });

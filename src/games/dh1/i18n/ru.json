@@ -9,9 +9,9 @@
   "dh1.skinColor": "Цвет кожи",
   "dh1.hairColor": "Цвет волос",
   "dh1.eyeColor": "Цвет глаз",
-  "dh1.currentExp": "Текущий ОП",
+  "dh1.currentExp": "Всего опыта",
   "dh1.spendExp": "Потратить ОП",
-  "dh1.totalExpSpent": "Всего потрачено ОП",
+  "dh1.totalExpSpent": "Потрачено опыта",
   "dh1.wounds": "Раны",
   "dh1.fate": "Судьба",
   "dh1.insanity": "Безумие",
@@ -679,5 +679,14 @@
   "dh1.statNotes": "Заметки к характеристикам",
   "dh1.equipment.armor": "Броня",
   "dh1.equipment.weapons": "Оружие",
-  "dh1.availableExp": "Свободный опыт"
+  "dh1.availableExp": "Свободный опыт",
+  "dh1.spendAmount": "Сколько ОП",
+  "dh1.spendWhat": "Что куплено",
+  "dh1.spendConfirm": "Потратить",
+  "dh1.spendHint": "Цену вводит игрок: приложение не проверяет легальность.",
+  "dh1.experienceLog": "Журнал опыта",
+  "dh1.experienceLogHint": "Покупки, записанные игроком; записи можно удалять.",
+  "dh1.experienceLogEmpty": "Покупок пока нет.",
+  "dh1.manualPurchase": "Ручная покупка",
+  "dh1.deleteExperienceEntry": "Удалить запись"
 }

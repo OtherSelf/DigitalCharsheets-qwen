@@ -214,6 +214,11 @@ function enforceDh1Fields(character: RawRecord, warnings: string[]): void {
   }
 }
 
+function ensureExperienceLog(character: RawRecord): void {
+  if (Array.isArray(character.experienceLog)) return;
+  character.experienceLog = [];
+}
+
 export function normalizeDh1(
   raw: Readonly<Record<string, unknown>>,
   options: NormalizeOptions = {},
@@ -224,6 +229,7 @@ export function normalizeDh1(
   if (options.applyDefaults) fillDefaults(character);
   normalizeDivination(character, warnings);
   enforceDh1Fields(character, warnings);
+  ensureExperienceLog(character);
 
   return {
     character: character as unknown as DH1Character,

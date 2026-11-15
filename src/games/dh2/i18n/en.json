@@ -9,9 +9,9 @@
   "dh2.skinColor": "Skin Color",
   "dh2.hairColor": "Hair Color",
   "dh2.eyeColor": "Eye Color",
-  "dh2.currentExp": "Current EXP",
+  "dh2.currentExp": "Total XP",
   "dh2.spendExp": "Spend EXP",
-  "dh2.totalExpSpent": "Total EXP Spent",
+  "dh2.totalExpSpent": "XP spent",
   "dh2.wounds": "Wounds",
   "dh2.fate": "Fate",
   "dh2.insanity": "Insanity",
@@ -763,7 +763,7 @@
   "dh2.characteristicsHint": "Roll 2d10+20 for each characteristic at the table and enter the result. The home world marks which characteristics roll 3d10 (keep the highest or the lowest two).",
   "dh2.divinationHint": "Roll 1d100 at the table and pick the row of Table 2-9.",
   "dh2.availableExp": "Available XP",
-  "dh2.experienceLog": "XP purchases",
+  "dh2.experienceLog": "XP log",
   "dh2.experienceKind.characteristic": "Characteristic advance",
   "dh2.experienceKind.skill": "Skill advance",
   "dh2.experienceKind.talent": "Talent",
@@ -803,5 +803,8 @@
   "dh2.spendAmount": "XP amount",
   "dh2.spendWhat": "What was bought",
   "dh2.spendConfirm": "Spend",
-  "dh2.spendHint": "The price is entered by the player: the app does not check legality (book and GM decide)."
+  "dh2.spendHint": "The price is entered by the player: the app does not check legality (book and GM decide).",
+  "dh2.experienceLogHint": "Purchases recorded by the player; entries can be deleted.",
+  "dh2.experienceLogEmpty": "No purchases yet.",
+  "dh2.deleteExperienceEntry": "Delete entry"
 }

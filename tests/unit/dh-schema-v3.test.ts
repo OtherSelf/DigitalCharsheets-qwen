@@ -44,6 +44,8 @@ describe('DH1: миграция листа v2', () => {
     expect(dh.corruptionPoints).toEqual({ total: 1, notes: '' });
     expect(dh.traits).toHaveLength(1);
     expect(dh.fatigue1st).toEqual({ current: 1 });
+    // Журнал опыта добавлен аддитивно: старый лист получает пустой массив.
+    expect(dh.experienceLog).toEqual([]);
   });
 
   it('повторный прогон идемпотентен', () => {
@@ -111,6 +113,7 @@ describe('создание dh1/dh2: пол, безумие, порча', () => {
     expect(draft.identity?.gender).toBe('Женский');
     expect(draft.insanityPoints.total).toBe(3);
     expect(draft.corruptionPoints.total).toBe(2);
+    expect(draft.experienceLog).toEqual([]);
   });
 
   it('dh2 берёт значения из формы создания', () => {
@@ -123,5 +126,6 @@ describe('создание dh1/dh2: пол, безумие, порча', () => {
     expect(draft.gender).toBe('Мужской');
     expect(draft.insanityPoints.total).toBe(4);
     expect(draft.corruptionPoints.total).toBe(1);
+    expect(draft.experienceLog).toEqual([]);
   });
 });
