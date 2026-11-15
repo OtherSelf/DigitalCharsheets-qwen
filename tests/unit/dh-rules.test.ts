@@ -20,6 +20,7 @@ import {
   AdvancedPathsByCareer,
   RanksByCareer,
 } from '@/games/dh1/dark-heresy-ranks';
+import { createDh1Demo } from '@/games/dh1/demo';
 import {
   divinationEffectKey,
   divinationKey,
@@ -185,6 +186,21 @@ describe('Dark Heresy: справочные данные против базов
       expect(key, `мир «${world}» без WORLD_VARIANT_LABELS`).toBeTruthy();
       expectTranslation(key, world);
     }
+  });
+
+  it('демо-персонаж легален: мир, «Прошлое», пророчество, ранг, статы', () => {
+    const demo = createDh1Demo();
+    expect(DarkHeresyHomeWorlds).toContain(demo.homeWorld);
+    expect(WORLD_VARIANTS_BY_HOMEWORLD[demo.homeWorld]).toContain(
+      demo.worldVariant,
+    );
+    const divination = DIVINATIONS.find((d) => d.id === demo.divination);
+    expect(divination, 'демо: неизвестное пророчество').toBeTruthy();
+    expect(divination?.effectId).toBe(demo.divinationEffect);
+    expect(demo.rank).toBe('Guard');
+    const base =
+      WORLD_STARTING_PROFILE[demo.homeWorld].characteristics.toughness;
+    expect(demo.stats.toughness).toBeLessThanOrEqual(base + 20);
   });
 
   it('стартовые таблицы: профиль 8 миров, богатство 8 профессий, опыт 400', () => {
