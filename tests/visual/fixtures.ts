@@ -465,6 +465,7 @@ export const dhCharacter: Omit<DH1Character, 'id' | 'userId'> = {
   eyeColor: 'Grey',
   experience: 2500,
   totalExpSpent: 2200,
+  experienceLog: [],
   alternatePath: null,
   advancedPath: null,
   backstory:
