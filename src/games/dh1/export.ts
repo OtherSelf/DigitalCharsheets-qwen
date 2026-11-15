@@ -29,6 +29,7 @@ export function buildDh1PortableJson(
       skinColor: character.skinColor,
       hairColor: character.hairColor,
       eyeColor: character.eyeColor,
+      identity: character.identity,
     });
   }
 
@@ -51,10 +52,19 @@ export function buildDh1PortableJson(
       movement: character.movement,
       skills: character.skills,
       talents: character.talents,
+      traits: character.traits,
+      mutations: character.mutations,
+      eliteAdvances: character.eliteAdvances,
+      psy: character.psy,
+      insanityDetails: character.insanityDetails,
+      corruptionDetails: character.corruptionDetails,
     });
   }
 
-  if (config.includeEquipment) result.equipment = character.equipment;
+  if (config.includeEquipment) {
+    result.equipment = character.equipment;
+    result.carry = character.carry;
+  }
   if (config.includeInventory) {
     result.inventory = character.inventory;
     result.wealth = character.wealth;

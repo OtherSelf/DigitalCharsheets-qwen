@@ -50,6 +50,10 @@ export function buildDh1ExcelSections(
     w.row('dh1.skinColor', character.skinColor);
     w.row('dh1.hairColor', character.hairColor);
     w.row('dh1.eyeColor', character.eyeColor);
+    w.row('dh1.playerName', character.identity?.playerName ?? '');
+    w.row('dh1.gender', character.identity?.gender ?? '');
+    w.row('dh1.build', character.identity?.build ?? '');
+    w.row('dh1.handedness', character.identity?.handedness ?? '');
     w.row('dh1.experience', character.experience);
     w.row('dh1.totalExpSpent', character.totalExpSpent);
     w.row('dh1.alternatePath', character.alternatePath);
@@ -82,6 +86,29 @@ export function buildDh1ExcelSections(
     w.row('io.excel.insanityNotes', character.insanityPoints.notes);
     w.row('io.excel.corruptionPoints', character.corruptionPoints.total);
     w.row('io.excel.corruptionNotes', character.corruptionPoints.notes);
+    w.row('dh1.traits', w.list(character.traits ?? []));
+    w.row('dh1.mutations', w.list(character.mutations ?? []));
+    w.row('dh1.eliteAdvances', w.list(character.eliteAdvances ?? []));
+    if (character.psy) {
+      w.row('dh1.psyRating', character.psy.rating ?? '');
+      w.row('dh1.discipline', character.psy.discipline ?? '');
+      w.row('dh1.psychicPowers', w.list(character.psy.powers ?? []));
+      w.row('dh1.testedAgainst', character.psy.testedAgainst ?? '');
+    }
+    if (character.insanityDetails) {
+      w.row('dh1.insanityDegree', character.insanityDetails.degree ?? '');
+      w.row(
+        'dh1.traumaModifier',
+        character.insanityDetails.traumaModifier ?? '',
+      );
+      w.row('dh1.disorders', character.insanityDetails.disorders ?? '');
+      w.row('dh1.severity', character.insanityDetails.severity ?? '');
+    }
+    if (character.corruptionDetails) {
+      w.row('dh1.corruptionDegree', character.corruptionDetails.degree ?? '');
+      w.row('dh1.corruptionTest', character.corruptionDetails.test ?? '');
+      w.row('dh1.defilements', character.corruptionDetails.defilements ?? '');
+    }
     w.row('io.excel.fatigueFirst', fatigue.current);
     w.row('io.excel.fatigueNotes', fatigue.notes);
     w.row('dh1.criticalConditions', w.list(character.criticalConditions ?? []));
@@ -147,14 +174,26 @@ export function buildDh1ExcelSections(
     for (const [part, labelKey] of armorLabels) {
       const piece = character.equipment.armor[part];
       if (!piece) continue;
-      w.row(labelKey, `AP ${piece.ap} · ${piece.type} · ${piece.quality}`);
+      w.row(
+        labelKey,
+        `AP ${piece.ap} · ${piece.type} · ${piece.quality}${
+          piece.weight ? ` · ${piece.weight}` : ''
+        }`,
+      );
     }
+    w.row('dh1.armourWeight', character.equipment.armorWeight ?? '');
+    w.row('dh1.totalCarriedWeight', character.carry?.totalCarriedWeight ?? '');
+    w.row('dh1.carryWeight', character.carry?.carry ?? '');
+    w.row('dh1.liftWeight', character.carry?.lift ?? '');
+    w.row('dh1.pushWeight', character.carry?.push ?? '');
     w.sub('io.excel.weapons');
     w.tableHeader([
       'io.excel.name',
       'io.excel.weaponType',
       'io.excel.range',
       'io.excel.damage',
+      'dh1.weaponPenetration',
+      'dh1.weaponWeight',
       'io.excel.traits',
     ]);
     for (const weapon of character.equipment.weapons.melee) {
@@ -163,6 +202,8 @@ export function buildDh1ExcelSections(
         weapon.type,
         weapon.range,
         weapon.damage,
+        weapon.penetration,
+        weapon.weight ?? '',
         weapon.traits,
       ]);
     }
@@ -172,6 +213,8 @@ export function buildDh1ExcelSections(
         weapon.type,
         weapon.range,
         weapon.damage,
+        weapon.penetration ?? '',
+        weapon.weight ?? '',
         weapon.traits,
       ]);
     }
