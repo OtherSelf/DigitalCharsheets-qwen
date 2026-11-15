@@ -1,30 +1,36 @@
 import type { DH2CharacterDraft } from './defaults';
+import { deriveAptitudes } from './dh2e-aptitudes';
 import type { DarkHeresyStatUpgrade } from './types';
 
 /**
- * Демо-персонаж Dark Heresy 2-й редакции: десять характеристик
- * (включая `influence`) и `fatigue2nd`. Модуль не зависит от dh1.
+ * Демо-персонаж Dark Heresy 2-й редакции: мир, бэкграунд и роль 2e,
+ * выведенные аптитюды, десять характеристик (включая `influence`),
+ * пророчество таблицы 2-9 и `fatigue2nd`.
  */
 export function createDh2Demo(): DH2CharacterDraft {
   return {
     name: 'Interrogator Vane',
-    characterClass: 'Acolyte',
+    characterClass: 'warrior',
     systemId: 'dh2',
     gameSystem: 'Dark Heresy',
     backstory:
       'A dedicated servant of the Inquisition, rooting out heresy in the underhive.',
     notes: 'Demo character for preview purposes.',
     questLog: [],
-    homeWorld: 'Hive World',
-    worldVariant: 'Scintilla',
-    careerPath: 'Guardsman',
-    rank: 'Rank 1',
-    divination: 'The Emperor Protects',
-    divinationEffect: '+10 to next test',
-    quirk: 'Always cleans their weapon',
-    background: '',
-    role: '',
-    aptitudes: { profile: [], chosen: {}, extra: [] },
+    homeWorld: 'hive-world',
+    background: 'adeptus-arbites',
+    role: 'warrior',
+    aptitudes: {
+      ...(() => {
+        const aptitudes = deriveAptitudes({
+          homeWorld: 'hive-world',
+          background: 'adeptus-arbites',
+          role: 'warrior',
+        });
+        return { profile: aptitudes.profile, chosen: {}, extra: [] };
+      })(),
+    },
+    divination: 'd100-10',
     eliteAdvances: [],
     psy: { rating: 0, disciplines: [], powers: [] },
     experienceLog: [],
@@ -34,10 +40,8 @@ export function createDh2Demo(): DH2CharacterDraft {
     skinColor: 'Pale',
     hairColor: 'Black',
     eyeColor: 'Grey',
-    experience: 500,
-    totalExpSpent: 500,
-    alternatePath: null,
-    advancedPath: null,
+    experience: 1000,
+    totalExpSpent: 0,
     stats: {
       weaponSkill: 35,
       ballisticSkill: 30,

@@ -19,12 +19,12 @@ const BASIC_FIELDS = [
   'name',
   'characterClass',
   'homeWorld',
-  'worldVariant',
-  'careerPath',
-  'rank',
+  'background',
+  'role',
+  'aptitudes',
+  'eliteAdvances',
+  'psy',
   'divination',
-  'divinationEffect',
-  'quirk',
   'height',
   'weight',
   'age',
@@ -48,8 +48,7 @@ const COMBAT_FIELDS = [
 const PROGRESSION_FIELDS = [
   'experience',
   'totalExpSpent',
-  'alternatePath',
-  'advancedPath',
+  'experienceLog',
 ] as const;
 
 export function mergeDh2Data(

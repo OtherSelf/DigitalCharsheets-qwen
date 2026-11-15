@@ -4,9 +4,12 @@ import type { GameHistoryConfig } from '../types';
 export const dh2History: GameHistoryConfig = {
   labels: {
     name: 'common.name',
-    careerPath: 'dh2.careerPath',
     homeWorld: 'dh2.homeWorld',
-    rank: 'dh2.rank',
+    background: 'dh2.background',
+    role: 'dh2.role',
+    aptitudes: 'dh2.aptitudes',
+    eliteAdvances: 'dh2.eliteAdvances',
+    psy: 'dh2.psy',
     experience: 'dh2.experience',
     wounds: 'dh2.wounds',
     fatePoints: 'dh2.fatePoints',

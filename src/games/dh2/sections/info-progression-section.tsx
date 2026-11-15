@@ -2,15 +2,8 @@
 
 import * as React from 'react';
 
-import { ChevronDown, ChevronRight, Minus, Plus } from 'lucide-react';
-
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible';
 import {
   Dialog,
   DialogContent,
@@ -25,38 +18,35 @@ import { useCharacterContext, useTranslation } from '@/games/plugin-host';
 import { cn } from '@/lib/utils';
 
 import {
-  CAREER_KEYS,
-  dhLocalizedKey,
-  HOME_WORLD_KEYS,
-  QUIRK_KEYS,
-  RANK_KEYS,
-  VARIANT_KEYS,
-  WORLD_VARIANT_LABELS,
-} from '../dark-heresy-data';
-import {
-  ADVANCED_RANK_THRESHOLD,
-  AdvancedPathsByCareer,
-  calculateRank,
-  RanksByCareer,
-  type AdvancedPath,
-} from '../dark-heresy-ranks';
-import { divinationEffectLabel, divinationLabel } from '../divination-i18n';
-import { type DarkHeresyCareerPath, type DH2Character } from '../types';
+  aptitudeLabels,
+  backgroundLabel,
+  divinationEffectLabel,
+  divinationLabel,
+  eliteAdvanceLabel,
+  homeWorldLabel,
+  roleLabel,
+} from '../dh2e-labels';
+import type { DH2Character } from '../types';
 import { EditSaveButton } from './dh-ui-helpers';
+
+interface SectionProps {
+  character: DH2Character;
+  isCompactView: boolean;
+  activeCompactSection?: string;
+  onEditingChange?: (val: boolean) => void;
+}
 
 const DetailField = ({
   label,
   value,
   editing,
-  type = 'text',
   onChange,
   onBlur,
   isCompactView,
 }: {
   label: string;
-  value: string | number;
+  value: string;
   editing: boolean;
-  type?: string;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onBlur?: (e: React.FocusEvent<HTMLInputElement>) => void;
   isCompactView: boolean;
@@ -73,10 +63,9 @@ const DetailField = ({
     {editing ? (
       <Input
         defaultValue={value}
-        type={type}
         onChange={onChange}
         onBlur={onBlur}
-        className="h-8"
+        className={cn('h-8', isCompactView && 'h-7 text-xs')}
       />
     ) : (
       <p
@@ -91,12 +80,34 @@ const DetailField = ({
   </div>
 );
 
-interface SectionProps {
-  character: DH2Character;
+const ReadOnlyField = ({
+  label,
+  value,
+  isCompactView,
+}: {
+  label: string;
+  value: string;
   isCompactView: boolean;
-  activeCompactSection?: string;
-  onEditingChange?: (val: boolean) => void;
-}
+}) => (
+  <div className="space-y-1">
+    <Label
+      className={cn(
+        'text-muted-foreground text-xs',
+        isCompactView && 'text-[10px]',
+      )}
+    >
+      {label}
+    </Label>
+    <p
+      className={cn(
+        'text-sm font-medium break-words',
+        isCompactView && 'text-xs',
+      )}
+    >
+      {value || '-'}
+    </p>
+  </div>
+);
 
 export const InfoSection = ({
   character,
@@ -113,17 +124,6 @@ export const InfoSection = ({
   React.useEffect(() => {
     onEditingChange?.(isInfoEditing);
   }, [isInfoEditing, onEditingChange]);
-
-  const worldVariantLabel = React.useMemo(() => {
-    if (!character.homeWorld) return t('dh2.waitingHomeWorld');
-    const key = WORLD_VARIANT_LABELS[character.homeWorld];
-    if (key === 'Tribal Taboos') return t('dh2.tribalTaboos');
-    if (key === 'Hive Class') return t('dh2.hiveClass');
-    if (key === 'Birth Planet') return t('dh2.birthPlanet');
-    if (key === 'Ship Tradition') return t('dh2.shipTradition');
-    if (key === 'Place of Birth') return t('dh2.placeOfBirth');
-    return t('dh2.worldVariant');
-  }, [character.homeWorld, t]);
 
   const showInfo = !isCompactView || activeCompactSection === 'info-section';
   if (!showInfo) return null;
@@ -163,118 +163,58 @@ export const InfoSection = ({
             }
             isCompactView={isCompactView}
           />
-          <div className="space-y-1">
-            <Label
-              className={cn(
-                'text-muted-foreground text-xs',
-                isCompactView && 'text-[10px]',
-              )}
-            >
-              {t('dh2.homeWorld')}
-            </Label>
-            <p
-              className={cn(
-                'text-sm font-medium break-words',
-                isCompactView && 'text-xs',
-              )}
-            >
-              {character.homeWorld
-                ? t(
-                    dhLocalizedKey(
-                      HOME_WORLD_KEYS[character.homeWorld] || 'dh2.homeWorld',
-                      'dh2',
-                    ),
-                  )
-                : '-'}
-            </p>
-          </div>
-          <div className="space-y-1">
-            <Label
-              className={cn(
-                'text-muted-foreground text-xs',
-                isCompactView && 'text-[10px]',
-              )}
-            >
-              {worldVariantLabel}
-            </Label>
-            {/* LANDMARK: BIRTH_WORLD_IMMUTABLE
-                Место рождения — выбор создания персонажа (как homeWorld и
-                careerPath). После создания не редактируем: смена мира ломает
-                лор/варианты и выглядит как подмена персонажа. Остальные
-                текстовые поля Info остаются редактируемыми. */}
-            <p
-              className={cn(
-                'text-sm font-medium break-words',
-                isCompactView && 'text-xs',
-              )}
-            >
-              {character.worldVariant
-                ? t(
-                    dhLocalizedKey(
-                      VARIANT_KEYS[character.worldVariant] ||
-                        character.worldVariant,
-                      'dh2',
-                    ),
-                  )
-                : '-'}
-            </p>
-          </div>
-          <div className="space-y-1">
-            <Label
-              className={cn(
-                'text-muted-foreground text-xs',
-                isCompactView && 'text-[10px]',
-              )}
-            >
-              {t('dh2.careerPath')}
-            </Label>
-            <p
-              className={cn(
-                'text-sm font-medium break-words',
-                isCompactView && 'text-xs',
-              )}
-            >
-              {character.careerPath
-                ? t(
-                    dhLocalizedKey(
-                      CAREER_KEYS[character.careerPath] || 'dh2.careerPath',
-                      'dh2',
-                    ),
-                  )
-                : '-'}
-            </p>
-          </div>
-
-          {/* --- UPDATED DIVINATION FIELDS WITH TRANSLATION --- */}
-          <DetailField
-            label={t('dh2.divination')}
-            value={divinationLabel(character.divination, t, 'dh2')}
-            editing={false}
-            isCompactView={isCompactView}
-          />
-          <DetailField
-            label={t('dh2.divinationEffect')}
-            value={divinationEffectLabel(character.divinationEffect, t, 'dh2')}
-            editing={false}
-            isCompactView={isCompactView}
-          />
-          {/* --- END UPDATED DIVINATION FIELDS --- */}
-
-          <DetailField
-            label={t('dh2.quirk')}
+          <ReadOnlyField
+            label={t('dh2.homeWorld')}
             value={
-              character.quirk
-                ? t(
-                    dhLocalizedKey(
-                      QUIRK_KEYS[character.quirk] || character.quirk,
-                      'dh2',
-                    ),
-                  )
-                : ''
+              character.homeWorld
+                ? homeWorldLabel(character.homeWorld, t)
+                : t('dh2.waitingHomeWorld')
             }
+            isCompactView={isCompactView}
+          />
+          <ReadOnlyField
+            label={t('dh2.background')}
+            value={backgroundLabel(character.background, t)}
+            isCompactView={isCompactView}
+          />
+          <ReadOnlyField
+            label={t('dh2.role')}
+            value={roleLabel(character.role, t)}
+            isCompactView={isCompactView}
+          />
+          <ReadOnlyField
+            label={t('dh2.aptitudes')}
+            value={aptitudeLabels(character.aptitudes.profile, t)}
+            isCompactView={isCompactView}
+          />
+          <ReadOnlyField
+            label={t('dh2.eliteAdvances')}
+            value={character.eliteAdvances
+              .map((id) => eliteAdvanceLabel(id, t))
+              .join(', ')}
+            isCompactView={isCompactView}
+          />
+          <ReadOnlyField
+            label={t('dh2.psyRating')}
+            value={character.psy.rating > 0 ? String(character.psy.rating) : ''}
+            isCompactView={isCompactView}
+          />
+          <ReadOnlyField
+            label={t('dh2.divination')}
+            value={divinationLabel(character.divination, t)}
+            isCompactView={isCompactView}
+          />
+          <ReadOnlyField
+            label={t('dh2.divinationEffect')}
+            value={divinationEffectLabel(character.divination, t)}
+            isCompactView={isCompactView}
+          />
+          <DetailField
+            label={t('common.age')}
+            value={character.age}
             editing={isInfoEditing}
             onBlur={(e) =>
-              updateCharacter(character.id, { quirk: e.target.value })
+              updateCharacter(character.id, { age: e.target.value })
             }
             isCompactView={isCompactView}
           />
@@ -293,15 +233,6 @@ export const InfoSection = ({
             editing={isInfoEditing}
             onBlur={(e) =>
               updateCharacter(character.id, { weight: e.target.value })
-            }
-            isCompactView={isCompactView}
-          />
-          <DetailField
-            label={t('common.age')}
-            value={character.age}
-            editing={isInfoEditing}
-            onBlur={(e) =>
-              updateCharacter(character.id, { age: e.target.value })
             }
             isCompactView={isCompactView}
           />
@@ -333,96 +264,57 @@ export const InfoSection = ({
             isCompactView={isCompactView}
           />
         </div>
-        <div className="mt-4 grid grid-cols-1 gap-4">
-          <Collapsible
-            open={isBackstoryOpen}
-            onOpenChange={setIsBackstoryOpen}
-            className="w-full"
+        <div className="mt-4 flex flex-wrap gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setIsBackstoryOpen(true)}
           >
-            <div className="mb-2 flex flex-row items-center justify-between">
-              <CollapsibleTrigger className="hover:bg-accent hover:text-accent-foreground -ml-2 flex w-full items-center gap-2 rounded-md px-2 py-1 transition-colors focus:outline-none">
-                {isBackstoryOpen ? (
-                  <ChevronDown className="h-4 w-4" />
-                ) : (
-                  <ChevronRight className="h-4 w-4" />
-                )}
-                <Label
-                  className={cn(
-                    'text-muted-foreground cursor-pointer text-xs',
-                    isCompactView && 'text-[10px]',
-                  )}
-                >
-                  {t('common.backstory')}
-                </Label>
-              </CollapsibleTrigger>
-            </div>
-            <CollapsibleContent className="w-full space-y-1">
-              {isInfoEditing ? (
-                <Textarea
-                  defaultValue={character.backstory}
-                  className="min-h-[100px] resize-y"
-                  onBlur={(e) =>
-                    updateCharacter(character.id, { backstory: e.target.value })
-                  }
-                />
-              ) : (
-                <p
-                  className={cn(
-                    'px-2 text-sm font-medium break-words whitespace-pre-wrap',
-                    isCompactView && 'text-xs',
-                  )}
-                >
-                  {character.backstory || '-'}
-                </p>
-              )}
-            </CollapsibleContent>
-          </Collapsible>
-
-          <Collapsible
-            open={isNotesOpen}
-            onOpenChange={setIsNotesOpen}
-            className="w-full"
+            {t('common.backstory')}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setIsNotesOpen(true)}
           >
-            <div className="mb-2 flex flex-row items-center justify-between">
-              <CollapsibleTrigger className="hover:bg-accent hover:text-accent-foreground -ml-2 flex w-full items-center gap-2 rounded-md px-2 py-1 transition-colors focus:outline-none">
-                {isNotesOpen ? (
-                  <ChevronDown className="h-4 w-4" />
-                ) : (
-                  <ChevronRight className="h-4 w-4" />
-                )}
-                <Label
-                  className={cn(
-                    'text-muted-foreground cursor-pointer text-xs',
-                    isCompactView && 'text-[10px]',
-                  )}
-                >
-                  {t('common.notes')}
-                </Label>
-              </CollapsibleTrigger>
-            </div>
-            <CollapsibleContent className="w-full space-y-1">
-              {isInfoEditing ? (
-                <Textarea
-                  defaultValue={character.notes}
-                  className="min-h-[100px] resize-y"
-                  onBlur={(e) =>
-                    updateCharacter(character.id, { notes: e.target.value })
-                  }
-                />
-              ) : (
-                <p
-                  className={cn(
-                    'px-2 text-sm font-medium break-words whitespace-pre-wrap',
-                    isCompactView && 'text-xs',
-                  )}
-                >
-                  {character.notes || '-'}
-                </p>
-              )}
-            </CollapsibleContent>
-          </Collapsible>
+            {t('common.notes')}
+          </Button>
         </div>
       </CardContent>
+
+      <Dialog open={isBackstoryOpen} onOpenChange={setIsBackstoryOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('common.backstory')}</DialogTitle>
+            <DialogDescription>{t('common.backstory')}</DialogDescription>
+          </DialogHeader>
+          <Textarea
+            defaultValue={character.backstory}
+            className="min-h-[180px]"
+            onBlur={(e) =>
+              updateCharacter(character.id, { backstory: e.target.value })
+            }
+          />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isNotesOpen} onOpenChange={setIsNotesOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('common.notes')}</DialogTitle>
+            <DialogDescription>{t('common.notes')}</DialogDescription>
+          </DialogHeader>
+          <Textarea
+            defaultValue={character.notes}
+            className="min-h-[180px]"
+            onBlur={(e) =>
+              updateCharacter(character.id, { notes: e.target.value })
+            }
+          />
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };
@@ -441,406 +333,112 @@ export const ProgressionSection = ({
     onEditingChange?.(isProgressionEditing);
   }, [isProgressionEditing, onEditingChange]);
 
-  const [editableExperience, setEditableExperience] = React.useState(
-    character.experience ?? 0,
-  );
-  const [editableTotalExpSpent, setEditableTotalExpSpent] = React.useState(
-    character.totalExpSpent ?? 0,
-  );
-  const [editableAdvancedPath, setEditableAdvancedPath] = React.useState(
-    character.advancedPath ?? null,
-  );
-  const [editableAlternatePath, setEditableAlternatePath] = React.useState(
-    character.alternatePath ?? null,
-  );
-  const [amountToSpend, setAmountToSpend] = React.useState(0);
-  const expInputRef = React.useRef<HTMLInputElement>(null);
-
-  // ─── LANDMARK: SYNC CURRENT EXP ───
-  // Черновик «Текущего опыта» раньше инициализировался один раз при монтировании
-  // и никогда не сверялся с сохранённым значением. Если лист обновлялся извне
-  // (импорт, статистика, вторая вкладка), поле продолжало показывать старый
-  // номер, и следующая же правка записывала его обратно на сервер.
-  // Синхронизируем, только когда в поле не печатают, чтобы не затереть ввод.
-  React.useEffect(() => {
-    if (
-      typeof document !== 'undefined' &&
-      document.activeElement === expInputRef.current
-    )
-      return;
-    setEditableExperience(character.experience ?? 0);
-  }, [character.experience]);
-
-  const [isAdvancedPathModalOpen, setIsAdvancedPathModalOpen] =
-    React.useState(false);
-  const [isAlternateRankModalOpen, setIsAlternateRankModalOpen] =
-    React.useState(false);
-
-  // Псайкер выбирает ветвь уже на 2000 ОО (стр. 100: Савант-Милитант /
-  // Схолар Материум). У остальных профессий продвинутые пути — с 6000 ОО.
-  const advancedPathThreshold =
-    character.careerPath === 'Imperial Psyker' ? 2000 : ADVANCED_RANK_THRESHOLD;
-
-  const possibleAdvancedPaths =
-    AdvancedPathsByCareer[
-      character.careerPath as keyof typeof AdvancedPathsByCareer
-    ];
-  const careerProgression = character.careerPath
-    ? RanksByCareer[character.careerPath as DarkHeresyCareerPath]
-    : null;
-  let chosenAdvancedPathData: AdvancedPath | null = null;
-  if (
-    (editableAdvancedPath ?? character.advancedPath) &&
-    possibleAdvancedPaths
-  ) {
-    const paths = Object.values(possibleAdvancedPaths) as AdvancedPath[];
-    chosenAdvancedPathData =
-      paths.find(
-        (p) => p.name === (editableAdvancedPath ?? character.advancedPath),
-      ) || null;
-  }
-  const currentRankName = careerProgression
-    ? calculateRank(
-        careerProgression,
-        editableTotalExpSpent,
-        chosenAdvancedPathData,
-        editableAlternatePath ?? character.alternatePath,
-      )
-    : 'N/A';
-  const canChooseAlternateRank =
-    character.careerPath === 'Adept' &&
-    editableTotalExpSpent >= 2000 &&
-    editableTotalExpSpent < 3000;
-
-  const handleTotalExpChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newTotalExp = parseInt(e.target.value, 10) || 0;
-    setEditableTotalExpSpent(newTotalExp);
-    if (newTotalExp < advancedPathThreshold) setEditableAdvancedPath(null);
-    if (
-      newTotalExp < 2000 &&
-      (editableAlternatePath ?? character.alternatePath) === 'Chirurgeon'
-    )
-      setEditableAlternatePath(null);
-  };
-
-  const handleSaveTotalExp = () => {
-    if (
-      editableTotalExpSpent !== character.totalExpSpent ||
-      (editableAdvancedPath ?? null) !== (character.advancedPath ?? null) ||
-      (editableAlternatePath ?? null) !== (character.alternatePath ?? null)
-    ) {
-      updateCharacter(character.id, {
-        totalExpSpent: editableTotalExpSpent,
-        advancedPath: editableAdvancedPath ?? null,
-        alternatePath: editableAlternatePath ?? null,
-      });
-    }
-  };
-
-  const handleSpendExp = () => {
-    if (amountToSpend > 0 && amountToSpend <= editableExperience) {
-      const newCurrentExp = editableExperience - amountToSpend;
-      const newTotalExp = editableTotalExpSpent + amountToSpend;
-      setEditableExperience(newCurrentExp);
-      setEditableTotalExpSpent(newTotalExp);
-      if (newTotalExp < advancedPathThreshold) setEditableAdvancedPath(null);
-      updateCharacter(character.id, {
-        experience: newCurrentExp,
-        totalExpSpent: newTotalExp,
-        advancedPath:
-          newTotalExp < advancedPathThreshold
-            ? (editableAdvancedPath ?? null)
-            : (editableAdvancedPath ?? character.advancedPath ?? null),
-        alternatePath: editableAlternatePath ?? character.alternatePath ?? null,
-      });
-      setAmountToSpend(0);
-    }
-  };
-
-  // ─── LANDMARK: CURRENT_EXP_AUTOSAVE ───
-  // Раньше «Текущий опыт» уходил на сервер ТОЛЬКО по onBlur. Если после
-  // ввода перезагрузить страницу / закрыть вкладку / перейти по ссылке,
-  // blur не срабатывал и правка молча терялась. Теперь пишем на каждый
-  // ввод: очередь в CharacterProvider склеивает «печатание» в один PUT,
-  // а `__page`/`__seq` не дают запоздавшему запросу перетереть свежий.
-  const handleCurrentExpChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const next = Math.max(0, parseInt(e.target.value, 10) || 0);
-    setEditableExperience(next);
-    updateCharacter(character.id, { experience: next });
-  };
-
-  const handleSelectAdvancedPath = (pathName: string) => {
-    updateCharacter(character.id, { advancedPath: pathName });
-    setEditableAdvancedPath(pathName);
-    setIsAdvancedPathModalOpen(false);
-  };
-
-  const handleSelectAlternateRank = (pathName: string | null) => {
-    updateCharacter(character.id, { alternatePath: pathName });
-    setEditableAlternatePath(pathName);
-    setIsAlternateRankModalOpen(false);
-  };
-
   const showProgression =
     !isCompactView || activeCompactSection === 'progression-section';
   if (!showProgression) return null;
 
+  const available =
+    (character.experience ?? 0) - (character.totalExpSpent ?? 0);
+
   return (
-    <>
-      <Card id="progression-section">
-        <CardHeader
+    <Card id="progression-section">
+      <CardHeader
+        className={cn(
+          'flex flex-row items-center justify-between px-6 pt-3 pb-6',
+          isCompactView && 'px-4 pt-2 pb-4',
+        )}
+      >
+        <CardTitle
           className={cn(
-            'flex flex-row items-center justify-between px-6 pt-3 pb-6',
-            isCompactView && 'px-4 pt-2 pb-4',
+            'font-headline',
+            isCompactView ? 'text-lg' : 'text-2xl',
           )}
         >
-          <CardTitle
-            className={cn(
-              'font-headline',
-              isCompactView ? 'text-lg' : 'text-2xl',
+          {t('dh2.experience')}
+        </CardTitle>
+        {(showEditButtons || isProgressionEditing) && (
+          <EditSaveButton
+            editing={isProgressionEditing}
+            onEdit={() => setIsProgressionEditing(true)}
+            onSave={() => setIsProgressionEditing(false)}
+          />
+        )}
+      </CardHeader>
+      <CardContent className="space-y-4 pt-0">
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-1">
+            <Label className="text-muted-foreground text-xs">
+              {t('dh2.currentExp')}
+            </Label>
+            {isProgressionEditing ? (
+              <Input
+                type="number"
+                defaultValue={character.experience ?? 0}
+                onBlur={(e) =>
+                  updateCharacter(character.id, {
+                    experience: parseInt(e.target.value, 10) || 0,
+                  })
+                }
+                className="h-8"
+              />
+            ) : (
+              <p className="text-sm font-medium">{character.experience ?? 0}</p>
             )}
-          >
-            {t('common.progression')}
-          </CardTitle>
-          {(showEditButtons || isProgressionEditing) && (
-            <EditSaveButton
-              editing={isProgressionEditing}
-              onEdit={() => setIsProgressionEditing(true)}
-              onSave={() => {
-                handleSaveTotalExp();
-                setIsProgressionEditing(false);
-              }}
-            />
-          )}
-        </CardHeader>
-        <CardContent className="pt-0">
-          <div className="flex flex-col space-y-4">
-            <div className="space-y-1">
-              <Label
-                htmlFor="current-exp-edit"
-                className="text-muted-foreground text-xs"
-              >
-                {t('dh2.currentExp')}
-              </Label>
-              <Input
-                id="current-exp-edit"
-                ref={expInputRef}
-                type="number"
-                min={0}
-                value={editableExperience === 0 ? '' : editableExperience}
-                onChange={handleCurrentExpChange}
-                className="h-9"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="spend-exp-amount">{t('dh2.spendExp')}</Label>
-              <div className="flex items-center gap-2">
-                <Button
-                  size="icon"
-                  variant="outline"
-                  className="h-9 w-9 shrink-0"
-                  onClick={() =>
-                    setAmountToSpend(Math.max(0, amountToSpend - 50))
-                  }
-                >
-                  <Minus className="h-4 w-4" />
-                </Button>
-                <Input
-                  id="spend-exp-amount"
-                  type="number"
-                  value={amountToSpend === 0 ? '' : amountToSpend}
-                  onChange={(e) =>
-                    setAmountToSpend(
-                      Math.max(0, parseInt(e.target.value, 10) || 0),
-                    )
-                  }
-                  className="h-9 text-center"
-                />
-                <Button
-                  size="icon"
-                  variant="outline"
-                  className="h-9 w-9 shrink-0"
-                  onClick={() => setAmountToSpend(amountToSpend + 50)}
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-            <Button
-              onClick={handleSpendExp}
-              disabled={
-                amountToSpend <= 0 || amountToSpend > editableExperience
-              }
-              className="w-full"
-            >
-              {t('dh2.spendExp')}
-            </Button>
-            <div className="space-y-1">
-              <Label
-                htmlFor="total-exp-edit"
-                className="text-muted-foreground text-xs"
-              >
-                {t('dh2.totalExpSpent')}
-              </Label>
-              <Input
-                id="total-exp-edit"
-                type="number"
-                value={editableTotalExpSpent === 0 ? '' : editableTotalExpSpent}
-                onChange={handleTotalExpChange}
-                onBlur={handleSaveTotalExp}
-                disabled={!isProgressionEditing}
-                className="h-9"
-              />
-            </div>
-
-            {/* ========== RANK DISPLAY SECTION START ========== */}
-            <div className="space-y-1 border-t pt-2">
-              <Label className="text-muted-foreground text-xs">
-                {t('dh2.rank')}
-              </Label>
-              <div className="flex flex-col gap-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <p className="text-sm font-medium break-words">
-                    {currentRankName === 'N/A' ||
-                    currentRankName === 'Unknown Rank'
-                      ? t('dh2.unknownRank')
-                      : t(
-                          dhLocalizedKey(
-                            RANK_KEYS[currentRankName] || currentRankName,
-                            'dh2',
-                          ),
-                        )}
-                  </p>
-
-                  {(editableAdvancedPath ?? character.advancedPath) ? (
-                    <div className="flex items-center gap-2">
-                      <span className="border-primary/20 bg-primary/10 text-primary rounded border px-2 py-0.5 text-[10px] font-semibold">
-                        {t('dh2.advancedPath')}:{' '}
-                        {t(
-                          RANK_KEYS[
-                            editableAdvancedPath ?? character.advancedPath!
-                          ] ||
-                            (editableAdvancedPath ?? character.advancedPath!),
-                        )}
-                      </span>
-                      {isProgressionEditing &&
-                        editableTotalExpSpent >= advancedPathThreshold && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="h-6 px-2 text-[10px]"
-                            onClick={() => setIsAdvancedPathModalOpen(true)}
-                          >
-                            {t('dh2.changeAdvancedPath')}
-                          </Button>
-                        )}
-                    </div>
-                  ) : (
-                    isProgressionEditing &&
-                    editableTotalExpSpent >= advancedPathThreshold && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="h-6 px-2 text-[10px]"
-                        onClick={() => setIsAdvancedPathModalOpen(true)}
-                      >
-                        {t('dh2.selectAdvancedPath')}
-                      </Button>
-                    )
-                  )}
-
-                  {(editableAlternatePath ?? character.alternatePath) && (
-                    <span className="border-secondary/20 bg-secondary/20 text-secondary-foreground rounded border px-2 py-0.5 text-[10px] font-semibold">
-                      {t('dh2.alternatePath')}:{' '}
-                      {t(
-                        RANK_KEYS[
-                          editableAlternatePath ?? character.alternatePath!
-                        ] ||
-                          (editableAlternatePath ?? character.alternatePath!),
-                      )}
-                    </span>
-                  )}
-                </div>
-
-                <div className="mt-1 flex gap-2">
-                  {isProgressionEditing && canChooseAlternateRank && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="h-7 text-xs"
-                      onClick={() => setIsAlternateRankModalOpen(true)}
-                    >
-                      {(editableAlternatePath ?? character.alternatePath)
-                        ? t('dh2.changeAlternateRank')
-                        : t('dh2.selectAlternateRank')}
-                    </Button>
-                  )}
-                </div>
-              </div>
-            </div>
-            {/* ========== RANK DISPLAY SECTION END ========== */}
           </div>
-        </CardContent>
-      </Card>
-
-      <Dialog
-        open={isAdvancedPathModalOpen}
-        onOpenChange={setIsAdvancedPathModalOpen}
-      >
-        <DialogContent
-          className="sm:max-w-md"
-          onInteractOutside={(e) => e.preventDefault()}
-          onEscapeKeyDown={(e) => e.preventDefault()}
-        >
-          <DialogHeader>
-            <DialogTitle>{t('dh2.selectAdvancedPathTitle')}</DialogTitle>
-            <DialogDescription>
-              {t('dh2.selectAdvancedPathDesc')}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid grid-cols-1 gap-4 py-4">
-            {possibleAdvancedPaths &&
-              Object.values(possibleAdvancedPaths).map((path) => (
-                <Button
-                  key={path.name}
-                  onClick={() => handleSelectAdvancedPath(path.name)}
-                  className="h-12 text-base"
-                >
-                  {t('dh2.choose')}{' '}
-                  {t(dhLocalizedKey(RANK_KEYS[path.name] || path.name, 'dh2'))}
-                </Button>
+          <div className="space-y-1">
+            <Label className="text-muted-foreground text-xs">
+              {t('dh2.totalExpSpent')}
+            </Label>
+            {isProgressionEditing ? (
+              <Input
+                type="number"
+                defaultValue={character.totalExpSpent ?? 0}
+                onBlur={(e) =>
+                  updateCharacter(character.id, {
+                    totalExpSpent: parseInt(e.target.value, 10) || 0,
+                  })
+                }
+                className="h-8"
+              />
+            ) : (
+              <p className="text-sm font-medium">
+                {character.totalExpSpent ?? 0}
+              </p>
+            )}
+          </div>
+          <div className="space-y-1">
+            <Label className="text-muted-foreground text-xs">
+              {t('dh2.availableExp')}
+            </Label>
+            <p className="text-primary text-sm font-semibold">{available}</p>
+          </div>
+          <div className="space-y-1">
+            <Label className="text-muted-foreground text-xs">
+              {t('dh2.psyRating')}
+            </Label>
+            <p className="text-sm font-medium">{character.psy.rating || '-'}</p>
+          </div>
+        </div>
+        {character.experienceLog.length > 0 && (
+          <div className="space-y-1">
+            <Label className="text-muted-foreground text-xs">
+              {t('dh2.experienceLog')}
+            </Label>
+            <ul className="space-y-1 text-xs">
+              {character.experienceLog.slice(-10).map((entry) => (
+                <li key={entry.id} className="flex justify-between gap-2">
+                  <span className="truncate">
+                    {t(`dh2.experienceKind.${entry.kind}`)}: {entry.ref}
+                  </span>
+                  <span className="text-muted-foreground shrink-0">
+                    {entry.cost}
+                  </span>
+                </li>
               ))}
+            </ul>
           </div>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog
-        open={isAlternateRankModalOpen}
-        onOpenChange={setIsAlternateRankModalOpen}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t('dh2.selectAlternateRankTitle')}</DialogTitle>
-            <DialogDescription>
-              {t('dh2.selectAlternateRankDesc')}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid grid-cols-1 gap-4 py-4">
-            <Button
-              onClick={() => handleSelectAlternateRank(null)}
-              className="h-12 text-base"
-            >
-              {t('dh2.choose')} {t('dh2.rankInditor')}
-            </Button>
-            <Button
-              onClick={() => handleSelectAlternateRank('Chirurgeon')}
-              className="h-12 text-base"
-            >
-              {t('dh2.choose')} {t('dh2.rankChirurgeon')}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-    </>
+        )}
+      </CardContent>
+    </Card>
   );
 };

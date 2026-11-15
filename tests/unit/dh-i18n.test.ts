@@ -5,7 +5,21 @@ import { describe, expect, it } from 'vitest';
 
 import * as dh1Data from '@/games/dh1/dark-heresy-data';
 import { dh1CardSummary } from '@/games/dh1/slots/card-summary';
-import * as dh2Data from '@/games/dh2/dark-heresy-data';
+import {
+  DH2E_APTITUDES,
+  DH2E_BACKGROUNDS,
+  DH2E_DIVINATIONS,
+  DH2E_HOMEWORLDS,
+  DH2E_ROLES,
+} from '@/games/dh2/dh2e-data';
+import {
+  DH2E_DISCIPLINES,
+  DH2E_ELITES,
+  DH2E_POWERS,
+  DH2E_SKILLS,
+  DH2E_TALENTS,
+} from '@/games/dh2/dh2e-reference';
+import { DH2E_SKILL_TIERS, DH2E_STAT_STEPS } from '@/games/dh2/dh2e-rules';
 import { dh2CardSummary } from '@/games/dh2/slots/card-summary';
 import { translations } from '@/lib/i18n';
 
@@ -29,13 +43,29 @@ function sourceFiles(dir: string): string[] {
     .filter((file) => /\.(ts|tsx|json)$/.test(file));
 }
 
-const DATA_MAPS = [
-  ['HOME_WORLD_KEYS', dh1Data.HOME_WORLD_KEYS, dh2Data.HOME_WORLD_KEYS],
-  ['VARIANT_KEYS', dh1Data.VARIANT_KEYS, dh2Data.VARIANT_KEYS],
-  ['QUIRK_KEYS', dh1Data.QUIRK_KEYS, dh2Data.QUIRK_KEYS],
-  ['CAREER_KEYS', dh1Data.CAREER_KEYS, dh2Data.CAREER_KEYS],
-  ['RANK_KEYS', dh1Data.RANK_KEYS, dh2Data.RANK_KEYS],
+const DH1_DATA_MAPS = [
+  ['HOME_WORLD_KEYS', dh1Data.HOME_WORLD_KEYS],
+  ['VARIANT_KEYS', dh1Data.VARIANT_KEYS],
+  ['QUIRK_KEYS', dh1Data.QUIRK_KEYS],
+  ['CAREER_KEYS', dh1Data.CAREER_KEYS],
+  ['RANK_KEYS', dh1Data.RANK_KEYS],
 ] as const;
+
+/** Все ключи данных 2e: они обязаны быть в обоих словарях. */
+const DH2_DATA_KEYS: readonly string[] = [
+  ...DH2E_HOMEWORLDS.map((item) => item.labelKey),
+  ...DH2E_BACKGROUNDS.map((item) => item.labelKey),
+  ...DH2E_ROLES.map((item) => item.labelKey),
+  ...DH2E_APTITUDES.map((item) => item.labelKey),
+  ...DH2E_DIVINATIONS.flatMap((item) => [item.textKey, item.effectKey]),
+  ...DH2E_SKILLS.map((item) => item.labelKey),
+  ...DH2E_TALENTS.map((item) => item.labelKey),
+  ...DH2E_DISCIPLINES.map((item) => item.labelKey),
+  ...DH2E_POWERS.map((item) => item.labelKey),
+  ...DH2E_ELITES.map((item) => item.labelKey),
+  ...DH2E_STAT_STEPS.map((item) => item.labelKey),
+  ...DH2E_SKILL_TIERS.map((item) => item.labelKey),
+];
 
 describe('Dark Heresy: ключи справочных данных', () => {
   it('в src/games нет литералов виртуального домена dh.*', () => {
@@ -51,18 +81,13 @@ describe('Dark Heresy: ключи справочных данных', () => {
     );
   });
 
-  it('каждый ключ карт есть в en и ru словарях', () => {
+  it('каждый ключ карт DH1 есть в en и ru словарях', () => {
     const missing: string[] = [];
-    for (const [name, dh1Map, dh2Map] of DATA_MAPS) {
-      for (const [pid, map] of [
-        ['dh1', dh1Map],
-        ['dh2', dh2Map],
-      ] as const) {
-        for (const value of Object.values(map as Record<string, string>)) {
-          for (const lang of ['en', 'ru'] as const) {
-            if (!(value in translations[lang])) {
-              missing.push(`${pid}.${name}: ${value} (${lang})`);
-            }
+    for (const [name, map] of DH1_DATA_MAPS) {
+      for (const value of Object.values(map as Record<string, string>)) {
+        for (const lang of ['en', 'ru'] as const) {
+          if (!(value in translations[lang])) {
+            missing.push(`dh1.${name}: ${value} (${lang})`);
           }
         }
       }
@@ -70,29 +95,43 @@ describe('Dark Heresy: ключи справочных данных', () => {
     expect(missing).toEqual([]);
   });
 
-  it('карточка DH показывает переведённый ранг, а не ключ словаря', () => {
-    const cases = [
-      ['en', dh1CardSummary, dh1Data],
-      ['ru', dh1CardSummary, dh1Data],
-      ['en', dh2CardSummary, dh2Data],
-      ['ru', dh2CardSummary, dh2Data],
-    ] as const;
+  it('каждый ключ данных 2e есть в en и ru словарях', () => {
+    const missing: string[] = [];
+    for (const key of DH2_DATA_KEYS) {
+      for (const lang of ['en', 'ru'] as const) {
+        if (!(key in translations[lang])) {
+          missing.push(`${key} (${lang})`);
+        }
+      }
+    }
+    expect(missing).toEqual([]);
+  });
 
-    for (const [lang, summary, data] of cases) {
+  it('карточка DH1 показывает переведённый ранг, а не ключ словаря', () => {
+    for (const lang of ['en', 'ru'] as const) {
       const t = (key: string) => translations[lang][key] ?? key;
-      const result = (
-        summary as unknown as (
-          character: unknown,
-          translate: (key: string) => string,
-        ) => { text: string }
-      )({ rank: 'Scholar', characterClass: 'Adept' }, t);
-
-      const dataMaps = data as {
-        RANK_KEYS: Record<string, string>;
-        CAREER_KEYS: Record<string, string>;
-      };
+      const result = dh1CardSummary(
+        { rank: 'Scholar', characterClass: 'Adept' } as never,
+        t,
+      );
       expect(result.text).toBe(
-        `${t(dataMaps.RANK_KEYS.Scholar)} ${t(dataMaps.CAREER_KEYS.Adept)}`,
+        `${t(dh1Data.RANK_KEYS.Scholar)} ${t(dh1Data.CAREER_KEYS.Adept)}`,
+      );
+      expect(result.text).not.toMatch(/\bdh[12]?\.[A-Za-z]/);
+    }
+  });
+
+  it('карточка DH2 показывает бэкграунд и роль 2e', () => {
+    for (const lang of ['en', 'ru'] as const) {
+      const t = (key: string) => translations[lang][key] ?? key;
+      const result = dh2CardSummary(
+        { background: 'adeptus-arbites', role: 'warrior' } as never,
+        t,
+      );
+      expect(result.text).toBe(
+        `${t('dh2.catalog.background.adeptus-arbites')} / ${t(
+          'dh2.catalog.role.warrior',
+        )}`,
       );
       expect(result.text).not.toMatch(/\bdh[12]?\.[A-Za-z]/);
     }

@@ -53,7 +53,7 @@ describe('character schema v1', () => {
     expect(dh.notes).toContain('[migration v2]');
     expect(character.schemaVersion).toBe(CHARACTER_SCHEMA_VERSION);
     expect(dh.divination).toBe('mutationWithout');
-    expect(dh.divinationEffect).toBe('minorMutation');
+    expect((dh as DH1Character).divinationEffect).toBe('minorMutation');
   });
 
   it('идемпотентна: второй проход ничего не меняет', () => {
@@ -69,7 +69,7 @@ describe('character schema v1', () => {
     expect(second.changed).toBe(false);
     const dh = second.character as unknown as DH1Character | DH2Character;
     expect(dh.divination).toBe('darkDreams');
-    expect(dh.divinationEffect).toBe('insanity2');
+    expect((dh as DH1Character).divinationEffect).toBe('insanity2');
   });
 
   it('сохраняет неизвестное кастомное пророчество и сообщает о нём', () => {
@@ -107,7 +107,9 @@ describe('character schema v1', () => {
       DH1Character | DH2Character;
     expect(imported.schemaVersion).toBe(CHARACTER_SCHEMA_VERSION);
     expect(imported.divination).toBe('trustYourFear');
-    expect(imported.divinationEffect).toBe('agility2Fate1');
+    expect((imported as unknown as DH1Character).divinationEffect).toBe(
+      'agility2Fate1',
+    );
   });
 
   it('ставит версию D&D-листу без изменения полей', () => {
@@ -144,7 +146,9 @@ describe('character schema v1', () => {
     const stored = JSON.parse(fs.readFileSync(file, 'utf8'));
     expect(stored.schemaVersion).toBe(CHARACTER_SCHEMA_VERSION);
     expect(stored.divination).toBe('sinsHidden');
-    expect(stored.divinationEffect).toBe('corruption3');
+    expect((stored as unknown as DH1Character).divinationEffect).toBe(
+      'corruption3',
+    );
 
     const second = normalizeAllCharacters();
     expect(second).toMatchObject({ total: 1, updated: 0, issues: [] });

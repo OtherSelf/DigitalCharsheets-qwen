@@ -7,14 +7,14 @@ import { Scale } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/games/plugin-host';
 
+import { backgroundLabel, roleLabel } from '../dh2e-labels';
 import { DhHouseRulesDialog } from '../sections/dh-house-rules-dialog';
 import type { DH2Character } from '../types';
 
 /**
  * ─── LANDMARK: DH2 HEADER SLOTS ────────────────────────────────────────────
- * Подпись «ранг/карьера | Dark Heresy» и кнопка домашних правил с диалогом.
- * Раньше это жило в `src/components/header.tsx` с проверками `gameSystem`
- * и `resolveCharacterSystemId`; теперь — слот плагина (этап 3, D11).
+ * Подпись «бэкграунд/роль | Dark Heresy» и кнопка домашних правил с диалогом.
+ * Карьер и ранг DH1 в модуле 2e не существуют (D2).
  */
 
 function translateOr(
@@ -26,32 +26,18 @@ function translateOr(
   return translated === key ? fallback : translated;
 }
 
-function stripNonLetters(value: string): string {
-  return value.replace(/[^a-zA-Z]/g, '');
-}
-
-/** Подпись под именем в шапке: «Scholar Adept | Dark Heresy». */
+/** Подпись под именем в шапке: «Adeptus Arbites / Warrior | Dark Heresy». */
 export function dh2HeaderSubtitle(
   character: DH2Character,
   t: (key: string) => string,
 ): string {
-  const rank = character.rank || '';
-  const characterClass = character.characterClass || '';
-
-  const translatedRank = translateOr(
-    t,
-    `dh2.rank${stripNonLetters(rank)}`,
-    rank,
-  );
-  const translatedClass = translateOr(
-    t,
-    `dh2.career${stripNonLetters(characterClass)}`,
-    characterClass,
-  );
+  const background = backgroundLabel(character.background, t);
+  const role = roleLabel(character.role, t);
   const translatedSystem =
     translateOr(t, 'dh2.systemName', character.gameSystem) || 'Dark Heresy';
+  const parts = [background, role].filter(Boolean);
 
-  return `${translatedRank} ${translatedClass} | ${translatedSystem}`;
+  return `${parts.length ? `${parts.join(' / ')} | ` : ''}${translatedSystem}`;
 }
 
 /** Кнопка домашних правил в шапке (в компактном виде живёт в сайдбаре). */

@@ -14,7 +14,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
 import {
   Form,
   FormControl,
@@ -37,72 +36,77 @@ import {
   useToast,
   useTranslation,
 } from '@/games/plugin-host';
+import type { CreateFormProps } from '@/games/types';
 import {
   buildInvalidFormAlert,
   focusFirstInvalidField,
 } from '@/lib/form-validation';
 
-import {
-  ALL_QUIRKS,
-  CAREER_KEYS,
-  dhLocalizedKey,
-  DIVINATIONS,
-  getQuirksForHomeWorld,
-  HOME_WORLD_KEYS,
-  QUIRK_KEYS,
-  VARIANT_KEYS,
-  WORLD_VARIANTS_BY_HOMEWORLD,
-} from './dark-heresy-data';
 import { createDh2Defaults } from './defaults';
+import { deriveAptitudes } from './dh2e-aptitudes';
 import {
-  divinationEffectKey,
-  divinationKey,
-  effectIdForDivination,
-} from './divination-i18n';
-import { DarkHeresyCareerPaths, DarkHeresyHomeWorlds } from './types';
+  DH2E_BACKGROUNDS,
+  DH2E_CHARACTERISTICS,
+  DH2E_DIVINATIONS,
+  DH2E_HOMEWORLDS,
+  DH2E_ROLES,
+} from './dh2e-data';
+import {
+  aptitudeLabels,
+  backgroundLabel,
+  divinationLabel,
+  homeWorldLabel,
+  roleLabel,
+} from './dh2e-labels';
 
-const VARIANT_LABEL_KEYS: Record<string, string> = {
-  'Feral World': 'dh2.tribalTaboos',
-  'Hive World': 'dh2.hiveClass',
-  'Imperial World': 'dh2.birthPlanet',
-  'Void Born': 'dh2.shipTradition',
-  'Forge World': 'dh2.placeOfBirth',
+const CHARACTERISTIC_FIELDS = [
+  'weaponSkill',
+  'ballisticSkill',
+  'strength',
+  'toughness',
+  'agility',
+  'intelligence',
+  'perception',
+  'willpower',
+  'fellowship',
+  'influence',
+] as const;
+
+const CHARACTERISTIC_LABEL_KEYS: Record<
+  (typeof CHARACTERISTIC_FIELDS)[number],
+  string
+> = {
+  weaponSkill: 'dh2.weaponSkill',
+  ballisticSkill: 'dh2.ballisticSkill',
+  strength: 'common.strength',
+  toughness: 'dh2.toughness',
+  agility: 'dh2.agility',
+  intelligence: 'common.intelligence',
+  perception: 'common.perception',
+  willpower: 'common.willpower',
+  fellowship: 'dh2.fellowship',
+  influence: 'dh2.influence',
 };
-
-export type DarkHeresyFormVariant = 'dh2';
 
 /**
  * ─── LANDMARK: DARK HERESY CREATE FORM ─────────────────────────────────────
- * Форма создания Dark Heresy 2-й редакции. Модуль самодостаточен:
- * поля, фабрика персонажа и переводы принадлежат только этой редакции.
+ * Создание персонажа 2e по шагам книги: мир → бэкграунд → роль →
+ * характеристики → детали. Значения характеристик игрок вводит сам (броски
+ * кубиков за столом), поэтому подсказки мира показывают, какие кубики
+ * бросать, а не подставляют числа (D5).
  */
-export function DarkHeresyCreateForm({
-  variant,
-  onCreated,
-}: {
-  variant: DarkHeresyFormVariant;
-  onCreated?: (characterId: string) => void;
-}) {
+export function DarkHeresyCreateForm({ onCreated }: CreateFormProps) {
   const { toast } = useToast();
   const { addCharacter } = useCharacterContext();
   const { t } = useTranslation();
-  const [showAllQuirks, setShowAllQuirks] = React.useState(false);
-  const [availableQuirks, setAvailableQuirks] = React.useState<string[]>([]);
 
-  // Схема зависит от языка: тексты ошибок берутся из словаря, поэтому она
-  // собирается внутри компонента, а не один раз на уровне модуля.
   const formSchema = z.object({
     name: z.string().min(2, t('common.nameMinLength')),
-    homeWorld: z.enum(DarkHeresyHomeWorlds, {
-      error: t('dh2.selectHomeWorldError'),
-    }),
-    worldVariant: z.string().optional(),
-    careerPath: z.enum(DarkHeresyCareerPaths, {
-      error: t('dh2.selectCareerPathError'),
-    }),
+    homeWorld: z.string({ error: t('dh2.selectHomeWorldError') }),
+    background: z.string({ error: t('dh2.selectBackgroundError') }),
+    role: z.string({ error: t('dh2.selectRoleError') }),
+    divination: z.string().optional(),
     backstory: z.string().optional(),
-    divination: z.string({ error: t('dh2.selectDivinationError') }),
-    quirk: z.string().optional(),
     height: z.string().optional(),
     weight: z.string().optional(),
     age: z.string().optional(),
@@ -125,20 +129,17 @@ export function DarkHeresyCreateForm({
     fatePoints: z.coerce.number().int(),
   });
 
-  // zod 4 разделяет типы входа и выхода (z.input/z.output, например из-за
-  // z.coerce.number()). zodResolver возвращает разобранные данные, поэтому
-  // форма типизируется выходным типом схемы; приведение сужает TFieldValues.
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema) as unknown as Resolver<
       z.infer<typeof formSchema>
     >,
-    // Фокус/скролл на первом невалидном поле делает handleInvalid: RHF умеет
-    // фокусировать только зарегистрированные refs, а кастомные Select на
-    // мобильном остаются вне экрана.
     shouldFocusError: false,
     defaultValues: {
       name: '',
-      worldVariant: '',
+      homeWorld: '',
+      background: '',
+      role: '',
+      divination: '',
       weaponSkill: 30,
       ballisticSkill: 30,
       strength: 30,
@@ -151,48 +152,57 @@ export function DarkHeresyCreateForm({
       influence: 30,
       wounds: 10,
       fatePoints: 1,
-      divination: '',
-      quirk: '',
       height: '',
       weight: '',
       age: '',
       skinColor: '',
       hairColor: '',
       eyeColor: '',
-      experience: 0,
+      experience: 1000,
       totalExpSpent: 0,
     },
   });
 
-  const watchedDivination = form.watch('divination');
   const watchedHomeWorld = form.watch('homeWorld');
+  const watchedBackground = form.watch('background');
+  const watchedRole = form.watch('role');
+  const watchedDivination = form.watch('divination');
 
-  const divinationEffect = React.useMemo(() => {
-    return effectIdForDivination(watchedDivination);
-  }, [watchedDivination]);
+  const world = React.useMemo(
+    () => DH2E_HOMEWORLDS.find((item) => item.id === watchedHomeWorld),
+    [watchedHomeWorld],
+  );
+  const background = React.useMemo(
+    () => DH2E_BACKGROUNDS.find((item) => item.id === watchedBackground),
+    [watchedBackground],
+  );
+  const role = React.useMemo(
+    () => DH2E_ROLES.find((item) => item.id === watchedRole),
+    [watchedRole],
+  );
+  const aptitudes = React.useMemo(
+    () =>
+      deriveAptitudes({
+        homeWorld: watchedHomeWorld,
+        background: watchedBackground,
+        role: watchedRole,
+      }),
+    [watchedHomeWorld, watchedBackground, watchedRole],
+  );
+  const divination = React.useMemo(
+    () => DH2E_DIVINATIONS.find((item) => item.id === watchedDivination),
+    [watchedDivination],
+  );
 
+  // Мир задаёт порог Судьбы и раны: подсказываем значения, игрок их правит.
   React.useEffect(() => {
-    if (showAllQuirks) {
-      setAvailableQuirks(ALL_QUIRKS);
-    } else if (watchedHomeWorld) {
-      // У Мира-кузницы своей таблицы примет нет — хелпер отдаёт общий список.
-      setAvailableQuirks(getQuirksForHomeWorld(watchedHomeWorld));
-    } else {
-      setAvailableQuirks([]);
-    }
-    form.setValue('quirk', '');
-  }, [watchedHomeWorld, showAllQuirks, form]);
-
-  React.useEffect(() => {
-    form.setValue('worldVariant', '');
-  }, [watchedHomeWorld, form]);
+    if (!world) return;
+    form.setValue('fatePoints', world.fateThreshold);
+    const match = world.wounds.match(/^(\d+)\+1d5$/);
+    form.setValue('wounds', match ? Number(match[1]) + 1 : 10);
+  }, [world, form]);
 
   const handleInvalid = (errors: FieldErrors) => {
-    // RHF фокусирует только «нативные» поля; Select на мобильном может
-    // оказаться вне экрана — поэтому явно скроллим/фокусируем и показываем
-    // тост с первой ошибкой, чтобы нажатие «Создать» не выглядело немым.
-    // onInvalid вызывается до перерисовки ошибок: `aria-invalid` появится
-    // только в следующем кадре, поэтому фокус ставим после коммита React.
     window.setTimeout(focusFirstInvalidField, 0);
     const alert = buildInvalidFormAlert(errors, {
       title: t('common.fillRequiredFields'),
@@ -207,7 +217,6 @@ export function DarkHeresyCreateForm({
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     const newCharacter = createDh2Defaults(values);
-
     const docRef = await addCharacter(newCharacter);
 
     if (docRef) {
@@ -227,9 +236,9 @@ export function DarkHeresyCreateForm({
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit, handleInvalid)}>
           <CardContent className="space-y-6">
-            <div className="space-y-2">
+            <section className="space-y-3">
               <h3 className="text-base font-medium">
-                {t('common.basicInformation')}
+                {t('dh2.stageHomeWorld')}
               </h3>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <FormField
@@ -240,8 +249,8 @@ export function DarkHeresyCreateForm({
                       <FormLabel>{t('common.characterName')}</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder={t('dh2.placeholderJax')}
                           {...field}
+                          placeholder={t('dh2.placeholderJax')}
                         />
                       </FormControl>
                       <FormMessage />
@@ -256,7 +265,7 @@ export function DarkHeresyCreateForm({
                       <FormLabel>{t('dh2.homeWorld')}</FormLabel>
                       <Select
                         onValueChange={field.onChange}
-                        defaultValue={field.value}
+                        value={field.value}
                       >
                         <FormControl>
                           <SelectTrigger>
@@ -266,85 +275,9 @@ export function DarkHeresyCreateForm({
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {DarkHeresyHomeWorlds.map((world) => (
-                            <SelectItem key={world} value={world}>
-                              {t(
-                                dhLocalizedKey(
-                                  HOME_WORLD_KEYS[world] || world,
-                                  'dh2',
-                                ),
-                              )}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="worldVariant"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        {t(
-                          VARIANT_LABEL_KEYS[watchedHomeWorld] ||
-                            'dh2.worldVariant',
-                        )}
-                      </FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        value={field.value}
-                        disabled={!watchedHomeWorld}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder={t('dh2.selectVariant')} />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {(watchedHomeWorld
-                            ? WORLD_VARIANTS_BY_HOMEWORLD[watchedHomeWorld] ||
-                              []
-                            : []
-                          ).map((v) => (
-                            <SelectItem key={v} value={v}>
-                              {t(dhLocalizedKey(VARIANT_KEYS[v] || v, 'dh2'))}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="careerPath"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t('dh2.careerPath')}</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue
-                              placeholder={t('dh2.selectCareerPath')}
-                            />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {DarkHeresyCareerPaths.map((path) => (
-                            <SelectItem key={path} value={path}>
-                              {t(
-                                dhLocalizedKey(
-                                  CAREER_KEYS[path] || path,
-                                  'dh2',
-                                ),
-                              )}
+                          {DH2E_HOMEWORLDS.map((item) => (
+                            <SelectItem key={item.id} value={item.id}>
+                              {t(item.labelKey)}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -354,396 +287,169 @@ export function DarkHeresyCreateForm({
                   )}
                 />
               </div>
-            </div>
-
-            <div className="space-y-2">
-              <h3 className="text-base font-medium">
-                {t('common.description')}
-              </h3>
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <FormField
-                  control={form.control}
-                  name="divination"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t('dh2.divination')}</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue
-                              placeholder={t('dh2.selectDivination')}
-                            />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {DIVINATIONS.map(({ id }) => (
-                            <SelectItem key={id} value={id}>
-                              {t(divinationKey(id, 'dh2'))}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormItem>
-                  <FormLabel>{t('dh2.divinationEffect')}</FormLabel>
-                  <Input
-                    readOnly
-                    value={
-                      divinationEffect
-                        ? t(divinationEffectKey(divinationEffect, 'dh2'))
-                        : ''
-                    }
-                    placeholder={t('dh2.effectAppearsHere')}
-                    className="bg-muted/50 border-dashed"
-                  />
-                </FormItem>
-                <FormField
-                  control={form.control}
-                  name="quirk"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t('dh2.quirk')}</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        value={field.value}
-                        disabled={!watchedHomeWorld && !showAllQuirks}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder={t('dh2.selectQuirk')} />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {availableQuirks.map((quirk) => (
-                            <SelectItem key={quirk} value={quirk}>
-                              {t(
-                                dhLocalizedKey(
-                                  QUIRK_KEYS[quirk] || quirk,
-                                  'dh2',
-                                ),
-                              )}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <div className="flex items-center space-x-2 self-end pb-2">
-                  <Checkbox
-                    id="all-quirks"
-                    checked={showAllQuirks}
-                    onCheckedChange={(checked) => setShowAllQuirks(!!checked)}
-                  />
-                  <label
-                    htmlFor="all-quirks"
-                    className="text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                  >
-                    {t('dh2.showAllQuirks')}
-                  </label>
+              {world && (
+                <div className="bg-muted/40 space-y-2 rounded-md border p-3 text-xs">
+                  <p className="text-sm font-medium">
+                    {homeWorldLabel(world.id, t)}
+                  </p>
+                  <p>
+                    {t('dh2.worldModifierHint')}:{' '}
+                    {world.characteristicModifiers.plus
+                      .map((id) => `+ ${t(`dh2.catalog.characteristic.${id}`)}`)
+                      .concat(
+                        world.characteristicModifiers.minus.map(
+                          (id) => `− ${t(`dh2.catalog.characteristic.${id}`)}`,
+                        ),
+                      )
+                      .join(', ') || '—'}
+                  </p>
+                  <p>
+                    {t('dh2.worldFateHint')}: {world.fateThreshold} (
+                    {t('dh2.emperorsBlessing')} {world.emperorsBlessing}+),{' '}
+                    {t('dh2.wounds')}: {world.wounds}
+                  </p>
+                  <p>
+                    {t('dh2.worldAptitudeHint')}:{' '}
+                    {t(`dh2.catalog.aptitude.${world.aptitudeId}`)}
+                  </p>
+                  <p className="text-muted-foreground">{t(world.bonusKey)}</p>
                 </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4 pt-2 md:grid-cols-3">
-                <FormField
-                  control={form.control}
-                  name="height"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t('common.height')}</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder={t('dh2.placeholderHeight')}
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="weight"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t('common.weight')}</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder={t('dh2.placeholderWeight')}
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="age"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t('common.age')}</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder={t('dh2.placeholderAge')}
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="skinColor"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t('dh2.skinColor')}</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder={t('dh2.placeholderSkinColor')}
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="hairColor"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t('dh2.hairColor')}</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder={t('dh2.placeholderHairColor')}
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="eyeColor"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t('dh2.eyeColor')}</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder={t('dh2.placeholderEyeColor')}
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </div>
-
-            <FormField
-              control={form.control}
-              name="backstory"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t('common.backstory')}</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder={t('dh2.placeholderUnderhive')}
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
               )}
-            />
+            </section>
 
-            <div className="space-y-2">
+            <section className="space-y-3">
               <h3 className="text-base font-medium">
-                {t('common.progression')}
+                {t('dh2.stageBackground')}
               </h3>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <FormField
                   control={form.control}
-                  name="experience"
+                  name="background"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('dh2.experience')}</FormLabel>
-                      <FormControl>
-                        <Input type="number" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="totalExpSpent"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t('dh2.totalExpSpent')}</FormLabel>
-                      <FormControl>
-                        <Input type="number" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <h3 className="text-base font-medium">
-                {t('common.characteristics')}
-              </h3>
-              <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
-                <FormField
-                  control={form.control}
-                  name="weaponSkill"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t('dh2.weaponSkill')}</FormLabel>
-                      <FormControl>
-                        <Input type="number" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="ballisticSkill"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t('dh2.ballisticSkill')}</FormLabel>
-                      <FormControl>
-                        <Input type="number" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="strength"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t('common.strength')}</FormLabel>
-                      <FormControl>
-                        <Input type="number" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="toughness"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t('dh2.toughness')}</FormLabel>
-                      <FormControl>
-                        <Input type="number" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="agility"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t('dh2.agility')}</FormLabel>
-                      <FormControl>
-                        <Input type="number" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="intelligence"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t('common.intelligence')}</FormLabel>
-                      <FormControl>
-                        <Input type="number" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="perception"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t('common.perception')}</FormLabel>
-                      <FormControl>
-                        <Input type="number" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="willpower"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t('common.willpower')}</FormLabel>
-                      <FormControl>
-                        <Input type="number" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="fellowship"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t('dh2.fellowship')}</FormLabel>
-                      <FormControl>
-                        <Input type="number" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                {variant === 'dh2' && (
-                  <FormField
-                    control={form.control}
-                    name="influence"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{t('dh2.influence')}</FormLabel>
+                      <FormLabel>{t('dh2.background')}</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                      >
                         <FormControl>
-                          <Input type="number" {...field} />
+                          <SelectTrigger>
+                            <SelectValue
+                              placeholder={t('dh2.selectBackground')}
+                            />
+                          </SelectTrigger>
                         </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                )}
+                        <SelectContent>
+                          {DH2E_BACKGROUNDS.map((item) => (
+                            <SelectItem key={item.id} value={item.id}>
+                              {t(item.labelKey)}
+                              {world?.recommendedBackgroundIds.includes(item.id)
+                                ? ` · ${t('dh2.recommended')}`
+                                : ''}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="role"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('dh2.role')}</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder={t('dh2.selectRole')} />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {DH2E_ROLES.map((item) => (
+                            <SelectItem key={item.id} value={item.id}>
+                              {t(item.labelKey)}
+                              {background?.recommendedRoleIds.includes(item.id)
+                                ? ` · ${t('dh2.recommended')}`
+                                : ''}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
-            </div>
+              {background && (
+                <p className="text-muted-foreground text-xs">
+                  {backgroundLabel(background.id, t)}:{' '}
+                  {t(background.bonusKeys[0] ?? '')}
+                </p>
+              )}
+              {role && (
+                <p className="text-muted-foreground text-xs">
+                  {roleLabel(role.id, t)}: {t(role.bonusKey)}
+                </p>
+              )}
+              <p className="text-xs">
+                {t('dh2.aptitudes')}:{' '}
+                <span className="font-medium">
+                  {aptitudeLabels(aptitudes.profile, t) || '—'}
+                </span>
+              </p>
+            </section>
 
-            <div className="space-y-2">
-              <h3 className="text-base font-medium">{t('dh2.otherStats')}</h3>
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <section className="space-y-3">
+              <h3 className="text-base font-medium">
+                {t('dh2.stageCharacteristics')}
+              </h3>
+              <p className="text-muted-foreground text-xs">
+                {t('dh2.characteristicsHint')}
+              </p>
+              <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
+                {CHARACTERISTIC_FIELDS.map((key) => {
+                  const modifier = world
+                    ? world.characteristicModifiers.plus.includes(
+                        characteristicId(key),
+                      )
+                      ? '+'
+                      : world.characteristicModifiers.minus.includes(
+                            characteristicId(key),
+                          )
+                        ? '−'
+                        : ''
+                    : '';
+                  return (
+                    <FormField
+                      key={key}
+                      control={form.control}
+                      name={key}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="flex items-center gap-1">
+                            {t(CHARACTERISTIC_LABEL_KEYS[key])}
+                            {modifier && (
+                              <span className="text-primary font-semibold">
+                                {modifier}
+                              </span>
+                            )}
+                          </FormLabel>
+                          <FormControl>
+                            <Input type="number" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  );
+                })}
+              </div>
+              <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
                 <FormField
                   control={form.control}
                   name="wounds"
@@ -762,7 +468,7 @@ export function DarkHeresyCreateForm({
                   name="fatePoints"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('dh2.fatePoints')}</FormLabel>
+                      <FormLabel>{t('dh2.fate')}</FormLabel>
                       <FormControl>
                         <Input type="number" {...field} />
                       </FormControl>
@@ -771,9 +477,111 @@ export function DarkHeresyCreateForm({
                   )}
                 />
               </div>
-            </div>
+            </section>
+
+            <section className="space-y-3">
+              <h3 className="text-base font-medium">
+                {t('dh2.stageDivination')}
+              </h3>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <FormField
+                  control={form.control}
+                  name="divination"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('dh2.divination')}</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue
+                              placeholder={t('dh2.selectDivination')}
+                            />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {DH2E_DIVINATIONS.map((item) => (
+                            <SelectItem key={item.id} value={item.id}>
+                              {item.from === item.to
+                                ? String(item.from).padStart(3, '0')
+                                : `${String(item.from).padStart(2, '0')}–${String(
+                                    item.to,
+                                  ).padStart(2, '0')}`}
+                              {' · '}
+                              {divinationLabel(item.id, t)}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <div className="space-y-1 text-xs">
+                  {divination ? (
+                    <p>
+                      <span className="font-medium">
+                        {t(divination.effectKey)}
+                      </span>
+                    </p>
+                  ) : (
+                    <p className="text-muted-foreground">
+                      {t('dh2.divinationHint')}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </section>
+
+            <section className="space-y-3">
+              <h3 className="text-base font-medium">{t('dh2.stageDetails')}</h3>
+              <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+                {(
+                  [
+                    ['height', 'common.height'],
+                    ['weight', 'common.weight'],
+                    ['age', 'common.age'],
+                    ['skinColor', 'dh2.skinColor'],
+                    ['hairColor', 'dh2.hairColor'],
+                    ['eyeColor', 'dh2.eyeColor'],
+                    ['experience', 'dh2.experience'],
+                    ['totalExpSpent', 'dh2.totalExpSpent'],
+                  ] as const
+                ).map(([key, labelKey]) => (
+                  <FormField
+                    key={key}
+                    control={form.control}
+                    name={key}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t(labelKey)}</FormLabel>
+                        <FormControl>
+                          <Input type="number" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                ))}
+              </div>
+              <FormField
+                control={form.control}
+                name="backstory"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('common.backstory')}</FormLabel>
+                    <FormControl>
+                      <Textarea {...field} className="min-h-[100px]" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </section>
           </CardContent>
-          <CardFooter>
+          <CardFooter className="flex justify-end">
             <Button type="submit">{t('common.createCharacter')}</Button>
           </CardFooter>
         </form>
@@ -782,10 +590,11 @@ export function DarkHeresyCreateForm({
   );
 }
 
-export function Dh2CharacterForm({
-  onCreated,
-}: { onCreated?: (characterId: string) => void } = {}) {
-  return <DarkHeresyCreateForm variant="dh2" onCreated={onCreated} />;
+/** Ключ статистики → смысловой id характеристики (для модификаторов мира). */
+function characteristicId(key: string): string {
+  const match = DH2E_CHARACTERISTICS.find((item) => item.id === key);
+  return match?.aptitudeIds[0] ?? key;
 }
 
-export default Dh2CharacterForm;
+/** Имя компонента из `plugin.json#sheet.createForm` (историческое). */
+export const Dh2CharacterForm = DarkHeresyCreateForm;

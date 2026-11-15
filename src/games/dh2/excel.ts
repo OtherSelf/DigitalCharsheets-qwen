@@ -1,5 +1,14 @@
 import { createExcelSections } from '../shared/excel';
 import type { ExcelSection, ExportTranslate, GameExportConfig } from '../types';
+import {
+  aptitudeLabels,
+  backgroundLabel,
+  divinationEffectLabel,
+  divinationLabel,
+  eliteAdvanceLabel,
+  homeWorldLabel,
+  roleLabel,
+} from './dh2e-labels';
 import type { DarkHeresyStatUpgrade, DH2Character } from './types';
 
 /**
@@ -38,13 +47,19 @@ export function buildDh2ExcelSections(
     w.section('io.excel.basicInformation');
     w.row('io.excel.name', character.name);
     w.row('io.excel.classCareer', character.characterClass);
-    w.row('dh2.rank', character.rank);
-    w.row('dh2.homeWorld', character.homeWorld);
-    w.row('dh2.worldVariant', character.worldVariant);
-    w.row('dh2.careerPath', character.careerPath);
-    w.row('dh2.divination', character.divination);
-    w.row('dh2.divinationEffect', character.divinationEffect);
-    w.row('dh2.quirk', character.quirk);
+    w.row('dh2.homeWorld', homeWorldLabel(character.homeWorld, t));
+    w.row('dh2.background', backgroundLabel(character.background, t));
+    w.row('dh2.role', roleLabel(character.role, t));
+    w.row('dh2.aptitudes', aptitudeLabels(character.aptitudes.profile, t));
+    w.row(
+      'dh2.eliteAdvances',
+      character.eliteAdvances.map((id) => eliteAdvanceLabel(id, t)).join(', '),
+    );
+    w.row('dh2.divination', divinationLabel(character.divination, t));
+    w.row(
+      'dh2.divinationEffect',
+      divinationEffectLabel(character.divination, t),
+    );
     w.row('common.age', character.age);
     w.row('common.height', character.height);
     w.row('common.weight', character.weight);
@@ -53,8 +68,6 @@ export function buildDh2ExcelSections(
     w.row('dh2.eyeColor', character.eyeColor);
     w.row('dh2.experience', character.experience);
     w.row('dh2.totalExpSpent', character.totalExpSpent);
-    w.row('dh2.alternatePath', character.alternatePath);
-    w.row('dh2.advancedPath', character.advancedPath);
   }
 
   if (config.includeStats) {

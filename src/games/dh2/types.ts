@@ -7,27 +7,6 @@ import type { CharacterBase, InventoryItem } from '../shared/types';
  * Редакционные отличия добавляются в конце этого файла.
  */
 
-export const DarkHeresyHomeWorlds = [
-  'Feral World',
-  'Hive World',
-  'Imperial World',
-  'Void Born',
-  'Forge World',
-] as const;
-export type DarkHeresyHomeWorld = (typeof DarkHeresyHomeWorlds)[number];
-
-export const DarkHeresyCareerPaths = [
-  'Adept',
-  'Arbitrator',
-  'Assassin',
-  'Cleric',
-  'Guardsman',
-  'Imperial Psyker',
-  'Scum',
-  'Tech-Priest',
-] as const;
-export type DarkHeresyCareerPath = (typeof DarkHeresyCareerPaths)[number];
-
 /**
  * Девять базовых характеристик Dark Heresy. `influence` добавляется
  * только в `DH2Character`.
@@ -173,16 +152,8 @@ export interface DarkHeresyEquipment {
  */
 export interface DarkHeresyBase extends CharacterBase {
   gameSystem: 'Dark Heresy';
-  /** Мир: смысловой id 2e (`feral-world`) либо DH1-название до миграции. */
+  /** Мир 2e: смысловой id (`feral-world`). */
   homeWorld: string;
-  worldVariant: string;
-  careerPath: DarkHeresyCareerPath | '';
-  rank: string;
-  /** Стабильный ID пророчества (`mutationWithout`), не текст. */
-  divination: string;
-  /** Стабильный ID эффекта (`insanity2`), не текст. */
-  divinationEffect: string;
-  quirk: string;
   /** Бэкграунд 2e: смысловой id (`adeptus-arbites`). */
   background: string;
   /** Роль 2e: смысловой id (`assassin`). */
@@ -193,6 +164,8 @@ export interface DarkHeresyBase extends CharacterBase {
   eliteAdvances: string[];
   /** Пси-профиль 2e. */
   psy: DH2PsyProfile;
+  /** Пророчество 2e: id строки таблицы 2-9 (`d100-10`), не текст. */
+  divination: string;
   /** Журнал покупок опыта 2e. */
   experienceLog: DH2ExperienceEntry[];
   height: string;
@@ -203,8 +176,6 @@ export interface DarkHeresyBase extends CharacterBase {
   eyeColor: string;
   experience: number;
   totalExpSpent: number;
-  alternatePath: string | null;
-  advancedPath: string | null;
   wounds: { current: number; max: number; notes?: string };
   fatePoints: { current: number; max: number; notes?: string };
   insanityPoints: { total: number; notes?: string };
