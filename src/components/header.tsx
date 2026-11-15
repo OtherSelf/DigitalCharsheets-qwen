@@ -543,7 +543,9 @@ export function Header({
               </Button>
             )}
             {/* LANDMARK: SMART_LANGUAGE_TOGGLE */}
-            {(!displayCharacter || !isCompactView) && <LanguageToggle />}
+            {(!displayCharacter || !isCompactView || !isSmallScreen) && (
+              <LanguageToggle />
+            )}
             <ThemeToggle />
             {authControls}
           </div>
