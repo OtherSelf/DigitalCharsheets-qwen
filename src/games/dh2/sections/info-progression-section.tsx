@@ -14,9 +14,14 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { useCharacterContext, useTranslation } from '@/games/plugin-host';
+import {
+  useCharacterContext,
+  useToast,
+  useTranslation,
+} from '@/games/plugin-host';
 import { cn } from '@/lib/utils';
 
+import { countAptitudeMatches } from '../dh2e-aptitudes';
 import {
   aptitudeLabels,
   backgroundLabel,
@@ -26,7 +31,10 @@ import {
   homeWorldLabel,
   roleLabel,
 } from '../dh2e-labels';
-import type { DH2Character } from '../types';
+import { DH2E_SKILLS, DH2E_TALENTS } from '../dh2e-reference';
+import { DH2E_SKILL_TIERS } from '../dh2e-rules';
+import { skillRankCost, talentCost, toMatches } from '../dh2e-xp';
+import type { DH2Character, Skill, Talent } from '../types';
 import { EditSaveButton } from './dh-ui-helpers';
 
 interface SectionProps {
@@ -327,18 +335,113 @@ export const ProgressionSection = ({
 }: SectionProps) => {
   const { updateCharacter, showEditButtons } = useCharacterContext();
   const { t } = useTranslation();
+  const { toast } = useToast();
   const [isProgressionEditing, setIsProgressionEditing] = React.useState(false);
 
   React.useEffect(() => {
     onEditingChange?.(isProgressionEditing);
   }, [isProgressionEditing, onEditingChange]);
 
+  const available =
+    (character.experience ?? 0) - (character.totalExpSpent ?? 0);
+
+  const [purchaseKind, setPurchaseKind] = React.useState<'skill' | 'talent'>(
+    'skill',
+  );
+  const [purchaseRef, setPurchaseRef] = React.useState('');
+  const [purchaseRank, setPurchaseRank] = React.useState(1);
+  const [purchaseTier, setPurchaseTier] = React.useState(1);
+
+  const talentOptions = React.useMemo(
+    () => DH2E_TALENTS.filter((item) => item.tier === purchaseTier),
+    [purchaseTier],
+  );
+  const selectedSkill = DH2E_SKILLS.find((item) => item.id === purchaseRef);
+  const selectedTalent = DH2E_TALENTS.find((item) => item.id === purchaseRef);
+
+  const purchaseCost = React.useMemo(() => {
+    if (purchaseKind === 'skill') {
+      if (!selectedSkill) return 0;
+      const matches = toMatches(
+        countAptitudeMatches(
+          selectedSkill.aptitudeIds,
+          character.aptitudes.profile,
+        ),
+      );
+      return skillRankCost(matches, purchaseRank - 1);
+    }
+    if (!selectedTalent) return 0;
+    const matches = toMatches(
+      countAptitudeMatches(
+        selectedTalent.aptitudeSlots,
+        character.aptitudes.profile,
+      ),
+    );
+    return talentCost(matches, selectedTalent.tier);
+  }, [purchaseKind, selectedSkill, selectedTalent, purchaseRank, character]);
+
+  const handlePurchase = () => {
+    if (!purchaseRef || purchaseCost <= 0) return;
+    const entry = {
+      id: `${purchaseKind}:${purchaseRef}:${Date.now()}`,
+      kind: purchaseKind,
+      ref: purchaseRef,
+      cost: purchaseCost,
+      createdAt: new Date().toISOString(),
+    } as DH2Character['experienceLog'][number];
+    const patch: Partial<DH2Character> = {
+      experienceLog: [...character.experienceLog, entry],
+      totalExpSpent: character.totalExpSpent + purchaseCost,
+    };
+    if (purchaseKind === 'skill' && selectedSkill) {
+      const name = t(selectedSkill.labelKey);
+      const existing = character.skills.find((item) => item.name === name);
+      const training = {
+        skilled: purchaseRank >= 1,
+        plus10: purchaseRank >= 2,
+        plus20: purchaseRank >= 3,
+        plus30: purchaseRank >= 4,
+      };
+      patch.skills = existing
+        ? character.skills.map((item) =>
+            item.name === name
+              ? { ...item, training: { ...item.training, ...training } }
+              : item,
+          )
+        : [
+            ...character.skills,
+            {
+              id: `skill-${purchaseRef}`,
+              name,
+              notes: '',
+              type: 'basic',
+              training,
+            } satisfies Skill,
+          ];
+    }
+    if (purchaseKind === 'talent' && selectedTalent) {
+      const name = t(selectedTalent.labelKey);
+      if (!character.talents.some((item) => item.name === name)) {
+        patch.talents = [
+          ...character.talents,
+          { id: `talent-${purchaseRef}`, name, notes: '' } satisfies Talent,
+        ];
+      }
+    }
+    updateCharacter(character.id, patch);
+    if (purchaseCost > available) {
+      toast({
+        variant: 'destructive',
+        title: t('dh2.xpWarning'),
+        description: t('dh2.xpWarningNegative'),
+      });
+    }
+    setPurchaseRef('');
+  };
+
   const showProgression =
     !isCompactView || activeCompactSection === 'progression-section';
   if (!showProgression) return null;
-
-  const available =
-    (character.experience ?? 0) - (character.totalExpSpent ?? 0);
 
   return (
     <Card id="progression-section">
@@ -417,6 +520,81 @@ export const ProgressionSection = ({
               {t('dh2.psyRating')}
             </Label>
             <p className="text-sm font-medium">{character.psy.rating || '-'}</p>
+          </div>
+        </div>
+        <div className="space-y-2 rounded-md border p-3">
+          <Label className="text-muted-foreground text-xs">
+            {t('dh2.purchaseExp')}
+          </Label>
+          <div className="flex flex-wrap items-end gap-2">
+            <select
+              className="border-input bg-background h-8 rounded-md border px-2 text-xs"
+              value={purchaseKind}
+              onChange={(event) => {
+                setPurchaseKind(event.target.value as 'skill' | 'talent');
+                setPurchaseRef('');
+              }}
+              aria-label={t('dh2.purchaseKind')}
+            >
+              <option value="skill">{t('dh2.skills')}</option>
+              <option value="talent">{t('dh2.talentsAndTraits')}</option>
+            </select>
+            {purchaseKind === 'talent' && (
+              <select
+                className="border-input bg-background h-8 rounded-md border px-2 text-xs"
+                value={purchaseTier}
+                onChange={(event) => {
+                  setPurchaseTier(Number(event.target.value));
+                  setPurchaseRef('');
+                }}
+                aria-label={t('dh2.tier')}
+              >
+                {[1, 2, 3].map((tier) => (
+                  <option key={tier} value={tier}>
+                    {t('dh2.tier')} {tier}
+                  </option>
+                ))}
+              </select>
+            )}
+            <select
+              className="border-input bg-background h-8 min-w-[10rem] rounded-md border px-2 text-xs"
+              value={purchaseRef}
+              onChange={(event) => setPurchaseRef(event.target.value)}
+              aria-label={t('dh2.purchaseItem')}
+            >
+              <option value="">{t('dh2.purchaseItem')}</option>
+              {(purchaseKind === 'skill' ? DH2E_SKILLS : talentOptions).map(
+                (item) => (
+                  <option key={item.id} value={item.id}>
+                    {t(item.labelKey)}
+                  </option>
+                ),
+              )}
+            </select>
+            {purchaseKind === 'skill' && (
+              <select
+                className="border-input bg-background h-8 rounded-md border px-2 text-xs"
+                value={purchaseRank}
+                onChange={(event) =>
+                  setPurchaseRank(Number(event.target.value))
+                }
+                aria-label={t('dh2.rank')}
+              >
+                {DH2E_SKILL_TIERS.map((tier) => (
+                  <option key={tier.id} value={tier.rank}>
+                    {t(tier.labelKey)}
+                  </option>
+                ))}
+              </select>
+            )}
+            <Button
+              type="button"
+              size="sm"
+              onClick={handlePurchase}
+              disabled={!purchaseRef || purchaseCost <= 0}
+            >
+              {t('dh2.buy')} {purchaseCost > 0 ? `· ${purchaseCost} XP` : ''}
+            </Button>
           </div>
         </div>
         {character.experienceLog.length > 0 && (

@@ -773,5 +773,11 @@
   "dh2.acolyte": "Acolyte",
   "dh2.buyStep": "Buy the next step",
   "dh2.xpWarning": "Not enough XP",
-  "dh2.xpWarningNegative": "The purchase costs more than the remaining XP; the sheet allows it for house rules, but check the balance."
+  "dh2.xpWarningNegative": "The purchase costs more than the remaining XP; the sheet allows it for house rules, but check the balance.",
+  "dh2.purchaseExp": "Buy with XP",
+  "dh2.purchaseKind": "Purchase type",
+  "dh2.purchaseItem": "Pick from the 2e reference",
+  "dh2.buy": "Buy",
+  "dh2.tier": "Tier",
+  "dh2.skills": "Skills"
 }
