@@ -46,6 +46,7 @@ function sourceFiles(dir: string): string[] {
 const DH1_DATA_MAPS = [
   ['HOME_WORLD_KEYS', dh1Data.HOME_WORLD_KEYS],
   ['VARIANT_KEYS', dh1Data.VARIANT_KEYS],
+  ['WORLD_VARIANT_LABELS', dh1Data.WORLD_VARIANT_LABELS],
   ['QUIRK_KEYS', dh1Data.QUIRK_KEYS],
   ['CAREER_KEYS', dh1Data.CAREER_KEYS],
   ['RANK_KEYS', dh1Data.RANK_KEYS],
@@ -66,6 +67,13 @@ const DH2_DATA_KEYS: readonly string[] = [
   ...DH2E_STAT_STEPS.map((item) => item.labelKey),
   ...DH2E_SKILL_TIERS.map((item) => item.labelKey),
 ];
+
+/** Особенности миров 1e: имя и механика — обязательные ключи обеих локалей. */
+const DH1_FEATURE_KEYS: readonly string[] = Object.values(
+  dh1Data.WORLD_FEATURES,
+)
+  .flat()
+  .flatMap((feature) => [feature.labelKey, feature.effectKey]);
 
 describe('Dark Heresy: ключи справочных данных', () => {
   it('в src/games нет литералов виртуального домена dh.*', () => {
@@ -89,6 +97,18 @@ describe('Dark Heresy: ключи справочных данных', () => {
           if (!(value in translations[lang])) {
             missing.push(`dh1.${name}: ${value} (${lang})`);
           }
+        }
+      }
+    }
+    expect(missing).toEqual([]);
+  });
+
+  it('каждый ключ особенностей мира есть в en и ru словарях', () => {
+    const missing: string[] = [];
+    for (const key of DH1_FEATURE_KEYS) {
+      for (const lang of ['en', 'ru'] as const) {
+        if (!(key in translations[lang])) {
+          missing.push(`${key} (${lang})`);
         }
       }
     }

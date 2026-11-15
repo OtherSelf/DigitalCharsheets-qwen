@@ -323,14 +323,50 @@ export const WORLD_VARIANTS_BY_HOMEWORLD: Record<string, string[]> = {
     'Research Outpost',
     'Explorator Fleet',
   ],
+  // Таблица И-1-4 «Путь к Величию» (стр. 33).
+  'Noble Born': [
+    'Mercantile Magnates',
+    'Military Tradition',
+    'Rulers of Mankind',
+    'Imperial Quartermaster',
+    'House of Iron Spires',
+    'Blood of Greatness',
+    "Rogue's Fortune",
+    'Tainted Blood',
+  ],
+  // Таблица И-1-5 «Судьба Семьи» (стр. 35).
+  'Schola Progenium': [
+    'War Martyrs',
+    'Rebellion Victims',
+    'Distant Outpost',
+    'Lost in the Void',
+    'No Trace',
+    'No Return',
+    'Halo of Silence',
+  ],
+  // Таблица И-1-3 «Осколки Памяти» (стр. 29–30).
+  'Mind-Cleared': [
+    'Broken Mirror',
+    'Cold Grave',
+    'Night of the Daemon',
+    'Sole Survivor',
+    'Dark Altar',
+    'Bloody Throne',
+    'Forest of Nightmares',
+    'Malfian Candidate',
+    'Restorer of Glory',
+  ],
 };
 
 export const WORLD_VARIANT_LABELS: Record<string, string> = {
-  'Feral World': 'Tribal Taboos',
-  'Hive World': 'Hive Class',
-  'Imperial World': 'Birth Planet',
-  'Void Born': 'Ship Tradition',
-  'Forge World': 'Place of Birth',
+  'Feral World': 'dh1.tribalTaboos',
+  'Hive World': 'dh1.hiveClass',
+  'Imperial World': 'dh1.birthPlanet',
+  'Void Born': 'dh1.shipTradition',
+  'Forge World': 'dh1.placeOfBirth',
+  'Noble Born': 'dh1.pathToGreatness',
+  'Schola Progenium': 'dh1.familyFate',
+  'Mind-Cleared': 'dh1.memoryShards',
 };
 
 /** Ключ данных в пространстве конкретной редакции: dh.* → dh1 или dh2. */
@@ -353,6 +389,9 @@ export const HOME_WORLD_KEYS: Record<string, string> = {
   'Imperial World': 'dh1.homeWorldImperial',
   'Void Born': 'dh1.homeWorldVoidBorn',
   'Forge World': 'dh1.homeWorldForge',
+  'Schola Progenium': 'dh1.homeWorldSchola',
+  'Noble Born': 'dh1.homeWorldNoble',
+  'Mind-Cleared': 'dh1.homeWorldMindCleared',
 };
 
 export const VARIANT_KEYS: Record<string, string> = {
@@ -389,6 +428,30 @@ export const VARIANT_KEYS: Record<string, string> = {
   Territory: 'dh1.variantTerritory',
   'Research Outpost': 'dh1.variantResearchOutpost',
   'Explorator Fleet': 'dh1.variantExploratorFleet',
+  'Mercantile Magnates': 'dh1.variantMercantileMagnates',
+  'Military Tradition': 'dh1.variantMilitaryTradition',
+  'Rulers of Mankind': 'dh1.variantRulersOfMankind',
+  'Imperial Quartermaster': 'dh1.variantImperialQuartermaster',
+  'House of Iron Spires': 'dh1.variantHouseOfIronSpires',
+  'Blood of Greatness': 'dh1.variantBloodOfGreatness',
+  "Rogue's Fortune": 'dh1.variantRoguesFortune',
+  'Tainted Blood': 'dh1.variantTaintedBlood',
+  'War Martyrs': 'dh1.variantWarMartyrs',
+  'Rebellion Victims': 'dh1.variantRebellionVictims',
+  'Distant Outpost': 'dh1.variantDistantOutpost',
+  'Lost in the Void': 'dh1.variantLostInTheVoid',
+  'No Trace': 'dh1.variantNoTrace',
+  'No Return': 'dh1.variantNoReturn',
+  'Halo of Silence': 'dh1.variantHaloOfSilence',
+  'Broken Mirror': 'dh1.variantBrokenMirror',
+  'Cold Grave': 'dh1.variantColdGrave',
+  'Night of the Daemon': 'dh1.variantNightOfTheDaemon',
+  'Sole Survivor': 'dh1.variantSoleSurvivor',
+  'Dark Altar': 'dh1.variantDarkAltar',
+  'Bloody Throne': 'dh1.variantBloodyThrone',
+  'Forest of Nightmares': 'dh1.variantForestOfNightmares',
+  'Malfian Candidate': 'dh1.variantMalfianCandidate',
+  'Restorer of Glory': 'dh1.variantRestorerOfGlory',
 };
 
 export const ALL_QUIRKS = [
@@ -399,6 +462,193 @@ export const ALL_QUIRKS = [
     ...VOID_BORN_QUIRKS,
   ]),
 ].sort();
+
+/**
+ * Особенности родных миров (core + «Книга Инквизитора»).
+ *
+ * Здесь хранится только имя и короткая механика; полные описания остаются
+ * в книге. Ключи словаря — обязательные для обеих локалей.
+ */
+export interface WorldFeatureRef {
+  /** EN-имя из каталога `content/dh1` (стабильный ключ данных). */
+  name: string;
+  labelKey: string;
+  effectKey: string;
+}
+
+export const WORLD_FEATURES: Record<string, WorldFeatureRef[]> = {
+  'Feral World': [
+    {
+      name: 'Iron Stomach',
+      labelKey: 'dh1.featureIronStomach',
+      effectKey: 'dh1.featureIronStomachEffect',
+    },
+    {
+      name: 'Primitive',
+      labelKey: 'dh1.featurePrimitive',
+      effectKey: 'dh1.featurePrimitiveEffect',
+    },
+    {
+      name: 'Rite of Passage',
+      labelKey: 'dh1.featureRiteOfPassage',
+      effectKey: 'dh1.featureRiteOfPassageEffect',
+    },
+    {
+      name: 'Wilderness Savvy',
+      labelKey: 'dh1.featureWildernessSavvy',
+      effectKey: 'dh1.featureWildernessSavvyEffect',
+    },
+  ],
+  'Hive World': [
+    {
+      name: 'Accustomed to Crowds',
+      labelKey: 'dh1.featureAccustomedToCrowds',
+      effectKey: 'dh1.featureAccustomedToCrowdsEffect',
+    },
+    {
+      name: 'Caves of Steel',
+      labelKey: 'dh1.featureCavesOfSteel',
+      effectKey: 'dh1.featureCavesOfSteelEffect',
+    },
+    {
+      name: 'Hivebound',
+      labelKey: 'dh1.featureHivebound',
+      effectKey: 'dh1.featureHiveboundEffect',
+    },
+    {
+      name: 'Wary',
+      labelKey: 'dh1.featureWary',
+      effectKey: 'dh1.featureWaryEffect',
+    },
+  ],
+  'Imperial World': [
+    {
+      name: 'Blessed Ignorance',
+      labelKey: 'dh1.featureBlessedIgnorance',
+      effectKey: 'dh1.featureBlessedIgnoranceEffect',
+    },
+    {
+      name: 'Hagiography',
+      labelKey: 'dh1.featureHagiography',
+      effectKey: 'dh1.featureHagiographyEffect',
+    },
+    {
+      name: 'Liturgical Familiarity',
+      labelKey: 'dh1.featureLiturgicalFamiliarity',
+      effectKey: 'dh1.featureLiturgicalFamiliarityEffect',
+    },
+    {
+      name: 'Superior Origins',
+      labelKey: 'dh1.featureSuperiorOrigins',
+      effectKey: 'dh1.featureSuperiorOriginsEffect',
+    },
+  ],
+  'Void Born': [
+    {
+      name: 'Charmed',
+      labelKey: 'dh1.featureCharmed',
+      effectKey: 'dh1.featureCharmedEffect',
+    },
+    {
+      name: 'Ill-Omened',
+      labelKey: 'dh1.featureIllOmened',
+      effectKey: 'dh1.featureIllOmenedEffect',
+    },
+    {
+      name: 'Shipwise',
+      labelKey: 'dh1.featureShipwise',
+      effectKey: 'dh1.featureShipwiseEffect',
+    },
+    {
+      name: 'Void Accustomed',
+      labelKey: 'dh1.featureVoidAccustomed',
+      effectKey: 'dh1.featureVoidAccustomedEffect',
+    },
+  ],
+  'Forge World': [
+    {
+      name: 'Fit For Purpose',
+      labelKey: 'dh1.featureFitForPurpose',
+      effectKey: 'dh1.featureFitForPurposeEffect',
+    },
+    {
+      name: 'Stranger to the Cult',
+      labelKey: 'dh1.featureStrangerToTheCult',
+      effectKey: 'dh1.featureStrangerToTheCultEffect',
+    },
+    {
+      name: 'Credo Omnissiah',
+      labelKey: 'dh1.featureCredoOmnissiah',
+      effectKey: 'dh1.featureCredoOmnissiahEffect',
+    },
+  ],
+  'Schola Progenium': [
+    {
+      name: 'Schola Education',
+      labelKey: 'dh1.featureScholaEducation',
+      effectKey: 'dh1.featureScholaEducationEffect',
+    },
+    {
+      name: 'Skill at Arms',
+      labelKey: 'dh1.featureSkillAtArms',
+      effectKey: 'dh1.featureSkillAtArmsEffect',
+    },
+    {
+      name: 'Sheltered Upbringing',
+      labelKey: 'dh1.featureShelteredUpbringing',
+      effectKey: 'dh1.featureShelteredUpbringingEffect',
+    },
+    {
+      name: 'Tempered Will',
+      labelKey: 'dh1.featureTemperedWill',
+      effectKey: 'dh1.featureTemperedWillEffect',
+    },
+  ],
+  'Noble Born': [
+    {
+      name: 'Etiquette',
+      labelKey: 'dh1.featureEtiquette',
+      effectKey: 'dh1.featureEtiquetteEffect',
+    },
+    {
+      name: 'Supremely Connected',
+      labelKey: 'dh1.featureSupremelyConnected',
+      effectKey: 'dh1.featureSupremelyConnectedEffect',
+    },
+    {
+      name: 'Vendetta',
+      labelKey: 'dh1.featureVendetta',
+      effectKey: 'dh1.featureVendettaEffect',
+    },
+    {
+      name: 'Wealth',
+      labelKey: 'dh1.featureWealth',
+      effectKey: 'dh1.featureWealthEffect',
+    },
+  ],
+  'Mind-Cleared': [
+    {
+      name: 'Engram Implantation',
+      labelKey: 'dh1.featureEngramImplantation',
+      effectKey: 'dh1.featureEngramImplantationEffect',
+    },
+    {
+      name: 'Failsafe Control',
+      labelKey: 'dh1.featureFailsafeControl',
+      effectKey: 'dh1.featureFailsafeControlEffect',
+    },
+    {
+      name: 'Imperial Conditioning',
+      labelKey: 'dh1.featureImperialConditioning',
+      effectKey: 'dh1.featureImperialConditioningEffect',
+    },
+    {
+      name: 'Through A Mirror Darkly',
+      labelKey: 'dh1.featureThroughAMirrorDarkly',
+      effectKey: 'dh1.featureThroughAMirrorDarklyEffect',
+    },
+  ],
+};
 
 /**
  * Приметы для родного мира (табл. 1-13).

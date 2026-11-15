@@ -23,6 +23,9 @@ const homeWorldSchema = z.union([
     'Imperial World',
     'Void Born',
     'Forge World',
+    'Schola Progenium',
+    'Noble Born',
+    'Mind-Cleared',
   ]),
   z.literal(''),
 ]);

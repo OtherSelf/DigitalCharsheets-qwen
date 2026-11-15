@@ -9,6 +9,8 @@ import {
   QUIRK_KEYS,
   QUIRKS_BY_HOMEWORLD,
   VARIANT_KEYS,
+  WORLD_FEATURES,
+  WORLD_VARIANT_LABELS,
   WORLD_VARIANTS_BY_HOMEWORLD,
 } from '@/games/dh1/dark-heresy-data';
 import {
@@ -46,6 +48,9 @@ const CORE_HOME_WORLDS = [
   'Imperial World',
   'Void Born',
   'Forge World',
+  'Schola Progenium',
+  'Noble Born',
+  'Mind-Cleared',
 ] as const;
 
 const CORE_CAREERS = [
@@ -62,29 +67,20 @@ const CORE_CAREERS = [
 const t = (lang: 'en' | 'ru', key: string) => translations[lang][key];
 
 function expectTranslation(key: string, label: string) {
-  // Ключи справочных данных уже приходят с редакцией (`dh1.*`/`dh2.*`);
-  // проверяем обе редакции, чтобы равенство словарей DH не разъехалось.
-  const editionMatch = /^dh([12])\.(.*)$/.exec(key);
-  const keys = editionMatch
-    ? [`dh1.${editionMatch[2]}`, `dh2.${editionMatch[2]}`]
-    : [key];
+  // Ключи DH1 проверяются как есть: у dh1 есть собственные данные
+  // (миры «Книги Инквизитора», особенности), которых нет в dh2.
   for (const lang of ['en', 'ru'] as const) {
-    for (const localizedKey of keys) {
-      const value = t(lang, localizedKey);
-      expect(
-        value,
-        `${label}: нет перевода «${localizedKey}» (${lang})`,
-      ).toBeTruthy();
-      expect(
-        value.trim().length,
-        `${label}: пустой перевод «${localizedKey}»`,
-      ).toBeGreaterThan(0);
-    }
+    const value = t(lang, key);
+    expect(value, `${label}: нет перевода «${key}» (${lang})`).toBeTruthy();
+    expect(
+      value.trim().length,
+      `${label}: пустой перевод «${key}» (${lang})`,
+    ).toBeGreaterThan(0);
   }
 }
 
 describe('Dark Heresy: справочные данные против базовой книги', () => {
-  it('содержит все пять родных миров из Таблицы 1-1', () => {
+  it('содержит все восемь родных миров из Таблицы 1-1', () => {
     expect([...DarkHeresyHomeWorlds].sort()).toEqual(
       [...CORE_HOME_WORLDS].sort(),
     );
@@ -159,7 +155,7 @@ describe('Dark Heresy: справочные данные против базов
     ).toBe('+3 Fellowship.');
   });
 
-  it('варианты «прошлого» совпадают по количеству с Таблицами 1-14…1-17 и И-1-2', () => {
+  it('варианты «прошлого» совпадают по количеству с Таблицами 1-14…1-17 и И-1-2…И-1-5', () => {
     // Дикий Мир — 10, Мир-улей — 6, Имперский Мир — 7, Рождённый в Пустоте — 4.
     expect(WORLD_VARIANTS_BY_HOMEWORLD['Feral World']).toHaveLength(10);
     expect(WORLD_VARIANTS_BY_HOMEWORLD['Hive World']).toHaveLength(6);
@@ -174,6 +170,31 @@ describe('Dark Heresy: справочные данные против базов
       'Research Outpost',
       'Explorator Fleet',
     ]);
+    // «Книга Инквизитора»: аристократ — 8 путей, схола — 7 судеб, очищенный — 9 осколков.
+    expect(WORLD_VARIANTS_BY_HOMEWORLD['Noble Born']).toHaveLength(8);
+    expect(WORLD_VARIANTS_BY_HOMEWORLD['Schola Progenium']).toHaveLength(7);
+    expect(WORLD_VARIANTS_BY_HOMEWORLD['Mind-Cleared']).toHaveLength(9);
+  });
+
+  it('у каждого мира есть заголовок таблицы «Прошлого»', () => {
+    for (const world of DarkHeresyHomeWorlds) {
+      const key = WORLD_VARIANT_LABELS[world];
+      expect(key, `мир «${world}» без WORLD_VARIANT_LABELS`).toBeTruthy();
+      expectTranslation(key, world);
+    }
+  });
+
+  it('особенности миров: 3–4 на мир, у каждой есть имя, механика и перевод', () => {
+    for (const world of DarkHeresyHomeWorlds) {
+      const features = WORLD_FEATURES[world];
+      expect(features, `нет особенностей для «${world}»`).toBeTruthy();
+      expect(features.length).toBeGreaterThanOrEqual(3);
+      for (const feature of features) {
+        expect(feature.name.trim()).toBeTruthy();
+        expectTranslation(feature.labelKey, feature.name);
+        expectTranslation(feature.effectKey, `${feature.name} (механика)`);
+      }
+    }
   });
 
   it('у каждого варианта мира есть ключ и перевод', () => {
