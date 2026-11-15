@@ -22,6 +22,7 @@ export const EMPTY_STAT_UPGRADE: DarkHeresyStatUpgrade = [
   false,
   false,
   false,
+  false,
 ];
 
 export function statRecord<T>(

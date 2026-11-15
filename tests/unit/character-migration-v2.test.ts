@@ -79,7 +79,14 @@ describe('миграция листа v2: редакции', () => {
 
     expect(dh.systemId).toBe('dh2');
     expect(dh.stats.influence).toBe(legacy.stats.influence);
-    expect(dh.statUpgrades.influence).toEqual(legacy.statUpgrades.influence);
+    // Ступеней в 2e пять: четвертый флаг DH1-листа сохраняется, пятый — false.
+    expect(dh.statUpgrades.influence).toEqual([
+      false,
+      false,
+      false,
+      false,
+      false,
+    ]);
     expect(dh.fatigue2nd).toEqual({ current: 2, notes: 'second edition' });
     expect(dh.fatigue1st).toBeUndefined();
   });

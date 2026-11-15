@@ -38,6 +38,7 @@ import { SkillsTalentsSection } from './sections/skills-talents-section';
 import { EMPTY_STAT_UPGRADE, pickAllowedStats, statRecord } from './stats';
 import type {
   BodyPart,
+  DarkHeresyStatUpgrade,
   DH2Character as Character,
   DH2Character,
 } from './types';
@@ -610,12 +611,7 @@ export const Dh2Sheet = React.forwardRef<
                                       specific[i] = false;
                                     }
                                   }
-                                  nextUpgrades[char.key] = specific as [
-                                    boolean,
-                                    boolean,
-                                    boolean,
-                                    boolean,
-                                  ];
+                                  nextUpgrades[char.key] = specific as DarkHeresyStatUpgrade;
                                   if (isCharacteristicsEditing) {
                                     setEditableStatUpgrades(nextUpgrades);
                                   } else {
@@ -1662,12 +1658,7 @@ export const Dh2Sheet = React.forwardRef<
                                           specific[i] = false;
                                         }
                                       }
-                                      nextUpgrades[char.key] = specific as [
-                                        boolean,
-                                        boolean,
-                                        boolean,
-                                        boolean,
-                                      ];
+                                      nextUpgrades[char.key] = specific as DarkHeresyStatUpgrade;
                                       if (isCharacteristicsEditing) {
                                         setEditableStatUpgrades(nextUpgrades);
                                       } else {

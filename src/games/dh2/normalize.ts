@@ -53,10 +53,20 @@ const DEFAULT_STATS: RawRecord = {
 
 const DEFAULT_UPGRADES: RawRecord = {
   ...Object.fromEntries(
-    CORE_STAT_KEYS.map((key) => [key, [false, false, false, false]]),
+    CORE_STAT_KEYS.map((key) => [key, [false, false, false, false, false]]),
   ),
-  influence: [false, false, false, false],
+  influence: [false, false, false, false, false],
 };
+
+/**
+ * Ступеней характеристик в 2e пять (Simple…Expert), в листах DH1-стиля было
+ * четыре. Лишние флаги отбрасываем, недостающие добиваем `false`: иначе
+ * пятая ступень никогда не станет доступной.
+ */
+function toFiveFlags(value: unknown): boolean[] {
+  const source = Array.isArray(value) ? value : [];
+  return Array.from({ length: 5 }, (_, index) => Boolean(source[index]));
+}
 
 const DEFAULT_EQUIPMENT = {
   armor: {
@@ -165,13 +175,9 @@ function enforceDh2Fields(character: RawRecord, warnings: string[]): void {
     typeof stats.influence === 'number' ? stats.influence : 30;
   const nextUpgrades: RawRecord = { ...upgrades };
   for (const key of CORE_STAT_KEYS) {
-    nextUpgrades[key] = Array.isArray(upgrades[key])
-      ? upgrades[key]
-      : [false, false, false, false];
+    nextUpgrades[key] = toFiveFlags(upgrades[key]);
   }
-  nextUpgrades.influence = Array.isArray(upgrades.influence)
-    ? upgrades.influence
-    : [false, false, false, false];
+  nextUpgrades.influence = toFiveFlags(upgrades.influence);
   const nextNotes: RawRecord = { ...notes };
   if (typeof notes.influence === 'string') {
     nextNotes.influence = notes.influence;
@@ -194,6 +200,24 @@ function enforceDh2Fields(character: RawRecord, warnings: string[]): void {
   character.stats = nextStats;
   character.statUpgrades = nextUpgrades;
   character.statNotes = nextNotes;
+
+  // Поля генерации 2e: мир/бэкграунд/роль, аптитюды, пси, элитные, журнал.
+  if (typeof character.background !== 'string') character.background = '';
+  if (typeof character.role !== 'string') character.role = '';
+  const aptitudes = asRecord(character.aptitudes);
+  character.aptitudes = {
+    profile: Array.isArray(aptitudes.profile) ? aptitudes.profile : [],
+    chosen: asRecord(aptitudes.chosen),
+    extra: Array.isArray(aptitudes.extra) ? aptitudes.extra : [],
+  };
+  if (!Array.isArray(character.eliteAdvances)) character.eliteAdvances = [];
+  const psy = asRecord(character.psy);
+  character.psy = {
+    rating: typeof psy.rating === 'number' ? psy.rating : 0,
+    disciplines: Array.isArray(psy.disciplines) ? psy.disciplines : [],
+    powers: Array.isArray(psy.powers) ? psy.powers : [],
+  };
+  if (!Array.isArray(character.experienceLog)) character.experienceLog = [];
 
   // Тренировка навыка: `plus30` стало обязательным в типе v2.
   if (Array.isArray(character.skills)) {
