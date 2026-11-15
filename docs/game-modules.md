@@ -49,7 +49,31 @@ src/games/
     index.ts
   dh2/                      independent copy of dh1, actualized separately
     (same file set; keys dh2.*)
+    dh2e-data.ts, dh2e-reference.ts, dh2e-rules.ts
+                            second-edition data pack, generated (see below)
 ```
+
+## Second-edition data pack (dh2)
+
+`src/games/dh2/dh2e-*.ts` are generated files: they carry the 2e reference
+data (home worlds, backgrounds, roles, aptitudes, divinations, skills,
+talents, disciplines, psychic powers, elite advances, XP cost tables) taken
+from the content catalog that lives in the workspace repository
+(`content/dh2/catalog.json` and `content/dh2/rules.json`).
+
+The module never reads the workspace at runtime; the generated files are
+committed. Rebuild after the catalog changes:
+
+```sh
+npm run dh2e:data    # regenerate dh2e-*.ts and dh2.data.* i18n keys
+npm run dh2e:check   # fail if the generated files are stale
+```
+
+`DCS_CONTENT_DIR` overrides the catalog location (default:
+`../DigitalCharsheets-workspace/content/dh2`). The generator owns only the
+`dh2.catalog.*` slice of `src/games/dh2/i18n/{en,ru}.json`; every other key is
+hand-written. `dh2e:check` is a local guard: CI has no workspace checkout, so
+it is not part of `npm run verify`.
 
 ## Plugin manifest
 
