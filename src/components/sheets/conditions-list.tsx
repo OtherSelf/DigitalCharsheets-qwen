@@ -233,7 +233,7 @@ export function ConditionsList({
                       patch(index, { kind: value as ConditionKind })
                     }
                   >
-                    <SelectTrigger className="h-8">
+                    <SelectTrigger className="h-8" aria-label={labels.kind}>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -248,6 +248,7 @@ export function ConditionsList({
                 <ConditionField label={labels.name}>
                   <Input
                     value={condition.name}
+                    aria-label={labels.name}
                     onChange={(event) =>
                       patch(index, { name: event.target.value })
                     }
@@ -257,6 +258,7 @@ export function ConditionsList({
                 <ConditionField label={labels.severity}>
                   <Input
                     value={condition.severity ?? ''}
+                    aria-label={labels.severity}
                     onChange={(event) =>
                       patch(index, { severity: event.target.value })
                     }
@@ -266,6 +268,7 @@ export function ConditionsList({
                 <ConditionField label={labels.effect} className="sm:col-span-2">
                   <Input
                     value={condition.effect ?? ''}
+                    aria-label={labels.effect}
                     onChange={(event) =>
                       patch(index, { effect: event.target.value })
                     }
@@ -279,7 +282,7 @@ export function ConditionsList({
                       patch(index, { source: value as ConditionSource })
                     }
                   >
-                    <SelectTrigger className="h-8">
+                    <SelectTrigger className="h-8" aria-label={labels.source}>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -295,6 +298,7 @@ export function ConditionsList({
               <ConditionField label={labels.notes}>
                 <Textarea
                   value={condition.notes ?? ''}
+                  aria-label={labels.notes}
                   onChange={(event) =>
                     patch(index, { notes: event.target.value })
                   }

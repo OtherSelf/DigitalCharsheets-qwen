@@ -913,5 +913,8 @@
   "dh2.conditions.source.manual": "Вручную",
   "dh2.conditions.source.divination": "Пророчество",
   "dh2.conditions.source.legacy": "Старые данные",
-  "dh2.conditions.title": "Состояния"
+  "dh2.conditions.title": "Состояния",
+  "dh2.personalSection": "Личные данные",
+  "dh2.creationSection": "Создание",
+  "dh2.condition": "Состояние"
 }

@@ -714,5 +714,7 @@
   "dh1.conditions.kind.rudiment": "Рудимент",
   "dh1.conditions.source.manual": "Вручную",
   "dh1.conditions.source.divination": "Пророчество",
-  "dh1.conditions.source.legacy": "Старые данные"
+  "dh1.conditions.source.legacy": "Старые данные",
+  "dh1.personalSection": "Личные данные",
+  "dh1.creationSection": "Создание"
 }
