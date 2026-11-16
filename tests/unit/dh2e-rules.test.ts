@@ -18,11 +18,58 @@ import { DH2E_XP_COST_TABLES } from '@/games/dh2/dh2e-rules';
  * опыт ведёт игрок с ГМ (D10), но таблицы остаются эталоном в данных.
  */
 describe('данные генерации 2e', () => {
-  it('шесть миров, семь бэкграундов, восемь ролей, 19 аптитюд', () => {
-    expect(DH2E_HOMEWORLDS).toHaveLength(6);
-    expect(DH2E_BACKGROUNDS).toHaveLength(7);
-    expect(DH2E_ROLES).toHaveLength(8);
+  it('15 миров, 13 бэкграундов, 12 ролей, 19 аптитюд', () => {
+    expect(DH2E_HOMEWORLDS).toHaveLength(15);
+    expect(DH2E_BACKGROUNDS).toHaveLength(13);
+    expect(DH2E_ROLES).toHaveLength(12);
     expect(DH2E_APTITUDES).toHaveLength(19);
+  });
+
+  it('опции дополнений Enemies Within/Without/Beyond доступны', () => {
+    const worldIds = DH2E_HOMEWORLDS.map((item) => item.id);
+    const backgroundIds = DH2E_BACKGROUNDS.map((item) => item.id);
+    const roleIds = DH2E_ROLES.map((item) => item.id);
+    for (const id of [
+      'agri-world',
+      'feudal-world',
+      'frontier-world',
+      'daemon-world',
+      'penal-colony',
+      'quarantine-world',
+      'death-world',
+      'garden-world',
+      'research-station',
+    ]) {
+      expect(worldIds, id).toContain(id);
+    }
+    for (const id of [
+      'adepta-sororitas',
+      'mutant',
+      'heretek',
+      'imperial-navy',
+      'rogue-trader-fleet',
+      'exorcised',
+    ]) {
+      expect(backgroundIds, id).toContain(id);
+    }
+    for (const id of ['fanatic', 'penitent', 'ace', 'crusader']) {
+      expect(roleIds, id).toContain(id);
+    }
+  });
+
+  it('стартовые черты, Порча и малигнантность заданы у бэкграундов', () => {
+    const mutant = DH2E_BACKGROUNDS.find((item) => item.id === 'mutant');
+    expect(mutant?.startingTraits?.choose).toBe(1);
+    expect(mutant?.startingTraits?.keys).toHaveLength(9);
+    expect(mutant?.startingCorruption).toBe(10);
+
+    const heretek = DH2E_BACKGROUNDS.find((item) => item.id === 'heretek');
+    expect(heretek?.startingTraits?.keys).toHaveLength(1);
+    expect(heretek?.startingTraits?.choose).toBeUndefined();
+
+    const exorcised = DH2E_BACKGROUNDS.find((item) => item.id === 'exorcised');
+    expect(exorcised?.startingMalignancy).toBe(1);
+    expect(exorcised?.startingCorruption).toBeUndefined();
   });
 
   it('у каждой роли пять аптитюд, у мира — аптитюда и раны', () => {

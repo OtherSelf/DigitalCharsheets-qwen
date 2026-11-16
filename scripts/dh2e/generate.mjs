@@ -249,6 +249,19 @@ function buildData(catalog, rules, i18n) {
 
   const backgrounds = ofKind('background').map((entity) => {
     const props = entity.props;
+    const traits = props.startingTraits;
+    let startingTraits;
+    if (traits?.of?.length) {
+      startingTraits = {
+        ...(traits.choose ? { choose: traits.choose } : {}),
+        keys: traits.of.map((trait, index) => {
+          const key = `${I18N_PREFIX}background.${slugOf(entity.id)}.trait.${index}`;
+          i18n.en[key] = trait.en;
+          i18n.ru[key] = trait.ru;
+          return key;
+        }),
+      };
+    }
     return {
       id: slugOf(entity.id),
       labelKey: ownLabelKey(entity, 'background', i18n),
@@ -259,6 +272,13 @@ function buildData(catalog, rules, i18n) {
       bonusKeys: backgroundBonusKeys(entity, i18n),
       aptitudeChoice: props.aptitudeChoice?.of ?? [],
       recommendedRoleIds: (props.recommendedRoles ?? []).map(slugOf),
+      ...(startingTraits ? { startingTraits } : {}),
+      ...(typeof props.startingCorruption === 'number'
+        ? { startingCorruption: props.startingCorruption }
+        : {}),
+      ...(typeof props.startingMalignancy === 'number'
+        ? { startingMalignancy: props.startingMalignancy }
+        : {}),
     };
   });
 

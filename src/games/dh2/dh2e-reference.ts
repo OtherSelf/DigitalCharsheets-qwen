@@ -848,6 +848,27 @@ export const DH2E_TALENTS: readonly Dh2eTalent[] = [
     tier: 2,
     aptitudeSlots: ['weapon-skill', 'finesse'],
   },
+  {
+    id: 'flagellant',
+    labelKey: 'dh2.catalog.talent.flagellant',
+    tier: 1,
+    aptitudeSlots: ['offence', 'toughness'],
+    hintKey: 'dh2.catalog.talent.flagellant.hint',
+  },
+  {
+    id: 'bodyguard',
+    labelKey: 'dh2.catalog.talent.bodyguard',
+    tier: 1,
+    aptitudeSlots: ['agility', 'defence'],
+    hintKey: 'dh2.catalog.talent.bodyguard.hint',
+  },
+  {
+    id: 'hotshot-pilot',
+    labelKey: 'dh2.catalog.talent.hotshot-pilot',
+    tier: 2,
+    aptitudeSlots: ['agility', 'tech'],
+    hintKey: 'dh2.catalog.talent.hotshot-pilot.hint',
+  },
 ];
 
 export const DH2E_DISCIPLINES: readonly Dh2eDiscipline[] = [
@@ -1187,5 +1208,27 @@ export const DH2E_ELITES: readonly Dh2eEliteAdvance[] = [
       'dh2.catalog.elite.untouchable.change.3',
     ],
     prereqText: 'A Void in the Warp (нельзя с Psyker); GM guidance',
+  },
+  {
+    id: 'sister-of-battle',
+    labelKey: 'dh2.catalog.elite.sister-of-battle',
+    cost: 750,
+    changeKeys: [
+      'dh2.catalog.elite.sister-of-battle.change.0',
+      'dh2.catalog.elite.sister-of-battle.change.1',
+      'dh2.catalog.elite.sister-of-battle.change.2',
+      'dh2.catalog.elite.sister-of-battle.change.3',
+    ],
+    prereqText: 'Influence 50; Willpower 40; Adepta Sororitas background',
+  },
+  {
+    id: 'astropath',
+    labelKey: 'dh2.catalog.elite.astropath',
+    cost: 300,
+    changeKeys: [
+      'dh2.catalog.elite.astropath.change.0',
+      'dh2.catalog.elite.astropath.change.1',
+    ],
+    prereqText: 'Psyker elite advance; Adeptus Astra Telepathica background',
   },
 ];

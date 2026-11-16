@@ -118,12 +118,12 @@ describe.each([
     expect(ru['dh2.catalog.elite.untouchable']).toBe('Неприкасаемый');
   });
 
-  it('DH2: подсказки 17 талантов, видимых в создании', () => {
+  it('DH2: подсказки 20 талантов, видимых в создании', () => {
     if (prefix !== 'dh2') return;
     const hints = Object.keys(ru).filter((key) =>
       /^dh2\.catalog\.talent\..+\.hint$/.test(key),
     );
-    expect(hints).toHaveLength(17);
+    expect(hints).toHaveLength(20);
     expect(ru['dh2.catalog.talent.catfall']).toBe('Мягкое Приземление');
     expect(ru['dh2.catalog.talent.catfall.hint']).toBe(
       'Уменьшает урон от падения.',
