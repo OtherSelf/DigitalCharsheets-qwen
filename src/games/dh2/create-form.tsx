@@ -147,6 +147,7 @@ export function DarkHeresyCreateForm({ onCreated }: CreateFormProps) {
     influence: z.coerce.number().int(),
     wounds: z.coerce.number().int(),
     fatePoints: z.coerce.number().int(),
+    creationAcquisitions: z.coerce.number().int().min(0).optional(),
   });
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -175,6 +176,7 @@ export function DarkHeresyCreateForm({ onCreated }: CreateFormProps) {
       influence: 30,
       wounds: 10,
       fatePoints: 1,
+      creationAcquisitions: 0,
       height: '',
       weight: '',
       age: '',
@@ -190,6 +192,10 @@ export function DarkHeresyCreateForm({ onCreated }: CreateFormProps) {
   const watchedBackground = form.watch('background');
   const watchedRole = form.watch('role');
   const watchedDivination = form.watch('divination');
+  const watchedInfluence = form.watch('influence');
+  const watchedAcquisitions = form.watch('creationAcquisitions');
+  const influenceLimit = Math.floor((Number(watchedInfluence) || 0) / 10);
+  const acquisitions = Number(watchedAcquisitions) || 0;
 
   // Выборы, которые правила оставляют игроку (D11): аптитюды, дубли,
   // талант роли и «одно из» стартового пакета. Живут вне zod-схемы: это не
@@ -710,6 +716,15 @@ export function DarkHeresyCreateForm({ onCreated }: CreateFormProps) {
                   );
                 })}
               </div>
+              <p className="text-muted-foreground text-xs">
+                {t('dh2.influenceLimitHint')}: {influenceLimit}.{' '}
+                {t('dh2.acquisitionAvailabilityHint')}
+              </p>
+              {acquisitions > influenceLimit && (
+                <p className="text-destructive text-xs">
+                  {t('dh2.acquisitionLimitExceeded')}
+                </p>
+              )}
             </section>
 
             <section className="space-y-3">
@@ -809,6 +824,28 @@ export function DarkHeresyCreateForm({ onCreated }: CreateFormProps) {
                     )}
                   />
                 ))}
+                <FormField
+                  control={form.control}
+                  name="creationAcquisitions"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('dh2.creationAcquisitions')}</FormLabel>
+                      <FormControl>
+                        <Input type="number" min={0} {...field} />
+                      </FormControl>
+                      <p
+                        className={
+                          acquisitions > influenceLimit
+                            ? 'text-destructive text-xs'
+                            : 'text-muted-foreground text-xs'
+                        }
+                      >
+                        {acquisitions} / {influenceLimit}
+                      </p>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
               {woundsRange && fateRange && (
                 <p className="text-muted-foreground text-xs">

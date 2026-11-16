@@ -58,6 +58,7 @@ import {
   type DH2Character,
 } from '../types';
 import { EditSaveButton } from './dh-ui-helpers';
+import { RequisitionBlock } from './requisition-block';
 
 const defaultEquipment = {
   armor: {
@@ -417,6 +418,7 @@ export const EquipmentInventorySection = React.forwardRef<
             </div>
             <CollapsibleContent>
               <div className={cn('space-y-6', isCompactView ? 'p-3' : 'p-6')}>
+                <RequisitionBlock character={character} />
                 <div>
                   <Collapsible
                     open={!isCompactView || isArmorExpanded}
