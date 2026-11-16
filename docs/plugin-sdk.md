@@ -78,8 +78,9 @@ state from a plugin component:
 | `useCharacterContext()` | read/update sheets (`getCharacter`, `updateCharacter`, `addCharacter`, `deleteCharacter`, `showEditButtons`, `hideNotes`, `isCompactView`, `toast`, …) |
 | `useTranslation()` | `t(key)` for the current language (always full `ns.key`) |
 | `useToast()` | host toasts |
+| `NarrativeSheet` | right-hand Sheet for `notes`/`backstory`: markdown view, smart mode (empty opens in edit), Edit/Save/Cancel inside the Sheet |
 
-The module re-exports the host hooks, so plugin internals stay decoupled from
+The module re-exports the host hooks and `NarrativeSheet`, so plugin internals stay decoupled from
 `@/context/*` / `@/hooks/*` and the boundary test keeps zero legacy entries.
 Types come from `@/games/types` / `@/games/plugin-api`; only the plugin's own
 `types.ts` describes the sheet shape.

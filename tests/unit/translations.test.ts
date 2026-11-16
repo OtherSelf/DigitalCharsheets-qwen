@@ -98,7 +98,7 @@ const ru = translations.ru;
 // Значения, которые законно совпадают в en/ru: имена систем, числовой
 // placeholder и маска пароля. Новые совпадения должны быть осознанными.
 const NAMESPACE_RE =
-  /^(common|auth|admin|dnd|dh1|dh2|settings|demo|io|games|share|history)\./;
+  /^(common|auth|admin|dnd|dh1|dh2|settings|demo|io|games|share|history|narrative)\./;
 
 const SAME_VALUE_ALLOWED = new Set([
   'dh1.placeholderAge',
