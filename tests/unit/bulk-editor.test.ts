@@ -211,6 +211,36 @@ describe('таблицы жизненных показателей', () => {
     expect(patch.experience).toBe(900);
   });
 
+  it('dh2: psy rating в колонках и патче, элитные/аптитюды — не bulk', () => {
+    const table = tableOf('dh2', 'dh2-vitals');
+    expect(table.columns.map((column) => column.key)).toContain('psyRating');
+    const character = {
+      wounds: { current: 5, max: 12, notes: '' },
+      fatePoints: { current: 1, max: 3, notes: '' },
+      insanityPoints: { total: 2, notes: '' },
+      corruptionPoints: { total: 0, notes: '' },
+      psy: { rating: 2, disciplines: ['Telepathy'], powers: [] },
+      experience: 500,
+    };
+    const values = valuesOf(table, character);
+    expect(values.psyRating).toBe(2);
+    const patch = table.apply(character as never, {
+      woundsMax: 20,
+      fateMax: 5,
+      insanity: 1,
+      corruption: 0,
+      psyRating: 3,
+      experience: 900,
+    }) as Record<string, any>;
+    expect(patch.psy).toEqual({
+      rating: 3,
+      disciplines: ['Telepathy'],
+      powers: [],
+    });
+    expect(patch.wounds.max).toBe(20);
+    expect(patch.experience).toBe(900);
+  });
+
   it('dnd5e: уровень/HP/AC/бонус/скорость/опыт, опыт пишется в оба поля', () => {
     const table = tableOf('dnd5e', 'dnd5e-vitals');
     const character = {
