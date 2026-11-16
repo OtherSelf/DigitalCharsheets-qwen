@@ -78,7 +78,9 @@ export type DH2ExperienceKind =
   | 'psy-rating'
   | 'elite-advance'
   /** Ручная покупка: цена и назначение вводит игрок (D4). */
-  | 'other';
+  | 'other'
+  /** Начисление или штраф опыта; удаление снимает его с `experience`. */
+  | 'award';
 
 /** Строка журнала покупок: цена по таблицам 2-2/2-4/2-6 и ссылка на покупку. */
 export interface DH2ExperienceEntry {

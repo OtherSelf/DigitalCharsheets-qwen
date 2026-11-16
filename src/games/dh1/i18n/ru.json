@@ -716,5 +716,10 @@
   "dh1.conditions.source.divination": "Пророчество",
   "dh1.conditions.source.legacy": "Старые данные",
   "dh1.personalSection": "Личные данные",
-  "dh1.creationSection": "Создание"
+  "dh1.creationSection": "Создание",
+  "dh1.addExperience": "Добавить ОП",
+  "dh1.addExperienceHint": "Положительное число — награда, отрицательное — штраф. Запись попадает в журнал опыта; её удаление отменяет начисление.",
+  "dh1.addExperienceWhat": "За что",
+  "dh1.addExperienceConfirm": "Добавить",
+  "dh1.experienceAward": "Награда опыта"
 }

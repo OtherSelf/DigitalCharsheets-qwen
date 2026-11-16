@@ -916,5 +916,10 @@
   "dh2.conditions.title": "Conditions",
   "dh2.personalSection": "Personal data",
   "dh2.creationSection": "Creation",
-  "dh2.condition": "Condition"
+  "dh2.condition": "Condition",
+  "dh2.addExperience": "Add XP",
+  "dh2.addExperienceHint": "Positive numbers are awards, negative are penalties. The entry goes to the XP journal; deleting it reverts the change.",
+  "dh2.addExperienceWhat": "What was it for",
+  "dh2.addExperienceConfirm": "Add",
+  "dh2.experienceKind.award": "XP award"
 }

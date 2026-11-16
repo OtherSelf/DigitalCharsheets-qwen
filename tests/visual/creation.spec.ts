@@ -971,3 +971,145 @@ test.describe('добавление оружия на листе DH', () => {
     await expectSavedWeapon(page, 'melee', 'New melee weapon');
   });
 });
+
+/**
+ * ─── LANDMARK: XP AWARD ───────────────────────────────────────────────────
+ * Кнопка «Добавить ОП» рядом со «Spend EXP»: положительное число — награда,
+ * отрицательное — штраф. Начисление пишется в журнал опыта и увеличивает
+ * `experience`; удаление записи из журнала отменяет начисление ровно на её
+ * стоимость.
+ */
+test.describe('начисление опыта на листе DH', () => {
+  async function openProgression(page: Page) {
+    const progression = page.locator('#progression-section');
+    if (!(await progression.isVisible().catch(() => false))) {
+      await page
+        .getByRole('button', { name: 'Progression', exact: true })
+        .click();
+    }
+    await expect(progression).toBeVisible();
+    return progression;
+  }
+
+  async function awardExp(
+    page: Page,
+    amount: string,
+    note: string,
+    labels: { button: string; amount: string; what: string; confirm: string },
+  ) {
+    await page
+      .getByRole('button', { name: labels.button, exact: true })
+      .click();
+    const dialog = page.getByRole('dialog');
+    await expect(dialog).toBeVisible();
+    // Пресет по умолчанию — 100, поле свободное.
+    await expect(dialog.getByLabel(labels.amount)).toHaveValue('100');
+    await dialog.getByLabel(labels.amount).fill(amount);
+    await dialog.getByLabel(labels.what).fill(note);
+    await dialog.getByRole('button', { name: labels.confirm }).click();
+    await expect(dialog).toHaveCount(0);
+  }
+
+  async function expectExperience(page: Page, expected: number) {
+    await expect
+      .poll(async () => (await fetchCharacters(page))[0].experience)
+      .toBe(expected);
+  }
+
+  test('DH1: награда и штраф пишутся в журнал и отменяются', async ({
+    page,
+  }) => {
+    await prepare(page.context(), { authenticated: false, theme: 'light' });
+    const account = await registerAccount(page, 'dh1-award', 'DH1 Award');
+    const created = await page.request.post('/api/characters', {
+      data: { systemId: 'dh1', name: 'DH1 Award' },
+    });
+    expect([200, 201], 'создание листа').toContain(created.status());
+    const { id } = (await created.json()) as { id: string };
+    await signInViaUI(page, account);
+    await openApp(page, sheetPath(id));
+    const progression = await openProgression(page);
+
+    const labels = {
+      button: 'Add EXP',
+      amount: 'XP amount',
+      what: 'What was it for',
+      confirm: 'Add',
+    };
+    const before = (await fetchCharacters(page))[0].experience as number;
+
+    await awardExp(page, '100', 'Session 1', labels);
+    await expectExperience(page, before + 100);
+    await expect
+      .poll(async () =>
+        (await fetchCharacters(page))[0].experienceLog.find(
+          (entry: { label: string }) => entry.label === 'Session 1',
+        ),
+      )
+      .toMatchObject({ cost: 100, kind: 'award' });
+
+    // Запись видна в журнале опыта.
+    await progression
+      .getByRole('button', { name: 'XP log', exact: true })
+      .click();
+    const journal = page.getByRole('dialog');
+    await expect(journal.getByText('Session 1')).toBeVisible();
+    await expect(journal.getByText('100', { exact: true })).toBeVisible();
+
+    // Удаление записи снимает начисленное.
+    await journal.getByRole('button', { name: 'Delete entry' }).click();
+    await expectExperience(page, before);
+    await page.keyboard.press('Escape');
+
+    // Отрицательное число — штраф; удаление возвращает опыт.
+    await awardExp(page, '-50', 'Penalty', labels);
+    await expectExperience(page, before - 50);
+    await progression
+      .getByRole('button', { name: 'XP log', exact: true })
+      .click();
+    const penaltyJournal = page.getByRole('dialog');
+    await expect(penaltyJournal.getByText('Penalty')).toBeVisible();
+    await penaltyJournal.getByRole('button', { name: 'Delete entry' }).click();
+    await expectExperience(page, before);
+  });
+
+  test('DH2: награда пишется в журнал и отменяется', async ({ page }) => {
+    await prepare(page.context(), { authenticated: false, theme: 'light' });
+    const account = await registerAccount(page, 'dh2-award', 'DH2 Award');
+    const created = await page.request.post('/api/characters', {
+      data: { systemId: 'dh2', name: 'DH2 Award' },
+    });
+    expect([200, 201], 'создание листа').toContain(created.status());
+    const { id } = (await created.json()) as { id: string };
+    await signInViaUI(page, account);
+    await openApp(page, sheetPath(id));
+    const progression = await openProgression(page);
+
+    const labels = {
+      button: 'Add XP',
+      amount: 'XP amount',
+      what: 'What was it for',
+      confirm: 'Add',
+    };
+
+    await awardExp(page, '100', 'Session 1', labels);
+    await expect
+      .poll(async () =>
+        (await fetchCharacters(page))[0].experienceLog.find(
+          (entry: { ref: string }) => entry.ref === 'Session 1',
+        ),
+      )
+      .toMatchObject({ cost: 100, kind: 'award' });
+
+    await progression
+      .getByRole('button', { name: 'XP log', exact: true })
+      .click();
+    const journal = page.getByRole('dialog');
+    await expect(journal.getByText('Session 1')).toBeVisible();
+    await expect(journal.getByText('XP award')).toBeVisible();
+    await journal.getByRole('button', { name: 'Delete entry' }).click();
+    await expect
+      .poll(async () => (await fetchCharacters(page))[0].experience)
+      .toBe(1000);
+  });
+});

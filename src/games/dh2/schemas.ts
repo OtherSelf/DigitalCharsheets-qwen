@@ -201,6 +201,7 @@ export const darkHeresyBaseFields = {
         'psy-rating',
         'elite-advance',
         'other',
+        'award',
       ]),
       ref: z.string(),
       cost: z.number(),

@@ -235,6 +235,11 @@ export interface DH1ExperienceEntry {
   label: string;
   cost: number;
   createdAt: string;
+  /**
+   * `award` — начисление или штраф опыта (кнопка «Добавить ОП»). Покупки
+   * поле не пишут; удаление `award` снимает начисленное с `experience`.
+   */
+  kind?: 'award';
 }
 
 /** Детали Безумия (степень, травма, расстройства, серьёзность). */

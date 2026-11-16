@@ -916,5 +916,10 @@
   "dh2.conditions.title": "Состояния",
   "dh2.personalSection": "Личные данные",
   "dh2.creationSection": "Создание",
-  "dh2.condition": "Состояние"
+  "dh2.condition": "Состояние",
+  "dh2.addExperience": "Добавить ОП",
+  "dh2.addExperienceHint": "Положительное число — награда, отрицательное — штраф. Запись попадает в журнал опыта; её удаление отменяет начисление.",
+  "dh2.addExperienceWhat": "За что",
+  "dh2.addExperienceConfirm": "Добавить",
+  "dh2.experienceKind.award": "Награда опыта"
 }

@@ -829,6 +829,10 @@ export const ProgressionSection = ({
   const [isJournalOpen, setIsJournalOpen] = React.useState(false);
   const [spendAmount, setSpendAmount] = React.useState(0);
   const [spendWhat, setSpendWhat] = React.useState('');
+  const [isAwardOpen, setIsAwardOpen] = React.useState(false);
+  // Строкой, а не числом: иначе нельзя ввести минус или промежуточное «-».
+  const [awardAmount, setAwardAmount] = React.useState('100');
+  const [awardWhat, setAwardWhat] = React.useState('');
   const [eliteToAdd, setEliteToAdd] = React.useState('');
 
   React.useEffect(() => {
@@ -838,9 +842,42 @@ export const ProgressionSection = ({
   const available =
     (character.experience ?? 0) - (character.totalExpSpent ?? 0);
 
+  const handleAwardExp = () => {
+    const amount = Number.parseInt(awardAmount, 10) || 0;
+    if (amount === 0) return;
+    const note = awardWhat.trim() || t('dh2.experienceKind.award');
+    updateCharacter(character.id, {
+      experience: (character.experience ?? 0) + amount,
+      experienceLog: [
+        ...character.experienceLog,
+        {
+          id: `award:${Date.now()}`,
+          kind: 'award',
+          ref: note,
+          cost: amount,
+          createdAt: new Date().toISOString(),
+        },
+      ],
+    });
+    setIsAwardOpen(false);
+    setAwardAmount('100');
+    setAwardWhat('');
+  };
+
   const handleDeleteExperience = (entryId: string) => {
     const entry = character.experienceLog.find((item) => item.id === entryId);
     if (!entry) return;
+    if (entry.kind === 'award') {
+      // Удаление начисления снимает ровно добавленное (штраф вернётся со
+      // знаком: cost < 0 → experience += |cost|).
+      updateCharacter(character.id, {
+        experience: (character.experience ?? 0) - entry.cost,
+        experienceLog: character.experienceLog.filter(
+          (item) => item.id !== entryId,
+        ),
+      });
+      return;
+    }
     updateCharacter(character.id, {
       totalExpSpent: Math.max(0, character.totalExpSpent - entry.cost),
       experienceLog: character.experienceLog.filter(
@@ -926,7 +963,19 @@ export const ProgressionSection = ({
         >
           {t('dh2.experience')}
         </CardTitle>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              setAwardAmount('100');
+              setAwardWhat('');
+              setIsAwardOpen(true);
+            }}
+          >
+            {t('dh2.addExperience')}
+          </Button>
           <Button
             type="button"
             variant="outline"
@@ -1234,6 +1283,40 @@ export const ProgressionSection = ({
           <DialogFooter>
             <Button type="button" onClick={handleSpend}>
               {t('dh2.spendConfirm')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isAwardOpen} onOpenChange={setIsAwardOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('dh2.addExperience')}</DialogTitle>
+            <DialogDescription>{t('dh2.addExperienceHint')}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="space-y-1">
+              <Label htmlFor="award-amount">{t('dh2.spendAmount')}</Label>
+              <Input
+                id="award-amount"
+                type="number"
+                step={1}
+                value={awardAmount}
+                onChange={(e) => setAwardAmount(e.target.value)}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="award-what">{t('dh2.addExperienceWhat')}</Label>
+              <Input
+                id="award-what"
+                value={awardWhat}
+                onChange={(e) => setAwardWhat(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="button" onClick={handleAwardExp}>
+              {t('dh2.addExperienceConfirm')}
             </Button>
           </DialogFooter>
         </DialogContent>

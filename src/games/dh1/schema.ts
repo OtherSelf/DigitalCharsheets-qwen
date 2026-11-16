@@ -47,6 +47,7 @@ export const dh1CharacterSchema: z.ZodType<DH1Character> = z.looseObject({
         label: z.string(),
         cost: z.number(),
         createdAt: z.string(),
+        kind: z.enum(['award']).optional(),
       }),
     )
     .optional(),
