@@ -101,6 +101,33 @@ describe.each([
     expect(ru['dh2.catalog.discipline.telekinesis']).toBe('Телекинез');
   });
 
+  it('DH2: 19 склонностей и 3 элитных улучшения', () => {
+    if (prefix !== 'dh2') return;
+    expect(ru['dh2.catalog.aptitude.defence']).toBe('Защита');
+    expect(ru['dh2.catalog.aptitude.offence']).toBe('Нападение');
+    expect(ru['dh2.catalog.aptitude.tech']).toBe('Техно');
+    expect(ru['dh2.catalog.aptitude.knowledge']).toBe('Познание');
+    expect(ru['dh2.catalog.aptitude.fieldcraft']).toBe('Полевое');
+    expect(ru['dh2.catalog.aptitude.social']).toBe('Общение');
+    expect(ru['dh2.catalog.aptitude.weapon-skill']).toBe('Навык Рукопашной');
+    expect(ru['dh2.catalog.elite.inquisitor']).toBe('Инквизитор');
+    expect(ru['dh2.catalog.elite.psyker']).toBe('Псайкер');
+    expect(ru['dh2.catalog.elite.untouchable']).toBe('Неприкасаемый');
+  });
+
+  it('DH2: подсказки 17 талантов, видимых в создании', () => {
+    if (prefix !== 'dh2') return;
+    const hints = Object.keys(ru).filter((key) =>
+      /^dh2\.catalog\.talent\..+\.hint$/.test(key),
+    );
+    expect(hints).toHaveLength(17);
+    expect(ru['dh2.catalog.talent.catfall']).toBe('Мягкое Приземление');
+    expect(ru['dh2.catalog.talent.catfall.hint']).toBe(
+      'Уменьшает урон от падения.',
+    );
+    expect(ru['dh2.catalog.talent.weapon-training']).toBe('Выучка с Оружием');
+  });
+
   it('DH2: четыре навыка исправлены по RU-листу', () => {
     if (prefix !== 'dh2') return;
     expect(ru['dh2.catalog.skill.awareness']).toBe('Бдительность');

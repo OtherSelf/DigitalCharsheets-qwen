@@ -65,6 +65,7 @@ import {
   divinationLabel,
   homeWorldLabel,
   roleLabel,
+  talentHint,
   talentLabel,
 } from './dh2e-labels';
 import { fateRangeFor, woundsRangeFor } from './dh2e-starting-profile';
@@ -525,6 +526,7 @@ export function DarkHeresyCreateForm({ onCreated }: CreateFormProps) {
                         kind="talent"
                         items={background.startingTalents}
                         chosen={chosenTalentValues}
+                        hintFor={(id) => talentHint(id, t)}
                       />
                       {background.bonusKeys.map((key) => (
                         <p key={key} className="text-muted-foreground text-xs">
@@ -620,6 +622,9 @@ export function DarkHeresyCreateForm({ onCreated }: CreateFormProps) {
                               value: id,
                               label: talentLabel(id, t),
                             }))}
+                            hint={
+                              roleTalent ? talentHint(roleTalent, t) : undefined
+                            }
                             onChange={setRoleTalent}
                           />
                         )}
@@ -668,6 +673,14 @@ export function DarkHeresyCreateForm({ onCreated }: CreateFormProps) {
                                 value: option.key,
                                 label: grantOptionLabel(option, t),
                               }))}
+                              hint={
+                                choice.kind === 'talent' && grantSelected[key]
+                                  ? talentHint(
+                                      grantSelected[key].split(':')[0],
+                                      t,
+                                    )
+                                  : undefined
+                              }
                               onChange={(value) =>
                                 setGrantSelected((prev) => ({
                                   ...prev,
@@ -959,11 +972,13 @@ function GrantList({
   kind,
   items,
   chosen,
+  hintFor,
 }: {
   title: string;
   kind: 'skill' | 'talent';
   items: readonly GrantItem[];
   chosen: readonly string[] | undefined;
+  hintFor?: (id: string) => string | undefined;
 }) {
   const { t } = useTranslation();
   if (items.length === 0) return null;
@@ -988,11 +1003,38 @@ function GrantList({
       return grantOptionLabel(grantOption(kind, item), t);
     })
     .join(', ');
+  const fixedHints =
+    kind === 'talent' && hintFor
+      ? Array.from(
+          new Set(
+            items
+              .filter((item) => !isGrantChoice(item))
+              .map(
+                (item) =>
+                  grantOption(
+                    kind,
+                    item as Dh2eSkillGrant | Dh2eTalentGrant,
+                  ).key.split(':')[0],
+              ),
+          ),
+        )
+          .map((id) => hintFor(id))
+          .filter((hint): hint is string => Boolean(hint))
+      : [];
   return (
-    <p className="text-xs">
-      <span className="text-muted-foreground">{title}: </span>
-      {text}
-    </p>
+    <div className="space-y-0.5">
+      <p className="text-xs">
+        <span className="text-muted-foreground">{title}: </span>
+        {text}
+      </p>
+      {fixedHints.length > 0 && (
+        <div className="text-muted-foreground space-y-0.5 pl-4 text-xs">
+          {fixedHints.map((hint, index) => (
+            <p key={index}>{hint}</p>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -1002,12 +1044,14 @@ function ChoiceSelect({
   value,
   placeholder,
   options,
+  hint,
   onChange,
 }: {
   label: string;
   value: string;
   placeholder: string;
   options: readonly { value: string; label: string }[];
+  hint?: string;
   onChange: (value: string) => void;
 }) {
   const id = React.useId();
@@ -1028,6 +1072,7 @@ function ChoiceSelect({
           ))}
         </SelectContent>
       </Select>
+      {hint ? <p className="text-muted-foreground text-xs">{hint}</p> : null}
     </div>
   );
 }

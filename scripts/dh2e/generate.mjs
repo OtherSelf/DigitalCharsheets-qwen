@@ -332,15 +332,25 @@ function buildReference(catalog, i18n) {
     specialist: Boolean(entity.props.specialist),
   }));
 
-  const talents = ofKind('talent').map((entity) => ({
-    id: slugOf(entity.id),
-    labelKey: ownLabelKey(entity, 'talent', i18n),
-    tier: entity.props.tier,
-    aptitudeSlots: (entity.props.aptitudes ?? []).map(aptitudeSlot),
-    ...(entity.props.eliteAdvance
-      ? { eliteAdvance: entity.props.eliteAdvance }
-      : {}),
-  }));
+  const talents = ofKind('talent').map((entity) => {
+    const hint = entity.props.hint;
+    let hintKey;
+    if (hint?.en && hint?.ru) {
+      hintKey = `${I18N_PREFIX}talent.${slugOf(entity.id)}.hint`;
+      i18n.en[hintKey] = hint.en;
+      i18n.ru[hintKey] = hint.ru;
+    }
+    return {
+      id: slugOf(entity.id),
+      labelKey: ownLabelKey(entity, 'talent', i18n),
+      tier: entity.props.tier,
+      aptitudeSlots: (entity.props.aptitudes ?? []).map(aptitudeSlot),
+      ...(hintKey ? { hintKey } : {}),
+      ...(entity.props.eliteAdvance
+        ? { eliteAdvance: entity.props.eliteAdvance }
+        : {}),
+    };
+  });
 
   const disciplines = ofKind('psychic-discipline').map((entity) => ({
     id: slugOf(entity.id),

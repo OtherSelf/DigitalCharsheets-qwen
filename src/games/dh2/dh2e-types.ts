@@ -108,6 +108,7 @@ export interface Dh2eSkill {
 export interface Dh2eTalent {
   readonly id: string;
   readonly labelKey: string;
+  readonly hintKey?: string;
   readonly tier: number;
   readonly aptitudeSlots: readonly Dh2eAptitudeSlot[];
   readonly eliteAdvance?: string;
