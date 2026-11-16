@@ -1,6 +1,13 @@
 import { expect, test, type Page } from '@playwright/test';
 
-import { prepare, registerViaUI, sheetIdFromUrl, signInViaUI } from './helpers';
+import {
+  openApp,
+  prepare,
+  registerViaUI,
+  sheetIdFromUrl,
+  sheetPath,
+  signInViaUI,
+} from './helpers';
 
 /**
  * Функциональные (без эталонных PNG) сценарии «авторизация → создание
@@ -837,5 +844,130 @@ test.describe('черновик гостя и вход в аккаунт', () =>
       await page.evaluate(() => sessionStorage.getItem('pending_character')),
       'черновик снят после создания',
     ).toBeNull();
+  });
+});
+
+/**
+ * ─── LANDMARK: WEAPON ADD REGRESSION ───────────────────────────────────────
+ * Кнопку добавления вынесли из аккордеона «Not equipped» (b1b797a), а новый
+ * элемент рендерится только в раскрытом контенте: при свёрнутом списке клик
+ * выглядел как «ничего не произошло». Проверяем именно ВИДИМОСТЬ поля —
+ * проверка через evaluateAll по value прошла бы и для контрола, которого нет
+ * в DOM.
+ */
+test.describe('добавление оружия на листе DH', () => {
+  async function openEmptyEquipment(
+    page: Page,
+    account: { username: string; password: string },
+    systemId: 'dh1' | 'dh2',
+    name: string,
+  ) {
+    const created = await page.request.post('/api/characters', {
+      data: { systemId, name },
+    });
+    expect([200, 201], 'создание пустого листа').toContain(created.status());
+    const { id } = (await created.json()) as { id: string };
+
+    await signInViaUI(page, account);
+    await openApp(page, sheetPath(id));
+
+    const equipment = page.locator('#equipment-section');
+    if (!(await equipment.isVisible().catch(() => false))) {
+      // На мобильном секция скрыта за компактной навигацией.
+      await page
+        .getByRole('button', { name: 'Equipment', exact: true })
+        .click();
+    }
+    await expect(equipment).toBeVisible();
+    return equipment;
+  }
+
+  async function expectSavedWeapon(
+    page: Page,
+    slot: 'melee' | 'ranged',
+    name: string,
+  ) {
+    await expect
+      .poll(async () => {
+        const [character] = await fetchCharacters(page);
+        return (character?.equipment?.weapons?.[slot] ?? []).some(
+          (weapon: { name: string; equipped: boolean }) =>
+            weapon.name === name && weapon.equipped === false,
+        );
+      })
+      .toBe(true);
+  }
+
+  test('DH1: новое оружие сразу видно после добавления', async ({
+    page,
+    context,
+  }) => {
+    await prepare(context, { authenticated: false, theme: 'light' });
+    const account = await registerAccount(page, 'dh1-weapons', 'DH1 Weapons');
+    const equipment = await openEmptyEquipment(
+      page,
+      account,
+      'dh1',
+      'DH1 Weapons',
+    );
+
+    const melee = equipment.getByTestId('melee-weapons');
+    await melee.getByTestId('edit-button').click();
+    await melee.getByTestId('add-melee-weapon').click();
+
+    // Аккордеон раскрылся, поле нового оружия доступно и видимо.
+    await expect(melee.getByTestId('unequipped-melee-trigger')).toHaveAttribute(
+      'aria-expanded',
+      'true',
+    );
+    const newMelee = melee.locator('input').first();
+    await expect(newMelee).toBeVisible();
+    await expect(newMelee).toHaveValue('New melee weapon');
+
+    await melee.getByTestId('save-button').click();
+    await expectSavedWeapon(page, 'melee', 'New melee weapon');
+
+    const ranged = equipment.getByTestId('ranged-weapons');
+    await ranged.getByTestId('edit-button').click();
+    await ranged.getByTestId('add-ranged-weapon').click();
+
+    await expect(
+      ranged.getByTestId('unequipped-ranged-trigger'),
+    ).toHaveAttribute('aria-expanded', 'true');
+    const newRanged = ranged.locator('input').first();
+    await expect(newRanged).toBeVisible();
+    await expect(newRanged).toHaveValue('New ranged weapon');
+
+    await ranged.getByTestId('save-button').click();
+    await expectSavedWeapon(page, 'ranged', 'New ranged weapon');
+  });
+
+  test('DH2: новое оружие ближнего боя сразу видно', async ({
+    page,
+    context,
+  }) => {
+    await prepare(context, { authenticated: false, theme: 'light' });
+    const account = await registerAccount(page, 'dh2-weapons', 'DH2 Weapons');
+    const equipment = await openEmptyEquipment(
+      page,
+      account,
+      'dh2',
+      'DH2 Weapons',
+    );
+
+    const melee = equipment.getByTestId('melee-weapons');
+    await melee.getByTestId('edit-button').click();
+    await melee.getByTestId('add-melee-weapon').click();
+
+    await expect(melee.getByTestId('unequipped-melee-trigger')).toHaveAttribute(
+      'aria-expanded',
+      'true',
+    );
+    const newMelee = melee.locator('input').first();
+    await expect(newMelee).toBeVisible();
+    await expect(newMelee).toHaveValue('New melee weapon');
+
+    await melee.getByTestId('save-button').click();
+    await expectSavedWeapon(page, 'melee', 'New melee weapon');
   });
 });

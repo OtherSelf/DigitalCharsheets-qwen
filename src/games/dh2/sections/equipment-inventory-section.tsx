@@ -106,6 +106,12 @@ export const EquipmentInventorySection = React.forwardRef<
       React.useState(false);
     const [isRangedWeaponsEditing, setIsRangedWeaponsEditing] =
       React.useState(false);
+    // Новый элемент рендерится только в раскрытом «Не экипировано»:
+    // после добавления раскрываем нужный аккордеон, иначе клик по кнопке
+    // выглядит как «ничего не произошло».
+    const [openWeaponSlot, setOpenWeaponSlot] = React.useState<
+      'melee' | 'ranged' | null
+    >(null);
     const [isInventoryEditing, setIsInventoryEditing] = React.useState(false);
     const [isEquipmentSectionOpen, setIsEquipmentSectionOpen] =
       React.useState(true);
@@ -222,6 +228,7 @@ export const EquipmentInventorySection = React.forwardRef<
           melee: [...(prev.weapons.melee ?? []), newWeapon],
         },
       }));
+      setOpenWeaponSlot('melee');
     };
     const removeMeleeWeapon = (weaponId: string) => {
       setEditableEquipment((prev) => ({
@@ -279,6 +286,7 @@ export const EquipmentInventorySection = React.forwardRef<
           ranged: [...(prev.weapons.ranged ?? []), newWeapon],
         },
       }));
+      setOpenWeaponSlot('ranged');
     };
     const removeRangedWeapon = (weaponId: string) => {
       setEditableEquipment((prev) => ({
@@ -743,7 +751,7 @@ export const EquipmentInventorySection = React.forwardRef<
                     </CollapsibleContent>
                   </Collapsible>
                 </div>
-                <div className="space-y-4">
+                <div className="space-y-4" data-testid="melee-weapons">
                   <div>
                     <div className="mb-2 flex items-center justify-between">
                       <h4 className="text-lg font-semibold">
@@ -1006,14 +1014,33 @@ export const EquipmentInventorySection = React.forwardRef<
                       ))}
                     </div>
                   </div>
-                  <Accordion type="single" collapsible className="w-full">
+                  <Accordion
+                    type="single"
+                    collapsible
+                    className="w-full"
+                    value={openWeaponSlot === 'melee' ? 'unequipped-melee' : ''}
+                    onValueChange={(value) =>
+                      setOpenWeaponSlot(
+                        value === 'unequipped-melee' ? 'melee' : null,
+                      )
+                    }
+                  >
                     <AccordionItem
                       value="unequipped-melee"
                       className="border-b-0"
                     >
                       <AccordionPrimitive.Header className="flex w-full">
-                        <AccordionPrimitive.Trigger className="flex flex-1 items-center justify-between py-2 text-sm font-medium">
-                          <span>{t('dh2.notEquipped')}</span>
+                        <AccordionPrimitive.Trigger
+                          data-testid="unequipped-melee-trigger"
+                          className="flex flex-1 items-center justify-between py-2 text-sm font-medium [&[data-state=open]>svg]:rotate-180"
+                        >
+                          <span>
+                            {t('dh2.notEquipped')} (
+                            <span className="text-muted-foreground">
+                              {unequippedMeleeWeapons.length}
+                            </span>
+                            )
+                          </span>
                           <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
                         </AccordionPrimitive.Trigger>
                       </AccordionPrimitive.Header>
@@ -1285,6 +1312,7 @@ export const EquipmentInventorySection = React.forwardRef<
                   {isMeleeWeaponsEditing && (
                     <div className="pt-2">
                       <Button
+                        data-testid="add-melee-weapon"
                         onClick={addMeleeWeapon}
                         size="sm"
                         className="w-full"
@@ -1295,7 +1323,7 @@ export const EquipmentInventorySection = React.forwardRef<
                     </div>
                   )}
                 </div>
-                <div className="space-y-4">
+                <div className="space-y-4" data-testid="ranged-weapons">
                   <div>
                     <div className="mb-2 flex items-center justify-between">
                       <h4 className="text-lg font-semibold">
@@ -1621,14 +1649,35 @@ export const EquipmentInventorySection = React.forwardRef<
                       ))}
                     </div>
                   </div>
-                  <Accordion type="single" collapsible className="w-full">
+                  <Accordion
+                    type="single"
+                    collapsible
+                    className="w-full"
+                    value={
+                      openWeaponSlot === 'ranged' ? 'unequipped-ranged' : ''
+                    }
+                    onValueChange={(value) =>
+                      setOpenWeaponSlot(
+                        value === 'unequipped-ranged' ? 'ranged' : null,
+                      )
+                    }
+                  >
                     <AccordionItem
                       value="unequipped-ranged"
                       className="border-b-0"
                     >
                       <AccordionPrimitive.Header className="flex w-full">
-                        <AccordionPrimitive.Trigger className="flex flex-1 items-center justify-between py-2 text-sm font-medium">
-                          <span>{t('dh2.notEquipped')}</span>
+                        <AccordionPrimitive.Trigger
+                          data-testid="unequipped-ranged-trigger"
+                          className="flex flex-1 items-center justify-between py-2 text-sm font-medium [&[data-state=open]>svg]:rotate-180"
+                        >
+                          <span>
+                            {t('dh2.notEquipped')} (
+                            <span className="text-muted-foreground">
+                              {unequippedRangedWeapons.length}
+                            </span>
+                            )
+                          </span>
                           <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
                         </AccordionPrimitive.Trigger>
                       </AccordionPrimitive.Header>
@@ -1967,6 +2016,7 @@ export const EquipmentInventorySection = React.forwardRef<
                   {isRangedWeaponsEditing && (
                     <div className="pt-2">
                       <Button
+                        data-testid="add-ranged-weapon"
                         onClick={addRangedWeapon}
                         size="sm"
                         className="w-full"
