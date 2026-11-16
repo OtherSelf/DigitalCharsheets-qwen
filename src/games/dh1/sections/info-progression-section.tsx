@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 
-import { Eye, Lock, Trash2 } from 'lucide-react';
+import { Eye, Lock } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -31,6 +31,7 @@ import {
 } from '@/components/ui/tooltip';
 import {
   ConditionsList,
+  ExperienceLogSheet,
   NarrativeSheet,
   useCharacterContext,
   useTranslation,
@@ -62,6 +63,7 @@ import {
   divinationKey,
   divinationLabel,
 } from '../divination-i18n';
+import { dh1ExperienceRows } from '../experience';
 import { isCreationFieldLocked } from '../field-policy';
 import { type DarkHeresyCareerPath, type DH1Character } from '../types';
 import { EditSaveButton } from './dh-ui-helpers';
@@ -1277,50 +1279,17 @@ export const ProgressionSection = ({
         </DialogContent>
       </Dialog>
 
-      <Dialog open={isJournalOpen} onOpenChange={setIsJournalOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t('dh1.experienceLog')}</DialogTitle>
-            <DialogDescription>{t('dh1.experienceLogHint')}</DialogDescription>
-          </DialogHeader>
-          <div className="max-h-[60vh] space-y-2 overflow-y-auto">
-            {(character.experienceLog ?? []).length === 0 && (
-              <p className="text-muted-foreground text-sm">
-                {t('dh1.experienceLogEmpty')}
-              </p>
-            )}
-            {(character.experienceLog ?? []).map((entry) => (
-              <div
-                key={entry.id}
-                className="flex items-center justify-between gap-2 rounded-md border p-2 text-sm"
-              >
-                <div className="min-w-0">
-                  <p className="truncate font-medium">{entry.label}</p>
-                  <p className="text-muted-foreground text-xs">
-                    {new Date(entry.createdAt).toLocaleDateString(
-                      language === 'ru' ? 'ru-RU' : 'en-GB',
-                    )}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-primary font-semibold">
-                    {entry.cost}
-                  </span>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    aria-label={t('dh1.deleteExperienceEntry')}
-                    onClick={() => handleDeleteExperience(entry.id)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </DialogContent>
-      </Dialog>
+      <ExperienceLogSheet
+        open={isJournalOpen}
+        onOpenChange={setIsJournalOpen}
+        title={t('dh1.experienceLog')}
+        description={t('dh1.experienceLogHint')}
+        empty={t('dh1.experienceLogEmpty')}
+        deleteLabel={t('dh1.deleteExperienceEntry')}
+        language={language}
+        rows={dh1ExperienceRows(character.experienceLog)}
+        onDelete={handleDeleteExperience}
+      />
     </>
   );
 };

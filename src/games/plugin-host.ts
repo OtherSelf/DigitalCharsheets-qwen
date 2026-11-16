@@ -11,7 +11,8 @@
  *   • `useTranslation`      — `t()` текущего языка (полные ключи `ns.key`);
  *   • `useToast`            — тосты хоста;
  *   • `NarrativeSheet`      — правый Sheet заметок/предыстории с markdown;
- *   • `ConditionsList`      — структурированные состояния (Безумие/Порча).
+ *   • `ConditionsList`      — структурированные состояния (Безумие/Порча);
+ *   • `ExperienceLogSheet`  — правый Sheet журнала опыта.
  *
  * Модуль `'use client'`: его импортируют только клиентские компоненты.
  */
@@ -23,3 +24,7 @@ export {
   ConditionsList,
   type ConditionsLabels,
 } from '@/components/sheets/conditions-list';
+export {
+  ExperienceLogSheet,
+  type ExperienceLogRow,
+} from '@/components/sheets/experience-log-sheet';

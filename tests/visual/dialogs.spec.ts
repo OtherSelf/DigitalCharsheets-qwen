@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 
+import { dhCharacter } from './fixtures';
 import {
   getState,
   openApp,
@@ -7,6 +8,7 @@ import {
   prepare,
   screenshotPage,
   sheetPath,
+  signInViaUI,
 } from './helpers';
 
 const isMobile = () => test.info().project.name === 'mobile';
@@ -277,4 +279,79 @@ test.describe('диалоги — божественные дары (тольк�
 
     await screenshotPage(page, 'dialog-dnd-divine-boons-ru.png');
   });
+});
+
+/**
+ * ─── LANDMARK: EXPERIENCE LOG SHEET ───────────────────────────────────────
+ * Журнал опыта — правый Sheet из «Прогресса» (D8), как журнал заданий.
+ * Отдельный аккаунт и лист: удаление записи пишется на сервер, фикстуры
+ * визуальных тестов не трогаем.
+ */
+test.describe('журнал опыта', () => {
+  test(
+    'DH1: правый Sheet, строки и удаление записи (en)',
+    { tag: '@desktop' },
+    async ({ page }) => {
+      const username = `xp-log-${Date.now()}`;
+      const password = 'xp-log-password-1';
+      const registered = await page.request.post('/api/auth/register', {
+        data: {
+          username,
+          password,
+          displayName: 'XP Log',
+          recoveryPhrase: 'amber cobalt lantern',
+        },
+      });
+      expect([200, 201], 'регистрация аккаунта').toContain(registered.status());
+
+      const created = await page.request.post('/api/characters', {
+        data: {
+          ...dhCharacter,
+          name: 'XP Log',
+          experienceLog: [
+            {
+              id: 'xp-1',
+              label: 'Dodge',
+              cost: 100,
+              createdAt: '2026-01-02T10:00:00.000Z',
+            },
+            {
+              id: 'xp-2',
+              label: 'Awareness',
+              cost: 150,
+              createdAt: '2026-01-03T10:00:00.000Z',
+            },
+          ],
+        },
+      });
+      expect([200, 201], 'создание листа').toContain(created.status());
+      const { id } = (await created.json()) as { id: string };
+
+      await signInViaUI(page, { username, password });
+      await openApp(page, sheetPath(id));
+
+      await page.getByRole('button', { name: 'XP log' }).click();
+      const sheet = page.getByRole('dialog');
+      await expect(
+        sheet.getByRole('heading', { name: 'XP log' }),
+      ).toBeVisible();
+      await expect(sheet.getByTestId('experience-row')).toHaveCount(2);
+      await screenshotPage(page, 'sheet-dh-experience-log-en.png');
+
+      const saved = page.waitForResponse(
+        (response) =>
+          response.url().includes(`/api/characters/${id}`) &&
+          response.request().method() === 'PUT',
+      );
+      await sheet.getByRole('button', { name: 'Delete entry' }).first().click();
+      await expect(sheet.getByTestId('experience-row')).toHaveCount(1);
+      await saved;
+
+      await openApp(page, sheetPath(id));
+      await page.getByRole('button', { name: 'XP log' }).click();
+      await expect(
+        page.getByRole('dialog').getByTestId('experience-row'),
+      ).toHaveCount(1);
+    },
+  );
 });
