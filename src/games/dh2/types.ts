@@ -233,10 +233,29 @@ export interface DH2Fatigue {
  *   • в навыках доступна тренировка `+30`;
  *   • `edition` отсутствует: редакция задаётся модулем/`systemId` (D3).
  */
+/** Вид состояния (Безумие/Порча): расстройство, осквернение, мутация, рудимент. */
+export type ConditionKind = 'disorder' | 'corruption' | 'mutation' | 'rudiment';
+
+/** Источник состояния: игрок, пророчество или миграция старых данных. */
+export type ConditionSource = 'manual' | 'divination' | 'legacy';
+
+/** Структурированное состояние листа (D7); форма повторяется в каждом модуле. */
+export interface ConditionEntry {
+  id: string;
+  kind: ConditionKind;
+  name: string;
+  severity?: string;
+  effect?: string;
+  notes?: string;
+  source?: ConditionSource;
+}
+
 export interface DH2Character extends DarkHeresyBase {
   systemId?: 'dh2';
   stats: DH2Stats;
   statUpgrades: DH2StatUpgrades;
   statNotes?: DH2StatNotes;
   fatigue2nd: DH2Fatigue;
+  /** Структурированные состояния (D7): счётчики Безумия/Порчи остаются выше. */
+  conditions?: ConditionEntry[];
 }

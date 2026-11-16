@@ -697,5 +697,22 @@
   "dh1.experienceLogHint": "Покупки, записанные игроком; записи можно удалять.",
   "dh1.experienceLogEmpty": "Покупок пока нет.",
   "dh1.manualPurchase": "Ручная покупка",
-  "dh1.deleteExperienceEntry": "Удалить запись"
+  "dh1.deleteExperienceEntry": "Удалить запись",
+  "dh1.chosenAtCreation": "Выбрано при создании — чтобы изменить, пересоздайте персонажа.",
+  "dh1.conditions.add": "Добавить состояние",
+  "dh1.conditions.empty": "Состояний нет.",
+  "dh1.conditions.name": "Название",
+  "dh1.conditions.kind": "Тип",
+  "dh1.conditions.severity": "Степень",
+  "dh1.conditions.effect": "Эффект",
+  "dh1.conditions.notes": "Заметки",
+  "dh1.conditions.source": "Источник",
+  "dh1.conditions.remove": "Удалить состояние",
+  "dh1.conditions.kind.disorder": "Расстройство",
+  "dh1.conditions.kind.corruption": "Осквернение",
+  "dh1.conditions.kind.mutation": "Мутация",
+  "dh1.conditions.kind.rudiment": "Рудимент",
+  "dh1.conditions.source.manual": "Вручную",
+  "dh1.conditions.source.divination": "Пророчество",
+  "dh1.conditions.source.legacy": "Старые данные"
 }

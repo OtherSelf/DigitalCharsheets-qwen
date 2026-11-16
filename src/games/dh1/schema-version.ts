@@ -1,6 +1,6 @@
 /**
- * Версия формата листа DH1. Поднята до 3 после аддитивных блоков DH1APP
- * (identity, psy, traits/mutations, insanity/corruption details): старые
- * файлы помечаются устаревшими и проходят нормализацию редакции.
+ * Версия формата листа DH1. Поднята до 4 после структурированных состояний
+ * (`conditions`, D17): legacy-тексты расстройств/осквернений и `mutations`
+ * переносятся нормализацией, исходные поля остаются в данных.
  */
-export const DH1_SCHEMA_VERSION = 3 as const;
+export const DH1_SCHEMA_VERSION = 4 as const;

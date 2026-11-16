@@ -219,6 +219,90 @@ function ensureExperienceLog(character: RawRecord): void {
   character.experienceLog = [];
 }
 
+/** Строки legacy-текста состояний: перенос строки или `;`, пустые отброшены. */
+function splitLegacyLines(value: unknown): string[] {
+  if (typeof value !== 'string') return [];
+  return value
+    .split(/[\n;]+/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+}
+
+function isConditionLike(value: unknown): boolean {
+  if (!isRecord(value)) return false;
+  return typeof value.kind === 'string' && typeof value.name === 'string';
+}
+
+/** Ключ дедупликации миграции: тип + название, без учёта регистра пробелов. */
+function conditionKey(entry: RawRecord): string {
+  return `${String(entry.kind)}\u0000${String(entry.name).trim()}`;
+}
+
+/**
+ * Перенос legacy-состояний DH1 в `conditions` (D7, D12). Идемпотентность:
+ * записи дедуплицируются по `kind`+`name`, а исходные поля (`mutations`,
+ * `insanityDetails`, `corruptionDetails`) не удаляются — старые тексты и
+ * degree/trauma/test остаются как были.
+ */
+function ensureConditions(character: RawRecord): void {
+  const existing = Array.isArray(character.conditions)
+    ? (character.conditions as unknown[]).filter(isConditionLike)
+    : [];
+  const seen = new Set(
+    existing.map((entry) => conditionKey(entry as RawRecord)),
+  );
+  const next: RawRecord[] = existing.map((entry) => entry as RawRecord);
+
+  const add = (entry: RawRecord) => {
+    const key = conditionKey(entry);
+    if (seen.has(key)) return;
+    seen.add(key);
+    next.push(entry);
+  };
+
+  const mutations = Array.isArray(character.mutations)
+    ? character.mutations
+    : [];
+  mutations.forEach((mutation, index) => {
+    const item = asRecord(mutation);
+    const name = typeof item.name === 'string' ? item.name.trim() : '';
+    if (!name) return;
+    add({
+      id: `legacy-mutation-${index + 1}`,
+      kind: 'mutation',
+      name,
+      ...(typeof item.notes === 'string' && item.notes
+        ? { notes: item.notes }
+        : {}),
+      source: 'legacy',
+    });
+  });
+
+  const insanity = asRecord(character.insanityDetails);
+  splitLegacyLines(insanity.disorders).forEach((line, index) => {
+    add({
+      id: `legacy-disorder-${index + 1}`,
+      kind: 'disorder',
+      name: line,
+      effect: line,
+      source: 'legacy',
+    });
+  });
+
+  const corruption = asRecord(character.corruptionDetails);
+  splitLegacyLines(corruption.defilements).forEach((line, index) => {
+    add({
+      id: `legacy-corruption-${index + 1}`,
+      kind: 'corruption',
+      name: line,
+      effect: line,
+      source: 'legacy',
+    });
+  });
+
+  character.conditions = next;
+}
+
 export function normalizeDh1(
   raw: Readonly<Record<string, unknown>>,
   options: NormalizeOptions = {},
@@ -230,6 +314,7 @@ export function normalizeDh1(
   normalizeDivination(character, warnings);
   enforceDh1Fields(character, warnings);
   ensureExperienceLog(character);
+  ensureConditions(character);
 
   return {
     character: character as unknown as DH1Character,

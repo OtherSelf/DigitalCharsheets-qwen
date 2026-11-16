@@ -433,3 +433,70 @@ test.describe('политика редактирования после созд
     },
   );
 });
+
+/**
+ * ─── LANDMARK: CONDITIONS CRUD ─────────────────────────────────────────────
+ * Список состояний (D7): добавление только в режиме правки, запись через
+ * `updateCharacter`, просмотр — в режиме чтения. Исходные текстовые поля
+ * (mutations/disorders/defilements) в UI больше не дублируются.
+ */
+test.describe('состояния Безумия/Порчи', () => {
+  test(
+    'DH1: добавить, сохранить и удалить состояние (en)',
+    { tag: '@desktop' },
+    async ({ page, context }) => {
+      await prepare(context);
+      const id = getState().dhId;
+      await openApp(page, sheetPath(id));
+
+      const info = page.locator('#info-section:visible').first();
+      await startEditing(info);
+
+      const before = await info.getByTestId('condition-entry').count();
+      await info.getByRole('button', { name: 'Add condition' }).click();
+      await expect(info.getByTestId('condition-entry')).toHaveCount(before + 1);
+
+      const entry = info.getByTestId('condition-entry').last();
+      const inputs = entry.locator('input');
+      await inputs.nth(0).fill('Проверка состояния');
+      await inputs.nth(1).fill('2');
+      await entry.locator('textarea').fill('Заметка');
+
+      // Ждём PUT, в котором уже есть и название, и заметка: очередь
+      // склеивает патчи, поэтому ориентируемся на тело запроса.
+      await page.waitForResponse((response) => {
+        if (!response.url().includes(`/api/characters/${id}`)) return false;
+        if (response.request().method() !== 'PUT') return false;
+        const body = response.request().postData() ?? '';
+        return body.includes('Проверка состояния') && body.includes('Заметка');
+      });
+
+      await info.getByTestId('save-button').first().click();
+      await openApp(page, sheetPath(id));
+
+      const reloaded = page.locator('#info-section:visible').first();
+      await expect(reloaded.getByText('Проверка состояния')).toBeVisible();
+      await expect(reloaded.getByText('Disorder')).toBeVisible();
+
+      await startEditing(reloaded);
+      const stored = reloaded.getByTestId('condition-entry').last();
+      await stored.getByRole('button', { name: 'Remove condition' }).click();
+      await page.waitForResponse((response) => {
+        if (!response.url().includes(`/api/characters/${id}`)) return false;
+        if (response.request().method() !== 'PUT') return false;
+        return !(response.request().postData() ?? '').includes(
+          'Проверка состояния',
+        );
+      });
+
+      await reloaded.getByTestId('save-button').first().click();
+      await openApp(page, sheetPath(id));
+      await expect(
+        page
+          .locator('#info-section:visible')
+          .first()
+          .getByText('Проверка состояния'),
+      ).toHaveCount(0);
+    },
+  );
+});

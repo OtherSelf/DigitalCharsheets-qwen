@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 import {
+  conditionsSchema,
   darkHeresyBaseFields,
   darkHeresyCoreStatNotesSchema,
   darkHeresyCoreStatsSchema,
@@ -49,4 +50,5 @@ export const dh1CharacterSchema: z.ZodType<DH1Character> = z.looseObject({
       }),
     )
     .optional(),
+  conditions: conditionsSchema.optional(),
 });

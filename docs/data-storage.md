@@ -107,8 +107,9 @@ parses every `*.json` in the user's `characters/` directory; a broken file is
 skipped rather than failing the whole list.
 
 `CharacterBase.schemaVersion` is per module: `dnd5e` stays at `2`, Dark Heresy
-modules write `3` (`src/games/dh1/schema-version.ts`,
-`src/games/dh2/schema-version.ts`) after the DH1APP and 2e-generation field sets.
+modules write `4` (`src/games/dh1/schema-version.ts`,
+`src/games/dh2/schema-version.ts`) after the DH1APP, 2e-generation and
+structured-conditions field sets.
 Legacy files without the field or with `2` are migrated on startup by
 `src/lib/character-schema.ts` and lazily on read/save by
 `normalizeCharacterRecord` (`src/lib/character-version.ts`); the file is
@@ -156,6 +157,17 @@ of the other edition:
 - `influence` is part of `stats`; wealth is stored but hidden in the 2e UI
   (Influence is the resource). `influence.ts` computes the creation limit and
   the Requisition target from the availability/craftsmanship tables.
+
+Both editions also carry `conditions: ConditionEntry[]` (schema 4): the
+structured list of disorders, defilements, mutations and rudiments
+(`kind`, `name`, optional `severity`/`effect`/`notes`, `source` =
+`manual` | `divination` | `legacy`). The list is additive and has no
+automatic rules. `normalize` keeps it idempotent: DH1 migrates
+`mutations[]`, `insanityDetails.disorders` and
+`corruptionDetails.defilements` (newline/`;` separated lines) into entries
+with `source: "legacy"`, deduplicated by `kind`+`name`; the original fields and
+`degree`/`traumaModifier`/`test` stay in the file. DH2 has no text migration —
+it gets an empty array. The states go to both JSON and Excel exports.
 
 Migration rules (`v0/v1 → v2`):
 
