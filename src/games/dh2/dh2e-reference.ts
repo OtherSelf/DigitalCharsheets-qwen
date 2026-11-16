@@ -1144,6 +1144,8 @@ export const DH2E_ELITES: readonly Dh2eEliteAdvance[] = [
       'dh2.catalog.elite.inquisitor.change.1',
       'dh2.catalog.elite.inquisitor.change.2',
     ],
+    prereqText:
+      "Influence 75; Emperor's Blessing (decree of an Inquisitor); GM guidance",
   },
   {
     id: 'psyker',
@@ -1154,6 +1156,8 @@ export const DH2E_ELITES: readonly Dh2eEliteAdvance[] = [
       'dh2.catalog.elite.psyker.change.1',
       'dh2.catalog.elite.psyker.change.2',
     ],
+    prereqText:
+      'Willpower 40; A Beacon in the Warp (нельзя с Untouchable); GM guidance',
   },
   {
     id: 'untouchable',
@@ -1165,5 +1169,6 @@ export const DH2E_ELITES: readonly Dh2eEliteAdvance[] = [
       'dh2.catalog.elite.untouchable.change.2',
       'dh2.catalog.elite.untouchable.change.3',
     ],
+    prereqText: 'A Void in the Warp (нельзя с Psyker); GM guidance',
   },
 ];
