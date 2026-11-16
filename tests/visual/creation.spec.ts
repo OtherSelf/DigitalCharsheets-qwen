@@ -365,6 +365,155 @@ test.describe('создание персонажа — Dark Heresy 2e', () => {
   });
 });
 
+test.describe('черновик гостя dh2 и навигация «назад/вперёд»', () => {
+  test('черновик 2e переживает вход, навигацию и создаётся после регистрации', async ({
+    page,
+    context,
+  }) => {
+    await prepare(context, { authenticated: false, theme: 'light' });
+    await page.goto('/new/manual', { waitUntil: 'domcontentloaded' });
+    await page.waitForLoadState('networkidle');
+
+    await page.getByTestId('create-game-darkHeresy').click();
+    await page.getByTestId('create-edition-dh2').click();
+    // D13: гостю видно, что черновик сохранится, и вход не блокирует форму.
+    await expect(page.getByTestId('guest-draft-banner')).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: 'Create Character' }),
+    ).toBeVisible();
+
+    const name = 'Guest DH2';
+    await page.getByLabel('Character Name', { exact: true }).fill(name);
+    await page.getByLabel('Home World', { exact: true }).click();
+    await page.getByRole('option', { name: 'Hive World', exact: true }).click();
+    await page.getByLabel('Background', { exact: true }).click();
+    await page.getByRole('option', { name: /^Adeptus Arbites/ }).click();
+    await page.getByLabel('Role', { exact: true }).click();
+    await page.getByRole('option', { name: /^Assassin/ }).click();
+    await page
+      .getByLabel('Background aptitude: Adeptus Arbites', { exact: true })
+      .click();
+    await page.getByRole('option', { name: 'Offence', exact: true }).click();
+    await page.getByLabel('Role aptitude 2', { exact: true }).click();
+    await page
+      .getByRole('option', { name: 'Weapon Skill', exact: true })
+      .click();
+    await page.getByLabel('Role talent: Assassin', { exact: true }).click();
+    await page.getByRole('option', { name: 'Jaded', exact: true }).click();
+    await page.getByLabel('Starting skills 1', { exact: true }).click();
+    await page.getByRole('option', { name: 'Inquiry', exact: true }).click();
+    await page
+      .getByLabel('Duplicate replacement: Perception', { exact: true })
+      .click();
+    await page.getByRole('option', { name: 'Strength', exact: true }).click();
+    await page.getByLabel('Gender', { exact: true }).fill('Female');
+    await page.getByLabel('Insanity', { exact: true }).fill('4');
+    await page.getByLabel('Corruption', { exact: true }).fill('2');
+    await page.getByLabel('Experience', { exact: true }).fill('1200');
+
+    const readDraft = () =>
+      page.evaluate(() => {
+        const raw = sessionStorage.getItem('pending_character');
+        return raw ? (JSON.parse(raw) as Record<string, unknown>) : null;
+      });
+
+    await page.getByRole('button', { name: 'Create Character' }).click();
+    await page.waitForURL(/\/login/, { timeout: 30_000 });
+
+    const draft = await readDraft();
+    expect(draft, 'черновик гостя лежит в sessionStorage').toMatchObject({
+      name,
+      systemId: 'dh2',
+      gender: 'Female',
+      insanityPoints: { total: 4 },
+      corruptionPoints: { total: 2 },
+      experience: 1200,
+      aptitudes: {
+        chosen: {
+          background: 'offence',
+          'role.1': 'weapon-skill',
+          'duplicate.perception': 'strength',
+        },
+      },
+      startingChoices: { roleTalent: 'jaded', skills: ['inquiry'] },
+    });
+
+    // «Назад» возвращает в форму, «вперёд» — на логин; черновик не теряется,
+    // бесконечной загрузки нет.
+    await page.goBack();
+    await expect(page.getByTestId('create-step-form')).toBeVisible({
+      timeout: 15_000,
+    });
+    expect(await readDraft(), 'черновик пережил «назад»').toMatchObject({
+      name,
+    });
+    await page.goForward();
+    await page.waitForURL(/\/login/, { timeout: 15_000 });
+    expect(await readDraft(), 'черновик пережил «вперёд»').toMatchObject({
+      name,
+    });
+
+    const username = `guest-dh2-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    await registerViaUI(page, {
+      username,
+      password: 'visual-pass-1234',
+      displayName: 'Guest DH2',
+      recoveryPhrase: 'amber cobalt lantern',
+    });
+
+    await page.waitForURL(
+      (url) =>
+        url.pathname !== '/' &&
+        !url.pathname.startsWith('/new') &&
+        !url.pathname.startsWith('/login'),
+      { timeout: 30_000 },
+    );
+    const id = sheetIdFromUrl(page);
+    const characters = await fetchCharacters(page);
+    expect(characters, 'черновик стал единственным листом').toHaveLength(1);
+    expect(characters[0]).toMatchObject({
+      id,
+      name,
+      systemId: 'dh2',
+      gender: 'Female',
+      insanityPoints: { total: 4 },
+      corruptionPoints: { total: 2 },
+      experience: 1200,
+      aptitudes: {
+        chosen: {
+          background: 'offence',
+          'role.1': 'weapon-skill',
+          'duplicate.perception': 'strength',
+        },
+      },
+      startingChoices: {
+        roleTalent: 'jaded',
+        skills: ['inquiry'],
+        talents: [],
+      },
+    });
+    await expect(page.getByText(name, { exact: true }).first()).toBeVisible();
+    await expect(page.getByText('Jaded', { exact: true })).toBeVisible();
+
+    // «Назад» после регистрации: не остаёмся на вечном спиннере, «вперёд»
+    // возвращает на лист.
+    await page.goBack();
+    await page.waitForLoadState('networkidle');
+    await expect(page.getByText('Loading characters...')).toHaveCount(0);
+    const backPath = new URL(page.url()).pathname;
+    expect(
+      backPath === '/' ||
+        backPath.startsWith('/login') ||
+        backPath.startsWith('/new'),
+      `после «назад» ожидался дашборд/логин/форма, а не ${backPath}`,
+    ).toBe(true);
+    await page.goForward();
+    await expect(page.getByText(name, { exact: true }).first()).toBeVisible({
+      timeout: 15_000,
+    });
+  });
+});
+
 /**
  * ─── LANDMARK: GUEST_DRAFT_ON_LOGIN ─────────────────────────────────────────
  * Гость, который начертил персонажа до входа, не должен «заводить» его в чужом

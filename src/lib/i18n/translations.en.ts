@@ -72,6 +72,9 @@ export const enTranslations: Record<string, string> = {
     'The draft “{name}” was made before you signed in. It is not in this account yet.',
   'common.pendingDraftCreate': 'Create character',
   'common.pendingDraftDiscard': 'Discard draft',
+
+  'common.guestDraftBanner':
+    'Your draft is kept in this session — you can sign in after filling it in.',
   'common.basicInformation': 'Basic Information',
   'common.strength': 'Strength',
   'common.dexterity': 'Dexterity',

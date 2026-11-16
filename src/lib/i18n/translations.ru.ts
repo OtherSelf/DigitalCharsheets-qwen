@@ -72,6 +72,9 @@ export const ruTranslations: Record<string, string> = {
     'Черновик «{name}» создан до входа в аккаунт. В этом аккаунте его ещё нет.',
   'common.pendingDraftCreate': 'Создать персонажа',
   'common.pendingDraftDiscard': 'Удалить черновик',
+
+  'common.guestDraftBanner':
+    'Черновик сохранится в этой сессии — войти можно после заполнения.',
   'common.basicInformation': 'Основная информация',
   'common.strength': 'Сила',
   'common.dexterity': 'Ловкость',
