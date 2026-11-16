@@ -120,10 +120,17 @@ test.describe('admin', () => {
     await expect(dialog).toBeVisible();
     await expect(dialog.getByText('Seraphina Vael')).toBeVisible();
     await expect(dialog.getByText('Lucius Varn')).toBeVisible();
-    // Бейдж игры берётся из реестра плагинов (nameKey), а не из gameSystem.
-    await expect(
-      dialog.getByText('5th Edition', { exact: true }),
-    ).toBeVisible();
+    // Короткий код игры из реестра (D1): nameKey даёт только редакцию, код
+    // не переводится и не зависит от локали.
+    await expect(dialog.getByText('dnd5e', { exact: true })).toBeVisible();
+    await expect(dialog.getByText('dh1e', { exact: true })).toBeVisible();
+
+    // Tooltip — полное имя игры и редакция из i18n.
+    await dialog.getByText('dh1e', { exact: true }).hover();
+    await expect(page.getByRole('tooltip')).toContainText(
+      'Dark Heresy · 1st Edition',
+    );
+    await page.mouse.move(0, 0);
 
     await screenshotPage(page, 'admin-sheets-en.png');
   });

@@ -219,6 +219,7 @@ per-game save handlers out of the page.
 | `order` | Sort order in the creation wizard and admin lists. |
 | `defaultStatus` | `published` / `test` / `hidden`; runtime override in the game catalog. |
 | `nameKey`, `descriptionKey` | i18n keys; names are never stored in sheets. |
+| `shortCode` | Locale-independent edition code for the admin character list (`dnd5e`, `dh1e`, `dh2e`); not translated, the full game + edition goes to the tooltip. |
 | `schemaVersion` | Sheet format written by the module: `2` for `dnd5e`, `3` for `dh1`/`dh2`; manifests declare it and the migration chain ends here. |
 | `schema` | Zod schema; `ZodType<TCharacter>` makes `tsc` check it against the type. |
 | `i18n` | `{ en, ru }` dictionaries, merged by the core. |

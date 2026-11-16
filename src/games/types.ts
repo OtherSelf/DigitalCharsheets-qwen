@@ -383,6 +383,14 @@ export interface GameModule<
   readonly nameKey: string;
   readonly descriptionKey: string;
 
+  /**
+   * Короткий машинный код редакции для админки (`dnd5e`, `dh1e`, `dh2e`).
+   * Не переводится и не зависит от локали: `nameKey` даёт только редакцию
+   * («1st Edition»), а админу нужен компактный ярлык игры без потери
+   * однозначности. Полное имя игры и редакция — в tooltip.
+   */
+  readonly shortCode: string;
+
   /** Версия схемы листа, которую пишет модуль. */
   readonly schemaVersion: number;
   /** Строгая zod-схема листа (сверяется с типом через tsc). */

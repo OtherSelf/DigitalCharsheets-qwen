@@ -1,3 +1,5 @@
+import { getGameDefinition } from '@/games/games';
+import { getGameModule } from '@/games/registry';
 import type { AdminActionReason } from '@/lib/admin-types';
 
 type Translate = (key: string) => string;
@@ -51,4 +53,32 @@ export function adminCharacterLevelLabel(
   if (character.level !== null) return `${t('admin.level')} ${character.level}`;
   if (character.rank) return `${t('admin.rank')} ${character.rank}`;
   return '—';
+}
+
+/**
+ * Ярлык игры в «Списке чарлистов»: короткий код редакции (`dh2e`) и полное
+ * имя игры с редакцией для tooltip. `nameKey` модуля — только редакция
+ * («2nd Edition»), поэтому игра добавляется по `gameId`. Неизвестный или
+ * неустановленный плагин показываем сырым `systemId`/`gameSystem`, без
+ * выдуманного имени.
+ */
+export function adminGameBadge(
+  character: { systemId: string | null; gameSystem: string },
+  t: Translate,
+): { code: string; title: string | null } {
+  const gameModule = character.systemId
+    ? getGameModule(character.systemId)
+    : undefined;
+  if (!gameModule) {
+    return { code: character.systemId ?? character.gameSystem, title: null };
+  }
+
+  const gameDefinition = getGameDefinition(gameModule.gameId);
+  const title = [
+    gameDefinition ? t(gameDefinition.nameKey) : null,
+    t(gameModule.nameKey),
+  ]
+    .filter((part): part is string => Boolean(part))
+    .join(' · ');
+  return { code: gameModule.shortCode, title };
 }

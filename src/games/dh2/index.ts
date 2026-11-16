@@ -52,6 +52,7 @@ export const dh2Module: GameModule<DH2Character> = {
   defaultStatus: 'published',
   nameKey: 'games.dh2.name',
   descriptionKey: 'games.dh2.description',
+  shortCode: 'dh2e',
   schemaVersion: DH2_SCHEMA_VERSION,
   schema: dh2CharacterSchema,
   i18n: { en: dh2En, ru: dh2Ru },
