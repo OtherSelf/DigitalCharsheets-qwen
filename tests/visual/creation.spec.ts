@@ -494,6 +494,95 @@ test.describe('создание персонажа — Dark Heresy 2e', () => {
   });
 });
 
+test.describe('создание персонажа — дополнения DH2', () => {
+  test('опции Enemies создаются, показывают черты и покупают элитное', async ({
+    page,
+    context,
+  }) => {
+    await prepare(context, { authenticated: false, theme: 'light' });
+    const account = await registerAccount(page, 'dh2-supp', 'DH2 SUPP');
+    await signInViaUI(page, account);
+
+    await openCreationForm(page, 'Dark Heresy', 'dh2');
+
+    await page
+      .getByLabel('Character Name', { exact: true })
+      .fill('E2E Supp Acolyte');
+    await page.getByLabel('Home World', { exact: true }).click();
+    await page.getByRole('option', { name: 'Agri-World', exact: true }).click();
+    await page.getByLabel('Background', { exact: true }).click();
+    await page.getByRole('option', { name: /^Mutant/ }).click();
+    await page.getByLabel('Role', { exact: true }).click();
+    await page.getByRole('option', { name: /^Fanatic/ }).click();
+
+    // Стартовые черты и Порча — подсказка, на лист вручную (D2/D11).
+    await expect(page.getByText(/Starting traits: one of:/)).toBeVisible();
+    await expect(page.getByText(/Starting Corruption: 10/)).toBeVisible();
+
+    await page
+      .getByLabel('Background aptitude: Mutant', { exact: true })
+      .click();
+    await page.getByRole('option', { name: 'Fieldcraft', exact: true }).click();
+    await page.getByLabel('Role talent: Fanatic', { exact: true }).click();
+    await page
+      .getByRole('option', { name: 'Deny the Witch', exact: true })
+      .click();
+    await page.getByLabel('Starting skills 1', { exact: true }).click();
+    await page.getByRole('option', { name: 'Athletics', exact: true }).click();
+    await page.getByLabel('Starting skills 2', { exact: true }).click();
+    await page.getByRole('option', { name: 'Deceive', exact: true }).click();
+
+    await page.getByRole('button', { name: 'Create Character' }).click();
+    const id = await waitForSheetRedirect(page);
+
+    const created = (await fetchCharacters(page))[0];
+    expect(created).toMatchObject({
+      id,
+      homeWorld: 'agri-world',
+      background: 'mutant',
+      role: 'fanatic',
+      startingChoices: {
+        roleTalent: 'deny-the-witch',
+        skills: ['athletics', 'deceive'],
+      },
+      aptitudes: { chosen: { background: 'fieldcraft' } },
+    });
+    expect(created.aptitudes.profile).toEqual(
+      expect.arrayContaining(['strength', 'fieldcraft', 'offence']),
+    );
+
+    await expect(page.locator('#info-section')).toBeVisible();
+    if ((await page.locator('#progression-section').count()) === 0) {
+      await page
+        .getByRole('button', { name: 'Progression', exact: true })
+        .click();
+    }
+    const progression = page.locator('#progression-section');
+    await progression
+      .getByRole('combobox', { name: 'Choose an elite advance' })
+      .click();
+    await page.getByRole('option', { name: /^Sister of Battle/ }).click();
+    await expect(
+      progression.getByText(
+        /Influence 50; Willpower 40; Adepta Sororitas background/,
+      ),
+    ).toBeVisible();
+    await progression
+      .getByRole('button', { name: 'Add elite advance' })
+      .click();
+    await expect
+      .poll(async () => (await fetchCharacters(page))[0].eliteAdvances)
+      .toEqual(['sister-of-battle']);
+    await expect
+      .poll(async () => (await fetchCharacters(page))[0].experienceLog[0])
+      .toMatchObject({
+        kind: 'elite-advance',
+        cost: 750,
+        ref: 'Sister of Battle',
+      });
+  });
+});
+
 test.describe('черновик гостя dh2 и навигация «назад/вперёд»', () => {
   test('черновик 2e переживает вход, навигацию и создаётся после регистрации', async ({
     page,
