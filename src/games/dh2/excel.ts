@@ -83,6 +83,9 @@ export function buildDh2ExcelSections(
       'dh2.eliteAdvances',
       character.eliteAdvances.map((id) => eliteAdvanceLabel(id, t)).join(', '),
     );
+    w.row('dh2.psyRating', character.psy.rating);
+    w.row('dh2.psyDisciplines', character.psy.disciplines.join(', '));
+    w.row('dh2.psyPowers', character.psy.powers.join(', '));
     w.row('dh2.divination', divinationLabel(character.divination, t));
     w.row(
       'dh2.divinationEffect',

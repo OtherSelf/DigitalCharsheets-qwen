@@ -362,6 +362,50 @@ test.describe('создание персонажа — Dark Heresy 2e', () => {
       page.getByText('Starting skills (chosen)', { exact: true }),
     ).toBeVisible();
     await expect(page.getByText('Inquiry', { exact: true })).toBeVisible();
+
+    // Пси: повышение рейтинга подсказывает цену и пишет покупку в журнал;
+    // дисциплины и силы вносятся свободным текстом (D3/D14).
+    // На мобильном лист компактный: сначала открываем секцию прогрессии.
+    if ((await page.locator('#progression-section').count()) === 0) {
+      await page
+        .getByRole('button', { name: 'Progression', exact: true })
+        .click();
+    }
+    const progression = page.locator('#progression-section');
+    await expect(progression).toBeVisible();
+    await progression.getByRole('button', { name: 'Raise psy rating' }).click();
+    await expect
+      .poll(async () => (await fetchCharacters(page))[0].psy)
+      .toEqual({ rating: 1, disciplines: [], powers: [] });
+    await expect
+      .poll(async () => (await fetchCharacters(page))[0].experienceLog[0])
+      .toMatchObject({ kind: 'psy-rating', cost: 200, ref: 'Psy rating 1' });
+    await expect
+      .poll(async () => (await fetchCharacters(page))[0].totalExpSpent)
+      .toBe(200);
+
+    await progression.getByTestId('edit-button').click();
+    await progression.getByLabel('Psy rating').fill('2');
+    await progression.getByLabel('Disciplines').fill('Telepathy, Divination');
+    await progression
+      .getByLabel('Psychic powers')
+      .fill('Mind Link, Astral Tether');
+    await progression.getByTestId('save-button').click();
+    await expect
+      .poll(async () => (await fetchCharacters(page))[0].psy)
+      .toEqual({
+        rating: 2,
+        disciplines: ['Telepathy', 'Divination'],
+        powers: ['Mind Link', 'Astral Tether'],
+      });
+
+    await progression.getByRole('button', { name: 'XP log' }).click();
+    const journal = page.getByRole('dialog');
+    await expect(
+      journal.getByText('Psy rating 1', { exact: true }),
+    ).toBeVisible();
+    await expect(journal.getByText('200', { exact: true })).toBeVisible();
+    await page.keyboard.press('Escape');
   });
 });
 
