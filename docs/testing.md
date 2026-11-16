@@ -292,7 +292,8 @@ filtered with `grepInvert`, so the report has no skipped duplicates.
 
 1. lockfile check (`npm ci --dry-run`);
 2. Prettier check;
-3. ESLint;
+3. ESLint, plugin boundaries/registry, and (when `content/dh2` is checked out
+   next to the app) the DH2 generated-data drift check (`dh2e:check`);
 4. TypeScript;
 5. unit tests;
 6. production build;
