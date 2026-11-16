@@ -81,6 +81,18 @@ describe.each([
     expect(ru['dh2.fatePoints']).toBe('Судьба');
   });
 
+  it('DH2: пророчества дословно по таблице 2-9', () => {
+    if (prefix !== 'dh2') return;
+    const labels = Object.keys(ru).filter((key) =>
+      /^dh2\.catalog\.divination\.d100-\d+$/.test(key),
+    );
+    expect(labels).toHaveLength(25);
+    expect(ru['dh2.catalog.divination.d100-02']).toBe('');
+    expect(ru['dh2.catalog.divination.d100-02.effect']).toBe(
+      'Повысьте Восприятие персонажа на +5 и дайте ему ментальное расстройство Фобия (см. стр. 352).',
+    );
+  });
+
   it('DH2: четыре навыка исправлены по RU-листу', () => {
     if (prefix !== 'dh2') return;
     expect(ru['dh2.catalog.skill.awareness']).toBe('Бдительность');
