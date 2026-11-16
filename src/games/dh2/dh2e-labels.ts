@@ -38,6 +38,12 @@ const TALENT_KEYS = new Map(
   DH2E_TALENTS.map((item) => [item.id, item.labelKey]),
 );
 
+const TALENT_HINT_KEYS = new Map(
+  DH2E_TALENTS.flatMap((item) =>
+    item.hintKey ? [[item.id, item.hintKey] as const] : [],
+  ),
+);
+
 function label(
   keys: ReadonlyMap<string, string>,
   id: string,
@@ -85,4 +91,10 @@ export function skillLabel(id: string, t: Translate): string {
 
 export function talentLabel(id: string, t: Translate): string {
   return label(TALENT_KEYS, id, t);
+}
+
+/** Короткая подсказка таланта для создания; полные правила не храним. */
+export function talentHint(id: string, t: Translate): string | undefined {
+  const key = TALENT_HINT_KEYS.get(id);
+  return key ? t(key) : undefined;
 }

@@ -311,6 +311,12 @@ test.describe('создание персонажа — Dark Heresy 2e', () => {
       .click();
     await page.getByLabel('Role talent: Assassin', { exact: true }).click();
     await page.getByRole('option', { name: 'Jaded', exact: true }).click();
+    await expect(
+      page.getByText('Ignores mundane horrors without gaining Insanity.'),
+    ).toBeVisible();
+    await expect(
+      page.getByText('Use weapons of a chosen type without penalty.'),
+    ).toBeVisible();
     await page.getByLabel('Starting skills 1', { exact: true }).click();
     await page.getByRole('option', { name: 'Inquiry', exact: true }).click();
     await page

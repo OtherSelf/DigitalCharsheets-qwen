@@ -314,6 +314,7 @@ export const DH2E_TALENTS: readonly Dh2eTalent[] = [
     labelKey: 'dh2.catalog.talent.ambidextrous',
     tier: 1,
     aptitudeSlots: ['weapon-skill', 'ballistic-skill'],
+    hintKey: 'dh2.catalog.talent.ambidextrous.hint',
   },
   {
     id: 'armour-monger',
@@ -362,12 +363,14 @@ export const DH2E_TALENTS: readonly Dh2eTalent[] = [
     labelKey: 'dh2.catalog.talent.catfall',
     tier: 1,
     aptitudeSlots: ['agility', 'fieldcraft'],
+    hintKey: 'dh2.catalog.talent.catfall.hint',
   },
   {
     id: 'clues-from-the-crowds',
     labelKey: 'dh2.catalog.talent.clues-from-the-crowds',
     tier: 1,
     aptitudeSlots: ['general', 'social'],
+    hintKey: 'dh2.catalog.talent.clues-from-the-crowds.hint',
   },
   {
     id: 'combat-master',
@@ -446,6 +449,7 @@ export const DH2E_TALENTS: readonly Dh2eTalent[] = [
     labelKey: 'dh2.catalog.talent.disarm',
     tier: 1,
     aptitudeSlots: ['weapon-skill', 'defence'],
+    hintKey: 'dh2.catalog.talent.disarm.hint',
   },
   {
     id: 'double-tap',
@@ -458,6 +462,7 @@ export const DH2E_TALENTS: readonly Dh2eTalent[] = [
     labelKey: 'dh2.catalog.talent.double-team',
     tier: 1,
     aptitudeSlots: ['general', 'offence'],
+    hintKey: 'dh2.catalog.talent.double-team.hint',
   },
   {
     id: 'enemy',
@@ -536,6 +541,7 @@ export const DH2E_TALENTS: readonly Dh2eTalent[] = [
     labelKey: 'dh2.catalog.talent.hatred',
     tier: 2,
     aptitudeSlots: ['weapon-skill', 'social'],
+    hintKey: 'dh2.catalog.talent.hatred.hint',
   },
   {
     id: 'hip-shooting',
@@ -572,18 +578,21 @@ export const DH2E_TALENTS: readonly Dh2eTalent[] = [
     labelKey: 'dh2.catalog.talent.iron-jaw',
     tier: 1,
     aptitudeSlots: ['toughness', 'defence'],
+    hintKey: 'dh2.catalog.talent.iron-jaw.hint',
   },
   {
     id: 'jaded',
     labelKey: 'dh2.catalog.talent.jaded',
     tier: 1,
     aptitudeSlots: ['willpower', 'defence'],
+    hintKey: 'dh2.catalog.talent.jaded.hint',
   },
   {
     id: 'keen-intuition',
     labelKey: 'dh2.catalog.talent.keen-intuition',
     tier: 1,
     aptitudeSlots: ['perception', 'social'],
+    hintKey: 'dh2.catalog.talent.keen-intuition.hint',
   },
   {
     id: 'killing-strike',
@@ -596,6 +605,7 @@ export const DH2E_TALENTS: readonly Dh2eTalent[] = [
     labelKey: 'dh2.catalog.talent.leap-up',
     tier: 1,
     aptitudeSlots: ['agility', 'general'],
+    hintKey: 'dh2.catalog.talent.leap-up.hint',
   },
   {
     id: 'lightning-attack',
@@ -638,6 +648,7 @@ export const DH2E_TALENTS: readonly Dh2eTalent[] = [
     labelKey: 'dh2.catalog.talent.mechadendrite-use',
     tier: 2,
     aptitudeSlots: ['intelligence', 'tech'],
+    hintKey: 'dh2.catalog.talent.mechadendrite-use.hint',
   },
   {
     id: 'mighty-shot',
@@ -692,18 +703,21 @@ export const DH2E_TALENTS: readonly Dh2eTalent[] = [
     labelKey: 'dh2.catalog.talent.quick-draw',
     tier: 1,
     aptitudeSlots: ['agility', 'finesse'],
+    hintKey: 'dh2.catalog.talent.quick-draw.hint',
   },
   {
     id: 'rapid-reload',
     labelKey: 'dh2.catalog.talent.rapid-reload',
     tier: 1,
     aptitudeSlots: ['agility', 'fieldcraft'],
+    hintKey: 'dh2.catalog.talent.rapid-reload.hint',
   },
   {
     id: 'resistance',
     labelKey: 'dh2.catalog.talent.resistance',
     tier: 1,
     aptitudeSlots: ['toughness', 'defence'],
+    hintKey: 'dh2.catalog.talent.resistance.hint',
   },
   {
     id: 'sound-constitution',
@@ -746,6 +760,7 @@ export const DH2E_TALENTS: readonly Dh2eTalent[] = [
     labelKey: 'dh2.catalog.talent.takedown',
     tier: 1,
     aptitudeSlots: ['weapon-skill', 'offence'],
+    hintKey: 'dh2.catalog.talent.takedown.hint',
   },
   {
     id: 'target-selection',
@@ -812,6 +827,7 @@ export const DH2E_TALENTS: readonly Dh2eTalent[] = [
     labelKey: 'dh2.catalog.talent.warp-sense',
     tier: 1,
     aptitudeSlots: ['perception', 'psyker'],
+    hintKey: 'dh2.catalog.talent.warp-sense.hint',
   },
   {
     id: 'weapon-tech',
@@ -824,6 +840,7 @@ export const DH2E_TALENTS: readonly Dh2eTalent[] = [
     labelKey: 'dh2.catalog.talent.weapon-training',
     tier: 1,
     aptitudeSlots: ['general', 'finesse'],
+    hintKey: 'dh2.catalog.talent.weapon-training.hint',
   },
   {
     id: 'whirlwind-of-death',
