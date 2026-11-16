@@ -136,6 +136,27 @@ of the other edition:
 - `dh1`: nine characteristics (no `influence`), `fatigue1st`;
 - `dh2`: ten characteristics including `influence`, `fatigue2nd`.
 
+2e-only structures (additive in schema 3, rebuilt by `src/games/dh2/normalize.ts`):
+
+- `aptitudes: { profile, chosen, extra }` — profile is derived from home
+  world/background/role; `chosen` resolves background/role choices and
+  duplicate replacements (book p. 79). The sheet rebuilds the profile with
+  `deriveAptitudes`; legacy sheets without `chosen` keep the deterministic
+  fallback.
+- `startingChoices: { roleTalent?, skills: string[], talents: string[] }` —
+  the player's choices from the starting package ("one of two"); the package
+  remains a hint and is entered on the sheet manually. Empty strings mark an
+  unchosen slot.
+- `psy: { rating, disciplines: string[], powers: string[] }` — rating is
+  bought with the manual XP journal (`psy-rating`, 200 × new rating); the
+  discipline/power lists are free text from the book.
+- `eliteAdvances: string[]` — purchased elite advances (`elite-advance`
+  journal entries). Instant changes are shown as a memo and are not applied to
+  the sheet automatically.
+- `influence` is part of `stats`; wealth is stored but hidden in the 2e UI
+  (Influence is the resource). `influence.ts` computes the creation limit and
+  the Requisition target from the availability/craftsmanship tables.
+
 Migration rules (`v0/v1 → v2`):
 
 - `gameSystem: "Dungeons & Dragons"` → `dnd5e`;
