@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 
 import { createDh2Defaults } from '@/games/dh2/defaults';
 import { DH2E_AVAILABILITY, DH2E_CRAFTSMANSHIP } from '@/games/dh2/dh2e-rules';
+import { buildDh2ExcelSections } from '@/games/dh2/excel';
+import { buildDh2PortableJson } from '@/games/dh2/export';
 import {
   availabilityById,
   creationAcquisitionLimit,
@@ -9,6 +11,7 @@ import {
   isCreationAvailability,
   requisitionTarget,
 } from '@/games/dh2/influence';
+import type { GameExportConfig } from '@/games/types';
 
 /**
  * ─── LANDMARK: DH2 INFLUENCE TESTS ────────────────────────────────────────
@@ -83,5 +86,37 @@ describe('данные таблиц 5-1 и 5-2', () => {
     expect(DH2E_CRAFTSMANSHIP.map((entry) => entry.modifier)).toEqual([
       10, 0, -20, -30,
     ]);
+  });
+});
+
+describe('каналы листа', () => {
+  const config: GameExportConfig = {
+    includeBasicInfo: true,
+    includeStats: true,
+    includeCombat: false,
+    includeEquipment: false,
+    includeInventory: false,
+    includeSpells: false,
+    includeNarrative: false,
+    includeProgression: false,
+    includeCompanions: false,
+    includeQuestLog: false,
+    includeCustomHouseRules: false,
+  };
+
+  it('JSON и Excel содержат Influence', () => {
+    const character = {
+      ...createDh2Defaults({ influence: 45 }),
+      id: 'test-id',
+    };
+    const portable = buildDh2PortableJson(character, config);
+    expect(portable.stats).toMatchObject({ influence: 45 });
+
+    const labels = buildDh2ExcelSections(character, config, (key) => key)
+      .flatMap((section) => section.rows.flatMap((row) => row))
+      .filter((cell): cell is string => typeof cell === 'string')
+      .map((cell) => cell.trim());
+    expect(labels).toContain('dh2.influence');
+    expect(labels).toContain('45');
   });
 });

@@ -74,7 +74,7 @@ export const dh2BulkEditor: readonly BulkEditorTable<DH2Character>[] = [
     tab: VITALS_TAB,
     titleKey: 'dh2.bulkVitals',
     descriptionKey: 'dh2.bulkVitalsDesc',
-    minWidth: 800,
+    minWidth: 900,
     gap: 2,
     saveOneKey: 'common.savedVitalsFor',
     columns: [
@@ -103,12 +103,21 @@ export const dh2BulkEditor: readonly BulkEditorTable<DH2Character>[] = [
         value: (character) => character.corruptionPoints?.total ?? 0,
       },
       {
+        key: 'psyRating',
+        labelKey: 'dh2.psyRating',
+        min: 0,
+        value: (character) => character.psy?.rating ?? 0,
+      },
+      {
         key: 'experience',
         labelKey: 'dh2.experience',
         min: 0,
         value: (character) => character.experience ?? 0,
       },
     ],
+    // Аптитюды и элитные — не скалярные значения: выбор аптитюды зависит от
+    // мира/бэкграунда/роли, а элитное меняет журнал опыта. Правим их на листе,
+    // чтобы таблица не притворялась, что умеет проверять пререквизиты.
     apply: (character, values) => ({
       wounds: { ...character.wounds, max: Number(values.woundsMax) || 0 },
       fatePoints: { ...character.fatePoints, max: Number(values.fateMax) || 0 },
@@ -120,6 +129,7 @@ export const dh2BulkEditor: readonly BulkEditorTable<DH2Character>[] = [
         ...character.corruptionPoints,
         total: Number(values.corruption) || 0,
       },
+      psy: { ...character.psy, rating: Number(values.psyRating) || 0 },
       experience: Number(values.experience) || 0,
     }),
   },

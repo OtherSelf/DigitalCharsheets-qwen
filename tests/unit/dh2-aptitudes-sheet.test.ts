@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { applyAptitudeChoice } from '@/games/dh2/aptitudes-sheet';
 import { createDh2Defaults } from '@/games/dh2/defaults';
 import { deriveAptitudes } from '@/games/dh2/dh2e-aptitudes';
+import { dh2History } from '@/games/dh2/history';
 import { normalizeDh2 } from '@/games/dh2/normalize';
 
 /**
@@ -70,6 +71,13 @@ describe('выбор аптитюды на листе', () => {
     expect(patch.aptitudes.profile).toContain('ballistic-skill');
     expect(patch.aptitudes.profile).toContain('offence');
     expect(patch.aptitudes.profile.length).toBeGreaterThanOrEqual(5);
+  });
+});
+
+describe('история подписей', () => {
+  it('aptitudes.chosen и experienceLog имеют подписи', () => {
+    expect(dh2History.labels?.['aptitudes.chosen']).toBe('dh2.aptitudes');
+    expect(dh2History.collections?.experienceLog).toBe('dh2.experienceLog');
   });
 });
 
