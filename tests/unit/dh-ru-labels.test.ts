@@ -73,6 +73,22 @@ describe.each([
     }
   });
 
+  it('DH2: четыре термина из RU-листа', () => {
+    if (prefix !== 'dh2') return;
+    expect(ru['dh2.aptitudes']).toBe('Склонности');
+    expect(ru['dh2.skills']).toBe('Умения');
+    expect(ru['dh2.eliteAdvances']).toBe('Элитные улучшения');
+    expect(ru['dh2.fatePoints']).toBe('Судьба');
+  });
+
+  it('DH2: четыре навыка исправлены по RU-листу', () => {
+    if (prefix !== 'dh2') return;
+    expect(ru['dh2.catalog.skill.awareness']).toBe('Бдительность');
+    expect(ru['dh2.catalog.skill.commerce']).toBe('Коммерция');
+    expect(ru['dh2.catalog.skill.scholastic-lore']).toBe('Учёное Знание');
+    expect(ru['dh2.catalog.skill.tech-use']).toBe('Техпользование');
+  });
+
   it('пол: три варианта и подпись сохраняется текстом', () => {
     expect(ru[`${prefix}.genderMale`]).toBe('Мужской');
     expect(ru[`${prefix}.genderFemale`]).toBe('Женский');

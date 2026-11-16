@@ -150,7 +150,7 @@ export function buildDh2ExcelSections(
   }
 
   if (config.includeCombat) {
-    w.section('io.excel.skills');
+    w.section('dh2.skills');
     w.tableHeader([
       'io.excel.name',
       'io.excel.skillType',

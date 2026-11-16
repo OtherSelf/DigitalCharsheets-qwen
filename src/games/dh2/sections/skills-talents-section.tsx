@@ -335,7 +335,7 @@ export const SkillsTalentsSection = React.forwardRef<
                     <ChevronRight className="h-5 w-5" />
                   )}
                   <h3 className="font-headline text-lg font-semibold">
-                    {t('common.skills')}
+                    {t('dh2.skills')}
                   </h3>
                 </CollapsibleTrigger>
                 {(showEditButtons || isSkillsEditing) && (
