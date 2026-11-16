@@ -47,6 +47,7 @@ import {
   CAREER_KEYS,
   dhLocalizedKey,
   DIVINATIONS,
+  fateRangeFromText,
   getQuirksForHomeWorld,
   HOME_WORLD_KEYS,
   QUIRK_KEYS,
@@ -58,6 +59,7 @@ import {
   WORLD_STARTING_PROFILE,
   WORLD_VARIANT_LABELS,
   WORLD_VARIANTS_BY_HOMEWORLD,
+  woundsRangeFromFormula,
 } from './dark-heresy-data';
 import { RanksByCareer } from './dark-heresy-ranks';
 import { createDh1Defaults } from './defaults';
@@ -192,6 +194,15 @@ export function DarkHeresyCreateForm({
     () => (watchedHomeWorld ? WORLD_STARTING_PROFILE[watchedHomeWorld] : null),
     [watchedHomeWorld],
   );
+  const watchedWoundsRange = React.useMemo(
+    () =>
+      watchedProfile ? woundsRangeFromFormula(watchedProfile.wounds) : null,
+    [watchedProfile],
+  );
+  const watchedFateRange = React.useMemo(
+    () => (watchedProfile ? fateRangeFromText(watchedProfile.fate) : null),
+    [watchedProfile],
+  );
   const startingRank = React.useMemo(() => {
     if (!watchedCareer) return null;
     const rank = RanksByCareer[watchedCareer].standard[0]?.name;
@@ -217,6 +228,16 @@ export function DarkHeresyCreateForm({
   React.useEffect(() => {
     form.setValue('worldVariant', '');
   }, [watchedHomeWorld, form]);
+
+  // Раны и Судьба: по умолчанию минимум диапазона мира, бросок вводит
+  // игрок (D12). Значения не «из воздуха» и не средние.
+  React.useEffect(() => {
+    if (!watchedProfile) return;
+    const wounds = woundsRangeFromFormula(watchedProfile.wounds);
+    const fate = fateRangeFromText(watchedProfile.fate);
+    if (wounds) form.setValue('wounds', wounds.min);
+    if (fate) form.setValue('fatePoints', fate.min);
+  }, [watchedProfile, form]);
 
   const handleInvalid = (errors: FieldErrors) => {
     // RHF фокусирует только «нативные» поля; Select на мобильном может
@@ -429,9 +450,18 @@ export function DarkHeresyCreateForm({
                     </div>
                     <p className="text-muted-foreground text-sm">
                       {t('dh1.startingWounds')}: {watchedProfile.wounds}
+                      {watchedWoundsRange
+                        ? ` → ${watchedWoundsRange.min}–${watchedWoundsRange.max}`
+                        : ''}
                     </p>
                     <p className="text-muted-foreground text-sm">
                       {t('dh1.startingFate')}: {watchedProfile.fate}
+                      {watchedFateRange
+                        ? ` → ${watchedFateRange.min}–${watchedFateRange.max}`
+                        : ''}
+                    </p>
+                    <p className="text-muted-foreground text-xs">
+                      {t('dh1.rollHint')}
                     </p>
                     <div className="grid grid-cols-3 gap-1 text-xs">
                       {STARTING_STAT_KEYS.map(([statKey, abbrKey]) => (

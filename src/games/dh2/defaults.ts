@@ -8,6 +8,7 @@ import { characteristicAptitudes, deriveAptitudes } from './dh2e-aptitudes';
 import { DH2E_BACKGROUNDS, DH2E_HOMEWORLDS, DH2E_ROLES } from './dh2e-data';
 import { isDivinationId } from './dh2e-divinations';
 import { readStartingChoices } from './dh2e-grants';
+import { fateRangeFor, woundsRangeFor } from './dh2e-starting-profile';
 import { DH2_SCHEMA_VERSION } from './schema-version';
 import {
   DARK_HERESY_CORE_STATS,
@@ -74,16 +75,13 @@ function cleanChosen(
   return cleaned;
 }
 
-/** Раны мира 2e: `9+1d5` → 10 при «среднем» значении кубика. */
+/** Раны мира 2e: минимум диапазона, бросок игрок вводит сам (D12). */
 function defaultWounds(homeWorld: string): number {
-  const world = DH2E_HOMEWORLDS.find((item) => item.id === homeWorld);
-  const match = world?.wounds.match(/^(\d+)\+1d5$/);
-  return match ? Number(match[1]) + 1 : 10;
+  return woundsRangeFor(homeWorld)?.min ?? 10;
 }
 
 function defaultFate(homeWorld: string): number {
-  const world = DH2E_HOMEWORLDS.find((item) => item.id === homeWorld);
-  return world?.fateThreshold ?? 1;
+  return fateRangeFor(homeWorld)?.min ?? 1;
 }
 
 export function createDh2BaseDefaults(
