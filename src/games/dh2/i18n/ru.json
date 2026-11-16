@@ -59,7 +59,7 @@
   "dh2.requisitionHint": "Приложение только считает цель; бросок делает игрок.",
   "dh2.automatic": "Автоматически",
   "dh2.otherStats": "Другие параметры",
-  "dh2.fatePoints": "Судьба",
+  "dh2.fatePoints": "Очки судьбы",
   "dh2.selectHomeWorldError": "Вы должны выбрать родной мир.",
   "dh2.selectCareerPathError": "Вы должны выбрать карьерный путь.",
   "dh2.selectDivinationError": "Пожалуйста, выберите пророчество.",

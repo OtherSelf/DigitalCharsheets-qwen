@@ -78,7 +78,10 @@ describe.each([
     expect(ru['dh2.aptitudes']).toBe('Склонности');
     expect(ru['dh2.skills']).toBe('Умения');
     expect(ru['dh2.eliteAdvances']).toBe('Элитные улучшения');
-    expect(ru['dh2.fatePoints']).toBe('Судьба');
+    // D13: счётчик на листе — «Очки судьбы», «Судьба» осталась синонимом
+    // для `dh2.fate` (форма создания и порог).
+    expect(ru['dh2.fatePoints']).toBe('Очки судьбы');
+    expect(ru['dh2.fate']).toBe('Судьба');
   });
 
   it('DH2: пророчества дословно по таблице 2-9', () => {

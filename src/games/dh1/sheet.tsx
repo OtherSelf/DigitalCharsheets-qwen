@@ -715,7 +715,7 @@ export const Dh1Sheet = React.forwardRef<
                 </div>
               </MetricBox>
               <MetricBox
-                title={t('dh1.fate')}
+                title={t('dh1.fatePoints')}
                 notes={getPointsObject(character.fatePoints).notes}
                 onNoteChange={(val) =>
                   updateCharacter(character.id, {
@@ -1236,7 +1236,7 @@ export const Dh1Sheet = React.forwardRef<
                       </div>
                     </MetricBox>
                     <MetricBox
-                      title={t('dh1.fate')}
+                      title={t('dh1.fatePoints')}
                       notes={getPointsObject(character.fatePoints).notes}
                       onNoteChange={(val) =>
                         updateCharacter(character.id, {
