@@ -310,10 +310,10 @@ export const DH2E_BACKGROUNDS: readonly Dh2eBackground[] = [
         choose: 1,
         of: [
           {
-            skillId: 'undefined',
+            skillId: 'commerce',
           },
           {
-            skillId: 'undefined',
+            skillId: 'medicae',
           },
         ],
       },
@@ -362,10 +362,10 @@ export const DH2E_BACKGROUNDS: readonly Dh2eBackground[] = [
         choose: 1,
         of: [
           {
-            skillId: 'undefined',
+            skillId: 'inquiry',
           },
           {
-            skillId: 'undefined',
+            skillId: 'interrogation',
           },
         ],
       },
@@ -401,10 +401,10 @@ export const DH2E_BACKGROUNDS: readonly Dh2eBackground[] = [
         choose: 1,
         of: [
           {
-            skillId: 'undefined',
+            skillId: 'deceive',
           },
           {
-            skillId: 'undefined',
+            skillId: 'interrogation',
           },
         ],
       },
@@ -416,10 +416,10 @@ export const DH2E_BACKGROUNDS: readonly Dh2eBackground[] = [
         choose: 1,
         of: [
           {
-            skillId: 'undefined',
+            skillId: 'psyniscience',
           },
           {
-            skillId: 'undefined',
+            skillId: 'scrutiny',
           },
         ],
       },
@@ -445,7 +445,7 @@ export const DH2E_BACKGROUNDS: readonly Dh2eBackground[] = [
         choose: 1,
         of: [
           {
-            skillId: 'undefined',
+            skillId: 'awareness',
           },
           {
             skillId: 'operate',
@@ -499,10 +499,10 @@ export const DH2E_BACKGROUNDS: readonly Dh2eBackground[] = [
         choose: 1,
         of: [
           {
-            skillId: 'undefined',
+            skillId: 'inquiry',
           },
           {
-            skillId: 'undefined',
+            skillId: 'scrutiny',
           },
         ],
       },
@@ -548,7 +548,7 @@ export const DH2E_BACKGROUNDS: readonly Dh2eBackground[] = [
         choose: 1,
         of: [
           {
-            skillId: 'undefined',
+            skillId: 'medicae',
           },
           {
             skillId: 'operate',
@@ -579,10 +579,10 @@ export const DH2E_BACKGROUNDS: readonly Dh2eBackground[] = [
         choose: 1,
         of: [
           {
-            skillId: 'undefined',
+            skillId: 'acrobatics',
           },
           {
-            skillId: 'undefined',
+            skillId: 'sleight-of-hand',
           },
         ],
       },

@@ -8,6 +8,7 @@ import {
   DH2E_HOMEWORLDS,
   DH2E_ROLES,
 } from '@/games/dh2/dh2e-data';
+import { DH2E_SKILLS, DH2E_TALENTS } from '@/games/dh2/dh2e-reference';
 import { DH2E_XP_COST_TABLES } from '@/games/dh2/dh2e-rules';
 
 /**
@@ -54,6 +55,48 @@ describe('данные генерации 2e', () => {
     expect(DH2E_XP_COST_TABLES.skill.zero[3]).toBe(1200);
     expect(DH2E_XP_COST_TABLES.talent.two).toEqual([200, 300, 400]);
     expect(DH2E_XP_COST_TABLES.talent.zero[2]).toBe(1200);
+  });
+});
+
+describe('целостность стартовых пакетов', () => {
+  interface SkillSlot {
+    skillId?: string;
+    talentId?: string;
+    choose?: number;
+    of?: readonly SkillSlot[];
+  }
+
+  const skillIds = new Set(DH2E_SKILLS.map((item) => item.id));
+  const talentIds = new Set(DH2E_TALENTS.map((item) => item.id));
+
+  const checkSlot = (slot: SkillSlot): void => {
+    if (slot.choose && slot.of) {
+      slot.of.forEach(checkSlot);
+      return;
+    }
+    if (slot.skillId) {
+      expect(skillIds.has(slot.skillId), slot.skillId).toBe(true);
+    }
+    if (slot.talentId) {
+      expect(talentIds.has(slot.talentId), slot.talentId).toBe(true);
+    }
+    expect(JSON.stringify(slot)).not.toContain('undefined');
+  };
+
+  it('навыки/таланты бэкграундов и ролей ссылаются на справочник', () => {
+    for (const background of DH2E_BACKGROUNDS) {
+      for (const slot of background.startingSkills as SkillSlot[]) {
+        checkSlot(slot);
+      }
+      for (const slot of background.startingTalents as SkillSlot[]) {
+        checkSlot(slot);
+      }
+    }
+    for (const role of DH2E_ROLES) {
+      for (const id of role.talentChoice.of as readonly string[]) {
+        expect(talentIds.has(id), `${role.id}: ${id}`).toBe(true);
+      }
+    }
   });
 });
 

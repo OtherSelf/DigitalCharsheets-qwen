@@ -136,6 +136,12 @@ function skillGrant(entry) {
 }
 
 function flattenSkillEntry(entry) {
+  // `anyOf` может содержать как объекты {id, specialisation}, так и голые
+  // ссылки на сущности (`dh2/core/skill/commerce`) — без этой ветки slugOf
+  // получал undefined и в данные попадал литерал `skillId: 'undefined'`.
+  if (typeof entry === 'string') {
+    return [{ skillId: slugOf(entry) }];
+  }
   if (Array.isArray(entry.anyOf)) {
     return [{ choose: 1, of: entry.anyOf.flatMap(flattenSkillEntry) }];
   }
