@@ -58,6 +58,18 @@ export interface DH2PsyProfile {
   powers: string[];
 }
 
+/**
+ * Выборы стартового пакета, которые игрок сделал при создании. Пакет остаётся
+ * подсказкой: на лист выбранные навыки и таланты игрок вносит вручную (D11).
+ * `skills`/`talents` выровнены по `choose`-слотам бэкграунда, `''` — не выбрано.
+ */
+export interface DH2StartingChoices {
+  /** Выбранный талант роли (один из двух в `role.talentChoice`). */
+  roleTalent?: string;
+  skills: string[];
+  talents: string[];
+}
+
 export type DH2ExperienceKind =
   | 'characteristic'
   | 'skill'
@@ -166,6 +178,8 @@ export interface DarkHeresyBase extends CharacterBase {
   eliteAdvances: string[];
   /** Пси-профиль 2e. */
   psy: DH2PsyProfile;
+  /** Выборы стартового пакета при создании (D11). */
+  startingChoices?: DH2StartingChoices;
   /** Пророчество 2e: id строки таблицы 2-9 (`d100-10`), не текст. */
   divination: string;
   /** Пол персонажа: свободная строка (правила редакции его не ограничивают). */

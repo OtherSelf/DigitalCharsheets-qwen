@@ -20,6 +20,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { useCharacterContext, useTranslation } from '@/games/plugin-host';
 import { cn } from '@/lib/utils';
 
+import { DH2E_BACKGROUNDS } from '../dh2e-data';
+import { startingChoiceLabels } from '../dh2e-grants';
 import {
   aptitudeLabels,
   backgroundLabel,
@@ -28,6 +30,7 @@ import {
   eliteAdvanceLabel,
   homeWorldLabel,
   roleLabel,
+  talentLabel,
 } from '../dh2e-labels';
 import type { DH2Character } from '../types';
 import { EditSaveButton } from './dh-ui-helpers';
@@ -131,6 +134,25 @@ export const InfoSection = ({
   const showInfo = !isCompactView || activeCompactSection === 'info-section';
   if (!showInfo) return null;
 
+  const backgroundEntry = DH2E_BACKGROUNDS.find(
+    (item) => item.id === character.background,
+  );
+  const roleTalent = character.startingChoices?.roleTalent
+    ? talentLabel(character.startingChoices.roleTalent, t)
+    : '';
+  const chosenSkills = startingChoiceLabels(
+    backgroundEntry,
+    'skill',
+    character.startingChoices?.skills,
+    t,
+  );
+  const chosenTalents = startingChoiceLabels(
+    backgroundEntry,
+    'talent',
+    character.startingChoices?.talents,
+    t,
+  );
+
   return (
     <Card id="info-section">
       <CardHeader
@@ -190,6 +212,27 @@ export const InfoSection = ({
             value={aptitudeLabels(character.aptitudes.profile, t)}
             isCompactView={isCompactView}
           />
+          {roleTalent && (
+            <ReadOnlyField
+              label={t('dh2.roleTalent')}
+              value={roleTalent}
+              isCompactView={isCompactView}
+            />
+          )}
+          {chosenSkills.length > 0 && (
+            <ReadOnlyField
+              label={t('dh2.startingSkillsChosen')}
+              value={chosenSkills.join(', ')}
+              isCompactView={isCompactView}
+            />
+          )}
+          {chosenTalents.length > 0 && (
+            <ReadOnlyField
+              label={t('dh2.startingTalentsChosen')}
+              value={chosenTalents.join(', ')}
+              isCompactView={isCompactView}
+            />
+          )}
           <ReadOnlyField
             label={t('dh2.eliteAdvances')}
             value={character.eliteAdvances

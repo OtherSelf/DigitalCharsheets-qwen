@@ -1,5 +1,7 @@
 import { createExcelSections } from '../shared/excel';
 import type { ExcelSection, ExportTranslate, GameExportConfig } from '../types';
+import { DH2E_BACKGROUNDS } from './dh2e-data';
+import { startingChoiceLabels } from './dh2e-grants';
 import {
   aptitudeLabels,
   backgroundLabel,
@@ -8,6 +10,7 @@ import {
   eliteAdvanceLabel,
   homeWorldLabel,
   roleLabel,
+  talentLabel,
 } from './dh2e-labels';
 import type { DarkHeresyStatUpgrade, DH2Character } from './types';
 
@@ -51,6 +54,31 @@ export function buildDh2ExcelSections(
     w.row('dh2.background', backgroundLabel(character.background, t));
     w.row('dh2.role', roleLabel(character.role, t));
     w.row('dh2.aptitudes', aptitudeLabels(character.aptitudes.profile, t));
+    const backgroundEntry = DH2E_BACKGROUNDS.find(
+      (item) => item.id === character.background,
+    );
+    const starting = character.startingChoices;
+    if (starting?.roleTalent) {
+      w.row('dh2.roleTalent', talentLabel(starting.roleTalent, t));
+    }
+    const chosenSkills = startingChoiceLabels(
+      backgroundEntry,
+      'skill',
+      starting?.skills,
+      t,
+    );
+    if (chosenSkills.length > 0) {
+      w.row('dh2.startingSkillsChosen', chosenSkills.join(', '));
+    }
+    const chosenTalents = startingChoiceLabels(
+      backgroundEntry,
+      'talent',
+      starting?.talents,
+      t,
+    );
+    if (chosenTalents.length > 0) {
+      w.row('dh2.startingTalentsChosen', chosenTalents.join(', '));
+    }
     w.row(
       'dh2.eliteAdvances',
       character.eliteAdvances.map((id) => eliteAdvanceLabel(id, t)).join(', '),

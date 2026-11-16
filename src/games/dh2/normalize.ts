@@ -2,6 +2,7 @@ import type { NormalizeOptions, NormalizeResult } from '../types';
 import { deriveAptitudes } from './dh2e-aptitudes';
 import { DH2E_BACKGROUNDS, DH2E_HOMEWORLDS, DH2E_ROLES } from './dh2e-data';
 import { resolveDivinationId } from './dh2e-divinations';
+import { readStartingChoices } from './dh2e-grants';
 import type { DH2Character } from './types';
 
 /**
@@ -252,6 +253,10 @@ function enforceDh2Fields(character: RawRecord, warnings: string[]): void {
   const aptitudes = asRecord(character.aptitudes);
   const chosen = asRecord(aptitudes.chosen);
   const profile = Array.isArray(aptitudes.profile) ? aptitudes.profile : [];
+  const backgroundEntry = DH2E_BACKGROUNDS.find(
+    (item) => item.id === character.background,
+  );
+  const roleEntry = DH2E_ROLES.find((item) => item.id === character.role);
   const derived =
     profile.length > 0
       ? { profile: profile as string[] }
@@ -262,6 +267,8 @@ function enforceDh2Fields(character: RawRecord, warnings: string[]): void {
             role: String(character.role),
           },
           chosen as Record<string, string>,
+          // Старый лист без выбора получает прежний детерминированный профиль.
+          { fallbackToFirst: true },
         );
   character.aptitudes = {
     profile: derived.profile,
@@ -276,6 +283,11 @@ function enforceDh2Fields(character: RawRecord, warnings: string[]): void {
     disciplines: Array.isArray(psy.disciplines) ? psy.disciplines : [],
     powers: Array.isArray(psy.powers) ? psy.powers : [],
   };
+  character.startingChoices = readStartingChoices(
+    character.startingChoices,
+    backgroundEntry,
+    roleEntry,
+  );
   if (!Array.isArray(character.experienceLog)) character.experienceLog = [];
   if (typeof character.divination !== 'string') character.divination = '';
   if (typeof character.gender !== 'string') character.gender = '';

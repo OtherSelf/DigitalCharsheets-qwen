@@ -22,11 +22,16 @@ export function createDh2Demo(): DH2CharacterDraft {
     role: 'warrior',
     aptitudes: {
       ...(() => {
-        const aptitudes = deriveAptitudes({
-          homeWorld: 'hive-world',
-          background: 'adeptus-arbites',
-          role: 'warrior',
-        });
+        const aptitudes = deriveAptitudes(
+          {
+            homeWorld: 'hive-world',
+            background: 'adeptus-arbites',
+            role: 'warrior',
+          },
+          {},
+          // Демо-лист не проходит форму создания: профиль детерминированный.
+          { fallbackToFirst: true },
+        );
         return { profile: aptitudes.profile, chosen: {}, extra: [] };
       })(),
     },

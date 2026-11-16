@@ -32,6 +32,7 @@ export function buildDh2PortableJson(
 
   if (config.includeStats) {
     result.aptitudes = character.aptitudes;
+    result.startingChoices = character.startingChoices;
     result.eliteAdvances = character.eliteAdvances;
     result.psy = character.psy;
     result.stats = character.stats;
