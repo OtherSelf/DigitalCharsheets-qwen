@@ -46,3 +46,13 @@ export function pickAllowedStats<T>(
   for (const key of ALL_DARK_HERESY_STATS) result[key] = record[key];
   return result;
 }
+
+/** Итог характеристики с покупками: база + 5 за каждую ступень. */
+export function statTotal(
+  character: Pick<DH2Character, 'stats' | 'statUpgrades'>,
+  key: DarkHeresyStatKey,
+): number {
+  const base = Number(character.stats?.[key] ?? 0) || 0;
+  const upgrades = character.statUpgrades?.[key] ?? EMPTY_STAT_UPGRADE;
+  return base + upgrades.filter(Boolean).length * 5;
+}

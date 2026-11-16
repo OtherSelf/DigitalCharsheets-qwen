@@ -32,6 +32,13 @@ import {
   roleLabel,
   talentLabel,
 } from '../dh2e-labels';
+import {
+  buyPsyRating,
+  formatPsyList,
+  parsePsyList,
+  psyRatingCost,
+} from '../psy';
+import { statTotal } from '../stats';
 import type { DH2Character } from '../types';
 import { EditSaveButton } from './dh-ui-helpers';
 
@@ -250,6 +257,20 @@ export const InfoSection = ({
             value={character.psy.rating > 0 ? String(character.psy.rating) : ''}
             isCompactView={isCompactView}
           />
+          {character.psy.disciplines.length > 0 && (
+            <ReadOnlyField
+              label={t('dh2.psyDisciplines')}
+              value={formatPsyList(character.psy.disciplines)}
+              isCompactView={isCompactView}
+            />
+          )}
+          {character.psy.powers.length > 0 && (
+            <ReadOnlyField
+              label={t('dh2.psyPowers')}
+              value={formatPsyList(character.psy.powers)}
+              isCompactView={isCompactView}
+            />
+          )}
           <ReadOnlyField
             label={t('dh2.divination')}
             value={divinationLabel(character.divination, t)}
@@ -378,6 +399,7 @@ export const ProgressionSection = ({
 }: SectionProps) => {
   const { updateCharacter, showEditButtons } = useCharacterContext();
   const { t, language } = useTranslation();
+  const psyFieldId = React.useId();
   const [isProgressionEditing, setIsProgressionEditing] = React.useState(false);
   const [isSpendOpen, setIsSpendOpen] = React.useState(false);
   const [isJournalOpen, setIsJournalOpen] = React.useState(false);
@@ -421,6 +443,23 @@ export const ProgressionSection = ({
     setSpendAmount(0);
     setSpendWhat('');
     setIsSpendOpen(false);
+  };
+
+  // Следующая ступень пси-рейтинга: цена — подсказка, списание — в журнал
+  // (D1/D3). Доступный опыт не блокирует покупку: это решает стол.
+  const nextPsyRating = (character.psy?.rating ?? 0) + 1;
+  const nextPsyCost = psyRatingCost(nextPsyRating);
+  const willpowerTotal = statTotal(character, 'willpower');
+
+  const handleRaisePsyRating = () => {
+    const purchase = buyPsyRating(character, t('dh2.psyRating'));
+    updateCharacter(character.id, purchase.patch);
+  };
+
+  const savePsyList = (field: 'disciplines' | 'powers', raw: string): void => {
+    updateCharacter(character.id, {
+      psy: { ...character.psy, [field]: parsePsyList(raw) },
+    });
   };
 
   const showProgression =
@@ -517,12 +556,112 @@ export const ProgressionSection = ({
             </Label>
             <p className="text-primary text-sm font-semibold">{available}</p>
           </div>
-          <div className="space-y-1">
-            <Label className="text-muted-foreground text-xs">
-              {t('dh2.psyRating')}
-            </Label>
-            <p className="text-sm font-medium">{character.psy.rating || '-'}</p>
+        </div>
+
+        <div className="space-y-3 border-t pt-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h4 className="text-sm font-medium">{t('dh2.psySection')}</h4>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleRaisePsyRating}
+            >
+              {t('dh2.raisePsyRating')}
+            </Button>
           </div>
+          <p className="text-muted-foreground text-xs">
+            {t('dh2.nextPsyRating')}: {nextPsyRating} · {nextPsyCost}{' '}
+            {t('dh2.xpAbbr')}. {t('dh2.psyPurchaseHint')}
+          </p>
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            <div className="space-y-1">
+              <Label
+                htmlFor={`${psyFieldId}-rating`}
+                className="text-muted-foreground text-xs"
+              >
+                {t('dh2.psyRating')}
+              </Label>
+              {isProgressionEditing ? (
+                <Input
+                  id={`${psyFieldId}-rating`}
+                  key={character.psy.rating}
+                  type="number"
+                  min={0}
+                  defaultValue={character.psy.rating}
+                  onBlur={(e) =>
+                    updateCharacter(character.id, {
+                      psy: {
+                        ...character.psy,
+                        rating: Math.max(0, parseInt(e.target.value, 10) || 0),
+                      },
+                    })
+                  }
+                  className="h-8"
+                />
+              ) : (
+                <p className="text-sm font-medium">
+                  {character.psy.rating || '-'}
+                </p>
+              )}
+            </div>
+            <div className="space-y-1">
+              <Label className="text-muted-foreground text-xs">
+                {t('dh2.focusPowerTest')}
+              </Label>
+              <p className="text-sm font-medium">
+                {t('common.willpower')} {willpowerTotal}
+              </p>
+              <p className="text-muted-foreground text-xs">
+                {t('dh2.focusPowerHint')}
+              </p>
+            </div>
+            <div className="space-y-1">
+              <Label
+                htmlFor={`${psyFieldId}-disciplines`}
+                className="text-muted-foreground text-xs"
+              >
+                {t('dh2.psyDisciplines')}
+              </Label>
+              {isProgressionEditing ? (
+                <Input
+                  id={`${psyFieldId}-disciplines`}
+                  defaultValue={formatPsyList(character.psy.disciplines)}
+                  onBlur={(e) => savePsyList('disciplines', e.target.value)}
+                  className="h-8"
+                />
+              ) : (
+                <p className="text-sm font-medium break-words">
+                  {formatPsyList(character.psy.disciplines) || '-'}
+                </p>
+              )}
+            </div>
+            <div className="space-y-1">
+              <Label
+                htmlFor={`${psyFieldId}-powers`}
+                className="text-muted-foreground text-xs"
+              >
+                {t('dh2.psyPowers')}
+              </Label>
+              {isProgressionEditing ? (
+                <Input
+                  id={`${psyFieldId}-powers`}
+                  defaultValue={formatPsyList(character.psy.powers)}
+                  onBlur={(e) => savePsyList('powers', e.target.value)}
+                  className="h-8"
+                />
+              ) : (
+                <p className="text-sm font-medium break-words">
+                  {formatPsyList(character.psy.powers) || '-'}
+                </p>
+              )}
+            </div>
+          </div>
+          {isProgressionEditing && (
+            <p className="text-muted-foreground text-xs">
+              {t('dh2.psyFreeTextHint')}
+            </p>
+          )}
         </div>
       </CardContent>
       <Dialog open={isSpendOpen} onOpenChange={setIsSpendOpen}>
