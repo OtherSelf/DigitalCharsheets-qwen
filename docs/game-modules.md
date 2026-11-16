@@ -75,6 +75,24 @@ npm run dh2e:check   # fail if the generated files are stale
 hand-written. `dh2e:check` is a local guard: CI has no workspace checkout, so
 it is not part of `npm run verify`.
 
+## Edition differences (dh1 vs dh2)
+
+The modules intentionally duplicate code (D10). Where the rules differ, the
+sheet follows the edition instead of sharing a switch:
+
+| Area | dh1 (1e) | dh2 (2e) |
+| --- | --- | --- |
+| Progression | career path, rank, alternate/advanced paths (`dark-heresy-ranks.ts`) | no ranks or paths; manual XP journal |
+| Wealth | throne gelt and monthly income on the sheet | wealth hidden; Influence is the resource |
+| Requisition | not a rule | Influence + availability/craftsmanship target (`influence.ts`) |
+| Psychic | one discipline plus a power list (`psy.discipline`) | free-text disciplines/powers, psy rating purchase hint, elite advances |
+| Identity | `identity.playerName` is stored but not shown | `gender` is shown; no player name |
+| Creation hints | world starting profile and starting packages | aptitude choices, wound/fate ranges, Influence acquisition limit |
+
+Common behaviour is mirrored on purpose: creation fields, the XP journal,
+history labels, compact view and the export channels (JSON/Excel). Rules are
+kept in the module, not in the core; see `docs/data-storage.md` for fields.
+
 ## Plugin manifest
 
 Every module folder has a `plugin.json` (`src/games/plugin.schema.json`):
