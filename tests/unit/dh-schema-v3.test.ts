@@ -37,7 +37,8 @@ describe('DH1: миграция листа v2', () => {
     expect(dh.divination).toBe('trustYourFear');
     expect(dh.divinationEffect).toBe('agility2Fate1');
     expect(dh.quirk).toBe('Suspicious of psykers.');
-    // «Имя игрока» остаётся в данных, хотя поле скрыто в листе.
+    // «Имя игрока» — legacy-ключ: в контракте листа его нет, но старые
+    // данные не переписываются и проходят looseObject.
     expect((dh.identity as Record<string, unknown>).playerName).toBe('Игрок');
     expect((dh.identity as Record<string, unknown>).gender).toBe('Мужской');
     expect(dh.insanityPoints).toEqual({ total: 3, notes: '' });

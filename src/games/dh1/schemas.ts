@@ -202,8 +202,9 @@ const psyPowerSchema = z.looseObject({
   notes: z.string().optional(),
 });
 
+// looseObject: старые JSON несут identity.playerName — он не поле листа, но
+// парс не должен падать и не должен терять остальную идентичность.
 export const dh1IdentitySchema = z.looseObject({
-  playerName: z.string().optional(),
   gender: z.string().optional(),
   build: z.string().optional(),
   handedness: z.string().optional(),

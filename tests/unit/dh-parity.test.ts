@@ -65,8 +65,9 @@ describe('осознанные различия редакций', () => {
     expect(dh2.startingChoices).toBeDefined();
   });
 
-  it('история: dh1 скрывает имя игрока, dh2 знает influence и пси', () => {
-    expect(dh1History.labels?.['identity.playerName']).toBeDefined();
+  it('история: dh1 без имени игрока, dh2 знает influence и пси', () => {
+    expect(dh1History.labels?.['identity.playerName']).toBeUndefined();
+    expect(dh1History.labels?.['identity.gender']).toBe('dh1.gender');
     expect(dh1History.labels?.['stats.influence']).toBeUndefined();
     expect(dh1History.labels?.['psy.discipline']).toBe('dh1.discipline');
 

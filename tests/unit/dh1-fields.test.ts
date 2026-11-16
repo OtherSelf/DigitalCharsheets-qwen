@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { createDh1Defaults } from '@/games/dh1/defaults';
 import { buildDh1PortableJson } from '@/games/dh1/export';
 import { dh1CharacterSchema } from '@/games/dh1/schema';
+import { dh1IdentitySchema } from '@/games/dh1/schemas';
 import { DarkHeresyHomeWorlds } from '@/games/dh1/types';
 import type { GameExportConfig } from '@/games/types';
 
@@ -70,7 +71,14 @@ describe('DH1: аддитивные поля листа', () => {
       eliteAdvances: [{ id: 'e1', name: 'Присяга Радикала' }],
     });
     const parsed = dh1CharacterSchema.parse(character);
-    expect(parsed.identity?.playerName).toBe('Анна');
+    expect(parsed.identity?.gender).toBe('Ж');
+    expect(parsed.identity?.build).toBe('Сухое');
+    // playerName — не поле листа: схема его не объявляет, но legacy-ключ
+    // проходит looseObject и не мешает остальной идентичности.
+    expect(
+      (parsed.identity as Record<string, unknown> | undefined)?.playerName,
+    ).toBe('Анна');
+    expect(Object.keys(dh1IdentitySchema.shape)).not.toContain('playerName');
     expect(parsed.carry?.push).toBe('108 кг');
     expect(parsed.traits?.[0].name).toBe('Железное Нутро');
     expect(parsed.mutations?.[0].notes).toBe('Скрывает');
@@ -238,10 +246,9 @@ describe('DH1: новые блоки в JSON-экспорте', () => {
     const exported = buildDh1PortableJson(
       character as never,
       EXPORT_ALL,
-    ) as Record<string, { playerName?: string; armorWeight?: string }>;
-    expect((exported.identity as { playerName?: string }).playerName).toBe(
-      'Анна',
-    );
+    ) as Record<string, { gender?: string; playerName?: string }>;
+    expect((exported.identity as { gender?: string }).gender).toBe('Ж');
+    expect(exported.identity).not.toHaveProperty('playerName');
     expect((exported.psy as { rating?: number }).rating).toBe(2);
     expect(Array.isArray(exported.traits)).toBe(true);
     expect((exported.insanityDetails as { degree?: string }).degree).toBe('1');

@@ -207,7 +207,6 @@ export interface DH1PsyPower {
 
 /** Идентичность игрока и персонажа (поля листа «Личные данные»). */
 export interface DH1Identity {
-  playerName?: string;
   gender?: string;
   build?: string;
   /** Ведущая рука: строка, чтобы не ломать ввод мастером. */

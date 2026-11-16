@@ -34,7 +34,6 @@ export const dh1History: GameHistoryConfig = {
     'equipment.armor': 'dh1.equipment.armor',
     'equipment.weapons': 'dh1.equipment.weapons',
     identity: 'dh1.identity',
-    'identity.playerName': 'dh1.playerName',
     'identity.gender': 'dh1.gender',
     'identity.build': 'dh1.build',
     'identity.handedness': 'dh1.handedness',
