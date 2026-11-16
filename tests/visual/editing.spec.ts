@@ -457,10 +457,10 @@ test.describe('состояния Безумия/Порчи', () => {
       await expect(info.getByTestId('condition-entry')).toHaveCount(before + 1);
 
       const entry = info.getByTestId('condition-entry').last();
-      const inputs = entry.locator('input');
-      await inputs.nth(0).fill('Проверка состояния');
-      await inputs.nth(1).fill('2');
-      await entry.locator('textarea').fill('Заметка');
+      // Поля подписаны aria-label — их же проверяем как доступные имена.
+      await entry.getByLabel('Name').fill('Проверка состояния');
+      await entry.getByLabel('Severity').fill('2');
+      await entry.getByLabel('Notes').fill('Заметка');
 
       // Ждём PUT, в котором уже есть и название, и заметка: очередь
       // склеивает патчи, поэтому ориентируемся на тело запроса.

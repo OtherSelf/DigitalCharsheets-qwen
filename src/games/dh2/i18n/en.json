@@ -913,5 +913,8 @@
   "dh2.conditions.source.manual": "Manual",
   "dh2.conditions.source.divination": "Divination",
   "dh2.conditions.source.legacy": "Legacy data",
-  "dh2.conditions.title": "Conditions"
+  "dh2.conditions.title": "Conditions",
+  "dh2.personalSection": "Personal data",
+  "dh2.creationSection": "Creation",
+  "dh2.condition": "Condition"
 }

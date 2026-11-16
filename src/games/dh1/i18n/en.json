@@ -714,5 +714,7 @@
   "dh1.conditions.kind.rudiment": "Rudiment",
   "dh1.conditions.source.manual": "Manual",
   "dh1.conditions.source.divination": "Divination",
-  "dh1.conditions.source.legacy": "Legacy data"
+  "dh1.conditions.source.legacy": "Legacy data",
+  "dh1.personalSection": "Personal data",
+  "dh1.creationSection": "Creation"
 }
