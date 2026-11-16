@@ -63,6 +63,12 @@ export interface Dh2eTalentGrant {
 
 export type Dh2eTalentGrantSlot = Dh2eTalentGrant | Dh2eChoice<Dh2eTalentGrant>;
 
+/** Стартовые черты бэкграунда: `choose: 1` — «одна из» (например, Mutant). */
+export interface Dh2eBackgroundTraits {
+  readonly choose?: number;
+  readonly keys: readonly string[];
+}
+
 export interface Dh2eBackground {
   readonly id: string;
   readonly labelKey: string;
@@ -71,6 +77,9 @@ export interface Dh2eBackground {
   readonly bonusKeys: readonly string[];
   readonly aptitudeChoice: readonly string[];
   readonly recommendedRoleIds: readonly string[];
+  readonly startingTraits?: Dh2eBackgroundTraits;
+  readonly startingCorruption?: number;
+  readonly startingMalignancy?: number;
 }
 
 export type Dh2eAptitudeSlot = string | Dh2eChoice<string>;

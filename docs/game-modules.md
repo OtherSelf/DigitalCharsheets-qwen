@@ -72,8 +72,9 @@ npm run dh2e:check   # fail if the generated files are stale
 `DCS_CONTENT_DIR` overrides the catalog location (default:
 `../DigitalCharsheets-workspace/content/dh2`). The generator owns only the
 `dh2.catalog.*` slice of `src/games/dh2/i18n/{en,ru}.json`; every other key is
-hand-written. `dh2e:check` is a local guard: CI has no workspace checkout, so
-it is not part of `npm run verify`.
+hand-written. `dh2e:check` runs as part of `npm run verify`: when the workspace
+catalog is checked out, stale generated files fail the gate; in CI without the
+workspace the step is skipped with a warning.
 
 ## Edition differences (dh1 vs dh2)
 
@@ -107,6 +108,9 @@ The 2e module owns the rules that only exist in that edition:
 - **Elite advances** — `elite.ts` lists available advances, their
   prerequisites and cost; purchase writes `elite-advance` to the journal.
   Instant changes are a memo only (D15).
+- **Starting package** — `Dh2eBackground` may carry optional
+  `startingTraits`, `startingCorruption` and `startingMalignancy`; the creation
+  form shows them as hints and the player applies them to the sheet manually.
 - **Influence / Requisition** — `influence.ts` caps creation acquisitions at
   the Influence bonus (Scarce −10 or better) and computes the Requisition
   target from the availability/craftsmanship tables (book p. 141).

@@ -299,6 +299,177 @@ export const DH2E_HOMEWORLDS: readonly Dh2eHomeWorld[] = [
       'outcast',
     ],
   },
+  {
+    id: 'agri-world',
+    labelKey: 'dh2.catalog.world.agri-world',
+    characteristicModifiers: {
+      plus: ['fellowship', 'strength'],
+      minus: ['agility'],
+    },
+    fateThreshold: 2,
+    emperorsBlessing: 7,
+    wounds: '8+1d5',
+    aptitudeId: 'strength',
+    bonusKey: 'dh2.catalog.world.agri-world.bonus',
+    recommendedBackgroundIds: [
+      'adeptus-mechanicus',
+      'adeptus-ministorum',
+      'imperial-guard',
+      'mutant',
+    ],
+  },
+  {
+    id: 'feudal-world',
+    labelKey: 'dh2.catalog.world.feudal-world',
+    characteristicModifiers: {
+      plus: ['perception', 'weaponSkill'],
+      minus: ['intelligence'],
+    },
+    fateThreshold: 3,
+    emperorsBlessing: 6,
+    wounds: '9+1d5',
+    aptitudeId: 'weapon-skill',
+    bonusKey: 'dh2.catalog.world.feudal-world.bonus',
+    recommendedBackgroundIds: [
+      'adepta-sororitas',
+      'adeptus-administratum',
+      'adeptus-ministorum',
+      'imperial-guard',
+    ],
+  },
+  {
+    id: 'frontier-world',
+    labelKey: 'dh2.catalog.world.frontier-world',
+    characteristicModifiers: {
+      plus: ['ballisticSkill', 'perception'],
+      minus: ['fellowship'],
+    },
+    fateThreshold: 3,
+    emperorsBlessing: 7,
+    wounds: '7+1d5',
+    aptitudeId: 'ballistic-skill',
+    bonusKey: 'dh2.catalog.world.frontier-world.bonus',
+    recommendedBackgroundIds: [
+      'adeptus-arbites',
+      'adeptus-astra-telepathica',
+      'mutant',
+      'outcast',
+    ],
+  },
+  {
+    id: 'daemon-world',
+    labelKey: 'dh2.catalog.world.daemon-world',
+    characteristicModifiers: {
+      plus: ['willpower', 'perception'],
+      minus: ['fellowship'],
+    },
+    fateThreshold: 3,
+    emperorsBlessing: 4,
+    wounds: '7+1d5',
+    aptitudeId: 'willpower',
+    bonusKey: 'dh2.catalog.world.daemon-world.bonus',
+    recommendedBackgroundIds: [
+      'adeptus-astra-telepathica',
+      'adeptus-ministorum',
+      'exorcised',
+      'outcast',
+    ],
+  },
+  {
+    id: 'penal-colony',
+    labelKey: 'dh2.catalog.world.penal-colony',
+    characteristicModifiers: {
+      plus: ['toughness', 'perception'],
+      minus: ['influence'],
+    },
+    fateThreshold: 3,
+    emperorsBlessing: 8,
+    wounds: '10+1d5',
+    aptitudeId: 'toughness',
+    bonusKey: 'dh2.catalog.world.penal-colony.bonus',
+    recommendedBackgroundIds: [
+      'adeptus-administratum',
+      'adeptus-ministorum',
+      'imperial-guard',
+      'outcast',
+    ],
+  },
+  {
+    id: 'quarantine-world',
+    labelKey: 'dh2.catalog.world.quarantine-world',
+    characteristicModifiers: {
+      plus: ['ballisticSkill', 'intelligence'],
+      minus: ['strength'],
+    },
+    fateThreshold: 3,
+    emperorsBlessing: 9,
+    wounds: '8+1d5',
+    aptitudeId: 'fieldcraft',
+    bonusKey: 'dh2.catalog.world.quarantine-world.bonus',
+    recommendedBackgroundIds: [
+      'adeptus-arbites',
+      'adeptus-mechanicus',
+      'imperial-guard',
+      'outcast',
+    ],
+  },
+  {
+    id: 'death-world',
+    labelKey: 'dh2.catalog.world.death-world',
+    characteristicModifiers: {
+      plus: ['agility', 'perception'],
+      minus: ['fellowship'],
+    },
+    fateThreshold: 2,
+    emperorsBlessing: 5,
+    wounds: '9+1d5',
+    aptitudeId: 'fieldcraft',
+    bonusKey: 'dh2.catalog.world.death-world.bonus',
+    recommendedBackgroundIds: [
+      'adeptus-arbites',
+      'adeptus-mechanicus',
+      'adeptus-ministorum',
+      'imperial-guard',
+    ],
+  },
+  {
+    id: 'garden-world',
+    labelKey: 'dh2.catalog.world.garden-world',
+    characteristicModifiers: {
+      plus: ['fellowship', 'agility'],
+      minus: ['toughness'],
+    },
+    fateThreshold: 2,
+    emperorsBlessing: 4,
+    wounds: '7+1d5',
+    aptitudeId: 'social',
+    bonusKey: 'dh2.catalog.world.garden-world.bonus',
+    recommendedBackgroundIds: [
+      'adeptus-administratum',
+      'adeptus-astra-telepathica',
+      'adeptus-ministorum',
+      'rogue-trader-fleet',
+    ],
+  },
+  {
+    id: 'research-station',
+    labelKey: 'dh2.catalog.world.research-station',
+    characteristicModifiers: {
+      plus: ['intelligence', 'perception'],
+      minus: ['fellowship'],
+    },
+    fateThreshold: 3,
+    emperorsBlessing: 8,
+    wounds: '8+1d5',
+    aptitudeId: 'knowledge',
+    bonusKey: 'dh2.catalog.world.research-station.bonus',
+    recommendedBackgroundIds: [
+      'adeptus-administratum',
+      'adeptus-astra-telepathica',
+      'adeptus-mechanicus',
+      'mutant',
+    ],
+  },
 ];
 
 export const DH2E_BACKGROUNDS: readonly Dh2eBackground[] = [
@@ -610,6 +781,358 @@ export const DH2E_BACKGROUNDS: readonly Dh2eBackground[] = [
     aptitudeChoice: ['fieldcraft', 'social'],
     recommendedRoleIds: ['assassin', 'desperado', 'seeker'],
   },
+  {
+    id: 'adepta-sororitas',
+    labelKey: 'dh2.catalog.background.adepta-sororitas',
+    startingSkills: [
+      {
+        skillId: 'athletics',
+      },
+      {
+        choose: 1,
+        of: [
+          {
+            skillId: 'charm',
+          },
+          {
+            skillId: 'intimidate',
+          },
+        ],
+      },
+      {
+        skillId: 'common-lore',
+        specialisation: 'adepta-sororitas',
+      },
+      {
+        skillId: 'linguistics',
+        specialisation: 'high-gothic',
+      },
+      {
+        choose: 1,
+        of: [
+          {
+            skillId: 'medicae',
+          },
+          {
+            skillId: 'parry',
+          },
+        ],
+      },
+    ],
+    startingTalents: [
+      {
+        choose: 1,
+        of: [
+          {
+            talentId: 'weapon-training',
+            specialisation: 'flame',
+          },
+          {
+            talentId: 'weapon-training',
+            specialisation: 'las',
+          },
+        ],
+      },
+      {
+        talentId: 'weapon-training',
+        specialisation: 'chain',
+      },
+    ],
+    bonusKeys: ['dh2.catalog.background.adepta-sororitas.bonus.0'],
+    aptitudeChoice: ['offence', 'social'],
+    recommendedRoleIds: ['chirurgeon', 'fanatic', 'sage', 'warrior'],
+  },
+  {
+    id: 'mutant',
+    labelKey: 'dh2.catalog.background.mutant',
+    startingSkills: [
+      {
+        choose: 1,
+        of: [
+          {
+            skillId: 'acrobatics',
+          },
+          {
+            skillId: 'athletics',
+          },
+        ],
+      },
+      {
+        skillId: 'awareness',
+      },
+      {
+        choose: 1,
+        of: [
+          {
+            skillId: 'deceive',
+          },
+          {
+            skillId: 'intimidate',
+          },
+        ],
+      },
+      {
+        skillId: 'forbidden-lore',
+        specialisation: 'mutants',
+      },
+      {
+        skillId: 'survival',
+      },
+    ],
+    startingTalents: [
+      {
+        talentId: 'weapon-training',
+        specialisations: ['low-tech', 'solid-projectile'],
+      },
+    ],
+    bonusKeys: ['dh2.catalog.background.mutant.bonus.0'],
+    aptitudeChoice: ['fieldcraft', 'offence'],
+    recommendedRoleIds: ['assassin', 'desperado', 'penitent', 'warrior'],
+    startingTraits: {
+      choose: 1,
+      keys: [
+        'dh2.catalog.background.mutant.trait.0',
+        'dh2.catalog.background.mutant.trait.1',
+        'dh2.catalog.background.mutant.trait.2',
+        'dh2.catalog.background.mutant.trait.3',
+        'dh2.catalog.background.mutant.trait.4',
+        'dh2.catalog.background.mutant.trait.5',
+        'dh2.catalog.background.mutant.trait.6',
+        'dh2.catalog.background.mutant.trait.7',
+        'dh2.catalog.background.mutant.trait.8',
+      ],
+    },
+    startingCorruption: 10,
+  },
+  {
+    id: 'exorcised',
+    labelKey: 'dh2.catalog.background.exorcised',
+    startingSkills: [
+      {
+        skillId: 'awareness',
+      },
+      {
+        choose: 1,
+        of: [
+          {
+            skillId: 'deceive',
+          },
+          {
+            skillId: 'inquiry',
+          },
+        ],
+      },
+      {
+        skillId: 'dodge',
+      },
+      {
+        skillId: 'forbidden-lore',
+        specialisation: 'daemonology',
+      },
+      {
+        choose: 1,
+        of: [
+          {
+            skillId: 'intimidate',
+          },
+          {
+            skillId: 'scrutiny',
+          },
+        ],
+      },
+    ],
+    startingTalents: [
+      {
+        talentId: 'hatred',
+        specialisation: 'daemons',
+      },
+      {
+        talentId: 'weapon-training',
+        specialisations: ['solid-projectile', 'chain'],
+      },
+    ],
+    bonusKeys: ['dh2.catalog.background.exorcised.bonus.0'],
+    aptitudeChoice: ['defence', 'knowledge'],
+    recommendedRoleIds: ['assassin', 'sage', 'hierophant', 'seeker'],
+    startingMalignancy: 1,
+  },
+  {
+    id: 'heretek',
+    labelKey: 'dh2.catalog.background.heretek',
+    startingSkills: [
+      {
+        choose: 1,
+        of: [
+          {
+            skillId: 'deceive',
+          },
+          {
+            skillId: 'inquiry',
+          },
+        ],
+      },
+      {
+        skillId: 'forbidden-lore',
+        specialisation: 'any',
+      },
+      {
+        choose: 1,
+        of: [
+          {
+            skillId: 'medicae',
+          },
+          {
+            skillId: 'security',
+          },
+        ],
+      },
+      {
+        skillId: 'tech-use',
+      },
+      {
+        skillId: 'trade',
+        specialisation: 'any',
+      },
+    ],
+    startingTalents: [
+      {
+        talentId: 'weapon-training',
+        specialisation: 'solid-projectile',
+      },
+    ],
+    bonusKeys: ['dh2.catalog.background.heretek.bonus.0'],
+    aptitudeChoice: ['finesse', 'tech'],
+    recommendedRoleIds: ['chirurgeon', 'desperado', 'sage', 'seeker'],
+    startingTraits: {
+      keys: ['dh2.catalog.background.heretek.trait.0'],
+    },
+  },
+  {
+    id: 'imperial-navy',
+    labelKey: 'dh2.catalog.background.imperial-navy',
+    startingSkills: [
+      {
+        skillId: 'athletics',
+      },
+      {
+        choose: 1,
+        of: [
+          {
+            skillId: 'command',
+          },
+          {
+            skillId: 'intimidate',
+          },
+        ],
+      },
+      {
+        skillId: 'common-lore',
+        specialisation: 'imperial-navy',
+      },
+      {
+        skillId: 'navigate',
+        specialisation: 'stellar',
+      },
+      {
+        choose: 1,
+        of: [
+          {
+            skillId: 'operate',
+            specialisation: 'aeronautica',
+          },
+          {
+            skillId: 'operate',
+            specialisation: 'voidship',
+          },
+        ],
+      },
+    ],
+    startingTalents: [
+      {
+        choose: 1,
+        of: [
+          {
+            talentId: 'weapon-training',
+            specialisation: 'chain',
+          },
+          {
+            talentId: 'weapon-training',
+            specialisation: 'shock',
+          },
+        ],
+      },
+      {
+        talentId: 'weapon-training',
+        specialisation: 'solid-projectile',
+      },
+    ],
+    bonusKeys: ['dh2.catalog.background.imperial-navy.bonus.0'],
+    aptitudeChoice: ['offence', 'tech'],
+    recommendedRoleIds: ['ace', 'chirurgeon', 'hierophant', 'warrior'],
+  },
+  {
+    id: 'rogue-trader-fleet',
+    labelKey: 'dh2.catalog.background.rogue-trader-fleet',
+    startingSkills: [
+      {
+        choose: 1,
+        of: [
+          {
+            skillId: 'charm',
+          },
+          {
+            skillId: 'scrutiny',
+          },
+        ],
+      },
+      {
+        skillId: 'commerce',
+      },
+      {
+        skillId: 'common-lore',
+        specialisation: 'rogue-traders',
+      },
+      {
+        skillId: 'linguistics',
+        specialisation: 'any',
+      },
+      {
+        choose: 1,
+        of: [
+          {
+            skillId: 'operate',
+            specialisation: 'surface',
+          },
+          {
+            skillId: 'operate',
+            specialisation: 'aeronautica',
+          },
+        ],
+      },
+    ],
+    startingTalents: [
+      {
+        choose: 1,
+        of: [
+          {
+            talentId: 'weapon-training',
+            specialisation: 'las',
+          },
+          {
+            talentId: 'weapon-training',
+            specialisation: 'solid-projectile',
+          },
+        ],
+      },
+      {
+        talentId: 'weapon-training',
+        specialisation: 'shock',
+      },
+    ],
+    bonusKeys: ['dh2.catalog.background.rogue-trader-fleet.bonus.0'],
+    aptitudeChoice: ['finesse', 'social'],
+    recommendedRoleIds: ['ace', 'desperado', 'hierophant', 'seeker'],
+  },
 ];
 
 export const DH2E_ROLES: readonly Dh2eRole[] = [
@@ -725,6 +1248,58 @@ export const DH2E_ROLES: readonly Dh2eRole[] = [
       of: ['iron-jaw', 'rapid-reload'],
     },
     bonusKey: 'dh2.catalog.role.warrior.bonus',
+  },
+  {
+    id: 'fanatic',
+    labelKey: 'dh2.catalog.role.fanatic',
+    aptitudes: [
+      'leadership',
+      'offence',
+      'toughness',
+      'weapon-skill',
+      'willpower',
+    ],
+    talentChoice: {
+      choose: 1,
+      of: ['deny-the-witch', 'jaded'],
+    },
+    bonusKey: 'dh2.catalog.role.fanatic.bonus',
+  },
+  {
+    id: 'penitent',
+    labelKey: 'dh2.catalog.role.penitent',
+    aptitudes: [
+      'agility',
+      'fieldcraft',
+      'intelligence',
+      'offence',
+      'toughness',
+    ],
+    talentChoice: {
+      choose: 1,
+      of: ['die-hard', 'flagellant'],
+    },
+    bonusKey: 'dh2.catalog.role.penitent.bonus',
+  },
+  {
+    id: 'crusader',
+    labelKey: 'dh2.catalog.role.crusader',
+    aptitudes: ['knowledge', 'offence', 'strength', 'toughness', 'willpower'],
+    talentChoice: {
+      choose: 1,
+      of: ['bodyguard', 'deny-the-witch'],
+    },
+    bonusKey: 'dh2.catalog.role.crusader.bonus',
+  },
+  {
+    id: 'ace',
+    labelKey: 'dh2.catalog.role.ace',
+    aptitudes: ['agility', 'finesse', 'perception', 'tech', 'willpower'],
+    talentChoice: {
+      choose: 1,
+      of: ['hard-target', 'hotshot-pilot'],
+    },
+    bonusKey: 'dh2.catalog.role.ace.bonus',
   },
 ];
 

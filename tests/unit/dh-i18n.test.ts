@@ -55,16 +55,24 @@ const DH1_DATA_MAPS = [
 
 /** Все ключи данных 2e: они обязаны быть в обоих словарях. */
 const DH2_DATA_KEYS: readonly string[] = [
-  ...DH2E_HOMEWORLDS.map((item) => item.labelKey),
-  ...DH2E_BACKGROUNDS.map((item) => item.labelKey),
-  ...DH2E_ROLES.map((item) => item.labelKey),
+  ...DH2E_HOMEWORLDS.flatMap((item) => [item.labelKey, item.bonusKey]),
+  ...DH2E_BACKGROUNDS.flatMap((item) => [
+    item.labelKey,
+    ...item.bonusKeys,
+    ...(item.startingTraits?.keys ?? []),
+  ]),
+  ...DH2E_ROLES.flatMap((item) => [item.labelKey, item.bonusKey]),
   ...DH2E_APTITUDES.map((item) => item.labelKey),
   ...DH2E_DIVINATIONS.flatMap((item) => [item.textKey, item.effectKey]),
   ...DH2E_SKILLS.map((item) => item.labelKey),
   ...DH2E_TALENTS.map((item) => item.labelKey),
   ...DH2E_DISCIPLINES.map((item) => item.labelKey),
   ...DH2E_POWERS.map((item) => item.labelKey),
-  ...DH2E_ELITES.map((item) => item.labelKey),
+  ...DH2E_ELITES.flatMap((item) => [
+    item.labelKey,
+    ...item.changeKeys,
+    `dh2.elitePrereq.${item.id}`,
+  ]),
   ...DH2E_STAT_STEPS.map((item) => item.labelKey),
   ...DH2E_SKILL_TIERS.map((item) => item.labelKey),
 ];

@@ -40,10 +40,12 @@ function draft() {
 }
 
 describe('данные элитных продвижений', () => {
-  it('три продвижения с ценой, пререквизитами и памяткой изменений', () => {
+  it('пять продвижений с ценой, пререквизитами и памяткой изменений', () => {
     expect(DH2E_ELITES.map((elite) => elite.id).sort()).toEqual([
+      'astropath',
       'inquisitor',
       'psyker',
+      'sister-of-battle',
       'untouchable',
     ]);
     for (const elite of DH2E_ELITES) {
@@ -56,12 +58,20 @@ describe('данные элитных продвижений', () => {
     expect(DH2E_ELITES.find((elite) => elite.id === 'inquisitor')?.cost).toBe(
       1000,
     );
+    expect(
+      DH2E_ELITES.find((elite) => elite.id === 'sister-of-battle')?.cost,
+    ).toBe(750);
+    expect(DH2E_ELITES.find((elite) => elite.id === 'astropath')?.cost).toBe(
+      300,
+    );
   });
 
   it('доступные не включают уже взятые', () => {
-    expect(availableEliteAdvances([]).map((elite) => elite.id)).toHaveLength(3);
+    expect(availableEliteAdvances([]).map((elite) => elite.id)).toHaveLength(5);
     expect(availableEliteAdvances(['psyker']).map((elite) => elite.id)).toEqual(
-      ['inquisitor', 'untouchable'],
+      DH2E_ELITES.filter((elite) => elite.id !== 'psyker').map(
+        (elite) => elite.id,
+      ),
     );
   });
 });

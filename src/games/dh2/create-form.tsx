@@ -528,6 +528,35 @@ export function DarkHeresyCreateForm({ onCreated }: CreateFormProps) {
                         chosen={chosenTalentValues}
                         hintFor={(id) => talentHint(id, t)}
                       />
+                      {background.startingTraits && (
+                        <p className="text-xs">
+                          <span className="text-muted-foreground">
+                            {t('dh2.startingTraits')}:
+                          </span>{' '}
+                          {background.startingTraits.choose === 1
+                            ? `${t('dh2.chooseOnePrefix')} `
+                            : ''}
+                          {background.startingTraits.keys
+                            .map((key) => t(key))
+                            .join(', ')}
+                        </p>
+                      )}
+                      {background.startingCorruption !== undefined && (
+                        <p className="text-xs">
+                          <span className="text-muted-foreground">
+                            {t('dh2.startingCorruption')}:
+                          </span>{' '}
+                          {background.startingCorruption}
+                        </p>
+                      )}
+                      {background.startingMalignancy !== undefined && (
+                        <p className="text-xs">
+                          <span className="text-muted-foreground">
+                            {t('dh2.startingMalignancy')}:
+                          </span>{' '}
+                          {background.startingMalignancy}
+                        </p>
+                      )}
                       {background.bonusKeys.map((key) => (
                         <p key={key} className="text-muted-foreground text-xs">
                           {t(key)}
