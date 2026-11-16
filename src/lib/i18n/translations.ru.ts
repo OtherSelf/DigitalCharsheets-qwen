@@ -682,6 +682,8 @@ export const ruTranslations: Record<string, string> = {
   'history.valuesCount': 'значений',
   'history.revisionsCount': 'ревизий',
   // ─── share: гостевая ссылка только для просмотра ───
+  'common.chosenAtCreation':
+    'Выбрано при создании — чтобы изменить, пересоздайте персонажа.',
   'narrative.empty': 'Пока пусто. Нажмите «Редактировать», чтобы заполнить.',
   'narrative.preview': 'Предпросмотр',
   'share.button': 'Ссылка для просмотра',
