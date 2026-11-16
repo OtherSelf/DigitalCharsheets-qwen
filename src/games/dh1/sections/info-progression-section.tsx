@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 
-import { Eye, Trash2 } from 'lucide-react';
+import { Eye, Lock, Trash2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,20 +17,37 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import {
   NarrativeSheet,
   useCharacterContext,
   useTranslation,
 } from '@/games/plugin-host';
+import { isCreationFieldLocked } from '@/games/shared/field-policy';
 import { cn } from '@/lib/utils';
 
 import {
   CAREER_KEYS,
+  DarkHeresyCareerPaths,
   dhLocalizedKey,
+  DIVINATIONS,
   HOME_WORLD_KEYS,
   QUIRK_KEYS,
   RANK_KEYS,
   VARIANT_KEYS,
   WORLD_VARIANT_LABELS,
+  WORLD_VARIANTS_BY_HOMEWORLD,
 } from '../dark-heresy-data';
 import {
   ADVANCED_RANK_THRESHOLD,
@@ -39,7 +56,11 @@ import {
   RanksByCareer,
   type AdvancedPath,
 } from '../dark-heresy-ranks';
-import { divinationEffectLabel, divinationLabel } from '../divination-i18n';
+import {
+  divinationEffectLabel,
+  divinationKey,
+  divinationLabel,
+} from '../divination-i18n';
 import { type DarkHeresyCareerPath, type DH1Character } from '../types';
 import { EditSaveButton } from './dh-ui-helpers';
 
@@ -59,36 +80,124 @@ const DetailField = ({
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onBlur?: (e: React.FocusEvent<HTMLInputElement>) => void;
   isCompactView: boolean;
-}) => (
-  <div className="space-y-1">
-    <Label
-      className={cn(
-        'text-muted-foreground text-xs',
-        isCompactView && 'text-[10px]',
-      )}
-    >
-      {label}
-    </Label>
-    {editing ? (
-      <Input
-        defaultValue={value}
-        type={type}
-        onChange={onChange}
-        onBlur={onBlur}
-        className="h-8"
-      />
-    ) : (
-      <p
+}) => {
+  const id = React.useId();
+  return (
+    <div className="space-y-1">
+      <Label
+        htmlFor={editing ? id : undefined}
         className={cn(
-          'text-sm font-medium break-words',
-          isCompactView && 'text-xs',
+          'text-muted-foreground text-xs',
+          isCompactView && 'text-[10px]',
         )}
       >
-        {value || '-'}
-      </p>
-    )}
-  </div>
-);
+        {label}
+      </Label>
+      {editing ? (
+        <Input
+          id={id}
+          defaultValue={value}
+          type={type}
+          onChange={onChange}
+          onBlur={onBlur}
+          className="h-8"
+        />
+      ) : (
+        <p
+          className={cn(
+            'text-sm font-medium break-words',
+            isCompactView && 'text-xs',
+          )}
+        >
+          {value || '-'}
+        </p>
+      )}
+    </div>
+  );
+};
+
+/**
+ * Поле создания (D4): пока пусто и идёт редактирование — Select; как только
+ * значение задано — read-only с замком «выбрано при создании». Заполнение
+ * только записывает поле, производные не пересчитываются (D15).
+ */
+const CreationField = ({
+  label,
+  value,
+  placeholder,
+  editing,
+  locked,
+  disabled,
+  isCompactView,
+  options,
+  onSelect,
+}: {
+  label: string;
+  value: string;
+  placeholder: string;
+  editing: boolean;
+  locked: boolean;
+  disabled?: boolean;
+  isCompactView: boolean;
+  options: readonly { value: string; label: string }[];
+  onSelect: (next: string) => void;
+}) => {
+  const { t } = useTranslation();
+  const lockHint = t('common.chosenAtCreation');
+
+  return (
+    <div className="space-y-1">
+      <Label
+        className={cn(
+          'text-muted-foreground text-xs',
+          isCompactView && 'text-[10px]',
+        )}
+      >
+        <span className="inline-flex items-center gap-1">
+          {label}
+          {locked && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span
+                  tabIndex={0}
+                  aria-label={lockHint}
+                  data-testid="creation-lock"
+                >
+                  <Lock className="h-3 w-3" />
+                </span>
+              </TooltipTrigger>
+              <TooltipContent side="top">{lockHint}</TooltipContent>
+            </Tooltip>
+          )}
+        </span>
+      </Label>
+      {locked || !editing ? (
+        <p
+          className={cn(
+            'text-sm font-medium break-words',
+            !locked && !value && 'text-muted-foreground',
+            isCompactView && 'text-xs',
+          )}
+        >
+          {value || '-'}
+        </p>
+      ) : (
+        <Select onValueChange={onSelect} disabled={disabled}>
+          <SelectTrigger className="h-8">
+            <SelectValue placeholder={placeholder} />
+          </SelectTrigger>
+          <SelectContent>
+            {options.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )}
+    </div>
+  );
+};
 
 /** Список свободных строк (черты, мутации, силы) ↔ строка через запятую. */
 function formatNames(entries?: { name: string }[]): string {
@@ -178,482 +287,503 @@ export const InfoSection = ({
         )}
       </CardHeader>
       <CardContent className="pt-0">
-        <div className="dcs-info-grid grid grid-cols-2 gap-x-4 gap-y-4 md:grid-cols-3">
-          <DetailField
-            label={t('common.characterName')}
-            value={character.name}
-            editing={isInfoEditing}
-            onBlur={(e) =>
-              updateCharacter(character.id, { name: e.target.value })
-            }
-            isCompactView={isCompactView}
-          />
-          <div className="space-y-1">
-            <Label
-              className={cn(
-                'text-muted-foreground text-xs',
-                isCompactView && 'text-[10px]',
-              )}
-            >
-              {t('dh1.homeWorld')}
-            </Label>
-            <p
-              className={cn(
-                'text-sm font-medium break-words',
-                isCompactView && 'text-xs',
-              )}
-            >
-              {character.homeWorld
-                ? t(
-                    dhLocalizedKey(
-                      HOME_WORLD_KEYS[character.homeWorld] || 'dh1.homeWorld',
-                      'dh1',
-                    ),
-                  )
-                : '-'}
-            </p>
-          </div>
-          <div className="space-y-1">
-            <Label
-              className={cn(
-                'text-muted-foreground text-xs',
-                isCompactView && 'text-[10px]',
-              )}
-            >
-              {worldVariantLabel}
-            </Label>
+        <TooltipProvider delayDuration={150}>
+          <div className="dcs-info-grid grid grid-cols-2 gap-x-4 gap-y-4 md:grid-cols-3">
+            <DetailField
+              label={t('common.characterName')}
+              value={character.name}
+              editing={isInfoEditing}
+              onBlur={(e) =>
+                updateCharacter(character.id, { name: e.target.value })
+              }
+              isCompactView={isCompactView}
+            />
+            <CreationField
+              label={t('dh1.homeWorld')}
+              value={
+                character.homeWorld
+                  ? t(
+                      dhLocalizedKey(
+                        HOME_WORLD_KEYS[character.homeWorld] || 'dh1.homeWorld',
+                        'dh1',
+                      ),
+                    )
+                  : ''
+              }
+              placeholder={t('dh1.waitingHomeWorld')}
+              editing={isInfoEditing}
+              locked={isCreationFieldLocked(character.homeWorld)}
+              isCompactView={isCompactView}
+              options={Object.keys(HOME_WORLD_KEYS).map((world) => ({
+                value: world,
+                label: t(dhLocalizedKey(HOME_WORLD_KEYS[world], 'dh1')),
+              }))}
+              onSelect={(next) =>
+                updateCharacter(character.id, { homeWorld: next })
+              }
+            />
             {/* LANDMARK: BIRTH_WORLD_IMMUTABLE
-                Место рождения — выбор создания персонажа (как homeWorld и
-                careerPath). После создания не редактируем: смена мира ломает
-                лор/варианты и выглядит как подмена персонажа. Остальные
-                текстовые поля Info остаются редактируемыми. */}
-            <p
-              className={cn(
-                'text-sm font-medium break-words',
-                isCompactView && 'text-xs',
+              Мир и его вариант — выбор создания: заполнить можно, пока пусто,
+              но заданное не меняем (D4). Смена мира ломает лор/варианты и
+              выглядит как подмена персонажа. */}
+            <CreationField
+              label={worldVariantLabel}
+              value={
+                character.worldVariant
+                  ? t(
+                      dhLocalizedKey(
+                        VARIANT_KEYS[character.worldVariant] ||
+                          character.worldVariant,
+                        'dh1',
+                      ),
+                    )
+                  : ''
+              }
+              placeholder={t('dh1.waitingHomeWorld')}
+              editing={isInfoEditing}
+              locked={isCreationFieldLocked(character.worldVariant)}
+              disabled={!character.homeWorld}
+              isCompactView={isCompactView}
+              options={(
+                (character.homeWorld &&
+                  WORLD_VARIANTS_BY_HOMEWORLD[character.homeWorld]) ||
+                []
+              ).map((variant) => ({
+                value: variant,
+                label: t(
+                  dhLocalizedKey(VARIANT_KEYS[variant] ?? variant, 'dh1'),
+                ),
+              }))}
+              onSelect={(next) =>
+                updateCharacter(character.id, { worldVariant: next })
+              }
+            />
+            <CreationField
+              label={t('dh1.careerPath')}
+              value={
+                character.careerPath
+                  ? t(
+                      dhLocalizedKey(
+                        CAREER_KEYS[character.careerPath] || 'dh1.careerPath',
+                        'dh1',
+                      ),
+                    )
+                  : ''
+              }
+              placeholder={t('dh1.careerPath')}
+              editing={isInfoEditing}
+              locked={isCreationFieldLocked(character.careerPath)}
+              isCompactView={isCompactView}
+              options={DarkHeresyCareerPaths.map((career) => ({
+                value: career,
+                label: t(dhLocalizedKey(CAREER_KEYS[career] ?? career, 'dh1')),
+              }))}
+              onSelect={(next) =>
+                updateCharacter(character.id, { careerPath: next })
+              }
+            />
+
+            <CreationField
+              label={t('dh1.divination')}
+              value={divinationLabel(character.divination, t, 'dh1')}
+              placeholder={t('dh1.selectDivination')}
+              editing={isInfoEditing}
+              locked={isCreationFieldLocked(character.divination)}
+              isCompactView={isCompactView}
+              options={DIVINATIONS.map(({ id }) => ({
+                value: id,
+                label: t(divinationKey(id, 'dh1')),
+              }))}
+              onSelect={(next) =>
+                updateCharacter(character.id, {
+                  divination: next,
+                  divinationEffect:
+                    DIVINATIONS.find((entry) => entry.id === next)?.effectId ??
+                    '',
+                })
+              }
+            />
+            <DetailField
+              label={t('dh1.divinationEffect')}
+              value={divinationEffectLabel(
+                character.divinationEffect,
+                t,
+                'dh1',
               )}
-            >
-              {character.worldVariant
-                ? t(
-                    dhLocalizedKey(
-                      VARIANT_KEYS[character.worldVariant] ||
-                        character.worldVariant,
-                      'dh1',
-                    ),
-                  )
-                : '-'}
-            </p>
+              editing={false}
+              isCompactView={isCompactView}
+            />
+
+            <DetailField
+              label={t('dh1.quirk')}
+              value={
+                character.quirk
+                  ? t(
+                      dhLocalizedKey(
+                        QUIRK_KEYS[character.quirk] || character.quirk,
+                        'dh1',
+                      ),
+                    )
+                  : ''
+              }
+              editing={isInfoEditing}
+              onBlur={(e) =>
+                updateCharacter(character.id, { quirk: e.target.value })
+              }
+              isCompactView={isCompactView}
+            />
+            <DetailField
+              label={t('common.height')}
+              value={character.height}
+              editing={isInfoEditing}
+              onBlur={(e) =>
+                updateCharacter(character.id, { height: e.target.value })
+              }
+              isCompactView={isCompactView}
+            />
+            <DetailField
+              label={t('common.weight')}
+              value={character.weight}
+              editing={isInfoEditing}
+              onBlur={(e) =>
+                updateCharacter(character.id, { weight: e.target.value })
+              }
+              isCompactView={isCompactView}
+            />
+            <DetailField
+              label={t('common.age')}
+              value={character.age}
+              editing={isInfoEditing}
+              onBlur={(e) =>
+                updateCharacter(character.id, { age: e.target.value })
+              }
+              isCompactView={isCompactView}
+            />
+            <DetailField
+              label={t('dh1.skinColor')}
+              value={character.skinColor}
+              editing={isInfoEditing}
+              onBlur={(e) =>
+                updateCharacter(character.id, { skinColor: e.target.value })
+              }
+              isCompactView={isCompactView}
+            />
+            <DetailField
+              label={t('dh1.hairColor')}
+              value={character.hairColor}
+              editing={isInfoEditing}
+              onBlur={(e) =>
+                updateCharacter(character.id, { hairColor: e.target.value })
+              }
+              isCompactView={isCompactView}
+            />
+            <DetailField
+              label={t('dh1.eyeColor')}
+              value={character.eyeColor}
+              editing={isInfoEditing}
+              onBlur={(e) =>
+                updateCharacter(character.id, { eyeColor: e.target.value })
+              }
+              isCompactView={isCompactView}
+            />
           </div>
-          <div className="space-y-1">
-            <Label
-              className={cn(
-                'text-muted-foreground text-xs',
-                isCompactView && 'text-[10px]',
-              )}
-            >
-              {t('dh1.careerPath')}
-            </Label>
-            <p
-              className={cn(
-                'text-sm font-medium break-words',
-                isCompactView && 'text-xs',
-              )}
-            >
-              {character.careerPath
-                ? t(
-                    dhLocalizedKey(
-                      CAREER_KEYS[character.careerPath] || 'dh1.careerPath',
-                      'dh1',
-                    ),
-                  )
-                : '-'}
-            </p>
-          </div>
 
-          {/* --- UPDATED DIVINATION FIELDS WITH TRANSLATION --- */}
-          <DetailField
-            label={t('dh1.divination')}
-            value={divinationLabel(character.divination, t, 'dh1')}
-            editing={false}
-            isCompactView={isCompactView}
-          />
-          <DetailField
-            label={t('dh1.divinationEffect')}
-            value={divinationEffectLabel(character.divinationEffect, t, 'dh1')}
-            editing={false}
-            isCompactView={isCompactView}
-          />
-          {/* --- END UPDATED DIVINATION FIELDS --- */}
-
-          <DetailField
-            label={t('dh1.quirk')}
-            value={
-              character.quirk
-                ? t(
-                    dhLocalizedKey(
-                      QUIRK_KEYS[character.quirk] || character.quirk,
-                      'dh1',
-                    ),
-                  )
-                : ''
-            }
-            editing={isInfoEditing}
-            onBlur={(e) =>
-              updateCharacter(character.id, { quirk: e.target.value })
-            }
-            isCompactView={isCompactView}
-          />
-          <DetailField
-            label={t('common.height')}
-            value={character.height}
-            editing={isInfoEditing}
-            onBlur={(e) =>
-              updateCharacter(character.id, { height: e.target.value })
-            }
-            isCompactView={isCompactView}
-          />
-          <DetailField
-            label={t('common.weight')}
-            value={character.weight}
-            editing={isInfoEditing}
-            onBlur={(e) =>
-              updateCharacter(character.id, { weight: e.target.value })
-            }
-            isCompactView={isCompactView}
-          />
-          <DetailField
-            label={t('common.age')}
-            value={character.age}
-            editing={isInfoEditing}
-            onBlur={(e) =>
-              updateCharacter(character.id, { age: e.target.value })
-            }
-            isCompactView={isCompactView}
-          />
-          <DetailField
-            label={t('dh1.skinColor')}
-            value={character.skinColor}
-            editing={isInfoEditing}
-            onBlur={(e) =>
-              updateCharacter(character.id, { skinColor: e.target.value })
-            }
-            isCompactView={isCompactView}
-          />
-          <DetailField
-            label={t('dh1.hairColor')}
-            value={character.hairColor}
-            editing={isInfoEditing}
-            onBlur={(e) =>
-              updateCharacter(character.id, { hairColor: e.target.value })
-            }
-            isCompactView={isCompactView}
-          />
-          <DetailField
-            label={t('dh1.eyeColor')}
-            value={character.eyeColor}
-            editing={isInfoEditing}
-            onBlur={(e) =>
-              updateCharacter(character.id, { eyeColor: e.target.value })
-            }
-            isCompactView={isCompactView}
-          />
-        </div>
-
-        <div className="mt-6 space-y-5">
-          <MetaBlock title={t('dh1.identity')}>
-            <DetailField
-              label={t('dh1.gender')}
-              value={character.identity?.gender ?? ''}
-              editing={isInfoEditing}
-              onBlur={(e) =>
-                updateCharacter(character.id, {
-                  identity: { ...character.identity, gender: e.target.value },
-                })
-              }
-              isCompactView={isCompactView}
-            />
-            <DetailField
-              label={t('dh1.build')}
-              value={character.identity?.build ?? ''}
-              editing={isInfoEditing}
-              onBlur={(e) =>
-                updateCharacter(character.id, {
-                  identity: { ...character.identity, build: e.target.value },
-                })
-              }
-              isCompactView={isCompactView}
-            />
-            <DetailField
-              label={t('dh1.handedness')}
-              value={character.identity?.handedness ?? ''}
-              editing={isInfoEditing}
-              onBlur={(e) =>
-                updateCharacter(character.id, {
-                  identity: {
-                    ...character.identity,
-                    handedness: e.target.value,
-                  },
-                })
-              }
-              isCompactView={isCompactView}
-            />
-          </MetaBlock>
-
-          {(character.psy || character.careerPath === 'Imperial Psyker') && (
-            <MetaBlock title={t('dh1.psySection')}>
+          <div className="mt-6 space-y-5">
+            <MetaBlock title={t('dh1.identity')}>
               <DetailField
-                label={t('dh1.psyRating')}
-                value={character.psy?.rating ?? ''}
-                editing={isInfoEditing}
-                type="number"
-                onBlur={(e) => {
-                  const parsed = Number.parseInt(e.target.value, 10);
-                  updateCharacter(character.id, {
-                    psy: {
-                      ...character.psy,
-                      rating: Number.isFinite(parsed) ? parsed : undefined,
-                    },
-                  });
-                }}
-                isCompactView={isCompactView}
-              />
-              <DetailField
-                label={t('dh1.discipline')}
-                value={character.psy?.discipline ?? ''}
+                label={t('dh1.gender')}
+                value={character.identity?.gender ?? ''}
                 editing={isInfoEditing}
                 onBlur={(e) =>
                   updateCharacter(character.id, {
-                    psy: { ...character.psy, discipline: e.target.value },
+                    identity: { ...character.identity, gender: e.target.value },
                   })
                 }
                 isCompactView={isCompactView}
               />
               <DetailField
-                label={t('dh1.psychicPowers')}
-                value={formatNames(character.psy?.powers)}
+                label={t('dh1.build')}
+                value={character.identity?.build ?? ''}
                 editing={isInfoEditing}
                 onBlur={(e) =>
                   updateCharacter(character.id, {
-                    psy: {
-                      ...character.psy,
-                      powers: parseNames(e.target.value),
-                    },
+                    identity: { ...character.identity, build: e.target.value },
                   })
                 }
                 isCompactView={isCompactView}
               />
               <DetailField
-                label={t('dh1.testedAgainst')}
-                value={character.psy?.testedAgainst ?? ''}
+                label={t('dh1.handedness')}
+                value={character.identity?.handedness ?? ''}
                 editing={isInfoEditing}
                 onBlur={(e) =>
                   updateCharacter(character.id, {
-                    psy: { ...character.psy, testedAgainst: e.target.value },
+                    identity: {
+                      ...character.identity,
+                      handedness: e.target.value,
+                    },
                   })
                 }
                 isCompactView={isCompactView}
               />
             </MetaBlock>
-          )}
 
-          <MetaBlock title={t('dh1.condition')}>
-            <DetailField
-              label={t('dh1.traits')}
-              value={formatNames(character.traits)}
-              editing={isInfoEditing}
-              onBlur={(e) =>
-                updateCharacter(character.id, {
-                  traits: parseNames(e.target.value),
-                })
-              }
-              isCompactView={isCompactView}
-            />
-            <DetailField
-              label={t('dh1.mutations')}
-              value={formatNames(character.mutations)}
-              editing={isInfoEditing}
-              onBlur={(e) =>
-                updateCharacter(character.id, {
-                  mutations: parseNames(e.target.value),
-                })
-              }
-              isCompactView={isCompactView}
-            />
-            <DetailField
-              label={t('dh1.eliteAdvances')}
-              value={formatNames(character.eliteAdvances)}
-              editing={isInfoEditing}
-              onBlur={(e) =>
-                updateCharacter(character.id, {
-                  eliteAdvances: parseNames(e.target.value),
-                })
-              }
-              isCompactView={isCompactView}
-            />
-            <DetailField
-              label={t('dh1.insanityDegree')}
-              value={character.insanityDetails?.degree ?? ''}
-              editing={isInfoEditing}
-              onBlur={(e) =>
-                updateCharacter(character.id, {
-                  insanityDetails: {
-                    ...character.insanityDetails,
-                    degree: e.target.value,
-                  },
-                })
-              }
-              isCompactView={isCompactView}
-            />
-            <DetailField
-              label={t('dh1.traumaModifier')}
-              value={character.insanityDetails?.traumaModifier ?? ''}
-              editing={isInfoEditing}
-              onBlur={(e) =>
-                updateCharacter(character.id, {
-                  insanityDetails: {
-                    ...character.insanityDetails,
-                    traumaModifier: e.target.value,
-                  },
-                })
-              }
-              isCompactView={isCompactView}
-            />
-            <DetailField
-              label={t('dh1.disorders')}
-              value={character.insanityDetails?.disorders ?? ''}
-              editing={isInfoEditing}
-              onBlur={(e) =>
-                updateCharacter(character.id, {
-                  insanityDetails: {
-                    ...character.insanityDetails,
-                    disorders: e.target.value,
-                  },
-                })
-              }
-              isCompactView={isCompactView}
-            />
-            <DetailField
-              label={t('dh1.severity')}
-              value={character.insanityDetails?.severity ?? ''}
-              editing={isInfoEditing}
-              onBlur={(e) =>
-                updateCharacter(character.id, {
-                  insanityDetails: {
-                    ...character.insanityDetails,
-                    severity: e.target.value,
-                  },
-                })
-              }
-              isCompactView={isCompactView}
-            />
-            <DetailField
-              label={t('dh1.corruptionDegree')}
-              value={character.corruptionDetails?.degree ?? ''}
-              editing={isInfoEditing}
-              onBlur={(e) =>
-                updateCharacter(character.id, {
-                  corruptionDetails: {
-                    ...character.corruptionDetails,
-                    degree: e.target.value,
-                  },
-                })
-              }
-              isCompactView={isCompactView}
-            />
-            <DetailField
-              label={t('dh1.corruptionTest')}
-              value={character.corruptionDetails?.test ?? ''}
-              editing={isInfoEditing}
-              onBlur={(e) =>
-                updateCharacter(character.id, {
-                  corruptionDetails: {
-                    ...character.corruptionDetails,
-                    test: e.target.value,
-                  },
-                })
-              }
-              isCompactView={isCompactView}
-            />
-            <DetailField
-              label={t('dh1.defilements')}
-              value={character.corruptionDetails?.defilements ?? ''}
-              editing={isInfoEditing}
-              onBlur={(e) =>
-                updateCharacter(character.id, {
-                  corruptionDetails: {
-                    ...character.corruptionDetails,
-                    defilements: e.target.value,
-                  },
-                })
-              }
-              isCompactView={isCompactView}
-            />
-          </MetaBlock>
+            {(character.psy || character.careerPath === 'Imperial Psyker') && (
+              <MetaBlock title={t('dh1.psySection')}>
+                <DetailField
+                  label={t('dh1.psyRating')}
+                  value={character.psy?.rating ?? ''}
+                  editing={isInfoEditing}
+                  type="number"
+                  onBlur={(e) => {
+                    const parsed = Number.parseInt(e.target.value, 10);
+                    updateCharacter(character.id, {
+                      psy: {
+                        ...character.psy,
+                        rating: Number.isFinite(parsed) ? parsed : undefined,
+                      },
+                    });
+                  }}
+                  isCompactView={isCompactView}
+                />
+                <DetailField
+                  label={t('dh1.discipline')}
+                  value={character.psy?.discipline ?? ''}
+                  editing={isInfoEditing}
+                  onBlur={(e) =>
+                    updateCharacter(character.id, {
+                      psy: { ...character.psy, discipline: e.target.value },
+                    })
+                  }
+                  isCompactView={isCompactView}
+                />
+                <DetailField
+                  label={t('dh1.psychicPowers')}
+                  value={formatNames(character.psy?.powers)}
+                  editing={isInfoEditing}
+                  onBlur={(e) =>
+                    updateCharacter(character.id, {
+                      psy: {
+                        ...character.psy,
+                        powers: parseNames(e.target.value),
+                      },
+                    })
+                  }
+                  isCompactView={isCompactView}
+                />
+                <DetailField
+                  label={t('dh1.testedAgainst')}
+                  value={character.psy?.testedAgainst ?? ''}
+                  editing={isInfoEditing}
+                  onBlur={(e) =>
+                    updateCharacter(character.id, {
+                      psy: { ...character.psy, testedAgainst: e.target.value },
+                    })
+                  }
+                  isCompactView={isCompactView}
+                />
+              </MetaBlock>
+            )}
 
-          <MetaBlock title={t('dh1.carrySection')}>
-            <DetailField
-              label={t('dh1.totalCarriedWeight')}
-              value={character.carry?.totalCarriedWeight ?? ''}
-              editing={isInfoEditing}
-              onBlur={(e) =>
-                updateCharacter(character.id, {
-                  carry: {
-                    ...character.carry,
-                    totalCarriedWeight: e.target.value,
-                  },
-                })
-              }
-              isCompactView={isCompactView}
-            />
-            <DetailField
-              label={t('dh1.carryWeight')}
-              value={character.carry?.carry ?? ''}
-              editing={isInfoEditing}
-              onBlur={(e) =>
-                updateCharacter(character.id, {
-                  carry: { ...character.carry, carry: e.target.value },
-                })
-              }
-              isCompactView={isCompactView}
-            />
-            <DetailField
-              label={t('dh1.liftWeight')}
-              value={character.carry?.lift ?? ''}
-              editing={isInfoEditing}
-              onBlur={(e) =>
-                updateCharacter(character.id, {
-                  carry: { ...character.carry, lift: e.target.value },
-                })
-              }
-              isCompactView={isCompactView}
-            />
-            <DetailField
-              label={t('dh1.pushWeight')}
-              value={character.carry?.push ?? ''}
-              editing={isInfoEditing}
-              onBlur={(e) =>
-                updateCharacter(character.id, {
-                  carry: { ...character.carry, push: e.target.value },
-                })
-              }
-              isCompactView={isCompactView}
-            />
-            <DetailField
-              label={t('dh1.armourWeight')}
-              value={character.equipment.armorWeight ?? ''}
-              editing={isInfoEditing}
-              onBlur={(e) =>
-                updateCharacter(character.id, {
-                  equipment: {
-                    ...character.equipment,
-                    armorWeight: e.target.value,
-                  },
-                })
-              }
-              isCompactView={isCompactView}
-            />
-          </MetaBlock>
-        </div>
+            <MetaBlock title={t('dh1.condition')}>
+              <DetailField
+                label={t('dh1.traits')}
+                value={formatNames(character.traits)}
+                editing={isInfoEditing}
+                onBlur={(e) =>
+                  updateCharacter(character.id, {
+                    traits: parseNames(e.target.value),
+                  })
+                }
+                isCompactView={isCompactView}
+              />
+              <DetailField
+                label={t('dh1.mutations')}
+                value={formatNames(character.mutations)}
+                editing={isInfoEditing}
+                onBlur={(e) =>
+                  updateCharacter(character.id, {
+                    mutations: parseNames(e.target.value),
+                  })
+                }
+                isCompactView={isCompactView}
+              />
+              <DetailField
+                label={t('dh1.eliteAdvances')}
+                value={formatNames(character.eliteAdvances)}
+                editing={isInfoEditing}
+                onBlur={(e) =>
+                  updateCharacter(character.id, {
+                    eliteAdvances: parseNames(e.target.value),
+                  })
+                }
+                isCompactView={isCompactView}
+              />
+              <DetailField
+                label={t('dh1.insanityDegree')}
+                value={character.insanityDetails?.degree ?? ''}
+                editing={isInfoEditing}
+                onBlur={(e) =>
+                  updateCharacter(character.id, {
+                    insanityDetails: {
+                      ...character.insanityDetails,
+                      degree: e.target.value,
+                    },
+                  })
+                }
+                isCompactView={isCompactView}
+              />
+              <DetailField
+                label={t('dh1.traumaModifier')}
+                value={character.insanityDetails?.traumaModifier ?? ''}
+                editing={isInfoEditing}
+                onBlur={(e) =>
+                  updateCharacter(character.id, {
+                    insanityDetails: {
+                      ...character.insanityDetails,
+                      traumaModifier: e.target.value,
+                    },
+                  })
+                }
+                isCompactView={isCompactView}
+              />
+              <DetailField
+                label={t('dh1.disorders')}
+                value={character.insanityDetails?.disorders ?? ''}
+                editing={isInfoEditing}
+                onBlur={(e) =>
+                  updateCharacter(character.id, {
+                    insanityDetails: {
+                      ...character.insanityDetails,
+                      disorders: e.target.value,
+                    },
+                  })
+                }
+                isCompactView={isCompactView}
+              />
+              <DetailField
+                label={t('dh1.severity')}
+                value={character.insanityDetails?.severity ?? ''}
+                editing={isInfoEditing}
+                onBlur={(e) =>
+                  updateCharacter(character.id, {
+                    insanityDetails: {
+                      ...character.insanityDetails,
+                      severity: e.target.value,
+                    },
+                  })
+                }
+                isCompactView={isCompactView}
+              />
+              <DetailField
+                label={t('dh1.corruptionDegree')}
+                value={character.corruptionDetails?.degree ?? ''}
+                editing={isInfoEditing}
+                onBlur={(e) =>
+                  updateCharacter(character.id, {
+                    corruptionDetails: {
+                      ...character.corruptionDetails,
+                      degree: e.target.value,
+                    },
+                  })
+                }
+                isCompactView={isCompactView}
+              />
+              <DetailField
+                label={t('dh1.corruptionTest')}
+                value={character.corruptionDetails?.test ?? ''}
+                editing={isInfoEditing}
+                onBlur={(e) =>
+                  updateCharacter(character.id, {
+                    corruptionDetails: {
+                      ...character.corruptionDetails,
+                      test: e.target.value,
+                    },
+                  })
+                }
+                isCompactView={isCompactView}
+              />
+              <DetailField
+                label={t('dh1.defilements')}
+                value={character.corruptionDetails?.defilements ?? ''}
+                editing={isInfoEditing}
+                onBlur={(e) =>
+                  updateCharacter(character.id, {
+                    corruptionDetails: {
+                      ...character.corruptionDetails,
+                      defilements: e.target.value,
+                    },
+                  })
+                }
+                isCompactView={isCompactView}
+              />
+            </MetaBlock>
+
+            <MetaBlock title={t('dh1.carrySection')}>
+              <DetailField
+                label={t('dh1.totalCarriedWeight')}
+                value={character.carry?.totalCarriedWeight ?? ''}
+                editing={isInfoEditing}
+                onBlur={(e) =>
+                  updateCharacter(character.id, {
+                    carry: {
+                      ...character.carry,
+                      totalCarriedWeight: e.target.value,
+                    },
+                  })
+                }
+                isCompactView={isCompactView}
+              />
+              <DetailField
+                label={t('dh1.carryWeight')}
+                value={character.carry?.carry ?? ''}
+                editing={isInfoEditing}
+                onBlur={(e) =>
+                  updateCharacter(character.id, {
+                    carry: { ...character.carry, carry: e.target.value },
+                  })
+                }
+                isCompactView={isCompactView}
+              />
+              <DetailField
+                label={t('dh1.liftWeight')}
+                value={character.carry?.lift ?? ''}
+                editing={isInfoEditing}
+                onBlur={(e) =>
+                  updateCharacter(character.id, {
+                    carry: { ...character.carry, lift: e.target.value },
+                  })
+                }
+                isCompactView={isCompactView}
+              />
+              <DetailField
+                label={t('dh1.pushWeight')}
+                value={character.carry?.push ?? ''}
+                editing={isInfoEditing}
+                onBlur={(e) =>
+                  updateCharacter(character.id, {
+                    carry: { ...character.carry, push: e.target.value },
+                  })
+                }
+                isCompactView={isCompactView}
+              />
+              <DetailField
+                label={t('dh1.armourWeight')}
+                value={character.equipment.armorWeight ?? ''}
+                editing={isInfoEditing}
+                onBlur={(e) =>
+                  updateCharacter(character.id, {
+                    equipment: {
+                      ...character.equipment,
+                      armorWeight: e.target.value,
+                    },
+                  })
+                }
+                isCompactView={isCompactView}
+              />
+            </MetaBlock>
+          </div>
+        </TooltipProvider>
 
         <div className="mt-4 flex flex-wrap gap-2">
           <Button

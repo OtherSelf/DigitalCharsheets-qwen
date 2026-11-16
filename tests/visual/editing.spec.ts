@@ -9,6 +9,7 @@ import {
   screenshotElement,
   screenshotPage,
   sheetPath,
+  signInViaUI,
 } from './helpers';
 
 /**
@@ -328,6 +329,107 @@ test.describe('редактирование Dark Heresy', () => {
       await startEditing(skills);
       await expectInputValue(skills, 'Awareness (Per)');
       await screenshotPage(page, 'sheet-dh-mobile-edit-skills-en.png');
+    },
+  );
+});
+
+/**
+ * ─── LANDMARK: CREATION EDIT POLICY ────────────────────────────────────────
+ * Двухуровневая политика (D4): описательные поля редактируются всегда,
+ * creation-поля — только пока пустые. Заполненный мир/роль/пророчество
+ * read-only с замком «выбрано при создании». Производные не пересчитываются
+ * (D15), поэтому тест проверяет только сам факт записи поля.
+ */
+test.describe('политика редактирования после создания', () => {
+  const LOCK_HINT = 'Chosen at creation — recreate the character to change it.';
+
+  test(
+    'DH1: заданные creation-поля только читаются (en)',
+    { tag: '@desktop' },
+    async ({ page, context }) => {
+      await prepare(context);
+      await openApp(page, sheetPath(getState().dhId));
+
+      const info = page.locator('#info-section:visible').first();
+      await startEditing(info);
+
+      // Фикстура задаёт homeWorld, worldVariant, careerPath и divination.
+      await expect(info.getByTestId('creation-lock')).toHaveCount(4);
+      // Подсказка локализована и доступна скринридеру.
+      await expect(info.getByTestId('creation-lock').first()).toHaveAttribute(
+        'aria-label',
+        LOCK_HINT,
+      );
+      await expect(info.getByText('Imperial World')).toBeVisible();
+      await expect(info.getByText('Shrine World')).toBeVisible();
+      // Выбора нет даже в режиме правки: смена мира — только пересозданием.
+      await expect(info.getByRole('combobox')).toHaveCount(0);
+    },
+  );
+
+  test(
+    'DH2: пустое creation-поле заполняется и блокируется (en)',
+    { tag: '@desktop' },
+    async ({ page }) => {
+      // Свежий лист dh2 без creation-полей: фикстуры визуальных тестов
+      // не трогаем, иначе поедут эталоны листа.
+      const username = `policy-dh2-${Date.now()}`;
+      const password = 'policy-password-1';
+      const registered = await page.request.post('/api/auth/register', {
+        data: {
+          username,
+          password,
+          displayName: 'Policy DH2',
+          recoveryPhrase: 'amber cobalt lantern',
+        },
+      });
+      expect([200, 201], 'регистрация аккаунта').toContain(registered.status());
+
+      const created = await page.request.post('/api/characters', {
+        data: { systemId: 'dh2', name: 'Policy DH2' },
+      });
+      expect([200, 201], 'создание пустого dh2-листа').toContain(
+        created.status(),
+      );
+      const { id } = (await created.json()) as { id: string };
+
+      await signInViaUI(page, { username, password });
+      await openApp(page, sheetPath(id));
+
+      const info = page.locator('#info-section:visible').first();
+      await startEditing(info);
+
+      // Пустое поле открывает выбор; заполняем мир.
+      const homeWorld = info.getByRole('combobox', { name: 'Home World' });
+      await expect(homeWorld).toBeVisible();
+      const saved = page.waitForResponse(
+        (response) =>
+          response.url().includes(`/api/characters/${id}`) &&
+          response.request().method() === 'PUT',
+      );
+      await homeWorld.click();
+      await page.getByRole('option', { name: 'Feral World' }).click();
+      await saved;
+      await expect(
+        info.getByText('Feral World', { exact: true }),
+      ).toBeVisible();
+
+      // Gender — описательное поле: input доступен в правке.
+      await expect(info.getByLabel('Gender')).toBeVisible();
+
+      await info.getByTestId('save-button').first().click();
+      await openApp(page, sheetPath(id));
+
+      const reloaded = page.locator('#info-section:visible').first();
+      await startEditing(reloaded);
+      // Мир задан: выбор исчез, появился замок «выбрано при создании».
+      await expect(
+        reloaded.getByRole('combobox', { name: 'Home World' }),
+      ).toHaveCount(0);
+      await expect(reloaded.getByTestId('creation-lock')).toHaveCount(1);
+      await expect(
+        reloaded.getByText('Feral World', { exact: true }),
+      ).toBeVisible();
     },
   );
 });

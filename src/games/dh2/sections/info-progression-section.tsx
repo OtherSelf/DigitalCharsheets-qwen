@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 
-import { Eye, Trash2 } from 'lucide-react';
+import { Eye, Lock, Trash2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -24,15 +24,27 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import {
   NarrativeSheet,
   useCharacterContext,
   useTranslation,
 } from '@/games/plugin-host';
+import { isCreationFieldLocked } from '@/games/shared/field-policy';
 import { cn } from '@/lib/utils';
 
 import { applyAptitudeChoice } from '../aptitudes-sheet';
 import { characteristicAptitudes, deriveAptitudes } from '../dh2e-aptitudes';
-import { DH2E_BACKGROUNDS, DH2E_HOMEWORLDS, DH2E_ROLES } from '../dh2e-data';
+import {
+  DH2E_BACKGROUNDS,
+  DH2E_DIVINATIONS,
+  DH2E_HOMEWORLDS,
+  DH2E_ROLES,
+} from '../dh2e-data';
 import { startingChoiceLabels } from '../dh2e-grants';
 import {
   aptitudeLabel,
@@ -82,35 +94,40 @@ const DetailField = ({
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onBlur?: (e: React.FocusEvent<HTMLInputElement>) => void;
   isCompactView: boolean;
-}) => (
-  <div className="space-y-1">
-    <Label
-      className={cn(
-        'text-muted-foreground text-xs',
-        isCompactView && 'text-[10px]',
-      )}
-    >
-      {label}
-    </Label>
-    {editing ? (
-      <Input
-        defaultValue={value}
-        onChange={onChange}
-        onBlur={onBlur}
-        className={cn('h-8', isCompactView && 'h-7 text-xs')}
-      />
-    ) : (
-      <p
+}) => {
+  const id = React.useId();
+  return (
+    <div className="space-y-1">
+      <Label
+        htmlFor={editing ? id : undefined}
         className={cn(
-          'text-sm font-medium break-words',
-          isCompactView && 'text-xs',
+          'text-muted-foreground text-xs',
+          isCompactView && 'text-[10px]',
         )}
       >
-        {value || '-'}
-      </p>
-    )}
-  </div>
-);
+        {label}
+      </Label>
+      {editing ? (
+        <Input
+          id={id}
+          defaultValue={value}
+          onChange={onChange}
+          onBlur={onBlur}
+          className={cn('h-8', isCompactView && 'h-7 text-xs')}
+        />
+      ) : (
+        <p
+          className={cn(
+            'text-sm font-medium break-words',
+            isCompactView && 'text-xs',
+          )}
+        >
+          {value || '-'}
+        </p>
+      )}
+    </div>
+  );
+};
 
 const ReadOnlyField = ({
   label,
@@ -173,6 +190,91 @@ const AptitudeChoice = ({
           ))}
         </SelectContent>
       </Select>
+    </div>
+  );
+};
+
+/**
+ * Поле создания (D4): пока пусто и идёт редактирование — Select; заданное
+ * значение read-only с замком «выбрано при создании». Производные (aptitudes,
+ * starting choices) при дозаполнении не пересчитываются (D15).
+ */
+const CreationField = ({
+  label,
+  value,
+  placeholder,
+  editing,
+  locked,
+  disabled,
+  isCompactView,
+  options,
+  onSelect,
+}: {
+  label: string;
+  value: string;
+  placeholder: string;
+  editing: boolean;
+  locked: boolean;
+  disabled?: boolean;
+  isCompactView: boolean;
+  options: readonly { value: string; label: string }[];
+  onSelect: (next: string) => void;
+}) => {
+  const { t } = useTranslation();
+  const lockHint = t('common.chosenAtCreation');
+  const id = React.useId();
+
+  return (
+    <div className="space-y-1">
+      <Label
+        htmlFor={locked || !editing ? undefined : id}
+        className={cn(
+          'text-muted-foreground text-xs',
+          isCompactView && 'text-[10px]',
+        )}
+      >
+        <span className="inline-flex items-center gap-1">
+          {label}
+          {locked && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span
+                  tabIndex={0}
+                  aria-label={lockHint}
+                  data-testid="creation-lock"
+                >
+                  <Lock className="h-3 w-3" />
+                </span>
+              </TooltipTrigger>
+              <TooltipContent side="top">{lockHint}</TooltipContent>
+            </Tooltip>
+          )}
+        </span>
+      </Label>
+      {locked || !editing ? (
+        <p
+          className={cn(
+            'text-sm font-medium break-words',
+            !locked && !value && 'text-muted-foreground',
+            isCompactView && 'text-xs',
+          )}
+        >
+          {value || '-'}
+        </p>
+      ) : (
+        <Select onValueChange={onSelect} disabled={disabled}>
+          <SelectTrigger id={id} className="h-8">
+            <SelectValue placeholder={placeholder} />
+          </SelectTrigger>
+          <SelectContent>
+            {options.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )}
     </div>
   );
 };
@@ -283,280 +385,333 @@ export const InfoSection = ({
         )}
       </CardHeader>
       <CardContent className="pt-0">
-        <div className="dcs-info-grid grid grid-cols-2 gap-x-4 gap-y-4 md:grid-cols-3">
-          <DetailField
-            label={t('common.characterName')}
-            value={character.name}
-            editing={isInfoEditing}
-            onBlur={(e) =>
-              updateCharacter(character.id, { name: e.target.value })
-            }
-            isCompactView={isCompactView}
-          />
-          <ReadOnlyField
-            label={t('dh2.homeWorld')}
-            value={
-              character.homeWorld
-                ? homeWorldLabel(character.homeWorld, t)
-                : t('dh2.waitingHomeWorld')
-            }
-            isCompactView={isCompactView}
-          />
-          <ReadOnlyField
-            label={t('dh2.background')}
-            value={backgroundLabel(character.background, t)}
-            isCompactView={isCompactView}
-          />
-          <ReadOnlyField
-            label={t('dh2.role')}
-            value={roleLabel(character.role, t)}
-            isCompactView={isCompactView}
-          />
-          <ReadOnlyField
-            label={t('dh2.aptitudes')}
-            value={aptitudeLabels(character.aptitudes.profile, t)}
-            isCompactView={isCompactView}
-          />
-          {roleTalent && (
-            <ReadOnlyField
-              label={t('dh2.roleTalent')}
-              value={roleTalent}
+        <TooltipProvider delayDuration={150}>
+          <div className="dcs-info-grid grid grid-cols-2 gap-x-4 gap-y-4 md:grid-cols-3">
+            <DetailField
+              label={t('common.characterName')}
+              value={character.name}
+              editing={isInfoEditing}
+              onBlur={(e) =>
+                updateCharacter(character.id, { name: e.target.value })
+              }
               isCompactView={isCompactView}
             />
-          )}
-          {chosenSkills.length > 0 && (
+            <CreationField
+              label={t('dh2.homeWorld')}
+              value={
+                character.homeWorld
+                  ? homeWorldLabel(character.homeWorld, t)
+                  : ''
+              }
+              placeholder={t('dh2.waitingHomeWorld')}
+              editing={isInfoEditing}
+              locked={isCreationFieldLocked(character.homeWorld)}
+              isCompactView={isCompactView}
+              options={DH2E_HOMEWORLDS.map((world) => ({
+                value: world.id,
+                label: homeWorldLabel(world.id, t),
+              }))}
+              onSelect={(next) =>
+                updateCharacter(character.id, { homeWorld: next })
+              }
+            />
+            <CreationField
+              label={t('dh2.background')}
+              value={
+                character.background
+                  ? backgroundLabel(character.background, t)
+                  : ''
+              }
+              placeholder={t('dh2.background')}
+              editing={isInfoEditing}
+              locked={isCreationFieldLocked(character.background)}
+              isCompactView={isCompactView}
+              options={DH2E_BACKGROUNDS.map((background) => ({
+                value: background.id,
+                label: backgroundLabel(background.id, t),
+              }))}
+              onSelect={(next) =>
+                updateCharacter(character.id, { background: next })
+              }
+            />
+            <CreationField
+              label={t('dh2.role')}
+              value={character.role ? roleLabel(character.role, t) : ''}
+              placeholder={t('dh2.role')}
+              editing={isInfoEditing}
+              locked={isCreationFieldLocked(character.role)}
+              isCompactView={isCompactView}
+              options={DH2E_ROLES.map((role) => ({
+                value: role.id,
+                label: roleLabel(role.id, t),
+              }))}
+              onSelect={(next) => updateCharacter(character.id, { role: next })}
+            />
             <ReadOnlyField
-              label={t('dh2.startingSkillsChosen')}
-              value={chosenSkills.join(', ')}
+              label={t('dh2.aptitudes')}
+              value={aptitudeLabels(character.aptitudes.profile, t)}
               isCompactView={isCompactView}
             />
-          )}
-          {chosenTalents.length > 0 && (
-            <ReadOnlyField
-              label={t('dh2.startingTalentsChosen')}
-              value={chosenTalents.join(', ')}
-              isCompactView={isCompactView}
-            />
-          )}
-          <ReadOnlyField
-            label={t('dh2.eliteAdvances')}
-            value={character.eliteAdvances
-              .map((id) => eliteAdvanceLabel(id, t))
-              .join(', ')}
-            isCompactView={isCompactView}
-          />
-          <ReadOnlyField
-            label={t('dh2.gender')}
-            value={character.gender}
-            isCompactView={isCompactView}
-          />
-          <ReadOnlyField
-            label={t('dh2.psyRating')}
-            value={character.psy.rating > 0 ? String(character.psy.rating) : ''}
-            isCompactView={isCompactView}
-          />
-          {character.psy.disciplines.length > 0 && (
-            <ReadOnlyField
-              label={t('dh2.psyDisciplines')}
-              value={formatPsyList(character.psy.disciplines)}
-              isCompactView={isCompactView}
-            />
-          )}
-          {character.psy.powers.length > 0 && (
-            <ReadOnlyField
-              label={t('dh2.psyPowers')}
-              value={formatPsyList(character.psy.powers)}
-              isCompactView={isCompactView}
-            />
-          )}
-          <ReadOnlyField
-            label={t('dh2.divination')}
-            value={divinationLabel(character.divination, t)}
-            isCompactView={isCompactView}
-          />
-          <ReadOnlyField
-            label={t('dh2.divinationEffect')}
-            value={divinationEffectLabel(character.divination, t)}
-            isCompactView={isCompactView}
-          />
-          <DetailField
-            label={t('common.age')}
-            value={character.age}
-            editing={isInfoEditing}
-            onBlur={(e) =>
-              updateCharacter(character.id, { age: e.target.value })
-            }
-            isCompactView={isCompactView}
-          />
-          <DetailField
-            label={t('common.height')}
-            value={character.height}
-            editing={isInfoEditing}
-            onBlur={(e) =>
-              updateCharacter(character.id, { height: e.target.value })
-            }
-            isCompactView={isCompactView}
-          />
-          <DetailField
-            label={t('common.weight')}
-            value={character.weight}
-            editing={isInfoEditing}
-            onBlur={(e) =>
-              updateCharacter(character.id, { weight: e.target.value })
-            }
-            isCompactView={isCompactView}
-          />
-          <DetailField
-            label={t('dh2.skinColor')}
-            value={character.skinColor}
-            editing={isInfoEditing}
-            onBlur={(e) =>
-              updateCharacter(character.id, { skinColor: e.target.value })
-            }
-            isCompactView={isCompactView}
-          />
-          <DetailField
-            label={t('dh2.hairColor')}
-            value={character.hairColor}
-            editing={isInfoEditing}
-            onBlur={(e) =>
-              updateCharacter(character.id, { hairColor: e.target.value })
-            }
-            isCompactView={isCompactView}
-          />
-          <DetailField
-            label={t('dh2.eyeColor')}
-            value={character.eyeColor}
-            editing={isInfoEditing}
-            onBlur={(e) =>
-              updateCharacter(character.id, { eyeColor: e.target.value })
-            }
-            isCompactView={isCompactView}
-          />
-        </div>
-
-        <div className="mt-4 space-y-2 rounded-md border p-3 text-sm">
-          <h4 className="text-sm font-medium">{t('dh2.aptitudes')}</h4>
-          <p className="text-sm font-medium break-words">
-            {aptitudeLabels(character.aptitudes.profile, t) || '-'}
-          </p>
-          <ul className="space-y-1 text-xs">
-            {worldEntry && (
-              <li>
-                <span className="text-muted-foreground">
-                  {t('dh2.homeWorld')}:{' '}
-                </span>
-                {homeWorldLabel(worldEntry.id, t)} —{' '}
-                {aptitudeLabel(worldEntry.aptitudeId, t)}
-              </li>
-            )}
-            {backgroundEntry && (
-              <li>
-                <span className="text-muted-foreground">
-                  {t('dh2.background')}:{' '}
-                </span>
-                {backgroundLabel(backgroundEntry.id, t)} —{' '}
-                {backgroundValue ? aptitudeLabel(backgroundValue, t) : '-'}
-              </li>
-            )}
-            {roleEntry && (
-              <li>
-                <span className="text-muted-foreground">{t('dh2.role')}: </span>
-                {roleLabel(roleEntry.id, t)}
-              </li>
-            )}
-          </ul>
-
-          {backgroundEntry &&
-            backgroundEntry.aptitudeChoice.length > 1 &&
-            (isInfoEditing ? (
-              <AptitudeChoice
-                label={t('dh2.backgroundAptitude')}
-                value={backgroundValue ?? ''}
-                options={backgroundEntry.aptitudeChoice.map((id) => ({
-                  value: id,
-                  label: aptitudeLabel(id, t),
-                }))}
-                onChange={(value) => applyAptitude('background', value)}
+            {roleTalent && (
+              <ReadOnlyField
+                label={t('dh2.roleTalent')}
+                value={roleTalent}
+                isCompactView={isCompactView}
               />
-            ) : (
-              <p className="text-muted-foreground text-xs">
-                {t('dh2.backgroundAptitude')}:{' '}
-                {backgroundValue ? aptitudeLabel(backgroundValue, t) : '-'}
-              </p>
-            ))}
+            )}
+            {chosenSkills.length > 0 && (
+              <ReadOnlyField
+                label={t('dh2.startingSkillsChosen')}
+                value={chosenSkills.join(', ')}
+                isCompactView={isCompactView}
+              />
+            )}
+            {chosenTalents.length > 0 && (
+              <ReadOnlyField
+                label={t('dh2.startingTalentsChosen')}
+                value={chosenTalents.join(', ')}
+                isCompactView={isCompactView}
+              />
+            )}
+            <ReadOnlyField
+              label={t('dh2.eliteAdvances')}
+              value={character.eliteAdvances
+                .map((id) => eliteAdvanceLabel(id, t))
+                .join(', ')}
+              isCompactView={isCompactView}
+            />
+            <DetailField
+              label={t('dh2.gender')}
+              value={character.gender}
+              editing={isInfoEditing}
+              onBlur={(e) =>
+                updateCharacter(character.id, { gender: e.target.value })
+              }
+              isCompactView={isCompactView}
+            />
+            <ReadOnlyField
+              label={t('dh2.psyRating')}
+              value={
+                character.psy.rating > 0 ? String(character.psy.rating) : ''
+              }
+              isCompactView={isCompactView}
+            />
+            {character.psy.disciplines.length > 0 && (
+              <ReadOnlyField
+                label={t('dh2.psyDisciplines')}
+                value={formatPsyList(character.psy.disciplines)}
+                isCompactView={isCompactView}
+              />
+            )}
+            {character.psy.powers.length > 0 && (
+              <ReadOnlyField
+                label={t('dh2.psyPowers')}
+                value={formatPsyList(character.psy.powers)}
+                isCompactView={isCompactView}
+              />
+            )}
+            <CreationField
+              label={t('dh2.divination')}
+              value={divinationLabel(character.divination, t)}
+              placeholder={t('dh2.selectDivination')}
+              editing={isInfoEditing}
+              locked={isCreationFieldLocked(character.divination)}
+              isCompactView={isCompactView}
+              options={DH2E_DIVINATIONS.map((divination) => ({
+                value: divination.id,
+                label: divinationLabel(divination.id, t),
+              }))}
+              onSelect={(next) =>
+                updateCharacter(character.id, { divination: next })
+              }
+            />
+            <ReadOnlyField
+              label={t('dh2.divinationEffect')}
+              value={divinationEffectLabel(character.divination, t)}
+              isCompactView={isCompactView}
+            />
+            <DetailField
+              label={t('common.age')}
+              value={character.age}
+              editing={isInfoEditing}
+              onBlur={(e) =>
+                updateCharacter(character.id, { age: e.target.value })
+              }
+              isCompactView={isCompactView}
+            />
+            <DetailField
+              label={t('common.height')}
+              value={character.height}
+              editing={isInfoEditing}
+              onBlur={(e) =>
+                updateCharacter(character.id, { height: e.target.value })
+              }
+              isCompactView={isCompactView}
+            />
+            <DetailField
+              label={t('common.weight')}
+              value={character.weight}
+              editing={isInfoEditing}
+              onBlur={(e) =>
+                updateCharacter(character.id, { weight: e.target.value })
+              }
+              isCompactView={isCompactView}
+            />
+            <DetailField
+              label={t('dh2.skinColor')}
+              value={character.skinColor}
+              editing={isInfoEditing}
+              onBlur={(e) =>
+                updateCharacter(character.id, { skinColor: e.target.value })
+              }
+              isCompactView={isCompactView}
+            />
+            <DetailField
+              label={t('dh2.hairColor')}
+              value={character.hairColor}
+              editing={isInfoEditing}
+              onBlur={(e) =>
+                updateCharacter(character.id, { hairColor: e.target.value })
+              }
+              isCompactView={isCompactView}
+            />
+            <DetailField
+              label={t('dh2.eyeColor')}
+              value={character.eyeColor}
+              editing={isInfoEditing}
+              onBlur={(e) =>
+                updateCharacter(character.id, { eyeColor: e.target.value })
+              }
+              isCompactView={isCompactView}
+            />
+          </div>
 
-          {roleSlots.some((slot) => slot.choice) && (
-            <div className="space-y-2">
-              <p className="text-muted-foreground text-xs">
-                {t('dh2.roleAptitudes')}
-              </p>
-              <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
-                {roleSlots
-                  .filter((slot) => slot.choice)
-                  .map((slot) =>
-                    isInfoEditing ? (
+          <div className="mt-4 space-y-2 rounded-md border p-3 text-sm">
+            <h4 className="text-sm font-medium">{t('dh2.aptitudes')}</h4>
+            <p className="text-sm font-medium break-words">
+              {aptitudeLabels(character.aptitudes.profile, t) || '-'}
+            </p>
+            <ul className="space-y-1 text-xs">
+              {worldEntry && (
+                <li>
+                  <span className="text-muted-foreground">
+                    {t('dh2.homeWorld')}:{' '}
+                  </span>
+                  {homeWorldLabel(worldEntry.id, t)} —{' '}
+                  {aptitudeLabel(worldEntry.aptitudeId, t)}
+                </li>
+              )}
+              {backgroundEntry && (
+                <li>
+                  <span className="text-muted-foreground">
+                    {t('dh2.background')}:{' '}
+                  </span>
+                  {backgroundLabel(backgroundEntry.id, t)} —{' '}
+                  {backgroundValue ? aptitudeLabel(backgroundValue, t) : '-'}
+                </li>
+              )}
+              {roleEntry && (
+                <li>
+                  <span className="text-muted-foreground">
+                    {t('dh2.role')}:{' '}
+                  </span>
+                  {roleLabel(roleEntry.id, t)}
+                </li>
+              )}
+            </ul>
+
+            {backgroundEntry &&
+              backgroundEntry.aptitudeChoice.length > 1 &&
+              (isInfoEditing ? (
+                <AptitudeChoice
+                  label={t('dh2.backgroundAptitude')}
+                  value={backgroundValue ?? ''}
+                  options={backgroundEntry.aptitudeChoice.map((id) => ({
+                    value: id,
+                    label: aptitudeLabel(id, t),
+                  }))}
+                  onChange={(value) => applyAptitude('background', value)}
+                />
+              ) : (
+                <p className="text-muted-foreground text-xs">
+                  {t('dh2.backgroundAptitude')}:{' '}
+                  {backgroundValue ? aptitudeLabel(backgroundValue, t) : '-'}
+                </p>
+              ))}
+
+            {roleSlots.some((slot) => slot.choice) && (
+              <div className="space-y-2">
+                <p className="text-muted-foreground text-xs">
+                  {t('dh2.roleAptitudes')}
+                </p>
+                <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
+                  {roleSlots
+                    .filter((slot) => slot.choice)
+                    .map((slot) =>
+                      isInfoEditing ? (
+                        <AptitudeChoice
+                          key={slot.key}
+                          label={`${t('dh2.roleAptitude')} ${slot.index + 1}`}
+                          value={slot.value}
+                          options={slot.options.map((id) => ({
+                            value: id,
+                            label: aptitudeLabel(id, t),
+                          }))}
+                          onChange={(value) => applyAptitude(slot.key, value)}
+                        />
+                      ) : (
+                        <p key={slot.key} className="text-xs">
+                          {t('dh2.roleAptitude')} {slot.index + 1}:{' '}
+                          {aptitudeLabel(slot.value, t)}
+                        </p>
+                      ),
+                    )}
+                </div>
+              </div>
+            )}
+
+            {duplicateAptitudes.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-destructive text-xs">
+                  {t('dh2.duplicates')}:{' '}
+                  {duplicateAptitudes
+                    .map((id) => aptitudeLabel(id, t))
+                    .join(', ')}
+                </p>
+                <p className="text-muted-foreground text-xs">
+                  {t('dh2.duplicatesHint')}
+                </p>
+                {isInfoEditing &&
+                  duplicateAptitudes.map((duplicate) => {
+                    const key = `duplicate.${duplicate}`;
+                    const current = chosenMap[key];
+                    const options = characteristicAptitudes().filter(
+                      (id) =>
+                        !derivedAptitudes.profile.includes(id) ||
+                        id === current,
+                    );
+                    return options.length > 0 ? (
                       <AptitudeChoice
-                        key={slot.key}
-                        label={`${t('dh2.roleAptitude')} ${slot.index + 1}`}
-                        value={slot.value}
-                        options={slot.options.map((id) => ({
+                        key={key}
+                        label={`${t('dh2.duplicateAptitude')}: ${aptitudeLabel(duplicate, t)}`}
+                        value={current ?? ''}
+                        placeholder={t('dh2.chooseReplacement')}
+                        options={options.map((id) => ({
                           value: id,
                           label: aptitudeLabel(id, t),
                         }))}
-                        onChange={(value) => applyAptitude(slot.key, value)}
+                        onChange={(value) => applyAptitude(key, value)}
                       />
                     ) : (
-                      <p key={slot.key} className="text-xs">
-                        {t('dh2.roleAptitude')} {slot.index + 1}:{' '}
-                        {aptitudeLabel(slot.value, t)}
+                      <p key={key} className="text-destructive text-xs">
+                        {t('dh2.noFreeAptitudes')}
                       </p>
-                    ),
-                  )}
+                    );
+                  })}
               </div>
-            </div>
-          )}
-
-          {duplicateAptitudes.length > 0 && (
-            <div className="space-y-2">
-              <p className="text-destructive text-xs">
-                {t('dh2.duplicates')}:{' '}
-                {duplicateAptitudes
-                  .map((id) => aptitudeLabel(id, t))
-                  .join(', ')}
-              </p>
-              <p className="text-muted-foreground text-xs">
-                {t('dh2.duplicatesHint')}
-              </p>
-              {isInfoEditing &&
-                duplicateAptitudes.map((duplicate) => {
-                  const key = `duplicate.${duplicate}`;
-                  const current = chosenMap[key];
-                  const options = characteristicAptitudes().filter(
-                    (id) =>
-                      !derivedAptitudes.profile.includes(id) || id === current,
-                  );
-                  return options.length > 0 ? (
-                    <AptitudeChoice
-                      key={key}
-                      label={`${t('dh2.duplicateAptitude')}: ${aptitudeLabel(duplicate, t)}`}
-                      value={current ?? ''}
-                      placeholder={t('dh2.chooseReplacement')}
-                      options={options.map((id) => ({
-                        value: id,
-                        label: aptitudeLabel(id, t),
-                      }))}
-                      onChange={(value) => applyAptitude(key, value)}
-                    />
-                  ) : (
-                    <p key={key} className="text-destructive text-xs">
-                      {t('dh2.noFreeAptitudes')}
-                    </p>
-                  );
-                })}
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        </TooltipProvider>
 
         <div className="mt-4 flex flex-wrap gap-2">
           <Button
