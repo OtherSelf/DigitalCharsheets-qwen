@@ -572,6 +572,10 @@ test.describe('демо и настройки профиля', () => {
       .click();
     await expect(page.getByText('Interrogator Vane').first()).toBeVisible();
     await screenshotPage(page, 'demo-dh2-en.png');
+
+    // 2e-лист с пси и элитными: блок аптитюд/пси в info-секции.
+    await page.locator('#info-section').scrollIntoViewIfNeeded();
+    await screenshotPage(page, 'demo-dh2-info-en.png');
   });
 
   test('demo — превью персонажей (ru)', async ({ page, context }) => {
