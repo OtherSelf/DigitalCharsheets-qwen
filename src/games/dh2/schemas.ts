@@ -263,3 +263,15 @@ export const darkHeresyBaseFields = {
 
 export const darkHeresyBaseSchema: z.ZodType<DarkHeresyBase> =
   z.looseObject(darkHeresyBaseFields);
+
+export const conditionEntrySchema = z.looseObject({
+  id: z.string().min(1),
+  kind: z.enum(['disorder', 'corruption', 'mutation', 'rudiment']),
+  name: z.string(),
+  severity: z.string().optional(),
+  effect: z.string().optional(),
+  notes: z.string().optional(),
+  source: z.enum(['manual', 'divination', 'legacy']).optional(),
+});
+
+export const conditionsSchema = z.array(conditionEntrySchema);

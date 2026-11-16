@@ -30,11 +30,12 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import {
+  ConditionsList,
   NarrativeSheet,
   useCharacterContext,
   useTranslation,
+  type ConditionsLabels,
 } from '@/games/plugin-host';
-import { isCreationFieldLocked } from '@/games/shared/field-policy';
 import { cn } from '@/lib/utils';
 
 import {
@@ -61,6 +62,7 @@ import {
   divinationKey,
   divinationLabel,
 } from '../divination-i18n';
+import { isCreationFieldLocked } from '../field-policy';
 import { type DarkHeresyCareerPath, type DH1Character } from '../types';
 import { EditSaveButton } from './dh-ui-helpers';
 
@@ -143,7 +145,7 @@ const CreationField = ({
   onSelect: (next: string) => void;
 }) => {
   const { t } = useTranslation();
-  const lockHint = t('common.chosenAtCreation');
+  const lockHint = t('dh1.chosenAtCreation');
 
   return (
     <div className="space-y-1">
@@ -252,6 +254,33 @@ export const InfoSection = ({
   React.useEffect(() => {
     onEditingChange?.(isInfoEditing);
   }, [isInfoEditing, onEditingChange]);
+
+  const conditionLabels: ConditionsLabels = React.useMemo(
+    () => ({
+      title: '',
+      add: t('dh1.conditions.add'),
+      empty: t('dh1.conditions.empty'),
+      name: t('dh1.conditions.name'),
+      kind: t('dh1.conditions.kind'),
+      severity: t('dh1.conditions.severity'),
+      effect: t('dh1.conditions.effect'),
+      notes: t('dh1.conditions.notes'),
+      source: t('dh1.conditions.source'),
+      remove: t('dh1.conditions.remove'),
+      kindLabels: {
+        disorder: t('dh1.conditions.kind.disorder'),
+        corruption: t('dh1.conditions.kind.corruption'),
+        mutation: t('dh1.conditions.kind.mutation'),
+        rudiment: t('dh1.conditions.kind.rudiment'),
+      },
+      sourceLabels: {
+        manual: t('dh1.conditions.source.manual'),
+        divination: t('dh1.conditions.source.divination'),
+        legacy: t('dh1.conditions.source.legacy'),
+      },
+    }),
+    [t],
+  );
 
   const worldVariantLabel = React.useMemo(() => {
     if (!character.homeWorld) return t('dh1.waitingHomeWorld');
@@ -598,17 +627,6 @@ export const InfoSection = ({
                 isCompactView={isCompactView}
               />
               <DetailField
-                label={t('dh1.mutations')}
-                value={formatNames(character.mutations)}
-                editing={isInfoEditing}
-                onBlur={(e) =>
-                  updateCharacter(character.id, {
-                    mutations: parseNames(e.target.value),
-                  })
-                }
-                isCompactView={isCompactView}
-              />
-              <DetailField
                 label={t('dh1.eliteAdvances')}
                 value={formatNames(character.eliteAdvances)}
                 editing={isInfoEditing}
@@ -648,34 +666,6 @@ export const InfoSection = ({
                 isCompactView={isCompactView}
               />
               <DetailField
-                label={t('dh1.disorders')}
-                value={character.insanityDetails?.disorders ?? ''}
-                editing={isInfoEditing}
-                onBlur={(e) =>
-                  updateCharacter(character.id, {
-                    insanityDetails: {
-                      ...character.insanityDetails,
-                      disorders: e.target.value,
-                    },
-                  })
-                }
-                isCompactView={isCompactView}
-              />
-              <DetailField
-                label={t('dh1.severity')}
-                value={character.insanityDetails?.severity ?? ''}
-                editing={isInfoEditing}
-                onBlur={(e) =>
-                  updateCharacter(character.id, {
-                    insanityDetails: {
-                      ...character.insanityDetails,
-                      severity: e.target.value,
-                    },
-                  })
-                }
-                isCompactView={isCompactView}
-              />
-              <DetailField
                 label={t('dh1.corruptionDegree')}
                 value={character.corruptionDetails?.degree ?? ''}
                 editing={isInfoEditing}
@@ -703,20 +693,17 @@ export const InfoSection = ({
                 }
                 isCompactView={isCompactView}
               />
-              <DetailField
-                label={t('dh1.defilements')}
-                value={character.corruptionDetails?.defilements ?? ''}
-                editing={isInfoEditing}
-                onBlur={(e) =>
-                  updateCharacter(character.id, {
-                    corruptionDetails: {
-                      ...character.corruptionDetails,
-                      defilements: e.target.value,
-                    },
-                  })
-                }
-                isCompactView={isCompactView}
-              />
+              <div className="col-span-2 space-y-2 md:col-span-3">
+                <ConditionsList
+                  conditions={character.conditions}
+                  labels={conditionLabels}
+                  editing={isInfoEditing}
+                  isCompactView={isCompactView}
+                  onChange={(next) =>
+                    updateCharacter(character.id, { conditions: next })
+                  }
+                />
+              </div>
             </MetaBlock>
 
             <MetaBlock title={t('dh1.carrySection')}>

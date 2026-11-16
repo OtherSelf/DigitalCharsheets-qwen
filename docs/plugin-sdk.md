@@ -79,6 +79,7 @@ state from a plugin component:
 | `useTranslation()` | `t(key)` for the current language (always full `ns.key`) |
 | `useToast()` | host toasts |
 | `NarrativeSheet` | right-hand Sheet for `notes`/`backstory`: markdown view, smart mode (empty opens in edit), Edit/Save/Cancel inside the Sheet |
+| `ConditionsList` | structured conditions list (kind/name/severity/effect/notes/source) with add/remove; labels come from the plugin dictionary, the shapes live in the edition types |
 
 The module re-exports the host hooks and `NarrativeSheet`, so plugin internals stay decoupled from
 `@/context/*` / `@/hooks/*` and the boundary test keeps zero legacy entries.

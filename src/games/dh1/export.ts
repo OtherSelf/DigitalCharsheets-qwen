@@ -63,6 +63,7 @@ export function buildDh1PortableJson(
       talents: character.talents,
       traits: character.traits,
       mutations: character.mutations,
+      conditions: character.conditions,
       eliteAdvances: character.eliteAdvances,
       psy: character.psy,
       insanityDetails: character.insanityDetails,

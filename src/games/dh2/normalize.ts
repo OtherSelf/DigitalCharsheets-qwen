@@ -188,6 +188,14 @@ function fillDefaults(character: RawRecord): void {
   if (!character.talents) character.talents = [];
 }
 
+/**
+ * DH2: структурированные состояния аддитивны, миграции текстов нет (D7/D17).
+ * Пустой массив — значение по умолчанию, счётчики Безумия/Порчи остаются.
+ */
+function ensureConditions(character: RawRecord): void {
+  if (!Array.isArray(character.conditions)) character.conditions = [];
+}
+
 function enforceDh2Fields(character: RawRecord, warnings: string[]): void {
   const stats = asRecord(character.stats);
   const upgrades = asRecord(character.statUpgrades);
@@ -320,6 +328,7 @@ export function normalizeDh2(
   if (options.applyDefaults) fillDefaults(character);
   migrateLegacyFields(character, warnings);
   enforceDh2Fields(character, warnings);
+  ensureConditions(character);
 
   return {
     character: character as unknown as DH2Character,

@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 import {
+  conditionsSchema,
   darkHeresyBaseFields,
   darkHeresyCoreStatNotesFields,
   darkHeresyCoreStatsFields,
@@ -40,4 +41,5 @@ export const dh2CharacterSchema: z.ZodType<DH2Character> = z.looseObject({
     })
     .optional(),
   fatigue2nd: fatigueSchema,
+  conditions: conditionsSchema.optional(),
 });

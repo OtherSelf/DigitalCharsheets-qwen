@@ -40,6 +40,7 @@ const COMBAT_FIELDS = [
   'corruptionPoints',
   'movement',
   'criticalConditions',
+  'conditions',
   'customResources',
   'skills',
   'talents',

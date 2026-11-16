@@ -683,8 +683,6 @@ export const enTranslations: Record<string, string> = {
   'history.valuesCount': 'values',
   'history.revisionsCount': 'revisions',
   // ─── share: read-only guest link ───
-  'common.chosenAtCreation':
-    'Chosen at creation — recreate the character to change it.',
   'narrative.empty': 'Nothing here yet. Use Edit to write it.',
   'narrative.preview': 'Preview',
   'share.button': 'Share read-only link',

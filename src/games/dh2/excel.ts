@@ -129,6 +129,28 @@ export function buildDh2ExcelSections(
     w.row('io.excel.corruptionNotes', character.corruptionPoints.notes);
     w.row('io.excel.fatigueSecond', fatigue.current);
     w.row('io.excel.fatigueNotes', fatigue.notes);
+
+    const conditions = (character.conditions ?? []).filter(
+      (condition) => condition.name.trim() !== '',
+    );
+    if (conditions.length > 0) {
+      w.tableHeader([
+        'dh2.conditions.name',
+        'dh2.conditions.kind',
+        'dh2.conditions.effect',
+        'dh2.conditions.source',
+      ]);
+      for (const condition of conditions) {
+        w.tableRow([
+          condition.name,
+          t(`dh2.conditions.kind.${condition.kind}`),
+          [condition.severity, condition.effect, condition.notes]
+            .filter(Boolean)
+            .join(' · '),
+          t(`dh2.conditions.source.${condition.source ?? 'manual'}`),
+        ]);
+      }
+    }
     w.row('dh2.criticalConditions', w.list(character.criticalConditions ?? []));
     w.row(
       'dh2.customResources',

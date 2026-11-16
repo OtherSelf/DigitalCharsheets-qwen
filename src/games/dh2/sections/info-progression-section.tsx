@@ -30,11 +30,12 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import {
+  ConditionsList,
   NarrativeSheet,
   useCharacterContext,
   useTranslation,
+  type ConditionsLabels,
 } from '@/games/plugin-host';
-import { isCreationFieldLocked } from '@/games/shared/field-policy';
 import { cn } from '@/lib/utils';
 
 import { applyAptitudeChoice } from '../aptitudes-sheet';
@@ -63,6 +64,7 @@ import {
   eliteById,
   removeEliteAdvance,
 } from '../elite';
+import { isCreationFieldLocked } from '../field-policy';
 import {
   buyPsyRating,
   formatPsyList,
@@ -221,7 +223,7 @@ const CreationField = ({
   onSelect: (next: string) => void;
 }) => {
   const { t } = useTranslation();
-  const lockHint = t('common.chosenAtCreation');
+  const lockHint = t('dh2.chosenAtCreation');
   const id = React.useId();
 
   return (
@@ -294,6 +296,33 @@ export const InfoSection = ({
   React.useEffect(() => {
     onEditingChange?.(isInfoEditing);
   }, [isInfoEditing, onEditingChange]);
+
+  const conditionLabels: ConditionsLabels = React.useMemo(
+    () => ({
+      title: t('dh2.conditions.title'),
+      add: t('dh2.conditions.add'),
+      empty: t('dh2.conditions.empty'),
+      name: t('dh2.conditions.name'),
+      kind: t('dh2.conditions.kind'),
+      severity: t('dh2.conditions.severity'),
+      effect: t('dh2.conditions.effect'),
+      notes: t('dh2.conditions.notes'),
+      source: t('dh2.conditions.source'),
+      remove: t('dh2.conditions.remove'),
+      kindLabels: {
+        disorder: t('dh2.conditions.kind.disorder'),
+        corruption: t('dh2.conditions.kind.corruption'),
+        mutation: t('dh2.conditions.kind.mutation'),
+        rudiment: t('dh2.conditions.kind.rudiment'),
+      },
+      sourceLabels: {
+        manual: t('dh2.conditions.source.manual'),
+        divination: t('dh2.conditions.source.divination'),
+        legacy: t('dh2.conditions.source.legacy'),
+      },
+    }),
+    [t],
+  );
 
   const showInfo = !isCompactView || activeCompactSection === 'info-section';
   if (!showInfo) return null;
@@ -712,6 +741,18 @@ export const InfoSection = ({
             )}
           </div>
         </TooltipProvider>
+
+        <div className="mt-4">
+          <ConditionsList
+            conditions={character.conditions}
+            labels={conditionLabels}
+            editing={isInfoEditing}
+            isCompactView={isCompactView}
+            onChange={(next) =>
+              updateCharacter(character.id, { conditions: next })
+            }
+          />
+        </div>
 
         <div className="mt-4 flex flex-wrap gap-2">
           <Button

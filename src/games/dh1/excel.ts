@@ -110,6 +110,28 @@ export function buildDh1ExcelSections(
     }
     w.row('io.excel.fatigueFirst', fatigue.current);
     w.row('io.excel.fatigueNotes', fatigue.notes);
+
+    const conditions = (character.conditions ?? []).filter(
+      (condition) => condition.name.trim() !== '',
+    );
+    if (conditions.length > 0) {
+      w.tableHeader([
+        'dh1.conditions.name',
+        'dh1.conditions.kind',
+        'dh1.conditions.effect',
+        'dh1.conditions.source',
+      ]);
+      for (const condition of conditions) {
+        w.tableRow([
+          condition.name,
+          t(`dh1.conditions.kind.${condition.kind}`),
+          [condition.severity, condition.effect, condition.notes]
+            .filter(Boolean)
+            .join(' · '),
+          t(`dh1.conditions.source.${condition.source ?? 'manual'}`),
+        ]);
+      }
+    }
     w.row('dh1.criticalConditions', w.list(character.criticalConditions ?? []));
     w.row(
       'dh1.customResources',

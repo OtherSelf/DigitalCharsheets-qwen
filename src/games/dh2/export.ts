@@ -53,6 +53,7 @@ export function buildDh2PortableJson(
       movement: character.movement,
       skills: character.skills,
       talents: character.talents,
+      conditions: character.conditions,
     });
   }
 

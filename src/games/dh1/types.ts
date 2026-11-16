@@ -262,6 +262,23 @@ export interface DH1CorruptionDetails {
  * Поля ниже добавлены аддитивно (D3 DH1APP): старые листы читаются без
  * миграции, отсутствие любого блока означает «не заполнено».
  */
+/** Вид состояния (Безумие/Порча): расстройство, осквернение, мутация, рудимент. */
+export type ConditionKind = 'disorder' | 'corruption' | 'mutation' | 'rudiment';
+
+/** Источник состояния: игрок, пророчество или миграция старых данных. */
+export type ConditionSource = 'manual' | 'divination' | 'legacy';
+
+/** Структурированное состояние листа (D7); форма повторяется в каждом модуле. */
+export interface ConditionEntry {
+  id: string;
+  kind: ConditionKind;
+  name: string;
+  severity?: string;
+  effect?: string;
+  notes?: string;
+  source?: ConditionSource;
+}
+
 export interface DH1Character extends DarkHeresyBase {
   systemId?: 'dh1';
   stats: DarkHeresyCoreStats;
@@ -278,4 +295,6 @@ export interface DH1Character extends DarkHeresyBase {
   corruptionDetails?: DH1CorruptionDetails;
   /** Журнал покупок опыта: ведёт игрок (D4), допускает удаление записей. */
   experienceLog?: DH1ExperienceEntry[];
+  /** Структурированные состояния (D7): расстройства, осквернения, мутации. */
+  conditions?: ConditionEntry[];
 }

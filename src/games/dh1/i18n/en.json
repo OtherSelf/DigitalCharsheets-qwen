@@ -697,5 +697,22 @@
   "dh1.experienceLogHint": "Purchases recorded by the player; entries can be deleted.",
   "dh1.experienceLogEmpty": "No purchases yet.",
   "dh1.manualPurchase": "Manual purchase",
-  "dh1.deleteExperienceEntry": "Delete entry"
+  "dh1.deleteExperienceEntry": "Delete entry",
+  "dh1.chosenAtCreation": "Chosen at creation — recreate the character to change it.",
+  "dh1.conditions.add": "Add condition",
+  "dh1.conditions.empty": "No conditions yet.",
+  "dh1.conditions.name": "Name",
+  "dh1.conditions.kind": "Type",
+  "dh1.conditions.severity": "Severity",
+  "dh1.conditions.effect": "Effect",
+  "dh1.conditions.notes": "Notes",
+  "dh1.conditions.source": "Source",
+  "dh1.conditions.remove": "Remove condition",
+  "dh1.conditions.kind.disorder": "Disorder",
+  "dh1.conditions.kind.corruption": "Defilement",
+  "dh1.conditions.kind.mutation": "Mutation",
+  "dh1.conditions.kind.rudiment": "Rudiment",
+  "dh1.conditions.source.manual": "Manual",
+  "dh1.conditions.source.divination": "Divination",
+  "dh1.conditions.source.legacy": "Legacy data"
 }
