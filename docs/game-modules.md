@@ -93,6 +93,28 @@ Common behaviour is mirrored on purpose: creation fields, the XP journal,
 history labels, compact view and the export channels (JSON/Excel). Rules are
 kept in the module, not in the core; see `docs/data-storage.md` for fields.
 
+### Second-edition sheet rules
+
+The 2e module owns the rules that only exist in that edition:
+
+- **Aptitudes** — `deriveAptitudes` (`dh2e-aptitudes.ts`) builds the profile
+  from world, background and role; `chosen` keeps the player's background/role
+  picks and duplicate replacements. The sheet block with sources and
+  duplicates is editable (`aptitudes-sheet.ts`).
+- **Psychic** — free-text disciplines and powers (D14); `psy.ts` computes the
+  rating price (200 × new rating) and writes a `psy-rating` journal entry. The
+  Focus Power hint shows Willpower with purchases.
+- **Elite advances** — `elite.ts` lists available advances, their
+  prerequisites and cost; purchase writes `elite-advance` to the journal.
+  Instant changes are a memo only (D15).
+- **Influence / Requisition** — `influence.ts` caps creation acquisitions at
+  the Influence bonus (Scarce −10 or better) and computes the Requisition
+  target from the availability/craftsmanship tables (book p. 141).
+- **Wounds/Fate** — `dh2e-starting-profile.ts` shows the world range and
+  prefills the minimum; the player enters the roll (D12).
+
+All of these are mirrored in behaviour, not shared with `dh1` (D10).
+
 ## Plugin manifest
 
 Every module folder has a `plugin.json` (`src/games/plugin.schema.json`):
