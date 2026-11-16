@@ -9,10 +9,12 @@
  *
  *   • `useCharacterContext` — чтение/запись листа и общие настройки листа;
  *   • `useTranslation`      — `t()` текущего языка (полные ключи `ns.key`);
- *   • `useToast`            — тосты хоста.
+ *   • `useToast`            — тосты хоста;
+ *   • `NarrativeSheet`      — правый Sheet заметок/предыстории с markdown.
  *
  * Модуль `'use client'`: его импортируют только клиентские компоненты.
  */
 export { useCharacterContext } from '@/context/character-context';
 export { useTranslation } from '@/context/language-context';
 export { useToast } from '@/hooks/use-toast';
+export { NarrativeSheet } from '@/components/sheets/narrative-sheet';

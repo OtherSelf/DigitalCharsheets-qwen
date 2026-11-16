@@ -152,11 +152,19 @@ test.describe('диалоги — заметки', () => {
     await expect(
       dialog.getByRole('heading', { name: 'Character Notes' }),
     ).toBeVisible();
+    // Непустые заметки открываются в просмотре markdown (D3): textarea
+    // появляется только после «Редактировать».
+    await expect(
+      dialog.getByText(/Owes a favour to the Lantern Guild/),
+    ).toBeVisible();
+    await expect(dialog.locator('textarea')).toHaveCount(0);
+
+    await screenshotPage(page, 'dialog-dnd-notes-en.png');
+
+    await dialog.getByRole('button', { name: 'Edit' }).click();
     await expect(dialog.locator('textarea')).toHaveValue(
       /Owes a favour to the Lantern Guild/,
     );
-
-    await screenshotPage(page, 'dialog-dnd-notes-en.png');
   });
 
   test(
@@ -167,11 +175,14 @@ test.describe('диалоги — заметки', () => {
       await openApp(page, sheetPath(getState().dhId));
 
       const dialog = await openDialog(page, 'Notes', false);
+      await expect(dialog.getByText(/Keep the sealed dossier/)).toBeVisible();
+
+      await screenshotPage(page, 'dialog-dh-notes-en.png');
+
+      await dialog.getByRole('button', { name: 'Edit' }).click();
       await expect(dialog.locator('textarea')).toHaveValue(
         /Keep the sealed dossier/,
       );
-
-      await screenshotPage(page, 'dialog-dh-notes-en.png');
     },
   );
 
@@ -180,11 +191,16 @@ test.describe('диалоги — заметки', () => {
     await openApp(page, sheetPath(getState().dndId));
 
     const dialog = await openDialog(page, 'Notes', true);
+    await expect(
+      dialog.getByText(/Owes a favour to the Lantern Guild/),
+    ).toBeVisible();
+
+    await screenshotPage(page, 'dialog-dnd-mobile-notes-en.png');
+
+    await dialog.getByRole('button', { name: 'Edit' }).click();
     await expect(dialog.locator('textarea')).toHaveValue(
       /Owes a favour to the Lantern Guild/,
     );
-
-    await screenshotPage(page, 'dialog-dnd-mobile-notes-en.png');
   });
 
   test(
@@ -195,11 +211,14 @@ test.describe('диалоги — заметки', () => {
       await openApp(page, sheetPath(getState().dhId));
 
       const dialog = await openDialog(page, 'Notes', true);
+      await expect(dialog.getByText(/Keep the sealed dossier/)).toBeVisible();
+
+      await screenshotPage(page, 'dialog-dh-mobile-notes-en.png');
+
+      await dialog.getByRole('button', { name: 'Edit' }).click();
       await expect(dialog.locator('textarea')).toHaveValue(
         /Keep the sealed dossier/,
       );
-
-      await screenshotPage(page, 'dialog-dh-mobile-notes-en.png');
     },
   );
 
@@ -210,6 +229,9 @@ test.describe('диалоги — заметки', () => {
     const dialog = await openDialog(page, 'Заметки', false);
     await expect(
       dialog.getByRole('heading', { name: 'Заметки персонажа' }),
+    ).toBeVisible();
+    await expect(
+      dialog.getByRole('button', { name: 'Редактировать' }),
     ).toBeVisible();
 
     await screenshotPage(page, 'dialog-dh-notes-ru.png');

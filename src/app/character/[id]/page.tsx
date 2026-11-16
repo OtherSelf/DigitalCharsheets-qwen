@@ -10,7 +10,7 @@ import { Header } from '@/components/header';
 import { ShareDialog } from '@/components/share/share-dialog';
 import { CharacterSheet } from '@/components/sheets/character-sheet';
 import { CompactSidebar } from '@/components/sheets/compact-sidebar';
-import { NotesDialog } from '@/components/sheets/notes-dialog';
+import { NotesSheet } from '@/components/sheets/notes-sheet';
 import { QuestJournalSheet } from '@/components/sheets/quest-journal-dialog';
 import { SheetStateBanner } from '@/components/sheets/sheet-state-banner';
 import { UnknownSheetView } from '@/components/sheets/unknown-sheet-view';
@@ -224,7 +224,7 @@ export default function CharacterPage() {
         </div>
         {character && !isReadOnly && (
           <>
-            <NotesDialog
+            <NotesSheet
               character={character}
               open={notesOpen}
               onOpenChange={setNotesOpen}

@@ -2,15 +2,10 @@
 
 import * as React from 'react';
 
-import { ChevronDown, ChevronRight, Trash2 } from 'lucide-react';
+import { Eye, Trash2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible';
 import {
   Dialog,
   DialogContent,
@@ -21,8 +16,11 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { useCharacterContext, useTranslation } from '@/games/plugin-host';
+import {
+  NarrativeSheet,
+  useCharacterContext,
+  useTranslation,
+} from '@/games/plugin-host';
 import { cn } from '@/lib/utils';
 
 import {
@@ -657,95 +655,45 @@ export const InfoSection = ({
           </MetaBlock>
         </div>
 
-        <div className="mt-4 grid grid-cols-1 gap-4">
-          <Collapsible
-            open={isBackstoryOpen}
-            onOpenChange={setIsBackstoryOpen}
-            className="w-full"
+        <div className="mt-4 flex flex-wrap gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="gap-1.5"
+            onClick={() => setIsBackstoryOpen(true)}
           >
-            <div className="mb-2 flex flex-row items-center justify-between">
-              <CollapsibleTrigger className="hover:bg-accent hover:text-accent-foreground -ml-2 flex w-full items-center gap-2 rounded-md px-2 py-1 transition-colors focus:outline-none">
-                {isBackstoryOpen ? (
-                  <ChevronDown className="h-4 w-4" />
-                ) : (
-                  <ChevronRight className="h-4 w-4" />
-                )}
-                <Label
-                  className={cn(
-                    'text-muted-foreground cursor-pointer text-xs',
-                    isCompactView && 'text-[10px]',
-                  )}
-                >
-                  {t('common.backstory')}
-                </Label>
-              </CollapsibleTrigger>
-            </div>
-            <CollapsibleContent className="w-full space-y-1">
-              {isInfoEditing ? (
-                <Textarea
-                  defaultValue={character.backstory}
-                  className="min-h-[100px] resize-y"
-                  onBlur={(e) =>
-                    updateCharacter(character.id, { backstory: e.target.value })
-                  }
-                />
-              ) : (
-                <p
-                  className={cn(
-                    'px-2 text-sm font-medium break-words whitespace-pre-wrap',
-                    isCompactView && 'text-xs',
-                  )}
-                >
-                  {character.backstory || '-'}
-                </p>
-              )}
-            </CollapsibleContent>
-          </Collapsible>
-
-          <Collapsible
-            open={isNotesOpen}
-            onOpenChange={setIsNotesOpen}
-            className="w-full"
+            <Eye className="h-4 w-4" />
+            {t('common.backstory')}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="gap-1.5"
+            onClick={() => setIsNotesOpen(true)}
           >
-            <div className="mb-2 flex flex-row items-center justify-between">
-              <CollapsibleTrigger className="hover:bg-accent hover:text-accent-foreground -ml-2 flex w-full items-center gap-2 rounded-md px-2 py-1 transition-colors focus:outline-none">
-                {isNotesOpen ? (
-                  <ChevronDown className="h-4 w-4" />
-                ) : (
-                  <ChevronRight className="h-4 w-4" />
-                )}
-                <Label
-                  className={cn(
-                    'text-muted-foreground cursor-pointer text-xs',
-                    isCompactView && 'text-[10px]',
-                  )}
-                >
-                  {t('common.notes')}
-                </Label>
-              </CollapsibleTrigger>
-            </div>
-            <CollapsibleContent className="w-full space-y-1">
-              {isInfoEditing ? (
-                <Textarea
-                  defaultValue={character.notes}
-                  className="min-h-[100px] resize-y"
-                  onBlur={(e) =>
-                    updateCharacter(character.id, { notes: e.target.value })
-                  }
-                />
-              ) : (
-                <p
-                  className={cn(
-                    'px-2 text-sm font-medium break-words whitespace-pre-wrap',
-                    isCompactView && 'text-xs',
-                  )}
-                >
-                  {character.notes || '-'}
-                </p>
-              )}
-            </CollapsibleContent>
-          </Collapsible>
+            <Eye className="h-4 w-4" />
+            {t('common.notes')}
+          </Button>
         </div>
+
+        <NarrativeSheet
+          open={isBackstoryOpen}
+          onOpenChange={setIsBackstoryOpen}
+          title={t('common.backstory')}
+          description={t('common.backstory')}
+          value={character.backstory ?? ''}
+          onSave={(next) => updateCharacter(character.id, { backstory: next })}
+        />
+        <NarrativeSheet
+          open={isNotesOpen}
+          onOpenChange={setIsNotesOpen}
+          title={t('common.notes')}
+          description={t('common.notes')}
+          value={character.notes ?? ''}
+          onSave={(next) => updateCharacter(character.id, { notes: next })}
+        />
       </CardContent>
     </Card>
   );

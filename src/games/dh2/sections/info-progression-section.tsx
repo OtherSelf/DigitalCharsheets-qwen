@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 
-import { Trash2 } from 'lucide-react';
+import { Eye, Trash2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -23,8 +23,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
-import { useCharacterContext, useTranslation } from '@/games/plugin-host';
+import {
+  NarrativeSheet,
+  useCharacterContext,
+  useTranslation,
+} from '@/games/plugin-host';
 import { cn } from '@/lib/utils';
 
 import { applyAptitudeChoice } from '../aptitudes-sheet';
@@ -560,52 +563,41 @@ export const InfoSection = ({
             type="button"
             variant="outline"
             size="sm"
+            className="gap-1.5"
             onClick={() => setIsBackstoryOpen(true)}
           >
+            <Eye className="h-4 w-4" />
             {t('common.backstory')}
           </Button>
           <Button
             type="button"
             variant="outline"
             size="sm"
+            className="gap-1.5"
             onClick={() => setIsNotesOpen(true)}
           >
+            <Eye className="h-4 w-4" />
             {t('common.notes')}
           </Button>
         </div>
       </CardContent>
 
-      <Dialog open={isBackstoryOpen} onOpenChange={setIsBackstoryOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t('common.backstory')}</DialogTitle>
-            <DialogDescription>{t('common.backstory')}</DialogDescription>
-          </DialogHeader>
-          <Textarea
-            defaultValue={character.backstory}
-            className="min-h-[180px]"
-            onBlur={(e) =>
-              updateCharacter(character.id, { backstory: e.target.value })
-            }
-          />
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={isNotesOpen} onOpenChange={setIsNotesOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t('common.notes')}</DialogTitle>
-            <DialogDescription>{t('common.notes')}</DialogDescription>
-          </DialogHeader>
-          <Textarea
-            defaultValue={character.notes}
-            className="min-h-[180px]"
-            onBlur={(e) =>
-              updateCharacter(character.id, { notes: e.target.value })
-            }
-          />
-        </DialogContent>
-      </Dialog>
+      <NarrativeSheet
+        open={isBackstoryOpen}
+        onOpenChange={setIsBackstoryOpen}
+        title={t('common.backstory')}
+        description={t('common.backstory')}
+        value={character.backstory ?? ''}
+        onSave={(next) => updateCharacter(character.id, { backstory: next })}
+      />
+      <NarrativeSheet
+        open={isNotesOpen}
+        onOpenChange={setIsNotesOpen}
+        title={t('common.notes')}
+        description={t('common.notes')}
+        value={character.notes ?? ''}
+        onSave={(next) => updateCharacter(character.id, { notes: next })}
+      />
     </Card>
   );
 };
