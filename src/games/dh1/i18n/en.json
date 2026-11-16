@@ -716,5 +716,10 @@
   "dh1.conditions.source.divination": "Divination",
   "dh1.conditions.source.legacy": "Legacy data",
   "dh1.personalSection": "Personal data",
-  "dh1.creationSection": "Creation"
+  "dh1.creationSection": "Creation",
+  "dh1.addExperience": "Add EXP",
+  "dh1.addExperienceHint": "Positive numbers are awards, negative are penalties. The entry goes to the XP journal; deleting it reverts the change.",
+  "dh1.addExperienceWhat": "What was it for",
+  "dh1.addExperienceConfirm": "Add",
+  "dh1.experienceAward": "XP award"
 }
