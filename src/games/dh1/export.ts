@@ -13,6 +13,9 @@ export function buildDh1PortableJson(
   const result: Record<string, unknown> = {};
 
   if (config.includeBasicInfo) {
+    // Identity собирается по полям листа: старые файлы несут identity.playerName,
+    // а экспорт не должен выносить его наружу (D6).
+    const identity = character.identity;
     Object.assign(result, {
       name: character.name,
       characterClass: character.characterClass,
@@ -29,7 +32,13 @@ export function buildDh1PortableJson(
       skinColor: character.skinColor,
       hairColor: character.hairColor,
       eyeColor: character.eyeColor,
-      identity: character.identity,
+      identity: identity
+        ? {
+            gender: identity.gender,
+            build: identity.build,
+            handedness: identity.handedness,
+          }
+        : undefined,
     });
   }
 

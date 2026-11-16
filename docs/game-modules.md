@@ -86,7 +86,7 @@ sheet follows the edition instead of sharing a switch:
 | Wealth | throne gelt and monthly income on the sheet | wealth hidden; Influence is the resource |
 | Requisition | not a rule | Influence + availability/craftsmanship target (`influence.ts`) |
 | Psychic | one discipline plus a power list (`psy.discipline`) | free-text disciplines/powers, psy rating purchase hint, elite advances |
-| Identity | `identity.playerName` is stored but not shown | `gender` is shown; no player name |
+| Identity | `identity.gender`/`build`/`handedness`; legacy `identity.playerName` is not a sheet field and is dropped from export | `gender` is shown; no player name |
 | Creation hints | world starting profile and starting packages | aptitude choices, wound/fate ranges, Influence acquisition limit |
 
 Common behaviour is mirrored on purpose: creation fields, the XP journal,
