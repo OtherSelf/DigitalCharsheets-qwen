@@ -175,6 +175,23 @@ The reference configs live in the workspace `nginx/` directory
 (`dcs.conf` for production, `dcs-dev.conf` for the dev bench); update both when
 the proxy setup changes.
 
+### Caching
+
+`next.config.ts` splits the cache policy by response class, because the two age
+differently (`LANDMARK: HTML_MUST_REVALIDATE`):
+
+- `/_next/static/*` has a content hash in the file name and is served as
+  `public, max-age=31536000, immutable`;
+- everything else, including prerendered HTML (`/`, `/login`, `/demo`), is
+  served as `no-store`.
+
+The HTML must not be cached. It references the hashed chunks above, and a
+rebuild replaces them; a cached HTML document then asks for files that no longer
+exist. The browser receives `404` with an HTML body, `nosniff` forbids
+executing it as a script, hydration never starts, and the prerendered shell
+stays on screen — on `/` that is a permanent spinner. For the same reason do not
+put HTML into a reverse-proxy `proxy_cache`; caching `/_next/static` is fine.
+
 ## Upgrades
 
 Startup maintenance runs once per process:
