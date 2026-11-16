@@ -23,6 +23,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { useTranslation } from '@/context/language-context';
+import { useLocalAuth } from '@/context/local-auth-context';
 import { listCatalog } from '@/games/character-system';
 import { getGameModule, listGameModules } from '@/games/registry';
 import { characterPath } from '@/lib/routes';
@@ -89,6 +90,7 @@ function fallbackCatalog(): CatalogGame[] {
 
 export default function ManualCharacterCreationPage() {
   const { t } = useTranslation();
+  const { user, isUserLoading } = useLocalAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -296,6 +298,14 @@ export default function ManualCharacterCreationPage() {
                   {t('games.backToEditions')}
                 </Button>
               </div>
+              {!isUserLoading && !user && (
+                <div
+                  data-testid="guest-draft-banner"
+                  className="bg-muted/40 text-muted-foreground mb-4 rounded-md border border-dashed p-3 text-sm"
+                >
+                  {t('common.guestDraftBanner')}
+                </div>
+              )}
               {Form ? (
                 <Form
                   onCreated={(characterId) =>
