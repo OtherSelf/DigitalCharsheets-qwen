@@ -93,6 +93,14 @@ describe.each([
     );
   });
 
+  it('DH2: психосилы и дисциплины по RU-книге', () => {
+    if (prefix !== 'dh2') return;
+    expect(ru['dh2.catalog.power.winding-fate']).toBe('Виток Судьбы');
+    expect(ru['dh2.catalog.power.iron-arm']).toBe('Железная Плоть');
+    expect(ru['dh2.catalog.power.assail']).toBe('Швыряние');
+    expect(ru['dh2.catalog.discipline.telekinesis']).toBe('Телекинез');
+  });
+
   it('DH2: четыре навыка исправлены по RU-листу', () => {
     if (prefix !== 'dh2') return;
     expect(ru['dh2.catalog.skill.awareness']).toBe('Бдительность');
