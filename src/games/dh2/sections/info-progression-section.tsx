@@ -849,7 +849,7 @@ export const ProgressionSection = ({
                 {t('dh2.focusPowerTest')}
               </Label>
               <p className="text-sm font-medium">
-                {t('common.willpower')} {willpowerTotal}
+                {t('dh2.willpower')} {willpowerTotal}
               </p>
               <p className="text-muted-foreground text-xs">
                 {t('dh2.focusPowerHint')}

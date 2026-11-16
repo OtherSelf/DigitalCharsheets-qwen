@@ -1312,21 +1312,21 @@ export const EquipmentInventorySection = React.forwardRef<
                             </div>
                           ))}
                         </div>
-                        {isMeleeWeaponsEditing && (
-                          <div className="p-2 pt-4">
-                            <Button
-                              onClick={addMeleeWeapon}
-                              size="sm"
-                              className="w-full"
-                            >
-                              <Plus className="mr-2 h-4 w-4" />{' '}
-                              {t('common.add')} {t('dh1.meleeWeapons')}
-                            </Button>
-                          </div>
-                        )}
                       </AccordionContent>
                     </AccordionItem>
                   </Accordion>
+                  {isMeleeWeaponsEditing && (
+                    <div className="pt-2">
+                      <Button
+                        onClick={addMeleeWeapon}
+                        size="sm"
+                        className="w-full"
+                      >
+                        <Plus className="mr-2 h-4 w-4" /> {t('common.add')}{' '}
+                        {t('dh1.meleeWeapons')}
+                      </Button>
+                    </div>
+                  )}
                 </div>
                 <div className="space-y-4">
                   <div>
@@ -2038,21 +2038,21 @@ export const EquipmentInventorySection = React.forwardRef<
                             </div>
                           ))}
                         </div>
-                        {isRangedWeaponsEditing && (
-                          <div className="p-2 pt-4">
-                            <Button
-                              onClick={addRangedWeapon}
-                              size="sm"
-                              className="w-full"
-                            >
-                              <Plus className="mr-2 h-4 w-4" />{' '}
-                              {t('common.add')} {t('dh1.rangedWeapons')}
-                            </Button>
-                          </div>
-                        )}
                       </AccordionContent>
                     </AccordionItem>
                   </Accordion>
+                  {isRangedWeaponsEditing && (
+                    <div className="pt-2">
+                      <Button
+                        onClick={addRangedWeapon}
+                        size="sm"
+                        className="w-full"
+                      >
+                        <Plus className="mr-2 h-4 w-4" /> {t('common.add')}{' '}
+                        {t('dh1.rangedWeapons')}
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </div>
             </CollapsibleContent>

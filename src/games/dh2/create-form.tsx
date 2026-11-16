@@ -95,12 +95,12 @@ const CHARACTERISTIC_LABEL_KEYS: Record<
 > = {
   weaponSkill: 'dh2.weaponSkill',
   ballisticSkill: 'dh2.ballisticSkill',
-  strength: 'common.strength',
+  strength: 'dh2.strength',
   toughness: 'dh2.toughness',
   agility: 'dh2.agility',
-  intelligence: 'common.intelligence',
-  perception: 'common.perception',
-  willpower: 'common.willpower',
+  intelligence: 'dh2.intelligence',
+  perception: 'dh2.perception',
+  willpower: 'dh2.willpower',
   fellowship: 'dh2.fellowship',
   influence: 'dh2.influence',
 };
@@ -196,6 +196,19 @@ export function DarkHeresyCreateForm({ onCreated }: CreateFormProps) {
   const watchedAcquisitions = form.watch('creationAcquisitions');
   const influenceLimit = Math.floor((Number(watchedInfluence) || 0) / 10);
   const acquisitions = Number(watchedAcquisitions) || 0;
+
+  const genderOptions = (current: string | undefined) => {
+    const options = [
+      t('dh2.genderMale'),
+      t('dh2.genderFemale'),
+      t('dh2.genderUnspecified'),
+    ].map((label) => ({ value: label, label }));
+    const custom = current?.trim();
+    if (custom && !options.some((option) => option.value === custom)) {
+      options.push({ value: custom, label: custom });
+    }
+    return options;
+  };
 
   // Выборы, которые правила оставляют игроку (D11): аптитюды, дубли,
   // талант роли и «одно из» стартового пакета. Живут вне zod-схемы: это не
@@ -767,20 +780,10 @@ export function DarkHeresyCreateForm({ onCreated }: CreateFormProps) {
                     </FormItem>
                   )}
                 />
-                <div className="space-y-1 text-xs">
-                  {divination ? (
-                    <p>
-                      <span className="font-medium">
-                        {t(divination.effectKey)}
-                      </span>
-                    </p>
-                  ) : (
-                    <p className="text-muted-foreground">
-                      {t('dh2.divinationHint')}
-                    </p>
-                  )}
-                </div>
               </div>
+              <p className="text-muted-foreground text-xs">
+                {divination ? t(divination.effectKey) : t('dh2.divinationHint')}
+              </p>
             </section>
 
             <section className="space-y-3">
@@ -792,9 +795,23 @@ export function DarkHeresyCreateForm({ onCreated }: CreateFormProps) {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>{t('dh2.gender')}</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value ?? ''}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder={t('dh2.selectGender')} />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {genderOptions(field.value).map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
