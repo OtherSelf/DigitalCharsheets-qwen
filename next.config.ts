@@ -73,6 +73,11 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
+        // Все ответы, включая статику и API.
+        source: '/:path*',
+        headers: securityHeaders,
+      },
+      {
         /*
           ─── LANDMARK: HTML_MUST_REVALIDATE ─────────────────────────────────
           HTML живёт по стабильному URL (`/`, `/login`, `/demo`), но ссылается
@@ -85,11 +90,12 @@ const nextConfig: NextConfig = {
 
           Поэтому HTML не кэшируется вовсе — так же, как его отдаёт dev-стенд,
           и строже дефолта `next start`, который помечает пререндеренные
-          страницы как `s-maxage=31536000`. Вечно кэшируется только статика с
-          хэшем в имени.
+          страницы как `s-maxage=31536000`. Правило идёт после общего, чтобы
+          переопределить `Cache-Control` только на нестатике: вечно кэшируется
+          лишь статика с хэшем в имени.
         */
         source: '/((?!_next/static).*)',
-        headers: [...securityHeaders, { key: 'Cache-Control', value: 'no-store' }],
+        headers: [{ key: 'Cache-Control', value: 'no-store' }],
       },
       {
         /*
@@ -98,7 +104,6 @@ const nextConfig: NextConfig = {
         */
         source: '/_next/static/:path*',
         headers: [
-          ...securityHeaders,
           {
             key: 'Cache-Control',
             value: 'public, max-age=31536000, immutable',
