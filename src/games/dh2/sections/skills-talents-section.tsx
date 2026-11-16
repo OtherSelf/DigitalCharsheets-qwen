@@ -45,12 +45,12 @@ import { EditSaveButton } from './dh-ui-helpers';
 const CHARACTERISTIC_KEYS = [
   'dh2.weaponSkill',
   'dh2.ballisticSkill',
-  'common.strength',
+  'dh2.strength',
   'dh2.toughness',
   'dh2.agility',
-  'common.intelligence',
-  'common.perception',
-  'common.willpower',
+  'dh2.intelligence',
+  'dh2.perception',
+  'dh2.willpower',
   'dh2.fellowship',
   'dh2.influence',
 ] as const;
@@ -58,41 +58,60 @@ const CHARACTERISTIC_KEYS = [
 const ABBR_KEYS: Record<string, string> = {
   'dh2.weaponSkill': 'dh2.weaponSkillAbbr',
   'dh2.ballisticSkill': 'dh2.ballisticSkillAbbr',
-  'common.strength': 'dh2.strengthAbbr',
+  'dh2.strength': 'dh2.strengthAbbr',
   'dh2.toughness': 'dh2.toughnessAbbr',
   'dh2.agility': 'dh2.agilityAbbr',
-  'common.intelligence': 'dh2.intelligenceAbbr',
-  'common.perception': 'dh2.perceptionAbbr',
-  'common.willpower': 'dh2.willpowerAbbr',
+  'dh2.intelligence': 'dh2.intelligenceAbbr',
+  'dh2.perception': 'dh2.perceptionAbbr',
+  'dh2.willpower': 'dh2.willpowerAbbr',
   'dh2.fellowship': 'dh2.fellowshipAbbr',
   'dh2.influence': 'dh2.influenceAbbr',
 };
 
 const ABBR_TO_KEY: Record<string, (typeof CHARACTERISTIC_KEYS)[number]> = {
   WS: 'dh2.weaponSkill',
+  НР: 'dh2.weaponSkill',
   ББ: 'dh2.weaponSkill',
   BS: 'dh2.ballisticSkill',
+  НС: 'dh2.ballisticSkill',
   ДБ: 'dh2.ballisticSkill',
-  S: 'common.strength',
-  СЛ: 'common.strength',
+  S: 'dh2.strength',
+  С: 'dh2.strength',
+  СЛ: 'dh2.strength',
   T: 'dh2.toughness',
+  Вын: 'dh2.toughness',
+  'Вын.': 'dh2.toughness',
   СТ: 'dh2.toughness',
   Ag: 'dh2.agility',
   AG: 'dh2.agility',
+  Agi: 'dh2.agility',
+  Лов: 'dh2.agility',
+  'Лов.': 'dh2.agility',
   ЛВ: 'dh2.agility',
-  Int: 'common.intelligence',
-  INT: 'common.intelligence',
-  ИН: 'common.intelligence',
-  Per: 'common.perception',
-  PER: 'common.perception',
-  ВП: 'common.perception',
-  WP: 'common.willpower',
-  СВ: 'common.willpower',
+  Int: 'dh2.intelligence',
+  INT: 'dh2.intelligence',
+  Инт: 'dh2.intelligence',
+  'Инт.': 'dh2.intelligence',
+  ИН: 'dh2.intelligence',
+  ИНТ: 'dh2.intelligence',
+  Per: 'dh2.perception',
+  PER: 'dh2.perception',
+  Вос: 'dh2.perception',
+  'Вос.': 'dh2.perception',
+  ВП: 'dh2.perception',
+  WP: 'dh2.willpower',
+  СВ: 'dh2.willpower',
   Fel: 'dh2.fellowship',
   FEL: 'dh2.fellowship',
+  Общ: 'dh2.fellowship',
+  'Общ.': 'dh2.fellowship',
   ОБ: 'dh2.fellowship',
+  Ifl: 'dh2.influence',
+  IFL: 'dh2.influence',
   Inf: 'dh2.influence',
   INF: 'dh2.influence',
+  Вл: 'dh2.influence',
+  'Вл.': 'dh2.influence',
   ВЛ: 'dh2.influence',
 };
 
@@ -146,7 +165,7 @@ export const SkillsTalentsSection = React.forwardRef<
       React.useState<string>('dh2.agility');
     const [newAdvancedSkillName, setNewAdvancedSkillName] = React.useState('');
     const [newAdvancedSkillChar, setNewAdvancedSkillChar] =
-      React.useState<string>('common.intelligence');
+      React.useState<string>('dh2.intelligence');
     const [editableTalents, setEditableTalents] = React.useState(
       character.talents ?? [],
     );
@@ -588,11 +607,12 @@ export const SkillsTalentsSection = React.forwardRef<
                             onChange={(e) =>
                               setNewBasicSkillChar(e.target.value)
                             }
-                            className="border-input bg-background focus-visible:ring-ring flex h-9 w-32 rounded-md border px-3 py-1 text-sm shadow-sm transition-colors focus-visible:ring-1 focus-visible:outline-none"
+                            aria-label={t('dh2.characteristic')}
+                            className="border-input bg-background focus-visible:ring-ring flex h-9 w-20 rounded-md border px-2 py-1 text-sm shadow-sm transition-colors focus-visible:ring-1 focus-visible:outline-none"
                           >
                             {CHARACTERISTIC_KEYS.map((key) => (
-                              <option key={key} value={key}>
-                                {t(key)} ({t(ABBR_KEYS[key])})
+                              <option key={key} value={key} title={t(key)}>
+                                {t(ABBR_KEYS[key])}
                               </option>
                             ))}
                           </select>
@@ -859,11 +879,12 @@ export const SkillsTalentsSection = React.forwardRef<
                             onChange={(e) =>
                               setNewAdvancedSkillChar(e.target.value)
                             }
-                            className="border-input bg-background focus-visible:ring-ring flex h-9 w-32 rounded-md border px-3 py-1 text-sm shadow-sm transition-colors focus-visible:ring-1 focus-visible:outline-none"
+                            aria-label={t('dh2.characteristic')}
+                            className="border-input bg-background focus-visible:ring-ring flex h-9 w-20 rounded-md border px-2 py-1 text-sm shadow-sm transition-colors focus-visible:ring-1 focus-visible:outline-none"
                           >
                             {CHARACTERISTIC_KEYS.map((key) => (
-                              <option key={key} value={key}>
-                                {t(key)} ({t(ABBR_KEYS[key])})
+                              <option key={key} value={key} title={t(key)}>
+                                {t(ABBR_KEYS[key])}
                               </option>
                             ))}
                           </select>

@@ -13,12 +13,12 @@ import type { DH1Character } from './types';
 const STAT_COLUMNS = [
   { key: 'weaponSkill', labelKey: 'dh1.weaponSkill' },
   { key: 'ballisticSkill', labelKey: 'dh1.ballisticSkill' },
-  { key: 'strength', labelKey: 'common.strength' },
+  { key: 'strength', labelKey: 'dh1.strength' },
   { key: 'toughness', labelKey: 'dh1.toughness' },
   { key: 'agility', labelKey: 'dh1.agility' },
-  { key: 'intelligence', labelKey: 'common.intelligence' },
-  { key: 'perception', labelKey: 'common.perception' },
-  { key: 'willpower', labelKey: 'common.willpower' },
+  { key: 'intelligence', labelKey: 'dh1.intelligence' },
+  { key: 'perception', labelKey: 'dh1.perception' },
+  { key: 'willpower', labelKey: 'dh1.willpower' },
   { key: 'fellowship', labelKey: 'dh1.fellowship' },
 ] as const;
 

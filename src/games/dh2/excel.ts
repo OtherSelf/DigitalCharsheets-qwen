@@ -36,12 +36,12 @@ export function buildDh2ExcelSections(
   const statLabels: [string, string][] = [
     ['weaponSkill', 'dh2.weaponSkill'],
     ['ballisticSkill', 'dh2.ballisticSkill'],
-    ['strength', 'common.strength'],
+    ['strength', 'dh2.strength'],
     ['toughness', 'dh2.toughness'],
     ['agility', 'dh2.agility'],
-    ['intelligence', 'common.intelligence'],
-    ['perception', 'common.perception'],
-    ['willpower', 'common.willpower'],
+    ['intelligence', 'dh2.intelligence'],
+    ['perception', 'dh2.perception'],
+    ['willpower', 'dh2.willpower'],
     ['fellowship', 'dh2.fellowship'],
     ['influence', 'dh2.influence'],
   ];

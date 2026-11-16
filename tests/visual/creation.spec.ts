@@ -522,7 +522,8 @@ test.describe('черновик гостя dh2 и навигация «наза�
       .getByLabel('Duplicate replacement: Perception', { exact: true })
       .click();
     await page.getByRole('option', { name: 'Strength', exact: true }).click();
-    await page.getByLabel('Gender', { exact: true }).fill('Female');
+    await page.getByLabel('Gender', { exact: true }).click();
+    await page.getByRole('option', { name: 'Female', exact: true }).click();
     await page.getByLabel('Insanity', { exact: true }).fill('4');
     await page.getByLabel('Corruption', { exact: true }).fill('2');
     await page.getByLabel('Experience', { exact: true }).fill('1200');

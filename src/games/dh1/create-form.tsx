@@ -213,6 +213,19 @@ export function DarkHeresyCreateForm({
     return effectIdForDivination(watchedDivination);
   }, [watchedDivination]);
 
+  const genderOptions = (current: string | undefined) => {
+    const options = [
+      t('dh1.genderMale'),
+      t('dh1.genderFemale'),
+      t('dh1.genderUnspecified'),
+    ].map((label) => ({ value: label, label }));
+    const custom = current?.trim();
+    if (custom && !options.some((option) => option.value === custom)) {
+      options.push({ value: custom, label: custom });
+    }
+    return options;
+  };
+
   React.useEffect(() => {
     if (showAllQuirks) {
       setAvailableQuirks(ALL_QUIRKS);
@@ -578,19 +591,6 @@ export function DarkHeresyCreateForm({
                     </FormItem>
                   )}
                 />
-                <FormItem>
-                  <FormLabel>{t('dh1.divinationEffect')}</FormLabel>
-                  <Input
-                    readOnly
-                    value={
-                      divinationEffect
-                        ? t(divinationEffectKey(divinationEffect, 'dh1'))
-                        : ''
-                    }
-                    placeholder={t('dh1.effectAppearsHere')}
-                    className="bg-muted/50 border-dashed"
-                  />
-                </FormItem>
                 <FormField
                   control={form.control}
                   name="quirk"
@@ -638,6 +638,11 @@ export function DarkHeresyCreateForm({
                   </label>
                 </div>
               </div>
+              <p className="text-muted-foreground text-xs">
+                {divinationEffect
+                  ? t(divinationEffectKey(divinationEffect, 'dh1'))
+                  : t('dh1.effectAppearsHere')}
+              </p>
               <div className="grid grid-cols-2 gap-4 pt-2 md:grid-cols-3">
                 <FormField
                   control={form.control}
@@ -825,7 +830,7 @@ export function DarkHeresyCreateForm({
                   name="strength"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('common.strength')}</FormLabel>
+                      <FormLabel>{t('dh1.strength')}</FormLabel>
                       <FormControl>
                         <Input type="number" {...field} />
                       </FormControl>
@@ -864,7 +869,7 @@ export function DarkHeresyCreateForm({
                   name="intelligence"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('common.intelligence')}</FormLabel>
+                      <FormLabel>{t('dh1.intelligence')}</FormLabel>
                       <FormControl>
                         <Input type="number" {...field} />
                       </FormControl>
@@ -877,7 +882,7 @@ export function DarkHeresyCreateForm({
                   name="perception"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('common.perception')}</FormLabel>
+                      <FormLabel>{t('dh1.perception')}</FormLabel>
                       <FormControl>
                         <Input type="number" {...field} />
                       </FormControl>
@@ -890,7 +895,7 @@ export function DarkHeresyCreateForm({
                   name="willpower"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('common.willpower')}</FormLabel>
+                      <FormLabel>{t('dh1.willpower')}</FormLabel>
                       <FormControl>
                         <Input type="number" {...field} />
                       </FormControl>
@@ -975,9 +980,23 @@ export function DarkHeresyCreateForm({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>{t('dh1.gender')}</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value ?? ''}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder={t('dh1.selectGender')} />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {genderOptions(field.value).map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}

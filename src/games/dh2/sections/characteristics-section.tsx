@@ -81,7 +81,7 @@ const CharacteristicStat = ({
   return (
     <div className="bg-background relative flex h-full min-h-[80px] flex-col justify-between rounded-lg border px-0.5 py-1 text-center">
       <div className="text-muted-foreground px-1 text-[10px] font-semibold tracking-wide uppercase">
-        {isCompactView ? label : fullName}
+        {isCompactView ? label : `${fullName} (${label})`}
       </div>
       {!hideNotes && (
         <Popover>
@@ -203,16 +203,16 @@ export const CharacteristicsSection = React.forwardRef<
 
     const characteristics = React.useMemo(() => {
       const base = [
-        { key: 'weaponSkill', label: 'WS', fullName: 'Weapon Skill' },
-        { key: 'ballisticSkill', label: 'BS', fullName: 'Ballistic Skill' },
-        { key: 'strength', label: 'S', fullName: 'Strength' },
-        { key: 'toughness', label: 'T', fullName: 'Toughness' },
-        { key: 'agility', label: 'Ag', fullName: 'Agility' },
-        { key: 'intelligence', label: 'Int', fullName: 'Intelligence' },
-        { key: 'perception', label: 'Per', fullName: 'Perception' },
-        { key: 'willpower', label: 'WP', fullName: 'Willpower' },
-        { key: 'fellowship', label: 'Fel', fullName: 'Fellowship' },
-        { key: 'influence', label: 'Inf', fullName: 'Influence' },
+        { key: 'weaponSkill' },
+        { key: 'ballisticSkill' },
+        { key: 'strength' },
+        { key: 'toughness' },
+        { key: 'agility' },
+        { key: 'intelligence' },
+        { key: 'perception' },
+        { key: 'willpower' },
+        { key: 'fellowship' },
+        { key: 'influence' },
       ] as const;
 
       if (!capabilities.influence) {
@@ -326,20 +326,9 @@ export const CharacteristicsSection = React.forwardRef<
           {characteristics.map((char) => (
             <CharacteristicStat
               key={char.key}
-              label={char.label}
+              label={t(`dh2.${char.key}Abbr`)}
               // Полное имя — по ключу характеристики, а не по label: label может быть сокращён.
-              fullName={t(
-                [
-                  'weaponSkill',
-                  'ballisticSkill',
-                  'toughness',
-                  'agility',
-                  'fellowship',
-                  'influence',
-                ].includes(char.key)
-                  ? `dh2.${char.key}`
-                  : `common.${char.key}`,
-              )}
+              fullName={t(`dh2.${char.key}`)}
               value={
                 isCharacteristicsEditing
                   ? editableStats[char.key]
