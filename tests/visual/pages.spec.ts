@@ -574,7 +574,13 @@ test.describe('демо и настройки профиля', () => {
     await screenshotPage(page, 'demo-dh2-en.png');
 
     // 2e-лист с пси и элитными: блок аптитюд/пси в info-секции.
-    await page.locator('#info-section').scrollIntoViewIfNeeded();
+    // Демо-превью перерисовывается после выбора редакции, поэтому скролл
+    // повторяем, если узел успел перемонтироваться.
+    const infoSection = page.locator('#info-section');
+    await expect(infoSection).toBeVisible({ timeout: 15_000 });
+    await expect(async () => {
+      await infoSection.scrollIntoViewIfNeeded();
+    }).toPass({ timeout: 15_000 });
     await screenshotPage(page, 'demo-dh2-info-en.png');
   });
 
