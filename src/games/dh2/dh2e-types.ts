@@ -159,3 +159,19 @@ export interface Dh2eTalentTier {
   readonly id: number;
   readonly labelKey: string;
 }
+
+/** Ступень доступности и её модификатор к Реквизиции (таблица 5-1). */
+export interface Dh2eAvailabilityModifier {
+  readonly id: string;
+  readonly labelKey: string;
+  /** `null` у Ubiquitous: тест не требуется. */
+  readonly modifier: number | null;
+  readonly automatic: boolean;
+}
+
+/** Качество предмета и его модификатор к Реквизиции (таблица 5-2). */
+export interface Dh2eCraftsmanshipModifier {
+  readonly id: string;
+  readonly labelKey: string;
+  readonly modifier: number;
+}

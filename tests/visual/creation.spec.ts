@@ -459,6 +459,25 @@ test.describe('создание персонажа — Dark Heresy 2e', () => {
       .toEqual([]);
     // Удаление не откатывает опыт: 200 (пси) + 300 (элитное) остаются.
     expect((await fetchCharacters(page))[0].totalExpSpent).toBe(500);
+
+    // Реквизиция: Influence + доступность + качество, без авто-броска.
+    const equipment = page.locator('#equipment-section');
+    if (!(await equipment.isVisible().catch(() => false))) {
+      await page
+        .getByRole('button', { name: 'Equipment', exact: true })
+        .click();
+    }
+    await expect(
+      equipment.getByText('Requisition', { exact: true }),
+    ).toBeVisible();
+    await expect(equipment.getByText(/Target test: 30/)).toBeVisible();
+    await equipment.getByLabel('Availability', { exact: true }).click();
+    await page.getByRole('option', { name: /^Scarce/ }).click();
+    await expect(equipment.getByText(/Target test: 20/)).toBeVisible();
+    await equipment.getByLabel('Craftsmanship', { exact: true }).click();
+    await page.getByRole('option', { name: /^Good/ }).click();
+    // Scarce (−10) + Good (−20): 30 − 10 − 20 = 0.
+    await expect(equipment.getByText(/Target test: 0/)).toBeVisible();
   });
 });
 
@@ -507,6 +526,11 @@ test.describe('черновик гостя dh2 и навигация «наза�
     await page.getByLabel('Insanity', { exact: true }).fill('4');
     await page.getByLabel('Corruption', { exact: true }).fill('2');
     await page.getByLabel('Experience', { exact: true }).fill('1200');
+    await expect(
+      page.getByText(
+        /At creation you may take up to Influence bonus acquisitions: 3/,
+      ),
+    ).toBeVisible();
 
     const readDraft = () =>
       page.evaluate(() => {

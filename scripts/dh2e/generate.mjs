@@ -407,6 +407,29 @@ function buildRules(rules, i18n) {
     talent: rules.xpCostTables.talent.rows,
   };
 
+  const equipment = rules.equipment ?? {};
+  const availabilityModifiers = (equipment.availabilityModifiers ?? []).map(
+    (item) => {
+      const key = `${I18N_PREFIX}availability.${item.id}`;
+      i18n.en[key] = item.en;
+      i18n.ru[key] = item.ru;
+      return {
+        id: item.id,
+        labelKey: key,
+        modifier: item.modifier ?? null,
+        automatic: item.automatic === true,
+      };
+    },
+  );
+  const craftsmanshipModifiers = (equipment.craftsmanshipModifiers ?? []).map(
+    (item) => {
+      const key = `${I18N_PREFIX}craftsmanship.${item.id}`;
+      i18n.en[key] = item.en;
+      i18n.ru[key] = item.ru;
+      return { id: item.id, labelKey: key, modifier: item.modifier };
+    },
+  );
+
   return {
     statSteps,
     skillTiers,
@@ -415,6 +438,8 @@ function buildRules(rules, i18n) {
     startingXp: rules.startingXp,
     eliteCosts: rules.eliteAdvances.costs,
     psyRatingMultiplier: 200,
+    availabilityModifiers,
+    craftsmanshipModifiers,
   };
 }
 
@@ -553,7 +578,9 @@ export const DH2E_ELITES: readonly Dh2eEliteAdvance[] = ${JSON.stringify(
 
   const rulesSource = `${HEADER}
 import type {
+  Dh2eAvailabilityModifier,
   Dh2eCostRow,
+  Dh2eCraftsmanshipModifier,
   Dh2eSkillTier,
   Dh2eStatStep,
   Dh2eTalentTier,
@@ -597,6 +624,20 @@ export const DH2E_ELITE_COSTS: Readonly<Record<string, number>> = ${JSON.stringi
 
 /** Стоимость повышения пси-рейтинга: 200 × новый рейтинг (с. 90). */
 export const DH2E_PSY_RATING_MULTIPLIER = ${rulesData.psyRatingMultiplier};
+
+/** Таблица 5-1: ступени доступности и модификатор Реквизиции. */
+export const DH2E_AVAILABILITY: readonly Dh2eAvailabilityModifier[] = ${JSON.stringify(
+    rulesData.availabilityModifiers,
+    null,
+    2,
+  )};
+
+/** Таблица 5-2: качество предмета и модификатор Реквизиции/ремонта. */
+export const DH2E_CRAFTSMANSHIP: readonly Dh2eCraftsmanshipModifier[] = ${JSON.stringify(
+    rulesData.craftsmanshipModifiers,
+    null,
+    2,
+  )};
 `;
 
   const enPath = join(MODULE_DIR, 'i18n/en.json');

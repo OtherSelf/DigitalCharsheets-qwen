@@ -5,7 +5,9 @@
  */
 
 import type {
+  Dh2eAvailabilityModifier,
   Dh2eCostRow,
+  Dh2eCraftsmanshipModifier,
   Dh2eSkillTier,
   Dh2eStatStep,
   Dh2eTalentTier,
@@ -122,3 +124,97 @@ export const DH2E_ELITE_COSTS: Readonly<Record<string, number>> = {
 
 /** Стоимость повышения пси-рейтинга: 200 × новый рейтинг (с. 90). */
 export const DH2E_PSY_RATING_MULTIPLIER = 200;
+
+/** Таблица 5-1: ступени доступности и модификатор Реквизиции. */
+export const DH2E_AVAILABILITY: readonly Dh2eAvailabilityModifier[] = [
+  {
+    id: 'ubiquitous',
+    labelKey: 'dh2.catalog.availability.ubiquitous',
+    modifier: null,
+    automatic: true,
+  },
+  {
+    id: 'abundant',
+    labelKey: 'dh2.catalog.availability.abundant',
+    modifier: 30,
+    automatic: false,
+  },
+  {
+    id: 'plentiful',
+    labelKey: 'dh2.catalog.availability.plentiful',
+    modifier: 20,
+    automatic: false,
+  },
+  {
+    id: 'common',
+    labelKey: 'dh2.catalog.availability.common',
+    modifier: 10,
+    automatic: false,
+  },
+  {
+    id: 'average',
+    labelKey: 'dh2.catalog.availability.average',
+    modifier: 0,
+    automatic: false,
+  },
+  {
+    id: 'scarce',
+    labelKey: 'dh2.catalog.availability.scarce',
+    modifier: -10,
+    automatic: false,
+  },
+  {
+    id: 'rare',
+    labelKey: 'dh2.catalog.availability.rare',
+    modifier: -20,
+    automatic: false,
+  },
+  {
+    id: 'very-rare',
+    labelKey: 'dh2.catalog.availability.very-rare',
+    modifier: -30,
+    automatic: false,
+  },
+  {
+    id: 'extremely-rare',
+    labelKey: 'dh2.catalog.availability.extremely-rare',
+    modifier: -40,
+    automatic: false,
+  },
+  {
+    id: 'near-unique',
+    labelKey: 'dh2.catalog.availability.near-unique',
+    modifier: -50,
+    automatic: false,
+  },
+  {
+    id: 'unique',
+    labelKey: 'dh2.catalog.availability.unique',
+    modifier: -60,
+    automatic: false,
+  },
+];
+
+/** Таблица 5-2: качество предмета и модификатор Реквизиции/ремонта. */
+export const DH2E_CRAFTSMANSHIP: readonly Dh2eCraftsmanshipModifier[] = [
+  {
+    id: 'poor',
+    labelKey: 'dh2.catalog.craftsmanship.poor',
+    modifier: 10,
+  },
+  {
+    id: 'common',
+    labelKey: 'dh2.catalog.craftsmanship.common',
+    modifier: 0,
+  },
+  {
+    id: 'good',
+    labelKey: 'dh2.catalog.craftsmanship.good',
+    modifier: -20,
+  },
+  {
+    id: 'best',
+    labelKey: 'dh2.catalog.craftsmanship.best',
+    modifier: -30,
+  },
+];
