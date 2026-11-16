@@ -23,6 +23,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -43,7 +44,7 @@ import {
 } from '@/lib/form-validation';
 
 import { createDh2Defaults } from './defaults';
-import { deriveAptitudes } from './dh2e-aptitudes';
+import { characteristicAptitudes, deriveAptitudes } from './dh2e-aptitudes';
 import {
   DH2E_BACKGROUNDS,
   DH2E_CHARACTERISTICS,
@@ -52,14 +53,27 @@ import {
   DH2E_ROLES,
 } from './dh2e-data';
 import {
+  backgroundGrantChoices,
+  grantOption,
+  grantOptionLabel,
+  grantValues,
+} from './dh2e-grants';
+import {
+  aptitudeLabel,
   aptitudeLabels,
   backgroundLabel,
   divinationLabel,
   homeWorldLabel,
   roleLabel,
-  skillLabel,
   talentLabel,
 } from './dh2e-labels';
+import type {
+  Dh2eChoice,
+  Dh2eSkillGrant,
+  Dh2eSkillGrantSlot,
+  Dh2eTalentGrant,
+  Dh2eTalentGrantSlot,
+} from './dh2e-types';
 
 const CHARACTERISTIC_FIELDS = [
   'weaponSkill',
@@ -176,6 +190,18 @@ export function DarkHeresyCreateForm({ onCreated }: CreateFormProps) {
   const watchedRole = form.watch('role');
   const watchedDivination = form.watch('divination');
 
+  // Выборы, которые правила оставляют игроку (D11): аптитюды, дубли,
+  // талант роли и «одно из» стартового пакета. Живут вне zod-схемы: это не
+  // поля характеристик, а решения мастера/игрока, которые сохраняются в
+  // персонаже отдельными структурами.
+  const [aptitudeChosen, setAptitudeChosen] = React.useState<
+    Record<string, string>
+  >({});
+  const [roleTalent, setRoleTalent] = React.useState('');
+  const [grantSelected, setGrantSelected] = React.useState<
+    Record<string, string>
+  >({});
+
   const world = React.useMemo(
     () => DH2E_HOMEWORLDS.find((item) => item.id === watchedHomeWorld),
     [watchedHomeWorld],
@@ -190,17 +216,44 @@ export function DarkHeresyCreateForm({ onCreated }: CreateFormProps) {
   );
   const aptitudes = React.useMemo(
     () =>
-      deriveAptitudes({
-        homeWorld: watchedHomeWorld,
-        background: watchedBackground,
-        role: watchedRole,
-      }),
-    [watchedHomeWorld, watchedBackground, watchedRole],
+      deriveAptitudes(
+        {
+          homeWorld: watchedHomeWorld,
+          background: watchedBackground,
+          role: watchedRole,
+        },
+        aptitudeChosen,
+      ),
+    [watchedHomeWorld, watchedBackground, watchedRole, aptitudeChosen],
+  );
+  const grantChoices = React.useMemo(
+    () => (background ? backgroundGrantChoices(background) : []),
+    [background],
+  );
+  const chosenSkillValues = React.useMemo(
+    () => grantValues(background, 'skill', grantSelected),
+    [background, grantSelected],
+  );
+  const chosenTalentValues = React.useMemo(
+    () => grantValues(background, 'talent', grantSelected),
+    [background, grantSelected],
+  );
+  const duplicateAptitudes = React.useMemo(
+    () => [...new Set(aptitudes.duplicates)],
+    [aptitudes.duplicates],
   );
   const divination = React.useMemo(
     () => DH2E_DIVINATIONS.find((item) => item.id === watchedDivination),
     [watchedDivination],
   );
+
+  // Смена мира/бэкграунда/роли меняет набор слотов: старые выборы к ним уже
+  // не относятся, поэтому сбрасываем их, а не тащим в новый профиль.
+  React.useEffect(() => {
+    setAptitudeChosen({});
+    setRoleTalent('');
+    setGrantSelected({});
+  }, [watchedHomeWorld, watchedBackground, watchedRole]);
 
   // Мир задаёт порог Судьбы и раны: подсказываем значения, игрок их правит.
   React.useEffect(() => {
@@ -224,7 +277,16 @@ export function DarkHeresyCreateForm({ onCreated }: CreateFormProps) {
   };
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    const newCharacter = createDh2Defaults(values);
+    const newCharacter = createDh2Defaults({
+      ...values,
+      chosen: aptitudeChosen,
+      strictAptitudeChoices: true,
+      startingChoices: {
+        ...(role && roleTalent ? { roleTalent } : {}),
+        skills: chosenSkillValues,
+        talents: chosenTalentValues,
+      },
+    });
     const docRef = await addCharacter(newCharacter);
 
     if (docRef) {
@@ -409,6 +471,12 @@ export function DarkHeresyCreateForm({ onCreated }: CreateFormProps) {
                 <span className="font-medium">
                   {aptitudeLabels(aptitudes.profile, t) || '—'}
                 </span>
+                {aptitudes.unresolved.length > 0 && (
+                  <span className="text-destructive">
+                    {' · '}
+                    {t('dh2.unresolvedChoices')}
+                  </span>
+                )}
               </p>
 
               {(background || role) && (
@@ -420,11 +488,15 @@ export function DarkHeresyCreateForm({ onCreated }: CreateFormProps) {
                     <>
                       <GrantList
                         title={t('dh2.startingSkills')}
+                        kind="skill"
                         items={background.startingSkills}
+                        chosen={chosenSkillValues}
                       />
                       <GrantList
                         title={t('dh2.startingTalents')}
+                        kind="talent"
                         items={background.startingTalents}
+                        chosen={chosenTalentValues}
                       />
                       {background.bonusKeys.map((key) => (
                         <p key={key} className="text-muted-foreground text-xs">
@@ -433,9 +505,11 @@ export function DarkHeresyCreateForm({ onCreated }: CreateFormProps) {
                       ))}
                       <p className="text-xs">
                         {t('dh2.startingAptitude')}:{' '}
-                        {background.aptitudeChoice
-                          .map((id) => t(`dh2.catalog.aptitude.${id}`))
-                          .join(' / ')}
+                        {aptitudeChosen.background
+                          ? `${aptitudeLabel(aptitudeChosen.background, t)} · ${t('dh2.chosenPrefix')}`
+                          : `${background.aptitudeChoice
+                              .map((id) => aptitudeLabel(id, t))
+                              .join(' / ')} — ${t('dh2.choosePrompt')}`}
                       </p>
                     </>
                   )}
@@ -443,14 +517,140 @@ export function DarkHeresyCreateForm({ onCreated }: CreateFormProps) {
                     <>
                       <p className="text-xs">
                         {t('dh2.roleTalent')}:{' '}
-                        {role.talentChoice.of
-                          .map((id) => talentLabel(id, t))
-                          .join(' / ')}
+                        {roleTalent
+                          ? `${talentLabel(roleTalent, t)} · ${t('dh2.chosenPrefix')}`
+                          : `${role.talentChoice.of
+                              .map((id) => talentLabel(id, t))
+                              .join(' / ')} — ${t('dh2.choosePrompt')}`}
                       </p>
                       <p className="text-muted-foreground text-xs">
                         {t(role.bonusKey)}
                       </p>
                     </>
+                  )}
+
+                  {(aptitudes.choices.length > 0 ||
+                    duplicateAptitudes.length > 0 ||
+                    grantChoices.length > 0 ||
+                    (role && role.talentChoice.of.length > 1)) && (
+                    <div className="space-y-2 border-t pt-2">
+                      <h4 className="text-sm font-medium">
+                        {t('dh2.startingChoices')}
+                      </h4>
+                      <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
+                        {background && background.aptitudeChoice.length > 1 && (
+                          <ChoiceSelect
+                            label={`${t('dh2.backgroundAptitude')}: ${backgroundLabel(background.id, t)}`}
+                            value={aptitudeChosen.background ?? ''}
+                            placeholder={t('dh2.choosePrompt')}
+                            options={background.aptitudeChoice.map((id) => ({
+                              value: id,
+                              label: aptitudeLabel(id, t),
+                            }))}
+                            onChange={(value) =>
+                              setAptitudeChosen((prev) => ({
+                                ...prev,
+                                background: value,
+                              }))
+                            }
+                          />
+                        )}
+                        {role &&
+                          role.aptitudes.map((slot, index) => {
+                            if (
+                              typeof slot === 'string' ||
+                              slot.of.length < 2
+                            ) {
+                              return null;
+                            }
+                            const key = `role.${index}`;
+                            return (
+                              <ChoiceSelect
+                                key={key}
+                                label={`${t('dh2.roleAptitude')} ${index + 1}`}
+                                value={aptitudeChosen[key] ?? ''}
+                                placeholder={t('dh2.choosePrompt')}
+                                options={slot.of.map((id) => ({
+                                  value: id,
+                                  label: aptitudeLabel(id, t),
+                                }))}
+                                onChange={(value) =>
+                                  setAptitudeChosen((prev) => ({
+                                    ...prev,
+                                    [key]: value,
+                                  }))
+                                }
+                              />
+                            );
+                          })}
+                        {role && role.talentChoice.of.length > 1 && (
+                          <ChoiceSelect
+                            label={`${t('dh2.roleTalent')}: ${roleLabel(role.id, t)}`}
+                            value={roleTalent}
+                            placeholder={t('dh2.choosePrompt')}
+                            options={role.talentChoice.of.map((id) => ({
+                              value: id,
+                              label: talentLabel(id, t),
+                            }))}
+                            onChange={setRoleTalent}
+                          />
+                        )}
+                        {duplicateAptitudes.map((aptitude) => {
+                          const key = `duplicate.${aptitude}`;
+                          const picked = aptitudeChosen[key];
+                          const options = characteristicAptitudes()
+                            .filter(
+                              (id) =>
+                                !aptitudes.profile.includes(id) ||
+                                id === picked,
+                            )
+                            .map((id) => ({
+                              value: id,
+                              label: aptitudeLabel(id, t),
+                            }));
+                          return options.length > 0 ? (
+                            <ChoiceSelect
+                              key={key}
+                              label={`${t('dh2.duplicateAptitude')}: ${aptitudeLabel(aptitude, t)}`}
+                              value={picked ?? ''}
+                              placeholder={t('dh2.choosePrompt')}
+                              options={options}
+                              onChange={(value) =>
+                                setAptitudeChosen((prev) => ({
+                                  ...prev,
+                                  [key]: value,
+                                }))
+                              }
+                            />
+                          ) : (
+                            <p key={key} className="text-destructive text-xs">
+                              {t('dh2.noFreeAptitudes')}
+                            </p>
+                          );
+                        })}
+                        {grantChoices.map((choice) => {
+                          const key = `${choice.kind}:${choice.index}`;
+                          return (
+                            <ChoiceSelect
+                              key={key}
+                              label={`${choice.kind === 'skill' ? t('dh2.startingSkills') : t('dh2.startingTalents')} ${choice.index + 1}`}
+                              value={grantSelected[key] ?? ''}
+                              placeholder={t('dh2.choosePrompt')}
+                              options={choice.options.map((option) => ({
+                                value: option.key,
+                                label: grantOptionLabel(option, t),
+                              }))}
+                              onChange={(value) =>
+                                setGrantSelected((prev) => ({
+                                  ...prev,
+                                  [key]: value,
+                                }))
+                              }
+                            />
+                          );
+                        })}
+                      </div>
+                    </div>
                   )}
                 </div>
               )}
@@ -665,39 +865,56 @@ function characteristicId(key: string): string {
 /** Имя компонента из `plugin.json#sheet.createForm` (историческое). */
 export const Dh2CharacterForm = DarkHeresyCreateForm;
 
-/** Список стартовых навыков/талантов: варианты «одно из» показывает через « / ». */
+type GrantItem = Dh2eSkillGrantSlot | Dh2eTalentGrantSlot;
+
+function isGrantChoice(
+  item: GrantItem,
+): item is Dh2eChoice<Dh2eSkillGrant> | Dh2eChoice<Dh2eTalentGrant> {
+  return (
+    typeof item === 'object' &&
+    item !== null &&
+    'of' in item &&
+    Array.isArray((item as { of?: unknown }).of)
+  );
+}
+
+/**
+ * Список стартовых навыков/талантов: выбранный вариант «одно из» показываем
+ * как «выбрано: …», невыбранный — «выберите: A / B». Пакет остаётся
+ * подсказкой, на лист игрок вносит значения вручную (D11).
+ */
 function GrantList({
   title,
+  kind,
   items,
+  chosen,
 }: {
   title: string;
-  items: readonly object[];
+  kind: 'skill' | 'talent';
+  items: readonly GrantItem[];
+  chosen: readonly string[] | undefined;
 }) {
   const { t } = useTranslation();
   if (items.length === 0) return null;
   const text = items
-    .map((item) => {
-      const entry = item as {
-        skillId?: string;
-        talentId?: string;
-        specialisation?: string;
-        choose?: number;
-        of?: readonly object[];
-      };
-      if (entry.choose && entry.of) {
-        return entry.of
-          .map((option) => {
-            const inner = option as { skillId?: string; talentId?: string };
-            return inner.skillId
-              ? skillLabel(inner.skillId, t)
-              : talentLabel(inner.talentId ?? '', t);
-          })
+    .map((item, index) => {
+      if (isGrantChoice(item)) {
+        const choiceIndex = items
+          .slice(0, index)
+          .filter((entry) => isGrantChoice(entry)).length;
+        const value = chosen?.[choiceIndex];
+        const picked = item.of.find(
+          (option) => grantOption(kind, option).key === value,
+        );
+        if (picked) {
+          return `${t('dh2.chosenPrefix')} ${grantOptionLabel(grantOption(kind, picked), t)}`;
+        }
+        const options = item.of
+          .map((option) => grantOptionLabel(grantOption(kind, option), t))
           .join(' / ');
+        return `${t('dh2.choosePrompt')} ${options}`;
       }
-      const base = entry.skillId
-        ? skillLabel(entry.skillId, t)
-        : talentLabel(entry.talentId ?? '', t);
-      return entry.specialisation ? `${base} (${entry.specialisation})` : base;
+      return grantOptionLabel(grantOption(kind, item), t);
     })
     .join(', ');
   return (
@@ -705,5 +922,41 @@ function GrantList({
       <span className="text-muted-foreground">{title}: </span>
       {text}
     </p>
+  );
+}
+
+/** Выпадающий список одного выбора при создании (D11). */
+function ChoiceSelect({
+  label,
+  value,
+  placeholder,
+  options,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  placeholder: string;
+  options: readonly { value: string; label: string }[];
+  onChange: (value: string) => void;
+}) {
+  const id = React.useId();
+  return (
+    <div className="space-y-1">
+      <Label htmlFor={id} className="text-muted-foreground text-xs">
+        {label}
+      </Label>
+      <Select value={value} onValueChange={onChange}>
+        <SelectTrigger id={id} className="h-8">
+          <SelectValue placeholder={placeholder} />
+        </SelectTrigger>
+        <SelectContent>
+          {options.map((option) => (
+            <SelectItem key={option.value} value={option.value}>
+              {option.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
   );
 }

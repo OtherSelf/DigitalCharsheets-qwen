@@ -1,7 +1,13 @@
-import { readNumber, readString, type DefaultsInput } from '../shared/defaults';
-import { deriveAptitudes } from './dh2e-aptitudes';
+import {
+  readBoolean,
+  readNumber,
+  readString,
+  type DefaultsInput,
+} from '../shared/defaults';
+import { characteristicAptitudes, deriveAptitudes } from './dh2e-aptitudes';
 import { DH2E_BACKGROUNDS, DH2E_HOMEWORLDS, DH2E_ROLES } from './dh2e-data';
 import { isDivinationId } from './dh2e-divinations';
+import { readStartingChoices } from './dh2e-grants';
 import { DH2_SCHEMA_VERSION } from './schema-version';
 import {
   DARK_HERESY_CORE_STATS,
@@ -44,6 +50,30 @@ function readChosen(input: DefaultsInput): Record<string, string> {
   return result;
 }
 
+/**
+ * Оставляет в `aptitudes.chosen` только ключи, которые действительно есть у
+ * мира/бэкграунда/роли, и значения из их вариантов: мусор из формы или
+ * старого JSON не должен попадать в лист.
+ */
+function cleanChosen(
+  chosen: Readonly<Record<string, string>>,
+  result: ReturnType<typeof deriveAptitudes>,
+): Record<string, string> {
+  const allowed = new Map(
+    result.choices.map((choice) => [choice.key, choice.of]),
+  );
+  const characteristic = characteristicAptitudes();
+  const cleaned: Record<string, string> = {};
+  for (const [key, value] of Object.entries(chosen)) {
+    if (key.startsWith('duplicate.')) {
+      if (characteristic.includes(value)) cleaned[key] = value;
+      continue;
+    }
+    if (allowed.get(key)?.includes(value)) cleaned[key] = value;
+  }
+  return cleaned;
+}
+
 /** Раны мира 2e: `9+1d5` → 10 при «среднем» значении кубика. */
 function defaultWounds(homeWorld: string): number {
   const world = DH2E_HOMEWORLDS.find((item) => item.id === homeWorld);
@@ -62,8 +92,27 @@ export function createDh2BaseDefaults(
   const homeWorld = readKnownId(input, 'homeWorld', HOME_WORLD_IDS);
   const background = readKnownId(input, 'background', BACKGROUND_IDS);
   const role = readKnownId(input, 'role', ROLE_IDS);
-  const chosen = readChosen(input);
-  const aptitudes = deriveAptitudes({ homeWorld, background, role }, chosen);
+  const chosenInput = readChosen(input);
+  // Форма создания знает про выборы и не даёт подставлять `of[0]` молча;
+  // программное создание и миграция сохраняют прежний фолбэк (D11).
+  const strictChoices = readBoolean(input, 'strictAptitudeChoices', false);
+  const aptitudes = deriveAptitudes(
+    { homeWorld, background, role },
+    chosenInput,
+    {
+      fallbackToFirst: !strictChoices,
+    },
+  );
+  const chosen = cleanChosen(chosenInput, aptitudes);
+  const backgroundEntry = DH2E_BACKGROUNDS.find(
+    (item) => item.id === background,
+  );
+  const roleEntry = DH2E_ROLES.find((item) => item.id === role);
+  const startingChoices = readStartingChoices(
+    input.startingChoices,
+    backgroundEntry,
+    roleEntry,
+  );
 
   const divinationRaw = readString(input, 'divination', '');
   const divination = isDivinationId(divinationRaw) ? divinationRaw : '';
@@ -87,6 +136,7 @@ export function createDh2BaseDefaults(
     divination,
     gender: readString(input, 'gender', ''),
     psy: { rating: 0, disciplines: [], powers: [] },
+    startingChoices,
     height: readString(input, 'height', ''),
     weight: readString(input, 'weight', ''),
     age: readString(input, 'age', ''),

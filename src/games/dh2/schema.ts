@@ -32,5 +32,12 @@ export const dh2CharacterSchema: z.ZodType<DH2Character> = z.looseObject({
       influence: z.string().optional(),
     })
     .optional(),
+  startingChoices: z
+    .looseObject({
+      roleTalent: z.string().optional(),
+      skills: z.array(z.string()),
+      talents: z.array(z.string()),
+    })
+    .optional(),
   fatigue2nd: fatigueSchema,
 });

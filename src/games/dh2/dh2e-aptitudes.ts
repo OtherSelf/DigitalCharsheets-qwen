@@ -4,12 +4,16 @@
  * двух), роль (5, часть с выбором). Повтор аптитюды не даётся: игрок берёт
  * другую характеристическую аптитюду (с. 79), поэтому дубли разрешаются
  * через `chosen`, а не выбрасываются.
+ *
+ * Невыбранный слот у нового листа остаётся неразрешённым (`unresolved`) и
+ * показывается в UI как «выберите»; молча подставлять первый вариант нельзя.
+ * Прежний детерминированный фолбэк (`fallbackToFirst`) сохранён для
+ * legacy-листов и программного создания без формы (D11).
  */
 
 import {
   DH2E_APTITUDES,
   DH2E_BACKGROUNDS,
-  DH2E_CHARACTERISTICS,
   DH2E_HOMEWORLDS,
   DH2E_ROLES,
 } from './dh2e-data';
@@ -34,11 +38,26 @@ export interface Dh2eAptitudeResult {
   choices: Dh2eAptitudeChoice[];
   /** Повторы, заменённые на выбранную характеристическую аптитюду. */
   duplicates: string[];
+  /** Ключи слотов, для которых игрок ещё не сделал выбор. */
+  unresolved: string[];
 }
 
-const CHARACTERISTIC_APTITUDES = DH2E_CHARACTERISTICS.flatMap(
-  (characteristic) => characteristic.aptitudeIds,
-);
+export interface Dh2eDeriveOptions {
+  /**
+   * Легаси/программное создание: невыбранный слот разрешается первым
+   * вариантом (прежнее поведение). Форма создания передаёт `false`.
+   */
+  fallbackToFirst?: boolean;
+}
+
+/**
+ * Девять характеристических аптитюд (с. 79): только они годятся в замену
+ * дублю. Общие аптитюды (`offence`, `finesse`, …) в этот набор не входят,
+ * хотя и привязаны к характеристикам в таблице покупок.
+ */
+const CHARACTERISTIC_APTITUDES = DH2E_APTITUDES.filter(
+  (aptitude) => aptitude.group === 'characteristic',
+).map((aptitude) => aptitude.id);
 
 const APTITUDE_LABELS = new Map(
   DH2E_APTITUDES.map((aptitude) => [aptitude.id, aptitude.labelKey]),
@@ -48,29 +67,44 @@ export function aptitudeLabelKey(id: string): string {
   return APTITUDE_LABELS.get(id) ?? id;
 }
 
+/** Характеристические аптитюды: из них игрок выбирает замену дублю. */
+export function characteristicAptitudes(): readonly string[] {
+  return CHARACTERISTIC_APTITUDES;
+}
+
 function resolveSlot(
   slot: Dh2eAptitudeSlot,
   key: string,
   chosen: Readonly<Record<string, string>>,
   choices: Dh2eAptitudeChoice[],
-): string {
+  fallbackToFirst: boolean,
+  unresolved: string[],
+): string | undefined {
   if (typeof slot === 'string') return slot;
   const of = slot.of;
+  // Единственный вариант — не выбор, а факт: спрашивать нечего.
+  if (of.length === 1) return of[0];
   choices.push({ key, of });
   const picked = chosen[key];
-  return picked && of.includes(picked) ? picked : of[0];
+  if (picked && of.includes(picked)) return picked;
+  if (fallbackToFirst) return of[0];
+  unresolved.push(key);
+  return undefined;
 }
 
 /**
  * Собирает профиль: сначала мир, затем выбор бэкграунда, затем пять слотов
- * роли. Дубли заменяются первой ещё не занятой характеристической аптитюдой
- * (или остаются, если запас исчерпан — валидатор покажет предупреждение).
+ * роли. Дубли заменяются выбранной характеристической аптитюдой, которой у
+ * персонажа ещё нет; без выбора слот остаётся неразрешённым.
  */
 export function deriveAptitudes(
   sources: Readonly<Dh2eAptitudeSources>,
   chosen: Readonly<Record<string, string>> = {},
+  options: Dh2eDeriveOptions = {},
 ): Dh2eAptitudeResult {
+  const fallbackToFirst = options.fallbackToFirst ?? false;
   const choices: Dh2eAptitudeChoice[] = [];
+  const unresolved: string[] = [];
   const collected: string[] = [];
 
   const world = DH2E_HOMEWORLDS.find((item) => item.id === sources.homeWorld);
@@ -80,20 +114,29 @@ export function deriveAptitudes(
     (item) => item.id === sources.background,
   );
   if (background && background.aptitudeChoice.length > 0) {
-    collected.push(
-      resolveSlot(
-        { choose: 1, of: background.aptitudeChoice },
-        'background',
-        chosen,
-        choices,
-      ),
+    const picked = resolveSlot(
+      { choose: 1, of: background.aptitudeChoice },
+      'background',
+      chosen,
+      choices,
+      fallbackToFirst,
+      unresolved,
     );
+    if (picked) collected.push(picked);
   }
 
   const role = DH2E_ROLES.find((item) => item.id === sources.role);
   if (role) {
     role.aptitudes.forEach((slot, index) => {
-      collected.push(resolveSlot(slot, `role.${index}`, chosen, choices));
+      const picked = resolveSlot(
+        slot,
+        `role.${index}`,
+        chosen,
+        choices,
+        fallbackToFirst,
+        unresolved,
+      );
+      if (picked) collected.push(picked);
     });
   }
 
@@ -107,15 +150,27 @@ export function deriveAptitudes(
     duplicates.push(aptitude);
     const key = `duplicate.${aptitude}`;
     const picked = chosen[key];
-    const replacement = profile.includes(picked)
-      ? CHARACTERISTIC_APTITUDES.find((item) => !profile.includes(item))
-      : picked;
-    if (replacement && !profile.includes(replacement)) {
-      profile.push(replacement);
+    if (
+      picked &&
+      CHARACTERISTIC_APTITUDES.includes(picked) &&
+      !profile.includes(picked)
+    ) {
+      profile.push(picked);
+      continue;
     }
+    if (fallbackToFirst) {
+      const replacement = CHARACTERISTIC_APTITUDES.find(
+        (item) => !profile.includes(item),
+      );
+      if (replacement) {
+        profile.push(replacement);
+        continue;
+      }
+    }
+    if (!unresolved.includes(key)) unresolved.push(key);
   }
 
-  return { profile, choices, duplicates };
+  return { profile, choices, duplicates, unresolved };
 }
 
 /** Сколько совпадений у покупки: 2, 1 или 0 (таблицы 2-2/2-4/2-6). */

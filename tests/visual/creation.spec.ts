@@ -63,6 +63,7 @@ async function fetchCharacters(page: Page): Promise<any[]> {
 async function openCreationForm(
   page: Page,
   system: 'Dungeons & Dragons' | 'Dark Heresy',
+  edition: 'dh1' | 'dh2' = 'dh1',
 ): Promise<void> {
   await page.getByRole('link', { name: 'Create New Character' }).click();
   await page.waitForURL(/\/new$/, { timeout: 15_000 });
@@ -73,7 +74,7 @@ async function openCreationForm(
   } else {
     await page.getByTestId('create-game-darkHeresy').click();
     // Старый флоу создавал DH без edition — это 1-я редакция (D3).
-    await page.getByTestId('create-edition-dh1').click();
+    await page.getByTestId(`create-edition-${edition}`).click();
   }
 
   await expect(
@@ -275,6 +276,89 @@ test.describe('создание персонажа — Dark Heresy', () => {
     // Персонаж виден в дашборде (карточка листа).
     await page.goto('/');
     await expect(page.getByText(name, { exact: true })).toBeVisible();
+  });
+});
+
+test.describe('создание персонажа — Dark Heresy 2e', () => {
+  test('выборы при создании сохраняются в персонаже и видны на листе', async ({
+    page,
+    context,
+  }) => {
+    await prepare(context, { authenticated: false, theme: 'light' });
+    const account = await registerAccount(page, 'dh2-e2e', 'DH2 E2E');
+    await signInViaUI(page, account);
+
+    await openCreationForm(page, 'Dark Heresy', 'dh2');
+
+    const name = 'E2E Assassin';
+    await page.getByLabel('Character Name', { exact: true }).fill(name);
+    await page.getByLabel('Home World', { exact: true }).click();
+    await page.getByRole('option', { name: 'Hive World', exact: true }).click();
+    await page.getByLabel('Background', { exact: true }).click();
+    await page.getByRole('option', { name: /^Adeptus Arbites/ }).click();
+    await page.getByLabel('Role', { exact: true }).click();
+    await page.getByRole('option', { name: /^Assassin/ }).click();
+
+    // Выборы правил (D11): бэкграунд, слот роли, талант роли, «одно из»
+    // стартового навыка и замена дубля аптитюды.
+    await page
+      .getByLabel('Background aptitude: Adeptus Arbites', { exact: true })
+      .click();
+    await page.getByRole('option', { name: 'Offence', exact: true }).click();
+    await page.getByLabel('Role aptitude 2', { exact: true }).click();
+    await page
+      .getByRole('option', { name: 'Weapon Skill', exact: true })
+      .click();
+    await page.getByLabel('Role talent: Assassin', { exact: true }).click();
+    await page.getByRole('option', { name: 'Jaded', exact: true }).click();
+    await page.getByLabel('Starting skills 1', { exact: true }).click();
+    await page.getByRole('option', { name: 'Inquiry', exact: true }).click();
+    await page
+      .getByLabel('Duplicate replacement: Perception', { exact: true })
+      .click();
+    await page.getByRole('option', { name: 'Strength', exact: true }).click();
+
+    await page.getByRole('button', { name: 'Create Character' }).click();
+    const id = await waitForSheetRedirect(page);
+
+    const characters = await fetchCharacters(page);
+    expect(characters, 'ровно один лист у нового аккаунта').toHaveLength(1);
+    const created = characters[0];
+    expect(created).toMatchObject({
+      id,
+      name,
+      systemId: 'dh2',
+      homeWorld: 'hive-world',
+      background: 'adeptus-arbites',
+      role: 'assassin',
+      aptitudes: {
+        chosen: {
+          background: 'offence',
+          'role.1': 'weapon-skill',
+          'duplicate.perception': 'strength',
+        },
+      },
+      startingChoices: {
+        roleTalent: 'jaded',
+        skills: ['inquiry'],
+        talents: [],
+      },
+    });
+    expect(created.aptitudes.profile).toEqual(
+      expect.arrayContaining(['offence', 'weapon-skill', 'strength']),
+    );
+    expect(
+      new Set(created.aptitudes.profile).size,
+      'дубль аптитюды заменён, а не продублирован',
+    ).toBe(created.aptitudes.profile.length);
+
+    // Лист показывает выборы в info-секции.
+    await expect(page.getByText('Role talent', { exact: true })).toBeVisible();
+    await expect(page.getByText('Jaded', { exact: true })).toBeVisible();
+    await expect(
+      page.getByText('Starting skills (chosen)', { exact: true }),
+    ).toBeVisible();
+    await expect(page.getByText('Inquiry', { exact: true })).toBeVisible();
   });
 });
 
