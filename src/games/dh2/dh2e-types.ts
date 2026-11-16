@@ -131,6 +131,8 @@ export interface Dh2eEliteAdvance {
   readonly labelKey: string;
   readonly cost: number;
   readonly changeKeys: readonly string[];
+  /** Полные пререквизиты из книги: показываются рядом с выбором (D15). */
+  readonly prereqText?: string;
 }
 
 export interface Dh2eCostRow {

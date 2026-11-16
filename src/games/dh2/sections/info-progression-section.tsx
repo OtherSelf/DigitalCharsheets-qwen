@@ -16,6 +16,13 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useCharacterContext, useTranslation } from '@/games/plugin-host';
 import { cn } from '@/lib/utils';
@@ -32,6 +39,12 @@ import {
   roleLabel,
   talentLabel,
 } from '../dh2e-labels';
+import {
+  availableEliteAdvances,
+  buyEliteAdvance,
+  eliteById,
+  removeEliteAdvance,
+} from '../elite';
 import {
   buyPsyRating,
   formatPsyList,
@@ -405,6 +418,7 @@ export const ProgressionSection = ({
   const [isJournalOpen, setIsJournalOpen] = React.useState(false);
   const [spendAmount, setSpendAmount] = React.useState(0);
   const [spendWhat, setSpendWhat] = React.useState('');
+  const [eliteToAdd, setEliteToAdd] = React.useState('');
 
   React.useEffect(() => {
     onEditingChange?.(isProgressionEditing);
@@ -460,6 +474,25 @@ export const ProgressionSection = ({
     updateCharacter(character.id, {
       psy: { ...character.psy, [field]: parsePsyList(raw) },
     });
+  };
+
+  const availableElites = availableEliteAdvances(character.eliteAdvances);
+  const selectedElite = eliteToAdd ? eliteById(eliteToAdd) : undefined;
+
+  const handleAddElite = () => {
+    if (!selectedElite) return;
+    const purchase = buyEliteAdvance(
+      character,
+      selectedElite.id,
+      t(selectedElite.labelKey),
+    );
+    if (!purchase) return;
+    updateCharacter(character.id, purchase.patch);
+    setEliteToAdd('');
+  };
+
+  const handleRemoveElite = (eliteId: string) => {
+    updateCharacter(character.id, removeEliteAdvance(character, eliteId));
   };
 
   const showProgression =
@@ -661,6 +694,101 @@ export const ProgressionSection = ({
             <p className="text-muted-foreground text-xs">
               {t('dh2.psyFreeTextHint')}
             </p>
+          )}
+        </div>
+
+        <div className="space-y-3 border-t pt-3">
+          <h4 className="text-sm font-medium">{t('dh2.eliteAdvances')}</h4>
+          {character.eliteAdvances.length === 0 ? (
+            <p className="text-muted-foreground text-xs">
+              {t('dh2.noEliteAdvances')}
+            </p>
+          ) : (
+            <ul className="space-y-2">
+              {character.eliteAdvances.map((eliteId) => {
+                const elite = eliteById(eliteId);
+                return (
+                  <li key={eliteId} className="rounded-md border p-2 text-sm">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="font-medium">
+                        {elite ? t(elite.labelKey) : eliteId}
+                        {elite ? ` · ${elite.cost} ${t('dh2.xpAbbr')}` : ''}
+                      </p>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        aria-label={t('dh2.removeEliteAdvance')}
+                        onClick={() => handleRemoveElite(eliteId)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    {elite && (
+                      <>
+                        <p className="text-muted-foreground text-xs">
+                          {t(`dh2.elitePrereq.${elite.id}`)}
+                        </p>
+                        <p className="text-muted-foreground text-xs">
+                          {t('dh2.instantChangesHint')}
+                        </p>
+                        <ul className="mt-1 space-y-0.5 text-xs">
+                          {elite.changeKeys.map((key) => (
+                            <li key={key}>• {t(key)}</li>
+                          ))}
+                        </ul>
+                      </>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+          {character.eliteAdvances.length > 0 && (
+            <p className="text-muted-foreground text-xs">
+              {t('dh2.eliteRemoveHint')}
+            </p>
+          )}
+          {availableElites.length > 0 && (
+            <div className="space-y-2">
+              <Select value={eliteToAdd} onValueChange={setEliteToAdd}>
+                <SelectTrigger aria-label={t('dh2.selectEliteAdvance')}>
+                  <SelectValue placeholder={t('dh2.selectEliteAdvance')} />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableElites.map((elite) => (
+                    <SelectItem key={elite.id} value={elite.id}>
+                      {t(elite.labelKey)} · {elite.cost} {t('dh2.xpAbbr')}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {selectedElite && (
+                <div className="space-y-1 text-xs">
+                  <p className="font-medium">{t('dh2.gmApprovalRequired')}</p>
+                  <p className="text-muted-foreground">
+                    {t(`dh2.elitePrereq.${selectedElite.id}`)}
+                  </p>
+                  <p className="text-muted-foreground">
+                    {t('dh2.instantChangesHint')}
+                  </p>
+                  <ul className="space-y-0.5">
+                    {selectedElite.changeKeys.map((key) => (
+                      <li key={key}>• {t(key)}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={handleAddElite}
+                disabled={!selectedElite}
+              >
+                {t('dh2.addEliteAdvance')}
+              </Button>
+            </div>
           )}
         </div>
       </CardContent>

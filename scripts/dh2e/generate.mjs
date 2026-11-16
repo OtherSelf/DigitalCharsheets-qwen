@@ -370,6 +370,9 @@ function buildReference(catalog, i18n) {
       labelKey,
       cost: entity.props.cost,
       changeKeys,
+      ...(entity.props.prereqText
+        ? { prereqText: entity.props.prereqText }
+        : {}),
     };
   });
 

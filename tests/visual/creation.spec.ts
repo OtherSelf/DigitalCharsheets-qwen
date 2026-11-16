@@ -406,6 +406,40 @@ test.describe('создание персонажа — Dark Heresy 2e', () => {
     ).toBeVisible();
     await expect(journal.getByText('200', { exact: true })).toBeVisible();
     await page.keyboard.press('Escape');
+
+    // Элитное продвижение: пререквизиты и разрешение ГМ видны, покупка
+    // пишется в журнал, удаление не откатывает опыт (D15).
+    await progression
+      .getByRole('combobox', { name: 'Choose an elite advance' })
+      .click();
+    await page.getByRole('option', { name: /^Psyker/ }).click();
+    await expect(
+      progression.getByText('Requires GM permission.', { exact: true }),
+    ).toBeVisible();
+    await expect(
+      progression.getByText(/Willpower 40; A Beacon in the Warp/),
+    ).toBeVisible();
+    await progression
+      .getByRole('button', { name: 'Add elite advance' })
+      .click();
+    await expect
+      .poll(async () => (await fetchCharacters(page))[0].eliteAdvances)
+      .toEqual(['psyker']);
+    await expect
+      .poll(async () => (await fetchCharacters(page))[0].totalExpSpent)
+      .toBe(500);
+    await expect
+      .poll(async () => (await fetchCharacters(page))[0].experienceLog[1])
+      .toMatchObject({ kind: 'elite-advance', cost: 300, ref: 'Psyker' });
+
+    await progression
+      .getByRole('button', { name: 'Remove elite advance' })
+      .click();
+    await expect
+      .poll(async () => (await fetchCharacters(page))[0].eliteAdvances)
+      .toEqual([]);
+    // Удаление не откатывает опыт: 200 (пси) + 300 (элитное) остаются.
+    expect((await fetchCharacters(page))[0].totalExpSpent).toBe(500);
   });
 });
 
