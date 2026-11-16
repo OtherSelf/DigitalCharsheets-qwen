@@ -34,7 +34,7 @@ export function dh2CompactNav(
       icon: <TrendingUp className="h-5 w-5" />,
     },
     {
-      labelKey: 'common.skills',
+      labelKey: 'dh2.skills',
       id: 'skills-section',
       icon: <BookOpen className="h-5 w-5" />,
     },

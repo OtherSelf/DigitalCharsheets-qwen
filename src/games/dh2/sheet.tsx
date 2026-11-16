@@ -1128,7 +1128,7 @@ export const Dh2Sheet = React.forwardRef<
                 onClick={() => setIsSkillsPanelCollapsed(false)}
               >
                 <span className="text-muted-foreground rotate-180 transform text-center text-sm font-semibold tracking-widest whitespace-nowrap uppercase [writing-mode:vertical-rl]">
-                  {t('common.skills')}, {t('dh2.talentsAndTraits')},{' '}
+                  {t('dh2.skills')}, {t('dh2.talentsAndTraits')},{' '}
                   {t('dh2.wounds')} &amp; {t('dh2.fate')}
                 </span>
               </Button>
@@ -1137,7 +1137,7 @@ export const Dh2Sheet = React.forwardRef<
             <Card id="skills-talents-panel">
               <CardHeader className="flex-row items-center justify-between px-6 pt-3 pb-6">
                 <CardTitle className="font-headline">
-                  {t('common.skills')}, {t('dh2.talentsAndTraits')},{' '}
+                  {t('dh2.skills')}, {t('dh2.talentsAndTraits')},{' '}
                   {t('dh2.wounds')} &amp; {t('dh2.fate')}
                 </CardTitle>
                 <Button
