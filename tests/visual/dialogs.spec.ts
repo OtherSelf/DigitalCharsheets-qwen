@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test';
 
 import { dhCharacter } from './fixtures';
 import {
+  expectNoHorizontalOverflow,
   getState,
   openApp,
   openDialog,
@@ -197,6 +198,7 @@ test.describe('диалоги — заметки', () => {
       dialog.getByText(/Owes a favour to the Lantern Guild/),
     ).toBeVisible();
 
+    await expectNoHorizontalOverflow(page);
     await screenshotPage(page, 'dialog-dnd-mobile-notes-en.png');
 
     await dialog.getByRole('button', { name: 'Edit' }).click();
@@ -352,6 +354,74 @@ test.describe('журнал опыта', () => {
       await expect(
         page.getByRole('dialog').getByTestId('experience-row'),
       ).toHaveCount(1);
+    },
+  );
+});
+
+/**
+ * ─── LANDMARK: NARRATIVE SMART SAVE ───────────────────────────────────────
+ * Умный режим (D3): непустые заметки открываются в просмотре, «Редактировать»
+ * даёт textarea, «Сохранить» пишет в лист. Отдельный аккаунт, чтобы не менять
+ * фикстуры визуальных тестов.
+ */
+test.describe('заметки: сохранение из Sheet', () => {
+  test(
+    'DH1: Edit → Save → перезагрузка показывает новый текст (en)',
+    { tag: '@desktop' },
+    async ({ page }) => {
+      const username = `notes-save-${Date.now()}`;
+      const password = 'notes-save-password-1';
+      const registered = await page.request.post('/api/auth/register', {
+        data: {
+          username,
+          password,
+          displayName: 'Notes Save',
+          recoveryPhrase: 'amber cobalt lantern',
+        },
+      });
+      expect([200, 201], 'регистрация аккаунта').toContain(registered.status());
+
+      const created = await page.request.post('/api/characters', {
+        data: {
+          ...dhCharacter,
+          name: 'Notes Save',
+          notes: 'Старая заметка',
+        },
+      });
+      expect([200, 201], 'создание листа').toContain(created.status());
+      const { id } = (await created.json()) as { id: string };
+
+      await signInViaUI(page, { username, password });
+      await openApp(page, sheetPath(id));
+
+      await page
+        .getByTestId('app-header')
+        .getByRole('button', { name: 'Notes', exact: true })
+        .click();
+      let sheet = page.getByRole('dialog');
+      await expect(sheet.getByText('Старая заметка')).toBeVisible();
+
+      await sheet.getByRole('button', { name: 'Edit' }).click();
+      const textarea = sheet.locator('textarea');
+      await textarea.fill('Новая заметка из Sheet');
+      const saved = page.waitForResponse((response) => {
+        if (!response.url().includes(`/api/characters/${id}`)) return false;
+        if (response.request().method() !== 'PUT') return false;
+        return (response.request().postData() ?? '').includes(
+          'Новая заметка из Sheet',
+        );
+      });
+      await sheet.getByRole('button', { name: 'Save' }).click();
+      await saved;
+
+      await openApp(page, sheetPath(id));
+      await page
+        .getByTestId('app-header')
+        .getByRole('button', { name: 'Notes', exact: true })
+        .click();
+      sheet = page.getByRole('dialog');
+      await expect(sheet.getByText('Новая заметка из Sheet')).toBeVisible();
+      await expect(sheet.getByText('Старая заметка')).toHaveCount(0);
     },
   );
 });
