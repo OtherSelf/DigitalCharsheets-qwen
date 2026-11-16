@@ -27,9 +27,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { useCharacterContext, useTranslation } from '@/games/plugin-host';
 import { cn } from '@/lib/utils';
 
-import { DH2E_BACKGROUNDS } from '../dh2e-data';
+import { applyAptitudeChoice } from '../aptitudes-sheet';
+import { characteristicAptitudes, deriveAptitudes } from '../dh2e-aptitudes';
+import { DH2E_BACKGROUNDS, DH2E_HOMEWORLDS, DH2E_ROLES } from '../dh2e-data';
 import { startingChoiceLabels } from '../dh2e-grants';
 import {
+  aptitudeLabel,
   aptitudeLabels,
   backgroundLabel,
   divinationEffectLabel,
@@ -135,6 +138,42 @@ const ReadOnlyField = ({
   </div>
 );
 
+/** Выбор аптитюды на листе: тот же стиль, что у выборов при создании. */
+const AptitudeChoice = ({
+  label,
+  value,
+  placeholder,
+  options,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  placeholder?: string;
+  options: readonly { value: string; label: string }[];
+  onChange: (value: string) => void;
+}) => {
+  const id = React.useId();
+  return (
+    <div className="space-y-1">
+      <Label htmlFor={id} className="text-muted-foreground text-xs">
+        {label}
+      </Label>
+      <Select value={value} onValueChange={onChange}>
+        <SelectTrigger id={id} className="h-8">
+          <SelectValue placeholder={placeholder} />
+        </SelectTrigger>
+        <SelectContent>
+          {options.map((option) => (
+            <SelectItem key={option.value} value={option.value}>
+              {option.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+};
+
 export const InfoSection = ({
   character,
   isCompactView,
@@ -172,6 +211,49 @@ export const InfoSection = ({
     character.startingChoices?.talents,
     t,
   );
+
+  const worldEntry = DH2E_HOMEWORLDS.find(
+    (item) => item.id === character.homeWorld,
+  );
+  const roleEntry = DH2E_ROLES.find((item) => item.id === character.role);
+  const chosenMap = character.aptitudes.chosen ?? {};
+  const derivedAptitudes = deriveAptitudes(
+    {
+      homeWorld: character.homeWorld,
+      background: character.background,
+      role: character.role,
+    },
+    chosenMap,
+    { fallbackToFirst: true },
+  );
+  const backgroundValue =
+    backgroundEntry && backgroundEntry.aptitudeChoice.length > 0
+      ? backgroundEntry.aptitudeChoice.includes(chosenMap.background)
+        ? chosenMap.background
+        : backgroundEntry.aptitudeChoice[0]
+      : undefined;
+  const roleSlots = (roleEntry?.aptitudes ?? []).map((slot, index) => {
+    if (typeof slot === 'string') {
+      return {
+        index,
+        key: '',
+        value: slot,
+        options: [] as readonly string[],
+        choice: false,
+      };
+    }
+    const key = `role.${index}`;
+    const value =
+      chosenMap[key] && slot.of.includes(chosenMap[key])
+        ? chosenMap[key]
+        : slot.of[0];
+    return { index, key, value, options: slot.of, choice: slot.of.length > 1 };
+  });
+  const duplicateAptitudes = [...new Set(derivedAptitudes.duplicates)];
+
+  const applyAptitude = (key: string, value: string) => {
+    updateCharacter(character.id, applyAptitudeChoice(character, key, value));
+  };
 
   return (
     <Card id="info-section">
@@ -349,6 +431,130 @@ export const InfoSection = ({
             isCompactView={isCompactView}
           />
         </div>
+
+        <div className="mt-4 space-y-2 rounded-md border p-3 text-sm">
+          <h4 className="text-sm font-medium">{t('dh2.aptitudes')}</h4>
+          <p className="text-sm font-medium break-words">
+            {aptitudeLabels(character.aptitudes.profile, t) || '-'}
+          </p>
+          <ul className="space-y-1 text-xs">
+            {worldEntry && (
+              <li>
+                <span className="text-muted-foreground">
+                  {t('dh2.homeWorld')}:{' '}
+                </span>
+                {homeWorldLabel(worldEntry.id, t)} —{' '}
+                {aptitudeLabel(worldEntry.aptitudeId, t)}
+              </li>
+            )}
+            {backgroundEntry && (
+              <li>
+                <span className="text-muted-foreground">
+                  {t('dh2.background')}:{' '}
+                </span>
+                {backgroundLabel(backgroundEntry.id, t)} —{' '}
+                {backgroundValue ? aptitudeLabel(backgroundValue, t) : '-'}
+              </li>
+            )}
+            {roleEntry && (
+              <li>
+                <span className="text-muted-foreground">{t('dh2.role')}: </span>
+                {roleLabel(roleEntry.id, t)}
+              </li>
+            )}
+          </ul>
+
+          {backgroundEntry &&
+            backgroundEntry.aptitudeChoice.length > 1 &&
+            (isInfoEditing ? (
+              <AptitudeChoice
+                label={t('dh2.backgroundAptitude')}
+                value={backgroundValue ?? ''}
+                options={backgroundEntry.aptitudeChoice.map((id) => ({
+                  value: id,
+                  label: aptitudeLabel(id, t),
+                }))}
+                onChange={(value) => applyAptitude('background', value)}
+              />
+            ) : (
+              <p className="text-muted-foreground text-xs">
+                {t('dh2.backgroundAptitude')}:{' '}
+                {backgroundValue ? aptitudeLabel(backgroundValue, t) : '-'}
+              </p>
+            ))}
+
+          {roleSlots.some((slot) => slot.choice) && (
+            <div className="space-y-2">
+              <p className="text-muted-foreground text-xs">
+                {t('dh2.roleAptitudes')}
+              </p>
+              <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
+                {roleSlots
+                  .filter((slot) => slot.choice)
+                  .map((slot) =>
+                    isInfoEditing ? (
+                      <AptitudeChoice
+                        key={slot.key}
+                        label={`${t('dh2.roleAptitude')} ${slot.index + 1}`}
+                        value={slot.value}
+                        options={slot.options.map((id) => ({
+                          value: id,
+                          label: aptitudeLabel(id, t),
+                        }))}
+                        onChange={(value) => applyAptitude(slot.key, value)}
+                      />
+                    ) : (
+                      <p key={slot.key} className="text-xs">
+                        {t('dh2.roleAptitude')} {slot.index + 1}:{' '}
+                        {aptitudeLabel(slot.value, t)}
+                      </p>
+                    ),
+                  )}
+              </div>
+            </div>
+          )}
+
+          {duplicateAptitudes.length > 0 && (
+            <div className="space-y-2">
+              <p className="text-destructive text-xs">
+                {t('dh2.duplicates')}:{' '}
+                {duplicateAptitudes
+                  .map((id) => aptitudeLabel(id, t))
+                  .join(', ')}
+              </p>
+              <p className="text-muted-foreground text-xs">
+                {t('dh2.duplicatesHint')}
+              </p>
+              {isInfoEditing &&
+                duplicateAptitudes.map((duplicate) => {
+                  const key = `duplicate.${duplicate}`;
+                  const current = chosenMap[key];
+                  const options = characteristicAptitudes().filter(
+                    (id) =>
+                      !derivedAptitudes.profile.includes(id) || id === current,
+                  );
+                  return options.length > 0 ? (
+                    <AptitudeChoice
+                      key={key}
+                      label={`${t('dh2.duplicateAptitude')}: ${aptitudeLabel(duplicate, t)}`}
+                      value={current ?? ''}
+                      placeholder={t('dh2.chooseReplacement')}
+                      options={options.map((id) => ({
+                        value: id,
+                        label: aptitudeLabel(id, t),
+                      }))}
+                      onChange={(value) => applyAptitude(key, value)}
+                    />
+                  ) : (
+                    <p key={key} className="text-destructive text-xs">
+                      {t('dh2.noFreeAptitudes')}
+                    </p>
+                  );
+                })}
+            </div>
+          )}
+        </div>
+
         <div className="mt-4 flex flex-wrap gap-2">
           <Button
             type="button"

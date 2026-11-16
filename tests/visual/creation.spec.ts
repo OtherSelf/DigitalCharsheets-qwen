@@ -363,6 +363,25 @@ test.describe('создание персонажа — Dark Heresy 2e', () => {
     ).toBeVisible();
     await expect(page.getByText('Inquiry', { exact: true })).toBeVisible();
 
+    // Аптитюды на листе: источники и выбор замены дубля пересобирают профиль.
+    const info = page.locator('#info-section');
+    await info.getByTestId('edit-button').click();
+    await info
+      .getByLabel('Duplicate replacement: Perception', { exact: true })
+      .click();
+    await page.getByRole('option', { name: 'Toughness', exact: true }).click();
+    await info.getByTestId('save-button').click();
+    await expect
+      .poll(async () => (await fetchCharacters(page))[0].aptitudes.chosen)
+      .toMatchObject({ 'duplicate.perception': 'toughness' });
+    await expect
+      .poll(async () => (await fetchCharacters(page))[0].aptitudes.profile)
+      .toContain('toughness');
+    expect(
+      (await fetchCharacters(page))[0].aptitudes.profile,
+      'выбранная замена вытеснила прежнюю',
+    ).not.toContain('strength');
+
     // Пси: повышение рейтинга подсказывает цену и пишет покупку в журнал;
     // дисциплины и силы вносятся свободным текстом (D3/D14).
     // На мобильном лист компактный: сначала открываем секцию прогрессии.
