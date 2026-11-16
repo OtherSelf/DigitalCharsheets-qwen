@@ -986,6 +986,39 @@ export const WORLD_STARTING_PROFILE: Record<string, WorldStartingProfile> = {
   },
 };
 
+/** Диапазон стартового значения: формулу/таблицу читает игрок, минимум — дефолт. */
+export interface StartingRange {
+  min: number;
+  max: number;
+}
+
+/**
+ * Минимум и максимум формулы ран 1e: `1d5+9` → 10–14. Нужны, чтобы форма
+ * предзаполняла минимум и показывала диапазон (D12), а не 10/1 «из воздуха».
+ */
+export function woundsRangeFromFormula(
+  formula: string,
+): StartingRange | undefined {
+  const match = formula.match(/^(\d*)d(\d+)(?:\+(\d+))?$/i);
+  if (!match) return undefined;
+  const dice = match[1] ? Number(match[1]) : 1;
+  const sides = Number(match[2]);
+  const bonus = match[3] ? Number(match[3]) : 0;
+  return { min: dice + bonus, max: dice * sides + bonus };
+}
+
+/**
+ * Минимум и максимум Очков Судьбы 1e из текста таблицы 1-7:
+ * `1–4: 1, 5–8: 2, 9–10: 3` → 1–3.
+ */
+export function fateRangeFromText(text: string): StartingRange | undefined {
+  const values = [...text.matchAll(/:\s*(\d+)/g)].map((match) =>
+    Number(match[1]),
+  );
+  if (values.length === 0) return undefined;
+  return { min: Math.min(...values), max: Math.max(...values) };
+}
+
 /** Стартовый опыт всех персонажей 1e (Таблица 1-9, стр. 43). */
 export const STARTING_EXPERIENCE = 400;
 

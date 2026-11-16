@@ -1,4 +1,9 @@
 import { readNumber, readString, type DefaultsInput } from '../shared/defaults';
+import {
+  fateRangeFromText,
+  WORLD_STARTING_PROFILE,
+  woundsRangeFromFormula,
+} from './dark-heresy-data';
 import { calculateRank, RanksByCareer } from './dark-heresy-ranks';
 import { effectIdForDivination } from './divination-i18n';
 import { DH1_SCHEMA_VERSION } from './schema-version';
@@ -58,7 +63,22 @@ export function createDarkHeresyBaseDefaults(
   const divination = readString(input, 'divination', '');
   const agility = readNumber(input, 'agility', 30);
   const agilityBonus = Math.floor(agility / 10);
-  const wounds = readNumber(input, 'wounds', 10);
+  const homeWorld = readHomeWorld(input);
+  const startingProfile = homeWorld
+    ? WORLD_STARTING_PROFILE[homeWorld]
+    : undefined;
+  // Мир задаёт диапазон: дефолт — минимум, бросок игрок вводит сам (D12).
+  const wounds = readNumber(
+    input,
+    'wounds',
+    (startingProfile && woundsRangeFromFormula(startingProfile.wounds)?.min) ??
+      10,
+  );
+  const fatePoints = readNumber(
+    input,
+    'fatePoints',
+    (startingProfile && fateRangeFromText(startingProfile.fate)?.min) ?? 1,
+  );
 
   return {
     name: readString(input, 'name', ''),
@@ -66,7 +86,7 @@ export function createDarkHeresyBaseDefaults(
     gameSystem: 'Dark Heresy',
     schemaVersion: DH1_SCHEMA_VERSION,
     backstory: readString(input, 'backstory', ''),
-    homeWorld: readHomeWorld(input),
+    homeWorld,
     worldVariant: readString(input, 'worldVariant', ''),
     careerPath,
     rank,
@@ -88,10 +108,7 @@ export function createDarkHeresyBaseDefaults(
     notes: '',
     questLog: [],
     wounds: { current: wounds, max: wounds },
-    fatePoints: {
-      current: readNumber(input, 'fatePoints', 1),
-      max: readNumber(input, 'fatePoints', 1),
-    },
+    fatePoints: { current: fatePoints, max: fatePoints },
     insanityPoints: { total: readNumber(input, 'insanity', 0), notes: '' },
     corruptionPoints: { total: readNumber(input, 'corruption', 0), notes: '' },
     wealth: {

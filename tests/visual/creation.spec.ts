@@ -248,8 +248,8 @@ test.describe('создание персонажа — Dark Heresy', () => {
       characterClass: 'Adept',
       careerPath: 'Adept',
       homeWorld: 'Hive World',
-      // Дефолты формы DH1.
-      wounds: { current: 10, max: 10 },
+      // Дефолты формы DH1: минимум диапазона Hive World (1d5+8 → 9–13).
+      wounds: { current: 9, max: 9 },
       fatePoints: { current: 1, max: 1 },
       fatigue1st: { current: 0 },
     });
@@ -331,6 +331,9 @@ test.describe('создание персонажа — Dark Heresy 2e', () => {
       homeWorld: 'hive-world',
       background: 'adeptus-arbites',
       role: 'assassin',
+      // Минимумы мира: раны 8+1d5 → 9, Судьба 2.
+      wounds: { current: 9, max: 9 },
+      fatePoints: { current: 2, max: 2 },
       aptitudes: {
         chosen: {
           background: 'offence',

@@ -67,6 +67,7 @@ import {
   roleLabel,
   talentLabel,
 } from './dh2e-labels';
+import { fateRangeFor, woundsRangeFor } from './dh2e-starting-profile';
 import type {
   Dh2eChoice,
   Dh2eSkillGrant,
@@ -246,6 +247,14 @@ export function DarkHeresyCreateForm({ onCreated }: CreateFormProps) {
     () => DH2E_DIVINATIONS.find((item) => item.id === watchedDivination),
     [watchedDivination],
   );
+  const woundsRange = React.useMemo(
+    () => woundsRangeFor(watchedHomeWorld),
+    [watchedHomeWorld],
+  );
+  const fateRange = React.useMemo(
+    () => fateRangeFor(watchedHomeWorld),
+    [watchedHomeWorld],
+  );
 
   // Смена мира/бэкграунда/роли меняет набор слотов: старые выборы к ним уже
   // не относятся, поэтому сбрасываем их, а не тащим в новый профиль.
@@ -255,12 +264,12 @@ export function DarkHeresyCreateForm({ onCreated }: CreateFormProps) {
     setGrantSelected({});
   }, [watchedHomeWorld, watchedBackground, watchedRole]);
 
-  // Мир задаёт порог Судьбы и раны: подсказываем значения, игрок их правит.
+  // Мир задаёт раны и Судьбу: по умолчанию минимум диапазона, бросок игрок
+  // вписывает сам (D12).
   React.useEffect(() => {
     if (!world) return;
-    form.setValue('fatePoints', world.fateThreshold);
-    const match = world.wounds.match(/^(\d+)\+1d5$/);
-    form.setValue('wounds', match ? Number(match[1]) + 1 : 10);
+    form.setValue('fatePoints', fateRangeFor(world.id)?.min ?? 1);
+    form.setValue('wounds', woundsRangeFor(world.id)?.min ?? 10);
   }, [world, form]);
 
   const handleInvalid = (errors: FieldErrors) => {
@@ -801,6 +810,14 @@ export function DarkHeresyCreateForm({ onCreated }: CreateFormProps) {
                   />
                 ))}
               </div>
+              {woundsRange && fateRange && (
+                <p className="text-muted-foreground text-xs">
+                  {t('dh2.wounds')}: {woundsRange.formula} → {woundsRange.min}–
+                  {woundsRange.max} · {t('dh2.fate')}: {fateRange.threshold} (
+                  {t('dh2.emperorsBlessing')} {fateRange.blessing}+) →{' '}
+                  {fateRange.min}–{fateRange.max}. {t('dh2.rollHint')}
+                </p>
+              )}
             </section>
 
             <section className="space-y-3">

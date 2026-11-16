@@ -431,6 +431,7 @@
   "dh2.worldModifierHint": "Characteristic dice",
   "dh2.worldFateHint": "Fate threshold",
   "dh2.emperorsBlessing": "Emperor's Blessing",
+  "dh2.rollHint": "The default is the minimum of the range — enter your roll at the table.",
   "dh2.worldAptitudeHint": "Home world aptitude",
   "dh2.recommended": "recommended",
   "dh2.characteristicsHint": "Roll 2d10+20 for each characteristic at the table and enter the result. The home world marks which characteristics roll 3d10 (keep the highest or the lowest two).",
