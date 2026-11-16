@@ -20,15 +20,24 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { useTranslation } from '@/context/language-context';
-import { getGameModule } from '@/games/registry';
 import type {
   AdminCharactersResponse,
   AdminCharacterSummary,
   AdminUserSummary,
 } from '@/lib/admin-types';
 
-import { adminCharacterLevelLabel, formatAdminDate } from './admin-helpers';
+import {
+  adminCharacterLevelLabel,
+  adminGameBadge,
+  formatAdminDate,
+} from './admin-helpers';
 
 interface UserCharactersDialogProps {
   user: AdminUserSummary | null;
@@ -112,43 +121,54 @@ export function UserCharactersDialog({
           </p>
         ) : (
           <div className="max-h-[60vh] min-w-0 overflow-x-auto overflow-y-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t('admin.columnCharacter')}</TableHead>
-                  <TableHead>{t('admin.gameSystem')}</TableHead>
-                  <TableHead>{t('common.class')}</TableHead>
-                  <TableHead>{t('admin.levelOrRank')}</TableHead>
-                  <TableHead>{t('admin.updated')}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {characters.map((character) => (
-                  <TableRow key={character.id}>
-                    <TableCell className="font-medium">
-                      {character.name}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="secondary">
-                        {character.systemId
-                          ? t(
-                              getGameModule(character.systemId)?.nameKey ??
-                                character.gameSystem,
-                            )
-                          : character.gameSystem}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{character.characterClass || '—'}</TableCell>
-                    <TableCell>
-                      {adminCharacterLevelLabel(character, t)}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground text-xs whitespace-nowrap">
-                      {formatAdminDate(character.updatedAt, language)}
-                    </TableCell>
+            <TooltipProvider delayDuration={150}>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{t('admin.columnCharacter')}</TableHead>
+                    <TableHead>{t('admin.gameSystem')}</TableHead>
+                    <TableHead>{t('common.class')}</TableHead>
+                    <TableHead>{t('admin.levelOrRank')}</TableHead>
+                    <TableHead>{t('admin.updated')}</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {characters.map((character) => {
+                    const gameBadge = adminGameBadge(character, t);
+                    return (
+                      <TableRow key={character.id}>
+                        <TableCell className="font-medium">
+                          {character.name}
+                        </TableCell>
+                        <TableCell>
+                          {gameBadge.title ? (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Badge variant="secondary" tabIndex={0}>
+                                  {gameBadge.code}
+                                </Badge>
+                              </TooltipTrigger>
+                              <TooltipContent side="top">
+                                {gameBadge.title}
+                              </TooltipContent>
+                            </Tooltip>
+                          ) : (
+                            <Badge variant="secondary">{gameBadge.code}</Badge>
+                          )}
+                        </TableCell>
+                        <TableCell>{character.characterClass || '—'}</TableCell>
+                        <TableCell>
+                          {adminCharacterLevelLabel(character, t)}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground text-xs whitespace-nowrap">
+                          {formatAdminDate(character.updatedAt, language)}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </TooltipProvider>
           </div>
         )}
       </DialogContent>

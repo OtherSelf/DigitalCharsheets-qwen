@@ -47,6 +47,7 @@ export const exampleModule: GameModule<ExampleCharacter> = {
   defaultStatus: 'hidden',
   nameKey: 'example.name',
   descriptionKey: 'example.description',
+  shortCode: 'example',
   schemaVersion: CURRENT_SCHEMA_VERSION,
   schema: exampleCharacterSchema,
   i18n: { en: exampleEn, ru: exampleRu },

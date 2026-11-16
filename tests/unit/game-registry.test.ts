@@ -42,6 +42,18 @@ describe('реестр игр и редакций', () => {
     expect(() => gameRegistry.require('dh9')).toThrow(/Неизвестный модуль/);
   });
 
+  it('за каждой редакцией закреплён короткий код игры для админки', () => {
+    expect(getGameModule('dnd5e')?.shortCode).toBe('dnd5e');
+    expect(getGameModule('dh1')?.shortCode).toBe('dh1e');
+    expect(getGameModule('dh2')?.shortCode).toBe('dh2e');
+
+    const codes = listGameModules().map((gameModule) => gameModule.shortCode);
+    expect(new Set(codes).size).toBe(codes.length);
+    for (const code of codes) {
+      expect(code).toMatch(/^[a-z0-9]+$/);
+    }
+  });
+
   it('группирует редакции по игре', () => {
     expect(listGameModulesForGame('darkHeresy').map((m) => m.id)).toEqual([
       'dh1',

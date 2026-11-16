@@ -57,6 +57,7 @@ export const dh1Module: GameModule<DH1Character> = {
   defaultStatus: 'published',
   nameKey: 'games.dh1.name',
   descriptionKey: 'games.dh1.description',
+  shortCode: 'dh1e',
   schemaVersion: DH1_SCHEMA_VERSION,
   schema: dh1CharacterSchema,
   i18n: { en: dh1En, ru: dh1Ru },

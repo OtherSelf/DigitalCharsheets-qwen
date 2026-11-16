@@ -56,6 +56,7 @@ export const dnd5eModule: GameModule<DnD5eCharacter> = {
   defaultStatus: 'published',
   nameKey: 'games.dnd5e.name',
   descriptionKey: 'games.dnd5e.description',
+  shortCode: 'dnd5e',
   schemaVersion: CURRENT_SCHEMA_VERSION,
   schema: dnd5eCharacterSchema,
   i18n: { en: dnd5eEn, ru: dnd5eRu },
