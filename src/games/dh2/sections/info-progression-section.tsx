@@ -31,6 +31,7 @@ import {
 } from '@/components/ui/tooltip';
 import {
   ConditionsList,
+  ExperienceLogSheet,
   NarrativeSheet,
   useCharacterContext,
   useTranslation,
@@ -64,6 +65,7 @@ import {
   eliteById,
   removeEliteAdvance,
 } from '../elite';
+import { dh2ExperienceRows } from '../experience';
 import { isCreationFieldLocked } from '../field-policy';
 import {
   buyPsyRating,
@@ -1222,51 +1224,17 @@ export const ProgressionSection = ({
         </DialogContent>
       </Dialog>
 
-      <Dialog open={isJournalOpen} onOpenChange={setIsJournalOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t('dh2.experienceLog')}</DialogTitle>
-            <DialogDescription>{t('dh2.experienceLogHint')}</DialogDescription>
-          </DialogHeader>
-          <div className="max-h-[60vh] space-y-2 overflow-y-auto">
-            {character.experienceLog.length === 0 && (
-              <p className="text-muted-foreground text-sm">
-                {t('dh2.experienceLogEmpty')}
-              </p>
-            )}
-            {character.experienceLog.map((entry) => (
-              <div
-                key={entry.id}
-                className="flex items-center justify-between gap-2 rounded-md border p-2 text-sm"
-              >
-                <div className="min-w-0">
-                  <p className="truncate font-medium">{entry.ref}</p>
-                  <p className="text-muted-foreground text-xs">
-                    {t(`dh2.experienceKind.${entry.kind}`)} ·{' '}
-                    {new Date(entry.createdAt).toLocaleDateString(
-                      language === 'ru' ? 'ru-RU' : 'en-GB',
-                    )}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-primary font-semibold">
-                    {entry.cost}
-                  </span>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    aria-label={t('dh2.deleteExperienceEntry')}
-                    onClick={() => handleDeleteExperience(entry.id)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </DialogContent>
-      </Dialog>
+      <ExperienceLogSheet
+        open={isJournalOpen}
+        onOpenChange={setIsJournalOpen}
+        title={t('dh2.experienceLog')}
+        description={t('dh2.experienceLogHint')}
+        empty={t('dh2.experienceLogEmpty')}
+        deleteLabel={t('dh2.deleteExperienceEntry')}
+        language={language}
+        rows={dh2ExperienceRows(character.experienceLog, t)}
+        onDelete={handleDeleteExperience}
+      />
     </Card>
   );
 };
