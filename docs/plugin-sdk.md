@@ -80,8 +80,10 @@ state from a plugin component:
 | `useToast()` | host toasts |
 | `NarrativeSheet` | right-hand Sheet for `notes`/`backstory`: markdown view, smart mode (empty opens in edit), Edit/Save/Cancel inside the Sheet |
 | `ConditionsList` | structured conditions list (kind/name/severity/effect/notes/source) with add/remove; labels come from the plugin dictionary, the shapes live in the edition types |
+| `ExperienceLogSheet` | right-hand XP journal Sheet: rows are prepared by the plugin adapter (`label/cost/createdAt`, optional `kind`), deletion is delegated to the plugin callback |
 
-The module re-exports the host hooks and `NarrativeSheet`, so plugin internals stay decoupled from
+The module re-exports the host hooks and the shared sheet components (`NarrativeSheet`,
+`ConditionsList`, `ExperienceLogSheet`), so plugin internals stay decoupled from
 `@/context/*` / `@/hooks/*` and the boundary test keeps zero legacy entries.
 Types come from `@/games/types` / `@/games/plugin-api`; only the plugin's own
 `types.ts` describes the sheet shape.
