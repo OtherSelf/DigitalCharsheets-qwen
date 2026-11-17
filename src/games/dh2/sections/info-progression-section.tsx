@@ -311,7 +311,6 @@ export const InfoSection = ({
   const { t } = useTranslation();
   const [isInfoEditing, setIsInfoEditing] = React.useState(false);
   const [isBackstoryOpen, setIsBackstoryOpen] = React.useState(false);
-  const [isNotesOpen, setIsNotesOpen] = React.useState(false);
 
   React.useEffect(() => {
     onEditingChange?.(isInfoEditing);
@@ -782,16 +781,6 @@ export const InfoSection = ({
             <Eye className="h-4 w-4" />
             {t('common.backstory')}
           </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="gap-1.5"
-            onClick={() => setIsNotesOpen(true)}
-          >
-            <Eye className="h-4 w-4" />
-            {t('common.notes')}
-          </Button>
         </div>
       </CardContent>
 
@@ -802,14 +791,6 @@ export const InfoSection = ({
         description={t('common.backstory')}
         value={character.backstory ?? ''}
         onSave={(next) => updateCharacter(character.id, { backstory: next })}
-      />
-      <NarrativeSheet
-        open={isNotesOpen}
-        onOpenChange={setIsNotesOpen}
-        title={t('common.notes')}
-        description={t('common.notes')}
-        value={character.notes ?? ''}
-        onSave={(next) => updateCharacter(character.id, { notes: next })}
       />
     </Card>
   );
