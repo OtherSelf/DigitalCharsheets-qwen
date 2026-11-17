@@ -291,6 +291,20 @@ test.describe('общие страницы', () => {
       await expect(page.getByText('Seraphina Vael')).toBeVisible();
       await expect(page.getByText('Lucius Varn')).toBeVisible();
 
+      // Бейдж — короткий код редакции, полное имя — в title/aria-label.
+      const badges = page.getByTestId('edition-badge');
+      const dhBadge = badges.filter({ hasText: 'dh1e' });
+      await expect(dhBadge).toHaveCount(1);
+      await expect(dhBadge).toHaveAttribute(
+        'title',
+        'Warhammer 40k: Dark Heresy · 1st Edition',
+      );
+      await expect(dhBadge).toHaveAttribute(
+        'aria-label',
+        'Warhammer 40k: Dark Heresy · 1st Edition',
+      );
+      await expect(badges.filter({ hasText: 'dnd5e' })).toHaveCount(1);
+
       await expectNoRawI18nKeys(page, 'dashboard (en)');
       await screenshotPage(page, 'dashboard-en.png');
     },
@@ -306,6 +320,16 @@ test.describe('общие страницы', () => {
       await expect(
         page.getByRole('heading', { name: 'Существующие персонажи' }),
       ).toBeVisible();
+
+      // Короткий код не переводится, а подсказка локализована.
+      const dhBadge = page
+        .getByTestId('edition-badge')
+        .filter({ hasText: 'dh1e' });
+      await expect(dhBadge).toHaveCount(1);
+      await expect(dhBadge).toHaveAttribute(
+        'aria-label',
+        'Warhammer 40k: Dark Heresy · 1-я редакция',
+      );
 
       await expectNoRawI18nKeys(page, 'dashboard (ru)');
       await screenshotPage(page, 'dashboard-ru.png');

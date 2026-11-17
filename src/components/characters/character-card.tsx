@@ -60,11 +60,13 @@ export function CharacterCard({ character }: CharacterCardProps) {
   const summary = uiSlots?.CardSummary?.(character, t);
   const summaryText = summary?.text ?? '';
   const badgeVariant = summary?.badgeVariant ?? 'secondary';
-  // Бейдж «игра · редакция» целиком из реестра и i18n.
+  // Бейдж «игра · редакция» целиком из реестра и i18n; на карточке виден
+  // короткий код редакции (`dh2e`), полное имя — в title и aria-label (D5).
   const systemLabel =
     gameDefinition && gameModule
       ? `${t(gameDefinition.nameKey)} · ${t(gameModule.nameKey)}`
       : character.gameSystem;
+  const badgeLabel = gameModule?.shortCode ?? systemLabel;
 
   const handleDelete = () => {
     deleteCharacter(character.id);
@@ -105,10 +107,13 @@ export function CharacterCard({ character }: CharacterCardProps) {
             {summaryText}
           </CardDescription>
           <Badge
+            data-testid="edition-badge"
             variant={badgeVariant}
             className="system-badge mt-2 w-fit max-w-full text-xs"
+            title={systemLabel}
+            aria-label={systemLabel}
           >
-            {systemLabel}
+            {badgeLabel}
           </Badge>
         </div>
         <div className="actions-wrapper flex min-w-0 flex-1 items-center justify-end gap-1 p-2 sm:gap-2">
@@ -176,8 +181,14 @@ export function CharacterCard({ character }: CharacterCardProps) {
   return (
     <Card className="hover:shadow-primary/10 flex flex-col overflow-hidden transition-shadow duration-300 hover:shadow-lg">
       <CardContent className="flex-grow p-4">
-        <Badge variant={badgeVariant} className="mb-2 text-xs sm:text-sm">
-          {systemLabel}
+        <Badge
+          data-testid="edition-badge"
+          variant={badgeVariant}
+          className="mb-2 text-xs sm:text-sm"
+          title={systemLabel}
+          aria-label={systemLabel}
+        >
+          {badgeLabel}
         </Badge>
         <CardTitle className="font-headline mb-1 text-base break-words sm:text-lg">
           {character.name}
