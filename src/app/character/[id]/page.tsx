@@ -32,9 +32,10 @@ import {
   resolveCharacterSystemId,
   resolveSheetReadOnly,
 } from '@/games/character-system';
+import { hasCreationHints } from '@/games/shared/creation-hints';
 import type { SheetHandle } from '@/games/types';
 import { useGameUiSlots } from '@/hooks/use-game-ui-slots';
-import { historyPath } from '@/lib/routes';
+import { characterPath, historyPath } from '@/lib/routes';
 
 export default function CharacterPage() {
   const params = useParams<{ id: string }>();
@@ -80,6 +81,21 @@ export default function CharacterPage() {
       active = false;
     };
   }, []);
+
+  // После создания «/new» ведёт сюда с `?notes=1`: один раз открываем
+  // «Заметки», если при создании туда попали подсказки (DH1/DH2). Флаг из
+  // URL убираем, чтобы обновление страницы не открывало Sheet повторно.
+  const notesAutoOpenRef = useRef(false);
+  useEffect(() => {
+    if (notesAutoOpenRef.current || !character) return;
+    const search = new URLSearchParams(window.location.search);
+    if (search.get('notes') !== '1') return;
+    notesAutoOpenRef.current = true;
+    search.delete('notes');
+    const query = search.toString();
+    router.replace(`${characterPath(character.id)}${query ? `?${query}` : ''}`);
+    if (hasCreationHints(character.notes)) setNotesOpen(true);
+  }, [character, router]);
 
   const performNavigation = (id: string) => {
     if (id === 'notes-section') {

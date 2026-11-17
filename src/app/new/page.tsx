@@ -309,7 +309,9 @@ export default function ManualCharacterCreationPage() {
               {Form ? (
                 <Form
                   onCreated={(characterId) =>
-                    router.push(characterPath(characterId))
+                    // Флаг для листа: один раз открыть «Заметки», если при
+                    // создании туда попали подсказки (DH1/DH2).
+                    router.push(`${characterPath(characterId)}?notes=1`)
                   }
                 />
               ) : (

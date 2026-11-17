@@ -1,3 +1,4 @@
+import { creationHintsComment } from '../shared/creation-hints';
 import {
   CAREER_KEYS,
   fateRangeFromText,
@@ -51,6 +52,8 @@ export function dh1CreationHintsMarkdown(
     `# ${t('dh1.creationHintsTitle')}`,
     '',
     t('dh1.creationHintsIntro'),
+    '',
+    creationHintsComment(),
     '',
   ];
 
