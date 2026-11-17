@@ -14,10 +14,13 @@ import dh2En from './dh2/i18n/en.json';
 import dh2Ru from './dh2/i18n/ru.json';
 import dnd5eEn from './dnd5e/i18n/en.json';
 import dnd5eRu from './dnd5e/i18n/ru.json';
-import type { LocalizedMessages } from './types';
+import type { LocalizedMessages, PluginLocalizedMessages } from './types';
+
+/** Локали плагина из манифеста; порядок ключей — по id. */
+type PluginDictionaries = Readonly<Record<string, PluginLocalizedMessages>>;
 
 /** Словари по `systemId`; порядок ключей — по id (стабильная генерация). */
-export const generatedI18n: Readonly<Record<string, LocalizedMessages>> = {
+export const generatedI18n: PluginDictionaries = {
   dh1: { en: dh1En, ru: dh1Ru },
   dh2: { en: dh2En, ru: dh2Ru },
   dnd5e: { en: dnd5eEn, ru: dnd5eRu },

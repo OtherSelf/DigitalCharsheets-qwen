@@ -7,6 +7,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import * as dh1 from '@/games/dh1';
 import * as dh2 from '@/games/dh2';
 import * as dnd5e from '@/games/dnd5e';
+import { generatedI18n } from '@/games/i18n.generated';
 import {
   parseEntryPoint,
   PLUGIN_API_VERSION,
@@ -251,12 +252,19 @@ describe('сгенерированный реестр', () => {
     },
   );
 
-  it('словари плагинов имеют паритет en/ru', () => {
+  it('все объявленные локали плагина имеют паритет ключей', () => {
     for (const plugin of gamePlugins) {
-      const { en, ru } = plugin.module.i18n;
-      expect(Object.keys(en).sort(), plugin.manifest.id).toEqual(
-        Object.keys(ru).sort(),
-      );
+      const locales = Object.keys(plugin.manifest.i18n).sort();
+      const dictionaries = generatedI18n[plugin.manifest.id];
+      expect(locales.length, plugin.manifest.id).toBeGreaterThan(0);
+      const reference = Object.keys(dictionaries[locales[0]] ?? {}).sort();
+      expect(reference.length, plugin.manifest.id).toBeGreaterThan(0);
+      for (const locale of locales) {
+        expect(
+          Object.keys(dictionaries[locale] ?? {}).sort(),
+          `${plugin.manifest.id}: ${locale}`,
+        ).toEqual(reference);
+      }
     }
   });
 
@@ -291,11 +299,13 @@ describe('сгенерированный реестр', () => {
     expect(games.size).toBe(2);
   });
 
-  it('названия и описания заполнены на обоих языках', () => {
+  it('названия и описания заполнены на обоих языках сайта', () => {
     for (const plugin of gamePlugins) {
       for (const locale of ['en', 'ru'] as const) {
-        expect(plugin.manifest.name[locale].length).toBeGreaterThan(0);
-        expect(plugin.manifest.description[locale].length).toBeGreaterThan(0);
+        expect(plugin.manifest.name[locale]?.length ?? 0).toBeGreaterThan(0);
+        expect(
+          plugin.manifest.description[locale]?.length ?? 0,
+        ).toBeGreaterThan(0);
       }
     }
   });
@@ -491,10 +501,12 @@ describe('разбор точек входа и версий API', () => {
     expect(isHostApiCompatible('^2.0.0')).toBe(false);
     expect(isHostApiCompatible('~1.0.0')).toBe(false);
     expect(isHostApiCompatible('~1.1.0')).toBe(false);
-    expect(isHostApiCompatible('~1.2.0')).toBe(true);
+    expect(isHostApiCompatible('~1.2.0')).toBe(false);
+    expect(isHostApiCompatible('~1.3.0')).toBe(true);
     expect(isHostApiCompatible('>=1.0.0')).toBe(true);
     expect(isHostApiCompatible('1.0.0')).toBe(false);
-    expect(isHostApiCompatible('1.2.0')).toBe(true);
+    expect(isHostApiCompatible('1.2.0')).toBe(false);
+    expect(isHostApiCompatible('1.3.0')).toBe(true);
     expect(isHostApiCompatible('0.9.0')).toBe(false);
     expect(isHostApiCompatible('*')).toBe(true);
     expect(isHostApiCompatible('not-a-version')).toBe(false);

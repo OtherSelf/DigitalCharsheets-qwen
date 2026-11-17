@@ -1,14 +1,15 @@
-# Plugin SDK (v1.1)
+# Plugin SDK (v1.3)
 
 How to add a game or an edition to Digital Character Sheets. Everything
 game-specific lives in one folder under `src/games/<id>/`; the core only talks
 to the generated registry and the plugin contracts. A plugin is a folder plus a
 manifest plus a rebuild — no runtime code loading (D1), no ZIP/upload (D5).
 
-Status: **v1.2**, manifest `manifestVersion: 2`, `pluginApi: ^1.0.0`
+Status: **v1.3**, manifest `manifestVersion: 2`, `pluginApi: ^1.0.0`
 (1.1 added optional history labels; 1.2 adds `CreateFormCompletion` and
-generated game metadata. `manifestVersion 2` makes `game.description`
-required — manifests without it must be updated).
+generated game metadata; 1.3 allows a plugin to declare only one of the site
+languages and additional locale dictionaries. `manifestVersion 2` makes
+`game.description` required — manifests without it must be updated).
 
 ## Quick start (new plugin in an evening)
 
@@ -18,15 +19,17 @@ required — manifests without it must be updated).
    sheet and form, UI slots and `plugin.json`.
 2. **Create the folder** `src/games/<id>/` (the folder name must equal `plugin.json#id`).
 3. **Write `plugin.json`** (see [Manifest](#manifest)): `id`, `gameId`,
-   `version`, `order`, `name`/`description` (en/ru), `schemaVersion`, the family
-   block `game`, entry points, `sheet`, `i18n`, `demo`, `export`, `migrations`.
+   `version`, `order`, `name`/`description` (at least one of `en`/`ru`),
+   `schemaVersion`, the family block `game`, entry points, `sheet`, `i18n`,
+   `demo`, `export`, `migrations`.
 4. **Implement the module** in `index.ts` and export it from the `entry.module`
    point: `index.ts#<id>Module`. Export the other entry points the manifest
    references (`createDemo`, `toPortableJson`, `buildExcelSections`, …).
 5. **UI**: `sheet.tsx` and `create-form.tsx`; optional `ui.ts` with the UI slots.
-6. **Dictionaries**: `i18n/en.json`, `i18n/ru.json` with the same key set, keys
-   namespaced `<id>.*`. Family metadata (`game.*`) comes from the manifest, not
-   from these dictionaries.
+6. **Dictionaries**: `i18n/<locale>.json` for every declared locale (at least
+   one of `en`/`ru`) with the same key set, keys namespaced `<id>.*`. Extra
+   locales are allowed but only `en`/`ru` are shown by the site. Family
+   metadata (`game.*`) comes from the manifest, not from these dictionaries.
 7. **Generate and check**:
    ```bash
    npm run plugins:generate     # registry/i18n/games.generated.ts
@@ -133,8 +136,9 @@ Validated by `scripts/plugins/generate.mjs` (Ajv) on every generation/verify.
 Rules:
 
 - `id` equals the folder and the sheet `systemId`; `version` is semver.
-- `name`/`description` are the display source (admin, wizard); other strings
-  live in `i18n/*.json`. `tags` are stored but not shown in UI (D15).
+- `name`/`description` are the display source (admin, wizard); they declare at
+  least one of `en`/`ru` and may carry extra locales. Other strings live in
+  `i18n/<locale>.json`. `tags` are stored but not shown in UI (D15).
 - `game` is the family block (D17): every edition of one `gameId` declares the
   same `id`/`order`/`name`/`description`; the generator fails on mismatch.
   These fields are the only source of the game list and of its UI labels.
@@ -143,8 +147,10 @@ Rules:
   files, the conformance test checks the exports against the module namespace.
 - `sheet.mode` is currently `"custom"` only; the plugin owns its React sheet and
   form (D3).
-- `i18n` may point at `.json` (preferred, D13) or `.ts` (legacy). Both files
-  must export/contain the same key set.
+- `i18n` is a locale map (`"en": "i18n/en.json"`): declare at least one of
+  `en`/`ru`, extra locale codes are validated. It may point at `.json`
+  (preferred, D13) or `.ts` (legacy). Every declared locale must expose the same
+  key set.
 - `ui.entry` is a module exporting `uiSlots: GameUiSlots`; it is loaded lazily
   (dynamic import) so React components never enter the shared bundle.
 - `aliases` resolve legacy `gameSystem`/`edition` values to your `systemId`; the
@@ -273,11 +279,14 @@ that never calls the helper renders as before.
 
 ## i18n
 
-- Dictionaries live in `i18n/en.json` and `i18n/ru.json` (JSON, D13).
-- Key set must be identical in both languages; keys are namespaced `<id>.*`.
-- `name`/`description` of the plugin come from the manifest, not from i18n.
+- Dictionaries live in `i18n/<locale>.json` (JSON, D13). A plugin may ship only
+  one of the site languages, and may add extra locales.
+- All **declared** locales must have the same key set; keys are namespaced
+  `<id>.*`. `name`/`description` of the plugin come from the manifest.
 - The host merges dictionaries in `src/lib/i18n` from the generated
   `i18n.generated.ts` (dictionaries only — no React/registry imports there).
+  For each site language it takes that dictionary, or the other site language
+  when the first is not declared; extra locales are stored but not shown.
   Duplicate keys across layers are a startup error.
 - `t()` never guesses: a missing key renders as the key itself, so always pass
   the full `namespace.key`.
@@ -329,9 +338,10 @@ page uses it to switch to read-only mode.
 
 - `manifestVersion` — the manifest format understood by the host (2).
 - `pluginApi` — compatible Plugin API range (`^1.2.3`, `~1.2.3`, `>=1.0.0`,
-  exact, `*`); the host checks it at generation time. Host **1.1** remains
-  compatible with a `^1.0.0` manifest; the optional `history` labels are
-  additive and do not change the manifest.
+  exact, `*`); the host checks it at generation time. Host **1.3** remains
+  compatible with a `^1.0.0` manifest; partial locales (1.3), `history` labels
+  (1.1) and `CreateFormCompletion` (1.2) are additive and do not change the
+  manifest.
 - `schemaVersion` — the sheet format written by the plugin; bump it together
   with a migration step when the sheet shape changes.
 - `version` — the plugin's own semver, shown in admin. It is a plugin axis:

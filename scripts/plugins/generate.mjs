@@ -45,7 +45,7 @@ export const GAMES_DEFS_PATH = join(GAMES_DIR, 'games.generated.ts');
 export const MANIFEST_FILE = 'plugin.json';
 
 /** Версия Plugin API, с которой сверяется `pluginApi` манифестов. */
-export const PLUGIN_API_VERSION = '1.2.0';
+export const PLUGIN_API_VERSION = '1.3.0';
 /** Версия формата манифеста, которую понимает генератор. */
 export const PLUGIN_MANIFEST_VERSION = 2;
 
@@ -143,13 +143,19 @@ export function validatePluginFolder({ gamesDir, dirName, manifest }) {
     );
   }
 
+  const locales = Object.keys(manifest.i18n ?? {});
+  if (locales.length === 0) {
+    errors.push('i18n: нужна хотя бы одна локаль');
+  } else if (!locales.includes('en') && !locales.includes('ru')) {
+    errors.push('i18n: нужна хотя бы одна из локалей en или ru (D8)');
+  }
+
   /** @type {[string, string][]} */
   const entries = [
     ['entry.module', manifest.entry?.module],
     ['sheet.client', manifest.sheet?.client],
     ['sheet.createForm', manifest.sheet?.createForm],
-    ['i18n.en', manifest.i18n?.en],
-    ['i18n.ru', manifest.i18n?.ru],
+    ...locales.map((locale) => [`i18n.${locale}`, manifest.i18n[locale]]),
     ['demo.entry', manifest.demo?.entry],
     ['export.json', manifest.export?.json],
     ['export.excel', manifest.export?.excel],
@@ -324,6 +330,18 @@ export function createManifestValidator(schemaPath = SCHEMA_PATH) {
               : ''
           }`;
         });
+}
+
+/** Суффикс импорта для локали: `en` → `En`, `pt-BR` → `Pt_BR`. */
+function localeSuffix(locale) {
+  return locale
+    .replace(/[^A-Za-z0-9]/g, '_')
+    .replace(/^./, (chr) => chr.toUpperCase());
+}
+
+/** Ключ объекта в сгенерированном TS: голый идентификатор или в кавычках. */
+function tsKey(key) {
+  return /^[A-Za-z_$][A-Za-z0-9_$]*$/.test(key) ? key : JSON.stringify(key);
 }
 
 /** Строка вида `dnd5eModule` из `index.ts#dnd5eModule`. */
@@ -503,14 +521,16 @@ export function renderI18nRegistry(plugins) {
       const camel = manifest.id.replace(/[-_]+(.)?/g, (_, chr) =>
         chr ? chr.toUpperCase() : '',
       );
-      return ['en', 'ru']
+      return Object.keys(manifest.i18n)
+        .sort()
         .map((locale) => {
           const rel = manifest.i18n[locale];
           const isJson = rel.endsWith('.json');
           const spec = `./${manifest.id}/${rel.replace(/\.(ts|tsx|json)$/, '')}${isJson ? '.json' : ''}`;
+          const local = `${camel}${localeSuffix(locale)}`;
           return isJson
-            ? `import ${camel}${locale === 'en' ? 'En' : 'Ru'} from '${spec}';`
-            : `import { ${locale} as ${camel}${locale === 'en' ? 'En' : 'Ru'} } from '${spec}';`;
+            ? `import ${local} from '${spec}';`
+            : `import { ${locale} as ${local} } from '${spec}';`;
         })
         .join('\n');
     })
@@ -521,10 +541,12 @@ export function renderI18nRegistry(plugins) {
       const camel = manifest.id.replace(/[-_]+(.)?/g, (_, chr) =>
         chr ? chr.toUpperCase() : '',
       );
-      const key = /^[A-Za-z_$][A-Za-z0-9_$]*$/.test(manifest.id)
-        ? manifest.id
-        : JSON.stringify(manifest.id);
-      return `  ${key}: { en: ${camel}En, ru: ${camel}Ru },`;
+      const key = tsKey(manifest.id);
+      const fields = Object.keys(manifest.i18n)
+        .sort()
+        .map((locale) => `${tsKey(locale)}: ${camel}${localeSuffix(locale)}`)
+        .join(', ');
+      return `  ${key}: { ${fields} },`;
     })
     .join('\n');
 
@@ -560,10 +582,13 @@ export function renderI18nRegistry(plugins) {
  * Проверить:    npm run plugins:check
  */
 ${imports}
-import type { LocalizedMessages } from './types';
+import type { LocalizedMessages, PluginLocalizedMessages } from './types';
+
+/** Локали плагина из манифеста; порядок ключей — по id. */
+type PluginDictionaries = Readonly<Record<string, PluginLocalizedMessages>>;
 
 /** Словари по \`systemId\`; порядок ключей — по id (стабильная генерация). */
-export const generatedI18n: Readonly<Record<string, LocalizedMessages>> = {
+export const generatedI18n: PluginDictionaries = {
 ${entries}
 };
 
@@ -628,7 +653,7 @@ export function buildRegistry({
         version: manifest.version,
         schemaVersion: manifest.schemaVersion,
         gameId: manifest.gameId,
-        title: manifest.name.en,
+        title: manifest.name.en ?? manifest.name.ru,
       })),
     content: renderRegistry(plugins),
     i18nContent: renderI18nRegistry(plugins),
