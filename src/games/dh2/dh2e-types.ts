@@ -138,6 +138,24 @@ export interface Dh2ePower {
   readonly value: number;
 }
 
+/**
+ * Структурное требование элитного продвижения из каталога (D2). Проверяются
+ * все виды, кроме `trait`: черты на листе — свободный текст, поэтому черта
+ * остаётся подсказкой в `prereqText`.
+ */
+export type Dh2eEliteRequirement =
+  | {
+      readonly kind: 'characteristic';
+      /** Ключ характеристики листа (`influence`). */
+      readonly characteristic: string;
+      readonly min: number;
+    }
+  | { readonly kind: 'background'; readonly backgroundId: string }
+  | { readonly kind: 'gender'; readonly gender: 'male' | 'female' }
+  | { readonly kind: 'elite'; readonly eliteId: string }
+  | { readonly kind: 'notElite'; readonly eliteId: string }
+  | { readonly kind: 'trait'; readonly traitId: string };
+
 export interface Dh2eEliteAdvance {
   readonly id: string;
   readonly labelKey: string;
@@ -145,6 +163,8 @@ export interface Dh2eEliteAdvance {
   readonly changeKeys: readonly string[];
   /** Полные пререквизиты из книги: показываются рядом с выбором (D15). */
   readonly prereqText?: string;
+  /** Требования, которые лист может проверить сам (D2). */
+  readonly requirements?: readonly Dh2eEliteRequirement[];
 }
 
 export interface Dh2eCostRow {
