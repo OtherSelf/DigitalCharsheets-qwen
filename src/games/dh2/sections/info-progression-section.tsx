@@ -87,6 +87,8 @@ interface SectionProps {
   isCompactView: boolean;
   activeCompactSection?: string;
   onEditingChange?: (val: boolean) => void;
+  /** Импортированный лист проверяется: creation-замки временно открыты. */
+  creationReview?: boolean;
 }
 
 const DetailField = ({
@@ -175,6 +177,7 @@ const ReadOnlyField = ({
 const CreationField = ({
   label,
   value,
+  selectedValue,
   placeholder,
   editing,
   locked,
@@ -186,6 +189,8 @@ const CreationField = ({
 }: {
   label: string;
   value: string;
+  /** Сырое значение для предвыбора в Select (не локализованная подпись). */
+  selectedValue?: string;
   placeholder: string;
   editing: boolean;
   locked: boolean;
@@ -238,7 +243,11 @@ const CreationField = ({
           {value || '-'}
         </p>
       ) : (
-        <Select onValueChange={onSelect} disabled={disabled}>
+        <Select
+          value={selectedValue ?? ''}
+          onValueChange={onSelect}
+          disabled={disabled}
+        >
           <SelectTrigger id={id} className="h-8">
             <SelectValue placeholder={placeholder} />
           </SelectTrigger>
@@ -278,6 +287,7 @@ export const InfoSection = ({
   isCompactView,
   activeCompactSection,
   onEditingChange,
+  creationReview,
 }: SectionProps) => {
   const { updateCharacter, showEditButtons } = useCharacterContext();
   const { t } = useTranslation();
@@ -420,9 +430,12 @@ export const InfoSection = ({
               <CreationField
                 label={t('dh2.gender')}
                 value={genderLabel(character.gender, t)}
+                selectedValue={character.gender}
                 placeholder={t('dh2.selectGender')}
                 editing={isInfoEditing}
-                locked={isCreationFieldLocked(character.gender)}
+                locked={
+                  !creationReview && isCreationFieldLocked(character.gender)
+                }
                 isCompactView={isCompactView}
                 options={genderOptions(t)}
                 onSelect={(next) =>
@@ -493,9 +506,12 @@ export const InfoSection = ({
                     ? homeWorldLabel(character.homeWorld, t)
                     : ''
                 }
+                selectedValue={character.homeWorld}
                 placeholder={t('dh2.waitingHomeWorld')}
                 editing={isInfoEditing}
-                locked={isCreationFieldLocked(character.homeWorld)}
+                locked={
+                  !creationReview && isCreationFieldLocked(character.homeWorld)
+                }
                 isCompactView={isCompactView}
                 options={DH2E_HOMEWORLDS.map((world) => ({
                   value: world.id,
@@ -512,9 +528,12 @@ export const InfoSection = ({
                     ? backgroundLabel(character.background, t)
                     : ''
                 }
+                selectedValue={character.background}
                 placeholder={t('dh2.background')}
                 editing={isInfoEditing}
-                locked={isCreationFieldLocked(character.background)}
+                locked={
+                  !creationReview && isCreationFieldLocked(character.background)
+                }
                 isCompactView={isCompactView}
                 options={DH2E_BACKGROUNDS.map((background) => ({
                   value: background.id,
@@ -527,9 +546,12 @@ export const InfoSection = ({
               <CreationField
                 label={t('dh2.role')}
                 value={character.role ? roleLabel(character.role, t) : ''}
+                selectedValue={character.role}
                 placeholder={t('dh2.role')}
                 editing={isInfoEditing}
-                locked={isCreationFieldLocked(character.role)}
+                locked={
+                  !creationReview && isCreationFieldLocked(character.role)
+                }
                 isCompactView={isCompactView}
                 options={DH2E_ROLES.map((role) => ({
                   value: role.id,
@@ -575,9 +597,12 @@ export const InfoSection = ({
               <CreationField
                 label={t('dh2.divination')}
                 value={divinationLabel(character.divination, t)}
+                selectedValue={character.divination}
                 placeholder={t('dh2.selectDivination')}
                 editing={isInfoEditing}
-                locked={isCreationFieldLocked(character.divination)}
+                locked={
+                  !creationReview && isCreationFieldLocked(character.divination)
+                }
                 isCompactView={isCompactView}
                 options={DH2E_DIVINATIONS.map((divination) => ({
                   value: divination.id,
@@ -638,9 +663,13 @@ export const InfoSection = ({
                             ? aptitudeLabel(backgroundValue, t)
                             : ''
                         }
+                        selectedValue={backgroundValue}
                         placeholder={t('dh2.choosePrompt')}
                         editing={isInfoEditing}
-                        locked={isAptitudeLocked(character, 'background')}
+                        locked={
+                          !creationReview &&
+                          isAptitudeLocked(character, 'background')
+                        }
                         lockHintKey="dh2.chosenAptitudeLocked"
                         isCompactView={isCompactView}
                         options={backgroundEntry.aptitudeChoice.map((id) => ({
@@ -664,9 +693,13 @@ export const InfoSection = ({
                               key={slot.key}
                               label={`${t('dh2.roleAptitude')} ${slot.index + 1}`}
                               value={aptitudeLabel(slot.value, t)}
+                              selectedValue={slot.value}
                               placeholder={t('dh2.choosePrompt')}
                               editing={isInfoEditing}
-                              locked={isAptitudeLocked(character, slot.key)}
+                              locked={
+                                !creationReview &&
+                                isAptitudeLocked(character, slot.key)
+                              }
                               lockHintKey="dh2.chosenAptitudeLocked"
                               isCompactView={isCompactView}
                               options={slot.options.map((id) => ({
@@ -696,7 +729,8 @@ export const InfoSection = ({
                       {duplicateAptitudes.map((duplicate) => {
                         const key = `duplicate.${duplicate}`;
                         const current = chosenMap[key];
-                        const locked = isAptitudeLocked(character, key);
+                        const locked =
+                          !creationReview && isAptitudeLocked(character, key);
                         // Выбранную замену видно и в режиме чтения (с замком),
                         // пустую предлагаем только при редактировании.
                         if (!isInfoEditing && !locked) return null;
@@ -710,6 +744,7 @@ export const InfoSection = ({
                             key={key}
                             label={`${t('dh2.duplicateAptitude')}: ${aptitudeLabel(duplicate, t)}`}
                             value={current ? aptitudeLabel(current, t) : ''}
+                            selectedValue={current}
                             placeholder={t('dh2.chooseReplacement')}
                             editing={isInfoEditing}
                             locked={locked}

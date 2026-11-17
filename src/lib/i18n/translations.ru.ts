@@ -19,6 +19,13 @@ export const ruTranslations: Record<string, string> = {
   'common.cancel': 'Отмена',
   'common.notes': 'Заметки',
 
+  // ─── ПРОВЕРКА ВЫБОРОВ (импортированный лист) ───
+  'common.creationReviewTitle': 'Проверьте выборы при создании',
+  'common.creationReviewDescription':
+    'Лист импортирован, поэтому выборы, запертые при создании, можно править до подтверждения. Заполните обязательные поля и снова заприте лист.',
+  'common.creationReviewMissing': 'Не заполнено:',
+  'common.creationReviewConfirm': 'Зафиксировать выборы',
+
   'common.quantity': 'Количество',
   'common.questJournal': 'Журнал заданий',
   'common.info': 'Информация',

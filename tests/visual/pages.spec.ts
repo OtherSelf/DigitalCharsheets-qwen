@@ -1,4 +1,10 @@
-import { expect, test, type BrowserContext } from '@playwright/test';
+import {
+  expect,
+  test,
+  type BrowserContext,
+  type Locator,
+  type Page,
+} from '@playwright/test';
 
 import {
   collectPageErrors,
@@ -453,6 +459,245 @@ test.describe('общие страницы', () => {
       await expect(dialog.locator('input[type="file"]')).toBeAttached();
 
       await screenshotPage(page, 'import-dialog-en.png');
+    },
+  );
+
+  /**
+   * Выбрать первый пункт открытого Select и дождаться сохранения. Названия
+   * опций приходят из каталога редакции, поэтому тест не зависит от их
+   * конкретных подписей — ему важен сам факт правки и записи.
+   */
+  async function pickFirstOption(page: Page, combobox: Locator): Promise<void> {
+    const saved = page.waitForResponse(
+      (response) =>
+        response.request().method() === 'PUT' &&
+        response.url().includes('/api/characters/'),
+    );
+    await combobox.click();
+    await page.getByRole('option').first().click();
+    await saved;
+  }
+
+  /**
+   * ─── LANDMARK: IMPORT CREATION REVIEW ─────────────────────────────────
+   * Импорт открывает лист в режиме проверки (D1): creation-замки сняты,
+   * «Зафиксировать» недоступна, пока пусты обязательные поля (D3). После
+   * фиксации замки возвращаются, перезагрузка их сохраняет, а обычный лист
+   * баннера не показывает. Эталоны не снимаем (D11).
+   */
+  test(
+    'импорт — режим проверки выборов и фиксация (en)',
+    { tag: '@desktop' },
+    async ({ page }) => {
+      const username = `review-${Date.now()}`;
+      const password = 'review-password-1';
+      const registered = await page.request.post('/api/auth/register', {
+        data: {
+          username,
+          password,
+          displayName: 'Review',
+          recoveryPhrase: 'amber cobalt lantern',
+        },
+      });
+      expect([200, 201], 'регистрация аккаунта').toContain(registered.status());
+
+      // Обычный лист: заполненный мир заперт и без импорта.
+      const ordinaryResponse = await page.request.post('/api/characters', {
+        data: {
+          systemId: 'dh2',
+          name: 'Ordinary Review',
+          homeWorld: 'hive-world',
+        },
+      });
+      expect([200, 201], 'создание обычного листа').toContain(
+        ordinaryResponse.status(),
+      );
+      const ordinary = (await ordinaryResponse.json()) as { id: string };
+
+      // Импортируемый лист: пол задан (замок должен сняться), обязательные
+      // поля пусты.
+      const importedResponse = await page.request.post('/api/characters', {
+        data: { systemId: 'dh2', name: 'Imported Review', gender: 'male' },
+      });
+      expect([200, 201], 'создание импортируемого листа').toContain(
+        importedResponse.status(),
+      );
+      const imported = (await importedResponse.json()) as {
+        id: string;
+        name: string;
+      };
+
+      const envelope = {
+        metadata: {
+          appName: 'DigitalCharsheets-qwen',
+          format: 'dcs-export',
+          version: '3.0',
+          kind: 'character',
+          exportDate: '2026-01-01T00:00:00.000Z',
+          characterCount: 1,
+        },
+        character: imported,
+      };
+
+      await signInViaUI(page, { username, password });
+      await openApp(page, '/');
+      await page.getByRole('button', { name: /Import Character/i }).click();
+      await page
+        .getByRole('dialog')
+        .locator('input[type="file"]')
+        .setInputFiles({
+          name: 'review-dh2.json',
+          mimeType: 'application/json',
+          buffer: Buffer.from(JSON.stringify(envelope)),
+        });
+
+      await page.waitForURL(/\/character\/[^/]+$/, { timeout: 30_000 });
+      const banner = page.getByTestId('creation-review-banner');
+      await expect(banner).toBeVisible();
+      const missing = banner.getByTestId('creation-review-missing');
+      await expect(missing).toContainText('Home World');
+      await expect(missing).toContainText('Background');
+      await expect(missing).toContainText('Role');
+      const confirm = banner.getByTestId('creation-review-confirm');
+      await expect(confirm).toBeDisabled();
+
+      const info = page.locator('#info-section:visible').first();
+      await info.locator('[data-testid="edit-button"]:visible').first().click();
+
+      // Пол был заполнен при создании: в проверке он не заперт, а показан
+      // выбранным в Select.
+      await expect(info.getByTestId('creation-lock')).toHaveCount(0);
+      await expect(
+        info.getByRole('combobox', { name: 'Gender' }),
+      ).toContainText('Male');
+
+      await pickFirstOption(
+        page,
+        info.getByRole('combobox', { name: 'Home World' }),
+      );
+      await expect(missing).not.toContainText('Home World');
+      await pickFirstOption(
+        page,
+        info.getByRole('combobox', { name: 'Background' }),
+      );
+      await pickFirstOption(page, info.getByRole('combobox', { name: 'Role' }));
+
+      await expect(missing).toHaveCount(0);
+      await expect(confirm).toBeEnabled();
+      await confirm.click();
+      await expect(banner).toHaveCount(0);
+
+      // Замки вернулись: мир, бэкграунд, роль и пол снова read-only.
+      await expect(info.getByTestId('creation-lock')).toHaveCount(4);
+
+      await page.reload();
+      await expect(page.getByTestId('creation-review-banner')).toHaveCount(0);
+      const reloaded = page.locator('#info-section:visible').first();
+      await reloaded
+        .locator('[data-testid="edit-button"]:visible')
+        .first()
+        .click();
+      await expect(reloaded.getByTestId('creation-lock')).toHaveCount(4);
+      await expect(
+        reloaded.getByRole('combobox', { name: 'Home World' }),
+      ).toHaveCount(0);
+
+      // Обычный лист не попал в режим проверки.
+      await openApp(page, `/character/${ordinary.id}`);
+      await expect(page.getByTestId('creation-review-banner')).toHaveCount(0);
+      const ordinaryInfo = page.locator('#info-section:visible').first();
+      await ordinaryInfo
+        .locator('[data-testid="edit-button"]:visible')
+        .first()
+        .click();
+      await expect(ordinaryInfo.getByTestId('creation-lock')).toHaveCount(1);
+      await expect(
+        ordinaryInfo.getByRole('combobox', { name: 'Home World' }),
+      ).toHaveCount(0);
+    },
+  );
+
+  test(
+    'пакетный импорт помечает режимом проверки каждый лист (en)',
+    { tag: '@desktop' },
+    async ({ page }) => {
+      const username = `review-batch-${Date.now()}`;
+      const password = 'review-password-1';
+      const registered = await page.request.post('/api/auth/register', {
+        data: {
+          username,
+          password,
+          displayName: 'Review Batch',
+          recoveryPhrase: 'amber cobalt lantern',
+        },
+      });
+      expect([200, 201], 'регистрация аккаунта').toContain(registered.status());
+
+      const created: { id: string; name: string }[] = [];
+      for (const name of ['Batch One', 'Batch Two']) {
+        const response = await page.request.post('/api/characters', {
+          data: { systemId: 'dh1', name },
+        });
+        expect([200, 201], `создание листа ${name}`).toContain(
+          response.status(),
+        );
+        created.push((await response.json()) as { id: string; name: string });
+      }
+
+      const envelope = {
+        metadata: {
+          appName: 'DigitalCharsheets-qwen',
+          format: 'dcs-export',
+          version: '3.0',
+          kind: 'backup',
+          exportDate: '2026-01-01T00:00:00.000Z',
+          characterCount: created.length,
+          account: username,
+        },
+        characters: created,
+      };
+
+      await signInViaUI(page, { username, password });
+      await openApp(page, '/');
+      await page.getByRole('button', { name: /Import Character/i }).click();
+      await page
+        .getByRole('dialog')
+        .locator('input[type="file"]')
+        .setInputFiles({
+          name: 'review-batch.json',
+          mimeType: 'application/json',
+          buffer: Buffer.from(JSON.stringify(envelope)),
+        });
+
+      await page.waitForURL(/\/character\/[^/]+$/, { timeout: 30_000 });
+      const openedId = page.url().split('/').pop();
+      const banner = page.getByTestId('creation-review-banner');
+      await expect(banner).toBeVisible();
+      await expect(banner.getByTestId('creation-review-missing')).toContainText(
+        'Home World',
+      );
+      await expect(
+        banner.getByTestId('creation-review-confirm'),
+      ).toBeDisabled();
+
+      // Второй лист пакета тоже помечен: открываем его по имени.
+      const other = created.find((item) => item.id !== openedId);
+      expect(other, 'в пакете есть второй лист').toBeDefined();
+      const list = (await (
+        await page.request.get('/api/characters')
+      ).json()) as { id: string; name: string }[];
+      const originalIds = new Set(created.map((item) => item.id));
+      const otherId = list.find(
+        (item) => item.name === other!.name && !originalIds.has(item.id),
+      )?.id;
+      expect(otherId, 'второй лист создан').toBeTruthy();
+      // Состояние проверки живёт в памяти вкладки (D1), поэтому второй лист
+      // открываем клиентской навигацией: полная загрузка его бы сбросила.
+      await page.getByRole('link', { name: 'Back to Dashboard' }).click();
+      await page.waitForURL((url) => url.pathname === '/');
+      await page.locator(`a[href="/character/${otherId}"]`).click();
+      await page.waitForURL((url) => url.pathname === `/character/${otherId}`);
+      await expect(page.getByTestId('creation-review-banner')).toBeVisible();
     },
   );
 

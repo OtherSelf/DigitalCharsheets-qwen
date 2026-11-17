@@ -107,6 +107,17 @@ read-only text until Edit, and the derived free XP (`experience −
 totalExpSpent`) turns `text-destructive` when negative. The value is a
 computed number, not a stored field, and it is not clamped.
 
+### Creation review after import
+
+An imported sheet opens in review mode: the creation locks are lifted until
+the player confirms the choices. The flag lives in the browser tab only
+(`src/games/shared/creation-review.ts`), so a reload returns the sheet to its
+normal locked state and the sheet schema does not change. The confirm button
+stays disabled until the required fields are filled (dh1: `homeWorld` and
+`careerPath`; dh2: `homeWorld`, `background` and `role`). The banner and the
+store are shared (`src/games/shared/`), so a plugin can opt in without a core
+change; D&D 5e does not use them.
+
 ### Second-edition sheet rules
 
 The 2e module owns the rules that only exist in that edition:

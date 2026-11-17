@@ -129,6 +129,7 @@ const DetailField = ({
 const CreationField = ({
   label,
   value,
+  selectedValue,
   placeholder,
   editing,
   locked,
@@ -140,6 +141,8 @@ const CreationField = ({
 }: {
   label: string;
   value: string;
+  /** Сырое значение для предвыбора в Select (не локализованная подпись). */
+  selectedValue?: string;
   placeholder: string;
   editing: boolean;
   locked: boolean;
@@ -190,7 +193,11 @@ const CreationField = ({
           {value || '-'}
         </p>
       ) : (
-        <Select onValueChange={onSelect} disabled={disabled}>
+        <Select
+          value={selectedValue ?? ''}
+          onValueChange={onSelect}
+          disabled={disabled}
+        >
           <SelectTrigger className="h-8">
             <SelectValue placeholder={placeholder} />
           </SelectTrigger>
@@ -243,6 +250,8 @@ interface SectionProps {
   isCompactView: boolean;
   activeCompactSection?: string;
   onEditingChange?: (val: boolean) => void;
+  /** Импортированный лист проверяется: creation-замки временно открыты. */
+  creationReview?: boolean;
 }
 
 export const InfoSection = ({
@@ -250,6 +259,7 @@ export const InfoSection = ({
   isCompactView,
   activeCompactSection,
   onEditingChange,
+  creationReview,
 }: SectionProps) => {
   const { updateCharacter, showEditButtons } = useCharacterContext();
   const { t } = useTranslation();
@@ -409,9 +419,13 @@ export const InfoSection = ({
               <CreationField
                 label={t('dh1.gender')}
                 value={genderLabel(character.identity?.gender ?? '', t)}
+                selectedValue={character.identity?.gender ?? ''}
                 placeholder={t('dh1.selectGender')}
                 editing={isInfoEditing}
-                locked={isCreationFieldLocked(character.identity?.gender)}
+                locked={
+                  !creationReview &&
+                  isCreationFieldLocked(character.identity?.gender)
+                }
                 lockHintKey="dh1.chosenGenderLocked"
                 isCompactView={isCompactView}
                 options={genderOptions(t)}
@@ -465,9 +479,12 @@ export const InfoSection = ({
                       )
                     : ''
                 }
+                selectedValue={character.homeWorld}
                 placeholder={t('dh1.waitingHomeWorld')}
                 editing={isInfoEditing}
-                locked={isCreationFieldLocked(character.homeWorld)}
+                locked={
+                  !creationReview && isCreationFieldLocked(character.homeWorld)
+                }
                 isCompactView={isCompactView}
                 options={Object.keys(HOME_WORLD_KEYS).map((world) => ({
                   value: world,
@@ -494,9 +511,13 @@ export const InfoSection = ({
                       )
                     : ''
                 }
+                selectedValue={character.worldVariant}
                 placeholder={t('dh1.waitingHomeWorld')}
                 editing={isInfoEditing}
-                locked={isCreationFieldLocked(character.worldVariant)}
+                locked={
+                  !creationReview &&
+                  isCreationFieldLocked(character.worldVariant)
+                }
                 disabled={!character.homeWorld}
                 isCompactView={isCompactView}
                 options={(
@@ -525,9 +546,12 @@ export const InfoSection = ({
                       )
                     : ''
                 }
+                selectedValue={character.careerPath}
                 placeholder={t('dh1.careerPath')}
                 editing={isInfoEditing}
-                locked={isCreationFieldLocked(character.careerPath)}
+                locked={
+                  !creationReview && isCreationFieldLocked(character.careerPath)
+                }
                 isCompactView={isCompactView}
                 options={DarkHeresyCareerPaths.map((career) => ({
                   value: career,
@@ -542,9 +566,12 @@ export const InfoSection = ({
               <CreationField
                 label={t('dh1.divination')}
                 value={divinationLabel(character.divination, t, 'dh1')}
+                selectedValue={character.divination}
                 placeholder={t('dh1.selectDivination')}
                 editing={isInfoEditing}
-                locked={isCreationFieldLocked(character.divination)}
+                locked={
+                  !creationReview && isCreationFieldLocked(character.divination)
+                }
                 isCompactView={isCompactView}
                 options={DIVINATIONS.map(({ id }) => ({
                   value: id,
