@@ -363,6 +363,14 @@ export interface GameHistoryConfig {
   readonly labels?: Readonly<Record<string, string>>;
   /** Путь коллекции (`inventory`) → i18n-ключ заголовка. */
   readonly collections?: Readonly<Record<string, string>>;
+  /**
+   * Кодовые значения поля (`identity.gender`) → i18n-ключ подписи. Нужны,
+   * когда в данных лежит код (пол, ранг, тип), а игрок должен видеть текст:
+   * history показывает «было/стало» значением, а не сырым кодом.
+   */
+  readonly valueLabels?: Readonly<
+    Record<string, Readonly<Record<string, string>>>
+  >;
   /** Поля, из которых брать подпись элемента; по умолчанию name/title/description. */
   readonly itemLabelFields?: readonly string[];
 }

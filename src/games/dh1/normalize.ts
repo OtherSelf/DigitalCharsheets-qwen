@@ -4,6 +4,7 @@ import {
   resolveDivinationEffectId,
   resolveDivinationId,
 } from './divination-i18n';
+import { resolveGender } from './gender';
 import type { DH1Character } from './types';
 
 /**
@@ -15,6 +16,9 @@ import type { DH1Character } from './types';
  * Правила (D3/D8):
  *   • отсутствующие структуры заполняются дефолтами dh1;
  *   • пророчества из английских фраз превращаются в стабильные ID;
+ *   • пол — каноническим кодом (`identity.gender`, D3): старые подписи
+ *     переводятся, неизвестный текст становится `unspecified` и сохраняется
+ *     в `notes`;
  *   • полей 2-й редакции (`influence`, `fatigue2nd`) в dh1 нет, значимые
  *     значения не теряются — уходят в `notes` блоком `[migration v2]`;
  *   • у навыка тренировка всегда имеет `plus30`;
@@ -22,6 +26,7 @@ import type { DH1Character } from './types';
  */
 
 const MIGRATION_NOTE_MARKER = '[migration v2]';
+const GENDER_NOTE_MARKER = '[gender migration]';
 
 type RawRecord = Record<string, unknown>;
 
@@ -87,6 +92,29 @@ function appendMigrationNote(raw: RawRecord, line: string): void {
   if (notes.includes(line)) return;
   const block = `${MIGRATION_NOTE_MARKER} ${line}`;
   raw.notes = notes.trim() ? `${notes.trimEnd()}\n\n${block}` : block;
+}
+
+/**
+ * Пол — код в `identity.gender` (D3). Неизвестный текст не отбрасываем: он
+ * уходит в `notes` отдельным блоком, чтобы игрок видел исходную запись. Блок
+ * добавляется один раз, иначе каждая нормализация дописывала бы его заново.
+ */
+function migrateGender(character: RawRecord, warnings: string[]): void {
+  if (!isRecord(character.identity)) return;
+  const identity: RawRecord = { ...character.identity };
+  const resolution = resolveGender(identity.gender);
+  identity.gender = resolution.code;
+  character.identity = identity;
+
+  const legacy = resolution.legacyText;
+  if (!legacy) return;
+
+  const line = `${GENDER_NOTE_MARKER} пол: ${legacy}`;
+  const notes = typeof character.notes === 'string' ? character.notes : '';
+  if (!notes.includes(line)) {
+    character.notes = notes.trim() ? `${notes.trimEnd()}\n\n${line}` : line;
+  }
+  warnings.push(`dh1: пол «${legacy}» не распознан, стал unspecified`);
 }
 
 /** Пророчества и эффекты хранятся ID; старые фразы → ID (v1). */
@@ -312,6 +340,7 @@ export function normalizeDh1(
 
   if (options.applyDefaults) fillDefaults(character);
   normalizeDivination(character, warnings);
+  migrateGender(character, warnings);
   enforceDh1Fields(character, warnings);
   ensureExperienceLog(character);
   ensureConditions(character);

@@ -67,6 +67,7 @@ import {
 } from '../elite';
 import { dh2ExperienceRows } from '../experience';
 import { isCreationFieldLocked } from '../field-policy';
+import { genderLabel, genderOptions, toGenderCode } from '../gender';
 import {
   buyPsyRating,
   formatPsyList,
@@ -445,14 +446,17 @@ export const InfoSection = ({
                 }
                 isCompactView={isCompactView}
               />
-              <DetailField
+              <CreationField
                 label={t('dh2.gender')}
-                value={character.gender}
+                value={genderLabel(character.gender, t)}
+                placeholder={t('dh2.selectGender')}
                 editing={isInfoEditing}
-                onBlur={(e) =>
-                  updateCharacter(character.id, { gender: e.target.value })
-                }
+                locked={isCreationFieldLocked(character.gender)}
                 isCompactView={isCompactView}
+                options={genderOptions(t)}
+                onSelect={(next) =>
+                  updateCharacter(character.id, { gender: toGenderCode(next) })
+                }
               />
               <DetailField
                 label={t('common.age')}

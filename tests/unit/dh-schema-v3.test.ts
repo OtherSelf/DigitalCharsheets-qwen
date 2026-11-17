@@ -40,7 +40,8 @@ describe('DH1: миграция листа v2', () => {
     // «Имя игрока» — legacy-ключ: в контракте листа его нет, но старые
     // данные не переписываются и проходят looseObject.
     expect((dh.identity as Record<string, unknown>).playerName).toBe('Игрок');
-    expect((dh.identity as Record<string, unknown>).gender).toBe('Мужской');
+    // Пол нормализуется в канонический код (D3), подпись в данных не живёт.
+    expect((dh.identity as Record<string, unknown>).gender).toBe('male');
     expect(dh.insanityPoints).toEqual({ total: 3, notes: '' });
     expect(dh.corruptionPoints).toEqual({ total: 1, notes: '' });
     expect(dh.traits).toHaveLength(1);
@@ -107,11 +108,11 @@ describe('создание dh1/dh2: пол, безумие, порча', () => {
   it('dh1 берёт значения из формы создания', () => {
     const draft = createDh1Defaults({
       name: 'A',
-      gender: 'Женский',
+      gender: 'female',
       insanity: 3,
       corruption: 2,
     });
-    expect(draft.identity?.gender).toBe('Женский');
+    expect(draft.identity?.gender).toBe('female');
     expect(draft.insanityPoints.total).toBe(3);
     expect(draft.corruptionPoints.total).toBe(2);
     expect(draft.experienceLog).toEqual([]);
@@ -120,11 +121,11 @@ describe('создание dh1/dh2: пол, безумие, порча', () => {
   it('dh2 берёт значения из формы создания', () => {
     const draft = createDh2Defaults({
       name: 'B',
-      gender: 'Мужской',
+      gender: 'male',
       insanity: 4,
       corruption: 1,
     });
-    expect(draft.gender).toBe('Мужской');
+    expect(draft.gender).toBe('male');
     expect(draft.insanityPoints.total).toBe(4);
     expect(draft.corruptionPoints.total).toBe(1);
     expect(draft.experienceLog).toEqual([]);

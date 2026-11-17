@@ -110,7 +110,7 @@ Validated by `scripts/plugins/generate.mjs` (Ajv) on every generation/verify.
   "tags": ["warhammer40k", "d100"],
   "author": "Digital Character Sheets",
   "license": "MIT",
-  "schemaVersion": 2,
+  "schemaVersion": 5,
   "game": {
     "id": "darkHeresy",
     "order": 20,

@@ -9,6 +9,7 @@ import { DH2E_BACKGROUNDS, DH2E_HOMEWORLDS, DH2E_ROLES } from './dh2e-data';
 import { isDivinationId } from './dh2e-divinations';
 import { readStartingChoices } from './dh2e-grants';
 import { fateRangeFor, woundsRangeFor } from './dh2e-starting-profile';
+import { resolveGender } from './gender';
 import { DH2_SCHEMA_VERSION } from './schema-version';
 import {
   DARK_HERESY_CORE_STATS,
@@ -132,7 +133,7 @@ export function createDh2BaseDefaults(
     aptitudes: { profile: aptitudes.profile, chosen, extra: [] },
     eliteAdvances: [],
     divination,
-    gender: readString(input, 'gender', ''),
+    gender: resolveGender(input.gender).code,
     psy: { rating: 0, disciplines: [], powers: [] },
     startingChoices,
     height: readString(input, 'height', ''),

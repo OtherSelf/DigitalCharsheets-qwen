@@ -6,6 +6,7 @@ import {
 } from './dark-heresy-data';
 import { calculateRank, RanksByCareer } from './dark-heresy-ranks';
 import { effectIdForDivination } from './divination-i18n';
+import { resolveGender } from './gender';
 import { DH1_SCHEMA_VERSION } from './schema-version';
 import {
   DARK_HERESY_CORE_STATS,
@@ -145,7 +146,7 @@ export function createDh1Defaults(
   input: DefaultsInput = {},
 ): DH1CharacterDraft {
   const base = createDarkHeresyBaseDefaults(input);
-  const identity = { gender: readString(input, 'gender', '') };
+  const identity = { gender: resolveGender(input.gender).code };
   const stats = Object.fromEntries(
     DARK_HERESY_CORE_STATS.map((stat) => [stat, readNumber(input, stat, 30)]),
   ) as DarkHeresyCoreStats;

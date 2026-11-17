@@ -112,14 +112,34 @@ export function resolveHistoryLabel(
   return resolveBySegments(fieldPath, config, t);
 }
 
-/** Текстовое представление значения для строки «было/стало». */
-export function formatHistoryValue(value: StoredValue | undefined): string {
+/**
+ * Текстовое представление значения для строки «было/стало». Кодовые значения
+ * (`gender: "female"`) переводятся через `config.valueLabels`: путь берётся
+ * точным (`identity.gender`), а если его нет — по последнему сегменту.
+ */
+export function formatHistoryValue(
+  value: StoredValue | undefined,
+  context: {
+    config?: GameHistoryConfig;
+    path?: string;
+    t?: (key: string) => string;
+  } = {},
+): string {
   if (!value) return '';
   if (value.truncated === true) {
     return value.preview ?? '';
   }
   if (value.value === null) return 'null';
-  if (typeof value.value === 'string') return value.value;
+  if (typeof value.value === 'string') {
+    const { config, path, t } = context;
+    if (config?.valueLabels && path && t) {
+      const last = path.split('.').pop() ?? path;
+      const labels = config.valueLabels[path] ?? config.valueLabels[last];
+      const key = labels?.[value.value];
+      if (key) return t(key);
+    }
+    return value.value;
+  }
   try {
     return JSON.stringify(value.value) ?? '';
   } catch {

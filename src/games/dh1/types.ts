@@ -32,6 +32,13 @@ export const DarkHeresyCareerPaths = [
 export type DarkHeresyCareerPath = (typeof DarkHeresyCareerPaths)[number];
 
 /**
+ * Канонический код пола (D3). `''` — игрок его не выбрал, `unspecified` —
+ * осознанное «не указан». Подписи живут в i18n, в данных — только код.
+ */
+export const GENDER_CODES = ['male', 'female', 'unspecified', ''] as const;
+export type GenderCode = (typeof GENDER_CODES)[number];
+
+/**
  * Девять базовых характеристик Dark Heresy. `influence` добавляется
  * только в `DH2Character`.
  */
@@ -207,7 +214,7 @@ export interface DH1PsyPower {
 
 /** Идентичность игрока и персонажа (поля листа «Личные данные»). */
 export interface DH1Identity {
-  gender?: string;
+  gender?: GenderCode;
   build?: string;
   /** Ведущая рука: строка, чтобы не ломать ввод мастером. */
   handedness?: string;

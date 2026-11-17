@@ -70,8 +70,13 @@ import {
   divinationKey,
   effectIdForDivination,
 } from './divination-i18n';
+import { genderOptions } from './gender';
 import { STARTING_PACKAGES } from './starting-packages';
-import { DarkHeresyCareerPaths, DarkHeresyHomeWorlds } from './types';
+import {
+  DarkHeresyCareerPaths,
+  DarkHeresyHomeWorlds,
+  GENDER_CODES,
+} from './types';
 
 /** Порядок характеристик в подсказке стартового профиля (Таблица 1-3). */
 const STARTING_STAT_KEYS = [
@@ -142,7 +147,7 @@ export function DarkHeresyCreateForm({
     fatePoints: z.coerce.number().int(),
     insanity: z.coerce.number().int().min(0).optional(),
     corruption: z.coerce.number().int().min(0).optional(),
-    gender: z.string().optional(),
+    gender: z.enum(GENDER_CODES).optional(),
     throneGelt: z.coerce.number().int().optional(),
   });
 
@@ -214,19 +219,6 @@ export function DarkHeresyCreateForm({
   const divinationEffect = React.useMemo(() => {
     return effectIdForDivination(watchedDivination);
   }, [watchedDivination]);
-
-  const genderOptions = (current: string | undefined) => {
-    const options = [
-      t('dh1.genderMale'),
-      t('dh1.genderFemale'),
-      t('dh1.genderUnspecified'),
-    ].map((label) => ({ value: label, label }));
-    const custom = current?.trim();
-    if (custom && !options.some((option) => option.value === custom)) {
-      options.push({ value: custom, label: custom });
-    }
-    return options;
-  };
 
   React.useEffect(() => {
     if (showAllQuirks) {
@@ -1004,7 +996,7 @@ export function DarkHeresyCreateForm({
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {genderOptions(field.value).map((option) => (
+                          {genderOptions(t).map((option) => (
                             <SelectItem key={option.value} value={option.value}>
                               {option.label}
                             </SelectItem>

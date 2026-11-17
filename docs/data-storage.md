@@ -19,7 +19,7 @@ JSON files, written through small, synchronous helpers in `src/lib/`.
     <uid>/
       user.json                 profile (schema v4, source of truth)
       characters/
-        <character-id>.json     one file per character sheet (schema v2)
+        <character-id>.json     one file per character sheet (per-module schema)
       history/
         <character-id>.jsonl    append-only change log (one revision per line)
   settings/
@@ -98,7 +98,7 @@ overwriting existing values (including an existing `tester` role). A profile
 without `passwordHash` is reported but cannot be logged into; an administrator
 can set a password from `/admin`.
 
-## Character sheets (schema v2/v3)
+## Character sheets (schema v2/v5)
 
 One file per sheet: `users/<uid>/characters/<character-id>.json`. The content is
 the `Character` object from `src/lib/types.ts` (D&D 5e, Dark Heresy 1e or Dark
@@ -107,9 +107,9 @@ parses every `*.json` in the user's `characters/` directory; a broken file is
 skipped rather than failing the whole list.
 
 `CharacterBase.schemaVersion` is per module: `dnd5e` stays at `2`, Dark Heresy
-modules write `4` (`src/games/dh1/schema-version.ts`,
-`src/games/dh2/schema-version.ts`) after the DH1APP, 2e-generation and
-structured-conditions field sets.
+modules write `5` (`src/games/dh1/schema-version.ts`,
+`src/games/dh2/schema-version.ts`) after the DH1APP, 2e-generation,
+structured-conditions and canonical-gender field sets.
 Legacy files without the field or with `2` are migrated on startup by
 `src/lib/character-schema.ts` and lazily on read/save by
 `normalizeCharacterRecord` (`src/lib/character-version.ts`); the file is
@@ -119,6 +119,23 @@ resolves the edition and calls the plugin's `normalize`
 and coerces types, while missing structures are filled with defaults only on
 import (`applyDefaults`). The migration is idempotent and writes a file only
 when it changes.
+
+### Gender (schema 5)
+
+Dark Heresy stores the character's gender as a canonical code, not as a
+displayed label: `male`, `female`, `unspecified` or `''` (not chosen). DH2 keeps
+it in `gender`, DH1 in `identity.gender`; the UI and the Excel export render the
+localized label (`src/games/dh1/gender.ts`, `src/games/dh2/gender.ts`), so rules
+such as the Adepta Sororitas elite advance can compare a code and do not depend
+on the sheet language. The portable JSON export keeps the code.
+
+Normalization maps the labels written by earlier versions (`Мужчина`,
+`Мужской`, `Женщина`, `Женский`, `Не указан`, `Не указано`, `Не определено`,
+`Male`, `Female`, `Unspecified`, … and the `м`/`ж`/`m`/`f` shorthands) to codes
+and is idempotent. An unrecognized non-empty value becomes `unspecified` and the
+original text is appended to `notes` as a `[gender migration] пол: …` line, so
+no player data is lost.
+
 
 ### Discriminant and editions
 
@@ -158,7 +175,7 @@ of the other edition:
   (Influence is the resource). `influence.ts` computes the creation limit and
   the Requisition target from the availability/craftsmanship tables.
 
-Both editions also carry `conditions: ConditionEntry[]` (schema 4): the
+Both editions also carry `conditions: ConditionEntry[]` (added in schema 4): the
 structured list of disorders, defilements, mutations and rudiments
 (`kind`, `name`, optional `severity`/`effect`/`notes`, `source` =
 `manual` | `divination` | `legacy`). The list is additive and has no

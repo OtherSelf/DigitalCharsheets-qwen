@@ -463,6 +463,8 @@ export const dhCharacter: Omit<DH1Character, 'id' | 'userId'> = {
   skinColor: 'Weathered',
   hairColor: 'Black',
   eyeColor: 'Grey',
+  // Пол задан: фикстура проверяет и подпись пола, и замок после создания.
+  identity: { gender: 'male' },
   experience: 2500,
   totalExpSpent: 2200,
   experienceLog: [],

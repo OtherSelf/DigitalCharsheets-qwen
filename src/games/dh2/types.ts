@@ -51,6 +51,14 @@ export interface DH2AptitudeProfile {
   extra: string[];
 }
 
+/**
+ * Канонический код пола (D3). `''` — игрок его не выбрал, `unspecified` —
+ * осознанное «не указан». В данных хранится только код: подписи живут в i18n,
+ * а правила (элитные продвижения) сравнивают код, не завися от языка.
+ */
+export const GENDER_CODES = ['male', 'female', 'unspecified', ''] as const;
+export type GenderCode = (typeof GENDER_CODES)[number];
+
 /** Пси-профиль 2e: рейтинг, известные дисциплины и силы. */
 export interface DH2PsyProfile {
   rating: number;
@@ -184,8 +192,8 @@ export interface DarkHeresyBase extends CharacterBase {
   startingChoices?: DH2StartingChoices;
   /** Пророчество 2e: id строки таблицы 2-9 (`d100-10`), не текст. */
   divination: string;
-  /** Пол персонажа: свободная строка (правила редакции его не ограничивают). */
-  gender: string;
+  /** Пол персонажа каноническим кодом (D3): правила 2e его не ограничивают. */
+  gender: GenderCode;
   /** Журнал покупок опыта 2e. */
   experienceLog: DH2ExperienceEntry[];
   height: string;

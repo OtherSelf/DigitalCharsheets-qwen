@@ -84,9 +84,23 @@ function KindBadge({ kind }: { kind: HistoryChange['kind'] }) {
   );
 }
 
-function ValueText({ label, value }: { label: string; value: StoredValue }) {
+function ValueText({
+  label,
+  value,
+  historyConfig,
+  path,
+}: {
+  label: string;
+  value: StoredValue;
+  historyConfig?: GameHistoryConfig;
+  path?: string;
+}) {
   const { t } = useTranslation();
-  const text = formatHistoryValue(value);
+  const text = formatHistoryValue(value, {
+    config: historyConfig,
+    path,
+    t,
+  });
   const truncated = value.truncated === true;
 
   return (
@@ -113,6 +127,9 @@ function ChangeRow({
 }) {
   const { t } = useTranslation();
   const label = resolveHistoryLabel(change, historyConfig, t);
+  const fieldPath = change.field
+    ? `${change.path}.${change.field}`
+    : change.path;
 
   return (
     <div data-testid="history-change" className="border-b py-3 last:border-b-0">
@@ -139,7 +156,11 @@ function ChangeRow({
                 key={index}
                 className="bg-muted rounded px-1.5 py-0.5 text-xs"
               >
-                {formatHistoryValue(value)}
+                {formatHistoryValue(value, {
+                  config: historyConfig,
+                  path: fieldPath,
+                  t,
+                })}
               </code>
             ))}
           </div>
@@ -147,10 +168,20 @@ function ChangeRow({
       ) : (
         <div className="grid gap-2 sm:grid-cols-2">
           {change.before !== undefined && (
-            <ValueText label={t('history.before')} value={change.before} />
+            <ValueText
+              label={t('history.before')}
+              value={change.before}
+              historyConfig={historyConfig}
+              path={fieldPath}
+            />
           )}
           {change.after !== undefined && (
-            <ValueText label={t('history.after')} value={change.after} />
+            <ValueText
+              label={t('history.after')}
+              value={change.after}
+              historyConfig={historyConfig}
+              path={fieldPath}
+            />
           )}
         </div>
       )}

@@ -56,7 +56,7 @@ describe('DH1: аддитивные поля листа', () => {
     const character = baseDh1({
       identity: {
         playerName: 'Анна',
-        gender: 'Ж',
+        gender: 'female',
         build: 'Сухое',
         handedness: 'Правая',
       },
@@ -71,7 +71,7 @@ describe('DH1: аддитивные поля листа', () => {
       eliteAdvances: [{ id: 'e1', name: 'Присяга Радикала' }],
     });
     const parsed = dh1CharacterSchema.parse(character);
-    expect(parsed.identity?.gender).toBe('Ж');
+    expect(parsed.identity?.gender).toBe('female');
     expect(parsed.identity?.build).toBe('Сухое');
     // playerName — не поле листа: схема его не объявляет, но legacy-ключ
     // проходит looseObject и не мешает остальной идентичности.
@@ -222,7 +222,7 @@ const EXPORT_ALL: GameExportConfig = {
 describe('DH1: новые блоки в JSON-экспорте', () => {
   it('экспортирует идентичность, пси, черты, мутации, безумие, порчу и груз', () => {
     const character = baseDh1({
-      identity: { playerName: 'Анна', gender: 'Ж', build: 'Сухое' },
+      identity: { playerName: 'Анна', gender: 'female', build: 'Сухое' },
       traits: [{ id: 't1', name: 'Железное Нутро' }],
       mutations: [{ id: 'm1', name: 'Третья рука' }],
       eliteAdvances: [{ id: 'e1', name: 'Присяга Радикала' }],
@@ -247,7 +247,8 @@ describe('DH1: новые блоки в JSON-экспорте', () => {
       character as never,
       EXPORT_ALL,
     ) as Record<string, { gender?: string; playerName?: string }>;
-    expect((exported.identity as { gender?: string }).gender).toBe('Ж');
+    // П��ртируемый JSON хранит код (D3): подпись — дело UI и Excel.
+    expect((exported.identity as { gender?: string }).gender).toBe('female');
     expect(exported.identity).not.toHaveProperty('playerName');
     expect((exported.psy as { rating?: number }).rating).toBe(2);
     expect(Array.isArray(exported.traits)).toBe(true);

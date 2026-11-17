@@ -77,6 +77,8 @@ import type {
   Dh2eTalentGrant,
   Dh2eTalentGrantSlot,
 } from './dh2e-types';
+import { genderOptions } from './gender';
+import { GENDER_CODES } from './types';
 
 const CHARACTERISTIC_FIELDS = [
   'weaponSkill',
@@ -125,7 +127,7 @@ export function DarkHeresyCreateForm({ onCreated }: CreateFormProps) {
     background: z.string({ error: t('dh2.selectBackgroundError') }),
     role: z.string({ error: t('dh2.selectRoleError') }),
     divination: z.string().optional(),
-    gender: z.string().optional(),
+    gender: z.enum(GENDER_CODES).optional(),
     insanity: z.coerce.number().int().min(0).optional(),
     corruption: z.coerce.number().int().min(0).optional(),
     backstory: z.string().optional(),
@@ -198,19 +200,6 @@ export function DarkHeresyCreateForm({ onCreated }: CreateFormProps) {
   const watchedAcquisitions = form.watch('creationAcquisitions');
   const influenceLimit = Math.floor((Number(watchedInfluence) || 0) / 10);
   const acquisitions = Number(watchedAcquisitions) || 0;
-
-  const genderOptions = (current: string | undefined) => {
-    const options = [
-      t('dh2.genderMale'),
-      t('dh2.genderFemale'),
-      t('dh2.genderUnspecified'),
-    ].map((label) => ({ value: label, label }));
-    const custom = current?.trim();
-    if (custom && !options.some((option) => option.value === custom)) {
-      options.push({ value: custom, label: custom });
-    }
-    return options;
-  };
 
   // Выборы, которые правила оставляют игроку (D11): аптитюды, дубли,
   // талант роли и «одно из» стартового пакета. Живут вне zod-схемы: это не
@@ -863,7 +852,7 @@ export function DarkHeresyCreateForm({ onCreated }: CreateFormProps) {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {genderOptions(field.value).map((option) => (
+                          {genderOptions(t).map((option) => (
                             <SelectItem key={option.value} value={option.value}>
                               {option.label}
                             </SelectItem>

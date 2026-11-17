@@ -353,8 +353,9 @@ test.describe('политика редактирования после созд
       const info = page.locator('#info-section:visible').first();
       await startEditing(info);
 
-      // Фикстура задаёт homeWorld, worldVariant, careerPath и divination.
-      await expect(info.getByTestId('creation-lock')).toHaveCount(4);
+      // Фикстура задаёт homeWorld, worldVariant, careerPath, divination и
+      // пол: все пять полей после создания только читаются.
+      await expect(info.getByTestId('creation-lock')).toHaveCount(5);
       // Подсказка локализована и доступна скринридеру.
       await expect(info.getByTestId('creation-lock').first()).toHaveAttribute(
         'aria-label',

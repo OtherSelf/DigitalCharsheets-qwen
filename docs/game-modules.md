@@ -139,7 +139,7 @@ Every module folder has a `plugin.json` (`src/games/plugin.schema.json`):
   "tags": ["warhammer40k", "d100"],
   "author": "Digital Character Sheets",
   "license": "MIT",
-  "schemaVersion": 2,
+  "schemaVersion": 5,
   "game": { "id": "darkHeresy", "order": 20, "name": { "en": "…", "ru": "…" } },
   "dependencies": { "host": "^1.0.0", "plugins": {} },
   "entry": { "module": "index.ts#dh1Module" },
@@ -226,7 +226,7 @@ per-game save handlers out of the page.
 | `defaultStatus` | `published` / `test` / `hidden`; runtime override in the game catalog. |
 | `nameKey`, `descriptionKey` | i18n keys; names are never stored in sheets. |
 | `shortCode` | Locale-independent edition code for the admin character list (`dnd5e`, `dh1e`, `dh2e`); not translated, the full game + edition goes to the tooltip. |
-| `schemaVersion` | Sheet format written by the module: `2` for `dnd5e`, `4` for `dh1`/`dh2`; manifests declare it and the migration chain ends here. |
+| `schemaVersion` | Sheet format written by the module: `2` for `dnd5e`, `5` for `dh1`/`dh2`; manifests declare it and the migration chain ends here. |
 | `schema` | Zod schema; `ZodType<TCharacter>` makes `tsc` check it against the type. |
 | `i18n` | `{ en, ru }` dictionaries, merged by the core. |
 | `capabilities` | Fixed feature flags of the module (influence, +30, fatigue field). |

@@ -675,7 +675,7 @@ test.describe('черновик гостя dh2 и навигация «наза�
     expect(draft, 'черновик гостя лежит в sessionStorage').toMatchObject({
       name,
       systemId: 'dh2',
-      gender: 'Female',
+      gender: 'female',
       insanityPoints: { total: 4 },
       corruptionPoints: { total: 2 },
       experience: 1200,
@@ -726,7 +726,7 @@ test.describe('черновик гостя dh2 и навигация «наза�
       id,
       name,
       systemId: 'dh2',
-      gender: 'Female',
+      gender: 'female',
       insanityPoints: { total: 4 },
       corruptionPoints: { total: 2 },
       experience: 1200,
