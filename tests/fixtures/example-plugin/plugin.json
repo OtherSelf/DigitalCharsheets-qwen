@@ -24,6 +24,10 @@
     "name": {
       "en": "Example Game",
       "ru": "Пример игры"
+    },
+    "description": {
+      "en": "Fixture game",
+      "ru": "Фиктивная игра"
     }
   },
   "dependencies": {

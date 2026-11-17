@@ -94,7 +94,7 @@
       "description": "Блок семейства игр (D17). У всех редакций одного gameId совпадает.",
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "order", "name"],
+      "required": ["id", "order", "name", "description"],
       "properties": {
         "id": {
           "type": "string",
@@ -105,6 +105,9 @@
           "minimum": 0
         },
         "name": {
+          "$ref": "#/definitions/localizedText"
+        },
+        "description": {
           "$ref": "#/definitions/localizedText"
         }
       }

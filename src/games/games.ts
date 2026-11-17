@@ -1,27 +1,18 @@
+import { generatedGameDefinitions } from './games.generated';
 import type { GameDefinition, GameId } from './types';
 
 /**
  * ─── LANDMARK: GAME DEFINITIONS ────────────────────────────────────────────
- * Игры-«семейства», а не редакции: D&D и Dark Heresy. Редакции берутся из
- * модулей (`src/games/registry.ts`), а здесь задаётся порядок карточек на
- * шаге выбора игры и i18n-ключи названия/описания.
+ * Семейства игр (`dnd`, `darkHeresy`) генерируются из блоков `game`
+ * манифестов `src/games/<id>/plugin.json` (`npm run plugins:generate`,
+ * файл `games.generated.ts`). Ядро не перечисляет игры руками: добавили или
+ * удалили плагин — пересобрали реестр, этот файл не менялся.
  *
- * Человекочитаемые названия живут только в i18n; в данных листа их нет.
+ * Человекочитаемые названия/описания живут в сгенерированных ключах
+ * `games.generated.*` (см. `i18n.generated.ts`), а не в общем слое i18n.
  */
-export const GAME_DEFINITIONS: readonly GameDefinition[] = [
-  {
-    id: 'dnd',
-    order: 10,
-    nameKey: 'common.dungeonsAndDragons',
-    descriptionKey: 'games.dnd.description',
-  },
-  {
-    id: 'darkHeresy',
-    order: 20,
-    nameKey: 'common.darkHeresy',
-    descriptionKey: 'games.darkHeresy.description',
-  },
-];
+export const GAME_DEFINITIONS: readonly GameDefinition[] =
+  generatedGameDefinitions;
 
 export function getGameDefinition(id: GameId): GameDefinition | undefined {
   return GAME_DEFINITIONS.find((game) => game.id === id);

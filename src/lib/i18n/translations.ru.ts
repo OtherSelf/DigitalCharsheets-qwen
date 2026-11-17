@@ -187,8 +187,6 @@ export const ruTranslations: Record<string, string> = {
   'common.selectGameSystemDesc':
     'Выберите игровую систему для вашего нового персонажа.',
   'common.selectGameSystemPlaceholder': 'Выберите игровую систему...',
-  'common.dungeonsAndDragons': 'Dungeons & Dragons',
-  'common.darkHeresy': 'Warhammer 40k: Dark Heresy',
   'common.backToDashboard': 'Назад на панель управления',
   'common.statsEditor': 'Редактор характеристик',
   'common.backupAll': 'Резервное копирование всего',
@@ -234,7 +232,7 @@ export const ruTranslations: Record<string, string> = {
   'auth.changeWarning':
     'Изменение логина обновит идентификатор вашей учетной записи. Обязательно запомните его.',
   'auth.loginRegister': 'Вход / Регистрация',
-  'auth.brandTagline': 'D&D 5e и Dark Heresy',
+  'auth.brandTagline': 'Цифровые листы персонажей для настольных игр',
   'auth.loginTitle': 'С возвращением',
   'auth.loginDesc': 'Войдите в существующий аккаунт.',
   'auth.recoverTitle': 'Восстановление аккаунта',
@@ -433,7 +431,7 @@ export const ruTranslations: Record<string, string> = {
   'settings.emailPlaceholder': 'например, user@example.com',
   'demo.heroTitle': 'Попробуйте без регистрации',
   'demo.heroSubtitle':
-    'Изучите наши цифровые листы персонажей для D&D 5e и Dark Heresy. Создайте нового персонажа или откройте готовый лист. Когда будете готовы сохранить прогресс, просто создайте аккаунт!',
+    'Изучите цифровые листы персонажей для поддерживаемых настольных систем. Создайте нового персонажа или откройте готовый лист. Когда будете готовы сохранить прогресс, просто создайте аккаунт!',
   'demo.createCardTitle': 'Создайте своего персонажа',
   'demo.createCardDesc':
     'Соберите героя с нуля: прогресс сохраняется в этом браузере, а в конце можно создать аккаунт, чтобы сохранить его навсегда.',

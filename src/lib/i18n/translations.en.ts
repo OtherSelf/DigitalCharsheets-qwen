@@ -178,8 +178,6 @@ export const enTranslations: Record<string, string> = {
   'common.selectGameSystemDesc':
     'Choose the game system for your new character.',
   'common.selectGameSystemPlaceholder': 'Select a game system...',
-  'common.dungeonsAndDragons': 'Dungeons & Dragons',
-  'common.darkHeresy': 'Warhammer 40k: Dark Heresy',
   'common.backToDashboard': 'Back to Dashboard',
   'common.statsEditor': 'Stats Editor',
   'common.backupAll': 'Backup All',
@@ -232,7 +230,7 @@ export const enTranslations: Record<string, string> = {
   'auth.changeWarning':
     'Changing your login will update your account identifier. Make sure to remember it.',
   'auth.loginRegister': 'Login / Register',
-  'auth.brandTagline': 'D&D 5e & Dark Heresy',
+  'auth.brandTagline': 'Digital character sheets for tabletop RPGs',
   'auth.loginTitle': 'Welcome Back',
   'auth.loginDesc': 'Sign in to an existing account.',
   'auth.recoverTitle': 'Recover Account',
@@ -430,7 +428,7 @@ export const enTranslations: Record<string, string> = {
   'settings.emailPlaceholder': 'e.g. user@example.com',
   'demo.heroTitle': 'Try Before You Commit',
   'demo.heroSubtitle':
-    "Explore our digital character sheets for D&D 5e and Dark Heresy. Create a new character or preview a pre-made sheet. When you're ready to save your progress, simply create an account!",
+    "Explore digital character sheets for supported tabletop systems. Create a new character or preview a pre-made sheet. When you're ready to save your progress, simply create an account!",
   'demo.createCardTitle': 'Create Your Own Character',
   'demo.createCardDesc':
     'Start building your hero from scratch. Your progress is saved in this browser, and you can create an account at the end to keep it forever.',

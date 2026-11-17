@@ -1,4 +1,4 @@
-import { generatedI18n } from '@/games/i18n.generated';
+import { generatedGameI18n, generatedI18n } from '@/games/i18n.generated';
 import { en as gamesCoreEn } from '@/games/i18n/en';
 import { ru as gamesCoreRu } from '@/games/i18n/ru';
 
@@ -40,11 +40,13 @@ export const translations: Record<string, Record<string, string>> = {
   en: mergeDictionaries([
     enTranslations,
     gamesCoreEn,
+    generatedGameI18n.en,
     ...moduleDictionaries.map((messages) => messages.en),
   ]),
   ru: mergeDictionaries([
     ruTranslations,
     gamesCoreRu,
+    generatedGameI18n.ru,
     ...moduleDictionaries.map((messages) => messages.ru),
   ]),
 };

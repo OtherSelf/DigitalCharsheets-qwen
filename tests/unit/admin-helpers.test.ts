@@ -10,8 +10,8 @@ import { adminGameBadge } from '@/components/admin/admin-helpers';
  */
 const translate = (key: string) =>
   ({
-    'common.darkHeresy': 'Dark Heresy',
-    'common.dungeonsAndDragons': 'Dungeons & Dragons',
+    'games.generated.darkHeresy.name': 'Dark Heresy',
+    'games.generated.dnd.name': 'Dungeons & Dragons',
     'games.dh1.name': '1st Edition',
     'games.dh2.name': '2nd Edition',
     'games.dnd5e.name': '5th Edition',
@@ -34,7 +34,7 @@ describe('бейдж игры в списке чарлистов', () => {
   it('не переводит короткий код: локаль меняет только tooltip', () => {
     const ruTranslate = (key: string) =>
       ({
-        'common.darkHeresy': 'Dark Heresy',
+        'games.generated.darkHeresy.name': 'Dark Heresy',
         'games.dh1.name': '1-я редакция',
       })[key] ?? key;
 

@@ -14,7 +14,8 @@
  *       редакций одного семейства (D17) и совместимость `pluginApi`;
  *    4. проверяет, что все точки входа (`index.ts#export`, sheet/i18n-файлы,
  *       миграции) существуют и лежат внутри папки плагина;
- *    5. пишет `src/games/registry.generated.ts` со статическими импортами.
+ *    5. пишет `registry.generated.ts` (плагины), `i18n.generated.ts` (словари и
+ *       метаданные семейств игр) и `games.generated.ts` (список игр).
  *
  *  Ядро больше не перечисляет модули руками: добавление папки с манифестом
  *  меняет реестр без правок `registry.ts`.
@@ -40,6 +41,7 @@ export const GAMES_DIR = join(ROOT, 'src/games');
 export const SCHEMA_PATH = join(GAMES_DIR, 'plugin.schema.json');
 export const REGISTRY_PATH = join(GAMES_DIR, 'registry.generated.ts');
 export const I18N_REGISTRY_PATH = join(GAMES_DIR, 'i18n.generated.ts');
+export const GAMES_DEFS_PATH = join(GAMES_DIR, 'games.generated.ts');
 export const MANIFEST_FILE = 'plugin.json';
 
 /** Версия Plugin API, с которой сверяется `pluginApi` манифестов. */
@@ -267,6 +269,7 @@ export function validateCollection(plugins) {
       id: manifest.game?.id,
       order: manifest.game?.order,
       name: manifest.game?.name,
+      description: manifest.game?.description,
     });
     const known = games.get(manifest.gameId);
     if (!known) {
@@ -328,12 +331,77 @@ function moduleExportName(manifest) {
   return parseEntryPoint(manifest.entry.module).member;
 }
 
+/** Строковый литерал в стиле prettier (одинарные кавычки). */
+function tsString(value) {
+  return `'${String(value).replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`;
+}
+
 /** JSON-импорт манифеста: `dnd5e` → `dnd5eManifest`. */
 function manifestVarName(id) {
   const camel = id.replace(/[-_]+(.)?/g, (_, chr) =>
     chr ? chr.toUpperCase() : '',
   );
   return `${camel}Manifest`;
+}
+
+/**
+ * Уникальные семейства игр из `game`-блоков манифестов (D17).
+ * Порядок — `order`, затем `id`; сами названия/описания остаются в манифестах
+ * и попадают в `i18n.generated.ts` как ключи `games.generated.*`.
+ *
+ * @param {{dirName: string, manifest: any}[]} plugins
+ */
+function collectGameDefinitions(plugins) {
+  const games = new Map();
+  for (const { manifest } of plugins) {
+    const game = manifest.game;
+    if (!game?.id || games.has(game.id)) continue;
+    games.set(game.id, {
+      id: game.id,
+      order: game.order,
+      name: game.name,
+      description: game.description,
+    });
+  }
+  return [...games.values()].sort(
+    (a, b) => a.order - b.order || a.id.localeCompare(b.id, 'en'),
+  );
+}
+
+/**
+ * Текст `games.generated.ts`: определения семейств игр без импорта модулей,
+ * чтобы `games.ts` мог их переиспользовать без цикла с реестром.
+ *
+ * @param {{dirName: string, manifest: any}[]} plugins
+ */
+export function renderGameDefinitions(plugins) {
+  const entries = collectGameDefinitions(plugins)
+    .map(
+      (game) =>
+        `  {\n` +
+        `    id: ${tsString(game.id)},\n` +
+        `    order: ${game.order},\n` +
+        `    nameKey: 'games.generated.${game.id}.name',\n` +
+        `    descriptionKey: 'games.generated.${game.id}.description',\n` +
+        `  },`,
+    )
+    .join('\n');
+
+  return `/**
+ * ─── AUTO-GENERATED — НЕ РЕДАКТИРОВАТЬ ─────────────────────────────────────
+ * Семейства игр, сгенерированные из блоков \`game\` манифестов
+ * \`src/games/<id>/plugin.json\` (D17: у редакций одной игры блок одинаков).
+ *
+ * Пересобрать:  npm run plugins:generate
+ * Проверить:    npm run plugins:check
+ */
+import type { GameDefinition } from './types';
+
+/** Семейства игр в порядке показа (\`order\`, затем \`id\`). */
+export const generatedGameDefinitions: readonly GameDefinition[] = [
+${entries}
+];
+`;
 }
 
 /**
@@ -460,11 +528,33 @@ export function renderI18nRegistry(plugins) {
     })
     .join('\n');
 
+  const gameDefinitions = collectGameDefinitions(plugins);
+  const gameKeys = (locale) =>
+    gameDefinitions
+      .map((game) => {
+        const lines = [];
+        for (const [suffix, value] of [
+          ['name', game.name[locale]],
+          ['description', game.description[locale]],
+        ]) {
+          const key = `games.generated.${game.id}.${suffix}`;
+          const inline = `    '${key}': ${tsString(value)},`;
+          lines.push(
+            inline.length <= 80
+              ? inline
+              : `    '${key}':\n      ${tsString(value)},`,
+          );
+        }
+        return lines.join('\n');
+      })
+      .join('\n');
+
   return `/**
  * ─── AUTO-GENERATED — НЕ РЕДАКТИРОВАТЬ ─────────────────────────────────────
  * Словари плагинов, сгенерированные из \`src/games/<id>/plugin.json\` (поле
- * \`i18n\`). Импортируются \`src/lib/i18n\` до инициализации реестра, поэтому
- * здесь только словари — без модулей, схем и UI (этап 3).
+ * \`i18n\`) плюс названия/описания семейств игр (поле \`game\`).
+ * Импортируются \`src/lib/i18n\` до инициализации реестра, поэтому здесь
+ * только словари — без модулей, схем и UI (этап 3).
  *
  * Пересобрать:  npm run plugins:generate
  * Проверить:    npm run plugins:check
@@ -475,6 +565,16 @@ import type { LocalizedMessages } from './types';
 /** Словари по \`systemId\`; порядок ключей — по id (стабильная генерация). */
 export const generatedI18n: Readonly<Record<string, LocalizedMessages>> = {
 ${entries}
+};
+
+/** Названия и описания семейств игр (ключи \`games.generated.*\`). */
+export const generatedGameI18n: LocalizedMessages = {
+  en: {
+${gameKeys('en')}
+  },
+  ru: {
+${gameKeys('ru')}
+  },
 };
 `;
 }
@@ -532,6 +632,7 @@ export function buildRegistry({
       })),
     content: renderRegistry(plugins),
     i18nContent: renderI18nRegistry(plugins),
+    gamesContent: renderGameDefinitions(plugins),
   };
 }
 
@@ -556,7 +657,7 @@ function main(argv) {
     return 0;
   }
 
-  const { plugins, content, i18nContent } = buildRegistry();
+  const { plugins, content, i18nContent, gamesContent } = buildRegistry();
   const summary = plugins
     .map((plugin) => `${plugin.id}@${plugin.version} (order ${plugin.order})`)
     .join(', ');
@@ -570,6 +671,7 @@ function main(argv) {
     const targets = [
       ['registry.generated.ts', REGISTRY_PATH, content],
       ['i18n.generated.ts', I18N_REGISTRY_PATH, i18nContent],
+      ['games.generated.ts', GAMES_DEFS_PATH, gamesContent],
     ];
     let failed = false;
     for (const [label, filePath, expected] of targets) {
@@ -593,15 +695,16 @@ function main(argv) {
     }
     if (failed) return 1;
     console.log(
-      `✓ registry.generated.ts и i18n.generated.ts в синхроне · ${summary}`,
+      `✓ registry.generated.ts, i18n.generated.ts и games.generated.ts в синхроне · ${summary}`,
     );
     return 0;
   }
 
   writeFileSync(REGISTRY_PATH, content, 'utf8');
   writeFileSync(I18N_REGISTRY_PATH, i18nContent, 'utf8');
+  writeFileSync(GAMES_DEFS_PATH, gamesContent, 'utf8');
   console.log(
-    `✓ registry.generated.ts + i18n.generated.ts: ${plugins.length} плагин(ов) · ${summary}`,
+    `✓ registry/i18n/games.generated.ts: ${plugins.length} плагин(ов) · ${summary}`,
   );
   return 0;
 }

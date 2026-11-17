@@ -24,6 +24,10 @@
     "name": {
       "en": "Warhammer 40k: Dark Heresy",
       "ru": "Warhammer 40k: Dark Heresy"
+    },
+    "description": {
+      "en": "Grimdark investigation in the Warhammer 40,000 universe.",
+      "ru": "Мрачное расследование во вселенной Warhammer 40,000."
     }
   },
   "dependencies": {
