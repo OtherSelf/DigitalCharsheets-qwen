@@ -23,6 +23,35 @@ import {
  */
 
 test.describe('login: вход, регистрация, восстановление', () => {
+  test('глазок пароля показывает значение и не теряет его', async ({
+    page,
+    context,
+  }) => {
+    await prepare(context, { authenticated: false, theme: 'light' });
+    await openApp(page, '/login');
+
+    const password = page.locator('#auth-password');
+    await password.fill('visual-secret-12');
+    await expect(password).toHaveAttribute('type', 'password');
+
+    await page
+      .getByRole('button', { name: 'Show password', exact: true })
+      .first()
+      .click();
+    // Тип переключился, значение на месте, подпись кнопки сменилась.
+    await expect(password).toHaveAttribute('type', 'text');
+    await expect(password).toHaveValue('visual-secret-12');
+    await expect(
+      page.getByRole('button', { name: 'Hide password', exact: true }).first(),
+    ).toHaveAttribute('aria-pressed', 'true');
+
+    await page
+      .getByRole('button', { name: 'Hide password', exact: true })
+      .first()
+      .click();
+    await expect(password).toHaveAttribute('type', 'password');
+  });
+
   test('login — гостевая страница (en)', async ({ page, context }) => {
     await prepare(context, { authenticated: false, theme: 'light' });
     await openApp(page, '/login');

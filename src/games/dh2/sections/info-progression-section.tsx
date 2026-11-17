@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 
-import { Eye, Lock, Trash2 } from 'lucide-react';
+import { BookOpen, Lock, Trash2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -758,7 +758,7 @@ export const InfoSection = ({
             className="gap-1.5"
             onClick={() => setIsBackstoryOpen(true)}
           >
-            <Eye className="h-4 w-4" />
+            <BookOpen className="h-4 w-4" />
             {t('common.backstory')}
           </Button>
         </div>

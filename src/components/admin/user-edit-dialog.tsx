@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { PasswordInput } from '@/components/ui/password-input';
 import {
   Select,
   SelectContent,
@@ -170,9 +171,8 @@ export function UserEditDialog({
             <Label htmlFor="admin-edit-password">
               {t('common.newPassword')}
             </Label>
-            <Input
+            <PasswordInput
               id="admin-edit-password"
-              type="password"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               disabled={isSaving}
