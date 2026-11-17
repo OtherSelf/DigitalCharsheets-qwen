@@ -11,6 +11,54 @@ format changes.
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-11-17
+
+Canonical gender, locked creation choices, elite requirements and sheet UX
+polish.
+
+### Added
+
+- Dark Heresy 1e/2e store the gender as a canonical code (`male`, `female`,
+  `unspecified` or empty for "not chosen") instead of a localized label. Old
+  labels in RU/EN are migrated on read; an unrecognized value becomes
+  `unspecified` and the original text is kept in the notes as a
+  `[gender migration] …` line.
+- DH2 elite advances carry structured requirements (characteristic minimum,
+  background, gender, another elite). The sheet shows the conflicts in red
+  with the reason, while the purchase stays possible for GM exceptions.
+- DH2 aptitude choices are locked once made: the ones chosen at creation and
+  the ones filled on the sheet are read-only and marked with a lock; the
+  aptitude profile is rebuilt from them.
+- Password fields have a show/hide toggle on the login, registration,
+  recovery, settings, admin edit and account deletion forms.
+
+### Changed
+
+- Plugin versions: `dh1` 1.2.0, `dh2` 1.2.0; `dnd5e` stays 1.0.0. Dark Heresy
+  sheet `schemaVersion` is now `5` (D&D 5e stays `2`).
+- DH2 creation shows the Adepta Sororitas background as a gender lock: the
+  gender becomes Female and the select is disabled until the background
+  changes.
+- DH1 creation moves the gender select into the Details block; after creation
+  the gender is read-only in both editions.
+- DH2 creation marks every required empty choice in red with `aria-invalid`
+  (aptitudes, role talent, the starting package); choosing a value clears it.
+- `Dialog`/`AlertDialog` open in place with fade+zoom instead of sliding in
+  from the top-left corner, are capped at the viewport height with internal
+  scrolling, and keep a 1rem gutter on mobile. The right-side sheet is
+  unchanged.
+- The DH Info "Backstory" button uses a book icon instead of an eye.
+- Character history labels gender values from the dictionaries instead of
+  showing raw codes.
+
+### Fixed
+
+- The gender no longer changes meaning when the sheet language changes, and
+  rule checks (Sister of Battle) compare a code instead of a translated
+  string.
+- Excel exports show the localized gender label, while the portable JSON keeps
+  the code.
+
 ## [0.7.0] - 2026-11-17
 
 Dark Heresy 2e supplements, creation hints in notes and share-page ownership.

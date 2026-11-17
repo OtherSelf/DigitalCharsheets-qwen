@@ -342,6 +342,8 @@ test.describe('редактирование Dark Heresy', () => {
  */
 test.describe('политика редактирования после создания', () => {
   const LOCK_HINT = 'Chosen at creation — recreate the character to change it.';
+  const GENDER_LOCK_HINT =
+    'Chosen — the gender is fixed after creation; recreate the character to change it.';
 
   test(
     'DH1: заданные creation-поля только читаются (en)',
@@ -356,11 +358,18 @@ test.describe('политика редактирования после созд
       // Фикстура задаёт homeWorld, worldVariant, careerPath, divination и
       // пол: все пять полей после создания только читаются.
       await expect(info.getByTestId('creation-lock')).toHaveCount(5);
-      // Подсказка локализована и доступна скринридеру.
-      await expect(info.getByTestId('creation-lock').first()).toHaveAttribute(
-        'aria-label',
-        LOCK_HINT,
-      );
+      // Подсказки локализованы и доступны скринридеру: у пола своя формулировка
+      // (он запирается не только «при создании»), у остальных — общая.
+      const hints = await info
+        .getByTestId('creation-lock')
+        .evaluateAll((nodes) =>
+          nodes.map((node) => node.getAttribute('aria-label')),
+        );
+      expect(hints).toContain(LOCK_HINT);
+      expect(hints).toContain(GENDER_LOCK_HINT);
+      expect(
+        hints.every((hint) => hint === LOCK_HINT || hint === GENDER_LOCK_HINT),
+      ).toBe(true);
       await expect(info.getByText('Imperial World')).toBeVisible();
       await expect(info.getByText('Shrine World')).toBeVisible();
       // Выбора нет даже в режиме правки: смена мира — только пересозданием.
