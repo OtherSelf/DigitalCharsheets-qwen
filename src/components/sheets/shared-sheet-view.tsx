@@ -31,9 +31,11 @@ import type { Character } from '@/lib/types';
 export function SharedSheetView({
   character,
   history,
+  ownerName,
 }: {
   character: Character;
   history?: SharedHistoryPage | null;
+  ownerName?: string;
 }) {
   const { t } = useTranslation();
   const [tab, setTab] = useState<'sheet' | 'history'>('sheet');
@@ -60,6 +62,15 @@ export function SharedSheetView({
             title={t('share.readOnlyTitle')}
             hint={t('share.readOnlyHint')}
           />
+
+          {ownerName && (
+            <p
+              className="text-muted-foreground mb-3 text-xs"
+              data-testid="shared-owner"
+            >
+              {t('share.ownerName')}: {ownerName}
+            </p>
+          )}
 
           {history && (
             <div

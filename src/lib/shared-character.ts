@@ -131,6 +131,8 @@ function readSharedHistory(
 export interface ResolvedSharedSheet {
   character: Character;
   history: SharedHistoryPage | null;
+  /** Имя владельца для плашки гостевой страницы; uid и логин не отдаём. */
+  ownerName: string;
 }
 
 /**
@@ -161,6 +163,7 @@ export function resolveSharedSheet(token: string): ResolvedSharedSheet | null {
   return {
     character: sanitizeCharacterForShare(character),
     history,
+    ownerName: share.ownerName,
   };
 }
 

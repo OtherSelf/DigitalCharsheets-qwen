@@ -70,6 +70,19 @@ describe('resolveSharedCharacter', () => {
     expect(resolveSharedCharacter('')).toBeNull();
     expect(resolveSharedCharacter('a'.repeat(43))).toBeNull();
   });
+
+  it('resolveSharedSheet отдаёт имя владельца и не утекает uid', () => {
+    const uid = newUid();
+    createUserFolder(uid, 'shared-owner', 'Owner Name');
+    saveCharacterToServer(uid, makeDndCharacter({ id: 'char-1' }));
+    const { token } = issueShareToken(uid, 'char-1');
+
+    const shared = resolveSharedSheet(token);
+
+    expect(shared?.ownerName).toBe('Owner Name');
+    expect(shared?.character.userId).toBeUndefined();
+    expect(JSON.stringify(shared)).not.toContain(uid);
+  });
 });
 
 describe('shared history', () => {

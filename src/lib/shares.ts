@@ -63,6 +63,8 @@ export interface ShareMetadata {
 export interface ResolvedShare extends ShareMetadata {
   uid: string;
   characterId: string;
+  /** Отображаемое имя владельца: сервер показывает его гостю, uid наружу не идёт. */
+  ownerName: string;
 }
 
 export interface IssueShareOptions {
@@ -318,17 +320,17 @@ export function resolveShareToken(
   try {
     const owner = readStoredUser(record.uid);
     if (!owner || owner.isBlocked) return null;
+    return {
+      uid: record.uid,
+      characterId: record.characterId,
+      ownerName: owner.displayName,
+      createdAt: record.createdAt,
+      expiresAt: record.expiresAt,
+      includeHistory: record.includeHistory,
+    };
   } catch {
     return null;
   }
-
-  return {
-    uid: record.uid,
-    characterId: record.characterId,
-    createdAt: record.createdAt,
-    expiresAt: record.expiresAt,
-    includeHistory: record.includeHistory,
-  };
 }
 
 /** Отозвать ссылку листа; возвращает число удалённых записей. */
