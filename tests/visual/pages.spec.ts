@@ -701,6 +701,70 @@ test.describe('общие страницы', () => {
     },
   );
 
+  test(
+    'импорт — баннер проверки на мобильном (en)',
+    { tag: '@mobile' },
+    async ({ page }) => {
+      const username = `review-mobile-${Date.now()}`;
+      const password = 'review-password-1';
+      const registered = await page.request.post('/api/auth/register', {
+        data: {
+          username,
+          password,
+          displayName: 'Review Mobile',
+          recoveryPhrase: 'amber cobalt lantern',
+        },
+      });
+      expect([200, 201], 'регистрация аккаунта').toContain(registered.status());
+
+      const created = await page.request.post('/api/characters', {
+        data: { systemId: 'dh2', name: 'Mobile Review' },
+      });
+      const character = (await created.json()) as {
+        id: string;
+        name: string;
+      };
+      const envelope = {
+        metadata: {
+          appName: 'DigitalCharsheets-qwen',
+          format: 'dcs-export',
+          version: '3.0',
+          kind: 'character',
+          exportDate: '2026-01-01T00:00:00.000Z',
+          characterCount: 1,
+        },
+        character,
+      };
+
+      await signInViaUI(page, { username, password });
+      await openApp(page, '/');
+      await page.getByRole('button', { name: /Import Character/i }).click();
+      await page
+        .getByRole('dialog')
+        .locator('input[type="file"]')
+        .setInputFiles({
+          name: 'review-mobile.json',
+          mimeType: 'application/json',
+          buffer: Buffer.from(JSON.stringify(envelope)),
+        });
+
+      await page.waitForURL(/\/character\/[^/]+$/, { timeout: 30_000 });
+      const banner = page.getByTestId('creation-review-banner');
+      await expect(banner).toBeVisible();
+      await expect(
+        banner.getByTestId('creation-review-confirm'),
+      ).toBeDisabled();
+
+      // Баннер в потоке и не шире экрана: на мобильном он не должен
+      // выталкивать контент горизонтально.
+      const box = await banner.boundingBox();
+      const viewport = page.viewportSize();
+      expect(box, 'баннер измеряется').toBeTruthy();
+      expect(viewport).toBeTruthy();
+      expect(box!.width).toBeLessThanOrEqual(viewport!.width);
+    },
+  );
+
   test('new — выбор системы (en)', async ({ page, context }) => {
     await prepare(context);
     await openApp(page, '/new');
