@@ -125,6 +125,7 @@ const CharacteristicStat = ({
               checked={checked}
               disabled={isCheckboxDisabled(index)}
               onCheckedChange={(c) => onUpgradeChange(index, !!c)}
+              hideIndicator
               className="h-3 w-3"
             />
           ))}
