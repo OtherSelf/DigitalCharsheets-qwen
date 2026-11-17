@@ -53,6 +53,10 @@ export default async function SharePage({
   if (!shared) return <SharedLinkUnavailable />;
 
   return (
-    <SharedSheetView character={shared.character} history={shared.history} />
+    <SharedSheetView
+      character={shared.character}
+      history={shared.history}
+      ownerName={shared.ownerName}
+    />
   );
 }

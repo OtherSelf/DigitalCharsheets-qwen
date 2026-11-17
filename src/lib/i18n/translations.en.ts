@@ -728,6 +728,7 @@ export const enTranslations: Record<string, string> = {
   'share.readOnlyTitle': 'Read-only view',
   'share.readOnlyHint':
     'You are viewing a shared character sheet. Changes are not saved.',
+  'share.ownerName': 'Sheet owner',
   'share.invalidTitle': 'Link is invalid',
   'share.invalidDesc':
     'This link is unknown, expired or revoked. Ask the owner for a new one.',

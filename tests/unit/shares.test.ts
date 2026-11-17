@@ -146,6 +146,7 @@ describe('resolveShareToken', () => {
       uid,
       characterId: CHARACTER_ID,
       includeHistory: false,
+      ownerName: 'Share User',
     });
   });
 

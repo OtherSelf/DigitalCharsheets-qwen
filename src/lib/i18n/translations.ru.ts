@@ -727,6 +727,7 @@ export const ruTranslations: Record<string, string> = {
   'share.readOnlyTitle': 'Просмотр по ссылке',
   'share.readOnlyHint':
     'Вы смотрите лист, которым поделились. Изменения не сохраняются.',
+  'share.ownerName': 'Владелец листа',
   'share.invalidTitle': 'Ссылка недействительна',
   'share.invalidDesc':
     'Ссылка неизвестна, истекла или отозвана. Попросите владельца выпустить новую.',
