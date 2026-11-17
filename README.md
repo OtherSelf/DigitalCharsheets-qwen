@@ -74,7 +74,8 @@ rules for adding documentation. Useful pages:
   reference.
 - [Administration](docs/admin.md) — `/admin`, roles, first administrator.
 - [Export format](docs/export-format.md) — portable JSON/Excel envelope.
-- [Development](docs/development.md) — setup, scripts, code style.
+- [Development](docs/development.md) — setup, scripts, code style, release versions.
+- [Changelog](CHANGELOG.md) — released app, plugin and SDK versions.
 - [Testing](docs/testing.md) — unit, smoke, visual and pre-deploy checks.
 - [Deployment](docs/deployment.md) — production start, env vars, backups.
 
