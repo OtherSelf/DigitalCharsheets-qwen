@@ -327,4 +327,7 @@ page uses it to switch to read-only mode.
   additive and do not change the manifest.
 - `schemaVersion` — the sheet format written by the plugin; bump it together
   with a migration step when the sheet shape changes.
-- `version` — the plugin's own semver, shown in admin.
+- `version` — the plugin's own semver, shown in admin. It is a plugin axis:
+  any change inside the plugin folder bumps it by one minor per release, even
+  when `schemaVersion` does not change (and vice versa: a sheet-format bump
+  alone is still a plugin change).

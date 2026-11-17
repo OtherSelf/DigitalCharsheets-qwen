@@ -40,6 +40,14 @@ the manifest data — version, sheet schema version, conformance tag and host AP
 dependency — plus two independent switches stored in
 `<data-dir>/settings/game-catalog.json` (v2):
 
+The line under the version badge reads `Schema <schemaVersion> · <conformance>
+· host API <host>` (labels follow the UI language): the sheet format the
+plugin writes, the `tests.conformance` tag (CI/admin metadata, never executed
+at runtime), and the Plugin API range from `dependencies.host` that the
+generator checks against the host. Version axes and their bump rules are in
+[development.md](development.md); manifest fields are in
+[plugin-sdk.md](plugin-sdk.md).
+
 | Control | Stored as | Effect |
 | --- | --- | --- |
 | Current visibility | `plugins[id].visibility` | Overrides the manifest `defaultStatus`: |
