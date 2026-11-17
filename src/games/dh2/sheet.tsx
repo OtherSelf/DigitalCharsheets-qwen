@@ -900,27 +900,9 @@ export const Dh2Sheet = React.forwardRef<
                       className="mx-auto h-6 w-12 px-1 text-center text-xs"
                     />
                   ) : (
-                    <div className="flex items-center justify-center gap-1">
-                      <Button
-                        size="icon"
-                        variant="outline"
-                        className="h-5 w-5"
-                        onClick={() => handlePointChange('insanityPoints', -1)}
-                      >
-                        <Minus className="h-3 w-3" />
-                      </Button>
-                      <span className="min-w-[1.2rem] text-center text-sm font-bold">
-                        {getSimplePointsObject(character.insanityPoints).total}
-                      </span>
-                      <Button
-                        size="icon"
-                        variant="outline"
-                        className="h-5 w-5"
-                        onClick={() => handlePointChange('insanityPoints', 1)}
-                      >
-                        <Plus className="h-3 w-3" />
-                      </Button>
-                    </div>
+                    <span className="text-sm font-bold">
+                      {getSimplePointsObject(character.insanityPoints).total}
+                    </span>
                   )}
                 </div>
               </MetricBox>
@@ -957,32 +939,9 @@ export const Dh2Sheet = React.forwardRef<
                       className="mx-auto h-6 w-12 px-1 text-center text-xs"
                     />
                   ) : (
-                    <div className="flex items-center justify-center gap-1">
-                      <Button
-                        size="icon"
-                        variant="outline"
-                        className="h-5 w-5"
-                        onClick={() =>
-                          handlePointChange('corruptionPoints', -1)
-                        }
-                      >
-                        <Minus className="h-3 w-3" />
-                      </Button>
-                      <span className="min-w-[1.2rem] text-center text-sm font-bold">
-                        {
-                          getSimplePointsObject(character.corruptionPoints)
-                            .total
-                        }
-                      </span>
-                      <Button
-                        size="icon"
-                        variant="outline"
-                        className="h-5 w-5"
-                        onClick={() => handlePointChange('corruptionPoints', 1)}
-                      >
-                        <Plus className="h-3 w-3" />
-                      </Button>
-                    </div>
+                    <span className="text-sm font-bold">
+                      {getSimplePointsObject(character.corruptionPoints).total}
+                    </span>
                   )}
                 </div>
               </MetricBox>
@@ -1838,35 +1797,12 @@ export const Dh2Sheet = React.forwardRef<
                           className="mx-auto h-8 w-16 text-center text-lg font-bold"
                         />
                       ) : (
-                        <div className="flex items-center justify-center gap-2">
-                          {' '}
-                          <Button
-                            size="icon"
-                            variant="outline"
-                            className="h-6 w-6"
-                            onClick={() =>
-                              handlePointChange('insanityPoints', -1)
-                            }
-                          >
-                            <Minus className="h-4 w-4" />
-                          </Button>
-                          <p className="text-primary w-12 text-center text-2xl font-bold">
-                            {
-                              getSimplePointsObject(character.insanityPoints)
-                                .total
-                            }
-                          </p>
-                          <Button
-                            size="icon"
-                            variant="outline"
-                            className="h-6 w-6"
-                            onClick={() =>
-                              handlePointChange('insanityPoints', 1)
-                            }
-                          >
-                            <Plus className="h-4 w-4" />
-                          </Button>
-                        </div>
+                        <p className="text-primary w-12 text-center text-2xl font-bold">
+                          {
+                            getSimplePointsObject(character.insanityPoints)
+                              .total
+                          }
+                        </p>
                       )}
                     </div>
                   </MetricBox>
@@ -1906,35 +1842,12 @@ export const Dh2Sheet = React.forwardRef<
                           className="mx-auto h-8 w-16 text-center text-lg font-bold"
                         />
                       ) : (
-                        <div className="flex items-center justify-center gap-2">
-                          {' '}
-                          <Button
-                            size="icon"
-                            variant="outline"
-                            className="h-6 w-6"
-                            onClick={() =>
-                              handlePointChange('corruptionPoints', -1)
-                            }
-                          >
-                            <Minus className="h-4 w-4" />
-                          </Button>
-                          <p className="text-primary w-12 text-center text-2xl font-bold">
-                            {
-                              getSimplePointsObject(character.corruptionPoints)
-                                .total
-                            }
-                          </p>
-                          <Button
-                            size="icon"
-                            variant="outline"
-                            className="h-6 w-6"
-                            onClick={() =>
-                              handlePointChange('corruptionPoints', 1)
-                            }
-                          >
-                            <Plus className="h-4 w-4" />
-                          </Button>
-                        </div>
+                        <p className="text-primary w-12 text-center text-2xl font-bold">
+                          {
+                            getSimplePointsObject(character.corruptionPoints)
+                              .total
+                          }
+                        </p>
                       )}
                     </div>
                   </MetricBox>
