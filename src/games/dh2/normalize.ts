@@ -3,6 +3,7 @@ import { deriveAptitudes } from './dh2e-aptitudes';
 import { DH2E_BACKGROUNDS, DH2E_HOMEWORLDS, DH2E_ROLES } from './dh2e-data';
 import { resolveDivinationId } from './dh2e-divinations';
 import { readStartingChoices } from './dh2e-grants';
+import { resolveGender } from './gender';
 import type { DH2Character } from './types';
 
 /**
@@ -17,12 +18,15 @@ import type { DH2Character } from './types';
  *     лист 2e не должен показывать карьеру и ранг;
  *   • мир DH1 → id 2e, `Imperial World` остаётся только в `notes`;
  *   • пророчество DH1 → строка 2-9, неизвестное — в `notes`;
+ *   • пол — каноническим кодом (D3): старые подписи переводятся, неизвестный
+ *     текст становится `unspecified` и сохраняется в `notes`;
  *   • у характеристики пять ступеней (4-й флаг DH1 сохраняется, 5-й = false);
  *   • профиль аптитюд пересобирается из мира/бэкграунда/роли, если пуст;
  *   • функция идемпотентна: повторный прогон не меняет лист.
  */
 
 const MIGRATION_NOTE_MARKER = '[migration v2]';
+const GENDER_NOTE_MARKER = '[gender migration]';
 
 type RawRecord = Record<string, unknown>;
 
@@ -98,6 +102,26 @@ function appendMigrationNote(raw: RawRecord, line: string): void {
   if (notes.includes(line)) return;
   const block = `${MIGRATION_NOTE_MARKER} ${line}`;
   raw.notes = notes.trim() ? `${notes.trimEnd()}\n\n${block}` : block;
+}
+
+/**
+ * Пол — код (D3). Неизвестный текст не отбрасываем: он уходит в `notes`
+ * отдельным блоком, чтобы игрок увидел, что именно было написано. Блок
+ * добавляется один раз — иначе каждый прогон нормализации дописывал бы его
+ * заново (миграция обязана быть идемпотентной).
+ */
+function migrateGender(character: RawRecord, warnings: string[]): void {
+  const resolution = resolveGender(character.gender);
+  character.gender = resolution.code;
+  const legacy = resolution.legacyText;
+  if (!legacy) return;
+
+  const line = `${GENDER_NOTE_MARKER} пол: ${legacy}`;
+  const notes = typeof character.notes === 'string' ? character.notes : '';
+  if (!notes.includes(line)) {
+    character.notes = notes.trim() ? `${notes.trimEnd()}\n\n${line}` : line;
+  }
+  warnings.push(`dh2: пол «${legacy}» не распознан, стал unspecified`);
 }
 
 function hasMeaningfulValue(value: unknown): boolean {
@@ -298,7 +322,7 @@ function enforceDh2Fields(character: RawRecord, warnings: string[]): void {
   );
   if (!Array.isArray(character.experienceLog)) character.experienceLog = [];
   if (typeof character.divination !== 'string') character.divination = '';
-  if (typeof character.gender !== 'string') character.gender = '';
+  migrateGender(character, warnings);
 
   // Тренировка навыка: `plus30` стало обязательным в типе v2.
   if (Array.isArray(character.skills)) {

@@ -1,13 +1,14 @@
 import { z } from 'zod';
 
 import { inventoryItemSchema, questSchema } from '../shared/schemas';
-import type {
-  DarkHeresyBase,
-  DarkHeresyCoreStatNotes,
-  DarkHeresyCoreStats,
-  DarkHeresyCoreStatUpgrades,
-  Skill,
-  Talent,
+import {
+  GENDER_CODES,
+  type DarkHeresyBase,
+  type DarkHeresyCoreStatNotes,
+  type DarkHeresyCoreStats,
+  type DarkHeresyCoreStatUpgrades,
+  type Skill,
+  type Talent,
 } from './types';
 
 /**
@@ -178,7 +179,7 @@ export const darkHeresyBaseFields = {
   background: z.string(),
   role: z.string(),
   divination: z.string(),
-  gender: z.string(),
+  gender: z.enum(GENDER_CODES),
   aptitudes: z.looseObject({
     profile: z.array(z.string()),
     chosen: z.record(z.string(), z.string()),

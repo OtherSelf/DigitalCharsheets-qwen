@@ -65,6 +65,7 @@ import {
 } from '../divination-i18n';
 import { dh1ExperienceRows } from '../experience';
 import { isCreationFieldLocked } from '../field-policy';
+import { genderLabel, genderOptions, toGenderCode } from '../gender';
 import { type DarkHeresyCareerPath, type DH1Character } from '../types';
 import { EditSaveButton } from './dh-ui-helpers';
 
@@ -402,16 +403,22 @@ export const InfoSection = ({
                 isCompactView={isCompactView}
               />
 
-              <DetailField
+              <CreationField
                 label={t('dh1.gender')}
-                value={character.identity?.gender ?? ''}
+                value={genderLabel(character.identity?.gender ?? '', t)}
+                placeholder={t('dh1.selectGender')}
                 editing={isInfoEditing}
-                onBlur={(e) =>
+                locked={isCreationFieldLocked(character.identity?.gender)}
+                isCompactView={isCompactView}
+                options={genderOptions(t)}
+                onSelect={(next) =>
                   updateCharacter(character.id, {
-                    identity: { ...character.identity, gender: e.target.value },
+                    identity: {
+                      ...character.identity,
+                      gender: toGenderCode(next),
+                    },
                   })
                 }
-                isCompactView={isCompactView}
               />
               <DetailField
                 label={t('dh1.build')}

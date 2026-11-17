@@ -126,7 +126,8 @@ describe('состояния Безумия/Порчи (D7/D12/D17)', () => {
 
     expect(character.conditions).toEqual([]);
     expect(dh1CharacterSchema.parse(character).conditions).toEqual([]);
-    expect(DH1_SCHEMA_VERSION).toBe(4);
+    // `conditions` появились в версии 4: тест про аддитивность, не про текущую.
+    expect(DH1_SCHEMA_VERSION).toBeGreaterThanOrEqual(4);
   });
 
   it('DH2: условия аддитивны, по умолчанию пустой массив', () => {
@@ -139,7 +140,7 @@ describe('состояния Безумия/Порчи (D7/D12/D17)', () => {
 
     expect(character.conditions).toEqual([]);
     expect(dh2CharacterSchema.parse(character).conditions).toEqual([]);
-    expect(DH2_SCHEMA_VERSION).toBe(4);
+    expect(DH2_SCHEMA_VERSION).toBeGreaterThanOrEqual(4);
   });
 
   it('DH1: conditions попадают в JSON- и Excel-экспорт', () => {

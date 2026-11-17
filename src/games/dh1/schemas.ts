@@ -1,13 +1,14 @@
 import { z } from 'zod';
 
 import { inventoryItemSchema, questSchema } from '../shared/schemas';
-import type {
-  DarkHeresyBase,
-  DarkHeresyCoreStatNotes,
-  DarkHeresyCoreStats,
-  DarkHeresyCoreStatUpgrades,
-  Skill,
-  Talent,
+import {
+  GENDER_CODES,
+  type DarkHeresyBase,
+  type DarkHeresyCoreStatNotes,
+  type DarkHeresyCoreStats,
+  type DarkHeresyCoreStatUpgrades,
+  type Skill,
+  type Talent,
 } from './types';
 
 /**
@@ -205,7 +206,7 @@ const psyPowerSchema = z.looseObject({
 // looseObject: старые JSON несут identity.playerName — он не поле листа, но
 // парс не должен падать и не должен терять остальную идентичность.
 export const dh1IdentitySchema = z.looseObject({
-  gender: z.string().optional(),
+  gender: z.enum(GENDER_CODES).optional(),
   build: z.string().optional(),
   handedness: z.string().optional(),
 });

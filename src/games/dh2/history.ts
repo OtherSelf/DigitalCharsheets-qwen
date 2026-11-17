@@ -96,5 +96,13 @@ export const dh2History: GameHistoryConfig = {
     customResources: 'common.statsTab',
     conditions: 'dh2.conditions.title',
   },
+  valueLabels: {
+    // Пол в данных — код (D3); игрок должен видеть подпись, а не `female`.
+    gender: {
+      male: 'dh2.genderMale',
+      female: 'dh2.genderFemale',
+      unspecified: 'dh2.genderUnspecified',
+    },
+  },
   itemLabelFields: ['name', 'title', 'description'],
 };

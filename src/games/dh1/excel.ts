@@ -1,5 +1,6 @@
 import { createExcelSections } from '../shared/excel';
 import type { ExcelSection, ExportTranslate, GameExportConfig } from '../types';
+import { genderLabel } from './gender';
 import type { DarkHeresyStatUpgrade, DH1Character } from './types';
 
 /**
@@ -50,7 +51,7 @@ export function buildDh1ExcelSections(
     w.row('dh1.skinColor', character.skinColor);
     w.row('dh1.hairColor', character.hairColor);
     w.row('dh1.eyeColor', character.eyeColor);
-    w.row('dh1.gender', character.identity?.gender ?? '');
+    w.row('dh1.gender', genderLabel(character.identity?.gender ?? '', t));
     w.row('dh1.build', character.identity?.build ?? '');
     w.row('dh1.handedness', character.identity?.handedness ?? '');
     w.row('dh1.experience', character.experience);

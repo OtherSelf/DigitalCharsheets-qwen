@@ -118,5 +118,13 @@ export const dh1History: GameHistoryConfig = {
     experienceLog: 'dh1.experienceLog',
     conditions: 'dh1.conditions.title',
   },
+  valueLabels: {
+    // Пол в данных — код (D3); игрок должен видеть подпись, а не `female`.
+    'identity.gender': {
+      male: 'dh1.genderMale',
+      female: 'dh1.genderFemale',
+      unspecified: 'dh1.genderUnspecified',
+    },
+  },
   itemLabelFields: ['name', 'title', 'description'],
 };

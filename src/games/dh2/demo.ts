@@ -36,7 +36,7 @@ export function createDh2Demo(): DH2CharacterDraft {
       })(),
     },
     divination: 'd100-10',
-    gender: 'Male',
+    gender: 'male',
     eliteAdvances: ['psyker'],
     psy: { rating: 2, disciplines: ['Telepathy'], powers: ['Mind Link'] },
     startingChoices: {
