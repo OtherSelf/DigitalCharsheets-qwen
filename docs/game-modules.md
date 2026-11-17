@@ -102,6 +102,11 @@ Common behaviour is mirrored on purpose: creation fields, the XP journal,
 history labels, compact view and the export channels (JSON/Excel). Rules are
 kept in the module, not in the core; see `docs/data-storage.md` for fields.
 
+The experience block works the same in both editions: current and spent XP are
+read-only text until Edit, and the derived free XP (`experience −
+totalExpSpent`) turns `text-destructive` when negative. The value is a
+computed number, not a stored field, and it is not clamped.
+
 ### Second-edition sheet rules
 
 The 2e module owns the rules that only exist in that edition:

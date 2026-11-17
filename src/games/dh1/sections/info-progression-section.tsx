@@ -848,6 +848,7 @@ export const ProgressionSection = ({
   const [awardAmount, setAwardAmount] = React.useState('100');
   const [awardWhat, setAwardWhat] = React.useState('');
   const expInputRef = React.useRef<HTMLInputElement>(null);
+  const totalExpInputRef = React.useRef<HTMLInputElement>(null);
 
   // ─── LANDMARK: SYNC CURRENT EXP ───
   // Черновик «Текущего опыта» раньше инициализировался один раз при монтировании
@@ -863,6 +864,18 @@ export const ProgressionSection = ({
       return;
     setEditableExperience(character.experience ?? 0);
   }, [character.experience]);
+
+  // «Потрачено опыта» вне режима правки — текст, поэтому черновик обязан
+  // догонять сохранённое значение: иначе ранг считался бы по старому числу
+  // после правки из журнала опыта или из другой вкладки.
+  React.useEffect(() => {
+    if (
+      typeof document !== 'undefined' &&
+      document.activeElement === totalExpInputRef.current
+    )
+      return;
+    setEditableTotalExpSpent(character.totalExpSpent ?? 0);
+  }, [character.totalExpSpent]);
 
   const [isAdvancedPathModalOpen, setIsAdvancedPathModalOpen] =
     React.useState(false);
@@ -1018,6 +1031,8 @@ export const ProgressionSection = ({
     updateCharacter(character.id, { experience: next });
   };
 
+  const availableExp = editableExperience - editableTotalExpSpent;
+
   const handleSelectAdvancedPath = (pathName: string) => {
     updateCharacter(character.id, { advancedPath: pathName });
     setEditableAdvancedPath(pathName);
@@ -1096,45 +1111,71 @@ export const ProgressionSection = ({
           <div className="flex flex-col space-y-4">
             <div className="space-y-1">
               <Label
-                htmlFor="current-exp-edit"
+                htmlFor={isProgressionEditing ? 'current-exp-edit' : undefined}
                 className="text-muted-foreground text-xs"
               >
                 {t('dh1.currentExp')}
               </Label>
-              <Input
-                id="current-exp-edit"
-                ref={expInputRef}
-                type="number"
-                min={0}
-                value={editableExperience === 0 ? '' : editableExperience}
-                onChange={handleCurrentExpChange}
-                className="h-9"
-              />
+              {isProgressionEditing ? (
+                <Input
+                  id="current-exp-edit"
+                  ref={expInputRef}
+                  type="number"
+                  min={0}
+                  value={editableExperience === 0 ? '' : editableExperience}
+                  onChange={handleCurrentExpChange}
+                  className="h-9"
+                />
+              ) : (
+                <p
+                  data-testid="current-exp-value"
+                  className="text-sm font-medium"
+                >
+                  {editableExperience}
+                </p>
+              )}
             </div>
             <div className="space-y-1">
               <Label
-                htmlFor="total-exp-edit"
+                htmlFor={isProgressionEditing ? 'total-exp-edit' : undefined}
                 className="text-muted-foreground text-xs"
               >
                 {t('dh1.totalExpSpent')}
               </Label>
-              <Input
-                id="total-exp-edit"
-                type="number"
-                value={editableTotalExpSpent === 0 ? '' : editableTotalExpSpent}
-                onChange={handleTotalExpChange}
-                onBlur={handleSaveTotalExp}
-                disabled={!isProgressionEditing}
-                className="h-9"
-              />
+              {isProgressionEditing ? (
+                <Input
+                  id="total-exp-edit"
+                  ref={totalExpInputRef}
+                  type="number"
+                  value={
+                    editableTotalExpSpent === 0 ? '' : editableTotalExpSpent
+                  }
+                  onChange={handleTotalExpChange}
+                  onBlur={handleSaveTotalExp}
+                  className="h-9"
+                />
+              ) : (
+                <p
+                  data-testid="total-exp-spent-value"
+                  className="text-sm font-medium"
+                >
+                  {editableTotalExpSpent}
+                </p>
+              )}
             </div>
 
             <div className="space-y-1">
               <Label className="text-muted-foreground text-xs">
                 {t('dh1.availableExp')}
               </Label>
-              <p className="text-primary text-sm font-semibold">
-                {editableExperience - editableTotalExpSpent}
+              <p
+                data-testid="available-exp"
+                className={cn(
+                  'text-sm font-semibold',
+                  availableExp < 0 ? 'text-destructive' : 'text-primary',
+                )}
+              >
+                {availableExp}
               </p>
             </div>
 

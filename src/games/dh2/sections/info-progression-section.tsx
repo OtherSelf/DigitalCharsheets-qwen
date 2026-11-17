@@ -1050,7 +1050,12 @@ export const ProgressionSection = ({
                 className="h-8"
               />
             ) : (
-              <p className="text-sm font-medium">{character.experience ?? 0}</p>
+              <p
+                data-testid="current-exp-value"
+                className="text-sm font-medium"
+              >
+                {character.experience ?? 0}
+              </p>
             )}
           </div>
           <div className="space-y-1">
@@ -1069,7 +1074,10 @@ export const ProgressionSection = ({
                 className="h-8"
               />
             ) : (
-              <p className="text-sm font-medium">
+              <p
+                data-testid="total-exp-spent-value"
+                className="text-sm font-medium"
+              >
                 {character.totalExpSpent ?? 0}
               </p>
             )}
@@ -1078,7 +1086,15 @@ export const ProgressionSection = ({
             <Label className="text-muted-foreground text-xs">
               {t('dh2.availableExp')}
             </Label>
-            <p className="text-primary text-sm font-semibold">{available}</p>
+            <p
+              data-testid="available-exp"
+              className={cn(
+                'text-sm font-semibold',
+                available < 0 ? 'text-destructive' : 'text-primary',
+              )}
+            >
+              {available}
+            </p>
           </div>
         </div>
 
