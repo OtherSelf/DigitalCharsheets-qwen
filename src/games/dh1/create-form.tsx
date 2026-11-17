@@ -42,6 +42,7 @@ import {
   focusFirstInvalidField,
 } from '@/lib/form-validation';
 
+import { dh1CreationHintsMarkdown } from './creation-hints';
 import {
   ALL_QUIRKS,
   CAREER_KEYS,
@@ -271,7 +272,19 @@ export function DarkHeresyCreateForm({
   };
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    const newCharacter = createDh1Defaults(values);
+    const notes = dh1CreationHintsMarkdown(
+      {
+        homeWorld: values.homeWorld,
+        worldVariant: values.worldVariant,
+        careerPath: values.careerPath,
+        divination: values.divination,
+        quirk: values.quirk,
+        wounds: values.wounds,
+        fatePoints: values.fatePoints,
+      },
+      t,
+    );
+    const newCharacter = createDh1Defaults({ ...values, notes });
 
     const docRef = await addCharacter(newCharacter);
 

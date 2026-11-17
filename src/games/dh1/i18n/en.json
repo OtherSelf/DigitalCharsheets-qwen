@@ -1,5 +1,7 @@
 {
   "dh1.talentsAndTraits": "Talents & Traits",
+  "dh1.creationHintsTitle": "Creation hints",
+  "dh1.creationHintsIntro": "Generated when the character was created. Copy the values to the sheet manually, then delete this block.",
   "dh1.equipment": "Equipment",
   "dh1.homeWorld": "Home World",
   "dh1.careerPath": "Career Path",

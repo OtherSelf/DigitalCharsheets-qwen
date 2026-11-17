@@ -105,7 +105,7 @@ export function createDarkHeresyBaseDefaults(
     totalExpSpent,
     alternatePath: readNullableString(input, 'alternatePath'),
     advancedPath: readNullableString(input, 'advancedPath'),
-    notes: '',
+    notes: readString(input, 'notes', ''),
     questLog: [],
     wounds: { current: wounds, max: wounds },
     fatePoints: { current: fatePoints, max: fatePoints },

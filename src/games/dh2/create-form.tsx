@@ -43,6 +43,7 @@ import {
   focusFirstInvalidField,
 } from '@/lib/form-validation';
 
+import { dh2CreationHintsMarkdown } from './creation-hints';
 import { createDh2Defaults } from './defaults';
 import { characteristicAptitudes, deriveAptitudes } from './dh2e-aptitudes';
 import {
@@ -306,15 +307,30 @@ export function DarkHeresyCreateForm({ onCreated }: CreateFormProps) {
   };
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    const startingChoices = {
+      ...(role && roleTalent ? { roleTalent } : {}),
+      skills: chosenSkillValues,
+      talents: chosenTalentValues,
+    };
+    const notes = dh2CreationHintsMarkdown(
+      {
+        homeWorld: values.homeWorld,
+        background: values.background,
+        role: values.role,
+        aptitudes: aptitudes.profile,
+        startingChoices,
+        divination: values.divination,
+        wounds: values.wounds,
+        fatePoints: values.fatePoints,
+      },
+      t,
+    );
     const newCharacter = createDh2Defaults({
       ...values,
+      notes,
       chosen: aptitudeChosen,
       strictAptitudeChoices: true,
-      startingChoices: {
-        ...(role && roleTalent ? { roleTalent } : {}),
-        skills: chosenSkillValues,
-        talents: chosenTalentValues,
-      },
+      startingChoices,
     });
     const docRef = await addCharacter(newCharacter);
 
