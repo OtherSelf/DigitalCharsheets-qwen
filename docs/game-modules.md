@@ -181,8 +181,8 @@ Every module folder has a `plugin.json` (`src/games/plugin.schema.json`):
 Rules:
 
 - `id` equals the folder name and the sheet `systemId`; `version` is semver.
-- `name`/`description` are the display source (admin, creation wizard); other
-  strings stay in `i18n/*`.
+- `name`/`description` are the display source (admin, creation wizard) and
+  declare at least one of `en`/`ru`; other strings stay in `i18n/<locale>.*`.
 - `game` is the family block (D17): every edition of one `gameId` declares the
   same `id`/`order`/`name`, and the generator fails if they differ.
 - `entry.module` is `<file>#<export>`; `demo`/`export`/`migrations` are entry
@@ -254,7 +254,7 @@ per-game save handlers out of the page.
 | `shortCode` | Locale-independent edition code for the admin character list (`dnd5e`, `dh1e`, `dh2e`); not translated, the full game + edition goes to the tooltip. |
 | `schemaVersion` | Sheet format written by the module: `2` for `dnd5e`, `5` for `dh1`/`dh2`; manifests declare it and the migration chain ends here. |
 | `schema` | Zod schema; `ZodType<TCharacter>` makes `tsc` check it against the type. |
-| `i18n` | `{ en, ru }` dictionaries, merged by the core. |
+| `i18n` | Declared locales (`en`/`ru` plus optional extras), merged by the core with an en↔ru fallback. |
 | `capabilities` | Fixed feature flags of the module (influence, +30, fatigue field). |
 | `createDefaults()` | Character draft (no `id`) for forms/tests. |
 | `createDemo()` | Demo character for `/demo` (no `id`). |

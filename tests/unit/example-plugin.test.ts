@@ -30,6 +30,8 @@ type Generator = {
   buildRegistry(options: { gamesDir: string; schemaPath: string }): {
     plugins: { id: string }[];
     content: string;
+    i18nContent: string;
+    gamesContent: string;
   };
   validatePluginFolder(input: {
     gamesDir: string;
@@ -98,11 +100,80 @@ describe('эталонный плагин: манифест', () => {
     expect(exampleManifest.pluginApi).toBe('^1.0.0');
     expect(exampleManifest.schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
     expect(exampleManifest.defaultStatus).toBe('hidden');
-    expect(PLUGIN_API_VERSION).toBe('1.1.0');
+    expect(PLUGIN_API_VERSION).toBe('1.3.0');
     // Фикстура не попадает в боевой реестр.
     expect(gamePlugins.some((plugin) => plugin.manifest.id === 'example')).toBe(
       false,
     );
+  });
+});
+
+/**
+ * Вариант фикстуры во временной папке: правим манифест и словари, не трогая
+ * эталон в `tests/fixtures`.
+ */
+function installLocaleVariant(
+  mutate: (pluginDir: string, manifest: any) => void,
+): { gamesDir: string; schemaPath: string } {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'dcs-example-locale-'));
+  tempDirs.push(root);
+  const gamesDir = path.join(root, 'src/games');
+  fs.mkdirSync(gamesDir, { recursive: true });
+  const pluginDir = path.join(gamesDir, 'example');
+  fs.cpSync(FIXTURE_DIR, pluginDir, { recursive: true });
+  const manifestPath = path.join(pluginDir, 'plugin.json');
+  const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+  mutate(pluginDir, manifest);
+  fs.writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+  return {
+    gamesDir,
+    schemaPath: path.join(process.cwd(), 'src/games/plugin.schema.json'),
+  };
+}
+
+describe('эталонный плагин: неполные и дополнительные локали (SDK 1.3)', () => {
+  it('плагин только с ru проходит генерацию и не тянет en', async () => {
+    const { buildRegistry } = await generator();
+    const { gamesDir, schemaPath } = installLocaleVariant((dir, manifest) => {
+      manifest.i18n = { ru: 'i18n/ru.json' };
+      manifest.name = { ru: manifest.name.ru };
+      manifest.description = { ru: manifest.description.ru };
+      fs.rmSync(path.join(dir, 'i18n/en.json'));
+    });
+
+    const built = buildRegistry({ gamesDir, schemaPath });
+    expect(built.i18nContent).toContain('example: { ru: exampleRu }');
+    expect(built.i18nContent).not.toContain('exampleEn');
+  });
+
+  it('плагин с en+ru+de проходит генерацию, de не ломает реестр', async () => {
+    const { buildRegistry } = await generator();
+    const { gamesDir, schemaPath } = installLocaleVariant((dir, manifest) => {
+      fs.copyFileSync(
+        path.join(dir, 'i18n/en.json'),
+        path.join(dir, 'i18n/de.json'),
+      );
+      manifest.i18n = { ...manifest.i18n, de: 'i18n/de.json' };
+    });
+
+    const built = buildRegistry({ gamesDir, schemaPath });
+    expect(built.i18nContent).toContain('de: exampleDe');
+    expect(built.content).toContain('exampleModule');
+  });
+
+  it('плагин без en/ru отклоняется с понятной ошибкой', async () => {
+    const { buildRegistry } = await generator();
+    const { gamesDir, schemaPath } = installLocaleVariant((dir, manifest) => {
+      fs.copyFileSync(
+        path.join(dir, 'i18n/en.json'),
+        path.join(dir, 'i18n/de.json'),
+      );
+      manifest.i18n = { de: 'i18n/de.json' };
+      manifest.name = { de: manifest.name.en };
+      manifest.description = { de: manifest.description.en };
+    });
+
+    expect(() => buildRegistry({ gamesDir, schemaPath })).toThrow(/en или ru/);
   });
 });
 

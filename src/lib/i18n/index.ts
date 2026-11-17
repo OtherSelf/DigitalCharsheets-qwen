@@ -2,6 +2,7 @@ import { generatedGameI18n, generatedI18n } from '@/games/i18n.generated';
 import { en as gamesCoreEn } from '@/games/i18n/en';
 import { ru as gamesCoreRu } from '@/games/i18n/ru';
 
+import { pluginMessagesFor } from './plugin-messages';
 import { enTranslations } from './translations.en';
 import { ruTranslations } from './translations.ru';
 
@@ -41,12 +42,12 @@ export const translations: Record<string, Record<string, string>> = {
     enTranslations,
     gamesCoreEn,
     generatedGameI18n.en,
-    ...moduleDictionaries.map((messages) => messages.en),
+    ...moduleDictionaries.map((messages) => pluginMessagesFor(messages, 'en')),
   ]),
   ru: mergeDictionaries([
     ruTranslations,
     gamesCoreRu,
     generatedGameI18n.ru,
-    ...moduleDictionaries.map((messages) => messages.ru),
+    ...moduleDictionaries.map((messages) => pluginMessagesFor(messages, 'ru')),
   ]),
 };

@@ -56,11 +56,25 @@ export interface GameDefinition {
   readonly descriptionKey: string;
 }
 
-/** Словари модуля; общий слой собирается в `src/lib/i18n`. */
+/** Языки интерфейса сайта; локали плагина могут быть шире. */
+export type SiteLanguage = 'en' | 'ru';
+export const SITE_LANGUAGES: readonly SiteLanguage[] = ['en', 'ru'];
+
+/** Строгие словари слоя сайта: общий слой, метаданные семейств игр. */
 export interface LocalizedMessages {
   readonly en: Readonly<Record<string, string>>;
   readonly ru: Readonly<Record<string, string>>;
 }
+
+/**
+ * Словари плагина: объявленные локали могут быть неполными (хотя бы одна из
+ * `en`/`ru`) и дополнительными (`de`, `pt-BR`, …). Сайт берёт `en`/`ru` и
+ * подставляет второй язык при отсутствии первого (D8).
+ */
+export type PluginLocalizedMessages = Partial<
+  Record<SiteLanguage, Readonly<Record<string, string>>>
+> &
+  Readonly<Record<string, Readonly<Record<string, string>> | undefined>>;
 
 /**
  * Минимальная структурная база листа для контракта. Конкретные типы
@@ -417,8 +431,8 @@ export interface GameModule<
   /** Строгая zod-схема листа (сверяется с типом через tsc). */
   readonly schema: ZodType<TCharacter>;
 
-  /** Словари модуля (en/ru), сливаются с общим слоем при инициализации. */
-  readonly i18n: LocalizedMessages;
+  /** Словари модуля (неполные локали допустимы), сливаются общим слоем. */
+  readonly i18n: PluginLocalizedMessages;
 
   /** Capability-конфиг общих компонентов (DH1/DH2 и т.п.). */
   readonly capabilities: ModuleCapabilities;

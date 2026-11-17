@@ -3,7 +3,6 @@ import path from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-import { listGameModules } from '@/games/registry';
 import { translations } from '@/lib/i18n';
 
 /**
@@ -22,9 +21,9 @@ import { translations } from '@/lib/i18n';
 const ROOT = process.cwd();
 const SRC = path.join(ROOT, 'src');
 /**
- * Файлы словарей. Ядро пока TS (`translations.*.ts`), плагины — JSON
- * (`i18n/{en,ru}.json`, D13), поэтому список собирается сканированием, а не
- * руками: новый плагин не требует правок теста.
+ * Файлы словарей. Ядро пока TS (`translations.*.ts`), плагины — JSON (D13),
+ * но локаль больше не обязана называться `en`/`ru`: список собирается
+ * сканированием папок `i18n`, а паритет проверяется по манифестам.
  */
 function dictionaryFiles(): string[] {
   const fixed = [
@@ -37,16 +36,11 @@ function dictionaryFiles(): string[] {
   const pluginDictionaries = fs
     .readdirSync(pluginsDir, { recursive: true, encoding: 'utf8' })
     .map((file) => path.join(pluginsDir, file))
-    .filter((file) => {
-      const base = path.basename(file);
-      return (
-        (base === 'en.json' ||
-          base === 'ru.json' ||
-          base === 'en.ts' ||
-          base === 'ru.ts') &&
-        file.includes(`${path.sep}i18n${path.sep}`)
-      );
-    })
+    .filter(
+      (file) =>
+        /\.(json|ts)$/.test(file) &&
+        file.includes(`${path.sep}i18n${path.sep}`),
+    )
     .sort();
   return [...fixed, ...pluginDictionaries].filter((file) =>
     fs.existsSync(file),
@@ -90,6 +84,38 @@ function duplicateKeys(file: string): string[] {
     .filter(([, count]) => count > 1)
     .map(([key]) => key)
     .sort();
+}
+
+/**
+ * Манифесты плагинов из `src/games/<id>/plugin.json`: источник истины о том,
+ * какие локали плагин объявил.
+ */
+function pluginManifests(): { dir: string; manifest: any }[] {
+  const gamesDir = path.join(SRC, 'games');
+  return fs
+    .readdirSync(gamesDir, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => {
+      const dir = path.join(gamesDir, entry.name);
+      const manifestPath = path.join(dir, 'plugin.json');
+      return fs.existsSync(manifestPath)
+        ? { dir, manifest: JSON.parse(fs.readFileSync(manifestPath, 'utf8')) }
+        : null;
+    })
+    .filter((entry): entry is { dir: string; manifest: any } => !!entry);
+}
+
+/** Ключи словаря: JSON читаем как JSON, legacy `.ts` — построчно. */
+function dictionaryKeys(file: string): string[] {
+  if (file.endsWith('.json')) {
+    return Object.keys(JSON.parse(fs.readFileSync(file, 'utf8')));
+  }
+  const keys: string[] = [];
+  for (const line of fs.readFileSync(file, 'utf8').split('\n')) {
+    const match = /^\s{2}(?:'([^']+)'|"([^"]+)"):\s*/.exec(line);
+    if (match) keys.push(match[1] ?? match[2]);
+  }
+  return keys;
 }
 
 const en = translations.en;
@@ -206,14 +232,31 @@ describe('переводы: целостность словарей', () => {
     }
   });
 
-  it('каждый модуль реестра отдаёт паритет en/ru', () => {
-    for (const gameModule of listGameModules()) {
-      const enKeys = Object.keys(gameModule.i18n.en).sort();
-      const ruKeys = Object.keys(gameModule.i18n.ru).sort();
-      expect(enKeys, `${gameModule.id}: en/ru расходятся`).toEqual(ruKeys);
-      expect(enKeys.length, `${gameModule.id}: пустой словарь`).toBeGreaterThan(
-        0,
-      );
+  it('все объявленные локали плагина имеют один набор ключей', () => {
+    for (const plugin of pluginManifests()) {
+      const locales = Object.keys(plugin.manifest.i18n ?? {}).sort();
+      expect(
+        locales.length,
+        `${plugin.manifest.id}: нет объявленных локалей`,
+      ).toBeGreaterThan(0);
+      const dictionaries = locales.map((locale) => {
+        const file = path.join(plugin.dir, plugin.manifest.i18n[locale]);
+        expect(fs.existsSync(file), `${plugin.manifest.id}/${locale}`).toBe(
+          true,
+        );
+        return dictionaryKeys(file);
+      });
+      const reference = dictionaries[0].sort();
+      expect(
+        reference.length,
+        `${plugin.manifest.id}: пустой словарь`,
+      ).toBeGreaterThan(0);
+      dictionaries.forEach((keys, index) => {
+        expect(
+          keys.sort(),
+          `${plugin.manifest.id}: ${locales[index]} расходится с ${locales[0]}`,
+        ).toEqual(reference);
+      });
     }
   });
 

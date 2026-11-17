@@ -25,9 +25,11 @@ import type {
   ModuleStatus,
   NormalizeOptions,
   NormalizeResult,
+  PluginLocalizedMessages,
   PluginNavItem,
   SheetComponent,
   SheetHandle,
+  SiteLanguage,
 } from './types';
 
 /**
@@ -56,7 +58,7 @@ import type {
 export const PLUGIN_MANIFEST_VERSION = 1 as const;
 
 /** Версия Plugin API; манифест объявляет совместимый диапазон. */
-export const PLUGIN_API_VERSION = '1.1.0' as const;
+export const PLUGIN_API_VERSION = '1.3.0' as const;
 
 /**
  * Версия схемы листа, с которой работает хост по умолчанию. Основной
@@ -65,15 +67,25 @@ export const PLUGIN_API_VERSION = '1.1.0' as const;
  */
 export const CURRENT_SCHEMA_VERSION = 2 as const;
 
-/** Языки, на которых обязаны быть названия и описания в манифесте. */
+/**
+ * Языки сайта. Плагин обязан объявить хотя бы одну из этих локалей; остальные
+ * локали допустимы, валидируются и хранятся, но сайтом не используются (D8).
+ */
 export const PLUGIN_LOCALES = ['en', 'ru'] as const;
 export type PluginLocale = (typeof PLUGIN_LOCALES)[number];
 
-/** Название/описание на языках сайта (источник — манифест, D4). */
+/** Название/описание на языках сайта (блок `game`, источник — манифест). */
 export interface LocalizedText {
   readonly en: string;
   readonly ru: string;
 }
+
+/**
+ * Название/описание самого плагина: карта «локаль → строка», минимум одна из
+ * `en`/`ru`, дополнительные локали разрешены (SDK 1.3).
+ */
+export type PluginLocalizedText = Partial<Record<PluginLocale, string>> &
+  Readonly<Record<string, string | undefined>>;
 
 /** Блок семейства игр в манифесте (D17: одинаков у всех редакций). */
 export interface PluginGameManifest {
@@ -133,8 +145,8 @@ export interface PluginManifest {
   readonly version: string;
   readonly order: number;
   readonly defaultStatus: ModuleStatus;
-  readonly name: LocalizedText;
-  readonly description: LocalizedText;
+  readonly name: PluginLocalizedText;
+  readonly description: PluginLocalizedText;
   readonly tags: readonly string[];
   readonly author: string;
   readonly license: string;
@@ -143,7 +155,8 @@ export interface PluginManifest {
   readonly dependencies: PluginDependencies;
   readonly entry: { readonly module: string };
   readonly sheet: PluginSheetManifest;
-  readonly i18n: { readonly en: string; readonly ru: string };
+  /** Локаль → путь к словарю; минимум одна из `en`/`ru` (D8). */
+  readonly i18n: Readonly<Record<string, string>>;
   readonly demo: { readonly entry: string };
   readonly export: {
     readonly json: string;
@@ -285,7 +298,7 @@ export interface GamePlugin<
     input?: Readonly<Record<string, unknown>>,
   ): Omit<TCharacter, 'id'>;
   createDemo(): Omit<TCharacter, 'id'>;
-  readonly i18n: LocalizedMessages;
+  readonly i18n: PluginLocalizedMessages;
   readonly capabilities: ModuleCapabilities;
   readonly components: GameModuleComponents<TCharacter>;
   readonly export: GameExportAdapter<TCharacter>;
@@ -343,20 +356,25 @@ export interface PluginRegistration<
  */
 export type GeneratedPluginRegistration = PluginRegistration<any>;
 
-/** Название плагина на языке сайта; неизвестный язык → английский. */
+/**
+ * Название плагина на языке сайта. Если объявлена только одна локаль сайта,
+ * берём её (SDK 1.3); неизвестный язык → английский, затем русский.
+ */
 export function pluginDisplayName(
   manifest: PluginManifest,
   locale: string,
 ): string {
-  return locale === 'ru' ? manifest.name.ru : manifest.name.en;
+  const name = manifest.name;
+  return (locale === 'ru' ? name.ru : name.en) ?? name.en ?? name.ru ?? '';
 }
 
-/** Описание плагина на языке сайта. */
+/** Описание плагина на языке сайта; fallback — как у названия. */
 export function pluginDescription(
   manifest: PluginManifest,
   locale: string,
 ): string {
-  return locale === 'ru' ? manifest.description.ru : manifest.description.en;
+  const text = manifest.description;
+  return (locale === 'ru' ? text.ru : text.en) ?? text.en ?? text.ru ?? '';
 }
 
 /** Заполнен ли слот UI (используется хостом в этапе 3). */
@@ -390,7 +408,9 @@ export type {
   ModuleStatus,
   NormalizeOptions,
   NormalizeResult,
+  PluginLocalizedMessages,
   PluginNavItem,
+  SiteLanguage,
   SheetComponent,
   SheetHandle,
 };
