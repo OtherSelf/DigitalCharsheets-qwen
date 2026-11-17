@@ -67,6 +67,7 @@ import {
   eliteById,
   eliteRequirementIssues,
   removeEliteAdvance,
+  removeEliteJournalEntry,
 } from '../elite';
 import { dh2ExperienceRows } from '../experience';
 import { isCreationFieldLocked } from '../field-policy';
@@ -907,6 +908,13 @@ export const ProgressionSection = ({
           (item) => item.id !== entryId,
         ),
       });
+      return;
+    }
+    if (entry.kind === 'elite-advance') {
+      // Второй путь удаления элитного: без снятия id профиль и журнал
+      // разошлись бы (D7).
+      const removal = removeEliteJournalEntry(character, entryId);
+      if (removal) updateCharacter(character.id, removal);
       return;
     }
     updateCharacter(character.id, {

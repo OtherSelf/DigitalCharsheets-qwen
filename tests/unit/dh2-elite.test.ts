@@ -6,8 +6,10 @@ import {
   availableEliteAdvances,
   buyEliteAdvance,
   eliteById,
+  eliteIdFromEntry,
   eliteRequirementIssues,
   removeEliteAdvance,
+  removeEliteJournalEntry,
 } from '@/games/dh2/elite';
 import { buildDh2ExcelSections } from '@/games/dh2/excel';
 import { dh2History } from '@/games/dh2/history';
@@ -16,8 +18,8 @@ import type { GameExportConfig } from '@/games/types';
 /**
  * ─── LANDMARK: DH2 ELITE TESTS ────────────────────────────────────────────
  * Элитные продвижения: пререквизиты и цена — из данных; покупка пишется в
- * журнал, instant changes остаются памяткой (D15), удаление не откатывает
- * характеристики и опыт.
+ * журнал, instant changes остаются памяткой (D15), удаление симметрично
+ * возвращает опыт, но не откатывает характеристики (D7).
  */
 
 const translate = (key: string) => key;
@@ -224,7 +226,28 @@ describe('покупка и удаление', () => {
     expect(buyEliteAdvance(character, 'no-such-elite', 'No')).toBeUndefined();
   });
 
-  it('удаление не откатывает опыт и журнал', () => {
+  function purchased(): ReturnType<typeof draft> {
+    const character = draft();
+    const purchase = buyEliteAdvance(
+      character,
+      'psyker',
+      'Psyker',
+      '2026-11-16T00:00:00Z',
+    );
+    expect(purchase).toBeDefined();
+    return { ...character, ...purchase!.patch };
+  }
+
+  it('удаление в профиле снимает id, строку журнала и возвращает цену', () => {
+    const character = purchased();
+    expect(removeEliteAdvance(character, 'psyker')).toEqual({
+      eliteAdvances: [],
+      totalExpSpent: 0,
+      experienceLog: [],
+    });
+  });
+
+  it('legacy-лист без строки журнала теряет только id', () => {
     const character = {
       ...draft(),
       eliteAdvances: ['psyker', 'untouchable'],
@@ -233,6 +256,55 @@ describe('покупка и удаление', () => {
     expect(patch).toEqual({ eliteAdvances: ['untouchable'] });
     expect(patch).not.toHaveProperty('totalExpSpent');
     expect(patch).not.toHaveProperty('experienceLog');
+  });
+
+  it('опыт не уходит в минус, повторное удаление не трогает журнал', () => {
+    const character = { ...purchased(), totalExpSpent: 100 };
+    const patch = removeEliteAdvance(character, 'psyker');
+    expect(patch.totalExpSpent).toBe(0);
+
+    const after = { ...character, ...patch };
+    expect(removeEliteAdvance(after, 'psyker')).toEqual({ eliteAdvances: [] });
+  });
+
+  it('удаление строки журнала снимает id из профиля и цену', () => {
+    const character = purchased();
+    const entryId = character.experienceLog[0].id;
+    expect(removeEliteJournalEntry(character, entryId)).toEqual({
+      eliteAdvances: [],
+      totalExpSpent: 0,
+      experienceLog: [],
+    });
+    expect(removeEliteJournalEntry(character, 'no-such-entry')).toBeUndefined();
+  });
+
+  it('не элитную строку журнала этот путь не трогает', () => {
+    const character = {
+      ...draft(),
+      experienceLog: [
+        {
+          id: 'manual:1',
+          kind: 'other' as const,
+          ref: 'Manual',
+          cost: 50,
+          createdAt: '2026-11-16T00:00:00Z',
+        },
+      ],
+    };
+    expect(removeEliteJournalEntry(character, 'manual:1')).toBeUndefined();
+  });
+
+  it('eliteIdFromEntry разбирает суффикс и игнорирует чужие записи', () => {
+    expect(
+      eliteIdFromEntry({
+        id: 'elite-advance:2026-11-16T00:00:00Z:psyker',
+        kind: 'elite-advance',
+      }),
+    ).toBe('psyker');
+    expect(eliteIdFromEntry({ id: 'award:1', kind: 'award' })).toBeUndefined();
+    expect(
+      eliteIdFromEntry({ id: 'elite-advance:broken', kind: 'elite-advance' }),
+    ).toBeUndefined();
   });
 });
 

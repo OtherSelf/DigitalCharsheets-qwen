@@ -120,7 +120,9 @@ The 2e module owns the rules that only exist in that edition:
   Focus Power hint shows Willpower with purchases.
 - **Elite advances** — `elite.ts` lists available advances, their
   prerequisites and cost; purchase writes `elite-advance` to the journal.
-  Instant changes are a memo only (D15).
+  Removing the advance from the block or deleting its journal row is symmetric:
+  both drop the id and the row and return the cost to `totalExpSpent` (a legacy
+  sheet without a row loses only the id). Instant changes are a memo only (D15).
 - **Starting package** — `Dh2eBackground` may carry optional
   `startingTraits`, `startingCorruption` and `startingMalignancy`; the creation
   form shows them as hints and the player applies them to the sheet manually.
