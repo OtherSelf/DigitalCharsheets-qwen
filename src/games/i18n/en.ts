@@ -2,11 +2,6 @@
 // Метаданные реестра: названия/описания игр и шаги мастера создания.
 // Язык: en. Правила: docs/i18n.md.
 export const en: Record<string, string> = {
-  'games.dnd.name': 'Dungeons & Dragons',
-  'games.dnd.description': 'Heroic fantasy: classes, spells and d20 checks.',
-  'games.darkHeresy.name': 'Dark Heresy',
-  'games.darkHeresy.description':
-    'Grimdark investigation in the Warhammer 40,000 universe.',
   'games.stepGame': 'Game',
   'games.stepEdition': 'Edition',
   'games.stepCharacter': 'Character',

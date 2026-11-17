@@ -24,6 +24,10 @@
     "name": {
       "en": "Dungeons & Dragons",
       "ru": "Dungeons & Dragons"
+    },
+    "description": {
+      "en": "Heroic fantasy: classes, spells and d20 checks.",
+      "ru": "Героическое фэнтези: классы, заклинания и проверки d20."
     }
   },
   "dependencies": {

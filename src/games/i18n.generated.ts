@@ -1,8 +1,9 @@
 /**
  * ─── AUTO-GENERATED — НЕ РЕДАКТИРОВАТЬ ─────────────────────────────────────
  * Словари плагинов, сгенерированные из `src/games/<id>/plugin.json` (поле
- * `i18n`). Импортируются `src/lib/i18n` до инициализации реестра, поэтому
- * здесь только словари — без модулей, схем и UI (этап 3).
+ * `i18n`) плюс названия/описания семейств игр (поле `game`).
+ * Импортируются `src/lib/i18n` до инициализации реестра, поэтому здесь
+ * только словари — без модулей, схем и UI (этап 3).
  *
  * Пересобрать:  npm run plugins:generate
  * Проверить:    npm run plugins:check
@@ -20,4 +21,24 @@ export const generatedI18n: Readonly<Record<string, LocalizedMessages>> = {
   dh1: { en: dh1En, ru: dh1Ru },
   dh2: { en: dh2En, ru: dh2Ru },
   dnd5e: { en: dnd5eEn, ru: dnd5eRu },
+};
+
+/** Названия и описания семейств игр (ключи `games.generated.*`). */
+export const generatedGameI18n: LocalizedMessages = {
+  en: {
+    'games.generated.dnd.name': 'Dungeons & Dragons',
+    'games.generated.dnd.description':
+      'Heroic fantasy: classes, spells and d20 checks.',
+    'games.generated.darkHeresy.name': 'Warhammer 40k: Dark Heresy',
+    'games.generated.darkHeresy.description':
+      'Grimdark investigation in the Warhammer 40,000 universe.',
+  },
+  ru: {
+    'games.generated.dnd.name': 'Dungeons & Dragons',
+    'games.generated.dnd.description':
+      'Героическое фэнтези: классы, заклинания и проверки d20.',
+    'games.generated.darkHeresy.name': 'Warhammer 40k: Dark Heresy',
+    'games.generated.darkHeresy.description':
+      'Мрачное расследование во вселенной Warhammer 40,000.',
+  },
 };

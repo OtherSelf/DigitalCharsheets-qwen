@@ -23,10 +23,11 @@ Status: **v1.1**, manifest `manifestVersion: 1`, `pluginApi: ^1.0.0`
    references (`createDemo`, `toPortableJson`, `buildExcelSections`, …).
 5. **UI**: `sheet.tsx` and `create-form.tsx`; optional `ui.ts` with the UI slots.
 6. **Dictionaries**: `i18n/en.json`, `i18n/ru.json` with the same key set, keys
-   namespaced `<id>.*` (plus shared `games.<id>.*` metadata keys if needed).
+   namespaced `<id>.*`. Family metadata (`game.*`) comes from the manifest, not
+   from these dictionaries.
 7. **Generate and check**:
    ```bash
-   npm run plugins:generate     # registry.generated.ts + i18n.generated.ts
+   npm run plugins:generate     # registry/i18n/games.generated.ts
    npm run plugins:check        # manifests ↔ registry
    npm run plugins:boundaries   # import rules
    npm run plugins:conformance  # plugin contract (unit set)
@@ -108,7 +109,12 @@ Validated by `scripts/plugins/generate.mjs` (Ajv) on every generation/verify.
   "author": "Digital Character Sheets",
   "license": "MIT",
   "schemaVersion": 2,
-  "game": { "id": "darkHeresy", "order": 20, "name": { "en": "…", "ru": "…" } },
+  "game": {
+    "id": "darkHeresy",
+    "order": 20,
+    "name": { "en": "…", "ru": "…" },
+    "description": { "en": "…", "ru": "…" }
+  },
   "dependencies": { "host": "^1.0.0", "plugins": {} },
   "entry": { "module": "index.ts#dh1Module" },
   "sheet": { "mode": "custom", "client": "sheet.tsx", "createForm": "create-form.tsx" },
@@ -128,7 +134,8 @@ Rules:
 - `name`/`description` are the display source (admin, wizard); other strings
   live in `i18n/*.json`. `tags` are stored but not shown in UI (D15).
 - `game` is the family block (D17): every edition of one `gameId` declares the
-  same `id`/`order`/`name`; the generator fails on mismatch.
+  same `id`/`order`/`name`/`description`; the generator fails on mismatch.
+  These fields are the only source of the game list and of its UI labels.
 - Entry points are `<file>#<export>`. `entry.module` points at the module
   object; `demo`/`export`/`migrations` at functions. The generator checks the
   files, the conformance test checks the exports against the module namespace.
@@ -147,6 +154,20 @@ Rules:
   to sheets older than the step, and writes a `.bak` before the first migrated
   rewrite. Unknown future versions are never overwritten.
 - `tests.conformance` is metadata for CI/admin, never executed at runtime (D7).
+
+## Game families and the generated list
+
+- A game family is defined **only** by the `game` blocks of manifests. The
+  generator emits three files: `registry.generated.ts` (editions),
+  `i18n.generated.ts` (module dictionaries plus `games.generated.<id>.*`
+  labels) and `games.generated.ts` (family list). Core has no hand-written
+  list of games.
+- Adding or removing a game/edition = add/remove the folder + `plugin.json`,
+  run `npm run plugins:generate`, then `npm run verify` and rebuild. No core
+  edits are needed; `npm run plugins:check` (part of verify) fails on drift.
+- The registry is **build-time** (D1): `npm start` serves the compiled `.next`
+  output, so regenerate before the build, not at server start. The same applies
+  to dictionaries and the family list.
 
 ## Module contract
 

@@ -104,6 +104,7 @@ function exampleManifest(
       id: 'exampleGame',
       order: 90,
       name: { en: 'Example game', ru: 'Пример игры' },
+      description: { en: 'Fixture game', ru: 'Фиктивная игра' },
     },
     dependencies: { host: '^1.0.0', plugins: {} },
     entry: { module: 'index.ts#exampleModule' },
@@ -353,6 +354,7 @@ describe('фиктивный плагин добавляется папкой + 
         id: 'exampleGame',
         order: 90,
         name: { en: 'Example game', ru: 'Пример игры' },
+        description: { en: 'Fixture game', ru: 'Фиктивная игра' },
       },
     });
     sandboxPlugin(another);
@@ -449,6 +451,7 @@ describe('ошибки манифеста ловятся при генераци
             id: 'exampleGame',
             order: 91,
             name: { en: 'Other', ru: 'Другая' },
+            description: { en: 'Other', ru: 'Другая' },
           },
         }),
       },

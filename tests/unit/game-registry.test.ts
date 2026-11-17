@@ -66,7 +66,7 @@ describe('реестр игр и редакций', () => {
   it('игры имеют уникальные id и ссылаются на i18n-ключи', () => {
     const games = listGameDefinitions();
     expect(games.map((game) => game.id)).toEqual(['dnd', 'darkHeresy']);
-    expect(getGameDefinition('dnd')?.nameKey).toBe('common.dungeonsAndDragons');
+    expect(getGameDefinition('dnd')?.nameKey).toBe('games.generated.dnd.name');
     expect(new Set(games.map((game) => game.id)).size).toBe(games.length);
   });
 
