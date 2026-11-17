@@ -7,10 +7,21 @@ import { Check } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 
+export interface CheckboxProps extends React.ComponentPropsWithoutRef<
+  typeof CheckboxPrimitive.Root
+> {
+  /**
+   * Не рисовать галочку внутри: для маленьких боксов (12px в
+   * «Характеристиках») достаточно заливки, иконка не вписывается и выглядит
+   * инородно.
+   */
+  hideIndicator?: boolean;
+}
+
 const Checkbox = React.forwardRef<
   React.ElementRef<typeof CheckboxPrimitive.Root>,
-  React.ComponentPropsWithoutRef<typeof CheckboxPrimitive.Root>
->(({ className, ...props }, ref) => (
+  CheckboxProps
+>(({ className, hideIndicator = false, ...props }, ref) => (
   <CheckboxPrimitive.Root
     ref={ref}
     className={cn(
@@ -19,11 +30,13 @@ const Checkbox = React.forwardRef<
     )}
     {...props}
   >
-    <CheckboxPrimitive.Indicator
-      className={cn('flex items-center justify-center text-current')}
-    >
-      <Check className="h-4 w-4" />
-    </CheckboxPrimitive.Indicator>
+    {!hideIndicator && (
+      <CheckboxPrimitive.Indicator
+        className={cn('flex items-center justify-center text-current')}
+      >
+        <Check className="h-4 w-4" />
+      </CheckboxPrimitive.Indicator>
+    )}
   </CheckboxPrimitive.Root>
 ));
 Checkbox.displayName = CheckboxPrimitive.Root.displayName;

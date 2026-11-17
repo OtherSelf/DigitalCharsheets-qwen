@@ -130,6 +130,7 @@ const CharacteristicStat = ({
               onCheckedChange={(c) => onUpgradeChange(index, !!c)}
               title={upgradeTitles[index]}
               aria-label={upgradeTitles[index]}
+              hideIndicator
               className="h-3 w-3"
             />
           ))}
