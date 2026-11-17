@@ -23,9 +23,15 @@ import {
 } from '@/components/ui/popover';
 import { Textarea } from '@/components/ui/textarea';
 import { useCharacterContext, useTranslation } from '@/games/plugin-host';
+import {
+  finishCreationReview,
+  isCreationReview,
+} from '@/games/shared/creation-review';
+import { CreationReviewBanner } from '@/games/shared/creation-review-banner';
 import { cn } from '@/lib/utils';
 
 import { getDarkHeresyCapabilities } from './capabilities';
+import { isFieldFilled } from './field-policy';
 import { CharacteristicsSection } from './sections/characteristics-section';
 import { CustomResourceCounter } from './sections/custom-resource-counter';
 import { EditSaveButton, MetricBox } from './sections/dh-ui-helpers';
@@ -193,6 +199,27 @@ export const Dh1Sheet = React.forwardRef<
   } = useCharacterContext();
   const { t } = useTranslation();
   const capabilities = getDarkHeresyCapabilities(character);
+  // LANDMARK: CREATION REVIEW STATE
+  // Импортированный лист открывается с открытыми замками до фиксации (D1).
+  // Состояние живёт в памяти вкладки и привязано к id: лист может остаться
+  // смонтированным при переходе между персонажами.
+  const [creationReview, setCreationReview] = React.useState(() =>
+    isCreationReview(character.id),
+  );
+  React.useEffect(() => {
+    setCreationReview(isCreationReview(character.id));
+  }, [character.id]);
+  // Обязательные поля для фиксации (D3): мир и карьера.
+  const missingCreationFields = creationReview
+    ? [
+        !isFieldFilled(character.homeWorld) ? t('dh1.homeWorld') : null,
+        !isFieldFilled(character.careerPath) ? t('dh1.careerPath') : null,
+      ].filter((label): label is string => label !== null)
+    : [];
+  const handleCreationReviewConfirm = () => {
+    finishCreationReview(character.id);
+    setCreationReview(false);
+  };
   const [isPointsEditing, setIsPointsEditing] = React.useState(false);
   const [isSkillsPanelCollapsed, setIsSkillsPanelCollapsed] =
     React.useState(false);
@@ -989,6 +1016,16 @@ export const Dh1Sheet = React.forwardRef<
           </div>
         </div>
       )}
+      {creationReview && (
+        <CreationReviewBanner
+          title={t('common.creationReviewTitle')}
+          description={t('common.creationReviewDescription')}
+          missingLabel={t('common.creationReviewMissing')}
+          missing={missingCreationFields}
+          confirmLabel={t('common.creationReviewConfirm')}
+          onConfirm={handleCreationReviewConfirm}
+        />
+      )}
       <div
         className={cn(
           'sheet-info-grid grid grid-cols-1 gap-6 lg:grid-cols-12',
@@ -1012,6 +1049,7 @@ export const Dh1Sheet = React.forwardRef<
             character={character}
             isCompactView={isCompactView}
             activeCompactSection={activeCompactSection}
+            creationReview={creationReview}
             onEditingChange={(v: boolean) => reportSectionEditing('info', v)}
           />
         </div>

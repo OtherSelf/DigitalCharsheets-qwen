@@ -264,6 +264,13 @@ host removes that request from the URL after opening, so a refresh does not
 reopen the panel. Core does not inspect game data to decide this — the plugin
 knows whether it wrote something worth showing.
 
+Optional shared pieces live in `@/games/shared/*` (allowed by the import
+boundaries): `creation-review.ts` is a module-level store of sheets being
+reviewed after import, and `creation-review-banner.tsx` renders the banner with
+the missing-required list and the confirm button. They are opt-in: the plugin
+decides which fields are required and supplies the translated strings; a plugin
+that never calls the helper renders as before.
+
 ## i18n
 
 - Dictionaries live in `i18n/en.json` and `i18n/ru.json` (JSON, D13).

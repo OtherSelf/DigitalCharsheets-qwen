@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/dialog';
 import { useCharacterContext } from '@/context/character-context';
 import { useTranslation } from '@/context/language-context';
+import { startCreationReview } from '@/games/shared/creation-review';
 import {
   IMPORT_ERROR_I18N_KEYS,
   importCharacterFromJSON,
@@ -86,6 +87,9 @@ export function ImportCharacterDialog({
             safeCharacterData as Omit<Character, 'id' | 'userId'>,
           );
           if (newChar) {
+            // Импортированные листы открываются в режиме проверки выборов
+            // (D1): замки снимаются до явной фиксации.
+            startCreationReview(newChar.id);
             lastCreatedCharId = newChar.id;
             importedCount++;
           }
@@ -107,6 +111,7 @@ export function ImportCharacterDialog({
           safeCharacterData as Omit<Character, 'id' | 'userId'>,
         );
         if (newChar) {
+          startCreationReview(newChar.id);
           lastCreatedCharId = newChar.id;
           importedCount++;
         }

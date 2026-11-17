@@ -19,6 +19,13 @@ export const enTranslations: Record<string, string> = {
   'common.cancel': 'Cancel',
   'common.notes': 'Notes',
 
+  // ─── CREATION REVIEW (imported sheet) ───
+  'common.creationReviewTitle': 'Check the choices made at creation',
+  'common.creationReviewDescription':
+    'This sheet was imported, so the choices locked at creation are editable until you confirm. Fill the required fields, then lock the sheet again.',
+  'common.creationReviewMissing': 'Still empty:',
+  'common.creationReviewConfirm': 'Lock choices',
+
   'common.quantity': 'Quantity',
   'common.questJournal': 'Quest Journal',
   'common.info': 'Info',
