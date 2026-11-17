@@ -1,4 +1,4 @@
-import { expect, test, type Locator } from '@playwright/test';
+import { expect, test, type Locator, type Page } from '@playwright/test';
 
 import {
   discardUnsavedChanges,
@@ -17,7 +17,8 @@ import {
  * но и то, что поля открываются ЗАПОЛНЕННЫМИ данными персонажа.
  *
  * Клик по Edit меняет только локальный state — в API ничего не уходит,
- * поэтому тесты не портят фикстуры. Сохранение (Save) не нажимаем.
+ * поэтому тесты не портят фикстуры. Сценарии, которым нужна запись (политика
+ * создания, блок опыта), работают на временном аккаунте.
  */
 
 async function startEditing(scope: Locator): Promise<void> {
@@ -507,6 +508,143 @@ test.describe('состояния Безумия/Порчи', () => {
           .first()
           .getByText('Проверка состояния'),
       ).toHaveCount(0);
+    },
+  );
+});
+
+/**
+ * ─── LANDMARK: EXPERIENCE BLOCK ────────────────────────────────────────────
+ * «Свободный опыт» — вычисляемое число: при перерасходе оно отрицательное и
+ * должно быть красным (D6). В dh1 «Текущий» и «Потрачено» вне Edit — текст,
+ * править их можно только из input в режиме правки (D11).
+ *
+ * Эталоны здесь не снимаем (D11): состояние проверяется ассертами на
+ * временном аккаунте, чтобы не раздувать матрицу PNG.
+ */
+test.describe('блок опыта', () => {
+  async function createAccountSheet(
+    page: Page,
+    systemId: 'dh1' | 'dh2',
+    values: { experience: number; totalExpSpent: number },
+  ): Promise<string> {
+    const username = `xp-${systemId}-${Date.now()}`;
+    const password = 'xp-password-1';
+    const registered = await page.request.post('/api/auth/register', {
+      data: {
+        username,
+        password,
+        displayName: `XP ${systemId}`,
+        recoveryPhrase: 'amber cobalt lantern',
+      },
+    });
+    expect([200, 201], 'регистрация аккаунта').toContain(registered.status());
+
+    const created = await page.request.post('/api/characters', {
+      data: { systemId, name: `XP ${systemId}`, ...values },
+    });
+    expect([200, 201], 'создание листа').toContain(created.status());
+    const { id } = (await created.json()) as { id: string };
+
+    await signInViaUI(page, { username, password });
+    return id;
+  }
+
+  test(
+    'DH1: отрицательный свободный опыт красный, поля опыта только в Edit (en)',
+    { tag: '@desktop' },
+    async ({ page }) => {
+      const id = await createAccountSheet(page, 'dh1', {
+        experience: 100,
+        totalExpSpent: 250,
+      });
+      await openApp(page, sheetPath(id));
+
+      const progression = page.locator('#progression-section:visible').first();
+      const available = progression.getByTestId('available-exp');
+      await expect(available).toHaveText('-150');
+      await expect(available).toHaveClass(/text-destructive/);
+
+      // Вне Edit оба поля — текст, полей ввода опыта нет.
+      await expect(progression.getByTestId('current-exp-value')).toHaveText(
+        '100',
+      );
+      await expect(progression.getByTestId('total-exp-spent-value')).toHaveText(
+        '250',
+      );
+      await expect(progression.locator('#current-exp-edit')).toHaveCount(0);
+      await expect(progression.locator('#total-exp-edit')).toHaveCount(0);
+
+      await startEditing(progression);
+      const current = progression.locator('#current-exp-edit');
+      const spent = progression.locator('#total-exp-edit');
+      await expect(current).toHaveValue('100');
+      await expect(spent).toHaveValue('250');
+
+      // Перерасход закрыт: 100 − 40 = 60, цвет снова обычный.
+      const saved = page.waitForResponse(
+        (response) =>
+          response.url().includes(`/api/characters/${id}`) &&
+          response.request().method() === 'PUT',
+      );
+      await spent.fill('40');
+      await spent.blur();
+      await saved;
+      await expect(available).toHaveText('60');
+      await expect(available).toHaveClass(/text-primary/);
+
+      await progression.getByTestId('save-button').first().click();
+      await page.reload();
+      const reloaded = page.locator('#progression-section:visible').first();
+      await expect(reloaded.getByTestId('available-exp')).toHaveText('60');
+      await expect(reloaded.getByTestId('current-exp-value')).toHaveText('100');
+      await expect(reloaded.getByTestId('total-exp-spent-value')).toHaveText(
+        '40',
+      );
+      await expect(reloaded.locator('#current-exp-edit')).toHaveCount(0);
+    },
+  );
+
+  test(
+    'DH2: отрицательный свободный опыт красный и сохраняется после Edit (en)',
+    { tag: '@desktop' },
+    async ({ page }) => {
+      const id = await createAccountSheet(page, 'dh2', {
+        experience: 100,
+        totalExpSpent: 250,
+      });
+      await openApp(page, sheetPath(id));
+
+      const progression = page.locator('#progression-section:visible').first();
+      const available = progression.getByTestId('available-exp');
+      await expect(available).toHaveText('-150');
+      await expect(available).toHaveClass(/text-destructive/);
+
+      await startEditing(progression);
+      const spent = progression.locator('input[type="number"]').nth(1);
+      await expect(spent).toHaveValue('250');
+
+      const saved = page.waitForResponse(
+        (response) =>
+          response.url().includes(`/api/characters/${id}`) &&
+          response.request().method() === 'PUT',
+      );
+      await spent.fill('40');
+      await spent.blur();
+      await saved;
+      await expect(available).toHaveText('60');
+      await expect(available).toHaveClass(/text-primary/);
+
+      await progression.getByTestId('save-button').first().click();
+      await expect(progression.getByTestId('total-exp-spent-value')).toHaveText(
+        '40',
+      );
+      await page.reload();
+      await expect(
+        page
+          .locator('#progression-section:visible')
+          .first()
+          .getByTestId('total-exp-spent-value'),
+      ).toHaveText('40');
     },
   );
 });
