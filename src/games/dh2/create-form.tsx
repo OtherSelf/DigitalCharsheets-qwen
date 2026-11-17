@@ -1086,12 +1086,18 @@ function GrantList({
 }
 
 /** Выпадающий список одного выбора при создании (D11). */
+/**
+ * Обязательный выбор из книги (D6): пока значение пустое, селект красный и
+ * помечен `aria-invalid`, чтобы пропущенное «одно из» было видно сразу.
+ * Красный цвет — подсказка, а не запрет: форма не блокируется.
+ */
 function ChoiceSelect({
   label,
   value,
   placeholder,
   options,
   hint,
+  required = true,
   onChange,
 }: {
   label: string;
@@ -1099,16 +1105,24 @@ function ChoiceSelect({
   placeholder: string;
   options: readonly { value: string; label: string }[];
   hint?: string;
+  required?: boolean;
   onChange: (value: string) => void;
 }) {
   const id = React.useId();
+  const invalid = required && !value;
   return (
     <div className="space-y-1">
       <Label htmlFor={id} className="text-muted-foreground text-xs">
         {label}
       </Label>
       <Select value={value} onValueChange={onChange}>
-        <SelectTrigger id={id} className="h-8">
+        <SelectTrigger
+          id={id}
+          aria-invalid={invalid}
+          className={
+            invalid ? 'border-destructive text-destructive h-8' : 'h-8'
+          }
+        >
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
         <SelectContent>
