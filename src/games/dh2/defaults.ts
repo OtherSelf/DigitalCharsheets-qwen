@@ -144,7 +144,7 @@ export function createDh2BaseDefaults(
     experience: readNumber(input, 'experience', 1000),
     totalExpSpent: readNumber(input, 'totalExpSpent', 0),
     experienceLog: [],
-    notes: '',
+    notes: readString(input, 'notes', ''),
     questLog: [],
     wounds: { current: wounds, max: wounds },
     fatePoints: { current: fatePoints, max: fatePoints },

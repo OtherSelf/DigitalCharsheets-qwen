@@ -279,6 +279,9 @@ test.describe('создание персонажа — Dark Heresy', () => {
     ).toBeUndefined();
     expect(created.divination, 'пророчество выбрано').toBeTruthy();
     expect(Object.keys(created.statUpgrades)).toHaveLength(9);
+    expect(created.notes, 'подсказки создания уходят в заметки').toContain(
+      '# Creation hints',
+    );
 
     // Персонаж виден в дашборде (карточка листа).
     await page.goto('/');
@@ -367,6 +370,9 @@ test.describe('создание персонажа — Dark Heresy 2e', () => {
       new Set(created.aptitudes.profile).size,
       'дубль аптитюды заменён, а не продублирован',
     ).toBe(created.aptitudes.profile.length);
+    expect(created.notes, 'подсказки создания уходят в заметки').toContain(
+      '# Creation hints',
+    );
 
     // Лист показывает выборы в info-секции.
     await expect(page.getByText('Role talent', { exact: true })).toBeVisible();
@@ -550,6 +556,8 @@ test.describe('создание персонажа — дополнения DH2'
     expect(created.aptitudes.profile).toEqual(
       expect.arrayContaining(['strength', 'fieldcraft', 'offence']),
     );
+    expect(created.notes).toContain('Starting Corruption: 10');
+    expect(created.notes).toContain('Amphibious');
 
     await expect(page.locator('#info-section')).toBeVisible();
     if ((await page.locator('#progression-section').count()) === 0) {
