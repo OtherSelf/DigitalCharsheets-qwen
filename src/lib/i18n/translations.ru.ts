@@ -213,6 +213,8 @@ export const ruTranslations: Record<string, string> = {
   'common.statWisAbbr': 'МУД',
   'common.statChaAbbr': 'ХАР',
   'common.displayName': 'Никнейм',
+  'common.showPassword': 'Показать пароль',
+  'common.hidePassword': 'Скрыть пароль',
   'common.newPassword': 'Новый пароль',
   'common.back': 'Назад',
   'common.passwordMinLength': 'Пароль должен содержать не менее 12 символов.',

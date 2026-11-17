@@ -211,6 +211,8 @@ export const enTranslations: Record<string, string> = {
   'common.statWisAbbr': 'WIS',
   'common.statChaAbbr': 'CHA',
   'common.displayName': 'Display Name',
+  'common.showPassword': 'Show password',
+  'common.hidePassword': 'Hide password',
   'common.newPassword': 'New Password',
   'common.back': 'Back',
   'common.passwordMinLength': 'Password must be at least 12 characters.',

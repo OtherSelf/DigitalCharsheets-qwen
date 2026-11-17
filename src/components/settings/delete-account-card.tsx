@@ -23,6 +23,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { PasswordInput } from '@/components/ui/password-input';
 import { useTranslation } from '@/context/language-context';
 import { useLocalAuth } from '@/context/local-auth-context';
 
@@ -148,11 +149,10 @@ export function DeleteAccountCard() {
               <Label htmlFor="delete-account-password">
                 {t('settings.deleteAccountPasswordLabel')}
               </Label>
-              <Input
+              <PasswordInput
                 ref={passwordRef}
                 id="delete-account-password"
                 name="password"
-                type="password"
                 autoComplete="current-password"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}

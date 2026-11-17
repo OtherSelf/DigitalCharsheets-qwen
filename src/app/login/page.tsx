@@ -26,6 +26,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { PasswordInput } from '@/components/ui/password-input';
 import { useTranslation } from '@/context/language-context';
 import { useLocalAuth } from '@/context/local-auth-context';
 import { PENDING_CHARACTER_KEY } from '@/lib/pending-draft';
@@ -432,9 +433,8 @@ export default function LoginPage() {
                       <Lock className="text-muted-foreground h-4 w-4" />
                       {t('auth.password')}
                     </label>
-                    <Input
+                    <PasswordInput
                       id="auth-password"
-                      type="password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder={t('auth.passwordPlaceholder')}
@@ -542,9 +542,8 @@ export default function LoginPage() {
                       <Lock className="text-muted-foreground h-4 w-4" />
                       {t('auth.password')}
                     </label>
-                    <Input
+                    <PasswordInput
                       id="register-password"
-                      type="password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder={t('auth.passwordPlaceholder')}
@@ -696,9 +695,8 @@ export default function LoginPage() {
                       <Lock className="text-muted-foreground h-4 w-4" />
                       {t('common.newPassword')}
                     </label>
-                    <Input
+                    <PasswordInput
                       id="recover-new-password"
-                      type="password"
                       value={newRecoveryPassword}
                       onChange={(e) => setNewRecoveryPassword(e.target.value)}
                       placeholder={t('auth.passwordPlaceholder')}
