@@ -35,3 +35,19 @@ export function applyAptitudeChoice(
     },
   };
 }
+
+/**
+ * Замок склонности (D1): ключ выбора попал в `aptitudes.chosen` — значит,
+ * решение уже принято (при создании или при дозаполнении пустого слота), и
+ * переписать его из Info нельзя. Ключи: `background`, `role.<index>`,
+ * `duplicate.<aptitude>`.
+ */
+export function isAptitudeLocked(
+  character: Pick<DH2Character, 'aptitudes'>,
+  key: string,
+): boolean {
+  return Object.prototype.hasOwnProperty.call(
+    character.aptitudes?.chosen ?? {},
+    key,
+  );
+}
