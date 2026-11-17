@@ -39,7 +39,7 @@ import {
 } from '@/games/plugin-host';
 import { cn } from '@/lib/utils';
 
-import { applyAptitudeChoice } from '../aptitudes-sheet';
+import { applyAptitudeChoice, isAptitudeLocked } from '../aptitudes-sheet';
 import { characteristicAptitudes, deriveAptitudes } from '../dh2e-aptitudes';
 import {
   DH2E_BACKGROUNDS,
@@ -163,42 +163,6 @@ const ReadOnlyField = ({
   </div>
 );
 
-/** Выбор аптитюды на листе: тот же стиль, что у выборов при создании. */
-const AptitudeChoice = ({
-  label,
-  value,
-  placeholder,
-  options,
-  onChange,
-}: {
-  label: string;
-  value: string;
-  placeholder?: string;
-  options: readonly { value: string; label: string }[];
-  onChange: (value: string) => void;
-}) => {
-  const id = React.useId();
-  return (
-    <div className="space-y-1">
-      <Label htmlFor={id} className="text-muted-foreground text-xs">
-        {label}
-      </Label>
-      <Select value={value} onValueChange={onChange}>
-        <SelectTrigger id={id} className="h-8">
-          <SelectValue placeholder={placeholder} />
-        </SelectTrigger>
-        <SelectContent>
-          {options.map((option) => (
-            <SelectItem key={option.value} value={option.value}>
-              {option.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </div>
-  );
-};
-
 /**
  * Поле создания (D4): пока пусто и идёт редактирование — Select; заданное
  * значение read-only с замком «выбрано при создании». Производные (aptitudes,
@@ -214,6 +178,7 @@ const CreationField = ({
   isCompactView,
   options,
   onSelect,
+  lockHintKey,
 }: {
   label: string;
   value: string;
@@ -224,9 +189,11 @@ const CreationField = ({
   isCompactView: boolean;
   options: readonly { value: string; label: string }[];
   onSelect: (next: string) => void;
+  /** Подсказка к замку; по умолчанию «выбрано при создании». */
+  lockHintKey?: string;
 }) => {
   const { t } = useTranslation();
-  const lockHint = t('dh2.chosenAtCreation');
+  const lockHint = t(lockHintKey ?? 'dh2.chosenAtCreation');
   const id = React.useId();
 
   return (
@@ -659,25 +626,26 @@ export const InfoSection = ({
                   </ul>
 
                   {backgroundEntry &&
-                    backgroundEntry.aptitudeChoice.length > 1 &&
-                    (isInfoEditing ? (
-                      <AptitudeChoice
+                    backgroundEntry.aptitudeChoice.length > 1 && (
+                      <CreationField
                         label={t('dh2.backgroundAptitude')}
-                        value={backgroundValue ?? ''}
+                        value={
+                          backgroundValue
+                            ? aptitudeLabel(backgroundValue, t)
+                            : ''
+                        }
+                        placeholder={t('dh2.choosePrompt')}
+                        editing={isInfoEditing}
+                        locked={isAptitudeLocked(character, 'background')}
+                        lockHintKey="dh2.chosenAptitudeLocked"
+                        isCompactView={isCompactView}
                         options={backgroundEntry.aptitudeChoice.map((id) => ({
                           value: id,
                           label: aptitudeLabel(id, t),
                         }))}
-                        onChange={(value) => applyAptitude('background', value)}
+                        onSelect={(value) => applyAptitude('background', value)}
                       />
-                    ) : (
-                      <p className="text-muted-foreground text-xs">
-                        {t('dh2.backgroundAptitude')}:{' '}
-                        {backgroundValue
-                          ? aptitudeLabel(backgroundValue, t)
-                          : '-'}
-                      </p>
-                    ))}
+                    )}
 
                   {roleSlots.some((slot) => slot.choice) && (
                     <div className="space-y-2">
@@ -687,27 +655,25 @@ export const InfoSection = ({
                       <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
                         {roleSlots
                           .filter((slot) => slot.choice)
-                          .map((slot) =>
-                            isInfoEditing ? (
-                              <AptitudeChoice
-                                key={slot.key}
-                                label={`${t('dh2.roleAptitude')} ${slot.index + 1}`}
-                                value={slot.value}
-                                options={slot.options.map((id) => ({
-                                  value: id,
-                                  label: aptitudeLabel(id, t),
-                                }))}
-                                onChange={(value) =>
-                                  applyAptitude(slot.key, value)
-                                }
-                              />
-                            ) : (
-                              <p key={slot.key} className="text-xs">
-                                {t('dh2.roleAptitude')} {slot.index + 1}:{' '}
-                                {aptitudeLabel(slot.value, t)}
-                              </p>
-                            ),
-                          )}
+                          .map((slot) => (
+                            <CreationField
+                              key={slot.key}
+                              label={`${t('dh2.roleAptitude')} ${slot.index + 1}`}
+                              value={aptitudeLabel(slot.value, t)}
+                              placeholder={t('dh2.choosePrompt')}
+                              editing={isInfoEditing}
+                              locked={isAptitudeLocked(character, slot.key)}
+                              lockHintKey="dh2.chosenAptitudeLocked"
+                              isCompactView={isCompactView}
+                              options={slot.options.map((id) => ({
+                                value: id,
+                                label: aptitudeLabel(id, t),
+                              }))}
+                              onSelect={(value) =>
+                                applyAptitude(slot.key, value)
+                              }
+                            />
+                          ))}
                       </div>
                     </div>
                   )}
@@ -723,33 +689,40 @@ export const InfoSection = ({
                       <p className="text-muted-foreground text-xs">
                         {t('dh2.duplicatesHint')}
                       </p>
-                      {isInfoEditing &&
-                        duplicateAptitudes.map((duplicate) => {
-                          const key = `duplicate.${duplicate}`;
-                          const current = chosenMap[key];
-                          const options = characteristicAptitudes().filter(
-                            (id) =>
-                              !derivedAptitudes.profile.includes(id) ||
-                              id === current,
-                          );
-                          return options.length > 0 ? (
-                            <AptitudeChoice
-                              key={key}
-                              label={`${t('dh2.duplicateAptitude')}: ${aptitudeLabel(duplicate, t)}`}
-                              value={current ?? ''}
-                              placeholder={t('dh2.chooseReplacement')}
-                              options={options.map((id) => ({
-                                value: id,
-                                label: aptitudeLabel(id, t),
-                              }))}
-                              onChange={(value) => applyAptitude(key, value)}
-                            />
-                          ) : (
-                            <p key={key} className="text-destructive text-xs">
-                              {t('dh2.noFreeAptitudes')}
-                            </p>
-                          );
-                        })}
+                      {duplicateAptitudes.map((duplicate) => {
+                        const key = `duplicate.${duplicate}`;
+                        const current = chosenMap[key];
+                        const locked = isAptitudeLocked(character, key);
+                        // Выбранную замену видно и в режиме чтения (с замком),
+                        // пустую предлагаем только при редактировании.
+                        if (!isInfoEditing && !locked) return null;
+                        const options = characteristicAptitudes().filter(
+                          (id) =>
+                            !derivedAptitudes.profile.includes(id) ||
+                            id === current,
+                        );
+                        return options.length > 0 ? (
+                          <CreationField
+                            key={key}
+                            label={`${t('dh2.duplicateAptitude')}: ${aptitudeLabel(duplicate, t)}`}
+                            value={current ? aptitudeLabel(current, t) : ''}
+                            placeholder={t('dh2.chooseReplacement')}
+                            editing={isInfoEditing}
+                            locked={locked}
+                            lockHintKey="dh2.chosenAptitudeLocked"
+                            isCompactView={isCompactView}
+                            options={options.map((id) => ({
+                              value: id,
+                              label: aptitudeLabel(id, t),
+                            }))}
+                            onSelect={(value) => applyAptitude(key, value)}
+                          />
+                        ) : (
+                          <p key={key} className="text-destructive text-xs">
+                            {t('dh2.noFreeAptitudes')}
+                          </p>
+                        );
+                      })}
                     </div>
                   )}
                 </div>

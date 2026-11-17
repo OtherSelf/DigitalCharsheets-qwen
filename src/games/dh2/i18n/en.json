@@ -546,6 +546,7 @@
   "dh2.experienceLogEmpty": "No purchases yet.",
   "dh2.deleteExperienceEntry": "Delete entry",
   "dh2.chosenAtCreation": "Chosen at creation — recreate the character to change it.",
+  "dh2.chosenAptitudeLocked": "Chosen — the aptitude profile is built from it; recreate the character to change it.",
   "dh2.conditions.add": "Add condition",
   "dh2.conditions.empty": "No conditions yet.",
   "dh2.conditions.name": "Name",

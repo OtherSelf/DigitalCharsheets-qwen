@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { applyAptitudeChoice } from '@/games/dh2/aptitudes-sheet';
+import {
+  applyAptitudeChoice,
+  isAptitudeLocked,
+} from '@/games/dh2/aptitudes-sheet';
 import { createDh2Defaults } from '@/games/dh2/defaults';
 import { deriveAptitudes } from '@/games/dh2/dh2e-aptitudes';
 import { dh2History } from '@/games/dh2/history';
@@ -71,6 +74,51 @@ describe('выбор аптитюды на листе', () => {
     expect(patch.aptitudes.profile).toContain('ballistic-skill');
     expect(patch.aptitudes.profile).toContain('offence');
     expect(patch.aptitudes.profile.length).toBeGreaterThanOrEqual(5);
+  });
+});
+
+describe('замок выбранной склонности (D1)', () => {
+  it('ключ из `chosen` заперт, пустой слот — нет', () => {
+    const character = createDh2Defaults({
+      ...sources,
+      chosen: {},
+      strictAptitudeChoices: true,
+    });
+    expect(isAptitudeLocked(character, 'background')).toBe(false);
+    expect(isAptitudeLocked(character, 'role.1')).toBe(false);
+
+    const withBackground = {
+      ...character,
+      ...applyAptitudeChoice(character, 'background', 'offence'),
+    };
+    expect(isAptitudeLocked(withBackground, 'background')).toBe(true);
+    expect(isAptitudeLocked(withBackground, 'role.1')).toBe(false);
+  });
+
+  it('выбор при создании запирает слот и остаётся в профиле', () => {
+    const character = createDh2Defaults({
+      ...sources,
+      chosen: { background: 'offence' },
+      strictAptitudeChoices: true,
+    });
+    expect(isAptitudeLocked(character, 'background')).toBe(true);
+    expect(character.aptitudes.profile).toContain('offence');
+  });
+
+  it('дозаполнение пустого слота запирает его в том же патче', () => {
+    const character = createDh2Defaults({
+      ...sources,
+      chosen: {},
+      strictAptitudeChoices: true,
+    });
+    const patch = applyAptitudeChoice(
+      character,
+      'duplicate.perception',
+      'strength',
+    );
+    const next = { ...character, ...patch };
+    expect(isAptitudeLocked(next, 'duplicate.perception')).toBe(true);
+    expect(next.aptitudes.chosen['duplicate.perception']).toBe('strength');
   });
 });
 

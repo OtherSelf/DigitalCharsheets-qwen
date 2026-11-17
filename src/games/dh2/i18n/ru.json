@@ -546,6 +546,7 @@
   "dh2.experienceLogEmpty": "Покупок пока нет.",
   "dh2.deleteExperienceEntry": "Удалить запись",
   "dh2.chosenAtCreation": "Выбрано при создании — чтобы изменить, пересоздайте персонажа.",
+  "dh2.chosenAptitudeLocked": "Выбрано — профиль склонностей собран по нему; чтобы изменить, пересоздайте персонажа.",
   "dh2.conditions.add": "Добавить состояние",
   "dh2.conditions.empty": "Состояний нет.",
   "dh2.conditions.name": "Название",
