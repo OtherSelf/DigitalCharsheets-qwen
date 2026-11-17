@@ -5,8 +5,10 @@ game-specific lives in one folder under `src/games/<id>/`; the core only talks
 to the generated registry and the plugin contracts. A plugin is a folder plus a
 manifest plus a rebuild — no runtime code loading (D1), no ZIP/upload (D5).
 
-Status: **v1.1**, manifest `manifestVersion: 1`, `pluginApi: ^1.0.0`
-(additive: the 1.1 host adds optional history labels).
+Status: **v1.2**, manifest `manifestVersion: 2`, `pluginApi: ^1.0.0`
+(1.1 added optional history labels; 1.2 adds `CreateFormCompletion` and
+generated game metadata. `manifestVersion 2` makes `game.description`
+required — manifests without it must be updated).
 
 ## Quick start (new plugin in an evening)
 
@@ -96,7 +98,7 @@ Validated by `scripts/plugins/generate.mjs` (Ajv) on every generation/verify.
 
 ```json
 {
-  "manifestVersion": 1,
+  "manifestVersion": 2,
   "pluginApi": "^1.0.0",
   "id": "dh1",
   "gameId": "darkHeresy",
@@ -318,7 +320,7 @@ page uses it to switch to read-only mode.
 
 ## Versioning
 
-- `manifestVersion` — the manifest format understood by the host (1).
+- `manifestVersion` — the manifest format understood by the host (2).
 - `pluginApi` — compatible Plugin API range (`^1.2.3`, `~1.2.3`, `>=1.0.0`,
   exact, `*`); the host checks it at generation time. Host **1.1** remains
   compatible with a `^1.0.0` manifest; the optional `history` labels are

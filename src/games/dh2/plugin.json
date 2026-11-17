@@ -1,9 +1,9 @@
 {
-  "manifestVersion": 1,
+  "manifestVersion": 2,
   "pluginApi": "^1.0.0",
   "id": "dh2",
   "gameId": "darkHeresy",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "order": 30,
   "defaultStatus": "published",
   "name": {
