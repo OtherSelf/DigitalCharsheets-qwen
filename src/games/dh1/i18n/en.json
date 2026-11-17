@@ -701,6 +701,7 @@
   "dh1.manualPurchase": "Manual purchase",
   "dh1.deleteExperienceEntry": "Delete entry",
   "dh1.chosenAtCreation": "Chosen at creation — recreate the character to change it.",
+  "dh1.chosenGenderLocked": "Chosen — the gender is fixed after creation; recreate the character to change it.",
   "dh1.conditions.add": "Add condition",
   "dh1.conditions.empty": "No conditions yet.",
   "dh1.conditions.name": "Name",

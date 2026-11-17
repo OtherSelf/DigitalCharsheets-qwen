@@ -64,6 +64,16 @@ function readJson(path) {
   return JSON.parse(readFileSync(path, 'utf8'));
 }
 
+/** Пол, который бэкграунд фиксирует правилами (Адептус Сороритас — female). */
+function genderLockOf(entity, value) {
+  if (value !== 'female' && value !== 'male') {
+    throw new Error(
+      `${entity.id}: неизвестный genderLock ${JSON.stringify(value)}`,
+    );
+  }
+  return value;
+}
+
 function slugOf(id) {
   return String(id).split('/').pop();
 }
@@ -278,6 +288,9 @@ function buildData(catalog, rules, i18n) {
         : {}),
       ...(typeof props.startingMalignancy === 'number'
         ? { startingMalignancy: props.startingMalignancy }
+        : {}),
+      ...(props.genderLock
+        ? { genderLock: genderLockOf(entity, props.genderLock) }
         : {}),
     };
   });

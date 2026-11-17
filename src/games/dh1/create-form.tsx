@@ -652,6 +652,33 @@ export function DarkHeresyCreateForm({
               <div className="grid grid-cols-2 gap-4 pt-2 md:grid-cols-3">
                 <FormField
                   control={form.control}
+                  name="gender"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('dh1.gender')}</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value ?? ''}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder={t('dh1.selectGender')} />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {genderOptions(t).map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
                   name="height"
                   render={({ field }) => (
                     <FormItem>
@@ -976,33 +1003,6 @@ export function DarkHeresyCreateForm({
                       <FormControl>
                         <Input type="number" {...field} />
                       </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="gender"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t('dh1.gender')}</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        value={field.value ?? ''}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder={t('dh1.selectGender')} />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {genderOptions(t).map((option) => (
-                            <SelectItem key={option.value} value={option.value}>
-                              {option.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}

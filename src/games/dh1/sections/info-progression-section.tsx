@@ -136,6 +136,7 @@ const CreationField = ({
   isCompactView,
   options,
   onSelect,
+  lockHintKey,
 }: {
   label: string;
   value: string;
@@ -146,9 +147,11 @@ const CreationField = ({
   isCompactView: boolean;
   options: readonly { value: string; label: string }[];
   onSelect: (next: string) => void;
+  /** Подсказка к замку; по умолчанию «выбрано при создании». */
+  lockHintKey?: string;
 }) => {
   const { t } = useTranslation();
-  const lockHint = t('dh1.chosenAtCreation');
+  const lockHint = t(lockHintKey ?? 'dh1.chosenAtCreation');
 
   return (
     <div className="space-y-1">
@@ -409,6 +412,7 @@ export const InfoSection = ({
                 placeholder={t('dh1.selectGender')}
                 editing={isInfoEditing}
                 locked={isCreationFieldLocked(character.identity?.gender)}
+                lockHintKey="dh1.chosenGenderLocked"
                 isCompactView={isCompactView}
                 options={genderOptions(t)}
                 onSelect={(next) =>

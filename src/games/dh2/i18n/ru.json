@@ -511,6 +511,7 @@
   "dh2.genderFemale": "Женский",
   "dh2.genderUnspecified": "Не определено",
   "dh2.selectGender": "Выберите пол",
+  "dh2.genderLockedByBackground": "Бэкграунд фиксирует пол персонажа.",
   "dh2.characteristic": "Характеристика",
   "dh2.psyDisciplines": "Дисциплины",
   "dh2.psyPowers": "Психосилы",

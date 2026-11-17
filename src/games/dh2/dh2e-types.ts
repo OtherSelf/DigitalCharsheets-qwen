@@ -80,6 +80,8 @@ export interface Dh2eBackground {
   readonly startingTraits?: Dh2eBackgroundTraits;
   readonly startingCorruption?: number;
   readonly startingMalignancy?: number;
+  /** Пол, который бэкграунд фиксирует правилами (Адептус Сороритас — female). */
+  readonly genderLock?: 'male' | 'female';
 }
 
 export type Dh2eAptitudeSlot = string | Dh2eChoice<string>;

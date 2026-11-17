@@ -701,6 +701,7 @@
   "dh1.manualPurchase": "Ручная покупка",
   "dh1.deleteExperienceEntry": "Удалить запись",
   "dh1.chosenAtCreation": "Выбрано при создании — чтобы изменить, пересоздайте персонажа.",
+  "dh1.chosenGenderLocked": "Выбрано — после создания пол не меняется; чтобы изменить, пересоздайте персонажа.",
   "dh1.conditions.add": "Добавить состояние",
   "dh1.conditions.empty": "Состояний нет.",
   "dh1.conditions.name": "Название",
