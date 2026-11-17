@@ -123,11 +123,23 @@ restores the stored version. To fix an old clone with CRLF files once, run
 Versioning. `Unreleased` collects changes until a release; the release commit
 moves them to a dated version heading and bumps `package.json`/lockfile.
 
+The app version follows the owner's rules, not "features vs fixes":
+
+- **MAJOR** — releases only, and only with the owner's explicit approval.
+  This includes `0.x → 1.0.0`: it is a release, not an ordinary bump.
+- **MINOR** — only on the owner's instruction, when a batch of changes has
+  accumulated; that release gets a dated `CHANGELOG.md` section. An agent
+  never raises MINOR on its own.
+- **PATCH** — free to bump for ordinary fixes; a PATCH does not need a
+  CHANGELOG entry (the change is described in the commit message).
+- With the owner's go-ahead, `0.x → 0.y` is an ordinary MINOR; no extra
+  ceremony beyond the release note.
+
 Versions are independent:
 
 | Axis | Source | When to bump |
 |---|---|---|
-| App | `package.json#version` | User-visible release (minor for features, patch for fixes). |
+| App | `package.json#version` | By the MAJOR/MINOR/PATCH rules above; MAJOR and MINOR only with the owner. |
 | Game edition (plugin) | `plugin.json#version` | Any change inside `src/games/<id>/`; one minor per release, even if several books are added. |
 | Sheet format | `plugin.json#schemaVersion` and `schema-version.ts` | Only when the stored character format changes; migrations must follow. |
 | Plugin API | `PLUGIN_API_VERSION` in `scripts/plugins/generate.mjs` | Additive SDK change → minor (1.2.0); breaking runtime contract → major. |
