@@ -654,6 +654,11 @@ test.describe('создание персонажа — пол и бэкграу�
       page.getByText("The background fixes the character's gender."),
     ).toBeVisible();
 
+    // Подсказка стартового пакета перечисляет варианты выбора, но не
+    // подставляет в текст UI-плейсхолдер «Choose…».
+    await expect(page.getByText(/Choose… Medicae/)).toHaveCount(0);
+    await expect(page.getByText(/Medicae \/ Parry/).first()).toBeVisible();
+
     // Смена бэкграунда до сохранения снимает блок, значение остаётся.
     await page.getByLabel('Background', { exact: true }).click();
     await page.getByRole('option', { name: /^Mutant/ }).click();
