@@ -41,8 +41,6 @@ polish.
   changes.
 - DH1 creation moves the gender select into the Details block; after creation
   the gender is read-only in both editions.
-- DH2 creation marks every required empty choice in red with `aria-invalid`
-  (aptitudes, role talent, the starting package); choosing a value clears it.
 - `Dialog`/`AlertDialog` open in place with fade+zoom instead of sliding in
   from the top-left corner, are capped at the viewport height with internal
   scrolling, and keep a 1rem gutter on mobile. The right-side sheet is

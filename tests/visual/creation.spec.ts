@@ -536,25 +536,24 @@ test.describe('создание персонажа — дополнения DH2'
     await expect(page.getByText(/Starting traits: one of:/)).toBeVisible();
     await expect(page.getByText(/Starting Corruption: 10/)).toBeVisible();
 
-    // Пустые обязательные выборы красные и aria-invalid, пока не выбраны (D6).
+    // Выборы из книги — обычные селекты: пустое значение не подсвечивается
+    // (решение владельца), ошибку показывает общая валидация при отправке.
     const backgroundAptitude = page.getByLabel('Background aptitude: Mutant', {
       exact: true,
     });
-    const firstGrant = page.getByLabel('Starting skills 1', { exact: true });
-    await expect(backgroundAptitude).toHaveAttribute('aria-invalid', 'true');
-    await expect(firstGrant).toHaveAttribute('aria-invalid', 'true');
+    await expect(backgroundAptitude).not.toHaveAttribute('aria-invalid');
 
     await backgroundAptitude.click();
     await page.getByRole('option', { name: 'Fieldcraft', exact: true }).click();
-    await expect(backgroundAptitude).toHaveAttribute('aria-invalid', 'false');
 
     await page.getByLabel('Role talent: Fanatic', { exact: true }).click();
     await page
       .getByRole('option', { name: 'Deny the Witch', exact: true })
       .click();
-    await firstGrant.click();
+    await page.getByLabel('Starting skills 1', { exact: true }).click();
     await page.getByRole('option', { name: 'Athletics', exact: true }).click();
-    await expect(firstGrant).toHaveAttribute('aria-invalid', 'false');
+    await page.getByLabel('Starting skills 2', { exact: true }).click();
+    await page.getByRole('option', { name: 'Deceive', exact: true }).click();
     await page.getByLabel('Starting skills 2', { exact: true }).click();
     await page.getByRole('option', { name: 'Deceive', exact: true }).click();
 
