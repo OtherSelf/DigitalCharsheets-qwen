@@ -702,6 +702,7 @@
   "dh1.conditions.add": "Add condition",
   "dh1.conditions.empty": "No conditions yet.",
   "dh1.conditions.name": "Name",
+  "dh1.conditions.title": "Conditions",
   "dh1.conditions.kind": "Type",
   "dh1.conditions.severity": "Severity",
   "dh1.conditions.effect": "Effect",

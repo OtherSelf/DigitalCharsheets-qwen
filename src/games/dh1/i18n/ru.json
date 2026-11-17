@@ -702,6 +702,7 @@
   "dh1.conditions.add": "Добавить состояние",
   "dh1.conditions.empty": "Состояний нет.",
   "dh1.conditions.name": "Название",
+  "dh1.conditions.title": "Состояния",
   "dh1.conditions.kind": "Тип",
   "dh1.conditions.severity": "Степень",
   "dh1.conditions.effect": "Эффект",

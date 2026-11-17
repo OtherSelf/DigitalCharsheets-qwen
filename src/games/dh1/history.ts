@@ -99,6 +99,12 @@ export const dh1History: GameHistoryConfig = {
     clipSize: 'dh1.weaponClipSize',
     reload: 'dh1.weaponReload',
     equipped: 'dh1.equipped',
+    'conditions.name': 'dh1.conditions.name',
+    'conditions.kind': 'dh1.conditions.kind',
+    'conditions.severity': 'dh1.conditions.severity',
+    'conditions.effect': 'dh1.conditions.effect',
+    'conditions.notes': 'dh1.conditions.notes',
+    'conditions.source': 'dh1.conditions.source',
   },
   collections: {
     inventory: 'common.inventory',
@@ -110,6 +116,7 @@ export const dh1History: GameHistoryConfig = {
     questLog: 'common.questJournal',
     customResources: 'common.statsTab',
     experienceLog: 'dh1.experienceLog',
+    conditions: 'dh1.conditions.title',
   },
   itemLabelFields: ['name', 'title', 'description'],
 };

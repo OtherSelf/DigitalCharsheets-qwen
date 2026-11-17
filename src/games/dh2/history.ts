@@ -79,6 +79,12 @@ export const dh2History: GameHistoryConfig = {
     reload: 'dh2.weaponReload',
     equipped: 'dh2.equipped',
     gender: 'dh2.gender',
+    'conditions.name': 'dh2.conditions.name',
+    'conditions.kind': 'dh2.conditions.kind',
+    'conditions.severity': 'dh2.conditions.severity',
+    'conditions.effect': 'dh2.conditions.effect',
+    'conditions.notes': 'dh2.conditions.notes',
+    'conditions.source': 'dh2.conditions.source',
   },
   collections: {
     inventory: 'common.inventory',
@@ -88,6 +94,7 @@ export const dh2History: GameHistoryConfig = {
     experienceLog: 'dh2.experienceLog',
     questLog: 'common.questJournal',
     customResources: 'common.statsTab',
+    conditions: 'dh2.conditions.title',
   },
   itemLabelFields: ['name', 'title', 'description'],
 };

@@ -108,6 +108,25 @@ describe('history labels', () => {
     ).toBe('dh2.aptitudes');
   });
 
+  it('подписывает элементы состояний коллекцией и полями', () => {
+    const change: HistoryChange = {
+      kind: 'changed',
+      path: 'conditions',
+      key: 'c1',
+      label: 'Bleeding',
+      field: 'severity',
+      before: { value: 1 },
+      after: { value: 2 },
+    };
+
+    expect(resolveHistoryLabel(change, dh2History, t)).toBe(
+      'dh2.conditions.title · Bleeding · dh2.conditions.severity',
+    );
+    expect(resolveHistoryLabel(change, dh1History, t)).toBe(
+      'dh1.conditions.title · Bleeding · dh1.conditions.severity',
+    );
+  });
+
   it('подписывает последний сегмент пути и элемент коллекции', () => {
     const tKey = (key: string) => key;
     expect(
