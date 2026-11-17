@@ -578,9 +578,9 @@ export function DarkHeresyCreateForm({ onCreated }: CreateFormProps) {
                         {t('dh2.startingAptitude')}:{' '}
                         {aptitudeChosen.background
                           ? `${aptitudeLabel(aptitudeChosen.background, t)} · ${t('dh2.chosenPrefix')}`
-                          : `${background.aptitudeChoice
+                          : background.aptitudeChoice
                               .map((id) => aptitudeLabel(id, t))
-                              .join(' / ')} — ${t('dh2.choosePrompt')}`}
+                              .join(' / ')}
                       </p>
                     </>
                   )}
@@ -590,9 +590,9 @@ export function DarkHeresyCreateForm({ onCreated }: CreateFormProps) {
                         {t('dh2.roleTalent')}:{' '}
                         {roleTalent
                           ? `${talentLabel(roleTalent, t)} · ${t('dh2.chosenPrefix')}`
-                          : `${role.talentChoice.of
+                          : role.talentChoice.of
                               .map((id) => talentLabel(id, t))
-                              .join(' / ')} — ${t('dh2.choosePrompt')}`}
+                              .join(' / ')}
                       </p>
                       <p className="text-muted-foreground text-xs">
                         {t(role.bonusKey)}
@@ -1042,10 +1042,12 @@ function GrantList({
         if (picked) {
           return `${t('dh2.chosenPrefix')} ${grantOptionLabel(grantOption(kind, picked), t)}`;
         }
+        // В подсказке перечисляем варианты, а не UI-плейсхолдер «Выберите…»:
+        // иначе строка читается как «…, Выберите… Медика / Парирование».
         const options = item.of
           .map((option) => grantOptionLabel(grantOption(kind, option), t))
           .join(' / ');
-        return `${t('dh2.choosePrompt')} ${options}`;
+        return options;
       }
       return grantOptionLabel(grantOption(kind, item), t);
     })
