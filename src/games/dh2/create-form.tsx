@@ -339,7 +339,7 @@ export function DarkHeresyCreateForm({ onCreated }: CreateFormProps) {
         title: t('common.characterCreatedTitle'),
         description: t('dh2.characterCreatedDescDH'),
       });
-      onCreated?.(docRef.id);
+      onCreated?.(docRef.id, { openNotes: true });
     }
   }
 

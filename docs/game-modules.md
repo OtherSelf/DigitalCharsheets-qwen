@@ -111,6 +111,8 @@ The 2e module owns the rules that only exist in that edition:
 - **Starting package** — `Dh2eBackground` may carry optional
   `startingTraits`, `startingCorruption` and `startingMalignancy`; the creation
   form shows them as hints and the player applies them to the sheet manually.
+  DH1/DH2 also write a markdown hint sheet into `notes` and ask the host to
+  open Notes once after creation (`CreateFormCompletion.openNotes`).
 - **Influence / Requisition** — `influence.ts` caps creation acquisitions at
   the Influence bonus (Scarce −10 or better) and computes the Requisition
   target from the availability/craftsmanship tables (book p. 141).

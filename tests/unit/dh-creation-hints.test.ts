@@ -2,10 +2,6 @@ import { describe, expect, it } from 'vitest';
 
 import { dh1CreationHintsMarkdown } from '@/games/dh1/creation-hints';
 import { dh2CreationHintsMarkdown } from '@/games/dh2/creation-hints';
-import {
-  CREATION_HINTS_MARKER,
-  hasCreationHints,
-} from '@/games/shared/creation-hints';
 import { translations } from '@/lib/i18n';
 
 function t(lang: 'en' | 'ru') {
@@ -67,13 +63,6 @@ describe('dh2: подсказки создания', () => {
     expect(localized).toContain('Агро-мир');
     expect(localized).toContain('Мутант');
     expect(localized).toContain('Стартовая Порча: 10');
-  });
-
-  it('оставляет скрытый маркер для авто-открытия заметок', () => {
-    expect(markdown).toContain(CREATION_HINTS_MARKER);
-    expect(hasCreationHints(markdown)).toBe(true);
-    expect(hasCreationHints('обычные заметки')).toBe(false);
-    expect(hasCreationHints(undefined)).toBe(false);
   });
 });
 

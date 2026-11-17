@@ -1,4 +1,3 @@
-import { creationHintsComment } from '../shared/creation-hints';
 import {
   DH2E_BACKGROUNDS,
   DH2E_DIVINATIONS,
@@ -127,7 +126,6 @@ export function dh2CreationHintsMarkdown(
     '',
     t('dh2.creationHintsIntro'),
     '',
-    creationHintsComment(),
     '',
   ];
 

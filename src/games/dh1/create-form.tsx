@@ -37,6 +37,7 @@ import {
   useToast,
   useTranslation,
 } from '@/games/plugin-host';
+import type { CreateFormCompletion, CreateFormProps } from '@/games/types';
 import {
   buildInvalidFormAlert,
   focusFirstInvalidField,
@@ -97,7 +98,7 @@ export function DarkHeresyCreateForm({
   onCreated,
 }: {
   variant: DarkHeresyFormVariant;
-  onCreated?: (characterId: string) => void;
+  onCreated?: (characterId: string, completion?: CreateFormCompletion) => void;
 }) {
   const { toast } = useToast();
   const { addCharacter } = useCharacterContext();
@@ -293,7 +294,7 @@ export function DarkHeresyCreateForm({
         title: t('common.characterCreatedTitle'),
         description: t('dh1.characterCreatedDescDH'),
       });
-      onCreated?.(docRef.id);
+      onCreated?.(docRef.id, { openNotes: true });
     }
   }
 
@@ -1041,7 +1042,7 @@ export function DarkHeresyCreateForm({
 
 export function Dh1CharacterForm({
   onCreated,
-}: { onCreated?: (characterId: string) => void } = {}) {
+}: Pick<CreateFormProps, 'onCreated'> = {}) {
   return <DarkHeresyCreateForm variant="dh1" onCreated={onCreated} />;
 }
 

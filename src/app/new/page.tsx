@@ -308,10 +308,14 @@ export default function ManualCharacterCreationPage() {
               )}
               {Form ? (
                 <Form
-                  onCreated={(characterId) =>
-                    // Флаг для листа: один раз открыть «Заметки», если при
-                    // создании туда попали подсказки (DH1/DH2).
-                    router.push(`${characterPath(characterId)}?notes=1`)
+                  onCreated={(characterId, completion) =>
+                    // Плагин сам просит панель после создания (SDK:
+                    // CreateFormCompletion); ядро не знает правил игры.
+                    router.push(
+                      `${characterPath(characterId)}${
+                        completion?.openNotes ? '?panel=notes' : ''
+                      }`,
+                    )
                   }
                 />
               ) : (
