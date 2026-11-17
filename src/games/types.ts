@@ -183,11 +183,24 @@ export interface SheetHandle {
 }
 
 /**
+ * Что хосту сделать после создания листа. Плагин сам решает, нужен ли игроку
+ * экран сразу: например, DH кладёт подсказки создания в `notes` и просит
+ * открыть их. Ядро не знает правил игры — оно лишь исполняет просьбу.
+ */
+export interface CreateFormCompletion {
+  /** Один раз открыть «Заметки» нового листа (правый Sheet). */
+  readonly openNotes?: boolean;
+}
+
+/**
  * Пропсы формы создания. Навигацию после создания делает хост: плагин только
  * сообщает id через `onCreated` (поэтому `next/navigation` ему не нужен).
  */
 export interface CreateFormProps {
-  readonly onCreated?: (characterId: string) => void;
+  readonly onCreated?: (
+    characterId: string,
+    completion?: CreateFormCompletion,
+  ) => void;
 }
 
 /** Форма создания персонажа модуля. */

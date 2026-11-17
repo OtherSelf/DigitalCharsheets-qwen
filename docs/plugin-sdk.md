@@ -229,10 +229,17 @@ Sections (`sections/*.tsx`) and accordions are ordinary React; use the host UI
 kit (`@/components/ui/*`) and `useTranslation()`. If a section is part of the
 compact navigation, its `id` must match the `CompactNav` item id.
 
-`create-form.tsx` — receives one optional prop, `onCreated(characterId)`; it
-reads `useCharacterContext()` (addCharacter), calls `createDefaults()` and calls
-`onCreated` after the server created the sheet. Navigation belongs to the host,
-so `next/navigation` is not imported by plugins at all.
+`create-form.tsx` — receives one optional prop,
+`onCreated(characterId, completion?)`. It reads `useCharacterContext()`
+(addCharacter), calls `createDefaults()` and calls `onCreated` after the server
+created the sheet. Navigation belongs to the host, so `next/navigation` is not
+imported by plugins at all.
+
+`completion` is an optional `CreateFormCompletion` (any game may use it):
+`openNotes: true` asks the host to open the new sheet's Notes panel once. The
+host removes that request from the URL after opening, so a refresh does not
+reopen the panel. Core does not inspect game data to decide this — the plugin
+knows whether it wrote something worth showing.
 
 ## i18n
 
