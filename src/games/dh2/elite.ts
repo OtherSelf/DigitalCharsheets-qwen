@@ -132,12 +132,89 @@ export function buyEliteAdvance(
   };
 }
 
-/** Удаление элитного: только id, опыт и характеристики не трогаем (D15). */
-export function removeEliteAdvance(
-  character: Pick<DH2Character, 'eliteAdvances'>,
+/** Патч удаления: профиль всегда, журнал и опыт — только если есть запись. */
+export type EliteRemovalPatch = {
+  eliteAdvances: string[];
+  totalExpSpent?: number;
+  experienceLog?: DH2ExperienceEntry[];
+};
+
+type EliteExperienceSubject = Pick<
+  DH2Character,
+  'eliteAdvances' | 'totalExpSpent' | 'experienceLog'
+>;
+
+const ELITE_ENTRY_PREFIX = 'elite-advance:';
+
+/**
+ * `eliteId` из строки журнала `elite-advance:<iso>:<eliteId>`. Разбираем по
+ * последнему двоеточию: ISO-время само содержит `:`.
+ */
+export function eliteIdFromEntry(
+  entry: Pick<DH2ExperienceEntry, 'id' | 'kind'>,
+): string | undefined {
+  if (entry.kind !== 'elite-advance') return undefined;
+  if (!entry.id.startsWith(ELITE_ENTRY_PREFIX)) return undefined;
+  const suffix = entry.id.slice(ELITE_ENTRY_PREFIX.length);
+  const separator = suffix.lastIndexOf(':');
+  if (separator === -1) return undefined;
+  return suffix.slice(separator + 1) || undefined;
+}
+
+function eliteEntryFor(
+  character: EliteExperienceSubject,
   eliteId: string,
-): Pick<DH2Character, 'eliteAdvances'> {
+): DH2ExperienceEntry | undefined {
+  return (character.experienceLog ?? []).find(
+    (entry) =>
+      entry.kind === 'elite-advance' && eliteIdFromEntry(entry) === eliteId,
+  );
+}
+
+/**
+ * Удаление элитного из профиля: id уходит, связанная строка журнала — тоже,
+ * её цена возвращается в свободный опыт (D7). Legacy-лист без строки журнала
+ * теряет только id: возвращать нечего, опыт не трогаем.
+ */
+export function removeEliteAdvance(
+  character: EliteExperienceSubject,
+  eliteId: string,
+): EliteRemovalPatch {
+  const eliteAdvances = character.eliteAdvances.filter((id) => id !== eliteId);
+  const entry = eliteEntryFor(character, eliteId);
+  if (!entry) return { eliteAdvances };
+
   return {
-    eliteAdvances: character.eliteAdvances.filter((id) => id !== eliteId),
+    eliteAdvances,
+    totalExpSpent: Math.max(0, (character.totalExpSpent ?? 0) - entry.cost),
+    experienceLog: (character.experienceLog ?? []).filter(
+      (item) => item.id !== entry.id,
+    ),
+  };
+}
+
+/**
+ * Удаление строки журнала элитного: симметрично снимает id из профиля и
+ * возвращает цену. Остальные виды записей обрабатывает сам лист.
+ * `undefined` — это не элитное или строка уже удалена.
+ */
+export function removeEliteJournalEntry(
+  character: EliteExperienceSubject,
+  entryId: string,
+): EliteRemovalPatch | undefined {
+  const entry = (character.experienceLog ?? []).find(
+    (item) => item.id === entryId,
+  );
+  if (!entry || entry.kind !== 'elite-advance') return undefined;
+  const eliteId = eliteIdFromEntry(entry);
+
+  return {
+    eliteAdvances: eliteId
+      ? character.eliteAdvances.filter((id) => id !== eliteId)
+      : character.eliteAdvances,
+    totalExpSpent: Math.max(0, (character.totalExpSpent ?? 0) - entry.cost),
+    experienceLog: (character.experienceLog ?? []).filter(
+      (item) => item.id !== entryId,
+    ),
   };
 }
