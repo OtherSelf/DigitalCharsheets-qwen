@@ -87,7 +87,7 @@ function exampleManifest(
   overrides: Record<string, unknown> = {},
 ): PluginManifest {
   return {
-    manifestVersion: 1,
+    manifestVersion: 2,
     pluginApi: '^1.0.0',
     id: 'example',
     gameId: 'exampleGame',
@@ -303,7 +303,7 @@ describe('сгенерированный реестр', () => {
   it('plugin API и версии манифеста свежие', async () => {
     const { isHostApiCompatible } = await generator();
     for (const plugin of gamePlugins) {
-      expect(plugin.manifest.manifestVersion).toBe(1);
+      expect(plugin.manifest.manifestVersion).toBe(2);
       expect(isHostApiCompatible(plugin.manifest.pluginApi)).toBe(true);
       expect(PLUGIN_API_VERSION).toMatch(/^\d+\.\d+\.\d+$/);
     }
@@ -490,9 +490,11 @@ describe('разбор точек входа и версий API', () => {
     expect(isHostApiCompatible('^1.5.0')).toBe(false);
     expect(isHostApiCompatible('^2.0.0')).toBe(false);
     expect(isHostApiCompatible('~1.0.0')).toBe(false);
-    expect(isHostApiCompatible('~1.1.0')).toBe(true);
+    expect(isHostApiCompatible('~1.1.0')).toBe(false);
+    expect(isHostApiCompatible('~1.2.0')).toBe(true);
     expect(isHostApiCompatible('>=1.0.0')).toBe(true);
     expect(isHostApiCompatible('1.0.0')).toBe(false);
+    expect(isHostApiCompatible('1.2.0')).toBe(true);
     expect(isHostApiCompatible('0.9.0')).toBe(false);
     expect(isHostApiCompatible('*')).toBe(true);
     expect(isHostApiCompatible('not-a-version')).toBe(false);

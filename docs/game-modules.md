@@ -127,7 +127,7 @@ Every module folder has a `plugin.json` (`src/games/plugin.schema.json`):
 
 ```json
 {
-  "manifestVersion": 1,
+  "manifestVersion": 2,
   "pluginApi": "^1.0.0",
   "id": "dh1",
   "gameId": "darkHeresy",

@@ -45,9 +45,9 @@ export const GAMES_DEFS_PATH = join(GAMES_DIR, 'games.generated.ts');
 export const MANIFEST_FILE = 'plugin.json';
 
 /** Версия Plugin API, с которой сверяется `pluginApi` манифестов. */
-export const PLUGIN_API_VERSION = '1.1.0';
+export const PLUGIN_API_VERSION = '1.2.0';
 /** Версия формата манифеста, которую понимает генератор. */
-export const PLUGIN_MANIFEST_VERSION = 1;
+export const PLUGIN_MANIFEST_VERSION = 2;
 
 /** Каталоги `src/games/*`, которые являются ядром, а не плагинами. */
 const CORE_GAMES_DIRS = new Set(['shared', 'i18n']);
