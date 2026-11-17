@@ -117,6 +117,26 @@ restores the stored version. To fix an old clone with CRLF files once, run
 - The Scalar docs dependency lives in `dependencies` because `/api/docs` needs
   it at runtime.
 
+## Versions and changelog
+
+[`CHANGELOG.md`](../CHANGELOG.md) follows Keep a Changelog 1.1 and Semantic
+Versioning. `Unreleased` collects changes until a release; the release commit
+moves them to a dated version heading and bumps `package.json`/lockfile.
+
+Versions are independent:
+
+| Axis | Source | When to bump |
+|---|---|---|
+| App | `package.json#version` | User-visible release (minor for features, patch for fixes). |
+| Game edition (plugin) | `plugin.json#version` | Any change inside `src/games/<id>/`; one minor per release, even if several books are added. |
+| Sheet format | `plugin.json#schemaVersion` and `schema-version.ts` | Only when the stored character format changes; migrations must follow. |
+| Plugin API | `PLUGIN_API_VERSION` in `scripts/plugins/generate.mjs` | Additive SDK change → minor (1.2.0); breaking runtime contract → major. |
+| Manifest format | `PLUGIN_MANIFEST_VERSION` + `plugin.schema.json` | Breaking manifest schema (e.g. a new required field) → next integer (2). |
+
+Game families have no separate version: their id/order/name/description come
+from the `game` block of the manifests and are regenerated. A release with
+`CHANGELOG.md` changes is verified with `npm run verify` and the visual suite.
+
 ## Related
 
 - [testing.md](testing.md) — unit/smoke/visual/pre-deploy
