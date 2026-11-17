@@ -175,7 +175,9 @@ of the other edition:
   discipline/power lists are free text from the book.
 - `eliteAdvances: string[]` — purchased elite advances (`elite-advance`
   journal entries). Instant changes are shown as a memo and are not applied to
-  the sheet automatically.
+  the sheet automatically. The catalog requirements (characteristic minimum,
+  background, gender, another elite) are checked against the sheet and shown
+  as red warnings; the purchase itself is never blocked.
 - `influence` is part of `stats`; wealth is stored but hidden in the 2e UI
   (Influence is the resource). `influence.ts` computes the creation limit and
   the Requisition target from the availability/craftsmanship tables.

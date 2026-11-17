@@ -69,6 +69,14 @@ npm run dh2e:data    # regenerate dh2e-*.ts and dh2.data.* i18n keys
 npm run dh2e:check   # fail if the generated files are stale
 ```
 
+Elite advances carry a structured `prereq` list (characteristic minimum,
+background, gender, another elite, a trait). The generator validates every
+reference and writes it as `requirements`; a typo fails `dh2e:data`/
+`dh2e:check` instead of producing a silent no-op. The sheet checks the
+requirements it can compare (background, gender, characteristics, elites) and
+shows red warnings, while a `trait` stays a hint because traits are free text
+on the sheet.
+
 `DCS_CONTENT_DIR` overrides the catalog location (default:
 `../DigitalCharsheets-workspace/content/dh2`). The generator owns only the
 `dh2.catalog.*` slice of `src/games/dh2/i18n/{en,ru}.json`; every other key is

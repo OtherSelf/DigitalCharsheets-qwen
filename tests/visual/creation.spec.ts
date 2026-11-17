@@ -594,6 +594,19 @@ test.describe('создание персонажа — дополнения DH2'
         /Influence 50; Willpower 40; Adepta Sororitas background/,
       ),
     ).toBeVisible();
+    // Конфликт с бэкграундом/полом/характеристиками виден красным (D2), но
+    // покупку не блокирует: мастер мог разрешить исключение.
+    const eliteWarning = progression.getByTestId('elite-warning');
+    await expect(eliteWarning).toBeVisible();
+    await expect(eliteWarning).toContainText(
+      'The character does not meet the requirements:',
+    );
+    await expect(eliteWarning).toContainText('Adepta Sororitas');
+    await expect(eliteWarning).toContainText('Female');
+    await expect(eliteWarning).toContainText('Influence 50');
+    await expect(
+      progression.getByRole('button', { name: 'Add elite advance' }),
+    ).toBeEnabled();
     await progression
       .getByRole('button', { name: 'Add elite advance' })
       .click();

@@ -1184,6 +1184,13 @@ export const DH2E_ELITES: readonly Dh2eEliteAdvance[] = [
     ],
     prereqText:
       "Influence 75; Emperor's Blessing (decree of an Inquisitor); GM guidance",
+    requirements: [
+      {
+        kind: 'characteristic',
+        characteristic: 'influence',
+        min: 75,
+      },
+    ],
   },
   {
     id: 'psyker',
@@ -1196,6 +1203,17 @@ export const DH2E_ELITES: readonly Dh2eEliteAdvance[] = [
     ],
     prereqText:
       'Willpower 40; A Beacon in the Warp (нельзя с Untouchable); GM guidance',
+    requirements: [
+      {
+        kind: 'characteristic',
+        characteristic: 'willpower',
+        min: 40,
+      },
+      {
+        kind: 'notElite',
+        eliteId: 'untouchable',
+      },
+    ],
   },
   {
     id: 'untouchable',
@@ -1208,6 +1226,16 @@ export const DH2E_ELITES: readonly Dh2eEliteAdvance[] = [
       'dh2.catalog.elite.untouchable.change.3',
     ],
     prereqText: 'A Void in the Warp (нельзя с Psyker); GM guidance',
+    requirements: [
+      {
+        kind: 'trait',
+        traitId: 'a-void-in-the-warp',
+      },
+      {
+        kind: 'notElite',
+        eliteId: 'psyker',
+      },
+    ],
   },
   {
     id: 'sister-of-battle',
@@ -1220,6 +1248,26 @@ export const DH2E_ELITES: readonly Dh2eEliteAdvance[] = [
       'dh2.catalog.elite.sister-of-battle.change.3',
     ],
     prereqText: 'Influence 50; Willpower 40; Adepta Sororitas background',
+    requirements: [
+      {
+        kind: 'background',
+        backgroundId: 'adepta-sororitas',
+      },
+      {
+        kind: 'gender',
+        gender: 'female',
+      },
+      {
+        kind: 'characteristic',
+        characteristic: 'influence',
+        min: 50,
+      },
+      {
+        kind: 'characteristic',
+        characteristic: 'willpower',
+        min: 40,
+      },
+    ],
   },
   {
     id: 'astropath',
@@ -1230,5 +1278,15 @@ export const DH2E_ELITES: readonly Dh2eEliteAdvance[] = [
       'dh2.catalog.elite.astropath.change.1',
     ],
     prereqText: 'Psyker elite advance; Adeptus Astra Telepathica background',
+    requirements: [
+      {
+        kind: 'background',
+        backgroundId: 'adeptus-astra-telepathica',
+      },
+      {
+        kind: 'elite',
+        eliteId: 'psyker',
+      },
+    ],
   },
 ];

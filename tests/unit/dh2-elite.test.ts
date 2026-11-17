@@ -6,6 +6,7 @@ import {
   availableEliteAdvances,
   buyEliteAdvance,
   eliteById,
+  eliteRequirementIssues,
   removeEliteAdvance,
 } from '@/games/dh2/elite';
 import { buildDh2ExcelSections } from '@/games/dh2/excel';
@@ -73,6 +74,118 @@ describe('данные элитных продвижений', () => {
         (elite) => elite.id,
       ),
     );
+  });
+});
+
+describe('структурные требования (D2)', () => {
+  function sister(overrides: Record<string, unknown> = {}) {
+    return {
+      ...createDh2Defaults({
+        name: 'Sororitas',
+        homeWorld: 'hive-world',
+        background: 'adepta-sororitas',
+        role: 'warrior',
+        gender: 'female',
+        influence: 50,
+        willpower: 40,
+        ...overrides,
+      }),
+    };
+  }
+
+  it('валидная Сестра Битвы требований не нарушает', () => {
+    const elite = eliteById('sister-of-battle')!;
+    expect(eliteRequirementIssues(sister(), elite)).toEqual([]);
+  });
+
+  it('male, чужой бэкграунд и низкие характеристики — причины', () => {
+    const elite = eliteById('sister-of-battle')!;
+    expect(
+      eliteRequirementIssues(sister({ gender: 'male' }), elite).map(
+        (issue) => issue.code,
+      ),
+    ).toEqual(['gender']);
+    expect(
+      eliteRequirementIssues(
+        sister({ background: 'adeptus-arbites' }),
+        elite,
+      ).map((issue) => issue.code),
+    ).toEqual(['background']);
+    const weak = eliteRequirementIssues(
+      sister({ influence: 40, willpower: 30 }),
+      elite,
+    ).map((issue) => issue.code);
+    expect(weak).toEqual(['characteristic', 'characteristic']);
+  });
+
+  it('Астропат требует Телепатику и купленного Псайкера', () => {
+    const elite = eliteById('astropath')!;
+    const wrongBackground = createDh2Defaults({
+      name: 'Acolyte',
+      background: 'adepta-sororitas',
+    });
+    expect(
+      eliteRequirementIssues(wrongBackground, elite).map((issue) => issue.code),
+    ).toEqual(['background', 'elite']);
+
+    const telepathica = createDh2Defaults({
+      name: 'Astropath',
+      background: 'adeptus-astra-telepathica',
+    });
+    expect(
+      eliteRequirementIssues(telepathica, elite).map((issue) => issue.code),
+    ).toEqual(['elite']);
+    expect(
+      eliteRequirementIssues(
+        { ...telepathica, eliteAdvances: ['psyker'] },
+        elite,
+      ),
+    ).toEqual([]);
+  });
+
+  it('Псайкер и Неприкасаемый конфликтуют в обе стороны', () => {
+    const psyker = eliteById('psyker')!;
+    const untouchable = eliteById('untouchable')!;
+    const character = {
+      ...createDh2Defaults({
+        name: 'Psyker',
+        homeWorld: 'hive-world',
+        willpower: 40,
+      }),
+      eliteAdvances: ['untouchable'],
+    };
+    expect(
+      eliteRequirementIssues(character, psyker).map((issue) => issue.code),
+    ).toEqual(['notElite']);
+    expect(
+      eliteRequirementIssues(
+        { ...character, eliteAdvances: ['psyker'] },
+        untouchable,
+      ).map((issue) => issue.code),
+    ).toEqual(['notElite']);
+  });
+
+  it('Инквизитор требует Influence 75, черта не блокирует', () => {
+    const elite = eliteById('inquisitor')!;
+    expect(
+      eliteRequirementIssues(
+        createDh2Defaults({ name: 'Acolyte', influence: 74 }),
+        elite,
+      ).map((issue) => issue.code),
+    ).toEqual(['characteristic']);
+    expect(
+      eliteRequirementIssues(
+        createDh2Defaults({ name: 'Acolyte', influence: 75 }),
+        elite,
+      ),
+    ).toEqual([]);
+
+    // `trait` остаётся подсказкой: свободный текст на листе не проверить.
+    expect(
+      eliteById('untouchable')?.requirements?.some(
+        (requirement) => requirement.kind === 'trait',
+      ),
+    ).toBe(true);
   });
 });
 

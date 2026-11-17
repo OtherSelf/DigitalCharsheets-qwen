@@ -354,6 +354,83 @@ function buildData(catalog, rules, i18n) {
   };
 }
 
+/**
+ * Требования элитного продвижения (с. 86): характеристика с минимумом,
+ * бэкграунд, пол и другое элитное. Ссылки проверяются по каталогу — опечатка
+ * в id должна ронять генерацию, а не показывать пустое предупреждение.
+ * `trait` переносится как есть: черты листа хранятся свободным текстом, и
+ * приложение не может проверить их автоматически.
+ */
+function eliteRequirements(entity, ofKind) {
+  const prereq = entity.props?.prereq;
+  if (prereq === undefined || prereq === null) return undefined;
+  if (!Array.isArray(prereq)) {
+    throw new Error(`${entity.id}: prereq должен быть массивом`);
+  }
+  const backgroundIds = new Set(
+    ofKind('background').map((item) => slugOf(item.id)),
+  );
+  const eliteIds = new Set(
+    ofKind('elite-advance').map((item) => slugOf(item.id)),
+  );
+
+  return prereq.map((requirement) => {
+    if (requirement.characteristic !== undefined) {
+      if (typeof requirement.min !== 'number') {
+        throw new Error(
+          `${entity.id}: у требования "${requirement.characteristic}" нет min`,
+        );
+      }
+      return {
+        kind: 'characteristic',
+        characteristic: statId(requirement.characteristic),
+        min: requirement.min,
+      };
+    }
+    if (requirement.background !== undefined) {
+      const id = slugOf(requirement.background);
+      if (!backgroundIds.has(id)) {
+        throw new Error(
+          `${entity.id}: неизвестный бэкграунд ${requirement.background}`,
+        );
+      }
+      return { kind: 'background', backgroundId: id };
+    }
+    if (requirement.gender !== undefined) {
+      if (requirement.gender !== 'female' && requirement.gender !== 'male') {
+        throw new Error(
+          `${entity.id}: неизвестный пол ${JSON.stringify(requirement.gender)}`,
+        );
+      }
+      return { kind: 'gender', gender: requirement.gender };
+    }
+    if (requirement.elite !== undefined) {
+      const id = slugOf(requirement.elite);
+      if (!eliteIds.has(id)) {
+        throw new Error(
+          `${entity.id}: неизвестное элитное ${requirement.elite}`,
+        );
+      }
+      return { kind: 'elite', eliteId: id };
+    }
+    if (requirement.notElite !== undefined) {
+      const id = slugOf(requirement.notElite);
+      if (!eliteIds.has(id)) {
+        throw new Error(
+          `${entity.id}: неизвестное элитное ${requirement.notElite}`,
+        );
+      }
+      return { kind: 'notElite', eliteId: id };
+    }
+    if (requirement.trait !== undefined) {
+      return { kind: 'trait', traitId: String(requirement.trait) };
+    }
+    throw new Error(
+      `${entity.id}: неизвестное требование ${JSON.stringify(requirement)}`,
+    );
+  });
+}
+
 function buildReference(catalog, i18n) {
   const entities = catalog.entities;
   const ofKind = (kind) => entities.filter((entity) => entity.kind === kind);
@@ -408,6 +485,7 @@ function buildReference(catalog, i18n) {
         return key;
       },
     );
+    const requirements = eliteRequirements(entity, ofKind);
     return {
       id: slugOf(entity.id),
       labelKey,
@@ -416,6 +494,7 @@ function buildReference(catalog, i18n) {
       ...(entity.props.prereqText
         ? { prereqText: entity.props.prereqText }
         : {}),
+      ...(requirements && requirements.length > 0 ? { requirements } : {}),
     };
   });
 

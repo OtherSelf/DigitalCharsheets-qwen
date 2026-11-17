@@ -7,7 +7,8 @@
  */
 
 import { DH2E_ELITES } from './dh2e-reference';
-import type { Dh2eEliteAdvance } from './dh2e-types';
+import type { Dh2eEliteAdvance, Dh2eEliteRequirement } from './dh2e-types';
+import { statTotal, type DarkHeresyStatKey } from './stats';
 import type { DH2Character, DH2ExperienceEntry } from './types';
 
 export function eliteById(id: string): Dh2eEliteAdvance | undefined {
@@ -19,6 +20,73 @@ export function availableEliteAdvances(
   taken: readonly string[],
 ): readonly Dh2eEliteAdvance[] {
   return DH2E_ELITES.filter((elite) => !taken.includes(elite.id));
+}
+
+/**
+ * Код причины, по которой персонаж не проходит требование (D2). UI переводит
+ * его в текст; покупка не блокируется — ГМ мог разрешить исключение.
+ */
+export type EliteRequirementCode =
+  'background' | 'gender' | 'characteristic' | 'elite' | 'notElite' | 'trait';
+
+export interface EliteRequirementIssue {
+  readonly code: EliteRequirementCode;
+  readonly requirement: Dh2eEliteRequirement;
+}
+
+type EliteRequirementSubject = Pick<
+  DH2Character,
+  'background' | 'gender' | 'stats' | 'statUpgrades' | 'eliteAdvances'
+>;
+
+/**
+ * Требования, которые лист не выполняет. `trait` не проверяется: черты
+ * хранятся свободным текстом, поэтому такая строка остаётся подсказкой в
+ * `prereqText` (см. Dh2eEliteRequirement). Пустой массив — персонаж подходит.
+ */
+export function eliteRequirementIssues(
+  character: EliteRequirementSubject,
+  elite: Dh2eEliteAdvance,
+): EliteRequirementIssue[] {
+  const issues: EliteRequirementIssue[] = [];
+  for (const requirement of elite.requirements ?? []) {
+    if (
+      requirement.kind === 'characteristic' &&
+      statTotal(character, requirement.characteristic as DarkHeresyStatKey) <
+        requirement.min
+    ) {
+      issues.push({ code: 'characteristic', requirement });
+      continue;
+    }
+    if (
+      requirement.kind === 'background' &&
+      character.background !== requirement.backgroundId
+    ) {
+      issues.push({ code: 'background', requirement });
+      continue;
+    }
+    if (
+      requirement.kind === 'gender' &&
+      character.gender !== requirement.gender
+    ) {
+      issues.push({ code: 'gender', requirement });
+      continue;
+    }
+    if (
+      requirement.kind === 'elite' &&
+      !character.eliteAdvances.includes(requirement.eliteId)
+    ) {
+      issues.push({ code: 'elite', requirement });
+      continue;
+    }
+    if (
+      requirement.kind === 'notElite' &&
+      character.eliteAdvances.includes(requirement.eliteId)
+    ) {
+      issues.push({ code: 'notElite', requirement });
+    }
+  }
+  return issues;
 }
 
 export interface ElitePurchase {

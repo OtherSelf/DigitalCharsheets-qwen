@@ -43,6 +43,7 @@ import { applyAptitudeChoice, isAptitudeLocked } from '../aptitudes-sheet';
 import { characteristicAptitudes, deriveAptitudes } from '../dh2e-aptitudes';
 import {
   DH2E_BACKGROUNDS,
+  DH2E_CHARACTERISTICS,
   DH2E_DIVINATIONS,
   DH2E_HOMEWORLDS,
   DH2E_ROLES,
@@ -59,10 +60,12 @@ import {
   roleLabel,
   talentLabel,
 } from '../dh2e-labels';
+import type { Dh2eEliteAdvance, Dh2eEliteRequirement } from '../dh2e-types';
 import {
   availableEliteAdvances,
   buyEliteAdvance,
   eliteById,
+  eliteRequirementIssues,
   removeEliteAdvance,
 } from '../elite';
 import { dh2ExperienceRows } from '../experience';
@@ -773,6 +776,76 @@ export const InfoSection = ({
   );
 };
 
+/** Текст одной причины: подпись требования из каталога, не сырой код (D2). */
+function eliteIssueText(
+  requirement: Dh2eEliteRequirement,
+  t: (key: string) => string,
+): string {
+  switch (requirement.kind) {
+    case 'background':
+      return `${t('dh2.eliteIssueBackground')}: ${backgroundLabel(
+        requirement.backgroundId,
+        t,
+      )}`;
+    case 'gender':
+      return `${t('dh2.eliteIssueGender')}: ${genderLabel(requirement.gender, t)}`;
+    case 'characteristic': {
+      const characteristic = DH2E_CHARACTERISTICS.find(
+        (item) => item.id === requirement.characteristic,
+      );
+      const label = characteristic
+        ? t(characteristic.labelKey)
+        : requirement.characteristic;
+      return `${t('dh2.eliteIssueCharacteristic')}: ${label} ${requirement.min}`;
+    }
+    case 'elite':
+      return `${t('dh2.eliteIssueElite')}: ${eliteAdvanceLabel(
+        requirement.eliteId,
+        t,
+      )}`;
+    case 'notElite':
+      return `${t('dh2.eliteIssueConflict')}: ${eliteAdvanceLabel(
+        requirement.eliteId,
+        t,
+      )}`;
+    case 'trait':
+      return `${t('dh2.eliteIssueTrait')}: ${requirement.traitId}`;
+  }
+}
+
+/**
+ * Красные причины конфликта с бэкграундом/полом/характеристиками/другим
+ * элитным (D2). Покупку не блокируют: ГМ мог разрешить исключение.
+ */
+const EliteRequirementWarnings = ({
+  character,
+  elite,
+}: {
+  character: DH2Character;
+  elite: Dh2eEliteAdvance;
+}) => {
+  const { t } = useTranslation();
+  const issues = eliteRequirementIssues(character, elite);
+  if (issues.length === 0) return null;
+
+  return (
+    <div
+      className="text-destructive space-y-1 text-xs"
+      data-testid="elite-warning"
+    >
+      <p className="font-medium">{t('dh2.eliteWarningTitle')}</p>
+      <ul className="space-y-0.5">
+        {issues.map((issue, index) => (
+          <li key={`${issue.code}-${index}`}>
+            • {eliteIssueText(issue.requirement, t)}
+          </li>
+        ))}
+      </ul>
+      <p className="text-muted-foreground">{t('dh2.eliteWarningBuyAnyway')}</p>
+    </div>
+  );
+};
+
 export const ProgressionSection = ({
   character,
   isCompactView,
@@ -1147,6 +1220,10 @@ export const ProgressionSection = ({
                         <p className="text-muted-foreground text-xs">
                           {t(`dh2.elitePrereq.${elite.id}`)}
                         </p>
+                        <EliteRequirementWarnings
+                          character={character}
+                          elite={elite}
+                        />
                         <p className="text-muted-foreground text-xs">
                           {t('dh2.instantChangesHint')}
                         </p>
@@ -1187,6 +1264,10 @@ export const ProgressionSection = ({
                   <p className="text-muted-foreground">
                     {t(`dh2.elitePrereq.${selectedElite.id}`)}
                   </p>
+                  <EliteRequirementWarnings
+                    character={character}
+                    elite={selectedElite}
+                  />
                   <p className="text-muted-foreground">
                     {t('dh2.instantChangesHint')}
                   </p>
