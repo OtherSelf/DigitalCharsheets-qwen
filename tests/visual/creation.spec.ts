@@ -243,6 +243,13 @@ test.describe('создание персонажа — Dark Heresy', () => {
 
     const id = await waitForSheetRedirect(page);
 
+    // После создания лист один раз открывает «Заметки» с подсказками.
+    await expect(
+      page.getByRole('heading', { name: 'Creation hints' }),
+    ).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+
     const characters = await fetchCharacters(page);
     expect(characters, 'ровно один лист у нового аккаунта').toHaveLength(1);
 
@@ -336,6 +343,12 @@ test.describe('создание персонажа — Dark Heresy 2e', () => {
 
     await page.getByRole('button', { name: 'Create Character' }).click();
     const id = await waitForSheetRedirect(page);
+
+    await expect(
+      page.getByRole('heading', { name: 'Creation hints' }),
+    ).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(page.getByRole('dialog')).toHaveCount(0);
 
     const characters = await fetchCharacters(page);
     expect(characters, 'ровно один лист у нового аккаунта').toHaveLength(1);
@@ -540,6 +553,12 @@ test.describe('создание персонажа — дополнения DH2'
 
     await page.getByRole('button', { name: 'Create Character' }).click();
     const id = await waitForSheetRedirect(page);
+
+    await expect(
+      page.getByRole('heading', { name: 'Creation hints' }),
+    ).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(page.getByRole('dialog')).toHaveCount(0);
 
     const created = (await fetchCharacters(page))[0];
     expect(created).toMatchObject({
