@@ -841,6 +841,7 @@ export const DH2E_BACKGROUNDS: readonly Dh2eBackground[] = [
     bonusKeys: ['dh2.catalog.background.adepta-sororitas.bonus.0'],
     aptitudeChoice: ['offence', 'social'],
     recommendedRoleIds: ['chirurgeon', 'fanatic', 'sage', 'warrior'],
+    genderLock: 'female',
   },
   {
     id: 'mutant',

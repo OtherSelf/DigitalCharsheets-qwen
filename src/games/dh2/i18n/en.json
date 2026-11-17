@@ -511,6 +511,7 @@
   "dh2.genderFemale": "Female",
   "dh2.genderUnspecified": "Unspecified",
   "dh2.selectGender": "Select gender",
+  "dh2.genderLockedByBackground": "The background fixes the character's gender.",
   "dh2.characteristic": "Characteristic",
   "dh2.psyDisciplines": "Disciplines",
   "dh2.psyPowers": "Psychic powers",

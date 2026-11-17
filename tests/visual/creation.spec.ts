@@ -610,6 +610,69 @@ test.describe('создание персонажа — дополнения DH2'
   });
 });
 
+test.describe('создание персонажа — пол и бэкграунд DH2', () => {
+  test('Адептус Сороритас ставит female и запирает пол до смены бэкграунда', async ({
+    page,
+    context,
+  }) => {
+    await prepare(context, { authenticated: false, theme: 'light' });
+    const account = await registerAccount(page, 'dh2-gender', 'DH2 GENDER');
+    await signInViaUI(page, account);
+    await openCreationForm(page, 'Dark Heresy', 'dh2');
+
+    await page.getByLabel('Home World', { exact: true }).click();
+    await page.getByRole('option', { name: 'Agri-World', exact: true }).click();
+
+    const genderSelect = page.getByLabel('Gender', { exact: true });
+    await page.getByLabel('Background', { exact: true }).click();
+    await page.getByRole('option', { name: /^Adepta Sororitas/ }).click();
+
+    // Бэкграунд фиксирует пол: значение female, выбор недоступен (D4).
+    await expect(genderSelect).toBeDisabled();
+    await expect(genderSelect).toHaveText('Female');
+    await expect(
+      page.getByText("The background fixes the character's gender."),
+    ).toBeVisible();
+
+    // Смена бэкграунда до сохранения снимает блок, значение остаётся.
+    await page.getByLabel('Background', { exact: true }).click();
+    await page.getByRole('option', { name: /^Mutant/ }).click();
+    await expect(genderSelect).toBeEnabled();
+    await expect(genderSelect).toHaveText('Female');
+
+    // Возвращаем Сороритас и создаём персонажа: в данных — код female.
+    await page.getByLabel('Background', { exact: true }).click();
+    await page.getByRole('option', { name: /^Adepta Sororitas/ }).click();
+    await expect(genderSelect).toBeDisabled();
+
+    await page
+      .getByLabel('Character Name', { exact: true })
+      .fill('E2E Sororitas');
+    await page.getByLabel('Role', { exact: true }).click();
+    await page.getByRole('option', { name: /^Chirurgeon/ }).click();
+    await page.getByRole('button', { name: 'Create Character' }).click();
+    const id = await waitForSheetRedirect(page);
+
+    const created = (await fetchCharacters(page)).find(
+      (character) => character.id === id,
+    );
+    expect(created?.gender).toBe('female');
+
+    // После создания пол только читается: в Info нет селекта пола, есть замок.
+    // Сначала закрываем подсказки создания — иначе их оверлей перекрывает лист.
+    const hints = page.getByRole('dialog');
+    await expect(hints).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(hints).toHaveCount(0);
+
+    const info = page.locator('#info-section');
+    await expect(info.getByText('Female', { exact: true })).toBeVisible();
+    await info.getByTestId('edit-button').first().click();
+    await expect(info.getByText('Female', { exact: true })).toBeVisible();
+    await expect(info.getByLabel('Gender', { exact: true })).toHaveCount(0);
+  });
+});
+
 test.describe('черновик гостя dh2 и навигация «назад/вперёд»', () => {
   test('черновик 2e переживает вход, навигацию и создаётся после регистрации', async ({
     page,

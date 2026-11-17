@@ -10,6 +10,7 @@ import { dh1CharacterSchema } from '@/games/dh1/schema';
 import { DH1_SCHEMA_VERSION } from '@/games/dh1/schema-version';
 import type { DH1Character } from '@/games/dh1/types';
 import { createDh2Defaults } from '@/games/dh2/defaults';
+import { DH2E_BACKGROUNDS } from '@/games/dh2/dh2e-data';
 import { genderLabel as dh2GenderLabel } from '@/games/dh2/gender';
 import { dh2History } from '@/games/dh2/history';
 import { normalizeDh2 } from '@/games/dh2/normalize';
@@ -153,6 +154,22 @@ describe('схемы: в данных только код', () => {
       dh2CharacterSchema.safeParse({ ...draft, id: 'y', gender: 'Мужской' })
         .success,
     ).toBe(false);
+  });
+});
+
+describe('пол в создании 2e: замок бэкграунда (D4)', () => {
+  it('Адептус Сороритас требует female, остальные бэкграунды пол не задают', () => {
+    const sororitas = DH2E_BACKGROUNDS.find(
+      (background) => background.id === 'adepta-sororitas',
+    );
+    expect(sororitas?.genderLock).toBe('female');
+
+    const unconstrained = DH2E_BACKGROUNDS.filter(
+      (background) => background.id !== 'adepta-sororitas',
+    );
+    expect(unconstrained.every((background) => !background.genderLock)).toBe(
+      true,
+    );
   });
 });
 

@@ -129,6 +129,11 @@ localized label (`src/games/dh1/gender.ts`, `src/games/dh2/gender.ts`), so rules
 such as the Adepta Sororitas elite advance can compare a code and do not depend
 on the sheet language. The portable JSON export keeps the code.
 
+A background may pin the gender with `genderLock` in the content catalog
+(Adepta Sororitas → `female`): the creation form fills the code and disables
+the select, and changing the background before saving releases it. After the
+sheet exists the field is read-only for every filled value (D4/D5).
+
 Normalization maps the labels written by earlier versions (`Мужчина`,
 `Мужской`, `Женщина`, `Женский`, `Не указан`, `Не указано`, `Не определено`,
 `Male`, `Female`, `Unspecified`, … and the `м`/`ж`/`m`/`f` shorthands) to codes

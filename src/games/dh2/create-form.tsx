@@ -274,6 +274,13 @@ export function DarkHeresyCreateForm({ onCreated }: CreateFormProps) {
     setGrantSelected({});
   }, [watchedHomeWorld, watchedBackground, watchedRole]);
 
+  // Бэкграунд с `genderLock` (Адептус Сороритас) фиксирует пол правилами (D4):
+  // до сохранения блок снимается сменой бэкграунда, после — замком в Info.
+  const genderLock = background?.genderLock;
+  React.useEffect(() => {
+    if (genderLock) form.setValue('gender', genderLock);
+  }, [genderLock, form]);
+
   // Мир задаёт раны и Судьбу: по умолчанию минимум диапазона, бросок игрок
   // вписывает сам (D12).
   React.useEffect(() => {
@@ -845,6 +852,7 @@ export function DarkHeresyCreateForm({ onCreated }: CreateFormProps) {
                       <Select
                         onValueChange={field.onChange}
                         value={field.value ?? ''}
+                        disabled={Boolean(genderLock)}
                       >
                         <FormControl>
                           <SelectTrigger>
@@ -859,6 +867,11 @@ export function DarkHeresyCreateForm({ onCreated }: CreateFormProps) {
                           ))}
                         </SelectContent>
                       </Select>
+                      {genderLock ? (
+                        <p className="text-muted-foreground text-xs">
+                          {t('dh2.genderLockedByBackground')}
+                        </p>
+                      ) : null}
                       <FormMessage />
                     </FormItem>
                   )}
