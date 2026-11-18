@@ -7,5 +7,9 @@
   "example.rank": "Rank",
   "example.notes": "Notes",
   "example.saving": "Saving…",
-  "example.saved": "Saved"
+  "example.saved": "Saved",
+  "example.bulkStats": "Stats",
+  "example.bulkStatsDesc": "Might and Wits for every sheet",
+  "example.stat.might": "Might",
+  "example.stat.wits": "Wits"
 }

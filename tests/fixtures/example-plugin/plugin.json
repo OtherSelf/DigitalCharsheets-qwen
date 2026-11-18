@@ -3,7 +3,7 @@
   "pluginApi": "^1.0.0",
   "id": "example",
   "gameId": "exampleGame",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "order": 90,
   "defaultStatus": "hidden",
   "name": {
@@ -66,7 +66,7 @@
     "conformance": ">=1"
   },
   "ui": {
-    "slots": ["HeaderSubtitle", "CompactNav", "CardSummary"],
+    "slots": ["HeaderSubtitle", "CompactNav", "CardSummary", "BulkEditor"],
     "entry": "ui.ts"
   },
   "aliases": [

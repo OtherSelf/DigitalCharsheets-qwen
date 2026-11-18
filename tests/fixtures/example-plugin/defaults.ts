@@ -1,6 +1,6 @@
 import { CURRENT_SCHEMA_VERSION } from '@/games/plugin-api';
 
-import type { ExampleCharacter } from './types';
+import { EXAMPLE_SYSTEM_ID, type ExampleCharacter } from './types';
 
 /** Черновик листа: `id` присваивает сервер. */
 export type ExampleDraft = Omit<ExampleCharacter, 'id'>;
@@ -12,7 +12,7 @@ export function createExampleDefaults(
   const rank = typeof input.rank === 'string' ? input.rank : 'Novice';
   return {
     name,
-    systemId: 'example',
+    systemId: EXAMPLE_SYSTEM_ID,
     gameSystem: 'Example Game',
     schemaVersion: CURRENT_SCHEMA_VERSION,
     rank,
