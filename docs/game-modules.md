@@ -305,6 +305,10 @@ per-game save handlers out of the page.
 6. **Visibility** — `defaultStatus` in the manifest is the default; admins can
    override it in `settings/game-catalog.json` via `/admin` (Games & editions).
 7. **Tests**:
+   - edition-specific unit tests live in `src/games/<id>/tests/unit/` and run
+     from the repo root (`npm test`, `npm run test:plugin -- <id>`); the shared
+     kit is `@tests/support`, and test-only dependencies are allowed under
+     `src/games/<id>/tests/**` only;
    - `npm run plugins:conformance` runs the manifest↔module contract for every
      plugin (entry points, demo vs schema, i18n parity, migrations, UI slots,
      bulk-editor tables); add the module id to the expected sorted list in the
