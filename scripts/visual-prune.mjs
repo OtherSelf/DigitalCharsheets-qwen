@@ -47,10 +47,31 @@ if (!fs.existsSync(SNAPSHOTS_DIR)) {
   process.exit(0);
 }
 
-const specs = walk(
-  VISUAL_DIR,
-  (file) => file.endsWith('.spec.ts') || file.endsWith('.ts'),
-);
+const specs = [
+  ...walk(
+    VISUAL_DIR,
+    (file) => file.endsWith('.spec.ts') || file.endsWith('.ts'),
+  ),
+  // Спеки плагинов лежат в src/games/<id>/tests/visual, а эталоны — в общем
+  // root tests/visual/__screenshots__/<project>-games/…; без них PNG новой
+  // игры считались бы сиротами.
+  ...fs
+    .readdirSync(path.join(APP_DIR, 'src', 'games'), { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .flatMap((entry) => {
+      const dir = path.join(
+        APP_DIR,
+        'src',
+        'games',
+        entry.name,
+        'tests',
+        'visual',
+      );
+      return fs.existsSync(dir)
+        ? walk(dir, (file) => file.endsWith('.visual.spec.ts'))
+        : [];
+    }),
+];
 
 const referenced = new Set();
 const pngLiteral = /['"`]([A-Za-z0-9._-]+\.png)['"`]/g;

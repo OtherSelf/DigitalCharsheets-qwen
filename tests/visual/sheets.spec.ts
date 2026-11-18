@@ -23,7 +23,7 @@ import {
  * Desktop снимает элементы целиком, mobile — секции компактного сайдбара.
  */
 
-test.describe('лист D&D — чтение', () => {
+test.describe('лист D&D — чтение', { tag: '@plugin:dnd5e' }, () => {
   test(
     'desktop: верх, характеристики и бой (en)',
     { tag: ['@fast', '@desktop'] },
@@ -141,7 +141,7 @@ test.describe('лист D&D — чтение', () => {
   );
 });
 
-test.describe('лист Dark Heresy — чтение', () => {
+test.describe('лист Dark Heresy — чтение', { tag: '@plugin:dh1' }, () => {
   test(
     'desktop: верх, инфо, прогрессия, характеристики (en)',
     { tag: ['@fast', '@desktop'] },

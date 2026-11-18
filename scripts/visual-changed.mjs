@@ -134,6 +134,12 @@ const RULES = [
     specs: FAST,
   },
   {
+    // Игровой плагин: его visual-спеки живут рядом с кодом и помечены
+    // @plugin:<id>; безопаснее прогнать весь набор, чем угадывать экраны.
+    pattern: /^src\/games\//,
+    specs: 'full',
+  },
+  {
     pattern: /^src\//,
     specs: FAST,
   },

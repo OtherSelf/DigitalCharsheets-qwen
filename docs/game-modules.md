@@ -309,10 +309,9 @@ per-game save handlers out of the page.
      from the repo root (`npm test`, `npm run test:plugin -- <id>`); the shared
      kit is `@tests/support`, and test-only dependencies are allowed under
      `src/games/<id>/tests/**` only;
-   - `npm run plugins:conformance` runs the manifest↔module contract for every
-     plugin (entry points, demo vs schema, i18n parity, migrations, UI slots,
-     bulk-editor tables); add the module id to the expected sorted list in the
-     registry tests;
+   - `npm run plugins:conformance` discovers `src/games/*/plugin.json` and runs
+     the manifest↔module contract (entry points, demo vs schema, i18n parity,
+     UI slots) — no expected list to edit when a game is added;
    - a copy of `tests/fixtures/example-plugin` proves that a folder + manifest is
      enough — use it as the template (`docs/plugin-sdk.md`);
    - i18n parity (`tests/unit/translations.test.ts`) runs per module;

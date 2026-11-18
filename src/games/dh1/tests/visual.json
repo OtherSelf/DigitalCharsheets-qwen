@@ -1,0 +1,37 @@
+{
+  "nameSegment": "dh",
+  "requiredLangs": {
+    "demo": ["en"],
+    "new": ["en", "ru"],
+    "stats-editor": ["en"],
+    "sheet": ["en", "ru"],
+    "dialog": ["en", "ru"]
+  },
+  "requiredSections": {
+    "sheet": [
+      "top",
+      "info",
+      "progression",
+      "characteristics",
+      "skills",
+      "talents",
+      "equipment",
+      "inventory"
+    ],
+    "dialog": ["quest-journal", "house-rules", "notes"]
+  },
+  "requiredEditSections": {
+    "sheet": [
+      "info",
+      "progression",
+      "characteristics",
+      "skills",
+      "equipment",
+      "inventory"
+    ]
+  },
+  "requiredRuEditSections": {
+    "sheet": ["characteristics", "skills", "equipment"]
+  },
+  "mobileReadEdit": true
+}
