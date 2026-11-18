@@ -94,11 +94,16 @@ export interface LocalizedText {
 export type PluginLocalizedText = Partial<Record<PluginLocale, string>> &
   Readonly<Record<string, string | undefined>>;
 
-/** Блок семейства игр в манифесте (D17: одинаков у всех редакций). */
+/**
+ * Блок семейства игр в манифесте (D17: одинаков у всех редакций).
+ * `name` и `description` обязательны на обоих языках сайта: это источник
+ * названий и описаний в каталоге (`plugin.schema.json#definitions.localizedText`).
+ */
 export interface PluginGameManifest {
   readonly id: string;
   readonly order: number;
   readonly name: LocalizedText;
+  readonly description: LocalizedText;
 }
 
 /** Зависимости плагина: версия хоста и (зарезервировано) другие плагины. */

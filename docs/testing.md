@@ -75,8 +75,17 @@ discovers plugins by `src/games/*/plugin.json` — there is no file list in
 - manifest ↔ module: id, gameId, schemaVersion; default and demo pass the
   module's own zod schema; en/ru dictionaries have the same keys;
 - declared UI slots exist (runtime field names match manifest slot names);
+- out-of-range values are rejected (negative TCK) and portable JSON round-trips;
 - the reference fixture is installed into a temporary `src/games/` and goes
   through the same generator, so a folder + manifest is still enough.
+
+The rest of the contract lives in sibling host suites, not in this file:
+entry points, `order`/`defaultStatus` and the migration chain —
+`plugins-registry.test.ts`; the exact slot set — `plugin-slots.test.ts`;
+`BulkEditor` — `bulk-editor.test.ts`; a renamed copy of the fixture under
+another id — `plugin-template.test.ts`; byte-for-byte drift of the generated
+files — `npm run plugins:check`. The full mapping is in
+[`plugin-sdk.md`](plugin-sdk.md#tests-conformance).
 
 Plugin-specific checks (bulk-editor table columns, custom slots) belong in
 `src/games/<id>/tests/`; the dedicated host suites for them remain part of
