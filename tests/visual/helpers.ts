@@ -1,5 +1,6 @@
 import {
   expect,
+  request,
   test,
   type BrowserContext,
   type Locator,
@@ -591,6 +592,60 @@ export async function fetchCharacters(page: Page): Promise<any[]> {
   const res = await page.request.get('/api/characters');
   expect(res.status()).toBe(200);
   return (await res.json()) as any[];
+}
+
+/**
+ * Шаблон сидированного листа игры для POST /api/characters.
+ *
+ * Хостовые спеки не импортируют игровые фикстуры (D17): сценарию, которому
+ * нужен «богатый» лист, достаточно взять его у seeded-аккаунта — global-setup
+ * создал лист тем же шаблоном, поэтому данные (и пиксели) совпадают. Сегмент
+ * игры (`dnd`, `dh`) — ключ `state.characters`.
+ *
+ * Читаем отдельным API-контекстом, а не `page.request`: хелпер можно звать до
+ * регистрации временного аккаунта, и он не переключает сессию теста. Нет
+ * листа/сегмента — сценарий пропускается: это фича конкретной игры, а не
+ * хоста (D17/D18).
+ */
+export async function seededCharacterPayload(
+  segment: string,
+): Promise<Record<string, unknown>> {
+  const state = getState();
+  const seededId = state.characters[segment];
+  if (!seededId) {
+    test.skip(
+      true,
+      `нет сидированного листа "${segment}": игра не установлена или не имеет ` +
+        'фикстуры tests/fixtures/visual.ts',
+    );
+    return {};
+  }
+
+  const api = await request.newContext({ baseURL: state.baseURL });
+  try {
+    const auth = await api.post('/api/auth', {
+      data: { username: state.username, password: state.password },
+    });
+    expect(auth.status(), 'вход seeded-аккаунтом для чтения листа').toBe(200);
+
+    const response = await api.get('/api/characters');
+    expect(response.status(), 'чтение seeded-листов').toBe(200);
+    const characters = (await response.json()) as Array<
+      Record<string, unknown> & { id?: string }
+    >;
+    const character = characters.find((item) => item.id === seededId);
+    if (!character) {
+      test.skip(true, `сидированный лист "${segment}" (${seededId}) не найден`);
+      return {};
+    }
+
+    // `id`/`userId` выдаёт сервер; `systemId` оставляем — по нему POST
+    // выбирает редакцию, а в файл листа он всё равно не пишется.
+    const { id: _id, userId: _userId, ...payload } = character;
+    return payload;
+  } finally {
+    await api.dispose();
+  }
 }
 
 /** Создаёт лист текущим (уже авторизованным) контекстом запросов. */
