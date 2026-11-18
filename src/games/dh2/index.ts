@@ -1,6 +1,7 @@
 import type { ExportTranslate, GameExportConfig, GameModule } from '../types';
 import { createDh2Defaults } from './defaults';
 import { createDh2Demo } from './demo';
+import { deriveDh2 } from './derive';
 import { buildDh2ExcelSections } from './excel';
 import { buildDh2PortableJson } from './export';
 import { dh2History } from './history';
@@ -20,6 +21,12 @@ import type { DH2Character } from './types';
  * объекта модуля; тест сверяет манифест с реальным набором экспортов.
  */
 export const createDefaults = createDh2Defaults;
+
+/**
+ * Точка входа пересчёта производных (`plugin.json#derive`): мост в
+ * рантайм-реестр, пока GameModule не слился с GamePlugin (D2).
+ */
+export const deriveCharacter = deriveDh2;
 export const createDemo = createDh2Demo;
 
 export function toPortableJson(

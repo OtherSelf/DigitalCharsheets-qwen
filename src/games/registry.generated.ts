@@ -6,9 +6,9 @@
  * Пересобрать:  npm run plugins:generate
  * Проверить:    npm run plugins:check   (шаг `npm run verify`)
  */
-import { dh1Module } from './dh1';
+import { deriveCharacter as dh1Derive, dh1Module } from './dh1';
 import dh1Manifest from './dh1/plugin.json';
-import { dh2Module } from './dh2';
+import { deriveCharacter as dh2Derive, dh2Module } from './dh2';
 import dh2Manifest from './dh2/plugin.json';
 import { deriveCharacter as dnd5eDerive, dnd5eModule } from './dnd5e';
 import dnd5eManifest from './dnd5e/plugin.json';
@@ -28,10 +28,12 @@ export const generatedPlugins: readonly GeneratedPluginRegistration[] = [
   {
     manifest: dh1Manifest as unknown as PluginManifest,
     module: dh1Module,
+    derive: dh1Derive,
   },
   {
     manifest: dh2Manifest as unknown as PluginManifest,
     module: dh2Module,
+    derive: dh2Derive,
   },
 ];
 
