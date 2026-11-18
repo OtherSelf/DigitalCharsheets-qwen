@@ -45,7 +45,15 @@ afterEach(() => {
 
 // ──────── создание персонажа в каждой обнаруженной редакции (матрица) ──────
 
-describe.each(listGameModules())(
+// Создавать лист может только редакция, видимая роли `user`. В тестовом
+// каталоге (пустой файл) это ровно `defaultStatus: published`; скрытый или
+// `test`-плагин матрицей не проверяется, иначе добавление плагина в статусе
+// hidden ломало бы хост-тест (сценарий доступности проверяет game-catalog).
+const CREATABLE_MODULES = listGameModules().filter(
+  (gameModule) => gameModule.defaultStatus === 'published',
+);
+
+describe.each(CREATABLE_MODULES)(
   'создание персонажа — $id',
   (gameModule: AnyGameModule) => {
     const slug = gameModule.id;

@@ -44,6 +44,38 @@ languages and additional locale dictionaries. `manifestVersion 2` makes
    to `src/games/plugin-api.ts` + `types.ts` and to the docs here; otherwise
    only the plugin folder changes.
 
+## Renaming the template
+
+Copying the fixture is half the job: the fields below are part of the contract,
+not styling. `npm run plugins:scaffold -- <id>` performs exactly these
+replacements (the same `scripts/plugins/rename-plugin.mjs` drives the
+`plugin-template` gate), so a manual copy has a checklist instead of a guess.
+
+```bash
+npm run plugins:scaffold -- mygame            # folder + rename + plugins:generate
+npm run plugins:scaffold -- mygame --game myFamily --order 60 --title "My Game"
+```
+
+| Where | Fixture value | Becomes |
+| --- | --- | --- |
+| Folder | `tests/fixtures/example-plugin/` | `src/games/<id>/` (the name must equal `plugin.json#id`) |
+| `plugin.json#id`, module `id`, draft `systemId` | `example` | `<id>` (one constant, not three literals) |
+| `plugin.json#gameId`, `game.id`, module `gameId` | `exampleGame` | the family id (`<id>Game` for a new family) |
+| `plugin.json#game.name` / `game.description` | `Example Game` | your family text, both `en` and `ru` |
+| `plugin.json#order`, `game.order` | `90` | unique across plugins (the generator rejects a duplicate) |
+| `plugin.json#defaultStatus` | `hidden` | `published`, `test` or `hidden` |
+| `plugin.json#version` | `0.2.0` | `0.1.0` for a new plugin |
+| `entry.module` and the export in `index.ts` | `index.ts#exampleModule` | `index.ts#<id>Module` |
+| `nameKey`, `descriptionKey` | `example.name` | `<id>.name` |
+| Dictionary keys and every `t('…')` | `example.*` | `<id>.*` (full namespace, no bare keys) |
+| `shortCode` | `example` | `<id>` (unique, lowercase) |
+| `author`, `tags`, `aliases` | `tests`, `example` | yours |
+| `schemaVersion` + `migrations` | `2`, one step | your version with steps `1 → … → schemaVersion` |
+
+After renaming run `npm run plugins:generate`, `npm run plugins:check` and
+`npm run verify`; the fixture gate (`tests/unit/plugin-template.test.ts`) does
+the same on a renamed copy, so a rename that misses a field fails CI.
+
 ## Folder layout
 
 ```text
