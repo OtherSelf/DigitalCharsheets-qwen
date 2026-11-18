@@ -123,8 +123,34 @@ const ru = translations.ru;
 
 // Значения, которые законно совпадают в en/ru: имена систем, числовой
 // placeholder и маска пароля. Новые совпадения должны быть осознанными.
-const NAMESPACE_RE =
-  /^(common|auth|admin|dnd|dh1|dh2|settings|demo|io|games|share|history|narrative)\./;
+// Домены литеральных ключей: ядровые слои плюс id всех манифестов. Список
+// не ручной: иначе плагин с новым id валит тест хоста, хотя namespace `<id>.*`
+// — его контракт.
+const CORE_NAMESPACES = [
+  'common',
+  'auth',
+  'admin',
+  'settings',
+  'demo',
+  'io',
+  'games',
+  'share',
+  'history',
+  'narrative',
+];
+// Домены словарей плагинов — из самих словарей: у редакции бывает несколько
+// namespace (dnd5e и legacy dnd.*), и перечислять их руками в тесте хоста
+// значит требовать правки при добавлении плагина.
+const PLUGIN_DOMAINS = pluginManifests().flatMap(({ dir, manifest }) =>
+  Object.keys(manifest.i18n ?? {}).flatMap((locale) =>
+    dictionaryKeys(path.join(dir, manifest.i18n[locale])).map(
+      (key) => key.split('.')[0],
+    ),
+  ),
+);
+const NAMESPACE_RE = new RegExp(
+  `^(${[...CORE_NAMESPACES, ...PLUGIN_DOMAINS].sort().join('|')})\\.`,
+);
 
 const SAME_VALUE_ALLOWED = new Set([
   'dh1.placeholderAge',

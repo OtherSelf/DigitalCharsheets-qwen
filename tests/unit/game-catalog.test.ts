@@ -3,6 +3,7 @@ import path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
+import { gamePlugins } from '@/games/registry';
 import {
   canAccessModule,
   canCreateWithModule,
@@ -88,7 +89,8 @@ describe('game-catalog', () => {
   it('listModuleAccess отдаёт статус, enabled и видимость каждого модуля', () => {
     setModuleStatus('dh2', 'test');
     const entries = listModuleAccess('user');
-    expect(entries).toHaveLength(3);
+    // Число модулей — из реестра: добавление плагина не правит тест.
+    expect(entries).toHaveLength(gamePlugins.length);
     expect(entries.find((entry) => entry.module.id === 'dh2')).toMatchObject({
       status: 'test',
       enabled: true,

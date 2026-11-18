@@ -4,6 +4,8 @@ import path from 'node:path';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
+import { gamePlugins } from '@/games/registry';
+
 /**
  * ─── LANDMARK: PLUGIN BOUNDARIES TESTS ─────────────────────────────────────
  * Проверка скрипта `scripts/plugins/check-boundaries.mjs`: правила импортов
@@ -281,7 +283,11 @@ describe('правила на реальном дереве src/games', () => {
   it('соблюдаются во всех плагинах (конфиг scripts/plugins/boundaries.json)', async () => {
     const { collectPlugins, evaluateBoundaries, readConfig } = await checker();
     const plugins = collectPlugins();
-    expect(Object.keys(plugins).sort()).toEqual(['dh1', 'dh2', 'dnd5e']);
+    // Набор — из реестра, а не литералом: новый плагин не должен требовать
+    // правки теста хоста. Проверка ловит расхождение «диск ↔ реестр».
+    expect(Object.keys(plugins).sort()).toEqual(
+      gamePlugins.map((plugin) => plugin.manifest.id).sort(),
+    );
 
     const report = evaluateBoundaries({ plugins, config: readConfig() });
     expect(
