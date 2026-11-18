@@ -75,13 +75,11 @@ export function ImportCharacterDialog({
       // иначе сервер отказал бы на частично невалидном наборе.
       if (result.batchData && result.batchData.length > 0) {
         for (const charData of result.batchData) {
+          // Ядро не додумывает поля редакции: единственное, что оно вправе
+          // поправить, — пустое имя (иначе лист не отличить в списке).
           const safeCharacterData = {
-            name: charData.name || t('io.importedCharacterName'),
-            characterClass: charData.characterClass || t('io.unknownClass'),
-            backstory: charData.backstory || '',
-            notes: charData.notes || '',
-            questLog: charData.questLog || [],
             ...charData,
+            name: charData.name || t('io.importedCharacterName'),
           };
           const newChar = await addCharacter(
             safeCharacterData as Omit<Character, 'id' | 'userId'>,
@@ -100,12 +98,8 @@ export function ImportCharacterDialog({
       else if (result.data) {
         const { id: _id, ...characterData } = result.data.character;
         const safeCharacterData = {
-          name: characterData.name || t('io.importedCharacterName'),
-          characterClass: characterData.characterClass || t('io.unknownClass'),
-          backstory: characterData.backstory || '',
-          notes: characterData.notes || '',
-          questLog: characterData.questLog || [],
           ...characterData,
+          name: characterData.name || t('io.importedCharacterName'),
         };
         const newChar = await addCharacter(
           safeCharacterData as Omit<Character, 'id' | 'userId'>,

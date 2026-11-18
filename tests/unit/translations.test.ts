@@ -135,9 +135,12 @@ const SAME_VALUE_ALLOWED = new Set([
   'games.generated.dnd.name',
   'games.generated.darkHeresy.name',
   'admin.siteTitlePlaceholder',
-  'io.excel.plus10',
-  'io.excel.plus20',
-  'io.excel.plus30',
+  // Ступени тренировки записываются одинаково в обеих локалях.
+  'dh1.excel.plus10',
+  'dh1.excel.plus20',
+  'dh2.excel.plus10',
+  'dh2.excel.plus20',
+  'dh2.excel.plus30',
   'auth.passwordPlaceholder',
 ]);
 
@@ -270,8 +273,13 @@ describe('переводы: целостность словарей', () => {
     const keys = new Set<string>();
     for (const file of files) {
       const text = fs.readFileSync(file, 'utf8');
-      for (const match of text.matchAll(/'io\.excel\.[A-Za-z0-9]+'/g)) {
-        keys.add(match[0].slice(1, -1));
+      // Подписи Excel живут в словарях плагинов и приходят в общий набор под
+      // своим доменом (`dnd.excel.*`, `dh1.excel.*`, `dh2.excel.*`); в ядре
+      // остаются только общие метки выгрузки (`io.excel.*`).
+      for (const match of text.matchAll(
+        /'((?:io|dnd|dh1|dh2)\.excel\.[A-Za-z0-9]+)'/g,
+      )) {
+        keys.add(match[1]);
       }
     }
     expect(keys.size).toBeGreaterThan(80);

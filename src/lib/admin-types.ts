@@ -42,11 +42,11 @@ export interface AdminCharacterSummary {
   /** Машинный id редакции (null — плагин не установлен). */
   systemId: string | null;
   gameSystem: string;
-  characterClass: string;
-  /** Уровень персонажа (если игра его ведёт); иначе null. */
-  level: number | null;
-  /** Ранг/звание (если игра его ведёт); иначе null. */
-  rank: string | null;
+  /**
+   * Лист как есть. Ядро не читает его поля: подпись строки собирает плагин
+   * слотом `CardSummary`, поэтому админка не знает ни `level`, ни `rank`.
+   */
+  sheet: Record<string, unknown>;
   /** Время изменения файла листа (в самих листах нет общего updatedAt). */
   updatedAt: string | null;
 }

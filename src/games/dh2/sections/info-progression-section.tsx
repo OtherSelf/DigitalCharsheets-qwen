@@ -91,6 +91,17 @@ interface SectionProps {
   creationReview?: boolean;
 }
 
+// Наборы состояний объявляет редакция: компонент в ядре принимает их
+// пропсами и не знает ни одного значения.
+const CONDITION_KINDS = [
+  'disorder',
+  'corruption',
+  'mutation',
+  'rudiment',
+] as const;
+
+const CONDITION_SOURCES = ['manual', 'divination', 'legacy'] as const;
+
 const DetailField = ({
   label,
   value,
@@ -773,6 +784,8 @@ export const InfoSection = ({
                 <div className="mt-4">
                   <ConditionsList
                     conditions={character.conditions}
+                    kinds={CONDITION_KINDS}
+                    sources={CONDITION_SOURCES}
                     labels={conditionLabels}
                     editing={isInfoEditing}
                     isCompactView={isCompactView}

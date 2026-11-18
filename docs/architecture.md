@@ -15,6 +15,15 @@ translations and export adapter lives under `src/games/<systemId>/`, and the
 core works through a single registry. Adding a game does not touch the core.
 See [game-modules.md](game-modules.md).
 
+"A game-agnostic core" is enforced, not just intended: `npm run plugins:purity`
+scans `src/lib`, `src/components`, `src/app`, `src/context` and `src/hooks` for
+game names and game field names (`proficiencyBonus`, `rank`, `wounds`, …).
+Comments and string literals do not count — a localized label is data, not
+knowledge. Exceptions live in the script with a reason and a removal deadline.
+The same rule covers admin summaries (the sheet label comes from the plugin's
+`CardSummary` slot), conditions (the plugin passes its `kinds`/`sources`) and
+Excel labels (they live in plugin dictionaries under `<plugin>.excel.*`).
+
 The original prototype was scaffolded in Firebase Studio; the current version is
 a Next.js App Router rewrite finished with Qwen assistance. The legacy schema the
 importer still accepts is summarised in

@@ -32,6 +32,14 @@ The API behind it is documented in [api.md](api.md).
   - you cannot demote, block or delete the **last active administrator**;
   - deleting an account removes its directory, sheets and login-index entries.
 
+## Character rows in the admin dialog
+
+The per-user "sheets" dialog lists generic fields only: id, name, `systemId`,
+legacy `gameSystem`, the raw sheet and the file mtime. The label in the details
+column is built by the plugin (`CardSummary` slot), so the admin panel does not
+know what a level, a rank or a class is — the same rule as the rest of the core
+(see [architecture.md](architecture.md)).
+
 ## Game visibility
 
 `/admin` has a **Games & editions** section backed by

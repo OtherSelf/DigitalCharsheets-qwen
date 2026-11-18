@@ -125,6 +125,13 @@ test.describe('admin', () => {
     await expect(dialog.getByText('dnd5e', { exact: true })).toBeVisible();
     await expect(dialog.getByText('dh1e', { exact: true })).toBeVisible();
 
+    // Подпись листа собирает плагин слотом `CardSummary`: ядро не знает ни
+    // уровня, ни ранга, поэтому ждём загрузки слота, а не появления текста
+    // конкретной игры.
+    const details = dialog.getByTestId('admin-sheet-details');
+    await expect(details.nth(0)).not.toHaveText('—');
+    await expect(details.nth(1)).not.toHaveText('—');
+
     // Tooltip — полное имя игры и редакция из i18n.
     await dialog.getByText('dh1e', { exact: true }).hover();
     await expect(page.getByRole('tooltip')).toContainText(

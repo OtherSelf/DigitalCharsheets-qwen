@@ -27,17 +27,38 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { useTranslation } from '@/context/language-context';
+import type { CharacterRecord } from '@/games/types';
+import { useGameUiSlots } from '@/hooks/use-game-ui-slots';
 import type {
   AdminCharactersResponse,
   AdminCharacterSummary,
   AdminUserSummary,
 } from '@/lib/admin-types';
 
-import {
-  adminCharacterLevelLabel,
-  adminGameBadge,
-  formatAdminDate,
-} from './admin-helpers';
+import { adminGameBadge, formatAdminDate } from './admin-helpers';
+
+/**
+ * Подпись листа в таблице: её собирает плагин слотом `CardSummary`. Ядро
+ * передаёт только сырой лист и переводчик, поэтому не знает ни уровня, ни
+ * ранга (D7).
+ */
+function AdminCharacterDetails({
+  character,
+}: {
+  character: AdminCharacterSummary;
+}) {
+  const { t } = useTranslation();
+  const slots = useGameUiSlots(character.systemId ?? undefined);
+  const summary = slots?.CardSummary?.(
+    character.sheet as unknown as CharacterRecord,
+    t,
+  );
+  return (
+    <TableCell data-testid="admin-sheet-details">
+      {summary?.text || '—'}
+    </TableCell>
+  );
+}
 
 interface UserCharactersDialogProps {
   user: AdminUserSummary | null;
@@ -127,8 +148,7 @@ export function UserCharactersDialog({
                   <TableRow>
                     <TableHead>{t('admin.columnCharacter')}</TableHead>
                     <TableHead>{t('admin.gameSystem')}</TableHead>
-                    <TableHead>{t('common.class')}</TableHead>
-                    <TableHead>{t('admin.levelOrRank')}</TableHead>
+                    <TableHead>{t('admin.details')}</TableHead>
                     <TableHead>{t('admin.updated')}</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -156,10 +176,7 @@ export function UserCharactersDialog({
                             <Badge variant="secondary">{gameBadge.code}</Badge>
                           )}
                         </TableCell>
-                        <TableCell>{character.characterClass || '—'}</TableCell>
-                        <TableCell>
-                          {adminCharacterLevelLabel(character, t)}
-                        </TableCell>
+                        <AdminCharacterDetails character={character} />
                         <TableCell className="text-muted-foreground text-xs whitespace-nowrap">
                           {formatAdminDate(character.updatedAt, language)}
                         </TableCell>

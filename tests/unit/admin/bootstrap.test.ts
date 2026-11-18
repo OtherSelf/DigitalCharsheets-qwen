@@ -165,19 +165,22 @@ describe('GET /api/admin/users/[uid]/characters', () => {
     const dnd = body.characters.find(
       (character: { id: string }) => character.id === 'dnd-1',
     );
-    expect(dnd).toMatchObject({
-      gameSystem: 'Dungeons & Dragons',
-      level: 3,
-      rank: null,
-    });
+    // Ядро отдаёт только общие поля и сырой лист: подпись строки собирает
+    // плагин слотом `CardSummary`, поэтому `level`/`rank` здесь нет (D7).
+    expect(dnd).toMatchObject({ gameSystem: 'Dungeons & Dragons' });
+    expect(dnd.sheet).toMatchObject({ level: 3, name: 'Ragnar Testborn' });
+    expect(dnd).not.toHaveProperty('level');
+    expect(dnd).not.toHaveProperty('rank');
+    expect(dnd).not.toHaveProperty('characterClass');
     expect(typeof dnd.updatedAt).toBe('string');
 
     const dh = body.characters.find(
       (character: { id: string }) => character.id === 'dh-1',
     );
     expect(dh.gameSystem).toBe('Dark Heresy');
-    expect(dh.level).toBeNull();
-    expect(typeof dh.rank).toBe('string');
+    // Ранг есть в листе, но ядро о нём не знает.
+    expect(dh.sheet).toHaveProperty('rank');
+    expect(dh).not.toHaveProperty('rank');
 
     const missing = await adminCharactersGet(
       get(

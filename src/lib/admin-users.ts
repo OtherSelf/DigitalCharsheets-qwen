@@ -148,13 +148,7 @@ export function listCharactersForAdmin(
           resolveCharacterSystemId(raw as Record<string, string>) ?? null,
         gameSystem:
           typeof raw.gameSystem === 'string' ? raw.gameSystem : 'Unknown',
-        characterClass:
-          typeof raw.characterClass === 'string' ? raw.characterClass : '',
-        level:
-          typeof raw.level === 'number' && Number.isFinite(raw.level)
-            ? raw.level
-            : null,
-        rank: typeof raw.rank === 'string' && raw.rank ? raw.rank : null,
+        sheet: raw,
         updatedAt: stat.mtime.toISOString(),
       });
     } catch {

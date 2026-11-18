@@ -37,9 +37,9 @@ export function buildDh1ExcelSections(
   ];
 
   if (config.includeBasicInfo) {
-    w.section('io.excel.basicInformation');
-    w.row('io.excel.name', character.name);
-    w.row('io.excel.classCareer', character.characterClass);
+    w.section('dh1.excel.basicInformation');
+    w.row('dh1.excel.name', character.name);
+    w.row('dh1.excel.classCareer', character.characterClass);
     w.row('dh1.rank', character.rank);
     w.row('dh1.homeWorld', character.homeWorld);
     w.row('dh1.worldVariant', character.worldVariant);
@@ -63,7 +63,7 @@ export function buildDh1ExcelSections(
   }
 
   if (config.includeStats) {
-    w.section('io.excel.characteristics');
+    w.section('dh1.excel.characteristics');
     for (const [key, labelKey] of statLabels) {
       const base = stats[key] ?? 0;
       const bonus = upgradeBonus(upgrades[key]);
@@ -73,21 +73,21 @@ export function buildDh1ExcelSections(
   }
 
   if (config.includeCombat) {
-    w.section('io.excel.combat');
+    w.section('dh1.excel.combat');
     w.row(
       'dh1.wounds',
       `${character.wounds.current} / ${character.wounds.max}`,
     );
-    w.row('io.excel.woundsNotes', character.wounds.notes);
+    w.row('dh1.excel.woundsNotes', character.wounds.notes);
     w.row(
       'dh1.fatePoints',
       `${character.fatePoints.current} / ${character.fatePoints.max}`,
     );
-    w.row('io.excel.fateNotes', character.fatePoints.notes);
-    w.row('io.excel.insanityPoints', character.insanityPoints.total);
-    w.row('io.excel.insanityNotes', character.insanityPoints.notes);
-    w.row('io.excel.corruptionPoints', character.corruptionPoints.total);
-    w.row('io.excel.corruptionNotes', character.corruptionPoints.notes);
+    w.row('dh1.excel.fateNotes', character.fatePoints.notes);
+    w.row('dh1.excel.insanityPoints', character.insanityPoints.total);
+    w.row('dh1.excel.insanityNotes', character.insanityPoints.notes);
+    w.row('dh1.excel.corruptionPoints', character.corruptionPoints.total);
+    w.row('dh1.excel.corruptionNotes', character.corruptionPoints.notes);
     w.row('dh1.traits', w.list(character.traits ?? []));
     w.row('dh1.mutations', w.list(character.mutations ?? []));
     w.row('dh1.eliteAdvances', w.list(character.eliteAdvances ?? []));
@@ -111,8 +111,8 @@ export function buildDh1ExcelSections(
       w.row('dh1.corruptionTest', character.corruptionDetails.test ?? '');
       w.row('dh1.defilements', character.corruptionDetails.defilements ?? '');
     }
-    w.row('io.excel.fatigueFirst', fatigue.current);
-    w.row('io.excel.fatigueNotes', fatigue.notes);
+    w.row('dh1.excel.fatigueFirst', fatigue.current);
+    w.row('dh1.excel.fatigueNotes', fatigue.notes);
 
     const conditions = (character.conditions ?? []).filter(
       (condition) => condition.name.trim() !== '',
@@ -145,24 +145,24 @@ export function buildDh1ExcelSections(
       ),
     );
     w.row(
-      'io.excel.movement',
+      'dh1.excel.movement',
       [
-        `${t('io.excel.movementWalkHalf')}: ${character.movement.walkHalf}`,
-        `${t('io.excel.movementWalkFull')}: ${character.movement.walkFull}`,
-        `${t('io.excel.movementCharge')}: ${character.movement.charge}`,
-        `${t('io.excel.movementRun')}: ${character.movement.run}`,
+        `${t('dh1.excel.movementWalkHalf')}: ${character.movement.walkHalf}`,
+        `${t('dh1.excel.movementWalkFull')}: ${character.movement.walkFull}`,
+        `${t('dh1.excel.movementCharge')}: ${character.movement.charge}`,
+        `${t('dh1.excel.movementRun')}: ${character.movement.run}`,
       ].join(', '),
     );
   }
 
   if (config.includeCombat) {
-    w.section('io.excel.skills');
+    w.section('dh1.excel.skills');
     w.tableHeader([
-      'io.excel.name',
-      'io.excel.skillType',
-      'io.excel.skilled',
-      'io.excel.plus10',
-      'io.excel.plus20',
+      'dh1.excel.name',
+      'dh1.excel.skillType',
+      'dh1.excel.skilled',
+      'dh1.excel.plus10',
+      'dh1.excel.plus20',
     ]);
     for (const skill of character.skills ?? []) {
       w.tableRow([
@@ -176,8 +176,8 @@ export function buildDh1ExcelSections(
 
     const talents = character.talents ?? [];
     if (talents.length > 0) {
-      w.section('io.excel.talents');
-      w.tableHeader(['io.excel.name', 'io.excel.description']);
+      w.section('dh1.excel.talents');
+      w.tableHeader(['dh1.excel.name', 'dh1.excel.description']);
       for (const talent of talents) {
         w.tableRow([talent.name, talent.description ?? talent.notes ?? '']);
       }
@@ -185,15 +185,15 @@ export function buildDh1ExcelSections(
   }
 
   if (config.includeEquipment) {
-    w.section('io.excel.equipmentInventory');
-    w.sub('io.excel.armor');
+    w.section('dh1.excel.equipmentInventory');
+    w.sub('dh1.excel.armor');
     const armorLabels: [keyof typeof character.equipment.armor, string][] = [
-      ['Head', 'io.excel.armorHead'],
-      ['Body', 'io.excel.armorBody'],
-      ['Left arm', 'io.excel.armorLeftArm'],
-      ['Right arm', 'io.excel.armorRightArm'],
-      ['Left leg', 'io.excel.armorLeftLeg'],
-      ['Right leg', 'io.excel.armorRightLeg'],
+      ['Head', 'dh1.excel.armorHead'],
+      ['Body', 'dh1.excel.armorBody'],
+      ['Left arm', 'dh1.excel.armorLeftArm'],
+      ['Right arm', 'dh1.excel.armorRightArm'],
+      ['Left leg', 'dh1.excel.armorLeftLeg'],
+      ['Right leg', 'dh1.excel.armorRightLeg'],
     ];
     for (const [part, labelKey] of armorLabels) {
       const piece = character.equipment.armor[part];
@@ -210,15 +210,15 @@ export function buildDh1ExcelSections(
     w.row('dh1.carryWeight', character.carry?.carry ?? '');
     w.row('dh1.liftWeight', character.carry?.lift ?? '');
     w.row('dh1.pushWeight', character.carry?.push ?? '');
-    w.sub('io.excel.weapons');
+    w.sub('dh1.excel.weapons');
     w.tableHeader([
-      'io.excel.name',
-      'io.excel.weaponType',
-      'io.excel.range',
-      'io.excel.damage',
+      'dh1.excel.name',
+      'dh1.excel.weaponType',
+      'dh1.excel.range',
+      'dh1.excel.damage',
       'dh1.weaponPenetration',
       'dh1.weaponWeight',
-      'io.excel.traits',
+      'dh1.excel.traits',
     ]);
     for (const weapon of character.equipment.weapons.melee) {
       w.tableRow([
@@ -245,29 +245,29 @@ export function buildDh1ExcelSections(
   }
 
   if (config.includeInventory) {
-    w.sub('io.excel.inventory');
+    w.sub('dh1.excel.inventory');
     w.raw(`    ${w.list(character.inventory ?? [])}`);
-    w.sub('io.excel.wealth');
+    w.sub('dh1.excel.wealth');
     w.row('dh1.throneGelt', character.wealth.throneGelt);
     w.row('dh1.monthlyIncome', character.wealth.monthlyIncome);
-    w.row('io.excel.wealthNotes', character.wealth.notes);
+    w.row('dh1.excel.wealthNotes', character.wealth.notes);
   }
 
   if (config.includeNarrative) {
-    w.section('io.excel.narrative');
-    w.row('io.excel.backstory', character.backstory);
+    w.section('dh1.excel.narrative');
+    w.row('dh1.excel.backstory', character.backstory);
     w.row('common.notes', character.notes);
   }
 
   if (config.includeQuestLog) {
     const quests = character.questLog ?? [];
     if (quests.length > 0) {
-      w.section('io.excel.questLog');
+      w.section('dh1.excel.questLog');
       w.tableHeader([
-        'io.excel.questTitle',
-        'io.excel.questStatus',
-        'io.excel.description',
-        'io.excel.rewards',
+        'dh1.excel.questTitle',
+        'dh1.excel.questStatus',
+        'dh1.excel.description',
+        'dh1.excel.rewards',
       ]);
       for (const quest of quests) {
         w.tableRow([
@@ -283,7 +283,7 @@ export function buildDh1ExcelSections(
   if (config.includeCustomHouseRules) {
     const rules = character.customHouseRules ?? [];
     if (rules.length > 0) {
-      w.section('io.excel.houseRules');
+      w.section('dh1.excel.houseRules');
       for (const rule of rules) {
         w.tableRow([rule.name, rule.description]);
       }
