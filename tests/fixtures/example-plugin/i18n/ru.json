@@ -7,5 +7,9 @@
   "example.rank": "Ранг",
   "example.notes": "Заметки",
   "example.saving": "Сохранение…",
-  "example.saved": "Сохранено"
+  "example.saved": "Сохранено",
+  "example.bulkStats": "Характеристики",
+  "example.bulkStatsDesc": "Мощь и смекалка для каждого листа",
+  "example.stat.might": "Мощь",
+  "example.stat.wits": "Смекалка"
 }

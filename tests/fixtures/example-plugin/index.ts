@@ -11,8 +11,10 @@ import { buildExampleExcelSections } from './excel';
 import { buildExamplePortableJson } from './export';
 import exampleEn from './i18n/en.json';
 import exampleRu from './i18n/ru.json';
+import { mergeExampleData } from './merge';
+import { normalizeExample } from './normalize';
 import { exampleCharacterSchema } from './schema';
-import type { ExampleCharacter } from './types';
+import { EXAMPLE_SYSTEM_ID, type ExampleCharacter } from './types';
 
 /**
  * ─── LANDMARK: EXAMPLE PLUGIN ──────────────────────────────────────────────
@@ -53,7 +55,7 @@ export function buildExcelSections(
 }
 
 export const exampleModule: GameModule<ExampleCharacter> = {
-  id: 'example',
+  id: EXAMPLE_SYSTEM_ID,
   gameId: 'exampleGame',
   order: 90,
   defaultStatus: 'hidden',
@@ -75,5 +77,7 @@ export const exampleModule: GameModule<ExampleCharacter> = {
       import('./sheet').then((module) => ({ default: module.ExampleSheet })),
   },
   export: { toPortableJson, buildExcelSections },
+  normalize: normalizeExample,
+  merge: mergeExampleData,
   migrations: [{ from: 1, to: 2, migrate: migrateV1toV2 }],
 };

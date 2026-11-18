@@ -518,9 +518,12 @@ export interface GameModule<
   /**
    * Привести legacy/импортированный лист к типу редакции: дефолты
    * отсутствующих структур, канонизация значений, перенос полей между
-   * редакциями. Идемпотентна — вызывается и при старте, и при импорте (этап 2).
+   * редакциями. Идемпотентна — вызывается и при старте, и при импорте.
+   *
+   * Обязательна у каждого плагина (SDK v1, D10): импорт и нормализация не
+   * должны ветвиться по игре в ядре. Гейт — `plugins-registry.test.ts`.
    */
-  normalize?(
+  normalize(
     raw: Readonly<Record<string, unknown>>,
     options?: NormalizeOptions,
   ): NormalizeResult<TCharacter>;
@@ -564,10 +567,13 @@ export interface GameModule<
   ): { character: TCharacter; patch: Partial<TCharacter> } | undefined;
 
   /**
-   * Слить импортированные данные в существующий лист. Раньше это делала
-   * `mergeImportedData` ветками `isDnd/isDh1/isDh2`; теперь — модуль (этап 2).
+   * Слить импортированные данные в существующий лист.
+   *
+   * Обязательна у каждого плагина (SDK v1, D10): ядро не знает полей
+   * редакции, поэтому слияние описывает модуль. Гейт —
+   * `plugins-registry.test.ts`.
    */
-  merge?(
+  merge(
     target: TCharacter,
     source: Readonly<Record<string, unknown>>,
     config: GameExportConfig,

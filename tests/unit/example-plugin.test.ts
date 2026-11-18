@@ -203,6 +203,61 @@ describe('эталонный плагин: модуль', () => {
     }
   });
 
+  it('объявляет normalize и merge: контракт обязателен у каждого плагина', () => {
+    expect(typeof example.exampleModule.normalize).toBe('function');
+    expect(typeof example.exampleModule.merge).toBe('function');
+  });
+
+  it('normalize идемпотентен и заполняет пустые структуры', () => {
+    const normalize = example.exampleModule.normalize;
+    expect(normalize).toBeDefined();
+    const first = normalize!(
+      { name: 'N', stats: { might: 7 }, rank: '' },
+      {
+        applyDefaults: true,
+      },
+    );
+    const second = normalize!({ ...first.character }, { applyDefaults: true });
+    expect(second.character).toEqual(first.character);
+    expect(second.warnings ?? []).toEqual([]);
+    expect((first.character as ExampleCharacter).stats).toEqual({
+      might: 7,
+      wits: 10,
+    });
+    expect((first.character as ExampleCharacter).rank).toBe('Novice');
+  });
+
+  it('merge переносит поля по секциям конфига и не мутирует цель', () => {
+    const merge = example.exampleModule.merge;
+    expect(merge).toBeDefined();
+    const target = {
+      ...example.createDemo(),
+      id: 'fixture',
+    } as ExampleCharacter;
+    const snapshot = JSON.parse(JSON.stringify(target));
+    const merged = merge!(
+      target,
+      { name: 'Imported', stats: { might: 42 }, notes: 'from import' },
+      {
+        includeBasicInfo: true,
+        includeStats: true,
+        includeCombat: false,
+        includeEquipment: false,
+        includeInventory: false,
+        includeSpells: false,
+        includeNarrative: true,
+        includeProgression: false,
+        includeCompanions: false,
+        includeQuestLog: false,
+        includeCustomHouseRules: false,
+      },
+    );
+    expect(merged.name).toBe('Imported');
+    expect(merged.stats).toEqual({ might: 42, wits: 10 });
+    expect(merged.notes).toBe('from import');
+    expect(target).toEqual(snapshot);
+  });
+
   it('дефолты и демо проходят собственную схему', () => {
     for (const draft of [example.createDefaults(), example.createDemo()]) {
       const parsed = example.exampleModule.schema.safeParse({
@@ -285,8 +340,13 @@ describe('эталонный плагин: модуль', () => {
       text: 'Rank Veteran',
       badgeVariant: 'outline',
     });
-    expect(exampleUiSlots.CompactNav?.(character)).toEqual([
-      { labelKey: 'example.sheetTitle', id: 'info-section' },
-    ]);
+    const nav = exampleUiSlots.CompactNav?.(character) ?? [];
+    expect(nav).toHaveLength(1);
+    expect(nav[0]).toMatchObject({
+      labelKey: 'example.sheetTitle',
+      id: 'info-section',
+    });
+    // Иконка — часть формы слота, а не оформление на стороне хоста.
+    expect(nav[0].icon).toBeTruthy();
   });
 });

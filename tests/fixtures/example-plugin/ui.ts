@@ -1,5 +1,6 @@
 import type { GameUiSlots } from '@/games/types';
 
+import { exampleBulkEditor } from './bulk-editor';
 import {
   exampleCardSummary,
   exampleCompactNav,
@@ -12,4 +13,5 @@ export const uiSlots: GameUiSlots<ExampleCharacter> = {
   HeaderSubtitle: exampleHeaderSubtitle,
   CompactNav: exampleCompactNav,
   CardSummary: exampleCardSummary,
+  BulkEditor: exampleBulkEditor,
 };
