@@ -1,6 +1,5 @@
 import { expect, test } from '@playwright/test';
 
-import { dhCharacter } from '../../src/games/dh1/tests/fixtures/visual';
 import {
   expectNoHorizontalOverflow,
   getState,
@@ -8,6 +7,7 @@ import {
   openDialog,
   prepare,
   screenshotPage,
+  seededCharacterPayload,
   sheetPath,
   signInViaUI,
 } from './helpers';
@@ -327,6 +327,8 @@ test.describe('журнал опыта', () => {
     'DH1: правый Sheet, строки и удаление записи (en)',
     { tag: '@desktop' },
     async ({ page }) => {
+      // Данные листа — у сидированного DH-листа, без импорта фикстуры игры.
+      const dhPayload = await seededCharacterPayload('dh');
       const username = `xp-log-${Date.now()}`;
       const password = 'xp-log-password-1';
       const registered = await page.request.post('/api/auth/register', {
@@ -341,7 +343,7 @@ test.describe('журнал опыта', () => {
 
       const created = await page.request.post('/api/characters', {
         data: {
-          ...dhCharacter,
+          ...dhPayload,
           name: 'XP Log',
           experienceLog: [
             {
@@ -402,6 +404,8 @@ test.describe('заметки: сохранение из Sheet', () => {
     'DH1: Edit → Save → перезагрузка показывает новый текст (en)',
     { tag: '@desktop' },
     async ({ page }) => {
+      // Данные листа — у сидированного DH-листа, без импорта фикстуры игры.
+      const dhPayload = await seededCharacterPayload('dh');
       const username = `notes-save-${Date.now()}`;
       const password = 'notes-save-password-1';
       const registered = await page.request.post('/api/auth/register', {
@@ -416,7 +420,7 @@ test.describe('заметки: сохранение из Sheet', () => {
 
       const created = await page.request.post('/api/characters', {
         data: {
-          ...dhCharacter,
+          ...dhPayload,
           name: 'Notes Save',
           notes: 'Старая заметка',
         },

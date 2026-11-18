@@ -1,7 +1,5 @@
 import { expect, test } from '@playwright/test';
 
-import { dhCharacter } from '../../src/games/dh1/tests/fixtures/visual';
-import { dndCharacter } from '../../src/games/dnd5e/tests/fixtures/visual';
 import {
   collectPageErrors,
   expectNoHorizontalOverflow,
@@ -10,6 +8,7 @@ import {
   openDialog,
   openMobileSection,
   prepare,
+  seededCharacterPayload,
   sheetPath,
   signInViaUI,
 } from './helpers';
@@ -977,7 +976,8 @@ test(
       'Александра-Мария фон дер Вельденштайн цу Штайнберг унд Ротенбург';
 
     // Отдельный аккаунт и персонаж: фикстуры визуальных тестов не трогаем,
-    // иначе поехали бы эталоны дашборда.
+    // иначе поехали бы эталоны дашборда. Данные — у сидированного DH-листа.
+    const dhPayload = await seededCharacterPayload('dh');
     const username = `long-name-${Date.now()}`;
     const password = 'long-name-password-1';
     const registered = await page.request.post('/api/auth/register', {
@@ -991,7 +991,7 @@ test(
     expect([200, 201], 'регистрация аккаунта').toContain(registered.status());
 
     const created = await page.request.post('/api/characters', {
-      data: { ...dhCharacter, name: LONG_NAME },
+      data: { ...dhPayload, name: LONG_NAME },
     });
     expect([200, 201], 'создание персонажа').toContain(created.status());
     const { id } = (await created.json()) as { id: string };
@@ -1112,6 +1112,11 @@ test.describe('вид листа: компактный и обычный', () =>
       // Отдельный аккаунт и персонаж: фикстуры и эталоны не затрагиваем.
       // У компаньона включены ВСЕ необязательные секции — именно они раньше
       // дублировали id (attunement-card, inventory-box, spells-section, ...).
+      // Основа — сидированный D&D-лист, чтобы не импортировать фикстуру игры.
+      const dndPayload = await seededCharacterPayload('dnd');
+      const companions = dndPayload.companions as Array<
+        Record<string, unknown>
+      >;
       const username = `compact-dupes-${Date.now()}`;
       const password = 'compact-dupes-1';
       const registered = await page.request.post('/api/auth/register', {
@@ -1125,7 +1130,7 @@ test.describe('вид листа: компактный и обычный', () =>
       expect([200, 201], 'регистрация аккаунта').toContain(registered.status());
 
       const companion = {
-        ...dndCharacter.companions![0],
+        ...companions[0],
         showInventory: true,
         showSpells: true,
         showNarrative: true,
@@ -1135,7 +1140,7 @@ test.describe('вид листа: компактный и обычный', () =>
       };
       const created = await page.request.post('/api/characters', {
         data: {
-          ...dndCharacter,
+          ...dndPayload,
           name: 'Companion Dupes',
           companions: [companion],
         },
@@ -1200,6 +1205,7 @@ test.describe('синхронизация между вкладками', () => 
       reducedMotion: 'reduce',
     });
     const page = await context.newPage();
+    const dhPayload = await seededCharacterPayload('dh');
     const username = `cross-tab-${Date.now()}`;
     const password = 'cross-tab-password-1';
 
@@ -1234,7 +1240,7 @@ test.describe('синхронизация между вкладками', () => 
     );
 
     const first = await page.request.post('/api/characters', {
-      data: { ...dhCharacter, name: 'First Tab Character' },
+      data: { ...dhPayload, name: 'First Tab Character' },
     });
     expect([200, 201], 'первый персонаж').toContain(first.status());
     const { id: firstId } = (await first.json()) as { id: string };
@@ -1246,7 +1252,7 @@ test.describe('синхронизация между вкладками', () => 
 
     // «Вторая вкладка» создаёт ещё одного персонажа — серверная запись.
     const second = await page.request.post('/api/characters', {
-      data: { ...dhCharacter, name: 'Second Tab Character' },
+      data: { ...dhPayload, name: 'Second Tab Character' },
     });
     expect([200, 201], 'персонаж из второй вкладки').toContain(second.status());
 
@@ -1272,7 +1278,7 @@ test.describe('синхронизация между вкладками', () => 
     // антидребезг освежения (300 мс после предыдущей загрузки).
     await page.waitForTimeout(600);
     const third = await page.request.post('/api/characters', {
-      data: { ...dhCharacter, name: 'Focus Refreshed Character' },
+      data: { ...dhPayload, name: 'Focus Refreshed Character' },
     });
     expect([200, 201], 'персонаж для проверки фокуса').toContain(
       third.status(),
