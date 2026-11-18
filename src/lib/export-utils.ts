@@ -2,8 +2,6 @@
 
 'use client';
 
-import * as XLSX from 'xlsx';
-
 import {
   getCharacterModule,
   resolveCharacterSystemId,
@@ -714,11 +712,11 @@ const EXCEL_COLUMNS = [
  * затем человекочитаемый лист по секциям. Данные проверяются так же, как при
  * JSON-экспорте: битый лист не превращается в файл.
  */
-export const exportCharacterToExcel = (
+export const exportCharacterToExcel = async (
   character: Character,
   now = new Date(),
   translate: ExportTranslate = defaultExcelTranslate,
-): { success: boolean; filename?: string; error?: string } => {
+): Promise<{ success: boolean; filename?: string; error?: string }> => {
   try {
     const normalized = normalizeCharacterRecord(
       character as unknown as Record<string, unknown>,
@@ -727,6 +725,10 @@ export const exportCharacterToExcel = (
     if (errors.length > 0) {
       return { success: false, error: `Экспорт отменён: ${errors.join(' ')}` };
     }
+
+    // SheetJS грузится только по действию экспорта: в начальном бандле
+    // библиотека на сотни килобайт не нужна никому, кто просто смотрит лист.
+    const XLSX = await import('xlsx');
 
     const worksheet = XLSX.utils.aoa_to_sheet(
       buildCharacterSheetRows(normalized, translate, now),

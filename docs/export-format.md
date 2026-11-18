@@ -89,6 +89,15 @@ the owner is taken from the current session on import (the legacy Firestore
 import creates local accounts separately and runs the same character
 normalizer).
 
+## Lazy SheetJS
+
+The Excel writer is `xlsx` (SheetJS). It is imported dynamically inside
+`exportCharacterToExcel`, so the library never enters the initial client graph:
+on the dashboard and the sheet page it is a separate chunk fetched only when the
+user presses "Export Excel". Measured on `next build`: the initial chunk set for
+`/` and `/admin` shrank from 2947 KB to 2578 KB and the SheetJS chunk (357 KB →
+469 KB after code splitting) moved from initial to lazy (712 KB of lazy chunks).
+
 ## Where the code lives
 
 - [`src/lib/export-utils.ts`](../src/lib/export-utils.ts) — envelope, import
