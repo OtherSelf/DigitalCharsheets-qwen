@@ -434,35 +434,61 @@ export function renderRegistry(plugins) {
       a.manifest.id.localeCompare(b.manifest.id, 'en'),
   );
 
-  // Импорты — в алфавитном порядке (так их сортирует prettier), а записи
-  // массива — в порядке показа (`order`, затем `id`).
-  const imports = [...sorted]
-    .sort((a, b) => a.manifest.id.localeCompare(b.manifest.id, 'en'))
-    .map(({ manifest }) => {
-      const names = [{ name: moduleExportName(manifest) }];
-      if (manifest.derive) {
-        // Импорт из того же модуля, что и сам плагин: derive — обычный
-        // именованный экспорт точки входа, а не поле GameModule (D2).
-        names.push({
-          name: parseEntryPoint(manifest.derive.entry).member,
-          alias: deriveVarName(manifest.id),
-        });
-      }
-      // Prettier сортирует именованные импорты по имени, а `plugins:check`
-      // сравнивает файл побайтно: генерируем сразу в том же порядке.
-      const sorted = [...names].sort((a, b) =>
-        a.name.localeCompare(b.name, 'en'),
-      );
-      const list = sorted
-        .map((item) =>
-          item.alias ? `${item.name} as ${item.alias}` : item.name,
-        )
-        .join(', ');
-      return (
-        `import { ${list} } from './${manifest.id}';\n` +
-        `import ${manifestVarName(manifest.id)} from './${manifest.id}/plugin.json';`
-      );
-    })
+  // Импорты — единым списком, отсортированным по строке пути, как это делает
+  // `@ianvs/prettier-plugin-sort-imports`. Массив записей — в порядке показа
+  // (`order`, затем `id`).
+  //
+  // `import type … from './plugin-api'` участвует в той же сортировке: иначе
+  // плагин с id после `plugin-api` (`probe`, `wfrp`, `zz…`) делал
+  // сгенерированный файл «грязным» для prettier, а `prettier --check` —
+  // шаг 2/7 `npm run verify`. Цикл `generate` → `format` не сходился.
+  const imports = [
+    ...[...sorted]
+      .sort((a, b) => a.manifest.id.localeCompare(b.manifest.id, 'en'))
+      .map(({ manifest }) => {
+        const names = [{ name: moduleExportName(manifest) }];
+        if (manifest.derive) {
+          // Импорт из того же модуля, что и сам плагин: derive — обычный
+          // именованный экспорт точки входа, а не поле GameModule (D2).
+          names.push({
+            name: parseEntryPoint(manifest.derive.entry).member,
+            alias: deriveVarName(manifest.id),
+          });
+        }
+        // Prettier сортирует именованные импорты по имени, а `plugins:check`
+        // сравнивает файл побайтно: генерируем сразу в том же порядке.
+        const sortedNames = [...names].sort((a, b) =>
+          a.name.localeCompare(b.name, 'en'),
+        );
+        const list = sortedNames
+          .map((item) =>
+            item.alias ? `${item.name} as ${item.alias}` : item.name,
+          )
+          .join(', ');
+        return [
+          {
+            spec: `./${manifest.id}`,
+            text: `import { ${list} } from './${manifest.id}';`,
+          },
+          {
+            spec: `./${manifest.id}/plugin.json`,
+            text: `import ${manifestVarName(manifest.id)} from './${manifest.id}/plugin.json';`,
+          },
+        ];
+      })
+      .flat(),
+    {
+      spec: './plugin-api',
+      text:
+        'import type {\n' +
+        '  GameUiSlots,\n' +
+        '  GeneratedPluginRegistration,\n' +
+        '  PluginManifest,\n' +
+        "} from './plugin-api';",
+    },
+  ]
+    .sort((a, b) => a.spec.localeCompare(b.spec, 'en'))
+    .map((statement) => statement.text)
     .join('\n');
   const entries = sorted
     .map(({ manifest }) => {
@@ -493,6 +519,18 @@ export function renderRegistry(plugins) {
     })
     .join('\n');
 
+  // Пустой набор загрузчиков prettier печатает как `{}` в одну строку —
+  // генерируем сразу так, иначе `plugins:check` и `prettier --check` спорят.
+  const uiLoadersBlock = uiLoaders
+    ? `export const generatedUiLoaders: Readonly<
+  Record<string, () => Promise<GameUiSlots<any>>>
+> = {
+${uiLoaders}
+};`
+    : `export const generatedUiLoaders: Readonly<
+  Record<string, () => Promise<GameUiSlots<any>>>
+> = {};`;
+
   return `/**
  * ─── AUTO-GENERATED — НЕ РЕДАКТИРОВАТЬ ─────────────────────────────────────
  * Реестр плагинов, сгенерированный из манифестов \`src/games/<id>/plugin.json\`
@@ -502,11 +540,6 @@ export function renderRegistry(plugins) {
  * Проверить:    npm run plugins:check   (шаг \`npm run verify\`)
  */
 ${imports}
-import type {
-  GameUiSlots,
-  GeneratedPluginRegistration,
-  PluginManifest,
-} from './plugin-api';
 
 /** Зарегистрированные плагины в порядке показа (\`order\`, затем \`id\`). */
 export const generatedPlugins: readonly GeneratedPluginRegistration[] = [
@@ -514,11 +547,7 @@ ${entries}
 ];
 
 /** Ленивые UI-слоты: \`systemId\` → загрузчик объекта \`GameUiSlots\`. */
-export const generatedUiLoaders: Readonly<
-  Record<string, () => Promise<GameUiSlots<any>>>
-> = {
-${uiLoaders}
-};
+${uiLoadersBlock}
 `;
 }
 
@@ -538,8 +567,11 @@ export function renderI18nRegistry(plugins) {
     a.manifest.id.localeCompare(b.manifest.id, 'en'),
   );
 
-  const imports = sorted
-    .map(({ manifest }) => {
+  // Импорты словарей и `import type … from './types'` — одним списком по
+  // строке пути: prettier сортирует их так же, а id после `types` иначе
+  // ломал `prettier --check` (шаг 2/7 verify) на авто-сгенерированном файле.
+  const imports = [
+    ...sorted.flatMap(({ manifest }) => {
       const camel = manifest.id.replace(/[-_]+(.)?/g, (_, chr) =>
         chr ? chr.toUpperCase() : '',
       );
@@ -550,12 +582,21 @@ export function renderI18nRegistry(plugins) {
           const isJson = rel.endsWith('.json');
           const spec = `./${manifest.id}/${rel.replace(/\.(ts|tsx|json)$/, '')}${isJson ? '.json' : ''}`;
           const local = `${camel}${localeSuffix(locale)}`;
-          return isJson
-            ? `import ${local} from '${spec}';`
-            : `import { ${locale} as ${local} } from '${spec}';`;
-        })
-        .join('\n');
-    })
+          return {
+            spec,
+            text: isJson
+              ? `import ${local} from '${spec}';`
+              : `import { ${locale} as ${local} } from '${spec}';`,
+          };
+        });
+    }),
+    {
+      spec: './types',
+      text: "import type { LocalizedMessages, PluginLocalizedMessages } from './types';",
+    },
+  ]
+    .sort((a, b) => a.spec.localeCompare(b.spec, 'en'))
+    .map((statement) => statement.text)
     .join('\n');
 
   const entries = sorted
@@ -604,7 +645,6 @@ export function renderI18nRegistry(plugins) {
  * Проверить:    npm run plugins:check
  */
 ${imports}
-import type { LocalizedMessages, PluginLocalizedMessages } from './types';
 
 /** Локали плагина из манифеста; порядок ключей — по id. */
 type PluginDictionaries = Readonly<Record<string, PluginLocalizedMessages>>;
