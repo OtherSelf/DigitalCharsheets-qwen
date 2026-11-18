@@ -1,3 +1,5 @@
+import { statBonus } from '@/games/shared/dh-stats';
+
 import { readNumber, readString, type DefaultsInput } from '../shared/defaults';
 import {
   fateRangeFromText,
@@ -63,7 +65,7 @@ export function createDarkHeresyBaseDefaults(
     : readString(input, 'rank', '');
   const divination = readString(input, 'divination', '');
   const agility = readNumber(input, 'agility', 30);
-  const agilityBonus = Math.floor(agility / 10);
+  const agilityBonus = statBonus(agility);
   const homeWorld = readHomeWorld(input);
   const startingProfile = homeWorld
     ? WORLD_STARTING_PROFILE[homeWorld]

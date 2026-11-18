@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/popover';
 import { Textarea } from '@/components/ui/textarea';
 import { useCharacterContext, useTranslation } from '@/games/plugin-host';
+import { statBonus, upgradeBonus } from '@/games/shared/dh-stats';
 import { cn } from '@/lib/utils';
 
 import { getDarkHeresyCapabilities } from '../capabilities';
@@ -67,7 +68,7 @@ const CharacteristicStat = ({
       ? [...upgrades, ...Array(4 - upgrades.length).fill(false)]
       : [false, false, false, false]
   ).slice(0, 4) as [boolean, boolean, boolean, boolean];
-  const bonus = currentUpgrades.filter(Boolean).length * 5;
+  const bonus = upgradeBonus(currentUpgrades);
   const displayValue = value + bonus;
   const isCheckboxDisabled = (index: number) => {
     if (editing) return true;
@@ -371,9 +372,9 @@ export const CharacteristicsSection = React.forwardRef<
                   false,
                   false,
                 ]) as boolean[];
-                const agBonus = agUpgrades.filter(Boolean).length * 5;
+                const agBonus = upgradeBonus(agUpgrades);
                 const effectiveAg = character.stats.agility + agBonus;
-                const agMod = Math.floor(effectiveAg / 10);
+                const agMod = statBonus(effectiveAg);
                 return (
                   <>
                     <div className="bg-background rounded-lg border p-2 text-center">

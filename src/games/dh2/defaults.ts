@@ -1,3 +1,5 @@
+import { statBonus } from '@/games/shared/dh-stats';
+
 import {
   readBoolean,
   readNumber,
@@ -117,7 +119,7 @@ export function createDh2BaseDefaults(
   const divination = isDivinationId(divinationRaw) ? divinationRaw : '';
 
   const agility = readNumber(input, 'agility', 30);
-  const agilityBonus = Math.floor(agility / 10);
+  const agilityBonus = statBonus(agility);
   const wounds = readNumber(input, 'wounds', defaultWounds(homeWorld));
   const fatePoints = readNumber(input, 'fatePoints', defaultFate(homeWorld));
 

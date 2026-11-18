@@ -1,3 +1,5 @@
+import { statTotal as sumStat } from '@/games/shared/dh-stats';
+
 import {
   DARK_HERESY_CORE_STATS,
   type DarkHeresyCoreStat,
@@ -47,12 +49,18 @@ export function pickAllowedStats<T>(
   return result;
 }
 
-/** Итог характеристики с покупками: база + 5 за каждую ступень. */
+/**
+ * Итог характеристики с покупками: база + 5 за каждую ступень.
+ *
+ * Арифметика — в `shared/dh-stats.ts` (одна на обе редакции), здесь только
+ * удобный доступ по ключу персонажа.
+ */
 export function statTotal(
   character: Pick<DH2Character, 'stats' | 'statUpgrades'>,
   key: DarkHeresyStatKey,
 ): number {
-  const base = Number(character.stats?.[key] ?? 0) || 0;
-  const upgrades = character.statUpgrades?.[key] ?? EMPTY_STAT_UPGRADE;
-  return base + upgrades.filter(Boolean).length * 5;
+  return sumStat(
+    character.stats?.[key],
+    character.statUpgrades?.[key] ?? EMPTY_STAT_UPGRADE,
+  );
 }

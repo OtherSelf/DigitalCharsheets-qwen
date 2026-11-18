@@ -1,3 +1,5 @@
+import { upgradeBonus } from '@/games/shared/dh-stats';
+
 import { createExcelSections } from '../shared/excel';
 import type { ExcelSection, ExportTranslate, GameExportConfig } from '../types';
 import { DH2E_BACKGROUNDS } from './dh2e-data';
@@ -105,7 +107,7 @@ export function buildDh2ExcelSections(
     w.section('io.excel.characteristics');
     for (const [key, labelKey] of statLabels) {
       const base = stats[key] ?? 0;
-      const bonus = (upgrades[key] ?? []).filter(Boolean).length * 5;
+      const bonus = upgradeBonus(upgrades[key]);
       const note = notes[key];
       w.row(labelKey, `${base + bonus}${note ? ` — ${note}` : ''}`);
     }

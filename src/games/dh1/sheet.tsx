@@ -28,6 +28,7 @@ import {
   isCreationReview,
 } from '@/games/shared/creation-review';
 import { CreationReviewBanner } from '@/games/shared/creation-review-banner';
+import { statBonus, upgradeBonus } from '@/games/shared/dh-stats';
 import { cn } from '@/lib/utils';
 
 import { getDarkHeresyCapabilities } from './capabilities';
@@ -365,10 +366,10 @@ export const Dh1Sheet = React.forwardRef<
       false,
       false,
     ];
-    const bonus = upgrades.filter(Boolean).length * 5;
+    const bonus = upgradeBonus(upgrades);
     return baseStat + bonus;
   };
-  const getStatMod = (stat: number) => Math.floor(stat / 10);
+  const getStatMod = (stat: number) => statBonus(stat);
   const effectiveToughness = getEffectiveStat('toughness');
   // У 1-й редакции ровно одно поле усталости.
   const fatigue = character.fatigue1st;
@@ -524,7 +525,7 @@ export const Dh1Sheet = React.forwardRef<
                     const val = stats[char.key] || 0;
                     const upgrades = (statUpgrades[char.key] ||
                       EMPTY_STAT_UPGRADE) as boolean[];
-                    const bonus = upgrades.filter(Boolean).length * 5;
+                    const bonus = upgradeBonus(upgrades);
                     const notes = statNotes[char.key] || '';
                     return (
                       <div
@@ -980,9 +981,9 @@ export const Dh1Sheet = React.forwardRef<
                   false,
                   false,
                 ]) as boolean[];
-                const agBonus = agUpgrades.filter(Boolean).length * 5;
+                const agBonus = upgradeBonus(agUpgrades);
                 const effectiveAg = character.stats.agility + agBonus;
-                const agMod = Math.floor(effectiveAg / 10);
+                const agMod = statBonus(effectiveAg);
                 return (
                   <>
                     <div className="bg-background/50 rounded border p-1 text-center">
@@ -1543,7 +1544,7 @@ export const Dh1Sheet = React.forwardRef<
                         const val = stats[char.key] || 0;
                         const upgrades = (statUpgrades[char.key] ||
                           EMPTY_STAT_UPGRADE) as boolean[];
-                        const bonus = upgrades.filter(Boolean).length * 5;
+                        const bonus = upgradeBonus(upgrades);
                         const notes = statNotes[char.key] || '';
                         return (
                           <div
@@ -1689,9 +1690,9 @@ export const Dh1Sheet = React.forwardRef<
                         false,
                         false,
                       ]) as boolean[];
-                      const agBonus = agUpgrades.filter(Boolean).length * 5;
+                      const agBonus = upgradeBonus(agUpgrades);
                       const effectiveAg = character.stats.agility + agBonus;
-                      const agMod = Math.floor(effectiveAg / 10);
+                      const agMod = statBonus(effectiveAg);
                       return (
                         <>
                           <div className="bg-background/50 rounded border p-1 text-center">
