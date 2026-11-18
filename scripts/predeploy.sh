@@ -253,6 +253,13 @@ node scripts/plugins/generate.mjs --check \
   || die "Реестр плагинов устарел: запустите npm run plugins:generate и закоммитьте src/games/registry.generated.ts"
 ok "реестр плагинов в синхроне"
 
+# Раскладка тестов: лимит 400 строк на файл в tests/unit и запрет тестов одной
+# редакции в хосте (их место — src/games/<id>/tests/unit).
+step "3/7 раскладка тестов (scripts/tests/check-test-layout.mjs)"
+node scripts/tests/check-test-layout.mjs \
+  || die "Нарушена раскладка тестов (см. вывод выше; правила — scripts/tests/check-test-layout.mjs)"
+ok "раскладка тестов соблюдена"
+
 # Данные DH2: `dh2e-*.ts` и словарь `dh2.catalog.*` обязаны совпадать с
 # контент-каталогом workspace. В CI workspace нет — там шаг пропускается,
 # локально расхождение блокирует деплой (см. docs/game-modules.md).
