@@ -327,9 +327,7 @@ describe('админский API: метаданные плагинов и enabl
     const dnd = body.games.find((game: { id: string }) => game.id === 'dnd5e');
     expect(dnd).toMatchObject({
       enabled: true,
-      // Версия берётся из манифеста: API обязан отдавать именно её, а не
-      // константу в тесте, иначе любой релиз плагина ломает проверку.
-      version: dnd5eManifest.version,
+      version: dnd5eManifest.version, // версия — из манифеста, не константа
       schemaVersion: 2,
       conformance: '>=1',
       tags: expect.any(Array),

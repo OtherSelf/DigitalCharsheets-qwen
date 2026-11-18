@@ -48,6 +48,22 @@ DH1 test cannot build on DH2's internals. The reference fixture
 (`tests/fixtures/example-plugin/tests`) proves that a plugin can ship its own
 test and run from the repo root.
 
+## Test layout
+
+Host tests are split by domain: `tests/unit/api/`, `auth/`, `characters/`,
+`admin/`, `export/`, `storage/`, `history/`. A file must stay within **400
+lines**: a 1,500-line `api-routes.test.ts` hides which route broke and makes
+review meaningless. `npm run test:layout` (also a step of `npm run verify`)
+enforces the limit and fails in both directions:
+
+- a file over 400 lines must be split by domain or listed as an exception with a
+  reason and a ceiling in `scripts/tests/check-test-layout.mjs` (a ceiling is a
+  ratchet: the file may shrink but not grow; an unused exception is an error);
+- a test that imports the modules of exactly one game belongs in
+  `src/games/<id>/tests/unit/`, not in the host. A test that imports two
+  editions (DH1/DH2 parity, shared labels) stays in `tests/unit` — it checks the
+  contract between editions, and a plugin may not import another plugin.
+
 ## Plugin conformance
 
 `npm run plugins:conformance` runs the plugin contract suite:

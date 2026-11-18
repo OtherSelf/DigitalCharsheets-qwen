@@ -1,0 +1,292 @@
+/**
+ * normalizeLogin и uid, вход по паролю, accountExists/registerUser: uid не
+ * меняется при повторном входе, формат user.json и индекс логинов.
+ */
+
+import fs from 'node:fs';
+import path from 'node:path';
+
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+
+import { isUid, newUid, normalizeLogin } from '@/lib/ids';
+import { verifyPassword } from '@/lib/security/password';
+import {
+  isRecoveryPhraseHash,
+  recoveryPhraseMatches,
+} from '@/lib/security/phrase';
+import { isScryptHash } from '@/lib/security/scrypt';
+import {
+  accountExists,
+  authenticateUser,
+  getStoredUser,
+  registerUser,
+} from '@/lib/server-auth';
+import { resolveLogin } from '@/lib/user-index';
+import { USER_SCHEMA_VERSION } from '@/lib/user-schema';
+
+import {
+  loginIndexPath,
+  readJson,
+  removeDir,
+  userPaths,
+  useTempDataDir,
+} from '@tests/support';
+import { sha256 } from '@tests/support/hash';
+
+let dataDir: string;
+
+beforeEach(() => {
+  dataDir = useTempDataDir();
+});
+
+afterEach(() => {
+  removeDir(dataDir);
+});
+
+describe('normalizeLogin / uid', () => {
+  it('нормализует регистр и внешние пробелы', () => {
+    expect(normalizeLogin('  Hero@Example.com ')).toBe('hero@example.com');
+    expect(normalizeLogin('HERO@EXAMPLE.COM')).toBe('hero@example.com');
+  });
+
+  it('uid — UUID, а не производная от логина', () => {
+    const a = newUid();
+    const b = newUid();
+    expect(isUid(a)).toBe(true);
+    expect(a).not.toBe(b);
+    expect(isUid('user-abc123')).toBe(false);
+    expect(isUid('../escape')).toBe(false);
+  });
+});
+
+describe('authenticateUser', () => {
+  it('создаёт аккаунт при первом входе и пишет user.json + индекс', () => {
+    const result = authenticateUser('newbie', 'secret1', 'Newbie');
+
+    expect(result.success).toBe(true);
+    expect(result.isNewUser).toBe(true);
+    expect(isUid(result.user?.uid)).toBe(true);
+    expect(result.user?.hasRecoveryPhrase).toBe(false);
+
+    const uid = result.user!.uid;
+    const paths = userPaths(dataDir, uid);
+    expect(fs.existsSync(paths.userFile)).toBe(true);
+
+    const stored = readJson(paths.userFile);
+    expect(stored).toMatchObject({
+      schemaVersion: USER_SCHEMA_VERSION,
+      uid,
+      username: 'newbie',
+      displayName: 'Newbie',
+    });
+    expect(isScryptHash(stored.passwordHash)).toBe(true);
+    expect(verifyPassword(stored.passwordHash, 'secret1').valid).toBe(true);
+    expect(stored.createdAt).toBeTruthy();
+    // Пароль не хранится как есть, только sha256-хеш.
+    expect(JSON.stringify(stored)).not.toContain('secret1');
+
+    // Индекс: логин указывает на этот uid.
+    const index = readJson(loginIndexPath(dataDir));
+    expect(index.logins.newbie).toBe(uid);
+    expect(resolveLogin('newbie')).toBe(uid);
+  });
+
+  it('не перезаписывает существующий аккаунт и сохраняет uid', () => {
+    const first = authenticateUser('repeat', 'pass-one-1234');
+    const second = authenticateUser('repeat', 'pass-one-1234');
+
+    expect(first.isNewUser).toBe(true);
+    expect(second.isNewUser).toBe(false);
+    expect(second.user?.uid).toBe(first.user?.uid);
+    expect(second.user?.displayName).toBe('repeat');
+  });
+
+  it('не пускает с неверным паролем', () => {
+    authenticateUser('repeat', 'pass-one-1234');
+    const result = authenticateUser('repeat', 'wrong');
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('Incorrect password.');
+  });
+
+  it('логин регистронезависим', () => {
+    const created = authenticateUser('CaseUser', 'pass-one-1234');
+    const login = authenticateUser('caseuser', 'pass-one-1234');
+
+    expect(login.success).toBe(true);
+    expect(login.isNewUser).toBe(false);
+    expect(login.user?.uid).toBe(created.user?.uid);
+    // username в профиле нормализуется в нижний регистр
+    expect(login.user?.username).toBe('caseuser');
+  });
+
+  it('displayName по умолчанию берётся из логина до @', () => {
+    const result = authenticateUser('player@table.ru', 'pass-one-1234');
+    expect(result.user?.displayName).toBe('player');
+  });
+
+  it('читает legacy-поле email вместо username', () => {
+    const uid = newUid();
+    const paths = userPaths(dataDir, uid);
+    fs.mkdirSync(paths.userDir, { recursive: true });
+    fs.writeFileSync(
+      paths.userFile,
+      JSON.stringify({
+        email: 'legacy',
+        displayName: 'Old',
+        passwordHash: sha256('pass-one-1234'),
+      }),
+    );
+
+    // uid берётся из каталога, логин — из email.
+    expect(getStoredUser(uid)?.username).toBe('legacy');
+    expect(getStoredUser(uid)?.uid).toBe(uid);
+
+    // Индекс пересобирается сканом и видит такой профиль.
+    expect(resolveLogin('legacy')).toBe(uid);
+
+    const result = authenticateUser('legacy', 'pass-one-1234');
+    expect(result.success).toBe(true);
+    expect(result.user?.uid).toBe(uid);
+  });
+
+  it('allowRegistration: false не создаёт аккаунт для свободного логина', () => {
+    const result = authenticateUser('ghost', 'pass-one-1234', undefined, {
+      allowRegistration: false,
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.reason).toBe('no_account');
+    expect(result.error).toContain('No account found');
+    expect(accountExists('ghost')).toBe(false);
+    expect(fs.existsSync(path.join(dataDir, 'users'))).toBe(false);
+  });
+
+  it('allowRegistration: false пускает существующий аккаунт и различает пароль', () => {
+    const created = authenticateUser('known', 'pass-one-1234');
+    const ok = authenticateUser('known', 'pass-one-1234', undefined, {
+      allowRegistration: false,
+    });
+    const bad = authenticateUser('known', 'wrong', undefined, {
+      allowRegistration: false,
+    });
+
+    expect(ok.success).toBe(true);
+    expect(ok.user?.uid).toBe(created.user?.uid);
+    expect(bad.success).toBe(false);
+    expect(bad.reason).toBe('invalid_password');
+  });
+});
+
+describe('accountExists / registerUser', () => {
+  it('accountExists нормализует логин и не создаёт аккаунт', () => {
+    const created = authenticateUser('Existing.User', 'pass-one-1234');
+
+    expect(accountExists('existing.user')).toBe(true);
+    expect(accountExists('  EXISTING.USER  ')).toBe(true);
+    expect(accountExists('missing')).toBe(false);
+    expect(accountExists('')).toBe(false);
+
+    // Проверка существования — только чтение.
+    expect(resolveLogin('existing.user')).toBe(created.user?.uid);
+  });
+
+  it('registerUser создаёт аккаунт с паролем и recovery-фразой', () => {
+    const result = registerUser(
+      '  New.User  ',
+      'pass-one-1234',
+      'New User',
+      '  Amber Cobalt  ',
+    );
+
+    expect(result.success).toBe(true);
+    expect(result.isNewUser).toBe(true);
+    expect(result.user?.username).toBe('new.user');
+    expect(result.user?.displayName).toBe('New User');
+    expect(result.user?.hasRecoveryPhrase).toBe(true);
+
+    const uid = result.user!.uid;
+    const stored = readJson(userPaths(dataDir, uid).userFile);
+    expect(stored).toMatchObject({
+      schemaVersion: USER_SCHEMA_VERSION,
+      uid,
+      username: 'new.user',
+      displayName: 'New User',
+    });
+    expect(isScryptHash(stored.passwordHash)).toBe(true);
+    expect(verifyPassword(stored.passwordHash, 'pass-one-1234').valid).toBe(
+      true,
+    );
+    // Фраза хранится хэшем, а не открытым текстом.
+    expect(isRecoveryPhraseHash(stored.recoveryPhrase)).toBe(true);
+    expect(recoveryPhraseMatches(stored.recoveryPhrase, 'amber cobalt')).toBe(
+      true,
+    );
+    expect(resolveLogin('new.user')).toBe(uid);
+
+    // Пароль из регистрации работает при входе.
+    expect(authenticateUser('new.user', 'pass-one-1234').user?.uid).toBe(uid);
+    expect(authenticateUser('new.user', 'pass-two-1234').success).toBe(false);
+  });
+
+  it('registerUser отклоняет занятый логин и ничего не перезаписывает', () => {
+    const first = registerUser(
+      'taken',
+      'pass-one-1234',
+      'First',
+      'amber cobalt',
+    );
+    const second = registerUser(
+      'taken',
+      'pass-two-1234',
+      'Second',
+      'zulu yankee',
+    );
+
+    expect(second.success).toBe(false);
+    expect(second.reason).toBe('exists');
+    expect(second.error).toContain('already registered');
+
+    const stored = readJson(userPaths(dataDir, first.user!.uid).userFile);
+    expect(stored.displayName).toBe('First');
+    expect(isScryptHash(stored.passwordHash)).toBe(true);
+    expect(verifyPassword(stored.passwordHash, 'pass-one-1234').valid).toBe(
+      true,
+    );
+    expect(isRecoveryPhraseHash(stored.recoveryPhrase)).toBe(true);
+    expect(recoveryPhraseMatches(stored.recoveryPhrase, 'zulu yankee')).toBe(
+      false,
+    );
+  });
+
+  it('registerUser валидирует пароль и фразу', () => {
+    const shortPassword = registerUser(
+      'short-pass',
+      '123',
+      'Short',
+      'amber cobalt',
+    );
+    expect(shortPassword.success).toBe(false);
+    expect(shortPassword.reason).toBe('invalid_input');
+
+    const shortPhrase = registerUser(
+      'short-phrase',
+      'pass-one-1234',
+      'Short',
+      'ab',
+    );
+    expect(shortPhrase.success).toBe(false);
+    expect(shortPhrase.reason).toBe('invalid_input');
+
+    const noLogin = registerUser(
+      '   ',
+      'pass-one-1234',
+      'Nobody',
+      'amber cobalt',
+    );
+    expect(noLogin.success).toBe(false);
+
+    expect(accountExists('short-pass')).toBe(false);
+    expect(accountExists('short-phrase')).toBe(false);
+  });
+});
