@@ -39,10 +39,10 @@ describe('exportCharacterToExcel (xlsx)', () => {
   const row = (rows: any[][], label: string) =>
     rows.find((r) => String(r[0] ?? '').trim() === label);
 
-  it('пишет dcs_character_<имя>_<дата>.xlsx с листом по имени персонажа', () => {
+  it('пишет dcs_character_<имя>_<дата>.xlsx с листом по имени персонажа', async () => {
     process.chdir(tmp);
     try {
-      const result = exportCharacterToExcel(makeDndCharacter() as any, date);
+      const result = await exportCharacterToExcel(makeDndCharacter() as any, date);
 
       expect(result.success).toBe(true);
       expect(result.filename).toBe(
@@ -59,10 +59,10 @@ describe('exportCharacterToExcel (xlsx)', () => {
     }
   });
 
-  it('внутри — стандартный технический блок и данные листа', () => {
+  it('внутри — стандартный технический блок и данные листа', async () => {
     process.chdir(tmp);
     try {
-      const result = exportCharacterToExcel(makeDndCharacter() as any, date);
+      const result = await exportCharacterToExcel(makeDndCharacter() as any, date);
       expect(result.success).toBe(true);
       const rows = readRows(result.filename!);
 
@@ -91,7 +91,7 @@ describe('exportCharacterToExcel (xlsx)', () => {
     }
   });
 
-  it('выгружает поля Dark Heresy v2: fatigue2nd, критические, ресурсы', () => {
+  it('выгружает поля Dark Heresy v2: fatigue2nd, критические, ресурсы', async () => {
     process.chdir(tmp);
     try {
       const character = makeDhCharacter({
@@ -103,7 +103,7 @@ describe('exportCharacterToExcel (xlsx)', () => {
           { id: 'r1', description: 'Ammo', current: 3, max: 10 },
         ],
       });
-      const result = exportCharacterToExcel(character as any, date);
+      const result = await exportCharacterToExcel(character as any, date);
       expect(result.success).toBe(true);
 
       const rows = readRows(result.filename!);
@@ -129,10 +129,10 @@ describe('exportCharacterToExcel (xlsx)', () => {
     }
   });
 
-  it('подписи Excel переводятся на язык сайта', () => {
+  it('подписи Excel переводятся на язык сайта', async () => {
     process.chdir(tmp);
     try {
-      const result = exportCharacterToExcel(
+      const result = await exportCharacterToExcel(
         makeDndCharacter() as any,
         date,
         (key) => translations.ru[key] ?? key,
@@ -150,13 +150,13 @@ describe('exportCharacterToExcel (xlsx)', () => {
     }
   });
 
-  it('битый лист — ошибка, файл не создаётся', () => {
+  it('битый лист — ошибка, файл не создаётся', async () => {
     process.chdir(tmp);
     try {
       const before = fs
         .readdirSync(tmp)
         .filter((f) => f.endsWith('.xlsx')).length;
-      const result = exportCharacterToExcel(
+      const result = await exportCharacterToExcel(
         makeDndCharacter({ name: '' }) as any,
         date,
       );
