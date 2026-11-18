@@ -544,6 +544,25 @@ describe('авторизация: изоляция персонажей по а�
   });
 });
 
+// ──────────────── DH1: обязательное поле только имя ───────────────────────
+
+describe('создание DH1: только имя обязательно', () => {
+  it('лист создаётся без мира и карьеры, пустые поля остаются пустыми', async () => {
+    const user = await register('dh1-name-only');
+    const { status, body } = await createCharacter(user.uid, {
+      systemId: 'dh1',
+      name: 'Name Only',
+    });
+
+    expect(status).toBe(201);
+    expect(body.homeWorld).toBe('');
+    expect(body.careerPath).toBe('');
+    expect(body.characterClass).toBe('');
+    expect(body.rank).toBe('');
+    expect(body.divination).toBe('');
+  });
+});
+
 // ──────── создание персонажа в каждой версии игры (матрица систем) ─────────
 
 describe.each(SYSTEMS)(

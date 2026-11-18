@@ -21,8 +21,11 @@ export function dh1CardSummary(
     dhLocalizedKey(CAREER_KEYS[characterClass] || characterClass, 'dh1'),
   );
 
+  // Новый лист может быть создан только с именем: ранг и карьера ещё не
+  // выбраны, но карточка не должна оставаться с пустой подписью.
+  const text = `${rankText ? `${rankText} ` : ''}${classText}`.trim();
   return {
-    text: `${rankText ? `${rankText} ` : ''}${classText}`,
+    text: text || t('dh1.unknownRank'),
     badgeVariant: 'secondary',
   };
 }

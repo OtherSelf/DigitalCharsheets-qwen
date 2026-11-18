@@ -107,6 +107,10 @@ read-only text until Edit, and the derived free XP (`experience −
 totalExpSpent`) turns `text-destructive` when negative. The value is a
 computed number, not a stored field, and it is not clamped.
 
+Both creation forms require only the character name. Home world, career or
+background/role, divination and the rest may stay empty and be chosen later on
+the sheet while the creation field is still empty.
+
 ### Creation review after import
 
 An imported sheet opens in review mode: the creation locks are lifted until

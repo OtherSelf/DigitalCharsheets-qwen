@@ -198,7 +198,7 @@ const CreationField = ({
           onValueChange={onSelect}
           disabled={disabled}
         >
-          <SelectTrigger className="h-8">
+          <SelectTrigger className="h-8" aria-label={label}>
             <SelectValue placeholder={placeholder} />
           </SelectTrigger>
           <SelectContent>

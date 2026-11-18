@@ -60,7 +60,7 @@ export function createDarkHeresyBaseDefaults(
   const totalExpSpent = readNumber(input, 'totalExpSpent', 0);
   const rank = careerRanks
     ? calculateRank(careerRanks, totalExpSpent, null, null)
-    : readString(input, 'rank', 'N/A');
+    : readString(input, 'rank', '');
   const divination = readString(input, 'divination', '');
   const agility = readNumber(input, 'agility', 30);
   const agilityBonus = Math.floor(agility / 10);
