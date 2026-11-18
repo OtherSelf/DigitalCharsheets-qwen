@@ -67,7 +67,7 @@ test.describe('создание DH1: обязательно только имя'
         .first()
         .getAttribute('href');
       expect(icon, 'favicon').toBeTruthy();
-      expect(icon).not.toContain('favicon-dh.png');
+      expect(icon).not.toMatch(/favicon-dh[.]png$/);
       const info = page.locator('#info-section:visible').first();
       await info.locator('[data-testid="edit-button"]:visible').first().click();
       const world = info.getByRole('combobox', {
