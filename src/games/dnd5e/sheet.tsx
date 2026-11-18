@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { useCharacterContext, useTranslation } from '@/games/plugin-host';
 import { cn } from '@/lib/utils';
 
+import { deriveDnd5e } from './derive';
 import { DndAttunementSection } from './sections/attunement-section';
 import { DndCharacterInfoSection } from './sections/character-info-section';
 import { DndCombatSection } from './sections/combat-section';
@@ -158,27 +159,6 @@ const DEFAULT_SKILLS: DnDSkill[] = [
   },
 ];
 
-const SKILL_STAT_MAP: Record<string, keyof DnD5eCharacter['stats']> = {
-  acrobatics: 'dexterity',
-  animalHandling: 'wisdom',
-  arcana: 'intelligence',
-  athletics: 'strength',
-  deception: 'charisma',
-  history: 'intelligence',
-  insight: 'wisdom',
-  intimidation: 'charisma',
-  investigation: 'intelligence',
-  medicine: 'wisdom',
-  nature: 'intelligence',
-  perception: 'wisdom',
-  performance: 'charisma',
-  persuasion: 'charisma',
-  religion: 'intelligence',
-  sleightOfHand: 'dexterity',
-  stealth: 'dexterity',
-  survival: 'wisdom',
-};
-
 export const DndSheet = React.forwardRef<any, DndSheetProps>(
   ({ character, isCompactView, activeCompactSection }, ref) => {
     const { updateCharacter, showEditButtons, setHasUnsavedChanges } =
@@ -261,23 +241,22 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
       [character.id, updateCharacter],
     );
 
-    const proficiencyBonus = Math.floor((progressionData.level - 1) / 4) + 2;
+    // Производные значения считает та же функция, что и сервер (D14):
+    // собственных формул у листа нет, иначе клиент и файл расходятся.
+    const derived = React.useMemo(
+      () =>
+        deriveDnd5e({
+          ...character,
+          level: progressionData.level,
+          stats,
+          savingThrows,
+          skills,
+        }),
+      [character, progressionData.level, stats, savingThrows, skills],
+    );
+    const proficiencyBonus = derived.proficiencyBonus;
 
-    const calculatedSkills = React.useMemo(() => {
-      return skills.map((skill) => {
-        const statKey = SKILL_STAT_MAP[skill.name];
-        if (!statKey) return skill;
-
-        const mod = Math.floor((stats[statKey] - 10) / 2);
-        const baseValue =
-          mod +
-          (skill.proficient ? proficiencyBonus : 0) +
-          (skill.expertise ? proficiencyBonus : 0);
-        const finalValue = baseValue + (skill.manualModifier || 0);
-
-        return { ...skill, value: finalValue };
-      });
-    }, [skills, stats, proficiencyBonus]);
+    const calculatedSkills = derived.skills;
 
     const passivePerception =
       10 + (calculatedSkills.find((s) => s.name === 'perception')?.value || 0);
@@ -288,16 +267,7 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
         ? character.hitPoints
         : { current: baseMaxHp, max: baseMaxHp };
 
-    const calculatedSavingThrows = React.useMemo(() => {
-      return savingThrows.map((st) => {
-        const statKey = st.name.toLowerCase() as keyof typeof stats;
-        const mod = Math.floor((stats[statKey] - 10) / 2);
-        const baseValue = mod + (st.proficient ? proficiencyBonus : 0);
-        const finalValue = baseValue + (st.manualModifier || 0);
-
-        return { ...st, value: finalValue };
-      });
-    }, [savingThrows, stats, proficiencyBonus]);
+    const calculatedSavingThrows = derived.savingThrows;
 
     const handleSaveProgression = React.useCallback(() => {
       updateCharacter(character.id, { ...progressionData });

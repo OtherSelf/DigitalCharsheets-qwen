@@ -2,6 +2,7 @@ import { CURRENT_SCHEMA_VERSION } from '../plugin-api';
 import type { ExportTranslate, GameExportConfig, GameModule } from '../types';
 import { createDnd5eDefaults } from './defaults';
 import { createDnd5eDemo } from './demo';
+import { deriveDnd5e } from './derive';
 import { dnd5eFindEmbedded, dnd5eUpdateEmbedded } from './embedded';
 import { buildDnd5eExcelSections } from './excel';
 import { buildDnd5ePortableJson } from './export';
@@ -28,6 +29,13 @@ import type { DnD5eCharacter } from './types';
  */
 export const createDefaults = createDnd5eDefaults;
 export const createDemo = createDnd5eDemo;
+
+/**
+ * Точка входа пересчёта производных (`plugin.json#derive`). Отдельный экспорт,
+ * а не поле модуля: манифест ссылается на него, и он же становится мостом в
+ * рантайм-реестр (D2).
+ */
+export const deriveCharacter = deriveDnd5e;
 
 export function toPortableJson(
   character: DnD5eCharacter,
