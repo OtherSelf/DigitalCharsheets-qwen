@@ -34,7 +34,7 @@ import { type Character } from '@/lib/types';
  * ─── LANDMARK: BULK EDITOR HOST ────────────────────────────────────────────
  * Массовый редактор. Ядро рисует оболочку (шапку, вкладки, кнопку «сохранить
  * всё», состояние сохранения) и общую таблицу, а колонки, значения, подписи и
- * сборку патча отдают плагины слотом `BulkEditor` (`ui.bulkEditor`, этап 3b).
+ * сборку патча отдают плагины слотом `BulkEditor` (`ui.BulkEditor`).
  * Поэтому здесь нет игровых констант и ветвлений по системе.
  *
  * Вкладки собираются из плагинов: `stats` — общая (карточки идут отдельными
@@ -180,7 +180,7 @@ export default function StatsEditorPage() {
   const tables = useMemo<BulkTableEntry[]>(
     () =>
       modules.flatMap((module) =>
-        (slotsById[module.id]?.bulkEditor ?? []).map((table) => ({
+        (slotsById[module.id]?.BulkEditor ?? []).map((table) => ({
           module,
           table,
         })),

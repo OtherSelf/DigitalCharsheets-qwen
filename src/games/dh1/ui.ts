@@ -31,6 +31,6 @@ export const uiSlots: GameUiSlots<DH1Character> = {
   CompactNav: dh1CompactNav,
   CardSummary: dh1CardSummary,
   HouseRulesDialog: Dh1HouseRulesDialogSlot,
-  bulkEditor: dh1BulkEditor,
+  BulkEditor: dh1BulkEditor,
   favicon: faviconSrc,
 };

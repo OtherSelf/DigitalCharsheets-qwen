@@ -31,6 +31,6 @@ export const uiSlots: GameUiSlots<DnD5eCharacter> = {
   CompactNav: dnd5eCompactNav,
   CardSummary: dnd5eCardSummary,
   HouseRulesDialog: DndHouseRulesDialogSlot,
-  bulkEditor: dnd5eBulkEditor,
+  BulkEditor: dnd5eBulkEditor,
   favicon: faviconSrc,
 };

@@ -21,7 +21,7 @@ async function tablesOf(id: string): Promise<readonly BulkEditorTable<any>[]> {
   if (cached) return cached;
   const slots = await loadGameUiSlots(id);
   if (!slots) throw new Error(`нет UI-слотов для ${id}`);
-  const tables = slots.bulkEditor ?? [];
+  const tables = slots.BulkEditor ?? [];
   tablesCache.set(id, tables);
   return tables;
 }
