@@ -150,21 +150,32 @@ function deriveSpellcastingEntry(
  * состав полей).
  */
 export function deriveDnd5e(character: DnD5eCharacter): DnD5eCharacter {
+  // Лист может быть неполным: черновик, legacy-запись, документ из миграции.
+  // Пересчитываем только то, что реально есть, и никогда не падаем — иначе
+  // сохранение упало бы на первом же неполном документе.
+  const stats = character.stats ?? {};
   const proficiencyBonus = proficiencyBonusForLevel(character.level);
-  const stats = character.stats;
 
-  const derived: DnD5eCharacter = {
-    ...character,
-    proficiencyBonus,
-    savingThrows: character.savingThrows.map((save) => ({
+  const derived: DnD5eCharacter = { ...character };
+  // Без уровня бонус мастерства не считается и поле не появляется: derive не
+  // меняет состав полей документа.
+  if (typeof character.level === 'number') {
+    derived.proficiencyBonus = proficiencyBonus;
+  }
+
+  if (Array.isArray(character.savingThrows)) {
+    derived.savingThrows = character.savingThrows.map((save) => ({
       ...save,
       value: savingThrowValue(save, stats, proficiencyBonus),
-    })),
-    skills: character.skills.map((skill) => ({
+    }));
+  }
+
+  if (Array.isArray(character.skills)) {
+    derived.skills = character.skills.map((skill) => ({
       ...skill,
       value: skillValue(skill, stats, proficiencyBonus),
-    })),
-  };
+    }));
+  }
 
   if (
     character.spellSaveDifficulty !== undefined &&

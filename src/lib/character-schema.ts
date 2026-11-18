@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 
+import { healCharacterDerive } from './character-derive';
 import { appendMigrationMarker } from './character-history';
 import {
   normalizeCharacterRecord,
@@ -23,6 +24,8 @@ export interface NormalizeCharactersReport {
   updated: number;
   /** Сколько шагов цепочек миграций применено ко всем листам. */
   migrations: number;
+  /** Сколько листов получило пересчитанные производные. */
+  derived: number;
   issues: string[];
 }
 
@@ -36,6 +39,7 @@ export function normalizeAllCharacters(): NormalizeCharactersReport {
     total: 0,
     updated: 0,
     migrations: 0,
+    derived: 0,
     issues: [],
   };
 
@@ -83,23 +87,46 @@ export function normalizeAllCharacters(): NormalizeCharactersReport {
           `users/${userEntry.name}/characters/${file}: ${issue}`,
         );
       }
-      if (!normalized.changed) continue;
+
+      // Производные «догоняют» лист, сохранённый по старой версии схемы:
+      // значения меняются, поэтому перезапись идёт по тем же правилам, что у
+      // миграции — с .bak и маркером в истории (D11/D12).
+      const beforeVersion =
+        typeof (parsed as Record<string, unknown>).schemaVersion === 'number'
+          ? Number((parsed as Record<string, unknown>).schemaVersion)
+          : 0;
+      const healed = healCharacterDerive(
+        normalized.character as unknown as Record<string, unknown>,
+        beforeVersion,
+      ) as unknown as ParsedCharacterRecord['character'];
+      const derivedChanged =
+        JSON.stringify(healed) !==
+        JSON.stringify(
+          normalized.character as unknown as Record<string, unknown>,
+        );
+
+      if (!normalized.changed && !derivedChanged) continue;
+
+      const rewritten = derivedChanged ? healed : normalized.character;
+      const rewroteValues = normalized.migrationsApplied > 0 || derivedChanged;
 
       try {
-        // Перед первой перезаписью мигрированного листа кладём рядом .bak:
-        // миграция необратима, а данные пользователя — нет.
-        if (normalized.migrationsApplied > 0) {
+        // Перед первой перезаписью листа, у которого меняются значения,
+        // кладём рядом .bak: миграция и пересчёт необратимы, а данные
+        // пользователя — нет.
+        if (rewroteValues) {
           report.migrations += normalized.migrationsApplied;
+          if (derivedChanged) report.derived += 1;
           const backupPath = `${full}.bak`;
           if (!fs.existsSync(backupPath)) {
             fs.copyFileSync(full, backupPath);
           }
         }
-        withDataLock(() => writeJsonAtomic(full, normalized.character));
+        withDataLock(() => writeJsonAtomic(full, rewritten));
         report.updated += 1;
         // Маркер пишется после лока: appendHistory при компакции берёт тот же
         // data-lock, вложенный лок — взаимоблокировка.
-        if (normalized.migrationsApplied > 0) {
+        if (rewroteValues) {
           try {
             appendMigrationMarker(userEntry.name, file.slice(0, -5));
           } catch (historyError) {

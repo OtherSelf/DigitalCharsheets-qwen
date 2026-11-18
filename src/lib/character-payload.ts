@@ -1,6 +1,7 @@
 import type { ZodType } from 'zod';
 
 import type { AnyGameModule } from '@/games/registry';
+import { applyCharacterDerive } from '@/lib/character-derive';
 import { normalizeCharacterRecord } from '@/lib/character-version';
 
 /**
@@ -157,7 +158,10 @@ export function prepareNewCharacter(
   const merged = { ...defaults, ...data, ...serverFields };
   const normalized = normalizeCharacterRecord(merged)
     .character as unknown as Record<string, unknown>;
-  const validated = validateCharacterData(module, normalized);
+  // Производные пересчитываются до ответа клиенту: иначе клиент сохранит у
+  // себя то, что прислал, и при следующем PUT вернёт это обратно.
+  const derived = applyCharacterDerive(normalized);
+  const validated = validateCharacterData(module, derived);
   if (!validated.ok) return validated;
   return { ok: true, character: validated.data };
 }

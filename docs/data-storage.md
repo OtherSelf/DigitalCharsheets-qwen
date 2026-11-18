@@ -118,7 +118,20 @@ resolves the edition and calls the plugin's `normalize`
 (`src/games/<id>/normalize.ts`); at startup/save it only remaps legacy fields
 and coerces types, while missing structures are filled with defaults only on
 import (`applyDefaults`). The migration is idempotent and writes a file only
-when it changes.
+when it changes. A rewrite caused by a migration or by a derived-value
+recalculation always leaves a `.bak` next to the sheet and appends a
+`migration` marker to its history, so a user can see why the numbers changed.
+
+### Derived values
+
+Derivative fields (skill and save values, proficiency bonus, spell save DC)
+belong to the host, not to the client: on every save the server runs the
+plugin's `derive` (`src/lib/character-derive.ts`) before `writeJsonAtomic`, so a
+sheet written by any client is self-consistent. Sheets saved under an older
+`schemaVersion` are recomputed on read and persist through the startup scan
+(again with `.bak` and a history marker). `DCS_SERVER_DERIVE=0` disables the
+recalculation as an emergency brake; `npm run plugins:doctor` reports sheets
+whose derivative values disagree with the rules on the current corpus.
 
 ### Gender (schema 5)
 

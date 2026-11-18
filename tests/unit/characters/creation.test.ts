@@ -11,7 +11,12 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { POST as charactersPost } from '@/app/api/characters/route';
 import { GET as exportGet } from '@/app/api/export/route';
-import { listGameModules, type AnyGameModule } from '@/games/registry';
+import {
+  getGamePlugin,
+  listGameModules,
+  type AnyGameModule,
+} from '@/games/registry';
+import { applyCharacterDerive } from '@/lib/character-derive';
 import { normalizeCharacterRecord } from '@/lib/character-version';
 
 import { readJson, removeDir, userPaths, useTempDataDir } from '@tests/support';
@@ -54,10 +59,14 @@ describe.each(listGameModules())(
     }
 
     function expectedSheet(data: Record<string, unknown>) {
-      return normalizeCharacterRecord({
-        ...(gameModule.createDefaults() as Record<string, unknown>),
-        ...data,
-      }).character;
+      // Сервер авторитетен для производных значений: на диске и в ответе
+      // лежит документ после `derive`, а не то, что прислал клиент (D11).
+      return applyCharacterDerive(
+        normalizeCharacterRecord({
+          ...(gameModule.createDefaults() as Record<string, unknown>),
+          ...data,
+        }).character as unknown as Record<string, unknown>,
+      );
     }
 
     it('POST создаёт лист (201) и не теряет ни одного поля', async () => {
@@ -85,6 +94,43 @@ describe.each(listGameModules())(
         userId: user.uid,
         schemaVersion: gameModule.schemaVersion,
       });
+    });
+
+    it('производные значения пересчитываются сервером при создании', async () => {
+      const plugin = getGamePlugin(gameModule.id);
+      const derivedFields = plugin?.manifest.derived ?? [];
+      if (!plugin?.derive || derivedFields.length === 0) {
+        // Плагин без `derive` — пересчитывать нечего, и это не ошибка хоста.
+        expect(plugin?.derive).toBeUndefined();
+        return;
+      }
+
+      const user = await register(`derive-${slug}`);
+      const data = { ...payload() } as Record<string, unknown>;
+      // Портим верхнеуровневое числовое производное, если оно объявлено:
+      // сервер обязан сохранить согласованный документ (D11).
+      const scalar = derivedFields.find(
+        (field) => !field.includes('[]') && typeof data[field] === 'number',
+      );
+      if (scalar) data[scalar] = 999;
+
+      const { status, body: created } = await createCharacter(user.uid, data);
+      expect(status).toBe(201);
+
+      const stored = readJson(
+        path.join(
+          userPaths(dataDir, user.uid).charactersDir,
+          `${created.id}.json`,
+        ),
+      ) as Record<string, unknown>;
+      const derived = (
+        plugin.derive as (doc: unknown) => Record<string, unknown>
+      )(expectedSheet(data));
+      for (const field of derivedFields) {
+        if (field.includes('[]')) continue;
+        if (!(field in derived)) continue;
+        expect(stored[field], `${slug}: ${field}`).toEqual(derived[field]);
+      }
     });
 
     it('системные поля персонажа сохраняются в своей ветке', async () => {

@@ -21,6 +21,7 @@
     "test": "vitest run",
     "test:plugin": "node scripts/tests/test-plugin.mjs",
     "test:layout": "node scripts/tests/check-test-layout.mjs",
+    "plugins:doctor": "vitest run tests/unit/plugins-doctor.test.ts",
     "test:watch": "vitest",
     "test:smoke": "node scripts/smoke.mjs",
     "test:dev": "node scripts/dev-smoke.mjs",
