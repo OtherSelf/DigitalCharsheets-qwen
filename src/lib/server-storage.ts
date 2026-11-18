@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 
+import { applyCharacterDerive, healCharacterDerive } from './character-derive';
 import {
   appendCreateMarker,
   appendHistory,
@@ -8,6 +9,7 @@ import {
 } from './character-history';
 import { normalizeCharacterRecord } from './character-version';
 import { getCharactersDir, getUserDir } from './data-dir';
+import { withDataLock } from './data-lock';
 import { writeJsonAtomic } from './fs-atomic';
 import { diffCharacterRecords } from './history-diff';
 import { isUid } from './ids';
@@ -121,7 +123,13 @@ export function getCharactersFromServer(userId: string): Character[] {
       try {
         const content = fs.readFileSync(path.join(charsDir, file), 'utf8');
         const parsed = JSON.parse(content) as Record<string, unknown>;
-        characters.push(normalizeCharacterRecord(parsed).character);
+        const normalized = normalizeCharacterRecord(parsed);
+        characters.push(
+          healCharacterDerive(
+            normalized.character as unknown as Record<string, unknown>,
+            typeof parsed.schemaVersion === 'number' ? parsed.schemaVersion : 0,
+          ) as unknown as Character,
+        );
       } catch (e) {
         console.error(`Error reading character file ${file}:`, e);
       }
@@ -150,9 +158,12 @@ export function getCharacterFromServer(
 
   try {
     const content = fs.readFileSync(filePath, 'utf8');
-    return normalizeCharacterRecord(
-      JSON.parse(content) as Record<string, unknown>,
-    ).character;
+    const parsed = JSON.parse(content) as Record<string, unknown>;
+    const normalized = normalizeCharacterRecord(parsed);
+    return healCharacterDerive(
+      normalized.character as unknown as Record<string, unknown>,
+      typeof parsed.schemaVersion === 'number' ? parsed.schemaVersion : 0,
+    ) as unknown as Character;
   } catch (e) {
     console.error(`Character file ${characterId} is corrupted:`, e);
     return null;
@@ -174,10 +185,16 @@ export function saveCharacterToServer(
   }
   ensureCharactersDir(userId);
   const existed = fs.existsSync(filePath);
-  writeJsonAtomic(
-    filePath,
-    normalizeCharacterRecord(character as unknown as Record<string, unknown>)
-      .character,
+  const normalized = normalizeCharacterRecord(
+    character as unknown as Record<string, unknown>,
+  ).character;
+  // Производные пересчитывает сервер: клиент мог прислать рассогласованный
+  // лист, а в файле должен лежать согласованный (D11).
+  const derived = applyCharacterDerive(
+    normalized as unknown as Record<string, unknown>,
+  );
+  withDataLock(() =>
+    writeJsonAtomic(filePath, derived as unknown as Character),
   );
   if (!existed) {
     // Маркер «лист создан» — без полного diff. История best-effort: её сбой
@@ -257,23 +274,29 @@ export function updateCharacterOnServer(
     ...data,
   } as Record<string, unknown>).character;
 
-  // Считаем diff до записи и до добавления userId владельца: служебные поля
-  // в историю не попадают, а сравнение идёт по содержанию листа.
+  // Производные пересчитываются до diff и до записи: в файл и в историю
+  // попадает то, что увидит игрок, а не то, что прислал клиент (D11).
+  const derived = applyCharacterDerive(
+    updated as unknown as Record<string, unknown>,
+  ) as unknown as Character;
+
+  // Считаем diff до добавления userId владельца: служебные поля в историю не
+  // попадают, а сравнение идёт по содержанию листа.
   const diff = diffCharacterRecords(
     character as unknown as Record<string, unknown>,
-    updated as unknown as Record<string, unknown>,
+    derived as unknown as Record<string, unknown>,
   );
 
   // Привязка к владельцу. Поле не входит в тип Character (это метаданные,
   // авторизация — по каталогу и cookie), но на диске оно должно быть: так
   // «плоский» бэкап и диагностика видят, чей это лист. Дописываем, если лист
   // пришёл из миграции/импорта без него.
-  const withOwner = updated as unknown as Record<string, unknown>;
+  const withOwner = derived as unknown as Record<string, unknown>;
   if (!withOwner.userId) {
     withOwner.userId = userId;
   }
 
-  writeJsonAtomic(filePath, updated);
+  withDataLock(() => writeJsonAtomic(filePath, derived));
 
   if (diff && isUid(userId)) {
     // Журнал не должен ломать сохранение: лист уже записан, ошибку только
@@ -287,7 +310,7 @@ export function updateCharacterOnServer(
       );
     }
   }
-  return updated;
+  return derived;
 }
 
 // УДАЛЕНИЕ: файл листа; true — удалили, false — файла не было или он занят.

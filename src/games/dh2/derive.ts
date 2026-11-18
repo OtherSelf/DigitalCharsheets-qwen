@@ -11,6 +11,9 @@ import type { DH2Character } from './types';
  * Пересчёт чистый и идемпотентный; состав полей не меняет (D14).
  */
 export function deriveDh2(character: DH2Character): DH2Character {
+  // Неполный документ (черновик, legacy) не должен ломать сохранение: правим
+  // только те структуры, которые в нём есть.
+  if (!Array.isArray(character.skills)) return { ...character };
   return {
     ...character,
     skills: character.skills.map((skill) => ({
