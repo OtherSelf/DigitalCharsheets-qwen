@@ -259,6 +259,11 @@
           "description": {
             "type": "string",
             "minLength": 1
+          },
+          "removes": {
+            "description": "Поля верхнего уровня, которые шаг удаляет сознательно (значения должны быть перенесены, например в notes).",
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
           }
         }
       }

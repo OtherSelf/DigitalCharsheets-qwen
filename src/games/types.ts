@@ -184,7 +184,18 @@ export interface GameExportAdapter<TCharacter extends CharacterRecord> {
 export interface CharacterMigration {
   readonly from: number;
   readonly to: number;
-  migrate(raw: Readonly<Record<string, unknown>>): Record<string, unknown>;
+  /**
+   * Привести лист версии `from` к версии `to`. Возвращается документ целиком:
+   * шаг вправе удалить поле, а не только добавить.
+   *
+   * `warnings` — канал отчёта: шаг сообщает, что именно он перенёс или не
+   * распознал. Они попадают в `issues` нормализации, чтобы оператор и тесты
+   * видели миграцию, а не молчаливое изменение.
+   */
+  migrate(
+    raw: Readonly<Record<string, unknown>>,
+    warnings: string[],
+  ): Record<string, unknown>;
 }
 
 /**

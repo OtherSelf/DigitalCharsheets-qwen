@@ -25,6 +25,18 @@ import type { ExampleCharacter } from './types';
 export const createDefaults = createExampleDefaults;
 export const createDemo = createExampleDemo;
 
+/**
+ * Шаг цепочки миграций фикстуры: `1 → 2` — дискриминант редакции. Он нужен,
+ * чтобы фикстура проходила тот же гейт, что и боевые плагины.
+ */
+export function migrateV1toV2(
+  character: Readonly<Record<string, unknown>>,
+): Record<string, unknown> {
+  const next = { ...character };
+  delete next.edition;
+  return next;
+}
+
 export function toPortableJson(
   character: ExampleCharacter,
   config: GameExportConfig,
@@ -63,5 +75,5 @@ export const exampleModule: GameModule<ExampleCharacter> = {
       import('./sheet').then((module) => ({ default: module.ExampleSheet })),
   },
   export: { toPortableJson, buildExcelSections },
-  migrations: [],
+  migrations: [{ from: 1, to: 2, migrate: migrateV1toV2 }],
 };

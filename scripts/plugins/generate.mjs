@@ -158,7 +158,35 @@ export function validatePluginFolder({ gamesDir, dirName, manifest }) {
   const migrations = [...(manifest.migrations ?? [])].sort(
     (a, b) => a.from - b.from,
   );
-  if (migrations.length > 0) {
+
+  for (const [index, migration] of migrations.entries()) {
+    const removes = migration.removes;
+    if (removes === undefined) continue;
+    if (!Array.isArray(removes)) {
+      errors.push(`migrations[${index}].removes: ожидается массив имён полей`);
+      continue;
+    }
+    const duplicated = removes.filter(
+      (field, position) =>
+        typeof field === 'string' && removes.indexOf(field) !== position,
+    );
+    if (duplicated.length > 0) {
+      errors.push(
+        `migrations[${index}].removes: повторяющиеся поля (${[...new Set(duplicated)].join(', ')})`,
+      );
+    }
+  }
+  // Гейт: версионированная схема обязана объявлять путь из v1. Пока цепочка
+  // была необязательной, все три плагина жили с `migrations: []` и
+  // `schemaVersion` 2/5/5 — то есть без объявленного пути вообще.
+  if (migrations.length === 0) {
+    if (manifest.schemaVersion > 1) {
+      errors.push(
+        `migrations: schemaVersion ${manifest.schemaVersion}, но цепочка пуста — ` +
+          `нужны шаги 1 → ${manifest.schemaVersion}`,
+      );
+    }
+  } else {
     let expected = 1;
     for (const migration of migrations) {
       if (migration.from !== expected) {

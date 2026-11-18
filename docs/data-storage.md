@@ -109,7 +109,21 @@ skipped rather than failing the whole list.
 `CharacterBase.schemaVersion` is per module: `dnd5e` stays at `2`, Dark Heresy
 modules write `5` (`src/games/dh1/schema-version.ts`,
 `src/games/dh2/schema-version.ts`) after the DH1APP, 2e-generation,
-structured-conditions and canonical-gender field sets.
+structured-conditions and canonical-gender field sets. Each plugin declares the
+chain in `plugin.json` and implements the steps in `migrations.ts`, so the
+versions mean the same thing for the code, the migration and the docs:
+
+| Version | Change | Step |
+| --- | --- | --- |
+| 1 | DH divination phrases became stable ids; `schemaVersion` appeared | — |
+| 2 | Edition discriminator: `systemId` instead of `gameSystem`/`edition` | `migrateV1toV2` |
+| 3 | Edition field sets separated: DH1 drops `influence`/`fatigue2nd` (→ `notes`), DH2 gains `influence` and `fatigue2nd` | `migrateV2toV3` |
+| 4 | Conditions are structured records (`conditions[]`) instead of free text | `migrateV3toV4` |
+| 5 | Gender is a canonical code (`male`/`female`/`unspecified`), old text → `notes` | `migrateV4toV5` |
+
+`dnd5e` has a single step (`1 → 2`): the same edition discriminator, nothing
+else. The steps call the same phase functions as `normalize`, so the chain and
+the read-time normalization cannot drift apart.
 Legacy files without the field or with `2` are migrated on startup by
 `src/lib/character-schema.ts` and lazily on read/save by
 `normalizeCharacterRecord` (`src/lib/character-version.ts`); the file is

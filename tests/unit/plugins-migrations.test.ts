@@ -48,17 +48,14 @@ describe('пустая цепочка миграций видна в отчёт�
     expect(warnings[0]).toContain('1 → 3');
   });
 
-  it('в сгенерированном отчёте предупреждение есть у каждого отставшего плагина', async () => {
+  it('в отчёте генератора предупреждений нет: цепочки объявлены', async () => {
     const { buildRegistry } =
       (await import('../../scripts/plugins/generate.mjs')) as unknown as Generator;
     const { plugins, warnings } = buildRegistry();
     const behind = plugins.filter((item) => item.schemaVersion > 1);
     expect(behind.length).toBeGreaterThan(0);
-    for (const item of behind) {
-      expect(
-        warnings.filter((warning) => warning.startsWith(`${item.id}:`)),
-        item.id,
-      ).toHaveLength(1);
-    }
+    // С тех пор как цепочки появились, гейт обязателен: пустая цепочка —
+    // ошибка манифеста, а не предупреждение.
+    expect(warnings).toEqual([]);
   });
 });

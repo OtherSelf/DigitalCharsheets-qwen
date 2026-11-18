@@ -62,7 +62,36 @@
     "skills[].training.plus20",
     "skills[].training.plus30"
   ],
-  "migrations": [],
+  "migrations": [
+    {
+      "from": 1,
+      "to": 2,
+      "entry": "index.ts#migrateDh1V1toV2",
+      "description": "дискриминант редакции: systemId, legacy edition убран",
+      "removes": ["edition"]
+    },
+    {
+      "from": 2,
+      "to": 3,
+      "entry": "index.ts#migrateDh1V2toV3",
+      "description": "поля 2-й редакции убраны, значения перенесены в notes",
+      "removes": ["fatigue2nd"]
+    },
+    {
+      "from": 3,
+      "to": 4,
+      "entry": "index.ts#migrateDh1V3toV4",
+      "description": "состояния стали структурными записями conditions",
+      "removes": []
+    },
+    {
+      "from": 4,
+      "to": 5,
+      "entry": "index.ts#migrateDh1V4toV5",
+      "description": "пол хранится каноническим кодом, старый текст в notes",
+      "removes": []
+    }
+  ],
   "tests": {
     "conformance": ">=1"
   },

@@ -13,6 +13,12 @@ import {
   dh1MatchesLegacyImport,
 } from './legacy-import';
 import { mergeDh1Data } from './merge';
+import {
+  migrateDh1V1toV2,
+  migrateDh1V2toV3,
+  migrateDh1V3toV4,
+  migrateDh1V4toV5,
+} from './migrations';
 import { normalizeDh1 } from './normalize';
 import { dh1CharacterSchema } from './schema';
 import { DH1_SCHEMA_VERSION } from './schema-version';
@@ -32,6 +38,13 @@ export const createDefaults = createDh1Defaults;
  * рантайм-реестр, пока GameModule не слился с GamePlugin (D2).
  */
 export const deriveCharacter = deriveDh1;
+
+export {
+  migrateDh1V1toV2,
+  migrateDh1V2toV3,
+  migrateDh1V3toV4,
+  migrateDh1V4toV5,
+} from './migrations';
 export const createDemo = createDh1Demo;
 
 export function toPortableJson(
@@ -86,7 +99,12 @@ export const dh1Module: GameModule<DH1Character> = {
     toPortableJson,
     buildExcelSections,
   },
-  migrations: [],
+  migrations: [
+    { from: 1, to: 2, migrate: migrateDh1V1toV2 },
+    { from: 2, to: 3, migrate: migrateDh1V2toV3 },
+    { from: 3, to: 4, migrate: migrateDh1V3toV4 },
+    { from: 4, to: 5, migrate: migrateDh1V4toV5 },
+  ],
   history: dh1History,
   matchesLegacyImport: dh1MatchesLegacyImport,
   legacyImportName: dh1LegacyImportName,

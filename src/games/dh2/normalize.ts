@@ -110,7 +110,7 @@ function appendMigrationNote(raw: RawRecord, line: string): void {
  * добавляется один раз — иначе каждый прогон нормализации дописывал бы его
  * заново (миграция обязана быть идемпотентной).
  */
-function migrateGender(character: RawRecord, warnings: string[]): void {
+export function migrateGender(character: RawRecord, warnings: string[]): void {
   const resolution = resolveGender(character.gender);
   character.gender = resolution.code;
   const legacy = resolution.legacyText;
@@ -140,7 +140,10 @@ function toFiveFlags(value: unknown): boolean[] {
   return Array.from({ length: 5 }, (_, index) => Boolean(source[index]));
 }
 
-function migrateLegacyFields(character: RawRecord, warnings: string[]): void {
+export function migrateLegacyFields(
+  character: RawRecord,
+  warnings: string[],
+): void {
   const moved: string[] = [];
   for (const [key, label] of Object.entries(LEGACY_FIELDS)) {
     const value = character[key];
@@ -216,11 +219,14 @@ function fillDefaults(character: RawRecord): void {
  * DH2: структурированные состояния аддитивны, миграции текстов нет (D7/D17).
  * Пустой массив — значение по умолчанию, счётчики Безумия/Порчи остаются.
  */
-function ensureConditions(character: RawRecord): void {
+export function ensureConditions(character: RawRecord): void {
   if (!Array.isArray(character.conditions)) character.conditions = [];
 }
 
-function enforceDh2Fields(character: RawRecord, warnings: string[]): void {
+export function enforceDh2Fields(
+  character: RawRecord,
+  warnings: string[],
+): void {
   const stats = asRecord(character.stats);
   const upgrades = asRecord(character.statUpgrades);
   const notes = asRecord(character.statNotes);

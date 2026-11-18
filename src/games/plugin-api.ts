@@ -116,6 +116,12 @@ export interface PluginMigrationManifest {
   readonly to: number;
   readonly entry: string;
   readonly description?: string;
+  /**
+   * Поля верхнего уровня, которые шаг удаляет сознательно. Проверка lossless
+   * (`tests/unit/plugin-conformance.test.ts`) разрешает потерять только их:
+   * остальные ключи обязаны пережить цепочку.
+   */
+  readonly removes?: readonly string[];
 }
 
 /**
