@@ -195,8 +195,10 @@ Rules:
   `/api/import` endpoint was removed).
 - `ui` is not set on the module object anymore — slots live in `ui.ts`.
 - `history` (SDK 1.1, optional) — `labels` (`path → i18n key`), `collections`
-  (array path → title key) and `itemLabelFields` used by the owner-only change
-  history screen; unknown paths fall back to a humanised path.
+  (array path → title key), `itemLabelFields`, `valueLabels` (code → key) and an
+  optional `formatValue(path, value, t)` for values that need a parser (arrays
+  of ids, nested objects, enums). Unknown paths fall back to a humanised path;
+  unknown values fall back to a readable representation.
 
 ## UI slots
 

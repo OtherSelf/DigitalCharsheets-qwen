@@ -87,7 +87,7 @@ export function resolveHistoryLabel(
       config?.collections?.[change.path] ?? config?.labels?.[change.path];
     const base = collectionKey
       ? t(collectionKey)
-      : humanizeHistoryPath(change.path);
+      : resolveBySegments(change.path, config, t);
     const item = change.label ?? change.key;
     const fieldKey = change.field
       ? (config?.labels?.[fieldPath] ?? config?.labels?.[change.field] ?? null)
@@ -113,9 +113,11 @@ export function resolveHistoryLabel(
 }
 
 /**
- * Текстовое представление значения для строки «было/стало». Кодовые значения
- * (`gender: "female"`) переводятся через `config.valueLabels`: путь берётся
- * точным (`identity.gender`), а если его нет — по последнему сегменту.
+ * Текстовое представление значения для строки «было/стало». Сначала плагин
+ * через `formatValue` переводит доменные коды (мир, склонности, пол), затем
+ * общие правила: булевы — «да/нет», массивы — элементы через запятую,
+ * объекты — подпись элемента или текст задачи, `null` — прочерк. Сырой JSON
+ * остаётся последним средством, а не обычным видом истории.
  */
 export function formatHistoryValue(
   value: StoredValue | undefined,
@@ -129,22 +131,77 @@ export function formatHistoryValue(
   if (value.truncated === true) {
     return value.preview ?? '';
   }
-  if (value.value === null) return 'null';
-  if (typeof value.value === 'string') {
-    const { config, path, t } = context;
+
+  const raw = value.value;
+  const { config, path, t } = context;
+
+  if (raw === null || raw === undefined) return '—';
+
+  if (config?.formatValue && path) {
+    const formatted = config.formatValue(path, raw, t ?? ((key) => key));
+    if (formatted !== undefined) return formatted;
+  }
+
+  if (typeof raw === 'boolean') {
+    return t ? t(raw ? 'common.yes' : 'common.no') : String(raw);
+  }
+
+  if (typeof raw === 'string') {
+    const last = path?.split('.').pop();
+    if (last === 'status' && t) {
+      if (raw === 'active') return t('common.questActive');
+      if (raw === 'completed') return t('common.questDone');
+      if (raw === 'default') return t('common.itemStatusDefault');
+      if (raw === 'lost') return t('common.itemStatusLost');
+    }
+    if (last === 'priority' && t) {
+      if (raw === 'main') return t('common.mainQuest');
+      if (raw === 'side') return t('common.sideQuest');
+      if (raw === 'personal') return t('common.personalQuest');
+    }
     if (config?.valueLabels && path && t) {
-      const last = path.split('.').pop() ?? path;
-      const labels = config.valueLabels[path] ?? config.valueLabels[last];
-      const key = labels?.[value.value];
+      const lastSegment = path.split('.').pop() ?? path;
+      const labels =
+        config.valueLabels[path] ?? config.valueLabels[lastSegment];
+      const key = labels?.[raw];
       if (key) return t(key);
     }
-    return value.value;
+    return raw;
   }
-  try {
-    return JSON.stringify(value.value) ?? '';
-  } catch {
-    return String(value.value);
+
+  if (Array.isArray(raw)) {
+    if (raw.length === 0) return '—';
+    return raw
+      .map((item) =>
+        formatHistoryValue({ value: item } as StoredValue, context),
+      )
+      .join(', ');
   }
+
+  if (typeof raw === 'object') {
+    const record = raw as Record<string, unknown>;
+    // Задача квеста: «✓ текст» / «· текст».
+    if (typeof record.text === 'string' && 'completed' in record) {
+      return `${record.completed ? '✓' : '·'} ${record.text}`;
+    }
+    const fields = config?.itemLabelFields ?? [
+      'name',
+      'title',
+      'description',
+      'label',
+    ];
+    for (const field of fields) {
+      const label = record[field];
+      if (typeof label === 'string' && label.trim() !== '') return label;
+    }
+    try {
+      return JSON.stringify(raw) ?? '';
+    } catch {
+      return String(raw);
+    }
+  }
+
+  return String(raw);
 }
 
 /** Дата/время для таймлайна; язык выбирает вызывающий. */

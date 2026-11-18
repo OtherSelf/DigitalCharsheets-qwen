@@ -460,6 +460,20 @@ function diffArray(
   const afterPrimitive = isPrimitiveArray(after);
 
   if (beforePrimitive && afterPrimitive) {
+    // Булевы массивы (продвижения характеристик) — набор галочек, а не
+    // список значений: показываем весь набор, иначе история писала бы
+    // «добавлено true, удалено false».
+    const beforeBooleans = before.every((item) => typeof item === 'boolean');
+    const afterBooleans = after.every((item) => typeof item === 'boolean');
+    if (beforeBooleans && afterBooleans) {
+      addChange(changes, {
+        kind: 'changed',
+        path,
+        before: storeValue(before, maxChars),
+        after: storeValue(after, maxChars),
+      });
+      return;
+    }
     diffPrimitiveArray(path, before, after, changes, maxChars);
     return;
   }
