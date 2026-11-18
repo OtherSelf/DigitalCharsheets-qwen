@@ -541,6 +541,30 @@ ${gameKeys('ru')}
 }
 
 /**
+ * Предупреждения набора: манифест валиден, но описывает контракт не полностью.
+ *
+ * Сейчас это пустая цепочка миграций при `schemaVersion > 1`: гейт на неё
+ * вводится отдельно (этап 4), а до тех пор молчать нельзя — иначе «проверено»
+ * означает «проверка не запускалась».
+ *
+ * @param {{dirName: string, manifest: any}[]} plugins
+ * @returns {string[]}
+ */
+export function collectWarnings(plugins) {
+  const warnings = [];
+  for (const { dirName, manifest } of plugins) {
+    const steps = (manifest.migrations ?? []).length;
+    if (manifest.schemaVersion > 1 && steps === 0) {
+      warnings.push(
+        `${dirName}: schemaVersion ${manifest.schemaVersion}, но migrations пуст — ` +
+          `цепочки 1 → ${manifest.schemaVersion} нет`,
+      );
+    }
+  }
+  return warnings;
+}
+
+/**
  * Полный цикл: манифесты → проверки → текст реестра.
  *
  * @param {{gamesDir?: string, schemaPath?: string}} [options]
@@ -576,6 +600,7 @@ export function buildRegistry({
   }
 
   return {
+    warnings: collectWarnings(plugins),
     plugins: [...plugins]
       .sort(
         (a, b) =>
@@ -618,15 +643,23 @@ function main(argv) {
     return 0;
   }
 
-  const { plugins, content, i18nContent, gamesContent } = buildRegistry();
+  const { plugins, warnings, content, i18nContent, gamesContent } =
+    buildRegistry();
   const summary = plugins
     .map((plugin) => `${plugin.id}@${plugin.version} (order ${plugin.order})`)
     .join(', ');
 
+  // Предупреждения не гейт: они печатаются всегда (и в JSON), чтобы пустая
+  // цепочка миграций была видна в отчёте, а не только в чьей-то памяти.
+  const printWarnings = () => {
+    for (const warning of warnings) console.warn(`⚠ ${warning}`);
+  };
+
   if (flags.has('--json')) {
-    console.log(JSON.stringify({ plugins }, null, 2));
+    console.log(JSON.stringify({ plugins, warnings }, null, 2));
     return 0;
   }
+  printWarnings();
 
   if (flags.has('--check')) {
     const targets = [
@@ -667,6 +700,11 @@ function main(argv) {
   console.log(
     `✓ registry/i18n/games.generated.ts: ${plugins.length} плагин(ов) · ${summary}`,
   );
+  if (warnings.length > 0) {
+    console.log(
+      `  предупреждений: ${warnings.length} (гейт на цепочки миграций — этап 4)`,
+    );
+  }
   return 0;
 }
 

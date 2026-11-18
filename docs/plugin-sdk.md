@@ -161,7 +161,11 @@ Rules:
 - `migrations` order is the apply order; a non-empty chain must cover
   `1 → … → schemaVersion` without gaps. The runner applies steps in order, only
   to sheets older than the step, and writes a `.bak` before the first migrated
-  rewrite. Unknown future versions are never overwritten.
+  rewrite. Unknown future versions are never overwritten. A manifest with
+  `schemaVersion > 1` and an empty `migrations` array is reported as a warning
+  by `npm run plugins:check` (and in the `--json` report), so a missing chain is
+  visible at build time; the warning lists the exact plugin and the expected
+  `1 → N` range.
 - `tests.conformance` is metadata for CI/admin, never executed at runtime (D7).
 
 ## Game families and the generated list
