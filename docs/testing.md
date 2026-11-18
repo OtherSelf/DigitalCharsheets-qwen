@@ -401,3 +401,12 @@ Useful flags: `--skip-build`, `--skip-unit`, `--skip-smoke`, `--base-url URL`,
 - [development.md](development.md) — scripts and code style
 - [admin.md](admin.md) — admin behaviour covered by the tests
 - [api.md](api.md) — endpoints covered by smoke/OpenAPI tests
+
+## Test layout ratchet
+
+`npm run test:layout` (`scripts/tests/check-test-layout.mjs`) keeps tests of a
+single edition out of the host and caps file size. It also ratchets **game
+mentions** in `tests/visual/**` and `tests/support/**`: the number of
+identifiers and string literals that name an edition may only go down
+(`GAME_MENTION_ALLOWANCE`, each entry with a reason and a removal deadline).
+An empty entry is an error — debt has to be removed, not parked.

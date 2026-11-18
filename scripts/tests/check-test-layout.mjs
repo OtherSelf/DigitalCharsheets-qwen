@@ -29,9 +29,96 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const UNIT_DIR = join(ROOT, 'tests/unit');
+const VISUAL_DIR = join(ROOT, 'tests/visual');
+const SUPPORT_DIR = join(ROOT, 'tests/support');
 const GAMES_DIR = join(ROOT, 'src/games');
 const LIMIT = 400;
 const CORE_GAMES_DIRS = new Set(['shared', 'i18n']);
+
+/**
+ * Игровые упоминания в `tests/visual` и `tests/support`: сценарий одной
+ * редакции должен жить в `src/games/<id>/tests/`, но пока часть общих спеков
+ * упоминает игры напрямую. Храповик фиксирует текущее число: больше нельзя,
+ * меньше — можно. `removeBy` — срок, к которому файл переезжает.
+ *
+ * Счёт — вхождения идентификаторов и строк (`Dungeons`, `dnd5e`,
+ * `makeDndCharacter`, `sheet-dnd-…`), а не строки: имя селектора и имя
+ * фикстуры одинаково важны.
+ */
+const GAME_MENTION_ALLOWANCE = {
+  'tests/visual/pages.spec.ts': {
+    max: 23,
+    reason:
+      'общие страницы проверяются на живых играх; сценарии редакций переезжают в плагины',
+    removeBy: 'этап 8 трекера плагинов',
+  },
+  'tests/visual/dialogs.spec.ts': {
+    max: 7,
+    reason: 'диалоги листов DH/D&D снимаются из общего спека',
+    removeBy: 'этап 8 трекера плагинов',
+  },
+  'tests/visual/i18n-raw.spec.ts': {
+    max: 6,
+    reason: 'сырые ключи словарей проверяются на реальных редакциях',
+    removeBy: 'этап 8 трекера плагинов',
+  },
+  'tests/support/fixtures.ts': {
+    max: 5,
+    reason:
+      'makeDndCharacter/makeDhCharacter — тест-кит хоста; заменяются фикстурами example-plugin',
+    removeBy: 'этап 8 трекера плагинов',
+  },
+  'tests/visual/admin.spec.ts': {
+    max: 4,
+    reason: 'админка проверяется на листах двух редакций',
+    removeBy: 'этап 8 трекера плагинов',
+  },
+  'tests/visual/form-validation.spec.ts': {
+    max: 4,
+    reason: 'валидация формы проверяется на живых редакциях',
+    removeBy: 'этап 8 трекера плагинов',
+  },
+  'tests/visual/history.spec.ts': {
+    max: 4,
+    reason: 'история листа проверяется на живых редакциях',
+    removeBy: 'этап 8 трекера плагинов',
+  },
+  'tests/visual/basic-pages.spec.ts': {
+    max: 3,
+    reason: 'базовые страницы используют листы редакций',
+    removeBy: 'этап 8 трекера плагинов',
+  },
+  'tests/visual/creation.spec.ts': {
+    max: 3,
+    reason: 'мастер создания проверяется на живых редакциях',
+    removeBy: 'этап 8 трекера плагинов',
+  },
+  'tests/visual/helpers.ts': {
+    max: 3,
+    reason: 'хелперы визуальных тестов знают имена редакций для навигации',
+    removeBy: 'этап 8 трекера плагинов',
+  },
+  'tests/visual/tablet.spec.ts': {
+    max: 3,
+    reason: 'планшетный сценарий листа DH1',
+    removeBy: 'этап 8 трекера плагинов',
+  },
+  'tests/visual/fixtures.ts': {
+    max: 1,
+    reason: 'фикстуры визуальных тестов ссылаются на лист DH',
+    removeBy: 'этап 8 трекера плагинов',
+  },
+  'tests/visual/locale.spec.ts': {
+    max: 1,
+    reason: 'локаль проверяется на листе D&D',
+    removeBy: 'этап 8 трекера плагинов',
+  },
+  'tests/support/character-payloads.ts': {
+    max: 1,
+    reason: 'тестовая payload-фабрика знает имя системы',
+    removeBy: 'этап 8 трекера плагинов',
+  },
+};
 
 /**
  * Исключения из лимита. Потолок фиксирует текущий размер: файл может только
@@ -123,6 +210,67 @@ for (const absolute of walk(UNIT_DIR)) {
     result.errors.push(
       `${name}: тест одной редакции (${game}) должен лежать в ` +
         `src/games/${game}/tests/unit/. Кросс-эдишн тест импортирует две игры.`,
+    );
+  }
+}
+
+// ── игровые упоминания в visual/support ────────────────────────────────────
+const GAME_TOKEN_RE =
+  /dnd5e|dh1e|dh2e|dh1|dh2|Dungeons|Dark Heresy|makeDndCharacter|makeDhCharacter/g;
+
+function walkByExtension(dir, extensions, acc = []) {
+  let entries = [];
+  try {
+    entries = readdirSync(dir, { withFileTypes: true });
+  } catch {
+    return acc;
+  }
+  for (const entry of entries) {
+    const absolute = join(dir, entry.name);
+    if (entry.isDirectory()) {
+      if (entry.name === '__screenshots__') continue;
+      walkByExtension(absolute, extensions, acc);
+    } else if (
+      entry.isFile() &&
+      extensions.some((ext) => entry.name.endsWith(ext))
+    ) {
+      acc.push(absolute);
+    }
+  }
+  return acc;
+}
+
+const mentionFiles = [
+  ...walkByExtension(VISUAL_DIR, ['.ts', '.tsx']),
+  ...walkByExtension(SUPPORT_DIR, ['.ts', '.tsx']),
+];
+
+for (const absolute of mentionFiles) {
+  const name = relative(ROOT, absolute).split('\\').join('/');
+  const source = readFileSync(absolute, 'utf8');
+  const count = (source.match(GAME_TOKEN_RE) ?? []).length;
+  if (count === 0) {
+    if (GAME_MENTION_ALLOWANCE[name]) {
+      result.errors.push(
+        `${name}: игровых упоминаний больше нет — удалите запись из ` +
+          'GAME_MENTION_ALLOWANCE (храповик не разрешает пустых исключений).',
+      );
+    }
+    continue;
+  }
+  const allowance = GAME_MENTION_ALLOWANCE[name];
+  if (!allowance) {
+    result.errors.push(
+      `${name}: ${count} игровых упоминаний. Сценарий одной редакции живёт в ` +
+        'src/games/<id>/tests/; добавьте запись в GAME_MENTION_ALLOWANCE с причиной ' +
+        'и сроком, если файл общий.',
+    );
+    continue;
+  }
+  if (count > allowance.max) {
+    result.errors.push(
+      `${name}: ${count} игровых упоминаний > потолка ${allowance.max}. ` +
+        'Храповик не разрешает рост.',
     );
   }
 }

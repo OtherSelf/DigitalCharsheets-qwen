@@ -97,6 +97,16 @@ export function validateCharacterData(
   if (!parsed.success) {
     return { ok: false, issues: toIssues(parsed.error) };
   }
+  // Имя — единственное поле, которое ядро знает у всех редакций: лист без
+  // имени нельзя отличить в списке. Пустое имя в черновике допустимо, в
+  // запросе на сохранение — нет.
+  const name = (parsed.data as Record<string, unknown>).name;
+  if (typeof name === 'string' && name.trim() === '') {
+    return {
+      ok: false,
+      issues: [{ path: 'name', message: 'Name must not be empty' }],
+    };
+  }
   // `looseObject` возвращает данные с сохранёнными неизвестными вложенными
   // полями: доверяем схеме модуля и пишем ровно то, что она приняла.
   return { ok: true, data: parsed.data as Record<string, unknown> };
