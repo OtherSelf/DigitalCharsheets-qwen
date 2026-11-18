@@ -6,32 +6,18 @@ import { describe, expect, it } from 'vitest';
 import * as dh1Data from '@/games/dh1/dark-heresy-data';
 import { dh1CardSummary } from '@/games/dh1/slots/card-summary';
 import { STARTING_PACKAGES } from '@/games/dh1/starting-packages';
-import {
-  DH2E_APTITUDES,
-  DH2E_BACKGROUNDS,
-  DH2E_DIVINATIONS,
-  DH2E_HOMEWORLDS,
-  DH2E_ROLES,
-} from '@/games/dh2/dh2e-data';
-import {
-  DH2E_DISCIPLINES,
-  DH2E_ELITES,
-  DH2E_POWERS,
-  DH2E_SKILLS,
-  DH2E_TALENTS,
-} from '@/games/dh2/dh2e-reference';
-import { DH2E_SKILL_TIERS, DH2E_STAT_STEPS } from '@/games/dh2/dh2e-rules';
-import { dh2CardSummary } from '@/games/dh2/slots/card-summary';
 import { translations } from '@/lib/i18n';
 
 /**
- * ─── LANDMARK: DH DATA I18N GUARD ─────────────────────────────────────────
- * Справочные карты DH (`HOME_WORLD_KEYS`, `RANK_KEYS`, …) отдают ключи
- * словаря. Раньше они жили в «виртуальном» домене `dh.*`, который
- * дорисовывался до `dh1.*`/`dh2.*` в момент вызова — и любой пропущенный
- * вызов показывал в UI сырой ключ (`dh.rankScholar`). После этапа 5 карты
- * содержат готовые ключи редакции, а этот тест следит, чтобы домен `dh.*`
- * не вернулся и чтобы все ключи реально были в обоих словарях.
+ * ─── LANDMARK: DH1 DATA I18N GUARD ───────────────────────────────────────
+ * Справочные карты 1e (`HOME_WORLD_KEYS`, `RANK_KEYS`, …) отдают готовые
+ * ключи домена `dh1.*`; виртуального домена `dh.*` в `src/games` быть не
+ * должно, иначе в UI уходит сырой ключ. Каждый ключ обязан быть в обоих
+ * словарях.
+ *
+ * Проверка литералов `dh.*` общая для репозитория и дублируется в тесте dh2
+ * (D16): сузить её до своего каталога — значит молча пропустить нарушение в
+ * соседнем плагине.
  */
 
 const ROOT = process.cwd();
@@ -52,30 +38,6 @@ const DH1_DATA_MAPS = [
   ['CAREER_KEYS', dh1Data.CAREER_KEYS],
   ['RANK_KEYS', dh1Data.RANK_KEYS],
 ] as const;
-
-/** Все ключи данных 2e: они обязаны быть в обоих словарях. */
-const DH2_DATA_KEYS: readonly string[] = [
-  ...DH2E_HOMEWORLDS.flatMap((item) => [item.labelKey, item.bonusKey]),
-  ...DH2E_BACKGROUNDS.flatMap((item) => [
-    item.labelKey,
-    ...item.bonusKeys,
-    ...(item.startingTraits?.keys ?? []),
-  ]),
-  ...DH2E_ROLES.flatMap((item) => [item.labelKey, item.bonusKey]),
-  ...DH2E_APTITUDES.map((item) => item.labelKey),
-  ...DH2E_DIVINATIONS.flatMap((item) => [item.textKey, item.effectKey]),
-  ...DH2E_SKILLS.map((item) => item.labelKey),
-  ...DH2E_TALENTS.map((item) => item.labelKey),
-  ...DH2E_DISCIPLINES.map((item) => item.labelKey),
-  ...DH2E_POWERS.map((item) => item.labelKey),
-  ...DH2E_ELITES.flatMap((item) => [
-    item.labelKey,
-    ...item.changeKeys,
-    `dh2.elitePrereq.${item.id}`,
-  ]),
-  ...DH2E_STAT_STEPS.map((item) => item.labelKey),
-  ...DH2E_SKILL_TIERS.map((item) => item.labelKey),
-];
 
 /** Особенности миров 1e: имя и механика — обязательные ключи обеих локалей. */
 const DH1_FEATURE_KEYS: readonly string[] = Object.values(
@@ -146,18 +108,6 @@ describe('Dark Heresy: ключи справочных данных', () => {
     expect(missing).toEqual([]);
   });
 
-  it('каждый ключ данных 2e есть в en и ru словарях', () => {
-    const missing: string[] = [];
-    for (const key of DH2_DATA_KEYS) {
-      for (const lang of ['en', 'ru'] as const) {
-        if (!(key in translations[lang])) {
-          missing.push(`${key} (${lang})`);
-        }
-      }
-    }
-    expect(missing).toEqual([]);
-  });
-
   it('карточка DH1 показывает переведённый ранг, а не ключ словаря', () => {
     for (const lang of ['en', 'ru'] as const) {
       const t = (key: string) => translations[lang][key] ?? key;
@@ -167,22 +117,6 @@ describe('Dark Heresy: ключи справочных данных', () => {
       );
       expect(result.text).toBe(
         `${t(dh1Data.RANK_KEYS.Scholar)} ${t(dh1Data.CAREER_KEYS.Adept)}`,
-      );
-      expect(result.text).not.toMatch(/\bdh[12]?\.[A-Za-z]/);
-    }
-  });
-
-  it('карточка DH2 показывает бэкграунд и роль 2e', () => {
-    for (const lang of ['en', 'ru'] as const) {
-      const t = (key: string) => translations[lang][key] ?? key;
-      const result = dh2CardSummary(
-        { background: 'adeptus-arbites', role: 'warrior' } as never,
-        t,
-      );
-      expect(result.text).toBe(
-        `${t('dh2.catalog.background.adeptus-arbites')} / ${t(
-          'dh2.catalog.role.warrior',
-        )}`,
       );
       expect(result.text).not.toMatch(/\bdh[12]?\.[A-Za-z]/);
     }

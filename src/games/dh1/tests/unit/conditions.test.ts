@@ -5,14 +5,20 @@ import { buildDh1PortableJson } from '@/games/dh1/export';
 import { normalizeDh1 } from '@/games/dh1/normalize';
 import { dh1CharacterSchema } from '@/games/dh1/schema';
 import { DH1_SCHEMA_VERSION } from '@/games/dh1/schema-version';
-import { createDh2Defaults } from '@/games/dh2/defaults';
-import { buildDh2PortableJson } from '@/games/dh2/export';
-import { normalizeDh2 } from '@/games/dh2/normalize';
-import { dh2CharacterSchema } from '@/games/dh2/schema';
-import { DH2_SCHEMA_VERSION } from '@/games/dh2/schema-version';
 import type { GameExportConfig } from '@/games/types';
 
 import { makeDhCharacter } from '@tests/support';
+
+/**
+ * ─── LANDMARK: DH1 CONDITIONS TESTS ──────────────────────────────────────
+ * Состояния Безумия/Порчи 1e (D7/D12/D17): миграция переносит текстовые
+ * mutations/disorders/defilements в структурированные `conditions` без
+ * потерь, повторная нормализация не дублирует элементы, а JSON/Excel-экспорт
+ * показывают подписи, а не коды.
+ *
+ * Проверки 1e живут рядом с редакцией (D16): состояния DH1 переносит своя
+ * миграция, dh2 к этой проверке не причастен.
+ */
 
 const EXPORT_ALL: GameExportConfig = {
   includeBasicInfo: true,
@@ -130,19 +136,6 @@ describe('состояния Безумия/Порчи (D7/D12/D17)', () => {
     expect(DH1_SCHEMA_VERSION).toBeGreaterThanOrEqual(4);
   });
 
-  it('DH2: условия аддитивны, по умолчанию пустой массив', () => {
-    const draft = {
-      ...createDh2Defaults({}),
-      id: 'dh2-condition-test',
-      systemId: 'dh2',
-    };
-    const { character } = normalizeDh2(draft, { applyDefaults: true });
-
-    expect(character.conditions).toEqual([]);
-    expect(dh2CharacterSchema.parse(character).conditions).toEqual([]);
-    expect(DH2_SCHEMA_VERSION).toBeGreaterThanOrEqual(4);
-  });
-
   it('DH1: conditions попадают в JSON- и Excel-экспорт', () => {
     const { character } = normalizeDh1(legacyDh1(), { applyDefaults: true });
     const translate = (key: string) => key;
@@ -158,27 +151,5 @@ describe('состояния Безумия/Порчи (D7/D12/D17)', () => {
     expect(cells).toContain('Третья рука');
     expect(cells).toContain('dh1.conditions.kind.mutation');
     expect(cells).toContain('dh1.conditions.source.legacy');
-  });
-
-  it('DH2: conditions попадают в JSON-экспорт', () => {
-    const draft = {
-      ...createDh2Defaults({}),
-      id: 'dh2-condition-test',
-      systemId: 'dh2',
-    };
-    const { character } = normalizeDh2(draft, { applyDefaults: true });
-    character.conditions = [
-      {
-        id: 'c1',
-        kind: 'rudiment',
-        name: 'Рудимент',
-        severity: '1',
-        source: 'manual',
-      },
-    ];
-
-    expect(buildDh2PortableJson(character, EXPORT_ALL).conditions).toEqual(
-      character.conditions,
-    );
   });
 });

@@ -7,50 +7,55 @@ import {
   resolveSheetReadOnly,
   type CharacterSystemSource,
 } from '@/games/character-system';
-
-import { makeDhCharacter, makeDndCharacter } from '@tests/support';
+import { listGameModules, listGamePlugins } from '@/games/registry';
 
 /**
  * ─── LANDMARK: CHARACTER SYSTEM RESOLUTION TESTS ──────────────────────────
- * С этапа 2 ядро не хардкодит имена игр: legacy `gameSystem`/`edition`
- * разрешаются по `plugin.json#aliases`, самое специфичное правило выигрывает.
+ * Ядро не хардкодит имена игр: legacy `gameSystem`/`edition` разрешаются по
+ * `plugin.json#aliases` обнаруженных плагинов, самое специфичное правило
+ * выигрывает.
+ *
+ * Общие инварианты проверяются для каждого обнаруженного модуля; точные
+ * legacy-значения редакции — в её собственном тесте
+ * (`src/games/<id>/tests/unit/legacy.test.ts`), чтобы добавление или удаление
+ * плагина не ломало хост.
  */
 
 describe('разрешение systemId', () => {
   it('явный systemId выигрывает у legacy-полей', () => {
-    expect(
-      resolveCharacterSystemId({
-        systemId: 'dnd5e',
-        gameSystem: 'Dark Heresy',
-      }),
-    ).toBe('dnd5e');
-    expect(resolveCharacterSystemId({ systemId: 'dh1', edition: '2nd' })).toBe(
-      'dh1',
-    );
+    for (const gameModule of listGameModules()) {
+      expect(
+        resolveCharacterSystemId({
+          systemId: gameModule.id,
+          gameSystem: 'Unknown',
+        }),
+      ).toBe(gameModule.id);
+      expect(
+        resolveCharacterSystemId({
+          systemId: gameModule.id,
+          edition: 'Unknown',
+        }),
+      ).toBe(gameModule.id);
+    }
   });
 
   it('неизвестный systemId не подменяется legacy-именами', () => {
-    // Плагина `dh9` нет: явный id авторитетен, угадывать по gameSystem нельзя.
+    // Плагина `missing-plugin` нет: явный id авторитетен, угадывать по
+    // legacy-полям нельзя.
     expect(
-      resolveCharacterSystemId({ systemId: 'dh9', gameSystem: 'Dark Heresy' }),
+      resolveCharacterSystemId({
+        systemId: 'missing-plugin',
+        gameSystem: 'Unknown',
+      }),
     ).toBeUndefined();
-  });
-
-  it('D&D 5e по legacy gameSystem', () => {
-    expect(resolveCharacterSystemId({ gameSystem: 'Dungeons & Dragons' })).toBe(
-      'dnd5e',
-    );
-  });
-
-  it.each([
-    ['2nd', 'dh2'],
-    ['1st', 'dh1'],
-    ['hybrid', 'dh1'],
-    [undefined, 'dh1'],
-  ])('Dark Heresy с edition=%s → %s', (edition, expected) => {
-    expect(
-      resolveCharacterSystemId({ gameSystem: 'Dark Heresy', edition }),
-    ).toBe(expected);
+    for (const plugin of listGamePlugins()) {
+      for (const alias of plugin.manifest.aliases ?? []) {
+        expect(
+          resolveCharacterSystemId({ systemId: 'missing-plugin', ...alias }),
+          `${plugin.manifest.id}: ${JSON.stringify(alias)}`,
+        ).toBeUndefined();
+      }
+    }
   });
 
   it('неизвестная игра не разрешается', () => {
@@ -66,46 +71,64 @@ describe('разрешение systemId', () => {
   });
 
   it('алиасы берутся из манифестов, а не из кода ядра', () => {
-    // Ровно те legacy-значения, что объявлены в plugin.json.
-    expect(resolveLegacySystemId({ gameSystem: 'Dungeons & Dragons' })).toBe(
-      'dnd5e',
-    );
-    expect(
-      resolveLegacySystemId({ gameSystem: 'Dark Heresy', edition: '2nd' }),
-    ).toBe('dh2');
-    expect(resolveLegacySystemId({ gameSystem: 'Dark Heresy' })).toBe('dh1');
+    // Каждое legacy-правило, объявленное в plugin.json, ведёт в
+    // зарегистрированный модуль; точное значение проверяет тест редакции.
+    const registered = new Set(listGameModules().map((m) => m.id));
+    for (const plugin of listGamePlugins()) {
+      for (const alias of plugin.manifest.aliases ?? []) {
+        const resolved = resolveLegacySystemId(alias);
+        expect(
+          resolved,
+          `${plugin.manifest.id}: ${JSON.stringify(alias)}`,
+        ).toBeDefined();
+        expect(
+          registered.has(resolved!),
+          `${plugin.manifest.id}: ${String(resolved)}`,
+        ).toBe(true);
+      }
+    }
   });
 
   it('getCharacterModule отдаёт модуль разрешённой редакции', () => {
-    expect(getCharacterModule({ systemId: 'dh2' })?.id).toBe('dh2');
-    expect(getCharacterModule({ gameSystem: 'Dungeons & Dragons' })?.id).toBe(
-      'dnd5e',
-    );
+    for (const gameModule of listGameModules()) {
+      expect(getCharacterModule({ systemId: gameModule.id })).toBe(gameModule);
+    }
     expect(getCharacterModule({ gameSystem: 'Unknown' })).toBeUndefined();
+    expect(getCharacterModule({})).toBeUndefined();
   });
 });
 
 describe('режим листа «только чтение» (D9)', () => {
   it('обычный лист — редактируемый', () => {
-    expect(resolveSheetReadOnly({ systemId: 'dh1' }, [])).toEqual({
-      readOnly: false,
-      reason: null,
-    });
+    for (const gameModule of listGameModules()) {
+      expect(resolveSheetReadOnly({ systemId: gameModule.id }, [])).toEqual({
+        readOnly: false,
+        reason: null,
+      });
+    }
   });
 
   it('отключённый админом плагин — read-only c причиной disabled', () => {
-    expect(resolveSheetReadOnly({ systemId: 'dh1' }, ['dh1'])).toEqual({
-      readOnly: true,
-      reason: 'disabled',
-    });
+    const detected = listGameModules();
+    for (const gameModule of detected) {
+      expect(
+        resolveSheetReadOnly({ systemId: gameModule.id }, [gameModule.id]),
+      ).toEqual({ readOnly: true, reason: 'disabled' });
+    }
     // Выключение одной редакции не задевает другую.
-    expect(resolveSheetReadOnly({ systemId: 'dh2' }, ['dh1']).readOnly).toBe(
-      false,
-    );
+    for (const disabled of detected) {
+      for (const other of detected) {
+        if (other.id === disabled.id) continue;
+        expect(
+          resolveSheetReadOnly({ systemId: other.id }, [disabled.id]).readOnly,
+          `${disabled.id} → ${other.id}`,
+        ).toBe(false);
+      }
+    }
   });
 
   it('плагин не установлен — read-only c причиной plugin_missing', () => {
-    expect(resolveSheetReadOnly({ systemId: 'gone' }, [])).toEqual({
+    expect(resolveSheetReadOnly({ systemId: 'missing-plugin' }, [])).toEqual({
       readOnly: true,
       reason: 'plugin_missing',
     });
@@ -113,14 +136,5 @@ describe('режим листа «только чтение» (D9)', () => {
       readOnly: true,
       reason: 'plugin_missing',
     });
-  });
-});
-
-describe('нормализация листа через реестр', () => {
-  it('legacy-листы D&D и DH нормализуются плагинами', () => {
-    const dnd = makeDndCharacter();
-    const dh = makeDhCharacter({ edition: '2nd' });
-    expect(resolveCharacterSystemId(dnd)).toBe('dnd5e');
-    expect(resolveCharacterSystemId(dh)).toBe('dh2');
   });
 });

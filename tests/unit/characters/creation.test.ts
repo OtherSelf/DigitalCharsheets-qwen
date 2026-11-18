@@ -1,6 +1,7 @@
 /**
- * Сквозное создание персонажа для каждой игровой системы: payload'ы форм,
- * системные поля, список и экспорт. DH1 создаётся с одним именем.
+ * Сквозное создание персонажа для каждой обнаруженной редакции: payload'ы
+ * берутся из `createDefaults()` модуля, системные поля проверяют тесты
+ * плагинов. Так добавление/удаление плагина не ломает хост (D18).
  */
 
 import fs from 'node:fs';
@@ -10,7 +11,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { POST as charactersPost } from '@/app/api/characters/route';
 import { GET as exportGet } from '@/app/api/export/route';
-import { getGameModule } from '@/games/registry';
+import { listGameModules, type AnyGameModule } from '@/games/registry';
 import { normalizeCharacterRecord } from '@/lib/character-version';
 
 import { readJson, removeDir, userPaths, useTempDataDir } from '@tests/support';
@@ -26,11 +27,6 @@ import {
   PASSWORD,
   register,
 } from '@tests/support/character-flows';
-import {
-  dhPayload,
-  dndPayload,
-  SYSTEMS,
-} from '@tests/support/character-payloads';
 
 let dataDir: string;
 
@@ -42,57 +38,50 @@ afterEach(() => {
   removeDir(dataDir);
 });
 
-describe('создание DH1: только имя обязательно', () => {
-  it('лист создаётся без мира и карьеры, пустые поля остаются пустыми', async () => {
-    const user = await register('dh1-name-only');
-    const { status, body } = await createCharacter(user.uid, {
-      systemId: 'dh1',
-      name: 'Name Only',
-    });
+// ──────── создание персонажа в каждой обнаруженной редакции (матрица) ──────
 
-    expect(status).toBe(201);
-    expect(body.homeWorld).toBe('');
-    expect(body.careerPath).toBe('');
-    expect(body.characterClass).toBe('');
-    expect(body.rank).toBe('');
-    expect(body.divination).toBe('');
-  });
-});
+describe.each(listGameModules())(
+  'создание персонажа — $id',
+  (gameModule: AnyGameModule) => {
+    const slug = gameModule.id;
+    const characterName = `Character ${slug}`;
 
-// ──────── создание персонажа в каждой версии игры (матрица систем) ─────────
+    function payload(overrides: Record<string, unknown> = {}) {
+      return {
+        ...gameModule.createDefaults({ name: characterName }),
+        ...overrides,
+      };
+    }
 
-describe.each(SYSTEMS)(
-  'создание персонажа — $name',
-  ({ name, slug, build, ownFields, foreignFields }) => {
+    function expectedSheet(data: Record<string, unknown>) {
+      return normalizeCharacterRecord({
+        ...(gameModule.createDefaults() as Record<string, unknown>),
+        ...data,
+      }).character;
+    }
+
     it('POST создаёт лист (201) и не теряет ни одного поля', async () => {
       const user = await register(`gm-${slug}`);
-      const payload = build();
+      const data = payload();
 
-      const { status, body } = await createCharacter(user.uid, payload);
+      const { status, body: created } = await createCharacter(user.uid, data);
 
       expect(status).toBe(201);
-      expect(body.id).toBeTruthy();
-      expect(body.userId).toBe(user.uid);
-      expect(body.gameSystem).toBe(name);
-      expect(body.name).toBe(payload.name);
+      expect(created.id).toBeTruthy();
+      expect(created.userId).toBe(user.uid);
+      expect(created.systemId).toBe(gameModule.id);
+      expect(created.name).toBe(data.name);
 
       // Сервер заполняет недостающие поля значениями редакции
       // (`createDefaults`), добавляет id/userId и нормализует лист до v2.
-      const gameModule = getGameModule(body.systemId)!;
-      const expectedPayload = normalizeCharacterRecord({
-        ...(gameModule.createDefaults() as Record<string, unknown>),
-        ...payload,
-      }).character;
-
-      // Файл на диске — данные клиента поверх полей редакции.
       const filePath = path.join(
         userPaths(dataDir, user.uid).charactersDir,
-        `${body.id}.json`,
+        `${created.id}.json`,
       );
       expect(fs.existsSync(filePath)).toBe(true);
       expect(readJson(filePath)).toEqual({
-        ...expectedPayload,
-        id: body.id,
+        ...expectedSheet(data),
+        id: created.id,
         userId: user.uid,
         schemaVersion: gameModule.schemaVersion,
       });
@@ -100,49 +89,41 @@ describe.each(SYSTEMS)(
 
     it('системные поля персонажа сохраняются в своей ветке', async () => {
       const user = await register(`fields-${slug}`);
-      const payload = build();
-      const { body } = await createCharacter(user.uid, payload);
+      const data = payload();
+      const { body: created } = await createCharacter(user.uid, data);
 
       const stored = readJson(
         path.join(
           userPaths(dataDir, user.uid).charactersDir,
-          `${body.id}.json`,
+          `${created.id}.json`,
         ),
       );
+      const expected = expectedSheet(data) as unknown as Record<
+        string,
+        unknown
+      >;
 
-      const gameModule = getGameModule(body.systemId)!;
-      const expected = normalizeCharacterRecord({
-        ...(gameModule.createDefaults() as Record<string, unknown>),
-        ...payload,
-      }).character as unknown as Record<string, unknown>;
-      for (const field of ownFields) {
-        expect(stored, `поле ${field} должно быть у ${name}`).toHaveProperty(
-          field,
-        );
-        expect(stored[field]).toEqual(expected[field]);
-      }
-      for (const field of foreignFields) {
+      // Каждое поле фабрики редакции доезжает до диска без потерь; состав
+      // собственных/чужих полей проверяют тесты плагинов.
+      for (const field of Object.keys(gameModule.createDefaults())) {
         expect(
           stored,
-          `поле ${field} не должно попадать в ${name}`,
-        ).not.toHaveProperty(field);
+          `поле ${field} должно быть у ${gameModule.id}`,
+        ).toHaveProperty(field);
+        expect(stored[field]).toEqual(expected[field]);
       }
 
-      // Ключевые для листа значения тоже на месте (с учётом миграции v2).
       expect(stored.stats).toEqual(expected.stats);
-      expect(stored.name).toBe(payload.name);
+      expect(stored.name).toBe(data.name);
+      expect(gameModule.schema.safeParse(stored).success).toBe(true);
     });
 
     it('лист попадает в список и доступен через /api/export?characterId', async () => {
       const user = await register(`export-${slug}`);
-      const payload = build();
-      const { body: created } = await createCharacter(user.uid, payload);
+      const data = payload();
+      const { body: created } = await createCharacter(user.uid, data);
 
-      const gameModule = getGameModule(created.systemId)!;
-      const expectedPayload = normalizeCharacterRecord({
-        ...(gameModule.createDefaults() as Record<string, unknown>),
-        ...payload,
-      }).character;
+      const expected = expectedSheet(data);
 
       const list = await listCharacters(user.uid);
       expect(list.map((c) => c.id)).toContain(created.id);
@@ -158,7 +139,7 @@ describe.each(SYSTEMS)(
       // Экспорт — переносимый: служебный userId в него не попадает.
       expect(exported.userId).toBeUndefined();
       expect(exported).toEqual({
-        ...expectedPayload,
+        ...expected,
         id: created.id,
         schemaVersion: gameModule.schemaVersion,
       });
@@ -166,8 +147,8 @@ describe.each(SYSTEMS)(
 
     it('лист виден после повторного входа в аккаунт', async () => {
       const user = await register(`relogin-${slug}`);
-      const payload = build();
-      const { body: created } = await createCharacter(user.uid, payload);
+      const data = payload();
+      const { body: created } = await createCharacter(user.uid, data);
 
       const again = await login(`relogin-${slug}`, PASSWORD);
       expect(again.body.isNewUser).toBe(false);
@@ -177,29 +158,29 @@ describe.each(SYSTEMS)(
       expect(list).toHaveLength(1);
       expect(list[0]).toMatchObject({
         id: created.id,
-        name: payload.name,
-        gameSystem: name,
+        name: data.name,
+        systemId: gameModule.id,
       });
     });
 
     it('сервер выдаёт свой id и игнорирует id от клиента', async () => {
       const user = await register(`client-id-${slug}`);
-      const payload = build({ id: 'client-chosen-id' });
+      const data = payload({ id: 'client-chosen-id' });
 
-      const { status, body } = await createCharacter(user.uid, payload);
+      const { status, body: created } = await createCharacter(user.uid, data);
 
       expect(status).toBe(201);
-      expect(body.id).not.toBe('client-chosen-id');
-      expect(body.id.length).toBeGreaterThan(0);
+      expect(created.id).not.toBe('client-chosen-id');
+      expect(created.id.length).toBeGreaterThan(0);
 
       // В каталоге ровно один файл — по серверному id, «клиентского» нет.
       const files = fs.readdirSync(userPaths(dataDir, user.uid).charactersDir);
-      expect(files).toEqual([`${body.id}.json`]);
+      expect(files).toEqual([`${created.id}.json`]);
     });
 
     it('без сессии создание отклоняется (401) и ничего не пишет', async () => {
-      const payload = build();
-      const res = await charactersPost(jsonRequest(CHARACTERS_URL, payload));
+      const data = payload();
+      const res = await charactersPost(jsonRequest(CHARACTERS_URL, data));
 
       expect(res.status).toBe(401);
       expect((await res.json()).error).toMatch(/unauthorized/i);
@@ -208,34 +189,35 @@ describe.each(SYSTEMS)(
   },
 );
 
-// ─────────────── две системы в одном аккаунте не смешиваются ───────────────
+// ─────────────── две редакции в одном аккаунте не смешиваются ──────────────
 
 describe('две игровые системы в одном аккаунте', () => {
-  it('D&D и Dark Heresy хранятся раздельно и не смешиваются', async () => {
+  it('две обнаруженные редакции хранятся раздельно и не смешиваются', async () => {
+    const [first, second] = listGameModules();
     const user = await register('multi-system');
 
-    const dnd = await createCharacter(user.uid, dndPayload());
-    const dh = await createCharacter(user.uid, dhPayload());
-    expect([dnd.status, dh.status]).toEqual([201, 201]);
+    const firstPayload = first.createDefaults({
+      name: `Character ${first.id}`,
+    });
+    const secondPayload = second.createDefaults({
+      name: `Character ${second.id}`,
+    });
+
+    const firstCreated = await createCharacter(user.uid, firstPayload);
+    const secondCreated = await createCharacter(user.uid, secondPayload);
+    expect([firstCreated.status, secondCreated.status]).toEqual([201, 201]);
 
     const list = await listCharacters(user.uid);
     expect(list).toHaveLength(2);
-
-    const storedDnd = list.find((c) => c.gameSystem === 'Dungeons & Dragons');
-    const storedDh = list.find((c) => c.gameSystem === 'Dark Heresy');
-
-    expect(storedDnd?.name).toBe('Seraphina Vael');
-    expect(storedDh?.name).toBe('Lucius Varn');
-    expect(storedDnd?.spells).toHaveLength(2);
-    expect(storedDnd?.fatePoints).toBeUndefined();
-    expect(storedDh?.fatePoints).toEqual({ current: 1, max: 1 });
-    expect(storedDh?.spells).toBeUndefined();
+    expect(list.map((c) => c.systemId).sort()).toEqual(
+      [first.id, second.id].sort(),
+    );
 
     // И на диске два независимых файла.
     const files = fs.readdirSync(userPaths(dataDir, user.uid).charactersDir);
     expect(files).toHaveLength(2);
     expect(files.sort()).toEqual(
-      [`${dnd.body.id}.json`, `${dh.body.id}.json`].sort(),
+      [`${firstCreated.body.id}.json`, `${secondCreated.body.id}.json`].sort(),
     );
   });
 });

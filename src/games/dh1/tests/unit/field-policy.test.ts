@@ -4,18 +4,18 @@ import {
   isFieldFilled as dh1Filled,
   isCreationFieldLocked as dh1Locked,
 } from '@/games/dh1/field-policy';
-import {
-  isFieldFilled as dh2Filled,
-  isCreationFieldLocked as dh2Locked,
-} from '@/games/dh2/field-policy';
 
 /**
- * ─── LANDMARK: FIELD EDIT POLICY TESTS ─────────────────────────────────────
+ * ─── LANDMARK: DH1 FIELD EDIT POLICY TESTS ───────────────────────────────
  * Двухуровневая политика (D4): `creation-empty` поле открывается на выбор,
  * только пока пустое. Пустотой считаются undefined, пустая/пробельная строка
  * и пустой массив; ноль — уже значение. Заполнение только пишет поле, поэтому
  * проверяем именно предикат, а не пересчёт производных (D15).
+ *
+ * Проверки 1e живут рядом с редакцией (D16): своё правило редакция проверяет
+ * сама, сравнения с dh2 в этом файле нет.
  */
+
 describe('политика полей после создания', () => {
   it('незаполненные значения открывают выбор', () => {
     expect(dh1Filled(undefined)).toBe(false);
@@ -28,10 +28,22 @@ describe('политика полей после создания', () => {
     expect(dh1Locked(undefined)).toBe(false);
   });
 
-  it('копии правила в dh1 и dh2 ведут себя одинаково', () => {
-    for (const value of [undefined, null, '', '   ', [], 'Adept', 0, '0']) {
-      expect(dh2Filled(value)).toBe(dh1Filled(value));
-      expect(dh2Locked(value)).toBe(dh1Locked(value));
+  it('правило пустоты и значения одинаково для всех полей DH1', () => {
+    // Таблица истинности вместо сравнения с соседней редакцией (D16):
+    // удаление dh2 не должно менять смысл проверки.
+    const cases: [unknown, boolean][] = [
+      [undefined, false],
+      [null, false],
+      ['', false],
+      ['   ', false],
+      [[], false],
+      ['Adept', true],
+      [0, true],
+      ['0', true],
+    ];
+    for (const [value, filled] of cases) {
+      expect(dh1Filled(value), String(value)).toBe(filled);
+      expect(dh1Locked(value), String(value)).toBe(filled);
     }
   });
 

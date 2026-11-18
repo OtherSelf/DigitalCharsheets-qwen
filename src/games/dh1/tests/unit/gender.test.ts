@@ -9,22 +9,18 @@ import { normalizeDh1 } from '@/games/dh1/normalize';
 import { dh1CharacterSchema } from '@/games/dh1/schema';
 import { DH1_SCHEMA_VERSION } from '@/games/dh1/schema-version';
 import type { DH1Character } from '@/games/dh1/types';
-import { createDh2Defaults } from '@/games/dh2/defaults';
-import { DH2E_BACKGROUNDS } from '@/games/dh2/dh2e-data';
-import { genderLabel as dh2GenderLabel } from '@/games/dh2/gender';
-import { dh2History } from '@/games/dh2/history';
-import { normalizeDh2 } from '@/games/dh2/normalize';
-import { dh2CharacterSchema } from '@/games/dh2/schema';
-import { DH2_SCHEMA_VERSION } from '@/games/dh2/schema-version';
 import { getGameModule } from '@/games/registry';
 import type { GameExportConfig } from '@/games/types';
 import { formatHistoryValue } from '@/lib/history-labels';
 
 /**
- * ─── LANDMARK: DH GENDER TESTS ─────────────────────────────────────────────
+ * ─── LANDMARK: DH1 GENDER TESTS ───────────────────────────────────────────
  * Пол хранится каноническим кодом (D3): старые подписи обеих локалей
  * переводятся, неизвестный текст не теряется, повторная нормализация лист не
  * меняет. Подпись для игрока — только через i18n, сырой код наружу не идёт.
+ *
+ * Проверки dh1 живут рядом с редакцией (D16): паритет с dh2 в тестах редакции
+ * не проверяется, свой лист редакция проверяет сама.
  */
 
 const EXPORT_ALL: GameExportConfig = {
@@ -47,10 +43,6 @@ function t(key: string): string {
 
 function dh1Raw(gender: unknown) {
   return { identity: { gender } };
-}
-
-function dh2Raw(gender: unknown) {
-  return { gender };
 }
 
 describe('DH1: миграция пола в канонический код', () => {
@@ -103,33 +95,6 @@ describe('DH1: миграция пола в канонический код', ()
   });
 });
 
-describe('DH2: миграция пола в канонический код', () => {
-  it('переводит подписи и оставляет код как есть', () => {
-    expect(normalizeDh2(dh2Raw('Женский')).character.gender).toBe('female');
-    expect(normalizeDh2(dh2Raw('Male')).character.gender).toBe('male');
-    expect(normalizeDh2(dh2Raw('female')).character.gender).toBe('female');
-    expect(normalizeDh2(dh2Raw('')).character.gender).toBe('');
-    expect(normalizeDh2({}).character.gender).toBe('');
-  });
-
-  it('неизвестный текст становится unspecified и сохраняется в notes', () => {
-    const { character, warnings } = normalizeDh2(dh2Raw('male-ish'));
-    expect(character.gender).toBe('unspecified');
-    expect(character.notes).toContain('[gender migration] пол: male-ish');
-    expect((warnings ?? []).join(' ')).toContain('не распознан');
-  });
-
-  it('повторный прогон идемпотентен', () => {
-    const first = normalizeDh2(dh2Raw('небинарный'));
-    const second = normalizeDh2({
-      ...(first.character as unknown as Record<string, unknown>),
-    });
-    expect(
-      String(second.character.notes).match(/\[gender migration\]/g),
-    ).toHaveLength(1);
-  });
-});
-
 describe('схемы: в данных только код', () => {
   it('dh1 принимает код и отклоняет подпись', () => {
     const draft = createDh1Defaults({ name: 'A', gender: 'female' });
@@ -144,39 +109,11 @@ describe('схемы: в данных только код', () => {
       }).success,
     ).toBe(false);
   });
-
-  it('dh2 принимает код и отклоняет подпись', () => {
-    const draft = createDh2Defaults({ name: 'B', gender: 'male' });
-    expect(dh2CharacterSchema.safeParse({ ...draft, id: 'y' }).success).toBe(
-      true,
-    );
-    expect(
-      dh2CharacterSchema.safeParse({ ...draft, id: 'y', gender: 'Мужской' })
-        .success,
-    ).toBe(false);
-  });
-});
-
-describe('пол в создании 2e: замок бэкграунда (D4)', () => {
-  it('Адептус Сороритас требует female, остальные бэкграунды пол не задают', () => {
-    const sororitas = DH2E_BACKGROUNDS.find(
-      (background) => background.id === 'adepta-sororitas',
-    );
-    expect(sororitas?.genderLock).toBe('female');
-
-    const unconstrained = DH2E_BACKGROUNDS.filter(
-      (background) => background.id !== 'adepta-sororitas',
-    );
-    expect(unconstrained.every((background) => !background.genderLock)).toBe(
-      true,
-    );
-  });
 });
 
 describe('версия схемы и отображение', () => {
-  it('DH1/DH2 — 5, D&D 5e остаётся 2', () => {
+  it('DH1 — 5, D&D 5e остаётся 2', () => {
     expect(DH1_SCHEMA_VERSION).toBe(5);
-    expect(DH2_SCHEMA_VERSION).toBe(5);
     expect(getGameModule('dnd5e')?.schemaVersion).toBe(2);
   });
 
@@ -185,7 +122,6 @@ describe('версия схемы и отображение', () => {
     expect(dh1GenderLabel('female', t)).toBe('dh1.genderFemale');
     expect(dh1GenderLabel('unspecified', t)).toBe('dh1.genderUnspecified');
     expect(dh1GenderLabel('', t)).toBe('');
-    expect(dh2GenderLabel('female', t)).toBe('dh2.genderFemale');
 
     const character = {
       ...createDh1Defaults({ name: 'A', gender: 'female' }),
@@ -214,18 +150,5 @@ describe('версия схемы и отображение', () => {
         { config: dh1History, path: 'identity.gender', t },
       ),
     ).toBe('dh1.genderFemale');
-    expect(
-      formatHistoryValue(
-        { value: 'male' },
-        { config: dh2History, path: 'gender', t },
-      ),
-    ).toBe('dh2.genderMale');
-    // Неизвестный код не подменяется: лучше показать данные, чем пустоту.
-    expect(
-      formatHistoryValue(
-        { value: 'other' },
-        { config: dh2History, path: 'gender', t },
-      ),
-    ).toBe('other');
   });
 });

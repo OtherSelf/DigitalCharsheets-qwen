@@ -3,10 +3,7 @@ import path from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-import { dh1History } from '@/games/dh1/history';
-import { dh2History } from '@/games/dh2/history';
 import { listGameModules } from '@/games/registry';
-import type { GameHistoryConfig } from '@/games/types';
 import { diffCharacterRecords } from '@/lib/history-diff';
 import {
   formatHistoryDate,
@@ -17,6 +14,20 @@ import {
 } from '@/lib/history-labels';
 import type { HistoryChange } from '@/lib/history-types';
 import { translations } from '@/lib/i18n';
+
+/**
+ * ─── LANDMARK: HISTORY LABELS (HOST) ────────────────────────────────────
+ * Общие правила подписей истории: карта плагина важнее человекочитаемого
+ * пути, элемент коллекции собирается как «Коллекция · Элемент · Поле»,
+ * значения форматируются без сырого JSON. Здесь же — проверки, которые
+ * обязаны выполняться у каждого модуля из `listGameModules()`: ключи подписей
+ * есть в обеих локалях, демо-лист не оставляет непереведённых сегментов,
+ * конфиг не выходит за словарь плагина и allowlist ядра.
+ *
+ * Редакционные коды (dh1/dh2) проверяются рядом с редакциями
+ * (`src/games/<id>/tests/unit/history-labels.test.ts`, D16), поэтому этот файл
+ * не импортирует конкретные игры.
+ */
 
 function t(key: string): string {
   return key;
@@ -169,85 +180,6 @@ describe('history labels', () => {
     ).toBe('common.inventory · Sword · common.notes');
   });
 
-  it('подписывает вложенные пути DH точной картой плагина', () => {
-    const tKey = (key: string) => key;
-    expect(
-      resolveHistoryLabel(
-        {
-          kind: 'changed',
-          path: 'identity.gender',
-          before: { value: '' },
-          after: { value: 'f' },
-        },
-        dh1History,
-        tKey,
-      ),
-    ).toBe('dh1.gender');
-    expect(
-      resolveHistoryLabel(
-        {
-          kind: 'changed',
-          path: 'aptitudes.profile',
-          before: { value: [] },
-          after: { value: ['toughness'] },
-        },
-        dh2History,
-        tKey,
-      ),
-    ).toBe('dh2.aptitudes');
-  });
-
-  it('подписывает элементы состояний коллекцией и полями', () => {
-    const change: HistoryChange = {
-      kind: 'changed',
-      path: 'conditions',
-      key: 'c1',
-      label: 'Bleeding',
-      field: 'severity',
-      before: { value: 1 },
-      after: { value: 2 },
-    };
-
-    expect(resolveHistoryLabel(change, dh2History, t)).toBe(
-      'dh2.conditions.title · Bleeding · dh2.conditions.severity',
-    );
-    expect(resolveHistoryLabel(change, dh1History, t)).toBe(
-      'dh1.conditions.title · Bleeding · dh1.conditions.severity',
-    );
-  });
-
-  it('подписывает последний сегмент пути и элемент коллекции', () => {
-    const tKey = (key: string) => key;
-    expect(
-      resolveHistoryLabel(
-        {
-          kind: 'changed',
-          path: 'equipment.armor.Head.ap',
-          before: { value: 2 },
-          after: { value: 3 },
-        },
-        dh1History,
-        tKey,
-      ),
-    ).toBe('dh1.equipment.armor · dh1.armorAp');
-
-    expect(
-      resolveHistoryLabel(
-        {
-          kind: 'changed',
-          path: 'equipment.armor',
-          key: 'Head',
-          label: 'Head',
-          field: 'ap',
-          before: { value: 2 },
-          after: { value: 3 },
-        },
-        dh1History,
-        tKey,
-      ),
-    ).toBe('dh1.equipment.armor · Head · dh1.armorAp');
-  });
-
   it('падает в человекочитаемый путь без подписей', () => {
     const change: HistoryChange = {
       kind: 'changed',
@@ -353,169 +285,6 @@ describe('history: подписи и значения всех игр', () => {
         );
       }
     }
-  });
-
-  it('переводит коды DH1', () => {
-    expect(
-      formatHistoryValue(
-        { value: 'Hive World' },
-        { config: dh1History, path: 'homeWorld', t: tRu },
-      ),
-    ).toBe(translations.ru['dh1.homeWorldHive']);
-    expect(
-      formatHistoryValue(
-        { value: 'painOfBullet' },
-        { config: dh1History, path: 'divination', t: tRu },
-      ),
-    ).toBe(translations.ru['dh1.data.divination.painOfBullet']);
-    expect(
-      formatHistoryValue(
-        { value: 'Common' },
-        { config: dh1History, path: 'equipment.armor.Head.quality', t: tRu },
-      ),
-    ).toBe(translations.ru['dh1.armorQualityCommon']);
-    expect(
-      formatHistoryValue(
-        { value: 'male' },
-        { config: dh1History, path: 'identity.gender', t: tRu },
-      ),
-    ).toBe(translations.ru['dh1.genderMale']);
-    expect(
-      formatHistoryValue(
-        { value: [false, true, false, false] },
-        { config: dh1History, path: 'statUpgrades.weaponSkill', t: tRu },
-      ),
-    ).toBe('1/4');
-    expect(
-      formatHistoryValue(
-        {
-          value: { skilled: true, plus10: true, plus20: false, plus30: false },
-        },
-        { config: dh1History, path: 'skills.training', t: tRu },
-      ),
-    ).toBe(`${translations.ru['dh1.skilled']}, +10`);
-    expect(formatHistoryValue({ value: null })).toBe('—');
-  });
-
-  it('переводит коды DH2, включая массивы и объекты', () => {
-    const label = (key: string) => translations.ru[key];
-    expect(
-      formatHistoryValue(
-        { value: 'hive-world' },
-        { config: dh2History, path: 'homeWorld', t: tRu },
-      ),
-    ).toBe(label('dh2.catalog.world.hive-world'));
-    expect(
-      formatHistoryValue(
-        { value: 'adeptus-arbites' },
-        { config: dh2History, path: 'background', t: tRu },
-      ),
-    ).toBe(label('dh2.catalog.background.adeptus-arbites'));
-    expect(
-      formatHistoryValue(
-        { value: 'd100-10' },
-        { config: dh2History, path: 'divination', t: tRu },
-      ),
-    ).toBe(label('dh2.catalog.divination.d100-10'));
-    expect(
-      formatHistoryValue(
-        { value: ['perception', 'toughness'] },
-        { config: dh2History, path: 'aptitudes.profile', t: tRu },
-      ),
-    ).toBe(
-      `${label('dh2.catalog.aptitude.perception')}, ${label('dh2.catalog.aptitude.toughness')}`,
-    );
-    expect(
-      formatHistoryValue(
-        { value: ['psyker'] },
-        { config: dh2History, path: 'eliteAdvances', t: tRu },
-      ),
-    ).toBe(label('dh2.catalog.elite.psyker'));
-    expect(
-      formatHistoryValue(
-        { value: 'iron-jaw' },
-        { config: dh2History, path: 'startingChoices.roleTalent', t: tRu },
-      ),
-    ).toBe(label('dh2.catalog.talent.iron-jaw'));
-    expect(
-      formatHistoryValue(
-        { value: ['inquiry'] },
-        { config: dh2History, path: 'startingChoices.skills', t: tRu },
-      ),
-    ).toBe(label('dh2.catalog.skill.inquiry'));
-    expect(
-      formatHistoryValue(
-        { value: { background: 'offence' } },
-        { config: dh2History, path: 'aptitudes.chosen', t: tRu },
-      ),
-    ).toBe(label('dh2.catalog.aptitude.offence'));
-    expect(
-      formatHistoryValue(
-        { value: [true, false, false, false, false] },
-        { config: dh2History, path: 'statUpgrades.influence', t: tRu },
-      ),
-    ).toBe('1/5');
-  });
-
-  it('переводит общие коды задач, инвентаря и булевы', () => {
-    expect(
-      formatHistoryValue(
-        { value: 'active' },
-        { config: dh1History, path: 'questLog.status', t: tRu },
-      ),
-    ).toBe(tRu('common.questActive'));
-    expect(
-      formatHistoryValue(
-        { value: 'completed' },
-        { config: dh1History, path: 'questLog.status', t: tRu },
-      ),
-    ).toBe(tRu('common.questDone'));
-    expect(
-      formatHistoryValue(
-        { value: 'lost' },
-        { config: dh1History, path: 'inventory.status', t: tRu },
-      ),
-    ).toBe(tRu('dh1.itemStatusLost'));
-    expect(
-      formatHistoryValue(
-        { value: 'default' },
-        { config: dh1History, path: 'inventory.status', t: tRu },
-      ),
-    ).toBe(tRu('dh1.itemStatusDefault'));
-    expect(
-      formatHistoryValue(
-        { value: true },
-        {
-          config: dh1History,
-          path: 'equipment.weapons.melee.equipped',
-          t: tRu,
-        },
-      ),
-    ).toBe(tRu('dh1.historyYes'));
-    expect(
-      formatHistoryValue(
-        { value: ['A', 'B'] },
-        { path: 'personalityTraits', t: tRu },
-      ),
-    ).toBe('A, B');
-    expect(
-      formatHistoryValue(
-        { value: { text: 'Find the relic', completed: true } },
-        { path: 'questLog.objectives', t: tRu },
-      ),
-    ).toBe('✓ Find the relic');
-    expect(
-      resolveHistoryLabel(
-        {
-          kind: 'added',
-          path: 'equipment.weapons.melee',
-          key: 'm1',
-          label: 'Chainsword',
-        },
-        dh1History,
-        tRu,
-      ),
-    ).toBe(`${tRu('dh1.meleeWeapons')} · Chainsword`);
   });
 
   it('конфиг истории ссылается только на словарь плагина или allowlist', () => {
