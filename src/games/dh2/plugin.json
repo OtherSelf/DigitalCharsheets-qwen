@@ -62,7 +62,45 @@
     "skills[].training.plus20",
     "skills[].training.plus30"
   ],
-  "migrations": [],
+  "migrations": [
+    {
+      "from": 1,
+      "to": 2,
+      "entry": "index.ts#migrateDh2V1toV2",
+      "description": "дискриминант редакции: systemId, legacy edition убран",
+      "removes": ["edition"]
+    },
+    {
+      "from": 2,
+      "to": 3,
+      "entry": "index.ts#migrateDh2V2toV3",
+      "description": "2e-generation: поля DH1 в notes, появились influence и fatigue2nd",
+      "removes": [
+        "careerPath",
+        "rank",
+        "worldVariant",
+        "quirk",
+        "alternatePath",
+        "advancedPath",
+        "divinationEffect",
+        "fatigue1st"
+      ]
+    },
+    {
+      "from": 3,
+      "to": 4,
+      "entry": "index.ts#migrateDh2V3toV4",
+      "description": "состояния стали структурными записями conditions",
+      "removes": []
+    },
+    {
+      "from": 4,
+      "to": 5,
+      "entry": "index.ts#migrateDh2V4toV5",
+      "description": "пол хранится каноническим кодом",
+      "removes": []
+    }
+  ],
   "tests": {
     "conformance": ">=1"
   },

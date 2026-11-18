@@ -8,6 +8,12 @@ import { dh2History } from './history';
 import dh2En from './i18n/en.json';
 import dh2Ru from './i18n/ru.json';
 import { mergeDh2Data } from './merge';
+import {
+  migrateDh2V1toV2,
+  migrateDh2V2toV3,
+  migrateDh2V3toV4,
+  migrateDh2V4toV5,
+} from './migrations';
 import { normalizeDh2 } from './normalize';
 import { dh2CharacterSchema } from './schema';
 import { DH2_SCHEMA_VERSION } from './schema-version';
@@ -27,6 +33,13 @@ export const createDefaults = createDh2Defaults;
  * рантайм-реестр, пока GameModule не слился с GamePlugin (D2).
  */
 export const deriveCharacter = deriveDh2;
+
+export {
+  migrateDh2V1toV2,
+  migrateDh2V2toV3,
+  migrateDh2V3toV4,
+  migrateDh2V4toV5,
+} from './migrations';
 export const createDemo = createDh2Demo;
 
 export function toPortableJson(
@@ -81,6 +94,11 @@ export const dh2Module: GameModule<DH2Character> = {
     toPortableJson,
     buildExcelSections,
   },
-  migrations: [],
+  migrations: [
+    { from: 1, to: 2, migrate: migrateDh2V1toV2 },
+    { from: 2, to: 3, migrate: migrateDh2V2toV3 },
+    { from: 3, to: 4, migrate: migrateDh2V3toV4 },
+    { from: 4, to: 5, migrate: migrateDh2V4toV5 },
+  ],
   history: dh2History,
 };

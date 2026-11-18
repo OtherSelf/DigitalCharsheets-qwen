@@ -64,7 +64,15 @@
     "spellcastingEntries[].attackBonus",
     "spellcastingEntries[].saveDC"
   ],
-  "migrations": [],
+  "migrations": [
+    {
+      "from": 1,
+      "to": 2,
+      "entry": "index.ts#migrateDnd5eV1toV2",
+      "description": "дискриминант редакции: systemId ставит хост, legacy edition убран",
+      "removes": ["edition"]
+    }
+  ],
   "tests": {
     "conformance": ">=1"
   },

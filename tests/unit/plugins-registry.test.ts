@@ -115,7 +115,15 @@ function exampleManifest(
       json: 'index.ts#toPortableJson',
       excel: 'index.ts#buildExcelSections',
     },
-    migrations: [],
+    migrations: [
+      {
+        from: 1,
+        to: 2,
+        entry: 'index.ts#migrateV1toV2',
+        description: 'дискриминант редакции',
+        removes: ['edition'],
+      },
+    ],
     tests: { conformance: '>=1' },
     ...overrides,
   } as PluginManifest;
@@ -290,8 +298,8 @@ describe('сгенерированный реестр', () => {
         // namespace, а сам формат точки входа проверяется здесь.
         expect(parseEntryPoint(migration.entry).member).toBeDefined();
       });
-      // Пока цепочка пуста (миграции в ядре, этап 2), покрывать нечего.
-      expect(manifest.migrations).toEqual([]);
+      // Цепочка непустая: `schemaVersion > 1` без шагов — ошибка манифеста.
+      expect(manifest.migrations.length).toBeGreaterThan(0);
     }
   });
 

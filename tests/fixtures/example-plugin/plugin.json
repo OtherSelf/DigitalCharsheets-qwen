@@ -53,7 +53,15 @@
     "json": "index.ts#toPortableJson",
     "excel": "index.ts#buildExcelSections"
   },
-  "migrations": [],
+  "migrations": [
+    {
+      "from": 1,
+      "to": 2,
+      "entry": "index.ts#migrateV1toV2",
+      "description": "дискриминант редакции: systemId ставит хост",
+      "removes": ["edition"]
+    }
+  ],
   "tests": {
     "conformance": ">=1"
   },

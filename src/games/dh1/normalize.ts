@@ -99,7 +99,7 @@ function appendMigrationNote(raw: RawRecord, line: string): void {
  * уходит в `notes` отдельным блоком, чтобы игрок видел исходную запись. Блок
  * добавляется один раз, иначе каждая нормализация дописывала бы его заново.
  */
-function migrateGender(character: RawRecord, warnings: string[]): void {
+export function migrateGender(character: RawRecord, warnings: string[]): void {
   if (!isRecord(character.identity)) return;
   const identity: RawRecord = { ...character.identity };
   const resolution = resolveGender(identity.gender);
@@ -118,7 +118,7 @@ function migrateGender(character: RawRecord, warnings: string[]): void {
 }
 
 /** Пророчества и эффекты хранятся ID; старые фразы → ID (v1). */
-function normalizeDivination(raw: RawRecord, warnings: string[]): void {
+export function normalizeDivination(raw: RawRecord, warnings: string[]): void {
   const divinationRaw =
     typeof raw.divination === 'string' ? raw.divination : '';
   const effectRaw =
@@ -175,7 +175,10 @@ function fillDefaults(character: RawRecord): void {
   if (!character.talents) character.talents = [];
 }
 
-function enforceDh1Fields(character: RawRecord, warnings: string[]): void {
+export function enforceDh1Fields(
+  character: RawRecord,
+  warnings: string[],
+): void {
   const stats = asRecord(character.stats);
   const upgrades = asRecord(character.statUpgrades);
   const notes = asRecord(character.statNotes);
@@ -242,7 +245,7 @@ function enforceDh1Fields(character: RawRecord, warnings: string[]): void {
   }
 }
 
-function ensureExperienceLog(character: RawRecord): void {
+export function ensureExperienceLog(character: RawRecord): void {
   if (Array.isArray(character.experienceLog)) return;
   character.experienceLog = [];
 }
@@ -272,7 +275,7 @@ function conditionKey(entry: RawRecord): string {
  * `insanityDetails`, `corruptionDetails`) не удаляются — старые тексты и
  * degree/trauma/test остаются как были.
  */
-function ensureConditions(character: RawRecord): void {
+export function ensureConditions(character: RawRecord): void {
   const existing = Array.isArray(character.conditions)
     ? (character.conditions as unknown[]).filter(isConditionLike)
     : [];

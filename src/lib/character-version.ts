@@ -39,30 +39,36 @@ export interface ParsedCharacterRecord {
 }
 
 /**
- * Применить упорядоченную цепочку миграций плагина к ещё не версионированному
- * листу. Порядок — массив `migrations` модуля; шаг применяется, если файл
- * старше его `to`. Возвращает число примененных шагов.
+ * Применить упорядоченную цепочку миграций плагина к листу. Порядок — массив
+ * `migrations` модуля; шаг применяется, если файл старше его `to`.
+ *
+ * Шаг возвращает **документ целиком**, а не патч: миграция может не только
+ * добавить поле, но и удалить его (например, поля чужой редакции). Слияние
+ * результата с исходником оставило бы удалённые ключи на месте.
+ *
+ * @returns документ после применённых шагов и их число.
  */
 export function applyCharacterMigrations(
   migrations: readonly CharacterMigration[],
   raw: Readonly<Record<string, unknown>>,
   incomingVersion: number,
-): { character: Record<string, unknown>; applied: number } {
+): { character: Record<string, unknown>; applied: number; warnings: string[] } {
   let character = { ...raw };
+  const warnings: string[] = [];
   let applied = 0;
   for (const step of migrations) {
     if (incomingVersion >= step.to) continue;
-    character = { ...character, ...step.migrate(character) };
+    character = { ...step.migrate(character, warnings) };
     applied += 1;
   }
-  return { character, applied };
+  return { character, applied, warnings };
 }
 
 export function normalizeCharacterRecord(
   raw: Record<string, unknown>,
   options: NormalizeOptions = {},
 ): ParsedCharacterRecord {
-  const character = { ...raw };
+  let character = { ...raw };
   const issues: string[] = [];
   const before = JSON.stringify(character);
 
@@ -122,13 +128,15 @@ export function normalizeCharacterRecord(
     };
   }
 
-  // Цепочка миграций (пока пустая у всех плагинов: v1→v2 — это нормализация).
+  // Цепочка миграций: шаг возвращает документ целиком, поэтому присваиваем, а
+  // не сливаем — иначе удалённые шагом поля остались бы на месте.
   const migrated = applyCharacterMigrations(
     gameModule.migrations,
     character,
     incomingVersion,
   );
-  Object.assign(character, migrated.character);
+  character = migrated.character;
+  issues.push(...migrated.warnings);
 
   character.systemId = systemId;
   character.schemaVersion = targetVersion;

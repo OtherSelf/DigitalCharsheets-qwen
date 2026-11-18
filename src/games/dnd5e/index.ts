@@ -15,6 +15,7 @@ import {
   dnd5eMatchesLegacyImport,
 } from './legacy-import';
 import { mergeDnd5eData } from './merge';
+import { migrateDnd5eV1toV2 } from './migrations';
 import { normalizeDnd5e } from './normalize';
 import { dnd5eCharacterSchema } from './schema';
 import type { DnD5eCharacter } from './types';
@@ -36,6 +37,8 @@ export const createDemo = createDnd5eDemo;
  * рантайм-реестр (D2).
  */
 export const deriveCharacter = deriveDnd5e;
+
+export { migrateDnd5eV1toV2 } from './migrations';
 
 export function toPortableJson(
   character: DnD5eCharacter,
@@ -89,7 +92,7 @@ export const dnd5eModule: GameModule<DnD5eCharacter> = {
     toPortableJson,
     buildExcelSections,
   },
-  migrations: [],
+  migrations: [{ from: 1, to: 2, migrate: migrateDnd5eV1toV2 }],
   history: dnd5eHistory,
   matchesLegacyImport: dnd5eMatchesLegacyImport,
   legacyImportName: dnd5eLegacyImportName,
