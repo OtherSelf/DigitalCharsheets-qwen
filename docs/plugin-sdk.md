@@ -56,8 +56,8 @@ src/games/<id>/
   demo.ts              createDemo() (no id)
   export.ts            toPortableJson() fields for export 3.0
   excel.ts             buildExcelSections()
-  normalize.ts         legacy/imported sheet → your type (+ warnings)
-  merge.ts             import merge (partial patch over an existing sheet)
+  normalize.ts         legacy/imported sheet → your type (+ warnings), required
+  merge.ts             import merge (partial patch over an existing sheet), required
   create-form.tsx      custom creation form
   sheet.tsx            custom sheet, forwardRef<SheetHandle>
   ui.ts                optional UI slots (manifest `ui.entry`)
@@ -131,7 +131,12 @@ Validated by `scripts/plugins/generate.mjs` (Ajv) on every generation/verify.
   "aliases": [{ "gameSystem": "Dark Heresy", "edition": "1st" }],
   "derive": { "entry": "index.ts#deriveCharacter" },
   "derived": ["skills[].training.skilled", "skills[].training.plus10"],
-  "migrations": [],
+  "migrations": [
+    { "from": 1, "to": 2, "entry": "index.ts#migrateV1toV2" },
+    { "from": 2, "to": 3, "entry": "index.ts#migrateV2toV3" },
+    { "from": 3, "to": 4, "entry": "index.ts#migrateV3toV4" },
+    { "from": 4, "to": 5, "entry": "index.ts#migrateV4toV5" }
+  ],
   "tests": { "conformance": ">=1" }
 }
 ```
@@ -139,6 +144,9 @@ Validated by `scripts/plugins/generate.mjs` (Ajv) on every generation/verify.
 Rules:
 
 - `id` equals the folder and the sheet `systemId`; `version` is semver.
+- `order` is the display position of an edition and must be **unique across all
+  plugins**; a duplicate fails the generator (`validateCollection`), not just
+  the sort. The family order lives in `game.order` and is unique per family.
 - `name`/`description` are the display source (admin, wizard); they declare at
   least one of `en`/`ru` and may carry extra locales. Other strings live in
   `i18n/<locale>.json`. `tags` are stored but not shown in UI (D15).
@@ -154,6 +162,11 @@ Rules:
   items (`skills[].value`); every declared path must exist in the sheet.
 - `sheet.mode` is currently `"custom"` only; the plugin owns its React sheet and
   form (D3).
+- `schema.ts` is the only description of sheet fields the host has (OpenAPI is
+  generated from it), so numeric and text domains must be **bounded in zod**
+  (`min`/`max`/`length`): the negative conformance check
+  (`plugin-conformance.test.ts`) saves an out-of-range value and expects the
+  schema to reject it. A schema without bounds accepts `stats.might: 999`.
 - `i18n` is a locale map (`"en": "i18n/en.json"`): declare at least one of
   `en`/`ru`, extra locale codes are validated. It may point at `.json`
   (preferred, D13) or `.ts` (legacy). Every declared locale must expose the same
@@ -199,10 +212,12 @@ Rules:
 [game-modules.md](game-modules.md#contract) for the field table. Key points:
 
 - `createDefaults()` / `createDemo()` return drafts without `id`.
-- `normalize(raw, options)` — idempotent legacy normalization; with
-  `options.applyDefaults` also fills missing structures (import path).
-- `merge(target, source, config)` — import merge; the host only checks that both
-  sides are the same edition.
+- `normalize(raw, options)` — **required.** Idempotent legacy normalization;
+  with `options.applyDefaults` it also fills missing structures (import path).
+  Every registered plugin must expose it as a function
+  (`plugins-registry.test.ts`).
+- `merge(target, source, config)` — **required.** Import merge; the host only
+  checks that both sides are the same edition. Same gate as `normalize`.
 - `migrations` — ordered chain (see above).
 - `derive` — optional pure function that recomputes derivative fields from the
   primary ones (`index.ts#deriveCharacter`). It is declared in the manifest as
@@ -329,21 +344,20 @@ There is no separate package yet; the conformance set runs in Vitest:
 npm run plugins:conformance
 ```
 
-`tests/unit/plugin-conformance.test.ts` discovers every
-`src/games/*/plugin.json` and checks:
+`npm run plugins:conformance` runs **only**
+`tests/unit/plugin-conformance.test.ts`. The contract is split across several
+host suites, and each line below names the file that actually checks it:
 
-- generated `registry.generated.ts`/`i18n.generated.ts` match the manifests
-  byte-for-byte;
-- manifest ↔ module: id/gameId/order/defaultStatus/schemaVersion, every entry
-  point is a real named export, migrations match;
-- defaults and demo pass the module's own zod schema;
-- en/ru dictionaries have the same keys;
-- UI slots load lazily, are exactly the ones declared in `ui.slots`, and give
-  non-empty labels / valid i18n keys;
-- `BulkEditor` tables have unique ids, known label keys and produce the expected
-  patches;
-- the reference fixture plugin is copied into a temporary `src/games/` and goes
-  through the same generator — proof that a folder + manifest is enough.
+| Check | Where |
+| --- | --- |
+| Generated `registry.generated.ts`, `i18n.generated.ts`, `games.generated.ts` match the manifests byte-for-byte | `npm run plugins:check` (`generate.mjs --check`); the unit suite re-renders `registry.generated.ts` |
+| Generator output is prettier-clean for any plugin id | `tests/unit/plugins-generator.test.ts` |
+| Manifest ↔ module: id/gameId/order/defaultStatus/schemaVersion, entry points as real named exports, migration chain matches the module | `tests/unit/plugins-registry.test.ts` |
+| Defaults and demo pass the module's zod schema; en/ru dictionaries have the same keys; declared UI slots are implemented and non-empty; out-of-range data is rejected (negative TCK); portable JSON round-trip | `tests/unit/plugin-conformance.test.ts` |
+| UI slots are exactly the declared set (no extras), load lazily, `CompactNav` items carry `icon` and full i18n keys | `tests/unit/plugin-slots.test.ts` |
+| Every plugin declares `BulkEditor`; the `stats` tab comes first; table ids are unique and prefixed with the plugin id; every label key exists in both languages; the save patch does not mutate the sheet | `tests/unit/bulk-editor.test.ts` |
+| A copy of the reference fixture under another id passes the folder, collection, registry and module contract (the "folder + manifest is enough" promise) | `tests/unit/plugin-template.test.ts` |
+| The reference fixture itself implements the module contract | `tests/unit/example-plugin.test.ts` |
 
 Host-side behaviour is covered by `tests/unit/game-catalog.test.ts`
 (visibility/enabled, v1→v2 migration), `games-api.test.ts` (role matrix,

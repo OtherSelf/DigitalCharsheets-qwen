@@ -15,7 +15,7 @@ src/games/
   registry.generated.ts     modules + manifests, generated from plugin.json
   i18n.generated.ts         plugin dictionaries, generated from plugin.json#i18n
   registry.ts               registry factory + helpers (createGameRegistry)
-  games.ts                  game families (D&D, Dark Heresy) + order + i18n keys
+  games.ts                  game families: re-exports games.generated.ts
   character-system.ts       systemId resolution and i18n name keys for UI
   i18n/{en,ru}.ts           registry/wizard metadata (games.*)
   i18n.generated.ts         plugin dictionaries from plugin.json#i18n
@@ -197,14 +197,24 @@ Every module folder has a `plugin.json` (`src/games/plugin.schema.json`):
   "author": "Digital Character Sheets",
   "license": "MIT",
   "schemaVersion": 5,
-  "game": { "id": "darkHeresy", "order": 20, "name": { "en": "…", "ru": "…" } },
+  "game": {
+    "id": "darkHeresy",
+    "order": 20,
+    "name": { "en": "…", "ru": "…" },
+    "description": { "en": "…", "ru": "…" }
+  },
   "dependencies": { "host": "^1.0.0", "plugins": {} },
   "entry": { "module": "index.ts#dh1Module" },
   "sheet": { "mode": "custom", "client": "sheet.tsx", "createForm": "create-form.tsx" },
-  "i18n": { "en": "i18n/en.ts", "ru": "i18n/ru.ts" },
+  "i18n": { "en": "i18n/en.json", "ru": "i18n/ru.json" },
   "demo": { "entry": "index.ts#createDemo" },
   "export": { "json": "index.ts#toPortableJson", "excel": "index.ts#buildExcelSections" },
-  "migrations": [],
+  "migrations": [
+    { "from": 1, "to": 2, "entry": "index.ts#migrateV1toV2" },
+    { "from": 2, "to": 3, "entry": "index.ts#migrateV2toV3" },
+    { "from": 3, "to": 4, "entry": "index.ts#migrateV3toV4" },
+    { "from": 4, "to": 5, "entry": "index.ts#migrateV4toV5" }
+  ],
   "tests": { "conformance": ">=1" }
 }
 ```
@@ -215,7 +225,10 @@ Rules:
 - `name`/`description` are the display source (admin, creation wizard) and
   declare at least one of `en`/`ru`; other strings stay in `i18n/<locale>.*`.
 - `game` is the family block (D17): every edition of one `gameId` declares the
-  same `id`/`order`/`name`, and the generator fails if they differ.
+  same `id`/`order`/`name`/`description`, and the generator fails if they
+  differ. `name` and `description` are required on both `en` and `ru`.
+- `order` is unique across all plugins (a duplicate is a generator error), not
+  just a sort key; `game.order` is unique per family.
 - `entry.module` is `<file>#<export>`; `demo`/`export`/`migrations` are entry
   points too. The manifest member must be a real named export — the
   `plugins-registry` test checks every reference against the module namespace.
@@ -224,11 +237,14 @@ Rules:
 - `pluginApi` is checked against the host version (`^`, `~`, `>=`, exact, `*`).
 - `aliases` maps legacy `gameSystem`/`edition` values to the plugin; the most
   specific alias wins (`{gameSystem, edition:'2nd'}` beats `{gameSystem}`).
-- `migrations` order is the apply order; a non-empty chain must cover
-  `1 → … → schemaVersion` without gaps (the generator checks it). Migrations
-  still live in the core until stage 2, so all three manifests are empty today.
-- `import` (normalize/merge), `ui.slots` and `aliases` are declared in the
-  schema for stages 2–3 and are optional until then.
+- `migrations` order is the apply order; the chain must cover
+  `1 → … → schemaVersion` without gaps, and **`schemaVersion > 1` with an empty
+  chain is a manifest error**. Steps point at the module's own functions
+  (`index.ts#migrateV1toV2`); the runner writes a `.bak` before the first
+  migrated rewrite and never overwrites a newer version.
+- `normalize` and `merge` are **required module fields** (SDK v1): the import
+  and legacy-normalization path is the plugin's, not the core's. `ui.slots` and
+  `aliases` are optional; `dependencies.plugins` is reserved (D14).
 
 `registry.generated.ts` and `i18n.generated.ts` are produced by
 `npm run plugins:generate` (also `predev`/`prebuild`) from the manifests;
@@ -293,9 +309,9 @@ per-game save handlers out of the page.
 | `ui` | Optional UI slots (stage 3): `HeaderActions`, `HeaderSubtitle`, `CompactNav`, `BulkEditor`, `CardSummary`, `HouseRulesDialog` + `favicon` (asset imported from the plugin's `assets/`). The host renders a neutral fallback when a slot is missing. |
 | `export.toPortableJson` | JSON field selection for export 3.0. |
 | `export.buildExcelSections` | Localized Excel sections. |
-| `normalize(raw, options?)` | Legacy normalization: remaps fields per edition and (with `applyDefaults`) fills missing structures. Replaces the core's `normalizeCharacter`/`normalizeCharacterRecord` branches (stage 2). |
-| `merge(target, source, config)` | Import merge; replaces the core's `isDnd/isDh1/isDh2` branches (stage 2). |
-| `migrations` | Per-module chain; the v1→v2 transformation itself lives in `normalize` (idempotent), the explicit chain runner is stage 4. |
+| `normalize(raw, options?)` | **Required.** Legacy normalization: remaps fields per edition and (with `applyDefaults`) fills missing structures. The core has no per-game branches. |
+| `merge(target, source, config)` | **Required.** Import merge; the host checks only that both sides are the same edition. |
+| `migrations` | Per-module chain; `schemaVersion > 1` requires a non-empty chain `1 → … → schemaVersion`. |
 
 ## Adding a new edition (example: `dh3`)
 
@@ -319,13 +335,15 @@ per-game save handlers out of the page.
 2. **Manifest** — add `src/games/dh3/plugin.json` (see *Plugin manifest*
    above) and run `npm run plugins:generate`. The registry is generated; no
    core edit is needed.
-3. **Game metadata** — only if it is a new game family: add a `GameDefinition`
-   to `src/games/games.ts` (id, order, name/description keys).
+3. **Game metadata** — nothing to edit: the family block in `plugin.json`
+   feeds `games.generated.ts` (id, order, name/description keys), and
+   `src/games/games.ts` only re-exports it. A new family appears after
+   `npm run plugins:generate`.
 4. **Translations** — the merge in `src/lib/i18n/index.ts` picks the module
    dictionaries up automatically. Add the same keys to `en` and `ru`.
 5. **Data** — the edition owns its normalization: `normalize.ts` (defaults,
-   field remapping) and `merge.ts` (import merge). Legacy identifiers are
-   declared in `plugin.json#aliases`; the core
+   field remapping) and `merge.ts` (import merge); both are required module
+   fields. Legacy identifiers are declared in `plugin.json#aliases`; the core
    [`src/lib/character-version.ts`](../src/lib/character-version.ts) only
    orchestrates. Never drop fields silently: move values into `notes` and
    return them as warnings.
