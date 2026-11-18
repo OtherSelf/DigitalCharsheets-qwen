@@ -17,6 +17,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { useCharacterContext, useTranslation } from '@/games/plugin-host';
 import { cn } from '@/lib/utils';
 
+import { abilityModifier } from '../derive';
+
 type DnDStats = {
   strength: number;
   dexterity: number;
@@ -54,7 +56,7 @@ const StatBox = ({
   hideNotes: boolean;
 }) => {
   const { t } = useTranslation();
-  const modifier = Math.floor((value - 10) / 2);
+  const modifier = abilityModifier(value);
   const displayModifier = modifier >= 0 ? `+${modifier}` : modifier.toString();
   return (
     <div
@@ -222,7 +224,7 @@ export function DndStatsSection({
   const { updateCharacter, showEditButtons, hideNotes } = useCharacterContext();
   const { t } = useTranslation();
 
-  const wisdomMod = Math.floor((stats.wisdom - 10) / 2);
+  const wisdomMod = abilityModifier(stats.wisdom);
 
   return (
     <div

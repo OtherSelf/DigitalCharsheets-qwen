@@ -1,5 +1,6 @@
 import { CURRENT_SCHEMA_VERSION } from '../plugin-api';
 import { readNumber, readString, type DefaultsInput } from '../shared/defaults';
+import { abilityModifier, proficiencyBonusForLevel } from './derive';
 import type {
   DnD5eCharacter,
   DnDAbility,
@@ -91,9 +92,9 @@ export function createDnd5eDefaults(
     'level',
     calculateLevelFromExp(experiencePoints),
   );
-  const proficiencyBonus = Math.floor((level - 1) / 4) + 2;
+  const proficiencyBonus = proficiencyBonusForLevel(level);
   const constitution = readNumber(input, 'constitution', 10);
-  const constitutionModifier = Math.floor((constitution - 10) / 2);
+  const constitutionModifier = abilityModifier(constitution);
   const maxHitPoints = readNumber(
     input,
     'max',

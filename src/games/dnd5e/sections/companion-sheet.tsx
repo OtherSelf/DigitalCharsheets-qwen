@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label';
 import { useTranslation } from '@/games/plugin-host';
 import { cn } from '@/lib/utils';
 
+import { abilityModifier } from '../derive';
 import type { DnDCompanion, DnDSavingThrow, DnDSkill } from '../types';
 import { DndAttunementSection } from './attunement-section';
 import { DndCharacterInfoSection } from './character-info-section';
@@ -258,7 +259,7 @@ export function CompanionSheet({
     return skills.map((skill) => {
       const statKey = SKILL_STAT_MAP[skill.name];
       if (!statKey || isSkillsEditing) return skill;
-      const mod = Math.floor((stats[statKey] - 10) / 2);
+      const mod = abilityModifier(stats[statKey]);
       return {
         ...skill,
         value:
@@ -275,7 +276,7 @@ export function CompanionSheet({
   const calculatedSavingThrows = React.useMemo(() => {
     return savingThrows.map((st) => {
       const statKey = st.name.toLowerCase() as keyof typeof stats;
-      const mod = Math.floor((stats[statKey] - 10) / 2);
+      const mod = abilityModifier(stats[statKey]);
       return { ...st, value: mod + (st.proficient ? profBonus : 0) };
     });
   }, [savingThrows, stats, profBonus]);

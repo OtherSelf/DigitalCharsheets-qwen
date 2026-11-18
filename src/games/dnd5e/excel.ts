@@ -1,5 +1,6 @@
 import { createExcelSections } from '../shared/excel';
 import type { ExcelSection, ExportTranslate, GameExportConfig } from '../types';
+import { abilityModifier } from './derive';
 import type { DnD5eCharacter } from './types';
 
 /**
@@ -22,7 +23,7 @@ export function buildDnd5eExcelSections(
     pp: 0,
   };
   const modifier = (score: number) => {
-    const mod = Math.floor((score - 10) / 2);
+    const mod = abilityModifier(score);
     return `${score} (${mod >= 0 ? '+' : ''}${mod})`;
   };
 

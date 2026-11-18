@@ -44,6 +44,7 @@ import {
 
 import type { CreateFormProps } from '../types';
 import { calculateLevelFromExp, createDnd5eDefaults } from './defaults';
+import { abilityModifier } from './derive';
 
 // Map internal English names to translation keys
 const RACE_TRANSLATION_KEYS: Record<string, string> = {
@@ -315,7 +316,7 @@ export function DndCharacterForm({ onCreated }: CreateFormProps = {}) {
 
   React.useEffect(() => {
     if (form.getValues('level') === 1) {
-      const conMod = Math.floor((watchedCon - 10) / 2);
+      const conMod = abilityModifier(watchedCon);
       form.setValue('max', Math.max(1, 8 + conMod));
     }
   }, [watchedCon, form]);
