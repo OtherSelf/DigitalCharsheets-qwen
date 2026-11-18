@@ -457,7 +457,7 @@ test.describe('создание персонажа — Dark Heresy 2e', () => {
     await page.keyboard.press('Escape');
 
     // Элитное продвижение: пререквизиты и разрешение ГМ видны, покупка
-    // пишется в журнал, удаление не откатывает опыт (D15).
+    // пишется в журнал, удаление симметрично возвращает опыт (D7/D15).
     await progression
       .getByRole('combobox', { name: 'Choose an elite advance' })
       .click();
@@ -487,8 +487,14 @@ test.describe('создание персонажа — Dark Heresy 2e', () => {
     await expect
       .poll(async () => (await fetchCharacters(page))[0].eliteAdvances)
       .toEqual([]);
-    // Удаление не откатывает опыт: 200 (пси) + 300 (элитное) остаются.
-    expect((await fetchCharacters(page))[0].totalExpSpent).toBe(500);
+    // Удаление симметрично (D7): элитное, его строка журнала и 300 опыта
+    // возвращаются; остаётся только покупка пси-рейтинга за 200.
+    await expect
+      .poll(async () => (await fetchCharacters(page))[0].totalExpSpent)
+      .toBe(200);
+    await expect
+      .poll(async () => (await fetchCharacters(page))[0].experienceLog.length)
+      .toBe(1);
 
     // Реквизиция: Influence + доступность + качество, без авто-броска.
     const equipment = page.locator('#equipment-section');
