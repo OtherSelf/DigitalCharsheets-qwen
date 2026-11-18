@@ -3,6 +3,8 @@ import { describe, expect, it } from 'vitest';
 import { dh1History } from '@/games/dh1/history';
 import { dh2History } from '@/games/dh2/history';
 import { listGameModules } from '@/games/registry';
+import type { GameHistoryConfig } from '@/games/types';
+import { diffCharacterRecords } from '@/lib/history-diff';
 import {
   formatHistoryDate,
   formatHistoryValue,
@@ -14,6 +16,89 @@ import { translations } from '@/lib/i18n';
 
 function t(key: string): string {
   return key;
+}
+
+const tRu = (key: string) => translations.ru[key] ?? key;
+
+const IGNORED_FIELDS = new Set([
+  'id',
+  'userId',
+  'systemId',
+  'schemaVersion',
+  'gameSystem',
+  'createdAt',
+  'updatedAt',
+]);
+
+/** t, который помечает переведённые сегменты: остаток без меток — fallback. */
+const marker = (key: string) => `«${key}»`;
+
+function untranslatedPart(label: string): string {
+  return label.replace(/«[^»]+»/g, '').replace(/[·\s]/g, '');
+}
+
+/** Демо и дефолты покрывают почти все поля листа; пустые массивы пропускаются. */
+function historyChecks(mod: {
+  createDemo(): unknown;
+  createDefaults(): unknown;
+}): HistoryChange[] {
+  const changes: HistoryChange[] = [];
+  const visit = (value: unknown, path: string): void => {
+    if (Array.isArray(value)) {
+      changes.push({ kind: 'added', path, key: 'k', label: '«item»' });
+      for (const item of value) {
+        if (!item || typeof item !== 'object' || Array.isArray(item)) continue;
+        for (const field of Object.keys(item)) {
+          if (IGNORED_FIELDS.has(field) || field.startsWith('__')) continue;
+          changes.push({
+            kind: 'changed',
+            path,
+            key: 'k',
+            label: '«item»',
+            field,
+          });
+        }
+      }
+      return;
+    }
+    if (value && typeof value === 'object') {
+      for (const [key, child] of Object.entries(value)) {
+        if (IGNORED_FIELDS.has(key) || key.startsWith('__')) continue;
+        visit(child, path ? `${path}.${key}` : key);
+      }
+      return;
+    }
+    changes.push({ kind: 'changed', path });
+  };
+  for (const draft of [mod.createDemo(), mod.createDefaults()]) {
+    for (const [key, child] of Object.entries(
+      draft as Record<string, unknown>,
+    )) {
+      if (IGNORED_FIELDS.has(key) || key.startsWith('__')) continue;
+      visit(child, key);
+    }
+  }
+  return changes;
+}
+
+function mutate(value: unknown): unknown {
+  if (typeof value === 'string') return value ? `${value} X` : 'X';
+  if (typeof value === 'number') return value + 1;
+  if (typeof value === 'boolean') return !value;
+  if (value === null) return 'X';
+  if (Array.isArray(value)) {
+    if (value.length === 0) return ['X'];
+    if (value.every((item) => item === null || typeof item !== 'object')) {
+      return [...value, 'X'];
+    }
+    return [...value, { ...(value[0] as object), id: 'new-item', name: 'New' }];
+  }
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, child]) => [key, mutate(child)]),
+    );
+  }
+  return value;
 }
 
 describe('history labels', () => {
@@ -189,7 +274,7 @@ describe('history labels', () => {
       }),
     ).toBe('long…');
     expect(formatHistoryValue({ value: 42 })).toBe('42');
-    expect(formatHistoryValue({ value: null })).toBe('null');
+    expect(formatHistoryValue({ value: null })).toBe('—');
   });
 
   it('форматирует дату без падения на мусоре', () => {
@@ -197,5 +282,231 @@ describe('history labels', () => {
       '2026',
     );
     expect(formatHistoryDate('not-a-date', 'ru')).toBe('not-a-date');
+  });
+});
+
+/**
+ * История не должна показывать сырые ключи, коды и JSON: подписи полей
+ * переводятся всеми тремя плагинами, значения-коды — через `formatValue`.
+ */
+describe('history: подписи и значения всех игр', () => {
+  it('valueLabels ссылаются на существующие ключи в en и ru', () => {
+    for (const mod of listGameModules()) {
+      const config = mod.history;
+      for (const [path, labels] of Object.entries(config?.valueLabels ?? {})) {
+        for (const [code, key] of Object.entries(labels)) {
+          expect(
+            translations.en[key],
+            `${mod.id}: ${path}.${code} (en)`,
+          ).toBeTruthy();
+          expect(
+            translations.ru[key],
+            `${mod.id}: ${path}.${code} (ru)`,
+          ).toBeTruthy();
+        }
+      }
+    }
+  });
+
+  it('у каждого поля демо-листа и элемента коллекции есть перевод', () => {
+    for (const mod of listGameModules()) {
+      const config = mod.history;
+      if (!config) continue;
+      const bad: string[] = [];
+      for (const change of historyChecks(mod)) {
+        const label = resolveHistoryLabel(change, config, marker);
+        if (untranslatedPart(label)) {
+          bad.push(
+            `${change.path}${change.field ? `.${change.field}` : ''} => ${label}`,
+          );
+        }
+      }
+      expect([...new Set(bad)], `${mod.id}: непереведённые подписи`).toEqual(
+        [],
+      );
+    }
+  });
+
+  it('не показывает сырой JSON, булевы и null на демо-данных', () => {
+    for (const mod of listGameModules()) {
+      const config = mod.history;
+      const before = mod.createDemo() as Record<string, unknown>;
+      const after = mutate(before) as Record<string, unknown>;
+      const diff = diffCharacterRecords(before, after, { maxChanges: 500 });
+      expect(diff, mod.id).toBeTruthy();
+      for (const change of diff!.changes) {
+        const fieldPath = change.field
+          ? `${change.path}.${change.field}`
+          : change.path;
+        const rendered = [change.before, change.after, ...(change.values ?? [])]
+          .filter((value) => value !== undefined)
+          .map((value) =>
+            formatHistoryValue(value, { config, path: fieldPath, t: tRu }),
+          )
+          .join(' | ');
+        expect(rendered, `${mod.id}: ${fieldPath}`).not.toMatch(
+          /[[{]]|\b(true|false|null)\b/,
+        );
+      }
+    }
+  });
+
+  it('переводит коды DH1', () => {
+    expect(
+      formatHistoryValue(
+        { value: 'Hive World' },
+        { config: dh1History, path: 'homeWorld', t: tRu },
+      ),
+    ).toBe(translations.ru['dh1.homeWorldHive']);
+    expect(
+      formatHistoryValue(
+        { value: 'painOfBullet' },
+        { config: dh1History, path: 'divination', t: tRu },
+      ),
+    ).toBe(translations.ru['dh1.data.divination.painOfBullet']);
+    expect(
+      formatHistoryValue(
+        { value: 'Common' },
+        { config: dh1History, path: 'equipment.armor.Head.quality', t: tRu },
+      ),
+    ).toBe(translations.ru['dh1.armorQualityCommon']);
+    expect(
+      formatHistoryValue(
+        { value: 'male' },
+        { config: dh1History, path: 'identity.gender', t: tRu },
+      ),
+    ).toBe(translations.ru['dh1.genderMale']);
+    expect(
+      formatHistoryValue(
+        { value: [false, true, false, false] },
+        { config: dh1History, path: 'statUpgrades.weaponSkill', t: tRu },
+      ),
+    ).toBe('1/4');
+    expect(
+      formatHistoryValue(
+        {
+          value: { skilled: true, plus10: true, plus20: false, plus30: false },
+        },
+        { config: dh1History, path: 'skills.training', t: tRu },
+      ),
+    ).toBe(`${translations.ru['dh1.skilled']}, +10`);
+    expect(formatHistoryValue({ value: null })).toBe('—');
+  });
+
+  it('переводит коды DH2, включая массивы и объекты', () => {
+    const label = (key: string) => translations.ru[key];
+    expect(
+      formatHistoryValue(
+        { value: 'hive-world' },
+        { config: dh2History, path: 'homeWorld', t: tRu },
+      ),
+    ).toBe(label('dh2.catalog.world.hive-world'));
+    expect(
+      formatHistoryValue(
+        { value: 'adeptus-arbites' },
+        { config: dh2History, path: 'background', t: tRu },
+      ),
+    ).toBe(label('dh2.catalog.background.adeptus-arbites'));
+    expect(
+      formatHistoryValue(
+        { value: 'd100-10' },
+        { config: dh2History, path: 'divination', t: tRu },
+      ),
+    ).toBe(label('dh2.catalog.divination.d100-10'));
+    expect(
+      formatHistoryValue(
+        { value: ['perception', 'toughness'] },
+        { config: dh2History, path: 'aptitudes.profile', t: tRu },
+      ),
+    ).toBe(
+      `${label('dh2.catalog.aptitude.perception')}, ${label('dh2.catalog.aptitude.toughness')}`,
+    );
+    expect(
+      formatHistoryValue(
+        { value: ['psyker'] },
+        { config: dh2History, path: 'eliteAdvances', t: tRu },
+      ),
+    ).toBe(label('dh2.catalog.elite.psyker'));
+    expect(
+      formatHistoryValue(
+        { value: 'iron-jaw' },
+        { config: dh2History, path: 'startingChoices.roleTalent', t: tRu },
+      ),
+    ).toBe(label('dh2.catalog.talent.iron-jaw'));
+    expect(
+      formatHistoryValue(
+        { value: ['inquiry'] },
+        { config: dh2History, path: 'startingChoices.skills', t: tRu },
+      ),
+    ).toBe(label('dh2.catalog.skill.inquiry'));
+    expect(
+      formatHistoryValue(
+        { value: { background: 'offence' } },
+        { config: dh2History, path: 'aptitudes.chosen', t: tRu },
+      ),
+    ).toBe(label('dh2.catalog.aptitude.offence'));
+    expect(
+      formatHistoryValue(
+        { value: [true, false, false, false, false] },
+        { config: dh2History, path: 'statUpgrades.influence', t: tRu },
+      ),
+    ).toBe('1/5');
+  });
+
+  it('переводит общие коды задач, инвентаря и булевы', () => {
+    expect(
+      formatHistoryValue(
+        { value: 'active' },
+        { path: 'questLog.status', t: tRu },
+      ),
+    ).toBe(tRu('common.questActive'));
+    expect(
+      formatHistoryValue(
+        { value: 'completed' },
+        { path: 'questLog.status', t: tRu },
+      ),
+    ).toBe(tRu('common.questDone'));
+    expect(
+      formatHistoryValue(
+        { value: 'lost' },
+        { path: 'inventory.status', t: tRu },
+      ),
+    ).toBe(tRu('common.itemStatusLost'));
+    expect(
+      formatHistoryValue(
+        { value: 'default' },
+        { path: 'inventory.status', t: tRu },
+      ),
+    ).toBe(tRu('common.itemStatusDefault'));
+    expect(
+      formatHistoryValue(
+        { value: true },
+        { path: 'equipment.weapons.melee.equipped', t: tRu },
+      ),
+    ).toBe(tRu('common.yes'));
+    expect(
+      formatHistoryValue(
+        { value: ['A', 'B'] },
+        { path: 'personalityTraits', t: tRu },
+      ),
+    ).toBe('A, B');
+    expect(
+      formatHistoryValue(
+        { value: { text: 'Find the relic', completed: true } },
+        { path: 'questLog.objectives', t: tRu },
+      ),
+    ).toBe('✓ Find the relic');
+    expect(
+      resolveHistoryLabel(
+        {
+          kind: 'added',
+          path: 'equipment.weapons.melee',
+          key: 'm1',
+          label: 'Chainsword',
+        },
+        dh1History,
+        tRu,
+      ),
+    ).toBe(`${tRu('dh1.meleeWeapons')} · Chainsword`);
   });
 });

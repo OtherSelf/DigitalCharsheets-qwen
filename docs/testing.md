@@ -148,9 +148,11 @@ theme × language × mode × viewport cross-product:
   history tab (`includeHistory`), the invalid link and the owner dialog. Its link is seeded directly into the temporary
   data directory; with `--base-url` there is no data directory, so the share
   screenshots are skipped like the admin ones.
-- `history.spec.ts` covers the owner timeline (desktop/mobile) and the empty
-  state after clearing. History fixtures are written into the temporary data
-  directory with fixed dates, so PNGs do not drift.
+- `history.spec.ts` covers the owner timeline (desktop/mobile), the empty
+  state after clearing, and functional DH1/DH2 timelines on temporary accounts:
+  labels and code values are localised and no raw JSON reaches the page.
+  History fixtures are written into the temporary data directory with fixed
+  dates, so PNGs do not drift.
 
 `test:visual:changed` maps the current diff (committed vs `--base`, plus
 staged/unstaged/untracked files) to specs. It is deliberately conservative:
@@ -265,7 +267,7 @@ OS or missing fonts.
 | `user-menu.spec.ts` | Profile menu (user, admin, RU), display settings, 80% UI scale |
 | `admin.spec.ts` | `/admin`: users, edit/block/delete dialogs, sheet list, games & editions |
 | `share.spec.ts` | Guest read-only share link, optional history tab, invalid link, owner dialog |
-| `history.spec.ts` | Character history timeline and the empty state after clearing |
+| `history.spec.ts` | Character history timeline, empty state, and DH1/DH2 label/code checks |
 | `robustness.spec.ts` | Load failures: not-found and retry screens |
 | `i18n-raw.spec.ts` | No raw translation keys in the rendered UI |
 | `tablet.spec.ts` | Tablet 1024×768 project only |

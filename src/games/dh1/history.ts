@@ -1,4 +1,78 @@
 import type { GameHistoryConfig } from '../types';
+import {
+  CAREER_KEYS,
+  HOME_WORLD_KEYS,
+  QUIRK_KEYS,
+  RANK_KEYS,
+  VARIANT_KEYS,
+} from './dark-heresy-data';
+import { divinationEffectLabel, divinationLabel } from './divination-i18n';
+import { genderLabel } from './gender';
+
+type Translate = (key: string) => string;
+
+function mappedLabel(
+  map: Readonly<Record<string, string>>,
+  value: unknown,
+  t: Translate,
+): string | undefined {
+  if (typeof value !== 'string' || !value) return undefined;
+  const key = map[value];
+  return key ? t(key) : undefined;
+}
+
+function conditionLabel(
+  prefix: 'dh1' | 'dh2',
+  field: 'kind' | 'source',
+  value: string,
+  t: Translate,
+): string | undefined {
+  if (!value) return undefined;
+  const key = `${prefix}.conditions.${field}.${value}`;
+  const text = t(key);
+  return text === key ? value : text;
+}
+
+function armorEnumLabel(
+  path: string,
+  value: unknown,
+  t: Translate,
+): string | undefined {
+  if (typeof value !== 'string' || !value) return undefined;
+  const prefix = /^equipment\.armor\.[^.]+\.type$/.test(path)
+    ? 'dh1.armorType'
+    : /^equipment\.armor\.[^.]+\.quality$/.test(path)
+      ? 'dh1.armorQuality'
+      : undefined;
+  if (!prefix) return undefined;
+  const suffix = prefix === 'dh1.armorQuality' ? value.replace('-', '') : value;
+  const key = `${prefix}${suffix}`;
+  const text = t(key);
+  return text === key ? value : text;
+}
+
+function trainingLabel(value: unknown, t: Translate): string | undefined {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return undefined;
+  }
+  const record = value as Record<string, unknown>;
+  const parts: string[] = [];
+  if (record.skilled) parts.push(t('dh1.skilled'));
+  if (record.plus10) parts.push('+10');
+  if (record.plus20) parts.push('+20');
+  if (record.plus30) parts.push('+30');
+  return parts.length > 0 ? parts.join(', ') : '—';
+}
+
+function statAdvanceLabel(value: unknown, t: Translate): string | undefined {
+  if (Array.isArray(value)) {
+    return `${value.filter(Boolean).length}/${value.length}`;
+  }
+  if (typeof value === 'boolean') {
+    return t(value ? 'common.yes' : 'common.no');
+  }
+  return undefined;
+}
 
 /**
  * Подписи полей Dark Heresy 1-й редакции для экрана истории.
@@ -12,6 +86,7 @@ import type { GameHistoryConfig } from '../types';
 export const dh1History: GameHistoryConfig = {
   labels: {
     name: 'common.name',
+    characterClass: 'common.class',
     careerPath: 'dh1.careerPath',
     homeWorld: 'dh1.homeWorld',
     worldVariant: 'dh1.worldVariant',
@@ -33,10 +108,18 @@ export const dh1History: GameHistoryConfig = {
     'equipment.armorWeight': 'dh1.armourWeight',
     'equipment.armor': 'dh1.equipment.armor',
     'equipment.weapons': 'dh1.equipment.weapons',
+    'equipment.weapons.melee.traits': 'dh1.weaponTraits',
+    'equipment.weapons.ranged.traits': 'dh1.weaponTraits',
     identity: 'dh1.identity',
     'identity.gender': 'dh1.gender',
     'identity.build': 'dh1.build',
     'identity.handedness': 'dh1.handedness',
+    height: 'common.height',
+    weight: 'common.weight',
+    age: 'common.age',
+    skinColor: 'dh1.skinColor',
+    hairColor: 'dh1.hairColor',
+    eyeColor: 'dh1.eyeColor',
     carry: 'dh1.carrySection',
     'carry.totalCarriedWeight': 'dh1.totalCarriedWeight',
     'carry.carry': 'dh1.carry',
@@ -67,12 +150,52 @@ export const dh1History: GameHistoryConfig = {
     'inventory.quantity': 'common.quantity',
     skills: 'common.skills',
     'skills.notes': 'common.notes',
-    'skills.training': 'common.skills',
     talents: 'dh1.talentsAndTraits',
     'talents.notes': 'common.notes',
     'talents.description': 'common.description',
+    'skills.training': 'common.training',
     fatigue1st: 'dh1.fatigueFirstEdition',
     fatigue2nd: 'dh1.fatigueSecondEdition',
+    criticalConditions: 'dh1.criticalConditions',
+    movement: 'common.movement',
+    current: 'common.current',
+    max: 'common.max',
+    total: 'common.total',
+    walkHalf: 'dh1.halfMove',
+    walkFull: 'common.walkFull',
+    charge: 'dh1.charge',
+    run: 'dh1.run',
+    'movement.walkHalf': 'dh1.halfMove',
+    'movement.walkFull': 'common.walkFull',
+    'movement.charge': 'dh1.charge',
+    'movement.run': 'dh1.run',
+    throneGelt: 'dh1.throneGelt',
+    monthlyIncome: 'dh1.monthlyIncome',
+    // Сегменты характеристик для `statUpgrades` и `statNotes`.
+    weaponSkill: 'dh1.weaponSkill',
+    ballisticSkill: 'dh1.ballisticSkill',
+    strength: 'dh1.strength',
+    toughness: 'dh1.toughness',
+    agility: 'dh1.agility',
+    intelligence: 'dh1.intelligence',
+    perception: 'dh1.perception',
+    willpower: 'dh1.willpower',
+    fellowship: 'dh1.fellowship',
+    // Части брони, по которым история пишет `equipment.armor.<part>.ap`.
+    Head: 'dh1.armorHead',
+    'Right arm': 'dh1.armorRightArm',
+    'Left arm': 'dh1.armorLeftArm',
+    Body: 'dh1.armorBody',
+    'Right leg': 'dh1.armorRightLeg',
+    'Left leg': 'dh1.armorLeftLeg',
+    // Общие поля журнала заданий.
+    title: 'common.title',
+    status: 'common.status',
+    priority: 'common.priority',
+    objectives: 'common.questObjectives',
+    rewards: 'common.questRewards',
+    npcs: 'common.questNpcs',
+    locations: 'common.questLocations',
     questLog: 'common.questJournal',
     notes: 'common.notes',
     backstory: 'common.backstory',
@@ -107,6 +230,9 @@ export const dh1History: GameHistoryConfig = {
     'conditions.source': 'dh1.conditions.source',
   },
   collections: {
+    criticalConditions: 'dh1.criticalConditions',
+    'equipment.weapons.melee': 'dh1.meleeWeapons',
+    'equipment.weapons.ranged': 'dh1.rangedWeapons',
     inventory: 'common.inventory',
     skills: 'common.skills',
     talents: 'dh1.talentsAndTraits',
@@ -127,4 +253,41 @@ export const dh1History: GameHistoryConfig = {
     },
   },
   itemLabelFields: ['name', 'title', 'description'],
+  formatValue(path, value, t) {
+    if (typeof value === 'string') {
+      switch (path) {
+        case 'homeWorld':
+          return mappedLabel(HOME_WORLD_KEYS, value, t);
+        case 'worldVariant':
+          return mappedLabel(VARIANT_KEYS, value, t);
+        case 'careerPath':
+        case 'characterClass':
+          return mappedLabel(CAREER_KEYS, value, t);
+        case 'rank':
+        case 'advancedPath':
+        case 'alternatePath':
+          return mappedLabel(RANK_KEYS, value, t);
+        case 'quirk':
+          return mappedLabel(QUIRK_KEYS, value, t);
+        case 'divination':
+          return divinationLabel(value, t, 'dh1') || undefined;
+        case 'divinationEffect':
+          return divinationEffectLabel(value, t, 'dh1') || undefined;
+        case 'identity.gender':
+          return genderLabel(value, t) || undefined;
+        case 'conditions.kind':
+          return conditionLabel('dh1', 'kind', value, t);
+        case 'conditions.source':
+          return conditionLabel('dh1', 'source', value, t);
+        case 'experienceLog.kind':
+          return value === 'award' ? t('dh1.experienceAward') : undefined;
+        default:
+          break;
+      }
+      return armorEnumLabel(path, value, t);
+    }
+    if (path === 'skills.training') return trainingLabel(value, t);
+    if (path.startsWith('statUpgrades.')) return statAdvanceLabel(value, t);
+    return undefined;
+  },
 };

@@ -130,6 +130,12 @@ function ChangeRow({
   const fieldPath = change.field
     ? `${change.path}.${change.field}`
     : change.path;
+  // Добавление/удаление элемента коллекции уже подписано («Оружие · New»);
+  // сырой JSON объекта здесь только мешает.
+  const hideKeyedItemBody =
+    change.key !== undefined &&
+    change.field === undefined &&
+    (change.kind === 'added' || change.kind === 'removed');
 
   return (
     <div data-testid="history-change" className="border-b py-3 last:border-b-0">
@@ -143,7 +149,8 @@ function ChangeRow({
           {t('history.tooManyChanges')}
           {change.count !== undefined ? ` (${change.count})` : ''}
         </p>
-      ) : change.kind === 'array-add' || change.kind === 'array-remove' ? (
+      ) : hideKeyedItemBody ? null : change.kind === 'array-add' ||
+        change.kind === 'array-remove' ? (
         <div className="space-y-1">
           <div className="text-muted-foreground text-[11px] uppercase">
             {change.kind === 'array-add'

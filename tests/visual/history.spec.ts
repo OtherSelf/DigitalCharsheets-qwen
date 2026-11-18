@@ -6,6 +6,7 @@ import {
   openApp,
   prepare,
   screenshotPage,
+  signInViaUI,
 } from './helpers';
 
 const historyUrl = (id: string) => `/character/${id}/history`;
@@ -61,6 +62,126 @@ test.describe('история изменений', () => {
       await expect(page.getByTestId('history-empty')).toBeVisible();
       await expectNoRawI18nKeys(page, 'пустая история (en)');
       await screenshotPage(page, 'history-empty-en.png');
+    },
+  );
+});
+
+/**
+ * ─── LANDMARK: HISTORY I18N ALL GAMES ─────────────────────────────────────
+ * DH1/DH2 не имеют засеянных фикстур истории, поэтому создаём временный
+ * аккаунт и пишем изменения через API. Проверяем, что сырые коды (id
+ * пророчества, склонностей, пола) и JSON массивов не попадают в таймлайн.
+ */
+async function registerTempAccount(
+  page: import('@playwright/test').Page,
+  label: string,
+): Promise<{ username: string; password: string }> {
+  const username = `${label}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+  const password = 'history-password-1';
+  const registered = await page.request.post('/api/auth/register', {
+    data: {
+      username,
+      password,
+      displayName: label,
+      recoveryPhrase: 'amber cobalt lantern',
+    },
+  });
+  expect([200, 201], 'регистрация аккаунта').toContain(registered.status());
+  return { username, password };
+}
+
+test.describe('история DH: подписи и значения без кодов', () => {
+  test(
+    'DH1: пророчество и продвижения характеристик (en)',
+    { tag: '@desktop' },
+    async ({ page }) => {
+      const account = await registerTempAccount(page, 'history-dh1');
+      const created = await page.request.post('/api/characters', {
+        data: {
+          systemId: 'dh1',
+          name: 'History DH1',
+          homeWorld: 'Hive World',
+          careerPath: 'Adept',
+          divination: 'painOfBullet',
+        },
+      });
+      expect([200, 201], 'создание листа').toContain(created.status());
+      const { id } = (await created.json()) as { id: string };
+
+      const updated = await page.request.put(`/api/characters/${id}`, {
+        data: {
+          divination: 'sinsHidden',
+          statUpgrades: { weaponSkill: [false, true, false, false] },
+        },
+      });
+      expect(updated.status(), 'правка листа').toBe(200);
+
+      await signInViaUI(page, account);
+      await openApp(page, historyUrl(id));
+      await expectNoRawI18nKeys(page, 'история DH1');
+      await expect(page.getByText('Divination', { exact: true })).toBeVisible();
+      await expect(page.getByText(/Sins hidden in the heart/)).toBeVisible();
+      await expect(page.getByText('painOfBullet')).toHaveCount(0);
+      await expect(page.getByText('sinsHidden')).toHaveCount(0);
+      await expect(
+        page.getByText('Characteristic advances · Weapon Skill'),
+      ).toBeVisible();
+      await expect(page.getByText('0/4', { exact: true })).toBeVisible();
+      await expect(page.getByText('1/4', { exact: true })).toBeVisible();
+      await expect(page.locator('pre', { hasText: '[false' })).toHaveCount(0);
+      await expect(page.locator('pre', { hasText: 'true' })).toHaveCount(0);
+    },
+  );
+
+  test(
+    'DH2: пол, склонности и стартовые выборы (en)',
+    { tag: '@desktop' },
+    async ({ page }) => {
+      const account = await registerTempAccount(page, 'history-dh2');
+      const created = await page.request.post('/api/characters', {
+        data: {
+          systemId: 'dh2',
+          name: 'History DH2',
+          homeWorld: 'hive-world',
+          background: 'adeptus-arbites',
+          role: 'warrior',
+          gender: 'male',
+        },
+      });
+      expect([200, 201], 'создание листа').toContain(created.status());
+      const { id } = (await created.json()) as { id: string };
+
+      const updated = await page.request.put(`/api/characters/${id}`, {
+        data: {
+          gender: 'female',
+          eliteAdvances: ['psyker'],
+          startingChoices: {
+            roleTalent: 'iron-jaw',
+            skills: ['inquiry'],
+            talents: [],
+          },
+        },
+      });
+      expect(updated.status(), 'правка листа').toBe(200);
+
+      await signInViaUI(page, account);
+      await openApp(page, historyUrl(id));
+      await expectNoRawI18nKeys(page, 'история DH2');
+      await expect(page.getByText('Gender', { exact: true })).toBeVisible();
+      await expect(page.getByText('Female', { exact: true })).toBeVisible();
+      await expect(
+        page.getByText('Elite Advances', { exact: true }),
+      ).toBeVisible();
+      await expect(page.getByText('Psyker', { exact: true })).toBeVisible();
+      await expect(
+        page.getByText('Role talent', { exact: true }),
+      ).toBeVisible();
+      await expect(page.getByText('Iron Jaw', { exact: true })).toBeVisible();
+      await expect(page.getByText('Inquiry', { exact: true })).toBeVisible();
+      await expect(page.getByText(/^psyker$/)).toHaveCount(0);
+      await expect(page.getByText(/^iron-jaw$/)).toHaveCount(0);
+      await expect(page.getByText(/^inquiry$/)).toHaveCount(0);
+      await expect(page.locator('pre', { hasText: '["' })).toHaveCount(0);
     },
   );
 });

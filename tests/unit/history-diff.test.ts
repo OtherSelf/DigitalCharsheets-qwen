@@ -15,6 +15,7 @@ function makeBase(): Record<string, unknown> {
     stats: { strength: 10, dexterity: 12 },
     inventory: [{ id: 'i1', name: 'Sword', status: 'default', notes: '' }],
     divineBoons: ['a', 'b'],
+    statUpgrades: { weaponSkill: [false, false, false, false] },
     questLog: [
       {
         id: 'q1',
@@ -179,6 +180,34 @@ describe('diffCharacterRecords', () => {
         },
       },
     ]);
+  });
+
+  it('булев массив продвижений сравнивает как набор, а не add/remove', () => {
+    const before = makeBase();
+    const after = clone(before);
+    (after.statUpgrades as Record<string, unknown>).weaponSkill = [
+      false,
+      true,
+      false,
+      false,
+    ];
+
+    const diff = diffCharacterRecords(before, after);
+
+    expect(diff?.changes).toEqual([
+      {
+        kind: 'changed',
+        path: 'statUpgrades.weaponSkill',
+        before: { value: [false, false, false, false] },
+        after: { value: [false, true, false, false] },
+      },
+    ]);
+    expect(diff?.summary).toEqual({
+      changed: 1,
+      added: 0,
+      removed: 0,
+      bulk: 0,
+    });
   });
 
   it('даёт array-add/array-remove для массивов примитивов', () => {

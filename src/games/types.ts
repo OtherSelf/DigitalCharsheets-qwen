@@ -372,6 +372,20 @@ export interface GameUiSlots<
  * путь поля → i18n-ключ отдаёт плагин, а при отсутствии записи UI показывает
  * человекочитаемый путь. Ключи обязаны существовать в словарях плагина.
  */
+export type HistoryTranslate = (key: string) => string;
+
+/**
+ * Локализовать значение поля для истории: `path` — полный путь после
+ * `change.field`, `value` — значение до/после. `undefined` — показать
+ * стандартное представление. Плагин сам решает, что считать кодом (пол,
+ * мир, склонности) и как собрать массив или объект.
+ */
+export type HistoryValueFormatter = (
+  path: string,
+  value: unknown,
+  t: HistoryTranslate,
+) => string | undefined;
+
 export interface GameHistoryConfig {
   /** Точный путь поля (`stats.strength`) → i18n-ключ. */
   readonly labels?: Readonly<Record<string, string>>;
@@ -387,6 +401,8 @@ export interface GameHistoryConfig {
   >;
   /** Поля, из которых брать подпись элемента; по умолчанию name/title/description. */
   readonly itemLabelFields?: readonly string[];
+  /** Локализовать значение; вызывается до встроенных форматов. */
+  readonly formatValue?: HistoryValueFormatter;
 }
 
 /**
