@@ -361,6 +361,16 @@ State is stored in `<data-dir>/settings/game-catalog.json` (v2, D6/D16):
 `/api/games` exposes the per-role catalog plus a `disabled` id list; the sheet
 page uses it to switch to read-only mode.
 
+## API schema
+
+The plugin's `schema` (zod) is the only description of sheet fields the host
+has, so the OpenAPI document is generated from it: `Sheet_<systemId>` is the
+stored shape, `SheetInput_<systemId>` the request shape, and the `schemaVersion`
+in each component description comes from your manifest. Changing `schema.ts`
+without bumping `schemaVersion` is therefore visible in `/api/docs`, and
+`tests/unit/openapi.test.ts` fails if a demo sheet stops matching the published
+schema.
+
 ## Versioning
 
 - `manifestVersion` — the manifest format understood by the host (2).
