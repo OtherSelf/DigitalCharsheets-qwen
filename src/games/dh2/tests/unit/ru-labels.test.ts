@@ -1,13 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import dh1En from '@/games/dh1/i18n/en.json';
-import dh1Ru from '@/games/dh1/i18n/ru.json';
 import dh2En from '@/games/dh2/i18n/en.json';
 import dh2Ru from '@/games/dh2/i18n/ru.json';
 
 /**
- * ─── LANDMARK: DH RU SHEET LABELS TESTS ───────────────────────────────────
- * Подписи характеристик и их сокращения в RU-словарях сверены с новым
+ * ─── LANDMARK: DH2 RU SHEET LABELS TESTS ─────────────────────────────────
+ * Подписи характеристик, сокращения и термины в RU/EN-словарях 2e сверены с
  * RU-листом DH2e (`books/dh2/ru/.../dh2-sheet-fillable-ru`). Тест не даёт
  * молча вернуть старые «ББ/ДБ/СЛ» или «Навык оружия».
  */
@@ -51,12 +49,10 @@ const EN_ABBR: Record<string, string> = {
   influence: 'Ifl',
 };
 
-describe.each([
-  ['dh1', dh1Ru, dh1En],
-  ['dh2', dh2Ru, dh2En],
-] as const)('%s: подписи характеристик', (prefix, ruJson, enJson) => {
-  const ru = ruJson as Record<string, string>;
-  const en = enJson as Record<string, string>;
+describe('dh2: подписи характеристик', () => {
+  const prefix = 'dh2';
+  const ru = dh2Ru as Record<string, string>;
+  const en = dh2En as Record<string, string>;
 
   it('RU: полные названия из RU-листа', () => {
     for (const [key, value] of Object.entries(RU_FULL)) {
@@ -74,7 +70,6 @@ describe.each([
   });
 
   it('DH2: четыре термина из RU-листа', () => {
-    if (prefix !== 'dh2') return;
     expect(ru['dh2.aptitudes']).toBe('Склонности');
     expect(ru['dh2.skills']).toBe('Умения');
     expect(ru['dh2.eliteAdvances']).toBe('Элитные улучшения');
@@ -85,7 +80,6 @@ describe.each([
   });
 
   it('DH2: пророчества дословно по таблице 2-9', () => {
-    if (prefix !== 'dh2') return;
     const labels = Object.keys(ru).filter((key) =>
       /^dh2\.catalog\.divination\.d100-\d+$/.test(key),
     );
@@ -97,7 +91,6 @@ describe.each([
   });
 
   it('DH2: психосилы и дисциплины по RU-книге', () => {
-    if (prefix !== 'dh2') return;
     expect(ru['dh2.catalog.power.winding-fate']).toBe('Виток Судьбы');
     expect(ru['dh2.catalog.power.iron-arm']).toBe('Железная Плоть');
     expect(ru['dh2.catalog.power.assail']).toBe('Швыряние');
@@ -105,7 +98,6 @@ describe.each([
   });
 
   it('DH2: 19 склонностей и 3 элитных улучшения', () => {
-    if (prefix !== 'dh2') return;
     expect(ru['dh2.catalog.aptitude.defence']).toBe('Защита');
     expect(ru['dh2.catalog.aptitude.offence']).toBe('Нападение');
     expect(ru['dh2.catalog.aptitude.tech']).toBe('Техно');
@@ -119,7 +111,6 @@ describe.each([
   });
 
   it('DH2: подсказки 20 талантов, видимых в создании', () => {
-    if (prefix !== 'dh2') return;
     const hints = Object.keys(ru).filter((key) =>
       /^dh2\.catalog\.talent\..+\.hint$/.test(key),
     );
@@ -132,7 +123,6 @@ describe.each([
   });
 
   it('DH2: четыре навыка исправлены по RU-листу', () => {
-    if (prefix !== 'dh2') return;
     expect(ru['dh2.catalog.skill.awareness']).toBe('Бдительность');
     expect(ru['dh2.catalog.skill.commerce']).toBe('Коммерция');
     expect(ru['dh2.catalog.skill.scholastic-lore']).toBe('Учёное Знание');

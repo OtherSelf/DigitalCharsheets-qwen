@@ -5,7 +5,6 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { DH1_SCHEMA_VERSION } from '@/games/dh1/schema-version';
 import type { DH1Character } from '@/games/dh1/types';
-import type { DH2Character } from '@/games/dh2/types';
 import {
   normalizeAllCharacters,
   type NormalizeCharactersReport,
@@ -24,9 +23,15 @@ import {
 } from '@tests/support';
 
 /**
+ * ─── LANDMARK: DH1 CHARACTER SCHEMA TESTS ────────────────────────────────
  * Character schema v1: legacy DH-пророчества были английскими фразами, теперь
  * в файле stable ID + schemaVersion. Проверяем чистую нормализацию и
- * startup-обход файлов.
+ * startup-обход файлов для 1e-листа.
+ *
+ * Проверки 1e живут рядом с редакцией (D16): паритет с dh2 здесь не
+ * проверяется, свой лист редакция проверяет сама. Нормализация чужого
+ * D&D-листа — поведение хоста, которым пользуются обе редакции, поэтому
+ * проверка дублируется в dh2/dh1 (D16).
  */
 let dataDir: string;
 
@@ -47,14 +52,14 @@ describe('character schema v1', () => {
     });
 
     const { character, changed, issues } = normalizeCharacterRecord(legacy);
-    const dh = character as unknown as DH1Character | DH2Character;
+    const dh = character as unknown as DH1Character;
     expect(changed).toBe(true);
     // В legacy-листе было influence=5 — это поле 2e, оно уходит в notes.
     expect(issues.join(' ')).toContain('поля 2e перенесены');
     expect(dh.notes).toContain('[migration v2]');
     expect(character.schemaVersion).toBe(DH1_SCHEMA_VERSION);
     expect(dh.divination).toBe('mutationWithout');
-    expect((dh as DH1Character).divinationEffect).toBe('minorMutation');
+    expect(dh.divinationEffect).toBe('minorMutation');
   });
 
   it('идемпотентна: второй проход ничего не меняет', () => {
@@ -68,9 +73,9 @@ describe('character schema v1', () => {
       first.character as unknown as Record<string, unknown>,
     );
     expect(second.changed).toBe(false);
-    const dh = second.character as unknown as DH1Character | DH2Character;
+    const dh = second.character as unknown as DH1Character;
     expect(dh.divination).toBe('darkDreams');
-    expect((dh as DH1Character).divinationEffect).toBe('insanity2');
+    expect(dh.divinationEffect).toBe('insanity2');
   });
 
   it('сохраняет неизвестное кастомное пророчество и сообщает о нём', () => {
@@ -80,7 +85,7 @@ describe('character schema v1', () => {
         divinationEffect: '+3 Intelligence.',
       }),
     );
-    const dh = character as unknown as DH1Character | DH2Character;
+    const dh = character as unknown as DH1Character;
     expect(dh.divination).toBe('Knowledge is power, guard it well.');
     expect(character.schemaVersion).toBe(DH1_SCHEMA_VERSION);
     expect(issues.join(' ')).toContain('неизвестное пророчество');
@@ -104,13 +109,10 @@ describe('character schema v1', () => {
     const parsed = parseExportPayload(payload);
     expect(parsed.ok).toBe(true);
     if (!parsed.ok) return;
-    const imported = parsed.characters[0] as unknown as
-      DH1Character | DH2Character;
+    const imported = parsed.characters[0] as unknown as DH1Character;
     expect(imported.schemaVersion).toBe(DH1_SCHEMA_VERSION);
     expect(imported.divination).toBe('trustYourFear');
-    expect((imported as unknown as DH1Character).divinationEffect).toBe(
-      'agility2Fate1',
-    );
+    expect(imported.divinationEffect).toBe('agility2Fate1');
   });
 
   it('ставит версию D&D-листу без изменения полей', () => {

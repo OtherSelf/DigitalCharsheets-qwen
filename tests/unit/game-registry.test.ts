@@ -1,8 +1,5 @@
 import { describe, expect, it } from 'vitest';
 
-import { dh1Module } from '@/games/dh1';
-import { dh2Module } from '@/games/dh2';
-import { dnd5eModule } from '@/games/dnd5e';
 import { getGameDefinition, listGameDefinitions } from '@/games/games';
 import {
   createGameRegistry,
@@ -15,12 +12,18 @@ import type { GameModule } from '@/games/types';
 
 /**
  * ─── LANDMARK: GAME REGISTRY TESTS ─────────────────────────────────────────
- * Контракт реестра и модулей:
+ * Контракт реестра и модулей проверяется на обнаруженном наборе плагинов:
+ * добавили или удалили папку в `src/games` — этот файл не меняется.
  *   • id уникальны, порядок стабилен;
  *   • дефолты каждого модуля проходят его же zod-схему;
- *   • редакционные поля не протекают между dh1/dh2;
+ *   • каждый модуль группируется по своей игре, игры ссылаются на
+ *     сгенерированные i18n-ключи;
  *   • фиктивная редакция добавляется в реестр без правок ядра
  *     (приёмочный критерий «dh3-заглушка»).
+ *
+ * Редакционные поля (fatigue1st/fatigue2nd/influence), схема и адаптер
+ * экспорта, точный shortCode — проверяет тест самой редакции:
+ * `src/games/<id>/tests/unit/module.test.ts`.
  */
 
 function withId(gameModule: GameModule<any>, id = 'test-character') {
@@ -28,25 +31,37 @@ function withId(gameModule: GameModule<any>, id = 'test-character') {
 }
 
 describe('реестр игр и редакций', () => {
-  it('содержит три встроенных модуля в стабильном порядке', () => {
-    expect(listGameModules().map((gameModule) => gameModule.id)).toEqual([
-      'dnd5e',
-      'dh1',
-      'dh2',
-    ]);
+  it('содержит все обнаруженные модули в стабильном порядке', () => {
+    const detected = listGameModules();
+    expect(detected.length).toBeGreaterThan(0);
+
+    const ids = detected.map((gameModule) => gameModule.id);
+    expect(new Set(ids).size).toBe(ids.length);
+    expect(ids).toEqual(
+      [...detected]
+        .sort((a, b) => a.order - b.order || a.id.localeCompare(b.id))
+        .map((gameModule) => gameModule.id),
+    );
+
+    // Боевой реестр — тот же обнаруженный список, без ручных id.
+    expect(gameRegistry.modules.map((gameModule) => gameModule.id)).toEqual(
+      ids,
+    );
+    expect(listGameModules().map((gameModule) => gameModule.id)).toEqual(ids);
   });
 
-  it('находит модуль по systemId и возвращает undefined для чужого', () => {
-    expect(getGameModule('dh2')?.id).toBe('dh2');
-    expect(getGameModule('dh9')).toBeUndefined();
-    expect(() => gameRegistry.require('dh9')).toThrow(/Неизвестный модуль/);
+  it('находит каждый модуль по systemId и возвращает undefined для чужого', () => {
+    for (const gameModule of listGameModules()) {
+      expect(getGameModule(gameModule.id)).toBe(gameModule);
+    }
+
+    expect(getGameModule('missing-plugin')).toBeUndefined();
+    expect(() => gameRegistry.require('missing-plugin')).toThrow(
+      /Неизвестный модуль/,
+    );
   });
 
-  it('за каждой редакцией закреплён короткий код игры для админки', () => {
-    expect(getGameModule('dnd5e')?.shortCode).toBe('dnd5e');
-    expect(getGameModule('dh1')?.shortCode).toBe('dh1e');
-    expect(getGameModule('dh2')?.shortCode).toBe('dh2e');
-
+  it('за каждой редакцией закреплён уникальный короткий код игры', () => {
     const codes = listGameModules().map((gameModule) => gameModule.shortCode);
     expect(new Set(codes).size).toBe(codes.length);
     for (const code of codes) {
@@ -55,23 +70,52 @@ describe('реестр игр и редакций', () => {
   });
 
   it('группирует редакции по игре', () => {
-    expect(listGameModulesForGame('darkHeresy').map((m) => m.id)).toEqual([
-      'dh1',
-      'dh2',
-    ]);
-    expect(listGameModulesForGame('dnd').map((m) => m.id)).toEqual(['dnd5e']);
-    expect(listGameModulesForGame('nope')).toEqual([]);
+    const detected = listGameModules();
+    const gameIds = [
+      ...new Set(detected.map((gameModule) => gameModule.gameId)),
+    ];
+    expect(gameIds.length).toBeGreaterThan(0);
+
+    for (const gameId of gameIds) {
+      // Порядок и набор — ровно те модули, что заявили эту игру.
+      expect(listGameModulesForGame(gameId).map((m) => m.id)).toEqual(
+        detected
+          .filter((gameModule) => gameModule.gameId === gameId)
+          .map((gameModule) => gameModule.id),
+      );
+    }
+    expect(listGameModulesForGame('missing-game')).toEqual([]);
   });
 
   it('игры имеют уникальные id и ссылаются на i18n-ключи', () => {
     const games = listGameDefinitions();
-    expect(games.map((game) => game.id)).toEqual(['dnd', 'darkHeresy']);
-    expect(getGameDefinition('dnd')?.nameKey).toBe('games.generated.dnd.name');
+    const detected = listGameModules();
+    expect(games.length).toBeGreaterThan(0);
     expect(new Set(games.map((game) => game.id)).size).toBe(games.length);
+
+    // Каждая обнаруженная игра описана определением, и наоборот.
+    expect(games.map((game) => game.id).sort()).toEqual(
+      [...new Set(detected.map((gameModule) => gameModule.gameId))].sort(),
+    );
+    expect(games.map((game) => game.id)).toEqual(
+      [...games]
+        .sort((a, b) => a.order - b.order || a.id.localeCompare(b.id))
+        .map((game) => game.id),
+    );
+
+    for (const game of games) {
+      expect(getGameDefinition(game.id)).toBe(game);
+      expect(game.nameKey).toBe(`games.generated.${game.id}.name`);
+      expect(game.descriptionKey).toBe(
+        `games.generated.${game.id}.description`,
+      );
+    }
   });
 
   it('падает на дублирующемся id модуля', () => {
-    expect(() => createGameRegistry([dnd5eModule, dnd5eModule])).toThrow(
+    const [first] = listGameModules();
+    expect(first).toBeDefined();
+    expect(() => createGameRegistry([first, first])).toThrow(
       /Дублирующийся id/,
     );
   });
@@ -97,113 +141,61 @@ describe('модули: дефолты и схемы', () => {
     }
   });
 
-  it('dh1 не содержит 2e-полей, dh2 — 1e-полей', () => {
-    const dh1 = dh1Module.createDefaults() as unknown as Record<
-      string,
-      unknown
-    >;
-    const dh2 = dh2Module.createDefaults() as unknown as Record<
-      string,
-      unknown
-    >;
-
-    expect(dh1.fatigue1st).toBeDefined();
-    expect('fatigue2nd' in dh1).toBe(false);
-    expect('influence' in (dh1.stats as Record<string, unknown>)).toBe(false);
-
-    expect(dh2.fatigue2nd).toBeDefined();
-    expect('fatigue1st' in dh2).toBe(false);
-    expect((dh2.stats as Record<string, number>).influence).toBe(30);
-  });
-
-  it('дефолты dnd5e не содержат полей Dark Heresy', () => {
-    const draft = dnd5eModule.createDefaults() as unknown as Record<
-      string,
-      unknown
-    >;
-    expect(draft.gameSystem).toBe('Dungeons & Dragons');
-    expect('fatigue1st' in draft).toBe(false);
-    expect('homeWorld' in draft).toBe(false);
-  });
-
-  it('схема отвергает битый лист', () => {
-    const { id: _id, ...draft } = withId(dnd5eModule) as Record<
-      string,
-      unknown
-    >;
-    const result = dnd5eModule.schema.safeParse({
-      ...draft,
-      stats: { strength: 10 },
-      level: 'не число',
-    });
-    expect(result.success).toBe(false);
-  });
-
-  it('адаптер экспорта убирает непереносимые поля', () => {
-    const portable = dnd5eModule.export.toPortableJson(
-      {
-        ...dnd5eModule.createDefaults(),
-        name: 'Export Test',
-        id: 'c1',
-        userId: 'u1',
-        migratedFrom: 'firebase',
-        __seq: 3,
-      } as never,
-      {
-        includeBasicInfo: true,
-        includeStats: true,
-        includeCombat: true,
-        includeEquipment: true,
-        includeInventory: true,
-        includeSpells: true,
-        includeNarrative: true,
-        includeProgression: true,
-        includeCompanions: true,
-        includeQuestLog: true,
-        includeCustomHouseRules: true,
-      },
-    );
-    // Идентичность добавляет ядро; адаптер отдаёт только поля модуля.
-    expect(portable.userId).toBeUndefined();
-    expect(portable.migratedFrom).toBeUndefined();
-    expect(portable.__seq).toBeUndefined();
-    expect(portable.id).toBeUndefined();
-    expect(portable.name).toBe('Export Test');
+  it('названия редакций есть в словарях всех объявленных локалей', () => {
+    for (const gameModule of listGameModules()) {
+      expect(gameModule.nameKey.length, gameModule.id).toBeGreaterThan(0);
+      expect(gameModule.descriptionKey.length, gameModule.id).toBeGreaterThan(
+        0,
+      );
+      for (const [locale, dictionary] of Object.entries(gameModule.i18n)) {
+        expect(
+          dictionary?.[gameModule.nameKey],
+          `${gameModule.id}: ${locale} ${gameModule.nameKey}`,
+        ).toBeTruthy();
+        expect(
+          dictionary?.[gameModule.descriptionKey],
+          `${gameModule.id}: ${locale} ${gameModule.descriptionKey}`,
+        ).toBeTruthy();
+      }
+    }
   });
 });
 
 describe('расширяемость: новая редакция без правок ядра', () => {
   it('фиктивный модуль dh3 (test) добавляется в реестр и виден по статусу', () => {
-    const dh3Module: GameModule<any> = {
-      ...(dh1Module as GameModule<any>),
+    const detected = listGameModules();
+    const base = detected[0];
+    expect(base).toBeDefined();
+
+    const fakeModule: GameModule<any> = {
+      ...(base as GameModule<any>),
       id: 'dh3-test',
-      gameId: 'darkHeresy',
-      order: 25,
+      order: Math.max(...detected.map((gameModule) => gameModule.order)) + 10,
       defaultStatus: 'test',
       nameKey: 'games.dh3.name',
       descriptionKey: 'games.dh3.description',
       i18n: { en: {}, ru: {} },
     };
 
-    const registry = createGameRegistry([
-      dnd5eModule,
-      dh1Module,
-      dh2Module,
-      dh3Module,
-    ]);
+    const registry = createGameRegistry([...detected, fakeModule]);
 
     expect(registry.get('dh3-test')?.defaultStatus).toBe('test');
-    expect(registry.list().map((gameModule) => gameModule.id)).toEqual([
-      'dnd5e',
-      'dh1',
-      'dh3-test',
-      'dh2',
-    ]);
+    // Порядок — тот же компаратор реестра: order, затем id.
+    expect(registry.list().map((gameModule) => gameModule.id)).toEqual(
+      [...detected, fakeModule]
+        .sort((a, b) => a.order - b.order || a.id.localeCompare(b.id))
+        .map((gameModule) => gameModule.id),
+    );
+    expect(registry.list()).toHaveLength(detected.length + 1);
     expect(
       registry
         .list()
         .filter((gameModule) => gameModule.defaultStatus === 'published')
         .map((gameModule) => gameModule.id),
-    ).toEqual(['dnd5e', 'dh1', 'dh2']);
+    ).toEqual(
+      detected
+        .filter((gameModule) => gameModule.defaultStatus === 'published')
+        .map((gameModule) => gameModule.id),
+    );
   });
 });

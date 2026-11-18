@@ -4,16 +4,14 @@ import path from 'node:path';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
-import * as dh1 from '@/games/dh1';
-import * as dh2 from '@/games/dh2';
-import * as dnd5e from '@/games/dnd5e';
+import { listGameDefinitions } from '@/games/games';
 import { generatedI18n } from '@/games/i18n.generated';
 import {
   parseEntryPoint,
   PLUGIN_API_VERSION,
   type PluginManifest,
 } from '@/games/plugin-api';
-import { gamePlugins, gameRegistry, getPluginManifest } from '@/games/registry';
+import { gamePlugins, gameRegistry } from '@/games/registry';
 
 /**
  * ─── LANDMARK: PLUGIN REGISTRY TESTS ──────────────────────────────────────
@@ -77,11 +75,8 @@ afterEach(() => {
   }
 });
 
-const MODULE_NAMESPACES: Record<string, Record<string, unknown>> = {
-  dnd5e,
-  dh1,
-  dh2,
-};
+/** Обнаруженные плагины: список id берётся из манифестов, не из литералов. */
+const discoveredIds = gamePlugins.map((plugin) => plugin.manifest.id);
 
 /** Манифест фиктивного плагина; `overrides` — точечные правки для тестов. */
 function exampleManifest(
@@ -162,63 +157,81 @@ describe('сгенерированный реестр', () => {
     expect(fs.readFileSync(REGISTRY_PATH, 'utf8')).toBe(content);
   });
 
-  it('содержит ровно три встроенных плагина в порядке показа', async () => {
-    const { buildRegistry } = await generator();
+  it('содержит все обнаруженные плагины в порядке показа', async () => {
+    const { buildRegistry, collectManifests } = await generator();
     const { plugins } = buildRegistry();
-    expect(plugins.map((plugin) => plugin.id)).toEqual(['dnd5e', 'dh1', 'dh2']);
-    expect(plugins.map((plugin) => plugin.order)).toEqual([10, 20, 30]);
+    const manifests = collectManifests().map(({ manifest }) => manifest);
+    const expected = [...manifests].sort(
+      (a, b) => a.order - b.order || a.id.localeCompare(b.id),
+    );
+
+    expect(expected.length).toBeGreaterThan(0);
+    expect(plugins.map((plugin) => plugin.id)).toEqual(
+      expected.map((manifest) => manifest.id),
+    );
+    for (let index = 1; index < plugins.length; index += 1) {
+      expect(plugins[index].order, plugins[index].id).toBeGreaterThanOrEqual(
+        plugins[index - 1].order,
+      );
+    }
   });
 
   it('реестр собран из сгенерированного списка, а не из ручного', () => {
-    expect(gameRegistry.modules.map((gameModule) => gameModule.id)).toEqual([
-      'dnd5e',
-      'dh1',
-      'dh2',
-    ]);
-    expect(gamePlugins.map((plugin) => plugin.manifest.id)).toEqual([
-      'dnd5e',
-      'dh1',
-      'dh2',
-    ]);
+    expect(discoveredIds.length).toBeGreaterThan(0);
+    expect(gameRegistry.modules.map((gameModule) => gameModule.id)).toEqual(
+      discoveredIds,
+    );
+    expect(gameRegistry.modules).toHaveLength(gamePlugins.length);
   });
 
-  it.each([['dnd5e'], ['dh1'], ['dh2']])(
-    'манифест %s совпадает с модулем',
-    async (id) => {
-      const manifest = getPluginManifest(id);
-      expect(manifest, `нет манифеста для ${id}`).toBeDefined();
-      const gameModule = gameRegistry.require(id);
-      expect(manifest!.id).toBe(gameModule.id);
-      expect(manifest!.gameId).toBe(gameModule.gameId);
-      expect(manifest!.order).toBe(gameModule.order);
-      expect(manifest!.defaultStatus).toBe(gameModule.defaultStatus);
-      expect(manifest!.schemaVersion).toBe(gameModule.schemaVersion);
-      expect(manifest!.game.id).toBe(gameModule.gameId);
+  describe.each(discoveredIds)('плагин %s', (id) => {
+    it('манифест совпадает с модулем', () => {
+      const plugin = gamePlugins.find((entry) => entry.manifest.id === id);
+      expect(plugin, `нет плагина для ${id}`).toBeDefined();
+      const { manifest, module: gameModule } = plugin!;
 
-      // Точки входа — реальные экспорты модуля, а не только поля объекта:
-      // `entry.module` — сам объект модуля, остальные — функции.
-      const namespace = MODULE_NAMESPACES[id];
-      expect(namespace, `нет namespace для ${id}`).toBeDefined();
-      const moduleEntry = parseEntryPoint(manifest!.entry.module);
-      expect(moduleEntry.member).toBeDefined();
-      expect(typeof namespace[moduleEntry.member!], `${id}: module entry`).toBe(
-        'object',
-      );
-      for (const entry of [
-        manifest!.demo.entry,
-        manifest!.export.json,
-        manifest!.export.excel,
-      ]) {
-        const member = parseEntryPoint(entry).member;
-        expect(typeof namespace[member!], `${id}: ${entry}`).toBe('function');
+      expect(manifest.id).toBe(gameModule.id);
+      expect(manifest.gameId).toBe(gameModule.gameId);
+      expect(manifest.order).toBe(gameModule.order);
+      expect(manifest.defaultStatus).toBe(gameModule.defaultStatus);
+      expect(manifest.schemaVersion).toBe(gameModule.schemaVersion);
+      expect(manifest.game.id).toBe(gameModule.gameId);
+    });
+
+    // Имя экспорта `index.ts` сверяет тест самой редакции
+    // (`src/games/<id>/tests/unit/module.test.ts`): у хоста нет её namespace.
+    it('точки входа манифеста резолвятся в функции модуля', () => {
+      const plugin = gamePlugins.find((entry) => entry.manifest.id === id);
+      expect(plugin, `нет плагина для ${id}`).toBeDefined();
+      const { manifest, module: gameModule } = plugin!;
+
+      expect(parseEntryPoint(manifest.entry.module).member).toBeDefined();
+
+      const demoMember = parseEntryPoint(manifest.demo.entry).member!;
+      expect(
+        typeof (gameModule as unknown as Record<string, unknown>)[demoMember],
+        `${id}: ${manifest.demo.entry}`,
+      ).toBe('function');
+
+      for (const entry of [manifest.export.json, manifest.export.excel]) {
+        const member = parseEntryPoint(entry).member!;
+        expect(
+          typeof (gameModule.export as unknown as Record<string, unknown>)[
+            member
+          ],
+          `${id}: ${entry}`,
+        ).toBe('function');
       }
-    },
-  );
 
-  it.each([['dnd5e'], ['dh1'], ['dh2']])(
-    'демо-персонаж %s проходит схему модуля',
-    (id) => {
-      const gameModule = gameRegistry.require(id);
+      for (const migration of manifest.migrations) {
+        expect(parseEntryPoint(migration.entry).member).toBeDefined();
+      }
+    });
+
+    it('демо-персонаж проходит схему модуля', () => {
+      const plugin = gamePlugins.find((entry) => entry.manifest.id === id);
+      expect(plugin, `нет плагина для ${id}`).toBeDefined();
+      const gameModule = plugin!.module;
       const parsed = gameModule.schema.safeParse({
         ...gameModule.createDemo(),
         id: 'demo-fixture',
@@ -226,8 +239,20 @@ describe('сгенерированный реестр', () => {
       expect(parsed.success, parsed.success ? '' : parsed.error.message).toBe(
         true,
       );
-    },
-  );
+    });
+
+    it('normalize идемпотентен и молчит на дефолтах', () => {
+      const plugin = gamePlugins.find((entry) => entry.manifest.id === id);
+      expect(plugin, `нет плагина для ${id}`).toBeDefined();
+      const normalize = plugin!.module.normalize;
+      expect(normalize).toBeTypeOf('function');
+      const draft = { ...plugin!.module.createDefaults(), id: 'fixture' };
+      const first = normalize!(draft);
+      const second = normalize!(first.character);
+      expect(second.character).toEqual(first.character);
+      expect(second.warnings ?? []).toEqual([]);
+    });
+  });
 
   it('каждый плагин реализует normalize и merge (этап 2)', () => {
     for (const plugin of gamePlugins) {
@@ -237,20 +262,6 @@ describe('сгенерированный реестр', () => {
       expect(typeof plugin.module.merge, plugin.manifest.id).toBe('function');
     }
   });
-
-  it.each([['dnd5e'], ['dh1'], ['dh2']])(
-    'normalize плагина %s идемпотентен и молчит на дефолтах',
-    (id) => {
-      const plugin = gamePlugins.find((entry) => entry.manifest.id === id);
-      const normalize = plugin?.module.normalize;
-      expect(normalize).toBeTypeOf('function');
-      const draft = { ...plugin!.module.createDefaults(), id: 'fixture' };
-      const first = normalize!(draft);
-      const second = normalize!(first.character);
-      expect(second.character).toEqual(first.character);
-      expect(second.warnings ?? []).toEqual([]);
-    },
-  );
 
   it('все объявленные локали плагина имеют паритет ключей', () => {
     for (const plugin of gamePlugins) {
@@ -275,11 +286,9 @@ describe('сгенерированный реестр', () => {
       manifest.migrations.forEach((migration, index) => {
         expect(migration.from).toBe(module.migrations[index].from);
         expect(migration.to).toBe(module.migrations[index].to);
-        expect(
-          typeof MODULE_NAMESPACES[manifest.id][
-            parseEntryPoint(migration.entry).member!
-          ],
-        ).toBe('function');
+        // Имя экспорта миграции сверяет тест редакции: у хоста нет её
+        // namespace, а сам формат точки входа проверяется здесь.
+        expect(parseEntryPoint(migration.entry).member).toBeDefined();
       });
       // Пока цепочка пуста (миграции в ядре, этап 2), покрывать нечего.
       expect(manifest.migrations).toEqual([]);
@@ -296,7 +305,12 @@ describe('сгенерированный реестр', () => {
         games.set(plugin.manifest.gameId, plugin.manifest.game);
       }
     }
-    expect(games.size).toBe(2);
+    // Семейств столько же, сколько сгенерированных определений игр.
+    expect([...games.keys()].sort()).toEqual(
+      listGameDefinitions()
+        .map((game) => game.id)
+        .sort(),
+    );
   });
 
   it('названия и описания заполнены на обоих языках сайта', () => {

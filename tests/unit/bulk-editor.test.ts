@@ -1,9 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { dh1BulkEditor } from '@/games/dh1/bulk-editor';
-import { dh2BulkEditor } from '@/games/dh2/bulk-editor';
-import { dnd5eBulkEditor } from '@/games/dnd5e/bulk-editor';
-import { gamePlugins } from '@/games/registry';
+import { gamePlugins, loadGameUiSlots } from '@/games/registry';
 import type { BulkEditorTable } from '@/games/types';
 import { translations } from '@/lib/i18n';
 
@@ -12,29 +9,21 @@ import { translations } from '@/lib/i18n';
  * Массовый редактор `/stats-editor` целиком описывается плагинами (этап 3b):
  * колонки, значения по умолчанию, подписи и сборка патча. Ядро только
  * рисует таблицу, поэтому здесь проверяется контракт данных, а не разметка.
+ *
+ * Таблицы конкретных редакций (`dh1-stats`, `dnd5e-vitals`, …) проверяют
+ * тесты самих плагинов: хост не должен знать их id (D18).
  */
 
-function plugin(id: string) {
-  const entry = gamePlugins.find((item) => item.manifest.id === id);
-  if (!entry) throw new Error(`нет плагина ${id}`);
-  return entry;
-}
+const tablesCache = new Map<string, readonly BulkEditorTable<any>[]>();
 
-const BULK_TABLES: Record<string, readonly BulkEditorTable<any>[]> = {
-  dnd5e: dnd5eBulkEditor,
-  dh1: dh1BulkEditor,
-  dh2: dh2BulkEditor,
-};
-
-function tables(id: string): readonly BulkEditorTable<any>[] {
-  plugin(id);
-  return BULK_TABLES[id] ?? [];
-}
-
-function tableOf(id: string, tableId: string): BulkEditorTable<any> {
-  const table = tables(id).find((item) => item.id === tableId);
-  if (!table) throw new Error(`нет таблицы ${tableId} у ${id}`);
-  return table;
+async function tablesOf(id: string): Promise<readonly BulkEditorTable<any>[]> {
+  const cached = tablesCache.get(id);
+  if (cached) return cached;
+  const slots = await loadGameUiSlots(id);
+  if (!slots) throw new Error(`нет UI-слотов для ${id}`);
+  const tables = slots.bulkEditor ?? [];
+  tablesCache.set(id, tables);
+  return tables;
 }
 
 function valuesOf(table: BulkEditorTable<any>, character: unknown) {
@@ -60,21 +49,21 @@ const STATS = {
 };
 
 describe('BulkEditor объявлен в манифестах', () => {
-  it('каждый плагин со слотом BulkEditor отдаёт таблицы', () => {
+  it('каждый плагин со слотом BulkEditor отдаёт таблицы', async () => {
     for (const entry of gamePlugins) {
       const declared = entry.manifest.ui?.slots?.includes('BulkEditor');
       expect(declared, entry.manifest.id).toBe(true);
       expect(
-        tables(entry.manifest.id).length,
+        (await tablesOf(entry.manifest.id)).length,
         entry.manifest.id,
       ).toBeGreaterThan(0);
     }
   });
 
-  it('id таблиц уникальны, у каждой есть вкладка и колонки', () => {
+  it('id таблиц уникальны, у каждой есть вкладка и колонки', async () => {
     const seen = new Set<string>();
     for (const entry of gamePlugins) {
-      for (const table of tables(entry.manifest.id)) {
+      for (const table of await tablesOf(entry.manifest.id)) {
         expect(table.id, entry.manifest.id).toMatch(
           new RegExp(`^${entry.manifest.id}-`),
         );
@@ -88,9 +77,9 @@ describe('BulkEditor объявлен в манифестах', () => {
     }
   });
 
-  it('подписи колонок и вкладок есть в обоих словарях', () => {
+  it('подписи колонок и вкладок есть в обоих словарях', async () => {
     for (const entry of gamePlugins) {
-      for (const table of tables(entry.manifest.id)) {
+      for (const table of await tablesOf(entry.manifest.id)) {
         const keys = [
           table.titleKey,
           table.descriptionKey,
@@ -111,182 +100,54 @@ describe('BulkEditor объявлен в манифестах', () => {
     }
   });
 
-  it('вкладки: stats → dh-vitals → dnd-vitals', () => {
-    const tabs = new Map<string, number>();
+  it('вкладка статистики есть у каждого плагина и идёт первой', async () => {
+    // Хост открывает /stats-editor на вкладке `stats`: без неё экран пуст.
     for (const entry of gamePlugins) {
-      for (const table of tables(entry.manifest.id)) {
-        tabs.set(table.tab.id, table.tab.order);
+      const orders = new Map<string, number>();
+      for (const table of await tablesOf(entry.manifest.id)) {
+        orders.set(table.tab.id, table.tab.order);
       }
+      expect(orders.has('stats'), entry.manifest.id).toBe(true);
+      expect(Math.min(...orders.values()), entry.manifest.id).toBe(
+        orders.get('stats'),
+      );
+      expect(new Set(orders.values()).size, entry.manifest.id).toBe(
+        orders.size,
+      );
     }
-    expect(
-      [...tabs.keys()].sort((a, b) => tabs.get(a)! - tabs.get(b)!),
-    ).toEqual(['stats', 'dh-vitals', 'dnd-vitals']);
   });
 });
 
 describe('таблицы характеристик', () => {
-  it('dh1: девять колонок без influence, пустые статы → 30', () => {
-    const table = tableOf('dh1', 'dh1-stats');
-    expect(table.columns.map((column) => column.key)).toEqual([
-      'weaponSkill',
-      'ballisticSkill',
-      'strength',
-      'toughness',
-      'agility',
-      'intelligence',
-      'perception',
-      'willpower',
-      'fellowship',
-    ]);
-    const values = valuesOf(table, { id: 'x', name: 'X', stats: {} });
-    expect(values.weaponSkill).toBe(30);
+  it('save-патч применяется к дефолтному листу и его не мутирует', async () => {
+    for (const entry of gamePlugins) {
+      const character = entry.module.createDefaults() as Record<string, any>;
+      for (const table of await tablesOf(entry.manifest.id)) {
+        const values = valuesOf(table, character);
+        const patch = table.apply(character as never, values) as Record<
+          string,
+          unknown
+        >;
+        expect(patch, table.id).toBeTypeOf('object');
+        expect(Object.keys(patch).length, table.id).toBeGreaterThan(0);
+        expect(character, table.id).toEqual(entry.module.createDefaults());
+      }
+    }
   });
 
-  it('dh2: десять колонок с influence', () => {
-    const table = tableOf('dh2', 'dh2-stats');
-    expect(table.columns.map((column) => column.key)).toContain('influence');
-    const values = valuesOf(table, {
-      id: 'x',
-      name: 'X',
-      stats: { influence: 45 },
-    });
-    expect(values.influence).toBe(45);
-  });
-
-  it('dh2 пишет influence в патч, dh1 — нет', () => {
-    const dh2 = tableOf('dh2', 'dh2-stats');
-    const dh1 = tableOf('dh1', 'dh1-stats');
-    const dh2Patch = dh2.apply({ stats: {} } as never, { influence: 45 });
-    const dh1Patch = dh1.apply({ stats: {} } as never, { strength: 40 });
-    expect(
-      (dh2Patch as { stats: Record<string, number> }).stats.influence,
-    ).toBe(45);
-    expect(
-      'influence' in (dh1Patch as { stats: Record<string, number> }).stats,
-    ).toBe(false);
-  });
-
-  it('dnd5e: шесть колонок, пустые статы → 10, патч мержится', () => {
-    const table = tableOf('dnd5e', 'dnd5e-stats');
-    expect(table.columns).toHaveLength(6);
-    const values = valuesOf(table, { id: 'x', name: 'X', stats: {} });
-    expect(values.strength).toBe(10);
-    const patch = table.apply(
-      { stats: { strength: 10, dexterity: 12 } } as never,
-      { strength: 16 },
-    ) as { stats: Record<string, number> };
-    expect(patch.stats.strength).toBe(16);
-    expect(patch.stats.dexterity).toBe(12);
-  });
-});
-
-describe('таблицы жизненных показателей', () => {
-  it('dh1: текущие значения и патч по полям редакции', () => {
-    const table = tableOf('dh1', 'dh1-vitals');
-    const character = {
-      wounds: { current: 5, max: 12, notes: '' },
-      fatePoints: { current: 1, max: 3, notes: '' },
-      insanityPoints: { total: 2, notes: '' },
-      corruptionPoints: { total: 4, notes: '' },
-      experience: 500,
-    };
-    const values = valuesOf(table, character);
-    expect(values).toEqual({
-      woundsMax: 12,
-      fateMax: 3,
-      insanity: 2,
-      corruption: 4,
-      experience: 500,
-    });
-    const patch = table.apply(character as never, {
-      woundsMax: 20,
-      fateMax: 5,
-      insanity: 1,
-      corruption: 0,
-      experience: 900,
-    }) as Record<string, any>;
-    expect(patch.wounds).toEqual({ current: 5, max: 20, notes: '' });
-    expect(patch.fatePoints.max).toBe(5);
-    expect(patch.insanityPoints.total).toBe(1);
-    expect(patch.experience).toBe(900);
-  });
-
-  it('dh2: psy rating в колонках и патче, элитные/аптитюды — не bulk', () => {
-    const table = tableOf('dh2', 'dh2-vitals');
-    expect(table.columns.map((column) => column.key)).toContain('psyRating');
-    const character = {
-      wounds: { current: 5, max: 12, notes: '' },
-      fatePoints: { current: 1, max: 3, notes: '' },
-      insanityPoints: { total: 2, notes: '' },
-      corruptionPoints: { total: 0, notes: '' },
-      psy: { rating: 2, disciplines: ['Telepathy'], powers: [] },
-      experience: 500,
-    };
-    const values = valuesOf(table, character);
-    expect(values.psyRating).toBe(2);
-    const patch = table.apply(character as never, {
-      woundsMax: 20,
-      fateMax: 5,
-      insanity: 1,
-      corruption: 0,
-      psyRating: 3,
-      experience: 900,
-    }) as Record<string, any>;
-    expect(patch.psy).toEqual({
-      rating: 3,
-      disciplines: ['Telepathy'],
-      powers: [],
-    });
-    expect(patch.wounds.max).toBe(20);
-    expect(patch.experience).toBe(900);
-  });
-
-  it('dnd5e: уровень/HP/AC/бонус/скорость/опыт, опыт пишется в оба поля', () => {
-    const table = tableOf('dnd5e', 'dnd5e-vitals');
-    const character = {
-      level: 3,
-      hitPoints: { current: 10, max: 24 },
-      armorClass: 15,
-      proficiencyBonus: 2,
-      speed: 30,
-      experiencePoints: 900,
-    };
-    const values = valuesOf(table, character);
-    expect(values).toMatchObject({
-      level: 3,
-      hitPointsMax: 24,
-      armorClass: 15,
-      proficiencyBonus: 2,
-      speed: '30',
-      experiencePoints: 900,
-    });
-    const patch = table.apply(character as never, {
-      level: 5,
-      hitPointsMax: 40,
-      armorClass: 17,
-      proficiencyBonus: 3,
-      speed: '35ft',
-      experiencePoints: 6500,
-    }) as Record<string, unknown>;
-    expect(patch.level).toBe(5);
-    expect(patch.speed).toBe('35ft');
-    expect(patch.experiencePoints).toBe(6500);
-    expect(patch.experience).toBe(6500);
-  });
-
-  it('нечисловые значения не ломают патч', () => {
-    const table = tableOf('dnd5e', 'dnd5e-vitals');
-    const patch = table.apply({} as never, {
-      level: '',
-      hitPointsMax: '',
-      armorClass: '',
-      proficiencyBonus: '',
-      speed: '',
-      experiencePoints: '',
-    }) as Record<string, unknown>;
-    expect(patch.level).toBe(1);
-    expect(patch.hitPoints).toEqual({ max: 0 });
-    expect(patch.experience).toBe(0);
+  it('таблица статистики пишет значения колонок в stats', async () => {
+    for (const entry of gamePlugins) {
+      const character = entry.module.createDefaults() as Record<string, any>;
+      const statsTable = (await tablesOf(entry.manifest.id)).find(
+        (table) => table.tab.id === 'stats',
+      );
+      if (!statsTable) continue;
+      const values = valuesOf(statsTable, character);
+      const patch = statsTable.apply(character as never, values) as {
+        stats?: Record<string, number | string>;
+      };
+      expect(patch.stats, statsTable.id).toMatchObject(values);
+    }
   });
 
   it('конфиг экспорта в тесте не влияет на таблицы', () => {
