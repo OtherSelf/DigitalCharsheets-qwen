@@ -157,14 +157,14 @@ The 2e module owns the rules that only exist in that edition:
   from world, background and role; `chosen` keeps the player's background/role
   picks and duplicate replacements. The sheet block with sources and
   duplicates is editable (`aptitudes-sheet.ts`).
-- **Psychic** — free-text disciplines and powers (D14); `psy.ts` computes the
+- **Psychic** — free-text disciplines and powers; `psy.ts` computes the
   rating price (200 × new rating) and writes a `psy-rating` journal entry. The
   Focus Power hint shows Willpower with purchases.
 - **Elite advances** — `elite.ts` lists available advances, their
   prerequisites and cost; purchase writes `elite-advance` to the journal.
   Removing the advance from the block or deleting its journal row is symmetric:
   both drop the id and the row and return the cost to `totalExpSpent` (a legacy
-  sheet without a row loses only the id). Instant changes are a memo only (D15).
+  sheet without a row loses only the id). Instant changes are a memo only.
 - **Starting package** — `Dh2eBackground` may carry optional
   `startingTraits`, `startingCorruption` and `startingMalignancy`; the creation
   form shows them as hints and the player applies them to the sheet manually.
@@ -174,7 +174,7 @@ The 2e module owns the rules that only exist in that edition:
   the Influence bonus (Scarce −10 or better) and computes the Requisition
   target from the availability/craftsmanship tables (book p. 141).
 - **Wounds/Fate** — `dh2e-starting-profile.ts` shows the world range and
-  prefills the minimum; the player enters the roll (D12).
+  prefills the minimum; the player enters the roll.
 
 All of these are mirrored in behaviour, not shared with `dh1` (D10).
 

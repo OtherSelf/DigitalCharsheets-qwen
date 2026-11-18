@@ -37,7 +37,7 @@
  *    npm run plugins:boundaries -- --json     # машиночитаемый отчёт
  *
  *  Связано: scripts/predeploy.sh (шаг «линт»), docs/game-modules.md § Rules,
- *           _NEW_FUTURE2_PROMPT.md § 5.1 (правила импортов плагина).
+ *           docs/game-modules.md § Import boundaries, docs/decisions.md.
  * ============================================================================
  */
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs';

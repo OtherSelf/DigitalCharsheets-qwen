@@ -420,6 +420,28 @@ without bumping `schemaVersion` is therefore visible in `/api/docs`, and
 `tests/unit/openapi.test.ts` fails if a demo sheet stops matching the published
 schema.
 
+## Troubleshooting
+
+The generator prints Russian diagnostics (repository convention; the code, test
+names and tool messages are Russian, these pages are English). The most common
+ones:
+
+| Message | Cause | Fix |
+| --- | --- | --- |
+| `id "x" не совпадает с именем папки "y"` | The folder name and `plugin.json#id` differ | Rename the folder or the manifest `id`; they are one `systemId` |
+| `i18n: нужна хотя бы одна из локалей en или ru (SDK 1.3)` | The `i18n` map declares only extra locales | Declare `en` and/or `ru`; extra locales are allowed on top |
+| `migrations: schemaVersion N, но цепочка пуста` | Versioned sheet format without a path from v1 | Add steps `1 → … → N`, or keep `schemaVersion: 1` |
+| `migrations: ожидался шаг с N, найден с M` | A gap in the chain | Start at `from: 1` and increment by one |
+| `migrations: шаг N должен вести в N+1` | A jump (`1 → 3`) | Split the step; each one moves exactly one version |
+| `migrations: цепочка заканчивается на N, а schemaVersion = M` | The chain and the manifest disagree | The last `to` must equal `schemaVersion` |
+| `дублирующийся id` / `дублирующийся order` | Two plugins share an id or the display order | Make `order` unique across plugins |
+| `блок game отличается` | Editions of one `gameId` declare different `game` blocks | Copy the same `id/order/name/description` into every edition |
+| `Неподдерживаемый диапазон pluginApi: "…"` | An unsupported range form | Use `*`, `1.2.3`, `^1.2.3`, `~1.2.3` or `>=1.2.3` |
+| `<field>: файл не найден (path#export)` | An entry point points at a missing file | Fix the path; it must stay inside the plugin folder |
+| `entry.module должен содержать имя экспорта` | `entry.module` is a bare file | Write `index.ts#<id>Module` |
+| `✗ src/games/registry.generated.ts устарел` | A manifest changed without regeneration | `npm run plugins:generate` and commit the generated files |
+| `prettier --check` warns about a generated file | A generator bug, not a formatting nit | Do not hand-format: fix `renderRegistry` and add the case to `plugins-generator.test.ts` |
+
 ## Versioning
 
 - `manifestVersion` — the manifest format understood by the host (2).

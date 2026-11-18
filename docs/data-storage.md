@@ -166,7 +166,7 @@ on the sheet language. The portable JSON export keeps the code.
 A background may pin the gender with `genderLock` in the content catalog
 (Adepta Sororitas → `female`): the creation form fills the code and disables
 the select, and changing the background before saving releases it. After the
-sheet exists the field is read-only for every filled value (D4/D5).
+sheet exists the field is read-only for every filled value.
 
 Normalization maps the labels written by earlier versions (`Мужчина`,
 `Мужской`, `Женщина`, `Женский`, `Не указан`, `Не указано`, `Не определено`,

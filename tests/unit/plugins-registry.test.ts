@@ -16,7 +16,7 @@ import { gamePlugins, gameRegistry } from '@/games/registry';
 
 /**
  * ─── LANDMARK: PLUGIN REGISTRY TESTS ──────────────────────────────────────
- * Conformance «манифест ↔ модуль» (этап 1 плана `_NEW_FUTURE2_PROMPT.md`):
+ * Conformance «манифест ↔ модуль» (`docs/plugin-sdk.md` § Tests):
  *
  *   • `plugin.json` каждого плагина описывает именно свой модуль
  *     (id, игра, порядок, schemaVersion, точки входа);
