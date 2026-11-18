@@ -3,6 +3,8 @@ import path from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
+import { readJson } from '@tests/support';
+
 /**
  * Статический контроль визуальных тестов.
  *
@@ -21,18 +23,52 @@ import { describe, expect, it } from 'vitest';
 const ROOT = process.cwd();
 const VISUAL_DIR = path.join(ROOT, 'tests', 'visual');
 const SHOTS_DIR = path.join(VISUAL_DIR, '__screenshots__');
-// Проекты Playwright: у каждого свой каталог эталонов. `tablet` снимает
-// только tests/visual/tablet.spec.ts (testMatch в playwright.config.ts).
-const PROJECTS = ['desktop', 'mobile', 'tablet'] as const;
+const PLUGINS_DIR = path.join(ROOT, 'src', 'games');
+// Проекты Playwright: host (tests/visual) и плагины (src/games/*/tests/visual).
+const PROJECTS = [
+  'desktop',
+  'mobile',
+  'tablet',
+  'desktop-games',
+  'mobile-games',
+] as const;
 
-const NAME_RE = /^[a-z0-9]+(?:-(?:dnd|dh))?(?:-[a-z0-9]+)*-(en|ru)\.png$/;
-const GAMES = new Set(['dnd', 'dh']);
+interface PluginVisualConfig {
+  pluginId: string;
+  nameSegment: string;
+  requiredLangs?: Record<string, Array<'en' | 'ru'>>;
+  requiredSections?: Record<string, string[]>;
+  requiredEditSections?: Record<string, string[]>;
+  requiredRuEditSections?: Record<string, string[]>;
+  mobileReadEdit?: boolean;
+}
+
+/**
+ * Сегмент игры в имени PNG (`sheet-dh-top-en.png`) плагин объявляет сам в
+ * `src/games/<id>/tests/visual.json`: списка игр в тесте нет, новая игра
+ * добавляет файл и попадает в схему без правок хоста.
+ */
+const pluginConfigs: PluginVisualConfig[] = fs
+  .readdirSync(PLUGINS_DIR, { withFileTypes: true })
+  .filter((entry) => entry.isDirectory())
+  .flatMap((entry) => {
+    const file = path.join(PLUGINS_DIR, entry.name, 'tests', 'visual.json');
+    if (!fs.existsSync(file)) return [];
+    return [{ ...readJson<PluginVisualConfig>(file), pluginId: entry.name }];
+  });
+
+const GAMES = new Set(pluginConfigs.map((config) => config.nameSegment));
+const GAME_ALTERNATION = [...GAMES].join('|');
+
+const NAME_RE = new RegExp(
+  `^[a-z0-9]+(?:-(?:${GAME_ALTERNATION}))?(?:-[a-z0-9]+)*-(en|ru)\\.png$`,
+);
 const LANGS = new Set(['en', 'ru']);
 
 interface ParsedName {
   name: string;
   page: string;
-  game?: 'dnd' | 'dh';
+  game?: string;
   extras: string[];
   extraText: string;
   lang: 'en' | 'ru';
@@ -59,7 +95,7 @@ function parseName(name: string): ParsedName {
       (prefix) => base === prefix || base.startsWith(`${prefix}-`),
     ) ?? base.split('-')[0];
   const rest = base === page ? [] : base.slice(page.length + 1).split('-');
-  const game = GAMES.has(rest[0]) ? (rest[0] as 'dnd' | 'dh') : undefined;
+  const game = GAMES.has(rest[0]) ? rest[0] : undefined;
   const lang = rest[rest.length - 1] as 'en' | 'ru';
   const extras = rest.slice(game ? 1 : 0, -1);
   return { name, page, game, extras, extraText: extras.join('-'), lang };
@@ -73,14 +109,27 @@ function walk(dir: string): string[] {
   });
 }
 
-function readSpecNames(): string[] {
-  const specFiles = fs
+function specFiles(): string[] {
+  const host = fs
     .readdirSync(VISUAL_DIR)
     .filter((name) => name.endsWith('.spec.ts'))
     .map((name) => path.join(VISUAL_DIR, name));
+  const plugins = fs
+    .readdirSync(PLUGINS_DIR, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .flatMap((entry) => {
+      const dir = path.join(PLUGINS_DIR, entry.name, 'tests', 'visual');
+      if (!fs.existsSync(dir)) return [];
+      return walk(dir).filter((file) => file.endsWith('.visual.spec.ts'));
+    });
+  return [...host, ...plugins];
+}
+
+function readSpecNames(): string[] {
+  const specFilesList = specFiles();
 
   const names: string[] = [];
-  for (const file of specFiles) {
+  for (const file of specFilesList) {
     const source = fs.readFileSync(file, 'utf8');
     // Имена встречаются и прямо в вызове, и в массивах вида
     // [['sheet-dnd-info-ru.png', '#character-info-card'], ...].
@@ -117,10 +166,7 @@ describe('визуальные тесты: имена эталонов', () => {
     const gamePages = new Set(['sheet', 'dialog']);
     for (const item of parsed) {
       if (gamePages.has(item.page)) {
-        expect(
-          item.game,
-          `${item.name}: не указана игра (dnd/dh)`,
-        ).toBeTruthy();
+        expect(item.game, `${item.name}: не указана игра`).toBeTruthy();
       }
       expect(LANGS.has(item.lang), `${item.name}: язык не en/ru`).toBe(true);
     }
@@ -154,91 +200,59 @@ describe('визуальные тесты: имена эталонов', () => {
 });
 
 // ── Матрица обязательного покрытия ─────────────────────────────────────────
-// Ключ — <страница> или <страница>:<игра>. Значение — обязательные языки.
-const REQUIRED_LANGS: Record<string, Array<'en' | 'ru'>> = {
+// Хостовые экраны (не принадлежат ни одной игре) — часть контракта хоста.
+const HOST_REQUIRED_LANGS: Record<string, Array<'en' | 'ru'>> = {
   login: ['en', 'ru'],
   dashboard: ['en', 'ru'],
-  // `/` и `/demo` — один DemoLanding; базовый лендинг снимается как
-  // dashboard-guest-en/ru, поэтому отдельного demo-en/ru больше нет.
-  // Превью листов внутри демо — только en: листы уже покрыты в sheet:*.
-  'demo:dnd': ['en'],
-  'demo:dh': ['en'],
+  // `/` и `/demo` — один DemoLanding; лендинг снимается как dashboard-guest.
   settings: ['en', 'ru'],
   new: ['en', 'ru'],
-  'new:dnd': ['en', 'ru'],
-  'new:dh': ['en', 'ru'],
   'stats-editor': ['en', 'ru'],
-  'stats-editor:dnd': ['en'],
-  'stats-editor:dh': ['en'],
-  'sheet:dnd': ['en', 'ru'],
-  'sheet:dh': ['en', 'ru'],
-  'dialog:dnd': ['en', 'ru'],
-  'dialog:dh': ['en', 'ru'],
 };
 
-// Уникальные секции каждой системы (токен в имени после игры).
-const REQUIRED_SECTIONS: Record<string, string[]> = {
-  'sheet:dnd': [
-    'top',
-    'info',
-    'stats',
-    'saves',
-    'skills',
-    'combat',
-    'attacks',
-    'inventory',
-    'attunement',
-    'spells',
-    'companions',
-    'narrative',
-    'divine-boons',
-  ],
-  'sheet:dh': [
-    'top',
-    'info',
-    'progression',
-    'characteristics',
-    'skills',
-    'talents',
-    'equipment',
-    'inventory',
-  ],
-  'dialog:dnd': ['quest-journal', 'house-rules', 'notes', 'divine-boons'],
-  'dialog:dh': ['quest-journal', 'house-rules', 'notes'],
-};
+type Lang = 'en' | 'ru';
+const REQUIRED_LANGS: Record<string, Lang[]> = { ...HOST_REQUIRED_LANGS };
+const REQUIRED_SECTIONS: Record<string, string[]> = {};
+const REQUIRED_EDIT_SECTIONS: Record<string, string[]> = {};
+const REQUIRED_RU_EDIT_SECTIONS: Record<string, string[]> = {};
+const MOBILE_READ_EDIT: string[] = [];
 
-// Секции, которые обязаны иметь скриншот в режиме редактирования.
-const REQUIRED_EDIT_SECTIONS: Record<string, string[]> = {
-  'sheet:dnd': [
-    'info',
-    'progression',
-    'stats',
-    'saves',
-    'skills',
-    'combat',
-    'attacks',
-    'inventory',
-    'attunement',
-    'spells',
-    'companions',
-    'narrative',
-  ],
-  'sheet:dh': [
-    'info',
-    'progression',
-    'characteristics',
-    'skills',
-    'equipment',
-    'inventory',
-  ],
-};
+function mergeRequirements(
+  target: Record<string, string[]>,
+  source: Record<string, string[]> | undefined,
+  segment: string,
+) {
+  for (const [page, values] of Object.entries(source ?? {})) {
+    target[`${page}:${segment}`] = values;
+  }
+}
 
-// RU edit — выборка по матрице, а не полное зеркало EN: длинные строки
-// проверяются на самых плотных секциях, остальные остаются в EN-покрытии.
-const REQUIRED_RU_EDIT_SECTIONS: Record<string, string[]> = {
-  'sheet:dnd': ['stats', 'skills', 'inventory', 'spells'],
-  'sheet:dh': ['characteristics', 'skills', 'equipment'],
-};
+// Требования к секциям и языкам игра объявляет сама в
+// src/games/<id>/tests/visual.json; две редакции с одним сегментом (dh1/dh2)
+// делят матрицу — это одна игра-семейство.
+for (const config of pluginConfigs) {
+  for (const [page, langs] of Object.entries(config.requiredLangs ?? {})) {
+    REQUIRED_LANGS[`${page}:${config.nameSegment}`] = langs;
+  }
+  mergeRequirements(
+    REQUIRED_SECTIONS,
+    config.requiredSections,
+    config.nameSegment,
+  );
+  mergeRequirements(
+    REQUIRED_EDIT_SECTIONS,
+    config.requiredEditSections,
+    config.nameSegment,
+  );
+  mergeRequirements(
+    REQUIRED_RU_EDIT_SECTIONS,
+    config.requiredRuEditSections,
+    config.nameSegment,
+  );
+  if (config.mobileReadEdit) {
+    MOBILE_READ_EDIT.push(`sheet:${config.nameSegment}`);
+  }
+}
 
 describe('визуальные тесты: покрытие', () => {
   it('для каждого экрана есть все обязательные языки', () => {
@@ -299,7 +313,7 @@ describe('визуальные тесты: покрытие', () => {
   });
 
   it('у мобильных листов есть чтение и редактирование', () => {
-    for (const key of ['sheet:dnd', 'sheet:dh']) {
+    for (const key of MOBILE_READ_EDIT) {
       const items = keys.get(key) ?? [];
       expect(
         items.some((item) => item.extras.includes('mobile')),

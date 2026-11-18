@@ -1,0 +1,48 @@
+{
+  "nameSegment": "dnd",
+  "requiredLangs": {
+    "demo": ["en"],
+    "new": ["en", "ru"],
+    "stats-editor": ["en"],
+    "sheet": ["en", "ru"],
+    "dialog": ["en", "ru"]
+  },
+  "requiredSections": {
+    "sheet": [
+      "top",
+      "info",
+      "stats",
+      "saves",
+      "skills",
+      "combat",
+      "attacks",
+      "inventory",
+      "attunement",
+      "spells",
+      "companions",
+      "narrative",
+      "divine-boons"
+    ],
+    "dialog": ["quest-journal", "house-rules", "notes", "divine-boons"]
+  },
+  "requiredEditSections": {
+    "sheet": [
+      "info",
+      "progression",
+      "stats",
+      "saves",
+      "skills",
+      "combat",
+      "attacks",
+      "inventory",
+      "attunement",
+      "spells",
+      "companions",
+      "narrative"
+    ]
+  },
+  "requiredRuEditSections": {
+    "sheet": ["stats", "skills", "inventory", "spells"]
+  },
+  "mobileReadEdit": true
+}

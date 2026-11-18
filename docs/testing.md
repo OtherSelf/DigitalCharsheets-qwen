@@ -66,18 +66,21 @@ enforces the limit and fails in both directions:
 
 ## Plugin conformance
 
-`npm run plugins:conformance` runs the plugin contract suite:
+`npm run plugins:conformance` runs `tests/unit/plugin-conformance.test.ts`, which
+discovers plugins by `src/games/*/plugin.json` — there is no file list in
+`package.json`:
 
-- `plugins-registry.test.ts` — generated registry/i18n match the manifests; every
-  manifest ↔ module field and entry point; defaults/demo vs schema;
-- `plugin-slots.test.ts` — lazy UI slots load and are exactly the declared ones;
-  labels/keys, read-only boundary state;
-- `bulk-editor.test.ts` — `/stats-editor` tables: columns, defaults, save patches;
-- `example-plugin.test.ts` — the reference fixture (custom sheet/form/i18n/slots)
-  installed into a temporary `src/games/` and run through the same generator.
+- folder ↔ manifest ↔ generated registry agree, and every manifest passes the
+  same folder/schema validation as the generator;
+- manifest ↔ module: id, gameId, schemaVersion; default and demo pass the
+  module's own zod schema; en/ru dictionaries have the same keys;
+- declared UI slots exist (including the `BulkEditor` → `bulkEditor` mapping);
+- the reference fixture is installed into a temporary `src/games/` and goes
+  through the same generator, so a folder + manifest is still enough.
 
-`npm run plugins:boundaries` enforces the import rules (the legacy allowlist is
-empty), `npm run plugins:check` fails when the generated files are stale.
+Plugin-specific checks (bulk-editor table columns, custom slots) belong in
+`src/games/<id>/tests/`; the dedicated host suites for them remain part of
+`npm test`.
 
 ## Unit tests
 
@@ -138,7 +141,7 @@ in parallel with `npm test`.
 | `DCS_DATA_DIR` leaks between tests; a sheet is visible to another account | Missing `useTempDataDir()` in `beforeEach` / `removeDir(dataDir)` in `afterEach` |
 | `FileReader is not defined` | The file is outside the Vitest include, or `setupFiles` lost `tests/support/setup.ts` |
 | `console.error` noise from expected errors | Stub it with `vi.spyOn(console, 'error')` and restore it |
-| `visual-naming` reports a missing section or baseline | Add the screenshot with the right name (see Visual regression) or extend `REQUIRED_*` in that spec |
+| `visual-naming` reports a missing section or baseline | Add the screenshot with the right name (see Visual regression) or extend `src/games/<id>/tests/visual.json` (`requiredLangs`/`requiredSections`) |
 | Passes locally, times out elsewhere | Raise `testTimeout`/`hookTimeout` in `vitest.config.ts`, or lighten the test |
 | A coverage report is wanted | `@vitest/coverage-v8` is not installed: `npm i -D @vitest/coverage-v8`, then `npx vitest run --coverage` |
 
@@ -172,7 +175,16 @@ Playwright renders the app in Chromium and compares screenshots with the
 baselines in `tests/visual/__screenshots__/`.
 
 - Projects: `desktop` (1440×900) and `mobile` (Pixel 7); `tablet` (1024×768)
-  only for `tests/visual/tablet.spec.ts`.
+  only for `tests/visual/tablet.spec.ts`. Plugin specs run in `desktop-games` /
+  `mobile-games`: their own `testDir` is `src/games`, and a project-level
+  `snapshotPathTemplate` keeps the baselines under the same
+  `tests/visual/__screenshots__/` root.
+- Game scenarios are tagged `@plugin:<id>` (`@plugin:dh1`, `@plugin:dh2`,
+  `@plugin:dnd5e`), whether they live in a host spec or in a plugin spec:
+  `npm run test:visual:plugin -- dh1` runs only that plugin through
+  `playwright --grep`. A new game adds
+  `src/games/<id>/tests/visual/*.visual.spec.ts` and `tests/visual.json`
+  (name segment, required languages/sections) — no host edits.
 - Data is isolated per worker: global-setup creates a canonical `visual-tests`
   account and one account per worker, each with the same fixtures.
 - `scripts/visual.sh` builds the app (unless `--skip-build`), starts a temporary
@@ -278,9 +290,11 @@ Names encode `<page>-[dnd|dh]-[field]-<en|ru>` (the game token only on game
 screens); `snapshotPathTemplate` in `playwright.config.ts` defines the directory
 `tests/visual/__screenshots__/<project>/<spec>/`. A static guard,
 `tests/unit/visual-naming.test.ts`, fails on a wrong name, an orphaned PNG, a
-screenshot without a baseline and on missing required coverage
-(`REQUIRED_LANGS`, `REQUIRED_SECTIONS`, `REQUIRED_EDIT_SECTIONS`) — that test,
-not this page, is the source of truth for what has to exist.
+screenshot without a baseline and on missing required coverage. Coverage is not
+hardcoded in the test: each plugin declares its name segment and required
+languages/sections in `src/games/<id>/tests/visual.json`, the host keeps only the
+game-agnostic screens — that test, not this page, is the source of truth for
+what has to exist.
 
 The set is a few hundred PNGs (~11 MB): most screens have a desktop and a mobile
 baseline, and `tablet.spec.ts` owns the eight tablet ones. There is deliberately

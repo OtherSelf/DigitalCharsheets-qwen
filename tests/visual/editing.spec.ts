@@ -57,7 +57,7 @@ async function expectInputValue(scope: Locator, value: string): Promise<void> {
     .toBe(true);
 }
 
-test.describe('редактирование D&D', () => {
+test.describe('редактирование D&D', { tag: '@plugin:dnd5e' }, () => {
   test(
     'desktop: прогрессия, инфо, статы, спасброски, навыки (en)',
     { tag: '@desktop' },
@@ -219,7 +219,7 @@ test.describe('редактирование D&D', () => {
   );
 });
 
-test.describe('редактирование Dark Heresy', () => {
+test.describe('редактирование Dark Heresy', { tag: '@plugin:dh1' }, () => {
   test(
     'desktop: инфо, прогрессия, характеристики (en)',
     { tag: '@desktop' },
@@ -348,7 +348,7 @@ test.describe('политика редактирования после созд
 
   test(
     'DH1: заданные creation-поля только читаются (en)',
-    { tag: '@desktop' },
+    { tag: ['@desktop', '@plugin:dh1'] },
     async ({ page, context }) => {
       await prepare(context);
       await openApp(page, sheetPath(getState().dhId));
@@ -451,7 +451,7 @@ test.describe('политика редактирования после созд
  * `updateCharacter`, просмотр — в режиме чтения. Исходные текстовые поля
  * (mutations/disorders/defilements) в UI больше не дублируются.
  */
-test.describe('состояния Безумия/Порчи', () => {
+test.describe('состояния Безумия/Порчи', { tag: '@plugin:dh1' }, () => {
   test(
     'DH1: добавить, сохранить и удалить состояние (en)',
     { tag: '@desktop' },

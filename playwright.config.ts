@@ -128,5 +128,36 @@ export default defineConfig({
         hasTouch: false,
       },
     },
+    {
+      /*
+        Спеки плагинов: `src/games/<id>/tests/visual/*.visual.spec.ts`.
+        Отдельный testDir, потому что host-проекты сканируют только
+        tests/visual. `snapshotPathTemplate` на уровне проекта возвращает
+        эталоны в общий root tests/visual/__screenshots__ — новая игра не
+        двигает host-эталоны и не требует правок конфига.
+      */
+      name: 'desktop-games',
+      testDir: './src/games',
+      testMatch: '**/tests/visual/*.visual.spec.ts',
+      snapshotPathTemplate:
+        'tests/visual/__screenshots__/{projectName}/{testFilePath}/{arg}{ext}',
+      use: {
+        viewport: { width: 1440, height: 900 },
+        deviceScaleFactor: 1,
+        isMobile: false,
+        hasTouch: false,
+      },
+    },
+    {
+      name: 'mobile-games',
+      testDir: './src/games',
+      testMatch: '**/tests/visual/*.visual.spec.ts',
+      snapshotPathTemplate:
+        'tests/visual/__screenshots__/{projectName}/{testFilePath}/{arg}{ext}',
+      use: {
+        ...pixel7,
+        deviceScaleFactor: 2.625,
+      },
+    },
   ],
 });

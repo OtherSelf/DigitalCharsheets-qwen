@@ -29,6 +29,7 @@
     "plugins:check": "node scripts/plugins/generate.mjs --check",
     "plugins:boundaries": "node scripts/plugins/check-boundaries.mjs",
     "test:visual": "bash scripts/visual.sh",
+    "test:visual:plugin": "node scripts/tests/test-visual-plugin.mjs",
     "test:visual:full": "bash scripts/visual.sh",
     "test:visual:changed": "node scripts/visual-changed.mjs",
     "test:visual:prune": "node scripts/visual-prune.mjs",
@@ -37,7 +38,7 @@
     "dh2e:data": "node scripts/dh2e/generate.mjs",
     "dh2e:check": "node scripts/dh2e/generate.mjs --check",
     "test:visual:fast": "bash scripts/visual.sh --grep @fast",
-    "plugins:conformance": "vitest run tests/unit/plugins-registry.test.ts tests/unit/plugin-slots.test.ts tests/unit/bulk-editor.test.ts tests/unit/example-plugin.test.ts"
+    "plugins:conformance": "vitest run tests/unit/plugin-conformance.test.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^7.0.5",

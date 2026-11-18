@@ -304,8 +304,8 @@ There is no separate package yet; the conformance set runs in Vitest:
 npm run plugins:conformance
 ```
 
-What it checks (`tests/unit/plugins-registry.test.ts`,
-`plugin-slots.test.ts`, `bulk-editor.test.ts`, `example-plugin.test.ts`):
+`tests/unit/plugin-conformance.test.ts` discovers every
+`src/games/*/plugin.json` and checks:
 
 - generated `registry.generated.ts`/`i18n.generated.ts` match the manifests
   byte-for-byte;
