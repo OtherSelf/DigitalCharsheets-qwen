@@ -11,6 +11,51 @@ format changes.
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-11-18
+
+Server-side derived values, declared migration chains and an honest API schema.
+
+### Added
+
+- The server recalculates derived sheet values (`DCS_SERVER_DERIVE`, on by
+  default; `=0` is the emergency brake): creating or updating a sheet runs the
+  plugin's `derive` hook before the diff and the write, so level and
+  proficiency bonus (or DH characteristics and their consequences) can no
+  longer contradict each other in the stored file. Documents written by older
+  versions are recalculated when they are read or normalized.
+- Plugins declare a full migration chain: D&D 5e ships 1→2 and Dark Heresy
+  1→5 (`from`/`to`/`entry` per step). The chain validator now also runs for a
+  manifest that declares no steps, and applied steps are reported.
+- `derive` and `derived` in the plugin manifest: a plugin names its derivation
+  entry point and the field paths it owns. The manifest fields are additive,
+  `PLUGIN_API_VERSION` stays `1.3.0`.
+- Negative conformance tests: schemas reject out-of-range values (D&D level
+  1–20, characteristics 1–30; DH characteristics and Influence 0–100) and an
+  empty sheet name in a request, with `issues[].path = "name"`.
+
+### Changed
+
+- Plugin versions: `dh1` 1.4.0, `dh2` 1.4.0, `dnd5e` 1.2.0. The sheet
+  `schemaVersion` is unchanged (Dark Heresy `5`, D&D 5e `2`).
+- `openapi.json` derives `Sheet_<systemId>` and `SheetInput_<systemId>` from the
+  registry zod schemas, so the documented `required` fields match what the API
+  really accepts; `Character` is an `anyOf` over editions and the component
+  description carries the manifest `schemaVersion`.
+- Excel export loads SheetJS on demand instead of shipping it in the initial
+  client graph.
+- The core no longer formats game fields: the admin character list shows a
+  generic Details column (labels come from the plugin `CardSummary` slot), and
+  the game dictionaries own their Excel captions and import-preview fields.
+- UI slot names are normalized, and the manifest check fails on an unsupported
+  `pluginApi` range instead of silently ignoring it.
+
+### Fixed
+
+- A Dark Heresy sheet without `systemId` (or with only
+  `gameSystem: "Dark Heresy"`) no longer opens as DH1: the bare alias is gone
+  and such a sheet opens read-only as "plugin missing" until its edition is
+  known (ADR 0004).
+
 ## [0.9.1] - 2026-11-18
 
 Plugin lifecycle guard and sheet access for a removed game.
