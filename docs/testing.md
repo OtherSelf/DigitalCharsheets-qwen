@@ -199,8 +199,8 @@ user (en/ru) and administrator (with the Administration item), desktop and
 mobile. The same spec covers the Display Settings modal and the dashboard at
 80% UI scale; the theme switcher is in `themes.spec.ts`, and the import dialog
 is in `pages.spec.ts`; the creation wizard (game → edition → form), `/demo`
-with one character per edition, and the dashboard edition badges (short code
-with the full game/edition name in `title`/`aria-label`) also live there.
+with one character per edition, and the dashboard game/edition badges also live
+there.
 
 ### Determinism
 
