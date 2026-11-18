@@ -297,19 +297,14 @@ test.describe('общие страницы', () => {
       await expect(page.getByText('Seraphina Vael')).toBeVisible();
       await expect(page.getByText('Lucius Varn')).toBeVisible();
 
-      // Бейдж — короткий код редакции, полное имя — в title/aria-label.
+      // Бейдж — полное «игра · редакция» из реестра и i18n.
       const badges = page.getByTestId('edition-badge');
-      const dhBadge = badges.filter({ hasText: 'dh1e' });
-      await expect(dhBadge).toHaveCount(1);
-      await expect(dhBadge).toHaveAttribute(
-        'title',
-        'Warhammer 40k: Dark Heresy · 1st Edition',
-      );
-      await expect(dhBadge).toHaveAttribute(
-        'aria-label',
-        'Warhammer 40k: Dark Heresy · 1st Edition',
-      );
-      await expect(badges.filter({ hasText: 'dnd5e' })).toHaveCount(1);
+      await expect(
+        badges.filter({ hasText: 'Warhammer 40k: Dark Heresy · 1st Edition' }),
+      ).toHaveCount(1);
+      await expect(
+        badges.filter({ hasText: 'Dungeons & Dragons · 5th Edition' }),
+      ).toHaveCount(1);
 
       await expectNoRawI18nKeys(page, 'dashboard (en)');
       await screenshotPage(page, 'dashboard-en.png');
@@ -327,15 +322,12 @@ test.describe('общие страницы', () => {
         page.getByRole('heading', { name: 'Существующие персонажи' }),
       ).toBeVisible();
 
-      // Короткий код не переводится, а подсказка локализована.
-      const dhBadge = page
-        .getByTestId('edition-badge')
-        .filter({ hasText: 'dh1e' });
-      await expect(dhBadge).toHaveCount(1);
-      await expect(dhBadge).toHaveAttribute(
-        'aria-label',
-        'Warhammer 40k: Dark Heresy · 1-я редакция',
-      );
+      // Название редакции локализовано вместе с игрой.
+      await expect(
+        page
+          .getByTestId('edition-badge')
+          .filter({ hasText: 'Warhammer 40k: Dark Heresy · 1-я редакция' }),
+      ).toHaveCount(1);
 
       await expectNoRawI18nKeys(page, 'dashboard (ru)');
       await screenshotPage(page, 'dashboard-ru.png');
