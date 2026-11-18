@@ -61,6 +61,13 @@ test.describe('создание DH1: обязательно только имя'
       const id = new URL(page.url()).pathname.split('/').pop()!;
       // Пустой мир не запирает creation-поле: его можно выбрать после создания.
       await openApp(page, `/character/${id}`);
+      // Иконка вкладки — ассет из папки плагина, а не общий public/favicon-*.
+      const icon = await page
+        .locator("link[rel*='icon']")
+        .first()
+        .getAttribute('href');
+      expect(icon, 'favicon').toBeTruthy();
+      expect(icon).not.toContain('favicon-dh.png');
       const info = page.locator('#info-section:visible').first();
       await info.locator('[data-testid="edit-button"]:visible').first().click();
       const world = info.getByRole('combobox', {
