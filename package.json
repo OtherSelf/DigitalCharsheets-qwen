@@ -38,7 +38,8 @@
     "dh2e:data": "node scripts/dh2e/generate.mjs",
     "dh2e:check": "node scripts/dh2e/generate.mjs --check",
     "test:visual:fast": "bash scripts/visual.sh --grep @fast",
-    "plugins:conformance": "vitest run tests/unit/plugin-conformance.test.ts"
+    "plugins:conformance": "vitest run tests/unit/plugin-conformance.test.ts",
+    "prestart": "npm run plugins:check"
   },
   "dependencies": {
     "@hookform/resolvers": "^7.0.5",

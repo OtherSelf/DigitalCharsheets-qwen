@@ -53,6 +53,33 @@ src/games/
                             second-edition data pack, generated (see below)
 ```
 
+## Adding and removing a plugin
+
+A plugin is discovered from `src/games/<id>/plugin.json`; the core never lists
+games. The generated registry is still a static import graph, so both
+directions rebuild it:
+
+```sh
+# add: copy a plugin folder (or tests/fixtures/example-plugin), then
+npm run plugins:generate
+npm run build && npm start
+
+# remove: delete src/games/<id>, then
+npm run plugins:generate
+rm -rf .next && npm run build && npm start
+```
+
+`next start` never regenerates the registry: `prestart` runs `plugins:check`
+and refuses to start with a clear error when a folder was added or removed
+without `plugins:generate`.
+
+Sheets of a removed game stay in the data directory — the server never deletes
+data on its own. Such a sheet is still listed, opens as `UnknownSheetView`
+(«plugin not installed», `resolveSheetReadOnly` → `plugin_missing`), and exports
+as portable JSON or Excel; history and the dashboard label do not depend on the
+module being present. `tests/unit/games/removed-plugin.test.ts` locks this
+behaviour.
+
 ## Second-edition data pack (dh2)
 
 `src/games/dh2/dh2e-*.ts` are generated files: they carry the 2e reference

@@ -141,6 +141,29 @@ describe('conformance: авто-обнаружение плагинов', () => 
   });
 });
 
+describe('conformance: добавление и удаление игры', () => {
+  it('реестр пересобирается до сборки и проверяется перед стартом', () => {
+    const pkg = JSON.parse(
+      fs.readFileSync(path.join(process.cwd(), 'package.json'), 'utf8'),
+    ) as { scripts: Record<string, string> };
+    // Реестр — статический граф импортов: без generate папка не появится,
+    // без prestart сервер молча упадёт на устаревшем реестре.
+    expect(pkg.scripts.predev).toContain('plugins:generate');
+    expect(pkg.scripts.prebuild).toContain('plugins:generate');
+    expect(pkg.scripts.prestart).toContain('plugins:check');
+  });
+
+  it('генератор не читает tests/ и не зависит от списка игр', async () => {
+    const { validatePluginFolder } = await generator();
+    for (const { dirName, manifest } of discovered) {
+      expect(
+        validatePluginFolder({ gamesDir: GAMES_DIR, dirName, manifest }),
+        dirName,
+      ).toEqual([]);
+    }
+  });
+});
+
 describe('conformance: эталонная фикстура', () => {
   it('фикстура проходит тот же генератор, что и боевые плагины', async () => {
     const fixtureDir = path.join(
