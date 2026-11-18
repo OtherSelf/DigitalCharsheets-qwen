@@ -7,6 +7,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { listGameDefinitions } from '@/games/games';
 import { generatedI18n } from '@/games/i18n.generated';
 import {
+  isHostApiCompatible,
   parseEntryPoint,
   PLUGIN_API_VERSION,
   type PluginManifest,
@@ -51,7 +52,6 @@ type Generator = {
   validateCollection(
     plugins: { dirName: string; manifest: PluginManifest }[],
   ): string[];
-  isHostApiCompatible(range: string, hostVersion?: string): boolean;
   renderRegistry(
     plugins: { dirName: string; manifest: PluginManifest }[],
   ): string;
@@ -324,8 +324,7 @@ describe('сгенерированный реестр', () => {
     }
   });
 
-  it('plugin API и версии манифеста свежие', async () => {
-    const { isHostApiCompatible } = await generator();
+  it('plugin API и версии манифеста свежие', () => {
     for (const plugin of gamePlugins) {
       expect(plugin.manifest.manifestVersion).toBe(2);
       expect(isHostApiCompatible(plugin.manifest.pluginApi)).toBe(true);
@@ -508,8 +507,7 @@ describe('разбор точек входа и версий API', () => {
     expect(() => parseEntryPoint('index.ts#bad-name')).toThrow(/экспорта/);
   });
 
-  it('isHostApiCompatible понимает ^, ~, >= и точную версию', async () => {
-    const { isHostApiCompatible } = await generator();
+  it('isHostApiCompatible понимает ^, ~, >= и точную версию', () => {
     expect(isHostApiCompatible('^1.0.0')).toBe(true);
     expect(isHostApiCompatible('^1.5.0')).toBe(false);
     expect(isHostApiCompatible('^2.0.0')).toBe(false);

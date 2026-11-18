@@ -35,6 +35,15 @@ import { fileURLToPath } from 'node:url';
 
 import Ajv from 'ajv';
 
+// Константы и проверки Plugin API — из того же источника, что использует
+// рантайм: две копии уже разошлись (manifestVersion 1 против 2).
+import {
+  isHostApiCompatible,
+  parseEntryPoint,
+  PLUGIN_API_VERSION,
+  PLUGIN_MANIFEST_VERSION,
+} from '../../src/games/plugin-api.constants.mjs';
+
 const HERE = dirname(fileURLToPath(import.meta.url));
 export const ROOT = resolve(HERE, '../..');
 export const GAMES_DIR = join(ROOT, 'src/games');
@@ -44,87 +53,8 @@ export const I18N_REGISTRY_PATH = join(GAMES_DIR, 'i18n.generated.ts');
 export const GAMES_DEFS_PATH = join(GAMES_DIR, 'games.generated.ts');
 export const MANIFEST_FILE = 'plugin.json';
 
-/** Версия Plugin API, с которой сверяется `pluginApi` манифестов. */
-export const PLUGIN_API_VERSION = '1.3.0';
-/** Версия формата манифеста, которую понимает генератор. */
-export const PLUGIN_MANIFEST_VERSION = 2;
-
 /** Каталоги `src/games/*`, которые являются ядром, а не плагинами. */
 const CORE_GAMES_DIRS = new Set(['shared', 'i18n']);
-
-// ────────────────────────────────────────────────────────────────────────────
-//  Актуальные для генерации проверки манифеста (те же правила, что в схеме)
-// ────────────────────────────────────────────────────────────────────────────
-
-/**
- * Совместим ли диапазон `pluginApi` с версией хоста.
- * Поддержаны `^`, `~`, `>=`, точная версия и `*` — без зависимости semver.
- *
- * @param {string} range
- * @param {string} [hostVersion]
- */
-export function isHostApiCompatible(range, hostVersion = PLUGIN_API_VERSION) {
-  const host = parseVersion(hostVersion);
-  if (!host) return false;
-  const trimmed = String(range ?? '').trim();
-  if (trimmed === '' || trimmed === '*') return true;
-
-  const expected = parseVersion(trimmed.replace(/^[~^>=<\s]+/, ''));
-  if (!expected) return false;
-
-  if (trimmed.startsWith('^')) {
-    return host.major === expected.major && compare(host, expected) >= 0;
-  }
-  if (trimmed.startsWith('~')) {
-    return (
-      host.major === expected.major &&
-      host.minor === expected.minor &&
-      compare(host, expected) >= 0
-    );
-  }
-  if (trimmed.startsWith('>=')) return compare(host, expected) >= 0;
-  return compare(host, expected) === 0;
-}
-
-function parseVersion(version) {
-  const match = /^(\d+)\.(\d+)\.(\d+)$/.exec(String(version).trim());
-  if (!match) return undefined;
-  return {
-    major: Number(match[1]),
-    minor: Number(match[2]),
-    patch: Number(match[3]),
-  };
-}
-
-function compare(a, b) {
-  return a.major - b.major || a.minor - b.minor || a.patch - b.patch;
-}
-
-/**
- * Разобрать точку входа `<файл>(#<экспорт>)?` и убедиться, что путь
- * относительный и не выходит за папку плагина.
- *
- * @param {string} entry
- * @returns {{file: string, member?: string}}
- */
-export function parseEntryPoint(entry) {
-  const parts = String(entry ?? '').split('#');
-  if (parts.length > 2) {
-    throw new Error(`Некорректная точка входа: "${entry}"`);
-  }
-  const file = (parts[0] ?? '').trim();
-  const member = parts[1]?.trim();
-  if (!file) throw new Error(`Пустая точка входа: "${entry}"`);
-  if (file.startsWith('/') || file.split(/[\\/]/).includes('..')) {
-    throw new Error(
-      `Точка входа должна быть относительным путём внутри плагина: "${entry}"`,
-    );
-  }
-  if (member !== undefined && !/^[A-Za-z_$][A-Za-z0-9_$]*$/.test(member)) {
-    throw new Error(`Некорректное имя экспорта: "${entry}"`);
-  }
-  return member ? { file, member } : { file };
-}
 
 /**
  * Проверка одного плагина: id = имя папки, файлы точек входа существуют,

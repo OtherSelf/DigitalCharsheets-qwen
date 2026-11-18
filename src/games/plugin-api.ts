@@ -54,11 +54,18 @@ import type {
  * Файл чистый (без fs/DOM/Next): его импортируют и клиент, и сервер.
  */
 
-/** Версия формата манифеста, которую понимает этот хост. */
-export const PLUGIN_MANIFEST_VERSION = 1 as const;
-
-/** Версия Plugin API; манифест объявляет совместимый диапазон. */
-export const PLUGIN_API_VERSION = '1.3.0' as const;
+/**
+ * Версия Plugin API и формата манифеста живут в исполняемом `.mjs`-источнике:
+ * их читает и генератор реестра, который не может импортировать TypeScript.
+ * Здесь только реэкспорт — второго определения быть не должно.
+ */
+export {
+  PLUGIN_API_VERSION,
+  PLUGIN_MANIFEST_VERSION,
+  SUPPORTED_PLUGIN_API_RANGES,
+  parseEntryPoint,
+  isHostApiCompatible,
+} from './plugin-api.constants.mjs';
 
 /**
  * Версия схемы листа, с которой работает хост по умолчанию. Основной
@@ -197,89 +204,6 @@ export interface PluginAlias {
 export interface ParsedEntryPoint {
   readonly file: string;
   readonly member?: string;
-}
-
-/**
- * Разобрать точку входа `<файл>(#<экспорт>)?`.
- *
- * @throws если строка пустая, содержит абсолютный путь или `..`.
- */
-export function parseEntryPoint(entry: string): ParsedEntryPoint {
-  const [rawFile, member, ...rest] = entry.split('#');
-  const file = rawFile?.trim() ?? '';
-  if (!file || rest.length > 0) {
-    throw new Error(`Некорректная точка входа плагина: "${entry}"`);
-  }
-  if (file.startsWith('/') || file.split(/[\\/]/).includes('..')) {
-    throw new Error(
-      `Точка входа должна быть относительным путём внутри плагина: "${entry}"`,
-    );
-  }
-  if (member !== undefined) {
-    const trimmed = member.trim();
-    if (!/^[A-Za-z_$][A-Za-z0-9_$]*$/.test(trimmed)) {
-      throw new Error(`Некорректное имя экспорта в точке входа: "${entry}"`);
-    }
-    return { file, member: trimmed };
-  }
-  return { file };
-}
-
-/**
- * Совместим ли диапазон `pluginApi` манифеста с версией хоста.
- * Поддерживаются `^1.2.3`, `~1.2.3`, точная версия, `*` и `>=1.0.0` —
- * этого достаточно для наших манифестов, без зависимости от semver (D1).
- */
-export function isHostApiCompatible(
-  range: string,
-  hostVersion: string = PLUGIN_API_VERSION,
-): boolean {
-  const host = parseVersion(hostVersion);
-  if (!host) return false;
-  const trimmed = range.trim();
-  if (trimmed === '' || trimmed === '*') return true;
-
-  const lowerBound = trimmed.replace(/^[~^>=<\s]+/, '');
-  const expected = parseVersion(lowerBound);
-  if (!expected) return false;
-
-  if (trimmed.startsWith('^')) {
-    // ^1.2.3 → та же мажорная версия, не ниже 1.2.3.
-    return (
-      host.major === expected.major && compareVersions(host, expected) >= 0
-    );
-  }
-  if (trimmed.startsWith('~')) {
-    return (
-      host.major === expected.major &&
-      host.minor === expected.minor &&
-      compareVersions(host, expected) >= 0
-    );
-  }
-  if (trimmed.startsWith('>=')) {
-    return compareVersions(host, expected) >= 0;
-  }
-  return compareVersions(host, expected) === 0;
-}
-
-interface ParsedVersion {
-  major: number;
-  minor: number;
-  patch: number;
-}
-
-function parseVersion(version: string): ParsedVersion | undefined {
-  const match = /^(\d+)\.(\d+)\.(\d+)$/.exec(version.trim());
-  if (!match) return undefined;
-  return {
-    major: Number(match[1]),
-    minor: Number(match[2]),
-    patch: Number(match[3]),
-  };
-}
-
-function compareVersions(a: ParsedVersion, b: ParsedVersion): number {
-  return a.major - b.major || a.minor - b.minor || a.patch - b.patch;
 }
 
 /**
