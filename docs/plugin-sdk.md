@@ -76,6 +76,20 @@ After renaming run `npm run plugins:generate`, `npm run plugins:check` and
 `npm run verify`; the fixture gate (`tests/unit/plugin-template.test.ts`) does
 the same on a renamed copy, so a rename that misses a field fails CI.
 
+Four values are declared **twice** — in the manifest and in the module object —
+and the generator plus `plugins-registry.test.ts` compare them field by field:
+`id`, `gameId` (and `game.id`), `order`, `defaultStatus`. Change both, or the
+contract fails with `expected 'published' to be 'hidden'`. `schemaVersion` is
+the same story (`plugin.json` and the module).
+
+Display names and descriptions must be genuinely translated: the i18n suite
+fails on a `ru` value that is byte-identical to `en` (`ZZ Probe` works as a
+placeholder, but not as a translation).
+
+If you edited `plugin.json` (or any file) by hand, run `npm run format` before
+`verify`: the gate starts with `prettier --check`, and formatting is not a
+contract change. `plugins:scaffold` formats its output itself.
+
 ## Folder layout
 
 ```text
@@ -199,6 +213,9 @@ Rules:
   (`min`/`max`/`length`): the negative conformance check
   (`plugin-conformance.test.ts`) saves an out-of-range value and expects the
   schema to reject it. A schema without bounds accepts `stats.might: 999`.
+  The top-level object must be **`z.looseObject`**: the host stores service
+  fields (`userId`, timestamps) that are not part of your type, and a strict
+  `z.object` strips them when the sheet is written.
 - `i18n` is a locale map (`"en": "i18n/en.json"`): declare at least one of
   `en`/`ru`, extra locale codes are validated. It may point at `.json`
   (preferred, D13) or `.ts` (legacy). Every declared locale must expose the same
