@@ -12,7 +12,7 @@ import { dh2CharacterSchema } from '@/games/dh2/schema';
 import { DH2_SCHEMA_VERSION } from '@/games/dh2/schema-version';
 import type { GameExportConfig } from '@/games/types';
 
-import { makeDhCharacter } from './helpers';
+import { makeDhCharacter } from '@tests/support';
 
 const EXPORT_ALL: GameExportConfig = {
   includeBasicInfo: true,

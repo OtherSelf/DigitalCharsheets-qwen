@@ -25,7 +25,7 @@ import {
   readJson,
   removeDir,
   useTempDataDir,
-} from './helpers';
+} from '@tests/support';
 
 const CHARACTER_ID = 'char-1';
 const NOW = Date.parse('2026-05-12T18:00:00.000Z');

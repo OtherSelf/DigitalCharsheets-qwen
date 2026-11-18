@@ -8,6 +8,7 @@ the pre-deploy gate that ties them together. None of them touch your real
 
 ```bash
 npm test                    # unit tests (Vitest)
+npm run test:plugin -- dh1  # unit tests of one plugin (id, fixture name or path)
 npm run verify              # full pre-deploy gate
 npm run test:visual         # Playwright screenshot regression (full)
 npm run test:visual:full    # explicit alias for the full visual run
@@ -18,6 +19,34 @@ npm run test:visual:update  # rewrite baselines
 npm run test:visual:report  # open the HTML report
 npm run test:dev            # dev-proxy hydration + health/version smoke
 ```
+
+## Test kit
+
+Shared helpers live in `tests/support/` and are imported as `@tests/support`
+(alias in `tsconfig.json` and `vitest.config.ts`):
+
+- `data-dir.ts` — `useTempDataDir()`, `removeDir()`, `readJson()`, `userPaths()`,
+  `loginIndexPath()`;
+- `auth.ts` — `sessionCookie()`, `sessionHeaders()` (uid always comes from a
+  signed session);
+- `fixtures.ts` — minimal `makeDndCharacter()` / `makeDhCharacter()`.
+
+Game plugins carry their own tests next to the code:
+
+```text
+src/games/<id>/tests/
+  unit/*.test.ts             # schema, defaults, demo, export, i18n, rules
+  visual/*.visual.spec.ts    # plugin screens (tag @plugin:<id>)
+  fixtures/                  # data of this game
+```
+
+Plugins never import the kit from production files: ESLint
+(`no-restricted-imports`) and `scripts/plugins/check-boundaries.mjs` allow
+`vitest`, `@playwright/test`, `@tests/*` and `node:fs` only under
+`src/games/<id>/tests/**`. Cross-plugin imports are forbidden there too, so a
+DH1 test cannot build on DH2's internals. The reference fixture
+(`tests/fixtures/example-plugin/tests`) proves that a plugin can ship its own
+test and run from the repo root.
 
 ## Plugin conformance
 
@@ -36,7 +65,9 @@ empty), `npm run plugins:check` fails when the generated files are stale.
 
 ## Unit tests
 
-- Runner: Vitest (`tests/unit/*.test.ts`), Node environment.
+- Runner: Vitest, Node environment. It picks up `tests/**/*.test.ts` (host) and
+  `src/games/*/tests/**/*.test.ts` (plugins); Playwright specs are not part of
+  this run.
 - They create a temporary data directory (`DCS_DATA_DIR`) per test and remove it
   afterwards; they never read or write the real data directory.
 - API route handlers are imported and called as ordinary functions with a
@@ -54,12 +85,11 @@ empty), `npm run plugins:check` fails when the generated files are stale.
 
 ### Writing a unit test
 
-- Name the file `tests/unit/<topic>.test.ts`; `vitest.config.ts` picks up
-  `tests/**/*.test.ts` (Playwright specs are not part of this run). One file per
-  module or one cross-cutting topic.
-- Anything that writes to disk creates a temporary data directory in
-  `beforeEach` (`useTempDataDir()`) and removes it in `afterEach`
-  (`removeDir(dataDir)`). The real `./data` is never touched.
+- Name the file `tests/unit/<topic>.test.ts`; anything that writes to disk
+  creates a temporary data directory in `beforeEach` (`useTempDataDir()`) and
+  removes it in `afterEach` (`removeDir(dataDir)`). The real `./data` is never
+  touched. Import the helpers from `@tests/support`, not from a neighbouring
+  file: copies drift.
 - Assert behaviour, not internals: statuses, bodies and the files on disk. If a
   module persists data, read the file back — that is how the "200 but nothing was
   saved" class of bugs is caught.
@@ -74,17 +104,18 @@ empty), `npm run plugins:check` fails when the generated files are stale.
 - There is no component layer yet: no `jsdom`, no Testing Library, so UI
   behaviour belongs to the visual specs.
 
-A full run takes roughly 30–60 s. `testTimeout` and `hookTimeout` are 20 s:
-`plugin-slots.test.ts` dynamically imports every game sheet, and on a loaded
-machine those imports alone can exceed 20 s. Do not run heavy jobs (another full
-suite, a build) in parallel with `npm test`; if you have to, raise the timeout.
+A full run takes roughly 30–60 s. `testTimeout` is 40 s and `hookTimeout` is
+20 s: `plugin-slots.test.ts` dynamically imports every game sheet, and on a
+loaded machine those imports alone exceed 20 s (observed at ~10 s standalone
+and >20 s in the full suite). Do not run heavy jobs (another full suite, a build)
+in parallel with `npm test`.
 
 ### Common failures
 
 | Symptom | Cause / fix |
 | --- | --- |
 | `DCS_DATA_DIR` leaks between tests; a sheet is visible to another account | Missing `useTempDataDir()` in `beforeEach` / `removeDir(dataDir)` in `afterEach` |
-| `FileReader is not defined` | The file is outside `tests/**/*.test.ts`, or `setupFiles` lost `tests/unit/setup.ts` |
+| `FileReader is not defined` | The file is outside the Vitest include, or `setupFiles` lost `tests/support/setup.ts` |
 | `console.error` noise from expected errors | Stub it with `vi.spyOn(console, 'error')` and restore it |
 | `visual-naming` reports a missing section or baseline | Add the screenshot with the right name (see Visual regression) or extend `REQUIRED_*` in that spec |
 | Passes locally, times out elsewhere | Raise `testTimeout`/`hookTimeout` in `vitest.config.ts`, or lighten the test |

@@ -17,7 +17,7 @@ import {
   removeDir,
   userPaths,
   useTempDataDir,
-} from './helpers';
+} from '@tests/support';
 
 /**
  * Шаблон профиля v4 (src/lib/user-schema.ts).

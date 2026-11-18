@@ -22,7 +22,7 @@ import { verifyPassword } from '@/lib/security/password';
 import { isRecoveryPhraseHash } from '@/lib/security/phrase';
 import { isScryptHash } from '@/lib/security/scrypt';
 
-import { readJson, removeDir, userPaths, useTempDataDir } from './helpers';
+import { readJson, removeDir, userPaths, useTempDataDir } from '@tests/support';
 
 /**
  * Сквозные сценарии «регистрация → вход → создание персонажа» для КАЖДОЙ

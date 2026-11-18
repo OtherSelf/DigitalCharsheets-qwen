@@ -15,7 +15,7 @@ import {
   removeDir,
   userPaths,
   useTempDataDir,
-} from './helpers';
+} from '@tests/support';
 
 /**
  * Фолбэк на EXDEV в writeJsonAtomic (src/lib/server-storage.ts).

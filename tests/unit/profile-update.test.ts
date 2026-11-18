@@ -24,7 +24,7 @@ import {
   removeDir,
   userPaths,
   useTempDataDir,
-} from './helpers';
+} from '@tests/support';
 
 /**
  * Обновление профиля (src/lib/server-auth.ts::updateUserProfile).

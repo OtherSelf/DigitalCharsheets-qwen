@@ -37,7 +37,7 @@ import {
   sessionHeaders,
   userPaths,
   useTempDataDir,
-} from './helpers';
+} from '@tests/support';
 
 /**
  * Первый администратор, шаблон профиля на старте и /api/admin/*.

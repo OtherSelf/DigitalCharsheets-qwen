@@ -46,6 +46,7 @@ type Checker = {
   isRelativeSpecifier(specifier: string): boolean;
   matchesPattern(specifier: string, pattern: string): boolean;
   isInside(parent: string, child: string): boolean;
+  isPluginTestFile(file: string, pluginId: string, gamesDir?: string): boolean;
   collectPlugins(gamesDir?: string): Record<string, string[]>;
   evaluateBoundaries(input: {
     gamesDir?: string;
@@ -208,6 +209,32 @@ describe('проверка границ', () => {
       'demo/index.ts': "import { theme } from '@/lib/theme';",
     });
     expect(messages(report)[0]).toContain('не разрешён плагину');
+  });
+
+  it('пускает тестовые зависимости только в src/games/<id>/tests/**', async () => {
+    const report = await evaluate({
+      'dh1/index.ts': 'export const x = 1;',
+      'dh1/tests/unit/rules.test.ts':
+        "import { describe } from 'vitest';\n" +
+        "import { readFileSync } from 'node:fs';\n" +
+        "import { makeDhCharacter } from '@tests/support';\n" +
+        "import { page } from '@/app/page';",
+    });
+    expect(report.errors).toEqual([]);
+  });
+
+  it('запрещает кросс-плагинные импорты и в тестах (alias и относительный)', async () => {
+    const report = await evaluate({
+      'dh1/index.ts': 'export const dh1 = 1;',
+      'dh2/index.ts': 'export const dh2 = 1;',
+      'dh1/tests/unit/rules.test.ts':
+        "import { dh2 } from '@/games/dh2';\n" +
+        "import { dh2 as rel } from '../../../dh2/index';",
+    });
+    expect(report.errors).toHaveLength(2);
+    expect(
+      report.errors.every((error) => error.message.includes('кросс-плагинный')),
+    ).toBe(true);
   });
 
   it('пускает модуль из legacy и считает файлы', async () => {

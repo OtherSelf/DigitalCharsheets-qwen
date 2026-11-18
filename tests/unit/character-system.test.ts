@@ -8,7 +8,7 @@ import {
   type CharacterSystemSource,
 } from '@/games/character-system';
 
-import { makeDhCharacter, makeDndCharacter } from './helpers';
+import { makeDhCharacter, makeDndCharacter } from '@tests/support';
 
 /**
  * ─── LANDMARK: CHARACTER SYSTEM RESOLUTION TESTS ──────────────────────────

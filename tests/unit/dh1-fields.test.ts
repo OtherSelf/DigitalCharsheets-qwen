@@ -7,7 +7,7 @@ import { dh1IdentitySchema } from '@/games/dh1/schemas';
 import { DarkHeresyHomeWorlds } from '@/games/dh1/types';
 import type { GameExportConfig } from '@/games/types';
 
-import { makeDhCharacter } from './helpers';
+import { makeDhCharacter } from '@tests/support';
 
 /**
  * Полный лист 1e: `makeDhCharacter` — облегчённая заготовка миграций, в ней

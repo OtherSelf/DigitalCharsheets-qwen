@@ -1,5 +1,5 @@
 /**
- * Глобальные полифилы для node-окружения тестов (setupFiles в vitest.config.ts).
+ * Полифилы для node-окружения тестов (setupFiles в vitest.config.ts).
  *
  * importCharacterFromJSON() в браузере использует FileReader — в Node его нет.
  * Замена на File.text() достаточна для тестов импорта.

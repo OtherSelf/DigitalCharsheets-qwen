@@ -12,7 +12,7 @@ import {
   type LocalUser,
 } from '@/lib/local-storage';
 
-import { makeDndCharacter } from './helpers';
+import { makeDndCharacter } from '@tests/support';
 
 /**
  * Клиентская сессия и листы в localStorage (src/lib/local-storage.ts).

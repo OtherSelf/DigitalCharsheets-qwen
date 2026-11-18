@@ -28,7 +28,7 @@ import {
   removeDir,
   sessionHeaders,
   useTempDataDir,
-} from './helpers';
+} from '@tests/support';
 
 /**
  * ─── LANDMARK: GAMES API TESTS ─────────────────────────────────────────────

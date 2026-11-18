@@ -16,7 +16,7 @@ import {
   setSiteTitle,
 } from '@/lib/game-catalog';
 
-import { removeDir, useTempDataDir } from './helpers';
+import { removeDir, useTempDataDir } from '@tests/support';
 
 /**
  * ─── LANDMARK: GAME CATALOG TESTS ─────────────────────────────────────────

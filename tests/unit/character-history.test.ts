@@ -14,7 +14,7 @@ import { getHistoryFile } from '@/lib/data-dir';
 import type { HistoryChange, HistorySummary } from '@/lib/history-types';
 import { newUid } from '@/lib/ids';
 
-import { removeDir, useTempDataDir } from './helpers';
+import { removeDir, useTempDataDir } from '@tests/support';
 
 const NOW = Date.parse('2026-05-12T18:00:00.000Z');
 const CHARACTER_ID = 'char-1';

@@ -22,7 +22,7 @@ import {
 } from '@/lib/export-utils';
 import { translations } from '@/lib/i18n';
 
-import { makeDhCharacter, makeDndCharacter } from './helpers';
+import { makeDhCharacter, makeDndCharacter } from '@tests/support';
 
 // xlsx 0.20 в Node подхватывает fs только при CJS-загрузке; под vitest (ESM)
 // детект не срабатывает, и writeFile/readFile уходят в браузерную ветку.

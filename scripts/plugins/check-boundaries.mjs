@@ -26,7 +26,10 @@
  *       пределах СВОЕГО плагина (кросс-плагинные импорты запрещены);
  *    3. `allowed` — маски `*` разрешены;
  *    4. `legacy` — счётчик файлов: больше — ошибка (новая зависимость),
- *       меньше — ошибка (запись устарела, запустите `--update`).
+ *       меньше — ошибка (запись устарела, запустите `--update`);
+ *    5. `src/games/<id>/tests/**` — исключение из 1/3/4: тестам нужны vitest,
+ *       Playwright, node:fs и `@tests/*`. Кросс-плагинные импорты запрещены
+ *       и в тестах.
  *
  *  Использование:
  *    npm run plugins:boundaries            # проверка (этот же вызов в verify)
@@ -140,6 +143,21 @@ export function isInside(parent, child) {
  *   staleLegacy: string[],
  * }}
  */
+/**
+ * Файл теста плагина: `src/games/<id>/tests/**`.
+ *
+ * Тестам разрешены vitest, Playwright, node:fs и тест-кит `@tests/*` — это не
+ * рантайм плагина (D4). Кросс-плагинные импорты проверяются и здесь: тест DH1
+ * не должен тянуть модули DH2 (редакции независимы, D10).
+ *
+ * @param {string} file
+ * @param {string} pluginId
+ * @param {string} [gamesDir]
+ */
+export function isPluginTestFile(file, pluginId, gamesDir = GAMES_DIR) {
+  return isInside(join(gamesDir, pluginId, 'tests'), file);
+}
+
 export function evaluateBoundaries({ gamesDir = GAMES_DIR, plugins, config }) {
   const errors = [];
   const counts = {};
@@ -154,7 +172,39 @@ export function evaluateBoundaries({ gamesDir = GAMES_DIR, plugins, config }) {
         ? relative(ROOT, absolute)
         : absolute;
       const source = readFileSync(absolute, 'utf8');
+      const testFile = isPluginTestFile(absolute, pluginId, gamesDir);
       for (const specifier of extractSpecifiers(source)) {
+        if (testFile) {
+          if (isRelativeSpecifier(specifier)) {
+            const target = resolve(dirname(absolute), specifier);
+            const other = pluginIds.find(
+              (id) => id !== pluginId && isInside(join(gamesDir, id), target),
+            );
+            if (other) {
+              errors.push({
+                file,
+                specifier,
+                message: `кросс-плагинный импорт в тесте: ${pluginId} не может зависеть от ${other} (редакции независимы, D10)`,
+              });
+            }
+          } else {
+            const other = pluginIds.find(
+              (id) =>
+                id !== pluginId &&
+                (specifier === `@/games/${id}` ||
+                  specifier.startsWith(`@/games/${id}/`)),
+            );
+            if (other) {
+              errors.push({
+                file,
+                specifier,
+                message: `кросс-плагинный импорт в тесте: ${pluginId} не может зависеть от ${other} (редакции независимы, D10)`,
+              });
+            }
+          }
+          continue;
+        }
+
         // 1. Абсолютно запрещённое.
         const ban = forbidden.find((rule) =>
           matchesPattern(specifier, rule.pattern),

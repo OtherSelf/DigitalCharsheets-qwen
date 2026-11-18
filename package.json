@@ -19,6 +19,7 @@
     "format:check": "prettier --check .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "test:plugin": "node scripts/tests/test-plugin.mjs",
     "test:watch": "vitest",
     "test:smoke": "node scripts/smoke.mjs",
     "test:dev": "node scripts/dev-smoke.mjs",

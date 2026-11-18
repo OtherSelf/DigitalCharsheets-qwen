@@ -33,7 +33,7 @@ import {
   removeDir,
   userPaths,
   useTempDataDir,
-} from './helpers';
+} from '@tests/support';
 
 /**
  * Авторизация и восстановление доступа (src/lib/server-auth.ts).

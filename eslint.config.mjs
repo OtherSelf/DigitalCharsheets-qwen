@@ -75,6 +75,48 @@ const eslintConfig = [
     },
   },
   {
+    /*
+      Production-файлы плагинов не тянут тестовые зависимости. boundaries.json
+      видит те же имена, но не различает тест и рантайм по пути; здесь
+      исключены ровно `src/games/<id>/tests/**`, где vitest, Playwright и
+      node:fs нужны по определению.
+    */
+    files: ['src/games/**/*.{js,jsx,mjs,cjs,ts,tsx,mts,cts}'],
+    ignores: ['src/games/*/tests/**'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['vitest', 'vitest/*'],
+              message:
+                'vitest доступен только тестам плагина (src/games/<id>/tests/**)',
+            },
+            {
+              group: ['@playwright/test'],
+              message:
+                'Playwright доступен только visual-тестам плагина (src/games/<id>/tests/visual/**)',
+            },
+            {
+              group: ['@tests/*'],
+              message: 'тест-кит доступен только тестам плагина',
+            },
+            {
+              group: ['fs', 'fs/*', 'node:fs', 'node:fs/*'],
+              message:
+                'плагин не читает и не пишет файлы: сохранение идёт через host API (D4)',
+            },
+            {
+              group: ['path', 'node:path'],
+              message: 'работа с путями — только в ядре (D4)',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
     // CommonJS — это не костыль, а формат: шим для EXDEV и фикстуры тестов
     // обязаны быть .cjs, а tailwind.config.ts подключается к PostCSS.
     files: ['**/*.cjs', 'tailwind.config.ts'],
