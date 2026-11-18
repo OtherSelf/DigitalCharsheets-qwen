@@ -27,6 +27,7 @@
     "test:dev": "node scripts/dev-smoke.mjs",
     "verify": "bash scripts/predeploy.sh",
     "plugins:generate": "node scripts/plugins/generate.mjs",
+    "plugins:scaffold": "node scripts/plugins/scaffold.mjs",
     "plugins:check": "node scripts/plugins/generate.mjs --check",
     "plugins:boundaries": "node scripts/plugins/check-boundaries.mjs",
     "plugins:purity": "node scripts/plugins/check-core-purity.mjs",
