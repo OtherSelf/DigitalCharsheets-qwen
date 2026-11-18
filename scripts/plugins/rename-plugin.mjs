@@ -45,11 +45,16 @@ export function renameRules({ id, gameId, gameTitle }) {
     ['exampleGame', gameId],
     ['Example Game', gameTitle],
     ['exampleModule', `${id}Module`],
+    // DOM-идентификаторы и id таблицы BulkEditor: `example-stats`, `example-rank`.
+    ['example-', `${id}-`],
     ['example.', `${id}.`],
     ["'example'", `'${id}'`],
     ['"example"', `"${id}"`],
   ];
 }
+
+/** `order` шаблона в модуле и таблице BulkEditor — литерал `order: 90`. */
+const TEMPLATE_ORDER_RE = /\border: 90\b/g;
 
 /**
  * @param {string} text
@@ -60,6 +65,9 @@ export function renameText(text, options) {
   let result = text;
   for (const [from, to] of renameRules(options)) {
     result = result.split(from).join(to);
+  }
+  if (options.order !== undefined) {
+    result = result.replace(TEMPLATE_ORDER_RE, `order: ${options.order}`);
   }
   return result;
 }
@@ -105,7 +113,7 @@ export async function renamePlugin(input) {
     throw new Error(`Нет папки шаблона: ${sourceDir}`);
   }
 
-  const options = { id, gameId, gameTitle };
+  const options = { id, gameId, gameTitle, order };
 
   const copy = (from, to) => {
     fs.mkdirSync(to, { recursive: true });

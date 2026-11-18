@@ -5,7 +5,7 @@
  * ============================================================================
  *
  *  Источник истины — манифесты `src/games/<id>/plugin.json` (этап 1 плана,
- *  `_NEW_FUTURE2_PROMPT.md` §5.3–5.4). Скрипт:
+ *  `docs/game-modules.md`, `docs/plugin-sdk.md`). Скрипт:
  *
  *    1. читает `src/games/* /plugin.json`;
  *    2. валидирует каждый по `src/games/plugin.schema.json` (Ajv, только
@@ -77,7 +77,7 @@ export function validatePluginFolder({ gamesDir, dirName, manifest }) {
   if (locales.length === 0) {
     errors.push('i18n: нужна хотя бы одна локаль');
   } else if (!locales.includes('en') && !locales.includes('ru')) {
-    errors.push('i18n: нужна хотя бы одна из локалей en или ru (D8)');
+    errors.push('i18n: нужна хотя бы одна из локалей en или ru (SDK 1.3)');
   }
 
   /** @type {[string, string][]} */

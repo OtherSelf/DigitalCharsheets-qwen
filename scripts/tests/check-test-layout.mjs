@@ -20,7 +20,7 @@
  *    npm run test:layout            # проверка (шаг verify)
  *    node scripts/tests/check-test-layout.mjs --json
  *
- *  Связано: vitest.config.ts, docs/testing.md, _NEW_TESTING_PROMPT.md D6/D11.
+ *  Связано: vitest.config.ts, docs/testing.md.
  * ============================================================================
  */
 import { readdirSync, readFileSync, statSync } from 'node:fs';

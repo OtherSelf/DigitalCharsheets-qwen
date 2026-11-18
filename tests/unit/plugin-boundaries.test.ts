@@ -9,7 +9,7 @@ import { gamePlugins } from '@/games/registry';
 /**
  * ─── LANDMARK: PLUGIN BOUNDARIES TESTS ─────────────────────────────────────
  * Проверка скрипта `scripts/plugins/check-boundaries.mjs`: правила импортов
- * игровых плагинов (этап 0 плана `_NEW_FUTURE2_PROMPT.md`).
+ * игровых плагинов (`docs/game-modules.md` § Import boundaries).
  *
  * Тесты на временных каталогах доказывают, что скрипт ловит все четыре класса
  * нарушений, а не только «забыли добавить в список»:
