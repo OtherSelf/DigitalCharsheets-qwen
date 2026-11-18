@@ -11,6 +11,7 @@ import {
   POST as charactersPost,
 } from '@/app/api/characters/route';
 import { GET as gamesGet } from '@/app/api/games/route';
+import dnd5eManifest from '@/games/dnd5e/plugin.json';
 import {
   setModuleEnabled,
   setModuleStatus,
@@ -326,7 +327,9 @@ describe('админский API: метаданные плагинов и enabl
     const dnd = body.games.find((game: { id: string }) => game.id === 'dnd5e');
     expect(dnd).toMatchObject({
       enabled: true,
-      version: '1.0.0',
+      // Версия берётся из манифеста: API обязан отдавать именно её, а не
+      // константу в тесте, иначе любой релиз плагина ломает проверку.
+      version: dnd5eManifest.version,
       schemaVersion: 2,
       conformance: '>=1',
       tags: expect.any(Array),
