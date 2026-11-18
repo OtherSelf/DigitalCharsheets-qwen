@@ -253,7 +253,7 @@ OS or missing fonts.
 
 | Spec | Covers |
 | --- | --- |
-| `pages.spec.ts` | Login (sign-in, registration, recovery), dashboard, `/demo`, settings, creation wizard |
+| `pages.spec.ts` | Login (sign-in, registration, recovery), dashboard, `/demo`, settings, creation wizard, import dialog and the post-import creation review |
 | `basic-pages.spec.ts` | Guest header, adaptivity, compact vs normal sheet view, cross-tab sync, functional checks without PNGs |
 | `creation.spec.ts` | UI sign-in, character creation for both editions, guest draft → account |
 | `form-validation.spec.ts` | Invalid create-form submit: toast, `aria-invalid`, focus on the first field |
