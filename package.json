@@ -29,6 +29,7 @@
     "plugins:generate": "node scripts/plugins/generate.mjs",
     "plugins:check": "node scripts/plugins/generate.mjs --check",
     "plugins:boundaries": "node scripts/plugins/check-boundaries.mjs",
+    "plugins:purity": "node scripts/plugins/check-core-purity.mjs",
     "test:visual": "bash scripts/visual.sh",
     "test:visual:plugin": "node scripts/tests/test-visual-plugin.mjs",
     "test:visual:full": "bash scripts/visual.sh",

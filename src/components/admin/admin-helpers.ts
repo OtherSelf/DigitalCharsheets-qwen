@@ -45,16 +45,6 @@ export function formatAdminDate(
   }
 }
 
-/** Подпись уровня/ранга в диалоге листов. */
-export function adminCharacterLevelLabel(
-  character: { level: number | null; rank: string | null },
-  t: Translate,
-): string {
-  if (character.level !== null) return `${t('admin.level')} ${character.level}`;
-  if (character.rank) return `${t('admin.rank')} ${character.rank}`;
-  return '—';
-}
-
 /**
  * Ярлык игры в «Списке чарлистов»: короткий код редакции (`dh2e`) и полное
  * имя игры с редакцией для tooltip. `nameKey` модуля — только редакция

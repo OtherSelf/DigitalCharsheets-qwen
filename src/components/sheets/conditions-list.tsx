@@ -23,32 +23,19 @@ import { cn } from '@/lib/utils';
  * компонент общий, но правила и словари остаются у модуля; структурная
  * совместимость проверяется компилятором на месте использования.
  */
-export type ConditionKind = 'disorder' | 'corruption' | 'mutation' | 'rudiment';
-
-export type ConditionSource = 'manual' | 'divination' | 'legacy';
-
+/**
+ * Запись состояния в общем виде: конкретные значения `kind`/`source`
+ * объявляет редакция (`kinds`/`sources` в пропсах), ядро их не перечисляет.
+ */
 export interface ConditionEntry {
   id: string;
-  kind: ConditionKind;
+  kind: string;
   name: string;
   severity?: string;
   effect?: string;
   notes?: string;
-  source?: ConditionSource;
+  source?: string;
 }
-
-const CONDITION_KINDS: readonly ConditionKind[] = [
-  'disorder',
-  'corruption',
-  'mutation',
-  'rudiment',
-];
-
-const CONDITION_SOURCES: readonly ConditionSource[] = [
-  'manual',
-  'divination',
-  'legacy',
-];
 
 /**
  * Уникальный id записи. `crypto.randomUUID` есть и в браузере, и в Node 18+;
@@ -79,14 +66,19 @@ export interface ConditionsLabels {
   notes: string;
   source: string;
   remove: string;
-  kindLabels: Record<ConditionKind, string>;
-  sourceLabels: Record<ConditionSource, string>;
+  kindLabels: Record<string, string>;
+  sourceLabels: Record<string, string>;
 }
 
-export interface ConditionsListProps {
+export interface ConditionsListProps<
+  TEntry extends ConditionEntry = ConditionEntry,
+> {
   /** Состояния листа; `undefined` трактуется как пустой список. */
-  conditions: ConditionEntry[] | undefined;
-  onChange: (next: ConditionEntry[]) => void;
+  conditions: TEntry[] | undefined;
+  onChange: (next: TEntry[]) => void;
+  /** Типы состояний и источники: их объявляет редакция, а не ядро. */
+  kinds: readonly TEntry['kind'][];
+  sources: readonly NonNullable<TEntry['source']>[];
   /** Добавление и правка доступны только в режиме редактирования секции. */
   editing: boolean;
   isCompactView?: boolean;
@@ -116,17 +108,19 @@ const ConditionField = ({
  * живут в их модулях, а структура записи (`ConditionEntry`) — в
  * `@/games/shared/types`.
  */
-export function ConditionsList({
+export function ConditionsList<TEntry extends ConditionEntry = ConditionEntry>({
   conditions,
   onChange,
+  kinds,
+  sources,
   editing,
   isCompactView,
   labels,
-}: ConditionsListProps) {
+}: ConditionsListProps<TEntry>) {
   const list = conditions ?? [];
   const visible = list.filter((condition) => condition.name.trim() !== '');
 
-  const patch = (index: number, next: Partial<ConditionEntry>) => {
+  const patch = (index: number, next: Partial<TEntry>) => {
     onChange(
       list.map((condition, position) =>
         position === index ? { ...condition, ...next } : condition,
@@ -143,10 +137,10 @@ export function ConditionsList({
       ...list,
       {
         id: createConditionId(),
-        kind: 'disorder',
+        kind: kinds[0] ?? '',
         name: '',
-        source: 'manual',
-      },
+        source: sources[0],
+      } as TEntry,
     ]);
   };
 
@@ -230,14 +224,14 @@ export function ConditionsList({
                   <Select
                     value={condition.kind}
                     onValueChange={(value) =>
-                      patch(index, { kind: value as ConditionKind })
+                      patch(index, { kind: value } as Partial<TEntry>)
                     }
                   >
                     <SelectTrigger className="h-8" aria-label={labels.kind}>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {CONDITION_KINDS.map((kind) => (
+                      {kinds.map((kind) => (
                         <SelectItem key={kind} value={kind}>
                           {labels.kindLabels[kind]}
                         </SelectItem>
@@ -250,7 +244,9 @@ export function ConditionsList({
                     value={condition.name}
                     aria-label={labels.name}
                     onChange={(event) =>
-                      patch(index, { name: event.target.value })
+                      patch(index, {
+                        name: event.target.value,
+                      } as Partial<TEntry>)
                     }
                     className="h-8"
                   />
@@ -260,7 +256,9 @@ export function ConditionsList({
                     value={condition.severity ?? ''}
                     aria-label={labels.severity}
                     onChange={(event) =>
-                      patch(index, { severity: event.target.value })
+                      patch(index, {
+                        severity: event.target.value,
+                      } as Partial<TEntry>)
                     }
                     className="h-8"
                   />
@@ -270,23 +268,25 @@ export function ConditionsList({
                     value={condition.effect ?? ''}
                     aria-label={labels.effect}
                     onChange={(event) =>
-                      patch(index, { effect: event.target.value })
+                      patch(index, {
+                        effect: event.target.value,
+                      } as Partial<TEntry>)
                     }
                     className="h-8"
                   />
                 </ConditionField>
                 <ConditionField label={labels.source}>
                   <Select
-                    value={condition.source ?? 'manual'}
+                    value={condition.source ?? sources[0]}
                     onValueChange={(value) =>
-                      patch(index, { source: value as ConditionSource })
+                      patch(index, { source: value } as Partial<TEntry>)
                     }
                   >
                     <SelectTrigger className="h-8" aria-label={labels.source}>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {CONDITION_SOURCES.map((source) => (
+                      {sources.map((source) => (
                         <SelectItem key={source} value={source}>
                           {labels.sourceLabels[source]}
                         </SelectItem>
@@ -300,7 +300,9 @@ export function ConditionsList({
                   value={condition.notes ?? ''}
                   aria-label={labels.notes}
                   onChange={(event) =>
-                    patch(index, { notes: event.target.value })
+                    patch(index, {
+                      notes: event.target.value,
+                    } as Partial<TEntry>)
                   }
                   className="min-h-[56px] text-sm"
                 />

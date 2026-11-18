@@ -28,26 +28,26 @@ export function buildDnd5eExcelSections(
   };
 
   if (config.includeBasicInfo) {
-    w.section('io.excel.basicInformation');
-    w.row('io.excel.name', character.name);
-    w.row('io.excel.classCareer', character.characterClass);
+    w.section('dnd.excel.basicInformation');
+    w.row('dnd.excel.name', character.name);
+    w.row('dnd.excel.classCareer', character.characterClass);
     w.row('dnd.race', character.race);
     w.row('dnd.background', character.background);
     w.row('dnd.alignment', character.alignment);
-    w.row('io.excel.level', character.level);
-    w.row('io.excel.experiencePoints', character.experiencePoints);
-    w.row('io.excel.proficiencyBonus', character.proficiencyBonus);
-    w.row('io.excel.inspiration', character.inspiration);
+    w.row('dnd.excel.level', character.level);
+    w.row('dnd.excel.experiencePoints', character.experiencePoints);
+    w.row('dnd.excel.proficiencyBonus', character.proficiencyBonus);
+    w.row('dnd.excel.inspiration', character.inspiration);
     w.row('common.age', character.age);
     w.row('common.height', character.height);
     w.row('common.weight', character.weight);
-    w.row('io.excel.eyes', character.eyes);
-    w.row('io.excel.hair', character.hair);
-    w.row('io.excel.skin', character.skin);
+    w.row('dnd.excel.eyes', character.eyes);
+    w.row('dnd.excel.hair', character.hair);
+    w.row('dnd.excel.skin', character.skin);
   }
 
   if (config.includeStats) {
-    w.section('io.excel.abilityScores');
+    w.section('dnd.excel.abilityScores');
     const labels: [keyof DnD5eCharacter['stats'], string][] = [
       ['strength', 'common.strength'],
       ['dexterity', 'common.dexterity'],
@@ -66,47 +66,47 @@ export function buildDnd5eExcelSections(
   }
 
   if (config.includeCombat) {
-    w.section('io.excel.combat');
-    w.row('io.excel.armorClass', character.armorClass);
-    w.row('io.excel.speed', `${character.speed} ft.`);
+    w.section('dnd.excel.combat');
+    w.row('dnd.excel.armorClass', character.armorClass);
+    w.row('dnd.excel.speed', `${character.speed} ft.`);
     w.row(
-      'io.excel.hitPoints',
+      'dnd.excel.hitPoints',
       `${character.hitPoints.current} / ${character.hitPoints.max}`,
     );
-    w.row('io.excel.temporaryHitPoints', character.temporaryHitPoints);
-    w.row('io.excel.hitDice', character.hitDice);
+    w.row('dnd.excel.temporaryHitPoints', character.temporaryHitPoints);
+    w.row('dnd.excel.hitDice', character.hitDice);
     w.row(
-      'io.excel.hitDiceUsed',
+      'dnd.excel.hitDiceUsed',
       Object.entries(character.hitDiceUsed ?? {})
         .map(([die, used]) => `${die}: ${used}`)
         .join(', '),
     );
     w.row(
-      'io.excel.deathSaves',
+      'dnd.excel.deathSaves',
       `${deathSaves.successes} / ${deathSaves.failures}`,
     );
-    w.row('io.excel.exhaustion', character.exhaustion);
-    w.row('io.excel.hpNotes', character.hitPointsNotes);
-    w.row('io.excel.combatResources', w.list(character.combatResources ?? []));
+    w.row('dnd.excel.exhaustion', character.exhaustion);
+    w.row('dnd.excel.hpNotes', character.hitPointsNotes);
+    w.row('dnd.excel.combatResources', w.list(character.combatResources ?? []));
 
-    w.section('io.excel.savingThrows');
+    w.section('dnd.excel.savingThrows');
     w.tableHeader([
-      'io.excel.name',
-      'io.excel.proficient',
-      'io.excel.value',
-      'io.excel.notes',
+      'dnd.excel.name',
+      'dnd.excel.proficient',
+      'dnd.excel.value',
+      'dnd.excel.notes',
     ]);
     for (const save of character.savingThrows ?? []) {
       w.tableRow([save.name, save.proficient, save.value, save.notes ?? '']);
     }
 
-    w.section('io.excel.skills');
+    w.section('dnd.excel.skills');
     w.tableHeader([
-      'io.excel.name',
-      'io.excel.proficient',
-      'io.excel.expertise',
-      'io.excel.value',
-      'io.excel.notes',
+      'dnd.excel.name',
+      'dnd.excel.proficient',
+      'dnd.excel.expertise',
+      'dnd.excel.value',
+      'dnd.excel.notes',
     ]);
     for (const skill of character.skills ?? []) {
       w.tableRow([
@@ -118,12 +118,12 @@ export function buildDnd5eExcelSections(
       ]);
     }
 
-    w.section('io.excel.attacks');
+    w.section('dnd.excel.attacks');
     w.tableHeader([
-      'io.excel.name',
-      'io.excel.ability',
-      'io.excel.damage',
-      'io.excel.notes',
+      'dnd.excel.name',
+      'dnd.excel.ability',
+      'dnd.excel.damage',
+      'dnd.excel.notes',
     ]);
     for (const attack of character.attacks ?? []) {
       w.tableRow([
@@ -136,14 +136,14 @@ export function buildDnd5eExcelSections(
   }
 
   if (config.includeSpells) {
-    w.section('io.excel.spellcasting');
-    w.row('io.excel.spellcastingAbility', character.spellcastingAbility);
-    w.row('io.excel.spellSaveDC', character.spellSaveDifficulty);
-    w.row('io.excel.spellAttackBonus', character.spellAttackBonus);
+    w.section('dnd.excel.spellcasting');
+    w.row('dnd.excel.spellcastingAbility', character.spellcastingAbility);
+    w.row('dnd.excel.spellSaveDC', character.spellSaveDifficulty);
+    w.row('dnd.excel.spellAttackBonus', character.spellAttackBonus);
 
     const entries = character.spellcastingEntries ?? [];
     if (entries.length > 0) {
-      w.sub('io.excel.entries');
+      w.sub('dnd.excel.entries');
       for (const entry of entries) {
         w.raw(
           `    ${entry.id}`,
@@ -156,14 +156,14 @@ export function buildDnd5eExcelSections(
 
     const slots = Object.entries(character.spellSlots ?? {});
     if (slots.length > 0) {
-      w.sub('io.excel.spellSlots');
+      w.sub('dnd.excel.spellSlots');
       for (const [level, slot] of slots) {
         w.raw(`    ${level}`, `${slot.current} / ${slot.max}`);
       }
     }
 
     if ((character.spells ?? []).length > 0) {
-      w.sub('io.excel.spells');
+      w.sub('dnd.excel.spells');
       for (const spell of character.spells) {
         w.raw(`    ${spell.name}`, String(spell.level), spell.notes);
       }
@@ -171,40 +171,40 @@ export function buildDnd5eExcelSections(
   }
 
   if (config.includeEquipment) {
-    w.section('io.excel.equipmentInventory');
-    w.sub('io.excel.currency');
-    w.row('io.excel.cp', currency.cp);
-    w.row('io.excel.sp', currency.sp);
-    w.row('io.excel.ep', currency.ep);
-    w.row('io.excel.gp', currency.gp);
-    w.row('io.excel.pp', currency.pp);
-    w.sub('io.excel.equipment');
+    w.section('dnd.excel.equipmentInventory');
+    w.sub('dnd.excel.currency');
+    w.row('dnd.excel.cp', currency.cp);
+    w.row('dnd.excel.sp', currency.sp);
+    w.row('dnd.excel.ep', currency.ep);
+    w.row('dnd.excel.gp', currency.gp);
+    w.row('dnd.excel.pp', currency.pp);
+    w.sub('dnd.excel.equipment');
     w.raw(`    ${w.list(character.equipment ?? [])}`);
   }
 
   if (config.includeInventory) {
-    w.sub('io.excel.inventory');
+    w.sub('dnd.excel.inventory');
     w.raw(`    ${w.list(character.inventory ?? [])}`);
     const attunement = character.attunementItems ?? [];
     if (attunement.length > 0) {
-      w.sub('io.excel.attunement');
+      w.sub('dnd.excel.attunement');
       w.raw(`    ${w.list(attunement, 'description')}`);
     }
   }
 
   if (config.includeNarrative) {
-    w.section('io.excel.featuresTraits');
+    w.section('dnd.excel.featuresTraits');
     w.raw(`    ${w.list(character.featuresAndTraits ?? [])}`);
 
-    w.section('io.excel.narrative');
-    w.row('io.excel.backstory', character.backstory);
+    w.section('dnd.excel.narrative');
+    w.row('dnd.excel.backstory', character.backstory);
     w.row('common.notes', character.notes);
-    w.row('io.excel.personalityTraits', w.list(character.personalityTraits));
-    w.row('io.excel.ideals', w.list(character.ideals));
-    w.row('io.excel.bonds', w.list(character.bonds));
-    w.row('io.excel.flaws', w.list(character.flaws));
+    w.row('dnd.excel.personalityTraits', w.list(character.personalityTraits));
+    w.row('dnd.excel.ideals', w.list(character.ideals));
+    w.row('dnd.excel.bonds', w.list(character.bonds));
+    w.row('dnd.excel.flaws', w.list(character.flaws));
     w.row(
-      'io.excel.proficiencies',
+      'dnd.excel.proficiencies',
       w.list(character.otherProficienciesAndLanguages),
     );
   }
@@ -212,12 +212,12 @@ export function buildDnd5eExcelSections(
   if (config.includeCompanions) {
     const companions = character.companions ?? [];
     if (companions.length > 0) {
-      w.section('io.excel.companions');
+      w.section('dnd.excel.companions');
       w.tableHeader([
-        'io.excel.name',
-        'io.excel.companionType',
-        'io.excel.armorClass',
-        'io.excel.hitPoints',
+        'dnd.excel.name',
+        'dnd.excel.companionType',
+        'dnd.excel.armorClass',
+        'dnd.excel.hitPoints',
       ]);
       for (const companion of companions) {
         w.tableRow([
@@ -233,12 +233,12 @@ export function buildDnd5eExcelSections(
   if (config.includeQuestLog) {
     const quests = character.questLog ?? [];
     if (quests.length > 0) {
-      w.section('io.excel.questLog');
+      w.section('dnd.excel.questLog');
       w.tableHeader([
-        'io.excel.questTitle',
-        'io.excel.questStatus',
-        'io.excel.description',
-        'io.excel.rewards',
+        'dnd.excel.questTitle',
+        'dnd.excel.questStatus',
+        'dnd.excel.description',
+        'dnd.excel.rewards',
       ]);
       for (const quest of quests) {
         w.tableRow([
@@ -254,7 +254,7 @@ export function buildDnd5eExcelSections(
   if (config.includeCustomHouseRules) {
     const rules = character.customHouseRules ?? [];
     if (rules.length > 0) {
-      w.section('io.excel.houseRules');
+      w.section('dnd.excel.houseRules');
       for (const rule of rules) {
         w.tableRow([rule.name, rule.description]);
       }
