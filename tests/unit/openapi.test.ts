@@ -1,11 +1,21 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
+import Ajv2020 from 'ajv/dist/2020';
 import { describe, expect, it } from 'vitest';
 
 import { GET as docsRoute } from '@/app/api/docs/route';
 import { GET as specRoute } from '@/app/api/openapi.json/route';
+import { listGameModules, listGamePlugins } from '@/games/registry';
 import { openApiDocument } from '@/lib/openapi';
+
+/** Ajv по схеме из спеки: проверяет, что документ роута пройдёт спеку. */
+function compile(schema: unknown) {
+  // OpenAPI 3.1 описывает схемы JSON Schema 2020-12: кортежи приходят как
+  // `prefixItems` + `items: false`, и draf-07-валидатор их не поймёт.
+  const ajv = new Ajv2020({ strict: false, allErrors: true });
+  return ajv.compile(schema as Record<string, unknown>);
+}
 
 /**
  * OpenAPI-спека и страница /api/docs.
@@ -198,5 +208,70 @@ describe('GET /api/docs', () => {
       /src="\/vendor\/scalar\/api-reference-\d+\.\d+\.\d+\.js"/,
     );
     expect(html).not.toContain('cdn.jsdelivr.net');
+  });
+});
+
+describe('схемы листов собираются из схем плагинов', () => {
+  const schemas = openApiDocument.components.schemas as Record<string, unknown>;
+
+  it('у каждого обнаруженного плагина есть входная и выходная схема', () => {
+    for (const plugin of listGamePlugins()) {
+      const id = plugin.manifest.id;
+      expect(schemas[`Sheet_${id}`], `Sheet_${id}`).toBeDefined();
+      expect(schemas[`SheetInput_${id}`], `SheetInput_${id}`).toBeDefined();
+      const description = JSON.stringify(schemas[`Sheet_${id}`]);
+      expect(description).toContain(
+        `schemaVersion ${plugin.manifest.schemaVersion}`,
+      );
+    }
+  });
+
+  it('Character перечисляет все редакции и валидирует их демо-листы', () => {
+    const character = schemas.Character as { anyOf?: { $ref: string }[] };
+    const refs = (character.anyOf ?? []).map((entry) => entry.$ref);
+    for (const plugin of listGamePlugins()) {
+      expect(refs).toContain(
+        `#/components/schemas/Sheet_${plugin.manifest.id}`,
+      );
+      const validate = compile(schemas[`Sheet_${plugin.manifest.id}`]);
+      const demo = {
+        id: `${plugin.manifest.id}-spec`,
+        ...plugin.module.createDemo(),
+      };
+      const ok = validate(demo);
+      expect(ok, JSON.stringify(validate.errors)).toBe(true);
+    }
+  });
+
+  it('CharacterInput допускает частичный POST {systemId, name}', () => {
+    const validate = compile(schemas.CharacterInput);
+    // Роут принимает такой запрос и заполняет остальное дефолтами редакции;
+    // спека обязана это разрешать (раньше требовала characterClass).
+    expect(validate({ systemId: 'dnd5e', name: 'Probe' })).toBe(true);
+    const target = listGameModules()[0].id;
+    expect(validate({ systemId: target, name: 'Probe' })).toBe(true);
+    // Ложного требования игрового поля больше нет.
+    expect(validate({ systemId: target })).toBe(true);
+  });
+
+  it('AdminCharacterSummary описывает общий вид строки админки', () => {
+    const summary = schemas.AdminCharacterSummary as {
+      required: string[];
+      properties: Record<string, unknown>;
+    };
+    expect(summary.required).toEqual(
+      expect.arrayContaining(['id', 'name', 'gameSystem', 'updatedAt']),
+    );
+    expect(Object.keys(summary.properties).sort()).toEqual([
+      'gameSystem',
+      'id',
+      'name',
+      'sheet',
+      'systemId',
+      'updatedAt',
+    ]);
+    for (const field of ['level', 'rank', 'characterClass']) {
+      expect(summary.properties).not.toHaveProperty(field);
+    }
   });
 });

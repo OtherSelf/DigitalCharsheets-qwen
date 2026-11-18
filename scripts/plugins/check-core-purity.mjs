@@ -76,15 +76,7 @@ export const GAME_FIELDS = [
  * Исключения. Каждое обязано иметь причину и срок снятия; просроченное
  * исключение — отдельный сигнал, но гейт его не валит (срок проверяет ревью).
  */
-export const ALLOWLIST = [
-  {
-    file: 'src/lib/openapi.ts',
-    reason:
-      'схемы Character/AdminCharacterSummary пока написаны руками с игровыми полями; ' +
-      'собираются из схем плагинов и снимаются вместе с этим',
-    removeBy: 'этап 6 (OpenAPI из схем плагинов)',
-  },
-];
+export const ALLOWLIST = [];
 
 /** Файлы ядра: `.ts`/`.tsx`, без деклараций и тестов. */
 function listFiles(dir) {

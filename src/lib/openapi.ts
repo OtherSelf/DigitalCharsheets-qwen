@@ -10,8 +10,55 @@
  * Cookie-сессия описана как apiKey в cookie: Swagger/Scalar показывают замок,
  * но HttpOnly-cookie выставляется только после логина, вручную её не ввести.
  */
-import { CURRENT_SCHEMA_VERSION } from '@/games/plugin-api';
+import { z } from 'zod';
+
+import type { GeneratedPluginRegistration } from '@/games/plugin-api';
 import { listGameModules, listGamePlugins } from '@/games/registry';
+
+/**
+ * ─── LANDMARK: SHEET SCHEMAS FROM PLUGINS ──────────────────────────────────
+ * Поля листа описывает плагин (`GameModule.schema`, zod), поэтому спека
+ * собирается из тех же схем, а не из ручного списка: раньше `Character`
+ * требовал `gameSystem`/`characterClass`/`backstory`/`notes`/`questLog`, хотя
+ * `POST {systemId, name}` возвращал `201`.
+ *
+ * `io: 'output'` — документ на диске (сервер заполнил всё), `io: 'input'` —
+ * форма запроса (только то, что клиент обязан прислать).
+ */
+function sheetSchemaFromPlugin(
+  plugin: GeneratedPluginRegistration,
+  io: 'input' | 'output',
+): Record<string, unknown> {
+  const generated = z.toJSONSchema(plugin.module.schema, { io }) as Record<
+    string,
+    unknown
+  >;
+  // `$schema` внутри компонента ломает ссылки документа: версия черновика
+  // объявлена один раз на весь документ.
+  delete generated.$schema;
+  return {
+    ...generated,
+    title: `${plugin.manifest.id} sheet (${io})`,
+    description:
+      `Sheet of ${plugin.manifest.id}, schemaVersion ` +
+      `${plugin.manifest.schemaVersion}. Source: plugin.json + schema.ts.`,
+  };
+}
+
+const sheetSchemas = listGamePlugins().map((plugin) => ({
+  id: plugin.manifest.id,
+  outputRef: `Sheet_${plugin.manifest.id}`,
+  inputRef: `SheetInput_${plugin.manifest.id}`,
+  output: sheetSchemaFromPlugin(plugin, 'output'),
+  input: sheetSchemaFromPlugin(plugin, 'input'),
+}));
+
+const sheetSchemaComponents = Object.fromEntries(
+  sheetSchemas.flatMap((entry) => [
+    [entry.outputRef, entry.output],
+    [entry.inputRef, entry.input],
+  ]),
+);
 
 const jsonContent = (schema: unknown) => ({
   'application/json': { schema },
@@ -166,6 +213,7 @@ export const openApiDocument = {
       },
     },
     schemas: {
+      ...sheetSchemaComponents,
       ErrorResponse: {
         type: 'object',
         required: ['error'],
@@ -663,82 +711,35 @@ export const openApiDocument = {
         additionalProperties: true,
       },
       Character: {
-        type: 'object',
-        required: [
-          'id',
-          'userId',
-          'gameSystem',
-          'name',
-          'characterClass',
-          'backstory',
-          'notes',
-          'questLog',
-        ],
-        properties: {
-          id: { type: 'string' },
-          userId: { type: 'string', format: 'uuid' },
-          systemId: {
-            type: 'string',
-            enum: SYSTEM_IDS,
-            description: 'Machine game/edition id; discriminant of the sheet.',
-          },
-          schemaVersion: {
-            type: 'integer',
-            description: `Character sheet schema version (${CURRENT_SCHEMA_VERSION}).`,
-          },
-          gameSystem: {
-            type: 'string',
-            enum: GAME_SYSTEM_NAMES,
-            description: 'Legacy human-readable mirror of systemId.',
-          },
-          name: { type: 'string' },
-          characterClass: { type: 'string' },
-          backstory: { type: 'string' },
-          notes: { type: 'string' },
-          questLog: { type: 'array', items: ref('Quest') },
-        },
-        additionalProperties: true,
         description:
-          'A character sheet. Fields depend on the game/edition; unknown fields are preserved.',
+          'A character sheet. Fields depend on the game/edition: the schema is ' +
+          '`Sheet_<systemId>` (zod schema of the plugin, converted to JSON Schema), ' +
+          'and `schemaVersion` belongs to that plugin. Server-owned `id`/`userId` ' +
+          'are allowed in addition because plugin schemas are loose objects.',
+        anyOf: sheetSchemas.map((entry) => ref(entry.outputRef)),
       },
       CharacterInput: {
         type: 'object',
-        required: ['name', 'characterClass'],
         description:
-          'Validated against the edition schema (`module.schema`). Server-owned fields (`id`, `userId`, `systemId`) and fields outside the schema are ignored, missing fields are filled from the edition defaults, and a payload that does not match the schema is rejected with `400` and a list of `issues`. Maximum body size: 1 MiB (`413`).',
+          'Validated against the edition schema (`module.schema`). Server-owned fields (`id`, `userId`, `systemId`) and fields outside the schema are ignored, missing fields are filled from the edition defaults, so only `systemId` (or a legacy alias) and `name` are effectively required; a payload that does not match the schema is rejected with `400` and a list of `issues`. Per-edition field sets: `SheetInput_<systemId>`. Maximum body size: 1 MiB (`413`).',
         properties: {
           systemId: {
             type: 'string',
             enum: SYSTEM_IDS,
             description: 'Machine game/edition id; discriminant of the sheet.',
           },
-          schemaVersion: {
-            type: 'integer',
-            description: `Character sheet schema version (${CURRENT_SCHEMA_VERSION}).`,
-          },
           gameSystem: {
             type: 'string',
             enum: GAME_SYSTEM_NAMES,
-            description: 'Legacy mirror; systemId is preferred.',
+            description: 'Legacy mirror of systemId; `systemId` is preferred.',
           },
-          name: { type: 'string' },
-          characterClass: { type: 'string' },
-          backstory: { type: 'string' },
-          notes: { type: 'string' },
-          questLog: { type: 'array', items: ref('Quest') },
+          name: { type: 'string', minLength: 1 },
         },
         additionalProperties: true,
       },
       PortableCharacter: {
         type: 'object',
-        required: [
-          'id',
-          'systemId',
-          'schemaVersion',
-          'gameSystem',
-          'name',
-          'characterClass',
-        ],
+        required: ['id', 'systemId', 'schemaVersion'],
         properties: {
           id: { type: 'string' },
           systemId: {
@@ -748,7 +749,9 @@ export const openApiDocument = {
           },
           schemaVersion: {
             type: 'integer',
-            description: `Character sheet schema version (${CURRENT_SCHEMA_VERSION}).`,
+            description:
+              'Schema version of the sheet; the value is the plugin’s ' +
+              '`schemaVersion` (see `Sheet_<systemId>`).',
           },
           gameSystem: {
             type: 'string',
@@ -756,14 +759,10 @@ export const openApiDocument = {
             description: 'Legacy mirror of systemId.',
           },
           name: { type: 'string' },
-          characterClass: { type: 'string' },
-          backstory: { type: 'string' },
-          notes: { type: 'string' },
-          questLog: { type: 'array', items: ref('Quest') },
         },
         additionalProperties: true,
         description:
-          'Export shape: no `userId`, no migration provenance, no Firestore leftovers.',
+          'Export shape: no `userId`, no migration provenance, no Firestore leftovers. Edition fields come from the plugin export adapter.',
       },
       ExportResponse: {
         oneOf: [
@@ -846,25 +845,23 @@ export const openApiDocument = {
       },
       AdminCharacterSummary: {
         type: 'object',
-        required: [
-          'id',
-          'name',
-          'gameSystem',
-          'characterClass',
-          'level',
-          'rank',
-          'updatedAt',
-        ],
+        required: ['id', 'name', 'gameSystem', 'sheet', 'updatedAt'],
         properties: {
           id: { type: 'string' },
           name: { type: 'string' },
+          systemId: { type: ['string', 'null'] },
           gameSystem: { type: 'string' },
-          characterClass: { type: 'string' },
-          level: { type: ['integer', 'null'] },
-          rank: { type: ['string', 'null'] },
+          sheet: {
+            type: 'object',
+            additionalProperties: true,
+            description:
+              'Raw sheet. The core does not read its fields: the row label is built by the plugin (`CardSummary` slot).',
+          },
           updatedAt: { type: ['string', 'null'], format: 'date-time' },
         },
         additionalProperties: false,
+        description:
+          'Admin list row: generic metadata plus the raw sheet; no game-specific columns.',
       },
       AdminCharactersResponse: {
         type: 'object',

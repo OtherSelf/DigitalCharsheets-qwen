@@ -124,6 +124,16 @@ and fields the schema does not declare are ignored, an invalid structure answers
 `400 { reason: "invalid_payload", issues: [...] }`, and a body larger than
 **1 MiB** answers `413 { reason: "payload_too_large" }`.
 
+The OpenAPI document is built from those same schemas: every registered plugin
+contributes `Sheet_<systemId>` (the stored document) and
+`SheetInput_<systemId>` (what a request may contain), and `Character` is
+`anyOf` over the editions. `CharacterInput` therefore does not pretend that
+edition fields are required — `POST { "systemId": "dnd5e", "name": "…" }` is
+accepted and the rest is filled from the edition defaults.
+`tests/unit/openapi.test.ts` compiles the published schemas with a JSON Schema
+2020-12 validator and checks that every plugin's demo sheet passes and that
+`CharacterInput` accepts a partial body.
+
 A share link is a bearer token for read-only viewing: anyone with
 `/share/<token>` can open the sheet without a session, so treat the URL as
 sensitive. The token is 32 random bytes (43 base64url characters), shown once by
