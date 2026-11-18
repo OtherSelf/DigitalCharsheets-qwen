@@ -1,10 +1,12 @@
 import crypto from 'node:crypto';
 import fs from 'node:fs';
+import { createRequire } from 'node:module';
 import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 import type { FullConfig } from '@playwright/test';
 
-import { dhCharacter, dndCharacter, VISUAL_RECOVERY_PHRASE } from './fixtures';
+import { VISUAL_RECOVERY_PHRASE } from './fixtures';
 import {
   STATE_FILE,
   type VisualAccount,
@@ -15,12 +17,13 @@ import {
 /**
  * Один раз на прогон:
  *   1. проверяет, что сервер отвечает;
- *   2. сеет аккаунты: canonical `visual-tests` (для снимков, где виден логин)
+ *   2. находит фикстуры игр перебором `src/games/<id>/tests/fixtures/visual.ts`;
+ *   3. сеет аккаунты: canonical `visual-tests` (для снимков, где виден логин)
  *      и по одному изолированному аккаунту на воркер `visual-tests-w1..wN`;
- *   3. в каждом воркер-аккаунте удаляет старые листы и создаёт два свежих
- *      (D&D и Dark Heresy) — данные воркеров не пересекаются, поэтому тесты
- *      можно гонять параллельно;
- *   4. пишет аккаунты и id персонажей в `.visual-state.json`.
+ *   4. в каждом воркер-аккаунте удаляет старые листы и создаёт по свежему
+ *      листу на каждую найденную игру — данные воркеров не пересекаются,
+ *      поэтому тесты можно гонять параллельно;
+ *   5. пишет аккаунты и id персонажей в `.visual-state.json`.
  *
  * Изоляция по воркерам, а не по проектам: Playwright распределяет воркеры по
  * файлам сам, и один и тот же аккаунт мог бы одновременно правиться из двух
@@ -35,6 +38,177 @@ const CANONICAL_USERNAME = 'visual-tests';
 const MAX_SEEDED_WORKERS = 8;
 
 /**
+ * ─── LANDMARK: GAME FIXTURE DISCOVERY ───────────────────────────────────────
+ * Игровые персонажи для сева больше не импортируются хостом напрямую: каждая
+ * игра держит фикстуру в `src/games/<id>/tests/fixtures/visual.ts`, а
+ * global-setup находит файлы перебором каталогов. Удаление папки игры (D17)
+ * убирает и фикстуру, и её спеки — хост при этом не падает, просто сеет
+ * меньше персонажей.
+ *
+ * Контракт фикстуры: default-экспорт — шаблон персонажа (`{ id, userId }`
+ * сервер выдаёт сам). Сегмент игры для `state.characters` берётся из
+ * `tests/visual.json` (`nameSegment`) — из того же объявления, что задаёт
+ * `dnd`/`dh` в именах эталонов.
+ */
+export interface GameVisualFixture {
+  /** id плагина — папка `src/games/<id>`. */
+  pluginId: string;
+  /** Сегмент игры в именах PNG и в `state.characters` (`dnd`, `dh`). */
+  segment: string;
+  /** Шаблон персонажа из default-экспорта фикстуры. */
+  character: object;
+}
+
+function readJsonField(file: string, field: string): unknown {
+  try {
+    const parsed = JSON.parse(fs.readFileSync(file, 'utf8')) as Record<
+      string,
+      unknown
+    >;
+    return parsed[field];
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * Импорт TS-фикстуры из global-setup.
+ *
+ * Node умеет снимать типы с `.ts` сам, поэтому обычно работает нативный
+ * `import()`. Если рантайм этого не умеет или файл загружен Playwright как
+ * CJS, пробуем `createRequire`: у Playwright зарегистрирован require-хук,
+ * который компилирует TS так же, как спеки.
+ */
+async function importFixtureModule(
+  file: string,
+): Promise<Record<string, unknown>> {
+  const url = pathToFileURL(file).href;
+  try {
+    return (await import(url)) as Record<string, unknown>;
+  } catch (importError) {
+    try {
+      return createRequire(file)(file) as Record<string, unknown>;
+    } catch {
+      throw new Error(
+        `Не удалось импортировать фикстуру ${path.relative(
+          process.cwd(),
+          file,
+        )}: ${
+          importError instanceof Error
+            ? importError.message
+            : String(importError)
+        }`,
+      );
+    }
+  }
+}
+
+/** Похоже ли значение на шаблон персонажа, а не на обёртку модуля. */
+function isCharacterLike(value: unknown): value is object {
+  if (!value || typeof value !== 'object') return false;
+  const record = value as Record<string, unknown>;
+  return (
+    typeof record.name === 'string' &&
+    (typeof record.gameSystem === 'string' ||
+      typeof record.systemId === 'string')
+  );
+}
+
+/**
+ * Достать персонажа из импортированного модуля фикстуры.
+ *
+ * Форма зависит от того, как рантайм загрузил файл: нативный ESM отдаёт
+ * `{ default: character }`, а CJS-интероп может завернуть default ещё раз
+ * (`{ default: { __esModule, default: character } }`). Поэтому идём по цепочке
+ * `default`, пока значение не станет похоже на персонажа.
+ */
+function unwrapFixtureCharacter(
+  imported: Record<string, unknown>,
+): object | null {
+  let candidate: unknown = imported.default ?? imported;
+  for (let depth = 0; depth < 4; depth += 1) {
+    if (isCharacterLike(candidate)) return candidate;
+    if (!candidate || typeof candidate !== 'object') return null;
+    if (!('default' in (candidate as Record<string, unknown>))) return null;
+    candidate = (candidate as Record<string, unknown>).default;
+  }
+  return isCharacterLike(candidate) ? candidate : null;
+}
+
+/**
+ * Все игровые фикстуры в порядке реестра плагинов (`plugin.json` → order,
+ * затем id). Порядок важен: он задаёт порядок карточек на дашборде и порядок
+ * листов в data-dir, а те зафиксированы эталонами.
+ */
+export async function discoverGameFixtures(
+  rootDir: string,
+): Promise<GameVisualFixture[]> {
+  const gamesDir = path.join(rootDir, 'src', 'games');
+  let entries: fs.Dirent[] = [];
+  try {
+    entries = fs.readdirSync(gamesDir, { withFileTypes: true });
+  } catch {
+    return [];
+  }
+
+  const files = entries
+    .filter((entry) => entry.isDirectory())
+    .flatMap((entry) => {
+      const file = path.join(
+        gamesDir,
+        entry.name,
+        'tests',
+        'fixtures',
+        'visual.ts',
+      );
+      if (!fs.existsSync(file)) return [];
+      const order = readJsonField(
+        path.join(gamesDir, entry.name, 'plugin.json'),
+        'order',
+      );
+      return [
+        {
+          pluginId: entry.name,
+          file,
+          order: typeof order === 'number' ? order : Number.MAX_SAFE_INTEGER,
+        },
+      ];
+    })
+    .sort(
+      (a, b) => a.order - b.order || a.pluginId.localeCompare(b.pluginId, 'en'),
+    );
+
+  const fixtures: GameVisualFixture[] = [];
+  const usedSegments = new Set<string>();
+  for (const entry of files) {
+    const character = unwrapFixtureCharacter(
+      await importFixtureModule(entry.file),
+    );
+    if (!character) {
+      console.warn(
+        `[visual] ${entry.pluginId}: в tests/fixtures/visual.ts нет default-экспорта — игра пропущена`,
+      );
+      continue;
+    }
+    const declared = readJsonField(
+      path.join(gamesDir, entry.pluginId, 'tests', 'visual.json'),
+      'nameSegment',
+    );
+    const segment =
+      typeof declared === 'string' && declared ? declared : entry.pluginId;
+    if (usedSegments.has(segment)) {
+      console.warn(
+        `[visual] ${entry.pluginId}: сегмент "${segment}" уже занят другой игрой — игра пропущена`,
+      );
+      continue;
+    }
+    usedSegments.add(segment);
+    fixtures.push({ pluginId: entry.pluginId, segment, character });
+  }
+  return fixtures;
+}
+
+/**
  * ─── LANDMARK: ADMIN VISUAL FIXTURES ────────────────────────────────────────
  * Для снимков /admin нужен детерминированный список пользователей: в отличие
  * от дашборда, он не изолирован по воркерам. Поэтому global-setup пишет три
@@ -46,9 +220,14 @@ const MAX_SEEDED_WORKERS = 8;
  * В таблице /admin эти аккаунты отфильтрованы поиском `visual-admin-`, так
  * что воркерские аккаунты и число воркеров на снимок не влияют. Числа в
  * карточках статистики — глобальные, их тест маскирует.
+ *
+ * Лист задаётся сегментом игры (`dnd`, `dh`), а не объектом фикстуры: тело
+ * персонажа берётся из обнаруженных фикстур плагинов. Игр без фикстуры в
+ * наборе нет — их листы просто не сеются.
  */
 interface AdminDemoCharacter {
-  fixture: object;
+  /** Сегмент игры из `state.characters` (`dnd`, `dh`). */
+  segment: string;
   id: string;
   updatedAt: string;
 }
@@ -73,12 +252,12 @@ const ADMIN_DEMO_USERS: AdminDemoUser[] = [
     lastLoginAt: '2025-04-01T09:30:00.000Z',
     characters: [
       {
-        fixture: dndCharacter,
+        segment: 'dnd',
         id: 'visual-admin-alice-dnd',
         updatedAt: '2025-05-01T12:00:00.000Z',
       },
       {
-        fixture: dhCharacter,
+        segment: 'dh',
         id: 'visual-admin-alice-dh',
         updatedAt: '2025-05-02T12:00:00.000Z',
       },
@@ -93,7 +272,7 @@ const ADMIN_DEMO_USERS: AdminDemoUser[] = [
     lastLoginAt: '2025-04-10T18:00:00.000Z',
     characters: [
       {
-        fixture: dndCharacter,
+        segment: 'dnd',
         id: 'visual-admin-bob-dnd',
         updatedAt: '2025-05-03T12:00:00.000Z',
       },
@@ -167,8 +346,10 @@ export function resolveWorkerCount(config: FullConfig): number {
 }
 
 interface SeedOptions {
-  /** Создавать ли двух персонажей (canonical нужен только для /settings). */
+  /** Создавать ли персонажей (canonical нужен только для /settings). */
   withCharacters: boolean;
+  /** Обнаруженные фикстуры игр: по листу на каждую (в порядке реестра). */
+  fixtures: GameVisualFixture[];
 }
 
 /** Регистрирует/переиспользует аккаунт и (при желании) сеет персонажей. */
@@ -282,15 +463,19 @@ async function seedAccount(
     return created.body.id;
   };
 
-  const dndId = await create(dndCharacter, 'D&D');
-  const dhId = await create(dhCharacter, 'Dark Heresy');
+  const characters: Record<string, string> = {};
+  for (const fixture of options.fixtures) {
+    const id = await create(fixture.character, fixture.pluginId);
+    if (id) characters[fixture.segment] = id;
+  }
 
   return {
     username,
     password: PASSWORD,
     user: { ...user, hasRecoveryPhrase: true },
-    dndId,
-    dhId,
+    characters,
+    dndId: characters.dnd ?? '',
+    dhId: characters.dh ?? '',
   };
 }
 
@@ -377,6 +562,7 @@ async function ensureAdminDemoUser(
   baseURL: string,
   dataDir: string,
   spec: AdminDemoUser,
+  fixtures: GameVisualFixture[],
 ): Promise<void> {
   let uid = findUidByUsername(dataDir, spec.username);
   if (!uid) {
@@ -428,15 +614,17 @@ async function ensureAdminDemoUser(
   const charactersDir = path.join(dataDir, 'users', uid, 'characters');
   fs.rmSync(charactersDir, { recursive: true, force: true });
   fs.mkdirSync(charactersDir, { recursive: true });
+  const characterBySegment = new Map(
+    fixtures.map((fixture) => [fixture.segment, fixture.character]),
+  );
   for (const character of spec.characters) {
+    const fixture = characterBySegment.get(character.segment);
+    // Игры с обнаруженной фикстурой нет (папку удалили) — листа тоже нет.
+    if (!fixture) continue;
     const file = path.join(charactersDir, `${character.id}.json`);
     fs.writeFileSync(
       file,
-      JSON.stringify(
-        { ...character.fixture, id: character.id, userId: uid },
-        null,
-        2,
-      ),
+      JSON.stringify({ ...fixture, id: character.id, userId: uid }, null, 2),
       'utf8',
     );
     // mtime задаёт колонку «Updated» в диалоге листов.
@@ -452,6 +640,7 @@ async function ensureAdminDemoUser(
  */
 async function seedAdminFixtures(
   baseURL: string,
+  fixtures: GameVisualFixture[],
 ): Promise<VisualAccount | null> {
   const dataDir = process.env.DCS_VISUAL_DATA_DIR;
   if (!dataDir) {
@@ -468,7 +657,7 @@ async function seedAdminFixtures(
     }
 
     for (const spec of ADMIN_DEMO_USERS) {
-      await ensureAdminDemoUser(baseURL, dataDir, spec);
+      await ensureAdminDemoUser(baseURL, dataDir, spec, fixtures);
     }
 
     const first = await signIn(
@@ -508,6 +697,7 @@ async function seedAdminFixtures(
       username: credentials.username,
       password: credentials.password,
       user: { ...user, hasRecoveryPhrase: true },
+      characters: {},
       dndId: '',
       dhId: '',
     };
@@ -547,7 +737,8 @@ function seedShareFixtures(workers: VisualAccount[]): void {
   > = {};
 
   workers.forEach((worker, index) => {
-    if (!worker.dndId) return;
+    const dndId = worker.characters.dnd;
+    if (!dndId) return;
     const token = shareTokenFor(index, 'plain');
     const historyToken = shareTokenFor(index, 'history');
     const hash = crypto
@@ -560,14 +751,14 @@ function seedShareFixtures(workers: VisualAccount[]): void {
       .digest('hex');
     shares[hash] = {
       uid: worker.user.uid,
-      characterId: worker.dndId,
+      characterId: dndId,
       createdAt: '2026-01-10T10:00:00.000Z',
       expiresAt: null,
       includeHistory: false,
     };
     shares[historyHash] = {
       uid: worker.user.uid,
-      characterId: worker.dndId,
+      characterId: dndId,
       createdAt: '2026-01-10T10:01:00.000Z',
       expiresAt: null,
       includeHistory: true,
@@ -575,7 +766,7 @@ function seedShareFixtures(workers: VisualAccount[]): void {
     worker.share = {
       token,
       historyToken,
-      characterId: worker.dndId,
+      characterId: dndId,
     };
   });
 
@@ -607,7 +798,8 @@ function seedHistoryFixtures(workers: VisualAccount[]): void {
   }
 
   for (const worker of workers) {
-    if (!worker.dndId) continue;
+    const dndId = worker.characters.dnd;
+    if (!dndId) continue;
     const dir = path.join(dataDir, 'users', worker.user.uid, 'history');
     fs.mkdirSync(dir, { recursive: true });
     const records = [
@@ -683,7 +875,7 @@ function seedHistoryFixtures(workers: VisualAccount[]): void {
       },
     ];
     fs.writeFileSync(
-      path.join(dir, `${worker.dndId}.jsonl`),
+      path.join(dir, `${dndId}.jsonl`),
       `${records.map((record) => JSON.stringify(record)).join('\n')}\n`,
       'utf8',
     );
@@ -699,11 +891,25 @@ export default async function globalSetup(config: FullConfig): Promise<void> {
   await waitForServer(baseURL);
 
   const workerCount = resolveWorkerCount(config);
+  // `config.rootDir` — это testDir (`tests/visual`), а не корень репозитория:
+  // фикстуры же лежат в `src/games`. Поэтому берём каталог конфига.
+  const projectRoot = config.configFile
+    ? path.dirname(config.configFile)
+    : process.cwd();
+  const fixtures = await discoverGameFixtures(projectRoot);
+  if (fixtures.length === 0) {
+    // Хост не обязан падать из-за отсутствия игр: сеять просто нечего.
+    console.warn(
+      '[visual] не найдено ни одной фикстуры src/games/*/tests/fixtures/visual.ts — ' +
+        'листы персонажей не посеяны',
+    );
+  }
 
   // canonical — фиксированный логин `visual-tests` (виден на /settings),
   // персонажи ему не нужны.
   const canonical = await seedAccount(baseURL, CANONICAL_USERNAME, {
     withCharacters: false,
+    fixtures,
   });
 
   const workers: VisualAccount[] = [];
@@ -711,6 +917,7 @@ export default async function globalSetup(config: FullConfig): Promise<void> {
     workers.push(
       await seedAccount(baseURL, `${CANONICAL_USERNAME}-w${index + 1}`, {
         withCharacters: true,
+        fixtures,
       }),
     );
   }
@@ -718,7 +925,7 @@ export default async function globalSetup(config: FullConfig): Promise<void> {
   seedShareFixtures(workers);
   seedHistoryFixtures(workers);
 
-  const admin = await seedAdminFixtures(baseURL);
+  const admin = await seedAdminFixtures(baseURL, fixtures);
 
   const state: VisualStateFile = {
     baseURL,
@@ -730,10 +937,21 @@ export default async function globalSetup(config: FullConfig): Promise<void> {
   fs.mkdirSync(path.dirname(STATE_FILE), { recursive: true });
   fs.writeFileSync(STATE_FILE, JSON.stringify(state, null, 2), 'utf8');
 
+  const seeded = fixtures
+    .map((fixture) => `${fixture.pluginId}(${fixture.segment})`)
+    .join(', ');
   console.log(
     `[visual] baseURL=${baseURL} canonical=${canonical.user.uid} ` +
+      `игры: ${seeded} ` +
       `воркеров: ${workers.length} ` +
-      `(${workers.map((w) => `${w.username}:${w.dndId}/${w.dhId}`).join(', ')})` +
+      `(${workers
+        .map(
+          (w) =>
+            `${w.username}:${Object.entries(w.characters)
+              .map(([segment, id]) => `${segment}=${id}`)
+              .join('/')}`,
+        )
+        .join(', ')})` +
       ` admin=${admin ? admin.username : '—'}`,
   );
 }

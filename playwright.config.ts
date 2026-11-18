@@ -135,10 +135,16 @@ export default defineConfig({
         tests/visual. `snapshotPathTemplate` на уровне проекта возвращает
         эталоны в общий root tests/visual/__screenshots__ — новая игра не
         двигает host-эталоны и не требует правок конфига.
+
+        `grepInvert` — тот же контракт тегов, что у host-проектов: `@desktop`
+        снимается только в desktop-games, `@mobile` — только в mobile-games.
+        Без него сценарий попал бы в оба проекта и искал эталон чужой ширины
+        (или, что хуже, создал бы его вместо падения).
       */
       name: 'desktop-games',
       testDir: './src/games',
       testMatch: '**/tests/visual/*.visual.spec.ts',
+      grepInvert: /@mobile/,
       snapshotPathTemplate:
         'tests/visual/__screenshots__/{projectName}/{testFilePath}/{arg}{ext}',
       use: {
@@ -152,6 +158,7 @@ export default defineConfig({
       name: 'mobile-games',
       testDir: './src/games',
       testMatch: '**/tests/visual/*.visual.spec.ts',
+      grepInvert: /@desktop/,
       snapshotPathTemplate:
         'tests/visual/__screenshots__/{projectName}/{testFilePath}/{arg}{ext}',
       use: {

@@ -6,6 +6,7 @@ import {
   type Page,
 } from '@playwright/test';
 
+import { VISUAL_RECOVERY_PHRASE } from './fixtures';
 import {
   readAdminState,
   readCanonicalState,
@@ -517,4 +518,227 @@ export function collectPageErrors(page: Page): string[] {
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
   return errors;
+}
+
+/**
+ * ─── LANDMARK: PLUGIN VISUAL HELPERS ────────────────────────────────────────
+ * Общий тест-кит игровых спеков: они лежат в `src/games/<id>/tests/visual` и
+ * импортируют его относительным путём (`../../../../../tests/visual/helpers`),
+ * потому что alias `@/*` в Playwright не работает. Игр здесь нет — только
+ * шаги, одинаковые для любой редакции: id персонажа из состояния,
+ * регистрация временного аккаунта, форма создания, режим правки.
+ */
+
+const VISUAL_PASSWORD = 'visual-pass-1234';
+
+/**
+ * id персонажа, посеянного из фикстуры игры (`src/games/<id>/tests/fixtures/
+ * visual.ts`). Ошибка вместо тихого `undefined`: спека плагина без фикстуры —
+ * это не «пропустим», а забытый файл.
+ */
+export function gameCharacterId(segment: string): string {
+  const id = getState().characters[segment];
+  if (!id) {
+    throw new Error(
+      `Нет посеянного персонажа "${segment}": у плагина нет ` +
+        'tests/fixtures/visual.ts (или global-setup не нашёл файл).',
+    );
+  }
+  return id;
+}
+
+export interface RegisteredAccount {
+  username: string;
+  password: string;
+  uid: string;
+}
+
+/** Регистрирует уникальный аккаунт под тест (сессия остаётся в контексте). */
+export async function registerAccount(
+  page: Page,
+  prefix: string,
+  displayName: string,
+): Promise<RegisteredAccount> {
+  const username = `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
+  const auth = await page.request.post('/api/auth/register', {
+    data: {
+      username,
+      password: VISUAL_PASSWORD,
+      displayName,
+      recoveryPhrase: VISUAL_RECOVERY_PHRASE,
+    },
+  });
+  expect(auth.status(), 'регистрация аккаунта через /api/auth/register').toBe(
+    200,
+  );
+  const body = await auth.json();
+  expect(body.success).toBe(true);
+  expect(body.user.hasRecoveryPhrase, 'фраза задана при регистрации').toBe(
+    true,
+  );
+
+  return {
+    username,
+    password: VISUAL_PASSWORD,
+    uid: body.user.uid as string,
+  };
+}
+
+/** Листы владельца сессионной cookie контекста. */
+export async function fetchCharacters(page: Page): Promise<any[]> {
+  // Владелец определяется сессионной cookie контекста.
+  const res = await page.request.get('/api/characters');
+  expect(res.status()).toBe(200);
+  return (await res.json()) as any[];
+}
+
+/** Создаёт лист текущим (уже авторизованным) контекстом запросов. */
+export async function createCharacterViaApi(
+  page: Page,
+  data: Record<string, unknown>,
+): Promise<string> {
+  const created = await page.request.post('/api/characters', { data });
+  expect([200, 201], 'создание листа').toContain(created.status());
+  const { id } = (await created.json()) as { id: string };
+  return id;
+}
+
+/**
+ * Временный аккаунт с одним листом для сценариев, которым нужна запись:
+ * фикстуры воркеров остаются нетронутыми. Вход через UI уже выполнен.
+ */
+export async function seedTempAccountSheet(
+  page: Page,
+  systemId: string,
+  values: Record<string, unknown> = {},
+): Promise<string> {
+  const username = `tmp-${systemId}-${Date.now()}`;
+  const password = 'tmp-password-1';
+  const registered = await page.request.post('/api/auth/register', {
+    data: {
+      username,
+      password,
+      displayName: `Temp ${systemId}`,
+      recoveryPhrase: VISUAL_RECOVERY_PHRASE,
+    },
+  });
+  expect([200, 201], 'регистрация аккаунта').toContain(registered.status());
+
+  const id = await createCharacterViaApi(page, {
+    systemId,
+    name: `Temp ${systemId}`,
+    ...values,
+  });
+
+  await signInViaUI(page, { username, password });
+  return id;
+}
+
+/**
+ * Путь реального пользователя: дашборд → «Create New Character» → игра →
+ * редакция. id игры и редакции — те же, из которых собраны data-testid
+ * манифеста (`create-game-<gameId>`, `create-edition-<plugin id>`).
+ */
+export async function openCreationForm(
+  page: Page,
+  game: string,
+  edition: string,
+): Promise<void> {
+  await page.getByRole('link', { name: 'Create New Character' }).click();
+  await page.waitForURL(/\/new$/, { timeout: 15_000 });
+
+  await page.getByTestId(`create-game-${game}`).click();
+  await page.getByTestId(`create-edition-${edition}`).click();
+
+  await expect(
+    page.getByRole('button', { name: 'Create Character' }),
+  ).toBeVisible();
+}
+
+/** Дожидается редиректа на лист /<id> и возвращает id. */
+export async function waitForSheetRedirect(page: Page): Promise<string> {
+  await page.waitForURL((url) => !url.pathname.startsWith('/new'), {
+    timeout: 30_000,
+  });
+  const id = sheetIdFromUrl(page);
+  expect(id, 'после создания открывается лист /<id>').not.toBe('');
+  return id;
+}
+
+/** Включает редактирование первой карточки секции. */
+export async function startEditing(scope: Locator): Promise<void> {
+  await scope.locator('[data-testid="edit-button"]:visible').first().click();
+  await expect(scope.getByTestId('save-button').first()).toBeVisible();
+}
+
+/**
+ * Включает редактирование сразу во всех карточках секции (например, у
+ * заклинаний Edit есть у каждого уровня). Иначе поля Fireball/Shield
+ * остались бы в режиме чтения.
+ */
+export async function startEditingAll(scope: Locator): Promise<void> {
+  const buttons = scope.locator('[data-testid="edit-button"]:visible');
+  for (let guard = 0; guard < 24; guard += 1) {
+    if ((await buttons.count()) === 0) break;
+    await buttons.first().click();
+  }
+  await expect(scope.getByTestId('save-button').first()).toBeVisible();
+}
+
+/** Проверяет, что среди input-полей секции есть поле с указанным значением. */
+export async function expectInputValue(
+  scope: Locator,
+  value: string,
+): Promise<void> {
+  await expect
+    .poll(() =>
+      scope
+        .locator('input')
+        .evaluateAll(
+          (inputs, expected) =>
+            inputs.some(
+              (input) => (input as HTMLInputElement).value === expected,
+            ),
+          value,
+        ),
+    )
+    .toBe(true);
+}
+
+/** Открывает секцию «Прогрессия» (на мобильном — через компактную навигацию). */
+export async function openProgressionSection(page: Page): Promise<Locator> {
+  const progression = page.locator('#progression-section');
+  if (!(await progression.isVisible().catch(() => false))) {
+    await page
+      .getByRole('button', { name: 'Progression', exact: true })
+      .click();
+  }
+  await expect(progression).toBeVisible();
+  return progression;
+}
+
+export interface ExperienceAwardLabels {
+  button: string;
+  amount: string;
+  what: string;
+  confirm: string;
+}
+
+/** Начисление/штраф опыта через диалог; подписи зависят от редакции. */
+export async function awardExperience(
+  page: Page,
+  amount: string,
+  note: string,
+  labels: ExperienceAwardLabels,
+): Promise<void> {
+  await page.getByRole('button', { name: labels.button, exact: true }).click();
+  const dialog = page.getByRole('dialog');
+  await expect(dialog).toBeVisible();
+  // Пресет по умолчанию — 100, поле свободное.
+  await expect(dialog.getByLabel(labels.amount)).toHaveValue('100');
+  await dialog.getByLabel(labels.amount).fill(amount);
+  await dialog.getByLabel(labels.what).fill(note);
+  await dialog.getByRole('button', { name: labels.confirm }).click();
+  await expect(dialog).toHaveCount(0);
 }
