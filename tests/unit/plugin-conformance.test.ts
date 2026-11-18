@@ -5,6 +5,7 @@ import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import { gamePlugins, loadGameUiSlots } from '@/games/registry';
+import { DEFAULT_EXPORT_CONFIG } from '@/lib/export-utils';
 
 /**
  * ─── LANDMARK: PLUGIN CONFORMANCE ─────────────────────────────────────────
@@ -185,4 +186,113 @@ describe('conformance: эталонная фикстура', () => {
       fs.rmSync(root, { recursive: true, force: true });
     }
   });
+});
+
+/**
+ * ─── НЕГАТИВНЫЙ TCK И ROUND-TRIP ────────────────────────────────────────
+ * Проверяется не только «валидное проходит», но и «невалидное не проходит»:
+ * иначе диапазоны в схемах никто не заметит. Round-trip — что экспорт не
+ * теряет структуру листа.
+ */
+describe('conformance: невалидные данные обязаны падать', () => {
+  /** Значение заведомо вне правил редакции: мусор, а не отрицание правил. */
+  const OUT_OF_RANGE = 999;
+
+  it.each(gamePlugins.map((plugin) => [plugin.manifest.id, plugin]))(
+    '%s: уровень и характеристики за пределами правил отклоняются',
+    async (_id, plugin) => {
+      const { validateCharacterData } = await import('@/lib/character-payload');
+      const base = {
+        id: 'conformance-negative',
+        userId: 'user-conformance',
+        systemId: plugin.manifest.id,
+        ...plugin.module.createDemo(),
+      } as Record<string, unknown>;
+
+      const candidates: Record<string, unknown>[] = [];
+      if (typeof base.level === 'number') {
+        candidates.push({ ...base, level: OUT_OF_RANGE });
+        candidates.push({ ...base, level: -5 });
+      }
+      if (base.stats && typeof base.stats === 'object') {
+        const stats = base.stats as Record<string, unknown>;
+        const numericKey = Object.keys(stats).find(
+          (key) => typeof stats[key] === 'number',
+        );
+        if (numericKey) {
+          candidates.push({
+            ...base,
+            stats: { ...stats, [numericKey]: OUT_OF_RANGE },
+          });
+          candidates.push({
+            ...base,
+            stats: { ...stats, [numericKey]: -1 },
+          });
+        }
+      }
+
+      expect(candidates.length, plugin.manifest.id).toBeGreaterThan(0);
+      for (const candidate of candidates) {
+        const result = validateCharacterData(plugin.module, candidate);
+        expect(result.ok, JSON.stringify(candidate).slice(0, 200)).toBe(false);
+        if (result.ok) continue;
+        expect(result.issues.length).toBeGreaterThan(0);
+        for (const issue of result.issues) {
+          expect(
+            issue.path.length,
+            `${plugin.manifest.id}: ${issue.path}`,
+          ).toBeGreaterThan(0);
+        }
+      }
+    },
+  );
+
+  it('лист с пустым именем не сохраняется через payload', async () => {
+    const { validateCharacterData } = await import('@/lib/character-payload');
+    for (const plugin of gamePlugins) {
+      const base = {
+        id: 'conformance-empty-name',
+        userId: 'user-conformance',
+        systemId: plugin.manifest.id,
+        ...plugin.module.createDefaults({ name: '' }),
+        name: '',
+      } as Record<string, unknown>;
+      const result = validateCharacterData(plugin.module, base);
+      expect(result.ok, plugin.manifest.id).toBe(false);
+      if (!result.ok) {
+        expect(result.issues.map((issue) => issue.path)).toContain('name');
+      }
+    }
+  });
+});
+
+describe('conformance: экспорт не теряет структуру', () => {
+  it.each(gamePlugins.map((plugin) => [plugin.manifest.id, plugin]))(
+    '%s: portable JSON после нормализации снова валидный лист',
+    async (_id, plugin) => {
+      const demo = {
+        id: `${plugin.manifest.id}-roundtrip`,
+        ...plugin.module.createDemo(),
+      } as Record<string, unknown>;
+      // Экспорт идёт с боевой конфигурацией: она включает всё, что важно
+      // игроку, и именно её использует кнопка «Скачать JSON».
+      const portable = plugin.module.export.toPortableJson(
+        demo as never,
+        DEFAULT_EXPORT_CONFIG as never,
+      );
+
+      // Экспорт — данные, а не код: он обязан пережить сериализацию.
+      const restored = JSON.parse(JSON.stringify(portable)) as Record<
+        string,
+        unknown
+      >;
+      const sheet: Record<string, unknown> = {
+        ...(plugin.module.createDefaults() as Record<string, unknown>),
+        ...restored,
+        id: demo.id,
+      };
+      expect(() => plugin.module.schema.parse(sheet)).not.toThrow();
+      expect(sheet.name).toBe(demo.name);
+    },
+  );
 });

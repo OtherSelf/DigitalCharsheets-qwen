@@ -23,13 +23,19 @@ const abilitySchema = z.enum([
   'charisma',
 ]);
 
+/**
+ * Характеристика 5e: 1–30 (эпические дары упираются в 30). Раньше диапазона не
+ * было, и `stats.strength: 999` сохранялось в файл.
+ */
+const abilityScoreSchema = z.number().int().min(1).max(30);
+
 const statBlockSchema = z.looseObject({
-  strength: z.number(),
-  dexterity: z.number(),
-  constitution: z.number(),
-  intelligence: z.number(),
-  wisdom: z.number(),
-  charisma: z.number(),
+  strength: abilityScoreSchema,
+  dexterity: abilityScoreSchema,
+  constitution: abilityScoreSchema,
+  intelligence: abilityScoreSchema,
+  wisdom: abilityScoreSchema,
+  charisma: abilityScoreSchema,
 });
 
 const statNotesSchema = z.looseObject({
@@ -196,7 +202,8 @@ export const dnd5eCharacterSchema: z.ZodType<DnD5eCharacter> = z.looseObject({
   notes: z.string(),
   questLog: z.array(questSchema),
   schemaVersion: z.number().int().optional(),
-  level: z.number(),
+  /** Уровень 5e: 1–20, выше в правилах не бывает. */
+  level: z.number().int().min(1).max(20),
   race: z.string(),
   background: z.string(),
   alignment: z.string(),

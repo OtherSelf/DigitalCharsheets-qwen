@@ -26,16 +26,22 @@ const upgradeSchema = z.tuple([
 ]);
 
 /** Поля характеристик; `influence` добавляет только dh2. */
+/**
+ * Характеристика Dark Heresy: 0–100 (правило общее с dh1). Влияние
+ * (`influence`) измеряется теми же пределами.
+ */
+const coreStatSchema = z.number().int().min(0).max(100);
+
 export const darkHeresyCoreStatsFields = {
-  weaponSkill: z.number(),
-  ballisticSkill: z.number(),
-  strength: z.number(),
-  toughness: z.number(),
-  agility: z.number(),
-  intelligence: z.number(),
-  perception: z.number(),
-  willpower: z.number(),
-  fellowship: z.number(),
+  weaponSkill: coreStatSchema,
+  ballisticSkill: coreStatSchema,
+  strength: coreStatSchema,
+  toughness: coreStatSchema,
+  agility: coreStatSchema,
+  intelligence: coreStatSchema,
+  perception: coreStatSchema,
+  willpower: coreStatSchema,
+  fellowship: coreStatSchema,
 };
 
 export const darkHeresyCoreStatsSchema: z.ZodType<DarkHeresyCoreStats> =
