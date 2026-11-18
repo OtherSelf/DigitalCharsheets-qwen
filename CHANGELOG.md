@@ -11,6 +11,26 @@ format changes.
 
 ## [Unreleased]
 
+## [0.9.1] - 2026-11-18
+
+Plugin lifecycle guard and sheet access for a removed game.
+
+### Changed
+
+- `npm start` now runs `plugins:check` first (`prestart`): the server refuses to
+  boot with a stale generated registry instead of failing later on import.
+  Adding or removing a game is still: plugin folder → `npm run plugins:generate`
+  → rebuild → restart (see [game-modules.md](docs/game-modules.md)).
+- Plugin test suites moved next to the plugins: host specs no longer know about
+  a specific game, and `test:plugin`, `test:visual:plugin` and `test:layout`
+  run per-plugin checks with a layout budget.
+
+### Fixed
+
+- Removing a game plugin no longer breaks the app: sheets of the removed game
+  stay in the list, open in a read-only "plugin missing" view instead of a 500,
+  and are still exported as JSON and in a full backup.
+
 ## [0.9.0] - 2026-11-18
 
 Import review mode, partial plugin locales and a cleaner creation flow.
