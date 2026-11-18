@@ -62,6 +62,7 @@ src/games/<id>/
   sheet.tsx            custom sheet, forwardRef<SheetHandle>
   ui.ts                optional UI slots (manifest `ui.entry`)
   slots/*.tsx          slot components/functions imported by ui.ts
+  assets/*             icons and images imported by the plugin (favicon)
   bulk-editor.ts       tables for /stats-editor (ui.bulkEditor)
   i18n/en.json, ru.json
   legacy-import.ts     optional Firestore/2.x importer for your game
@@ -195,10 +196,12 @@ Rules:
   `/api/import` endpoint was removed).
 - `ui` is not set on the module object anymore — slots live in `ui.ts`.
 - `history` (SDK 1.1, optional) — `labels` (`path → i18n key`), `collections`
-  (array path → title key), `itemLabelFields`, `valueLabels` (code → key) and an
+  (array path → title key), `itemLabelFields`, `valueLabels` (code → key), an
   optional `formatValue(path, value, t)` for values that need a parser (arrays
-  of ids, nested objects, enums). Unknown paths fall back to a humanised path;
-  unknown values fall back to a readable representation.
+  of ids, nested objects, enums) and `tokens` (yes/no, quest/item status keys).
+  All keys must live in the module dictionary; shared sheet/quest fields may
+  use the documented `HISTORY_SHARED_KEYS` allowlist. Unknown paths fall back
+  to a humanised path; unknown values fall back to a readable representation.
 
 ## UI slots
 
@@ -213,7 +216,7 @@ no `if (gameSystem === …)` is needed in the core (D11).
 | `BulkEditor` | `BulkEditorTable[]` (data, see below) | `/stats-editor` |
 | `CardSummary` | `(character, t) => { text, badgeVariant? }` | dashboard card |
 | `HouseRulesDialog` | component `{ characterId, open, onOpenChange }` | rules dialog |
-| `favicon` | `string` (path in `public/`) | tab icon |
+| `favicon` | `string` (URL of an asset imported from `assets/`) | tab icon |
 
 The sheet itself is loaded lazily (`components.loadSheet` = dynamic import) and
 wrapped in `Suspense` + `ErrorBoundary`: a render error shows the *sheet

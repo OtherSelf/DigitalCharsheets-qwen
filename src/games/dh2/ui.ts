@@ -1,5 +1,6 @@
 import type { GameUiSlots } from '@/games/types';
 
+import favicon from './assets/favicon.png';
 import { dh2BulkEditor } from './bulk-editor';
 import { dh2CardSummary } from './slots/card-summary';
 import { dh2CompactNav } from './slots/compact-nav';
@@ -9,6 +10,12 @@ import {
   Dh2HouseRulesDialogSlot,
 } from './slots/header';
 import type { DH2Character } from './types';
+
+// Next отдаёт StaticImageData, Vite (unit-тесты) — строку.
+const faviconSrc =
+  typeof favicon === 'string'
+    ? favicon
+    : (favicon as unknown as { src: string }).src;
 
 /**
  * ─── LANDMARK: DH2 UI SLOTS ──────────────────────────────────────
@@ -25,5 +32,5 @@ export const uiSlots: GameUiSlots<DH2Character> = {
   CardSummary: dh2CardSummary,
   HouseRulesDialog: Dh2HouseRulesDialogSlot,
   bulkEditor: dh2BulkEditor,
-  favicon: '/favicon-dh.png',
+  favicon: faviconSrc,
 };

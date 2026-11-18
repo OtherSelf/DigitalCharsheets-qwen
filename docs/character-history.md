@@ -64,11 +64,12 @@ response also carries `totalSessions`, `totalRevisions` and storage info
 
 The page is owner-only. Labels come from the edition plugin
 (`GameHistoryConfig.labels` / `collections`); unknown fields fall back to a
-humanised path. Values are localised by the plugin too (`valueLabels` and
-`formatValue`): gender codes, home worlds, aptitudes, divination ids and
-starting choices are shown as text, arrays are joined, booleans become
-yes/no and `null` becomes a dash. Shared quest/inventory codes are handled by
-the core. Adding or removing a collection item shows its label and the
+humanised path. Values are localised by the plugin too (`valueLabels`,
+`formatValue` and `tokens`): gender codes, home worlds, aptitudes, divination
+ids and starting choices are shown as text; booleans and quest/item statuses
+use tokens with plugin keys; arrays are joined and `null` becomes a dash.
+Game-specific keys live in the plugin dictionary; only shared sheet/quest
+fields may use the documented `HISTORY_SHARED_KEYS` allowlist. Adding or removing a collection item shows its label and the
 added/removed badge, not the raw JSON object. A guest link may optionally
 expose a read-only tab with the latest 20 sessions (`includeHistory`, off by
 default); it has no clear action and its values are sanitized.

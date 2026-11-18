@@ -69,7 +69,7 @@ function statAdvanceLabel(value: unknown, t: Translate): string | undefined {
     return `${value.filter(Boolean).length}/${value.length}`;
   }
   if (typeof value === 'boolean') {
-    return t(value ? 'common.yes' : 'common.no');
+    return t(value ? 'dh1.historyYes' : 'dh1.historyNo');
   }
   return undefined;
 }
@@ -153,7 +153,7 @@ export const dh1History: GameHistoryConfig = {
     talents: 'dh1.talentsAndTraits',
     'talents.notes': 'common.notes',
     'talents.description': 'common.description',
-    'skills.training': 'common.training',
+    'skills.training': 'dh1.historyTraining',
     fatigue1st: 'dh1.fatigueFirstEdition',
     fatigue2nd: 'dh1.fatigueSecondEdition',
     criticalConditions: 'dh1.criticalConditions',
@@ -162,11 +162,11 @@ export const dh1History: GameHistoryConfig = {
     max: 'common.max',
     total: 'common.total',
     walkHalf: 'dh1.halfMove',
-    walkFull: 'common.walkFull',
+    walkFull: 'dh1.moveFull',
     charge: 'dh1.charge',
     run: 'dh1.run',
     'movement.walkHalf': 'dh1.halfMove',
-    'movement.walkFull': 'common.walkFull',
+    'movement.walkFull': 'dh1.moveFull',
     'movement.charge': 'dh1.charge',
     'movement.run': 'dh1.run',
     throneGelt: 'dh1.throneGelt',
@@ -189,9 +189,9 @@ export const dh1History: GameHistoryConfig = {
     'Right leg': 'dh1.armorRightLeg',
     'Left leg': 'dh1.armorLeftLeg',
     // Общие поля журнала заданий.
-    title: 'common.title',
-    status: 'common.status',
-    priority: 'common.priority',
+    title: 'common.name',
+    status: 'dh1.historyStatus',
+    priority: 'dh1.historyPriority',
     objectives: 'common.questObjectives',
     rewards: 'common.questRewards',
     npcs: 'common.questNpcs',
@@ -253,6 +253,24 @@ export const dh1History: GameHistoryConfig = {
     },
   },
   itemLabelFields: ['name', 'title', 'description'],
+  tokens: {
+    yes: 'dh1.historyYes',
+    no: 'dh1.historyNo',
+    itemStatus: {
+      default: 'dh1.itemStatusDefault',
+      lost: 'dh1.itemStatusLost',
+    },
+    // Общие подписи журнала заданий ядра (разрешённый allowlist).
+    questStatus: {
+      active: 'common.questActive',
+      completed: 'common.questDone',
+    },
+    questPriority: {
+      main: 'common.mainQuest',
+      side: 'common.sideQuest',
+      personal: 'common.personalQuest',
+    },
+  },
   formatValue(path, value, t) {
     if (typeof value === 'string') {
       switch (path) {

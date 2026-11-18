@@ -378,5 +378,18 @@
   "dnd5e.bulkSaveVitals": "Save All D&D Vitals",
   "dnd5e.bulkVitalsSaved": "All D&D vitals saved!",
   "dnd5e.systemName": "Dungeons & Dragons",
-  "dnd5e.bulkStatsDesc": "Defaults to 10. Set correct values from your sheets."
+  "dnd5e.bulkStatsDesc": "Defaults to 10. Set correct values from your sheets.",
+  "dnd.historyYes": "Yes",
+  "dnd.historyNo": "No",
+  "dnd.historyStatus": "Status",
+  "dnd.historyPriority": "Priority",
+  "dnd.historyProficient": "Proficient",
+  "dnd.historyExpertise": "Expertise",
+  "dnd.historyValue": "Value",
+  "dnd.historyModifier": "Modifier",
+  "dnd.historyAttuned": "Attuned",
+  "dnd.historyDisabled": "Disabled",
+  "dnd.historyDamageDice": "Damage dice",
+  "dnd.itemStatusDefault": "In inventory",
+  "dnd.itemStatusLost": "Lost"
 }

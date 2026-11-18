@@ -165,10 +165,14 @@ describe('слоты-функции плагинов', () => {
     expect(navAt20?.some((item) => item.id === 'boons-section')).toBe(true);
   });
 
-  it('у каждой игры своя иконка вкладки', async () => {
-    expect((await slotsFor('dnd5e')).favicon).toBe('/favicon-dnd.png');
-    expect((await slotsFor('dh1')).favicon).toBe('/favicon-dh.png');
-    expect((await slotsFor('dh2')).favicon).toBe('/favicon-dh.png');
+  it('иконка вкладки каждой игры лежит в её папке', async () => {
+    for (const id of ['dnd5e', 'dh1', 'dh2']) {
+      const favicon = (await slotsFor(id)).favicon;
+      expect(favicon, id).toBeTruthy();
+      // Больше не общий файл из public/.
+      expect(favicon, id).not.toMatch(/^\/favicon-(dh|dnd)\.png$/);
+      expect(favicon, id).toContain(`/games/${id}/assets/`);
+    }
   });
 
   it('BulkEditor отдаётся данными, а не компонентом', async () => {

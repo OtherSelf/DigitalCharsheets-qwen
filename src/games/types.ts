@@ -363,7 +363,10 @@ export interface GameUiSlots<
     t: (key: string) => string,
   ) => CardSummary;
   readonly HouseRulesDialog?: ComponentType<GameHouseRulesDialogProps>;
-  /** Путь к иконке вкладки для игры (public/…). */
+  /**
+   * URL иконки вкладки: ассет импортируется из папки плагина
+   * (`src/games/<id>/assets/…`), ядро только ставит его в `<link rel="icon">`.
+   */
   readonly favicon?: string;
 }
 
@@ -373,6 +376,26 @@ export interface GameUiSlots<
  * человекочитаемый путь. Ключи обязаны существовать в словарях плагина.
  */
 export type HistoryTranslate = (key: string) => string;
+
+/**
+ * Тексты общих механизмов истории. Ключи принадлежат словарю плагина; ядро
+ * знает только, где токен нужен, и не хранит сами строки. Исключение —
+ * `questStatus`/`questPriority`: это общие подписи ядра для журнала заданий,
+ * которые плагин может переиспользовать.
+ */
+export interface HistoryTokens {
+  /** Булево значение: true / false. */
+  readonly yes?: string;
+  readonly no?: string;
+  /** Статус предмета инвентаря (`default` / `lost`). */
+  readonly itemStatus?: Readonly<Record<'default' | 'lost', string>>;
+  /** Статус квестовой записи (`active` / `completed`). */
+  readonly questStatus?: Readonly<Record<'active' | 'completed', string>>;
+  /** Приоритет квеста (`main` / `side` / `personal`). */
+  readonly questPriority?: Readonly<
+    Record<'main' | 'side' | 'personal', string>
+  >;
+}
 
 /**
  * Локализовать значение поля для истории: `path` — полный путь после
@@ -403,6 +426,8 @@ export interface GameHistoryConfig {
   readonly itemLabelFields?: readonly string[];
   /** Локализовать значение; вызывается до встроенных форматов. */
   readonly formatValue?: HistoryValueFormatter;
+  /** Ключи общих токенов истории (да/нет, статусы). */
+  readonly tokens?: HistoryTokens;
 }
 
 /**

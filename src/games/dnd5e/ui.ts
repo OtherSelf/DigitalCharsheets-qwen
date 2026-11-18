@@ -1,5 +1,6 @@
 import type { GameUiSlots } from '@/games/types';
 
+import favicon from './assets/favicon.png';
 import { dnd5eBulkEditor } from './bulk-editor';
 import { dnd5eCardSummary } from './slots/card-summary';
 import { dnd5eCompactNav } from './slots/compact-nav';
@@ -9,6 +10,12 @@ import {
   DndHouseRulesDialogSlot,
 } from './slots/header';
 import type { DnD5eCharacter } from './types';
+
+// Next отдаёт StaticImageData, Vite (unit-тесты) — строку.
+const faviconSrc =
+  typeof favicon === 'string'
+    ? favicon
+    : (favicon as unknown as { src: string }).src;
 
 /**
  * ─── LANDMARK: DND5E UI SLOTS ──────────────────────────────────────
@@ -25,5 +32,5 @@ export const uiSlots: GameUiSlots<DnD5eCharacter> = {
   CardSummary: dnd5eCardSummary,
   HouseRulesDialog: DndHouseRulesDialogSlot,
   bulkEditor: dnd5eBulkEditor,
-  favicon: '/favicon-dnd.png',
+  favicon: faviconSrc,
 };
