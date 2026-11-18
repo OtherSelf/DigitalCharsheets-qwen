@@ -53,6 +53,15 @@
     "json": "index.ts#toPortableJson",
     "excel": "index.ts#buildExcelSections"
   },
+  "derive": {
+    "entry": "index.ts#deriveCharacter"
+  },
+  "derived": [
+    "skills[].training.skilled",
+    "skills[].training.plus10",
+    "skills[].training.plus20",
+    "skills[].training.plus30"
+  ],
   "migrations": [],
   "tests": {
     "conformance": ">=1"

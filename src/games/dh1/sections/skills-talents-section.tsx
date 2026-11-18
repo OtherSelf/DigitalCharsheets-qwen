@@ -36,6 +36,7 @@ import {
 } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
 import { useCharacterContext, useTranslation } from '@/games/plugin-host';
+import { toggleTraining } from '@/games/shared/skill-training';
 import { cn } from '@/lib/utils';
 
 import { getDarkHeresyCapabilities } from '../capabilities';
@@ -197,20 +198,12 @@ export const SkillsTalentsSection = React.forwardRef<
         : (character.skills ?? []);
       const nextSkills = skillsToUpdate.map((s) => {
         if (s.id === skillId) {
-          const next = { ...s.training, [trainingKey]: isChecked };
-          if (trainingKey === 'skilled' && !isChecked) {
-            next.plus10 = false;
-            next.plus20 = false;
-            next.plus30 = false;
-          }
-          if (trainingKey === 'plus10' && !isChecked) {
-            next.plus20 = false;
-            next.plus30 = false;
-          }
-          if (trainingKey === 'plus20' && !isChecked) {
-            next.plus30 = false;
-          }
-          return { ...s, training: next };
+          // Кумулятивность уровней — правило системы, а не UI: та же функция
+          // зовётся из `derive` при записи листа.
+          return {
+            ...s,
+            training: toggleTraining(s.training, trainingKey, isChecked),
+          };
         }
         return s;
       });
