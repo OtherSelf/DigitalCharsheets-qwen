@@ -40,7 +40,7 @@ import {
   revokeRecoveryTokensForUser,
 } from '@/lib/security/tokens';
 
-import { readJson, removeDir, useTempDataDir } from './helpers';
+import { readJson, removeDir, useTempDataDir } from '@tests/support';
 
 /**
  * Утилиты безопасности, на которых стоят восстановление доступа (SEC-1/SEC-4),

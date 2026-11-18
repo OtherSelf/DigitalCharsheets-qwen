@@ -42,7 +42,7 @@ import {
   sessionHeaders,
   userPaths,
   useTempDataDir,
-} from './helpers';
+} from '@tests/support';
 
 /**
  * API-роуты Next: POST/GET/PUT/DELETE вызываются как обычные функции с объектом

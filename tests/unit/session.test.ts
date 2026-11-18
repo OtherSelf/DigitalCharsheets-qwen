@@ -17,7 +17,7 @@ import {
   verifySession,
 } from '@/lib/session';
 
-import { removeDir, useTempDataDir } from './helpers';
+import { removeDir, useTempDataDir } from '@tests/support';
 
 /**
  * Сессии (SEC-6): серверный реестр `jti` и флаги cookie.

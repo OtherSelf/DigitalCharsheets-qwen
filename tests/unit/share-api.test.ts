@@ -14,7 +14,7 @@ import {
   removeDir,
   sessionHeaders,
   useTempDataDir,
-} from './helpers';
+} from '@tests/support';
 
 const CHARACTER_ID = 'char-1';
 const FOREIGN_CHARACTER_ID = 'foreign-1';

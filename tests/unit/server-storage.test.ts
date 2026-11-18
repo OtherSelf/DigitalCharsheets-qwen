@@ -22,7 +22,7 @@ import {
   removeDir,
   userPaths,
   useTempDataDir,
-} from './helpers';
+} from '@tests/support';
 
 /**
  * Файловое хранилище листов (src/lib/server-storage.ts): чтение, запись, удаление,

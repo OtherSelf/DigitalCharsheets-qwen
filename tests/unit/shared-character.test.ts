@@ -13,7 +13,7 @@ import {
 import { issueShareToken } from '@/lib/shares';
 import type { Character } from '@/lib/types';
 
-import { makeDndCharacter, removeDir, useTempDataDir } from './helpers';
+import { makeDndCharacter, removeDir, useTempDataDir } from '@tests/support';
 
 let dataDir: string;
 

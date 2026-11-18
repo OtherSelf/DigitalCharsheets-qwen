@@ -21,7 +21,7 @@ import {
   makeDndCharacter,
   removeDir,
   useTempDataDir,
-} from './helpers';
+} from '@tests/support';
 
 /**
  * Character schema v1: legacy DH-пророчества были английскими фразами, теперь

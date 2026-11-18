@@ -23,7 +23,7 @@ import {
   removeDir,
   userPaths,
   useTempDataDir,
-} from './helpers';
+} from '@tests/support';
 
 /**
  * Удаление своего аккаунта (src/lib/server-auth.ts::deleteUserAccount).

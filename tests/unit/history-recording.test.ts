@@ -13,7 +13,7 @@ import {
 } from '@/lib/server-storage';
 import type { Character } from '@/lib/types';
 
-import { makeDndCharacter, removeDir, useTempDataDir } from './helpers';
+import { makeDndCharacter, removeDir, useTempDataDir } from '@tests/support';
 
 const CHARACTER_ID = 'char-1';
 

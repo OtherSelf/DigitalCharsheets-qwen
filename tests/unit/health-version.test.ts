@@ -6,7 +6,7 @@ import { GET as healthRoute } from '@/app/api/health/route';
 import { GET as versionRoute } from '@/app/api/version/route';
 import { APP_NAME, APP_VERSION, shortenCommit } from '@/lib/app-info';
 
-import { removeDir, useTempDataDir } from './helpers';
+import { removeDir, useTempDataDir } from '@tests/support';
 
 /**
  * /api/version в этих тестах не должен зависеть от того, запущен ли набор из

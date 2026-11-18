@@ -5,7 +5,7 @@ import {
   normalizeCharacterRecord,
 } from '@/lib/character-version';
 
-import { makeDhCharacter, makeDndCharacter } from './helpers';
+import { makeDhCharacter, makeDndCharacter } from '@tests/support';
 
 /**
  * ─── LANDMARK: CHARACTER MIGRATION v2 TESTS ────────────────────────────────

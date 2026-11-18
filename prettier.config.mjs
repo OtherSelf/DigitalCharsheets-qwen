@@ -30,6 +30,8 @@ const config = {
     '',
     '^@/(.*)$',
     '',
+    '^@tests/(.*)$',
+    '',
     '^[.]',
   ],
   importOrderTypeScriptVersion: '5.0.0',
