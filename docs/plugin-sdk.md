@@ -161,7 +161,10 @@ Rules:
 - `ui.entry` is a module exporting `uiSlots: GameUiSlots`; it is loaded lazily
   (dynamic import) so React components never enter the shared bundle.
 - `aliases` resolve legacy `gameSystem`/`edition` values to your `systemId`; the
-  most specific alias wins.
+  most specific alias wins. A sheet whose legacy fields match no alias (and that
+  has no `systemId`) is **not** guessed: it opens read-only with the
+  `plugin_missing` banner (ADR 0004). Declare a bare `gameSystem` alias only if
+  that name really is unambiguous for your game.
 - `dependencies.host` is the Plugin API range checked by the generator;
   `dependencies.plugins` is reserved (D14).
 - `migrations` order is the apply order; the chain must cover

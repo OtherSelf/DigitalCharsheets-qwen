@@ -63,9 +63,10 @@ const GAME_MENTION_ALLOWANCE = {
     removeBy: 'этап 8 трекера плагинов',
   },
   'tests/support/fixtures.ts': {
-    max: 5,
+    max: 6,
     reason:
-      'makeDndCharacter/makeDhCharacter — тест-кит хоста; заменяются фикстурами example-plugin',
+      'makeDndCharacter/makeDhCharacter — тест-кит хоста; +1 (systemId в DH-фикстуре) ' +
+      'осознанно после ADR 0004: лист без редакции больше не угадывается',
     removeBy: 'этап 8 трекера плагинов',
   },
   'tests/visual/admin.spec.ts': {

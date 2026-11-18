@@ -74,7 +74,7 @@ describe('mergeImportedData', () => {
   });
 
   it('восстанавливает при импорте поля DH v2: fatigue2nd, критические, ресурсы', () => {
-    const target = makeDhCharacter({ edition: '2nd' }) as any;
+    const target = makeDhCharacter({ systemId: 'dh2', edition: '2nd' }) as any;
     const imported = {
       metadata: {
         appName: 'DigitalCharsheets-qwen',

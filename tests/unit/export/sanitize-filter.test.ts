@@ -121,6 +121,7 @@ describe('filterCharacterForExport', () => {
 
   it('не теряет поля DH v2: fatigue2nd, criticalConditions, customResources', () => {
     const dh = makeDhCharacter({
+      systemId: 'dh2',
       edition: '2nd',
       fatigue1st: { current: 2, notes: 'beaten' },
       fatigue2nd: { current: 1, notes: '' },

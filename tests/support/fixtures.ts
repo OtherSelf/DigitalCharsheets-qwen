@@ -44,6 +44,8 @@ export function makeDhCharacter(overrides: Record<string, any> = {}): any {
   return {
     id: 'dh-1',
     userId: 'user-test',
+    // Дискриминант редакции: без него лист DH не разрешается (D13, ADR 0004).
+    systemId: 'dh1',
     gameSystem: 'Dark Heresy',
     name: 'Acolyte Vex',
     careerPath: 'Adept',
