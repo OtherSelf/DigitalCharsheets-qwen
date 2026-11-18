@@ -11,6 +11,46 @@ format changes.
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-11-18
+
+Import review mode, partial plugin locales and a cleaner creation flow.
+
+### Added
+
+- Imported sheets open in a review mode: a banner lists the empty required
+  creation fields (DH1 home world and career, DH2 home world, background and
+  role) and lifts the creation locks until the player confirms. It works for a
+  single sheet and for a package import and does not change the sheet schema.
+- A plugin may declare a subset of the site languages and extra locales (`i18n`
+  is a map, `en` or `ru` is required): a plugin that ships only RU is shown on
+  EN through the site-language fallback instead of raw keys. Plugin SDK is now
+  1.3.0.
+- Every game ships its own favicon in `src/games/<id>/assets/`, so the tab icon
+  follows the open sheet; the shared `public/favicon-dh*` / `favicon-dnd*`
+  files are gone.
+- DH1 creation requires only the character name: home world, career and
+  divination can be chosen later on the sheet.
+
+### Changed
+
+- Plugin versions: `dh1` 1.3.0, `dh2` 1.3.0, `dnd5e` 1.1.0; Plugin API 1.3.0.
+  The sheet `schemaVersion` is unchanged (Dark Heresy `5`, D&D 5e `2`).
+- DH2 creation no longer highlights empty required choices in red — the form
+  validation reports them on submit — and the starting-package hint lists the
+  variants without the "Choose…" placeholder.
+- DH1 "Current/Spent XP" are editable only in Edit mode (like DH2), and a
+  negative free XP is highlighted in both editions.
+- Dashboard cards show the full "game · edition" name again; the short code
+  stays in the admin list only.
+- Character history labels values from the game dictionaries: no raw codes or
+  JSON paths in the timeline, boolean characteristic-advance lists render as
+  `0/4 → 1/4`, and the shared history fields are an explicit allowlist.
+
+### Fixed
+
+- Deleting a DH2 elite advance also removes its journal line and its cost from
+  spent XP, so the two delete paths stay symmetric.
+
 ## [0.8.0] - 2026-11-17
 
 Canonical gender, locked creation choices, elite requirements and sheet UX
