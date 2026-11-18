@@ -53,6 +53,17 @@
     "json": "index.ts#toPortableJson",
     "excel": "index.ts#buildExcelSections"
   },
+  "derive": {
+    "entry": "index.ts#deriveCharacter"
+  },
+  "derived": [
+    "proficiencyBonus",
+    "savingThrows[].value",
+    "skills[].value",
+    "spellSaveDifficulty",
+    "spellcastingEntries[].attackBonus",
+    "spellcastingEntries[].saveDC"
+  ],
   "migrations": [],
   "tests": {
     "conformance": ">=1"

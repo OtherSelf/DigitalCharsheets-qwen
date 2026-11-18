@@ -26,6 +26,7 @@ import { useCharacterContext, useTranslation } from '@/games/plugin-host';
 import type { CombatResource } from '@/games/shared/types';
 import { cn } from '@/lib/utils';
 
+import { spellAttackBonus, spellSaveDc } from '../derive';
 import type { DnDAbility, DnDAttack, SpellcastingEntry } from '../types';
 
 const CLASS_HIT_DICE: Record<string, number> = {
@@ -472,21 +473,13 @@ export const DndCombatSection = React.forwardRef<
       updateCharacter(characterId, { hitDiceUsed: next });
     };
 
-    const getSpellcastingMod = (ability: string) => {
-      if (ability === 'none' || !ability) return 0;
-      const statValue = stats[ability] || 10;
-      return Math.floor((statValue - 10) / 2);
-    };
+    // Формулы атаки и DC живут в `derive.ts` рядом с остальными производными:
+    // секция подставляет только вход, а не повторяет математику (D14).
+    const calculateSpellAttack = (ability: DnDAbility | 'none') =>
+      spellAttackBonus(ability, stats, proficiencyBonus);
 
-    const calculateSpellAttack = (ability: string) => {
-      const mod = getSpellcastingMod(ability);
-      const total = mod + proficiencyBonus;
-      return total >= 0 ? `+${total}` : `${total}`;
-    };
-
-    const calculateSpellSaveDC = (ability: string) => {
-      return 8 + proficiencyBonus + getSpellcastingMod(ability);
-    };
+    const calculateSpellSaveDC = (ability: DnDAbility | 'none') =>
+      spellSaveDc(ability, stats, proficiencyBonus);
 
     // Track which abilities are already used to prevent duplicates
     const usedAbilities = React.useMemo(() => {
@@ -539,8 +532,9 @@ export const DndCombatSection = React.forwardRef<
           if (entry.id !== id) return entry;
           const updated = { ...entry, [field]: value };
           if (field === 'ability' && typeof value === 'string') {
-            updated.attackBonus = calculateSpellAttack(value);
-            updated.saveDC = calculateSpellSaveDC(value);
+            const ability = value as DnDAbility | 'none';
+            updated.attackBonus = calculateSpellAttack(ability);
+            updated.saveDC = calculateSpellSaveDC(ability);
           }
           return updated;
         }),

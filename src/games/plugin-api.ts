@@ -177,6 +177,16 @@ export interface PluginManifest {
     readonly normalize: string;
     readonly merge: string;
   };
+  /**
+   * Точка входа пересчёта производных (`index.ts#deriveCharacter`). Плагин,
+   * объявивший её, обязан перечислить поля в `derived`.
+   */
+  readonly derive?: { readonly entry: string };
+  /**
+   * Поля, которые пересчитывает `derive`: путь верхнего уровня или с `[]` для
+   * элементов массива (`skills[].value`). Нужен `plugins:doctor` и OpenAPI.
+   */
+  readonly derived?: readonly string[];
   readonly migrations: readonly PluginMigrationManifest[];
   readonly tests?: {
     readonly conformance: string;
@@ -193,6 +203,19 @@ export interface PluginManifest {
    */
   readonly aliases?: readonly PluginAlias[];
 }
+
+/**
+ * Чистая функция производных значений листа (этап 2, D2): по первичным полям
+ * (уровень, характеристики, владения) пересчитывает зависимые (бонус
+ * мастерства, значения спасбросков и навыков, DC заклинаний).
+ *
+ * Контракт проверяется TCK (`tests/unit/plugins-derive.test.ts`): функция не
+ * мутирует вход, идемпотентна, не меняет `schemaVersion`, не создаёт и не
+ * удаляет поля верхнего уровня и не зависит от порядка ключей.
+ */
+export type CharacterDerive<
+  TCharacter extends CharacterRecord = CharacterRecord,
+> = (doc: TCharacter) => TCharacter;
 
 /** Правило сопоставления legacy-полей листа с плагином. */
 export interface PluginAlias {
@@ -226,6 +249,12 @@ export interface GamePlugin<
   readonly capabilities: ModuleCapabilities;
   readonly components: GameModuleComponents<TCharacter>;
   readonly export: GameExportAdapter<TCharacter>;
+  /**
+   * Пересчитать производные значения. Чистая и идемпотентная: сервер зовёт её
+   * на записи, клиент — для мгновенного отклика, поэтому формула обязана жить
+   * в одном месте.
+   */
+  derive?: CharacterDerive<TCharacter>;
   normalize?(
     raw: Readonly<Record<string, unknown>>,
     options?: NormalizeOptions,
@@ -271,6 +300,11 @@ export interface PluginRegistration<
 > {
   readonly manifest: PluginManifest;
   readonly module: GameModule<TCharacter>;
+  /**
+   * Мост к `GamePlugin.derive`, пока `GameModule` не слился с `GamePlugin`:
+   * функция берётся из точки входа манифеста, а не из модуля (D2).
+   */
+  readonly derive?: CharacterDerive<any>;
 }
 
 /**

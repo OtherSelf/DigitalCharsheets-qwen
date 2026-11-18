@@ -10,7 +10,7 @@ import { dh1Module } from './dh1';
 import dh1Manifest from './dh1/plugin.json';
 import { dh2Module } from './dh2';
 import dh2Manifest from './dh2/plugin.json';
-import { dnd5eModule } from './dnd5e';
+import { deriveCharacter as dnd5eDerive, dnd5eModule } from './dnd5e';
 import dnd5eManifest from './dnd5e/plugin.json';
 import type {
   GameUiSlots,
@@ -23,6 +23,7 @@ export const generatedPlugins: readonly GeneratedPluginRegistration[] = [
   {
     manifest: dnd5eManifest as unknown as PluginManifest,
     module: dnd5eModule,
+    derive: dnd5eDerive,
   },
   {
     manifest: dh1Manifest as unknown as PluginManifest,

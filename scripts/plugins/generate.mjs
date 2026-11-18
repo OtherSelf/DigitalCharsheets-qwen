@@ -99,6 +99,9 @@ export function validatePluginFolder({ gamesDir, dirName, manifest }) {
       ['import.merge', manifest.import.merge],
     );
   }
+  if (manifest.derive) {
+    entries.push(['derive.entry', manifest.derive.entry]);
+  }
   for (const [index, migration] of (manifest.migrations ?? []).entries()) {
     entries.push([`migrations[${index}].entry`, migration.entry]);
   }
@@ -123,11 +126,33 @@ export function validatePluginFolder({ gamesDir, dirName, manifest }) {
     if (!existsSync(absolute)) {
       errors.push(`${field}: файл не найден (${entry})`);
     }
-    if (!parsed.member && field === 'entry.module') {
+    if (
+      !parsed.member &&
+      (field === 'entry.module' || field === 'derive.entry')
+    ) {
       errors.push(
-        'entry.module должен содержать имя экспорта модуля (например, "index.ts#dnd5eModule")',
+        `${field} должен содержать имя экспорта (например, "index.ts#deriveCharacter")`,
       );
     }
+  }
+
+  // `derive` без списка полей бесполезен: doctor и OpenAPI берут состав
+  // производных из манифеста, а не из чтения кода.
+  const derived = manifest.derived ?? [];
+  if (manifest.derive && derived.length === 0) {
+    errors.push('derived: плагин объявил derive, но не перечислил поля');
+  }
+  if (!manifest.derive && derived.length > 0) {
+    errors.push('derive: перечислены производные поля, но точки входа нет');
+  }
+  const duplicated = derived.filter(
+    (field, index) =>
+      typeof field === 'string' && derived.indexOf(field) !== index,
+  );
+  if (duplicated.length > 0) {
+    errors.push(
+      `derived: повторяющиеся поля (${[...new Set(duplicated)].join(', ')})`,
+    );
   }
 
   const migrations = [...(manifest.migrations ?? [])].sort(
@@ -285,6 +310,14 @@ function moduleExportName(manifest) {
   return parseEntryPoint(manifest.entry.module).member;
 }
 
+/** Локальное имя импорта функции derive: `dnd5e` → `dnd5eDerive`. */
+function deriveVarName(id) {
+  const camel = id.replace(/[-_]+(.)?/g, (_, chr) =>
+    chr ? chr.toUpperCase() : '',
+  );
+  return `${camel}Derive`;
+}
+
 /** Строковый литерал в стиле prettier (одинарные кавычки). */
 function tsString(value) {
   return `'${String(value).replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`;
@@ -377,20 +410,45 @@ export function renderRegistry(plugins) {
   // массива — в порядке показа (`order`, затем `id`).
   const imports = [...sorted]
     .sort((a, b) => a.manifest.id.localeCompare(b.manifest.id, 'en'))
-    .map(
-      ({ manifest }) =>
-        `import { ${moduleExportName(manifest)} } from './${manifest.id}';\n` +
-        `import ${manifestVarName(manifest.id)} from './${manifest.id}/plugin.json';`,
-    )
+    .map(({ manifest }) => {
+      const names = [{ name: moduleExportName(manifest) }];
+      if (manifest.derive) {
+        // Импорт из того же модуля, что и сам плагин: derive — обычный
+        // именованный экспорт точки входа, а не поле GameModule (D2).
+        names.push({
+          name: parseEntryPoint(manifest.derive.entry).member,
+          alias: deriveVarName(manifest.id),
+        });
+      }
+      // Prettier сортирует именованные импорты по имени, а `plugins:check`
+      // сравнивает файл побайтно: генерируем сразу в том же порядке.
+      const sorted = [...names].sort((a, b) =>
+        a.name.localeCompare(b.name, 'en'),
+      );
+      const list = sorted
+        .map((item) =>
+          item.alias ? `${item.name} as ${item.alias}` : item.name,
+        )
+        .join(', ');
+      return (
+        `import { ${list} } from './${manifest.id}';\n` +
+        `import ${manifestVarName(manifest.id)} from './${manifest.id}/plugin.json';`
+      );
+    })
     .join('\n');
   const entries = sorted
-    .map(
-      ({ manifest }) =>
+    .map(({ manifest }) => {
+      const deriveLine = manifest.derive
+        ? `    derive: ${deriveVarName(manifest.id)},\n`
+        : '';
+      return (
         `  {\n` +
         `    manifest: ${manifestVarName(manifest.id)} as unknown as PluginManifest,\n` +
         `    module: ${moduleExportName(manifest)},\n` +
-        `  },`,
-    )
+        deriveLine +
+        `  },`
+      );
+    })
     .join('\n');
 
   // UI-слоты подключаются лениво (dynamic import): реестр не тянет

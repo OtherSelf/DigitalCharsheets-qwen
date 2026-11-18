@@ -129,6 +129,8 @@ Validated by `scripts/plugins/generate.mjs` (Ajv) on every generation/verify.
   "export": { "json": "index.ts#toPortableJson", "excel": "index.ts#buildExcelSections" },
   "ui": { "slots": ["HeaderActions", "HeaderSubtitle", "CompactNav", "BulkEditor", "CardSummary", "HouseRulesDialog"], "entry": "ui.ts" },
   "aliases": [{ "gameSystem": "Dark Heresy", "edition": "1st" }],
+  "derive": { "entry": "index.ts#deriveCharacter" },
+  "derived": ["skills[].training.skilled", "skills[].training.plus10"],
   "migrations": [],
   "tests": { "conformance": ">=1" }
 }
@@ -144,8 +146,12 @@ Rules:
   same `id`/`order`/`name`/`description`; the generator fails on mismatch.
   These fields are the only source of the game list and of its UI labels.
 - Entry points are `<file>#<export>`. `entry.module` points at the module
-  object; `demo`/`export`/`migrations` at functions. The generator checks the
-  files, the conformance test checks the exports against the module namespace.
+  object; `demo`/`export`/`derive`/`migrations` at functions. The generator
+  checks the files, the conformance test checks the exports against the module
+  namespace.
+- `derive` and `derived` come in pairs: a declared entry point without a field
+  list (or the other way round) fails the generator. Paths use `[]` for array
+  items (`skills[].value`); every declared path must exist in the sheet.
 - `sheet.mode` is currently `"custom"` only; the plugin owns its React sheet and
   form (D3).
 - `i18n` is a locale map (`"en": "i18n/en.json"`): declare at least one of
@@ -193,6 +199,16 @@ Rules:
 - `merge(target, source, config)` — import merge; the host only checks that both
   sides are the same edition.
 - `migrations` — ordered chain (see above).
+- `derive` — optional pure function that recomputes derivative fields from the
+  primary ones (`index.ts#deriveCharacter`). It is declared in the manifest as
+  an entry point plus an explicit `derived` list of field paths, and the host
+  calls it when a sheet is written, so a document saved by any client stays
+  consistent (`level: 5` always comes with `proficiencyBonus: 3`). The same
+  function is what the plugin itself calls on the client: formulas live in one
+  place. Requirements: no input mutation, idempotent, no `schemaVersion`
+  change, no fields added or removed at the top level, no dependence on key
+  order. `tests/unit/plugins-derive.test.ts` enforces all of them for every
+  discovered plugin.
 - `findEmbedded` / `updateEmbedded` — optional nested entities (D&D companions)
   addressed by a virtual id (`companion-*`); the core only knows the id format.
 - `matchesLegacyImport` / `legacyImportName` / `convertLegacyImport` — optional
