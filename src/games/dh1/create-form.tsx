@@ -76,6 +76,8 @@ import {
   DarkHeresyCareerPaths,
   DarkHeresyHomeWorlds,
   GENDER_CODES,
+  type DarkHeresyCareerPath,
+  type DarkHeresyHomeWorld,
 } from './types';
 
 /** Порядок характеристик в подсказке стартового профиля (Таблица 1-3). */
@@ -115,15 +117,13 @@ export function DarkHeresyCreateForm({
   // собирается внутри компонента, а не один раз на уровне модуля.
   const formSchema = z.object({
     name: z.string().min(2, t('common.nameMinLength')),
-    homeWorld: z.enum(DarkHeresyHomeWorlds, {
-      error: t('dh1.selectHomeWorldError'),
-    }),
+    // Как и в dh2, обязательно только имя: мир, карьеру и пророчество можно
+    // выбрать позже на листе (пустые creation-поля остаются редактируемыми).
+    homeWorld: z.string().optional(),
     worldVariant: z.string().optional(),
-    careerPath: z.enum(DarkHeresyCareerPaths, {
-      error: t('dh1.selectCareerPathError'),
-    }),
+    careerPath: z.string().optional(),
     backstory: z.string().optional(),
-    divination: z.string({ error: t('dh1.selectDivinationError') }),
+    divination: z.string().optional(),
     quirk: z.string().optional(),
     height: z.string().optional(),
     weight: z.string().optional(),
@@ -195,8 +195,10 @@ export function DarkHeresyCreateForm({
   });
 
   const watchedDivination = form.watch('divination');
-  const watchedHomeWorld = form.watch('homeWorld');
-  const watchedCareer = form.watch('careerPath');
+  const watchedHomeWorld = form.watch('homeWorld') as
+    DarkHeresyHomeWorld | undefined;
+  const watchedCareer = form.watch('careerPath') as
+    DarkHeresyCareerPath | undefined;
   const watchedProfile = React.useMemo(
     () => (watchedHomeWorld ? WORLD_STARTING_PROFILE[watchedHomeWorld] : null),
     [watchedHomeWorld],
@@ -217,7 +219,7 @@ export function DarkHeresyCreateForm({
   }, [watchedCareer]);
 
   const divinationEffect = React.useMemo(() => {
-    return effectIdForDivination(watchedDivination);
+    return effectIdForDivination(watchedDivination ?? '');
   }, [watchedDivination]);
 
   React.useEffect(() => {
@@ -267,9 +269,9 @@ export function DarkHeresyCreateForm({
   async function onSubmit(values: z.infer<typeof formSchema>) {
     const notes = dh1CreationHintsMarkdown(
       {
-        homeWorld: values.homeWorld,
+        homeWorld: values.homeWorld ?? '',
         worldVariant: values.worldVariant,
-        careerPath: values.careerPath,
+        careerPath: values.careerPath ?? '',
         divination: values.divination,
         quirk: values.quirk,
         wounds: values.wounds,
@@ -360,7 +362,8 @@ export function DarkHeresyCreateForm({
                     <FormItem>
                       <FormLabel>
                         {t(
-                          WORLD_VARIANT_LABELS[watchedHomeWorld] ||
+                          (watchedHomeWorld &&
+                            WORLD_VARIANT_LABELS[watchedHomeWorld]) ||
                             'dh1.worldVariant',
                         )}
                       </FormLabel>
