@@ -136,6 +136,13 @@ when it changes. A rewrite caused by a migration or by a derived-value
 recalculation always leaves a `.bak` next to the sheet and appends a
 `migration` marker to its history, so a user can see why the numbers changed.
 
+### Sheets without an edition
+
+A sheet that has neither `systemId` nor a recognised legacy edition marker is
+left untouched and opens read-only (`plugin_missing`), with JSON export still
+available — see [ADR 0004](adr/0004-legacy-aliases.md). Nothing is guessed from
+the game name alone, and the import wizard asks for the edition explicitly.
+
 ### Derived values
 
 Derivative fields (skill and save values, proficiency bonus, spell save DC)

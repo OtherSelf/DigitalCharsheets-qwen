@@ -21,7 +21,8 @@ function normalize(raw: any) {
 }
 
 function dhWithStats(overrides: Record<string, unknown> = {}) {
-  const base = makeDhCharacter(overrides);
+  // Legacy-лист не объявляет `systemId` — его разрешают поля игры (D13).
+  const base = makeDhCharacter({ systemId: undefined, ...overrides });
   return base;
 }
 
@@ -38,7 +39,7 @@ describe('миграция листа v2: редакции', () => {
     expect(character.gameSystem).toBe('Dungeons & Dragons');
   });
 
-  it('dh без edition → dh1; влияние по умолчанию не шумит в notes', () => {
+  it('dh без edition не угадывается: лист остаётся как есть (D13)', () => {
     const legacy = dhWithStats({
       stats: { ...makeDhCharacter().stats, influence: 30 },
       statUpgrades: {
@@ -46,17 +47,14 @@ describe('миграция листа v2: редакции', () => {
         influence: [false, false, false, false],
       },
     });
-    const { character, issues } = normalize(legacy);
+    const { character, issues, changed } = normalize(legacy);
     const dh = character as any;
 
-    expect(dh.systemId).toBe('dh1');
-    expect(dh.edition).toBeUndefined();
-    expect(dh.stats.influence).toBeUndefined();
-    expect(dh.statUpgrades.influence).toBeUndefined();
-    expect(dh.fatigue2nd).toBeUndefined();
-    expect(dh.fatigue1st).toEqual({ current: 0 });
-    expect(dh.notes ?? '').toBe('');
-    expect(issues).toEqual([]);
+    // Редакция не угадывается: файл остаётся нетронутым, страница покажет
+    // read-only с причиной `plugin_missing` (ADR 0004).
+    expect(changed).toBe(false);
+    expect(dh.systemId).toBeUndefined();
+    expect(issues.join(' ')).toContain('не удалось определить редакцию');
   });
 
   it("dh edition '1st' → dh1, значения характеристик сохраняются", () => {
@@ -105,9 +103,9 @@ describe('миграция листа v2: редакции', () => {
     expect(issues.join(' ')).toContain('fatigue1st');
   });
 
-  it('hybrid → dh1, конфликтующие 2e-значения уходят в notes и отчёт', () => {
+  it("edition '1st' → dh1, конфликтующие 2e-значения уходят в notes и отчёт", () => {
     const legacy = dhWithStats({
-      edition: 'hybrid',
+      edition: '1st',
       stats: { ...makeDhCharacter().stats, influence: 42 },
       statUpgrades: {
         ...makeDhCharacter().statUpgrades,
@@ -144,7 +142,7 @@ describe('миграция листа v2: редакции', () => {
 describe('миграция листа v2: идемпотентность и границы', () => {
   it('второй прогон ничего не меняет и не дублирует notes', () => {
     const legacy = dhWithStats({
-      edition: 'hybrid',
+      edition: '1st',
       stats: { ...makeDhCharacter().stats, influence: 42 },
       fatigue2nd: { current: 4 },
     });
@@ -186,6 +184,7 @@ describe('миграция листа v2: идемпотентность и гр
 
   it('навыкам DH добавляется обязательный plus30=false', () => {
     const legacy = dhWithStats({
+      edition: '1st',
       skills: [
         {
           id: 's1',

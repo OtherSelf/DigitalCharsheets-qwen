@@ -42,7 +42,10 @@ describe('exportCharacterToExcel (xlsx)', () => {
   it('пишет dcs_character_<имя>_<дата>.xlsx с листом по имени персонажа', async () => {
     process.chdir(tmp);
     try {
-      const result = await exportCharacterToExcel(makeDndCharacter() as any, date);
+      const result = await exportCharacterToExcel(
+        makeDndCharacter() as any,
+        date,
+      );
 
       expect(result.success).toBe(true);
       expect(result.filename).toBe(
@@ -62,7 +65,10 @@ describe('exportCharacterToExcel (xlsx)', () => {
   it('внутри — стандартный технический блок и данные листа', async () => {
     process.chdir(tmp);
     try {
-      const result = await exportCharacterToExcel(makeDndCharacter() as any, date);
+      const result = await exportCharacterToExcel(
+        makeDndCharacter() as any,
+        date,
+      );
       expect(result.success).toBe(true);
       const rows = readRows(result.filename!);
 
@@ -95,6 +101,7 @@ describe('exportCharacterToExcel (xlsx)', () => {
     process.chdir(tmp);
     try {
       const character = makeDhCharacter({
+        systemId: 'dh2',
         edition: '2nd',
         fatigue1st: { current: 2, notes: 'beaten' },
         fatigue2nd: { current: 1, notes: '' },

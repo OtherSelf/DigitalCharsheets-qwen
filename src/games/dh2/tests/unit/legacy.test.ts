@@ -26,8 +26,16 @@ describe('dh2: legacy-маппинг редакции', () => {
   });
 
   it('Legacy-лист DH 2e нормализуется в dh2', () => {
-    expect(resolveCharacterSystemId(makeDhCharacter({ edition: '2nd' }))).toBe(
-      'dh2',
-    );
+    expect(
+      resolveCharacterSystemId(
+        makeDhCharacter({ systemId: undefined, edition: '2nd' }),
+      ),
+    ).toBe('dh2');
+  });
+
+  it('без edition 2-я редакция не угадывается', () => {
+    expect(
+      resolveCharacterSystemId(makeDhCharacter({ systemId: undefined })),
+    ).toBeUndefined();
   });
 });

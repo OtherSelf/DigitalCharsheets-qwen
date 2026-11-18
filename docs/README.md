@@ -19,6 +19,8 @@ deploying lives here, one topic per page.
 | [character-history.md](character-history.md) | Change log: diff model, JSONL storage, history API and screen |
 | [adr/0001-credentials-and-sessions.md](adr/0001-credentials-and-sessions.md) | ADR: password/phrase hashing, sessions with `jti`, recovery tokens, password policy |
 | [adr/0002-legacy-migration-tooling.md](adr/0002-legacy-migration-tooling.md) | ADR: legacy migration tooling in the repo, no data dumps in git |
+| [adr/0003-derived-values-authority.md](adr/0003-derived-values-authority.md) | ADR: the server recomputes derived values (`derive`), the client never diverges |
+| [adr/0004-legacy-aliases.md](adr/0004-legacy-aliases.md) | ADR: legacy game names never guess the edition; unknown sheets open read-only |
 | [admin.md](admin.md) | `/admin`, roles, first administrator, profile checks, block/delete rules |
 | [export-format.md](export-format.md) | Portable JSON/Excel export envelope and import rules |
 | [development.md](development.md) | Local setup, npm scripts, code style, formatting, lint, typecheck |
