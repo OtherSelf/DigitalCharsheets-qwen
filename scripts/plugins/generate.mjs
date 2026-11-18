@@ -190,10 +190,16 @@ export function validateCollection(plugins) {
         `manifestVersion ${manifest.manifestVersion}: хост понимает ${PLUGIN_MANIFEST_VERSION}`,
       );
     }
-    if (!isHostApiCompatible(manifest.pluginApi)) {
-      errors.push(
-        `pluginApi ${manifest.pluginApi}: хост предоставляет ${PLUGIN_API_VERSION}`,
-      );
+    // Неподдержанная форма диапазона — ошибка манифеста, а не «несовместимо»:
+    // `isHostApiCompatible` бросает, и текст броска важнее общего шаблона.
+    try {
+      if (!isHostApiCompatible(manifest.pluginApi)) {
+        errors.push(
+          `pluginApi ${manifest.pluginApi}: хост предоставляет ${PLUGIN_API_VERSION}`,
+        );
+      }
+    } catch (error) {
+      errors.push(`pluginApi ${manifest.pluginApi}: ${error.message}`);
     }
     if (manifest.gameId !== manifest.game?.id) {
       errors.push(
