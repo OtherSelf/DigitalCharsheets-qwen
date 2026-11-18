@@ -82,14 +82,19 @@ empty), `npm run plugins:check` fails when the generated files are stale.
   compaction, recording, owner-only API, labels).
 - `tests/unit/openapi.test.ts` compares the OpenAPI spec with every
   `src/app/api/**/route.ts`; a new endpoint without documentation fails it.
+- Tests of one edition live in `src/games/<id>/tests/unit/` (for example
+  `dh1-fields`, `dh2-psy`) and are found by the same `npm test`. Tests that
+  import two editions at once (DH parity, shared labels, schema versions) stay
+  in `tests/unit`: a plugin test may not import another plugin.
 
 ### Writing a unit test
 
-- Name the file `tests/unit/<topic>.test.ts`; anything that writes to disk
-  creates a temporary data directory in `beforeEach` (`useTempDataDir()`) and
-  removes it in `afterEach` (`removeDir(dataDir)`). The real `./data` is never
-  touched. Import the helpers from `@tests/support`, not from a neighbouring
-  file: copies drift.
+- Name the file `tests/unit/<topic>.test.ts` or, for an edition-specific
+  scenario, `src/games/<id>/tests/unit/<topic>.test.ts`. Anything that writes
+  to disk creates a temporary data directory in `beforeEach`
+  (`useTempDataDir()`) and removes it in `afterEach` (`removeDir(dataDir)`).
+  The real `./data` is never touched. Import the helpers from `@tests/support`,
+  not from a neighbouring file: copies drift.
 - Assert behaviour, not internals: statuses, bodies and the files on disk. If a
   module persists data, read the file back — that is how the "200 but nothing was
   saved" class of bugs is caught.
