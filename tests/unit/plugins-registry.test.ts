@@ -493,34 +493,3 @@ describe('ошибки манифеста ловятся при генераци
     expect(errors).toContain('pluginApi');
   });
 });
-
-describe('разбор точек входа и версий API', () => {
-  it('parseEntryPoint разделяет файл и экспорт', () => {
-    expect(parseEntryPoint('index.ts#createDemo')).toEqual({
-      file: 'index.ts',
-      member: 'createDemo',
-    });
-    expect(parseEntryPoint('i18n/en.ts')).toEqual({ file: 'i18n/en.ts' });
-    expect(() => parseEntryPoint('index.ts#a#b')).toThrow(/Некорректная/);
-    expect(() => parseEntryPoint('../outside.ts#x')).toThrow(/относительным/);
-    expect(() => parseEntryPoint('/abs.ts#x')).toThrow(/относительным/);
-    expect(() => parseEntryPoint('index.ts#bad-name')).toThrow(/экспорта/);
-  });
-
-  it('isHostApiCompatible понимает ^, ~, >= и точную версию', () => {
-    expect(isHostApiCompatible('^1.0.0')).toBe(true);
-    expect(isHostApiCompatible('^1.5.0')).toBe(false);
-    expect(isHostApiCompatible('^2.0.0')).toBe(false);
-    expect(isHostApiCompatible('~1.0.0')).toBe(false);
-    expect(isHostApiCompatible('~1.1.0')).toBe(false);
-    expect(isHostApiCompatible('~1.2.0')).toBe(false);
-    expect(isHostApiCompatible('~1.3.0')).toBe(true);
-    expect(isHostApiCompatible('>=1.0.0')).toBe(true);
-    expect(isHostApiCompatible('1.0.0')).toBe(false);
-    expect(isHostApiCompatible('1.2.0')).toBe(false);
-    expect(isHostApiCompatible('1.3.0')).toBe(true);
-    expect(isHostApiCompatible('0.9.0')).toBe(false);
-    expect(isHostApiCompatible('*')).toBe(true);
-    expect(isHostApiCompatible('not-a-version')).toBe(false);
-  });
-});

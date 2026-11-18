@@ -342,11 +342,15 @@ page uses it to switch to read-only mode.
 ## Versioning
 
 - `manifestVersion` — the manifest format understood by the host (2).
-- `pluginApi` — compatible Plugin API range (`^1.2.3`, `~1.2.3`, `>=1.0.0`,
-  exact, `*`); the host checks it at generation time. Host **1.3** remains
-  compatible with a `^1.0.0` manifest; partial locales (1.3), `history` labels
-  (1.1) and `CreateFormCompletion` (1.2) are additive and do not change the
-  manifest.
+- `pluginApi` — compatible Plugin API range, and only in these forms: `*`,
+  exact `1.2.3`, `^1.2.3`, `~1.2.3`, `>=1.2.3`. Anything else (`>1.0.0`,
+  `<1.0.0`, `<=2.0.0`, `=1.2.3`, `1.x`, `>=1.0 <2`, `^0.x.y`) fails the
+  generation step with an explicit error instead of being reinterpreted; `^`
+  is defined for major >= 1 only, because npm's `0.x` caret means something
+  else. The check runs at generation time (`npm run plugins:check`), so an
+  unsupported range cannot reach a build. Host **1.3** remains compatible with
+  a `^1.0.0` manifest; partial locales (1.3), `history` labels (1.1) and
+  `CreateFormCompletion` (1.2) are additive and do not change the manifest.
 - `schemaVersion` — the sheet format written by the plugin; bump it together
   with a migration step when the sheet shape changes.
 - `version` — the plugin's own semver, shown in admin. It is a plugin axis:

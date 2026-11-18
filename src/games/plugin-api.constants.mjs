@@ -97,21 +97,47 @@ function compareVersions(a, b) {
 /**
  * Совместим ли диапазон `pluginApi` манифеста с версией хоста.
  *
+ * Поддержаны ровно формы из `SUPPORTED_PLUGIN_API_RANGES`. Всё остальное —
+ * явный отказ, а не «несовместимо» и тем более не тихая переинтерпретация:
+ * `>1.0.0` раньше означало «ровно 1.0.0», `<=2.0.0` — «ровно 2.0.0», а
+ * `^0.2.3` — `<1.0.0` вместо `<0.3.0`. Хост не должен объявлять совместимость,
+ * которую не проверял: пусть манифест падает на сборке.
+ *
+ * `^` определён только для мажора >= 1: у npm для `0.x` другая семантика
+ * (совместимы патчи, не миноры), и повторять её наполовину хуже, чем отказать.
+ *
  * @param {string} range
  * @param {string} [hostVersion]
  * @returns {boolean}
+ * @throws {Error} если диапазон записан в неподдержанной форме или версия
+ *   хоста не разбирается. Вызывающий обязан показать это как ошибку
+ *   манифеста — см. `validateCollection` в генераторе.
  */
 export function isHostApiCompatible(range, hostVersion = PLUGIN_API_VERSION) {
   const host = parseVersion(hostVersion);
-  if (!host) return false;
+  if (!host) {
+    throw new Error(`Некорректная версия хоста: "${hostVersion}"`);
+  }
   const trimmed = String(range ?? '').trim();
-  if (trimmed === '' || trimmed === '*') return true;
+  if (trimmed === '*') return true;
 
   const operator = /^(\^|~|>=)/.exec(trimmed)?.[1] ?? '';
   const body = trimmed.slice(operator.length);
   const expected = parseVersion(body);
-  if (!expected) return false;
+  if (!expected) {
+    throw new Error(
+      `Неподдерживаемый диапазон pluginApi: "${range}". ` +
+        `Поддержаны: ${SUPPORTED_PLUGIN_API_RANGES.join(', ')}`,
+    );
+  }
   if (operator === '^') {
+    if (expected.major === 0) {
+      throw new Error(
+        `Неподдерживаемый диапазон pluginApi: "${range}". ` +
+          '`^` определён только для мажорной версии >= 1; ' +
+          'для 0.x используйте `~` или точную версию.',
+      );
+    }
     // ^1.2.3 → та же мажорная версия, не ниже 1.2.3.
     return (
       host.major === expected.major && compareVersions(host, expected) >= 0
