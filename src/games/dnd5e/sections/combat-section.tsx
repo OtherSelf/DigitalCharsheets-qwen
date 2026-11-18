@@ -26,7 +26,7 @@ import { useCharacterContext, useTranslation } from '@/games/plugin-host';
 import type { CombatResource } from '@/games/shared/types';
 import { cn } from '@/lib/utils';
 
-import { spellAttackBonus, spellSaveDc } from '../derive';
+import { abilityModifier, spellAttackBonus, spellSaveDc } from '../derive';
 import type { DnDAbility, DnDAttack, SpellcastingEntry } from '../types';
 
 const CLASS_HIT_DICE: Record<string, number> = {
@@ -216,7 +216,7 @@ export const DndCombatSection = React.forwardRef<
     ) => {
       if (ability === 'none' || !ability) return '+0';
       const statValue = stats[ability] || 10;
-      const mod = Math.floor((statValue - 10) / 2);
+      const mod = abilityModifier(statValue);
       const total = mod + (useProficiency ? proficiencyBonus : 0);
       return total >= 0 ? `+${total}` : `${total}`;
     };
@@ -255,8 +255,8 @@ export const DndCombatSection = React.forwardRef<
       updateCharacter(characterId, { attacks: updated });
     };
 
-    const dexMod = Math.floor(((stats.dexterity || 10) - 10) / 2);
-    const conMod = Math.floor(((stats.constitution || 10) - 10) / 2);
+    const dexMod = abilityModifier(stats.dexterity || 10);
+    const conMod = abilityModifier(stats.constitution || 10);
     const baseMaxHp = 8 + conMod;
 
     const activeMcLevelSum = progressionData.isMulticlass

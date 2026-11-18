@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { useCharacterContext, useTranslation } from '@/games/plugin-host';
 import { cn } from '@/lib/utils';
 
-import { deriveDnd5e } from './derive';
+import { abilityModifier, deriveDnd5e } from './derive';
 import { DndAttunementSection } from './sections/attunement-section';
 import { DndCharacterInfoSection } from './sections/character-info-section';
 import { DndCombatSection } from './sections/combat-section';
@@ -260,7 +260,7 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
 
     const passivePerception =
       10 + (calculatedSkills.find((s) => s.name === 'perception')?.value || 0);
-    const conMod = Math.floor(((character.stats?.constitution ?? 10) - 10) / 2);
+    const conMod = abilityModifier(character.stats?.constitution ?? 10);
     const baseMaxHp = 8 + conMod;
     const safeHitPoints =
       character.hitPoints && character.hitPoints.max > 0
@@ -362,7 +362,7 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
                 'charisma',
               ].map((key) => {
                 const val = stats[key as keyof typeof stats];
-                const mod = Math.floor((val - 10) / 2);
+                const mod = abilityModifier(val);
                 return (
                   <div
                     key={key}

@@ -39,7 +39,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { useCharacterContext, useTranslation } from '@/games/plugin-host';
 import { cn } from '@/lib/utils';
 
-import type { Spell, SpellcastingEntry } from '../types';
+import { spellAttackBonus, spellSaveDc } from '../derive';
+import type { DnDAbility, Spell, SpellcastingEntry } from '../types';
 
 const EditSaveButton = ({
   editing,
@@ -140,21 +141,13 @@ export function DndSpellsSection({
     initialSpellcastingEntries,
   ]);
 
-  const getSpellcastingMod = (ability: string) => {
-    if (ability === 'none' || !ability || !stats) return 0;
-    const statValue = stats[ability] || 10;
-    return Math.floor((statValue - 10) / 2);
-  };
+  // Формулы атаки и DC — из `derive`: у листа, секции и сервера один источник.
+  const abilityScores = stats ?? {};
+  const calculateSpellAttack = (ability: DnDAbility | 'none') =>
+    spellAttackBonus(ability, abilityScores, proficiencyBonus || 0);
 
-  const calculateSpellAttack = (ability: string) => {
-    const mod = getSpellcastingMod(ability);
-    const total = mod + (proficiencyBonus || 0);
-    return total >= 0 ? `+${total}` : `${total}`;
-  };
-
-  const calculateSpellSaveDC = (ability: string) => {
-    return 8 + (proficiencyBonus || 0) + getSpellcastingMod(ability);
-  };
+  const calculateSpellSaveDC = (ability: DnDAbility | 'none') =>
+    spellSaveDc(ability, abilityScores, proficiencyBonus || 0);
 
   const handleSpellcastingFieldChange = (
     id: string,
@@ -166,8 +159,9 @@ export function DndSpellsSection({
         if (entry.id !== id) return entry;
         const newEntry = { ...entry, [field]: value };
         if (field === 'ability' && typeof value === 'string') {
-          newEntry.attackBonus = calculateSpellAttack(value);
-          newEntry.saveDC = calculateSpellSaveDC(value);
+          const ability = value as DnDAbility | 'none';
+          newEntry.attackBonus = calculateSpellAttack(ability);
+          newEntry.saveDC = calculateSpellSaveDC(ability);
         }
         return newEntry;
       });
