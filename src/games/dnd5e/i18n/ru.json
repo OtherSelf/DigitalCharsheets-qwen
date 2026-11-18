@@ -378,5 +378,18 @@
   "dnd5e.bulkSaveVitals": "Сохранить все статы D&D",
   "dnd5e.bulkVitalsSaved": "Все статы D&D сохранены!",
   "dnd5e.systemName": "Dungeons & Dragons",
-  "dnd5e.bulkStatsDesc": "По умолчанию 10. Внесите верные значения из своих листов."
+  "dnd5e.bulkStatsDesc": "По умолчанию 10. Внесите верные значения из своих листов.",
+  "dnd.historyYes": "Да",
+  "dnd.historyNo": "Нет",
+  "dnd.historyStatus": "Статус",
+  "dnd.historyPriority": "Приоритет",
+  "dnd.historyProficient": "Владение",
+  "dnd.historyExpertise": "Компетентность",
+  "dnd.historyValue": "Значение",
+  "dnd.historyModifier": "Модификатор",
+  "dnd.historyAttuned": "Настроено",
+  "dnd.historyDisabled": "Отключено",
+  "dnd.historyDamageDice": "Кости урона",
+  "dnd.itemStatusDefault": "В инвентаре",
+  "dnd.itemStatusLost": "Потеряно"
 }

@@ -725,5 +725,13 @@
   "dh1.addExperienceHint": "Положительное число — награда, отрицательное — штраф. Запись попадает в журнал опыта; её удаление отменяет начисление.",
   "dh1.addExperienceWhat": "За что",
   "dh1.addExperienceConfirm": "Добавить",
-  "dh1.experienceAward": "Награда опыта"
+  "dh1.experienceAward": "Награда опыта",
+  "dh1.historyYes": "Да",
+  "dh1.historyNo": "Нет",
+  "dh1.historyStatus": "Статус",
+  "dh1.historyPriority": "Приоритет",
+  "dh1.historyTraining": "Обучение",
+  "dh1.moveFull": "Полный ход",
+  "dh1.itemStatusDefault": "В инвентаре",
+  "dh1.itemStatusLost": "Потеряно"
 }

@@ -263,7 +263,7 @@ per-game save handlers out of the page.
 | `createDefaults()` | Character draft (no `id`) for forms/tests. |
 | `createDemo()` | Demo character for `/demo` (no `id`). |
 | `components.loadCreateForm` / `loadSheet` | Lazy UI entry points; the host wraps the sheet in `Suspense` + `ErrorBoundary` and passes a typed `ref: SheetHandle` (`saveAll()`). |
-| `ui` | Optional UI slots (stage 3): `HeaderActions`, `HeaderSubtitle`, `CompactNav`, `BulkEditor`, `CardSummary`, `HouseRulesDialog` + static `favicon`. The host renders a neutral fallback when a slot is missing. |
+| `ui` | Optional UI slots (stage 3): `HeaderActions`, `HeaderSubtitle`, `CompactNav`, `BulkEditor`, `CardSummary`, `HouseRulesDialog` + `favicon` (asset imported from the plugin's `assets/`). The host renders a neutral fallback when a slot is missing. |
 | `export.toPortableJson` | JSON field selection for export 3.0. |
 | `export.buildExcelSections` | Localized Excel sections. |
 | `normalize(raw, options?)` | Legacy normalization: remaps fields per edition and (with `applyDefaults`) fills missing structures. Replaces the core's `normalizeCharacter`/`normalizeCharacterRecord` branches (stage 2). |

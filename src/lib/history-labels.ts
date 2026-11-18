@@ -113,6 +113,51 @@ export function resolveHistoryLabel(
 }
 
 /**
+ * Общие ключи ядра, которые конфиг истории вправе использовать. Всё, чего
+ * здесь нет, плагин обязан держать в собственном словаре: ядро не хранит
+ * игровые подписи. Список — часть SDK-контракта (docs/character-history.md).
+ */
+export const HISTORY_SHARED_KEYS: ReadonlySet<string> = new Set([
+  // Общие поля листа и общие разделы.
+  'common.name',
+  'common.notes',
+  'common.description',
+  'common.inventory',
+  'common.skills',
+  'common.quantity',
+  'common.questJournal',
+  'common.backstory',
+  'common.statsTab',
+  'common.current',
+  'common.max',
+  'common.total',
+  'common.class',
+  'common.movement',
+  'common.age',
+  'common.height',
+  'common.weight',
+  'common.inspiration',
+  'common.hpCurrent',
+  'common.hpMax',
+  'common.statStrAbbr',
+  'common.statDexAbbr',
+  'common.statConAbbr',
+  'common.statIntAbbr',
+  'common.statWisAbbr',
+  'common.statChaAbbr',
+  // Общий журнал заданий (рендерит ядро).
+  'common.questActive',
+  'common.questDone',
+  'common.mainQuest',
+  'common.sideQuest',
+  'common.personalQuest',
+  'common.questObjectives',
+  'common.questRewards',
+  'common.questNpcs',
+  'common.questLocations',
+]);
+
+/**
  * Текстовое представление значения для строки «было/стало». Сначала плагин
  * через `formatValue` переводит доменные коды (мир, склонности, пол), затем
  * общие правила: булевы — «да/нет», массивы — элементы через запятую,
@@ -142,22 +187,26 @@ export function formatHistoryValue(
     if (formatted !== undefined) return formatted;
   }
 
+  const tokens = config?.tokens;
+
   if (typeof raw === 'boolean') {
-    return t ? t(raw ? 'common.yes' : 'common.no') : String(raw);
+    const token = raw ? tokens?.yes : tokens?.no;
+    return token && t ? t(token) : String(raw);
   }
 
   if (typeof raw === 'string') {
     const last = path?.split('.').pop();
-    if (last === 'status' && t) {
-      if (raw === 'active') return t('common.questActive');
-      if (raw === 'completed') return t('common.questDone');
-      if (raw === 'default') return t('common.itemStatusDefault');
-      if (raw === 'lost') return t('common.itemStatusLost');
-    }
-    if (last === 'priority' && t) {
-      if (raw === 'main') return t('common.mainQuest');
-      if (raw === 'side') return t('common.sideQuest');
-      if (raw === 'personal') return t('common.personalQuest');
+    if (tokens && t) {
+      if (last === 'status') {
+        const key =
+          tokens.questStatus?.[raw as 'active' | 'completed'] ??
+          tokens.itemStatus?.[raw as 'default' | 'lost'];
+        if (key) return t(key);
+      }
+      if (last === 'priority') {
+        const key = tokens.questPriority?.[raw as 'main' | 'side' | 'personal'];
+        if (key) return t(key);
+      }
     }
     if (config?.valueLabels && path && t) {
       const lastSegment = path.split('.').pop() ?? path;

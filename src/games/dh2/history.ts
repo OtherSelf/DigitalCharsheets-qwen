@@ -62,7 +62,7 @@ function statAdvanceLabel(value: unknown, t: Translate): string | undefined {
     return `${value.filter(Boolean).length}/${value.length}`;
   }
   if (typeof value === 'boolean') {
-    return t(value ? 'common.yes' : 'common.no');
+    return t(value ? 'dh2.historyYes' : 'dh2.historyNo');
   }
   return undefined;
 }
@@ -141,11 +141,11 @@ export const dh2History: GameHistoryConfig = {
     max: 'common.max',
     total: 'common.total',
     walkHalf: 'dh2.halfMove',
-    walkFull: 'common.walkFull',
+    walkFull: 'dh2.moveFull',
     charge: 'dh2.charge',
     run: 'dh2.run',
     'movement.walkHalf': 'dh2.halfMove',
-    'movement.walkFull': 'common.walkFull',
+    'movement.walkFull': 'dh2.moveFull',
     'movement.charge': 'dh2.charge',
     'movement.run': 'dh2.run',
     throneGelt: 'dh2.throneGelt',
@@ -171,11 +171,11 @@ export const dh2History: GameHistoryConfig = {
     'equipment.weapons.melee.traits': 'dh2.weaponTraits',
     'equipment.weapons.ranged.traits': 'dh2.weaponTraits',
     criticalConditions: 'dh2.criticalConditions',
-    'skills.training': 'common.training',
+    'skills.training': 'dh2.historyTraining',
     // Общие поля журнала заданий.
-    title: 'common.title',
-    status: 'common.status',
-    priority: 'common.priority',
+    title: 'common.name',
+    status: 'dh2.historyStatus',
+    priority: 'dh2.historyPriority',
     objectives: 'common.questObjectives',
     rewards: 'common.questRewards',
     npcs: 'common.questNpcs',
@@ -237,6 +237,24 @@ export const dh2History: GameHistoryConfig = {
     },
   },
   itemLabelFields: ['name', 'title', 'description'],
+  tokens: {
+    yes: 'dh2.historyYes',
+    no: 'dh2.historyNo',
+    itemStatus: {
+      default: 'dh2.itemStatusDefault',
+      lost: 'dh2.itemStatusLost',
+    },
+    // Общие подписи журнала заданий ядра (разрешённый allowlist).
+    questStatus: {
+      active: 'common.questActive',
+      completed: 'common.questDone',
+    },
+    questPriority: {
+      main: 'common.mainQuest',
+      side: 'common.sideQuest',
+      personal: 'common.personalQuest',
+    },
+  },
   formatValue(path, value, t) {
     if (typeof value === 'string') {
       switch (path) {

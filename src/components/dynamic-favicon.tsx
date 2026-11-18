@@ -26,8 +26,6 @@ export function DynamicFavicon({ href }: { href?: string }) {
     link.href = `${iconHref}?v=${Date.now()}`;
 
     document.head.appendChild(link);
-
-    console.log('[FAVICON] Applied new href:', link.href);
   }, [href]);
 
   return null;

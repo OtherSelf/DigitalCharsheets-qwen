@@ -1,3 +1,6 @@
+import fs from 'node:fs';
+import path from 'node:path';
+
 import { describe, expect, it } from 'vitest';
 
 import { dh1History } from '@/games/dh1/history';
@@ -8,6 +11,7 @@ import { diffCharacterRecords } from '@/lib/history-diff';
 import {
   formatHistoryDate,
   formatHistoryValue,
+  HISTORY_SHARED_KEYS,
   humanizeHistoryPath,
   resolveHistoryLabel,
 } from '@/lib/history-labels';
@@ -457,33 +461,37 @@ describe('history: подписи и значения всех игр', () => {
     expect(
       formatHistoryValue(
         { value: 'active' },
-        { path: 'questLog.status', t: tRu },
+        { config: dh1History, path: 'questLog.status', t: tRu },
       ),
     ).toBe(tRu('common.questActive'));
     expect(
       formatHistoryValue(
         { value: 'completed' },
-        { path: 'questLog.status', t: tRu },
+        { config: dh1History, path: 'questLog.status', t: tRu },
       ),
     ).toBe(tRu('common.questDone'));
     expect(
       formatHistoryValue(
         { value: 'lost' },
-        { path: 'inventory.status', t: tRu },
+        { config: dh1History, path: 'inventory.status', t: tRu },
       ),
-    ).toBe(tRu('common.itemStatusLost'));
+    ).toBe(tRu('dh1.itemStatusLost'));
     expect(
       formatHistoryValue(
         { value: 'default' },
-        { path: 'inventory.status', t: tRu },
+        { config: dh1History, path: 'inventory.status', t: tRu },
       ),
-    ).toBe(tRu('common.itemStatusDefault'));
+    ).toBe(tRu('dh1.itemStatusDefault'));
     expect(
       formatHistoryValue(
         { value: true },
-        { path: 'equipment.weapons.melee.equipped', t: tRu },
+        {
+          config: dh1History,
+          path: 'equipment.weapons.melee.equipped',
+          t: tRu,
+        },
       ),
-    ).toBe(tRu('common.yes'));
+    ).toBe(tRu('dh1.historyYes'));
     expect(
       formatHistoryValue(
         { value: ['A', 'B'] },
@@ -508,5 +516,54 @@ describe('history: подписи и значения всех игр', () => {
         tRu,
       ),
     ).toBe(`${tRu('dh1.meleeWeapons')} · Chainsword`);
+  });
+
+  it('конфиг истории ссылается только на словарь плагина или allowlist', () => {
+    for (const mod of listGameModules()) {
+      const config = mod.history;
+      if (!config) continue;
+      const pluginKeys = new Set<string>();
+      for (const locale of ['en', 'ru']) {
+        const file = path.join(
+          process.cwd(),
+          'src/games',
+          mod.id,
+          'i18n',
+          `${locale}.json`,
+        );
+        expect(fs.existsSync(file), `${mod.id}: нет ${file}`).toBe(true);
+        for (const key of Object.keys(
+          JSON.parse(fs.readFileSync(file, 'utf8')) as Record<string, string>,
+        )) {
+          pluginKeys.add(key);
+        }
+      }
+      const tokenKeys: string[] = Object.values(config.tokens ?? {}).flatMap(
+        (value) => {
+          if (typeof value === 'string') return [value];
+          if (value && typeof value === 'object') {
+            return Object.values(value) as string[];
+          }
+          return [];
+        },
+      );
+      const referenced: string[] = [
+        ...Object.values(config.labels ?? {}),
+        ...Object.values(config.collections ?? {}),
+        ...Object.values(config.valueLabels ?? {}).flatMap((map) =>
+          Object.values(map),
+        ),
+        ...tokenKeys,
+      ];
+      const outside = referenced.filter((key) => !pluginKeys.has(key));
+      const foreign = outside.filter((key) => !HISTORY_SHARED_KEYS.has(key));
+      expect(foreign, `${mod.id}: игровые ключи должны быть в словаре`).toEqual(
+        [],
+      );
+      for (const key of outside) {
+        expect(translations.en[key], `${mod.id}: ${key} (en)`).toBeTruthy();
+        expect(translations.ru[key], `${mod.id}: ${key} (ru)`).toBeTruthy();
+      }
+    }
   });
 });

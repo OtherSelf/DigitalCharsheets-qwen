@@ -725,5 +725,13 @@
   "dh1.addExperienceHint": "Positive numbers are awards, negative are penalties. The entry goes to the XP journal; deleting it reverts the change.",
   "dh1.addExperienceWhat": "What was it for",
   "dh1.addExperienceConfirm": "Add",
-  "dh1.experienceAward": "XP award"
+  "dh1.experienceAward": "XP award",
+  "dh1.historyYes": "Yes",
+  "dh1.historyNo": "No",
+  "dh1.historyStatus": "Status",
+  "dh1.historyPriority": "Priority",
+  "dh1.historyTraining": "Training",
+  "dh1.moveFull": "Full Move",
+  "dh1.itemStatusDefault": "In inventory",
+  "dh1.itemStatusLost": "Lost"
 }
