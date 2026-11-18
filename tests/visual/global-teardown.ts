@@ -36,7 +36,8 @@ export default async function globalTeardown(
         ';',
       )[0];
 
-      for (const id of [account.dndId, account.dhId]) {
+      // Персонажи всех обнаруженных игр: ключи — сегменты, не список игр.
+      for (const id of Object.values(account.characters)) {
         if (!id) continue;
         await fetch(`${baseURL}/api/characters/${encodeURIComponent(id)}`, {
           method: 'DELETE',

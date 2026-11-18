@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-import { dhCharacter } from './fixtures';
+import { dhCharacter } from '../../src/games/dh1/tests/fixtures/visual';
 import {
   expectNoHorizontalOverflow,
   getState,

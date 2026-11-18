@@ -37,7 +37,7 @@ Game plugins carry their own tests next to the code:
 src/games/<id>/tests/
   unit/*.test.ts             # schema, defaults, demo, export, i18n, rules
   visual/*.visual.spec.ts    # plugin screens (tag @plugin:<id>)
-  fixtures/                  # data of this game
+  fixtures/visual.ts         # seeded characters (default export)
 ```
 
 Plugins never import the kit from production files: ESLint
@@ -178,15 +178,30 @@ baselines in `tests/visual/__screenshots__/`.
   only for `tests/visual/tablet.spec.ts`. Plugin specs run in `desktop-games` /
   `mobile-games`: their own `testDir` is `src/games`, and a project-level
   `snapshotPathTemplate` keeps the baselines under the same
-  `tests/visual/__screenshots__/` root.
+  `tests/visual/__screenshots__/` root. Both plugin projects use the same
+  `@desktop` / `@mobile` `grepInvert` as the host ones, so a screenshot is
+  compared only in the width it was taken in.
+- Game scenarios live in the plugin: screens in
+  `src/games/<id>/tests/visual/*.visual.spec.ts`, the seeded character in
+  `src/games/<id>/tests/fixtures/visual.ts`. The host (`tests/visual/`) keeps
+  only host screens and host fixtures (auth, dashboard, settings, admin,
+  share, history, guest drafts) and never imports a game fixture, so deleting a
+  game folder removes its specs/baselines/fixture without touching the host.
 - Game scenarios are tagged `@plugin:<id>` (`@plugin:dh1`, `@plugin:dh2`,
-  `@plugin:dnd5e`), whether they live in a host spec or in a plugin spec:
-  `npm run test:visual:plugin -- dh1` runs only that plugin through
-  `playwright --grep`. A new game adds
+  `@plugin:dnd5e`): `npm run test:visual:plugin -- dh1` runs only that plugin
+  through `playwright --grep`. A new game adds
   `src/games/<id>/tests/visual/*.visual.spec.ts` and `tests/visual.json`
   (name segment, required languages/sections) — no host edits.
 - Data is isolated per worker: global-setup creates a canonical `visual-tests`
-  account and one account per worker, each with the same fixtures.
+  account and one account per worker, each with the same fixtures. Fixtures are
+  discovered, not imported: global-setup scans
+  `src/games/<id>/tests/fixtures/visual.ts`, imports the default export and
+  seeds one character per found game in plugin-registry order (`plugin.json` →
+  `order`). `state.characters` maps the game segment (`dnd`, `dh`, the same
+  `nameSegment` used in baseline names) to the created id; a game without a
+  fixture is simply skipped. The legacy `dndId` / `dhId` fields stay as
+  aliases of `characters.dnd` / `characters.dh` for host specs.
+
 - `scripts/visual.sh` builds the app (unless `--skip-build`), starts a temporary
   production server with a temporary data directory, and runs Playwright.
 - The script also checks for JS errors, horizontal overflow and mobile
@@ -323,10 +338,8 @@ OS or missing fonts.
 | --- | --- |
 | `pages.spec.ts` | Login (sign-in, registration, recovery), dashboard, `/demo`, settings, creation wizard, import dialog and the post-import creation review |
 | `basic-pages.spec.ts` | Guest header, adaptivity, compact vs normal sheet view, cross-tab sync, functional checks without PNGs |
-| `creation.spec.ts` | UI sign-in, character creation for both editions, guest draft → account |
+| `creation.spec.ts` | UI sign-in and the guest draft → account flow (host-level, no game blocks) |
 | `form-validation.spec.ts` | Invalid create-form submit: toast, `aria-invalid`, focus on the first field |
-| `sheets.spec.ts` | Sheet reading, D&D and Dark Heresy |
-| `editing.spec.ts` | Edit mode for both sheets |
 | `locale.spec.ts` | Russian locale for both sheets |
 | `dialogs.spec.ts` | Quest journal, house rules, notes, divine boons (D&D only) |
 | `themes.spec.ts` | Light / dark / warm themes |
@@ -337,6 +350,19 @@ OS or missing fonts.
 | `robustness.spec.ts` | Load failures: not-found and retry screens |
 | `i18n-raw.spec.ts` | No raw translation keys in the rendered UI |
 | `tablet.spec.ts` | Tablet 1024×768 project only |
+
+Game sheets are hosted by the plugins, not by `tests/visual`:
+
+| Plugin spec | Covers |
+| --- | --- |
+| `dnd5e/tests/visual/sheets.visual.spec.ts` | D&D 5e sheet in read mode (desktop elements, mobile sections) |
+| `dnd5e/tests/visual/editing.visual.spec.ts` | D&D 5e edit mode |
+| `dnd5e/tests/visual/creation.visual.spec.ts` | D&D 5e creation form → sheet |
+| `dh1/tests/visual/sheets.visual.spec.ts` | Dark Heresy 1e sheet in read mode |
+| `dh1/tests/visual/editing.visual.spec.ts` | DH1 edit mode, creation locks, conditions, free experience |
+| `dh1/tests/visual/creation.visual.spec.ts` | DH1 creation, weapons, XP awards |
+| `dh2/tests/visual/creation.visual.spec.ts` | DH2 creation choices, Enemies options, gender/background, guest draft, weapons, XP awards |
+| `dh2/tests/visual/editing.visual.spec.ts` | DH2 creation locks, free experience |
 
 Tests that only make sense in one project are tagged `@desktop`/`@mobile` and
 filtered with `grepInvert`, so the report has no skipped duplicates.

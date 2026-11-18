@@ -35,10 +35,8 @@ const ALL_SPECS = [
   'basic-pages',
   'creation',
   'dialogs',
-  'editing',
   'locale',
   'pages',
-  'sheets',
   'tablet',
   'themes',
   'user-menu',
@@ -58,6 +56,12 @@ const RULES = [
   {
     pattern:
       /^(playwright\.config\.ts|scripts\/visual(-changed|-prune)?\.(sh|mjs))$/,
+    specs: 'full',
+  },
+  {
+    // Эталон плагина: сам PNG ничего не говорит о затронутых host-спеках,
+    // а игровые сценарии живут в src/games — дешевле прогнать всё.
+    pattern: /^tests\/visual\/__screenshots__\/[^/]+-games\//,
     specs: 'full',
   },
   {
@@ -85,12 +89,10 @@ const RULES = [
     specs: ['basic-pages', 'pages', 'tablet', 'user-menu'],
   },
   {
-    pattern: /^src\/components\/sheets\//,
-    specs: ['dialogs', 'editing', 'locale', 'sheets'],
-  },
-  {
-    pattern: /^src\/components\/(character|stats|sheet|dnd|dark-heresy)/,
-    specs: ['creation', 'dialogs', 'editing', 'sheets'],
+    // Общие компоненты листов рисуют и игровые экраны, чьи спеки теперь
+    // лежат в src/games/<id>/tests/visual — надёжнее прогнать всё.
+    pattern: /^src\/components\/(sheets|character|stats|sheet|dnd|dark-heresy)/,
+    specs: 'full',
   },
   {
     pattern: /^src\/components\/ui\//,
@@ -110,7 +112,7 @@ const RULES = [
   },
   {
     pattern: /^src\/app\/\[id\]\//,
-    specs: ['dialogs', 'editing', 'sheets'],
+    specs: 'full',
   },
   {
     pattern: /^src\/app\/api\//,
@@ -122,7 +124,7 @@ const RULES = [
   },
   {
     pattern: /^src\/(context|hooks)\//,
-    specs: ['creation', 'dialogs', 'editing', 'pages', 'sheets'],
+    specs: 'full',
   },
   {
     pattern: /^src\/lib\//,

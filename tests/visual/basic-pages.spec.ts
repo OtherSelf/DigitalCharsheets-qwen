@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 
-import { dhCharacter, dndCharacter } from './fixtures';
+import { dhCharacter } from '../../src/games/dh1/tests/fixtures/visual';
+import { dndCharacter } from '../../src/games/dnd5e/tests/fixtures/visual';
 import {
   collectPageErrors,
   expectNoHorizontalOverflow,
