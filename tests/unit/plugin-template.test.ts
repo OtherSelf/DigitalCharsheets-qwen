@@ -63,17 +63,32 @@ let gamesDir: string;
 let pluginDir: string;
 let manifest: Record<string, any>;
 
+/**
+ * Боевые манифесты без нашего probe-id: гейт обязан работать и тогда, когда
+ * в репозитории уже есть настоящий плагин с тем же id (иначе прогон гейта
+ * внутри дерева с копией падал бы на «дублирующемся id»).
+ */
+async function realManifests(): Promise<Plugin[]> {
+  const { collectManifests } = await generator();
+  return collectManifests().filter((entry) => entry.manifest.id !== PROBE_ID);
+}
+
 beforeAll(async () => {
   root = fs.mkdtempSync(path.join(os.tmpdir(), 'dcs-template-'));
   gamesDir = path.join(root, 'src/games');
   pluginDir = path.join(gamesDir, PROBE_ID);
+  // Свободный order: набор в validateCollection не должен падать на дубле,
+  // если настоящие плагины когда-нибудь займут фиксированный номер.
+  const real = await realManifests();
+  const order =
+    Math.max(0, ...real.map((entry) => Number(entry.manifest.order))) + 10;
   ({ manifest } = await renamePlugin({
     sourceDir: FIXTURE_DIR,
     targetDir: pluginDir,
     id: PROBE_ID,
     gameId: PROBE_GAME_ID,
     gameTitle: PROBE_TITLE,
-    order: 990,
+    order,
     version: '0.1.0',
   }));
 });
@@ -84,8 +99,7 @@ afterAll(() => {
 
 describe('копия фикстуры под чужим id', () => {
   it('проходит проверки папки и набора плагинов', async () => {
-    const { collectManifests, validateCollection, validatePluginFolder } =
-      await generator();
+    const { validateCollection, validatePluginFolder } = await generator();
 
     expect(
       validatePluginFolder({ gamesDir, dirName: PROBE_ID, manifest }),
@@ -93,7 +107,7 @@ describe('копия фикстуры под чужим id', () => {
     // Набор: боевые плагины + копия. order 990 не пересекается с 10/20/30.
     expect(
       validateCollection([
-        ...collectManifests(),
+        ...(await realManifests()),
         { dirName: PROBE_ID, manifest },
       ]),
     ).toEqual([]);
@@ -112,9 +126,9 @@ describe('копия фикстуры под чужим id', () => {
   });
 
   it('реестр с копией остаётся prettier-чистым', async () => {
-    const { collectManifests, renderRegistry } = await generator();
+    const { renderRegistry } = await generator();
     const content = renderRegistry([
-      ...collectManifests(),
+      ...(await realManifests()),
       { dirName: PROBE_ID, manifest },
     ]);
     const prettier = await import('prettier');
@@ -229,6 +243,14 @@ describe('копия фикстуры под чужим id', () => {
       exampleModule.migrations.length,
     );
     expect(fixtureManifest.migrations.length).toBeGreaterThan(0);
+
+    // Служебные поля хоста схема обязана сохранять: `z.object` их вырезает,
+    // и созданный лист остаётся без `userId` (падение creation.test.ts).
+    const withHostFields = exampleModule.schema.parse({
+      ...demo,
+      userId: 'host-user',
+    }) as unknown as Record<string, unknown>;
+    expect(withHostFields.userId).toBe('host-user');
     expect([...(fixtureManifest.ui?.slots ?? [])].sort()).toEqual(
       Object.keys(uiSlots).sort(),
     );
@@ -246,7 +268,7 @@ describe('копия фикстуры под чужим id', () => {
       true,
     );
     expect(manifest.game.id).toBe(PROBE_GAME_ID);
-    expect(manifest.game.order).toBe(990);
+    expect(manifest.game.order).toBe(manifest.order);
     const entry = fs.readFileSync(path.join(pluginDir, 'index.ts'), 'utf8');
     expect(entry).toContain(`export const ${PROBE_ID}Module`);
     // `shortCode` — поле модуля, не манифеста: схема лишних полей не терпит.
