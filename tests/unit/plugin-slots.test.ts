@@ -73,20 +73,18 @@ describe('загрузка листа, формы и слотов через р�
 
 describe('слоты: манифест ↔ модуль', () => {
   it('перечисленные слоты реализованы, лишних нет', async () => {
-    const FIELD_TO_SLOT: Record<string, string> = {
-      bulkEditor: 'BulkEditor',
-    };
     for (const entry of gamePlugins) {
       const slots = await slotsFor(entry.manifest.id);
       const declared = [...(entry.manifest.ui?.slots ?? [])].sort();
+      // Имена полей рантайма и слотов манифеста совпадают: расхождение
+      // регистра ловится здесь, а не костылём в тесте.
       const implemented = Object.entries(slots)
         .filter(
           ([name, value]) =>
             value !== undefined &&
-            ((PLUGIN_UI_SLOTS as readonly string[]).includes(name) ||
-              FIELD_TO_SLOT[name] !== undefined),
+            (PLUGIN_UI_SLOTS as readonly string[]).includes(name),
         )
-        .map(([name]) => FIELD_TO_SLOT[name] ?? name)
+        .map(([name]) => name)
         .sort();
       expect(implemented, entry.manifest.id).toEqual(declared);
     }
@@ -178,8 +176,8 @@ describe('слоты-функции плагинов', () => {
   it('BulkEditor отдаётся данными, а не компонентом', async () => {
     for (const entry of gamePlugins) {
       const slots = await slotsFor(entry.manifest.id);
-      expect(Array.isArray(slots.bulkEditor)).toBe(true);
-      expect(slots.bulkEditor?.length).toBeGreaterThan(0);
+      expect(Array.isArray(slots.BulkEditor)).toBe(true);
+      expect(slots.BulkEditor?.length).toBeGreaterThan(0);
     }
   });
 });

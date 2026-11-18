@@ -128,13 +128,8 @@ describe('conformance: авто-обнаружение плагинов', () => 
       if (declared.length === 0) continue;
       const slots = await loadGameUiSlots(plugin.manifest.id);
       expect(slots, plugin.manifest.id).toBeDefined();
-      // Манифест называет слот `BulkEditor`, модуль отдаёт `bulkEditor`.
-      const slotToField: Record<string, string> = {
-        BulkEditor: 'bulkEditor',
-      };
       for (const name of declared) {
-        const key = slotToField[name] ?? name;
-        const value = (slots as Record<string, unknown>)[key];
+        const value = (slots as Record<string, unknown>)[name];
         expect(value, `${plugin.manifest.id}: ${name}`).toBeTruthy();
       }
     }

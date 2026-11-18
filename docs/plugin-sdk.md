@@ -63,7 +63,7 @@ src/games/<id>/
   ui.ts                optional UI slots (manifest `ui.entry`)
   slots/*.tsx          slot components/functions imported by ui.ts
   assets/*             icons and images imported by the plugin (favicon)
-  bulk-editor.ts       tables for /stats-editor (ui.bulkEditor)
+  bulk-editor.ts       tables for /stats-editor (ui.BulkEditor)
   i18n/en.json, ru.json
   legacy-import.ts     optional Firestore/2.x importer for your game
 ```
@@ -229,7 +229,7 @@ sheet receives `ref: SheetHandle` and must implement `saveAll()`.
 
 ### Bulk editor (`/stats-editor`)
 
-`ui.bulkEditor` is an array of tables; the host owns the page, tabs, edit state
+`ui.BulkEditor` is an array of tables; the host owns the page, tabs, edit state
 and save buttons:
 
 ```ts

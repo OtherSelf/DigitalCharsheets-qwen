@@ -74,7 +74,7 @@ discovers plugins by `src/games/*/plugin.json` — there is no file list in
   same folder/schema validation as the generator;
 - manifest ↔ module: id, gameId, schemaVersion; default and demo pass the
   module's own zod schema; en/ru dictionaries have the same keys;
-- declared UI slots exist (including the `BulkEditor` → `bulkEditor` mapping);
+- declared UI slots exist (runtime field names match manifest slot names);
 - the reference fixture is installed into a temporary `src/games/` and goes
   through the same generator, so a folder + manifest is still enough.
 

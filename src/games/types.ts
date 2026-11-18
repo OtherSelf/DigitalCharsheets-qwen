@@ -357,7 +357,7 @@ export interface GameUiSlots<
   ) => string;
   readonly CompactNav?: (character: TCharacter) => readonly PluginNavItem[];
   /** Таблицы массового редактора `/stats-editor` (слот `BulkEditor`). */
-  readonly bulkEditor?: readonly BulkEditorTable<TCharacter>[];
+  readonly BulkEditor?: readonly BulkEditorTable<TCharacter>[];
   readonly CardSummary?: (
     character: TCharacter,
     t: (key: string) => string,
