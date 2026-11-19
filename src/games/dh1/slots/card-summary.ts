@@ -1,6 +1,6 @@
 import type { CardSummary } from '@/games/types';
 
-import { CAREER_KEYS, dhLocalizedKey, RANK_KEYS } from '../dark-heresy-data';
+import { CAREER_KEYS, RANK_KEYS } from '../dark-heresy-data';
 import type { DH1Character } from '../types';
 
 /**
@@ -17,9 +17,7 @@ export function dh1CardSummary(
   const characterClass = character.characterClass || '';
 
   const rankText = t(RANK_KEYS[rank] || rank);
-  const classText = t(
-    dhLocalizedKey(CAREER_KEYS[characterClass] || characterClass, 'dh1'),
-  );
+  const classText = t(CAREER_KEYS[characterClass] || characterClass);
 
   // Новый лист может быть создан только с именем: ранг и карьера ещё не
   // выбраны, но карточка не должна оставаться с пустой подписью.

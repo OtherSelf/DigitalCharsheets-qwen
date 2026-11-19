@@ -827,7 +827,7 @@ export const Dh2Sheet = React.forwardRef<
               {/* ─── LANDMARK: COMPACT VIEW FATIGUE COUNTERS ─── */}
               {/* У 2-й редакции одно поле усталости — fatigue2nd. */}
               <MetricBox
-                title={t('dh2.fatigueSecondEdition')}
+                title={t('dh2.fatigue')}
                 notes={fatigue.notes}
                 onNoteChange={(val) => updateFatigue({ notes: val })}
                 editing={isPointsEditing}
@@ -1326,7 +1326,7 @@ export const Dh2Sheet = React.forwardRef<
                       <div className="flex flex-wrap gap-4">
                         <div className="min-w-[140px] flex-1">
                           <MetricBox
-                            title={t('dh2.fatigueSecondEdition')}
+                            title={t('dh2.fatigue')}
                             notes={fatigue.notes}
                             onNoteChange={(val) =>
                               updateFatigue({ notes: val })

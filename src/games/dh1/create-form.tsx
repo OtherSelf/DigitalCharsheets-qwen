@@ -47,7 +47,6 @@ import { dh1CreationHintsMarkdown } from './creation-hints';
 import {
   ALL_QUIRKS,
   CAREER_KEYS,
-  dhLocalizedKey,
   DIVINATIONS,
   fateRangeFromText,
   getQuirksForHomeWorld,
@@ -142,7 +141,6 @@ export function DarkHeresyCreateForm({
     perception: z.coerce.number().int(),
     willpower: z.coerce.number().int(),
     fellowship: z.coerce.number().int(),
-    influence: z.coerce.number().int(),
     wounds: z.coerce.number().int(),
     fatePoints: z.coerce.number().int(),
     insanity: z.coerce.number().int().min(0).optional(),
@@ -174,7 +172,6 @@ export function DarkHeresyCreateForm({
       perception: 30,
       willpower: 30,
       fellowship: 30,
-      influence: 30,
       wounds: 10,
       fatePoints: 1,
       insanity: 0,
@@ -341,12 +338,7 @@ export function DarkHeresyCreateForm({
                         <SelectContent>
                           {DarkHeresyHomeWorlds.map((world) => (
                             <SelectItem key={world} value={world}>
-                              {t(
-                                dhLocalizedKey(
-                                  HOME_WORLD_KEYS[world] || world,
-                                  'dh1',
-                                ),
-                              )}
+                              {t(HOME_WORLD_KEYS[world] || world)}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -384,7 +376,7 @@ export function DarkHeresyCreateForm({
                             : []
                           ).map((v) => (
                             <SelectItem key={v} value={v}>
-                              {t(dhLocalizedKey(VARIANT_KEYS[v] || v, 'dh1'))}
+                              {t(VARIANT_KEYS[v] || v)}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -413,12 +405,7 @@ export function DarkHeresyCreateForm({
                         <SelectContent>
                           {DarkHeresyCareerPaths.map((path) => (
                             <SelectItem key={path} value={path}>
-                              {t(
-                                dhLocalizedKey(
-                                  CAREER_KEYS[path] || path,
-                                  'dh1',
-                                ),
-                              )}
+                              {t(CAREER_KEYS[path] || path)}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -619,12 +606,7 @@ export function DarkHeresyCreateForm({
                         <SelectContent>
                           {availableQuirks.map((quirk) => (
                             <SelectItem key={quirk} value={quirk}>
-                              {t(
-                                dhLocalizedKey(
-                                  QUIRK_KEYS[quirk] || quirk,
-                                  'dh1',
-                                ),
-                              )}
+                              {t(QUIRK_KEYS[quirk] || quirk)}
                             </SelectItem>
                           ))}
                         </SelectContent>

@@ -82,7 +82,6 @@ export const dh1Module: GameModule<DH1Character> = {
   schema: dh1CharacterSchema,
   i18n: { en: dh1En, ru: dh1Ru },
   capabilities: {
-    influence: false,
     plus30: false,
     fatigueField: 'fatigue1st',
   },

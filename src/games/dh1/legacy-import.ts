@@ -105,7 +105,6 @@ export function dh1ConvertLegacyImport(
       perception: 30,
       willpower: 30,
       fellowship: 30,
-      influence: 0,
     },
     statUpgrades: {},
     statNotes: {},

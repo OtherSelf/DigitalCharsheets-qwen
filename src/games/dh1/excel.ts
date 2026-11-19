@@ -111,7 +111,7 @@ export function buildDh1ExcelSections(
       w.row('dh1.corruptionTest', character.corruptionDetails.test ?? '');
       w.row('dh1.defilements', character.corruptionDetails.defilements ?? '');
     }
-    w.row('dh1.excel.fatigueFirst', fatigue.current);
+    w.row('dh1.excel.fatigue', fatigue.current);
     w.row('dh1.excel.fatigueNotes', fatigue.notes);
 
     const conditions = (character.conditions ?? []).filter(

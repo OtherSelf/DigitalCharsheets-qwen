@@ -20,7 +20,6 @@ const RU_FULL: Record<string, string> = {
   perception: 'Восприятие',
   willpower: 'Сила Воли',
   fellowship: 'Общительность',
-  influence: 'Влияние',
 };
 
 const RU_ABBR: Record<string, string> = {
@@ -33,7 +32,6 @@ const RU_ABBR: Record<string, string> = {
   perception: 'Вос.',
   willpower: 'СВ',
   fellowship: 'Общ.',
-  influence: 'Вл.',
 };
 
 const EN_ABBR: Record<string, string> = {
@@ -46,7 +44,6 @@ const EN_ABBR: Record<string, string> = {
   perception: 'Per',
   willpower: 'WP',
   fellowship: 'Fel',
-  influence: 'Ifl',
 };
 
 describe('dh1: подписи характеристик', () => {

@@ -53,7 +53,6 @@ const CHARACTERISTIC_KEYS = [
   'dh1.perception',
   'dh1.willpower',
   'dh1.fellowship',
-  'dh1.influence',
 ] as const;
 
 const ABBR_KEYS: Record<string, string> = {
@@ -66,7 +65,6 @@ const ABBR_KEYS: Record<string, string> = {
   'dh1.perception': 'dh1.perceptionAbbr',
   'dh1.willpower': 'dh1.willpowerAbbr',
   'dh1.fellowship': 'dh1.fellowshipAbbr',
-  'dh1.influence': 'dh1.influenceAbbr',
 };
 
 const ABBR_TO_KEY: Record<string, (typeof CHARACTERISTIC_KEYS)[number]> = {
@@ -107,13 +105,6 @@ const ABBR_TO_KEY: Record<string, (typeof CHARACTERISTIC_KEYS)[number]> = {
   Общ: 'dh1.fellowship',
   'Общ.': 'dh1.fellowship',
   ОБ: 'dh1.fellowship',
-  Ifl: 'dh1.influence',
-  IFL: 'dh1.influence',
-  Inf: 'dh1.influence',
-  INF: 'dh1.influence',
-  Вл: 'dh1.influence',
-  'Вл.': 'dh1.influence',
-  ВЛ: 'dh1.influence',
 };
 
 const getTranslatedSkillName = (
@@ -176,7 +167,7 @@ export const SkillsTalentsSection = React.forwardRef<
     // ─── LANDMARK: CAPABILITY_PLUS30_COLUMN ───
     // Колонка +30 существует только во 2-й редакции; редакция приходит из
     // модуля (systemId), переключателя в UI больше нет.
-    const showPlus30 = getDarkHeresyCapabilities(character).plus30;
+    const showPlus30 = getDarkHeresyCapabilities().plus30;
 
     const handleSaveSkills = React.useCallback(() => {
       updateCharacter(character.id, { skills: editableSkills });
