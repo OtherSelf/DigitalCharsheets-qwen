@@ -14,11 +14,13 @@ export function UpdateBanner({
   action,
   onAction,
   testId,
+  busy = false,
 }: {
   label: string;
   action: string;
   onAction: () => void;
   testId: string;
+  busy?: boolean;
 }) {
   return (
     <div
@@ -28,7 +30,7 @@ export function UpdateBanner({
       className="bg-card fixed bottom-4 left-1/2 z-40 flex max-w-[92vw] -translate-x-1/2 items-center gap-3 rounded-lg border px-4 py-2.5 text-sm shadow-lg"
     >
       <span>{label}</span>
-      <Button size="sm" onClick={onAction}>
+      <Button size="sm" onClick={onAction} disabled={busy}>
         {action}
       </Button>
     </div>
