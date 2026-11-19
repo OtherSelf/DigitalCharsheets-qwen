@@ -11,6 +11,44 @@ format changes.
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-11-19
+
+Stale tabs notice a new build, error screens stop reloading silently.
+
+### Added
+
+- `/api/version` reports `buildId`: the deployment id in production
+  (`deploymentId` comes from the build commit, with `.next/BUILD_ID` as the
+  fallback) and a per-process id in development. `next.config.ts` sets
+  `deploymentId`, so Next itself appends `?dpl=` to static assets.
+- A tab notices a new server: it polls `/api/version` every 60 s in production
+  (15 s in development), only while visible, and immediately on focus,
+  `visibilitychange` and `online`. When the build differs it shows an
+  "application updated" banner instead of silently running stale JS.
+- `npm run check:build-id` probes any stand from outside; `docs/deployment.md`
+  gained a "New build and stale tabs" section.
+
+### Changed
+
+- Plugin versions: `dh1` 1.5.0, `dh2` 1.5.0, `dnd5e` 1.3.0. The sheet
+  `schemaVersion` is unchanged (Dark Heresy `5`, D&D 5e `2`).
+- Error screens (`app/error.tsx`, the sheet error boundary) offer "Retry" and
+  "Reload page" buttons instead of reloading on their own; a chunk-loading
+  failure is recognised by its text and ends in that banner or screen instead of
+  a stuck spinner.
+- A lint rule forbids a static `xlsx` import in client modules, so the Excel
+  library stays in the lazy chunk.
+- `npm run verify` now checks CRLF in the index and in the working tree
+  (`npm run eol:check`; the tree is fixed by `npm run eol:fix`).
+
+### Fixed
+
+- The tab no longer reloads itself on forms: the creation wizard, the stats
+  editor and any focused input count as unsaved state and only get the banner,
+  so the player does not lose input mid-edit.
+- D&D 5e takes the experience label from its own dictionary, and DH1/DH2 drop
+  leftover edition-split rudiments.
+
 ## [0.10.1] - 2026-11-19
 
 Plugin scaffolding, contract alignment and the decision canon.

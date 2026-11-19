@@ -3,7 +3,7 @@
   "pluginApi": "^1.0.0",
   "id": "dh2",
   "gameId": "darkHeresy",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "order": 30,
   "defaultStatus": "published",
   "name": {
