@@ -4,7 +4,6 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { Button } from '@/components/ui/button';
 import { useCharacterContext } from '@/context/character-context';
 import { useTranslation } from '@/context/language-context';
 import {
@@ -13,6 +12,10 @@ import {
   nextPollDelay,
   readBuildId,
 } from '@/lib/build-guard';
+import { flushWithTimeout } from '@/lib/flush-with-timeout';
+import { readLastReloadAt, rememberReload } from '@/lib/page-reload';
+
+import { UpdateBanner } from './update-banner';
 
 /**
  * ─── LANDMARK: BUILD WATCHER ────────────────────────────────────────────────
@@ -31,54 +34,11 @@ import {
  * и браузером, и возможным прокси.
  */
 
-/** Ключ переживает перезагрузку вкладки, но не закрытие: cooldown на сессию. */
-const LAST_RELOAD_KEY = 'dcs:build-guard:last-reload';
-
 /**
  * Потолок ожидания флаша: сервер как раз перезапускается, и очередь
  * сохранений может висеть. Не дождались — считаем состояние несохранённым.
  */
 const FLUSH_TIMEOUT_MS = 5_000;
-
-function readLastReloadAt(): number | null {
-  try {
-    const raw = window.sessionStorage.getItem(LAST_RELOAD_KEY);
-    if (raw === null) return null;
-    const value = Number(raw);
-    return Number.isFinite(value) ? value : null;
-  } catch {
-    // Приватный режим или отключённое хранилище: cooldown просто не помним.
-    return null;
-  }
-}
-
-function rememberLastReload(now: number): void {
-  try {
-    window.sessionStorage.setItem(LAST_RELOAD_KEY, String(now));
-  } catch {
-    // Без хранилища перезагрузимся ещё раз в худшем случае — не теряем данные.
-  }
-}
-
-/** Дождаться очереди сохранений, но не бесконечно. */
-async function flushWithTimeout(
-  flush: () => Promise<void>,
-  timeoutMs: number,
-): Promise<boolean> {
-  let timer: ReturnType<typeof setTimeout> | undefined;
-  try {
-    return await Promise.race([
-      flush()
-        .then(() => true)
-        .catch(() => false),
-      new Promise<boolean>((resolve) => {
-        timer = setTimeout(() => resolve(false), timeoutMs);
-      }),
-    ]);
-  } finally {
-    if (timer) clearTimeout(timer);
-  }
-}
 
 export function BuildWatcher({ ownBuildId }: { ownBuildId: string }) {
   const { flushSaves, hasUnsavedChanges } = useCharacterContext();
@@ -108,7 +68,7 @@ export function BuildWatcher({ ownBuildId }: { ownBuildId: string }) {
     // Клик — согласие пользователя: досылаем очередь и перезагружаемся, даже
     // если поле осталось в режиме правки (тогда сработает нативный beforeunload).
     await flushWithTimeout(flushRef.current, FLUSH_TIMEOUT_MS);
-    rememberLastReload(Date.now());
+    rememberReload(Date.now());
     window.location.reload();
   }, []);
 
@@ -176,7 +136,7 @@ export function BuildWatcher({ ownBuildId }: { ownBuildId: string }) {
         return;
       }
 
-      rememberLastReload(Date.now());
+      rememberReload(Date.now());
       window.location.reload();
     };
 
@@ -214,16 +174,11 @@ export function BuildWatcher({ ownBuildId }: { ownBuildId: string }) {
   if (!pendingId) return null;
 
   return (
-    <div
-      role="status"
-      aria-live="polite"
-      data-testid="build-update-banner"
-      className="bg-card fixed bottom-4 left-1/2 z-40 flex max-w-[92vw] -translate-x-1/2 items-center gap-3 rounded-lg border px-4 py-2.5 text-sm shadow-lg"
-    >
-      <span>{t('common.updateAvailable')}</span>
-      <Button size="sm" onClick={() => void reloadNow()}>
-        {t('common.updateNow')}
-      </Button>
-    </div>
+    <UpdateBanner
+      testId="build-update-banner"
+      label={t('common.updateAvailable')}
+      action={t('common.updateNow')}
+      onAction={() => void reloadNow()}
+    />
   );
 }
