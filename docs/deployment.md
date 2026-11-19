@@ -125,14 +125,14 @@ watcher below still works).
 **Client side: the watcher.** A component mounted in the root layout compares
 the `buildId` it was rendered with against the running server — every 15 s on a
 dev server, every 60 s in production, only while the tab is visible, and
-immediately on focus, visibility change and `online`. If nothing is being edited
-the tab reloads silently; otherwise a banner offers "Update" and waits for the
-click. After an automatic reload the same mismatch does not reload again for ten
-minutes, so a broken deployment cannot turn a tab into a reload loop. Chunk-load
-failures (`ChunkLoadError`, `Failed to fetch dynamically imported module`,
-`module factory is not available`, a request to `/_next/static/`) follow the
-same rule through `error.tsx`, `global-error.tsx`, `SheetErrorBoundary` and the
-`window` listeners.
+immediately on focus, visibility change and `online`. When the ids differ it
+shows a banner: the app has been updated, save your changes and reload the page.
+Nothing reloads automatically — the tab may hold unsaved input, and
+`beforeunload` would cancel the navigation anyway. Chunk-load failures
+(`ChunkLoadError`, `Failed to fetch dynamically imported module`, `module
+factory is not available`, a request to `/_next/static/`) show the same banner
+through `error.tsx`, `global-error.tsx`, `SheetErrorBoundary` and the `window`
+listeners.
 
 Check a running server from outside:
 

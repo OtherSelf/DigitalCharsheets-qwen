@@ -179,13 +179,12 @@ does not prevent the server from starting.
   it. The header caches the title for the session.
 - Two client-side watches guard the open tab. `BuildWatcher` polls
   `GET /api/version` (15 s in development, 60 s in production, visible tab only)
-  and reloads it when the server reports another `buildId` — silently when
-  nothing is being edited, otherwise through a banner that waits for a click.
-  `ClientErrorGuard` listens to `window` `error`/`unhandledrejection` and treats
-  chunk-load failures the same way: one reload, then a banner; both share one
-  ten-minute cooldown in `sessionStorage`. Render errors are caught closer to the
-  source by the App Router `error.tsx`/`global-error.tsx` and by
-  `SheetErrorBoundary`, which also offers "Retry" (remount) and "Reload page".
+  and shows a banner when the server reports another `buildId`; `ClientErrorGuard`
+  does the same for chunk-load failures seen on `window`
+  `error`/`unhandledrejection`. The banner only informs — nothing reloads on its
+  own, because the tab may hold unsaved input. Render errors are caught closer to
+  the source by the App Router `error.tsx`/`global-error.tsx` and by
+  `SheetErrorBoundary`, which offer "Retry" (remount) and "Reload page".
 
 ## Related
 

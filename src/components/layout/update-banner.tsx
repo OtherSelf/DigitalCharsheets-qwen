@@ -2,25 +2,21 @@
 
 'use client';
 
-import { Button } from '@/components/ui/button';
-
 /**
- * Плашка «нужно обновить вкладку»: один вид для новой сборки и для ошибки
- * загрузки чанка. Живёт внизу по центру и на `z-40`, чтобы модальные окна
- * Radix (их оверлей выше) перекрывали её, а не наоборот.
+ * Плашка «приложение обновилось, сохраните изменения и обновите страницу».
+ *
+ * Намеренно без кнопки: перезагрузить вкладку за пользователя нельзя — в ней
+ * может быть несохранённый ввод (мастер создания, редактор поля), а попытка
+ * сделать это программно упирается в `beforeunload` и оставляет кнопку в
+ * состоянии «обновляем» навсегда. Сообщаем факт и уводим к обычному F5.
+ * z-40 ниже модальных окон Radix, чтобы не перекрывать диалоги.
  */
 export function UpdateBanner({
   label,
-  action,
-  onAction,
   testId,
-  busy = false,
 }: {
   label: string;
-  action: string;
-  onAction: () => void;
   testId: string;
-  busy?: boolean;
 }) {
   return (
     <div
@@ -30,9 +26,6 @@ export function UpdateBanner({
       className="bg-card fixed bottom-4 left-1/2 z-40 flex max-w-[92vw] -translate-x-1/2 items-center gap-3 rounded-lg border px-4 py-2.5 text-sm shadow-lg"
     >
       <span>{label}</span>
-      <Button size="sm" onClick={onAction} disabled={busy}>
-        {action}
-      </Button>
     </div>
   );
 }

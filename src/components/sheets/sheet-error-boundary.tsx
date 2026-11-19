@@ -7,13 +7,6 @@ import { AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useTranslation } from '@/context/language-context';
-import { isChunkLoadError } from '@/lib/chunk-error';
-import {
-  canAutoReload,
-  CHUNK_RECOVERY_COOLDOWN_MS,
-  readLastReloadAt,
-  rememberReload,
-} from '@/lib/page-reload';
 
 /**
  * ─── LANDMARK: SHEET ERROR BOUNDARY ────────────────────────────────────────
@@ -22,9 +15,9 @@ import {
  * рисует шапку, сайдбар и диалоги независимо от плагина.
  *
  * Отдельный случай — ошибка загрузки чанка: лист не сломан, вкладка просто
- * ссылается на удалённые после деплоя файлы. Тогда один раз перезагружаемся
- * сами (cooldown общий с `build-watcher.tsx`), а если нельзя — карточка с
- * «Повторить» (перемонтирование плагина) и «Обновить страницу».
+ * ссылается на удалённые после деплоя файлы. Показываем карточку с «Повторить»
+ * (перемонтирование плагина) и «Обновить страницу»; сами вкладку не
+ * перезагружаем, чтобы не потерять несохранённый ввод.
  *
  * Классовый компонент — единственный способ поймать ошибку рендера в React;
  * тексты берём из i18n через функциональную обёртку.
@@ -41,15 +34,8 @@ export class SheetBoundary extends React.Component<
 
   componentDidCatch(error: unknown) {
     // Не глотаем ошибку молча: она видна в консоли и в отчёте мониторинга.
+    // Перезагрузку не запускаем сами: в листе может быть несохранённый ввод.
     console.error('[sheet] plugin render failed:', error);
-
-    if (!isChunkLoadError(error)) return;
-
-    const now = Date.now();
-    if (!canAutoReload(now, readLastReloadAt(), CHUNK_RECOVERY_COOLDOWN_MS))
-      return;
-    rememberReload(now);
-    window.location.reload();
   }
 
   render() {
@@ -94,10 +80,7 @@ export function SheetErrorBoundary({
           <Button
             size="sm"
             variant="outline"
-            onClick={() => {
-              rememberReload(Date.now());
-              window.location.reload();
-            }}
+            onClick={() => window.location.reload()}
           >
             {t('common.reloadPage')}
           </Button>
