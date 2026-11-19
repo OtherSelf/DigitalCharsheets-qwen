@@ -102,6 +102,11 @@ ${C_BOLD}Примеры:${C_RESET}
   bash scripts/dcs-dev.sh test
   bash scripts/dcs-dev.sh logs 500
 
+${C_BOLD}Кеш${C_RESET} deploy и restart стирают <каталог проекта>/.next: кеш dev-сервера
+принадлежит конкретному процессу, и вкладка, открытая до рестарта, иначе падает
+с «module factory is not available». data/ и node_modules/ не трогаются; первый
+рендер после рестарта собирается заново.
+
 ${C_BOLD}Данные${C_RESET} (аккаунты и листы персонажей) лежат в <каталог проекта>/data.
 Дев-сервер слушает 0.0.0.0:PORT — для доступа извне нужен открытый порт в фаерволе
 или nginx-proxy. Первая загрузка страницы после старта компилируется ~10-20 с.
@@ -400,6 +405,25 @@ stop_server() {
   fi
 }
 
+# Кеш Turbopack в .next принадлежит конкретному процессу dev-сервера: вкладка,
+# открытая до рестарта, применяет патчи к графу прошлого процесса и падает с
+# «module factory is not available». `git clean -fdq` тут не помогает — .next
+# в .gitignore, поэтому deploy и restart начинают с чистого .next. Каталог
+# данных (data/) при этом не трогаем: он не кеш и принадлежит игрокам.
+wipe_next_cache() {
+  [ -n "$APP_DIR" ] && [ "$APP_DIR" != "/" ] || die "Небезопасный APP_DIR: '$APP_DIR'"
+
+  local next_dir="$APP_DIR/.next"
+  if [ ! -e "$next_dir" ]; then
+    dim ".next нет — чистить кеш прошлого процесса нечего"
+    return 0
+  fi
+
+  step "Удаляю $next_dir (кеш dev-сервера прошлого процесса)"
+  rm -rf -- "$next_dir" || die "не удалось удалить $next_dir"
+  ok "кеш сброшен: следующий старт соберёт маршруты заново"
+}
+
 start_server() {
   need screen "apt-get install -y screen (Debian/Ubuntu) / yum install screen (RHEL)"
   [ -d "$APP_DIR/node_modules" ] || die "нет $APP_DIR/node_modules — сначала bash scripts/dcs-dev.sh deploy"
@@ -509,6 +533,7 @@ cmd_deploy() {
   if [ "$RESET_DATA" -eq 1 ]; then
     wipe_data
   fi
+  wipe_next_cache
   start_server
   print_summary
 }
@@ -527,6 +552,7 @@ cmd_restart() {
   ensure_log_dir
   take_lock
   stop_server
+  wipe_next_cache
   start_server
   print_summary
 }
