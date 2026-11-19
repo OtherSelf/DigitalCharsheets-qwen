@@ -1,8 +1,4 @@
-import type {
-  CharacterBase,
-  CombatResource,
-  InventoryItem,
-} from '../shared/types';
+import type { CharacterBase, CombatResource } from '../shared/types';
 
 /**
  * ─── LANDMARK: DND5E TYPES ─────────────────────────────────────────────────
@@ -13,6 +9,14 @@ import type {
  * Модуль D&D отвечает за схему, дефолты, форму, лист, словари, экспорт и
  * миграции; ядро работает через `src/games/registry.ts`.
  */
+
+/** Предмет инвентаря/снаряжения D&D: форма не меняется. */
+export interface InventoryItem {
+  id: string;
+  name: string;
+  status: 'default' | 'lost';
+  notes?: string;
+}
 
 export interface AttunementItem {
   id: string;

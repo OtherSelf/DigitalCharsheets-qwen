@@ -14,7 +14,6 @@ export type {
   CharacterBase,
   CombatResource,
   GameSystem,
-  InventoryItem,
   Quest,
   QuestObjective,
 } from '@/games/shared/types';

@@ -38,14 +38,6 @@ export interface CharacterBase {
   schemaVersion?: number;
 }
 
-/** Предмет инвентаря (D&D и Dark Heresy). */
-export interface InventoryItem {
-  id: string;
-  name: string;
-  status: 'default' | 'lost';
-  notes?: string;
-}
-
 /** Универсальный счётчик-ресурс (бой, дом. правила, способности). */
 export interface CombatResource {
   id: string;
