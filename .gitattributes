@@ -17,6 +17,13 @@
 *.yml   text eol=lf
 *.yaml  text eol=lf
 
+# Файлы без расширения — отдельно: содержимое `.nvmrc` — строка версии, а
+# сохраняет её не редактор, а шелл/установщик, и в Windows они пишут CRLF.
+# Prettier такие файлы не переформатирует (нет парсера), поэтому правило
+# явное, а расхождение ловит `npm run eol:check`.
+.nvmrc        text eol=lf
+.node-version text eol=lf
+
 # Бинарные — без конвертации и текстового diff.
 *.png   binary
 *.jpg   binary

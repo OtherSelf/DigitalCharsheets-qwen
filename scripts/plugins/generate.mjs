@@ -441,7 +441,7 @@ export function renderRegistry(plugins) {
   // `import type … from './plugin-api'` участвует в той же сортировке: иначе
   // плагин с id после `plugin-api` (`probe`, `wfrp`, `zz…`) делал
   // сгенерированный файл «грязным» для prettier, а `prettier --check` —
-  // шаг 2/7 `npm run verify`. Цикл `generate` → `format` не сходился.
+  // шаг «формат» в `npm run verify`. Цикл `generate` → `format` не сходился.
   const imports = [
     ...[...sorted]
       .sort((a, b) => a.manifest.id.localeCompare(b.manifest.id, 'en'))
@@ -569,7 +569,7 @@ export function renderI18nRegistry(plugins) {
 
   // Импорты словарей и `import type … from './types'` — одним списком по
   // строке пути: prettier сортирует их так же, а id после `types` иначе
-  // ломал `prettier --check` (шаг 2/7 verify) на авто-сгенерированном файле.
+  // ломал `prettier --check` (шаг «формат» verify) на авто-сгенерированном файле.
   const imports = [
     ...sorted.flatMap(({ manifest }) => {
       const camel = manifest.id.replace(/[-_]+(.)?/g, (_, chr) =>

@@ -418,13 +418,14 @@ filtered with `grepInvert`, so the report has no skipped duplicates.
 `npm run verify` runs [`scripts/predeploy.sh`](../scripts/predeploy.sh):
 
 1. lockfile check (`npm ci --dry-run`);
-2. Prettier check;
-3. ESLint, plugin boundaries/registry, and (when `content/dh2` is checked out
+2. line endings: LF in the index and the working tree (`npm run eol:check`);
+3. Prettier check;
+4. ESLint, plugin boundaries/registry, and (when `content/dh2` is checked out
    next to the app) the DH2 generated-data drift check (`dh2e:check`);
-4. TypeScript;
-5. unit tests;
-6. production build;
-7. HTTP smoke test against a temporary server.
+5. TypeScript;
+6. unit tests;
+7. production build;
+8. HTTP smoke test against a temporary server.
 
 Useful flags: `--skip-build`, `--skip-unit`, `--skip-smoke`, `--base-url URL`,
 `--keep` (keep the temp data/logs). The real `./data` is never touched.
