@@ -74,6 +74,8 @@ export const ruTranslations: Record<string, string> = {
   'common.updateAvailable': 'Доступна новая версия',
   'common.updateNow': 'Обновить',
   'common.updating': 'Обновляем…',
+  'common.updateBlocked':
+    'Сначала сохраните изменения — потом обновите страницу.',
   'common.reloadPage': 'Обновить страницу',
   'common.reloadRequired':
     'Часть файлов не загрузилась. Обновите страницу, чтобы продолжить.',

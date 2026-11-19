@@ -40,12 +40,31 @@ import { UpdateBanner } from './update-banner';
  */
 const FLUSH_TIMEOUT_MS = 5_000;
 
+/**
+ * Идёт ввод, который перезагрузка уничтожит: мастер создания персонажа,
+ * редактор характеристик или просто сфокусированный контрол ввода.
+ */
+function isFormInProgress(): boolean {
+  const path = window.location.pathname;
+  if (path === '/new' || path.startsWith('/new/')) return true;
+  if (path.startsWith('/stats-editor')) return true;
+
+  const active = document.activeElement;
+  return (
+    active instanceof HTMLInputElement ||
+    active instanceof HTMLTextAreaElement ||
+    active instanceof HTMLSelectElement
+  );
+}
+
 export function BuildWatcher({ ownBuildId }: { ownBuildId: string }) {
   const { flushSaves, hasUnsavedChanges } = useCharacterContext();
   const { t } = useTranslation();
   const [pendingId, setPendingId] = useState<string | null>(null);
   // Клик уже получен, но перезагрузка ещё не случилась — это видно по кнопке.
   const [clicked, setClicked] = useState(false);
+  // Перезагрузку отменил beforeunload (несохранённый редактор): подсказываем.
+  const [blocked, setBlocked] = useState(false);
 
   // Рефы, чтобы таймер не пересоздавался на каждый рендер контекста.
   const dirtyRef = useRef(hasUnsavedChanges);
@@ -112,7 +131,11 @@ export function BuildWatcher({ ownBuildId }: { ownBuildId: string }) {
       const action = decideBuildAction({
         ownId,
         serverId,
-        dirty: dirtyRef.current || pendingRef.current !== null,
+        // «Грязно» — это не только лист: в форме создания персонажа или в
+        // редакторе характеристик ввод живёт только в памяти и перезагрузка
+        // его уничтожит; открытый на вводе контрол тоже считаем правкой.
+        dirty:
+          dirtyRef.current || pendingRef.current !== null || isFormInProgress(),
         now: Date.now(),
         lastAutoReloadAt: lastReloadRef.current,
       });
@@ -182,7 +205,7 @@ export function BuildWatcher({ ownBuildId }: { ownBuildId: string }) {
   return (
     <UpdateBanner
       testId="build-update-banner"
-      label={t('common.updateAvailable')}
+      label={blocked ? t('common.updateBlocked') : t('common.updateAvailable')}
       action={clicked ? t('common.updating') : t('common.updateNow')}
       onAction={reloadNow}
       busy={clicked}

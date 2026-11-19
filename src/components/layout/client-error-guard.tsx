@@ -35,6 +35,7 @@ export function ClientErrorGuard() {
   const { t } = useTranslation();
   const [needsReload, setNeedsReload] = useState(false);
   const [clicked, setClicked] = useState(false);
+  const [blocked, setBlocked] = useState(false);
 
   const dirtyRef = useRef(hasUnsavedChanges);
   const flushRef = useRef(flushSaves);
@@ -109,7 +110,7 @@ export function ClientErrorGuard() {
   return (
     <UpdateBanner
       testId="chunk-error-banner"
-      label={t('common.reloadRequired')}
+      label={blocked ? t('common.updateBlocked') : t('common.reloadRequired')}
       action={clicked ? t('common.updating') : t('common.reloadPage')}
       onAction={reloadNow}
       busy={clicked}
