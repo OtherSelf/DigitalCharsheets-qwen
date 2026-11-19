@@ -11,6 +11,35 @@ format changes.
 
 ## [Unreleased]
 
+## [0.10.1] - 2026-11-19
+
+Plugin scaffolding, contract alignment and the decision canon.
+
+### Added
+
+- `npm run plugins:scaffold -- <id> [--game] [--order] [--title] [--title-ru]`
+  copies the reference fixture into `src/games/<id>/` with the same rules the
+  template gate enforces and regenerates the registry, so a new edition starts
+  from a passing plugin instead of a copy with stale ids.
+- `docs/decisions.md`: the canon of decisions D1–D21 plus troubleshooting and
+  language rules, so plugin authors read one page instead of the commit log.
+
+### Changed
+
+- The plugin contract marks `normalize` and `merge` as required (SDK v1) and
+  `game.description` as mandatory, matching what the schema and the registry
+  gate already enforced. `docs/plugin-sdk.md` lists the fields to rename when
+  the template is copied, and the test map is aligned with the code.
+- Host plugin tests take the plugin list from the registry instead of a
+  hard-coded list, so a newly scaffolded edition is picked up automatically.
+
+### Fixed
+
+- The generated registry sorts imports the way Prettier does, so
+  `plugins:generate` no longer leaves a formatting diff.
+- The reference fixture keeps the host service fields in its schema and passes
+  the contract as a full plugin, including a copy under another id.
+
 ## [0.10.0] - 2026-11-18
 
 Server-side derived values, declared migration chains and an honest API schema.
