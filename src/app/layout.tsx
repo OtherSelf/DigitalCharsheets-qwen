@@ -4,6 +4,7 @@ import { Inter, Space_Grotesk } from 'next/font/google';
 
 import './globals.css';
 
+import { BuildWatcher } from '@/components/layout/build-watcher';
 import { RecoveryModalWrapper } from '@/components/recovery-modal-wrapper';
 import { ThemeProvider } from '@/components/theme-provider';
 import { UIScaleWrapper } from '@/components/ui-scale-wrapper';
@@ -12,6 +13,7 @@ import { CharacterProvider } from '@/context/character-context';
 import { LanguageProvider } from '@/context/language-context';
 import { LocalAuthProvider } from '@/context/local-auth-context';
 import { listGamePlugins } from '@/games/registry';
+import { getAppInfo } from '@/lib/app-info';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 const spaceGrotesk = Space_Grotesk({
@@ -23,6 +25,13 @@ const spaceGrotesk = Space_Grotesk({
 const GAME_TITLES = [
   ...new Set(listGamePlugins().map((plugin) => plugin.manifest.game.name.en)),
 ];
+
+/*
+  Id сборки, с которой отрендерен этот документ. Считается один раз на процесс:
+  сторож сравнивает его с `/api/version` и понимает, что сервер уже другой.
+  `data-dpl-id` для этого не годится — Next удаляет атрибут до гидратации.
+*/
+const BUILD_ID = getAppInfo().buildId;
 
 export const metadata: Metadata = {
   title: 'Digital Character Sheets',
@@ -68,6 +77,7 @@ export default function RootLayout({
                   {children}
                   <RecoveryModalWrapper />
                   <Toaster />
+                  <BuildWatcher ownBuildId={BUILD_ID} />
                 </UIScaleWrapper>
               </CharacterProvider>
             </LanguageProvider>

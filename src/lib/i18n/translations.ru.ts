@@ -71,6 +71,8 @@ export const ruTranslations: Record<string, string> = {
   'common.switchToEnglish': 'Переключить на английский',
   'common.openUserMenu': 'Открыть меню пользователя',
   'common.appVersion': 'Версия приложения',
+  'common.updateAvailable': 'Доступна новая версия',
+  'common.updateNow': 'Обновить',
   'common.serverConnectionFailed': 'Не удалось подключиться к серверу.',
   'common.saving': 'Сохранение...',
   'common.characterCreatedTitle': 'Персонаж создан!',
