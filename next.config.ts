@@ -1,5 +1,7 @@
 import type { NextConfig } from 'next';
 
+import { getGitCheckoutInfo } from './src/lib/git-commit';
+
 /**
  * ─── LANDMARK: SECURITY HEADERS ─────────────────────────────────────────────
  * Браузерные границы приложения. CSP, anti-frame и nosniff закрывают класс
@@ -12,6 +14,28 @@ import type { NextConfig } from 'next';
  * всё остальное — `'self'`.
  */
 const isDev = process.env.NODE_ENV !== 'production';
+
+/**
+ * ─── LANDMARK: DEPLOYMENT ID ────────────────────────────────────────────────
+ * `deploymentId` — framework-нативная защита от «старой» вкладки: Next ставит
+ * `?dpl=` в URL статики, `data-dpl-id` в `<html>` и делает hard navigation,
+ * если клиент и сервер разошлись по id. Своё сравнение версий не пишем.
+ *
+ * Значение берётся здесь, а не из окружения systemd: у юнита только
+ * `NODE_ENV=production`, и деплой-скрипт не может положить в него переменную.
+ * `next start` заново читает этот конфиг, поэтому id одинаков у сборки и у
+ * рантайма (`NEXT_DEPLOYMENT_ID` из окружения Next всё равно приоритетнее).
+ *
+ * Только production: в dev `?dpl=` попал бы в HMR-URL и ничего не даёт.
+ * В образе без `.git` и без `DCS_GIT_COMMIT` id не задаётся — тогда клиент
+ * сравнивает `.next/BUILD_ID` из `/api/version` (см. `src/lib/app-info.ts`).
+ */
+const deploymentId = isDev
+  ? undefined
+  : process.env.DCS_GIT_COMMIT?.trim() ||
+    process.env.GIT_COMMIT?.trim() ||
+    getGitCheckoutInfo()?.commit ||
+    undefined;
 
 const contentSecurityPolicy = [
   "default-src 'self'",
@@ -47,6 +71,7 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  deploymentId,
   /*
     Next 16 по умолчанию блокирует cross-origin обращения к dev-ресурсам
     (/_next/hmr и т.п.). Дев-стенд открывается через nginx по

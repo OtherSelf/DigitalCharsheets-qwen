@@ -1,3 +1,7 @@
+import { randomUUID } from 'node:crypto';
+import fs from 'node:fs';
+import path from 'node:path';
+
 import packageJson from '../../package.json';
 import { getGitCheckoutInfo } from './git-commit';
 
@@ -31,6 +35,11 @@ export interface AppInfo {
   /** Имя ветки; `null` — detached HEAD, env без ветки или не клон. */
   branch: string | null;
   buildDate: string | null;
+  /**
+   * Идентификатор запущенной сборки: клиент сравнивает его со своим, чтобы
+   * понять, что сервер теперь другой (`build-watcher.tsx`).
+   */
+  buildId: string;
   runtime: { node: string };
 }
 
@@ -54,6 +63,55 @@ function firstNonEmpty(...values: (string | undefined)[]): string | null {
 export function shortenCommit(commit: string | null): string | null {
   if (!commit) return null;
   return commit.slice(0, SHORT_COMMIT_LENGTH).toLowerCase();
+}
+
+/**
+ * ─── LANDMARK: BUILD ID ─────────────────────────────────────────────────────
+ * `buildId` — идентификатор запущенной сборки, а не версии из package.json:
+ * версия меняется раз в релиз, а сравнение нужно на каждый деплой и рестарт.
+ *
+ * В production это `NEXT_DEPLOYMENT_ID`: его выставляет сам `next start` из
+ * `deploymentId` в next.config, а там значение берётся из `DCS_GIT_COMMIT` или
+ * `.git` (один и тот же id у сборки и у рантайма). Если `deploymentId` не
+ * задан — образ без `.git` и без env — остаётся `.next/BUILD_ID`: он уникален
+ * для каждой сборки, и этого достаточно.
+ *
+ * В dev сравнивать нечего, кроме рестарта процесса, поэтому id случайный и
+ * живёт в `globalThis`: переживает HMR-переоценку модулей, но не рестарт.
+ */
+interface BootScope {
+  __dcsBootId?: string;
+}
+
+function bootId(): string {
+  const scope = globalThis as typeof globalThis & BootScope;
+  scope.__dcsBootId ??= randomUUID();
+  return scope.__dcsBootId;
+}
+
+function buildIdFromDisk(cwd: string): string | null {
+  try {
+    const value = fs
+      .readFileSync(path.join(cwd, '.next', 'BUILD_ID'), 'utf8')
+      .trim();
+    return value === '' ? null : value;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Id сборки. Файл `.next/BUILD_ID` читается на каждый вызов: это несколько
+ * микросекунд, зато значение не кешируется в модуле и не расходится с текущим
+ * содержимым диска (тесты подменяют `cwd`).
+ */
+export function getBuildId(options: AppInfoOptions = {}): string {
+  if (process.env.NODE_ENV !== 'production') return bootId();
+  return (
+    firstNonEmpty(process.env.NEXT_DEPLOYMENT_ID) ??
+    buildIdFromDisk(options.cwd ?? process.cwd()) ??
+    bootId()
+  );
 }
 
 export function getAppInfo(options: AppInfoOptions = {}): AppInfo {
@@ -83,6 +141,7 @@ export function getAppInfo(options: AppInfoOptions = {}): AppInfo {
     commitShort: shortenCommit(commit),
     branch: branchFromEnv ?? checkout?.branch ?? null,
     buildDate: firstNonEmpty(process.env.DCS_BUILD_DATE),
+    buildId: getBuildId(options),
     runtime: { node: process.version },
   };
 }

@@ -18,6 +18,7 @@ npm run test:visual:prune   # list obsolete PNG baselines
 npm run test:visual:update  # rewrite baselines
 npm run test:visual:report  # open the HTML report
 npm run test:dev            # dev-proxy hydration + health/version smoke
+npm run check:build-id -- <url>  # HTML/dpl/buildId contract of a running server
 ```
 
 ## Test kit

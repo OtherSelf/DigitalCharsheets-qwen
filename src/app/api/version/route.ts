@@ -7,13 +7,17 @@ import { getAppInfo } from '@/lib/app-info';
  * GET /api/version — версия приложения и данные сборки.
  *
  * Без авторизации и без секретов: имя, SemVer из package.json, commit и дата
- * сборки из окружения (если заданы) и версия Node. Список зависимостей и
- * пути намеренно не отдаём.
+ * сборки из окружения (если заданы), id запущенной сборки и версия Node.
+ * Список зависимостей и пути намеренно не отдаём.
  *
  * `commit`/`buildDate` задаются через DCS_GIT_COMMIT/DCS_BUILD_DATE (или
  * GIT_COMMIT/VERCEL_GIT_COMMIT_SHA для commit). Если переменных нет — null.
  * `commitShort` — первые 7 символов commit в нижнем регистре, ровно та форма,
  * которую показывает меню профиля (`v0.3.0 · a077aef`); без commit — null.
+ *
+ * `buildId` — не версия, а идентификатор процесса/сборки: клиент сравнивает
+ * его со своим и перезагружает вкладку, когда сервер стал другим
+ * (`src/components/layout/build-watcher.tsx`). Источники — `src/lib/app-info.ts`.
  */
 export const dynamic = 'force-dynamic';
 
