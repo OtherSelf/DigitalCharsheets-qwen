@@ -80,35 +80,10 @@ monitoring:
 - no authentication, no filesystem paths, `Cache-Control: no-store`.
 
 `GET /api/version` returns the application version and build metadata (see
-`DCS_GIT_COMMIT` / `DCS_BUILD_DATE` above). Both endpoints are documented in
-[api.md](api.md) and in `/api/docs`.
-
-`buildId` is the identifier of the running build, not the package version: a
-production server reports its `deploymentId` (Next's skew-protection id, derived
-below from the commit), or `.next/BUILD_ID` when no deployment id is configured;
-a development server reports a random id per process. The browser compares that
-value with the one it loaded and reloads the tab when the server changed — this
-is what the `?dpl=` static-asset suffix and the `data-dpl-id` attribute in the
-HTML belong to. Check any deployment from outside with
-`npm run check:build-id -- https://<host>`.
-
-Production builds set `deploymentId` in `next.config.ts` from `DCS_GIT_COMMIT`,
-then `GIT_COMMIT`, then the checkout's HEAD. Next appends `?dpl=` to static URLs,
-injects `data-dpl-id` into the HTML and hard-navigates when the browser still
-runs an older build; `next start` re-reads the same config, so the baked value
-and the runtime value agree. Because the id comes from the checkout, a `restart`
-after the checkout moved **without** a rebuild would give the runtime a different
-id than the one in the build: after `git pull` run `deploy`, not `restart`. In an
-image without `.git` set `DCS_GIT_COMMIT` at build time, or expect no `?dpl=`
-(and `buildId` falls back to `.next/BUILD_ID`).
-
-The browser watches for a new build itself: a client component compares the
-`buildId` it was rendered with against `/api/version`, polling every 15 s on a dev
-server and every 60 s in production, only while the tab is visible, and
-immediately on focus, visibility change and `online`. If nothing is being edited
-the tab reloads silently; otherwise a banner offers "Update" and the reload waits
-for that click. After an automatic reload the same mismatch does not reload again
-for ten minutes, so a broken deployment cannot turn the tab into a reload loop.
+`DCS_GIT_COMMIT` / `DCS_BUILD_DATE` above), including the `buildId` that the
+browser uses to notice a new build — see
+[New build and stale tabs](#new-build-and-stale-tabs). Both endpoints are
+documented in [api.md](api.md) and in `/api/docs`.
 
 The route is dynamic, so `DCS_GIT_COMMIT` is read at request time: exporting it
 before `next start` is enough, no rebuild required. The value (shortened to
@@ -130,6 +105,50 @@ Example:
 ```bash
 curl -fsS http://127.0.0.1:3000/api/health
 ```
+
+## New build and stale tabs
+
+A tab left open across a deploy or a dev-server restart must not keep running
+old client code: the HTML it loaded points at content-hashed chunks that the new
+build has already replaced, so the tab gets 404s, a dead "sheet unavailable"
+card, or `module factory is not available` in development. Two mechanisms cover
+that.
+
+**Server side: `deploymentId`.** Production builds set `deploymentId` in
+`next.config.ts` from `DCS_GIT_COMMIT`, then `GIT_COMMIT`, then the checkout's
+HEAD; `next start` re-reads the same config, so the baked and the runtime value
+agree. Next appends `?dpl=` to static-asset URLs, injects `data-dpl-id` into the
+HTML and hard-navigates when the browser still runs an older build. In an image
+without `.git` set `DCS_GIT_COMMIT` at build time, or expect no `?dpl=` (the
+watcher below still works).
+
+**Client side: the watcher.** A component mounted in the root layout compares
+the `buildId` it was rendered with against the running server — every 15 s on a
+dev server, every 60 s in production, only while the tab is visible, and
+immediately on focus, visibility change and `online`. If nothing is being edited
+the tab reloads silently; otherwise a banner offers "Update" and waits for the
+click. After an automatic reload the same mismatch does not reload again for ten
+minutes, so a broken deployment cannot turn a tab into a reload loop. Chunk-load
+failures (`ChunkLoadError`, `Failed to fetch dynamically imported module`,
+`module factory is not available`, a request to `/_next/static/`) follow the
+same rule through `error.tsx`, `global-error.tsx`, `SheetErrorBoundary` and the
+`window` listeners.
+
+Check a running server from outside:
+
+```bash
+npm run check:build-id -- https://<host>
+```
+
+It requires `buildId`, `data-dpl-id` and at least one `?dpl=` static URL to
+match; a server without a deployment id says so instead of failing.
+
+What this does not do: no blue-green deploys and no `?dpl=` routing on the proxy
+(hosting level), no service worker or offline mode, and no fix for the
+framework's own Turbopack bug — it gives the tab a way out and lowers the chance
+of hitting it. A `restart` after the checkout moved **without** a rebuild gives
+the runtime a different id than the one in the build, so after `git pull` run
+`deploy`, not `restart`.
 
 ## Data directory
 

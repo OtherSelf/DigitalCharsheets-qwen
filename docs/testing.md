@@ -180,6 +180,28 @@ known dev hosts, and checks `/api/health` and `/api/version` directly.
 `npm run verify` starts its own throwaway production server on a free port with
 a temporary `DCS_DATA_DIR`, so the smoke test never touches your real data.
 
+## New-build detection
+
+The build-identity contract (see
+[deployment.md](deployment.md#new-build-and-stale-tabs)) is checked on three
+levels, and the tab reload itself only in a browser:
+
+- `tests/unit/build-guard.test.ts` — when to reload, when to show the banner,
+  when to wait, the ten-minute cooldown and the 15/60 s intervals;
+- `tests/unit/page-reload.test.ts` — the shared cooldown storage, including
+  unavailable `sessionStorage`; `tests/unit/chunk-error.test.ts` — the error
+  texts recognised as a chunk-load failure;
+- `tests/unit/health-version.test.ts` — every `buildId` source (deployment id,
+  `.next/BUILD_ID`, per-process id in development);
+- `scripts/smoke.mjs` — the running server's `buildId` is non-empty and matches
+  `data-dpl-id` in the HTML;
+- `npm run check:build-id -- <url>` — the same contract against any deployment,
+  including a remote stand.
+
+To watch the reload by hand, open the app, restart the server that serves it, and
+wait one interval: the tab reloads by itself, or shows the "Update" banner when a
+sheet field is being edited.
+
 ## Visual regression
 
 Playwright renders the app in Chromium and compares screenshots with the
