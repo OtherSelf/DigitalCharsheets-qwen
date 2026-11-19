@@ -10,6 +10,7 @@ import { useTranslation } from '@/context/language-context';
 import { isChunkLoadError } from '@/lib/chunk-error';
 import {
   canAutoReload,
+  CHUNK_RECOVERY_COOLDOWN_MS,
   readLastReloadAt,
   rememberReload,
 } from '@/lib/page-reload';
@@ -45,7 +46,8 @@ export class SheetBoundary extends React.Component<
     if (!isChunkLoadError(error)) return;
 
     const now = Date.now();
-    if (!canAutoReload(now, readLastReloadAt())) return;
+    if (!canAutoReload(now, readLastReloadAt(), CHUNK_RECOVERY_COOLDOWN_MS))
+      return;
     rememberReload(now);
     window.location.reload();
   }

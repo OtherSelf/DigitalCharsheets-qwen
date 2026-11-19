@@ -10,6 +10,7 @@ import { isChunkLoadError } from '@/lib/chunk-error';
 import { flushWithTimeout } from '@/lib/flush-with-timeout';
 import {
   canAutoReload,
+  CHUNK_RECOVERY_COOLDOWN_MS,
   readLastReloadAt,
   rememberReload,
 } from '@/lib/page-reload';
@@ -62,7 +63,10 @@ export function ClientErrorGuard() {
 
       const dirty = !flushed || dirtyRef.current;
       const now = Date.now();
-      if (dirty || !canAutoReload(now, readLastReloadAt())) {
+      if (
+        dirty ||
+        !canAutoReload(now, readLastReloadAt(), CHUNK_RECOVERY_COOLDOWN_MS)
+      ) {
         busyRef.current = false;
         setNeedsReload(true);
         return;
@@ -91,9 +95,9 @@ export function ClientErrorGuard() {
     };
   }, []);
 
-  const reloadNow = useCallback(async () => {
-    // Клик — согласие пользователя: досылаем очередь и перезагружаемся.
-    await flushWithTimeout(flushRef.current, FLUSH_TIMEOUT_MS);
+  const reloadNow = useCallback(() => {
+    // Клик — согласие пользователя: перезагружаемся сразу, очередь досылает
+    // beforeunload/pagehide с keepalive (см. character-context).
     rememberReload(Date.now());
     window.location.reload();
   }, []);
@@ -105,7 +109,7 @@ export function ClientErrorGuard() {
       testId="chunk-error-banner"
       label={t('common.reloadRequired')}
       action={t('common.reloadPage')}
-      onAction={() => void reloadNow()}
+      onAction={reloadNow}
     />
   );
 }

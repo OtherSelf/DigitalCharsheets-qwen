@@ -14,6 +14,15 @@ import { AUTO_RELOAD_COOLDOWN_MS } from './build-guard';
  */
 export const PAGE_RELOAD_KEY = 'dcs:page-reload-at';
 
+/**
+ * Пауза между восстановлениями после ошибки загрузки чанка. Короче общего
+ * cooldown: перезагрузка при свежем деплое почти всегда лечит вкладку, а
+ * десять минут запрета (норма для сторожа сборки) в dev превращаются в
+ * «залипло на ошибке» — сервер как раз компилируется. Одна перезагрузка в
+ * минуту худший случай и остаётся, петли нет.
+ */
+export const CHUNK_RECOVERY_COOLDOWN_MS = 60_000;
+
 export interface ReloadStorage {
   getItem(key: string): string | null;
   setItem(key: string, value: string): void;
