@@ -102,6 +102,14 @@ id than the one in the build: after `git pull` run `deploy`, not `restart`. In a
 image without `.git` set `DCS_GIT_COMMIT` at build time, or expect no `?dpl=`
 (and `buildId` falls back to `.next/BUILD_ID`).
 
+The browser watches for a new build itself: a client component compares the
+`buildId` it was rendered with against `/api/version`, polling every 15 s on a dev
+server and every 60 s in production, only while the tab is visible, and
+immediately on focus, visibility change and `online`. If nothing is being edited
+the tab reloads silently; otherwise a banner offers "Update" and the reload waits
+for that click. After an automatic reload the same mismatch does not reload again
+for ten minutes, so a broken deployment cannot turn the tab into a reload loop.
+
 The route is dynamic, so `DCS_GIT_COMMIT` is read at request time: exporting it
 before `next start` is enough, no rebuild required. The value (shortened to
 seven characters, `commitShort`) is what the profile menu shows as
