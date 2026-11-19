@@ -303,7 +303,7 @@ describe('сгенерированный реестр', () => {
     }
   });
 
-  it('блок game одинаков у редакций одного семейства (D17)', () => {
+  it('блок game одинаков у редакций одного семейства', () => {
     const games = new Map<string, PluginManifest['game']>();
     for (const plugin of gamePlugins) {
       const known = games.get(plugin.manifest.gameId);
@@ -469,7 +469,7 @@ describe('ошибки манифеста ловятся при генераци
     expect(errors).toContain('дублирующийся order');
   });
 
-  it('расхождение game-блока у редакций одной игры (D17)', async () => {
+  it('расхождение game-блока у редакций одной игры', async () => {
     const { validateCollection } = await generator();
     const errors = validateCollection([
       { dirName: 'example', manifest: exampleManifest() },

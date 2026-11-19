@@ -40,7 +40,7 @@ describe('журнал опыта: адаптеры редакций', () => {
   });
 });
 
-describe('Судьба на листе (D13)', () => {
+describe('Судьба на листе', () => {
   it('подпись `fatePoints` — «Очки судьбы» в DH1', () => {
     expect(dh1Ru['dh1.fatePoints']).toBe('Очки судьбы');
     expect(dh1En['dh1.fatePoints']).toBe('Fate Points');

@@ -79,7 +79,7 @@ describe('данные элитных продвижений', () => {
   });
 });
 
-describe('структурные требования (D2)', () => {
+describe('структурные требования', () => {
   function sister(overrides: Record<string, unknown> = {}) {
     return {
       ...createDh2Defaults({

@@ -30,7 +30,7 @@ const EXPORT_ALL: GameExportConfig = {
   includeCustomHouseRules: true,
 };
 
-describe('состояния Безумия/Порчи (D7/D12/D17)', () => {
+describe('состояния Безумия/Порчи', () => {
   it('DH2: условия аддитивны, по умолчанию пустой массив', () => {
     const draft = {
       ...createDh2Defaults({}),

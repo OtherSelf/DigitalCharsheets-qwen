@@ -184,7 +184,7 @@ export function evaluateBoundaries({ gamesDir = GAMES_DIR, plugins, config }) {
               errors.push({
                 file,
                 specifier,
-                message: `кросс-плагинный импорт в тесте: ${pluginId} не может зависеть от ${other} (редакции независимы, D10)`,
+                message: `кросс-плагинный импорт в тесте: ${pluginId} не может зависеть от ${other} (редакции независимы)`,
               });
             }
           } else {
@@ -198,7 +198,7 @@ export function evaluateBoundaries({ gamesDir = GAMES_DIR, plugins, config }) {
               errors.push({
                 file,
                 specifier,
-                message: `кросс-плагинный импорт в тесте: ${pluginId} не может зависеть от ${other} (редакции независимы, D10)`,
+                message: `кросс-плагинный импорт в тесте: ${pluginId} не может зависеть от ${other} (редакции независимы)`,
               });
             }
           }
@@ -238,7 +238,7 @@ export function evaluateBoundaries({ gamesDir = GAMES_DIR, plugins, config }) {
             errors.push({
               file,
               specifier,
-              message: `кросс-плагинный импорт: ${pluginId} не может зависеть от ${other} (редакции независимы, D10)`,
+              message: `кросс-плагинный импорт: ${pluginId} не может зависеть от ${other} (редакции независимы)`,
             });
           }
           continue;

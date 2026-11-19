@@ -26,7 +26,7 @@ describe('dh1: legacy-маппинг редакции', () => {
     ).toBe('dh1');
   });
 
-  it('без edition редакция не угадывается: лист read-only (D13, ADR 0004)', () => {
+  it('без edition редакция не угадывается: лист read-only (ADR 0004)', () => {
     expect(resolveCharacterSystemId({ gameSystem: 'Dark Heresy' })).toBe(
       undefined,
     );

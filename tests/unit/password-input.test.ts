@@ -37,7 +37,7 @@ const PASSWORD_FILES = [
   'src/components/settings/delete-account-card.tsx',
 ];
 
-describe('поле пароля с глазком (D8)', () => {
+describe('поле пароля с глазком', () => {
   it('сырых type="password" в разметке не осталось', () => {
     const offenders = walk(path.join(ROOT, 'src')).filter((file) =>
       fs.readFileSync(file, 'utf8').includes('type="password"'),
