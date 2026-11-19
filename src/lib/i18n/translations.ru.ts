@@ -71,14 +71,9 @@ export const ruTranslations: Record<string, string> = {
   'common.switchToEnglish': 'Переключить на английский',
   'common.openUserMenu': 'Открыть меню пользователя',
   'common.appVersion': 'Версия приложения',
-  'common.updateAvailable': 'Доступна новая версия',
-  'common.updateNow': 'Обновить',
-  'common.updating': 'Обновляем…',
-  'common.updateBlocked':
-    'Сначала сохраните изменения — потом обновите страницу.',
+  'common.updateAvailable':
+    'Приложение обновилось. Сохраните изменения и обновите страницу.',
   'common.reloadPage': 'Обновить страницу',
-  'common.reloadRequired':
-    'Часть файлов не загрузилась. Обновите страницу, чтобы продолжить.',
   'common.errorHint':
     'Экран не загрузился. Попробуйте ещё раз или обновите страницу.',
   'common.serverConnectionFailed': 'Не удалось подключиться к серверу.',

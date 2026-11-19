@@ -2,14 +2,12 @@
 
 /**
  * ─── LANDMARK: BUILD GUARD ──────────────────────────────────────────────────
- * Чистое решение сторожа сборки: что делать вкладке, когда `/api/version`
- * вернул id, отличный от того, с которым вкладка загрузилась.
+ * Сравнение id запущенной сборки с ответом `/api/version`. Задача одна:
+ * заметить, что сервер теперь другой, и показать баннер. Перезагрузку делает
+ * пользователь — вкладка может содержать несохранённый ввод.
  *
- * Ни DOM, ни React, ни таймеров: правила («не терять правки», «не чаще раза в
- * 10 минут», «после баннера ждём клика») — это и есть поведение, которое
- * легче всего сломать, правя компонент, поэтому оно живёт отдельно и
- * покрывается таблицей unit-тестов. `build-watcher.tsx` только исполняет
- * решение.
+ * Ни DOM, ни таймеров: интервалы опроса и разбор ответа проверяются таблицей
+ * unit-тестов, а `build-watcher.tsx` только исполняет решение.
  */
 
 /** Интервал опроса: dev-стенд перезапускается часто, прод — заметно реже. */
@@ -18,50 +16,29 @@ export const BUILD_CHECK_INTERVAL_MS = {
   production: 60_000,
 } as const;
 
-/** Авто-перезагрузка не чаще этого интервала: иначе сломанный сервер = цикл. */
-export const AUTO_RELOAD_COOLDOWN_MS = 10 * 60_000;
-
 /**
- * На сколько jitter может сократить интервал. Только вниз: обещание
- * «вкладка замечает новый сервер за ≤ 15 с / ≤ 60 с» должно оставаться правдой.
+ * На сколько jitter может сократить интервал. Только вниз, чтобы обещание
+ * «вкладка замечает новый сервер за ≤ 15 с / ≤ 60 с» оставалось правдой.
  */
 export const JITTER_RATIO = 0.2;
 
-export type BuildAction = 'same' | 'wait' | 'banner' | 'reload';
+export type BuildAction = 'same' | 'wait' | 'banner';
 
 export interface BuildDecisionInput {
   /** id, с которым загружена вкладка; `null` — базовый id ещё не известен. */
   ownId: string | null;
   /** id из ответа `/api/version`; `null` — ответ без id (старый сервер, мусор). */
   serverId: string | null;
-  /** Открыт редактор поля листа: авто-перезагрузка запрещена. */
-  dirty: boolean;
-  now: number;
-  /** Когда вкладка последний раз перезагружалась сама; `null` — ни разу. */
-  lastAutoReloadAt: number | null;
-  cooldownMs?: number;
 }
 
 /**
- * `same` — ничего не делать; `wait` — сравнивать не с чем, базу возьмём из
- * этого ответа; `banner` — показать баннер и ждать клика; `reload` —
- * перезагрузить вкладку (только когда сохранено всё и cooldown истёк).
+ * `same` — ничего; `wait` — сравнивать не с чем, базу возьмём из ответа;
+ * `banner` — сервер стал другой сборкой, сообщаем пользователю.
  */
 export function decideBuildAction(input: BuildDecisionInput): BuildAction {
   if (!input.serverId) return 'wait';
   if (!input.ownId) return 'wait';
-  if (input.ownId === input.serverId) return 'same';
-  if (input.dirty) return 'banner';
-
-  const cooldown = input.cooldownMs ?? AUTO_RELOAD_COOLDOWN_MS;
-  if (
-    input.lastAutoReloadAt !== null &&
-    input.now - input.lastAutoReloadAt < cooldown
-  ) {
-    return 'banner';
-  }
-
-  return 'reload';
+  return input.ownId === input.serverId ? 'same' : 'banner';
 }
 
 /** Интервал для текущего режима: `NODE_ENV` инлайнится в клиентский бандл. */

@@ -2,9 +2,8 @@
 
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 
-import { useCharacterContext } from '@/context/character-context';
 import { useTranslation } from '@/context/language-context';
 import {
   buildCheckInterval,
@@ -12,8 +11,6 @@ import {
   nextPollDelay,
   readBuildId,
 } from '@/lib/build-guard';
-import { flushWithTimeout } from '@/lib/flush-with-timeout';
-import { readLastReloadAt, rememberReload } from '@/lib/page-reload';
 
 import { UpdateBanner } from './update-banner';
 
@@ -23,91 +20,27 @@ import { UpdateBanner } from './update-banner';
  * `/api/version` сравнивает id запущенной сборки со своим (он пришёл пропом из
  * серверного layout, а не из `data-dpl-id` — тот Next удаляет до гидратации).
  *
- * Решение «перезагружать или нет» принимает `src/lib/build-guard.ts`, здесь
- * только таймеры, fetch и исполнение: сохранено всё и cooldown истёк — тихая
- * перезагрузка; есть несохранённое, идёт флаш или недавно уже перезагружались —
- * баннер, который перезагружает по клику (осознанное согласие пользователя).
+ * Дальше только баннер: «приложение обновилось, сохраните изменения и
+ * обновите страницу». Никаких программных перезагрузок — во вкладке бывает
+ * несохранённый ввод, а `beforeunload` всё равно отменит переход.
  *
  * Почему опрос, а не `deploymentId` сам по себе: framework навигирует жёстко
  * только на переходах, а простаивающая вкладка так и осталась бы со старым
  * интерфейсом. Почему `?t=` и `no-store`: ответ публичного эндпоинта кешируется
  * и браузером, и возможным прокси.
  */
-
-/**
- * Потолок ожидания флаша: сервер как раз перезапускается, и очередь
- * сохранений может висеть. Не дождались — считаем состояние несохранённым.
- */
-const FLUSH_TIMEOUT_MS = 5_000;
-
-/**
- * Идёт ввод, который перезагрузка уничтожит: мастер создания персонажа,
- * редактор характеристик или просто сфокусированный контрол ввода.
- */
-function isFormInProgress(): boolean {
-  const path = window.location.pathname;
-  if (path === '/new' || path.startsWith('/new/')) return true;
-  if (path.startsWith('/stats-editor')) return true;
-
-  const active = document.activeElement;
-  return (
-    active instanceof HTMLInputElement ||
-    active instanceof HTMLTextAreaElement ||
-    active instanceof HTMLSelectElement
-  );
-}
-
 export function BuildWatcher({ ownBuildId }: { ownBuildId: string }) {
-  const { flushSaves, hasUnsavedChanges } = useCharacterContext();
   const { t } = useTranslation();
-  const [pendingId, setPendingId] = useState<string | null>(null);
-  // Клик уже получен, но перезагрузка ещё не случилась — это видно по кнопке.
-  const [clicked, setClicked] = useState(false);
-  // Перезагрузку отменил beforeunload (несохранённый редактор): подсказываем.
-  const [blocked, setBlocked] = useState(false);
-
-  // Рефы, чтобы таймер не пересоздавался на каждый рендер контекста.
-  const dirtyRef = useRef(hasUnsavedChanges);
-  const pendingRef = useRef<string | null>(null);
-  const lastReloadRef = useRef<number | null>(null);
-  const flushRef = useRef(flushSaves);
+  const [stale, setStale] = useState(false);
 
   useEffect(() => {
-    dirtyRef.current = hasUnsavedChanges;
-  }, [hasUnsavedChanges]);
-
-  useEffect(() => {
-    flushRef.current = flushSaves;
-  }, [flushSaves]);
-
-  const showPending = useCallback((id: string | null) => {
-    pendingRef.current = id;
-    setPendingId(id);
-  }, []);
-
-  const reloadNow = useCallback(() => {
-    setClicked(true);
-    /*
-      Клик — согласие пользователя, поэтому перезагружаемся сразу. Досылку
-      очереди делает `beforeunload`/`pagehide` в character-context (keepalive),
-      а несохранённый редактор прикроет нативный диалог: ждать здесь пять секунд
-      «на всякий случай» значит показывать мёртвую кнопку.
-    */
-    rememberReload(Date.now());
-    window.location.reload();
-  }, []);
-
-  useEffect(() => {
-    lastReloadRef.current = readLastReloadAt();
-
     let disposed = false;
-    let reloading = false;
     let timer: ReturnType<typeof setTimeout> | null = null;
     // Без пропа (старый сервер) база берётся из первого ответа API.
     let ownId = ownBuildId === '' ? null : ownBuildId;
 
     const check = async () => {
-      if (disposed || reloading) return;
+      if (disposed) return;
       if (document.visibilityState === 'hidden') return;
 
       let payload: unknown = null;
@@ -123,50 +56,14 @@ export function BuildWatcher({ ownBuildId }: { ownBuildId: string }) {
       }
 
       const serverId = readBuildId(payload);
-      if (serverId && !ownId) {
-        ownId = serverId;
+      const action = decideBuildAction({ ownId, serverId });
+
+      if (action === 'wait') {
+        if (serverId) ownId = serverId;
         return;
       }
 
-      const action = decideBuildAction({
-        ownId,
-        serverId,
-        // «Грязно» — это не только лист: в форме создания персонажа или в
-        // редакторе характеристик ввод живёт только в памяти и перезагрузка
-        // его уничтожит; открытый на вводе контрол тоже считаем правкой.
-        dirty:
-          dirtyRef.current || pendingRef.current !== null || isFormInProgress(),
-        now: Date.now(),
-        lastAutoReloadAt: lastReloadRef.current,
-      });
-
-      if (action === 'same') {
-        if (pendingRef.current !== null) showPending(null);
-        return;
-      }
-
-      if (action === 'banner') {
-        if (serverId) showPending(serverId);
-        return;
-      }
-
-      if (action !== 'reload') return;
-
-      reloading = true;
-      const flushed = await flushWithTimeout(
-        flushRef.current,
-        FLUSH_TIMEOUT_MS,
-      );
-      if (disposed) return;
-
-      if (!flushed || dirtyRef.current) {
-        reloading = false;
-        if (serverId) showPending(serverId);
-        return;
-      }
-
-      rememberReload(Date.now());
-      window.location.reload();
+      if (!disposed) setStale(action === 'banner');
     };
 
     const schedule = () => {
@@ -198,17 +95,14 @@ export function BuildWatcher({ ownBuildId }: { ownBuildId: string }) {
       window.removeEventListener('online', checkNow);
       window.removeEventListener('focus', checkNow);
     };
-  }, [ownBuildId, showPending]);
+  }, [ownBuildId]);
 
-  if (!pendingId) return null;
+  if (!stale) return null;
 
   return (
     <UpdateBanner
       testId="build-update-banner"
-      label={blocked ? t('common.updateBlocked') : t('common.updateAvailable')}
-      action={clicked ? t('common.updating') : t('common.updateNow')}
-      onAction={reloadNow}
-      busy={clicked}
+      label={t('common.updateAvailable')}
     />
   );
 }

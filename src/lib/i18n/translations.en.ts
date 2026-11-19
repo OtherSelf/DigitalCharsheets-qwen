@@ -71,13 +71,9 @@ export const enTranslations: Record<string, string> = {
   'common.switchToEnglish': 'Switch to English',
   'common.openUserMenu': 'Open user menu',
   'common.appVersion': 'App version',
-  'common.updateAvailable': 'A new version is available',
-  'common.updateNow': 'Update',
-  'common.updating': 'Updating…',
-  'common.updateBlocked': 'Save your changes first — then update the page.',
+  'common.updateAvailable':
+    'The app has been updated. Save your changes and reload the page.',
   'common.reloadPage': 'Reload page',
-  'common.reloadRequired':
-    'Some files failed to load. Reload the page to continue.',
   'common.errorHint':
     'This screen failed to load. Try again, or reload the page.',
   'common.serverConnectionFailed': 'Failed to connect to server.',

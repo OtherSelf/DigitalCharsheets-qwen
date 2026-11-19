@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  AUTO_RELOAD_COOLDOWN_MS,
   BUILD_CHECK_INTERVAL_MS,
   buildCheckInterval,
   decideBuildAction,
@@ -12,20 +11,11 @@ import {
 } from '@/lib/build-guard';
 
 /**
- * Решение сторожа — это и есть поведение «перезагрузить или нет», поэтому
- * проверяется таблицей случаев, а не через компонент.
+ * Решение сторожа — «показать баннер или нет», поэтому проверяется таблицей
+ * случаев, а не через компонент. Перезагрузку вкладки сторож не делает.
  */
-const NOW = 1_800_000_000_000;
-
 function decide(input: Partial<BuildDecisionInput> = {}): string {
-  return decideBuildAction({
-    ownId: 'build-a',
-    serverId: 'build-b',
-    dirty: false,
-    now: NOW,
-    lastAutoReloadAt: null,
-    ...input,
-  });
+  return decideBuildAction({ ownId: 'build-a', serverId: 'build-b', ...input });
 }
 
 describe('decideBuildAction', () => {
@@ -33,33 +23,15 @@ describe('decideBuildAction', () => {
     expect(decide({ serverId: 'build-a' })).toBe('same');
   });
 
-  it('другой id, сохранено всё — перезагружает', () => {
-    expect(decide()).toBe('reload');
+  it('другой id — показывает баннер и ничего не перезагружает', () => {
+    expect(decide()).toBe('banner');
   });
 
-  it('несохранённые правки важнее новой версии', () => {
-    expect(decide({ dirty: true })).toBe('banner');
+  it('одинаковый id при открытом редакторе тоже не баннер', () => {
+    expect(decide({ serverId: 'build-a' })).toBe('same');
   });
 
-  it('внутри cooldown не перезагружает, а показывает баннер', () => {
-    expect(
-      decide({ lastAutoReloadAt: NOW - AUTO_RELOAD_COOLDOWN_MS + 1 }),
-    ).toBe('banner');
-  });
-
-  it('граница cooldown считается истёкшей', () => {
-    expect(decide({ lastAutoReloadAt: NOW - AUTO_RELOAD_COOLDOWN_MS })).toBe(
-      'reload',
-    );
-  });
-
-  it('свой cooldown переопределяет константу', () => {
-    expect(decide({ lastAutoReloadAt: NOW - 100, cooldownMs: 50 })).toBe(
-      'reload',
-    );
-  });
-
-  it('ответ без buildId — ждёт, а не перезагружает', () => {
+  it('ответ без buildId — ждёт, а не паникует', () => {
     expect(decide({ serverId: null })).toBe('wait');
   });
 

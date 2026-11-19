@@ -186,11 +186,10 @@ The build-identity contract (see
 [deployment.md](deployment.md#new-build-and-stale-tabs)) is checked on three
 levels, and the tab reload itself only in a browser:
 
-- `tests/unit/build-guard.test.ts` — when to reload, when to show the banner,
-  when to wait, the ten-minute cooldown and the 15/60 s intervals;
-- `tests/unit/page-reload.test.ts` — the shared cooldown storage, including
-  unavailable `sessionStorage`; `tests/unit/chunk-error.test.ts` — the error
-  texts recognised as a chunk-load failure;
+- `tests/unit/build-guard.test.ts` — when to show the banner, when to wait, and
+  the 15/60 s intervals;
+- `tests/unit/chunk-error.test.ts` — the error texts recognised as a chunk-load
+  failure;
 - `tests/unit/health-version.test.ts` — every `buildId` source (deployment id,
   `.next/BUILD_ID`, per-process id in development);
 - `scripts/smoke.mjs` — the running server's `buildId` is non-empty and matches
@@ -198,9 +197,9 @@ levels, and the tab reload itself only in a browser:
 - `npm run check:build-id -- <url>` — the same contract against any deployment,
   including a remote stand.
 
-To watch the reload by hand, open the app, restart the server that serves it, and
-wait one interval: the tab reloads by itself, or shows the "Update" banner when a
-sheet field is being edited.
+To watch it by hand, open the app, restart the server that serves it, and wait
+one interval: the tab shows the "the app has been updated" banner. Nothing
+reloads automatically — reload the tab yourself.
 
 ## Visual regression
 
