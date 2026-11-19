@@ -223,6 +223,8 @@
   "dh2.itemStatusLost": "Потеряно",
   "dh2.meleeWeapons": "Оружие ближнего боя",
   "dh2.monthlyIncome": "Ежемесячный доход",
+  "dh2.inventoryLost": "Потеряно",
+  "dh2.inventoryTotals": "Итого",
   "dh2.move": "Перемещение",
   "dh2.moveFull": "Полный ход",
   "dh2.newInventoryItem": "Новый предмет...",

@@ -223,6 +223,8 @@
   "dh2.itemStatusLost": "Lost",
   "dh2.meleeWeapons": "Melee Weapons",
   "dh2.monthlyIncome": "Monthly Income",
+  "dh2.inventoryLost": "Lost",
+  "dh2.inventoryTotals": "Total",
   "dh2.move": "Move",
   "dh2.moveFull": "Full Move",
   "dh2.newInventoryItem": "New item...",

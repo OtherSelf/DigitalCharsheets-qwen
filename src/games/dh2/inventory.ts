@@ -36,3 +36,15 @@ export function readWeight(item: InventoryItem): number | undefined {
   }
   return value;
 }
+
+/** Сумма веса: только предметы «в наличии». */
+export function inventoryTotals(items: readonly InventoryItem[]): {
+  weight: number;
+} {
+  let weight = 0;
+  for (const item of items) {
+    if (readStatus(item) === 'lost') continue;
+    weight += readWeight(item) ?? 0;
+  }
+  return { weight };
+}
