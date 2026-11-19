@@ -107,7 +107,7 @@ export const dnd5eBulkEditor: readonly BulkEditorTable<DnD5eCharacter>[] = [
       },
       {
         key: 'experiencePoints',
-        labelKey: 'dh1.experience',
+        labelKey: 'dnd.experiencePoints',
         min: 0,
         value: (character) => {
           const legacy = character as DnD5eCharacterWithLegacy;
