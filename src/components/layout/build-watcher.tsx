@@ -64,10 +64,13 @@ export function BuildWatcher({ ownBuildId }: { ownBuildId: string }) {
     setPendingId(id);
   }, []);
 
-  const reloadNow = useCallback(async () => {
-    // Клик — согласие пользователя: досылаем очередь и перезагружаемся, даже
-    // если поле осталось в режиме правки (тогда сработает нативный beforeunload).
-    await flushWithTimeout(flushRef.current, FLUSH_TIMEOUT_MS);
+  const reloadNow = useCallback(() => {
+    /*
+      Клик — согласие пользователя, поэтому перезагружаемся сразу. Досылку
+      очереди делает `beforeunload`/`pagehide` в character-context (keepalive),
+      а несохранённый редактор прикроет нативный диалог: ждать здесь пять секунд
+      «на всякий случай» значит показывать мёртвую кнопку.
+    */
     rememberReload(Date.now());
     window.location.reload();
   }, []);
@@ -178,7 +181,7 @@ export function BuildWatcher({ ownBuildId }: { ownBuildId: string }) {
       testId="build-update-banner"
       label={t('common.updateAvailable')}
       action={t('common.updateNow')}
-      onAction={() => void reloadNow()}
+      onAction={reloadNow}
     />
   );
 }
