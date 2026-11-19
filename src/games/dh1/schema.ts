@@ -23,7 +23,7 @@ import type { DH1Character } from './types';
  * должно быть и в данных после миграции v2.
  *
  * Блоки ниже опциональны: лист 1e разрешает ручной ввод, а legacy-файлы не
- * должны требовать миграции (D3 DH1APP).
+ * должны требовать миграции.
  */
 export const dh1CharacterSchema: z.ZodType<DH1Character> = z.looseObject({
   ...darkHeresyBaseFields,

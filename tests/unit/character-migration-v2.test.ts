@@ -9,7 +9,7 @@ import { makeDhCharacter, makeDndCharacter } from '@tests/support';
 
 /**
  * ─── LANDMARK: CHARACTER MIGRATION v2 TESTS ────────────────────────────────
- * Правила миграции (D3/D4/D8):
+ * Правила миграции:
  *   • dnd5e / dh1 / dh2 по `systemId`, legacy — по `gameSystem` + `edition`;
  *   • dh1 без influence/fatigue2nd, dh2 без fatigue1st;
  *   • значения чужой редакции не теряются: hybrid/конфликты → notes;
@@ -21,7 +21,7 @@ function normalize(raw: any) {
 }
 
 function dhWithStats(overrides: Record<string, unknown> = {}) {
-  // Legacy-лист не объявляет `systemId` — его разрешают поля игры (D13).
+  // Legacy-лист не объявляет `systemId` — его разрешают поля игры.
   const base = makeDhCharacter({ systemId: undefined, ...overrides });
   return base;
 }

@@ -6,7 +6,7 @@ type Translate = (key: string) => string;
 
 /**
  * Адаптер журнала DH2: запись хранит `kind` и `ref`. Главная строка — текст
- * игрока (`ref`), вид покупки идёт подписью, как в прежнем диалоге (D8).
+ * игрока (`ref`), вид покупки идёт подписью, как в прежнем диалоге.
  */
 export function dh2ExperienceRows(
   entries: readonly DH2ExperienceEntry[] | undefined,

@@ -25,7 +25,7 @@ export type {
  */
 export type Character = CharacterRecord & {
   userId?: string;
-  /** Legacy-метка системы; дискриминант — `systemId` (D4). */
+  /** Legacy-метка системы; дискриминант — `systemId`. */
   gameSystem?: string;
   /** Поля редакции ядро не перечисляет — их знает плагин. */
   [key: string]: unknown;

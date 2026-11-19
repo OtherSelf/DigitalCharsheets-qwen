@@ -247,7 +247,7 @@ describe('DH1: новые блоки в JSON-экспорте', () => {
       character as never,
       EXPORT_ALL,
     ) as Record<string, { gender?: string; playerName?: string }>;
-    // П��ртируемый JSON хранит код (D3): подпись — дело UI и Excel.
+    // П��ртируемый JSON хранит код: подпись — дело UI и Excel.
     expect((exported.identity as { gender?: string }).gender).toBe('female');
     expect(exported.identity).not.toHaveProperty('playerName');
     expect((exported.psy as { rating?: number }).rating).toBe(2);

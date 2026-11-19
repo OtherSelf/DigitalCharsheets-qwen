@@ -35,7 +35,7 @@ export const createDefaults = createDh1Defaults;
 
 /**
  * Точка входа пересчёта производных (`plugin.json#derive`): мост в
- * рантайм-реестр, пока GameModule не слился с GamePlugin (D2).
+ * рантайм-реестр, пока GameModule не слился с GamePlugin.
  */
 export const deriveCharacter = deriveDh1;
 

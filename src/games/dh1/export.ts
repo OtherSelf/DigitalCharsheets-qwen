@@ -14,7 +14,7 @@ export function buildDh1PortableJson(
 
   if (config.includeBasicInfo) {
     // Identity собирается по полям листа: старые файлы несут identity.playerName,
-    // а экспорт не должен выносить его наружу (D6).
+    // а экспорт не должен выносить его наружу.
     const identity = character.identity;
     Object.assign(result, {
       name: character.name,

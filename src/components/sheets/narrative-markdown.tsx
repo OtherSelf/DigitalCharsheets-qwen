@@ -5,10 +5,10 @@ import remarkGfm from 'remark-gfm';
 
 /**
  * ─── LANDMARK: NARRATIVE MARKDOWN ──────────────────────────────────────────
- * Markdown для `notes`/`backstory` (D11). Рендер без `rehype-raw`: сырой HTML
+ * Markdown для `notes`/`backstory`. Рендер без `rehype-raw`: сырой HTML
  * в тексте игрока не исполняется, react-markdown показывает его как текст.
  * `@tailwindcss/typography` в проекте нет, поэтому стили заданы через
- * `components` — это дешевле, чем новый плагин (D2).
+ * `components` — это дешевле, чем новый плагин.
  */
 export function NarrativeMarkdown({ value }: { value: string }) {
   return (

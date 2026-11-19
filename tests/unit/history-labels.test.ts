@@ -25,7 +25,7 @@ import { translations } from '@/lib/i18n';
  * конфиг не выходит за словарь плагина и allowlist ядра.
  *
  * Редакционные коды (dh1/dh2) проверяются рядом с редакциями
- * (`src/games/<id>/tests/unit/history-labels.test.ts`, D16), поэтому этот файл
+ * (`src/games/<id>/tests/unit/history-labels.test.ts`), поэтому этот файл
  * не импортирует конкретные игры.
  */
 

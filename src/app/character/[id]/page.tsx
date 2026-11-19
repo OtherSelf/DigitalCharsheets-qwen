@@ -63,7 +63,7 @@ export default function CharacterPage() {
   const uiSlots = useGameUiSlots(systemId);
   const [disabledIds, setDisabledIds] = useState<string[]>([]);
 
-  // Отключённые админом плагины: их листы открываются только для чтения (D9).
+  // Отключённые админом плагины: их листы открываются только для чтения.
   // Видимость по ролям приходит отдельно (/api/games), поэтому здесь нужен
   // только список отключённых — он не зависит от роли.
   useEffect(() => {
@@ -181,7 +181,7 @@ export default function CharacterPage() {
   }
 
   const gameModule = getCharacterModule(character);
-  // Плагин не установлен или выключен — редактирование недоступно (D9).
+  // Плагин не установлен или выключен — редактирование недоступно.
   const sheetState = resolveSheetReadOnly(character, disabledIds);
   const isDisabled = sheetState.reason === 'disabled';
   const isReadOnly = sheetState.readOnly;

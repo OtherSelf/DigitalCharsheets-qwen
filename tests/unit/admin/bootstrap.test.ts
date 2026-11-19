@@ -166,7 +166,7 @@ describe('GET /api/admin/users/[uid]/characters', () => {
       (character: { id: string }) => character.id === 'dnd-1',
     );
     // Ядро отдаёт только общие поля и сырой лист: подпись строки собирает
-    // плагин слотом `CardSummary`, поэтому `level`/`rank` здесь нет (D7).
+    // плагин слотом `CardSummary`, поэтому `level`/`rank` здесь нет.
     expect(dnd).toMatchObject({ gameSystem: 'Dungeons & Dragons' });
     expect(dnd.sheet).toMatchObject({ level: 3, name: 'Ragnar Testborn' });
     expect(dnd).not.toHaveProperty('level');

@@ -1,8 +1,9 @@
 # Decisions (D)
 
-Architectural decisions referenced from the code and the other pages as `D<n>`.
+Architectural decisions referenced from the other pages of the docs as `D<n>`.
 The numbering is stable and does not move: a superseded decision keeps its
-number and points to the replacement. This page is the legend those references
+number and points to the replacement. Code comments do not cite the numbers —
+they name the decision in words. This page is the legend those references
 resolve to; decisions come from the plugin plan (now in the workspace archive)
 and from the ADRs under [`adr/`](adr/).
 

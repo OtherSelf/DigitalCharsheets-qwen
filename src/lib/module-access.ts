@@ -88,7 +88,7 @@ export function requireModuleAccess(
     };
   }
 
-  // Отключённый плагин: создание недоступно даже админу (D9, read-only).
+  // Отключённый плагин: создание недоступно даже админу (read-only).
   if (!isModuleEnabled(systemId)) {
     return {
       ok: false,

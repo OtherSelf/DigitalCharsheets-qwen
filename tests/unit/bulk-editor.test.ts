@@ -11,7 +11,7 @@ import { translations } from '@/lib/i18n';
  * рисует таблицу, поэтому здесь проверяется контракт данных, а не разметка.
  *
  * Таблицы конкретных редакций (`dh1-stats`, `dnd5e-vitals`, …) проверяют
- * тесты самих плагинов: хост не должен знать их id (D18).
+ * тесты самих плагинов: хост не должен знать их id.
  */
 
 const tablesCache = new Map<string, readonly BulkEditorTable<any>[]>();

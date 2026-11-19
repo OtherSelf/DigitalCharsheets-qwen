@@ -85,8 +85,8 @@ export function ImportCharacterDialog({
             safeCharacterData as Omit<Character, 'id' | 'userId'>,
           );
           if (newChar) {
-            // Импортированные листы открываются в режиме проверки выборов
-            // (D1): замки снимаются до явной фиксации.
+            // Импортированные листы открываются в режиме проверки выборов:
+            // замки снимаются до явной фиксации.
             startCreationReview(newChar.id);
             lastCreatedCharId = newChar.id;
             importedCount++;

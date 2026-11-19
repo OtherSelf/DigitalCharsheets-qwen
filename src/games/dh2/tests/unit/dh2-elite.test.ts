@@ -18,8 +18,8 @@ import type { GameExportConfig } from '@/games/types';
 /**
  * ─── LANDMARK: DH2 ELITE TESTS ────────────────────────────────────────────
  * Элитные продвижения: пререквизиты и цена — из данных; покупка пишется в
- * журнал, instant changes остаются памяткой (D15), удаление симметрично
- * возвращает опыт, но не откатывает характеристики (D7).
+ * журнал, instant changes остаются памяткой, удаление симметрично
+ * возвращает опыт, но не откатывает характеристики.
  */
 
 const translate = (key: string) => key;
@@ -209,7 +209,7 @@ describe('покупка и удаление', () => {
       cost: 300,
       createdAt: '2026-11-16T00:00:00Z',
     });
-    // D15: instant changes — только памятка, поле характеристик не меняется.
+    // instant changes — только памятка, поле характеристик не меняется.
     expect(Object.keys(purchase!.patch).sort()).toEqual([
       'eliteAdvances',
       'experienceLog',

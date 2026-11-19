@@ -474,7 +474,7 @@ export const DndCombatSection = React.forwardRef<
     };
 
     // Формулы атаки и DC живут в `derive.ts` рядом с остальными производными:
-    // секция подставляет только вход, а не повторяет математику (D14).
+    // секция подставляет только вход, а не повторяет математику.
     const calculateSpellAttack = (ability: DnDAbility | 'none') =>
       spellAttackBonus(ability, stats, proficiencyBonus);
 

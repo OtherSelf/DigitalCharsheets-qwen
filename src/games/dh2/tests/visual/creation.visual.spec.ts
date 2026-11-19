@@ -47,7 +47,7 @@ test.describe(
       await page.getByLabel('Role', { exact: true }).click();
       await page.getByRole('option', { name: /^Assassin/ }).click();
 
-      // Выборы правил (D11): бэкграунд, слот роли, талант роли, «одно из»
+      // Выборы правил: бэкграунд, слот роли, талант роли, «одно из»
       // стартового навыка и замена дубля аптитюды.
       await page
         .getByLabel('Background aptitude: Adeptus Arbites', { exact: true })
@@ -131,7 +131,7 @@ test.describe(
       // Аптитюды на листе: источники и выбор замены дубля пересобирают профиль.
       const info = page.locator('#info-section');
       await info.getByTestId('edit-button').click();
-      // Замена дубля выбрана при создании — в Info она заперта (D1): селекта
+      // Замена дубля выбрана при создании — в Info она заперта: селекта
       // нет, значение показано read-only, выбор не переписывается.
       await expect(
         info.getByLabel('Duplicate replacement: Perception', { exact: true }),
@@ -146,7 +146,7 @@ test.describe(
       });
 
       // Пси: повышение рейтинга подсказывает цену и пишет покупку в журнал;
-      // дисциплины и силы вносятся свободным текстом (D3/D14).
+      // дисциплины и силы вносятся свободным текстом.
       // На мобильном лист компактный: сначала открываем секцию прогрессии.
       if ((await page.locator('#progression-section').count()) === 0) {
         await page
@@ -192,7 +192,7 @@ test.describe(
       await page.keyboard.press('Escape');
 
       // Элитное продвижение: пререквизиты и разрешение ГМ видны, покупка
-      // пишется в журнал, удаление симметрично возвращает опыт (D7/D15).
+      // пишется в журнал, удаление симметрично возвращает опыт.
       await progression
         .getByRole('combobox', { name: 'Choose an elite advance' })
         .click();
@@ -222,7 +222,7 @@ test.describe(
       await expect
         .poll(async () => (await fetchCharacters(page))[0].eliteAdvances)
         .toEqual([]);
-      // Удаление симметрично (D7): элитное, его строка журнала и 300 опыта
+      // Удаление симметрично: элитное, его строка журнала и 300 опыта
       // возвращаются; остаётся только покупка пси-рейтинга за 200.
       await expect
         .poll(async () => (await fetchCharacters(page))[0].totalExpSpent)
@@ -278,7 +278,7 @@ test.describe(
       await page.getByLabel('Role', { exact: true }).click();
       await page.getByRole('option', { name: /^Fanatic/ }).click();
 
-      // Стартовые черты и Порча — подсказка, на лист вручную (D2/D11).
+      // Стартовые черты и Порча — подсказка, на лист вручную.
       await expect(page.getByText(/Starting traits: one of:/)).toBeVisible();
       await expect(page.getByText(/Starting Corruption: 10/)).toBeVisible();
 
@@ -353,7 +353,7 @@ test.describe(
           /Influence 50; Willpower 40; Adepta Sororitas background/,
         ),
       ).toBeVisible();
-      // Конфликт с бэкграундом/полом/характеристиками виден красным (D2), но
+      // Конфликт с бэкграундом/полом/характеристиками виден красным, но
       // покупку не блокирует: мастер мог разрешить исключение.
       const eliteWarning = progression.getByTestId('elite-warning');
       await expect(eliteWarning).toBeVisible();
@@ -404,7 +404,7 @@ test.describe(
       await page.getByLabel('Background', { exact: true }).click();
       await page.getByRole('option', { name: /^Adepta Sororitas/ }).click();
 
-      // Бэкграунд фиксирует пол: значение female, выбор недоступен (D4).
+      // Бэкграунд фиксирует пол: значение female, выбор недоступен.
       await expect(genderSelect).toBeDisabled();
       await expect(genderSelect).toHaveText('Female');
       await expect(
@@ -469,7 +469,7 @@ test.describe(
 
       await page.getByTestId('create-game-darkHeresy').click();
       await page.getByTestId('create-edition-dh2').click();
-      // D13: гостю видно, что черновик сохранится, и вход не блокирует форму.
+      // Гостю видно, что черновик сохранится, и вход не блокирует форму.
       await expect(page.getByTestId('guest-draft-banner')).toBeVisible();
       await expect(
         page.getByRole('button', { name: 'Create Character' }),

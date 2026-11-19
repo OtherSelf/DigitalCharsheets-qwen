@@ -56,7 +56,7 @@ export const DEFAULT_EXPORT_CONFIG: ExportConfig = {
  *
  * Экспорт всегда пишет 3.0: в персонаже `systemId` (id плагина) и
  * `schemaVersion: 2`. Импорт принимает 3.0 нативно, а 2.0/2.1 — с миграцией
- * листа по правилам v2 (D9). Старые файлы (просто массив листов, голый
+ * листа по правилам v2. Старые файлы (просто массив листов, голый
  * лист, конверт v1 без format/kind) импорт намеренно не принимает — при
  * попытке будет понятная ошибка «переэкспортируйте файл».
  */
@@ -482,7 +482,7 @@ export const filterCharacterForExport = (
   const gameModule = getCharacterModule(normalized);
   if (!gameModule) {
     // Плагин не установлен (удалён из сборки): отдаём переносимые поля
-    // как есть, чтобы JSON-экспорт работал (D9).
+    // как есть, чтобы JSON-экспорт работал.
     return {
       ...(normalized as unknown as Record<string, unknown>),
     } as Partial<Character>;

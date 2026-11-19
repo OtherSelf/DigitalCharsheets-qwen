@@ -24,7 +24,7 @@ function walk(dir: string, extensions: readonly string[]): string[] {
   });
 }
 
-/** Номера решений из таблицы `| D1 | … |`. */
+/** Номера решений из таблицы `| D<n> | … |`. */
 function canonicalNumbers(): number[] {
   const text = fs.readFileSync(DECISIONS, 'utf8');
   return [...text.matchAll(/^\| D(\d+) \|/gm)].map((match) => Number(match[1]));

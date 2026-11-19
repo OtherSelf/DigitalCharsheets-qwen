@@ -40,8 +40,8 @@ function catalogResponse() {
         defaultStatus: gameModule.defaultStatus,
         status: getModuleStatus(gameModule.id, catalog),
         enabled: isModuleEnabled(gameModule.id, catalog),
-        // Метаданные плагина для админки (D4): версия, схема, зависимости.
-        // tags хранятся, но в UI не выводятся (D15).
+        // Метаданные плагина для админки из манифеста: версия, схема, зависимости.
+        // tags хранятся, но в UI не выводятся.
         version: manifest?.version ?? null,
         schemaVersion: manifest?.schemaVersion ?? gameModule.schemaVersion,
         tags: manifest?.tags ?? [],

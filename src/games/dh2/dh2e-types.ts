@@ -139,7 +139,7 @@ export interface Dh2ePower {
 }
 
 /**
- * Структурное требование элитного продвижения из каталога (D2). Проверяются
+ * Структурное требование элитного продвижения из каталога. Проверяются
  * все виды, кроме `trait`: черты на листе — свободный текст, поэтому черта
  * остаётся подсказкой в `prereqText`.
  */
@@ -161,9 +161,9 @@ export interface Dh2eEliteAdvance {
   readonly labelKey: string;
   readonly cost: number;
   readonly changeKeys: readonly string[];
-  /** Полные пререквизиты из книги: показываются рядом с выбором (D15). */
+  /** Полные пререквизиты из книги: показываются рядом с выбором. */
   readonly prereqText?: string;
-  /** Требования, которые лист может проверить сам (D2). */
+  /** Требования, которые лист может проверить сам. */
   readonly requirements?: readonly Dh2eEliteRequirement[];
 }
 

@@ -114,7 +114,7 @@ const CHARACTERISTIC_LABEL_KEYS: Record<
  * Создание персонажа 2e по шагам книги: мир → бэкграунд → роль →
  * характеристики → детали. Значения характеристик игрок вводит сам (броски
  * кубиков за столом), поэтому подсказки мира показывают, какие кубики
- * бросать, а не подставляют числа (D5).
+ * бросать, а не подставляют числа.
  */
 export function DarkHeresyCreateForm({ onCreated }: CreateFormProps) {
   const { toast } = useToast();
@@ -201,7 +201,7 @@ export function DarkHeresyCreateForm({ onCreated }: CreateFormProps) {
   const influenceLimit = Math.floor((Number(watchedInfluence) || 0) / 10);
   const acquisitions = Number(watchedAcquisitions) || 0;
 
-  // Выборы, которые правила оставляют игроку (D11): аптитюды, дубли,
+  // Выборы, которые правила оставляют игроку: аптитюды, дубли,
   // талант роли и «одно из» стартового пакета. Живут вне zod-схемы: это не
   // поля характеристик, а решения мастера/игрока, которые сохраняются в
   // персонаже отдельными структурами.
@@ -274,7 +274,7 @@ export function DarkHeresyCreateForm({ onCreated }: CreateFormProps) {
     setGrantSelected({});
   }, [watchedHomeWorld, watchedBackground, watchedRole]);
 
-  // Бэкграунд с `genderLock` (Адептус Сороритас) фиксирует пол правилами (D4):
+  // Бэкграунд с `genderLock` (Адептус Сороритас) фиксирует пол правилами:
   // до сохранения блок снимается сменой бэкграунда, после — замком в Info.
   const genderLock = background?.genderLock;
   React.useEffect(() => {
@@ -282,7 +282,7 @@ export function DarkHeresyCreateForm({ onCreated }: CreateFormProps) {
   }, [genderLock, form]);
 
   // Мир задаёт раны и Судьбу: по умолчанию минимум диапазона, бросок игрок
-  // вписывает сам (D12).
+  // вписывает сам.
   React.useEffect(() => {
     if (!world) return;
     form.setValue('fatePoints', fateRangeFor(world.id)?.min ?? 1);
@@ -1012,7 +1012,7 @@ function isGrantChoice(
 /**
  * Список стартовых навыков/талантов: выбранный вариант «одно из» показываем
  * как «выбрано: …», невыбранный — «выберите: A / B». Пакет остаётся
- * подсказкой, на лист игрок вносит значения вручную (D11).
+ * подсказкой, на лист игрок вносит значения вручную.
  */
 function GrantList({
   title,
@@ -1087,7 +1087,7 @@ function GrantList({
   );
 }
 
-/** Выпадающий список одного выбора при создании (D11). */
+/** Выпадающий список одного выбора при создании. */
 /**
  * Выбор из книги («одно из»): обычный селект с подсказкой, без красной
  * подсветки пустого значения — по решению владельца ошибки формы показывает

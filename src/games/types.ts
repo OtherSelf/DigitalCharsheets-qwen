@@ -19,7 +19,7 @@ import type { ZodType } from 'zod';
 
 /**
  * Машинные идентификаторы редакций и игр. Список не хардкодится: он целиком
- * приходит из `plugin.json` (этап 5, D4). `SystemId`/`GameId` — строки, а
+ * приходит из `plugin.json` (этап 5). `SystemId`/`GameId` — строки, а
  * валидность проверяет генератор реестра (уникальные `id`, `gameId`).
  */
 export type SystemId = string & Record<never, never>;
@@ -69,7 +69,7 @@ export interface LocalizedMessages {
 /**
  * Словари плагина: объявленные локали могут быть неполными (хотя бы одна из
  * `en`/`ru`) и дополнительными (`de`, `pt-BR`, …). Сайт берёт `en`/`ru` и
- * подставляет второй язык при отсутствии первого (D8).
+ * подставляет второй язык при отсутствии первого.
  */
 export type PluginLocalizedMessages = Partial<
   Record<SiteLanguage, Readonly<Record<string, string>>>
@@ -243,7 +243,7 @@ export type SheetComponent<TCharacter extends CharacterRecord> = ComponentType<
   GameSheetProps<TCharacter>
 >;
 
-/** Пункт навигации мобильного сайдбара, который отдаёт плагин (D11). */
+/** Пункт навигации мобильного сайдбара, который отдаёт плагин. */
 export interface PluginNavItem {
   /** Идентификатор секции; совпадает с `id` секции листа. */
   readonly id: string;
@@ -338,7 +338,7 @@ export interface GameHouseRulesDialogProps {
 
 /**
  * ─── LANDMARK: GAME_UI_SLOTS ───────────────────────────────────────────────
- * Необязательные UI-слоты плагина (этап 3, D11). Хост рисует слот, если он
+ * Необязательные UI-слоты плагина (этап 3). Хост рисует слот, если он
  * задан, и нейтральный вариант, если нет, — поэтому в ядре нет
  * `if (gameSystem === …)`.
  *
@@ -509,7 +509,7 @@ export interface GameModule<
   /** Цепочка миграций схемы листа (в порядке применения). */
   readonly migrations: readonly CharacterMigration[];
 
-  /** Необязательные UI-слоты плагина (этап 3, D11). */
+  /** Необязательные UI-слоты плагина (этап 3). */
   readonly ui?: GameUiSlots<TCharacter>;
 
   /** Необязательные подписи полей для экрана истории. */

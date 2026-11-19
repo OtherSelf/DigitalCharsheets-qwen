@@ -1,6 +1,6 @@
 /**
  * /api/games и POST /api/characters: видимость редакций по ролям,
- * 403 на недоступную редакцию; id берутся из реестра (D18).
+ * 403 на недоступную редакцию; id берутся из реестра.
  */
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
