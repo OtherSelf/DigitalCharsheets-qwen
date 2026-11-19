@@ -73,6 +73,7 @@ export const enTranslations: Record<string, string> = {
   'common.appVersion': 'App version',
   'common.updateAvailable': 'A new version is available',
   'common.updateNow': 'Update',
+  'common.updating': 'Updating…',
   'common.reloadPage': 'Reload page',
   'common.reloadRequired':
     'Some files failed to load. Reload the page to continue.',

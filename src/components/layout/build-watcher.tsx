@@ -44,6 +44,8 @@ export function BuildWatcher({ ownBuildId }: { ownBuildId: string }) {
   const { flushSaves, hasUnsavedChanges } = useCharacterContext();
   const { t } = useTranslation();
   const [pendingId, setPendingId] = useState<string | null>(null);
+  // Клик уже получен, но перезагрузка ещё не случилась — это видно по кнопке.
+  const [clicked, setClicked] = useState(false);
 
   // Рефы, чтобы таймер не пересоздавался на каждый рендер контекста.
   const dirtyRef = useRef(hasUnsavedChanges);
@@ -65,6 +67,7 @@ export function BuildWatcher({ ownBuildId }: { ownBuildId: string }) {
   }, []);
 
   const reloadNow = useCallback(() => {
+    setClicked(true);
     /*
       Клик — согласие пользователя, поэтому перезагружаемся сразу. Досылку
       очереди делает `beforeunload`/`pagehide` в character-context (keepalive),
@@ -180,8 +183,9 @@ export function BuildWatcher({ ownBuildId }: { ownBuildId: string }) {
     <UpdateBanner
       testId="build-update-banner"
       label={t('common.updateAvailable')}
-      action={t('common.updateNow')}
+      action={clicked ? t('common.updating') : t('common.updateNow')}
       onAction={reloadNow}
+      busy={clicked}
     />
   );
 }

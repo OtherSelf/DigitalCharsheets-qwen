@@ -34,6 +34,7 @@ export function ClientErrorGuard() {
   const { flushSaves, hasUnsavedChanges } = useCharacterContext();
   const { t } = useTranslation();
   const [needsReload, setNeedsReload] = useState(false);
+  const [clicked, setClicked] = useState(false);
 
   const dirtyRef = useRef(hasUnsavedChanges);
   const flushRef = useRef(flushSaves);
@@ -96,6 +97,7 @@ export function ClientErrorGuard() {
   }, []);
 
   const reloadNow = useCallback(() => {
+    setClicked(true);
     // Клик — согласие пользователя: перезагружаемся сразу, очередь досылает
     // beforeunload/pagehide с keepalive (см. character-context).
     rememberReload(Date.now());
@@ -108,8 +110,9 @@ export function ClientErrorGuard() {
     <UpdateBanner
       testId="chunk-error-banner"
       label={t('common.reloadRequired')}
-      action={t('common.reloadPage')}
+      action={clicked ? t('common.updating') : t('common.reloadPage')}
       onAction={reloadNow}
+      busy={clicked}
     />
   );
 }
