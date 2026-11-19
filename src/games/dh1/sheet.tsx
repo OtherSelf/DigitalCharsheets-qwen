@@ -31,7 +31,6 @@ import { CreationReviewBanner } from '@/games/shared/creation-review-banner';
 import { statBonus, upgradeBonus } from '@/games/shared/dh-stats';
 import { cn } from '@/lib/utils';
 
-import { getDarkHeresyCapabilities } from './capabilities';
 import { isFieldFilled } from './field-policy';
 import { CharacteristicsSection } from './sections/characteristics-section';
 import { CustomResourceCounter } from './sections/custom-resource-counter';
@@ -199,7 +198,6 @@ export const Dh1Sheet = React.forwardRef<
     isTabletScreen,
   } = useCharacterContext();
   const { t } = useTranslation();
-  const capabilities = getDarkHeresyCapabilities(character);
   // LANDMARK: CREATION REVIEW STATE
   // Импортированный лист открывается с открытыми замками до фиксации (D1).
   // Состояние живёт в памяти вкладки и привязано к id: лист может остаться
@@ -228,9 +226,9 @@ export const Dh1Sheet = React.forwardRef<
     React.useState(false);
   const [isCharacteristicsEditing, setIsCharacteristicsEditing] =
     React.useState(false);
-  // ─── LANDMARK: EDITION-AGNOSTIC STAT VIEW ───
-  // Обе редакции используют один словарь (девять + influence); при
-  // сохранении ключи, которых нет в редакции, отфильтровываются.
+  // ─── LANDMARK: DH1 STAT VIEW ───
+  // Девять характеристик 1e; при сохранении остаются только ключи редакции,
+  // поэтому influence из старого файла в данные не возвращается.
   const [editableStats, setEditableStats] = React.useState(() =>
     statRecord<number>(character, 'stats', 0),
   );
@@ -247,20 +245,11 @@ export const Dh1Sheet = React.forwardRef<
 
   const handleSaveCharacteristics = React.useCallback(() => {
     updateCharacter(character.id, {
-      stats: pickAllowedStats(editableStats, capabilities.influence),
-      statUpgrades: pickAllowedStats(
-        editableStatUpgrades,
-        capabilities.influence,
-      ),
+      stats: pickAllowedStats(editableStats),
+      statUpgrades: pickAllowedStats(editableStatUpgrades),
     } as Partial<Character>);
     setIsCharacteristicsEditing(false);
-  }, [
-    character.id,
-    editableStats,
-    editableStatUpgrades,
-    updateCharacter,
-    capabilities.influence,
-  ]);
+  }, [character.id, editableStats, editableStatUpgrades, updateCharacter]);
 
   const characteristicsRef = React.useRef<{ saveAll: () => void }>(null);
   const skillsTalentsRef = React.useRef<{ saveAll: () => void }>(null);
@@ -497,168 +486,150 @@ export const Dh1Sheet = React.forwardRef<
                       key: 'fellowship' as const,
                       label: t('dh1.fellowshipAbbr'),
                     },
-                    {
-                      key: 'influence' as const,
-                      label: t('dh1.influenceAbbr'),
-                    },
                   ] as const
-                )
-                  .filter((c) =>
-                    capabilities.influence ? true : c.key !== 'influence',
-                  )
-                  .map((char, idx) => {
-                    const stats = isCharacteristicsEditing
-                      ? editableStats
-                      : statRecord<number>(character, 'stats', 0);
-                    const statUpgrades = isCharacteristicsEditing
-                      ? editableStatUpgrades
-                      : statRecord(
-                          character,
-                          'statUpgrades',
-                          EMPTY_STAT_UPGRADE,
-                        );
-                    const statNotes = statRecord<string>(
-                      character,
-                      'statNotes',
-                      '',
-                    );
-                    const val = stats[char.key] || 0;
-                    const upgrades = (statUpgrades[char.key] ||
-                      EMPTY_STAT_UPGRADE) as boolean[];
-                    const bonus = upgradeBonus(upgrades);
-                    const notes = statNotes[char.key] || '';
-                    return (
-                      <div
-                        key={char.key}
-                        className="bg-background relative flex min-h-[60px] flex-col justify-between rounded-md border px-0.5 py-1 text-center"
-                      >
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <Button
-                              variant={notes ? 'secondary' : 'ghost'}
-                              size="icon"
-                              className="absolute top-0.5 right-0.5 h-4 w-4"
-                            >
-                              <Info className="h-2.5 w-2.5" />
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent
-                            className="w-64 p-3"
-                            side="top"
-                            align="center"
+                ).map((char, idx) => {
+                  const stats = isCharacteristicsEditing
+                    ? editableStats
+                    : statRecord<number>(character, 'stats', 0);
+                  const statUpgrades = isCharacteristicsEditing
+                    ? editableStatUpgrades
+                    : statRecord(character, 'statUpgrades', EMPTY_STAT_UPGRADE);
+                  const statNotes = statRecord<string>(
+                    character,
+                    'statNotes',
+                    '',
+                  );
+                  const val = stats[char.key] || 0;
+                  const upgrades = (statUpgrades[char.key] ||
+                    EMPTY_STAT_UPGRADE) as boolean[];
+                  const bonus = upgradeBonus(upgrades);
+                  const notes = statNotes[char.key] || '';
+                  return (
+                    <div
+                      key={char.key}
+                      className="bg-background relative flex min-h-[60px] flex-col justify-between rounded-md border px-0.5 py-1 text-center"
+                    >
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant={notes ? 'secondary' : 'ghost'}
+                            size="icon"
+                            className="absolute top-0.5 right-0.5 h-4 w-4"
                           >
-                            <Label className="mb-2 block text-xs font-semibold">
-                              {char.label} - {t('common.notes')}
-                            </Label>
-                            <Textarea
-                              defaultValue={notes}
-                              onBlur={(e) => {
-                                const nextNotes = {
-                                  ...statRecord<string>(
-                                    character,
-                                    'statNotes',
-                                    '',
-                                  ),
-                                  [char.key]: e.target.value,
-                                };
-                                updateCharacter(character.id, {
-                                  statNotes: pickAllowedStats(
-                                    nextNotes,
-                                    capabilities.influence,
-                                  ),
-                                } as Partial<Character>);
-                              }}
-                              placeholder={t(
-                                'dh1.addNotesCharacteristicPlaceholder',
-                              )}
-                              className="min-h-[80px] text-xs"
-                            />
-                          </PopoverContent>
-                        </Popover>
-                        <div className="text-muted-foreground mt-1 text-[8px] font-semibold uppercase">
-                          {char.label}
-                        </div>
-                        <div className="mt-1 mb-1 flex items-center justify-center gap-1">
-                          {isCharacteristicsEditing ? (
-                            <Input
-                              type="number"
-                              value={val === 0 ? '' : val}
-                              onChange={(e) =>
-                                setEditableStats((prev) => ({
-                                  ...prev,
-                                  [char.key]: parseInt(e.target.value, 10) || 0,
-                                }))
-                              }
-                              className="text-primary h-6 w-10 [appearance:textfield] px-1 text-center text-xs leading-tight font-bold [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-                            />
-                          ) : (
-                            <div className="text-primary text-sm leading-tight font-bold">
-                              {val + bonus}
-                            </div>
-                          )}
-                          <div className="flex flex-col items-center gap-[1px]">
-                            {upgrades.map((checked, upgradeIdx) => (
-                              <Checkbox
-                                key={upgradeIdx}
-                                checked={checked}
-                                disabled={
-                                  !checked &&
-                                  upgradeIdx > 0 &&
-                                  !upgrades[upgradeIdx - 1]
-                                }
-                                onCheckedChange={(c) => {
-                                  const currentUpgrades =
-                                    isCharacteristicsEditing
-                                      ? editableStatUpgrades
-                                      : statRecord(
-                                          character,
-                                          'statUpgrades',
-                                          EMPTY_STAT_UPGRADE,
-                                        );
-                                  const nextUpgrades = { ...currentUpgrades };
-                                  const specific = [
-                                    ...(nextUpgrades[char.key] || [
-                                      false,
-                                      false,
-                                      false,
-                                      false,
-                                    ]),
-                                  ];
-                                  specific[upgradeIdx] = !!c;
-                                  if (!c) {
-                                    for (
-                                      let i = upgradeIdx + 1;
-                                      i < specific.length;
-                                      i++
-                                    ) {
-                                      specific[i] = false;
-                                    }
-                                  }
-                                  nextUpgrades[char.key] = specific as [
-                                    boolean,
-                                    boolean,
-                                    boolean,
-                                    boolean,
-                                  ];
-                                  if (isCharacteristicsEditing) {
-                                    setEditableStatUpgrades(nextUpgrades);
-                                  } else {
-                                    updateCharacter(character.id, {
-                                      statUpgrades: pickAllowedStats(
-                                        nextUpgrades,
-                                        capabilities.influence,
-                                      ),
-                                    } as Partial<Character>);
-                                  }
-                                }}
-                                className="data-[state=checked]:bg-primary h-2.5 w-2.5"
-                              />
-                            ))}
+                            <Info className="h-2.5 w-2.5" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent
+                          className="w-64 p-3"
+                          side="top"
+                          align="center"
+                        >
+                          <Label className="mb-2 block text-xs font-semibold">
+                            {char.label} - {t('common.notes')}
+                          </Label>
+                          <Textarea
+                            defaultValue={notes}
+                            onBlur={(e) => {
+                              const nextNotes = {
+                                ...statRecord<string>(
+                                  character,
+                                  'statNotes',
+                                  '',
+                                ),
+                                [char.key]: e.target.value,
+                              };
+                              updateCharacter(character.id, {
+                                statNotes: pickAllowedStats(nextNotes),
+                              } as Partial<Character>);
+                            }}
+                            placeholder={t(
+                              'dh1.addNotesCharacteristicPlaceholder',
+                            )}
+                            className="min-h-[80px] text-xs"
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      <div className="text-muted-foreground mt-1 text-[8px] font-semibold uppercase">
+                        {char.label}
+                      </div>
+                      <div className="mt-1 mb-1 flex items-center justify-center gap-1">
+                        {isCharacteristicsEditing ? (
+                          <Input
+                            type="number"
+                            value={val === 0 ? '' : val}
+                            onChange={(e) =>
+                              setEditableStats((prev) => ({
+                                ...prev,
+                                [char.key]: parseInt(e.target.value, 10) || 0,
+                              }))
+                            }
+                            className="text-primary h-6 w-10 [appearance:textfield] px-1 text-center text-xs leading-tight font-bold [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                          />
+                        ) : (
+                          <div className="text-primary text-sm leading-tight font-bold">
+                            {val + bonus}
                           </div>
+                        )}
+                        <div className="flex flex-col items-center gap-[1px]">
+                          {upgrades.map((checked, upgradeIdx) => (
+                            <Checkbox
+                              key={upgradeIdx}
+                              checked={checked}
+                              disabled={
+                                !checked &&
+                                upgradeIdx > 0 &&
+                                !upgrades[upgradeIdx - 1]
+                              }
+                              onCheckedChange={(c) => {
+                                const currentUpgrades = isCharacteristicsEditing
+                                  ? editableStatUpgrades
+                                  : statRecord(
+                                      character,
+                                      'statUpgrades',
+                                      EMPTY_STAT_UPGRADE,
+                                    );
+                                const nextUpgrades = { ...currentUpgrades };
+                                const specific = [
+                                  ...(nextUpgrades[char.key] || [
+                                    false,
+                                    false,
+                                    false,
+                                    false,
+                                  ]),
+                                ];
+                                specific[upgradeIdx] = !!c;
+                                if (!c) {
+                                  for (
+                                    let i = upgradeIdx + 1;
+                                    i < specific.length;
+                                    i++
+                                  ) {
+                                    specific[i] = false;
+                                  }
+                                }
+                                nextUpgrades[char.key] = specific as [
+                                  boolean,
+                                  boolean,
+                                  boolean,
+                                  boolean,
+                                ];
+                                if (isCharacteristicsEditing) {
+                                  setEditableStatUpgrades(nextUpgrades);
+                                } else {
+                                  updateCharacter(character.id, {
+                                    statUpgrades:
+                                      pickAllowedStats(nextUpgrades),
+                                  } as Partial<Character>);
+                                }
+                              }}
+                              className="data-[state=checked]:bg-primary h-2.5 w-2.5"
+                            />
+                          ))}
                         </div>
                       </div>
-                    );
-                  })}
+                    </div>
+                  );
+                })}
               </div>
             </div>
             <div className="mt-1 grid grid-cols-2 gap-1 px-1 md:col-span-2">
@@ -825,7 +796,7 @@ export const Dh1Sheet = React.forwardRef<
               {/* ─── LANDMARK: COMPACT VIEW FATIGUE COUNTERS ─── */}
               {/* У 1-й редакции одно поле усталости — fatigue1st. */}
               <MetricBox
-                title={t('dh1.fatigueFirstEdition')}
+                title={t('dh1.fatigue')}
                 notes={fatigue.notes}
                 onNoteChange={(val) => updateFatigue({ notes: val })}
                 editing={isPointsEditing}
@@ -1324,7 +1295,7 @@ export const Dh1Sheet = React.forwardRef<
                       <div className="flex flex-wrap gap-4">
                         <div className="min-w-[140px] flex-1">
                           <MetricBox
-                            title={t('dh1.fatigueFirstEdition')}
+                            title={t('dh1.fatigue')}
                             notes={fatigue.notes}
                             onNoteChange={(val) =>
                               updateFatigue({ notes: val })
@@ -1516,171 +1487,158 @@ export const Dh1Sheet = React.forwardRef<
                           key: 'fellowship' as const,
                           label: t('dh1.fellowshipAbbr'),
                         },
-                        {
-                          key: 'influence' as const,
-                          label: t('dh1.influenceAbbr'),
-                        },
                       ] as const
-                    )
-                      .filter((c) =>
-                        capabilities.influence ? true : c.key !== 'influence',
-                      )
-                      .map((char) => {
-                        const stats = isCharacteristicsEditing
-                          ? editableStats
-                          : statRecord<number>(character, 'stats', 0);
-                        const statUpgrades = isCharacteristicsEditing
-                          ? editableStatUpgrades
-                          : statRecord(
-                              character,
-                              'statUpgrades',
-                              EMPTY_STAT_UPGRADE,
-                            );
-                        const statNotes = statRecord<string>(
-                          character,
-                          'statNotes',
-                          '',
-                        );
-                        const val = stats[char.key] || 0;
-                        const upgrades = (statUpgrades[char.key] ||
-                          EMPTY_STAT_UPGRADE) as boolean[];
-                        const bonus = upgradeBonus(upgrades);
-                        const notes = statNotes[char.key] || '';
-                        return (
-                          <div
-                            key={char.key}
-                            className="bg-background relative flex min-h-[60px] flex-col justify-between rounded-md border px-0.5 py-1 text-center"
-                          >
-                            <Popover>
-                              <PopoverTrigger asChild>
-                                <Button
-                                  variant={notes ? 'secondary' : 'ghost'}
-                                  size="icon"
-                                  className="absolute top-0.5 right-0.5 h-4 w-4"
-                                >
-                                  <Info className="h-2.5 w-2.5" />
-                                </Button>
-                              </PopoverTrigger>
-                              <PopoverContent
-                                className="w-64 p-3"
-                                side="top"
-                                align="center"
+                    ).map((char) => {
+                      const stats = isCharacteristicsEditing
+                        ? editableStats
+                        : statRecord<number>(character, 'stats', 0);
+                      const statUpgrades = isCharacteristicsEditing
+                        ? editableStatUpgrades
+                        : statRecord(
+                            character,
+                            'statUpgrades',
+                            EMPTY_STAT_UPGRADE,
+                          );
+                      const statNotes = statRecord<string>(
+                        character,
+                        'statNotes',
+                        '',
+                      );
+                      const val = stats[char.key] || 0;
+                      const upgrades = (statUpgrades[char.key] ||
+                        EMPTY_STAT_UPGRADE) as boolean[];
+                      const bonus = upgradeBonus(upgrades);
+                      const notes = statNotes[char.key] || '';
+                      return (
+                        <div
+                          key={char.key}
+                          className="bg-background relative flex min-h-[60px] flex-col justify-between rounded-md border px-0.5 py-1 text-center"
+                        >
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button
+                                variant={notes ? 'secondary' : 'ghost'}
+                                size="icon"
+                                className="absolute top-0.5 right-0.5 h-4 w-4"
                               >
-                                <Label className="mb-2 block text-xs font-semibold">
-                                  {char.label} - {t('common.notes')}
-                                </Label>
-                                <Textarea
-                                  defaultValue={notes}
-                                  onBlur={(e) => {
-                                    const nextNotes = {
-                                      ...statRecord<string>(
-                                        character,
-                                        'statNotes',
-                                        '',
-                                      ),
-                                      [char.key]: e.target.value,
-                                    };
-                                    updateCharacter(character.id, {
-                                      statNotes: pickAllowedStats(
-                                        nextNotes,
-                                        capabilities.influence,
-                                      ),
-                                    } as Partial<Character>);
-                                  }}
-                                  placeholder={t(
-                                    'dh1.addNotesCharacteristicPlaceholder',
-                                  )}
-                                  className="min-h-[80px] text-xs"
-                                />
-                              </PopoverContent>
-                            </Popover>
-                            <div className="text-muted-foreground mt-1 text-[8px] font-semibold uppercase">
-                              {char.label}
-                            </div>
-                            <div className="mt-1 mb-1 flex items-center justify-center gap-1">
-                              {isCharacteristicsEditing ? (
-                                <Input
-                                  type="number"
-                                  value={val === 0 ? '' : val}
-                                  onChange={(e) =>
-                                    setEditableStats((prev) => ({
-                                      ...prev,
-                                      [char.key]:
-                                        parseInt(e.target.value, 10) || 0,
-                                    }))
-                                  }
-                                  className="text-primary h-6 w-10 [appearance:textfield] px-1 text-center text-xs leading-tight font-bold [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-                                />
-                              ) : (
-                                <div className="text-primary text-sm leading-tight font-bold">
-                                  {val + bonus}
-                                </div>
-                              )}
-                              <div className="flex flex-col items-center gap-[1px]">
-                                {upgrades.map((checked, upgradeIdx) => (
-                                  <Checkbox
-                                    key={upgradeIdx}
-                                    checked={checked}
-                                    disabled={
-                                      !checked &&
-                                      upgradeIdx > 0 &&
-                                      !upgrades[upgradeIdx - 1]
-                                    }
-                                    onCheckedChange={(c) => {
-                                      const currentUpgrades =
-                                        isCharacteristicsEditing
-                                          ? editableStatUpgrades
-                                          : statRecord(
-                                              character,
-                                              'statUpgrades',
-                                              EMPTY_STAT_UPGRADE,
-                                            );
-                                      const nextUpgrades = {
-                                        ...currentUpgrades,
-                                      };
-                                      const specific = [
-                                        ...(nextUpgrades[char.key] || [
-                                          false,
-                                          false,
-                                          false,
-                                          false,
-                                        ]),
-                                      ];
-                                      specific[upgradeIdx] = !!c;
-                                      if (!c) {
-                                        for (
-                                          let i = upgradeIdx + 1;
-                                          i < specific.length;
-                                          i++
-                                        ) {
-                                          specific[i] = false;
-                                        }
-                                      }
-                                      nextUpgrades[char.key] = specific as [
-                                        boolean,
-                                        boolean,
-                                        boolean,
-                                        boolean,
-                                      ];
-                                      if (isCharacteristicsEditing) {
-                                        setEditableStatUpgrades(nextUpgrades);
-                                      } else {
-                                        updateCharacter(character.id, {
-                                          statUpgrades: pickAllowedStats(
-                                            nextUpgrades,
-                                            capabilities.influence,
-                                          ),
-                                        } as Partial<Character>);
-                                      }
-                                    }}
-                                    className="data-[state=checked]:bg-primary h-2.5 w-2.5"
-                                  />
-                                ))}
+                                <Info className="h-2.5 w-2.5" />
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent
+                              className="w-64 p-3"
+                              side="top"
+                              align="center"
+                            >
+                              <Label className="mb-2 block text-xs font-semibold">
+                                {char.label} - {t('common.notes')}
+                              </Label>
+                              <Textarea
+                                defaultValue={notes}
+                                onBlur={(e) => {
+                                  const nextNotes = {
+                                    ...statRecord<string>(
+                                      character,
+                                      'statNotes',
+                                      '',
+                                    ),
+                                    [char.key]: e.target.value,
+                                  };
+                                  updateCharacter(character.id, {
+                                    statNotes: pickAllowedStats(nextNotes),
+                                  } as Partial<Character>);
+                                }}
+                                placeholder={t(
+                                  'dh1.addNotesCharacteristicPlaceholder',
+                                )}
+                                className="min-h-[80px] text-xs"
+                              />
+                            </PopoverContent>
+                          </Popover>
+                          <div className="text-muted-foreground mt-1 text-[8px] font-semibold uppercase">
+                            {char.label}
+                          </div>
+                          <div className="mt-1 mb-1 flex items-center justify-center gap-1">
+                            {isCharacteristicsEditing ? (
+                              <Input
+                                type="number"
+                                value={val === 0 ? '' : val}
+                                onChange={(e) =>
+                                  setEditableStats((prev) => ({
+                                    ...prev,
+                                    [char.key]:
+                                      parseInt(e.target.value, 10) || 0,
+                                  }))
+                                }
+                                className="text-primary h-6 w-10 [appearance:textfield] px-1 text-center text-xs leading-tight font-bold [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                              />
+                            ) : (
+                              <div className="text-primary text-sm leading-tight font-bold">
+                                {val + bonus}
                               </div>
+                            )}
+                            <div className="flex flex-col items-center gap-[1px]">
+                              {upgrades.map((checked, upgradeIdx) => (
+                                <Checkbox
+                                  key={upgradeIdx}
+                                  checked={checked}
+                                  disabled={
+                                    !checked &&
+                                    upgradeIdx > 0 &&
+                                    !upgrades[upgradeIdx - 1]
+                                  }
+                                  onCheckedChange={(c) => {
+                                    const currentUpgrades =
+                                      isCharacteristicsEditing
+                                        ? editableStatUpgrades
+                                        : statRecord(
+                                            character,
+                                            'statUpgrades',
+                                            EMPTY_STAT_UPGRADE,
+                                          );
+                                    const nextUpgrades = {
+                                      ...currentUpgrades,
+                                    };
+                                    const specific = [
+                                      ...(nextUpgrades[char.key] || [
+                                        false,
+                                        false,
+                                        false,
+                                        false,
+                                      ]),
+                                    ];
+                                    specific[upgradeIdx] = !!c;
+                                    if (!c) {
+                                      for (
+                                        let i = upgradeIdx + 1;
+                                        i < specific.length;
+                                        i++
+                                      ) {
+                                        specific[i] = false;
+                                      }
+                                    }
+                                    nextUpgrades[char.key] = specific as [
+                                      boolean,
+                                      boolean,
+                                      boolean,
+                                      boolean,
+                                    ];
+                                    if (isCharacteristicsEditing) {
+                                      setEditableStatUpgrades(nextUpgrades);
+                                    } else {
+                                      updateCharacter(character.id, {
+                                        statUpgrades:
+                                          pickAllowedStats(nextUpgrades),
+                                      } as Partial<Character>);
+                                    }
+                                  }}
+                                  className="data-[state=checked]:bg-primary h-2.5 w-2.5"
+                                />
+                              ))}
                             </div>
                           </div>
-                        );
-                      })}
+                        </div>
+                      );
+                    })}
                   </div>
                   <div className="grid grid-cols-4 gap-1">
                     {(() => {

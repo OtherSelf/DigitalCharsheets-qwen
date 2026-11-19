@@ -369,20 +369,6 @@ export const WORLD_VARIANT_LABELS: Record<string, string> = {
   'Mind-Cleared': 'dh1.memoryShards',
 };
 
-/** Ключ данных в пространстве конкретной редакции: dh.* → dh1 или dh2. */
-/**
- * Legacy-совместимость: карты DH уже содержат ключи конкретной редакции
- * (`dh1.*`), поэтому функция — no-op. Оставлена, чтобы старые вызовы
- * `dhLocalizedKey(key, edition)` не переписывались; ключи `dh.*` больше не
- * существуют в словарях (иначе это «сырой ключ» в UI).
- */
-export function dhLocalizedKey(
-  key: string,
-  _edition?: 'dh1' | 'dh1' | 'dh2',
-): string {
-  return key;
-}
-
 export const HOME_WORLD_KEYS: Record<string, string> = {
   'Feral World': 'dh1.homeWorldFeral',
   'Hive World': 'dh1.homeWorldHive',

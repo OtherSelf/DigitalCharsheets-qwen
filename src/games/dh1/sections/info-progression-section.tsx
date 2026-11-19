@@ -42,7 +42,6 @@ import { cn } from '@/lib/utils';
 import {
   CAREER_KEYS,
   DarkHeresyCareerPaths,
-  dhLocalizedKey,
   DIVINATIONS,
   HOME_WORLD_KEYS,
   QUIRK_KEYS,
@@ -358,12 +357,7 @@ export const InfoSection = ({
                 label={t('dh1.quirk')}
                 value={
                   character.quirk
-                    ? t(
-                        dhLocalizedKey(
-                          QUIRK_KEYS[character.quirk] || character.quirk,
-                          'dh1',
-                        ),
-                      )
+                    ? t(QUIRK_KEYS[character.quirk] || character.quirk)
                     : ''
                 }
                 editing={isInfoEditing}
@@ -481,13 +475,7 @@ export const InfoSection = ({
                 label={t('dh1.homeWorld')}
                 value={
                   character.homeWorld
-                    ? t(
-                        dhLocalizedKey(
-                          HOME_WORLD_KEYS[character.homeWorld] ||
-                            'dh1.homeWorld',
-                          'dh1',
-                        ),
-                      )
+                    ? t(HOME_WORLD_KEYS[character.homeWorld] || 'dh1.homeWorld')
                     : ''
                 }
                 selectedValue={character.homeWorld}
@@ -499,7 +487,7 @@ export const InfoSection = ({
                 isCompactView={isCompactView}
                 options={Object.keys(HOME_WORLD_KEYS).map((world) => ({
                   value: world,
-                  label: t(dhLocalizedKey(HOME_WORLD_KEYS[world], 'dh1')),
+                  label: t(HOME_WORLD_KEYS[world]),
                 }))}
                 onSelect={(next) =>
                   updateCharacter(character.id, { homeWorld: next })
@@ -514,11 +502,8 @@ export const InfoSection = ({
                 value={
                   character.worldVariant
                     ? t(
-                        dhLocalizedKey(
-                          VARIANT_KEYS[character.worldVariant] ||
-                            character.worldVariant,
-                          'dh1',
-                        ),
+                        VARIANT_KEYS[character.worldVariant] ||
+                          character.worldVariant,
                       )
                     : ''
                 }
@@ -537,9 +522,7 @@ export const InfoSection = ({
                   []
                 ).map((variant) => ({
                   value: variant,
-                  label: t(
-                    dhLocalizedKey(VARIANT_KEYS[variant] ?? variant, 'dh1'),
-                  ),
+                  label: t(VARIANT_KEYS[variant] ?? variant),
                 }))}
                 onSelect={(next) =>
                   updateCharacter(character.id, { worldVariant: next })
@@ -549,12 +532,7 @@ export const InfoSection = ({
                 label={t('dh1.careerPath')}
                 value={
                   character.careerPath
-                    ? t(
-                        dhLocalizedKey(
-                          CAREER_KEYS[character.careerPath] || 'dh1.careerPath',
-                          'dh1',
-                        ),
-                      )
+                    ? t(CAREER_KEYS[character.careerPath] || 'dh1.careerPath')
                     : ''
                 }
                 selectedValue={character.careerPath}
@@ -566,9 +544,7 @@ export const InfoSection = ({
                 isCompactView={isCompactView}
                 options={DarkHeresyCareerPaths.map((career) => ({
                   value: career,
-                  label: t(
-                    dhLocalizedKey(CAREER_KEYS[career] ?? career, 'dh1'),
-                  ),
+                  label: t(CAREER_KEYS[career] ?? career),
                 }))}
                 onSelect={(next) =>
                   updateCharacter(character.id, { careerPath: next })
@@ -1230,12 +1206,7 @@ export const ProgressionSection = ({
                     {currentRankName === 'N/A' ||
                     currentRankName === 'Unknown Rank'
                       ? t('dh1.unknownRank')
-                      : t(
-                          dhLocalizedKey(
-                            RANK_KEYS[currentRankName] || currentRankName,
-                            'dh1',
-                          ),
-                        )}
+                      : t(RANK_KEYS[currentRankName] || currentRankName)}
                   </p>
 
                   {(editableAdvancedPath ?? character.advancedPath) ? (
@@ -1332,8 +1303,7 @@ export const ProgressionSection = ({
                   onClick={() => handleSelectAdvancedPath(path.name)}
                   className="h-12 text-base"
                 >
-                  {t('dh1.choose')}{' '}
-                  {t(dhLocalizedKey(RANK_KEYS[path.name] || path.name, 'dh1'))}
+                  {t('dh1.choose')} {t(RANK_KEYS[path.name] || path.name)}
                 </Button>
               ))}
           </div>

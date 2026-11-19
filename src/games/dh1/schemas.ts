@@ -106,9 +106,6 @@ export const darkHeresyCoreStatNotesFields = {
 export const darkHeresyCoreStatNotesSchema: z.ZodType<DarkHeresyCoreStatNotes> =
   z.looseObject(darkHeresyCoreStatNotesFields);
 
-/** Схема одного апгрейда (+5/+10/+15/+20) — нужна dh2 для `influence`. */
-export const darkHeresyStatUpgradeSchema = upgradeSchema;
-
 export const fatigueSchema = z.looseObject({
   current: z.number(),
   notes: z.string().optional(),

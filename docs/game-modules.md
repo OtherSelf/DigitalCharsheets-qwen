@@ -302,7 +302,7 @@ per-game save handlers out of the page.
 | `schemaVersion` | Sheet format written by the module: `2` for `dnd5e`, `5` for `dh1`/`dh2`; manifests declare it and the migration chain ends here. |
 | `schema` | Zod schema; `ZodType<TCharacter>` makes `tsc` check it against the type. |
 | `i18n` | Declared locales (`en`/`ru` plus optional extras), merged by the core with an en↔ru fallback. |
-| `capabilities` | Fixed feature flags of the module (influence, +30, fatigue field). |
+| `capabilities` | Fixed feature flags of the module (edition, +30, fatigue field). |
 | `createDefaults()` | Character draft (no `id`) for forms/tests. |
 | `createDemo()` | Demo character for `/demo` (no `id`). |
 | `components.loadCreateForm` / `loadSheet` | Lazy UI entry points; the host wraps the sheet in `Suspense` + `ErrorBoundary` and passes a typed `ref: SheetHandle` (`saveAll()`). |

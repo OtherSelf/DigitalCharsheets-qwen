@@ -384,6 +384,11 @@ that never calls the helper renders as before.
   Duplicate keys across layers are a startup error.
 - `t()` never guesses: a missing key renders as the key itself, so always pass
   the full `namespace.key`.
+- Every dictionary key must be referenced by code: each edition's
+  `tests/unit/i18n-labels.test.ts` scans static literal keys and template
+  prefixes and fails on an unused key. Keys built at runtime are declared
+  explicitly in that test's `DYNAMIC_PREFIXES`, so a new dynamic family is
+  added together with the code that needs it.
 
 ## Tests (conformance)
 

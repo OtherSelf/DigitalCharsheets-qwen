@@ -103,7 +103,8 @@ Plugin-specific checks (bulk-editor table columns, custom slots) belong in
 - Covered areas: auth and profile updates, account deletion, recovery, file
   storage/locks/atomic writes, character schema v2 migration, export/import 3.0
   (JSON and Excel), the game registry/module contract, game catalog visibility
-  and module-access matrix, translations parity and hardcoded-UI checks,
+  and module-access matrix, translations parity and hardcoded-UI checks, unused
+  dictionary keys per edition,
   OpenAPI document and route coverage, admin API and bootstrap, health/version,
   the read-only share registry/API (`shares.json`, rotation, expiry,
   revocation, cleanup), and the character history (diff engine, JSONL store,

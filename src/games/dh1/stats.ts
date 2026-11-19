@@ -9,7 +9,7 @@ import {
  * ─── LANDMARK: DH1 STAT VIEW ───────────────────────────────────────────────
  * Словарь характеристик 1-й редакции: девять полей без `influence`.
  */
-export type DarkHeresyStatKey = DarkHeresyCoreStat | 'influence';
+export type DarkHeresyStatKey = DarkHeresyCoreStat;
 export type DarkHeresyCharacterLike = DH1Character;
 
 export const ALL_DARK_HERESY_STATS: readonly DarkHeresyStatKey[] =
@@ -35,9 +35,9 @@ export function statRecord<T>(
   return result;
 }
 
+/** Оставляет только характеристики редакции: посторонние ключи отбрасываются. */
 export function pickAllowedStats<T>(
   record: Record<DarkHeresyStatKey, T>,
-  _allowInfluence: boolean,
 ): Partial<Record<DarkHeresyStatKey, T>> {
   const result: Partial<Record<DarkHeresyStatKey, T>> = {};
   for (const key of ALL_DARK_HERESY_STATS) result[key] = record[key];

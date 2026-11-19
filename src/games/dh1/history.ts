@@ -154,7 +154,7 @@ export const dh1History: GameHistoryConfig = {
     'talents.notes': 'common.notes',
     'talents.description': 'common.description',
     'skills.training': 'dh1.historyTraining',
-    fatigue1st: 'dh1.fatigueFirstEdition',
+    fatigue1st: 'dh1.fatigue',
     fatigue2nd: 'dh1.fatigueSecondEdition',
     criticalConditions: 'dh1.criticalConditions',
     movement: 'common.movement',

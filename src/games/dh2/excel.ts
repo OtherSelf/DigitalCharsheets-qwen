@@ -51,7 +51,6 @@ export function buildDh2ExcelSections(
   if (config.includeBasicInfo) {
     w.section('dh2.excel.basicInformation');
     w.row('dh2.excel.name', character.name);
-    w.row('dh2.excel.classCareer', character.characterClass);
     w.row('dh2.homeWorld', homeWorldLabel(character.homeWorld, t));
     w.row('dh2.background', backgroundLabel(character.background, t));
     w.row('dh2.role', roleLabel(character.role, t));
@@ -129,7 +128,7 @@ export function buildDh2ExcelSections(
     w.row('dh2.excel.insanityNotes', character.insanityPoints.notes);
     w.row('dh2.excel.corruptionPoints', character.corruptionPoints.total);
     w.row('dh2.excel.corruptionNotes', character.corruptionPoints.notes);
-    w.row('dh2.excel.fatigueSecond', fatigue.current);
+    w.row('dh2.excel.fatigue', fatigue.current);
     w.row('dh2.excel.fatigueNotes', fatigue.notes);
 
     const conditions = (character.conditions ?? []).filter(

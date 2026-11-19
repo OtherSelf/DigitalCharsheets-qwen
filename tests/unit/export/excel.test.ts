@@ -117,7 +117,7 @@ describe('exportCharacterToExcel (xlsx)', () => {
       // edition больше нет; fatigue1st ушла в notes миграции.
       expect(row(rows, 'Edition')).toBeUndefined();
       expect(row(rows, 'Fatigue (1st)')).toBeUndefined();
-      expect(row(rows, 'Fatigue (2nd)')?.[1]).toBe(1);
+      expect(row(rows, 'Fatigue')?.[1]).toBe(1);
       // Несколько строк с подписью Notes: миграционная — та, где текст.
       const migrationNote = rows.find(
         (r) =>

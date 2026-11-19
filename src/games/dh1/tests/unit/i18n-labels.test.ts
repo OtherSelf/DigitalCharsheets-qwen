@@ -122,3 +122,97 @@ describe('Dark Heresy: ключи справочных данных', () => {
     }
   });
 });
+
+/**
+ * ─── LANDMARK: DH1 DICTIONARY USAGE GUARD ────────────────────────────────
+ * Обратная проверка к картам данных: каждый ключ словаря обязан где-то
+ * применяться. Без неё словарь пухнет остатками другой редакции и мёртвыми
+ * подписями, а проверки «используемый ключ существует» этого не видят.
+ *
+ * Сканер знает только статические ссылки: литералы `'dh1.…'` и шаблонные
+ * префиксы `` `dh1.rank${…}` ``. Всё, что собирается в рантайме, обязано
+ * быть в DYNAMIC_PREFIXES: список пополняется вместе с кодом осознанно,
+ * иначе тест упадёт на «мёртвом» ключе — в этом и смысл проверки.
+ */
+const DYNAMIC_PREFIXES: readonly string[] = [
+  'dh1.armorQuality',
+  'dh1.armorType',
+  'dh1.career',
+  'dh1.conditions.kind.',
+  'dh1.conditions.source.',
+  'dh1.data.divination.',
+  'dh1.data.divinationEffect.',
+  'dh1.rank',
+];
+
+/** Сетка характеристик собирает ключи как `dh1.${stat}` / `dh1.${stat}Abbr`. */
+const STAT_PREFIXES: readonly string[] = [
+  'weaponSkill',
+  'ballisticSkill',
+  'strength',
+  'toughness',
+  'agility',
+  'intelligence',
+  'perception',
+  'willpower',
+  'fellowship',
+].map((stat) => `dh1.${stat}`);
+
+/** Исходники продукта: без словарей и тестов, чтобы ключ искался в коде. */
+function codeText(): string {
+  return fs
+    .readdirSync(path.join(ROOT, 'src'), { recursive: true, encoding: 'utf8' })
+    .map((file) => path.join(ROOT, 'src', file))
+    .filter((file) => /\.(ts|tsx)$/.test(file))
+    .filter((file) => !file.includes(`${path.sep}i18n${path.sep}`))
+    .filter((file) => !file.includes(`${path.sep}tests${path.sep}`))
+    .filter((file) => !file.endsWith('i18n.generated.ts'))
+    .map((file) => fs.readFileSync(file, 'utf8'))
+    .join('\n');
+}
+
+function referencedKeys(text: string): {
+  literals: Set<string>;
+  prefixes: Set<string>;
+} {
+  const literals = new Set<string>();
+  for (const match of text.matchAll(
+    /['"`]((?:[A-Za-z][A-Za-z0-9_-]*\.)+[A-Za-z0-9_.-]+)['"`]/g,
+  )) {
+    literals.add(match[1]);
+  }
+  const prefixes = new Set<string>();
+  for (const match of text.matchAll(
+    /`((?:[A-Za-z][A-Za-z0-9_-]*\.)+[A-Za-z0-9_.-]*)\$\{/g,
+  )) {
+    // `dh1.${...}` — домен целиком, слишком широко: такие ключи покрывают
+    // перечисленные префиксы характеристик.
+    if (!/^[^.]+\.$/.test(match[1])) prefixes.add(match[1]);
+  }
+  return { literals, prefixes };
+}
+
+describe('Dark Heresy: словарь DH1 без мёртвых ключей', () => {
+  it('каждый ключ словаря DH1 применяется в коде', () => {
+    const text = codeText();
+    const { literals, prefixes } = referencedKeys(text);
+    expect(literals.size, 'сканер не нашёл литералов').toBeGreaterThan(300);
+
+    const dictionaryKeys = Object.keys(translations.en)
+      .filter((key) => key.startsWith('dh1.') || key.startsWith('games.dh1.'))
+      .sort();
+    expect(dictionaryKeys.length).toBeGreaterThan(100);
+
+    const dynamic = [...DYNAMIC_PREFIXES, ...STAT_PREFIXES];
+    const unused = dictionaryKeys.filter(
+      (key) =>
+        !literals.has(key) &&
+        ![...prefixes].some((prefix) => key.startsWith(prefix)) &&
+        !dynamic.some((prefix) => key.startsWith(prefix)),
+    );
+    expect(
+      unused,
+      'ключи без применения: удалить из en/ru или объявить динамическое семейство',
+    ).toEqual([]);
+  });
+});

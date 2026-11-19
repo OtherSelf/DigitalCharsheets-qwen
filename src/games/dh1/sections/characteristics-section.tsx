@@ -20,7 +20,6 @@ import { useCharacterContext, useTranslation } from '@/games/plugin-host';
 import { statBonus, upgradeBonus } from '@/games/shared/dh-stats';
 import { cn } from '@/lib/utils';
 
-import { getDarkHeresyCapabilities } from '../capabilities';
 import {
   EMPTY_STAT_UPGRADE,
   pickAllowedStats,
@@ -161,13 +160,10 @@ export const CharacteristicsSection = React.forwardRef<
     const { updateCharacter, hideNotes, showEditButtons } =
       useCharacterContext();
     const { t, language } = useTranslation();
-    const capabilities = getDarkHeresyCapabilities(character);
     const [isCharacteristicsEditing, setIsCharacteristicsEditing] =
       React.useState(false);
-    // ─── LANDMARK: EDITION-AGNOSTIC STAT VIEW ───
-    // Характеристики приводятся к одному словарю (девять + influence).
-    // Для dh1 ключ influence отфильтровывается при сохранении, поэтому
-    // лишнего поля в данных не появляется.
+    // ─── LANDMARK: DH1 CHARACTERISTICS ───
+    // У 1-й редакции девять характеристик: `influence` — поле 2e.
     const [editableStats, setEditableStats] = React.useState(() =>
       statRecord<number>(character, 'stats', 0),
     );
@@ -192,46 +188,29 @@ export const CharacteristicsSection = React.forwardRef<
     }, [character]);
     // ─── END SYNC EDITABLE STATE ───
 
-    // ─── LANDMARK: DYNAMIC CHARACTERISTICS BASED ON CAPABILITIES ───
-    const characteristics = React.useMemo(() => {
-      const base = [
-        { key: 'weaponSkill' },
-        { key: 'ballisticSkill' },
-        { key: 'strength' },
-        { key: 'toughness' },
-        { key: 'agility' },
-        { key: 'intelligence' },
-        { key: 'perception' },
-        { key: 'willpower' },
-        { key: 'fellowship' },
-        { key: 'influence' },
-      ] as const;
-
-      if (!capabilities.influence) {
-        return base.filter((char) => char.key !== 'influence');
-      }
-      return base;
-    }, [capabilities.influence]);
-    // ─── END DYNAMIC CHARACTERISTICS ───
+    // ─── LANDMARK: DH1 CHARACTERISTIC LIST ───
+    const characteristics = [
+      { key: 'weaponSkill' },
+      { key: 'ballisticSkill' },
+      { key: 'strength' },
+      { key: 'toughness' },
+      { key: 'agility' },
+      { key: 'intelligence' },
+      { key: 'perception' },
+      { key: 'willpower' },
+      { key: 'fellowship' },
+    ] as const;
+    // ─── END DH1 CHARACTERISTIC LIST ───
 
     const handleSaveCharacteristics = React.useCallback(() => {
-      // Сохраняем только ключи, которые существуют в редакции: dh1 не должен
-      // получить influence, даже если он был в форме/старом файле.
+      // Сохраняем только ключи редакции: старый файл с influence не должен
+      // вернуть поле в данные dh1.
       updateCharacter(character.id, {
-        stats: pickAllowedStats(editableStats, capabilities.influence),
-        statUpgrades: pickAllowedStats(
-          editableStatUpgrades,
-          capabilities.influence,
-        ),
+        stats: pickAllowedStats(editableStats),
+        statUpgrades: pickAllowedStats(editableStatUpgrades),
       } as Partial<Character>);
       setIsCharacteristicsEditing(false);
-    }, [
-      character.id,
-      editableStats,
-      editableStatUpgrades,
-      updateCharacter,
-      capabilities.influence,
-    ]);
+    }, [character.id, editableStats, editableStatUpgrades, updateCharacter]);
 
     const isAnyEditing = isCharacteristicsEditing;
     React.useEffect(() => {
@@ -277,7 +256,6 @@ export const CharacteristicsSection = React.forwardRef<
                 EMPTY_STAT_UPGRADE,
               ),
             ),
-            capabilities.influence,
           ),
         } as Partial<Character>);
       }
@@ -342,10 +320,10 @@ export const CharacteristicsSection = React.forwardRef<
               notes={currentNotes[char.key] || undefined}
               onNoteChange={(note) => {
                 updateCharacter(character.id, {
-                  statNotes: pickAllowedStats(
-                    { ...currentNotes, [char.key]: note },
-                    capabilities.influence,
-                  ),
+                  statNotes: pickAllowedStats({
+                    ...currentNotes,
+                    [char.key]: note,
+                  }),
                 } as Partial<Character>);
               }}
               isCompactView={isCompactView}
