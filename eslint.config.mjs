@@ -76,6 +76,38 @@ const eslintConfig = [
   },
   {
     /*
+      Тяжёлый импорт не должен попадать в начальный клиентский граф: `xlsx`
+      нужен только в момент нажатия «Экспорт в Excel», а статический импорт
+      тянет парсер (~1 МБ) в чанк, который грузится на каждой странице. Такой
+      чанк в открытой вкладке и рассыпается после перезапуска сервера
+      («module factory is not available»). Правильно —
+      `const XLSX = await import('xlsx')` в обработчике.
+
+      Глобы шире UI-слоя, потому что клиентские модули живут не только в
+      `src/components/**`: они есть и в `src/lib/**` (`export-utils.ts`), и в
+      `src/games/**` (листы плагинов). Плагины получают то же правило ниже, в
+      блоке границ; их тесты (`src/games/<id>/tests/**`) исключены — там
+      статический импорт законен.
+    */
+    files: ['src/**/*.{js,jsx,mjs,cjs,ts,tsx,mts,cts}'],
+    ignores: ['src/games/**'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['xlsx', 'xlsx/*'],
+              message:
+                'грузите лениво: const XLSX = await import("xlsx") в обработчике экспорта',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    /*
       Production-файлы плагинов не тянут тестовые зависимости. boundaries.json
       видит те же имена, но не различает тест и рантайм по пути; здесь
       исключены ровно `src/games/<id>/tests/**`, где vitest, Playwright и
@@ -88,6 +120,11 @@ const eslintConfig = [
         'error',
         {
           patterns: [
+            {
+              group: ['xlsx', 'xlsx/*'],
+              message:
+                'грузите лениво: const XLSX = await import("xlsx") в обработчике экспорта',
+            },
             {
               group: ['vitest', 'vitest/*'],
               message:

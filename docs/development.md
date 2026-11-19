@@ -88,6 +88,13 @@ npm run lint:fix       # eslint . --fix — safe autofixes only
   handlers in `onClick`/`onSubmit`, a11y and Next-specific rules. Errors block
   `npm run verify`; warnings (known `exhaustive-deps` and unused locals) are
   printed but do not block.
+- **Heavy client dependencies are loaded lazily.** A static `import` of `xlsx`
+  anywhere under `src/` is an ESLint error (`no-restricted-imports`, plugin
+  tests excepted): the parser is needed only when the user presses "Export to
+  Excel", and a chunk that big is what dies as `module factory is not available`
+  in a tab opened before a dev-server restart. Load it as
+  `const XLSX = await import('xlsx')` inside the handler. Config:
+  [`eslint.config.mjs`](../eslint.config.mjs).
 
 Markdown files are not formatted by Prettier (`*.md` is ignored). Keep docs
 readable manually and follow [docs/README.md](README.md).
