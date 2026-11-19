@@ -73,6 +73,11 @@ export const enTranslations: Record<string, string> = {
   'common.appVersion': 'App version',
   'common.updateAvailable': 'A new version is available',
   'common.updateNow': 'Update',
+  'common.reloadPage': 'Reload page',
+  'common.reloadRequired':
+    'Some files failed to load. Reload the page to continue.',
+  'common.errorHint':
+    'This screen failed to load. Try again, or reload the page.',
   'common.serverConnectionFailed': 'Failed to connect to server.',
   'common.saving': 'Saving...',
   'common.characterCreatedTitle': 'Character Created!',

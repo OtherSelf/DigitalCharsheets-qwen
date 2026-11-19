@@ -73,6 +73,11 @@ export const ruTranslations: Record<string, string> = {
   'common.appVersion': 'Версия приложения',
   'common.updateAvailable': 'Доступна новая версия',
   'common.updateNow': 'Обновить',
+  'common.reloadPage': 'Обновить страницу',
+  'common.reloadRequired':
+    'Часть файлов не загрузилась. Обновите страницу, чтобы продолжить.',
+  'common.errorHint':
+    'Экран не загрузился. Попробуйте ещё раз или обновите страницу.',
   'common.serverConnectionFailed': 'Не удалось подключиться к серверу.',
   'common.saving': 'Сохранение...',
   'common.characterCreatedTitle': 'Персонаж создан!',

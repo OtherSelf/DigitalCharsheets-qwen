@@ -5,6 +5,7 @@ import { Inter, Space_Grotesk } from 'next/font/google';
 import './globals.css';
 
 import { BuildWatcher } from '@/components/layout/build-watcher';
+import { ClientErrorGuard } from '@/components/layout/client-error-guard';
 import { RecoveryModalWrapper } from '@/components/recovery-modal-wrapper';
 import { ThemeProvider } from '@/components/theme-provider';
 import { UIScaleWrapper } from '@/components/ui-scale-wrapper';
@@ -78,6 +79,7 @@ export default function RootLayout({
                   <RecoveryModalWrapper />
                   <Toaster />
                   <BuildWatcher ownBuildId={BUILD_ID} />
+                  <ClientErrorGuard />
                 </UIScaleWrapper>
               </CharacterProvider>
             </LanguageProvider>
