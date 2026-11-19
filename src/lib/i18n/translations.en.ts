@@ -74,6 +74,7 @@ export const enTranslations: Record<string, string> = {
   'common.updateAvailable': 'A new version is available',
   'common.updateNow': 'Update',
   'common.updating': 'Updating…',
+  'common.updateBlocked': 'Save your changes first — then update the page.',
   'common.reloadPage': 'Reload page',
   'common.reloadRequired':
     'Some files failed to load. Reload the page to continue.',
