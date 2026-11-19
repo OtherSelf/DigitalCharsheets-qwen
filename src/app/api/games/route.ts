@@ -48,7 +48,7 @@ export async function GET(request: Request) {
     role: actor.role,
     siteTitle: catalog.siteTitle ?? null,
     games,
-    // Отключённые плагины нужны странице листа для read-only режима (D9).
+    // Отключённые плагины нужны странице листа для read-only режима.
     disabled: listGameModules()
       .filter((gameModule) => !isModuleEnabled(gameModule.id, catalog))
       .map((gameModule) => gameModule.id),

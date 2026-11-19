@@ -189,7 +189,7 @@ export function saveCharacterToServer(
     character as unknown as Record<string, unknown>,
   ).character;
   // Производные пересчитывает сервер: клиент мог прислать рассогласованный
-  // лист, а в файле должен лежать согласованный (D11).
+  // лист, а в файле должен лежать согласованный.
   const derived = applyCharacterDerive(
     normalized as unknown as Record<string, unknown>,
   );
@@ -275,7 +275,7 @@ export function updateCharacterOnServer(
   } as Record<string, unknown>).character;
 
   // Производные пересчитываются до diff и до записи: в файл и в историю
-  // попадает то, что увидит игрок, а не то, что прислал клиент (D11).
+  // попадает то, что увидит игрок, а не то, что прислал клиент.
   const derived = applyCharacterDerive(
     updated as unknown as Record<string, unknown>,
   ) as unknown as Character;

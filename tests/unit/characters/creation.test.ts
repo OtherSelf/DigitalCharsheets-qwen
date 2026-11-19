@@ -1,7 +1,7 @@
 /**
  * Сквозное создание персонажа для каждой обнаруженной редакции: payload'ы
  * берутся из `createDefaults()` модуля, системные поля проверяют тесты
- * плагинов. Так добавление/удаление плагина не ломает хост (D18).
+ * плагинов. Так добавление/удаление плагина не ломает хост.
  */
 
 import fs from 'node:fs';
@@ -68,7 +68,7 @@ describe.each(CREATABLE_MODULES)(
 
     function expectedSheet(data: Record<string, unknown>) {
       // Сервер авторитетен для производных значений: на диске и в ответе
-      // лежит документ после `derive`, а не то, что прислал клиент (D11).
+      // лежит документ после `derive`, а не то, что прислал клиент.
       return applyCharacterDerive(
         normalizeCharacterRecord({
           ...(gameModule.createDefaults() as Record<string, unknown>),
@@ -116,7 +116,7 @@ describe.each(CREATABLE_MODULES)(
       const user = await register(`derive-${slug}`);
       const data = { ...payload() } as Record<string, unknown>;
       // Портим верхнеуровневое числовое производное, если оно объявлено:
-      // сервер обязан сохранить согласованный документ (D11).
+      // сервер обязан сохранить согласованный документ.
       const scalar = derivedFields.find(
         (field) => !field.includes('[]') && typeof data[field] === 'number',
       );

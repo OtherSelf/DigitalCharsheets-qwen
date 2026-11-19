@@ -22,7 +22,7 @@ import { removeDir, useTempDataDir } from '@tests/support';
 /**
  * ─── LANDMARK: GAME CATALOG TESTS ─────────────────────────────────────────
  * Каталог v2 переживает рестарт (файл в data-dir), пишется атомарно под
- * локом. Две независимые сущности (D16): visibility — матрица ролей
+ * локом. Две независимые сущности: visibility — матрица ролей
  * (published → все; test → tester+admin; hidden → только admin), enabled —
  * активность плагина (создание/меню/демо). v1 `statuses` читается и
  * переезжает в v2 автоматически.

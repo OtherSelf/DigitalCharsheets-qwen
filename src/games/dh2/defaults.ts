@@ -30,7 +30,7 @@ import {
  * ─── LANDMARK: DARK_HERESY BASE DEFAULTS ──────────────────────────────────
  * Фабрика персонажа 2-й редакции: мир, бэкграунд, роль, аптитюды, десять
  * характеристик и усталость. Значения характеристик вводит игрок (броски
- * кубиков за столом), поэтому дефолт — 30 и никакого RNG (D5).
+ * кубиков за столом), поэтому дефолт — 30 и никакого RNG.
  */
 
 export type DarkHeresyBaseDraft = Omit<DarkHeresyBase, 'id'>;
@@ -78,7 +78,7 @@ function cleanChosen(
   return cleaned;
 }
 
-/** Раны мира 2e: минимум диапазона, бросок игрок вводит сам (D12). */
+/** Раны мира 2e: минимум диапазона, бросок игрок вводит сам. */
 function defaultWounds(homeWorld: string): number {
   return woundsRangeFor(homeWorld)?.min ?? 10;
 }
@@ -95,7 +95,7 @@ export function createDh2BaseDefaults(
   const role = readKnownId(input, 'role', ROLE_IDS);
   const chosenInput = readChosen(input);
   // Форма создания знает про выборы и не даёт подставлять `of[0]` молча;
-  // программное создание и миграция сохраняют прежний фолбэк (D11).
+  // программное создание и миграция сохраняют прежний фолбэк.
   const strictChoices = readBoolean(input, 'strictAptitudeChoices', false);
   const aptitudes = deriveAptitudes(
     { homeWorld, background, role },

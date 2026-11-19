@@ -21,7 +21,7 @@ import { translations } from '@/lib/i18n';
 const ROOT = process.cwd();
 const SRC = path.join(ROOT, 'src');
 /**
- * Файлы словарей. Ядро пока TS (`translations.*.ts`), плагины — JSON (D13),
+ * Файлы словарей. Ядро пока TS (`translations.*.ts`), плагины — JSON,
  * но локаль больше не обязана называться `en`/`ru`: список собирается
  * сканированием папок `i18n`, а паритет проверяется по манифестам.
  */

@@ -52,7 +52,7 @@ export interface DH2AptitudeProfile {
 }
 
 /**
- * Канонический код пола (D3). `''` — игрок его не выбрал, `unspecified` —
+ * Канонический код пола. `''` — игрок его не выбрал, `unspecified` —
  * осознанное «не указан». В данных хранится только код: подписи живут в i18n,
  * а правила (элитные продвижения) сравнивают код, не завися от языка.
  */
@@ -68,7 +68,7 @@ export interface DH2PsyProfile {
 
 /**
  * Выборы стартового пакета, которые игрок сделал при создании. Пакет остаётся
- * подсказкой: на лист выбранные навыки и таланты игрок вносит вручную (D11).
+ * подсказкой: на лист выбранные навыки и таланты игрок вносит вручную.
  * `skills`/`talents` выровнены по `choose`-слотам бэкграунда, `''` — не выбрано.
  */
 export interface DH2StartingChoices {
@@ -85,7 +85,7 @@ export type DH2ExperienceKind =
   | 'psychic-power'
   | 'psy-rating'
   | 'elite-advance'
-  /** Ручная покупка: цена и назначение вводит игрок (D4). */
+  /** Ручная покупка: цена и назначение вводит игрок. */
   | 'other'
   /** Начисление или штраф опыта; удаление снимает его с `experience`. */
   | 'award';
@@ -188,11 +188,11 @@ export interface DarkHeresyBase extends CharacterBase {
   eliteAdvances: string[];
   /** Пси-профиль 2e. */
   psy: DH2PsyProfile;
-  /** Выборы стартового пакета при создании (D11). */
+  /** Выборы стартового пакета при создании. */
   startingChoices?: DH2StartingChoices;
   /** Пророчество 2e: id строки таблицы 2-9 (`d100-10`), не текст. */
   divination: string;
-  /** Пол персонажа каноническим кодом (D3): правила 2e его не ограничивают. */
+  /** Пол персонажа каноническим кодом: правила 2e его не ограничивают. */
   gender: GenderCode;
   /** Журнал покупок опыта 2e. */
   experienceLog: DH2ExperienceEntry[];
@@ -241,7 +241,7 @@ export interface DH2Fatigue {
  *   • десять характеристик, включая `influence`;
  *   • усталость — `fatigue2nd` (`fatigue1st` не существует);
  *   • в навыках доступна тренировка `+30`;
- *   • `edition` отсутствует: редакция задаётся модулем/`systemId` (D3).
+ *   • `edition` отсутствует: редакция задаётся модулем/`systemId`.
  */
 /** Вид состояния (Безумие/Порча): расстройство, осквернение, мутация, рудимент. */
 export type ConditionKind = 'disorder' | 'corruption' | 'mutation' | 'rudiment';
@@ -249,7 +249,7 @@ export type ConditionKind = 'disorder' | 'corruption' | 'mutation' | 'rudiment';
 /** Источник состояния: игрок, пророчество или миграция старых данных. */
 export type ConditionSource = 'manual' | 'divination' | 'legacy';
 
-/** Структурированное состояние листа (D7); форма повторяется в каждом модуле. */
+/** Структурированное состояние листа; форма повторяется в каждом модуле. */
 export interface ConditionEntry {
   id: string;
   kind: ConditionKind;
@@ -266,6 +266,6 @@ export interface DH2Character extends DarkHeresyBase {
   statUpgrades: DH2StatUpgrades;
   statNotes?: DH2StatNotes;
   fatigue2nd: DH2Fatigue;
-  /** Структурированные состояния (D7): счётчики Безумия/Порчи остаются выше. */
+  /** Структурированные состояния: счётчики Безумия/Порчи остаются выше. */
   conditions?: ConditionEntry[];
 }

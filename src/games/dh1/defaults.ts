@@ -70,7 +70,7 @@ export function createDarkHeresyBaseDefaults(
   const startingProfile = homeWorld
     ? WORLD_STARTING_PROFILE[homeWorld]
     : undefined;
-  // Мир задаёт диапазон: дефолт — минимум, бросок игрок вводит сам (D12).
+  // Мир задаёт диапазон: дефолт — минимум, бросок игрок вводит сам.
   const wounds = readNumber(
     input,
     'wounds',

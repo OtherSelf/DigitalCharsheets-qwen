@@ -48,7 +48,7 @@ import type {
  *   • `GamePlugin` — модуль, у которого метаданные берутся из манифеста
  *     (этап 2: `GameModule` схлопывается в него);
  *   • `GameUiSlots` — слоты `HeaderActions`/`CompactNav`/`BulkEditor`/
- *     `CardSummary` (этап 3, D11);
+ *     `CardSummary` (этап 3);
  *   • `normalize`/`merge` — импорт и слияние в плагине (этап 2).
  *
  * Файл чистый (без fs/DOM/Next): его импортируют и клиент, и сервер.
@@ -76,7 +76,7 @@ export const CURRENT_SCHEMA_VERSION = 2 as const;
 
 /**
  * Языки сайта. Плагин обязан объявить хотя бы одну из этих локалей; остальные
- * локали допустимы, валидируются и хранятся, но сайтом не используются (D8).
+ * локали допустимы, валидируются и хранятся, но сайтом не используются.
  */
 export const PLUGIN_LOCALES = ['en', 'ru'] as const;
 export type PluginLocale = (typeof PLUGIN_LOCALES)[number];
@@ -95,7 +95,7 @@ export type PluginLocalizedText = Partial<Record<PluginLocale, string>> &
   Readonly<Record<string, string | undefined>>;
 
 /**
- * Блок семейства игр в манифесте (D17: одинаков у всех редакций).
+ * Блок семейства игр в манифесте (одинаков у всех редакций).
  * `name` и `description` обязательны на обоих языках сайта: это источник
  * названий и описаний в каталоге (`plugin.schema.json#definitions.localizedText`).
  */
@@ -114,7 +114,7 @@ export interface PluginDependencies {
 
 /**
  * Шаг цепочки миграций в манифесте. Исполнение — в модуле по `entry`
- * (`index.ts#migrateV1toV2`); манифест — источник порядка и описания (D4).
+ * (`index.ts#migrateV1toV2`); манифест — источник порядка и описания.
  */
 export interface PluginMigrationManifest {
   readonly from: number;
@@ -131,7 +131,7 @@ export interface PluginMigrationManifest {
 
 /**
  * UI-часть манифеста. `mode` пока единственный (`custom`): плагин владеет
- * React-компонентами листа и формы (D3). Поле оставлено как точка роста.
+ * React-компонентами листа и формы. Поле оставлено как точка роста.
  */
 export interface PluginSheetManifest {
   readonly mode: 'custom';
@@ -139,7 +139,7 @@ export interface PluginSheetManifest {
   readonly createForm: string;
 }
 
-/** Именованные слоты UI, которые плагин может заполнить (этап 3, D11). */
+/** Именованные слоты UI, которые плагин может заполнить (этап 3). */
 export const PLUGIN_UI_SLOTS = [
   'HeaderActions',
   'HeaderSubtitle',
@@ -173,7 +173,7 @@ export interface PluginManifest {
   readonly dependencies: PluginDependencies;
   readonly entry: { readonly module: string };
   readonly sheet: PluginSheetManifest;
-  /** Локаль → путь к словарю; минимум одна из `en`/`ru` (D8). */
+  /** Локаль → путь к словарю; минимум одна из `en`/`ru`. */
   readonly i18n: Readonly<Record<string, string>>;
   readonly demo: { readonly entry: string };
   readonly export: {
@@ -216,7 +216,7 @@ export interface PluginManifest {
 }
 
 /**
- * Чистая функция производных значений листа (этап 2, D2): по первичным полям
+ * Чистая функция производных значений листа (этап 2): по первичным полям
  * (уровень, характеристики, владения) пересчитывает зависимые (бонус
  * мастерства, значения спасбросков и навыков, DC заклинаний).
  *
@@ -313,7 +313,7 @@ export interface PluginRegistration<
   readonly module: GameModule<TCharacter>;
   /**
    * Мост к `GamePlugin.derive`, пока `GameModule` не слился с `GamePlugin`:
-   * функция берётся из точки входа манифеста, а не из модуля (D2).
+   * функция берётся из точки входа манифеста, а не из модуля.
    */
   readonly derive?: CharacterDerive<any>;
 }

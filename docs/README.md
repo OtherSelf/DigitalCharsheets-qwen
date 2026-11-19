@@ -17,7 +17,7 @@ deploying lives here, one topic per page.
 | [security.md](security.md) | Threat model, trust boundaries, session/recovery/path invariants, limits, runbook |
 | [sharing.md](sharing.md) | Read-only guest links: owner flow, token model, public page, privacy |
 | [character-history.md](character-history.md) | Change log: diff model, JSONL storage, history API and screen |
-| [decisions.md](decisions.md) | Legend for the `D<n>` references in docs and code: the architectural decisions and where each is enforced |
+| [decisions.md](decisions.md) | Legend for the `D<n>` references in docs: the architectural decisions and where each is enforced |
 | [adr/0001-credentials-and-sessions.md](adr/0001-credentials-and-sessions.md) | ADR: password/phrase hashing, sessions with `jti`, recovery tokens, password policy |
 | [adr/0002-legacy-migration-tooling.md](adr/0002-legacy-migration-tooling.md) | ADR: legacy migration tooling in the repo, no data dumps in git |
 | [adr/0003-derived-values-authority.md](adr/0003-derived-values-authority.md) | ADR: the server recomputes derived values (`derive`), the client never diverges |

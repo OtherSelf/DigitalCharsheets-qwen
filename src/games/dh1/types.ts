@@ -32,7 +32,7 @@ export const DarkHeresyCareerPaths = [
 export type DarkHeresyCareerPath = (typeof DarkHeresyCareerPaths)[number];
 
 /**
- * Канонический код пола (D3). `''` — игрок его не выбрал, `unspecified` —
+ * Канонический код пола. `''` — игрок его не выбрал, `unspecified` —
  * осознанное «не указан». Подписи живут в i18n, в данных — только код.
  */
 export const GENDER_CODES = ['male', 'female', 'unspecified', ''] as const;
@@ -269,9 +269,9 @@ export interface DH1CorruptionDetails {
  *   • девять характеристик без `influence`;
  *   • усталость — `fatigue1st` (`fatigue2nd` не существует);
  *   • `+30` в навыках не используется в UI;
- *   • `edition` отсутствует: редакция задаётся модулем/`systemId` (D3).
+ *   • `edition` отсутствует: редакция задаётся модулем/`systemId`.
  *
- * Поля ниже добавлены аддитивно (D3 DH1APP): старые листы читаются без
+ * Поля ниже добавлены аддитивно: старые листы читаются без
  * миграции, отсутствие любого блока означает «не заполнено».
  */
 /** Вид состояния (Безумие/Порча): расстройство, осквернение, мутация, рудимент. */
@@ -280,7 +280,7 @@ export type ConditionKind = 'disorder' | 'corruption' | 'mutation' | 'rudiment';
 /** Источник состояния: игрок, пророчество или миграция старых данных. */
 export type ConditionSource = 'manual' | 'divination' | 'legacy';
 
-/** Структурированное состояние листа (D7); форма повторяется в каждом модуле. */
+/** Структурированное состояние листа; форма повторяется в каждом модуле. */
 export interface ConditionEntry {
   id: string;
   kind: ConditionKind;
@@ -305,8 +305,8 @@ export interface DH1Character extends DarkHeresyBase {
   psy?: DH1Psy;
   insanityDetails?: DH1InsanityDetails;
   corruptionDetails?: DH1CorruptionDetails;
-  /** Журнал покупок опыта: ведёт игрок (D4), допускает удаление записей. */
+  /** Журнал покупок опыта: ведёт игрок, допускает удаление записей. */
   experienceLog?: DH1ExperienceEntry[];
-  /** Структурированные состояния (D7): расстройства, осквернения, мутации. */
+  /** Структурированные состояния: расстройства, осквернения, мутации. */
   conditions?: ConditionEntry[];
 }

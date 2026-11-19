@@ -15,8 +15,8 @@ interface NotesSheetProps {
 /**
  * ─── LANDMARK: NOTES SHEET ─────────────────────────────────────────────────
  * Страничная кнопка «Заметки» (шапка и компакт-навигация) правит то же поле
- * `notes`, что и Info-блоки, поэтому использует тот же `NarrativeSheet`
- * (D14): просмотр markdown и редактирование в одном правом Sheet, для всех
+ * `notes`, что и Info-блоки, поэтому использует тот же `NarrativeSheet`:
+ * просмотр markdown и редактирование в одном правом Sheet, для всех
  * редакций включая dnd5e.
  */
 export function NotesSheet({ character, open, onOpenChange }: NotesSheetProps) {

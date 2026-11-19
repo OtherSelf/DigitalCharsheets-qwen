@@ -245,7 +245,7 @@ export const dh1History: GameHistoryConfig = {
     conditions: 'dh1.conditions.title',
   },
   valueLabels: {
-    // Пол в данных — код (D3); игрок должен видеть подпись, а не `female`.
+    // Пол в данных — код; игрок должен видеть подпись, а не `female`.
     'identity.gender': {
       male: 'dh1.genderMale',
       female: 'dh1.genderFemale',

@@ -40,7 +40,7 @@ import { adminGameBadge, formatAdminDate } from './admin-helpers';
 /**
  * Подпись листа в таблице: её собирает плагин слотом `CardSummary`. Ядро
  * передаёт только сырой лист и переводчик, поэтому не знает ни уровня, ни
- * ранга (D7).
+ * ранга.
  */
 function AdminCharacterDetails({
   character,

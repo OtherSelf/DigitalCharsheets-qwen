@@ -41,7 +41,7 @@ describe('DH1: миграция листа v2', () => {
     // «Имя игрока» — legacy-ключ: в контракте листа его нет, но старые
     // данные не переписываются и проходят looseObject.
     expect((dh.identity as Record<string, unknown>).playerName).toBe('Игрок');
-    // Пол нормализуется в канонический код (D3), подпись в данных не живёт.
+    // Пол нормализуется в канонический код, подпись в данных не живёт.
     expect((dh.identity as Record<string, unknown>).gender).toBe('male');
     expect(dh.insanityPoints).toEqual({ total: 3, notes: '' });
     expect(dh.corruptionPoints).toEqual({ total: 1, notes: '' });

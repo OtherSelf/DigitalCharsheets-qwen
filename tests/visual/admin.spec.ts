@@ -120,7 +120,7 @@ test.describe('admin', () => {
     await expect(dialog).toBeVisible();
     await expect(dialog.getByText('Seraphina Vael')).toBeVisible();
     await expect(dialog.getByText('Lucius Varn')).toBeVisible();
-    // Короткий код игры из реестра (D1): nameKey даёт только редакцию, код
+    // Короткий код игры из реестра: nameKey даёт только редакцию, код
     // не переводится и не зависит от локали.
     await expect(dialog.getByText('dnd5e', { exact: true })).toBeVisible();
     await expect(dialog.getByText('dh1e', { exact: true })).toBeVisible();

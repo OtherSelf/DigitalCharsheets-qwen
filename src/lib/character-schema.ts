@@ -90,7 +90,7 @@ export function normalizeAllCharacters(): NormalizeCharactersReport {
 
       // Производные «догоняют» лист, сохранённый по старой версии схемы:
       // значения меняются, поэтому перезапись идёт по тем же правилам, что у
-      // миграции — с .bak и маркером в истории (D11/D12).
+      // миграции — с .bak и маркером в истории.
       const beforeVersion =
         typeof (parsed as Record<string, unknown>).schemaVersion === 'number'
           ? Number((parsed as Record<string, unknown>).schemaVersion)

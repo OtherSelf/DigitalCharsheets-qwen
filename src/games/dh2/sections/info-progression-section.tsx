@@ -181,9 +181,9 @@ const ReadOnlyField = ({
 );
 
 /**
- * Поле создания (D4): пока пусто и идёт редактирование — Select; заданное
+ * Поле создания: пока пусто и идёт редактирование — Select; заданное
  * значение read-only с замком «выбрано при создании». Производные (aptitudes,
- * starting choices) при дозаполнении не пересчитываются (D15).
+ * starting choices) при дозаполнении не пересчитываются.
  */
 const CreationField = ({
   label,
@@ -825,7 +825,7 @@ export const InfoSection = ({
   );
 };
 
-/** Текст одной причины: подпись требования из каталога, не сырой код (D2). */
+/** Текст одной причины: подпись требования из каталога, не сырой код. */
 function eliteIssueText(
   requirement: Dh2eEliteRequirement,
   t: (key: string) => string,
@@ -864,7 +864,7 @@ function eliteIssueText(
 
 /**
  * Красные причины конфликта с бэкграундом/полом/характеристиками/другим
- * элитным (D2). Покупку не блокируют: ГМ мог разрешить исключение.
+ * элитным. Покупку не блокируют: ГМ мог разрешить исключение.
  */
 const EliteRequirementWarnings = ({
   character,
@@ -960,7 +960,7 @@ export const ProgressionSection = ({
     }
     if (entry.kind === 'elite-advance') {
       // Второй путь удаления элитного: без снятия id профиль и журнал
-      // разошлись бы (D7).
+      // разошлись бы.
       const removal = removeEliteJournalEntry(character, entryId);
       if (removal) updateCharacter(character.id, removal);
       return;
@@ -994,8 +994,8 @@ export const ProgressionSection = ({
     setIsSpendOpen(false);
   };
 
-  // Следующая ступень пси-рейтинга: цена — подсказка, списание — в журнал
-  // (D1/D3). Доступный опыт не блокирует покупку: это решает стол.
+  // Следующая ступень пси-рейтинга: цена — подсказка, списание — в журнал.
+  // Доступный опыт не блокирует покупку: это решает стол.
   const nextPsyRating = (character.psy?.rating ?? 0) + 1;
   const nextPsyCost = psyRatingCost(nextPsyRating);
   const willpowerTotal = statTotal(character, 'willpower');

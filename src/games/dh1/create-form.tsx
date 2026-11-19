@@ -236,7 +236,7 @@ export function DarkHeresyCreateForm({
   }, [watchedHomeWorld, form]);
 
   // Раны и Судьба: по умолчанию минимум диапазона мира, бросок вводит
-  // игрок (D12). Значения не «из воздуха» и не средние.
+  // игрок. Значения не «из воздуха» и не средние.
   React.useEffect(() => {
     if (!watchedProfile) return;
     const wounds = woundsRangeFromFormula(watchedProfile.wounds);

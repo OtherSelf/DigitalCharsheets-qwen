@@ -6,7 +6,7 @@ import { Alert } from '@/components/ui/alert';
 
 /**
  * ─── LANDMARK: SHEET STATE BANNER ─────────────────────────────────────────
- * Баннер состояния листа: «игра отключена» (read-only, D9) или «плагин не
+ * Баннер состояния листа: «игра отключена» (read-only) или «плагин не
  * установлен» (generic JSON). Данные пользователя при этом не теряются.
  */
 export function SheetStateBanner({

@@ -241,7 +241,7 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
       [character.id, updateCharacter],
     );
 
-    // Производные значения считает та же функция, что и сервер (D14):
+    // Производные значения считает та же функция, что и сервер:
     // собственных формул у листа нет, иначе клиент и файл расходятся.
     const derived = React.useMemo(
       () =>

@@ -11,7 +11,7 @@
  *    2. валидирует каждый по `src/games/plugin.schema.json` (Ajv, только
  *       сборка/CI — в рантайме схема не нужна);
  *    3. проверяет уникальность `id`/`order`, совпадение `game`-блока у
- *       редакций одного семейства (D17) и совместимость `pluginApi`;
+ *       редакций одного семейства и совместимость `pluginApi`;
  *    4. проверяет, что все точки входа (`index.ts#export`, sheet/i18n-файлы,
  *       миграции) существуют и лежат внутри папки плагина;
  *    5. пишет `registry.generated.ts` (плагины), `i18n.generated.ts` (словари и
@@ -213,7 +213,7 @@ export function validatePluginFolder({ gamesDir, dirName, manifest }) {
 
 /**
  * Проверки уровня набора плагинов: уникальность id/order, версии,
- * совпадение `game`-блока у редакций одного семейства (D17).
+ * совпадение `game`-блока у редакций одного семейства.
  *
  * @param {{dirName: string, manifest: any}[]} plugins
  */
@@ -360,7 +360,7 @@ function manifestVarName(id) {
 }
 
 /**
- * Уникальные семейства игр из `game`-блоков манифестов (D17).
+ * Уникальные семейства игр из `game`-блоков манифестов.
  * Порядок — `order`, затем `id`; сами названия/описания остаются в манифестах
  * и попадают в `i18n.generated.ts` как ключи `games.generated.*`.
  *
@@ -405,7 +405,7 @@ export function renderGameDefinitions(plugins) {
   return `/**
  * ─── AUTO-GENERATED — НЕ РЕДАКТИРОВАТЬ ─────────────────────────────────────
  * Семейства игр, сгенерированные из блоков \`game\` манифестов
- * \`src/games/<id>/plugin.json\` (D17: у редакций одной игры блок одинаков).
+ * \`src/games/<id>/plugin.json\` (у редакций одной игры блок \`game\` одинаков).
  *
  * Пересобрать:  npm run plugins:generate
  * Проверить:    npm run plugins:check
@@ -449,7 +449,7 @@ export function renderRegistry(plugins) {
         const names = [{ name: moduleExportName(manifest) }];
         if (manifest.derive) {
           // Импорт из того же модуля, что и сам плагин: derive — обычный
-          // именованный экспорт точки входа, а не поле GameModule (D2).
+          // именованный экспорт точки входа, а не поле GameModule.
           names.push({
             name: parseEntryPoint(manifest.derive.entry).member,
             alias: deriveVarName(manifest.id),
@@ -534,7 +534,7 @@ ${uiLoaders}
   return `/**
  * ─── AUTO-GENERATED — НЕ РЕДАКТИРОВАТЬ ─────────────────────────────────────
  * Реестр плагинов, сгенерированный из манифестов \`src/games/<id>/plugin.json\`
- * (D1: плагины — build-time; новый плагин = папка + манифест + пересборка).
+ * (плагины — build-time: новый плагин = папка + манифест + пересборка).
  *
  * Пересобрать:  npm run plugins:generate
  * Проверить:    npm run plugins:check   (шаг \`npm run verify\`)

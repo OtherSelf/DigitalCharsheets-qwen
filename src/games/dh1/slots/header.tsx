@@ -14,7 +14,7 @@ import type { DH1Character } from '../types';
  * ─── LANDMARK: DH1 HEADER SLOTS ────────────────────────────────────────────
  * Подпись «ранг/карьера | Dark Heresy» и кнопка домашних правил с диалогом.
  * Раньше это жило в `src/components/header.tsx` с проверками `gameSystem`
- * и `resolveCharacterSystemId`; теперь — слот плагина (этап 3, D11).
+ * и `resolveCharacterSystemId`; теперь — слот плагина (этап 3).
  */
 
 function translateOr(

@@ -23,11 +23,11 @@ import type { UserRole } from './user-role';
  * `<data-dir>/settings/game-catalog.json`, переживает рестарт, пишется
  * атомарно под data-lock.
  *
- * Две независимые сущности (D16):
+ * Две независимые сущности (enabled и visibility — разные оси):
  *   • `visibility` — published / test / hidden: кто видит плагин в создании и
  *     меню (матрица ниже);
  *   • `enabled` — активен ли плагин: false = не показываем в создании/меню/
- *     демо, а существующие листы открываются только для чтения (D9).
+ *     демо, а существующие листы открываются только для чтения.
  *
  * v1 (`statuses`) читается и автоматически переезжает в v2
  * (`plugins: { id: { enabled, visibility } }`): `enabled=true`,
@@ -168,7 +168,7 @@ export function canAccessModule(
 
 /**
  * Можно ли создавать листы плагина и показывать его в меню: плагин включён
- * и виден роли. Открытие существующих листов проверяется отдельно (D9).
+ * и виден роли. Открытие существующих листов проверяется отдельно.
  */
 export function canCreateWithModule(
   role: UserRole | undefined,
@@ -239,7 +239,7 @@ export function setModuleStatus(
   return next;
 }
 
-/** Включить/выключить плагин (создание и меню; листы — read-only, D9). */
+/** Включить/выключить плагин (создание и меню; листы — read-only). */
 export function setModuleEnabled(
   systemId: SystemId,
   enabled: boolean,

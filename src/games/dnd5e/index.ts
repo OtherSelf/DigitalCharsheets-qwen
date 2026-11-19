@@ -34,7 +34,7 @@ export const createDemo = createDnd5eDemo;
 /**
  * Точка входа пересчёта производных (`plugin.json#derive`). Отдельный экспорт,
  * а не поле модуля: манифест ссылается на него, и он же становится мостом в
- * рантайм-реестр (D2).
+ * рантайм-реестр.
  */
 export const deriveCharacter = deriveDnd5e;
 

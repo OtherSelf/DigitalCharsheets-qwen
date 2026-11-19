@@ -20,7 +20,7 @@ import type { DH2Character } from '../types';
  * ─── LANDMARK: DH2 REQUISITION ─────────────────────────────────────────────
  * Реквизиция 2e (с. 141): цель = Influence + модификатор доступности +
  * модификатор качества. Приложение только считает цель; бросок и разрешение
- * ГМ — за столом (D1/D5). Автоматическая доступность теста не требует.
+ * ГМ — за столом. Автоматическая доступность теста не требует.
  */
 export function RequisitionBlock({ character }: { character: DH2Character }) {
   const { t } = useTranslation();

@@ -147,7 +147,7 @@ export function loadGameUiSlots(
   return promise;
 }
 
-/** Манифест плагина по `systemId` — источник названий и порядка (D4). */
+/** Манифест плагина по `systemId` — источник названий и порядка. */
 export const getPluginManifest = (id: SystemId): PluginManifest | undefined =>
   getGamePlugin(id)?.manifest;
 

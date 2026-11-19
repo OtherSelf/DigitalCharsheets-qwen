@@ -21,7 +21,7 @@ import type { GameDefinition, SystemId } from './types';
 export interface CharacterSystemSource {
   systemId?: string;
   gameSystem?: string;
-  /** Legacy 1e/2e marker: используется только до миграции v2 (D3). */
+  /** Legacy 1e/2e marker: используется только до миграции v2. */
   edition?: string;
 }
 
@@ -105,7 +105,7 @@ export function getSystemNameKeys(
 }
 
 /**
- * Режим листа «только чтение» (D9): плагин не установлен или отключён
+ * Режим листа «только чтение»: плагин не установлен или отключён
  * администратором. Возвращает причину, чтобы страница показала нужный баннер.
  */
 export interface SheetReadOnlyState {

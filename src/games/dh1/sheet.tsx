@@ -199,7 +199,7 @@ export const Dh1Sheet = React.forwardRef<
   } = useCharacterContext();
   const { t } = useTranslation();
   // LANDMARK: CREATION REVIEW STATE
-  // Импортированный лист открывается с открытыми замками до фиксации (D1).
+  // Импортированный лист открывается с открытыми замками до фиксации.
   // Состояние живёт в памяти вкладки и привязано к id: лист может остаться
   // смонтированным при переходе между персонажами.
   const [creationReview, setCreationReview] = React.useState(() =>
@@ -208,7 +208,7 @@ export const Dh1Sheet = React.forwardRef<
   React.useEffect(() => {
     setCreationReview(isCreationReview(character.id));
   }, [character.id]);
-  // Обязательные поля для фиксации (D3): мир и карьера.
+  // Обязательные поля для фиксации: мир и карьера.
   const missingCreationFields = creationReview
     ? [
         !isFieldFilled(character.homeWorld) ? t('dh1.homeWorld') : null,
