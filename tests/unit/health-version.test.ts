@@ -1,10 +1,17 @@
+import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { GET as healthRoute } from '@/app/api/health/route';
 import { GET as versionRoute } from '@/app/api/version/route';
-import { APP_NAME, APP_VERSION, shortenCommit } from '@/lib/app-info';
+import {
+  APP_NAME,
+  APP_VERSION,
+  getAppInfo,
+  shortenCommit,
+} from '@/lib/app-info';
 
 import { removeDir, useTempDataDir } from '@tests/support';
 
@@ -98,6 +105,8 @@ describe('GET /api/version', () => {
       commitShort: 'a077aef',
       branch: 'release/0.5',
       buildDate: '2026-01-01T00:00:00.000Z',
+      // В тестах NODE_ENV не production, поэтому id — случайный на процесс.
+      buildId: expect.any(String),
       runtime: { node: process.version },
     });
     expect(JSON.stringify(body)).not.toContain(dataDir);
@@ -117,6 +126,57 @@ describe('GET /api/version', () => {
     expect(body.commitShort).toBeNull();
     expect(body.branch).toBeNull();
     expect(body.buildDate).toBeNull();
+  });
+});
+
+describe('buildId', () => {
+  it('в production — deploymentId из окружения (его выставляет next start)', () => {
+    vi.stubEnv('NODE_ENV', 'production');
+    vi.stubEnv(
+      'NEXT_DEPLOYMENT_ID',
+      'abfe32f5ccc8f430a4d695c7b13deff4522e0546',
+    );
+
+    expect(getAppInfo().buildId).toBe(
+      'abfe32f5ccc8f430a4d695c7b13deff4522e0546',
+    );
+  });
+
+  it('в production без deploymentId — .next/BUILD_ID с диска', () => {
+    vi.stubEnv('NODE_ENV', 'production');
+    vi.stubEnv('NEXT_DEPLOYMENT_ID', '');
+
+    const cwd = fs.mkdtempSync(path.join(os.tmpdir(), 'dcs-build-id-'));
+    fs.mkdirSync(path.join(cwd, '.next'));
+    fs.writeFileSync(
+      path.join(cwd, '.next', 'BUILD_ID'),
+      'icxnjkkrBwwuT9xbHVJN6\n',
+    );
+
+    try {
+      expect(getAppInfo({ cwd }).buildId).toBe('icxnjkkrBwwuT9xbHVJN6');
+    } finally {
+      removeDir(cwd);
+    }
+  });
+
+  it('вне production — случайный id процесса: стабилен и не равен commit', () => {
+    vi.stubEnv('NODE_ENV', 'test');
+    vi.stubEnv(
+      'NEXT_DEPLOYMENT_ID',
+      'abfe32f5ccc8f430a4d695c7b13deff4522e0546',
+    );
+
+    const first = getAppInfo().buildId;
+    expect(first).toMatch(/^[0-9a-f-]{36}$/);
+    // Один процесс — один id: повторный запрос не должен выглядеть как деплой.
+    expect(getAppInfo().buildId).toBe(first);
+
+    // Рестарт процесса = потеря globalThis; только тогда id меняется (HMR его
+    // сохраняет, поэтому вкладка не перезагружается на каждую правку).
+    delete (globalThis as typeof globalThis & { __dcsBootId?: string })
+      .__dcsBootId;
+    expect(getAppInfo().buildId).not.toBe(first);
   });
 });
 

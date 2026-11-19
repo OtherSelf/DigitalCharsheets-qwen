@@ -375,7 +375,40 @@ await check('GET /api/version → 200 (JSON, без сессии)', async () => 
     body.runtime && typeof body.runtime.node === 'string',
     'GET /api/version: нет runtime.node',
   );
+  assert(
+    typeof body.buildId === 'string' && body.buildId.length > 0,
+    'GET /api/version: нет buildId',
+  );
   return `${body.name} ${body.version}`;
+});
+
+// Id сборки в HTML и в /api/version — один и тот же: клиент сравнивает именно
+// его, а `?dpl=` доказывает, что Next подписал статику тем же deploymentId.
+await check('GET / → data-dpl-id совпадает с buildId', async () => {
+  const html = await request('/', { auth: false });
+  assertStatus(html, 200, 'GET / (dpl)');
+
+  const version = assertJson(
+    await request('/api/version', { auth: false }),
+    'GET /api/version (dpl)',
+  );
+  const injected = /data-dpl-id="([^"]+)"/.exec(html.text);
+
+  if (!injected) {
+    // deploymentId не задан (образ без `.git` и без env): id остаётся за
+    // `.next/BUILD_ID`, но подписывать статику нечем.
+    return `buildId ${version.buildId} (без ?dpl=: deploymentId не задан)`;
+  }
+
+  assert(
+    injected[1] === version.buildId,
+    `data-dpl-id (${injected[1]}) не совпал с buildId (${version.buildId})`,
+  );
+  assert(
+    html.text.includes('dpl='),
+    'GET /: нет ни одной ссылки на статику с ?dpl=',
+  );
+  return `buildId ${version.buildId}, статика подписана`;
 });
 
 // 1.1 Браузерные границы (SEC-11)

@@ -114,7 +114,10 @@ async function probeApi(port) {
     {
       path: '/api/version',
       verify: (body) =>
-        typeof body.name === 'string' && typeof body.version === 'string',
+        typeof body.name === 'string' &&
+        typeof body.version === 'string' &&
+        typeof body.buildId === 'string' &&
+        body.buildId.length > 0,
     },
   ];
 

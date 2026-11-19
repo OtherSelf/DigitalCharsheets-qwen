@@ -24,6 +24,7 @@
     "plugins:doctor": "vitest run tests/unit/plugins-doctor.test.ts",
     "test:watch": "vitest",
     "test:smoke": "node scripts/smoke.mjs",
+    "check:build-id": "node scripts/check-build-id.mjs",
     "test:dev": "node scripts/dev-smoke.mjs",
     "verify": "bash scripts/predeploy.sh",
     "plugins:generate": "node scripts/plugins/generate.mjs",

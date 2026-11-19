@@ -554,6 +554,7 @@ export const openApiDocument = {
           'commitShort',
           'branch',
           'buildDate',
+          'buildId',
           'runtime',
         ],
         properties: {
@@ -578,6 +579,11 @@ export const openApiDocument = {
             type: ['string', 'null'],
             format: 'date-time',
             description: 'Build date from DCS_BUILD_DATE.',
+          },
+          buildId: {
+            type: 'string',
+            description:
+              'Identifier of the running build, compared by the client with the one it loaded to detect a redeploy. In production it is the Next `deploymentId` (commit SHA), or `.next/BUILD_ID` when no deployment id is configured; in development it is a random id generated once per server process.',
           },
           runtime: {
             type: 'object',

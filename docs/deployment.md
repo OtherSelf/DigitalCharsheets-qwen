@@ -58,7 +58,7 @@ plain `start`.
 | Variable | Default | Purpose |
 | --- | --- | --- |
 | `DCS_DATA_DIR` | `./data` | Directory with users, sheets and the login index. Must be writable. |
-| `DCS_GIT_COMMIT` | local `.git` (HEAD) | Commit SHA shown by `/api/version` and the UI version line. `GIT_COMMIT` / `VERCEL_GIT_COMMIT_SHA` are accepted too. Without env the local checkout is read, so a plain `next start` from a clone already reports its commit; in an image without `.git` set this explicitly at build time. |
+| `DCS_GIT_COMMIT` | local `.git` (HEAD) | Commit SHA shown by `/api/version` and the UI version line, and the source of `deploymentId` for production builds (see below). `GIT_COMMIT` / `VERCEL_GIT_COMMIT_SHA` are accepted too. Without env the local checkout is read, so a plain `next start` from a clone already reports its commit; in an image without `.git` set this explicitly at build time. |
 | `DCS_GIT_BRANCH` | `.git` HEAD branch | Branch shown in the version tooltip (`GIT_BRANCH` / `VERCEL_GIT_COMMIT_REF` are accepted). Only the tooltip displays it. |
 | `DCS_BUILD_DATE` | unset | Build date shown in the version tooltip (`null` when unset). |
 | `DCS_SESSION_SECRET` | `<data-dir>/.session-secret` | HMAC key for session cookies. Set explicitly if several instances/processes share one data dir or if the data dir is ephemeral. |
@@ -66,8 +66,6 @@ plain `start`.
 | `DCS_COOKIE_SECURE` | unset | `1` forces the `Secure` flag on the session cookie. It is already on by default in production; this variable is a compatible way to enable it in development. |
 | `DCS_COOKIE_INSECURE` | unset | `1` explicitly disables the `Secure` flag (local plain-HTTP development only). |
 | `DCS_ADMIN_USERNAME` | `admin` | Preferred login for the bootstrap administrator; `admin-2`, … if taken. |
-| `DCS_GIT_COMMIT` | unset | Commit shown by `/api/version`; falls back to `GIT_COMMIT` / `VERCEL_GIT_COMMIT_SHA`. |
-| `DCS_BUILD_DATE` | unset | ISO build date shown by `/api/version`. |
 | `PORT` | `3000` | HTTP port. |
 
 See [data-storage.md](data-storage.md) for the directory layout.
@@ -84,6 +82,25 @@ monitoring:
 `GET /api/version` returns the application version and build metadata (see
 `DCS_GIT_COMMIT` / `DCS_BUILD_DATE` above). Both endpoints are documented in
 [api.md](api.md) and in `/api/docs`.
+
+`buildId` is the identifier of the running build, not the package version: a
+production server reports its `deploymentId` (Next's skew-protection id, derived
+below from the commit), or `.next/BUILD_ID` when no deployment id is configured;
+a development server reports a random id per process. The browser compares that
+value with the one it loaded and reloads the tab when the server changed — this
+is what the `?dpl=` static-asset suffix and the `data-dpl-id` attribute in the
+HTML belong to. Check any deployment from outside with
+`npm run check:build-id -- https://<host>`.
+
+Production builds set `deploymentId` in `next.config.ts` from `DCS_GIT_COMMIT`,
+then `GIT_COMMIT`, then the checkout's HEAD. Next appends `?dpl=` to static URLs,
+injects `data-dpl-id` into the HTML and hard-navigates when the browser still
+runs an older build; `next start` re-reads the same config, so the baked value
+and the runtime value agree. Because the id comes from the checkout, a `restart`
+after the checkout moved **without** a rebuild would give the runtime a different
+id than the one in the build: after `git pull` run `deploy`, not `restart`. In an
+image without `.git` set `DCS_GIT_COMMIT` at build time, or expect no `?dpl=`
+(and `buildId` falls back to `.next/BUILD_ID`).
 
 The route is dynamic, so `DCS_GIT_COMMIT` is read at request time: exporting it
 before `next start` is enough, no rebuild required. The value (shortened to
