@@ -45,3 +45,26 @@ export function readPrice(item: InventoryItem): number | undefined {
   }
   return value;
 }
+
+/** Суммы колонок: только предметы «в наличии». */
+export interface InventoryTotals {
+  weight: number;
+  price: number;
+}
+
+/**
+ * Итоги инвентаря: вес и цена по строкам без `lost`. Пустые вес/цена
+ * считаются нулём, чтобы сумма не зависела от того, заполнены ли поля.
+ */
+export function inventoryTotals(
+  items: readonly InventoryItem[],
+): InventoryTotals {
+  let weight = 0;
+  let price = 0;
+  for (const item of items) {
+    if (readStatus(item) === 'lost') continue;
+    weight += readWeight(item) ?? 0;
+    price += readPrice(item) ?? 0;
+  }
+  return { weight, price };
+}

@@ -4,6 +4,7 @@ import { createDh2Defaults } from '@/games/dh2/defaults';
 import { buildDh2PortableJson } from '@/games/dh2/export';
 import {
   DEFAULT_ITEM_QUANTITY,
+  inventoryTotals,
   readQuantity,
   readStatus,
   readWeight,
@@ -37,6 +38,23 @@ describe('dh2: чтение полей инвентаря', () => {
     expect(readQuantity(item)).toBe(DEFAULT_ITEM_QUANTITY);
     expect(readStatus(item)).toBe('default');
     expect(readWeight(item)).toBeUndefined();
+  });
+
+  it('сумма веса не включает потерянные предметы', () => {
+    const items: InventoryItem[] = [
+      {
+        id: 'a',
+        name: 'Autopistol',
+        status: 'default',
+        quantity: 1,
+        weight: 1.5,
+      },
+      { id: 'b', name: 'Spare mag', status: 'default', weight: 0.3 },
+      { id: 'c', name: 'Lost kit', status: 'lost', weight: 99 },
+      { id: 'd', name: 'Rope', status: 'default' },
+    ];
+
+    expect(inventoryTotals(items).weight).toBeCloseTo(1.8, 5);
   });
 
   it('сохраняет заданные значения и нормализует мусор', () => {

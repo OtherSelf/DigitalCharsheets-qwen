@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { buildDh1PortableJson } from '@/games/dh1/export';
 import {
   DEFAULT_ITEM_QUANTITY,
+  inventoryTotals,
   readPrice,
   readQuantity,
   readStatus,
@@ -40,6 +41,33 @@ describe('dh1: чтение полей инвентаря', () => {
     expect(readStatus(item)).toBe('default');
     expect(readWeight(item)).toBeUndefined();
     expect(readPrice(item)).toBeUndefined();
+  });
+
+  it('суммы веса и цены не включают потерянные предметы', () => {
+    const items: InventoryItem[] = [
+      {
+        id: 'a',
+        name: 'Bolter',
+        status: 'default',
+        quantity: 1,
+        weight: 4.5,
+        price: 500,
+      },
+      {
+        id: 'b',
+        name: 'Ammo',
+        status: 'default',
+        quantity: 30,
+        weight: 0.3,
+        price: 12,
+      },
+      { id: 'c', name: 'Lost relic', status: 'lost', weight: 99, price: 999 },
+      { id: 'd', name: 'Rope', status: 'default' },
+    ];
+
+    const totals = inventoryTotals(items);
+    expect(totals.weight).toBeCloseTo(4.8, 5);
+    expect(totals.price).toBe(512);
   });
 
   it('сохраняет заданные значения и нормализует мусор', () => {
