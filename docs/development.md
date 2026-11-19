@@ -47,8 +47,10 @@ Deployment details, reverse proxy and environment variables:
 | `npm start` | Start the production server. |
 | `npm run lint` | ESLint (flat config, `next/core-web-vitals` + `next/typescript`). |
 | `npm run lint:fix` | Safe ESLint autofixes. |
-| `npm run format` | Prettier: formatting + import sorting + Tailwind class sorting. |
-| `npm run format:check` | Prettier check (CI/pre-commit gate). |
+| `npm run format` | LF normalization, then Prettier: formatting + import sorting + Tailwind class sorting. |
+| `npm run format:check` | Prettier check plus the line-ending check (CI/pre-commit gate). |
+| `npm run eol:check` | LF in the index and the working tree; fails on CRLF (also a step of `npm run verify`). |
+| `npm run eol:fix` | Rewrite CRLF → LF in the working tree; nothing else changes (`format` runs it first). |
 | `npm run typecheck` | `tsc --noEmit`. |
 | `npm test` | Unit tests (Vitest). |
 | `npm run test:watch` | Vitest in watch mode. |
@@ -61,7 +63,7 @@ Deployment details, reverse proxy and environment variables:
 | `npm run test:visual:prune` | List obsolete PNG baselines (`--write` to delete). |
 | `npm run test:visual:update` | Rewrite visual baselines. |
 | `npm run test:visual:report` | Open the Playwright HTML report. |
-| `npm run verify` | Full pre-deploy gate: format + lint + typecheck + unit + build + smoke. |
+| `npm run verify` | Full pre-deploy gate: lockfile + line endings + format + lint + typecheck + unit + build + smoke. |
 
 Testing details: [testing.md](testing.md).
 
@@ -70,8 +72,8 @@ Testing details: [testing.md](testing.md).
 The Python equivalent of `isort --profile black .; black .` here is:
 
 ```bash
-npm run format         # prettier --write . — import sorting + formatting
-npm run format:check   # prettier --check . — CI / pre-commit gate
+npm run format         # eol:fix + prettier --write . — LF, import sorting, formatting
+npm run format:check   # eol:check + prettier --check . — CI / pre-commit gate
 npm run lint           # eslint . — hooks, async, React/Next correctness
 npm run lint:fix       # eslint . --fix — safe autofixes only
 ```
@@ -82,7 +84,9 @@ npm run lint:fix       # eslint . --fix — safe autofixes only
   as builtin → `react`/`next` → third-party → `@/…` → relative, and sorts them.
 - **`prettier-plugin-tailwindcss`** — sorts Tailwind classes inside `className`.
 - `.prettierignore` keeps `.next`, `node_modules`, Playwright reports, `data/`,
-  `public/` and `*.md` out of the run.
+  `public/` and `*.md` out of the run, plus parser-less dotfiles such as
+  `.nvmrc`: Prettier cannot format them, so their line endings are covered by
+  `npm run eol:check` instead.
 - **ESLint** (flat config, `next/core-web-vitals` + `next/typescript`) — the part
   neither Prettier nor `tsc` covers: `react-hooks/exhaustive-deps`, async
   handlers in `onClick`/`onSubmit`, a11y and Next-specific rules. Errors block
@@ -106,6 +110,19 @@ Text is stored as **LF** in the repository and in every working tree;
 on Windows cannot produce CRLF-only diffs. `.editorconfig` makes editors keep
 LF, UTF-8 and a final newline.
 
+A checkout can still end up with CRLF: a Windows shell (`>` redirection in
+`cmd`) or an editor without `.editorconfig` support (Notepad) writes it, and git
+normalizes the content when reading, so `git status` and `git diff` show
+nothing. GitHub Desktop instead puts a yellow banner on such a file: "This file
+uses 'CRLF' line endings, but Git is configured to convert them to 'LF' the next
+time the file is checked out". `npm run eol:check` (a step of `npm run verify`)
+reads `git ls-files --eol` and fails when a tracked text file has CRLF in the
+index or in the working tree, or when a text file has no `eol=lf` rule.
+`npm run eol:fix` rewrites the working tree CRLF → LF (every other byte stays as
+it was), and `npm run format` runs it first. Prettier cannot do this job for
+`.nvmrc`, `.gitattributes` and `*.sh` (no parser), and `*.md` is in
+`.prettierignore`, so `npm run format` silently skips those files.
+
 The repository does **not** track the executable bit: every file is `100644`,
 and scripts are started through their npm wrapper or explicitly
 (`bash scripts/predeploy.sh`, `node scripts/smoke.mjs`). A tracked `100755`
@@ -114,8 +131,10 @@ mode-only `M` in VS Code even though the content matches.
 
 If a fresh checkout still reports files as modified, check `git diff`: a
 mode/EOL-only difference is clone noise, not an edit — `git checkout -- .`
-restores the stored version. To fix an old clone with CRLF files once, run
-`git add --renormalize .` and commit nothing if the diff is empty.
+restores the stored version and `npm run eol:fix` removes the CRLF variant. A
+CRLF committed before `.gitattributes` existed is in the index: `npm run
+eol:check` names such files, and `git add --renormalize .` plus a commit brings
+the index back to LF.
 
 ## Dependencies
 

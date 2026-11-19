@@ -152,8 +152,8 @@ export async function renamePlugin(input) {
   if (name !== undefined) manifest.name = name;
   if (description !== undefined) manifest.description = description;
   // Манифест пересобирается после правок полей, поэтому форматируем его
-  // сразу: `npm run verify` начинается с `prettier --check`, и «сырой»
-  // JSON.stringify сделал бы новый плагин красным на шаге 2/7.
+  // сразу: в `npm run verify` есть шаг `prettier --check`, и «сырой»
+  // JSON.stringify сделал бы новый плагин красным на нём.
   fs.writeFileSync(
     manifestPath,
     await prettier.format(JSON.stringify(manifest), { parser: 'json' }),

@@ -4,23 +4,27 @@
 #
 #  Прогоняет всё, что имеет смысл проверить ДО деплоя, на этой же машине:
 #
-#    1/7 lockfile  — npm ci --dry-run: package.json и package-lock.json собраны
+#    1/8 lockfile  — npm ci --dry-run: package.json и package-lock.json собраны
 #                    одной версией npm (иначе установка на сервере падает)
-#    2/7 формат    — prettier --check .: стиль и порядок импортов
+#    2/8 строки    — scripts/check-eol.mjs: LF в индексе и рабочем дереве.
+#                    CRLF в рабочем дереве `git status` не видит (git
+#                    нормализует при чтении), но GitHub Desktop показывает на
+#                    нём жёлтую плашку; Prettier такие файлы не переписывает
+#    3/8 формат    — prettier --check .: стиль и порядок импортов
 #                    (аналог `black --check` / `isort --check`)
-#    3/7 линт      — eslint .: hooks, async, React/Next-правила
+#    4/8 линт      — eslint .: hooks, async, React/Next-правила
 #                    (next/core-web-vitals + next/typescript), границы
 #                    импортов плагинов (scripts/plugins/check-boundaries.mjs),
 #                    актуальность сгенерированного реестра (plugins:check) и
 #                    данных DH2 (dh2e:check, если есть workspace-каталог)
-#    4/7 typecheck — tsc --noEmit отдельным шагом: падение видно до сборки и не
+#    5/8 typecheck — tsc --noEmit отдельным шагом: падение видно до сборки и не
 #                    тонет в выводе next build
-#    5/7 unit      — vitest: авторизация, файловое хранилище, экспорт/импорт,
+#    6/8 unit      — vitest: авторизация, файловое хранилище, экспорт/импорт,
 #                    API-роуты (без сети, на временном каталоге данных)
-#    6/7 build     — next build (NODE_ENV=production); при EXDEV — повтор с
+#    7/8 build     — next build (NODE_ENV=production); при EXDEV — повтор с
 #                    scripts/lib/fs-rename-fallback.cjs, затем проверка того, что
 #                    .next/server/pages/{404,500}.html на месте
-#    7/7 smoke     — поднимает `next start` на свободном порту с ВРЕМЕННЫМ
+#    8/8 smoke     — поднимает `next start` на свободном порту с ВРЕМЕННЫМ
 #                    каталогом данных (DCS_DATA_DIR), гоняет по HTTP
 #                    scripts/smoke.mjs и гасит сервер
 #
@@ -28,15 +32,15 @@
 #
 #  Использование:
 #    bash scripts/predeploy.sh                  # полный прогон
-#    bash scripts/predeploy.sh --skip-build     # без шага 6/7, использовать готовый .next
-#    bash scripts/predeploy.sh --skip-smoke     # без шага 7/7
+#    bash scripts/predeploy.sh --skip-build     # без шага 7/8, использовать готовый .next
+#    bash scripts/predeploy.sh --skip-smoke     # без шага 8/8
 #    bash scripts/predeploy.sh --base-url http://localhost:3001   # только smoke по стенду
 #    bash scripts/predeploy.sh --keep           # сохранить временные данные и лог сервера
 #
 #  Флаги и сценарии: bash scripts/predeploy.sh --help
 #  Код возврата: 0 — можно деплоить, 1 — есть падения.
-#  Связано: scripts/smoke.mjs, scripts/lib/fs-rename-fallback.cjs, tests/,
-#           docs/testing.md
+#  Связано: scripts/check-eol.mjs, scripts/smoke.mjs,
+#           scripts/lib/fs-rename-fallback.cjs, tests/, docs/testing.md
 # ============================================================================
 
 set -Eeuo pipefail
@@ -209,7 +213,7 @@ fi
 # ── 1. lockfile ─────────────────────────────────────────────────────────────
 # `npm ci` на сервере падает, если lock собран другим мажором npm (например,
 # локально npm 11, на сервере npm 10) — проверяем это здесь, а не на деплое.
-step "1/7 lockfile (npm ci --dry-run, npm $(npm -v))"
+step "1/8 lockfile (npm ci --dry-run, npm $(npm -v))"
 NPM_CI_LOG="$(mktemp "${TMPDIR:-/tmp}/dcs-predeploy-npmci-XXXXXX")"
 [ "$KEEP" -eq 1 ] || TMP_DIRS+=("$NPM_CI_LOG")
 if ! npm ci --dry-run --no-audit --no-fund >"$NPM_CI_LOG" 2>&1; then
@@ -221,33 +225,44 @@ if ! npm ci --dry-run --no-audit --no-fund >"$NPM_CI_LOG" 2>&1; then
 fi
 ok "lockfile в синхроне"
 
-# ── 2. формат ───────────────────────────────────────────────────────────────
+# ── 2. переводы строк ───────────────────────────────────────────────────────
+# `git status` CRLF не показывает: git нормализует содержимое при чтении, а
+# checkout на Windows оставляет файлы с CRLF — GitHub Desktop рисует на них
+# жёлтую плашку «Git is configured to convert them to LF». `npm run format`
+# такие файлы не лечит: у `.nvmrc` и `*.sh` нет парсера Prettier, а `*.md` в
+# `.prettierignore`, поэтому проверка отдельная и блокирующая.
+step "2/8 переводы строк (scripts/check-eol.mjs)"
+node scripts/check-eol.mjs \
+  || die "Переводы строк не LF (см. вывод выше). Рабочее дерево: npm run eol:fix; индекс: git add --renormalize . и коммит"
+ok "переводы строк LF"
+
+# ── 3. формат ───────────────────────────────────────────────────────────────
 # Аналог `black --check`: стиль и порядок импортов не должны «уплывать» между
 # прогонами. Падает быстро (< 5 c) и не требует сети.
 [ -x ./node_modules/.bin/prettier ] || die "Нет prettier в node_modules. Установите dev-зависимости: npm ci"
-step "2/7 формат (prettier --check .)"
+step "3/8 формат (prettier --check .)"
 "$PRETTIER" --check . || die "Формат нарушен. Запустите: npm run format (или npm run format:check — посмотреть список)"
 ok "формат соблюдён"
 
-# ── 3. линт ─────────────────────────────────────────────────────────────────
+# ── 4. линт ─────────────────────────────────────────────────────────────────
 # Ошибки ESLint — блокер. Предупреждения (известные exhaustive-deps и
 # неиспользуемые переменные) печатаются, но деплой не останавливают.
 [ -x ./node_modules/.bin/eslint ] || die "Нет eslint в node_modules. Установите dev-зависимости: npm ci"
-step "3/7 линт (eslint .)"
+step "4/8 линт (eslint .)"
 "$ESLINT" . || die "ESLint нашёл ошибки (см. вывод выше)"
 ok "линт без ошибок"
 
 # Границы импортов плагинов: ESLint их не видит, ему не важен путь модуля.
 # Храповик (scripts/plugins/boundaries.json) падает и на новой зависимости
 # плагина от ядра, и на неубранной записи после сокращения долга.
-step "3/7 границы плагинов (scripts/plugins/check-boundaries.mjs)"
+step "4/8 границы плагинов (scripts/plugins/check-boundaries.mjs)"
 node scripts/plugins/check-boundaries.mjs \
   || die "Нарушены границы импортов плагинов (см. вывод выше; правила — scripts/plugins/boundaries.json)"
 ok "границы плагинов соблюдены"
 
 # Игровые знания в ядре: имена игр и их поля. Правило «ядро не знает игр»
 # проверялось только grep'ом по именам, поэтому поля просачивались незаметно.
-step "3/7 чистота ядра (scripts/plugins/check-core-purity.mjs)"
+step "4/8 чистота ядра (scripts/plugins/check-core-purity.mjs)"
 node scripts/plugins/check-core-purity.mjs \
   || die "В ядре появились игровые имена/поля (см. вывод; исключения — scripts/plugins/check-core-purity.mjs#ALLOWLIST)"
 ok "ядро без игровых знаний"
@@ -255,14 +270,14 @@ ok "ядро без игровых знаний"
 # Реестр плагинов: `registry.generated.ts` обязан совпадать с манифестами.
 # Отдельная проверка нужна потому, что prebuild перегенерирует файл и молча
 # «починил» бы расхождение в рабочем дереве, а не в коммите.
-step "3/7 реестр плагинов (npm run plugins:check)"
+step "4/8 реестр плагинов (npm run plugins:check)"
 node scripts/plugins/generate.mjs --check \
   || die "Реестр плагинов устарел: запустите npm run plugins:generate и закоммитьте src/games/registry.generated.ts"
 ok "реестр плагинов в синхроне"
 
 # Раскладка тестов: лимит 400 строк на файл в tests/unit и запрет тестов одной
 # редакции в хосте (их место — src/games/<id>/tests/unit).
-step "3/7 раскладка тестов (scripts/tests/check-test-layout.mjs)"
+step "4/8 раскладка тестов (scripts/tests/check-test-layout.mjs)"
 node scripts/tests/check-test-layout.mjs \
   || die "Нарушена раскладка тестов (см. вывод выше; правила — scripts/tests/check-test-layout.mjs)"
 ok "раскладка тестов соблюдена"
@@ -271,32 +286,32 @@ ok "раскладка тестов соблюдена"
 # контент-каталогом workspace. В CI workspace нет — там шаг пропускается,
 # локально расхождение блокирует деплой (см. docs/game-modules.md).
 DH2_CONTENT_DIR="${DCS_CONTENT_DIR:-../DigitalCharsheets-workspace/content/dh2}"
-step "3/7 данные DH2 (dh2e:check)"
+step "4/8 данные DH2 (dh2e:check)"
 if [ -f "$DH2_CONTENT_DIR/catalog.json" ]; then
   node scripts/dh2e/generate.mjs --check \
     || die "Данные DH2 устарели: запустите npm run dh2e:data и закоммитьте src/games/dh2/dh2e-*.ts"
   ok "данные DH2 в синхроне с content/dh2"
 else
-  warn "3/7 данные DH2 пропущены: нет $DH2_CONTENT_DIR/catalog.json (CI без workspace)"
+  warn "4/8 данные DH2 пропущены: нет $DH2_CONTENT_DIR/catalog.json (CI без workspace)"
 fi
 
-# ── 4. typecheck ────────────────────────────────────────────────────────────
-step "4/7 typecheck ($TSC --noEmit)"
+# ── 5. typecheck ────────────────────────────────────────────────────────────
+step "5/8 typecheck ($TSC --noEmit)"
 "$TSC" --noEmit || die "TypeScript-ошибки. Почините их или запустите с --skip-unit? (см. вывод выше)"
 ok "типы сходятся"
 
-# ── 5. unit-тесты ───────────────────────────────────────────────────────────
+# ── 6. unit-тесты ───────────────────────────────────────────────────────────
 if [ "$SKIP_UNIT" -eq 0 ]; then
-  step "5/7 unit-тесты ($VITEST run)"
+  step "6/8 unit-тесты ($VITEST run)"
   "$VITEST" run || die "Юнит-тесты упали (см. вывод выше)"
   ok "юнит-тесты зелёные"
 else
-  warn "5/7 unit-тесты пропущены (--skip-unit)"
+  warn "6/8 unit-тесты пропущены (--skip-unit)"
 fi
 
-# ── 6. сборка ───────────────────────────────────────────────────────────────
+# ── 7. сборка ───────────────────────────────────────────────────────────────
 if [ "$SKIP_BUILD" -eq 0 ]; then
-  step "6/7 сборка (npm run build)"
+  step "7/8 сборка (npm run build)"
 
   BUILD_LOG="$(mktemp "${TMPDIR:-/tmp}/dcs-predeploy-build-XXXXXX")"
   [ "$KEEP" -eq 1 ] || TMP_DIRS+=("$BUILD_LOG")
@@ -323,7 +338,7 @@ if [ "$SKIP_BUILD" -eq 0 ]; then
   fi
 else
   [ -f .next/BUILD_ID ] || die "Нет .next/BUILD_ID, а сборка пропущена. Запустите npm run build или уберите --skip-build"
-  warn "6/7 сборка пропущена (--skip-build), используем .next от $(date -r .next/BUILD_ID '+%Y-%m-%d %H:%M' 2>/dev/null || echo 'неизвестно когда')"
+  warn "7/8 сборка пропущена (--skip-build), используем .next от $(date -r .next/BUILD_ID '+%Y-%m-%d %H:%M' 2>/dev/null || echo 'неизвестно когда')"
 fi
 
 # Контракт EXDEV-обхода (§5.2): next build обязан оставить страницы ошибок на
@@ -337,11 +352,11 @@ for page in 404 500; do
 done
 ok "артефакты .next/server/pages/{404,500}.html на месте"
 
-# ── 7. smoke-тест на временном сервере ──────────────────────────────────────
+# ── 8. smoke-тест на временном сервере ──────────────────────────────────────
 if [ "$SKIP_SMOKE" -eq 1 ]; then
-  warn "7/7 smoke-тест пропущен (--skip-smoke)"
+  warn "8/8 smoke-тест пропущен (--skip-smoke)"
 else
-  step "7/7 smoke: next start + HTTP-проверки"
+  step "8/8 smoke: next start + HTTP-проверки"
 
   [ -n "$PORT" ] || PORT="$(free_port)"
   [ -n "$PORT" ] || die "Не удалось выбрать свободный порт"

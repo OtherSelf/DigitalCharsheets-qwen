@@ -86,8 +86,9 @@ docs/game-modules.md.
 ## 4. Верификация перед коммитом
 
 Обязательно: `npm run verify` → `scripts/predeploy.sh`:
-lockfile (`npm ci --dry-run`) → format → lint (+ границы и реестр плагинов) →
-typecheck → unit → build → smoke на временном data-dir. Флаги скрипта —
+lockfile (`npm ci --dry-run`) → переводы строк (LF в индексе и рабочем дереве) →
+format → lint (+ границы и реестр плагинов) → typecheck → unit → build → smoke
+на временном data-dir. Флаги скрипта —
 `npm run verify -- --skip-build --skip-smoke` для быстрой перепроверки.
 
 - При изменениях UI: `npm run test:visual:fast` (@fast), при изменении вёрстки —
@@ -161,5 +162,12 @@ typecheck → unit → build → smoke на временном data-dir. Фла�
   `node scripts/…`, а не через `./`.
 - Не делай `chmod +x` отслеживаемым файлам: на Windows и сетевых шарах это
   даёт вечный mode-only diff `M` при совпадающем содержимом.
+- CRLF ловится проверкой, а не глазами: `npm run eol:check` (шаг verify)
+  читает `git ls-files --eol` и падает на CRLF в индексе и в рабочем дереве.
+  Рабочее дерево лечится `npm run eol:fix` (его же первым шагом делает
+  `npm run format`), индекс — `git add --renormalize .` и коммит. Prettier
+  такие файлы не переписывает: у `.nvmrc`, `.gitattributes` и `*.sh` нет
+  парсера, а `*.md` в `.prettierignore`.
 - Фантомные «изменения» в Windows-клоне проверяй через `git diff`: если
-  отличие только в режиме/EOL — это шум checkout, лечится `git checkout -- .`.
+  отличие только в режиме/EOL — это шум checkout, лечится `git checkout -- .`
+  (CRLF-вариант — `npm run eol:fix`).
