@@ -98,7 +98,7 @@ describe('разрешение systemId', () => {
   });
 });
 
-describe('режим листа «только чтение» (D9)', () => {
+describe('режим листа «только чтение»', () => {
   it('обычный лист — редактируемый', () => {
     for (const gameModule of listGameModules()) {
       expect(resolveSheetReadOnly({ systemId: gameModule.id }, [])).toEqual({

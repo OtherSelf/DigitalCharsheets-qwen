@@ -86,7 +86,7 @@ function legacyDh1(): Record<string, unknown> {
   });
 }
 
-describe('состояния Безумия/Порчи (D7/D12/D17)', () => {
+describe('состояния Безумия/Порчи', () => {
   it('DH1: миграция переносит mutations/disorders/defilements без потерь', () => {
     const { character } = normalizeDh1(legacyDh1(), { applyDefaults: true });
     const conditions = character.conditions ?? [];

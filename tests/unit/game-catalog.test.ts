@@ -103,7 +103,7 @@ describe('game-catalog', () => {
     });
   });
 
-  it('enabled=false скрывает из создания, не меняя visibility (D16)', () => {
+  it('enabled=false скрывает из создания, не меняя visibility', () => {
     setModuleEnabled('dh1', false);
     const catalog = readGameCatalog();
     expect(catalog.plugins.dh1).toEqual({

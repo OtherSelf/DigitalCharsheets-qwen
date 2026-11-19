@@ -68,7 +68,7 @@ describe('схемы: в данных только код', () => {
   });
 });
 
-describe('пол в создании 2e: замок бэкграунда (D4)', () => {
+describe('пол в создании 2e: замок бэкграунда', () => {
   it('Адептус Сороритас требует female, остальные бэкграунды пол не задают', () => {
     const sororitas = DH2E_BACKGROUNDS.find(
       (background) => background.id === 'adepta-sororitas',

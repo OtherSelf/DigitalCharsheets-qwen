@@ -190,7 +190,7 @@ describe('/api/admin/games', () => {
   });
 });
 
-describe('отключённый плагин (enabled=false, D9)', () => {
+describe('отключённый плагин (enabled=false)', () => {
   it('/api/games скрывает его из создания и отдаёт список disabled', async () => {
     publishAllModules();
     setModuleEnabled(FIRST_MODULE.id, false);

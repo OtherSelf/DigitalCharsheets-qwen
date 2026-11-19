@@ -39,7 +39,7 @@ describe('миграция листа v2: редакции', () => {
     expect(character.gameSystem).toBe('Dungeons & Dragons');
   });
 
-  it('dh без edition не угадывается: лист остаётся как есть (D13)', () => {
+  it('dh без edition не угадывается: лист остаётся как есть', () => {
     const legacy = dhWithStats({
       stats: { ...makeDhCharacter().stats, influence: 30 },
       statUpgrades: {

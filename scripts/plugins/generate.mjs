@@ -271,7 +271,7 @@ export function validateCollection(plugins) {
       games.set(manifest.gameId, { dirName, signature: gameSignature });
     } else if (known.signature !== gameSignature) {
       errors.push(
-        `игра "${manifest.gameId}": блок game отличается у ${known.dirName} и ${dirName} (D17 — у всех редакций он одинаковый)`,
+        `игра "${manifest.gameId}": блок game отличается у ${known.dirName} и ${dirName} (у всех редакций он одинаковый)`,
       );
     }
   }

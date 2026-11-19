@@ -195,7 +195,7 @@ describe('проверка границ', () => {
     expect(report.errors[0].message).toContain('за пределы src/games');
   });
 
-  it('запрещает кросс-плагинные относительные импорты (D10)', async () => {
+  it('запрещает кросс-плагинные относительные импорты', async () => {
     const report = await evaluate({
       'dh1/index.ts': 'export const dh1 = 1;',
       'dh2/index.ts': 'export const dh2 = 1;',

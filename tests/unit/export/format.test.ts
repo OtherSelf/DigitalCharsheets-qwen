@@ -100,7 +100,7 @@ describe('export format', () => {
     ).toThrow(/Экспорт отменён/);
   });
 
-  it('экспортирует лист удалённого плагина как есть (D9)', () => {
+  it('экспортирует лист удалённого плагина как есть', () => {
     // Плагин не установлен: JSON-экспорт должен работать, а не падать.
     const payload = buildCharacterExport(
       { systemId: 'gone', gameSystem: 'Unknown', name: 'X', notes: 'n' } as any,
