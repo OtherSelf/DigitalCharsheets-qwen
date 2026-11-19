@@ -1,4 +1,4 @@
-import type { CharacterBase, InventoryItem } from '../shared/types';
+import type { CharacterBase } from '../shared/types';
 
 /**
  * ─── LANDMARK: DARK_HERESY TYPES (BASE) ────────────────────────────────
@@ -163,6 +163,21 @@ export interface RangedWeapon {
 export interface DarkHeresyWeapons {
   melee: MeleeWeapon[];
   ranged: RangedWeapon[];
+}
+
+/**
+ * Предмет инвентаря DH2: количество и вес, без цены (решение владельца;
+ * денежное поле `wealth` в листе есть, но колонку цены DH2 не ведёт).
+ * Отсутствие полей читается как «1» и «не задано» (`inventory.ts`), файл
+ * при открытии не переписывается.
+ */
+export interface InventoryItem {
+  id: string;
+  name: string;
+  status: 'default' | 'lost';
+  notes?: string;
+  quantity?: number;
+  weight?: number;
 }
 
 export interface DarkHeresyEquipment {

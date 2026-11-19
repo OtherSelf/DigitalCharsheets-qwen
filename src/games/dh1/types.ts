@@ -1,4 +1,4 @@
-import type { CharacterBase, InventoryItem } from '../shared/types';
+import type { CharacterBase } from '../shared/types';
 
 /**
  * ─── LANDMARK: DARK_HERESY TYPES (BASE) ────────────────────────────────
@@ -137,6 +137,28 @@ export interface RangedWeapon {
 export interface DarkHeresyWeapons {
   melee: MeleeWeapon[];
   ranged: RangedWeapon[];
+}
+
+/**
+ * Предмет инвентаря DH1: одна строка таблицы «Предметы».
+ *
+ * `quantity`, `weight` и `price` необязательны: у листов до введения таблицы
+ * их нет, и отсутствие читается как «1», «не задано» и «не задано»
+ * (`inventory.ts`), а не записывается в файл при открытии. Цена — целые
+ * троны; граны и прочие дробные суммы остаются в заметках.
+ */
+export interface InventoryItem {
+  id: string;
+  name: string;
+  /** `default` — в наличии; `lost` — потеряно, в суммы не входит. */
+  status: 'default' | 'lost';
+  notes?: string;
+  /** Количество, целое >= 1; отсутствует у старых листов. */
+  quantity?: number;
+  /** Вес одной строки (с учётом количества); отсутствует у старых листов. */
+  weight?: number;
+  /** Цена одной строки в целых тронах; отсутствует у старых листов. */
+  price?: number;
 }
 
 export interface DarkHeresyEquipment {

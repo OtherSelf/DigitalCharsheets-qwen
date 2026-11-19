@@ -16,8 +16,9 @@ import {
 } from '@/components/ui/popover';
 import { Textarea } from '@/components/ui/textarea';
 import { useCharacterContext, useTranslation } from '@/games/plugin-host';
-import type { InventoryItem } from '@/games/shared/types';
 import { cn } from '@/lib/utils';
+
+import type { InventoryItem } from '../types';
 
 const EditSaveButton = ({
   editing,
