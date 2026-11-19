@@ -46,6 +46,13 @@ against the bench. It can be started from any checkout, including the bench
 directory itself: in that case it copies itself to a temporary file before
 updating, so `git reset` does not rewrite the script while it runs.
 
+`deploy` and `restart` delete the bench's `.next` before starting the server: the
+Turbopack cache belongs to one dev-server process, and a tab opened before the
+restart dies with `module factory is not available` when it patches the previous
+module graph. Only `.next` is removed — `data/` and `node_modules/` stay. The
+first page after such a restart compiles from scratch, so it is slower than a
+plain `start`.
+
 ## Environment variables
 
 | Variable | Default | Purpose |
