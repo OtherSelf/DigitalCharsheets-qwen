@@ -10,8 +10,14 @@ import { cn } from '@/lib/utils';
 
 /**
  * Обёртка темы игры вокруг шапки и листа страницы персонажа (и публичной
- * страницы share). Плагин без темы не получает обёртку вовсе — разметка и
- * пиксели остаются прежними.
+ * страницы share). Плагин без темы и без шрифта не получает обёртку вовсе —
+ * разметка и пиксели остаются прежними.
+ *
+ * Обёртка нужна и теме без токенов, но со шрифтом: она задаёт `data-system`,
+ * по которому CSS-модуль плагина включает своё семейство. `data-font-ready`
+ * появляется, когда ленивый чанк шрифта уже загружен и класс навешен; по нему
+ * визуальные тесты понимают, что можно снимать (файлы шрифта при этом могут
+ * ещё грузиться, поэтому хелпер дополнительно ждёт `document.fonts.ready`).
  *
  * `display: contents` нужен, чтобы обёртка не участвовала в раскладке:
  * родитель — flex-колонка страницы, и лишний блок сломал бы её высоту.
@@ -29,11 +35,17 @@ export function GameThemeScope({
     : undefined;
   const fontClass = usePluginFontClass(theme?.font ? systemId : undefined);
   const css = gameThemeCss(systemId, theme);
-  if (!css) return <>{children}</>;
+  // Шрифт без токенов всё равно требует обёртки: иначе не будет ни
+  // `data-system` для CSS плагина, ни класса семейства.
+  if (!css && !theme?.font) return <>{children}</>;
 
   return (
-    <div className={cn('contents', fontClass)} data-system={systemId}>
-      <style>{css}</style>
+    <div
+      className={cn('contents', fontClass)}
+      data-system={systemId}
+      data-font-ready={fontClass ? '' : undefined}
+    >
+      {css ? <style>{css}</style> : null}
       {children}
     </div>
   );

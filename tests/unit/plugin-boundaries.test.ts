@@ -179,6 +179,36 @@ describe('проверка границ', () => {
     expect(report.errors).toEqual([]);
   });
 
+  it('разрешает next/font/local, но не весь next/*', async () => {
+    const config: BoundaryConfig = {
+      ...CONFIG,
+      allowed: [...CONFIG.allowed, 'next/font/local'],
+    };
+    const font = await evaluate(
+      {
+        'demo/fonts.ts':
+          "import localFont from 'next/font/local';\nexport default localFont;",
+      },
+      config,
+    );
+    expect(font.errors).toEqual([]);
+
+    const navigation = await evaluate(
+      {
+        'demo/fonts.ts': "import { redirect } from 'next/navigation';",
+      },
+      config,
+    );
+    expect(messages(navigation)[0]).toContain('не разрешён плагину');
+  });
+
+  it('в boundaries.json разрешён ровно next/font/local', async () => {
+    const { readConfig } = await checker();
+    const config = readConfig();
+    expect(config.allowed).toContain('next/font/local');
+    expect(config.allowed).not.toContain('next/*');
+  });
+
   it('запрещает модуль из forbidden', async () => {
     const report = await evaluate({
       'demo/index.ts': "import { page } from '@/app/page';",

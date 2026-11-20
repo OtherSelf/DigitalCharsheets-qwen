@@ -471,7 +471,7 @@ ones:
 | `✗ src/games/registry.generated.ts устарел` | A manifest changed without regeneration | `npm run plugins:generate` and commit the generated files |
 | `prettier --check` warns about a generated file | A generator bug, not a formatting nit | Do not hand-format: fix `renderRegistry` and add the case to `plugins-generator.test.ts` |
 
-## Themming (`ui.theme`)
+## Theming (`ui.theme`)
 
 1.4 lets a plugin give its own sheet a restrained theme without touching the
 core. It is data in the manifest, not code and not selectors:
@@ -509,9 +509,50 @@ core. It is data in the manifest, not code and not selectors:
   shape `next/font/local` returns (`variable`, `className`). The generator emits
   a lazy loader in `generatedFontLoaders` (like `generatedUiLoaders`), so the
   font module and its assets never enter the shared bundle; the host applies the
-  returned class on the same wrapper, and the plugin itself decides where to use
-  `font-family: var(--font-plugin)`. If the chunk fails, the wrapper keeps the
-  host fonts. No shipped game has a custom font: the contract is exercised by
+  returned class on the same wrapper.
+
+A static `woff2` is not an npm dependency: keep the used subsets and the
+`OFL.txt` license in the plugin's `assets/`, and import them with
+`next/font/local` (allowed by `scripts/plugins/boundaries.json`; the rest of
+`next/*` stays forbidden):
+
+```ts
+// src/games/<id>/fonts.ts
+import localFont from 'next/font/local';
+
+import type { PluginFont } from '@/games/plugin-api';
+
+const latin = localFont({
+  src: './assets/<font>-latin.woff2',
+  weight: '600',
+  display: 'swap',
+  adjustFontFallback: 'Times New Roman',
+  variable: '--font-plugin-latin',
+});
+const cyrillic = localFont({
+  src: './assets/<font>-cyrillic.woff2',
+  weight: '600',
+  display: 'swap',
+  adjustFontFallback: 'Times New Roman',
+  variable: '--font-plugin-cyrillic',
+});
+
+export const pluginFont: PluginFont = {
+  variable: `${latin.variable} ${cyrillic.variable}`,
+};
+```
+
+- Two subsets are two families: `PluginFont.variable` is a space-separated
+  list of classes, and the plugin's CSS chains them so Cyrillic text falls
+  through to the second one —
+  `font-family: var(--font-plugin-latin), var(--font-plugin-cyrillic), ...`.
+  Both host locales (`en` and `ru`) must render in the plugin font; a
+  latin-only file silently falls back to the host face in Cyrillic.
+- The host marks the wrapper with `data-font-ready` once the lazy chunk has
+  loaded and the class is applied. Visual tests wait for that attribute **and**
+  `document.fonts.ready`: the class appears before the `woff2` files finish.
+- If the chunk fails, the wrapper keeps the host fonts. No shipped game
+  declares `font` yet: the contract is exercised by
   `tests/fixtures/example-plugin` (a same-shape object, because the fixture is
   not built by Next).
 
