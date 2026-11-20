@@ -111,10 +111,12 @@ const eslintConfig = [
       Production-файлы плагинов не тянут тестовые зависимости. boundaries.json
       видит те же имена, но не различает тест и рантайм по пути; здесь
       исключены ровно `src/games/<id>/tests/**`, где vitest, Playwright и
-      node:fs нужны по определению.
+      node:fs нужны по определению, и `src/games/<id>/scripts/**` — тулинг
+      сборки данных (генераторы), который по определению читает файлы и
+      запускается node, а не Next. Рантайм листа туда не попадает.
     */
     files: ['src/games/**/*.{js,jsx,mjs,cjs,ts,tsx,mts,cts}'],
-    ignores: ['src/games/*/tests/**'],
+    ignores: ['src/games/*/tests/**', 'src/games/*/scripts/**'],
     rules: {
       'no-restricted-imports': [
         'error',
