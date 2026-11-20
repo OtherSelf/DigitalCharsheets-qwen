@@ -61,6 +61,7 @@
     "react-hook-form",
     "@hookform/resolvers/*",
     "lucide-react",
+    "next/font/local",
     "@radix-ui/*",
     "class-variance-authority",
     "clsx",

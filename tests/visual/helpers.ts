@@ -177,6 +177,19 @@ export async function openApp(page: Page, path = '/'): Promise<void> {
   await page.waitForTimeout(100);
 }
 
+/**
+ * Ждёт шрифт темы плагина: обёртка получила `data-font-ready` (ленивый чанк
+ * загружен, класс навешен), затем — сами файлы шрифта. Только атрибута мало:
+ * CSS с `@font-face` уже в документе, а woff2 ещё качается.
+ */
+export async function waitForFontReady(page: Page): Promise<void> {
+  await page
+    .locator('[data-font-ready]')
+    .first()
+    .waitFor({ state: 'attached', timeout: 15_000 });
+  await page.evaluate(() => document.fonts.ready);
+}
+
 /** Убирает всё «живое» из кадра (фокус, hover, каретку). */
 async function settle(page: Page, resetScroll = true): Promise<void> {
   await page.evaluate(() => document.fonts.ready);
