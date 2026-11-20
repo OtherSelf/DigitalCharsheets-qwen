@@ -112,7 +112,7 @@ describe('DH1: аддитивные поля листа', () => {
     expect(parsed.corruptionDetails?.defilements).toBe('Нет');
   });
 
-  it('принимает Pen и вес у стрелкового оружия и вес у доспехов', () => {
+  it('принимает Pen у стрелкового оружия и вес у доспехов', () => {
     const ranged = {
       id: 'r1',
       name: 'Лазган',
@@ -125,7 +125,6 @@ describe('DH1: аддитивные поля листа', () => {
       clipSize: 60,
       reload: 'Full',
       traits: 'Reliable',
-      weight: '2,5 кг',
     };
     const character = baseDh1({
       equipment: {
@@ -148,7 +147,6 @@ describe('DH1: аддитивные поля листа', () => {
     });
     const parsed = dh1CharacterSchema.parse(character);
     expect(parsed.equipment.weapons.ranged[0].penetration).toBe('4');
-    expect(parsed.equipment.weapons.ranged[0].weight).toBe('2,5 кг');
     expect(parsed.equipment.armor.Body?.weight).toBe('6 кг');
   });
 

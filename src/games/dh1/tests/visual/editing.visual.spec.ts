@@ -1,4 +1,4 @@
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Locator, type Page } from '@playwright/test';
 
 import {
   expectInputValue,
@@ -345,3 +345,250 @@ test.describe('блок опыта', { tag: '@plugin:dh1' }, () => {
     },
   );
 });
+
+/**
+ * ─── LANDMARK: WEAPON CARD REGRESSIONS ─────────────────────────────────────
+ * Два бага карточек оружия, воспроизведённые до правки: переключение
+ * «Экипировано» в просмотре откатывалось при сохранении правки другого
+ * оружия (снимок editableEquipment устаревал), а «Бронепробитие» пропадало
+ * из карточки неэкипированного стрелкового оружия. Сценарии ниже — без
+ * эталонов: проверяют поведение и сохранённые данные.
+ */
+test.describe(
+  'карточки оружия: экипировка и бронепробитие',
+  { tag: '@plugin:dh1' },
+  () => {
+    const password = 'weapon-password-1';
+
+    async function createSheet(
+      page: Page,
+      equipment: Record<string, unknown>,
+    ): Promise<string> {
+      const username = `weapon-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+      const registered = await page.request.post('/api/auth/register', {
+        data: {
+          username,
+          password,
+          displayName: 'Weapon QA',
+          recoveryPhrase: 'amber cobalt lantern',
+        },
+      });
+      expect([200, 201], 'регистрация аккаунта').toContain(registered.status());
+
+      const created = await page.request.post('/api/characters', {
+        data: { systemId: 'dh1', name: 'Weapon QA' },
+      });
+      expect([200, 201], 'создание dh1-листа').toContain(created.status());
+      const { id } = (await created.json()) as { id: string };
+
+      const updated = await page.request.put(`/api/characters/${id}`, {
+        data: { equipment },
+      });
+      expect(updated.status(), 'запись оружия').toBe(200);
+
+      await signInViaUI(page, { username, password });
+      await openApp(page, sheetPath(id));
+      return id;
+    }
+
+    function displayCard(page: Page, name: string): Locator {
+      return page
+        .getByText(name, { exact: true })
+        .first()
+        .locator('xpath=ancestor::div[contains(@class,"rounded-lg")][1]');
+    }
+
+    function editCard(page: Page, name: string): Locator {
+      return page
+        .locator(`#equipment-section input[value="${name}"]`)
+        .first()
+        .locator('xpath=ancestor::div[contains(@class,"rounded-lg")][1]');
+    }
+
+    async function savedWeapons(page: Page, id: string) {
+      const response = await page.request.get('/api/characters');
+      const list = (await response.json()) as Array<{
+        id: string;
+        equipment: {
+          weapons: {
+            melee: Array<{
+              name: string;
+              equipped?: boolean;
+              penetration?: string;
+            }>;
+            ranged: Array<{
+              name: string;
+              equipped?: boolean;
+              penetration?: string;
+            }>;
+          };
+        };
+      }>;
+      return list.find((character) => character.id === id)?.equipment.weapons;
+    }
+
+    test(
+      'переключение «Экипировано» не откатывает соседнее оружие',
+      { tag: '@desktop' },
+      async ({ page }) => {
+        const id = await createSheet(page, {
+          armor: {
+            Head: null,
+            'Right arm': null,
+            Body: null,
+            'Left arm': null,
+            'Right leg': null,
+            'Left leg': null,
+          },
+          weapons: {
+            melee: [
+              {
+                id: 'melee-a',
+                name: 'Blade A',
+                type: 'Blade',
+                range: 'Melee',
+                penetration: '2',
+                damage: '1d10+3',
+                traits: '',
+                equipped: true,
+              },
+              {
+                id: 'melee-b',
+                name: 'Blade B',
+                type: 'Blade',
+                range: 'Melee',
+                penetration: '4',
+                damage: '1d10+2',
+                traits: '',
+                equipped: false,
+              },
+            ],
+            ranged: [],
+          },
+        });
+
+        const equipment = page.locator('#equipment-section:visible').first();
+        await expect(
+          displayCard(page, 'Blade A').getByRole('checkbox'),
+        ).toBeChecked();
+
+        // Включаем B в режиме просмотра.
+        await equipment
+          .getByText(/Not equipped \(1\)/)
+          .first()
+          .click();
+        await displayCard(page, 'Blade B').getByRole('checkbox').click();
+        await expect(
+          displayCard(page, 'Blade B').getByRole('checkbox'),
+        ).toBeChecked();
+        await expect(
+          displayCard(page, 'Blade A').getByRole('checkbox'),
+        ).toBeChecked();
+
+        // Вход в правку не должен показать устаревший снимок.
+        await equipment.getByTestId('edit-button').nth(1).click();
+        await expect(
+          editCard(page, 'Blade B').getByRole('checkbox'),
+        ).toBeChecked();
+
+        // Выключаем A и сохраняем: правка B обязана уцелеть.
+        await editCard(page, 'Blade A').getByRole('checkbox').click();
+        await expect(
+          editCard(page, 'Blade B').getByRole('checkbox'),
+        ).toBeChecked();
+        await page.getByTestId('save-button').first().click();
+        await expect
+          .poll(async () => (await savedWeapons(page, id))?.melee, {
+            message: 'флаги экипировки после сохранения',
+          })
+          .toEqual([
+            expect.objectContaining({ name: 'Blade A', equipped: false }),
+            expect.objectContaining({ name: 'Blade B', equipped: true }),
+          ]);
+      },
+    );
+
+    test(
+      '«Бронепробитие» остаётся у неэкипированного стрелкового оружия',
+      { tag: '@desktop' },
+      async ({ page }) => {
+        const id = await createSheet(page, {
+          armor: {
+            Head: null,
+            'Right arm': null,
+            Body: null,
+            'Left arm': null,
+            'Right leg': null,
+            'Left leg': null,
+          },
+          weapons: {
+            melee: [],
+            ranged: [
+              {
+                id: 'ranged-a',
+                name: 'Gun A',
+                type: 'Las',
+                range: '30 m',
+                rof: 'S/2/-',
+                damage: '1d10+2',
+                clip: 14,
+                clipSize: 30,
+                reload: 'Full',
+                traits: '',
+                equipped: true,
+                penetration: '1',
+              },
+              {
+                id: 'ranged-b',
+                name: 'Gun B',
+                type: 'Solid',
+                range: '20 m',
+                rof: 'S/-/-',
+                damage: '1d10+4',
+                clip: 8,
+                clipSize: 8,
+                reload: 'Full',
+                traits: '',
+                equipped: false,
+                penetration: '3',
+              },
+            ],
+          },
+        });
+
+        const equipment = page.locator('#equipment-section:visible').first();
+        await expect(displayCard(page, 'Gun A')).toContainText(
+          'Penetration: 1',
+        );
+
+        // Снимаем экипировку: карточка в «Не экипировано» должна сохранить Pen.
+        await displayCard(page, 'Gun A').getByRole('checkbox').click();
+        await equipment
+          .getByText(/Not equipped \(2\)/)
+          .first()
+          .click();
+        await expect(displayCard(page, 'Gun A')).toContainText(
+          'Penetration: 1',
+        );
+
+        // В правке поле тоже на месте и не теряется при сохранении.
+        await equipment.getByTestId('edit-button').nth(2).click();
+        await expect(
+          editCard(page, 'Gun A')
+            .locator('div.space-y-1')
+            .filter({ hasText: 'Penetration' })
+            .locator('input'),
+        ).toHaveValue('1');
+        await page.getByTestId('save-button').first().click();
+        await expect
+          .poll(async () => (await savedWeapons(page, id))?.ranged, {
+            message: 'бронепробитие после сохранения',
+          })
+          .toEqual([
+            expect.objectContaining({ name: 'Gun A', penetration: '1' }),
+            expect.objectContaining({ name: 'Gun B', penetration: '3' }),
+          ]);
+      },
+    );
+  },
+);

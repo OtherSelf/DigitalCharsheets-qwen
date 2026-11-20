@@ -88,6 +88,13 @@ const ARMOR_TYPES = [
   'Force',
 ];
 
+/** Вес оружия переехал в инвентарь: при сохранении оружия старое поле убираем. */
+function withoutWeaponWeight<T extends object>(weapon: T): T {
+  const copy = { ...weapon } as T & { weight?: unknown };
+  delete copy.weight;
+  return copy;
+}
+
 /** Разбор чисел инвентаря: пустое поле — «не задано», отрицательное — 0. */
 function parseQuantity(value: string): number | undefined {
   const parsed = Number.parseInt(value, 10);
@@ -173,31 +180,72 @@ export const EquipmentInventorySection = React.forwardRef<
       updateCharacter(character.id, { wealth: editableWealth });
       setIsWealthEditing(false);
     }, [character.id, editableWealth, updateCharacter]);
-    const handleSaveArmor = React.useCallback(() => {
-      updateCharacter(character.id, {
-        equipment: { ...editableEquipment, armor: editableEquipment.armor },
-      });
-      setIsArmorEditing(false);
-    }, [character.id, editableEquipment, updateCharacter]);
-    const handleSaveMeleeWeapons = React.useCallback(() => {
-      updateCharacter(character.id, { equipment: editableEquipment });
-      setIsMeleeWeaponsEditing(false);
-    }, [character.id, editableEquipment, updateCharacter]);
-    const handleSaveRangedWeapons = React.useCallback(() => {
-      updateCharacter(character.id, { equipment: editableEquipment });
-      setIsRangedWeaponsEditing(false);
-    }, [character.id, editableEquipment, updateCharacter]);
-    const handleSaveInventory = React.useCallback(() => {
-      updateCharacter(character.id, { inventory: editableInventory });
-      setIsInventoryEditing(false);
-    }, [character.id, editableInventory, updateCharacter]);
-
     const isAnyEditing =
       isWealthEditing ||
       isArmorEditing ||
       isMeleeWeaponsEditing ||
       isRangedWeaponsEditing ||
       isInventoryEditing;
+
+    /**
+     * Свежий снимок оборудования в `editableEquipment` перед правкой.
+     *
+     * Без него переключение «Экипировано» в режиме просмотра терялось: снимок
+     * оставался от монтирования секции, и сохранение писало старые флаги.
+     * Если другая секция уже правится, снимок не берём — иначе пропадут её
+     * несохранённые изменения.
+     */
+    const beginEquipmentEditing = (open: () => void) => {
+      if (!isAnyEditing) {
+        setEditableEquipment(
+          JSON.parse(JSON.stringify(character.equipment ?? defaultEquipment)),
+        );
+      }
+      open();
+    };
+
+    const handleSaveArmor = React.useCallback(() => {
+      const base = character.equipment ?? defaultEquipment;
+      updateCharacter(character.id, {
+        equipment: { ...base, armor: editableEquipment.armor },
+      });
+      setIsArmorEditing(false);
+    }, [character.id, character.equipment, editableEquipment, updateCharacter]);
+    const handleSaveMeleeWeapons = React.useCallback(() => {
+      const base = character.equipment ?? defaultEquipment;
+      updateCharacter(character.id, {
+        equipment: {
+          ...base,
+          weapons: {
+            ...(base.weapons ?? defaultEquipment.weapons),
+            melee: (editableEquipment.weapons?.melee ?? []).map(
+              withoutWeaponWeight,
+            ),
+          },
+        },
+      });
+      setIsMeleeWeaponsEditing(false);
+    }, [character.id, character.equipment, editableEquipment, updateCharacter]);
+    const handleSaveRangedWeapons = React.useCallback(() => {
+      const base = character.equipment ?? defaultEquipment;
+      updateCharacter(character.id, {
+        equipment: {
+          ...base,
+          weapons: {
+            ...(base.weapons ?? defaultEquipment.weapons),
+            ranged: (editableEquipment.weapons?.ranged ?? []).map(
+              withoutWeaponWeight,
+            ),
+          },
+        },
+      });
+      setIsRangedWeaponsEditing(false);
+    }, [character.id, character.equipment, editableEquipment, updateCharacter]);
+    const handleSaveInventory = React.useCallback(() => {
+      updateCharacter(character.id, { inventory: editableInventory });
+      setIsInventoryEditing(false);
+    }, [character.id, editableInventory, updateCharacter]);
+
     React.useEffect(() => {
       onEditingChange?.(isAnyEditing);
     }, [isAnyEditing, onEditingChange]);
@@ -205,25 +253,54 @@ export const EquipmentInventorySection = React.forwardRef<
     React.useImperativeHandle(
       ref,
       () => ({
+        // Сохранение всех секций сразу собирает оборудование одним патчем:
+        // последовательные вызовы handleSave* писали бы каждый свою версию
+        // от одного и того же снимка и затирали бы друг друга.
         saveAll: () => {
+          if (
+            isArmorEditing ||
+            isMeleeWeaponsEditing ||
+            isRangedWeaponsEditing
+          ) {
+            const base = character.equipment ?? defaultEquipment;
+            updateCharacter(character.id, {
+              equipment: {
+                ...base,
+                armor: isArmorEditing ? editableEquipment.armor : base.armor,
+                weapons: {
+                  melee: isMeleeWeaponsEditing
+                    ? (editableEquipment.weapons?.melee ?? []).map(
+                        withoutWeaponWeight,
+                      )
+                    : (base.weapons?.melee ?? []),
+                  ranged: isRangedWeaponsEditing
+                    ? (editableEquipment.weapons?.ranged ?? []).map(
+                        withoutWeaponWeight,
+                      )
+                    : (base.weapons?.ranged ?? []),
+                },
+              },
+            });
+            setIsArmorEditing(false);
+            setIsMeleeWeaponsEditing(false);
+            setIsRangedWeaponsEditing(false);
+          }
           if (isWealthEditing) handleSaveWealth();
-          if (isArmorEditing) handleSaveArmor();
-          if (isMeleeWeaponsEditing) handleSaveMeleeWeapons();
-          if (isRangedWeaponsEditing) handleSaveRangedWeapons();
           if (isInventoryEditing) handleSaveInventory();
         },
       }),
       [
+        character.id,
+        character.equipment,
+        editableEquipment,
         isWealthEditing,
         isArmorEditing,
         isMeleeWeaponsEditing,
         isRangedWeaponsEditing,
         isInventoryEditing,
         handleSaveWealth,
-        handleSaveArmor,
-        handleSaveMeleeWeapons,
-        handleSaveRangedWeapons,
         handleSaveInventory,
+        updateCharacter,
       ],
     );
 
@@ -421,10 +498,20 @@ export const EquipmentInventorySection = React.forwardRef<
       { value: 'Master-Crafted', label: t('dh1.armorQualityMasterCrafted') },
     ];
 
-    const currentEquipment =
-      isArmorEditing || isMeleeWeaponsEditing || isRangedWeaponsEditing
-        ? editableEquipment
-        : (character.equipment ?? defaultEquipment);
+    // Каждая ветка берёт свой источник: правка одного вида оружия не должна
+    // подменять отображение соседнего (иначе переключение в просмотре теряется).
+    const storedEquipment = character.equipment ?? defaultEquipment;
+    const currentEquipment = {
+      armor: isArmorEditing ? editableEquipment.armor : storedEquipment.armor,
+      weapons: {
+        melee: isMeleeWeaponsEditing
+          ? (editableEquipment.weapons?.melee ?? [])
+          : (storedEquipment.weapons?.melee ?? []),
+        ranged: isRangedWeaponsEditing
+          ? (editableEquipment.weapons?.ranged ?? [])
+          : (storedEquipment.weapons?.ranged ?? []),
+      },
+    };
     const currentInventory = isInventoryEditing
       ? editableInventory
       : (character.inventory ?? []);
@@ -507,7 +594,9 @@ export const EquipmentInventorySection = React.forwardRef<
                       {(showEditButtons || isArmorEditing) && (
                         <EditSaveButton
                           editing={isArmorEditing}
-                          onEdit={() => setIsArmorEditing(true)}
+                          onEdit={() =>
+                            beginEquipmentEditing(() => setIsArmorEditing(true))
+                          }
                           onSave={handleSaveArmor}
                         />
                       )}
@@ -811,7 +900,11 @@ export const EquipmentInventorySection = React.forwardRef<
                       {(showEditButtons || isMeleeWeaponsEditing) && (
                         <EditSaveButton
                           editing={isMeleeWeaponsEditing}
-                          onEdit={() => setIsMeleeWeaponsEditing(true)}
+                          onEdit={() =>
+                            beginEquipmentEditing(() =>
+                              setIsMeleeWeaponsEditing(true),
+                            )
+                          }
                           onSave={handleSaveMeleeWeapons}
                         />
                       )}
@@ -976,21 +1069,6 @@ export const EquipmentInventorySection = React.forwardRef<
                                     className="h-7 text-xs"
                                   />{' '}
                                 </div>
-                                <div className="space-y-1">
-                                  {' '}
-                                  <Label>{t('dh1.weaponWeight')}</Label>{' '}
-                                  <Input
-                                    defaultValue={weapon.weight ?? ''}
-                                    onChange={(e) =>
-                                      handleMeleeWeaponChange(
-                                        weapon.id,
-                                        'weight',
-                                        e.target.value,
-                                      )
-                                    }
-                                    className="h-7 text-xs"
-                                  />{' '}
-                                </div>
                                 <div className="col-span-2 space-y-1">
                                   {' '}
                                   <Label>{t('dh1.weaponTraits')}</Label>{' '}
@@ -1032,12 +1110,6 @@ export const EquipmentInventorySection = React.forwardRef<
                                     {t('dh1.weaponPenetration')}:
                                   </strong>{' '}
                                   {weapon.penetration || '-'}
-                                </div>
-                                <div>
-                                  <strong className="text-muted-foreground">
-                                    {t('dh1.weaponWeight')}:
-                                  </strong>{' '}
-                                  {weapon.weight || '-'}
                                 </div>
                                 <div className="col-span-2">
                                   <strong className="text-muted-foreground">
@@ -1404,7 +1476,11 @@ export const EquipmentInventorySection = React.forwardRef<
                       {(showEditButtons || isRangedWeaponsEditing) && (
                         <EditSaveButton
                           editing={isRangedWeaponsEditing}
-                          onEdit={() => setIsRangedWeaponsEditing(true)}
+                          onEdit={() =>
+                            beginEquipmentEditing(() =>
+                              setIsRangedWeaponsEditing(true),
+                            )
+                          }
                           onSave={handleSaveRangedWeapons}
                         />
                       )}
@@ -1586,21 +1662,6 @@ export const EquipmentInventorySection = React.forwardRef<
                                 </div>
                                 <div className="space-y-1">
                                   {' '}
-                                  <Label>{t('dh1.weaponWeight')}</Label>{' '}
-                                  <Input
-                                    defaultValue={weapon.weight ?? ''}
-                                    onChange={(e) =>
-                                      handleRangedWeaponChange(
-                                        weapon.id,
-                                        'weight',
-                                        e.target.value,
-                                      )
-                                    }
-                                    className="h-7 text-xs"
-                                  />{' '}
-                                </div>
-                                <div className="space-y-1">
-                                  {' '}
                                   <Label>{t('dh1.weaponClip')}</Label>{' '}
                                   <Input
                                     type="number"
@@ -1699,12 +1760,6 @@ export const EquipmentInventorySection = React.forwardRef<
                                     {t('dh1.weaponPenetration')}:
                                   </strong>{' '}
                                   {weapon.penetration || '-'}
-                                </div>
-                                <div>
-                                  <strong className="text-muted-foreground">
-                                    {t('dh1.weaponWeight')}:
-                                  </strong>{' '}
-                                  {weapon.weight || '-'}
                                 </div>
                                 <div>
                                   <strong className="text-muted-foreground">
@@ -1969,6 +2024,23 @@ export const EquipmentInventorySection = React.forwardRef<
                                     </div>
                                     <div className="space-y-1">
                                       {' '}
+                                      <Label>
+                                        {t('dh1.weaponPenetration')}
+                                      </Label>{' '}
+                                      <Input
+                                        defaultValue={weapon.penetration ?? ''}
+                                        onChange={(e) =>
+                                          handleRangedWeaponChange(
+                                            weapon.id,
+                                            'penetration',
+                                            e.target.value,
+                                          )
+                                        }
+                                        className="h-7 text-xs"
+                                      />{' '}
+                                    </div>
+                                    <div className="space-y-1">
+                                      {' '}
                                       <Label>{t('dh1.weaponClip')}</Label>{' '}
                                       <Input
                                         type="number"
@@ -2067,6 +2139,12 @@ export const EquipmentInventorySection = React.forwardRef<
                                         {t('dh1.weaponDamage')}:
                                       </strong>{' '}
                                       {weapon.damage || '-'}
+                                    </div>
+                                    <div>
+                                      <strong className="text-muted-foreground">
+                                        {t('dh1.weaponPenetration')}:
+                                      </strong>{' '}
+                                      {weapon.penetration || '-'}
                                     </div>
                                     <div>
                                       <strong className="text-muted-foreground">

@@ -217,7 +217,6 @@ export function buildDh1ExcelSections(
       'dh1.excel.range',
       'dh1.excel.damage',
       'dh1.weaponPenetration',
-      'dh1.weaponWeight',
       'dh1.excel.traits',
     ]);
     for (const weapon of character.equipment.weapons.melee) {
@@ -227,7 +226,6 @@ export function buildDh1ExcelSections(
         weapon.range,
         weapon.damage,
         weapon.penetration,
-        weapon.weight ?? '',
         weapon.traits,
       ]);
     }
@@ -238,7 +236,6 @@ export function buildDh1ExcelSections(
         weapon.range,
         weapon.damage,
         weapon.penetration ?? '',
-        weapon.weight ?? '',
         weapon.traits,
       ]);
     }
