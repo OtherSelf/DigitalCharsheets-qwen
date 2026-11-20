@@ -109,8 +109,6 @@ export interface MeleeWeapon {
   penetration: string;
   damage: string;
   traits: string;
-  /** Вес по листу; необязателен для legacy-листов. */
-  weight?: string;
   equipped?: boolean;
   notes?: string;
 }
@@ -128,8 +126,6 @@ export interface RangedWeapon {
   clipSize: number;
   reload: string;
   traits: string;
-  /** Вес по листу; необязателен для legacy-листов. */
-  weight?: string;
   equipped?: boolean;
   notes?: string;
 }
