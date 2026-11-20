@@ -1,4 +1,8 @@
-import { describe, expect, it } from 'vitest';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
+import { afterEach, describe, expect, it } from 'vitest';
 
 /**
  * ─── LANDMARK: CORE PURITY GATE ───────────────────────────────────────────
@@ -9,11 +13,22 @@ import { describe, expect, it } from 'vitest';
 type Purity = {
   findViolations(source: string): { line: number; tokens: string[] }[];
   stripNonCode(source: string): string;
+  findCssViolations(source: string): { line: number; tokens: string[] }[];
+  findIdViolations(source: string): { line: number; tokens: string[] }[];
+  stripCssComments(source: string): string;
 };
 
 async function purity(): Promise<Purity> {
   return (await import('../../scripts/plugins/check-core-purity.mjs')) as unknown as Purity;
 }
+
+const createdRoots: string[] = [];
+
+afterEach(() => {
+  for (const root of createdRoots.splice(0)) {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
 
 describe('гейт чистоты ядра', () => {
   it('находит игровое поле в коде', async () => {
@@ -61,16 +76,118 @@ describe('гейт чистоты ядра', () => {
     expect(stripped).not.toContain('rank');
   });
 
-  it('проверяет реальное дерево: нарушений 0', async () => {
+  it('видит игровой селектор в стилях', async () => {
+    const { findCssViolations } = await purity();
+    expect(
+      findCssViolations('.dnd-sheet .sheet-top-row { order: 1; }'),
+    ).toEqual([{ line: 1, tokens: ['dnd'] }]);
+    expect(
+      findCssViolations(
+        '.dh-sheet .sheet-panels > .w-12 { min-height: 3rem; }',
+      ),
+    ).toEqual([{ line: 1, tokens: ['dh'] }]);
+    expect(findCssViolations('.dcs-info-grid { gap: 1rem; }')).toEqual([
+      { line: 1, tokens: ['info-grid'] },
+    ]);
+  });
+
+  it('не считает игровые слова в комментариях CSS и в общих селекторах', async () => {
+    const { findCssViolations } = await purity();
+    const source = [
+      '/* широкий режим для блока Info в Dark Heresy */',
+      '@media (min-width: 1800px) {',
+      '  .sheet-main-grid { gap: 1rem; }',
+      '}',
+    ].join('\n');
+    expect(findCssViolations(source)).toEqual([]);
+  });
+
+  it('находит точный id игры в строковом литерале', async () => {
+    const { findIdViolations } = await purity();
+    expect(findIdViolations("if (systemId === 'dh1') return 1;")).toEqual([
+      { line: 1, tokens: ['dh1'] },
+    ]);
+    expect(findIdViolations('const system = `dnd5e`;')).toEqual([
+      { line: 1, tokens: ['dnd5e'] },
+    ]);
+  });
+
+  it('не считает id в комментариях, подписи и частичные совпадения', async () => {
+    const { findIdViolations } = await purity();
+    const source = [
+      "// 'dh1' приходит из манифеста",
+      "const label = 'Dungeons & Dragons';",
+      "const other = 'dh1x';",
+      "const game = 'darkHeresy';",
+    ].join('\n');
+    expect(findIdViolations(source)).toEqual([]);
+  });
+
+  it('посеянный id игры в литерале валит гейт', async () => {
+    const { checkCore } =
+      (await import('../../scripts/plugins/check-core-purity.mjs')) as unknown as {
+        checkCore(options?: { root?: string }): {
+          idViolations: { file: string; hits: unknown[] }[];
+        };
+      };
+    const root = mkdtempSync(join(tmpdir(), 'dcs-purity-id-'));
+    createdRoots.push(root);
+    mkdirSync(join(root, 'src/lib'), { recursive: true });
+    writeFileSync(
+      join(root, 'src/lib/leak.ts'),
+      "export const pick = (id: string) => (id === 'dh2' ? 1 : 0);\n",
+      'utf8',
+    );
+
+    const result = checkCore({ root });
+    expect(result.idViolations.map((item) => item.file)).toEqual([
+      'src/lib/leak.ts',
+    ]);
+  });
+
+  it('посеянный игровой селектор в чужом CSS валит гейт', async () => {
+    const { checkCore } =
+      (await import('../../scripts/plugins/check-core-purity.mjs')) as unknown as {
+        checkCore(options?: { root?: string }): {
+          violations: unknown[];
+          cssViolations: { file: string }[];
+        };
+      };
+    const root = mkdtempSync(join(tmpdir(), 'dcs-purity-'));
+    createdRoots.push(root);
+    mkdirSync(join(root, 'src/app'), { recursive: true });
+    writeFileSync(
+      join(root, 'src/app/leak.css'),
+      '.dh-sheet .sheet-panels { display: flex; }\n',
+      'utf8',
+    );
+
+    const result = checkCore({ root });
+    expect(result.cssViolations.map((item) => item.file)).toEqual([
+      'src/app/leak.css',
+    ]);
+  });
+
+  it('проверяет реальное дерево: нарушений 0, CSS — под храповиком', async () => {
     const { checkCore } =
       (await import('../../scripts/plugins/check-core-purity.mjs')) as unknown as {
         checkCore(options?: { root?: string }): {
           violations: unknown[];
           filesScanned: number;
+          cssScanned: number;
+          cssViolations: unknown[];
+          cssAllowed: { file: string; lines: number[]; max: number }[];
+          staleCssAllowlist: unknown[];
         };
       };
     const result = checkCore();
     expect(result.filesScanned).toBeGreaterThan(100);
     expect(result.violations).toEqual([]);
+    expect(result.cssScanned).toBeGreaterThan(0);
+    expect(result.cssViolations).toEqual([]);
+    expect(result.staleCssAllowlist).toEqual([]);
+    const [ratchet] = result.cssAllowed;
+    expect(ratchet.file).toBe('src/app/globals.css');
+    expect(ratchet.lines).toHaveLength(ratchet.max);
   });
 });
