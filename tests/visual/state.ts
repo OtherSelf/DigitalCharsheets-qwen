@@ -4,11 +4,15 @@ import path from 'node:path';
 /**
  * Состояние, которое global-setup передаёт воркерам через файл.
  *
- * Данные изолированы **по воркерам**: визуальные тесты правят персонажей
- * (редактирование секций, массовый редактор), поэтому два воркера на одном
- * аккаунте давали бы гонки и «мигающие» скриншоты. Каждому воркеру —
- * свой аккаунт с одинаковым набором персонажей: картинки от этого не
- * меняются (фикстуры те же), а данные не пересекаются.
+ * Данные изолированы **по паре «проект × воркер»**: визуальные тесты правят
+ * персонажей (редактирование секций, массовый редактор), а `workerIndex`
+ * уникален только внутри проекта. Один и тот же индекс в `desktop` и
+ * `mobile` (или в `desktop-games` и `mobile-games`) — это один аккаунт,
+ * поэтому параллельные проекты читают и правят одни и те же листы: один
+ * тест очищает историю, пока другой её снимает, а счётчик редакций на
+ * дашборде видит лишнюю карточку. Каждой паре — свой аккаунт с одинаковым
+ * набором персонажей: картинки от этого не меняются (фикстуры те же), а
+ * данные не пересекаются.
  *
  * Отдельный `canonical`-аккаунт нужен там, где на скриншоте виден логин:
  * страница `/settings` показывает имя пользователя, поэтому её снимают
@@ -58,8 +62,21 @@ export interface VisualStateFile {
   baseURL: string;
   /** Аккаунт для скриншотов, где виден логин (страница настроек). */
   canonical: VisualAccount;
-  /** По одному изолированному аккаунту на воркер. */
+  /**
+   * Изолированные аккаунты: блоки по проектам в порядке `projects`, внутри
+   * блока — воркеры `0..workersPerProject-1`.
+   */
   workers: VisualAccount[];
+  /** Имена проектов Playwright в порядке блоков `workers`. */
+  projects?: string[];
+  /** Размер блока `workers` на один проект. */
+  workersPerProject?: number;
+  /**
+   * Аккаунт для гостевых снимков `/share/<token>`: один на прогон, отдельно
+   * от воркеров. Очистка истории в `history.spec` не должна менять то, что
+   * видит гость.
+   */
+  guest?: VisualAccount;
   /**
    * Служебный администратор временного сервера. Появляется, только когда
    * global-setup знает DCS_DATA_DIR (запуск через scripts/visual.sh). Без
@@ -118,14 +135,50 @@ function readStateFile(): VisualStateFile {
     canonical: normalizeAccount(parsed.canonical),
     workers: parsed.workers.map(normalizeAccount),
     ...(parsed.admin ? { admin: normalizeAccount(parsed.admin) } : {}),
+    ...(parsed.guest ? { guest: normalizeAccount(parsed.guest) } : {}),
   };
 }
 
-/** Состояние аккаунта конкретного воркера (0..N-1). */
-export function readState(workerIndex = 0): VisualState {
+/**
+ * Индекс аккаунта в плоском списке `workers` для пары «проект × воркер».
+ *
+ * `workerIndex` уникален только внутри проекта, поэтому без имени проекта
+ * (старый файл состояния, `--list`) остаётся прежний выбор по воркеру.
+ */
+export function projectAccountIndex(
+  projects: readonly string[] | undefined,
+  workersPerProject: number | undefined,
+  projectName: string | undefined,
+  workerIndex: number,
+  workerCount: number,
+): number {
+  const projectIndex =
+    projectName && projects ? projects.indexOf(projectName) : -1;
+  const perProject = workersPerProject ?? 0;
+  const raw =
+    projectIndex >= 0 && perProject > 0
+      ? projectIndex * perProject + (workerIndex % perProject)
+      : workerIndex;
+  return workerCount > 0 ? raw % workerCount : 0;
+}
+
+/**
+ * Состояние аккаунта конкретной пары «проект × воркер».
+ *
+ * `projectName` — `test.info().project.name`; без него (или для старого файла
+ * состояния без `projects`) остаётся прежний выбор по `workerIndex`.
+ */
+export function readState(projectName?: string, workerIndex = 0): VisualState {
   const file = readStateFile();
   const workers = file.workers.length ? file.workers : [file.canonical];
-  const account = workers[workerIndex % workers.length];
+  const index = projectAccountIndex(
+    file.projects,
+    file.workersPerProject,
+    projectName,
+    workerIndex,
+    workers.length,
+  );
+  const account = workers[index];
   return { baseURL: file.baseURL, ...account };
 }
 
@@ -150,7 +203,18 @@ export function readAdminState(): VisualState | null {
   return { baseURL: file.baseURL, ...file.admin };
 }
 
+/**
+ * Гостевая ссылка для снимков `/share/<token>`: свой аккаунт, чтобы
+ * сценарии владельца (очистка истории) не меняли то, что видит гость.
+ * `null` — global-setup не смог посеять ссылки.
+ */
+export function readGuestShare(): NonNullable<VisualAccount['share']> | null {
+  if (!fs.existsSync(STATE_FILE)) return null;
+  const file = readStateFile();
+  return file.guest?.share ?? null;
+}
+
 export function readAllAccounts(): VisualAccount[] {
   const file = readStateFile();
-  return [file.canonical, ...file.workers];
+  return [file.canonical, ...file.workers, ...(file.guest ? [file.guest] : [])];
 }

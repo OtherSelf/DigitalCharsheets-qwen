@@ -8,6 +8,7 @@ import {
   screenshotPage,
   sheetPath,
 } from './helpers';
+import { readGuestShare } from './state';
 
 /**
  * Публичная гостевая ссылка: страница без логина, баннер read-only, `inert`
@@ -19,7 +20,7 @@ test.describe('гостевая ссылка', () => {
     'desktop: лист открыт без логина и не редактируется (en)',
     { tag: ['@fast', '@desktop'] },
     async ({ page, context }) => {
-      const share = getState().share;
+      const share = readGuestShare();
       test.skip(!share, 'нет DCS_VISUAL_DATA_DIR: ссылка не засеяна');
 
       await prepare(context, { authenticated: false, language: 'en' });
@@ -44,7 +45,7 @@ test.describe('гостевая ссылка', () => {
     'mobile: гостевая ссылка (en)',
     { tag: '@mobile' },
     async ({ page, context }) => {
-      const share = getState().share;
+      const share = readGuestShare();
       test.skip(!share, 'нет DCS_VISUAL_DATA_DIR: ссылка не засеяна');
 
       await prepare(context, { authenticated: false, language: 'en' });
@@ -60,7 +61,7 @@ test.describe('гостевая ссылка', () => {
     'desktop: история в гостевой ссылке (en)',
     { tag: '@desktop' },
     async ({ page, context }) => {
-      const share = getState().share;
+      const share = readGuestShare();
       test.skip(
         !share?.historyToken,
         'нет ссылки с историей: данные не засеяны',

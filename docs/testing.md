@@ -225,8 +225,12 @@ baselines in `tests/visual/__screenshots__/`.
   through `playwright --grep`. A new game adds
   `src/games/<id>/tests/visual/*.visual.spec.ts` and `tests/visual.json`
   (name segment, required languages/sections) — no host edits.
-- Data is isolated per worker: global-setup creates a canonical `visual-tests`
-  account and one account per worker, each with the same fixtures. Fixtures are
+- Data is isolated per **project and worker**: `workerIndex` is unique only
+  within a project, so the same index in `desktop` and `mobile` would share one
+  account and parallel scenarios would clear each other's history or add sheets.
+  global-setup creates a canonical `visual-tests` account, one account per
+  (project, worker) pair and a separate `visual-tests-guest` account that owns
+  the `/share/<token>` snapshots, each with the same fixtures. Fixtures are
   discovered, not imported: global-setup scans
   `src/games/<id>/tests/fixtures/visual.ts`, imports the default export and
   seeds one character per found game in plugin-registry order (`plugin.json` →
@@ -325,6 +329,12 @@ there.
 - `fullyParallel: false` (tests inside a file share one scenario), `workers: 4`
   (`DCS_VISUAL_WORKERS` overrides it), `retries: 2`, `timeout: 90 s`,
   `expect.timeout: 15 s`, `threshold: 0.2`, `maxDiffPixelRatio: 0.002`.
+- Host fonts ship only the `latin` subset (`src/app/layout.tsx`), so Cyrillic
+  UI text falls back to the system `sans-serif` face. The baselines were
+  captured with DejaVu Sans as that fallback; installing Arial-metric fonts
+  (`fonts-liberation`, often pulled in by `playwright install-deps`) makes
+  `Arial` resolve to Liberation Sans and shifts every RU screenshot. Check with
+  `fc-match Arial` before updating or comparing baselines.
 - The app lives in `h-dvh` + `overflow: hidden`, so Chromium draws content below
   the viewport non-deterministically. `screenshotElement` pins an element that is
   taller than its scroll container to the top of `<main>` and captures the
