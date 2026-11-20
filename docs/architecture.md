@@ -15,14 +15,41 @@ translations and export adapter lives under `src/games/<systemId>/`, and the
 core works through a single registry. Adding a game does not touch the core.
 See [game-modules.md](game-modules.md).
 
-"A game-agnostic core" is enforced, not just intended: `npm run plugins:purity`
-scans `src/lib`, `src/components`, `src/app`, `src/context` and `src/hooks` for
-game names and game field names (`proficiencyBonus`, `rank`, `wounds`, …).
-Comments and string literals do not count — a localized label is data, not
-knowledge. Exceptions live in the script with a reason and a removal deadline.
+"A game-agnostic core" is enforced, not just intended. Four gates run inside
+`npm run verify`:
+
+- `npm run plugins:purity` scans `src/lib`, `src/components`, `src/app`,
+  `src/context`, `src/hooks` and the SDK layer `src/games/shared` for game
+  names and game field names (`proficiencyBonus`, `rank`, `wounds`, …), for
+  **exact game ids inside string literals** (`if (systemId === 'dh1')` used to
+  be invisible) and for **game selectors in core CSS** (`.dnd-sheet`,
+  `.dh-sheet`). Comments are not code and do not count; exceptions carry a
+  reason and a removal deadline, and the CSS debt ratchet can only go down.
+- `npm run plugins:imports` checks the reverse direction: the core never
+  imports a plugin folder, only its contract (`registry*`, `types`,
+  `plugin-api*`, `plugin-host`, `character-system`, `games*`, `i18n*`,
+  `shared/*`).
+- `npm run plugins:boundaries` checks that a plugin imports the core only
+  through the allowlist in `scripts/plugins/boundaries.json`.
+- `npm run test:layout` checks that a test of one edition lives in
+  `src/games/<id>/tests/`, and keeps a ratchet on host tests that still
+  mention game ids.
+
 The same rule covers admin summaries (the sheet label comes from the plugin's
 `CardSummary` slot), conditions (the plugin passes its `kinds`/`sources`) and
 Excel labels (they live in plugin dictionaries under `<plugin>.excel.*`).
+
+### Who owns what
+
+| Thing | Owner | Where |
+|---|---|---|
+| Sheet layout and responsive rules | the edition | `src/games/<id>/sheet.module.css` |
+| Palette and accents of the sheet page | the edition, as data | `plugin.json#ui.theme` (host renders scoped CSS variables) |
+| Plugin font | the edition, lazily | `plugin.json#ui.theme.font` → `generatedFontLoaders` |
+| Mechanics that look alike (DH stats, skill training) | each edition separately | `src/games/dh1/…`, `src/games/dh2/…` (parity test) |
+| Data pack generation (dh2 reference) | the edition | `src/games/dh2/scripts/generate.mjs` |
+| Game-agnostic kernel (base fields, quests, Excel writer, import review store) | the core | `src/games/shared/` |
+| Theme rendering, gates, registry | the core | `src/lib/game-theme.ts`, `scripts/plugins/*` |
 
 The original prototype was scaffolded in Firebase Studio; the current version is
 a Next.js App Router rewrite finished with Qwen assistance. The legacy schema the
