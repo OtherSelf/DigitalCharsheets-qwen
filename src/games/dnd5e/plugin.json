@@ -90,6 +90,26 @@
       "HouseRulesDialog",
       "BulkEditor"
     ],
-    "entry": "ui.ts"
+    "entry": "ui.ts",
+    "theme": {
+      "tokens": {
+        "light": {
+          "primary": "355 62% 38%",
+          "primary-foreground": "40 30% 97%",
+          "accent": "30 45% 88%",
+          "accent-foreground": "20 30% 15%",
+          "border": "355 30% 80%",
+          "ring": "355 62% 38%"
+        },
+        "dark": {
+          "primary": "355 60% 60%",
+          "primary-foreground": "20 20% 10%",
+          "accent": "350 25% 30%",
+          "accent-foreground": "40 30% 95%",
+          "border": "350 20% 32%",
+          "ring": "355 60% 60%"
+        }
+      }
+    }
   }
 }
