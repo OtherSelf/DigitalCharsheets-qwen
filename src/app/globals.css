@@ -8,18 +8,6 @@
 */
 @custom-variant dark (&:where(.dark, .dark *));
 
-/*
-  Широкий режим для блока Info в Dark Heresy (>=1800px) — 4 колонки.
-  Раньше это был вариант `3xl:grid-cols-4`, но v4 ставит кастомный вариант
-  в каскаде раньше `md:`, и `md:grid-cols-3` перебивал его на широких экранах.
-  Явный media-запрос не зависит от порядка вариантов.
-*/
-@media (min-width: 1800px) {
-  .dcs-info-grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-}
-
 /* FONT FIX: Explicitly map the body font to the loaded Inter variable with fallbacks */
 body {
   font-family: var(--font-inter, 'Inter', sans-serif);
@@ -347,31 +335,6 @@ body > div:first-child {
 }
 
 @media (min-width: 768px) and (max-width: 1299px) {
-  .dnd-sheet .sheet-top-row {
-    flex-direction: column !important;
-  }
-
-  .dnd-sheet .sheet-main-grid {
-    display: grid !important;
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    align-items: start !important;
-  }
-  .dnd-sheet .sheet-main-grid > * {
-    grid-column: 1 / -1 !important;
-    min-width: 0 !important;
-  }
-  .dnd-sheet .sheet-main-grid > *:nth-child(1),
-  .dnd-sheet .sheet-main-grid > *:nth-child(2) {
-    grid-column: span 1 / span 1 !important;
-  }
-
-  .dnd-sheet.is-compact .sheet-main-grid {
-    grid-template-columns: minmax(0, 1fr) !important;
-  }
-  .dnd-sheet.is-compact .sheet-main-grid > * {
-    grid-column: 1 / -1 !important;
-  }
-
   .dh-sheet .sheet-info-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
@@ -404,11 +367,6 @@ body > div:first-child {
   }
   .dh-sheet.is-compact .sheet-info-grid > * {
     grid-column: 1 / -1 !important;
-  }
-
-  .dnd-stretch-card [data-state='open'] {
-    height: 100% !important;
-    max-height: none !important;
   }
 }
 
