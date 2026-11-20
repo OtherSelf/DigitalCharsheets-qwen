@@ -14,7 +14,7 @@ import {
   sanitizeData,
 } from '@/lib/export-utils';
 
-import { makeDhCharacter, makeDndCharacter } from '@tests/support';
+import { hasPlugin, makeDhCharacter, makeDndCharacter } from '@tests/support';
 import { allOff } from '@tests/support/export-fixtures';
 
 // xlsx 0.20 в Node подхватывает fs только при CJS-загрузке; под vitest (ESM)
@@ -119,31 +119,37 @@ describe('filterCharacterForExport', () => {
     expect((filtered as any).race).toBeUndefined();
   });
 
-  it('не теряет поля DH v2: fatigue2nd, criticalConditions, customResources', () => {
-    const dh = makeDhCharacter({
-      systemId: 'dh2',
-      edition: '2nd',
-      fatigue1st: { current: 2, notes: 'beaten' },
-      fatigue2nd: { current: 1, notes: '' },
-      criticalConditions: [{ id: 'c1', name: 'Broken arm', notes: 'right' }],
-      customResources: [{ id: 'r1', description: 'Ammo', current: 3, max: 10 }],
-    });
-    const filtered = filterCharacterForExport(
-      dh as any,
-      DEFAULT_EXPORT_CONFIG,
-    ) as any;
+  // Сценарий 2-й редакции: без неё в сборке проверять нечего.
+  it.runIf(hasPlugin('dh2'))(
+    'не теряет поля DH v2: fatigue2nd, criticalConditions, customResources',
+    () => {
+      const dh = makeDhCharacter({
+        systemId: 'dh2',
+        edition: '2nd',
+        fatigue1st: { current: 2, notes: 'beaten' },
+        fatigue2nd: { current: 1, notes: '' },
+        criticalConditions: [{ id: 'c1', name: 'Broken arm', notes: 'right' }],
+        customResources: [
+          { id: 'r1', description: 'Ammo', current: 3, max: 10 },
+        ],
+      });
+      const filtered = filterCharacterForExport(
+        dh as any,
+        DEFAULT_EXPORT_CONFIG,
+      ) as any;
 
-    expect(filtered.systemId).toBe('dh2');
-    expect(filtered.edition).toBeUndefined();
-    expect(filtered.fatigue1st).toBeUndefined();
-    expect(filtered.fatigue2nd).toEqual({ current: 1, notes: '' });
-    // Значимая fatigue1st не потеряна — ушла в notes миграции.
-    expect(String(filtered.notes)).toContain('[migration v2]');
-    expect(filtered.criticalConditions).toHaveLength(1);
-    expect(filtered.criticalConditions[0].name).toBe('Broken arm');
-    expect(filtered.customResources).toHaveLength(1);
-    expect(filtered.customResources[0].description).toBe('Ammo');
-  });
+      expect(filtered.systemId).toBe('dh2');
+      expect(filtered.edition).toBeUndefined();
+      expect(filtered.fatigue1st).toBeUndefined();
+      expect(filtered.fatigue2nd).toEqual({ current: 1, notes: '' });
+      // Значимая fatigue1st не потеряна — ушла в notes миграции.
+      expect(String(filtered.notes)).toContain('[migration v2]');
+      expect(filtered.criticalConditions).toHaveLength(1);
+      expect(filtered.criticalConditions[0].name).toBe('Broken arm');
+      expect(filtered.customResources).toHaveLength(1);
+      expect(filtered.customResources[0].description).toBe('Ammo');
+    },
+  );
 
   it('выключенные секции не попадают в результат', () => {
     const config = {

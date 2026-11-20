@@ -13,7 +13,7 @@
  * `scripts/tests/check-test-layout.mjs`).
  */
 
-import { getGamePlugin } from '@/games/registry';
+import { getGamePlugin, listGamePlugins } from '@/games/registry';
 import type { SystemId } from '@/games/types';
 
 /**
@@ -136,4 +136,14 @@ export function makeDhCharacter(overrides: Record<string, any> = {}): any {
     customHouseRules: [],
     ...overrides,
   };
+}
+
+/** Есть ли плагин в этой сборке (редакцию могли удалить из репозитория). */
+export function hasPlugin(systemId: string): boolean {
+  return getGamePlugin(systemId as SystemId) !== undefined;
+}
+
+/** Идентификаторы плагинов текущей сборки — для итерации без списка игр. */
+export function pluginIds(): string[] {
+  return listGamePlugins().map((entry) => entry.manifest.id);
 }

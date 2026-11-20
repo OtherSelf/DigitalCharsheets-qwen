@@ -290,12 +290,17 @@ describe('переводы: целостность словарей', () => {
   });
 
   it('все используемые ключи io.excel.* есть в словарях', () => {
+    // Excel-адаптеры берём с диска: список редакций тест хоста не знает.
+    const gamesDir = path.join(SRC, 'games');
     const files = [
-      path.join(SRC, 'games', 'dnd5e', 'excel.ts'),
-      path.join(SRC, 'games', 'dh1', 'excel.ts'),
-      path.join(SRC, 'games', 'dh2', 'excel.ts'),
+      ...fs
+        .readdirSync(gamesDir, { withFileTypes: true })
+        .filter((entry) => entry.isDirectory())
+        .map((entry) => path.join(gamesDir, entry.name, 'excel.ts'))
+        .filter((file) => fs.existsSync(file)),
       path.join(SRC, 'lib', 'export-utils.ts'),
     ];
+    expect(files.length).toBeGreaterThan(2);
     const keys = new Set<string>();
     for (const file of files) {
       const text = fs.readFileSync(file, 'utf8');
@@ -303,7 +308,7 @@ describe('переводы: целостность словарей', () => {
       // своим доменом (`dnd.excel.*`, `dh1.excel.*`, `dh2.excel.*`); в ядре
       // остаются только общие метки выгрузки (`io.excel.*`).
       for (const match of text.matchAll(
-        /'((?:io|dnd|dh1|dh2)\.excel\.[A-Za-z0-9]+)'/g,
+        /'([A-Za-z0-9_-]+\.excel\.[A-Za-z0-9_]+)'/g,
       )) {
         keys.add(match[1]);
       }
@@ -315,14 +320,16 @@ describe('переводы: целостность словарей', () => {
     expect(missing, 'нет ключей io.excel.* в en/ru').toEqual([]);
   });
 
-  it('домены dnd/dh/games приходят из модулей, а не из общего слоя', () => {
-    expect(en['dnd.lvl']).toBeTruthy();
-    expect(en['dh1.weaponSkill']).toBeTruthy();
-    expect(en['dh2.influence']).toBeTruthy();
+  it('домены игр приходят из модулей, а не из общего слоя', () => {
     expect(en['games.stepGame']).toBeTruthy();
-    expect(en['games.dh1.name']).toBeTruthy();
-    expect(en['games.dh2.name']).toBeTruthy();
-    expect(en['games.dnd5e.name']).toBeTruthy();
+    // Словари и подписи семейств — по манифестам сборки, без списка игр.
+    for (const { manifest } of pluginManifests()) {
+      expect(en[`${manifest.id}.systemName`], manifest.id).toBeTruthy();
+      expect(
+        en[`games.generated.${manifest.gameId}.name`],
+        manifest.gameId,
+      ).toBeTruthy();
+    }
   });
 
   it('в ru нет слов со смешанной кириллицей и латиницей', () => {

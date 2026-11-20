@@ -66,10 +66,20 @@ describe('поле пароля с глазком', () => {
   });
 
   it('«Предыстория» использует BookOpen, а не Eye', () => {
-    for (const file of [
-      'src/games/dh1/sections/info-progression-section.tsx',
-      'src/games/dh2/sections/info-progression-section.tsx',
-    ]) {
+    // Секции берём с диска: список редакций тест хоста знать не должен.
+    const sections = fs
+      .readdirSync(path.join(ROOT, 'src/games'), { withFileTypes: true })
+      .filter((entry) => entry.isDirectory())
+      .map((entry) =>
+        path.join(
+          'src/games',
+          entry.name,
+          'sections/info-progression-section.tsx',
+        ),
+      )
+      .filter((relative) => fs.existsSync(path.join(ROOT, relative)));
+    expect(sections.length).toBeGreaterThan(0);
+    for (const file of sections) {
       const source = read(file);
       expect(source, file).toContain('BookOpen');
       expect(source, file).not.toContain('<Eye ');

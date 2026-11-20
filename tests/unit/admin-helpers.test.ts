@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
 import { adminGameBadge } from '@/components/admin/admin-helpers';
+import { getGameModule } from '@/games/registry';
+
+import { hasPlugin } from '@tests/support';
 
 /**
  * ─── LANDMARK: ADMIN GAME BADGE ────────────────────────────────────────────
@@ -19,9 +22,18 @@ const translate = (key: string) =>
 
 describe('бейдж игры в списке чарлистов', () => {
   it('показывает короткий код и полное имя игры с редакцией', () => {
-    expect(
-      adminGameBadge({ systemId: 'dh2', gameSystem: 'Dark Heresy' }, translate),
-    ).toEqual({ code: 'dh2e', title: 'Dark Heresy · 2nd Edition' });
+    // Код — из модуля редакции, а не из литерала в тесте.
+    if (hasPlugin('dh2')) {
+      expect(
+        adminGameBadge(
+          { systemId: 'dh2', gameSystem: 'Dark Heresy' },
+          translate,
+        ),
+      ).toEqual({
+        code: getGameModule('dh2')?.shortCode,
+        title: 'Dark Heresy · 2nd Edition',
+      });
+    }
 
     expect(
       adminGameBadge(
