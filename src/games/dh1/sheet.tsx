@@ -114,11 +114,11 @@ export const Dh1Sheet = React.forwardRef<
   const { t } = useTranslation();
   // LANDMARK: CREATION REVIEW STATE
   // Импортированный лист открывается с открытыми замками до фиксации.
-  // Состояние живёт в памяти вкладки и привязано к id: лист может остаться
-  // смонтированным при переходе между персонажами.
-  const [creationReview, setCreationReview] = React.useState(() =>
-    isCreationReview(character.id),
-  );
+  // Отметка живёт в sessionStorage вкладки и привязана к id: лист может
+  // остаться смонтированным при переходе между персонажами. Стартуем с
+  // false, а реальное значение читаем в эффекте: иначе сервер и клиент
+  // отрисовали бы баннер по-разному (отметка есть только в браузере).
+  const [creationReview, setCreationReview] = React.useState(false);
   React.useEffect(() => {
     setCreationReview(isCreationReview(character.id));
   }, [character.id]);
