@@ -90,17 +90,19 @@ from the content catalog that lives in the workspace repository
 (`content/dh2/catalog.json` and `content/dh2/rules.json`).
 
 The module never reads the workspace at runtime; the generated files are
-committed. Rebuild after the catalog changes:
+committed. The generator lives in the plugin folder — the data pack belongs to
+the edition, not to the core tooling — so rebuild after the catalog changes
+with:
 
 ```sh
-npm run dh2e:data    # regenerate dh2e-*.ts and dh2.data.* i18n keys
-npm run dh2e:check   # fail if the generated files are stale
+node src/games/dh2/scripts/generate.mjs          # regenerate dh2e-*.ts + i18n keys
+node src/games/dh2/scripts/generate.mjs --check  # fail if the generated files are stale
 ```
 
 Elite advances carry a structured `prereq` list (characteristic minimum,
 background, gender, another elite, a trait). The generator validates every
-reference and writes it as `requirements`; a typo fails `dh2e:data`/
-`dh2e:check` instead of producing a silent no-op. The sheet checks the
+reference and writes it as `requirements`; a typo fails the generator's
+`--check` instead of producing a silent no-op. The sheet checks the
 requirements it can compare (background, gender, characteristics, elites) and
 shows red warnings, while a `trait` stays a hint because traits are free text
 on the sheet.
@@ -108,9 +110,11 @@ on the sheet.
 `DCS_CONTENT_DIR` overrides the catalog location (default:
 `../DigitalCharsheets-workspace/content/dh2`). The generator owns only the
 `dh2.catalog.*` slice of `src/games/dh2/i18n/{en,ru}.json`; every other key is
-hand-written. `dh2e:check` runs as part of `npm run verify`: when the workspace
-catalog is checked out, stale generated files fail the gate; in CI without the
-workspace the step is skipped with a warning.
+hand-written. Drift is caught by the edition's own unit test
+(`src/games/dh2/tests/unit/dh2e-freshness.test.ts`, part of `npm run verify`):
+when the workspace catalog is checked out, stale generated files fail the
+unit step; in CI without the workspace the test is skipped with a reason.
+Nothing in `scripts/predeploy.sh` or `package.json` mentions the edition.
 
 ## Edition differences (dh1 vs dh2)
 

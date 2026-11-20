@@ -1,7 +1,8 @@
 /**
  * ─── AUTO-GENERATED — НЕ РЕДАКТИРОВАТЬ ─────────────────────────────────────
  * Данные 2-й редакции из контент-каталога workspace (content/dh2).
- * Пересобрать: npm run dh2e:data. Проверить дрейф: npm run dh2e:check.
+ * Пересобрать: node src/games/dh2/scripts/generate.mjs.
+ * Проверить дрейф: тот же файл с --check (или unit-тест dh2e-freshness).
  */
 
 import type {

@@ -8,19 +8,23 @@
  *    content/dh2/catalog.json  (миры, бэкграунды, роли, пророчества, справочники)
  *    content/dh2/rules.json    (аптитюды, характеристики, таблицы XP, ступени)
  *
- *  Скрипт генерирует в `src/games/dh2/`:
+ *  Скрипт живёт в папке плагина (`src/games/dh2/scripts/`): данные 2-й
+ *  редакции — его собственность, а не тулинг ядра. Генерирует в
+ *  `src/games/dh2/`:
  *    dh2e-data.ts        миры, бэкграунды, роли, пророчества, аптитюды
  *    dh2e-reference.ts   навыки, таланты, дисциплины, силы, элитные продвижения
  *    dh2e-rules.ts       ступени, ранги навыков, таблицы 2-2/2-4/2-6
  *  и дописывает подписи в i18n/en.json, i18n/ru.json (только ключи `dh2.catalog.*`).
  *
  *  Runtime-зависимости от workspace нет: модуль читает только сгенерированные
- *  файлы. Пересборка — `npm run dh2e:data`, проверка дрейфа — `npm run dh2e:check`.
+ *  файлы. Пересборка — без флага, проверка дрейфа — `--check`; в `npm run
+ *  verify` дрейф ловит unit-тест плагина (`tests/unit/dh2e-freshness.test.ts`),
+ *  а не корневой скрипт.
  *
  *  Использование:
- *    npm run dh2e:data
- *    npm run dh2e:check
- *    DCS_CONTENT_DIR=/path/to/content/dh2 node scripts/dh2e/generate.mjs
+ *    node src/games/dh2/scripts/generate.mjs
+ *    node src/games/dh2/scripts/generate.mjs --check
+ *    DCS_CONTENT_DIR=/path/to/content/dh2 node src/games/dh2/scripts/generate.mjs
  * ============================================================================
  */
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
@@ -30,8 +34,9 @@ import { fileURLToPath } from 'node:url';
 import prettier from 'prettier';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const ROOT = resolve(HERE, '../..');
-const MODULE_DIR = join(ROOT, 'src/games/dh2');
+/** Корень репозитория: scripts → dh2 → games → src → корень. */
+const ROOT = resolve(HERE, '../../../..');
+const MODULE_DIR = resolve(HERE, '..');
 const CONTENT_DIR =
   process.env.DCS_CONTENT_DIR ??
   resolve(ROOT, '../DigitalCharsheets-workspace/content/dh2');
@@ -56,7 +61,8 @@ const STAT_IDS = {
 const HEADER = `/**
  * ─── AUTO-GENERATED — НЕ РЕДАКТИРОВАТЬ ─────────────────────────────────────
  * Данные 2-й редакции из контент-каталога workspace (content/dh2).
- * Пересобрать: npm run dh2e:data. Проверить дрейф: npm run dh2e:check.
+ * Пересобрать: node src/games/dh2/scripts/generate.mjs.
+ * Проверить дрейф: тот же файл с --check (или unit-тест dh2e-freshness).
  */
 `;
 
@@ -802,7 +808,7 @@ export const DH2E_CRAFTSMANSHIP: readonly Dh2eCraftsmanshipModifier[] = ${JSON.s
   if (CHECK) {
     if (dirty > 0) {
       console.error(
-        `dh2e: данные устарели (${dirty} файлов). Запустите npm run dh2e:data`,
+        `dh2e: данные устарели (${dirty} файлов). Запустите node src/games/dh2/scripts/generate.mjs`,
       );
       process.exit(1);
     }

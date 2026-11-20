@@ -14,9 +14,9 @@
 #                    (аналог `black --check` / `isort --check`)
 #    4/8 линт      — eslint .: hooks, async, React/Next-правила
 #                    (next/core-web-vitals + next/typescript), границы
-#                    импортов плагинов (scripts/plugins/check-boundaries.mjs),
-#                    актуальность сгенерированного реестра (plugins:check) и
-#                    данных DH2 (dh2e:check, если есть workspace-каталог)
+#                    импортов плагинов (check-boundaries.mjs), чистота ядра и
+#                    импорты ядра (check-core-purity.mjs, check-core-imports.mjs)
+#                    и актуальность сгенерированного реестра (plugins:check)
 #    5/8 typecheck — tsc --noEmit отдельным шагом: падение видно до сборки и не
 #                    тонет в выводе next build
 #    6/8 unit      — vitest: авторизация, файловое хранилище, экспорт/импорт,
@@ -290,19 +290,6 @@ step "4/8 раскладка тестов (scripts/tests/check-test-layout.mjs)"
 node scripts/tests/check-test-layout.mjs \
   || die "Нарушена раскладка тестов (см. вывод выше; правила — scripts/tests/check-test-layout.mjs)"
 ok "раскладка тестов соблюдена"
-
-# Данные DH2: `dh2e-*.ts` и словарь `dh2.catalog.*` обязаны совпадать с
-# контент-каталогом workspace. В CI workspace нет — там шаг пропускается,
-# локально расхождение блокирует деплой (см. docs/game-modules.md).
-DH2_CONTENT_DIR="${DCS_CONTENT_DIR:-../DigitalCharsheets-workspace/content/dh2}"
-step "4/8 данные DH2 (dh2e:check)"
-if [ -f "$DH2_CONTENT_DIR/catalog.json" ]; then
-  node scripts/dh2e/generate.mjs --check \
-    || die "Данные DH2 устарели: запустите npm run dh2e:data и закоммитьте src/games/dh2/dh2e-*.ts"
-  ok "данные DH2 в синхроне с content/dh2"
-else
-  warn "4/8 данные DH2 пропущены: нет $DH2_CONTENT_DIR/catalog.json (CI без workspace)"
-fi
 
 # ── 5. typecheck ────────────────────────────────────────────────────────────
 step "5/8 typecheck ($TSC --noEmit)"
