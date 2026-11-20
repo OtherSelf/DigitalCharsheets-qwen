@@ -32,6 +32,7 @@ import { statBonus, upgradeBonus } from '@/games/shared/dh-stats';
 import { cn } from '@/lib/utils';
 
 import { isFieldFilled } from './field-policy';
+import { ArmorDisplay } from './sections/armor-display';
 import { CharacteristicsSection } from './sections/characteristics-section';
 import { CustomResourceCounter } from './sections/custom-resource-counter';
 import { EditSaveButton, MetricBox } from './sections/dh-ui-helpers';
@@ -42,145 +43,7 @@ import {
 } from './sections/info-progression-section';
 import { SkillsTalentsSection } from './sections/skills-talents-section';
 import { EMPTY_STAT_UPGRADE, pickAllowedStats, statRecord } from './stats';
-import type {
-  BodyPart,
-  DH1Character as Character,
-  DH1Character,
-} from './types';
-
-const defaultArmor = {
-  Head: null,
-  'Right arm': null,
-  Body: null,
-  'Left arm': null,
-  'Right leg': null,
-  'Left leg': null,
-};
-
-const ArmorDisplay = ({
-  character,
-  isCompactView,
-}: {
-  character: DH1Character;
-  isCompactView: boolean;
-}) => {
-  const { t } = useTranslation();
-  const armor = character.equipment?.armor ?? defaultArmor;
-  const bodyPartLocations: Record<BodyPart, string> = {
-    Head: '1-10',
-    'Right arm': '11-20',
-    'Left arm': '21-30',
-    Body: '31-70',
-    'Right leg': '71-85',
-    'Left leg': '86-00',
-  };
-  const displayArmorType = (type: string | undefined | null) => {
-    if (!type) return '—';
-    const translationKey = `common.armorType${type}`;
-    const translated = t(translationKey);
-    return translated === translationKey ? type : translated;
-  };
-  const ArmorBox = ({
-    part,
-    location,
-  }: {
-    part: BodyPart;
-    location: string;
-  }) => {
-    const armorPiece = armor[part];
-    const bodyPartKey: Record<BodyPart, string> = {
-      Head: 'dh1.bodyPartHead',
-      'Right arm': 'dh1.bodyPartRightArm',
-      'Left arm': 'dh1.bodyPartLeftArm',
-      Body: 'dh1.bodyPartBody',
-      'Right leg': 'dh1.bodyPartRightLeg',
-      'Left leg': 'dh1.bodyPartLeftLeg',
-    };
-    const title = t(bodyPartKey[part] || part);
-    return (
-      <div
-        className={cn(
-          'bg-card text-card-foreground flex w-full min-w-0 flex-col items-center rounded-md border shadow-md',
-          isCompactView ? 'p-1' : 'p-2',
-        )}
-      >
-        <h4
-          className={cn(
-            'w-full truncate px-1 text-center font-bold',
-            isCompactView ? 'text-[10px]' : 'text-xs',
-          )}
-        >
-          {title}
-        </h4>
-        <div className="text-muted-foreground mb-1 text-[10px]">
-          ({location})
-        </div>
-        <div
-          className={cn(
-            'w-full space-y-0.5',
-            isCompactView ? 'text-[9px]' : 'text-center text-[10px]',
-          )}
-        >
-          <p className="truncate">
-            <strong className="text-muted-foreground">
-              {t('dh1.armorAp')}:{' '}
-            </strong>
-            {armorPiece?.ap ?? '—'}
-          </p>
-          <p className="truncate">
-            <strong className="text-muted-foreground">
-              {t('dh1.armorType')}:{' '}
-            </strong>
-            {displayArmorType(armorPiece?.type)}
-          </p>
-        </div>
-      </div>
-    );
-  };
-  return (
-    <div className="grid w-full max-w-full grid-cols-3 gap-x-2 gap-y-4 overflow-hidden pt-8">
-      <div />{' '}
-      <div className="flex items-start justify-center">
-        {' '}
-        <ArmorBox part="Head" location={bodyPartLocations['Head']} />{' '}
-      </div>{' '}
-      <div />
-      <div className="mt-2 flex flex-col justify-start">
-        {' '}
-        <ArmorBox
-          part="Left arm"
-          location={bodyPartLocations['Left arm']}
-        />{' '}
-      </div>
-      <div className="mt-8">
-        {' '}
-        <ArmorBox part="Body" location={bodyPartLocations['Body']} />{' '}
-      </div>
-      <div className="mt-2 flex flex-col justify-start">
-        {' '}
-        <ArmorBox
-          part="Right arm"
-          location={bodyPartLocations['Right arm']}
-        />{' '}
-      </div>
-      <div className="-mt-2">
-        {' '}
-        <ArmorBox
-          part="Left leg"
-          location={bodyPartLocations['Left leg']}
-        />{' '}
-      </div>{' '}
-      <div />
-      <div className="-mt-2">
-        {' '}
-        <ArmorBox
-          part="Right leg"
-          location={bodyPartLocations['Right leg']}
-        />{' '}
-      </div>
-    </div>
-  );
-};
+import type { DH1Character as Character, DH1Character } from './types';
 
 /** Шаг «−/+» для Безумия и Порчи: значение меняется сразу, ниже нуля не уходит. */
 const PointsStepper = ({
@@ -332,23 +195,14 @@ export const Dh1Sheet = React.forwardRef<
   const [editablePoints, setEditablePoints] = React.useState({
     wounds: getPointsObject(character.wounds),
     fatePoints: getPointsObject(character.fatePoints),
-    insanityPoints: getSimplePointsObject(character.insanityPoints),
-    corruptionPoints: getSimplePointsObject(character.corruptionPoints),
   });
 
   React.useEffect(() => {
     setEditablePoints({
       wounds: getPointsObject(character.wounds),
       fatePoints: getPointsObject(character.fatePoints),
-      insanityPoints: getSimplePointsObject(character.insanityPoints),
-      corruptionPoints: getSimplePointsObject(character.corruptionPoints),
     });
-  }, [
-    character.wounds,
-    character.fatePoints,
-    character.insanityPoints,
-    character.corruptionPoints,
-  ]);
+  }, [character.wounds, character.fatePoints]);
 
   const isAnyEditing =
     isPointsEditing || Object.values(sectionEditing).some(Boolean);
@@ -475,24 +329,6 @@ export const Dh1Sheet = React.forwardRef<
       ...prev,
       [pointType]: { ...prev[pointType], [field]: parseInt(value, 10) || 0 },
     }));
-  };
-  const handleSimplePointsChange = (
-    point: 'insanityPoints' | 'corruptionPoints',
-    field: 'total' | 'notes',
-    value: string,
-  ) => {
-    if (field === 'total') {
-      const numValue = parseInt(value, 10) || 0;
-      setEditablePoints((prev) => ({
-        ...prev,
-        [point]: { ...prev[point], total: Math.min(numValue, 100) },
-      }));
-    } else {
-      setEditablePoints((prev) => ({
-        ...prev,
-        [point]: { ...prev[point], notes: value },
-      }));
-    }
   };
 
   return (
@@ -1095,7 +931,7 @@ export const Dh1Sheet = React.forwardRef<
           />
         </div>
         {!isCompactView && (
-          <div className="hidden overflow-hidden md:col-span-3 md:block">
+          <div className="overflow-hidden md:col-span-3">
             <ArmorDisplay character={character} isCompactView={isCompactView} />
           </div>
         )}

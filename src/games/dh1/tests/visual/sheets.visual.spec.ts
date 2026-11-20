@@ -108,3 +108,37 @@ test.describe('лист Dark Heresy — чтение', { tag: '@plugin:dh1' }, (
     },
   );
 });
+
+/**
+ * ─── LANDMARK: HIT LOCATIONS ON NARROW SCREENS ────────────────────────────
+ * Блок попаданий (схема 1d100 по частям тела) раньше был скрыт на <md.
+ * Теперь на телефоне он живёт во вкладке «Информация», а на планшете
+ * остаётся в правой колонке листа.
+ */
+test.describe(
+  'локации попаданий на узких экранах',
+  { tag: '@plugin:dh1' },
+  () => {
+    test(
+      'мобильный и планшет показывают локации',
+      { tag: '@mobile' },
+      async ({ page, context }) => {
+        await page.setViewportSize({ width: 390, height: 844 });
+        await prepare(context);
+        await openApp(page, sheetPath(gameCharacterId('dh')));
+
+        await openMobileSection(page, 'Info', 'info-section');
+        const info = page.locator('#info-section:visible').first();
+        await expect(info.getByText('(1-10)')).toBeVisible();
+        await expect(info.getByText('(86-00)')).toBeVisible();
+        await expect(info.getByText('(31-70)')).toBeVisible();
+
+        // Планшет: та же схема видна в правой колонке листа.
+        await page.setViewportSize({ width: 1024, height: 768 });
+        await page.waitForTimeout(500);
+        await expect(page.getByText('(1-10)').first()).toBeVisible();
+        await expect(page.getByText('(86-00)').first()).toBeVisible();
+      },
+    );
+  },
+);

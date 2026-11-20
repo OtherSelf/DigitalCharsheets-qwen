@@ -66,6 +66,7 @@ import { dh1ExperienceRows } from '../experience';
 import { isCreationFieldLocked } from '../field-policy';
 import { genderLabel, genderOptions, toGenderCode } from '../gender';
 import { type DarkHeresyCareerPath, type DH1Character } from '../types';
+import { ArmorDisplay } from './armor-display';
 import { EditSaveButton } from './dh-ui-helpers';
 
 // Наборы состояний объявляет редакция: компонент в ядре принимает их
@@ -678,6 +679,18 @@ export const InfoSection = ({
                 />
               </div>
             </MetaBlock>
+            {isCompactView && (
+              <div className="space-y-2">
+                <h4 className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+                  {t('dh1.armor')}
+                </h4>
+                <ArmorDisplay
+                  character={character}
+                  isCompactView={isCompactView}
+                  embedded
+                />
+              </div>
+            )}
           </div>
         </TooltipProvider>
 
