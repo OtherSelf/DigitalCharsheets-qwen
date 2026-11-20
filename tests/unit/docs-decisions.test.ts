@@ -49,10 +49,10 @@ function referencedNumbers(): { file: string; number: number }[] {
 }
 
 describe('ссылки на решения (D)', () => {
-  it('легенда содержит D1–D22 без дыр и повторов', () => {
+  it('легенда содержит D1–D25 без дыр и повторов', () => {
     const numbers = canonicalNumbers().sort((a, b) => a - b);
     expect(numbers).toEqual(
-      Array.from({ length: 22 }, (_, index) => index + 1),
+      Array.from({ length: 25 }, (_, index) => index + 1),
     );
   });
 

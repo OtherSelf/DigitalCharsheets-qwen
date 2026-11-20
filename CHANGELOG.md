@@ -21,6 +21,24 @@ format changes.
   is now 1.4; the reference fixture and the DH2 demo theme exercise the
   contract.
 
+### Changed
+
+- The sheet layout of every game now lives in its own CSS module inside the
+  plugin folder (`dnd5e/sheet.module.css`, `dh1/…`, `dh2/…`) instead of
+  `globals.css`; the core keeps a gate that fails on game selectors in core
+  CSS. Two dead rules (`.dcs-info-grid`, `.dnd-stretch-card`) were removed with
+  it.
+- Alike Dark Heresy mechanics (stat arithmetic, cumulative skill training, the
+  import-review banner) are copies inside each edition instead of a shared
+  layer; a parity test compares their behaviour and skips when one edition is
+  absent. The DH2 data-pack generator moved into `src/games/dh2/scripts/` and
+  the game-specific `dh2e:*` npm scripts are gone.
+- Host unit tests no longer require a specific edition: the game catalog,
+  slots, translations, admin badge and password helpers read the registry and
+  files, and edition scenarios are guarded with `it.runIf(hasPlugin(id))`.
+  Removing `src/games/dh2` now leaves `npm run verify` green (build and a
+  temporary-server smoke test included).
+
 ### Fixed
 
 - An imported sheet keeps its choice-review mode when the transition to the
