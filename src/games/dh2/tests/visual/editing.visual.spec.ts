@@ -2,6 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 
 import {
   openApp,
+  openMobileSection,
   sheetPath,
   signInViaUI,
   startEditing,
@@ -238,6 +239,45 @@ test.describe('Безумие и Порча: плюс и минус', { tag: '@p
             ?.total;
         })
         .toBe(1);
+    },
+  );
+});
+
+/**
+ * ─── LANDMARK: HIT LOCATIONS IN INFO ──────────────────────────────────────
+ * DH2 повторяет DH1: на телефоне локации попаданий видны во вкладке
+ * «Информация», а не спрятаны.
+ */
+test.describe('локации попаданий на мобильном', { tag: '@plugin:dh2' }, () => {
+  test(
+    'DH2: мобильный показывает локации во вкладке «Информация»',
+    { tag: '@mobile' },
+    async ({ page }) => {
+      const username = `hits-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+      const password = 'hits-password-1';
+      const registered = await page.request.post('/api/auth/register', {
+        data: {
+          username,
+          password,
+          displayName: 'Hits QA',
+          recoveryPhrase: 'amber cobalt lantern',
+        },
+      });
+      expect([200, 201], 'регистрация аккаунта').toContain(registered.status());
+      const created = await page.request.post('/api/characters', {
+        data: { systemId: 'dh2', name: 'Hits QA' },
+      });
+      expect([200, 201], 'создание dh2-листа').toContain(created.status());
+      const { id } = (await created.json()) as { id: string };
+
+      await page.setViewportSize({ width: 390, height: 844 });
+      await signInViaUI(page, { username, password });
+      await openApp(page, sheetPath(id));
+
+      await openMobileSection(page, 'Info', 'info-section');
+      const info = page.locator('#info-section:visible').first();
+      await expect(info.getByText('(1-10)')).toBeVisible();
+      await expect(info.getByText('(86-00)')).toBeVisible();
     },
   );
 });
