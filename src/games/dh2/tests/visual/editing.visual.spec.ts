@@ -176,3 +176,68 @@ test.describe('блок опыта', { tag: '@plugin:dh2' }, () => {
     },
   );
 });
+
+/**
+ * ─── LANDMARK: SIMPLE POINTS STEPPER ──────────────────────────────────────
+ * DH2 повторяет поведение DH1: Порча меняется плюсом/минусом на 1, без
+ * модалки, сразу сохраняется и не уходит ниже нуля.
+ */
+test.describe('Безумие и Порча: плюс и минус', { tag: '@plugin:dh2' }, () => {
+  test(
+    'DH2: Порча меняется на 1 и сохраняется',
+    { tag: '@desktop' },
+    async ({ page }) => {
+      const username = `points2-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+      const password = 'points-password-2';
+      const registered = await page.request.post('/api/auth/register', {
+        data: {
+          username,
+          password,
+          displayName: 'Points DH2',
+          recoveryPhrase: 'amber cobalt lantern',
+        },
+      });
+      expect([200, 201], 'регистрация аккаунта').toContain(registered.status());
+      const created = await page.request.post('/api/characters', {
+        data: { systemId: 'dh2', name: 'Points DH2' },
+      });
+      expect([200, 201], 'создание dh2-листа').toContain(created.status());
+      const { id } = (await created.json()) as { id: string };
+
+      await signInViaUI(page, { username, password });
+      await openApp(page, sheetPath(id));
+
+      const increase = page.locator(
+        '[data-testid="corruption-points-increase"]:visible',
+      );
+      const box = increase.locator(
+        'xpath=ancestor::div[contains(@class,"flex h-full flex-col")][1]',
+      );
+      await expect(increase).toHaveCount(1);
+      await expect(box.locator('input')).toHaveCount(0);
+
+      await increase.click();
+      await expect
+        .poll(() =>
+          page
+            .locator('[data-testid="corruption-points-increase"]:visible')
+            .locator('xpath=..')
+            .locator('span')
+            .innerText(),
+        )
+        .toBe('1');
+
+      await expect
+        .poll(async () => {
+          const response = await page.request.get('/api/characters');
+          const list = (await response.json()) as Array<{
+            id: string;
+            corruptionPoints?: { total: number };
+          }>;
+          return list.find((character) => character.id === id)?.corruptionPoints
+            ?.total;
+        })
+        .toBe(1);
+    },
+  );
+});
