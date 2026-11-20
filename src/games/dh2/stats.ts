@@ -1,5 +1,4 @@
-import { statTotal as sumStat } from '@/games/shared/dh-stats';
-
+import { statTotal as sumStat } from './dh-stats';
 import {
   DARK_HERESY_CORE_STATS,
   type DarkHeresyCoreStat,

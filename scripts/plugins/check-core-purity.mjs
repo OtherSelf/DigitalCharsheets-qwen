@@ -46,6 +46,9 @@ export const CORE_DIRS = [
   'src/app',
   'src/context',
   'src/hooks',
+  // SDK-слой плагинов: механик игр здесь быть не должно (редакции держат
+  // свои копии правил, D10), поэтому он сканируется как ядро.
+  'src/games/shared',
 ];
 
 /** Имена игр/плагинов; в коде ядра их быть не должно вообще. */
@@ -83,7 +86,17 @@ export const GAME_FIELDS = [
  * Исключения. Каждое обязано иметь причину и срок снятия; просроченное
  * исключение — отдельный сигнал, но гейт его не валит (срок проверяет ревью).
  */
-export const ALLOWLIST = [];
+export const ALLOWLIST = [
+  {
+    file: 'src/games/shared/types.ts',
+    // Общее поле листа v1, а не правило игры: его читает миграция, и на него
+    // ссылается базовый тип любого листа. Уйдёт вместе с legacy-полями.
+    tokens: ['characterClass'],
+    reason:
+      'legacy-поле v1 в общей части листа; убирается отдельной миграцией, а не вместе с переносом правил DH',
+    removeBy: 'отдельная задача: удалить legacy-поля v1',
+  },
+];
 
 /**
  * Игровые токены в стилях ядра. Список короткий и предметный: общий префикс
@@ -549,8 +562,10 @@ export function checkCore({ root = ROOT } = {}) {
 
     if (found.length === 0) continue;
 
+    // Исключение может быть на весь файл (без `tokens`) или на конкретные
+    // токены: второе не открывает файл целиком и ловит новые нарушения в нём.
     const allow = isAllowed(file);
-    if (allow) {
+    if (allow && !allow.tokens) {
       result.allowed.push({
         file,
         lines: found.map((violation) => violation.line),
@@ -559,7 +574,26 @@ export function checkCore({ root = ROOT } = {}) {
       });
       continue;
     }
-    result.violations.push({ file, hits: found });
+
+    const allowedTokens = new Set(allow?.tokens ?? []);
+    const allowedLines = [];
+    const rest = [];
+    for (const violation of found) {
+      const leftover = violation.tokens.filter(
+        (token) => !allowedTokens.has(token),
+      );
+      if (leftover.length === 0) allowedLines.push(violation.line);
+      else rest.push({ line: violation.line, tokens: leftover });
+    }
+    if (allowedLines.length > 0) {
+      result.allowed.push({
+        file,
+        lines: allowedLines,
+        reason: allow.reason,
+        removeBy: allow.removeBy,
+      });
+    }
+    if (rest.length > 0) result.violations.push({ file, hits: rest });
   }
 
   for (const allow of ALLOWLIST) {

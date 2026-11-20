@@ -1,11 +1,10 @@
-import { statBonus } from '@/games/shared/dh-stats';
-
 import {
   readBoolean,
   readNumber,
   readString,
   type DefaultsInput,
 } from '../shared/defaults';
+import { statBonus } from './dh-stats';
 import { characteristicAptitudes, deriveAptitudes } from './dh2e-aptitudes';
 import { DH2E_BACKGROUNDS, DH2E_HOMEWORLDS, DH2E_ROLES } from './dh2e-data';
 import { isDivinationId } from './dh2e-divinations';

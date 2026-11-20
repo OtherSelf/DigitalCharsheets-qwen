@@ -380,9 +380,13 @@ per-game save handlers out of the page.
   translations, form or sheet. Divergence between dh1 and dh2 is expected and
   edited in the respective module.
 - `src/games/shared` is only a tiny game-agnostic kernel (base character
-  fields, quests, combat resources, Excel writer); game mechanics and
-  translations never live there. Inventory items are per-edition: dh1 has
-  `quantity`/`weight`/`price`, dh2 has `quantity`/`weight`, dnd5e keeps the
+  fields, quests, combat resources, Excel writer, the tab-scoped
+  `creation-review` store); game mechanics and translations never live there.
+  Mechanics that look alike are **copies inside each edition** — dh1 and dh2
+  each own `dh-stats.ts`, `skill-training.ts` and `creation-review-banner.tsx`
+  (`tests/unit/dh-family-parity.test.ts` compares the behaviour of both copies,
+  and skips when one edition is absent). Inventory items are per-edition: dh1
+  has `quantity`/`weight`/`price`, dh2 has `quantity`/`weight`, dnd5e keeps the
   original `{id, name, status, notes}` shape. Missing numeric fields read as
   defaults (`quantity = 1`) and are not written back until the player saves.
 - Export JSON fields and Excel sections are part of the module; the core only

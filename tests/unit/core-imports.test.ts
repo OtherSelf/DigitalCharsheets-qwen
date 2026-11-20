@@ -53,7 +53,7 @@ describe('гейт импортов ядра', () => {
       '@/games/plugin-api',
       '@/games/plugin-host',
       '@/games/character-system',
-      '@/games/shared/dh-stats',
+      '@/games/shared/defaults',
       '@/games/i18n/en',
       'react',
     ]) {

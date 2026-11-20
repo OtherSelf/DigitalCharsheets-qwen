@@ -36,10 +36,10 @@ import {
 } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
 import { useCharacterContext, useTranslation } from '@/games/plugin-host';
-import { toggleTraining } from '@/games/shared/skill-training';
 import { cn } from '@/lib/utils';
 
 import { getDarkHeresyCapabilities } from '../capabilities';
+import { toggleTraining } from '../skill-training';
 import type { DH2Character, Skill } from '../types';
 import { EditSaveButton } from './dh-ui-helpers';
 

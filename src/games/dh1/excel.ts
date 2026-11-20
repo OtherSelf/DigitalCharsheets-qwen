@@ -1,7 +1,6 @@
-import { upgradeBonus } from '@/games/shared/dh-stats';
-
 import { createExcelSections } from '../shared/excel';
 import type { ExcelSection, ExportTranslate, GameExportConfig } from '../types';
+import { upgradeBonus } from './dh-stats';
 import { genderLabel } from './gender';
 import type { DarkHeresyStatUpgrade, DH1Character } from './types';
 

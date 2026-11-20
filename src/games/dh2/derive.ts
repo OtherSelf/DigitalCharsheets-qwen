@@ -1,4 +1,4 @@
-import { closeTraining } from '../shared/skill-training';
+import { closeTraining } from './skill-training';
 import type { DH2Character } from './types';
 
 /**
