@@ -23,6 +23,11 @@ format changes.
 
 ### Changed
 
+- Each shipped game now has its own restrained sheet palette through
+  `plugin.json#ui.theme`: Dark Heresy 2e is terracotta on parchment, D&D 5e is
+  crimson with rose frames, the sandbox is green. Only accents, frames and (for
+  2e) card tint change; the rest of the site and the other games keep the host
+  palette.
 - The sheet layout of every game now lives in its own CSS module inside the
   plugin folder (`dnd5e/sheet.module.css`, `dh1/…`, `dh2/…`) instead of
   `globals.css`; the core keeps a gate that fails on game selectors in core
