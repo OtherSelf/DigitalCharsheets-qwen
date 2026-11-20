@@ -31,6 +31,7 @@ const PROJECTS = [
   'tablet',
   'desktop-games',
   'mobile-games',
+  'tablet-games',
 ] as const;
 
 interface PluginVisualConfig {
