@@ -11,6 +11,48 @@ format changes.
 
 ## [Unreleased]
 
+## [0.13.0] - 2026-11-20
+
+Each game gets its own palette, and the sandbox game ships.
+
+### Added
+
+- `ui.theme` in the plugin manifest: a plugin declares scoped light/dark design
+  tokens (12 fixed tokens, colors as HSL triplets, `radius` as a length) and the
+  sheet page applies them for that game only. Plugin API is now 1.4.0, and a
+  plugin may ship a theme font that is loaded lazily (a failed chunk keeps the
+  host fonts).
+- Dark Heresy 2e (terracotta on parchment), D&D 5e (deep carmine with pink
+  frames and a matching focus ring) and the sandbox game (green) no longer use
+  the host indigo palette on their sheets; cards stay as they were and the
+  radius comes from the token set.
+- The permanent test game "Sandbox" (`defaultStatus: test`): a real plugin in
+  the shipped build with its own schema, defaults, demo, export/Excel, migration,
+  dictionaries, UI slots, scoped theme and favicon. Testers and admins see it,
+  regular users do not by default, and its visibility is managed like any game.
+- Two core-purity gates: the core may not import a game folder
+  (`check-core-imports.mjs`), and core CSS or string literals may not name a
+  game (`check-core-purity.mjs`, with a ratchet for the current debt).
+
+### Changed
+
+- Plugin versions: `dh1` 1.7.0, `dh2` 1.7.0, `dnd5e` 1.5.0 (`sandbox` ships at
+  1.0.0). The sheet `schemaVersion` is unchanged (Dark Heresy `5`, D&D 5e `2`).
+- Games are independent copies: Dark Heresy family rules live inside each
+  edition instead of `src/games/shared`, sheet styles are CSS modules per game,
+  and the 2e data generator moved to `src/games/dh2/scripts` — no game scripts
+  or game paths remain in the repo root or in `predeploy.sh`.
+- Visual specs and baselines moved into the plugin folders; the host specs check
+  only geometry, so the host test suite stays green without any stock edition.
+
+### Fixed
+
+- The compact characteristics block on mobile and tablet no longer draws Radix
+  checkmarks inside the 10 px step boxes.
+- The import review mode survives a hard navigation (the mark lives in the tab's
+  sessionStorage), so an imported sheet keeps its review banner after the
+  segment reloads.
+
 ### Added
 
 - Games can theme their own sheet (`plugin.json#ui.theme`): a fixed list of
