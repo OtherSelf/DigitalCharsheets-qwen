@@ -22,6 +22,7 @@ import { DndProgressionSection } from './sections/progression-section';
 import { DndSavesSkillsSection } from './sections/saves-skills-section';
 import { DndSpellsSection } from './sections/spells-section';
 import { DndStatsSection } from './sections/stats-section';
+import styles from './sheet.module.css';
 import { DnD5eCharacter, DnDCompanion, DnDSkill } from './types';
 
 type DndSheetProps = {
@@ -322,6 +323,7 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
     return (
       <div
         className={cn(
+          styles.sheet,
           'dnd-sheet space-y-8 pb-12',
           isCompactView && 'is-compact',
         )}

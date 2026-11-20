@@ -106,9 +106,9 @@ export const CSS_GAME_TOKENS = [
 export const CSS_ALLOWLIST = [
   {
     file: 'src/app/globals.css',
-    max: 17,
+    max: 8,
     reason:
-      'раскладка листов DH/D&D (media 768–1299px и ≥1800px) переезжает в CSS-модули плагинов на этапе 2',
+      'раскладка листов DH (media 768–1299px) переезжает в CSS-модули плагинов на этапе 2',
     removeBy: 'этап 2',
   },
 ];
