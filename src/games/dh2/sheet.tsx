@@ -184,6 +184,58 @@ const ArmorDisplay = ({
   );
 };
 
+/** Шаг «−/+» для Безумия и Порчи: значение меняется сразу, ниже нуля не уходит. */
+const PointsStepper = ({
+  value,
+  onChange,
+  decreaseLabel,
+  increaseLabel,
+  testId,
+  size,
+}: {
+  value: number;
+  onChange: (delta: number) => void;
+  decreaseLabel: string;
+  increaseLabel: string;
+  testId: string;
+  size: 'sm' | 'lg';
+}) => {
+  const buttonClass = size === 'sm' ? 'h-5 w-5' : 'h-6 w-6';
+  const iconClass = size === 'sm' ? 'h-3 w-3' : 'h-4 w-4';
+  const valueClass =
+    size === 'sm'
+      ? 'min-w-[1.2rem] text-center text-sm font-bold'
+      : 'text-primary min-w-[1.5rem] text-center text-2xl font-bold';
+  return (
+    <div className="flex items-center justify-center gap-1">
+      <Button
+        type="button"
+        size="icon"
+        variant="outline"
+        className={buttonClass}
+        onClick={() => onChange(-1)}
+        disabled={value <= 0}
+        aria-label={decreaseLabel}
+        data-testid={`${testId}-decrease`}
+      >
+        <Minus className={iconClass} />
+      </Button>
+      <span className={valueClass}>{value}</span>
+      <Button
+        type="button"
+        size="icon"
+        variant="outline"
+        className={buttonClass}
+        onClick={() => onChange(1)}
+        aria-label={increaseLabel}
+        data-testid={`${testId}-increase`}
+      >
+        <Plus className={iconClass} />
+      </Button>
+    </div>
+  );
+};
+
 export const Dh2Sheet = React.forwardRef<
   any,
   {
@@ -321,11 +373,22 @@ export const Dh2Sheet = React.forwardRef<
     updateCharacter(character.id, {
       wounds: editablePoints.wounds,
       fatePoints: editablePoints.fatePoints,
-      insanityPoints: editablePoints.insanityPoints,
-      corruptionPoints: editablePoints.corruptionPoints,
     });
     setIsPointsEditing(false);
   }, [character.id, editablePoints, updateCharacter]);
+
+  /** Безумие и Порча меняются сразу на 1, не ниже нуля. */
+  const changeSimplePoints = (
+    field: 'insanityPoints' | 'corruptionPoints',
+    delta: number,
+  ) => {
+    const current = getSimplePointsObject(character[field]);
+    const next = Math.max(0, current.total + delta);
+    if (next === current.total) return;
+    updateCharacter(character.id, {
+      [field]: { ...current, total: next },
+    });
+  };
 
   const handleSaveAll = React.useCallback(() => {
     if (isPointsEditing) handleSavePoints();
@@ -907,32 +970,26 @@ export const Dh2Sheet = React.forwardRef<
                     },
                   })
                 }
-                editing={isPointsEditing}
-                onEdit={() => setIsPointsEditing(true)}
-                onSave={handleSavePoints}
+                editing={false}
+                onEdit={() => undefined}
+                onSave={() => undefined}
                 isCompactView={isCompactView}
                 hideNotes={hideNotes}
-                showEditButtons={showEditButtons}
+                showEditButtons={false}
               >
-                <div className="flex items-center justify-center gap-1">
-                  {isPointsEditing ? (
-                    <Input
-                      type="number"
-                      value={editablePoints.insanityPoints.total}
-                      onChange={(e) =>
-                        handleSimplePointsChange(
-                          'insanityPoints',
-                          'total',
-                          e.target.value,
-                        )
-                      }
-                      className="mx-auto h-6 w-12 px-1 text-center text-xs"
-                    />
-                  ) : (
-                    <span className="text-sm font-bold">
-                      {getSimplePointsObject(character.insanityPoints).total}
-                    </span>
-                  )}
+                <div className="flex items-center justify-center">
+                  <PointsStepper
+                    value={
+                      getSimplePointsObject(character.insanityPoints).total
+                    }
+                    onChange={(delta) =>
+                      changeSimplePoints('insanityPoints', delta)
+                    }
+                    decreaseLabel={t('dh2.decreaseInsanity')}
+                    increaseLabel={t('dh2.increaseInsanity')}
+                    testId="insanity-points"
+                    size="sm"
+                  />
                 </div>
               </MetricBox>
               <MetricBox
@@ -946,32 +1003,26 @@ export const Dh2Sheet = React.forwardRef<
                     },
                   })
                 }
-                editing={isPointsEditing}
-                onEdit={() => setIsPointsEditing(true)}
-                onSave={handleSavePoints}
+                editing={false}
+                onEdit={() => undefined}
+                onSave={() => undefined}
                 isCompactView={isCompactView}
                 hideNotes={hideNotes}
-                showEditButtons={showEditButtons}
+                showEditButtons={false}
               >
-                <div className="flex items-center justify-center gap-1">
-                  {isPointsEditing ? (
-                    <Input
-                      type="number"
-                      value={editablePoints.corruptionPoints.total}
-                      onChange={(e) =>
-                        handleSimplePointsChange(
-                          'corruptionPoints',
-                          'total',
-                          e.target.value,
-                        )
-                      }
-                      className="mx-auto h-6 w-12 px-1 text-center text-xs"
-                    />
-                  ) : (
-                    <span className="text-sm font-bold">
-                      {getSimplePointsObject(character.corruptionPoints).total}
-                    </span>
-                  )}
+                <div className="flex items-center justify-center">
+                  <PointsStepper
+                    value={
+                      getSimplePointsObject(character.corruptionPoints).total
+                    }
+                    onChange={(delta) =>
+                      changeSimplePoints('corruptionPoints', delta)
+                    }
+                    decreaseLabel={t('dh2.decreaseCorruption')}
+                    increaseLabel={t('dh2.increaseCorruption')}
+                    testId="corruption-points"
+                    size="sm"
+                  />
                 </div>
               </MetricBox>
             </div>
@@ -1814,36 +1865,27 @@ export const Dh2Sheet = React.forwardRef<
                         },
                       })
                     }
-                    editing={isPointsEditing}
-                    onEdit={() => setIsPointsEditing(true)}
-                    onSave={handleSavePoints}
+                    editing={false}
+                    onEdit={() => undefined}
+                    onSave={() => undefined}
                     isCompactView={isCompactView}
                     hideNotes={hideNotes}
-                    showEditButtons={showEditButtons}
+                    showEditButtons={false}
                   >
                     {' '}
-                    <div className="flex h-full flex-col items-center justify-center text-center">
-                      {isPointsEditing ? (
-                        <Input
-                          type="number"
-                          value={editablePoints.insanityPoints.total}
-                          onChange={(e) =>
-                            handleSimplePointsChange(
-                              'insanityPoints',
-                              'total',
-                              e.target.value,
-                            )
-                          }
-                          className="mx-auto h-8 w-16 text-center text-lg font-bold"
-                        />
-                      ) : (
-                        <p className="text-primary w-12 text-center text-2xl font-bold">
-                          {
-                            getSimplePointsObject(character.insanityPoints)
-                              .total
-                          }
-                        </p>
-                      )}
+                    <div className="flex h-full items-center justify-center">
+                      <PointsStepper
+                        value={
+                          getSimplePointsObject(character.insanityPoints).total
+                        }
+                        onChange={(delta) =>
+                          changeSimplePoints('insanityPoints', delta)
+                        }
+                        decreaseLabel={t('dh2.decreaseInsanity')}
+                        increaseLabel={t('dh2.increaseInsanity')}
+                        testId="insanity-points"
+                        size="lg"
+                      />
                     </div>
                   </MetricBox>
                   <MetricBox
@@ -1859,36 +1901,28 @@ export const Dh2Sheet = React.forwardRef<
                         },
                       })
                     }
-                    editing={isPointsEditing}
-                    onEdit={() => setIsPointsEditing(true)}
-                    onSave={handleSavePoints}
+                    editing={false}
+                    onEdit={() => undefined}
+                    onSave={() => undefined}
                     isCompactView={isCompactView}
                     hideNotes={hideNotes}
-                    showEditButtons={showEditButtons}
+                    showEditButtons={false}
                   >
                     {' '}
-                    <div className="flex h-full flex-col items-center justify-center text-center">
-                      {isPointsEditing ? (
-                        <Input
-                          type="number"
-                          value={editablePoints.corruptionPoints.total}
-                          onChange={(e) =>
-                            handleSimplePointsChange(
-                              'corruptionPoints',
-                              'total',
-                              e.target.value,
-                            )
-                          }
-                          className="mx-auto h-8 w-16 text-center text-lg font-bold"
-                        />
-                      ) : (
-                        <p className="text-primary w-12 text-center text-2xl font-bold">
-                          {
-                            getSimplePointsObject(character.corruptionPoints)
-                              .total
-                          }
-                        </p>
-                      )}
+                    <div className="flex h-full items-center justify-center">
+                      <PointsStepper
+                        value={
+                          getSimplePointsObject(character.corruptionPoints)
+                            .total
+                        }
+                        onChange={(delta) =>
+                          changeSimplePoints('corruptionPoints', delta)
+                        }
+                        decreaseLabel={t('dh2.decreaseCorruption')}
+                        increaseLabel={t('dh2.increaseCorruption')}
+                        testId="corruption-points"
+                        size="lg"
+                      />
                     </div>
                   </MetricBox>
                 </div>

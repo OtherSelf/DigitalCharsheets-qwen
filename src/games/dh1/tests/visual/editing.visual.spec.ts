@@ -592,3 +592,100 @@ test.describe(
     );
   },
 );
+
+/**
+ * ─── LANDMARK: SIMPLE POINTS STEPPER ──────────────────────────────────────
+ * Безумие и Порча меняются плюсом/минусом на 1, без кнопки редактирования и
+ * модалки; значение сразу уходит в лист и не уходит ниже нуля.
+ */
+test.describe('Безумие и Порча: плюс и минус', { tag: '@plugin:dh1' }, () => {
+  test(
+    'DH1: значение меняется на 1 и сохраняется',
+    { tag: '@desktop' },
+    async ({ page }) => {
+      const username = `points-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+      const password = 'points-password-1';
+      const registered = await page.request.post('/api/auth/register', {
+        data: {
+          username,
+          password,
+          displayName: 'Points QA',
+          recoveryPhrase: 'amber cobalt lantern',
+        },
+      });
+      expect([200, 201], 'регистрация аккаунта').toContain(registered.status());
+      const created = await page.request.post('/api/characters', {
+        data: { systemId: 'dh1', name: 'Points QA' },
+      });
+      expect([200, 201], 'создание dh1-листа').toContain(created.status());
+      const { id } = (await created.json()) as { id: string };
+
+      await signInViaUI(page, { username, password });
+      await openApp(page, sheetPath(id));
+
+      const increase = page.locator(
+        '[data-testid="insanity-points-increase"]:visible',
+      );
+      const decrease = page.locator(
+        '[data-testid="insanity-points-decrease"]:visible',
+      );
+      const value = () =>
+        increase.locator('xpath=..').locator('span').innerText();
+      const box = increase.locator(
+        'xpath=ancestor::div[contains(@class,"flex h-full flex-col")][1]',
+      );
+
+      await expect(increase).toHaveCount(1);
+      await expect(box.locator('input')).toHaveCount(0);
+      await expect(box.getByTestId('edit-button')).toHaveCount(0);
+
+      await increase.click();
+      await increase.click();
+      await expect.poll(value).toBe('2');
+      await decrease.click();
+      await expect.poll(value).toBe('1');
+
+      // Значение уже в листе: повторная загрузка показывает его же.
+      await expect
+        .poll(async () => {
+          const response = await page.request.get('/api/characters');
+          const list = (await response.json()) as Array<{
+            id: string;
+            insanityPoints?: { total: number };
+          }>;
+          return list.find((character) => character.id === id)?.insanityPoints
+            ?.total;
+        })
+        .toBe(1);
+
+      await page.reload();
+      await page
+        .locator('[data-testid="insanity-points-increase"]:visible')
+        .waitFor();
+      await expect
+        .poll(() =>
+          page
+            .locator('[data-testid="insanity-points-increase"]:visible')
+            .locator('xpath=..')
+            .locator('span')
+            .innerText(),
+        )
+        .toBe('1');
+
+      // Ниже нуля не уходит: на нуле «−» отключена.
+      await decrease.click();
+      await expect
+        .poll(() =>
+          page
+            .locator('[data-testid="insanity-points-decrease"]:visible')
+            .locator('xpath=..')
+            .locator('span')
+            .innerText(),
+        )
+        .toBe('0');
+      await expect(
+        page.locator('[data-testid="insanity-points-decrease"]:visible'),
+      ).toBeDisabled();
+    },
+  );
+});
