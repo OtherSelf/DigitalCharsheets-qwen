@@ -22,4 +22,10 @@ export const generatedGameDefinitions: readonly GameDefinition[] = [
     nameKey: 'games.generated.darkHeresy.name',
     descriptionKey: 'games.generated.darkHeresy.description',
   },
+  {
+    id: 'sandbox',
+    order: 900,
+    nameKey: 'games.generated.sandbox.name',
+    descriptionKey: 'games.generated.sandbox.description',
+  },
 ];

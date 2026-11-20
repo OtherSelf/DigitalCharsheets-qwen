@@ -18,6 +18,8 @@ import type {
   PluginFont,
   PluginManifest,
 } from './plugin-api';
+import { sandboxModule } from './sandbox';
+import sandboxManifest from './sandbox/plugin.json';
 
 /** Зарегистрированные плагины в порядке показа (`order`, затем `id`). */
 export const generatedPlugins: readonly GeneratedPluginRegistration[] = [
@@ -36,6 +38,10 @@ export const generatedPlugins: readonly GeneratedPluginRegistration[] = [
     module: dh2Module,
     derive: dh2Derive,
   },
+  {
+    manifest: sandboxManifest as unknown as PluginManifest,
+    module: sandboxModule,
+  },
 ];
 
 /** Ленивые UI-слоты: `systemId` → загрузчик объекта `GameUiSlots`. */
@@ -45,6 +51,7 @@ export const generatedUiLoaders: Readonly<
   dnd5e: () => import('./dnd5e/ui').then((module) => module.uiSlots),
   dh1: () => import('./dh1/ui').then((module) => module.uiSlots),
   dh2: () => import('./dh2/ui').then((module) => module.uiSlots),
+  sandbox: () => import('./sandbox/ui').then((module) => module.uiSlots),
 };
 
 export const generatedFontLoaders: Readonly<

@@ -406,6 +406,28 @@ per-game save handlers out of the page.
   `scripts/plugins/boundaries.json` (`forbidden`, `allowed`, `legacy`) —
   see [Import boundaries](#import-boundaries).
 
+## Sandbox: a shipped test game
+
+`src/games/sandbox` is a real plugin in the shipping build with
+`defaultStatus: "test"`: only testers and admins see it in the creation wizard
+and the admin list; an admin can change its visibility in `/admin` like any
+other game. It is the executable answer to "what does a game get from the
+core?" and is intentionally small:
+
+- its own schema, defaults, demo, export/Excel, migrations and i18n
+  (`sandbox.*` keys in its own dictionaries);
+- a custom React sheet and creation form, all four UI slots and its own tab
+  icon (`assets/favicon.png`);
+- a layout CSS module (`sheet.module.css`) with its own breakpoints, and a
+  scoped `ui.theme` (light and dark tokens) — both without a single line in
+  `src/app/globals.css`;
+- no custom font: it would need a licensed `.woff2`, and the `ui.theme.font`
+  contract is already covered by `tests/fixtures/example-plugin`.
+
+The difference from the fixture below: `tests/fixtures/example-plugin` is
+copied into temporary folders by unit tests and is never built by Next; the
+sandbox is built, rendered by the real app and visible to staff.
+
 ## Reference plugin (fixture)
 
 `tests/fixtures/example-plugin/` is a complete, hidden plugin with its own
