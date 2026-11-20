@@ -561,6 +561,7 @@ export const Dh2Sheet = React.forwardRef<
                                     } as Partial<Character>);
                                   }
                                 }}
+                                hideIndicator
                                 className="data-[state=checked]:bg-primary h-2.5 w-2.5"
                               />
                             ))}
@@ -1558,6 +1559,7 @@ export const Dh2Sheet = React.forwardRef<
                                         } as Partial<Character>);
                                       }
                                     }}
+                                    hideIndicator
                                     className="data-[state=checked]:bg-primary h-2.5 w-2.5"
                                   />
                                 ))}

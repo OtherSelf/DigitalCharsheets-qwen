@@ -263,6 +263,15 @@ test.describe('лист Dark Heresy 2e — планшет', { tag: '@plugin:dh2'
       await waitForScrollSettled(page);
       await expect(page.locator('#inventory-section:visible')).toHaveCount(1);
       await screenshotPage(page, 'sheet-dh2-tablet-compact-en.png');
+      // Галочка внутри 10-пиксельного бокса не влезает и выглядит грязью:
+      // на мобильном и планшете блок характеристик рисует только заливку
+      // (`hideIndicator`). Проверяем структурно — порог пиксельного сравнения
+      // такой мелкий дефект не видит.
+      await expect(
+        page
+          .getByTestId('characteristics-compact')
+          .locator('[role="checkbox"] svg'),
+      ).toHaveCount(0);
     },
   );
 });
