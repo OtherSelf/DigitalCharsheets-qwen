@@ -11,6 +11,44 @@ format changes.
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-11-20
+
+Inventory with quantities and totals, hit locations on the phone.
+
+### Added
+
+- DH1/DH2 inventory rows show quantity, weight and (DH1 only) price, with
+  totals under the columns, a "Lost" checkbox that greys the row out, a compact
+  grid on mobile and numeric fields in edit mode. A sheet from an older version
+  is not rewritten: quantity defaults to 1, weight and price read as "not set".
+- Hit locations and AP are visible on mobile: the armor scheme is its own
+  section and, in compact view, is also rendered at the end of the "Info" card.
+- Custom resources sit inside "Items" with their own plus/minus; the schema and
+  `customResources` are unchanged.
+- Madness and Corruption are edited with `−`/`+` buttons around the value
+  (step 1, not below zero, saved immediately) instead of a modal and the
+  points edit mode; notes stay in the popover.
+
+### Changed
+
+- Plugin versions: `dh1` 1.6.0, `dh2` 1.6.0, `dnd5e` 1.4.0. The sheet
+  `schemaVersion` is unchanged (Dark Heresy `5`, D&D 5e `2`).
+- The inventory model is split per game: `InventoryItem` no longer lives in the
+  shared types — DH1 has quantity/weight/price, DH2 quantity/weight, D&D 5e
+  keeps its previous shape — and the core no longer re-exports the item type.
+- The armor scheme returns to the bottom of "Info" (no separate compact tab,
+  the sidebar is back to six tabs); body-part labels wrap instead of being
+  clipped.
+
+### Fixed
+
+- Toggling "Equipped" in read mode no longer rolls back when a neighbouring
+  section saves: the equipment list is read from the current sheet and saved as
+  one patch.
+- DH1 shows armour-piercing for the unequipped ranged weapon too, and weapon
+  `weight` is gone from the types and forms (a legacy value is cleaned up on the
+  next save).
+
 ## [0.11.0] - 2026-11-19
 
 Stale tabs notice a new build, error screens stop reloading silently.
