@@ -450,9 +450,10 @@ fields and exact game ids in string literals, and the core `.css` files for
 game selectors (`.dnd-sheet`, `.dh-sheet`, `dcs-info-grid`, …). A layout
 selector for one game in `src/app/globals.css` is the same violation as
 `if (systemId === 'dh1')` in code: the layout belongs to the plugin. Current
-CSS debt is pinned by the `CSS_ALLOWLIST` ratchet in
-`scripts/plugins/check-core-purity.mjs` (`max` lines per file, `removeBy`); the
-number can only go down, and the entry is deleted with the last block.
+CSS debt would be pinned by the `CSS_ALLOWLIST` ratchet in
+`scripts/plugins/check-core-purity.mjs` (`max` lines per file, `removeBy`): the
+number can only go down, and the entry is deleted with the last block. The list
+is empty now — the sheet layout lives in the plugins' CSS modules.
 
 ## Related
 

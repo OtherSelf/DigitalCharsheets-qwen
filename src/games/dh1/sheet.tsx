@@ -41,6 +41,7 @@ import {
   ProgressionSection,
 } from './sections/info-progression-section';
 import { SkillsTalentsSection } from './sections/skills-talents-section';
+import styles from './sheet.module.css';
 import { EMPTY_STAT_UPGRADE, pickAllowedStats, statRecord } from './stats';
 import type { DH1Character as Character, DH1Character } from './types';
 
@@ -331,7 +332,13 @@ export const Dh1Sheet = React.forwardRef<
   };
 
   return (
-    <div className={cn('dh-sheet space-y-6', isCompactView && 'is-compact')}>
+    <div
+      className={cn(
+        styles.sheet,
+        'dh-sheet space-y-6',
+        isCompactView && 'is-compact',
+      )}
+    >
       {isCompactView && (
         <div
           data-testid="characteristics-compact"

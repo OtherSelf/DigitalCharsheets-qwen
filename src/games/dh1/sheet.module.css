@@ -1,0 +1,50 @@
+/*
+  Раскладка листа Dark Heresy (1-я редакция) на узком планшете (768–1299px).
+
+  Правила переехали из src/app/globals.css: раскладка листа принадлежит
+  плагину. Копия живёт и в dh2 — редакции независимы (D10): расходятся они
+  правкой в своей папке, а не общим файлом.
+
+  Tailwind-утилиты внутри (`md:flex-row`, `lg:grid-cols-12`) на этой ширине
+  перебивают желаемое, поэтому нужен `!important`. Модуль скоупит правила
+  хэшем: классы разметки листа — глобальные утилиты Tailwind, их достаём
+  через `:global`.
+*/
+@media (min-width: 768px) and (max-width: 1299px) {
+  .sheet :global(.sheet-info-grid) {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+  .sheet :global(.sheet-info-grid) > * {
+    grid-column: span 1 / span 1 !important;
+    min-width: 0 !important;
+  }
+
+  .sheet :global(.sheet-panels) {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+  .sheet :global(.sheet-panels) > * {
+    flex: 0 0 auto !important;
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .sheet :global(.sheet-panels) > :global(.w-12) {
+    min-height: 3rem !important;
+  }
+  .sheet
+    :global(.sheet-panels)
+    > :global(.w-12)
+    :global([class*='writing-mode']) {
+    writing-mode: horizontal-tb !important;
+    transform: none !important;
+  }
+
+  .sheet:global(.is-compact) :global(.sheet-info-grid) {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+  .sheet:global(.is-compact) :global(.sheet-info-grid) > * {
+    grid-column: 1 / -1 !important;
+  }
+}
