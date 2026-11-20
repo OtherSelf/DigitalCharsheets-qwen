@@ -10,7 +10,7 @@ import * as XLSX from 'xlsx';
 
 import { DEFAULT_EXPORT_CONFIG, mergeImportedData } from '@/lib/export-utils';
 
-import { makeDhCharacter, makeDndCharacter } from '@tests/support';
+import { hasPlugin, makeDhCharacter, makeDndCharacter } from '@tests/support';
 
 // xlsx 0.20 в Node подхватывает fs только при CJS-загрузке; под vitest (ESM)
 // детект не срабатывает, и writeFile/readFile уходят в браузерную ветку.
@@ -73,42 +73,49 @@ describe('mergeImportedData', () => {
     expect((merged as any).backstory).toBe('original');
   });
 
-  it('восстанавливает при импорте поля DH v2: fatigue2nd, критические, ресурсы', () => {
-    const target = makeDhCharacter({ systemId: 'dh2', edition: '2nd' }) as any;
-    const imported = {
-      metadata: {
-        appName: 'DigitalCharsheets-qwen',
-        version: '3.0',
-        exportDate: '',
-        kind: 'character',
-        config: DEFAULT_EXPORT_CONFIG,
-      },
-      character: {
+  // Сценарий 2-й редакции: без неё в сборке проверять нечего.
+  it.runIf(hasPlugin('dh2'))(
+    'восстанавливает при импорте поля DH v2: fatigue2nd, критические, ресурсы',
+    () => {
+      const target = makeDhCharacter({
         systemId: 'dh2',
-        gameSystem: 'Dark Heresy',
-        schemaVersion: 2,
-        fatigue1st: { current: 4 },
-        fatigue2nd: { current: 2 },
-        criticalConditions: [{ id: 'c9', name: 'Concussion' }],
-        customResources: [
-          { id: 'r9', description: 'Grenades', current: 1, max: 3 },
-        ],
-      },
-    };
+        edition: '2nd',
+      }) as any;
+      const imported = {
+        metadata: {
+          appName: 'DigitalCharsheets-qwen',
+          version: '3.0',
+          exportDate: '',
+          kind: 'character',
+          config: DEFAULT_EXPORT_CONFIG,
+        },
+        character: {
+          systemId: 'dh2',
+          gameSystem: 'Dark Heresy',
+          schemaVersion: 2,
+          fatigue1st: { current: 4 },
+          fatigue2nd: { current: 2 },
+          criticalConditions: [{ id: 'c9', name: 'Concussion' }],
+          customResources: [
+            { id: 'r9', description: 'Grenades', current: 1, max: 3 },
+          ],
+        },
+      };
 
-    const merged = mergeImportedData(
-      target,
-      imported as any,
-      DEFAULT_EXPORT_CONFIG,
-    ) as any;
+      const merged = mergeImportedData(
+        target,
+        imported as any,
+        DEFAULT_EXPORT_CONFIG,
+      ) as any;
 
-    expect(merged.systemId).toBe('dh2');
-    expect(merged.edition).toBeUndefined();
-    expect(merged.fatigue2nd.current).toBe(2);
-    expect(merged.fatigue1st).toBeUndefined();
-    expect(merged.criticalConditions[0].name).toBe('Concussion');
-    expect(merged.customResources[0].description).toBe('Grenades');
-  });
+      expect(merged.systemId).toBe('dh2');
+      expect(merged.edition).toBeUndefined();
+      expect(merged.fatigue2nd.current).toBe(2);
+      expect(merged.fatigue1st).toBeUndefined();
+      expect(merged.criticalConditions[0].name).toBe('Concussion');
+      expect(merged.customResources[0].description).toBe('Grenades');
+    },
+  );
 
   it('не подмешивает fatigue2nd в dh1', () => {
     const target = makeDhCharacter() as any;

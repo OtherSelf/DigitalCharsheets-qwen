@@ -13,7 +13,7 @@ import * as XLSX from 'xlsx';
 import { exportCharacterToExcel } from '@/lib/export-utils';
 import { translations } from '@/lib/i18n';
 
-import { makeDhCharacter, makeDndCharacter } from '@tests/support';
+import { hasPlugin, makeDhCharacter, makeDndCharacter } from '@tests/support';
 
 // xlsx 0.20 в Node подхватывает fs только при CJS-загрузке; под vitest (ESM)
 // детект не срабатывает, и writeFile/readFile уходят в браузерную ветку.
@@ -97,44 +97,48 @@ describe('exportCharacterToExcel (xlsx)', () => {
     }
   });
 
-  it('выгружает поля Dark Heresy v2: fatigue2nd, критические, ресурсы', async () => {
-    process.chdir(tmp);
-    try {
-      const character = makeDhCharacter({
-        systemId: 'dh2',
-        edition: '2nd',
-        fatigue1st: { current: 2, notes: 'beaten' },
-        fatigue2nd: { current: 1, notes: '' },
-        criticalConditions: [{ id: 'c1', name: 'Broken arm', notes: '' }],
-        customResources: [
-          { id: 'r1', description: 'Ammo', current: 3, max: 10 },
-        ],
-      });
-      const result = await exportCharacterToExcel(character as any, date);
-      expect(result.success).toBe(true);
+  // Сценарий 2-й редакции: без неё в сборке проверять нечего.
+  it.runIf(hasPlugin('dh2'))(
+    'выгружает поля Dark Heresy v2: fatigue2nd, критические, ресурсы',
+    async () => {
+      process.chdir(tmp);
+      try {
+        const character = makeDhCharacter({
+          systemId: 'dh2',
+          edition: '2nd',
+          fatigue1st: { current: 2, notes: 'beaten' },
+          fatigue2nd: { current: 1, notes: '' },
+          criticalConditions: [{ id: 'c1', name: 'Broken arm', notes: '' }],
+          customResources: [
+            { id: 'r1', description: 'Ammo', current: 3, max: 10 },
+          ],
+        });
+        const result = await exportCharacterToExcel(character as any, date);
+        expect(result.success).toBe(true);
 
-      const rows = readRows(result.filename!);
-      // edition больше нет; fatigue1st ушла в notes миграции.
-      expect(row(rows, 'Edition')).toBeUndefined();
-      expect(row(rows, 'Fatigue (1st)')).toBeUndefined();
-      expect(row(rows, 'Fatigue')?.[1]).toBe(1);
-      // Несколько строк с подписью Notes: миграционная — та, где текст.
-      const migrationNote = rows.find(
-        (r) =>
-          String(r[0] ?? '').trim() === 'Notes' &&
-          String(r[1] ?? '').includes('[migration v2]'),
-      );
-      expect(migrationNote).toBeDefined();
-      expect(String(row(rows, 'Critical Conditions')?.[1] ?? '')).toContain(
-        'Broken arm',
-      );
-      expect(String(row(rows, 'Custom Resources')?.[1] ?? '')).toContain(
-        'Ammo: 3/10',
-      );
-    } finally {
-      process.chdir(originalCwd);
-    }
-  });
+        const rows = readRows(result.filename!);
+        // edition больше нет; fatigue1st ушла в notes миграции.
+        expect(row(rows, 'Edition')).toBeUndefined();
+        expect(row(rows, 'Fatigue (1st)')).toBeUndefined();
+        expect(row(rows, 'Fatigue')?.[1]).toBe(1);
+        // Несколько строк с подписью Notes: миграционная — та, где текст.
+        const migrationNote = rows.find(
+          (r) =>
+            String(r[0] ?? '').trim() === 'Notes' &&
+            String(r[1] ?? '').includes('[migration v2]'),
+        );
+        expect(migrationNote).toBeDefined();
+        expect(String(row(rows, 'Critical Conditions')?.[1] ?? '')).toContain(
+          'Broken arm',
+        );
+        expect(String(row(rows, 'Custom Resources')?.[1] ?? '')).toContain(
+          'Ammo: 3/10',
+        );
+      } finally {
+        process.chdir(originalCwd);
+      }
+    },
+  );
 
   it('подписи Excel переводятся на язык сайта', async () => {
     process.chdir(tmp);

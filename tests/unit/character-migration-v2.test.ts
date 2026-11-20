@@ -5,7 +5,7 @@ import {
   normalizeCharacterRecord,
 } from '@/lib/character-version';
 
-import { makeDhCharacter, makeDndCharacter } from '@tests/support';
+import { hasPlugin, makeDhCharacter, makeDndCharacter } from '@tests/support';
 
 /**
  * ─── LANDMARK: CHARACTER MIGRATION v2 TESTS ────────────────────────────────
@@ -14,6 +14,9 @@ import { makeDhCharacter, makeDndCharacter } from '@tests/support';
  *   • dh1 без influence/fatigue2nd, dh2 без fatigue1st;
  *   • значения чужой редакции не теряются: hybrid/конфликты → notes;
  *   • повторный прогон идемпотентен, файлы новее v2 не трогаем.
+ *
+ * Сценарии конкретной редакции помечены `runIf`: если её нет в сборке
+ * (редакцию удалили), они пропускаются, а не валят host-слой.
  */
 
 function normalize(raw: any) {
@@ -67,41 +70,47 @@ describe('миграция листа v2: редакции', () => {
     expect(dh.stats.intelligence).toBe(legacy.stats.intelligence);
   });
 
-  it("dh edition '2nd' → dh2: influence и fatigue2nd остаются", () => {
-    const legacy = dhWithStats({
-      edition: '2nd',
-      fatigue2nd: { current: 2, notes: 'second edition' },
-    });
-    const { character } = normalize(legacy);
-    const dh = character as any;
+  it.runIf(hasPlugin('dh2'))(
+    "dh edition '2nd' → dh2: influence и fatigue2nd остаются",
+    () => {
+      const legacy = dhWithStats({
+        edition: '2nd',
+        fatigue2nd: { current: 2, notes: 'second edition' },
+      });
+      const { character } = normalize(legacy);
+      const dh = character as any;
 
-    expect(dh.systemId).toBe('dh2');
-    expect(dh.stats.influence).toBe(legacy.stats.influence);
-    // Ступеней в 2e пять: четвертый флаг DH1-листа сохраняется, пятый — false.
-    expect(dh.statUpgrades.influence).toEqual([
-      false,
-      false,
-      false,
-      false,
-      false,
-    ]);
-    expect(dh.fatigue2nd).toEqual({ current: 2, notes: 'second edition' });
-    expect(dh.fatigue1st).toBeUndefined();
-  });
+      expect(dh.systemId).toBe('dh2');
+      expect(dh.stats.influence).toBe(legacy.stats.influence);
+      // Ступеней в 2e пять: четвертый флаг DH1-листа сохраняется, пятый — false.
+      expect(dh.statUpgrades.influence).toEqual([
+        false,
+        false,
+        false,
+        false,
+        false,
+      ]);
+      expect(dh.fatigue2nd).toEqual({ current: 2, notes: 'second edition' });
+      expect(dh.fatigue1st).toBeUndefined();
+    },
+  );
 
-  it('dh2: значимая fatigue1st сохраняется в notes, поле удаляется', () => {
-    const legacy = dhWithStats({
-      edition: '2nd',
-      fatigue1st: { current: 3, notes: 'first edition fatigue' },
-    });
-    const { character, issues } = normalize(legacy);
-    const dh = character as any;
+  it.runIf(hasPlugin('dh2'))(
+    'dh2: значимая fatigue1st сохраняется в notes, поле удаляется',
+    () => {
+      const legacy = dhWithStats({
+        edition: '2nd',
+        fatigue1st: { current: 3, notes: 'first edition fatigue' },
+      });
+      const { character, issues } = normalize(legacy);
+      const dh = character as any;
 
-    expect(dh.fatigue1st).toBeUndefined();
-    expect(dh.notes).toContain('[migration v2]');
-    expect(dh.notes).toContain('усталость 1-й редакции');
-    expect(issues.join(' ')).toContain('fatigue1st');
-  });
+      expect(dh.fatigue1st).toBeUndefined();
+      expect(dh.notes).toContain('[migration v2]');
+      expect(dh.notes).toContain('усталость 1-й редакции');
+      expect(issues.join(' ')).toContain('fatigue1st');
+    },
+  );
 
   it("edition '1st' → dh1, конфликтующие 2e-значения уходят в notes и отчёт", () => {
     const legacy = dhWithStats({

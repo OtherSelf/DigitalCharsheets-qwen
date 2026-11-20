@@ -141,7 +141,7 @@ const GAME_MENTION_ALLOWANCE = {
     removeBy: 'этап 5 трекера game-core',
   },
   'tests/unit/admin-helpers.test.ts': {
-    max: 22,
+    max: 23,
     reason:
       'сценарий использует живые редакции; переезжает в плагин или на итерацию реестра',
     removeBy: 'этап 5 трекера game-core',
@@ -183,13 +183,13 @@ const GAME_MENTION_ALLOWANCE = {
     removeBy: 'этап 5 трекера game-core',
   },
   'tests/unit/character-migration-v2.test.ts': {
-    max: 29,
+    max: 31,
     reason:
       'сценарий использует живые редакции; переезжает в плагин или на итерацию реестра',
     removeBy: 'этап 5 трекера game-core',
   },
   'tests/unit/core-imports.test.ts': {
-    max: 10,
+    max: 9,
     reason: 'id игры — вход гейта импортов, а не знание хоста',
     removeBy: 'остаётся: вход гейта',
   },
@@ -211,7 +211,7 @@ const GAME_MENTION_ALLOWANCE = {
     removeBy: 'этап 5 трекера game-core',
   },
   'tests/unit/export/excel.test.ts': {
-    max: 10,
+    max: 11,
     reason:
       'сценарий использует живые редакции; переезжает в плагин или на итерацию реестра',
     removeBy: 'этап 5 трекера game-core',
@@ -229,13 +229,13 @@ const GAME_MENTION_ALLOWANCE = {
     removeBy: 'этап 5 трекера game-core',
   },
   'tests/unit/export/merge.test.ts': {
-    max: 15,
+    max: 16,
     reason:
       'сценарий использует живые редакции; переезжает в плагин или на итерацию реестра',
     removeBy: 'этап 5 трекера game-core',
   },
   'tests/unit/export/sanitize-filter.test.ts': {
-    max: 13,
+    max: 14,
     reason:
       'сценарий использует живые редакции; переезжает в плагин или на итерацию реестра',
     removeBy: 'этап 5 трекера game-core',
@@ -287,12 +287,6 @@ const GAME_MENTION_ALLOWANCE = {
       'сценарий использует живые редакции; переезжает в плагин или на итерацию реестра',
     removeBy: 'этап 5 трекера game-core',
   },
-  'tests/unit/password-input.test.ts': {
-    max: 2,
-    reason:
-      'сценарий использует живые редакции; переезжает в плагин или на итерацию реестра',
-    removeBy: 'этап 5 трекера game-core',
-  },
   'tests/unit/pending-draft.test.ts': {
     max: 1,
     reason:
@@ -305,7 +299,7 @@ const GAME_MENTION_ALLOWANCE = {
     removeBy: 'остаётся: вход гейта',
   },
   'tests/unit/plugin-slots.test.ts': {
-    max: 11,
+    max: 8,
     reason:
       'сценарий использует живые редакции; переезжает в плагин или на итерацию реестра',
     removeBy: 'этап 5 трекера game-core',
@@ -365,7 +359,7 @@ const GAME_MENTION_ALLOWANCE = {
     removeBy: 'этап 5 трекера game-core',
   },
   'tests/unit/translations.test.ts': {
-    max: 25,
+    max: 15,
     reason:
       'сценарий использует живые редакции; переезжает в плагин или на итерацию реестра',
     removeBy: 'этап 5 трекера game-core',

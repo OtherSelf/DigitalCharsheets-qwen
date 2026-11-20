@@ -11,6 +11,8 @@ import {
 import type { GameUiSlots } from '@/games/types';
 import { translations } from '@/lib/i18n';
 
+import { hasPlugin } from '@tests/support';
+
 /**
  * ─── LANDMARK: PLUGIN UI SLOTS TESTS ──────────────────────────────────────
  * Контракт UI-слотов этапа 3:
@@ -107,7 +109,7 @@ describe('слоты-функции плагинов', () => {
     expect(summary?.badgeVariant).toBe('default');
   });
 
-  it.each([['dh1'], ['dh2']])(
+  it.each([['dh1'], ['dh2']].filter(([id]) => hasPlugin(id)))(
     '%s: подпись шапки и карточки непустые',
     async (id) => {
       const entry = plugin(id);
@@ -164,7 +166,8 @@ describe('слоты-функции плагинов', () => {
   });
 
   it('иконка вкладки каждой игры лежит в её папке', async () => {
-    for (const id of ['dnd5e', 'dh1', 'dh2']) {
+    for (const { manifest } of gamePlugins) {
+      const id = manifest.id;
       const favicon = (await slotsFor(id)).favicon;
       expect(favicon, id).toBeTruthy();
       // Больше не общий файл из public/.
