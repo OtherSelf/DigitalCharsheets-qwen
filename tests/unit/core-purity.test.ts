@@ -168,7 +168,7 @@ describe('гейт чистоты ядра', () => {
     ]);
   });
 
-  it('проверяет реальное дерево: нарушений 0, CSS — под храповиком', async () => {
+  it('проверяет реальное дерево: нарушений 0, CSS-храповик пуст', async () => {
     const { checkCore } =
       (await import('../../scripts/plugins/check-core-purity.mjs')) as unknown as {
         checkCore(options?: { root?: string }): {
@@ -185,9 +185,7 @@ describe('гейт чистоты ядра', () => {
     expect(result.violations).toEqual([]);
     expect(result.cssScanned).toBeGreaterThan(0);
     expect(result.cssViolations).toEqual([]);
+    expect(result.cssAllowed).toEqual([]);
     expect(result.staleCssAllowlist).toEqual([]);
-    const [ratchet] = result.cssAllowed;
-    expect(ratchet.file).toBe('src/app/globals.css');
-    expect(ratchet.lines).toHaveLength(ratchet.max);
   });
 });
