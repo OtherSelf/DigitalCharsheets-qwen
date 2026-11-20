@@ -34,7 +34,6 @@ import { cn } from '@/lib/utils';
 import { isFieldFilled } from './field-policy';
 import { ArmorDisplay } from './sections/armor-display';
 import { CharacteristicsSection } from './sections/characteristics-section';
-import { CustomResourceCounter } from './sections/custom-resource-counter';
 import { EditSaveButton, MetricBox } from './sections/dh-ui-helpers';
 import { EquipmentInventorySection } from './sections/equipment-inventory-section';
 import {
@@ -759,10 +758,6 @@ export const Dh1Sheet = React.forwardRef<
                 </div>
               </MetricBox>
               {/* ─── END COMPACT VIEW FATIGUE COUNTERS ─── */}
-              <CustomResourceCounter
-                character={character}
-                isCompactView={true}
-              />
 
               <MetricBox
                 title={t('dh1.insanity')}
@@ -1303,11 +1298,6 @@ export const Dh1Sheet = React.forwardRef<
                     </CardContent>
                   </Card>
                 )}
-
-                <CustomResourceCounter
-                  character={character}
-                  isCompactView={false}
-                />
               </CardContent>
             </Card>
           )}

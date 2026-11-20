@@ -21,8 +21,9 @@ src/games/
   i18n.generated.ts         plugin dictionaries from plugin.json#i18n
   shared/
     types.ts                game-agnostic primitives (CharacterBase, quests,
-                            inventory) — no game mechanics or translations
-    schemas.ts              shared zod primitives for those types
+                            combat resources) — no game mechanics or translations
+    schemas.ts              shared zod primitives for those types; game item
+                            shapes (inventory) are declared by each module
     defaults.ts             readNumber/readString defaults helpers
     excel.ts                generic Excel section writer used by all modules
   dnd5e/
@@ -379,8 +380,11 @@ per-game save handlers out of the page.
   translations, form or sheet. Divergence between dh1 and dh2 is expected and
   edited in the respective module.
 - `src/games/shared` is only a tiny game-agnostic kernel (base character
-  fields, quests, inventory, Excel writer); game mechanics and translations
-  never live there.
+  fields, quests, combat resources, Excel writer); game mechanics and
+  translations never live there. Inventory items are per-edition: dh1 has
+  `quantity`/`weight`/`price`, dh2 has `quantity`/`weight`, dnd5e keeps the
+  original `{id, name, status, notes}` shape. Missing numeric fields read as
+  defaults (`quantity = 1`) and are not written back until the player saves.
 - Export JSON fields and Excel sections are part of the module; the core only
   writes the technical envelope/block.
 - Every module declares `defaultStatus` and `createDemo`; hiding a module in the

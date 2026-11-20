@@ -64,6 +64,7 @@ import {
   RangedWeapon,
   type DH1Character,
 } from '../types';
+import { CustomResourceCounter } from './custom-resource-counter';
 import { EditSaveButton } from './dh-ui-helpers';
 
 const defaultEquipment = {
@@ -2686,6 +2687,10 @@ export const EquipmentInventorySection = React.forwardRef<
                       )}
                     </>
                   )}
+                  <CustomResourceCounter
+                    character={character}
+                    isCompactView={isCompactView}
+                  />
                 </div>
               </div>
             </CollapsibleContent>
