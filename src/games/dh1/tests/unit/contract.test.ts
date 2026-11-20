@@ -24,7 +24,6 @@ describe('dh1: контракт редакции', () => {
       'talents-section',
       'equipment-section',
       'inventory-section',
-      'armor-section',
     ]);
   });
 

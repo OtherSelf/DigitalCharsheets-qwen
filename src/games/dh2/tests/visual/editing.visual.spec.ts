@@ -274,10 +274,10 @@ test.describe('локации попаданий на мобильном', { tag
       await signInViaUI(page, { username, password });
       await openApp(page, sheetPath(id));
 
-      await openMobileSection(page, 'Armor', 'armor-section');
-      const armor = page.locator('#armor-section:visible').first();
-      await expect(armor.getByText('(1-10)')).toBeVisible();
-      await expect(armor.getByText('(86-00)')).toBeVisible();
+      await openMobileSection(page, 'Info', 'info-section');
+      const info = page.locator('#info-section:visible').first();
+      await expect(info.getByText('(1-10)')).toBeVisible();
+      await expect(info.getByText('(86-00)')).toBeVisible();
     },
   );
 });
