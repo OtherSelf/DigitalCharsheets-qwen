@@ -72,8 +72,11 @@ export const ArmorDisplay = ({
       >
         <h4
           className={cn(
-            'w-full truncate px-1 text-center font-bold',
+            'w-full px-1 text-center font-bold',
             isCompactView ? 'text-[10px]' : 'text-xs',
+            embedded
+              ? 'text-[9px] leading-tight break-words whitespace-normal'
+              : 'truncate',
           )}
         >
           {title}

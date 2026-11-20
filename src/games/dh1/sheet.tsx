@@ -1718,6 +1718,24 @@ export const Dh1Sheet = React.forwardRef<
         </div>
         {/* DH-COMPACT-EQUIPMENT-PANEL-END */}
       </div>
+      {isCompactView && (
+        <div
+          className={cn(activeCompactSection !== 'armor-section' && 'hidden')}
+        >
+          <Card id="armor-section">
+            <CardHeader className="px-6 pt-3 pb-4">
+              <CardTitle className="font-headline">{t('dh1.armor')}</CardTitle>
+            </CardHeader>
+            <CardContent className="px-2 pt-0">
+              <ArmorDisplay
+                character={character}
+                isCompactView={isCompactView}
+                embedded
+              />
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 });
