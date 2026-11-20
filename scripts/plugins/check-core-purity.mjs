@@ -15,6 +15,13 @@
  *  содержимое строковых литералов не считаются: подпись «Dungeons & Dragons»
  *  в словаре — это данные, а не знание ядра.
  *
+ *  Стили ядра сканируются отдельно: селектор `.dnd-sheet`/`.dh-sheet` в
+ *  `globals.css` — такая же зависимость от конкретной игры, как её id в
+ *  коде, просто раньше её не видели (сканировались только `.ts/.tsx`).
+ *  Долг по CSS фиксируется храповиком (`CSS_ALLOWLIST`): больше потолка
+ *  нельзя, меньше — тоже (потолок опускают в том же коммите, который убрал
+ *  блоки), иначе долг копится молча.
+ *
  *  Исключения — только с причиной и сроком (`removeBy`): без них гейт
  *  зеленел бы за счёт молчания.
  *
@@ -78,8 +85,50 @@ export const GAME_FIELDS = [
  */
 export const ALLOWLIST = [];
 
-/** Файлы ядра: `.ts`/`.tsx`, без деклараций и тестов. */
-function listFiles(dir) {
+/**
+ * Игровые токены в стилях ядра. Список короткий и предметный: общий префикс
+ * `dcs-` игрой не считается, поэтому класс конкретной редакции
+ * (`dcs-info-grid`) перечислен отдельно.
+ */
+export const CSS_GAME_TOKENS = [
+  ['dnd', /(?<![a-z0-9])dnd(?:5e)?(?![a-z0-9])/i],
+  ['dh', /(?<![a-z0-9])dh(?:1|2)?(?![a-z0-9])/i],
+  ['dark-heresy', /(?<![a-z0-9])dark[-_ ]?heresy(?![a-z0-9])/i],
+  ['info-grid', /(?<![a-z0-9])(?:dcs-)?info-grid(?![a-z0-9])/i],
+  ['stretch-card', /(?<![a-z0-9])stretch-card(?![a-z0-9])/i],
+];
+
+/**
+ * Храповик CSS-долга: файл ядра и потолок строк с игровыми токенами.
+ * `max` — точное текущее число; его опускают в том же коммите, который
+ * убрал блоки, а запись удаляют вместе с последним блоком.
+ */
+export const CSS_ALLOWLIST = [
+  {
+    file: 'src/app/globals.css',
+    max: 17,
+    reason:
+      'раскладка листов DH/D&D (media 768–1299px и ≥1800px) переезжает в CSS-модули плагинов на этапе 2',
+    removeBy: 'этап 2',
+  },
+];
+
+/**
+ * Точные id игр. `stripNonCode` затирает содержимое литералов, поэтому
+ * `if (systemId === 'dh1')` раньше проходил незамеченным. id ищутся отдельно
+ * и только целиком: подпись «Dark Heresy» в словаре — данные, а не знание
+ * ядра, и остаётся разрешённой.
+ */
+export const GAME_IDS = ['dnd5e', 'dh1', 'dh2'];
+
+/**
+ * Исключения для id в литералах: данные i18n и подобные таблицы, где id —
+ * это значение, а не ветка кода. Каждое — с причиной и сроком.
+ */
+export const ID_ALLOWLIST = [];
+
+/** Файлы ядра: код (`.ts`/`.tsx`, без деклараций и тестов) или стили. */
+function listFiles(dir, kind = 'code') {
   const found = [];
   let entries = [];
   try {
@@ -93,7 +142,9 @@ function listFiles(dir) {
       if (entry.name === 'node_modules' || entry.name === '__screenshots__') {
         continue;
       }
-      found.push(...listFiles(full));
+      found.push(...listFiles(full, kind));
+    } else if (kind === 'css') {
+      if (/\.css$/.test(entry.name)) found.push(full);
     } else if (
       /\.(ts|tsx)$/.test(entry.name) &&
       !entry.name.endsWith('.d.ts') &&
@@ -245,8 +296,175 @@ export function findViolations(source) {
   return violations;
 }
 
+/**
+ * Убрать комментарии CSS, сохранив номера строк: `/* … *\/` заменяется
+ * пробелами, переводы строк остаются. Подписи в комментариях — не код.
+ */
+export function stripCssComments(source) {
+  const out = source.split('');
+  let i = 0;
+  while (i < source.length) {
+    if (source[i] === '/' && source[i + 1] === '*') {
+      const end = source.indexOf('*/', i + 2);
+      const stop = end === -1 ? source.length : end + 2;
+      for (let j = i; j < stop; j += 1) {
+        if (out[j] !== '\n') out[j] = ' ';
+      }
+      i = stop;
+      continue;
+    }
+    i += 1;
+  }
+  return out.join('');
+}
+
+/**
+ * Найти игровые токены в стилях: по одной записи на строку.
+ *
+ * @param {string} source
+ * @returns {{ line: number, tokens: string[] }[]}
+ */
+export function findCssViolations(source) {
+  const lines = stripCssComments(source).split('\n');
+  const violations = [];
+  lines.forEach((line, index) => {
+    const tokens = new Set();
+    for (const [token, pattern] of CSS_GAME_TOKENS) {
+      if (pattern.test(line)) tokens.add(token);
+    }
+    if (tokens.size > 0) {
+      violations.push({ line: index + 1, tokens: [...tokens].sort() });
+    }
+  });
+  return violations;
+}
+
+/**
+ * Убрать комментарии, сохранив литералы и содержимое строк: для поиска id
+ * именно значения в кавычках и важны, а подписи в комментариях — нет.
+ * Номера строк сохраняются.
+ *
+ * @param {string} source
+ * @returns {string}
+ */
+export function stripCommentsOnly(source) {
+  const out = source.split('');
+  const blank = (from, to) => {
+    for (let j = from; j < to; j += 1) {
+      if (out[j] !== '\n') out[j] = ' ';
+    }
+  };
+  let mode = 'code';
+  const templateStack = [];
+  let braceDepth = 0;
+  let i = 0;
+  while (i < source.length) {
+    const ch = source[i];
+    const next = source[i + 1];
+    if (mode === 'code') {
+      if (ch === '/' && next === '/') {
+        const end = source.indexOf('\n', i);
+        const stop = end === -1 ? source.length : end;
+        blank(i, stop);
+        i = stop;
+        continue;
+      }
+      if (ch === '/' && next === '*') {
+        const end = source.indexOf('*/', i + 2);
+        const stop = end === -1 ? source.length : end + 2;
+        blank(i, stop);
+        i = stop;
+        continue;
+      }
+      if (ch === '(' && next === '*') {
+        const end = source.indexOf('*)', i + 2);
+        if (end !== -1) {
+          blank(i, end + 2);
+          i = end + 2;
+          continue;
+        }
+      }
+      if (ch === "'" || ch === '"') {
+        mode = ch;
+        i += 1;
+        continue;
+      }
+      if (ch === '`') {
+        mode = '`';
+        i += 1;
+        continue;
+      }
+      if (ch === '{') {
+        braceDepth += 1;
+        i += 1;
+        continue;
+      }
+      if (ch === '}') {
+        if (braceDepth > 0) {
+          braceDepth -= 1;
+        } else if (templateStack.length > 0) {
+          mode = '`';
+          templateStack.pop();
+        }
+        i += 1;
+        continue;
+      }
+      i += 1;
+      continue;
+    }
+    if (ch === '\\') {
+      i += 2;
+      continue;
+    }
+    if (mode === '`' && ch === '$' && next === '{') {
+      templateStack.push(braceDepth);
+      braceDepth = 0;
+      mode = 'code';
+      i += 2;
+      continue;
+    }
+    if (ch === mode) {
+      mode = 'code';
+      i += 1;
+      continue;
+    }
+    i += 1;
+  }
+  return out.join('');
+}
+
+/**
+ * Найти точные id игр в строковых литералах: по одной записи на строку.
+ *
+ * @param {string} source
+ * @returns {{ line: number, tokens: string[] }[]}
+ */
+export function findIdViolations(source) {
+  const lines = stripCommentsOnly(source).split('\n');
+  const violations = [];
+  lines.forEach((line, index) => {
+    const ids = new Set();
+    for (const id of GAME_IDS) {
+      const pattern = new RegExp(`(['"\`])${id}\\1`, 'g');
+      for (const _match of line.matchAll(pattern)) ids.add(id);
+    }
+    if (ids.size > 0) {
+      violations.push({ line: index + 1, tokens: [...ids].sort() });
+    }
+  });
+  return violations;
+}
+
 function isAllowed(file) {
   return ALLOWLIST.find((entry) => entry.file === file);
+}
+
+function idAllowance(file) {
+  return ID_ALLOWLIST.find((entry) => entry.file === file);
+}
+
+function cssAllowance(file) {
+  return CSS_ALLOWLIST.find((entry) => entry.file === file);
 }
 
 export function checkCore({ root = ROOT } = {}) {
@@ -255,14 +473,87 @@ export function checkCore({ root = ROOT } = {}) {
     violations: [],
     allowed: [],
     staleAllowlist: [],
+    idViolations: [],
+    idAllowed: [],
+    staleIdAllowlist: [],
+    cssScanned: 0,
+    cssViolations: [],
+    cssAllowed: [],
+    staleCssAllowlist: [],
   };
   const files = CORE_DIRS.flatMap((dir) => listFiles(join(root, dir)));
   result.filesScanned = files.length;
+
+  const cssFiles = CORE_DIRS.flatMap((dir) =>
+    listFiles(join(root, dir), 'css'),
+  );
+  result.cssScanned = cssFiles.length;
+
+  for (const absolute of cssFiles) {
+    const file = relative(root, absolute).split('\\').join('/');
+    const hits = findCssViolations(readFileSync(absolute, 'utf8'));
+    if (hits.length === 0) continue;
+
+    const allowance = cssAllowance(file);
+    if (!allowance) {
+      result.cssViolations.push({ file, hits });
+      continue;
+    }
+    if (hits.length > allowance.max) {
+      result.cssViolations.push({
+        file,
+        hits,
+        overAllowance: allowance.max,
+      });
+      continue;
+    }
+    result.cssAllowed.push({
+      file,
+      lines: hits.map((hit) => hit.line),
+      max: allowance.max,
+      reason: allowance.reason,
+      removeBy: allowance.removeBy,
+    });
+    if (hits.length < allowance.max) {
+      result.staleCssAllowlist.push({
+        file,
+        actual: hits.length,
+        max: allowance.max,
+      });
+    }
+  }
+
+  for (const allowance of CSS_ALLOWLIST) {
+    if (!result.cssAllowed.some((entry) => entry.file === allowance.file)) {
+      result.staleCssAllowlist.push({
+        file: allowance.file,
+        actual: 0,
+        max: allowance.max,
+      });
+    }
+  }
 
   for (const absolute of files) {
     const file = relative(root, absolute).split('\\').join('/');
     const source = readFileSync(absolute, 'utf8');
     const found = findViolations(source);
+    const ids = findIdViolations(source);
+    if (found.length === 0 && ids.length === 0) continue;
+
+    if (ids.length > 0) {
+      const allowId = idAllowance(file);
+      if (allowId) {
+        result.idAllowed.push({
+          file,
+          lines: ids.map((hit) => hit.line),
+          reason: allowId.reason,
+          removeBy: allowId.removeBy,
+        });
+      } else {
+        result.idViolations.push({ file, hits: ids });
+      }
+    }
+
     if (found.length === 0) continue;
 
     const allow = isAllowed(file);
@@ -281,6 +572,12 @@ export function checkCore({ root = ROOT } = {}) {
   for (const allow of ALLOWLIST) {
     if (!result.allowed.some((entry) => entry.file === allow.file)) {
       result.staleAllowlist.push(allow.file);
+    }
+  }
+
+  for (const allow of ID_ALLOWLIST) {
+    if (!result.idAllowed.some((entry) => entry.file === allow.file)) {
+      result.staleIdAllowlist.push(allow.file);
     }
   }
   return result;
@@ -310,7 +607,11 @@ function main(argv) {
     return result.violations.length > 0 ? 1 : 0;
   }
 
-  if (result.violations.length > 0) {
+  if (
+    result.violations.length > 0 ||
+    result.idViolations.length > 0 ||
+    result.cssViolations.length > 0
+  ) {
     console.error('✗ игровые знания в ядре:');
     for (const violation of result.violations) {
       const lines = violation.hits
@@ -318,8 +619,27 @@ function main(argv) {
         .join('; ');
       console.error(`  - ${violation.file}: ${lines}`);
     }
+    for (const violation of result.idViolations) {
+      const lines = violation.hits
+        .map((hit) => `${hit.line} (${hit.tokens.join(', ')})`)
+        .join('; ');
+      console.error(`  - ${violation.file} (id в литерале): ${lines}`);
+    }
+    for (const violation of result.cssViolations) {
+      const lines = violation.hits
+        .map((hit) => `${hit.line} (${hit.tokens.join(', ')})`)
+        .join('; ');
+      const tail =
+        violation.overAllowance === undefined
+          ? ''
+          : ` [храповик: > ${violation.overAllowance}]`;
+      console.error(`  - ${violation.file} (css): ${lines}${tail}`);
+    }
     console.error(
-      '  Ядро не знает игр: подпись/поле объявляет плагин (слот, схема, словарь).',
+      '  Ядро не знает игр: подпись/поле объявляет плагин (слот, схема, словарь),',
+    );
+    console.error(
+      '  раскладку листа — CSS-модуль в папке плагина (docs/game-modules.md).',
     );
     return 1;
   }
@@ -333,10 +653,41 @@ function main(argv) {
   for (const file of result.staleAllowlist) {
     console.warn(`⚠ исключение для ${file} больше не нужно — удалите его`);
   }
+  for (const entry of result.idAllowed) {
+    console.warn(
+      `⚠ ${entry.file}: ${entry.lines.length} литерал(ов) с id игры под ` +
+        `исключением (${entry.removeBy}) — ${entry.reason}`,
+    );
+  }
+  for (const file of result.staleIdAllowlist) {
+    console.warn(`⚠ исключение для id в ${file} больше не нужно — удалите его`);
+  }
+  for (const entry of result.cssAllowed) {
+    console.warn(
+      `⚠ ${entry.file} (css): ${entry.lines.length} из ${entry.max} строк ` +
+        `под храповиком (${entry.removeBy}) — ${entry.reason}`,
+    );
+  }
+  if (result.staleCssAllowlist.length > 0) {
+    for (const entry of result.staleCssAllowlist) {
+      console.error(
+        `✗ храповик CSS устарел: ${entry.file} — ${entry.actual} строк вместо ` +
+          `${entry.max}. Опустите max (или удалите запись, если строк 0)`,
+      );
+    }
+    return 1;
+  }
   console.log(
-    `✓ игровые знания: ${result.filesScanned} файлов ядра, игровых имён и полей 0` +
+    `✓ игровые знания: ${result.filesScanned} файлов кода и ` +
+      `${result.cssScanned} файлов CSS ядра, игровых имён, полей и селекторов 0` +
       (result.allowed.length > 0
         ? ` (исключений: ${result.allowed.length})`
+        : '') +
+      (result.idAllowed.length > 0
+        ? ` (исключений по id: ${result.idAllowed.length})`
+        : '') +
+      (result.cssAllowed.length > 0
+        ? ` (css-храповик: ${result.cssAllowed.length})`
         : ''),
   );
   return 0;
