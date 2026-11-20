@@ -1,11 +1,16 @@
 import { getGameDefinition, listGameDefinitions } from './games';
 import type { GeneratedPluginRegistration, PluginManifest } from './plugin-api';
-import { generatedPlugins, generatedUiLoaders } from './registry.generated';
+import {
+  generatedFontLoaders,
+  generatedPlugins,
+  generatedUiLoaders,
+} from './registry.generated';
 import type {
   GameDefinition,
   GameId,
   GameModule,
   GameUiSlots,
+  PluginFont,
   SystemId,
 } from './types';
 
@@ -144,6 +149,42 @@ export function loadGameUiSlots(
       return {};
     });
   uiSlotsLoading.set(id, promise);
+  return promise;
+}
+
+const fontCache = new Map<string, PluginFont>();
+const fontLoading = new Map<string, Promise<PluginFont>>();
+
+/** Уже загруженный шрифт темы (для синхронного рендера обёртки). */
+export function getLoadedPluginFont(id: SystemId): PluginFont | undefined {
+  return fontCache.get(id);
+}
+
+/**
+ * Ленивая загрузка шрифта темы (`plugin.json#ui.theme.font`). Модуль шрифта
+ * может тянуть `next/font/local` и ассеты, поэтому он не попадает в общий
+ * бандл; ошибка загрузки не ломает страницу — обёртка остаётся без шрифта.
+ */
+export function loadPluginFont(id: SystemId): Promise<PluginFont> | undefined {
+  const cached = fontCache.get(id);
+  if (cached) return Promise.resolve(cached);
+  const loader = generatedFontLoaders[id];
+  if (!loader) return undefined;
+  const pending = fontLoading.get(id);
+  if (pending) return pending;
+
+  const promise = loader()
+    .then((font) => {
+      fontCache.set(id, font);
+      fontLoading.delete(id);
+      return font;
+    })
+    .catch((error) => {
+      console.error(`[plugins] не удалось загрузить шрифт темы ${id}:`, error);
+      fontLoading.delete(id);
+      return {};
+    });
+  fontLoading.set(id, promise);
   return promise;
 }
 

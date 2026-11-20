@@ -16,8 +16,10 @@ format changes.
 - Games can theme their own sheet (`plugin.json#ui.theme`): a fixed list of
   host tokens for the light and dark modes, rendered as CSS variables on the
   sheet page only. No selectors or arbitrary CSS — the rest of the site and the
-  other games stay untouched. `pluginApi` is now 1.4; the reference fixture and
-  the DH2 demo theme exercise the contract.
+  other games stay untouched. An optional plugin font (1.4) is loaded lazily
+  and applied to the same scope without entering the shared bundle. `pluginApi`
+  is now 1.4; the reference fixture and the DH2 demo theme exercise the
+  contract.
 
 ### Fixed
 

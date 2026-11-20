@@ -15,6 +15,7 @@ import dnd5eManifest from './dnd5e/plugin.json';
 import type {
   GameUiSlots,
   GeneratedPluginRegistration,
+  PluginFont,
   PluginManifest,
 } from './plugin-api';
 
@@ -45,3 +46,7 @@ export const generatedUiLoaders: Readonly<
   dh1: () => import('./dh1/ui').then((module) => module.uiSlots),
   dh2: () => import('./dh2/ui').then((module) => module.uiSlots),
 };
+
+export const generatedFontLoaders: Readonly<
+  Record<string, () => Promise<PluginFont>>
+> = {};

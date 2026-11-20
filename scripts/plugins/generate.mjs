@@ -486,6 +486,7 @@ export function renderRegistry(plugins) {
         'import type {\n' +
         '  GameUiSlots,\n' +
         '  GeneratedPluginRegistration,\n' +
+        '  PluginFont,\n' +
         '  PluginManifest,\n' +
         "} from './plugin-api';",
     },
@@ -534,6 +535,37 @@ ${uiLoaders}
   Record<string, () => Promise<GameUiSlots<any>>>
 > = {};`;
 
+  // Шрифт темы грузится так же лениво, как UI-слоты: модуль шрифта может
+  // тянуть `next/font/local` и ассеты, и в общий бандл он попасть не должен.
+  const fontLoaders = sorted
+    .filter(({ manifest }) => typeof manifest.ui?.theme?.font === 'string')
+    .map(({ manifest }) => {
+      const [file, member] = manifest.ui.theme.font.split('#');
+      const spec = `./${manifest.id}/${file.replace(/\.(ts|tsx)$/, '')}`;
+      const key = /^[A-Za-z_$][A-Za-z0-9_$]*$/.test(manifest.id)
+        ? manifest.id
+        : JSON.stringify(manifest.id);
+      // prettier (printWidth 80) переносит длинную строку так же; иначе
+      // `plugins:check` и `prettier --check` спорят о сгенерированном файле.
+      const inline = `  ${key}: () => import('${spec}').then((module) => module.${member}),`;
+      if (inline.length <= 80) return inline;
+      return (
+        `  ${key}: () =>\n` +
+        `    import('${spec}').then((module) => module.${member}),`
+      );
+    })
+    .join('\n');
+
+  const fontLoadersBlock = fontLoaders
+    ? `export const generatedFontLoaders: Readonly<
+  Record<string, () => Promise<PluginFont>>
+> = {
+${fontLoaders}
+};`
+    : `export const generatedFontLoaders: Readonly<
+  Record<string, () => Promise<PluginFont>>
+> = {};`;
+
   return `/**
  * ─── AUTO-GENERATED — НЕ РЕДАКТИРОВАТЬ ─────────────────────────────────────
  * Реестр плагинов, сгенерированный из манифестов \`src/games/<id>/plugin.json\`
@@ -551,6 +583,8 @@ ${entries}
 
 /** Ленивые UI-слоты: \`systemId\` → загрузчик объекта \`GameUiSlots\`. */
 ${uiLoadersBlock}
+
+${fontLoadersBlock}
 `;
 }
 

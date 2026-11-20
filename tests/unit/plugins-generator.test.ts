@@ -76,6 +76,28 @@ describe('сгенерированный реестр prettier-чист для �
     expect(await formatted(content, 'i18n.generated.ts')).toBe(content);
   });
 
+  it('эмитит загрузчик шрифта темы и остаётся prettier-чистым', async () => {
+    const { renderRegistry } = await generator();
+    const themed = plugin('themeprobe', 90);
+    themed.manifest.ui = {
+      theme: {
+        tokens: { light: { primary: '1 2% 3%' } },
+        font: 'fonts.ts#fontProbe',
+      },
+    };
+    const content = renderRegistry([plugin('dnd5e', 10), themed]);
+    expect(content).toContain('generatedFontLoaders');
+    expect(content).toContain(
+      "import('./themeprobe/fonts').then((module) => module.fontProbe)",
+    );
+    expect(await formatted(content, 'registry.generated.ts')).toBe(content);
+
+    const plain = renderRegistry([plugin('dnd5e', 10)]);
+    expect(plain).toContain(
+      'export const generatedFontLoaders: Readonly<\n  Record<string, () => Promise<PluginFont>>\n> = {};',
+    );
+  });
+
   it('служебный импорт стоит по строке пути, а не в конце', async () => {
     const { renderRegistry } = await generator();
     const content = renderRegistry([plugin('probe', 90)]);
