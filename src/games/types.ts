@@ -382,6 +382,47 @@ export interface GameUiSlots<
 }
 
 /**
+ * ─── LANDMARK: GAME THEME TOKENS ──────────────────────────────────────────
+ * Список токенов, которые игра вправе переопределить, — фиксированный и
+ * принадлежит ядру: манифест не задаёт селекторы и не может повлиять на
+ * страницы без своей игры. Значения — HSL-триплеты (`8 70% 45%`) как у
+ * `globals.css`, кроме `radius` (длина). Неполный набор добирается
+ * базовыми значениями хоста.
+ */
+export const GAME_THEME_TOKENS = [
+  'background',
+  'foreground',
+  'card',
+  'card-foreground',
+  'primary',
+  'primary-foreground',
+  'accent',
+  'accent-foreground',
+  'muted',
+  'border',
+  'ring',
+  'radius',
+] as const;
+
+export type GameThemeToken = (typeof GAME_THEME_TOKENS)[number];
+
+/** Подмножество токенов для одного режима (light/dark). */
+export type GameThemeTokenSet = Partial<Record<GameThemeToken, string>>;
+
+/**
+ * Скоупленная тема игры (`plugin.json#ui.theme`): токены для светлого и
+ * тёмного режима сайта и опциональный шрифт плагина (`next/font/local`).
+ */
+export interface GameTheme {
+  readonly tokens: {
+    readonly light?: GameThemeTokenSet;
+    readonly dark?: GameThemeTokenSet;
+  };
+  /** Точка входа `<файл>#плагинФонт`; применяется как класс на той же обёртке. */
+  readonly font?: string;
+}
+
+/**
  * Необязательные подписи для экрана истории изменений. Ядро не знает игр:
  * путь поля → i18n-ключ отдаёт плагин, а при отсутствии записи UI показывает
  * человекочитаемый путь. Ключи обязаны существовать в словарях плагина.

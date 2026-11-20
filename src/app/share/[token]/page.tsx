@@ -1,8 +1,10 @@
 import { cache } from 'react';
 import type { Metadata } from 'next';
 
+import { GameThemeScope } from '@/components/layout/game-theme-scope';
 import { SharedLinkUnavailable } from '@/components/share/shared-link-unavailable';
 import { SharedSheetView } from '@/components/sheets/shared-sheet-view';
+import { resolveCharacterSystemId } from '@/games/character-system';
 import { resolveSharedSheet } from '@/lib/shared-character';
 
 /**
@@ -53,10 +55,12 @@ export default async function SharePage({
   if (!shared) return <SharedLinkUnavailable />;
 
   return (
-    <SharedSheetView
-      character={shared.character}
-      history={shared.history}
-      ownerName={shared.ownerName}
-    />
+    <GameThemeScope systemId={resolveCharacterSystemId(shared.character)}>
+      <SharedSheetView
+        character={shared.character}
+        history={shared.history}
+        ownerName={shared.ownerName}
+      />
+    </GameThemeScope>
   );
 }

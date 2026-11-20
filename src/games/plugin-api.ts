@@ -18,6 +18,7 @@ import type {
   GameHistoryConfig,
   GameModule,
   GameModuleComponents,
+  GameTheme,
   GameUiSlots,
   LegacyImportContext,
   LocalizedMessages,
@@ -204,7 +205,12 @@ export interface PluginManifest {
     readonly fixtures?: string;
   };
   readonly ui?: {
-    readonly slots: readonly PluginUiSlot[];
+    /** Слоты, которые реализует `ui.entry`; без них `entry` не нужен. */
+    readonly slots?: readonly PluginUiSlot[];
+    /** Модуль, экспортирующий `uiSlots` (грузится лениво). */
+    readonly entry?: string;
+    /** Скоупленная тема: токены light/dark и опциональный шрифт. */
+    readonly theme?: GameTheme;
   };
   /**
    * Legacy-имена листа (`gameSystem`/`edition`), по которым разрешается
@@ -351,7 +357,7 @@ export function hasUiSlot(
   manifest: PluginManifest,
   slot: PluginUiSlot,
 ): boolean {
-  return manifest.ui?.slots.includes(slot) ?? false;
+  return manifest.ui?.slots?.includes(slot) ?? false;
 }
 
 export type {
