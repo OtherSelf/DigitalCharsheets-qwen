@@ -4,7 +4,41 @@
  * Поля намеренно неполные: хранилище и роуты принимают такой минимум, а
  * конкретный сценарий добавляет нужное через `overrides`. Игровые фикстуры
  * (с содержательными значениями) живут в `src/games/<id>/tests/fixtures/`.
+ *
+ * `makeCharacter(systemId)` — предпочтительный способ для нового теста: он
+ * берёт лист у самого плагина (`createDemo`), поэтому не знает полей игр и
+ * не ломается при удалении или добавлении редакции. Старые фабрики конкретных
+ * редакций остались ради существующих сценариев и постепенно заменяются
+ * (храповик — `GAME_MENTION_ALLOWANCE` в
+ * `scripts/tests/check-test-layout.mjs`).
  */
+
+import { getGamePlugin } from '@/games/registry';
+import type { SystemId } from '@/games/types';
+
+/**
+ * Валидный лист любой зарегистрированной редакции: поля берутся из
+ * `createDemo()` плагина, хост добавляет только служебные `id`/`userId`.
+ *
+ * @throws если такого плагина нет в сборке — тест должен падать явно, а не
+ *   проверять пустой объект
+ */
+export function makeCharacter(
+  systemId: string,
+  overrides: Record<string, any> = {},
+): any {
+  const entry = getGamePlugin(systemId as SystemId);
+  if (!entry) {
+    throw new Error(`makeCharacter: нет плагина ${systemId} в сборке`);
+  }
+  return {
+    ...entry.module.createDemo(),
+    id: `${systemId}-fixture`,
+    userId: 'user-test',
+    systemId,
+    ...overrides,
+  };
+}
 
 /** Незамысловатый D&D-персонаж — минимум, который принимает хранилище. */
 export function makeDndCharacter(overrides: Record<string, any> = {}): any {

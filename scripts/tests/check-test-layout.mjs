@@ -119,6 +119,262 @@ const GAME_MENTION_ALLOWANCE = {
     reason: 'тестовая payload-фабрика знает имя системы',
     removeBy: 'этап 8 трекера плагинов',
   },
+  // Host unit-тесты: потолки сняты на 2026-11-20 (этап 5 game-core). Числа
+  // могут только уменьшаться: сценарий редакции переезжает в
+  // `src/games/<id>/tests/`, а тест контракта идёт по реестру.
+  'tests/unit/account-deletion.test.ts': {
+    max: 6,
+    reason:
+      'сценарий использует живые редакции; переезжает в плагин или на итерацию реестра',
+    removeBy: 'этап 5 трекера game-core',
+  },
+  'tests/unit/admin/bootstrap.test.ts': {
+    max: 7,
+    reason:
+      'сценарий использует живые редакции; переезжает в плагин или на итерацию реестра',
+    removeBy: 'этап 5 трекера game-core',
+  },
+  'tests/unit/admin/users.test.ts': {
+    max: 6,
+    reason:
+      'сценарий использует живые редакции; переезжает в плагин или на итерацию реестра',
+    removeBy: 'этап 5 трекера game-core',
+  },
+  'tests/unit/admin-helpers.test.ts': {
+    max: 22,
+    reason:
+      'сценарий использует живые редакции; переезжает в плагин или на итерацию реестра',
+    removeBy: 'этап 5 трекера game-core',
+  },
+  'tests/unit/api/auth-sessions.test.ts': {
+    max: 3,
+    reason:
+      'сценарий использует живые редакции; переезжает в плагин или на итерацию реестра',
+    removeBy: 'этап 5 трекера game-core',
+  },
+  'tests/unit/api/characters.test.ts': {
+    max: 11,
+    reason:
+      'сценарий использует живые редакции; переезжает в плагин или на итерацию реестра',
+    removeBy: 'этап 5 трекера game-core',
+  },
+  'tests/unit/api/export.test.ts': {
+    max: 3,
+    reason:
+      'сценарий использует живые редакции; переезжает в плагин или на итерацию реестра',
+    removeBy: 'этап 5 трекера game-core',
+  },
+  'tests/unit/api/payload-validation.test.ts': {
+    max: 7,
+    reason:
+      'сценарий использует живые редакции; переезжает в плагин или на итерацию реестра',
+    removeBy: 'этап 5 трекера game-core',
+  },
+  'tests/unit/bulk-editor.test.ts': {
+    max: 2,
+    reason:
+      'сценарий использует живые редакции; переезжает в плагин или на итерацию реестра',
+    removeBy: 'этап 5 трекера game-core',
+  },
+  'tests/unit/character-history-api.test.ts': {
+    max: 3,
+    reason:
+      'сценарий использует живые редакции; переезжает в плагин или на итерацию реестра',
+    removeBy: 'этап 5 трекера game-core',
+  },
+  'tests/unit/character-migration-v2.test.ts': {
+    max: 29,
+    reason:
+      'сценарий использует живые редакции; переезжает в плагин или на итерацию реестра',
+    removeBy: 'этап 5 трекера game-core',
+  },
+  'tests/unit/core-imports.test.ts': {
+    max: 10,
+    reason: 'id игры — вход гейта импортов, а не знание хоста',
+    removeBy: 'остаётся: вход гейта',
+  },
+  'tests/unit/core-purity.test.ts': {
+    max: 12,
+    reason: 'id игры — вход гейта чистоты ядра, а не знание хоста',
+    removeBy: 'остаётся: вход гейта',
+  },
+  'tests/unit/dh-family-parity.test.ts': {
+    max: 34,
+    reason:
+      'паритет двух редакций DH — по правилу test:layout это host-level тест',
+    removeBy: 'остаётся: кросс-эдишн тест',
+  },
+  'tests/unit/exdev-storage.test.ts': {
+    max: 3,
+    reason:
+      'сценарий использует живые редакции; переезжает в плагин или на итерацию реестра',
+    removeBy: 'этап 5 трекера game-core',
+  },
+  'tests/unit/export/excel.test.ts': {
+    max: 10,
+    reason:
+      'сценарий использует живые редакции; переезжает в плагин или на итерацию реестра',
+    removeBy: 'этап 5 трекера game-core',
+  },
+  'tests/unit/export/format.test.ts': {
+    max: 7,
+    reason:
+      'сценарий использует живые редакции; переезжает в плагин или на итерацию реестра',
+    removeBy: 'этап 5 трекера game-core',
+  },
+  'tests/unit/export/import.test.ts': {
+    max: 12,
+    reason:
+      'сценарий использует живые редакции; переезжает в плагин или на итерацию реестра',
+    removeBy: 'этап 5 трекера game-core',
+  },
+  'tests/unit/export/merge.test.ts': {
+    max: 15,
+    reason:
+      'сценарий использует живые редакции; переезжает в плагин или на итерацию реестра',
+    removeBy: 'этап 5 трекера game-core',
+  },
+  'tests/unit/export/sanitize-filter.test.ts': {
+    max: 13,
+    reason:
+      'сценарий использует живые редакции; переезжает в плагин или на итерацию реестра',
+    removeBy: 'этап 5 трекера game-core',
+  },
+  'tests/unit/game-theme.test.ts': {
+    max: 7,
+    reason: 'id игры — значение CSS-селектора в проверке генератора темы',
+    removeBy: 'остаётся: вход проверки',
+  },
+  'tests/unit/games/removed-plugin.test.ts': {
+    max: 2,
+    reason:
+      'сценарий использует живые редакции; переезжает в плагин или на итерацию реестра',
+    removeBy: 'этап 5 трекера game-core',
+  },
+  'tests/unit/history-diff.test.ts': {
+    max: 2,
+    reason:
+      'сценарий использует живые редакции; переезжает в плагин или на итерацию реестра',
+    removeBy: 'этап 5 трекера game-core',
+  },
+  'tests/unit/history-labels.test.ts': {
+    max: 2,
+    reason:
+      'сценарий использует живые редакции; переезжает в плагин или на итерацию реестра',
+    removeBy: 'этап 5 трекера game-core',
+  },
+  'tests/unit/history-recording.test.ts': {
+    max: 2,
+    reason:
+      'сценарий использует живые редакции; переезжает в плагин или на итерацию реестра',
+    removeBy: 'этап 5 трекера game-core',
+  },
+  'tests/unit/i18n-hardcoded.test.ts': {
+    max: 3,
+    reason:
+      'сценарий использует живые редакции; переезжает в плагин или на итерацию реестра',
+    removeBy: 'этап 5 трекера game-core',
+  },
+  'tests/unit/local-storage.test.ts': {
+    max: 9,
+    reason:
+      'сценарий использует живые редакции; переезжает в плагин или на итерацию реестра',
+    removeBy: 'этап 5 трекера game-core',
+  },
+  'tests/unit/openapi.test.ts': {
+    max: 1,
+    reason:
+      'сценарий использует живые редакции; переезжает в плагин или на итерацию реестра',
+    removeBy: 'этап 5 трекера game-core',
+  },
+  'tests/unit/password-input.test.ts': {
+    max: 2,
+    reason:
+      'сценарий использует живые редакции; переезжает в плагин или на итерацию реестра',
+    removeBy: 'этап 5 трекера game-core',
+  },
+  'tests/unit/pending-draft.test.ts': {
+    max: 1,
+    reason:
+      'сценарий использует живые редакции; переезжает в плагин или на итерацию реестра',
+    removeBy: 'этап 5 трекера game-core',
+  },
+  'tests/unit/plugin-boundaries.test.ts': {
+    max: 20,
+    reason: 'id игры — вход проверки границ плагинов',
+    removeBy: 'остаётся: вход гейта',
+  },
+  'tests/unit/plugin-slots.test.ts': {
+    max: 11,
+    reason:
+      'сценарий использует живые редакции; переезжает в плагин или на итерацию реестра',
+    removeBy: 'этап 5 трекера game-core',
+  },
+  'tests/unit/plugins-derive.test.ts': {
+    max: 4,
+    reason:
+      'сценарий использует живые редакции; переезжает в плагин или на итерацию реестра',
+    removeBy: 'этап 5 трекера game-core',
+  },
+  'tests/unit/plugins-generator.test.ts': {
+    max: 4,
+    reason:
+      'сценарий использует живые редакции; переезжает в плагин или на итерацию реестра',
+    removeBy: 'этап 5 трекера game-core',
+  },
+  'tests/unit/profile-update.test.ts': {
+    max: 4,
+    reason:
+      'сценарий использует живые редакции; переезжает в плагин или на итерацию реестра',
+    removeBy: 'этап 5 трекера game-core',
+  },
+  'tests/unit/server-derive-flag.test.ts': {
+    max: 2,
+    reason:
+      'сценарий использует живые редакции; переезжает в плагин или на итерацию реестра',
+    removeBy: 'этап 5 трекера game-core',
+  },
+  'tests/unit/server-derive-write.test.ts': {
+    max: 2,
+    reason:
+      'сценарий использует живые редакции; переезжает в плагин или на итерацию реестра',
+    removeBy: 'этап 5 трекера game-core',
+  },
+  'tests/unit/server-storage.test.ts': {
+    max: 16,
+    reason:
+      'сценарий использует живые редакции; переезжает в плагин или на итерацию реестра',
+    removeBy: 'этап 5 трекера game-core',
+  },
+  'tests/unit/share-api.test.ts': {
+    max: 3,
+    reason:
+      'сценарий использует живые редакции; переезжает в плагин или на итерацию реестра',
+    removeBy: 'этап 5 трекера game-core',
+  },
+  'tests/unit/shared-character.test.ts': {
+    max: 5,
+    reason:
+      'сценарий использует живые редакции; переезжает в плагин или на итерацию реестра',
+    removeBy: 'этап 5 трекера game-core',
+  },
+  'tests/unit/shares.test.ts': {
+    max: 4,
+    reason:
+      'сценарий использует живые редакции; переезжает в плагин или на итерацию реестра',
+    removeBy: 'этап 5 трекера game-core',
+  },
+  'tests/unit/translations.test.ts': {
+    max: 25,
+    reason:
+      'сценарий использует живые редакции; переезжает в плагин или на итерацию реестра',
+    removeBy: 'этап 5 трекера game-core',
+  },
+  'tests/unit/visual-naming.test.ts': {
+    max: 2,
+    reason: 'имена эталонов в примерах правил',
+    removeBy: 'остаётся: правила имён',
+  },
 };
 
 /**
@@ -244,6 +500,7 @@ function walkByExtension(dir, extensions, acc = []) {
 const mentionFiles = [
   ...walkByExtension(VISUAL_DIR, ['.ts', '.tsx']),
   ...walkByExtension(SUPPORT_DIR, ['.ts', '.tsx']),
+  ...walkByExtension(UNIT_DIR, ['.ts', '.tsx']),
 ];
 
 for (const absolute of mentionFiles) {
