@@ -374,7 +374,7 @@ OS or missing fonts.
 | `creation.spec.ts` | UI sign-in and the guest draft → account flow (host-level, no game blocks) |
 | `form-validation.spec.ts` | Invalid create-form submit: toast, `aria-invalid`, focus on the first field |
 | `locale.spec.ts` | Russian locale for both sheets |
-| `dialogs.spec.ts` | Quest journal, house rules, notes, divine boons (D&D only) |
+| `dialogs.spec.ts` | Host-level dialog geometry only (centered, inside the viewport); the dialog screens themselves live with the games |
 | `themes.spec.ts` | Light / dark / warm themes |
 | `user-menu.spec.ts` | Profile menu (user, admin, RU), display settings, 80% UI scale |
 | `admin.spec.ts` | `/admin`: users, edit/block/delete dialogs, sheet list, games & editions |
@@ -388,6 +388,8 @@ Game sheets are hosted by the plugins, not by `tests/visual`:
 
 | Plugin spec | Covers |
 | --- | --- |
+| `dnd5e/tests/visual/dialogs.visual.spec.ts` | D&D 5e quest journal (en/ru), house rules (desktop/mobile, ru), notes (desktop/mobile), divine boons (desktop/mobile, ru) |
+| `dh1/tests/visual/dialogs.visual.spec.ts` | DH1 quest journal (en/ru), house rules (desktop/mobile), notes (desktop/mobile, ru), the XP-log sheet and notes saving from the Sheet |
 | `dnd5e/tests/visual/sheets.visual.spec.ts` | D&D 5e sheet in read mode (desktop elements, mobile sections, tablet 1024×768) |
 | `dnd5e/tests/visual/editing.visual.spec.ts` | D&D 5e edit mode |
 | `dnd5e/tests/visual/creation.visual.spec.ts` | D&D 5e creation form → sheet |
