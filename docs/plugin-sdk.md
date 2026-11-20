@@ -365,12 +365,13 @@ host removes that request from the URL after opening, so a refresh does not
 reopen the panel. Core does not inspect game data to decide this — the plugin
 knows whether it wrote something worth showing.
 
-Optional shared pieces live in `@/games/shared/*` (allowed by the import
-boundaries): `creation-review.ts` is a module-level store of sheets being
-reviewed after import, and `creation-review-banner.tsx` renders the banner with
-the missing-required list and the confirm button. They are opt-in: the plugin
-decides which fields are required and supplies the translated strings; a plugin
-that never calls the helper renders as before.
+The only shared piece of this flow is `@/games/shared/creation-review` (allowed
+by the import boundaries): a tab-scoped store of sheets being reviewed after
+import, written by the core's import dialog. The banner itself is the edition's
+own `creation-review-banner.tsx` — UI and rules are not shared between editions
+(D10). Both are opt-in: the plugin decides which fields are required and
+supplies the translated strings; a plugin that never calls the helper renders as
+before.
 
 ## i18n
 

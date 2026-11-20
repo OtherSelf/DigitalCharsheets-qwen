@@ -17,9 +17,9 @@ import {
 } from '@/components/ui/popover';
 import { Textarea } from '@/components/ui/textarea';
 import { useCharacterContext, useTranslation } from '@/games/plugin-host';
-import { statBonus, upgradeBonus } from '@/games/shared/dh-stats';
 import { cn } from '@/lib/utils';
 
+import { statBonus, upgradeBonus } from '../dh-stats';
 import {
   EMPTY_STAT_UPGRADE,
   pickAllowedStats,

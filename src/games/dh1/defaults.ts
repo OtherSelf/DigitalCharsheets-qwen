@@ -1,5 +1,3 @@
-import { statBonus } from '@/games/shared/dh-stats';
-
 import { readNumber, readString, type DefaultsInput } from '../shared/defaults';
 import {
   fateRangeFromText,
@@ -7,6 +5,7 @@ import {
   woundsRangeFromFormula,
 } from './dark-heresy-data';
 import { calculateRank, RanksByCareer } from './dark-heresy-ranks';
+import { statBonus } from './dh-stats';
 import { effectIdForDivination } from './divination-i18n';
 import { resolveGender } from './gender';
 import { DH1_SCHEMA_VERSION } from './schema-version';

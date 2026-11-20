@@ -1,7 +1,6 @@
-import { upgradeBonus } from '@/games/shared/dh-stats';
-
 import { createExcelSections } from '../shared/excel';
 import type { ExcelSection, ExportTranslate, GameExportConfig } from '../types';
+import { upgradeBonus } from './dh-stats';
 import { DH2E_BACKGROUNDS } from './dh2e-data';
 import { startingChoiceLabels } from './dh2e-grants';
 import {

@@ -27,10 +27,10 @@ import {
   finishCreationReview,
   isCreationReview,
 } from '@/games/shared/creation-review';
-import { CreationReviewBanner } from '@/games/shared/creation-review-banner';
-import { statBonus, upgradeBonus } from '@/games/shared/dh-stats';
 import { cn } from '@/lib/utils';
 
+import { CreationReviewBanner } from './creation-review-banner';
+import { statBonus, upgradeBonus } from './dh-stats';
 import { isFieldFilled } from './field-policy';
 import { ArmorDisplay } from './sections/armor-display';
 import { CharacteristicsSection } from './sections/characteristics-section';
