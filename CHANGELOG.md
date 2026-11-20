@@ -11,6 +11,14 @@ format changes.
 
 ## [Unreleased]
 
+### Fixed
+
+- An imported sheet keeps its choice-review mode when the transition to the
+  sheet page ends up as a full document load (Next.js hard-navigation
+  fallback). The flag now lives in the tab's `sessionStorage` instead of module
+  memory, so the creation locks open and the review banner appears again; the
+  unit test reproduces the module reload.
+
 ## [0.12.0] - 2026-11-20
 
 Inventory with quantities and totals, hit locations on the phone.
