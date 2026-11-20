@@ -281,3 +281,46 @@ test.describe('локации попаданий на мобильном', { tag
     },
   );
 });
+
+/**
+ * ─── LANDMARK: CUSTOM RESOURCES IN ITEMS ──────────────────────────────────
+ * DH2: те же счётчики внутри вкладки «Предметы».
+ */
+test.describe(
+  'пользовательские ресурсы внутри «Предметов»',
+  { tag: '@plugin:dh2' },
+  () => {
+    test(
+      'DH2: ресурсы рендерятся в инвентаре',
+      { tag: '@desktop' },
+      async ({ page }) => {
+        const username = `res-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+        const password = 'res-password-1';
+        const registered = await page.request.post('/api/auth/register', {
+          data: {
+            username,
+            password,
+            displayName: 'Resources QA',
+            recoveryPhrase: 'amber cobalt lantern',
+          },
+        });
+        expect([200, 201], 'регистрация аккаунта').toContain(
+          registered.status(),
+        );
+        const created = await page.request.post('/api/characters', {
+          data: { systemId: 'dh2', name: 'Resources QA' },
+        });
+        expect([200, 201], 'создание dh2-листа').toContain(created.status());
+        const { id } = (await created.json()) as { id: string };
+
+        await signInViaUI(page, { username, password });
+        await openApp(page, sheetPath(id));
+
+        const inventory = page.locator('#inventory-section:visible').first();
+        await expect(
+          inventory.getByText('Custom Resources', { exact: true }),
+        ).toBeVisible();
+      },
+    );
+  },
+);

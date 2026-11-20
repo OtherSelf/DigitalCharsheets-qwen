@@ -63,6 +63,7 @@ import {
   RangedWeapon,
   type DH2Character,
 } from '../types';
+import { CustomResourceCounter } from './custom-resource-counter';
 import { EditSaveButton } from './dh-ui-helpers';
 import { RequisitionBlock } from './requisition-block';
 
@@ -2463,6 +2464,10 @@ export const EquipmentInventorySection = React.forwardRef<
                       )}
                     </>
                   )}
+                  <CustomResourceCounter
+                    character={character}
+                    isCompactView={isCompactView}
+                  />
                 </div>
               </div>
             </CollapsibleContent>

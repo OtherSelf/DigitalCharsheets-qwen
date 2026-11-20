@@ -142,3 +142,33 @@ test.describe(
     );
   },
 );
+
+/**
+ * ─── LANDMARK: CUSTOM RESOURCES IN ITEMS ──────────────────────────────────
+ * «Пользовательские ресурсы» — счётчики, а не предметы (схема не менялась),
+ * но игрок видит их внутри вкладки «Предметы», а не отдельной карточкой.
+ */
+test.describe(
+  'пользовательские ресурсы внутри «Предметов»',
+  { tag: '@plugin:dh1' },
+  () => {
+    test(
+      'ресурсы рендерятся в инвентаре и только там',
+      { tag: '@desktop' },
+      async ({ page, context }) => {
+        await prepare(context);
+        await openApp(page, sheetPath(gameCharacterId('dh')));
+
+        const inventory = page.locator('#inventory-section:visible').first();
+        await expect(
+          inventory.getByText('Custom Resources', { exact: true }),
+        ).toBeVisible();
+        await expect(
+          page
+            .getByText('Custom Resources', { exact: true })
+            .filter({ visible: true }),
+        ).toHaveCount(1);
+      },
+    );
+  },
+);
