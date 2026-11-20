@@ -127,11 +127,16 @@ test.describe(
         await prepare(context);
         await openApp(page, sheetPath(gameCharacterId('dh')));
 
+        // Доспех — отдельная вкладка внизу сайдбара, а не часть «Информации».
         await openMobileSection(page, 'Info', 'info-section');
         const info = page.locator('#info-section:visible').first();
-        await expect(info.getByText('(1-10)')).toBeVisible();
-        await expect(info.getByText('(86-00)')).toBeVisible();
-        await expect(info.getByText('(31-70)')).toBeVisible();
+        await expect(info.getByText('(1-10)')).toHaveCount(0);
+
+        await openMobileSection(page, 'Armor', 'armor-section');
+        const armor = page.locator('#armor-section:visible').first();
+        await expect(armor.getByText('(1-10)')).toBeVisible();
+        await expect(armor.getByText('(86-00)')).toBeVisible();
+        await expect(armor.getByText('(31-70)')).toBeVisible();
 
         // Планшет: та же схема видна в правой колонке листа.
         await page.setViewportSize({ width: 1024, height: 768 });

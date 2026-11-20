@@ -5,6 +5,7 @@ import {
   BookOpen,
   Info,
   Shield,
+  ShieldHalf,
   Star,
   TrendingUp,
 } from 'lucide-react';
@@ -52,6 +53,11 @@ export function dh1CompactNav(
       labelKey: 'common.inventory',
       id: 'inventory-section',
       icon: <Backpack className="h-5 w-5" />,
+    },
+    {
+      labelKey: 'dh1.armor',
+      id: 'armor-section',
+      icon: <ShieldHalf className="h-5 w-5" />,
     },
   ];
 }
