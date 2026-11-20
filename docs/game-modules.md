@@ -432,6 +432,28 @@ Relative imports are only allowed inside the module's own folder and inside
 `src/games` core files (`types.ts`, `shared/*`); an import that resolves into
 another module's folder fails (editions are independent copies, D10).
 
+### The reverse direction: the core never imports a plugin folder
+
+`npm run plugins:imports` (`scripts/plugins/check-core-imports.mjs`, also in
+`npm run verify`) checks that `src/lib`, `src/components`, `src/app`,
+`src/context`, `src/hooks`, `src/games/shared` and `src/games/i18n` import only
+the contract of `src/games` — `registry*`, `types`, `plugin-api*`,
+`plugin-host`, `character-system`, `games*`, `i18n*`, `*.generated` and
+`shared/*`. An `@/games/<id>/…` import (or a relative path that resolves into a
+plugin folder) fails, because it restores the dependency the layers exist to
+remove: removing the game would then break the core.
+
+### Styles are part of the same rule
+
+`npm run plugins:purity` scans the core `.ts/.tsx` files for game names, game
+fields and exact game ids in string literals, and the core `.css` files for
+game selectors (`.dnd-sheet`, `.dh-sheet`, `dcs-info-grid`, …). A layout
+selector for one game in `src/app/globals.css` is the same violation as
+`if (systemId === 'dh1')` in code: the layout belongs to the plugin. Current
+CSS debt is pinned by the `CSS_ALLOWLIST` ratchet in
+`scripts/plugins/check-core-purity.mjs` (`max` lines per file, `removeBy`); the
+number can only go down, and the entry is deleted with the last block.
+
 ## Related
 
 - [architecture.md](architecture.md) — overall layout and startup
