@@ -144,7 +144,7 @@ export default defineConfig({
       name: 'desktop-games',
       testDir: './src/games',
       testMatch: '**/tests/visual/*.visual.spec.ts',
-      grepInvert: /@mobile/,
+      grepInvert: /@mobile|@tablet/,
       snapshotPathTemplate:
         'tests/visual/__screenshots__/{projectName}/{testFilePath}/{arg}{ext}',
       use: {
@@ -155,10 +155,30 @@ export default defineConfig({
       },
     },
     {
+      /*
+        Планшетные эталоны плагинов: 1024x768, только тесты с тегом `@tablet`.
+        Полоса 768..1299px — та, где у обеих редакций Dark Heresy жили
+        вёрстко-баги; сценарий листа принадлежит игре, поэтому эталоны лежат
+        рядом с ней, а не в host-проекте `tablet`.
+      */
+      name: 'tablet-games',
+      testDir: './src/games',
+      testMatch: '**/tests/visual/*.visual.spec.ts',
+      grep: /@tablet/,
+      snapshotPathTemplate:
+        'tests/visual/__screenshots__/{projectName}/{testFilePath}/{arg}{ext}',
+      use: {
+        viewport: { width: 1024, height: 768 },
+        deviceScaleFactor: 1,
+        isMobile: false,
+        hasTouch: false,
+      },
+    },
+    {
       name: 'mobile-games',
       testDir: './src/games',
       testMatch: '**/tests/visual/*.visual.spec.ts',
-      grepInvert: /@desktop/,
+      grepInvert: /@desktop|@tablet/,
       snapshotPathTemplate:
         'tests/visual/__screenshots__/{projectName}/{testFilePath}/{arg}{ext}',
       use: {

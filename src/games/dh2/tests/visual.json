@@ -1,3 +1,27 @@
 {
-  "nameSegment": "dh"
+  "nameSegment": "dh2",
+  "requiredLangs": {
+    "sheet": ["en", "ru"],
+    "dialog": ["en"]
+  },
+  "requiredSections": {
+    "sheet": [
+      "top",
+      "info",
+      "progression",
+      "characteristics",
+      "skills",
+      "talents",
+      "equipment",
+      "inventory"
+    ],
+    "dialog": ["notes", "house-rules"]
+  },
+  "requiredEditSections": {
+    "sheet": ["info", "progression", "characteristics", "skills"]
+  },
+  "requiredRuEditSections": {
+    "sheet": ["characteristics", "skills"]
+  },
+  "mobileReadEdit": true
 }

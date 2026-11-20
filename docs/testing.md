@@ -206,13 +206,14 @@ reloads automatically — reload the tab yourself.
 Playwright renders the app in Chromium and compares screenshots with the
 baselines in `tests/visual/__screenshots__/`.
 
-- Projects: `desktop` (1440×900) and `mobile` (Pixel 7); `tablet` (1024×768)
-  only for `tests/visual/tablet.spec.ts`. Plugin specs run in `desktop-games` /
-  `mobile-games`: their own `testDir` is `src/games`, and a project-level
-  `snapshotPathTemplate` keeps the baselines under the same
-  `tests/visual/__screenshots__/` root. Both plugin projects use the same
-  `@desktop` / `@mobile` `grepInvert` as the host ones, so a screenshot is
-  compared only in the width it was taken in.
+- Projects: `desktop` (1440×900) and `mobile` (Pixel 7); host `tablet`
+  (1024×768) only for `tests/visual/tablet.spec.ts` (dashboard, settings).
+  Plugin specs run in `desktop-games` / `mobile-games` / `tablet-games`: their
+  own `testDir` is `src/games`, a project-level `snapshotPathTemplate` keeps
+  the baselines under the same `tests/visual/__screenshots__/` root, and the
+  projects filter by tag (`@desktop`, `@mobile`, `@tablet`) so a screenshot is
+  compared only in the width it was taken in. A sheet scenario at 1024×768
+  belongs to the plugin (`tablet-games`), not to the host.
 - Game scenarios live in the plugin: screens in
   `src/games/<id>/tests/visual/*.visual.spec.ts`, the seeded character in
   `src/games/<id>/tests/fixtures/visual.ts`. The host (`tests/visual/`) keeps
@@ -381,18 +382,19 @@ OS or missing fonts.
 | `history.spec.ts` | Character history timeline, empty state, and DH1/DH2 label/code checks |
 | `robustness.spec.ts` | Load failures: not-found and retry screens |
 | `i18n-raw.spec.ts` | No raw translation keys in the rendered UI |
-| `tablet.spec.ts` | Tablet 1024×768 project only |
+| `tablet.spec.ts` | Host-only tablet 1024×768 screens: dashboard and settings |
 
 Game sheets are hosted by the plugins, not by `tests/visual`:
 
 | Plugin spec | Covers |
 | --- | --- |
-| `dnd5e/tests/visual/sheets.visual.spec.ts` | D&D 5e sheet in read mode (desktop elements, mobile sections) |
+| `dnd5e/tests/visual/sheets.visual.spec.ts` | D&D 5e sheet in read mode (desktop elements, mobile sections, tablet 1024×768) |
 | `dnd5e/tests/visual/editing.visual.spec.ts` | D&D 5e edit mode |
 | `dnd5e/tests/visual/creation.visual.spec.ts` | D&D 5e creation form → sheet |
-| `dh1/tests/visual/sheets.visual.spec.ts` | Dark Heresy 1e sheet in read mode |
+| `dh1/tests/visual/sheets.visual.spec.ts` | Dark Heresy 1e sheet in read mode, tablet top/compact and the notes dialog |
 | `dh1/tests/visual/editing.visual.spec.ts` | DH1 edit mode, creation locks, conditions, free experience |
 | `dh1/tests/visual/creation.visual.spec.ts` | DH1 creation, weapons, XP awards |
+| `dh2/tests/visual/sheets.visual.spec.ts` | DH2 sheet in read mode (own segment `dh2`): desktop elements, RU, mobile sections, edit mode, tablet top/compact, notes and house-rules dialogs |
 | `dh2/tests/visual/creation.visual.spec.ts` | DH2 creation choices, Enemies options, gender/background, guest draft, weapons, XP awards |
 | `dh2/tests/visual/editing.visual.spec.ts` | DH2 creation locks, free experience |
 

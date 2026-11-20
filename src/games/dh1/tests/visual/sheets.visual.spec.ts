@@ -1,14 +1,17 @@
 import { expect, test } from '@playwright/test';
 
 import {
+  expectNoHorizontalOverflow,
   expectNoRawI18nKeys,
   gameCharacterId,
   openApp,
+  openDialog,
   openMobileSection,
   prepare,
   screenshotElement,
   screenshotPage,
   sheetPath,
+  waitForScrollSettled,
 } from '../../../../../tests/visual/helpers';
 
 /**
@@ -173,3 +176,58 @@ test.describe(
     );
   },
 );
+
+/**
+ * ─── LANDMARK: DH1 TABLET ─────────────────────────────────────────────────
+ * Полоса 768..1299px — та, где жили оба последних вёрстко-бага листа
+ * (двухрядная шапка и «уезжание» шапки/левого меню при масштабе интерфейса).
+ * Сценарий листа принадлежит игре, поэтому эталоны планшета лежат здесь, а
+ * не в host-проекте `tablet`.
+ */
+test.describe('лист Dark Heresy 1e — планшет', { tag: '@plugin:dh1' }, () => {
+  test(
+    'tablet 1024x768: верх листа и компактный вид (en)',
+    { tag: '@tablet' },
+    async ({ page, context }) => {
+      await page.setViewportSize({ width: 1024, height: 768 });
+      await prepare(context);
+      await openApp(page, sheetPath(gameCharacterId('dh')));
+
+      await expect(
+        page.getByRole('heading', { name: 'Lucius Varn' }),
+      ).toBeVisible();
+      await expectNoHorizontalOverflow(page);
+      await screenshotPage(page, 'sheet-dh-tablet-top-en.png');
+
+      await page
+        .getByTestId('app-header')
+        .getByRole('button', { name: 'Switch to Compact View', exact: true })
+        .click();
+      await expect(page.getByRole('navigation')).toBeVisible();
+      await expect(page.locator('.dh-sheet.is-compact')).toHaveCount(1);
+      await page
+        .getByRole('navigation')
+        .getByRole('button', { name: 'Inventory', exact: true })
+        .click();
+      await waitForScrollSettled(page);
+      await expect(page.locator('#inventory-section:visible')).toHaveCount(1);
+      await expectNoHorizontalOverflow(page);
+      await screenshotPage(page, 'sheet-dh-tablet-compact-en.png');
+    },
+  );
+
+  test(
+    'tablet 1024x768: диалог заметок (en)',
+    { tag: '@tablet' },
+    async ({ page, context }) => {
+      await page.setViewportSize({ width: 1024, height: 768 });
+      await prepare(context);
+      await openApp(page, sheetPath(gameCharacterId('dh')));
+      const dialog = await openDialog(page, 'Notes', false);
+      await expect(
+        dialog.getByRole('heading', { name: 'Character Notes' }),
+      ).toBeVisible();
+      await screenshotElement(dialog, 'dialog-dh-tablet-notes-en.png');
+    },
+  );
+});

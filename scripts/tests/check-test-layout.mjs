@@ -99,11 +99,6 @@ const GAME_MENTION_ALLOWANCE = {
     reason: 'хелперы визуальных тестов знают имена редакций для навигации',
     removeBy: 'этап 8 трекера плагинов',
   },
-  'tests/visual/tablet.spec.ts': {
-    max: 3,
-    reason: 'планшетный сценарий листа DH1',
-    removeBy: 'этап 8 трекера плагинов',
-  },
   'tests/visual/fixtures.ts': {
     max: 1,
     reason: 'фикстуры визуальных тестов ссылаются на лист DH',

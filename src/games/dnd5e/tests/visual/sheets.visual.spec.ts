@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 import {
+  expectNoHorizontalOverflow,
   expectNoRawI18nKeys,
   gameCharacterId,
   openApp,
@@ -9,6 +10,7 @@ import {
   screenshotElement,
   screenshotPage,
   sheetPath,
+  waitForScrollSettled,
 } from '../../../../../tests/visual/helpers';
 
 /**
@@ -135,6 +137,79 @@ test.describe('лист D&D — чтение', { tag: '@plugin:dnd5e' }, () => {
       await openMobileSection(page, 'Companions', 'companions-section');
       await expect(page.getByText('Ember')).toBeVisible();
       await screenshotPage(page, 'sheet-dnd-mobile-companions-en.png');
+    },
+  );
+});
+
+/**
+ * ─── LANDMARK: DND TABLET ─────────────────────────────────────────────────
+ * Полоса 768..1299px — та, где у листов жили вёрстко-баги (двухрядная шапка,
+ * «уезжание» меню при масштабе). Сценарий листа принадлежит игре, поэтому
+ * эталоны планшета лежат здесь, а не в host-проекте `tablet`.
+ */
+test.describe('лист D&D — планшет', { tag: '@plugin:dnd5e' }, () => {
+  test(
+    'tablet 1024x768: верх листа и компактный вид (en)',
+    { tag: '@tablet' },
+    async ({ page, context }) => {
+      await page.setViewportSize({ width: 1024, height: 768 });
+      await prepare(context);
+      await openApp(page, sheetPath(gameCharacterId('dnd')));
+
+      await expect(
+        page.getByRole('heading', { name: 'Seraphina Vael' }),
+      ).toBeVisible();
+      const header = page.locator('header.app-header');
+      expect(
+        Math.round((await header.boundingBox())!.height),
+        'шапка листа на планшете — одна строка',
+      ).toBeLessThan(100);
+      await expectNoHorizontalOverflow(page);
+      await screenshotPage(page, 'sheet-dnd-tablet-top-en.png');
+
+      await page
+        .getByTestId('app-header')
+        .getByRole('button', { name: 'Switch to Compact View', exact: true })
+        .click();
+      await expect(page.locator('.dnd-sheet.is-compact')).toHaveCount(1);
+      // У D&D в меню больше пунктов, чем у DH — сайдбар не должен обрезаться.
+      const nav = page.getByRole('navigation');
+      await expect(nav).toBeVisible();
+      const navBox = (await nav.boundingBox())!;
+      expect(
+        Math.round(navBox.y + navBox.height),
+        'сайдбар не выходит за нижний край',
+      ).toBeLessThanOrEqual(768 + 1);
+      const navOverflow = await nav.evaluate((el) => ({
+        x: el.scrollWidth - el.clientWidth,
+        y: el.scrollHeight - el.clientHeight,
+      }));
+      expect(navOverflow.x, 'сайдбар не вылезает вбок').toBeLessThanOrEqual(1);
+      expect(
+        navOverflow.y,
+        'пункты меню влезают по высоте',
+      ).toBeLessThanOrEqual(1);
+
+      await page
+        .getByRole('navigation')
+        .getByRole('button', { name: 'Inventory & Attunement', exact: true })
+        .click();
+      await waitForScrollSettled(page);
+      await expect(page.locator('#inventory-box:visible')).toHaveCount(1);
+      // Подводим карточку инвентаря к верху: эталон не зависит от скролла.
+      await page.evaluate(() => {
+        const main = document.querySelector('main');
+        const card = document.getElementById('inventory-box');
+        if (!main || !card) return;
+        const top =
+          card.getBoundingClientRect().top -
+          main.getBoundingClientRect().top +
+          main.scrollTop;
+        main.scrollTo({ top });
+      });
+      await waitForScrollSettled(page);
+      await expectNoHorizontalOverflow(page);
+      await screenshotPage(page, 'sheet-dnd-tablet-compact-en.png');
     },
   );
 });
