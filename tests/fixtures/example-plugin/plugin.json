@@ -77,7 +77,8 @@
         "dark": {
           "primary": "20 60% 65%"
         }
-      }
+      },
+      "font": "fonts.ts#examplePluginFont"
     }
   },
   "aliases": [

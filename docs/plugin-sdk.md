@@ -499,10 +499,15 @@ core. It is data in the manifest, not code and not selectors:
 - The scope is the sheet page: header plus `<main>` (and the shared, read-only
   page). The dashboard, settings, dialogs and other games never see the
   tokens. Without a theme the host renders the page exactly as before.
-- `font` (optional, 1.4) is an entry point exporting a `next/font/local`
-  result; the host applies its `variable` class on the same wrapper. Real games
-  do not ship fonts yet — the contract is exercised by
-  `tests/fixtures/example-plugin`.
+- `font` (optional, 1.4) is an entry point exporting a `PluginFont` — the
+  shape `next/font/local` returns (`variable`, `className`). The generator emits
+  a lazy loader in `generatedFontLoaders` (like `generatedUiLoaders`), so the
+  font module and its assets never enter the shared bundle; the host applies the
+  returned class on the same wrapper, and the plugin itself decides where to use
+  `font-family: var(--font-plugin)`. If the chunk fails, the wrapper keeps the
+  host fonts. No shipped game has a custom font: the contract is exercised by
+  `tests/fixtures/example-plugin` (a same-shape object, because the fixture is
+  not built by Next).
 
 The core cannot be reached from a theme: there is no way to pass CSS, class
 names or selectors. `tests/unit/game-theme.test.ts` checks the CSS generator

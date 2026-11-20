@@ -4,7 +4,9 @@ import type { ReactNode } from 'react';
 
 import { getPluginManifest } from '@/games/registry';
 import type { SystemId } from '@/games/types';
+import { usePluginFontClass } from '@/hooks/use-plugin-font';
 import { gameThemeCss } from '@/lib/game-theme';
+import { cn } from '@/lib/utils';
 
 /**
  * Обёртка темы игры вокруг шапки и листа страницы персонажа (и публичной
@@ -25,11 +27,12 @@ export function GameThemeScope({
   const theme = systemId
     ? getPluginManifest(systemId as SystemId)?.ui?.theme
     : undefined;
+  const fontClass = usePluginFontClass(theme?.font ? systemId : undefined);
   const css = gameThemeCss(systemId, theme);
   if (!css) return <>{children}</>;
 
   return (
-    <div className="contents" data-system={systemId}>
+    <div className={cn('contents', fontClass)} data-system={systemId}>
       <style>{css}</style>
       {children}
     </div>

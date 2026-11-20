@@ -410,6 +410,17 @@ export type GameThemeToken = (typeof GAME_THEME_TOKENS)[number];
 export type GameThemeTokenSet = Partial<Record<GameThemeToken, string>>;
 
 /**
+ * Результат загрузчика шрифта плагина: `next/font/local` возвращает
+ * `{ className, variable, style }`. Хосту нужен класс, который он навесит на
+ * обёртку темы; `variable` предпочтительнее — плагин сам решает, где применить
+ * `font-family: var(--font-plugin)`.
+ */
+export interface PluginFont {
+  readonly variable?: string;
+  readonly className?: string;
+}
+
+/**
  * Скоупленная тема игры (`plugin.json#ui.theme`): токены для светлого и
  * тёмного режима сайта и опциональный шрифт плагина (`next/font/local`).
  */
