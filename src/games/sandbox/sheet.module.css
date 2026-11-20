@@ -1,0 +1,33 @@
+/*
+  Собственная раскладка песочницы. Она живёт в папке игры, а не в
+  `src/app/globals.css`: ядро не знает, как выглядит лист этой игры, и гейт
+  чистоты ядра не пропустил бы такие селекторы в общий CSS.
+
+  Ширины совпадают с брейкпоинтами хоста (мобильный компакт < 768,
+  планшет 768..1299, широкий экран от 1300), чтобы лист не «прыгал» при
+  переключении видов.
+*/
+.sheet {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: minmax(0, 1fr);
+  max-width: 60rem;
+}
+
+.stats {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (min-width: 768px) and (max-width: 1299px) {
+  .sheet {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1300px) {
+  .sheet {
+    grid-template-columns: 2fr minmax(0, 1fr);
+  }
+}

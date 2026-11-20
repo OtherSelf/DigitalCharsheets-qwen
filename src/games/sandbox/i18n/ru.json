@@ -1,0 +1,16 @@
+{
+  "sandbox.name": "Песочница",
+  "sandbox.description": "Тестовая игра: маленький лист для проверки контракта плагинов.",
+  "sandbox.sheetTitle": "Лист песочницы",
+  "sandbox.might": "Мощь",
+  "sandbox.wits": "Смекалка",
+  "sandbox.rank": "Ранг",
+  "sandbox.notes": "Заметки",
+  "sandbox.saving": "Сохранение…",
+  "sandbox.saved": "Сохранено",
+  "sandbox.bulkStats": "Характеристики",
+  "sandbox.bulkStatsDesc": "Мощь и смекалка для каждого листа",
+  "sandbox.stat.might": "Мощь",
+  "sandbox.stat.wits": "Смекалка",
+  "sandbox.systemName": "Песочница"
+}

@@ -14,6 +14,11 @@ manifests without it must be updated).
 
 ## Quick start (new plugin in an evening)
 
+A complete working example ships with the app: `src/games/sandbox` (visible to
+testers and admins only, `defaultStatus: "test"`) — own CSS module, scoped
+theme, slots, demo and export. Use it next to the scaffold when you want to see
+a finished plugin instead of a template.
+
 1. **Copy a template.** The smallest complete plugin is the conformance fixture
    [`tests/fixtures/example-plugin/`](../tests/fixtures/example-plugin): types,
    zod schema, defaults, demo, export/Excel, JSON dictionaries, a custom React

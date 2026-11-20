@@ -1,0 +1,16 @@
+{
+  "sandbox.name": "Sandbox",
+  "sandbox.description": "Test game: a tiny sheet for checking the plugin contract.",
+  "sandbox.sheetTitle": "Sandbox sheet",
+  "sandbox.might": "Might",
+  "sandbox.wits": "Wits",
+  "sandbox.rank": "Rank",
+  "sandbox.notes": "Notes",
+  "sandbox.saving": "Saving…",
+  "sandbox.saved": "Saved",
+  "sandbox.bulkStats": "Stats",
+  "sandbox.bulkStatsDesc": "Might and Wits for every sheet",
+  "sandbox.stat.might": "Might",
+  "sandbox.stat.wits": "Wits",
+  "sandbox.systemName": "Sandbox"
+}

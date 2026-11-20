@@ -1,0 +1,91 @@
+{
+  "manifestVersion": 2,
+  "pluginApi": "^1.0.0",
+  "id": "sandbox",
+  "gameId": "sandbox",
+  "version": "1.0.0",
+  "order": 900,
+  "defaultStatus": "test",
+  "name": {
+    "en": "Sandbox — Test Game",
+    "ru": "Песочница — тестовая игра"
+  },
+  "description": {
+    "en": "Live reference plugin: a small custom sheet, form, slots, own CSS module and a scoped theme. Visible to testers and admins only (defaultStatus \"test\") — it exists to prove that a game needs nothing from the core.",
+    "ru": "Живой эталон контракта: маленький собственный лист, форма, слоты, свой CSS-модуль и скоупленная тема. Видна только тестировщикам и админу (defaultStatus «test») — существует, чтобы доказывать: игре не нужно ничего от ядра."
+  },
+  "tags": ["sandbox", "test", "reference"],
+  "author": "tests",
+  "license": "MIT",
+  "schemaVersion": 2,
+  "game": {
+    "id": "sandbox",
+    "order": 900,
+    "name": {
+      "en": "Sandbox",
+      "ru": "Песочница"
+    },
+    "description": {
+      "en": "A test game for checking the plugin contract end to end.",
+      "ru": "Тестовая игра для сквозной проверки контракта плагинов."
+    }
+  },
+  "dependencies": {
+    "host": "^1.0.0",
+    "plugins": {}
+  },
+  "entry": {
+    "module": "index.ts#sandboxModule"
+  },
+  "sheet": {
+    "mode": "custom",
+    "client": "sheet.tsx",
+    "createForm": "create-form.tsx"
+  },
+  "i18n": {
+    "en": "i18n/en.json",
+    "ru": "i18n/ru.json"
+  },
+  "demo": {
+    "entry": "index.ts#createDemo"
+  },
+  "export": {
+    "json": "index.ts#toPortableJson",
+    "excel": "index.ts#buildExcelSections"
+  },
+  "migrations": [
+    {
+      "from": 1,
+      "to": 2,
+      "entry": "index.ts#migrateV1toV2",
+      "description": "дискриминант редакции: systemId ставит хост",
+      "removes": ["edition"]
+    }
+  ],
+  "tests": {
+    "conformance": ">=1"
+  },
+  "ui": {
+    "slots": ["HeaderSubtitle", "CompactNav", "CardSummary", "BulkEditor"],
+    "entry": "ui.ts",
+    "theme": {
+      "tokens": {
+        "light": {
+          "primary": "150 45% 32%",
+          "accent": "150 30% 88%",
+          "radius": "0.25rem"
+        },
+        "dark": {
+          "primary": "150 45% 58%",
+          "accent": "150 20% 24%",
+          "radius": "0.25rem"
+        }
+      }
+    }
+  },
+  "aliases": [
+    {
+      "gameSystem": "Sandbox — Test Game"
+    }
+  ]
+}
