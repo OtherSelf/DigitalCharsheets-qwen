@@ -6,6 +6,7 @@ import Link from 'next/link';
 
 import { Sparkles, Sword, UserPlus } from 'lucide-react';
 
+import { GameThemeScope } from '@/components/layout/game-theme-scope';
 import { CharacterSheet } from '@/components/sheets/character-sheet';
 import { Button } from '@/components/ui/button';
 import {
@@ -180,12 +181,14 @@ export function DemoLanding({ createHref = '/new' }: DemoLandingProps) {
             </Button>
           </div>
 
-          <div className="bg-card rounded-lg border p-4 md:p-6">
-            <CharacterSheet
-              character={activeCharacter}
-              activeCompactSection="info-section"
-            />
-          </div>
+          <GameThemeScope systemId={activeCharacter.systemId}>
+            <div className="bg-card rounded-lg border p-4 md:p-6">
+              <CharacterSheet
+                character={activeCharacter}
+                activeCompactSection="info-section"
+              />
+            </div>
+          </GameThemeScope>
         </div>
       )}
     </>

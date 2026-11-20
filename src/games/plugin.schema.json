@@ -285,10 +285,14 @@
       }
     },
     "ui": {
-      "description": "Необязательные UI-слоты плагина (этап 3).",
+      "description": "Необязательная UI-часть плагина: слоты (этап 3) и скоупленная тема.",
       "type": "object",
       "additionalProperties": false,
-      "required": ["slots", "entry"],
+      "minProperties": 1,
+      "dependencies": {
+        "slots": ["entry"],
+        "entry": ["slots"]
+      },
       "properties": {
         "slots": {
           "type": "array",
@@ -308,6 +312,9 @@
           "description": "Модуль, экспортирующий `uiSlots: GameUiSlots` (грузится лениво).",
           "type": "string",
           "pattern": "^[A-Za-z0-9_.-]+(/[A-Za-z0-9_.-]+)*\\.(ts|tsx)$"
+        },
+        "theme": {
+          "$ref": "#/definitions/gameTheme"
         }
       }
     },
@@ -373,6 +380,84 @@
       "description": "Относительный путь внутри папки плагина к .ts/.tsx/.json.",
       "type": "string",
       "pattern": "^[A-Za-z0-9_.-]+(/[A-Za-z0-9_.-]+)*\\.(ts|tsx|json)$"
+    },
+    "gameTheme": {
+      "description": "Тема игры: токены из списка хоста для light/dark и опциональный шрифт плагина.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tokens"],
+      "properties": {
+        "tokens": {
+          "type": "object",
+          "additionalProperties": false,
+          "minProperties": 1,
+          "properties": {
+            "light": {
+              "$ref": "#/definitions/themeTokenSet"
+            },
+            "dark": {
+              "$ref": "#/definitions/themeTokenSet"
+            }
+          }
+        },
+        "font": {
+          "$ref": "#/definitions/entryPointWithMember"
+        }
+      }
+    },
+    "themeTokenSet": {
+      "description": "Токены темы одного режима: цвета — HSL-триплет («8 70% 45%»), radius — длина.",
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "properties": {
+        "background": {
+          "$ref": "#/definitions/themeColor"
+        },
+        "foreground": {
+          "$ref": "#/definitions/themeColor"
+        },
+        "card": {
+          "$ref": "#/definitions/themeColor"
+        },
+        "card-foreground": {
+          "$ref": "#/definitions/themeColor"
+        },
+        "primary": {
+          "$ref": "#/definitions/themeColor"
+        },
+        "primary-foreground": {
+          "$ref": "#/definitions/themeColor"
+        },
+        "accent": {
+          "$ref": "#/definitions/themeColor"
+        },
+        "accent-foreground": {
+          "$ref": "#/definitions/themeColor"
+        },
+        "muted": {
+          "$ref": "#/definitions/themeColor"
+        },
+        "border": {
+          "$ref": "#/definitions/themeColor"
+        },
+        "ring": {
+          "$ref": "#/definitions/themeColor"
+        },
+        "radius": {
+          "$ref": "#/definitions/themeLength"
+        }
+      }
+    },
+    "themeColor": {
+      "description": "HSL-триплет без hsl(): «8 70% 45%». Ядро подставляет его в hsl(var(--token)).",
+      "type": "string",
+      "pattern": "^[0-9]{1,3}(\\.[0-9]+)? [0-9]{1,3}(\\.[0-9]+)?% [0-9]{1,3}(\\.[0-9]+)?%$"
+    },
+    "themeLength": {
+      "description": "Длина для radius: 0.25rem, 4px, 0 или 0.5em.",
+      "type": "string",
+      "pattern": "^(0|[0-9]+(\\.[0-9]+)?)(px|rem|em)$"
     },
     "entryPointWithMember": {
       "description": "Относительный путь и имя экспорта: index.ts#createDemo.",

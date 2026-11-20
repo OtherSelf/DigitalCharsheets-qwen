@@ -67,7 +67,18 @@
   },
   "ui": {
     "slots": ["HeaderSubtitle", "CompactNav", "CardSummary", "BulkEditor"],
-    "entry": "ui.ts"
+    "entry": "ui.ts",
+    "theme": {
+      "tokens": {
+        "light": {
+          "primary": "20 60% 45%",
+          "radius": "0.25rem"
+        },
+        "dark": {
+          "primary": "20 60% 65%"
+        }
+      }
+    }
   },
   "aliases": [
     {

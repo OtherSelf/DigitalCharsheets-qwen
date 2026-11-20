@@ -20,7 +20,7 @@
  */
 
 /** Версия Plugin API; манифест объявляет совместимый с ней диапазон. */
-export const PLUGIN_API_VERSION = '1.3.0';
+export const PLUGIN_API_VERSION = '1.4.0';
 
 /** Версия формата манифеста, которую понимает и хост, и генератор. */
 export const PLUGIN_MANIFEST_VERSION = 2;

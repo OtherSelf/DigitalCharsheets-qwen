@@ -30,6 +30,7 @@ and from the ADRs under [`adr/`](adr/).
 | D19 | **More slots than D11; dictionaries are generated.** `HeaderSubtitle` and `HouseRulesDialog` were added, the tab icon became a static `ui.favicon`, and plugin dictionaries moved to `src/games/i18n.generated.ts` so `src/lib/i18n` loads before the registry. | `PLUGIN_UI_SLOTS`, `i18n.generated.ts` |
 | D20 | **Catalog v2: `enabled` and `visibility` are independent.** Turning a plugin off does not hide existing sheets; they open read-only with a banner and JSON export. | `src/lib/game-catalog.ts` |
 | D21 | **`@/games/plugin-host` is the plugin runtime API.** Hooks are re-exported from one module, so plugin boundaries never import `@/context/*` or `@/hooks/*`; the creation form gets `onCreated` and the host owns navigation. | `src/games/plugin-host.ts`, `boundaries.json` |
+| D22 | **A game theme is data, not CSS.** `plugin.json#ui.theme` sets a fixed host token list (`GAME_THEME_TOKENS`) for `light` and `dark`; the host renders them as CSS variables inside `[data-system="<id>"]` on the sheet page only. Plugins cannot pass selectors, class names or arbitrary CSS, so a theme can never leak into other pages or games. The optional `font` entry point is add-only. | `src/lib/game-theme.ts`, `src/components/layout/game-theme-scope.tsx`, `plugin.schema.json#ui.theme` |
 
 ## Related
 

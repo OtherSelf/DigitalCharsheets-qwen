@@ -119,6 +119,28 @@
       "HouseRulesDialog",
       "BulkEditor"
     ],
-    "entry": "ui.ts"
+    "entry": "ui.ts",
+    "theme": {
+      "tokens": {
+        "light": {
+          "primary": "18 62% 40%",
+          "primary-foreground": "40 40% 97%",
+          "accent": "32 45% 82%",
+          "accent-foreground": "20 30% 15%",
+          "radius": "0.25rem",
+          "card": "34 30% 96%",
+          "border": "24 30% 70%"
+        },
+        "dark": {
+          "primary": "18 62% 58%",
+          "primary-foreground": "20 30% 12%",
+          "accent": "30 30% 30%",
+          "accent-foreground": "40 40% 95%",
+          "radius": "0.25rem",
+          "card": "30 12% 18%",
+          "border": "26 20% 40%"
+        }
+      }
+    }
   }
 }

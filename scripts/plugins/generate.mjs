@@ -93,6 +93,9 @@ export function validatePluginFolder({ gamesDir, dirName, manifest }) {
   if (manifest.ui?.entry) {
     entries.push(['ui.entry', manifest.ui.entry]);
   }
+  if (manifest.ui?.theme?.font) {
+    entries.push(['ui.theme.font', manifest.ui.theme.font]);
+  }
   if (manifest.import) {
     entries.push(
       ['import.normalize', manifest.import.normalize],

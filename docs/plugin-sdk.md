@@ -1,15 +1,16 @@
-# Plugin SDK (v1.3)
+# Plugin SDK (v1.4)
 
 How to add a game or an edition to Digital Character Sheets. Everything
 game-specific lives in one folder under `src/games/<id>/`; the core only talks
 to the generated registry and the plugin contracts. A plugin is a folder plus a
 manifest plus a rebuild — no runtime code loading (D1), no ZIP/upload (D5).
 
-Status: **v1.3**, manifest `manifestVersion: 2`, `pluginApi: ^1.0.0`
+Status: **v1.4**, manifest `manifestVersion: 2`, `pluginApi: ^1.0.0`
 (1.1 added optional history labels; 1.2 adds `CreateFormCompletion` and
 generated game metadata; 1.3 allows a plugin to declare only one of the site
-languages and additional locale dictionaries. `manifestVersion 2` makes
-`game.description` required — manifests without it must be updated).
+languages and additional locale dictionaries; 1.4 adds the scoped
+`ui.theme` block. `manifestVersion 2` makes `game.description` required —
+manifests without it must be updated).
 
 ## Quick start (new plugin in an evening)
 
@@ -464,6 +465,49 @@ ones:
 | `✗ src/games/registry.generated.ts устарел` | A manifest changed without regeneration | `npm run plugins:generate` and commit the generated files |
 | `prettier --check` warns about a generated file | A generator bug, not a formatting nit | Do not hand-format: fix `renderRegistry` and add the case to `plugins-generator.test.ts` |
 
+## Themming (`ui.theme`)
+
+1.4 lets a plugin give its own sheet a restrained theme without touching the
+core. It is data in the manifest, not code and not selectors:
+
+```json
+"ui": {
+  "slots": ["HeaderActions"],
+  "entry": "ui.ts",
+  "theme": {
+    "tokens": {
+      "light": { "primary": "18 62% 40%", "radius": "0.25rem" },
+      "dark": { "primary": "18 62% 58%" }
+    },
+    "font": "fonts.ts#pluginFont"
+  }
+}
+```
+
+- The token list belongs to the host: `background`, `foreground`, `card`,
+  `card-foreground`, `primary`, `primary-foreground`, `accent`,
+  `accent-foreground`, `muted`, `border`, `ring`, `radius`
+  (`GAME_THEME_TOKENS` in `src/games/types.ts`, mirrored by
+  `plugin.schema.json`). An unknown token fails generation.
+- Colour values are HSL triplets (`8 70% 45%`), exactly like `globals.css`;
+  `radius` is a length (`0.25rem`, `4px`, `0`).
+- `tokens.light` and `tokens.dark` are independent: the host renders
+  `[data-system="<id>"]` for the light set and `html.dark [data-system="<id>"]`
+  for the dark one (`src/lib/game-theme.ts`). A missing set or token keeps the
+  host value in that mode, so declare both sets if the sheet should look
+  themed in both.
+- The scope is the sheet page: header plus `<main>` (and the shared, read-only
+  page). The dashboard, settings, dialogs and other games never see the
+  tokens. Without a theme the host renders the page exactly as before.
+- `font` (optional, 1.4) is an entry point exporting a `next/font/local`
+  result; the host applies its `variable` class on the same wrapper. Real games
+  do not ship fonts yet — the contract is exercised by
+  `tests/fixtures/example-plugin`.
+
+The core cannot be reached from a theme: there is no way to pass CSS, class
+names or selectors. `tests/unit/game-theme.test.ts` checks the CSS generator
+and that the schema token list matches the types.
+
 ## Versioning
 
 - `manifestVersion` — the manifest format understood by the host (2).
@@ -473,9 +517,10 @@ ones:
   generation step with an explicit error instead of being reinterpreted; `^`
   is defined for major >= 1 only, because npm's `0.x` caret means something
   else. The check runs at generation time (`npm run plugins:check`), so an
-  unsupported range cannot reach a build. Host **1.3** remains compatible with
-  a `^1.0.0` manifest; partial locales (1.3), `history` labels (1.1) and
-  `CreateFormCompletion` (1.2) are additive and do not change the manifest.
+  unsupported range cannot reach a build. Host **1.4** remains compatible with
+  a `^1.0.0` manifest; partial locales (1.3), `history` labels (1.1),
+  `CreateFormCompletion` (1.2) and `ui.theme` (1.4) are additive and do not
+  change the manifest format.
 - `schemaVersion` — the sheet format written by the plugin; bump it together
   with a migration step when the sheet shape changes.
 - `version` — the plugin's own semver, shown in admin. It is a plugin axis:
