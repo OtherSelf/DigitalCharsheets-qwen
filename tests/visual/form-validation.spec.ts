@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-import { openApp, prepare } from './helpers';
+import { openApp, prepare, registerAccount, signInViaUI } from './helpers';
 
 /**
  * ─── LANDMARK: CREATE FORM VALIDATION UX ──────────────────────────────────
@@ -42,7 +42,11 @@ test.describe('создание DH1: обязательно только имя'
     'пустые мир и карьера не блокируют создание, выбор доступен на листе (en)',
     { tag: '@desktop' },
     async ({ page, context }) => {
-      await prepare(context);
+      // Свой аккаунт: созданный лист не должен попадать на дашборд
+      // воркерского аккаунта и менять его счётчик редакций.
+      await prepare(context, { authenticated: false, theme: 'light' });
+      const account = await registerAccount(page, 'form-check', 'Form Check');
+      await signInViaUI(page, account);
       await openApp(page, '/new?game=darkHeresy&edition=dh1');
 
       await page.locator('[name="name"]').fill('Name Only');

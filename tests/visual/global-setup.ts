@@ -19,16 +19,16 @@ import {
  *   1. проверяет, что сервер отвечает;
  *   2. находит фикстуры игр перебором `src/games/<id>/tests/fixtures/visual.ts`;
  *   3. сеет аккаунты: canonical `visual-tests` (для снимков, где виден логин)
- *      и по одному изолированному аккаунту на воркер `visual-tests-w1..wN`;
- *   4. в каждом воркер-аккаунте удаляет старые листы и создаёт по свежему
- *      листу на каждую найденную игру — данные воркеров не пересекаются,
- *      поэтому тесты можно гонять параллельно;
+ *      и по одному аккаунту на пару «проект × воркер»;
+ *   4. в каждом аккаунте удаляет старые листы и создаёт по свежему листу на
+ *      каждую найденную игру — данные параллельных проектов не пересекаются;
  *   5. пишет аккаунты и id персонажей в `.visual-state.json`.
  *
- * Изоляция по воркерам, а не по проектам: Playwright распределяет воркеры по
- * файлам сам, и один и тот же аккаунт мог бы одновременно правиться из двух
- * файлов (редактирование секций, массовый редактор) — это давало бы гонки и
- * «мигающие» скриншоты. Фикстуры у всех аккаунтов одинаковые, поэтому
+ * Изоляция по паре «проект × воркер», а не только по воркеру: `workerIndex`
+ * уникален внутри проекта, поэтому `desktop` и `mobile` с одним индексом
+ * делят аккаунт. Проекты идут параллельно, и один сценарий может обнулить
+ * историю, пока другой её снимает, или добавить лист, который ломает счётчик
+ * редакций на дашборде. Фикстуры у всех аккаунтов одинаковые, поэтому
  * картинки от изоляции не зависят.
  */
 
@@ -912,18 +912,29 @@ export default async function globalSetup(config: FullConfig): Promise<void> {
     fixtures,
   });
 
+  const projects = config.projects.map((project) => project.name);
   const workers: VisualAccount[] = [];
-  for (let index = 0; index < workerCount; index += 1) {
-    workers.push(
-      await seedAccount(baseURL, `${CANONICAL_USERNAME}-w${index + 1}`, {
-        withCharacters: true,
-        fixtures,
-      }),
-    );
+  for (const projectName of projects) {
+    for (let index = 0; index < workerCount; index += 1) {
+      workers.push(
+        await seedAccount(
+          baseURL,
+          `${CANONICAL_USERNAME}-${projectName}-w${index + 1}`,
+          { withCharacters: true, fixtures },
+        ),
+      );
+    }
   }
 
-  seedShareFixtures(workers);
-  seedHistoryFixtures(workers);
+  // Гостевые снимки /share — со своего аккаунта: очистка истории в
+  // `history.spec` не должна менять то, что видит гость.
+  const guest = await seedAccount(baseURL, `${CANONICAL_USERNAME}-guest`, {
+    withCharacters: true,
+    fixtures,
+  });
+
+  seedShareFixtures([...workers, guest]);
+  seedHistoryFixtures([...workers, guest]);
 
   const admin = await seedAdminFixtures(baseURL, fixtures);
 
@@ -931,6 +942,9 @@ export default async function globalSetup(config: FullConfig): Promise<void> {
     baseURL,
     canonical,
     workers,
+    projects,
+    workersPerProject: workerCount,
+    guest,
     ...(admin ? { admin } : {}),
   };
 
@@ -943,15 +957,8 @@ export default async function globalSetup(config: FullConfig): Promise<void> {
   console.log(
     `[visual] baseURL=${baseURL} canonical=${canonical.user.uid} ` +
       `игры: ${seeded} ` +
-      `воркеров: ${workers.length} ` +
-      `(${workers
-        .map(
-          (w) =>
-            `${w.username}:${Object.entries(w.characters)
-              .map(([segment, id]) => `${segment}=${id}`)
-              .join('/')}`,
-        )
-        .join(', ')})` +
-      ` admin=${admin ? admin.username : '—'}`,
+      `аккаунтов: ${workers.length} + guest ` +
+      `(${projects.length} проектов × ${workerCount} воркеров) ` +
+      `admin=${admin ? admin.username : '—'}`,
   );
 }

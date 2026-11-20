@@ -53,9 +53,9 @@ export interface PrepareOptions {
   account?: 'worker' | 'canonical' | 'admin';
 }
 
-/** Аккаунт текущего воркера: у каждого воркера свои персонажи. */
+/** Аккаунт текущего проекта и воркера: у каждой пары свои персонажи. */
 export function getState(): VisualState {
-  return readState(test.info().workerIndex);
+  return readState(test.info().project.name, test.info().workerIndex);
 }
 
 /** Фиксированный аккаунт для снимков, где виден логин. */
