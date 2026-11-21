@@ -11,6 +11,7 @@ import { VISUAL_RECOVERY_PHRASE } from './fixtures';
 import {
   readAdminState,
   readCanonicalState,
+  readSandboxAdminState,
   readState,
   type VisualState,
 } from './state';
@@ -50,7 +51,7 @@ export interface PrepareOptions {
    *   admin     — служебный администратор временного сервера для `/admin`
    *               (появляется только при запуске через scripts/visual.sh).
    */
-  account?: 'worker' | 'canonical' | 'admin';
+  account?: 'worker' | 'canonical' | 'admin' | 'sandboxAdmin';
 }
 
 /** Аккаунт текущего проекта и воркера: у каждой пары свои персонажи. */
@@ -86,11 +87,13 @@ export async function prepare(
       ? getCanonicalState()
       : account === 'admin'
         ? readAdminState()
-        : getState();
+        : account === 'sandboxAdmin'
+          ? readSandboxAdminState()
+          : getState();
 
   if (!state) {
     throw new Error(
-      'prepare(account: "admin"): нет админского аккаунта в состоянии. ' +
+      `prepare(account: "${account}"): нет аккаунта в состоянии. ` +
         'Запускайте снимки через "npm run test:visual" (scripts/visual.sh ' +
         'поднимает временный сервер с data-dir).',
     );

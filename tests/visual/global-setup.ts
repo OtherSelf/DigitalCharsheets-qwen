@@ -35,6 +35,7 @@ import {
 const PASSWORD = 'visual-pass-1234';
 const DISPLAY_NAME = 'Visual Tester';
 const CANONICAL_USERNAME = 'visual-tests';
+const SANDBOX_ADMIN_USERNAME = 'visual-sandbox-admin';
 const MAX_SEEDED_WORKERS = 8;
 
 /**
@@ -634,6 +635,68 @@ async function ensureAdminDemoUser(
 }
 
 /**
+ * Отдельный админ для единственного сценария Sandbox: песочный лист живёт в
+ * его аккаунте и не попадает на дашборд основного админа.
+ */
+async function ensureSandboxAdmin(
+  baseURL: string,
+  adminCookie: string,
+): Promise<VisualAccount> {
+  const registration = await requestJson<{ user?: VisualUser }>(
+    baseURL,
+    '/api/auth/register',
+    {
+      method: 'POST',
+      body: JSON.stringify({
+        username: SANDBOX_ADMIN_USERNAME,
+        password: PASSWORD,
+        displayName: 'Sandbox Admin',
+        recoveryPhrase: VISUAL_RECOVERY_PHRASE,
+      }),
+    },
+  );
+  if (registration.status !== 200 && registration.status !== 409) {
+    throw new Error(
+      `регистрация ${SANDBOX_ADMIN_USERNAME}: HTTP ${registration.status}`,
+    );
+  }
+
+  let uid = registration.body.user?.uid;
+  if (!uid) {
+    const list = await requestJson<{
+      users: { uid: string; username: string }[];
+    }>(baseURL, '/api/admin/users', { headers: { cookie: adminCookie } });
+    uid = list.body.users.find(
+      (candidate) => candidate.username === SANDBOX_ADMIN_USERNAME,
+    )?.uid;
+  }
+  if (!uid) throw new Error('uid второго админа не найден');
+
+  const patched = await requestJson<{ success: boolean }>(
+    baseURL,
+    `/api/admin/users/${uid}`,
+    {
+      method: 'PATCH',
+      headers: { cookie: adminCookie },
+      body: JSON.stringify({ role: 'admin' }),
+    },
+  );
+  if (patched.status !== 200 || !patched.body.success) {
+    throw new Error(`PATCH роли второго админа: HTTP ${patched.status}`);
+  }
+
+  const signed = await signIn(baseURL, SANDBOX_ADMIN_USERNAME, PASSWORD);
+  return {
+    username: SANDBOX_ADMIN_USERNAME,
+    password: PASSWORD,
+    user: { ...signed.user, hasRecoveryPhrase: true },
+    characters: {},
+    dndId: '',
+    dhId: '',
+  };
+}
+
+/**
  * Подготовить админа и демо-аккаунты для снимков /admin. `null` — нет
  * доступа к data-dir (запуск с --base-url или прямой `playwright test`):
  * админские тесты в этом случае пропускаются, остальная регрессия работает.
@@ -641,7 +704,10 @@ async function ensureAdminDemoUser(
 async function seedAdminFixtures(
   baseURL: string,
   fixtures: GameVisualFixture[],
-): Promise<VisualAccount | null> {
+): Promise<{
+  admin: VisualAccount;
+  sandboxAdmin: VisualAccount | null;
+} | null> {
   const dataDir = process.env.DCS_VISUAL_DATA_DIR;
   if (!dataDir) {
     console.log(
@@ -693,7 +759,7 @@ async function seedAdminFixtures(
       ));
     }
 
-    return {
+    const admin: VisualAccount = {
       username: credentials.username,
       password: credentials.password,
       user: { ...user, hasRecoveryPhrase: true },
@@ -701,6 +767,18 @@ async function seedAdminFixtures(
       dndId: '',
       dhId: '',
     };
+
+    let sandboxAdmin: VisualAccount | null = null;
+    try {
+      sandboxAdmin = await ensureSandboxAdmin(baseURL, first.cookie);
+    } catch (error) {
+      console.warn(
+        '[visual] Sandbox: отдельный админ не подготовлен —',
+        error instanceof Error ? error.message : error,
+      );
+    }
+
+    return { admin, sandboxAdmin };
   } catch (error) {
     console.warn(
       '[visual] /admin: не удалось подготовить данные —',
@@ -936,7 +1014,7 @@ export default async function globalSetup(config: FullConfig): Promise<void> {
   seedShareFixtures([...workers, guest]);
   seedHistoryFixtures([...workers, guest]);
 
-  const admin = await seedAdminFixtures(baseURL, fixtures);
+  const adminFixtures = await seedAdminFixtures(baseURL, fixtures);
 
   const state: VisualStateFile = {
     baseURL,
@@ -945,7 +1023,10 @@ export default async function globalSetup(config: FullConfig): Promise<void> {
     projects,
     workersPerProject: workerCount,
     guest,
-    ...(admin ? { admin } : {}),
+    ...(adminFixtures?.admin ? { admin: adminFixtures.admin } : {}),
+    ...(adminFixtures?.sandboxAdmin
+      ? { sandboxAdmin: adminFixtures.sandboxAdmin }
+      : {}),
   };
 
   fs.mkdirSync(path.dirname(STATE_FILE), { recursive: true });
@@ -959,6 +1040,6 @@ export default async function globalSetup(config: FullConfig): Promise<void> {
       `игры: ${seeded} ` +
       `аккаунтов: ${workers.length} + guest ` +
       `(${projects.length} проектов × ${workerCount} воркеров) ` +
-      `admin=${admin ? admin.username : '—'}`,
+      `admin=${adminFixtures?.admin.username ?? '—'}`,
   );
 }
