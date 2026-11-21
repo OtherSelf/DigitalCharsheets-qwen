@@ -144,6 +144,55 @@ test.describe('лист D&D — чтение', { tag: '@plugin:dnd5e' }, () => {
       await screenshotPage(page, 'sheet-dnd-mobile-companions-en.png');
     },
   );
+
+  test(
+    'mobile: Companions и вдохновение без наложения',
+    { tag: '@mobile' },
+    async ({ page, context }) => {
+      await prepare(context);
+      await openApp(page, sheetPath(gameCharacterId('dnd')));
+      await openMobileSection(page, 'Companions', 'companions-section');
+
+      const heading = page.getByRole('heading', {
+        name: 'Companions',
+        exact: true,
+      });
+      const addButton = page.getByRole('button', { name: 'Add Companion' });
+      await expect(heading).toBeVisible();
+      await expect(addButton).toBeVisible();
+      await expect(heading).toHaveText('Companions');
+
+      const title = await heading.boundingBox();
+      const button = await addButton.boundingBox();
+      expect(title && button, 'заголовок и кнопка имеют размер').toBeTruthy();
+      // Прямоугольники не пересекаются: либо по горизонтали, либо кнопка
+      // перенесена на вторую строку и они разделены по вертикали.
+      const separated =
+        title!.x + title!.width <= button!.x + 1 ||
+        button!.x + button!.width <= title!.x + 1 ||
+        title!.y + title!.height <= button!.y + 1 ||
+        button!.y + button!.height <= title!.y + 1;
+      expect(
+        separated,
+        `заголовок ${JSON.stringify(title)} и кнопка ${JSON.stringify(button)} пересекаются`,
+      ).toBe(true);
+
+      const inspiration = page.getByRole('group', { name: 'Inspiration' });
+      await expect(inspiration).toBeVisible();
+      for (const action of ['Decrease', 'Increase']) {
+        const target = inspiration.getByRole('button', { name: action });
+        const box = await target.boundingBox();
+        expect(box, `кнопка ${action} имеет размер`).not.toBeNull();
+        expect(box!.width, `ширина ${action}`).toBeGreaterThanOrEqual(32);
+        expect(box!.height, `высота ${action}`).toBeGreaterThanOrEqual(32);
+      }
+
+      // Усечённое имя обязано раскрываться подсказкой.
+      await expect(
+        page.getByRole('heading', { name: 'Seraphina Vael' }),
+      ).toHaveAttribute('title', 'Seraphina Vael');
+    },
+  );
 });
 
 /**
