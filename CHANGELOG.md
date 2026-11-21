@@ -11,6 +11,72 @@ format changes.
 
 ## [Unreleased]
 
+## [0.15.0] - 2026-11-22
+
+A public about page and a core footer, and the phone gets layouts that fit.
+
+### Added
+
+- A core footer on all 11 screens: version, short commit, branch (from `md` up),
+  repository, MIT license and a link to `/about`. It sits in the flow at the end
+  of each page's scrollable `main` and is pinned to the bottom of a short page,
+  so it no longer leaves a gap under the content.
+- A public `/about` page, readable without signing in: what the project is, the
+  stack, where `data/` lives and that it stays on your own server, the
+  intellectual-property disclaimer, links to the source, changelog, license and
+  issue tracker, and the running version.
+- The tab icon is served on every page: `app/favicon.ico` covers `/login`,
+  `/settings` and `/admin`, where the dynamic component is not mounted, so
+  `/favicon.ico` no longer answers 404, and a plugin icon returns to the core
+  one after an SPA transition.
+- Below 768 px the admin games list and the bulk stats editor render a card per
+  row instead of a table cropped halfway: the status select, the visibility
+  checkbox and the gear stay reachable, card fields are labelled from the
+  column headers, and the table is kept from `md` up with inner scroll.
+
+### Changed
+
+- The version label lives only in the footer: it is gone from the login card,
+  the demo landing and the profile menu, and the footer shares one
+  `/api/version` request per tab through `useAppVersion()`.
+- The 768 and 1300 px thresholds are declared once in `src/lib/viewport.ts` and
+  read through `useViewportFlags()`; the unused `ui/sidebar.tsx` and
+  `use-mobile.tsx` (a second copy of 768) were removed, and the manual
+  `viewport`/`title` tags in the root layout gave way to the `metadata` and
+  `viewport` exports.
+- Plugin versions: `dh1` 1.9.0, `dh2` 1.9.0, `dnd5e` 1.7.0 (`sandbox` stays
+  1.1.0). The sheet `schemaVersion` is unchanged (Dark Heresy `5`, D&D 5e `2`),
+  and `PLUGIN_API_VERSION` stays `1.4.0`.
+
+### Fixed
+
+- Compact navigation scrolls again. D&D had no section anchors at all and Dark
+  Heresy lacked skills/talents, so tapping the rail did nothing; the page now
+  scrolls `main` to the section after the layout settles, with padding and
+  clamping, repeats the scroll on a second tap, and warns in development when an
+  id does not resolve.
+- The rail itself scrolls on a short screen: on 360×640 the last buttons used to
+  sit outside the window.
+- Guest links use the mobile layout on the phone: the DH and D&D share pages no
+  longer scroll sideways, their panels stack in a column, and no compact rail
+  appears — a guest has no rail to switch sections with.
+- iOS no longer zooms the page when a field gets focus: fields below 768 px use
+  16 px on focus.
+- Touch targets on the phone: dialog and sheet close buttons and destructive
+  icons are 40×40, the D&D inspiration `±` and the rail buttons are at least
+  32×32 with accessible names, and the DH characteristic dots keep their 12 px
+  look inside a 24×24 hit area, so a tap 10 px off centre still counts.
+- D&D "Add Companion" no longer covers the "Companions" heading and stays on its
+  own line when the width is short; the inspiration pill is a labelled group;
+  captions that were clipped ("FATE POIN…", "Passive Wisdom (Perception)",
+  "Proficiency Bonus") wrap or get a hover title.
+- The demo buttons on the landing wrap their captions, so the Russian
+  "Dungeons & Dragons · 5-я редакция" no longer pushes the grid 8 px past
+  `main`.
+- The document no longer carries two `viewport` meta tags, and removing the
+  `<link>` nodes in `DynamicFavicon` no longer breaks the next SPA transition
+  (`removeChild of null`).
+
 ## [0.14.0] - 2026-11-21
 
 Every shipped game gets its own typeface, and right sheets close with a swipe.
