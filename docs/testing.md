@@ -336,6 +336,13 @@ bash scripts/visual.sh --base-url http://127.0.0.1:3000
 - Dense screens (admin games, bulk editor) render cards below 768 px and the
   table from `md` up. The switch is `useViewportFlags()` and only one tree is in
   the DOM, so text queries and labels are not duplicated.
+- The tab icon is part of the shell, not of a screen: `src/app/favicon.ico` is
+  served at `/favicon.ico` and injected by Next on every page, and
+  `DynamicFavicon` keeps one `#dynamic-favicon` link that it updates instead of
+  removing React-owned links (removing them made the next client navigation
+  crash with `removeChild of null`). The mobile scenario `иконка вкладки`
+  checks the core pages, that both sheets serve their own icon with 200 and
+  that the icon switches back after a client-side navigation.
 - Touch targets: ordinary buttons are at least 32×32 px below 768 px; the
   dialog and sheet close buttons (test ids `dialog-close` / `sheet-close`) and
   destructive icon buttons are at least 40×40 px. The DH characteristic dots

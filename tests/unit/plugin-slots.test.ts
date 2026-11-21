@@ -169,6 +169,20 @@ describe('слоты-функции плагинов', () => {
     );
   });
 
+  it('иконка вкладки каждой игры — свой файл', async () => {
+    const owners = new Map<string, string>();
+    for (const { manifest } of gamePlugins) {
+      const favicon = String((await slotsFor(manifest.id)).favicon ?? '');
+      expect(favicon, manifest.id).toBeTruthy();
+      const previous = owners.get(favicon);
+      expect(
+        previous,
+        `${manifest.id} делит иконку с ${previous ?? '—'}: ${favicon}`,
+      ).toBeUndefined();
+      owners.set(favicon, manifest.id);
+    }
+  });
+
   it('иконка вкладки каждой игры лежит в её папке', async () => {
     for (const { manifest } of gamePlugins) {
       const id = manifest.id;
