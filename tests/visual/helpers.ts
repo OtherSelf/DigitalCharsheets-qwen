@@ -99,6 +99,29 @@ export async function prepare(
     );
   }
 
+  // Подпись сборки в подвале и в меню берётся из `/api/version`. Фикстура
+  // подменяет только её: иначе каждый выпуск меняет эталоны, а диф одного
+  // глифа проходит под порогом и эталон тихо врёт. `buildId` остаётся
+  // настоящим — по нему `BuildWatcher` решает, что сервер пересобрался.
+  await context.route('**/api/version', async (route) => {
+    const response = await route.fetch();
+    const payload = (await response.json().catch(() => ({}))) as Record<
+      string,
+      unknown
+    >;
+    await route.fulfill({
+      response,
+      json: {
+        ...payload,
+        version: '0.0.0-test',
+        commit: null,
+        commitShort: '0000000',
+        branch: 'test',
+        buildDate: '2026-01-01T00:00:00.000Z',
+      },
+    });
+  });
+
   // Сессия теперь httpOnly-cookie: localStorage-снимка недостаточно,
   // поэтому логинимся в cookie-jar контекста (он общий для страниц и
   // context.request).
@@ -490,11 +513,23 @@ export async function expectNoHorizontalOverflow(page: Page): Promise<void> {
   const overflow = await page.evaluate(() => {
     const doc = document.documentElement;
     const body = document.body;
-    return Math.max(doc.scrollWidth, body.scrollWidth) - window.innerWidth;
+    const main = document.querySelector('main');
+    return {
+      page: Math.max(doc.scrollWidth, body.scrollWidth) - window.innerWidth,
+      // Внутренний скролл `main` не виден в `scrollWidth` документа: лист
+      // может переполняться внутри контейнера при «чистом» документе.
+      // Намеренные скроллеры (таблица в `overflow-x-auto`) на `main` не
+      // влияют — их содержимое остаётся внутри своего контейнера.
+      main: main ? main.scrollWidth - main.clientWidth : 0,
+    };
   });
   expect(
-    overflow,
+    overflow.page,
     'появился горизонтальный скролл страницы',
+  ).toBeLessThanOrEqual(1);
+  expect(
+    overflow.main,
+    'появился горизонтальный скролл внутри main',
   ).toBeLessThanOrEqual(1);
 }
 

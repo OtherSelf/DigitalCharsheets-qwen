@@ -641,6 +641,72 @@ test.describe('адаптивность', () => {
   );
 
   test(
+    'подпись версии в снимках не зависит от релиза',
+    { tag: '@mobile' },
+    async ({ page, context }) => {
+      await prepare(context, { authenticated: false });
+      await openApp(page, '/login');
+
+      // Фикстура `/api/version` из `prepare()`: иначе эталон стареет при
+      // каждом выпуске, а диф одного глифа проходит под порогом.
+      const version = page.getByTestId('app-version');
+      await expect(version).toBeVisible();
+      await expect(version).toContainText('0.0.0-test');
+      await expect(version).toContainText('0000000');
+    },
+  );
+
+  test(
+    'узкий экран 360×640: дашборд, лист и диалог без переполнения',
+    { tag: '@mobile' },
+    async ({ page, context }) => {
+      await prepare(context);
+      // Отдельного проекта под 360×640 нет: меняем ширину на лету, чтобы
+      // не плодить второй набор эталонов.
+      await page.setViewportSize({ width: 360, height: 640 });
+
+      await openApp(page, '/');
+      await expectNoHorizontalOverflow(page);
+
+      await openApp(page, sheetPath(getState().dhId));
+      await expectNoHorizontalOverflow(page);
+
+      await openMobileSection(page, 'Inventory', 'inventory-section');
+      await expect(
+        page.locator('#inventory-section:visible').first(),
+      ).toBeVisible();
+      await expectNoHorizontalOverflow(page);
+
+      await openDialog(page, 'House Rules', true);
+      await expect(page.getByRole('dialog')).toBeVisible();
+      await expectNoHorizontalOverflow(page);
+
+      // Ландшафт 640×360: рейл выше окна и обязан прокручиваться, иначе
+      // нижние пункты недостижимы. Это тот же телефонный режим, но низкий.
+      await page.keyboard.press('Escape');
+      await page.setViewportSize({ width: 640, height: 360 });
+      await openApp(page, sheetPath(getState().dhId));
+
+      const rail = page.getByRole('navigation');
+      const railGeometry = await rail.evaluate((element) => ({
+        scrollHeight: element.scrollHeight,
+        clientHeight: element.clientHeight,
+      }));
+      expect(
+        railGeometry.scrollHeight,
+        'в ландшафте рейл выше окна',
+      ).toBeGreaterThan(railGeometry.clientHeight);
+
+      // Клик по последнему пункту авто-прокручивает рейл — пункт достижим.
+      await openMobileSection(page, 'Inventory', 'inventory-section');
+      await expect(
+        page.locator('#inventory-section:visible').first(),
+      ).toBeVisible();
+      await expectNoHorizontalOverflow(page);
+    },
+  );
+
+  test(
     'stats-editor: карточки персонажей вместо широкой таблицы',
     { tag: '@mobile' },
     async ({ page, context }) => {
