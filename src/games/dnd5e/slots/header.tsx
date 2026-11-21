@@ -80,7 +80,11 @@ export function DndHeaderActions({
 
   return (
     <>
-      <div className="border-primary/20 bg-primary/10 flex shrink-0 items-center gap-2 rounded-full border px-2 py-1 md:ml-2 md:px-3">
+      <div
+        role="group"
+        aria-label={t('common.inspiration')}
+        className="border-primary/20 bg-primary/10 flex shrink-0 items-center gap-2 rounded-full border px-2 py-1 md:ml-2 md:px-3"
+      >
         {/* На узком планшете (768..1023) подпись скрывается, чтобы имя
             персонажа не сжималось: смысл «+/-» понятен по иконкам. */}
         <span className="header-field-label text-primary hidden text-[10px] font-bold tracking-widest uppercase sm:inline">
@@ -90,7 +94,8 @@ export function DndHeaderActions({
           <Button
             size="icon"
             variant="ghost"
-            className="text-primary hover:bg-primary/20 h-6 w-6"
+            aria-label={t('common.decrease')}
+            className="text-primary hover:bg-primary/20 h-8 w-8 md:h-6 md:w-6"
             onClick={() => handleInspirationChange(-1)}
           >
             <Minus className="h-3 w-3" />
@@ -101,7 +106,8 @@ export function DndHeaderActions({
           <Button
             size="icon"
             variant="ghost"
-            className="text-primary hover:bg-primary/20 h-6 w-6"
+            aria-label={t('common.increase')}
+            className="text-primary hover:bg-primary/20 h-8 w-8 md:h-6 md:w-6"
             onClick={() => handleInspirationChange(1)}
           >
             <Plus className="h-3 w-3" />

@@ -49,6 +49,8 @@ export const enTranslations: Record<string, string> = {
   'common.showEditButtons': 'Edit Buttons',
   'common.hideEditButtons': 'Edit Buttons',
   'common.inspiration': 'Inspiration',
+  'common.decrease': 'Decrease',
+  'common.increase': 'Increase',
   'common.characterName': 'Character Name',
   'common.description': 'Description',
   'common.current': 'Current',
