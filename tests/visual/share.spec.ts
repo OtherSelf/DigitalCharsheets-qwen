@@ -88,6 +88,7 @@ test.describe('гостевая ссылка', () => {
 
       await expect(page.getByTestId('shared-read-only-banner')).toBeVisible();
       await expectNoRawI18nKeys(page, 'гостевая ссылка mobile (en)');
+      await expectNoHorizontalOverflow(page);
       await screenshotPage(page, 'share-sheet-mobile-en.png');
     },
   );
