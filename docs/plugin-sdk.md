@@ -541,17 +541,20 @@ import type { PluginFont } from '@/games/plugin-api';
 export const pluginFont: PluginFont = { className: '<id>-theme-font' };
 ```
 
-- The class must be non-empty: it is the host's signal to set
-  `data-font-ready`; the plugin's CSS decides where the family applies.
+- The class must be non-empty: the host marks the wrapper with
+  `data-font-expected` from the manifest and with `data-font-ready` once the
+  class is applied; the plugin's CSS decides where the family applies.
 - Two subsets, one family: a Latin-only file silently falls back to the host
   face in Cyrillic, so both `en` and `ru` need a face with Cyrillic coverage.
 - `next/font/local` is allowed by `scripts/plugins/boundaries.json` (the rest of
   `next/*` is not), but Turbopack hoists the CSS and preload links of a font
   module imported from a lazy chunk into every page. Prefer `@font-face` in the
   game's CSS module when the font belongs to the sheet only.
-- Visual tests wait for `data-font-ready` **and** `document.fonts.ready`: the
-  attribute arrives when the chunk is applied, the `woff2` may still load.
-- DH1 is the first shipped game to declare `font`;
+- Visual tests wait for `data-font-expected` → `data-font-ready` **and**
+  `document.fonts.ready`: the ready attribute arrives when the chunk is
+  applied, the `woff2` may still load, and a screenshot taken earlier keeps the
+  host face.
+- DH1 and DH2 are the first shipped games to declare `font`;
   `tests/fixtures/example-plugin` still covers the object shape on its own.
 
 The core cannot be reached from a theme: there is no way to pass CSS, class
