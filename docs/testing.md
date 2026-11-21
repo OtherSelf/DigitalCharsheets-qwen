@@ -330,6 +330,12 @@ bash scripts/visual.sh --base-url http://127.0.0.1:3000
   are stacked by a rule in the plugin's `sheet.module.css`. `share.spec.ts`
   asserts that neither the document nor `main` overflows and that all sections
   are present, for both seeded sheets.
+- Inputs take `font-size: 16px` on focus below 768 px (`globals.css`), so iOS
+  does not zoom the page; the mobile editing scenario asserts the computed size
+  on a focused field and blurs it before taking the screenshot.
+- Dense screens (admin games, bulk editor) render cards below 768 px and the
+  table from `md` up. The switch is `useViewportFlags()` and only one tree is in
+  the DOM, so text queries and labels are not duplicated.
 - Touch targets: ordinary buttons are at least 32×32 px below 768 px; the
   dialog and sheet close buttons (test ids `dialog-close` / `sheet-close`) and
   destructive icon buttons are at least 40×40 px. The DH characteristic dots
