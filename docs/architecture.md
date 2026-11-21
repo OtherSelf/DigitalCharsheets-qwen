@@ -136,6 +136,12 @@ src/lib/* (server-only)
 ```
 
 - UI pages are mostly client components; they fetch the API with the cookie.
+- The core footer (`SiteFooter`: version, commit, branch, repository, license,
+  `/about`) is rendered at the end of each page's scrollable `main`, not in the
+  root layout: pages own `h-dvh` shells and scroll their own `main`, so a bar
+  under `{children}` would sit outside the viewport and never appear. A shared
+  `AppFrame` that would unify these shells is a separate task (see
+  `_BACKLOG.md`).
 - `GET /admin` is a public HTML shell, but all data comes from `/api/admin/*`,
   which returns 401/403 without an active administrator. Client-side role is
   only used to show/hide the menu item.
