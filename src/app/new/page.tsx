@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 
 import { Header } from '@/components/header';
+import { SiteFooter } from '@/components/layout/site-footer';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -324,6 +325,7 @@ export default function ManualCharacterCreationPage() {
             </div>
           )}
         </div>
+        <SiteFooter />
       </main>
     </div>
   );

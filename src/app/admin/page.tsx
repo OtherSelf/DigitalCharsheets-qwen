@@ -23,6 +23,7 @@ import { UserCharactersDialog } from '@/components/admin/user-characters-dialog'
 import { UserDeleteDialog } from '@/components/admin/user-delete-dialog';
 import { UserEditDialog } from '@/components/admin/user-edit-dialog';
 import { Header } from '@/components/header';
+import { SiteFooter } from '@/components/layout/site-footer';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -546,6 +547,7 @@ export default function AdminPage() {
             </CardContent>
           </Card>
         </div>
+        <SiteFooter />
       </main>
 
       <UserEditDialog

@@ -8,6 +8,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { AlertCircle, Minus, Plus, RotateCcw, Save } from 'lucide-react';
 
 import { Header } from '@/components/header';
+import { SiteFooter } from '@/components/layout/site-footer';
 import { DeleteAccountCard } from '@/components/settings/delete-account-card';
 import { SessionsCard } from '@/components/settings/sessions-card';
 import { Button } from '@/components/ui/button';
@@ -334,6 +335,7 @@ export default function ProfileSettingsPage() {
               формы недопустимы и сломали бы submit профиля. */}
           <DeleteAccountCard />
         </div>
+        <SiteFooter />
       </main>
     </div>
   );

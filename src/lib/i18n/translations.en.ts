@@ -48,6 +48,28 @@ export const enTranslations: Record<string, string> = {
   'common.showNotes': 'Show Notes',
   'common.showEditButtons': 'Edit Buttons',
   'common.hideEditButtons': 'Edit Buttons',
+  'about.title': 'About this project',
+  'about.subtitle':
+    'Self-hosted character sheets for tabletop RPGs: one server, JSON files, no third-party tracking.',
+  'about.whatTitle': 'What it is',
+  'about.whatBody':
+    'Digital Character Sheets keeps characters for several tabletop systems in one place: create a sheet, edit it in place, track history, share a read-only link. It runs on your own server, and every sheet is a JSON file in the data directory.',
+  'about.stackTitle': 'Stack',
+  'about.stackBody':
+    'Next.js (App Router) and React with Tailwind CSS. Games are plugins with a manifest: the core knows no rules, it renders sheets and navigation through the plugin registry. Storage is the file system, without a database.',
+  'about.privacyTitle': 'Your data',
+  'about.privacyBody':
+    'Accounts, sheets, history and sessions live in the data directory of this server. Nothing is sent to third parties: no analytics, no external fonts at runtime, no trackers. A share link is read-only and can be revoked at any time.',
+  'about.disclaimerTitle': 'Disclaimer',
+  'about.disclaimerBody':
+    'The project is unofficial and is not affiliated with the publishers of the game systems. Rules text and trademarks belong to their owners; the application only stores what you enter.',
+  'about.linksTitle': 'Links',
+  'about.linksBody': 'Source code, changelog, license and issue tracker.',
+  'about.contacts': 'Issues',
+  'footer.label': 'Site footer',
+  'footer.repository': 'Source code',
+  'footer.license': 'MIT license',
+  'footer.about': 'About',
   'common.inspiration': 'Inspiration',
   'common.decrease': 'Decrease',
   'common.increase': 'Increase',

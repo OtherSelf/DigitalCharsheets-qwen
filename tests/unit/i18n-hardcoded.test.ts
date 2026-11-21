@@ -26,6 +26,9 @@ const ALLOWED_TEXT = new Set([
   'Dungeons & Dragons',
   'Dark Heresy',
   'Warhammer 40k: Dark Heresy',
+  // Имена/файлы, которые не переводятся: лицензия и changelog в «О проекте».
+  'MIT',
+  'CHANGELOG',
 ]);
 const ALLOWED_UNITS = /^(pt\)|ft|d)$/;
 const ENTITY = /^&[a-z]+;$/;

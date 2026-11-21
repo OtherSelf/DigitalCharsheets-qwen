@@ -137,6 +137,8 @@ const CORE_NAMESPACES = [
   'share',
   'history',
   'narrative',
+  'footer',
+  'about',
 ];
 // Домены словарей плагинов — из самих словарей: у редакции бывает несколько
 // namespace (dnd5e и legacy dnd.*), и перечислять их руками в тесте хоста

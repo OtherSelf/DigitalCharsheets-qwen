@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { History, Loader2, Trash2 } from 'lucide-react';
 
 import { Header } from '@/components/header';
+import { SiteFooter } from '@/components/layout/site-footer';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -455,6 +456,7 @@ export function HistoryView({ character }: { character: Character }) {
             </div>
           )}
         </div>
+        <SiteFooter />
       </main>
 
       <AlertDialog open={clearOpen} onOpenChange={setClearOpen}>

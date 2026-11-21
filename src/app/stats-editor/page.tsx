@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { Check, Save } from 'lucide-react';
 
 import { Header } from '@/components/header';
+import { SiteFooter } from '@/components/layout/site-footer';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
@@ -475,6 +476,7 @@ export default function StatsEditorPage() {
             </Card>
           )}
         </div>
+        <SiteFooter />
       </main>
     </div>
   );

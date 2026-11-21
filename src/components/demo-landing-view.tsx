@@ -3,6 +3,7 @@
 import { DemoLanding } from '@/components/demo-landing';
 import { Header } from '@/components/header';
 import { AppVersion } from '@/components/layout/app-version';
+import { SiteFooter } from '@/components/layout/site-footer';
 
 /**
  * ─── LANDMARK: SHARED_DEMO_LANDING_VIEW ────────────────────────────────────
@@ -28,6 +29,7 @@ export function DemoLandingView() {
             <AppVersion />
           </div>
         </div>
+        <SiteFooter />
       </main>
     </div>
   );
