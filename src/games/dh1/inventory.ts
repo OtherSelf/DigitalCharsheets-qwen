@@ -53,8 +53,11 @@ export interface InventoryTotals {
 }
 
 /**
- * Итоги инвентаря: вес и цена по строкам без `lost`. Пустые вес/цена
- * считаются нулём, чтобы сумма не зависела от того, заполнены ли поля.
+ * Итоги инвентаря: вес и цена по строкам без `lost`.
+ *
+ * `weight` и `price` — «за единицу»: итог умножается на `readQuantity`.
+ * Старые листы не мигрируются, количество подставляется на чтении (D6);
+ * пустые вес/цена считаются нулём, чтобы сумма не зависела от заполнения.
  */
 export function inventoryTotals(
   items: readonly InventoryItem[],
@@ -63,8 +66,9 @@ export function inventoryTotals(
   let price = 0;
   for (const item of items) {
     if (readStatus(item) === 'lost') continue;
-    weight += readWeight(item) ?? 0;
-    price += readPrice(item) ?? 0;
+    const quantity = readQuantity(item);
+    weight += (readWeight(item) ?? 0) * quantity;
+    price += (readPrice(item) ?? 0) * quantity;
   }
   return { weight, price };
 }
