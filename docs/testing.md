@@ -301,6 +301,20 @@ bash scripts/visual.sh --update-snapshots
 bash scripts/visual.sh --base-url http://127.0.0.1:3000
 ```
 
+### Mobile sheets (below 768 px)
+
+- The sheet is a compact React view, not a CSS adaptivity layer: below 768 px
+  one section and the icon rail are rendered at a time. Sheet layout rules for
+  that range belong to the plugin (`src/games/<id>/sheet.module.css`); a
+  `.dh-sheet`-style selector in `globals.css` is a core-knows-games violation
+  caught by `npm run plugins:purity`.
+- Mobile baselines live in two projects: `mobile` (host screens) and
+  `mobile-games` (plugin sheets). A screenshot taken in one width is never
+  compared in another, so a sheet scenario at 412 px belongs to `mobile-games`
+  even when the host owns the page around it.
+- Thresholds live in `src/lib/viewport.ts`; `tests/unit/viewport.test.ts` guards
+  the numbers at 767/768/1299/1300 and the fractional width under browser zoom.
+
 ### Admin screenshots
 
 [`tests/visual/admin.spec.ts`](../tests/visual/admin.spec.ts) covers the user
