@@ -11,9 +11,9 @@ import {
 import { readGuestShare } from './state';
 
 /**
- * Публичная гостевая ссылка: страница без логина, баннер read-only, `inert`
- * на листе и единый экран для недействительного токена. Диалог владельца
- * снимается отдельно: у воркера уже есть активная ссылка из global-setup.
+ * Публичная гостевая ссылка: страница без логина, баннер read-only, ввод
+ * закрыт, но свёртки и история живые; недействительный токен — один экран.
+ * Диалог владельца снимается отдельно: у воркера уже есть активная ссылка.
  */
 test.describe('гостевая ссылка', () => {
   test(
@@ -27,17 +27,51 @@ test.describe('гостевая ссылка', () => {
       await openApp(page, `/share/${share!.token}`);
 
       await expect(page.getByTestId('shared-read-only-banner')).toBeVisible();
-      await expect(page.getByTestId('shared-sheet-inert')).toHaveAttribute(
-        'inert',
-        '',
-      );
+      const sheet = page.getByTestId('shared-sheet');
+      await expect(sheet).toBeVisible();
+      await expect(page.getByTestId('shared-sheet-inert')).toHaveCount(0);
       await expect(
         page.getByRole('heading', { name: 'Seraphina Vael' }),
       ).toBeVisible();
       await expect(page.getByTestId('share-button')).toHaveCount(0);
       await expect(page.getByTestId('shared-tab-history')).toHaveCount(0);
+
+      // Ввод закрыт, но интерфейс живой: все видимые textarea read-only,
+      // чекбоксы/переключатели disabled.
+      const editableTextareas = await sheet
+        .locator('textarea')
+        .evaluateAll(
+          (nodes) =>
+            nodes.filter(
+              (node) =>
+                (node as HTMLElement).offsetParent !== null &&
+                !(node as HTMLTextAreaElement).readOnly,
+            ).length,
+        );
+      expect(editableTextareas, 'видимые textarea только для чтения').toBe(0);
+      const enabledToggles = await page
+        .locator('button[role="checkbox"]:not([disabled])')
+        .count();
+      expect(enabledToggles, 'переключатели данных выключены').toBe(0);
+
       await expectNoRawI18nKeys(page, 'гостевая ссылка (en)');
       await screenshotPage(page, 'share-sheet-en.png');
+
+      // Сворачивание секции работает без inert (после снимка, чтобы не
+      // менять его состояние).
+      const companionsToggle = page
+        .getByRole('button', { name: /Companions|Spell List/ })
+        .first();
+      await expect(
+        companionsToggle,
+        'на листе есть секция для сворачивания',
+      ).toHaveCount(1);
+      const before = await companionsToggle.getAttribute('data-state');
+      await companionsToggle.click();
+      await expect(companionsToggle).not.toHaveAttribute(
+        'data-state',
+        before ?? 'open',
+      );
     },
   );
 
