@@ -137,7 +137,7 @@ describe('character schema v1', () => {
     expect(character.gameSystem).toBe('Dungeons & Dragons');
   });
 
-  it('startup-обход переписывает legacy-файлы и второй проход идемпотентен', () => {
+  it('startup-обход переписывает legacy-файлы и второй проход идемпотентен', async () => {
     const uid = '33333333-3333-4333-8333-333333333333';
     const charsDir = path.join(dataDir, 'users', uid, 'characters');
     fs.mkdirSync(charsDir, { recursive: true });
@@ -150,7 +150,7 @@ describe('character schema v1', () => {
     delete draft.schemaVersion;
     fs.writeFileSync(file, JSON.stringify(draft, null, 2), 'utf8');
 
-    const first: NormalizeCharactersReport = normalizeAllCharacters();
+    const first: NormalizeCharactersReport = await normalizeAllCharacters();
     expect(first).toMatchObject({ total: 1, updated: 1 });
     expect(first.issues.join(' ')).toContain('поля DH1 перенесены');
     const stored = JSON.parse(fs.readFileSync(file, 'utf8'));
@@ -158,11 +158,11 @@ describe('character schema v1', () => {
     expect(stored.divination).toBe('d100-10');
     expect(stored.divinationEffect).toBeUndefined();
 
-    const second = normalizeAllCharacters();
+    const second = await normalizeAllCharacters();
     expect(second).toMatchObject({ total: 1, updated: 0, issues: [] });
   });
 
-  it('не перезаписывает файл с более новой версией схемы', () => {
+  it('не перезаписывает файл с более новой версией схемы', async () => {
     const uid = '44444444-4444-4444-8444-444444444444';
     const charsDir = path.join(dataDir, 'users', uid, 'characters');
     fs.mkdirSync(charsDir, { recursive: true });
@@ -174,7 +174,7 @@ describe('character schema v1', () => {
     const raw = JSON.stringify(future, null, 2);
     fs.writeFileSync(file, raw, 'utf8');
 
-    const report = normalizeAllCharacters();
+    const report = await normalizeAllCharacters();
     expect(report.updated).toBe(0);
     expect(report.issues.join(' ')).toContain('новее поддерживаемой');
     expect(fs.readFileSync(file, 'utf8')).toBe(raw);

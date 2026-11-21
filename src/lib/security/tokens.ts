@@ -1,5 +1,5 @@
 import crypto from 'crypto';
-import fs from 'fs';
+import fs from 'fs/promises';
 import path from 'path';
 
 import { getRecoveryTokensFile } from '../data-dir';
@@ -67,10 +67,10 @@ function emptyTokensFile(): TokensFile {
  * Прочитать файл. Битый/чужой файл считается пустым: восстановление не
  * должно падать из-за обрезанного JSON, а «нет токена» — безопасный ответ.
  */
-function readTokensFile(): TokensFile {
+async function readTokensFile(): Promise<TokensFile> {
   let raw: string;
   try {
-    raw = fs.readFileSync(getRecoveryTokensFile(), 'utf8');
+    raw = await fs.readFile(getRecoveryTokensFile(), 'utf8');
   } catch {
     return emptyTokensFile();
   }
@@ -110,9 +110,9 @@ function readTokensFile(): TokensFile {
   return { version: FILE_VERSION, tokens };
 }
 
-function writeTokensFile(file: TokensFile): void {
-  fs.mkdirSync(path.dirname(getRecoveryTokensFile()), { recursive: true });
-  writeJsonAtomic(getRecoveryTokensFile(), file);
+async function writeTokensFile(file: TokensFile): Promise<void> {
+  await fs.mkdir(path.dirname(getRecoveryTokensFile()), { recursive: true });
+  await writeJsonAtomic(getRecoveryTokensFile(), file);
 }
 
 /** Убрать просроченные записи; при переполнении — самые старые. */
@@ -137,10 +137,10 @@ function pruneTokens(
  * Выдать одноразовый токен для uid. Возвращает сам токен (его видит только
  * вызывающий) и срок жизни; на диск уходит только хэш.
  */
-export function issueRecoveryToken(
+export async function issueRecoveryToken(
   uid: string,
   options: IssueRecoveryTokenOptions = {},
-): { token: string; expiresAt: string } {
+): Promise<{ token: string; expiresAt: string }> {
   if (!isUid(uid)) {
     throw new Error('Recovery token requires a valid uid.');
   }
@@ -151,15 +151,15 @@ export function issueRecoveryToken(
   const token = crypto.randomBytes(TOKEN_BYTES).toString('base64url');
   const hash = hashRecoveryToken(token);
 
-  withDataLock(() => {
-    const file = readTokensFile();
+  await withDataLock(async () => {
+    const file = await readTokensFile();
     const tokens = pruneTokens(file.tokens, nowMs);
     tokens[hash] = {
       uid,
       createdAt: new Date(nowMs).toISOString(),
       expiresAt,
     };
-    writeTokensFile({ version: FILE_VERSION, tokens });
+    await writeTokensFile({ version: FILE_VERSION, tokens });
   });
 
   return { token, expiresAt };
@@ -170,10 +170,10 @@ export function issueRecoveryToken(
  * токеном вернёт `invalid`. Просроченный токен удаляется и помечается
  * `expired` (для журнала; наружу роут отвечает одинаково — см. SEC-9).
  */
-export function consumeRecoveryToken(
+export async function consumeRecoveryToken(
   token: string,
   options: ConsumeRecoveryTokenOptions = {},
-): ConsumeRecoveryTokenResult {
+): Promise<ConsumeRecoveryTokenResult> {
   if (typeof token !== 'string' || token.trim() === '') {
     return { success: false, reason: 'invalid' };
   }
@@ -181,20 +181,20 @@ export function consumeRecoveryToken(
   const nowMs = options.nowMs ?? Date.now();
   const hash = hashRecoveryToken(token.trim());
 
-  return withDataLock(() => {
-    const file = readTokensFile();
+  return withDataLock(async () => {
+    const file = await readTokensFile();
     // Запись ищем до чистки: иначе просроченный токен выглядел бы как
     // неизвестный, и в журнале не отличить истечение от подделки.
     const record = file.tokens[hash];
     const tokens = pruneTokens(file.tokens, nowMs);
 
     if (!record) {
-      writeTokensFile({ version: FILE_VERSION, tokens });
+      await writeTokensFile({ version: FILE_VERSION, tokens });
       return { success: false, reason: 'invalid' };
     }
 
     delete tokens[hash];
-    writeTokensFile({ version: FILE_VERSION, tokens });
+    await writeTokensFile({ version: FILE_VERSION, tokens });
 
     if (Date.parse(record.expiresAt) <= nowMs) {
       return { success: false, reason: 'expired' };
@@ -207,9 +207,12 @@ export function consumeRecoveryToken(
  * Погасить все токены пользователя. Нужно при смене пароля/фразы и удалении
  * аккаунта: выданный ранее токен не должен пережить смену секретов.
  */
-export function revokeRecoveryTokensForUser(uid: string): number {
-  return withDataLock(() => {
-    const file = readTokensFile();
+export async function revokeRecoveryTokensForUser(
+  uid: string,
+  options: { locked?: boolean } = {},
+): Promise<number> {
+  const run = async (): Promise<number> => {
+    const file = await readTokensFile();
     const tokens = { ...file.tokens };
     let removed = 0;
     for (const [hash, record] of Object.entries(tokens)) {
@@ -217,7 +220,8 @@ export function revokeRecoveryTokensForUser(uid: string): number {
       delete tokens[hash];
       removed += 1;
     }
-    writeTokensFile({ version: FILE_VERSION, tokens });
+    await writeTokensFile({ version: FILE_VERSION, tokens });
     return removed;
-  });
+  };
+  return options.locked ? run() : withDataLock(run);
 }

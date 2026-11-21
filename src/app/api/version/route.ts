@@ -21,8 +21,8 @@ import { getAppInfo } from '@/lib/app-info';
  */
 export const dynamic = 'force-dynamic';
 
-export function GET() {
-  return NextResponse.json(getAppInfo(), {
+export async function GET() {
+  return NextResponse.json(await getAppInfo(), {
     headers: { 'Cache-Control': 'public, max-age=300' },
   });
 }

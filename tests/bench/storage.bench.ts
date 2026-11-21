@@ -78,59 +78,68 @@ describe('writeJsonAtomic', () => {
       notes: 'x'.repeat(100_000),
       items: Array.from({ length: 500 }, (_, index) => ({ id: index })),
     };
-    await bench('100 КБ + fsync', async () => {
-      await writeJsonAtomic(path.join(dataDir, 'bench-write.json'), payload);
-    }).run({ iterations: 10, warmupIterations: 2 });
+    (
+      await bench('100 КБ + fsync', async () => {
+        await writeJsonAtomic(path.join(dataDir, 'bench-write.json'), payload);
+      })
+    ).run({ iterations: 10, warmupIterations: 2 });
   });
 });
 
 describe('character history', () => {
   test('appendHistory при файле ~2 MiB', async ({ bench }) => {
-    await bench(
-      'appendHistory при файле ~2 MiB',
-      {
-        beforeEach: () => {
-          historyFile(2 * 1024 * 1024);
-        },
-      },
-      async () => {
-        await appendHistory(
-          uid,
-          historyId,
-          {
-            changes: [
-              { kind: 'changed', path: 'notes', before: 'a', after: 'b' },
-            ],
-            summary: { changed: 1, added: 0, removed: 0, bulk: 0 },
+    (
+      await bench(
+        'appendHistory при файле ~2 MiB',
+        {
+          beforeEach: () => {
+            historyFile(2 * 1024 * 1024);
           },
-          { maxBytes: 2 * 1024 * 1024 },
-        );
-      },
+        },
+        async () => {
+          await appendHistory(
+            uid,
+            historyId,
+            {
+              changes: [
+                { kind: 'changed', path: 'notes', before: 'a', after: 'b' },
+              ],
+              summary: { changed: 1, added: 0, removed: 0, bulk: 0 },
+            },
+            { maxBytes: 2 * 1024 * 1024 },
+          );
+        },
+      )
     ).run({ iterations: 5, warmupIterations: 1 });
   });
 
   test('readHistory при файле ~2 MiB', async ({ bench }) => {
-    await bench(
-      'readHistory при файле ~2 MiB',
-      {
-        beforeEach: () => {
-          historyFile(2 * 1024 * 1024);
+    (
+      await bench(
+        'readHistory при файле ~2 MiB',
+        {
+          beforeEach: () => {
+            historyFile(2 * 1024 * 1024);
+          },
         },
-      },
-      async () => {
-        await readHistory(uid, historyId);
-      },
+        async () => {
+          await readHistory(uid, historyId);
+        },
+      )
     ).run();
   });
 });
 
 for (const records of [100, 1_000, 10_000]) {
   describe(`sessions.json: ${records} записей`, () => {
-    beforeAll(() => sessionFile(records));
+    beforeAll(async () => sessionFile(records));
 
     test('isSessionActive читает и валидирует файл', async ({ bench }) => {
-      await bench('isSessionActive читает и валидирует файл', async () =>
-        countActiveSessions('user-0'),
+      (
+        await bench(
+          'isSessionActive читает и валидирует файл',
+          async () => await countActiveSessions('user-0'),
+        )
       ).run();
     });
   });

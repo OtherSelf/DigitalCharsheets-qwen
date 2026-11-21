@@ -53,7 +53,7 @@ describe('recovery-роуты (SEC-1, SEC-4)', () => {
     username = 'recover-api',
     password = 'pass-one-1234',
   ) {
-    const result = authenticateUser(username, password);
+    const result = await authenticateUser(username, password);
     return result.user!.uid;
   }
 
@@ -62,7 +62,7 @@ describe('recovery-роуты (SEC-1, SEC-4)', () => {
     phrase = 'amber cobalt lantern',
   ) {
     const uid = await createUser(username);
-    expect(setRecoveryPhrase(uid, phrase)).toBe(true);
+    expect(await setRecoveryPhrase(uid, phrase)).toBe(true);
     return uid;
   }
 
@@ -78,7 +78,7 @@ describe('recovery-роуты (SEC-1, SEC-4)', () => {
   it('/api/auth/phrase сохраняет фразу хэшем текущему пользователю', async () => {
     const uid = await createUser();
     const res = await phraseRoute(
-      json({ phrase: 'Alpha Beta' }, sessionHeaders(uid)),
+      json({ phrase: 'Alpha Beta' }, await sessionHeaders(uid)),
     );
 
     expect(res.status).toBe(200);
@@ -91,7 +91,7 @@ describe('recovery-роуты (SEC-1, SEC-4)', () => {
 
   it('/api/auth/phrase валидирует поля', async () => {
     const uid = await createUser();
-    const res = await phraseRoute(json({}, sessionHeaders(uid)));
+    const res = await phraseRoute(json({}, await sessionHeaders(uid)));
     expect(res.status).toBe(400);
   });
 
@@ -210,9 +210,9 @@ describe('recovery-роуты (SEC-1, SEC-4)', () => {
     expect(readJson(userPaths(dataDir, uid).userFile).passwordHash).toBe(
       before,
     );
-    expect(authenticateUser('recover-api', 'pwned-pass-1234').success).toBe(
-      false,
-    );
+    expect(
+      (await authenticateUser('recover-api', 'pwned-pass-1234')).success,
+    ).toBe(false);
   });
 
   it('recover/update по токену меняет пароль и фразу', async () => {
@@ -234,10 +234,12 @@ describe('recovery-роуты (SEC-1, SEC-4)', () => {
       }),
     );
     expect(res.status).toBe(200);
-    expect(authenticateUser('recover-api', 'fresh-password').success).toBe(
-      true,
+    expect(
+      (await authenticateUser('recover-api', 'fresh-password')).success,
+    ).toBe(true);
+    expect((await authenticateUser('recover-api', 'pass1')).success).toBe(
+      false,
     );
-    expect(authenticateUser('recover-api', 'pass1').success).toBe(false);
     expect(recoveryPhraseMatches(storedPhrase(uid), 'new amber cobalt')).toBe(
       true,
     );
@@ -265,12 +267,12 @@ describe('recovery-роуты (SEC-1, SEC-4)', () => {
     expect(second.status).toBe(401);
 
     // Второй пароль не применился.
-    expect(authenticateUser('recover-api', 'first-pass-1234').success).toBe(
-      true,
-    );
-    expect(authenticateUser('recover-api', 'second-pass-1234').success).toBe(
-      false,
-    );
+    expect(
+      (await authenticateUser('recover-api', 'first-pass-1234')).success,
+    ).toBe(true);
+    expect(
+      (await authenticateUser('recover-api', 'second-pass-1234')).success,
+    ).toBe(false);
   });
 
   it('recover/update валидирует длину пароля и фразы', async () => {
@@ -303,9 +305,9 @@ describe('recovery-роуты (SEC-1, SEC-4)', () => {
       }),
     );
     expect(ok.status).toBe(200);
-    expect(authenticateUser('recover-api', 'test-pass-12345').success).toBe(
-      true,
-    );
+    expect(
+      (await authenticateUser('recover-api', 'test-pass-12345')).success,
+    ).toBe(true);
     expect(recoveryPhraseMatches(storedPhrase(uid), 'gamma delta')).toBe(true);
   });
 
@@ -336,9 +338,9 @@ describe('recovery-роуты (SEC-1, SEC-4)', () => {
       json({ token, newPassword: 'fresh-pass-1234' }),
     );
     expect(byToken.status).toBe(200);
-    expect(authenticateUser('legacy-api', 'fresh-pass-1234').success).toBe(
-      true,
-    );
+    expect(
+      (await authenticateUser('legacy-api', 'fresh-pass-1234')).success,
+    ).toBe(true);
     // Фраза не менялась: в теле её не было.
     expect(
       recoveryPhraseMatches(storedPhrase(uid), 'amber cobalt lantern'),

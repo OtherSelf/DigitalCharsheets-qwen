@@ -27,13 +27,6 @@ const GAME_TITLES = [
   ...new Set(listGamePlugins().map((plugin) => plugin.manifest.game.name.en)),
 ];
 
-/*
-  Id сборки, с которой отрендерен этот документ. Считается один раз на процесс:
-  сторож сравнивает его с `/api/version` и понимает, что сервер уже другой.
-  `data-dpl-id` для этого не годится — Next удаляет атрибут до гидратации.
-*/
-const BUILD_ID = getAppInfo().buildId;
-
 export const metadata: Metadata = {
   title: 'Digital Character Sheets',
   description: `Character sheets for ${GAME_TITLES.join(', ')}`,
@@ -46,9 +39,15 @@ export const viewport: Viewport = {
   userScalable: true,
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  /*
+    Id сборки, с которой отрендерен этот документ: сторож сравнивает его с
+    `/api/version` и понимает, что сервер уже другой. `data-dpl-id` для этого
+    не годится — Next удаляет атрибут до гидратации.
+  */
+  const { buildId } = await getAppInfo();
   return (
     <html
       lang="en"
@@ -76,7 +75,7 @@ export default function RootLayout({
                   {children}
                   <RecoveryModalWrapper />
                   <Toaster />
-                  <BuildWatcher ownBuildId={BUILD_ID} />
+                  <BuildWatcher ownBuildId={buildId} />
                   <ClientErrorGuard />
                 </UIScaleWrapper>
               </CharacterProvider>

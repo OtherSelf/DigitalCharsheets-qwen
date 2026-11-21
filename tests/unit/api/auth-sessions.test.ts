@@ -91,9 +91,9 @@ describe('сессии: отзыв и повторная аутентифика�
       ),
     );
     expect(wrongCurrent.status).toBe(403);
-    expect(authenticateUser('session-rotate', TEST_PASSWORD).success).toBe(
-      true,
-    );
+    expect(
+      (await authenticateUser('session-rotate', TEST_PASSWORD)).success,
+    ).toBe(true);
 
     // Верный текущий пароль — смена проходит.
     const rotated = await profileRoute(
@@ -109,7 +109,7 @@ describe('сессии: отзыв и повторная аутентифика�
     );
     expect(rotated.status).toBe(200);
     expect(
-      authenticateUser('session-rotate', 'rotated-pass-1234').success,
+      (await authenticateUser('session-rotate', 'rotated-pass-1234')).success,
     ).toBe(true);
 
     // Текущая сессия жива, второе устройство — нет.
@@ -197,7 +197,7 @@ describe('DELETE /api/auth/profile', () => {
   it('без пароля — 400, аккаунт остаётся на месте', async () => {
     const { uid } = await loginAs('delete-no-pass');
 
-    const res = await profileDelete(deleteReq('', sessionHeaders(uid)));
+    const res = await profileDelete(deleteReq('', await sessionHeaders(uid)));
 
     expect(res.status).toBe(400);
     expect((await res.json()).reason).toBe('invalid_input');
@@ -206,10 +206,12 @@ describe('DELETE /api/auth/profile', () => {
 
   it('неверный пароль — 403, аккаунт и листы целы', async () => {
     const { uid } = await loginAs('delete-wrong-pass');
-    await charactersPost(json({ ...makeDndCharacter() }, sessionHeaders(uid)));
+    await charactersPost(
+      json({ ...makeDndCharacter() }, await sessionHeaders(uid)),
+    );
 
     const res = await profileDelete(
-      deleteReq('not-my-password', sessionHeaders(uid)),
+      deleteReq('not-my-password', await sessionHeaders(uid)),
     );
 
     expect(res.status).toBe(403);
@@ -222,10 +224,12 @@ describe('DELETE /api/auth/profile', () => {
 
   it('верный пароль — 200, каталог и индекс удалены, cookie стёрта', async () => {
     const { uid } = await loginAs('delete-me');
-    await charactersPost(json({ ...makeDndCharacter() }, sessionHeaders(uid)));
+    await charactersPost(
+      json({ ...makeDndCharacter() }, await sessionHeaders(uid)),
+    );
 
     const res = await profileDelete(
-      deleteReq('test-pass-1234', sessionHeaders(uid)),
+      deleteReq('test-pass-1234', await sessionHeaders(uid)),
     );
 
     expect(res.status).toBe(200);
@@ -250,13 +254,16 @@ describe('DELETE /api/auth/profile', () => {
   it('старая cookie после удаления не работает и не воссоздаёт каталог', async () => {
     const { uid } = await loginAs('stale-cookie');
     expect(
-      (await profileDelete(deleteReq('test-pass-1234', sessionHeaders(uid))))
-        .status,
+      (
+        await profileDelete(
+          deleteReq('test-pass-1234', await sessionHeaders(uid)),
+        )
+      ).status,
     ).toBe(200);
 
     // Подпись cookie ещё валидна, но записи сессии и профиля уже нет — 401.
     const res = await charactersGet(
-      req('http://localhost/api/characters', 'GET', sessionHeaders(uid)),
+      req('http://localhost/api/characters', 'GET', await sessionHeaders(uid)),
     );
     expect(res.status).toBe(401);
     // Доступ «по старой сессии» не должен воскресить users/<uid>/characters.
@@ -265,7 +272,9 @@ describe('DELETE /api/auth/profile', () => {
 
   it('освобождённый логин можно зарегистрировать заново с новым uid', async () => {
     const { uid: oldUid } = await loginAs('reborn-account');
-    await profileDelete(deleteReq('test-pass-1234', sessionHeaders(oldUid)));
+    await profileDelete(
+      deleteReq('test-pass-1234', await sessionHeaders(oldUid)),
+    );
 
     const again = await registerAs(
       'reborn-account',

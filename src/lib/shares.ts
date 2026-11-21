@@ -1,5 +1,5 @@
 import crypto from 'crypto';
-import fs from 'fs';
+import fs from 'fs/promises';
 import path from 'path';
 
 import { getSharesFile } from './data-dir';
@@ -118,10 +118,10 @@ function isValidDate(value: unknown): value is string {
  * Прочитать реестр. Битый/чужой файл считается пустым: ссылки просто не
  * работают (fail closed), листы не страдают.
  */
-function readSharesFile(): SharesFile {
+async function readSharesFile(): Promise<SharesFile> {
   let raw: string;
   try {
-    raw = fs.readFileSync(getSharesFile(), 'utf8');
+    raw = await fs.readFile(getSharesFile(), 'utf8');
   } catch {
     return emptySharesFile();
   }
@@ -181,9 +181,9 @@ function readSharesFile(): SharesFile {
   return { version: SHARES_FILE_VERSION, shares };
 }
 
-function writeSharesFile(file: SharesFile): void {
-  fs.mkdirSync(path.dirname(getSharesFile()), { recursive: true });
-  writeJsonAtomic(getSharesFile(), file);
+async function writeSharesFile(file: SharesFile): Promise<void> {
+  await fs.mkdir(path.dirname(getSharesFile()), { recursive: true });
+  await writeJsonAtomic(getSharesFile(), file);
 }
 
 function isExpired(record: ShareRecord, nowMs: number): boolean {
@@ -223,11 +223,11 @@ function findShareForCharacter(
  * Выдать (или перевыпустить) ссылку. Старая запись для этого же листа
  * удаляется в той же транзакции: активная ссылка всегда одна.
  */
-export function issueShareToken(
+export async function issueShareToken(
   uid: string,
   characterId: string,
   options: IssueShareOptions = {},
-): { token: string; createdAt: string; expiresAt: string | null } {
+): Promise<{ token: string; createdAt: string; expiresAt: string | null }> {
   if (!isUid(uid)) throw new Error('Share link requires a valid uid.');
   if (!isSafeId(characterId)) {
     throw new Error('Share link requires a safe character id.');
@@ -250,8 +250,8 @@ export function issueShareToken(
   const token = generateShareToken();
   const hash = hashShareToken(token);
 
-  withDataLock(() => {
-    const file = readSharesFile();
+  await withDataLock(async () => {
+    const file = await readSharesFile();
     const shares = pruneShares(file.shares, nowMs);
 
     for (const [existingHash, record] of Object.entries(shares)) {
@@ -267,7 +267,7 @@ export function issueShareToken(
       expiresAt,
       includeHistory: options.includeHistory === true,
     };
-    writeSharesFile({
+    await writeSharesFile({
       version: SHARES_FILE_VERSION,
       shares: pruneShares(shares, nowMs),
     });
@@ -280,16 +280,16 @@ export function issueShareToken(
  * Активная ссылка листа без самого токена. Токен на диске не хранится, поэтому
  * после закрытия диалога ссылку можно только перевыпустить.
  */
-export function getShareForCharacter(
+export async function getShareForCharacter(
   uid: string,
   characterId: string,
   options: ShareClock = {},
-): ShareMetadata | null {
+): Promise<ShareMetadata | null> {
   if (!isUid(uid) || !isSafeId(characterId)) return null;
 
   const nowMs = options.nowMs ?? Date.now();
   const record = findShareForCharacter(
-    readSharesFile().shares,
+    (await readSharesFile()).shares,
     uid,
     characterId,
   );
@@ -307,18 +307,18 @@ export function getShareForCharacter(
  * владелец ещё существует и не заблокирован: иначе старая ссылка пережила бы
  * блокировку аккаунта.
  */
-export function resolveShareToken(
+export async function resolveShareToken(
   token: string,
   options: ShareClock = {},
-): ResolvedShare | null {
+): Promise<ResolvedShare | null> {
   if (!isShareToken(token)) return null;
 
   const nowMs = options.nowMs ?? Date.now();
-  const record = readSharesFile().shares[hashShareToken(token)];
+  const record = (await readSharesFile()).shares[hashShareToken(token)];
   if (!record || isExpired(record, nowMs)) return null;
 
   try {
-    const owner = readStoredUser(record.uid);
+    const owner = await readStoredUser(record.uid);
     if (!owner || owner.isBlocked) return null;
     return {
       uid: record.uid,
@@ -334,14 +334,15 @@ export function resolveShareToken(
 }
 
 /** Отозвать ссылку листа; возвращает число удалённых записей. */
-export function revokeShareForCharacter(
+export async function revokeShareForCharacter(
   uid: string,
   characterId: string,
-): number {
+  options: { locked?: boolean } = {},
+): Promise<number> {
   if (!isUid(uid) || !isSafeId(characterId)) return 0;
 
-  return withDataLock(() => {
-    const file = readSharesFile();
+  const run = async (): Promise<number> => {
+    const file = await readSharesFile();
     const shares = { ...file.shares };
     let removed = 0;
     for (const [hash, record] of Object.entries(shares)) {
@@ -351,18 +352,23 @@ export function revokeShareForCharacter(
       }
     }
     if (removed > 0) {
-      writeSharesFile({ version: SHARES_FILE_VERSION, shares });
+      await writeSharesFile({ version: SHARES_FILE_VERSION, shares });
     }
     return removed;
-  });
+  };
+
+  return options.locked ? run() : withDataLock(run);
 }
 
 /** Отозвать все ссылки пользователя (удаление аккаунта/админское удаление). */
-export function revokeSharesForUser(uid: string): number {
+export async function revokeSharesForUser(
+  uid: string,
+  options: { locked?: boolean } = {},
+): Promise<number> {
   if (!isUid(uid)) return 0;
 
-  return withDataLock(() => {
-    const file = readSharesFile();
+  const run = async (): Promise<number> => {
+    const file = await readSharesFile();
     const shares = { ...file.shares };
     let removed = 0;
     for (const [hash, record] of Object.entries(shares)) {
@@ -372,8 +378,10 @@ export function revokeSharesForUser(uid: string): number {
       }
     }
     if (removed > 0) {
-      writeSharesFile({ version: SHARES_FILE_VERSION, shares });
+      await writeSharesFile({ version: SHARES_FILE_VERSION, shares });
     }
     return removed;
-  });
+  };
+
+  return options.locked ? run() : withDataLock(run);
 }

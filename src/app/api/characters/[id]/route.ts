@@ -51,7 +51,7 @@ export async function PUT(
 ) {
   const { id } = await params;
 
-  const uid = getSessionUid(request);
+  const uid = await getSessionUid(request);
   if (!uid) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
@@ -90,7 +90,7 @@ export async function PUT(
   // старых клиентов — тоже выбрасываем: владелец берётся из сессии.
   const { __page: _page, __seq: _seq, userId: _ignoredUserId, ...patch } = body;
 
-  const current = getCharacterFromServer(uid, id);
+  const current = await getCharacterFromServer(uid, id);
   if (!current) {
     return NextResponse.json({ error: 'Character not found' }, { status: 404 });
   }
@@ -123,7 +123,7 @@ export async function PUT(
 
   let updated;
   try {
-    updated = updateCharacterOnServer(
+    updated = await updateCharacterOnServer(
       uid,
       id,
       validatedPatch.data as Partial<Character>,
@@ -151,7 +151,7 @@ export async function DELETE(
 ) {
   const { id } = await params;
 
-  const uid = getSessionUid(request);
+  const uid = await getSessionUid(request);
   if (!uid) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
@@ -163,7 +163,7 @@ export async function DELETE(
     );
   }
 
-  const deleted = deleteCharacterFromServer(uid, id);
+  const deleted = await deleteCharacterFromServer(uid, id);
   if (!deleted) {
     return NextResponse.json({ error: 'Character not found' }, { status: 404 });
   }

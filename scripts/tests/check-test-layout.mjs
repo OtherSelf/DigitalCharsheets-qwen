@@ -366,10 +366,6 @@ const GAME_MENTION_ALLOWANCE = {
  * уменьшаться. `removeBy` — когда исключение должно исчезнуть.
  */
 const EXCEPTIONS = {
-  'security.test.ts': {
-    max: 415,
-    reason: 'сквозной сценарий безопасности; проверки связаны общим контекстом',
-  },
   'plugins-registry.test.ts': {
     max: 528,
     reason:

@@ -13,7 +13,7 @@ import {
  * жёсткого перехода (отметка хранится в sessionStorage вкладки).
  */
 describe('режим проверки выборов', () => {
-  afterEach(() => clearCreationReview());
+  afterEach(async () => clearCreationReview());
 
   it('включается по id листа и снимается фиксацией', () => {
     expect(isCreationReview('char-1')).toBe(false);

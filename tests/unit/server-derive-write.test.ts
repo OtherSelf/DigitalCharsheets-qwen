@@ -82,8 +82,8 @@ function savedSheet(id = 'char-derive'): Record<string, any> {
 }
 
 describe('пересчёт производных при записи', () => {
-  it('сохраняет согласованный лист, даже если клиент прислал мусор', () => {
-    saveCharacterToServer(uid, sheet());
+  it('сохраняет согласованный лист, даже если клиент прислал мусор', async () => {
+    await saveCharacterToServer(uid, sheet());
 
     const stored = savedSheet();
     expect(stored.proficiencyBonus).toBe(3);
@@ -96,9 +96,9 @@ describe('пересчёт производных при записи', () => {
     expect(stored.skills[0].value).toBe(8);
   });
 
-  it('пересчитывает лист при обновлении и возвращает согласованный документ', () => {
-    saveCharacterToServer(uid, sheet());
-    const updated = updateCharacterOnServer(uid, 'char-derive', {
+  it('пересчитывает лист при обновлении и возвращает согласованный документ', async () => {
+    await saveCharacterToServer(uid, sheet());
+    const updated = await updateCharacterOnServer(uid, 'char-derive', {
       level: 9,
     } as any);
 
@@ -106,16 +106,16 @@ describe('пересчёт производных при записи', () => {
     expect(savedSheet().proficiencyBonus).toBe(4);
   });
 
-  it('аварийный тормоз сохраняет лист как есть', () => {
+  it('аварийный тормоз сохраняет лист как есть', async () => {
     process.env.DCS_SERVER_DERIVE = '0';
-    saveCharacterToServer(uid, sheet());
+    await saveCharacterToServer(uid, sheet());
     expect(savedSheet().proficiencyBonus).toBe(99);
   });
 });
 
 describe('лечение отставших версий схемы', () => {
-  it('чтение пересчитывает лист старой версии, не трогая файл', () => {
-    saveCharacterToServer(uid, sheet());
+  it('чтение пересчитывает лист старой версии, не трогая файл', async () => {
+    await saveCharacterToServer(uid, sheet());
     const file = path.join(getCharactersDir(uid), 'char-derive.json');
     // Имитируем лист, сохранённый до пересчёта: старая версия и мусорные
     // производные.
@@ -124,26 +124,26 @@ describe('лечение отставших версий схемы', () => {
     raw.proficiencyBonus = 77;
     fs.writeFileSync(file, JSON.stringify(raw), 'utf8');
 
-    const healed = getCharacterFromServer(uid, 'char-derive');
+    const healed = await getCharacterFromServer(uid, 'char-derive');
     expect(healed?.proficiencyBonus).toBe(3);
     expect((readJson(file) as Record<string, any>).proficiencyBonus).toBe(77);
   });
 
-  it('startup-обход сохраняет пересчёт с .bak и без него не переписывает свежий лист', () => {
-    saveCharacterToServer(uid, sheet());
+  it('startup-обход сохраняет пересчёт с .bak и без него не переписывает свежий лист', async () => {
+    await saveCharacterToServer(uid, sheet());
     const file = path.join(getCharactersDir(uid), 'char-derive.json');
     const raw = readJson(file) as Record<string, any>;
     raw.schemaVersion = 1;
     raw.proficiencyBonus = 77;
     fs.writeFileSync(file, JSON.stringify(raw), 'utf8');
 
-    const report = normalizeAllCharacters();
+    const report = await normalizeAllCharacters();
     expect(report.derived).toBeGreaterThan(0);
     expect(fs.existsSync(`${file}.bak`)).toBe(true);
     expect((readJson(file) as Record<string, any>).proficiencyBonus).toBe(3);
 
     // Повторный прогон ничего не меняет: значение уже согласовано.
-    const second = normalizeAllCharacters();
+    const second = await normalizeAllCharacters();
     expect(second.derived).toBe(0);
   });
 });

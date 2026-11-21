@@ -48,11 +48,13 @@ describe('/api/export', () => {
   it('отдаёт список и одного персонажа, 404 на неизвестный id', async () => {
     const { uid } = await loginAs('user-exp');
     const created = await (
-      await charactersPost(json({ ...makeDndCharacter() }, sessionHeaders(uid)))
+      await charactersPost(
+        json({ ...makeDndCharacter() }, await sessionHeaders(uid)),
+      )
     ).json();
 
     const list = await exportGet(
-      req('http://localhost/api/export', 'GET', sessionHeaders(uid)),
+      req('http://localhost/api/export', 'GET', await sessionHeaders(uid)),
     );
     expect(list.status).toBe(200);
     expect(Array.isArray(await list.json())).toBe(true);
@@ -61,7 +63,7 @@ describe('/api/export', () => {
       req(
         `http://localhost/api/export?characterId=${created.id}`,
         'GET',
-        sessionHeaders(uid),
+        await sessionHeaders(uid),
       ),
     );
     expect(single.status).toBe(200);
@@ -71,7 +73,7 @@ describe('/api/export', () => {
       req(
         'http://localhost/api/export?characterId=nope',
         'GET',
-        sessionHeaders(uid),
+        await sessionHeaders(uid),
       ),
     );
     expect(missing.status).toBe(404);
@@ -80,7 +82,9 @@ describe('/api/export', () => {
   it('не отдаёт служебные поля (migrated*, userId, Document ID), но сохраняет данные', async () => {
     const { uid } = await loginAs('user-exp');
     const created = await (
-      await charactersPost(json({ ...makeDndCharacter() }, sessionHeaders(uid)))
+      await charactersPost(
+        json({ ...makeDndCharacter() }, await sessionHeaders(uid)),
+      )
     ).json();
 
     // Имитируем лист, пришедший из миграции: дописываем провенанс прямо в файл.
@@ -96,7 +100,7 @@ describe('/api/export', () => {
     fs.writeFileSync(file, JSON.stringify(raw), 'utf8');
 
     const res = await exportGet(
-      req('http://localhost/api/export', 'GET', sessionHeaders(uid)),
+      req('http://localhost/api/export', 'GET', await sessionHeaders(uid)),
     );
     expect(res.status).toBe(200);
     const list = await res.json();

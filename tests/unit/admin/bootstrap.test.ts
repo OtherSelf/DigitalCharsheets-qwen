@@ -43,21 +43,23 @@ afterEach(() => {
 });
 
 describe('ensureServiceAdmin', () => {
-  it('создаёт админа с паролем, ролью admin и файлом учётных данных', () => {
-    const result = ensureServiceAdmin();
+  it('создаёт админа с паролем, ролью admin и файлом учётных данных', async () => {
+    const result = await ensureServiceAdmin();
 
     expect(result.created).toBe(true);
     expect(result.username).toBe('admin');
     expect(result.password).toBeTruthy();
     expect(result.password!.length).toBeGreaterThanOrEqual(12);
 
-    const uid = resolveLogin('admin');
+    const uid = await resolveLogin('admin');
     expect(uid).toBeTruthy();
-    const stored = readStoredUser(uid!)!;
+    const stored = (await readStoredUser(uid!))!;
     expect(stored.role).toBe('admin');
     expect(stored.isBlocked).toBe(false);
     expect(stored.mustChangePassword).toBe(true);
-    expect(authenticateUser('admin', result.password!).success).toBe(true);
+    expect((await authenticateUser('admin', result.password!)).success).toBe(
+      true,
+    );
 
     const file = path.join(dataDir, INITIAL_ADMIN_FILE);
     expect(fs.existsSync(file)).toBe(true);
@@ -68,58 +70,65 @@ describe('ensureServiceAdmin', () => {
     expect(content).toContain('/admin');
   });
 
-  it('повторный запуск не создаёт второго админа и не меняет пароль', () => {
-    const first = ensureServiceAdmin();
-    const second = ensureServiceAdmin();
+  it('повторный запуск не создаёт второго админа и не меняет пароль', async () => {
+    const first = await ensureServiceAdmin();
+    const second = await ensureServiceAdmin();
 
     expect(first.created).toBe(true);
     expect(second.created).toBe(false);
 
-    const admins = fs
-      .readdirSync(path.join(dataDir, 'users'))
-      .filter((uid) => readStoredUser(uid)?.role === 'admin');
+    const admins: string[] = [];
+    for (const uid of fs.readdirSync(path.join(dataDir, 'users'))) {
+      if ((await readStoredUser(uid))?.role === 'admin') admins.push(uid);
+    }
     expect(admins).toHaveLength(1);
-    expect(authenticateUser('admin', first.password!).success).toBe(true);
+    expect((await authenticateUser('admin', first.password!)).success).toBe(
+      true,
+    );
   });
 
-  it('не занимает чужой логин `admin`, а берёт admin-2', () => {
-    const user = seedUser('admin', 'user-pass-1234');
+  it('не занимает чужой логин `admin`, а берёт admin-2', async () => {
+    const user = await seedUser('admin', 'user-pass-1234');
 
-    const result = ensureServiceAdmin();
+    const result = await ensureServiceAdmin();
     expect(result.created).toBe(true);
     expect(result.username).toBe('admin-2');
 
     // Старый аккаунт не тронут: по-прежнему обычный пользователь.
-    expect(readStoredUser(user.uid)?.role).toBe('user');
-    expect(authenticateUser('admin', 'user-pass-1234').success).toBe(true);
-    expect(authenticateUser('admin-2', result.password!).success).toBe(true);
+    expect((await readStoredUser(user.uid))?.role).toBe('user');
+    expect((await authenticateUser('admin', 'user-pass-1234')).success).toBe(
+      true,
+    );
+    expect((await authenticateUser('admin-2', result.password!)).success).toBe(
+      true,
+    );
   });
 
-  it('не трогает установку, где уже есть активный админ', () => {
-    const existing = seedAdmin('boss', 'boss-pass-1234');
-    const result = ensureServiceAdmin();
+  it('не трогает установку, где уже есть активный админ', async () => {
+    const existing = await seedAdmin('boss', 'boss-pass-1234');
+    const result = await ensureServiceAdmin();
 
     expect(result.created).toBe(false);
     expect(fs.readdirSync(path.join(dataDir, 'users'))).toHaveLength(1);
-    expect(readStoredUser(existing.uid)?.username).toBe('boss');
+    expect((await readStoredUser(existing.uid))?.username).toBe('boss');
   });
 
-  it('создаёт нового админа, если единственный заблокирован', () => {
-    const existing = seedAdmin('blocked-admin', 'blocked-pass-1');
+  it('создаёт нового админа, если единственный заблокирован', async () => {
+    const existing = await seedAdmin('blocked-admin', 'blocked-pass-1');
     const paths = userPaths(dataDir, existing.uid);
     const stored = readJson(paths.userFile);
     stored.isBlocked = true;
     stored.blockedAt = new Date().toISOString();
     fs.writeFileSync(paths.userFile, JSON.stringify(stored));
 
-    const result = ensureServiceAdmin();
+    const result = await ensureServiceAdmin();
     expect(result.created).toBe(true);
     expect(result.username).toBe('admin');
-    expect(readStoredUser(existing.uid)?.isBlocked).toBe(true);
+    expect((await readStoredUser(existing.uid))?.isBlocked).toBe(true);
   });
 
-  it('runStartupMaintenance нормализует профили и создаёт админа', () => {
-    const user = seedUser('old-user', 'user-pass-1234');
+  it('runStartupMaintenance нормализует профили и создаёт админа', async () => {
+    const user = await seedUser('old-user', 'user-pass-1234');
     const paths = userPaths(dataDir, user.uid);
     const legacy = readJson(paths.userFile);
     legacy.schemaVersion = 2;
@@ -127,7 +136,7 @@ describe('ensureServiceAdmin', () => {
     delete legacy.isBlocked;
     fs.writeFileSync(paths.userFile, JSON.stringify(legacy));
 
-    const report = runStartupMaintenance({ force: true });
+    const report = await runStartupMaintenance({ force: true });
     expect(report.profiles).toMatchObject({ total: 1, updated: 1 });
     expect(report.admin?.created).toBe(true);
     expect(readJson(paths.userFile)).toMatchObject({
@@ -140,13 +149,13 @@ describe('ensureServiceAdmin', () => {
 
 describe('GET /api/admin/users/[uid]/characters', () => {
   it('отдаёт сводку листов D&D и Dark Heresy, 404 на неизвестный uid', async () => {
-    const admin = seedAdmin();
-    const user = seedUser();
-    saveCharacterToServer(
+    const admin = await seedAdmin();
+    const user = await seedUser();
+    await saveCharacterToServer(
       user.uid,
       makeDndCharacter({ userId: user.uid, id: 'dnd-1' }),
     );
-    saveCharacterToServer(
+    await saveCharacterToServer(
       user.uid,
       makeDhCharacter({ userId: user.uid, id: 'dh-1' }),
     );
@@ -154,7 +163,7 @@ describe('GET /api/admin/users/[uid]/characters', () => {
     const res = await adminCharactersGet(
       get(
         `http://localhost/api/admin/users/${user.uid}/characters`,
-        sessionHeaders(admin.uid),
+        await sessionHeaders(admin.uid),
       ),
       params(user.uid),
     );
@@ -185,7 +194,7 @@ describe('GET /api/admin/users/[uid]/characters', () => {
     const missing = await adminCharactersGet(
       get(
         'http://localhost/api/admin/users/00000000-0000-4000-8000-000000000004/characters',
-        sessionHeaders(admin.uid),
+        await sessionHeaders(admin.uid),
       ),
       params('00000000-0000-4000-8000-000000000004'),
     );
@@ -193,11 +202,11 @@ describe('GET /api/admin/users/[uid]/characters', () => {
   });
 
   it('403 обычному пользователю', async () => {
-    const user = seedUser();
+    const user = await seedUser();
     const res = await adminCharactersGet(
       get(
         `http://localhost/api/admin/users/${user.uid}/characters`,
-        sessionHeaders(user.uid),
+        await sessionHeaders(user.uid),
       ),
       params(user.uid),
     );

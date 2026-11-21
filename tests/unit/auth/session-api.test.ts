@@ -24,9 +24,9 @@ afterEach(() => {
 
 describe('GET /api/auth/session', () => {
   it('отдаёт актуальную роль и 401 без сессии', async () => {
-    const admin = seedAdmin();
+    const admin = await seedAdmin();
     const res = await sessionRoute(
-      get('http://localhost/api/auth/session', sessionHeaders(admin.uid)),
+      get('http://localhost/api/auth/session', await sessionHeaders(admin.uid)),
     );
     expect(res.status).toBe(200);
     const body = await res.json();

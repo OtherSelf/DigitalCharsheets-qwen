@@ -1,4 +1,4 @@
-import fs from 'fs';
+import fs from 'fs/promises';
 
 /**
  * ─── LANDMARK: ATOMIC WRITE ─────────────────────────────────────────────────
@@ -8,38 +8,41 @@ import fs from 'fs';
  * молча пропускает — персонаж «исчезал» из списка.
  *
  * Теперь пишем во временный файл рядом и подменяем им основной через
- * `renameSync` — на одной ФС это атомарная операция. Читатель видит либо
- * старую версию целиком, либо новую целиком, но никогда — половину.
+ * `rename` — на одной ФС это атомарная операция. Читатель видит либо старую
+ * версию целиком, либо новую целиком, но никогда — половину.
  *
  * Вынесено из server-storage.ts, чтобы тем же способом писать `user.json`
  * и индекс логинов: и то, и другое нельзя оставлять обрезанным.
  */
-export function writeJsonAtomic(filePath: string, data: unknown): void {
+export async function writeJsonAtomic(
+  filePath: string,
+  data: unknown,
+): Promise<void> {
   const tmpPath = `${filePath}.${process.pid.toString(36)}.${Date.now().toString(36)}.${Math.random().toString(36).slice(2, 8)}.tmp`;
   const json = JSON.stringify(data, null, 2);
-  let fd: number | null = null;
+  let handle: Awaited<ReturnType<typeof fs.open>> | null = null;
   try {
-    fd = fs.openSync(tmpPath, 'w');
-    fs.writeFileSync(fd, json, 'utf8');
+    handle = await fs.open(tmpPath, 'w');
+    await handle.writeFile(json, 'utf8');
     // fsync, чтобы запись пережила внезапное выключение питания/контейнера.
     try {
-      fs.fsyncSync(fd);
+      await handle.sync();
     } catch {
       /* на некоторых ФС fsync не поддерживается */
     }
-    fs.closeSync(fd);
-    fd = null;
-    fs.renameSync(tmpPath, filePath);
+    await handle.close();
+    handle = null;
+    await fs.rename(tmpPath, filePath);
   } catch (error) {
-    if (fd !== null) {
+    if (handle !== null) {
       try {
-        fs.closeSync(fd);
+        await handle.close();
       } catch {
         /* уже закрыт */
       }
     }
     try {
-      if (fs.existsSync(tmpPath)) fs.unlinkSync(tmpPath);
+      await fs.unlink(tmpPath);
     } catch {
       /* best effort */
     }
@@ -50,9 +53,9 @@ export function writeJsonAtomic(filePath: string, data: unknown): void {
     // остаются целыми (лучше, чем 500 и потерянная правка).
     // Покрыто тестами tests/unit/exdev-storage.test.ts.
     if ((error as NodeJS.ErrnoException)?.code === 'EXDEV') {
-      fs.writeFileSync(filePath, json, 'utf8');
+      await fs.writeFile(filePath, json, 'utf8');
       try {
-        if (fs.existsSync(tmpPath)) fs.unlinkSync(tmpPath);
+        await fs.unlink(tmpPath);
       } catch {
         /* best effort */
       }

@@ -1,4 +1,5 @@
-import fs from 'fs';
+import fs from 'fs/promises';
+import fsSync, { type Stats } from 'node:fs';
 import path from 'path';
 
 /**
@@ -30,11 +31,11 @@ const SHA_RE = /^[0-9a-f]{7,64}$/i;
 const MAX_REFS_FILE_BYTES = 4 * 1024 * 1024;
 
 /** Каталог `.git` для каталога или `null`, если это не рабочая копия. */
-function resolveGitDir(dir: string): string | null {
+async function resolveGitDir(dir: string): Promise<string | null> {
   const candidate = path.join(dir, '.git');
-  let stat: fs.Stats;
+  let stat: Stats;
   try {
-    stat = fs.statSync(candidate);
+    stat = await fs.stat(candidate);
   } catch {
     return null;
   }
@@ -45,11 +46,11 @@ function resolveGitDir(dir: string): string | null {
     // `git worktree` и submodule хранят не каталог, а ссылку на него:
     //   gitdir: /repo/.git/worktrees/name
     try {
-      const content = fs.readFileSync(candidate, 'utf8').trim();
+      const content = (await fs.readFile(candidate, 'utf8')).trim();
       const match = /^gitdir:\s*(.+)$/i.exec(content);
       if (!match) return null;
       const target = path.resolve(dir, match[1]);
-      return fs.statSync(target).isDirectory() ? target : null;
+      return (await fs.stat(target)).isDirectory() ? target : null;
     } catch {
       return null;
     }
@@ -59,11 +60,11 @@ function resolveGitDir(dir: string): string | null {
 }
 
 /** Ближайший вверх по дереву каталог с `.git` (рабочая копия) или `null`. */
-export function findGitDir(startDir: string): string | null {
+export async function findGitDir(startDir: string): Promise<string | null> {
   let dir = path.resolve(startDir);
 
   for (;;) {
-    const gitDir = resolveGitDir(dir);
+    const gitDir = await resolveGitDir(dir);
     if (gitDir) return gitDir;
 
     const parent = path.dirname(dir);
@@ -73,22 +74,22 @@ export function findGitDir(startDir: string): string | null {
   }
 }
 
-function readSmallFile(file: string): string | null {
+async function readSmallFile(file: string): Promise<string | null> {
   try {
-    const stat = fs.statSync(file);
+    const stat = await fs.stat(file);
     if (!stat.isFile() || stat.size > MAX_REFS_FILE_BYTES) return null;
-    return fs.readFileSync(file, 'utf8');
+    return await fs.readFile(file, 'utf8');
   } catch {
     return null;
   }
 }
 
 /** SHA из распакованной ссылки (`refs/heads/x`) или из `packed-refs`. */
-function readRef(gitDir: string, ref: string): string | null {
-  const loose = readSmallFile(path.join(gitDir, ref))?.trim();
+async function readRef(gitDir: string, ref: string): Promise<string | null> {
+  const loose = (await readSmallFile(path.join(gitDir, ref)))?.trim();
   if (loose && SHA_RE.test(loose)) return loose;
 
-  const packed = readSmallFile(path.join(gitDir, 'packed-refs'));
+  const packed = await readSmallFile(path.join(gitDir, 'packed-refs'));
   if (!packed) return null;
 
   for (const line of packed.split('\n')) {
@@ -107,19 +108,19 @@ function readRef(gitDir: string, ref: string): string | null {
  * Прочитать состояние рабочей копии. `null` — не клон (нет `.git`), HEAD
  * битый или ссылка не разрешается: вызывающий покажет версию без коммита.
  */
-export function readGitCheckout(
+export async function readGitCheckout(
   startDir: string = process.cwd(),
-): GitCheckoutInfo | null {
-  const gitDir = findGitDir(startDir);
+): Promise<GitCheckoutInfo | null> {
+  const gitDir = await findGitDir(startDir);
   if (!gitDir) return null;
 
-  const head = readSmallFile(path.join(gitDir, 'HEAD'))?.trim();
+  const head = (await readSmallFile(path.join(gitDir, 'HEAD')))?.trim();
   if (!head) return null;
 
   const refMatch = /^ref:\s*(refs\/heads\/.+)$/.exec(head);
   if (refMatch) {
     const branch = refMatch[1].slice('refs/heads/'.length);
-    const sha = readRef(gitDir, refMatch[1]);
+    const sha = await readRef(gitDir, refMatch[1]);
     return sha ? { commit: sha.toLowerCase(), branch } : null;
   }
 
@@ -135,11 +136,11 @@ export function readGitCheckout(
  */
 let cached: { startDir: string; info: GitCheckoutInfo | null } | null = null;
 
-export function getGitCheckoutInfo(
+export async function getGitCheckoutInfo(
   startDir: string = process.cwd(),
-): GitCheckoutInfo | null {
+): Promise<GitCheckoutInfo | null> {
   if (cached && cached.startDir === startDir) return cached.info;
-  const info = readGitCheckout(startDir);
+  const info = await readGitCheckout(startDir);
   cached = { startDir, info };
   return info;
 }
@@ -147,4 +148,91 @@ export function getGitCheckoutInfo(
 /** Сбросить кэш (тесты и смена рабочего каталога в рантайме). */
 export function resetGitCheckoutCache(): void {
   cached = null;
+}
+
+/**
+ * Синхронный вариант для `next.config.ts`: конфиг вычисляется до старта
+ * сервера и не может ждать промис. В запросном пути используйте
+ * `getGitCheckoutInfo` — он не блокирует event loop.
+ */
+export function readGitCheckoutSync(
+  startDir: string = process.cwd(),
+): GitCheckoutInfo | null {
+  const readSmall = (file: string): string | null => {
+    try {
+      const stat = fsSync.statSync(file);
+      if (!stat.isFile() || stat.size > MAX_REFS_FILE_BYTES) return null;
+      return fsSync.readFileSync(file, 'utf8');
+    } catch {
+      return null;
+    }
+  };
+
+  const resolveDir = (dir: string): string | null => {
+    const candidate = path.join(dir, '.git');
+    let stat: fsSync.Stats;
+    try {
+      stat = fsSync.statSync(candidate);
+    } catch {
+      return null;
+    }
+    if (stat.isDirectory()) return candidate;
+    if (stat.isFile()) {
+      try {
+        const content = fsSync.readFileSync(candidate, 'utf8').trim();
+        const match = /^gitdir:\s*(.+)$/i.exec(content);
+        if (!match) return null;
+        const target = path.resolve(dir, match[1]);
+        return fsSync.statSync(target).isDirectory() ? target : null;
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  };
+
+  let dir = path.resolve(startDir);
+  let gitDir: string | null = null;
+  for (;;) {
+    gitDir = resolveDir(dir);
+    if (gitDir) break;
+    const parent = path.dirname(dir);
+    if (parent === dir) break;
+    dir = parent;
+  }
+  if (!gitDir) return null;
+
+  const head = readSmall(path.join(gitDir, 'HEAD'))?.trim();
+  if (!head) return null;
+
+  const refMatch = /^ref:\s*(refs\/heads\/.+)$/.exec(head);
+  if (refMatch) {
+    const branch = refMatch[1].slice('refs/heads/'.length);
+    const loose = readSmall(path.join(gitDir, refMatch[1]))?.trim();
+    if (loose && SHA_RE.test(loose)) {
+      return { commit: loose.toLowerCase(), branch };
+    }
+    const packed = readSmall(path.join(gitDir, 'packed-refs'));
+    if (packed) {
+      for (const line of packed.split('\n')) {
+        const trimmed = line.trim();
+        if (
+          trimmed === '' ||
+          trimmed.startsWith('#') ||
+          trimmed.startsWith('^')
+        ) {
+          continue;
+        }
+        const [sha, name] = trimmed.split(/\s+/);
+        if (name === refMatch[1] && SHA_RE.test(sha)) {
+          return { commit: sha.toLowerCase(), branch };
+        }
+      }
+    }
+    return null;
+  }
+
+  return SHA_RE.test(head)
+    ? { commit: head.toLowerCase(), branch: null }
+    : null;
 }

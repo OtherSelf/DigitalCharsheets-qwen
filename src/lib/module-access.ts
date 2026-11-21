@@ -17,10 +17,10 @@ export interface RequestActor {
 }
 
 /** Актор запроса: гость (без валидной сессии) получает базовую роль. */
-export function getRequestActor(request: Request): RequestActor {
-  const uid = getSessionUid(request);
+export async function getRequestActor(request: Request): Promise<RequestActor> {
+  const uid = await getSessionUid(request);
   if (!uid) return { uid: null, role: 'user' };
-  const stored = readStoredUser(uid);
+  const stored = await readStoredUser(uid);
   if (!stored || stored.isBlocked) return { uid: null, role: 'user' };
   return { uid, role: normalizeUserRole(stored.role) };
 }
@@ -46,10 +46,10 @@ export type ModuleAccessResult =
         | 'module_disabled';
     };
 
-export function requireModuleAccess(
+export async function requireModuleAccess(
   request: Request,
   systemId: SystemId | undefined,
-): ModuleAccessResult {
+): Promise<ModuleAccessResult> {
   if (!systemId) {
     return {
       ok: false,
@@ -59,7 +59,7 @@ export function requireModuleAccess(
     };
   }
 
-  const uid = getSessionUid(request);
+  const uid = await getSessionUid(request);
   if (!uid) {
     return {
       ok: false,
@@ -68,7 +68,7 @@ export function requireModuleAccess(
       reason: 'unauthorized',
     };
   }
-  const stored = readStoredUser(uid);
+  const stored = await readStoredUser(uid);
   if (!stored || stored.isBlocked) {
     return {
       ok: false,
@@ -79,7 +79,7 @@ export function requireModuleAccess(
   }
 
   const role = normalizeUserRole(stored.role);
-  if (!canAccessModule(role, systemId)) {
+  if (!(await canAccessModule(role, systemId))) {
     return {
       ok: false,
       status: 403,
@@ -89,7 +89,7 @@ export function requireModuleAccess(
   }
 
   // Отключённый плагин: создание недоступно даже админу (read-only).
-  if (!isModuleEnabled(systemId)) {
+  if (!(await isModuleEnabled(systemId))) {
     return {
       ok: false,
       status: 403,

@@ -18,8 +18,8 @@ import { readStoredUser } from './user-schema';
 export type AdminAuthResult =
   { ok: true; uid: string } | { ok: false; response: NextResponse };
 
-export function requireAdmin(request: Request): AdminAuthResult {
-  const uid = getSessionUid(request);
+export async function requireAdmin(request: Request): Promise<AdminAuthResult> {
+  const uid = await getSessionUid(request);
   if (!uid) {
     return {
       ok: false,
@@ -30,7 +30,7 @@ export function requireAdmin(request: Request): AdminAuthResult {
     };
   }
 
-  const user = readStoredUser(uid);
+  const user = await readStoredUser(uid);
   if (!user || user.isBlocked || user.role !== 'admin') {
     return {
       ok: false,

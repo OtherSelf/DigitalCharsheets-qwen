@@ -12,9 +12,9 @@ import { listUsersForAdmin } from '@/lib/admin-users';
  * 200 — { users, stats }.
  */
 export async function GET(request: Request) {
-  const auth = requireAdmin(request);
+  const auth = await requireAdmin(request);
   if (!auth.ok) return auth.response;
 
-  const { users, stats } = listUsersForAdmin();
+  const { users, stats } = await listUsersForAdmin();
   return NextResponse.json({ success: true, users, stats });
 }

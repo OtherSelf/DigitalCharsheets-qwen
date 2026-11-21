@@ -28,45 +28,47 @@ import {
  * Скрытие влияет на создание/меню, но не блокирует открытие существующих
  * листов владельцем.
  */
-function catalogResponse() {
-  const catalog = readGameCatalog();
+async function catalogResponse() {
+  const catalog = await readGameCatalog();
+  const games = [];
+  for (const gameModule of listGameModules()) {
+    const manifest = getPluginManifest(gameModule.id);
+    games.push({
+      id: gameModule.id,
+      gameId: gameModule.gameId,
+      gameNameKey:
+        getGameDefinition(gameModule.gameId)?.nameKey ?? gameModule.nameKey,
+      nameKey: gameModule.nameKey,
+      descriptionKey: gameModule.descriptionKey,
+      defaultStatus: gameModule.defaultStatus,
+      status: await getModuleStatus(gameModule.id, catalog),
+      enabled: await isModuleEnabled(gameModule.id, catalog),
+      useHostTheme: await isModuleHostTheme(gameModule.id, catalog),
+      // Метаданные плагина для админки из манифеста: версия, схема, зависимости.
+      // tags хранятся, но в UI не выводятся.
+      version: manifest?.version ?? null,
+      schemaVersion: manifest?.schemaVersion ?? gameModule.schemaVersion,
+      tags: manifest?.tags ?? [],
+      dependencies: manifest?.dependencies ?? null,
+      conformance: manifest?.tests?.conformance ?? null,
+      demo: Boolean(manifest?.demo),
+    });
+  }
   return {
     success: true as const,
     siteTitle: catalog.siteTitle ?? null,
-    games: listGameModules().map((gameModule) => {
-      const manifest = getPluginManifest(gameModule.id);
-      return {
-        id: gameModule.id,
-        gameId: gameModule.gameId,
-        gameNameKey:
-          getGameDefinition(gameModule.gameId)?.nameKey ?? gameModule.nameKey,
-        nameKey: gameModule.nameKey,
-        descriptionKey: gameModule.descriptionKey,
-        defaultStatus: gameModule.defaultStatus,
-        status: getModuleStatus(gameModule.id, catalog),
-        enabled: isModuleEnabled(gameModule.id, catalog),
-        useHostTheme: isModuleHostTheme(gameModule.id, catalog),
-        // Метаданные плагина для админки из манифеста: версия, схема, зависимости.
-        // tags хранятся, но в UI не выводятся.
-        version: manifest?.version ?? null,
-        schemaVersion: manifest?.schemaVersion ?? gameModule.schemaVersion,
-        tags: manifest?.tags ?? [],
-        dependencies: manifest?.dependencies ?? null,
-        conformance: manifest?.tests?.conformance ?? null,
-        demo: Boolean(manifest?.demo),
-      };
-    }),
+    games,
   };
 }
 
 export async function GET(request: Request) {
-  const auth = requireAdmin(request);
+  const auth = await requireAdmin(request);
   if (!auth.ok) return auth.response;
-  return NextResponse.json(catalogResponse());
+  return NextResponse.json(await catalogResponse());
 }
 
 export async function PUT(request: Request) {
-  const auth = requireAdmin(request);
+  const auth = await requireAdmin(request);
   if (!auth.ok) return auth.response;
 
   const body = (await request.json().catch(() => null)) as Record<
@@ -92,7 +94,7 @@ export async function PUT(request: Request) {
           { status: 400 },
         );
       }
-      setSiteTitle(body.siteTitle as string | null);
+      await setSiteTitle(body.siteTitle as string | null);
     }
 
     if (body.systemId !== undefined && body.enabled !== undefined) {
@@ -117,7 +119,7 @@ export async function PUT(request: Request) {
           { status: 400 },
         );
       }
-      setModuleEnabled(systemId, body.enabled);
+      await setModuleEnabled(systemId, body.enabled);
     }
 
     if (body.useHostTheme !== undefined) {
@@ -142,7 +144,7 @@ export async function PUT(request: Request) {
           { status: 400 },
         );
       }
-      setModuleHostTheme(systemId, body.useHostTheme);
+      await setModuleHostTheme(systemId, body.useHostTheme);
     }
 
     if (body.status !== undefined) {
@@ -167,7 +169,7 @@ export async function PUT(request: Request) {
           { status: 400 },
         );
       }
-      setModuleStatus(systemId, body.status);
+      await setModuleStatus(systemId, body.status);
     }
   } catch (error) {
     return NextResponse.json(
@@ -180,5 +182,5 @@ export async function PUT(request: Request) {
     );
   }
 
-  return NextResponse.json(catalogResponse());
+  return NextResponse.json(await catalogResponse());
 }

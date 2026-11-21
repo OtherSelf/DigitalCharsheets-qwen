@@ -73,7 +73,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const result = verifyRecovery(username, phrase);
+    const result = await verifyRecovery(username, phrase);
     if (!result.success || !result.user) {
       // В журнал — только причина, без логина и фразы.
       console.warn(
@@ -92,7 +92,7 @@ export async function POST(request: Request) {
 
     getAuthRateLimiter().reset(verifyKey);
 
-    const { token, expiresAt } = issueRecoveryToken(result.user.uid);
+    const { token, expiresAt } = await issueRecoveryToken(result.user.uid);
     return NextResponse.json({ success: true, token, expiresAt });
   } catch (error) {
     console.error('Recovery verify error:', error);

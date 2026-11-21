@@ -55,7 +55,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const result = authenticateUser(username, password, displayName, {
+    const result = await authenticateUser(username, password, displayName, {
       allowRegistration: false,
     });
 
@@ -108,7 +108,10 @@ export async function POST(request: Request) {
       isNewUser: result.isNewUser,
       user: result.user,
     });
-    response.headers.set('Set-Cookie', sessionCookieHeader(result.user.uid));
+    response.headers.set(
+      'Set-Cookie',
+      await sessionCookieHeader(result.user.uid),
+    );
     return response;
   } catch (error) {
     return NextResponse.json(

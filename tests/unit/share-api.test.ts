@@ -42,16 +42,16 @@ function request(
   });
 }
 
-beforeEach(() => {
+beforeEach(async () => {
   dataDir = useTempDataDir();
   uid = newUid();
-  createUserFolder(uid, 'share-api-user', 'Share API');
-  saveCharacterToServer(uid, makeDndCharacter({ id: CHARACTER_ID }));
-  headers = sessionHeaders(uid);
+  await createUserFolder(uid, 'share-api-user', 'Share API');
+  await saveCharacterToServer(uid, makeDndCharacter({ id: CHARACTER_ID }));
+  headers = await sessionHeaders(uid);
 
   const foreignUid = newUid();
-  createUserFolder(foreignUid, 'share-foreign-user', 'Foreign');
-  saveCharacterToServer(
+  await createUserFolder(foreignUid, 'share-foreign-user', 'Foreign');
+  await saveCharacterToServer(
     foreignUid,
     makeDndCharacter({ id: FOREIGN_CHARACTER_ID }),
   );
@@ -214,7 +214,7 @@ describe('GET/POST/DELETE /api/characters/[id]/share', () => {
     expect(revoked.status).toBe(200);
     expect(revoked.headers.get('cache-control')).toBe('no-store');
     expect(await resolveShareToken(created.token)).toBeNull();
-    expect(getShareForCharacter(uid, CHARACTER_ID)).toBeNull();
+    expect(await getShareForCharacter(uid, CHARACTER_ID)).toBeNull();
 
     const again = await shareDelete(request('DELETE'), params());
     expect(again.status).toBe(200);

@@ -49,20 +49,20 @@ afterEach(() => {
 });
 
 describe('game-catalog', () => {
-  it('без файла отдаёт defaultStatus модулей и enabled=true', () => {
-    const catalog = readGameCatalog();
+  it('без файла отдаёт defaultStatus модулей и enabled=true', async () => {
+    const catalog = await readGameCatalog();
     expect(catalog.plugins).toEqual({});
     expect(catalog.siteTitle).toBeUndefined();
     for (const plugin of PLUGINS) {
-      expect(getModuleStatus(plugin.manifest.id)).toBe(
+      expect(await getModuleStatus(plugin.manifest.id)).toBe(
         plugin.manifest.defaultStatus,
       );
     }
-    expect(isModuleEnabled(FIRST.id)).toBe(true);
+    expect(await isModuleEnabled(FIRST.id)).toBe(true);
   });
 
-  it('сохраняет статус в settings/game-catalog.json и читает обратно', () => {
-    setModuleStatus(SECOND.id, 'test');
+  it('сохраняет статус в settings/game-catalog.json и читает обратно', async () => {
+    await setModuleStatus(SECOND.id, 'test');
 
     const file = gameCatalogPath();
     expect(fs.existsSync(file)).toBe(true);
@@ -72,35 +72,35 @@ describe('game-catalog', () => {
       plugins: { [SECOND.id]: { enabled: true, visibility: 'test' } },
     });
 
-    expect(getModuleStatus(SECOND.id)).toBe('test');
-    expect(getModuleStatus(FIRST.id)).toBe(FIRST.defaultStatus);
+    expect(await getModuleStatus(SECOND.id)).toBe('test');
+    expect(await getModuleStatus(FIRST.id)).toBe(FIRST.defaultStatus);
 
-    setModuleStatus(FIRST.id, 'hidden');
-    expect(getModuleStatus(FIRST.id)).toBe('hidden');
-    expect(getModuleStatus(SECOND.id)).toBe('test');
+    await setModuleStatus(FIRST.id, 'hidden');
+    expect(await getModuleStatus(FIRST.id)).toBe('hidden');
+    expect(await getModuleStatus(SECOND.id)).toBe('test');
   });
 
-  it('матрица видимости по ролям', () => {
+  it('матрица видимости по ролям', async () => {
     for (const role of [undefined, 'user', 'tester', 'admin'] as const) {
-      expect(canAccessModule(role, FIRST.id)).toBe(true);
+      expect(await canAccessModule(role, FIRST.id)).toBe(true);
     }
 
-    setModuleStatus(SECOND.id, 'test');
-    expect(canAccessModule(undefined, SECOND.id)).toBe(false);
-    expect(canAccessModule('user', SECOND.id)).toBe(false);
-    expect(canAccessModule('tester', SECOND.id)).toBe(true);
-    expect(canAccessModule('admin', SECOND.id)).toBe(true);
+    await setModuleStatus(SECOND.id, 'test');
+    expect(await canAccessModule(undefined, SECOND.id)).toBe(false);
+    expect(await canAccessModule('user', SECOND.id)).toBe(false);
+    expect(await canAccessModule('tester', SECOND.id)).toBe(true);
+    expect(await canAccessModule('admin', SECOND.id)).toBe(true);
 
-    setModuleStatus(FIRST.id, 'hidden');
-    expect(canAccessModule(undefined, FIRST.id)).toBe(false);
-    expect(canAccessModule('user', FIRST.id)).toBe(false);
-    expect(canAccessModule('tester', FIRST.id)).toBe(false);
-    expect(canAccessModule('admin', FIRST.id)).toBe(true);
+    await setModuleStatus(FIRST.id, 'hidden');
+    expect(await canAccessModule(undefined, FIRST.id)).toBe(false);
+    expect(await canAccessModule('user', FIRST.id)).toBe(false);
+    expect(await canAccessModule('tester', FIRST.id)).toBe(false);
+    expect(await canAccessModule('admin', FIRST.id)).toBe(true);
   });
 
-  it('listModuleAccess отдаёт статус, enabled и видимость каждого модуля', () => {
-    setModuleStatus(SECOND.id, 'test');
-    const entries = listModuleAccess('user');
+  it('listModuleAccess отдаёт статус, enabled и видимость каждого модуля', async () => {
+    await setModuleStatus(SECOND.id, 'test');
+    const entries = await listModuleAccess('user');
     // Число модулей — из реестра: добавление плагина не правит тест.
     expect(entries).toHaveLength(PLUGINS.length);
     expect(
@@ -119,47 +119,47 @@ describe('game-catalog', () => {
     );
   });
 
-  it('enabled=false скрывает из создания, не меняя visibility', () => {
-    setModuleEnabled(FIRST.id, false);
-    const catalog = readGameCatalog();
+  it('enabled=false скрывает из создания, не меняя visibility', async () => {
+    await setModuleEnabled(FIRST.id, false);
+    const catalog = await readGameCatalog();
     expect(catalog.plugins[FIRST.id]).toEqual({
       enabled: false,
       visibility: FIRST.defaultStatus,
       useHostTheme: false,
     });
-    expect(isModuleEnabled(FIRST.id)).toBe(false);
-    expect(getModuleStatus(FIRST.id)).toBe(FIRST.defaultStatus);
-    expect(canAccessModule('admin', FIRST.id)).toBe(true);
-    expect(canCreateWithModule('admin', FIRST.id)).toBe(false);
-    expect(canCreateWithModule('user', SECOND.id)).toBe(true);
+    expect(await isModuleEnabled(FIRST.id)).toBe(false);
+    expect(await getModuleStatus(FIRST.id)).toBe(FIRST.defaultStatus);
+    expect(await canAccessModule('admin', FIRST.id)).toBe(true);
+    expect(await canCreateWithModule('admin', FIRST.id)).toBe(false);
+    expect(await canCreateWithModule('user', SECOND.id)).toBe(true);
 
-    const entry = listModuleAccess('user').find(
+    const entry = (await listModuleAccess('user')).find(
       (item) => item.module.id === FIRST.id,
     );
     expect(entry).toMatchObject({ enabled: false, visible: false });
 
-    setModuleEnabled(FIRST.id, true);
-    expect(isModuleEnabled(FIRST.id)).toBe(true);
-    expect(canCreateWithModule('user', FIRST.id)).toBe(true);
+    await setModuleEnabled(FIRST.id, true);
+    expect(await isModuleEnabled(FIRST.id)).toBe(true);
+    expect(await canCreateWithModule('user', FIRST.id)).toBe(true);
   });
 
-  it('смена visibility не включает выключенный плагин и наоборот', () => {
-    setModuleEnabled(SECOND.id, false);
-    setModuleStatus(SECOND.id, 'hidden');
-    expect(readGameCatalog().plugins[SECOND.id]).toEqual({
+  it('смена visibility не включает выключенный плагин и наоборот', async () => {
+    await setModuleEnabled(SECOND.id, false);
+    await setModuleStatus(SECOND.id, 'hidden');
+    expect((await readGameCatalog()).plugins[SECOND.id]).toEqual({
       enabled: false,
       visibility: 'hidden',
       useHostTheme: false,
     });
-    setModuleEnabled(SECOND.id, true);
-    expect(readGameCatalog().plugins[SECOND.id]).toEqual({
+    await setModuleEnabled(SECOND.id, true);
+    expect((await readGameCatalog()).plugins[SECOND.id]).toEqual({
       enabled: true,
       visibility: 'hidden',
       useHostTheme: false,
     });
   });
 
-  it('каталог v1 (statuses) мигрирует в v2 при чтении', () => {
+  it('каталог v1 (statuses) мигрирует в v2 при чтении', async () => {
     const file = gameCatalogPath();
     fs.mkdirSync(path.dirname(file), { recursive: true });
     fs.writeFileSync(
@@ -167,16 +167,16 @@ describe('game-catalog', () => {
       JSON.stringify({ version: 1, statuses: { [SECOND.id]: 'test' } }),
       'utf8',
     );
-    const catalog = readGameCatalog();
+    const catalog = await readGameCatalog();
     expect(catalog.version).toBe(2);
     expect(catalog.plugins).toEqual({
       [SECOND.id]: { enabled: true, visibility: 'test' },
     });
-    expect(getModuleStatus(SECOND.id)).toBe('test');
-    expect(isModuleEnabled(SECOND.id)).toBe(true);
+    expect(await getModuleStatus(SECOND.id)).toBe('test');
+    expect(await isModuleEnabled(SECOND.id)).toBe(true);
 
     // Первая запись переводит файл в v2.
-    setSiteTitle('Z');
+    await setSiteTitle('Z');
     const raw = JSON.parse(fs.readFileSync(file, 'utf8'));
     expect(raw.version).toBe(2);
     expect(raw.plugins[SECOND.id]).toEqual({
@@ -185,19 +185,19 @@ describe('game-catalog', () => {
     });
   });
 
-  it('заголовок сайта переопределяется и сбрасывается', () => {
-    setSiteTitle('  Мой стол  ');
-    expect(readGameCatalog().siteTitle).toBe('Мой стол');
+  it('заголовок сайта переопределяется и сбрасывается', async () => {
+    await setSiteTitle('  Мой стол  ');
+    expect((await readGameCatalog()).siteTitle).toBe('Мой стол');
 
-    setSiteTitle(null);
-    expect(readGameCatalog().siteTitle).toBeUndefined();
+    await setSiteTitle(null);
+    expect((await readGameCatalog()).siteTitle).toBeUndefined();
   });
 
-  it('битый файл или неизвестный статус не ломают чтение', () => {
+  it('битый файл или неизвестный статус не ломают чтение', async () => {
     const file = gameCatalogPath();
     fs.mkdirSync(path.dirname(file), { recursive: true });
     fs.writeFileSync(file, '{not json', 'utf8');
-    expect(readGameCatalog().plugins).toEqual({});
+    expect((await readGameCatalog()).plugins).toEqual({});
 
     fs.writeFileSync(
       file,
@@ -207,19 +207,19 @@ describe('game-catalog', () => {
       }),
       'utf8',
     );
-    expect(readGameCatalog().plugins).toEqual({
+    expect((await readGameCatalog()).plugins).toEqual({
       [FIRST.id]: { enabled: true, visibility: 'test' },
     });
   });
 
-  it('неизвестный модуль или статус — ошибка', () => {
-    expect(() => setModuleStatus(UNKNOWN_ID as never, 'test')).toThrow(
+  it('неизвестный модуль или статус — ошибка', async () => {
+    await expect(setModuleStatus(UNKNOWN_ID as never, 'test')).rejects.toThrow(
       /Неизвестный модуль/,
     );
-    expect(() => setModuleStatus(FIRST.id, 'bogus' as never)).toThrow(
+    await expect(setModuleStatus(FIRST.id, 'bogus' as never)).rejects.toThrow(
       /Неизвестный статус/,
     );
-    expect(() => setModuleEnabled(UNKNOWN_ID as never, false)).toThrow(
+    await expect(setModuleEnabled(UNKNOWN_ID as never, false)).rejects.toThrow(
       /Неизвестный модуль/,
     );
   });

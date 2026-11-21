@@ -335,7 +335,7 @@ describe('PUT /api/auth/profile', () => {
     const res = await profileRoute(
       json(
         { newUsername: 'new-login', newDisplayName: 'New Name' },
-        sessionHeaders(uid),
+        await sessionHeaders(uid),
       ),
     );
     expect(res.status).toBe(200);

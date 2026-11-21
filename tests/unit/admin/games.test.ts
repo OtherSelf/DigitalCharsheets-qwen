@@ -53,11 +53,14 @@ afterEach(() => {
   removeDir(dataDir);
 });
 
-function createUser(username: string, role: UserRole = 'user'): string {
-  const result = authenticateUser(username, 'pass-one-1234');
+async function createUser(
+  username: string,
+  role: UserRole = 'user',
+): Promise<string> {
+  const result = await authenticateUser(username, 'pass-one-1234');
   const uid = result.user!.uid;
-  const stored = readStoredUser(uid)!;
-  writeStoredUser(uid, { ...stored, role });
+  const stored = (await readStoredUser(uid))!;
+  await writeStoredUser(uid, { ...stored, role });
   return uid;
 }
 
@@ -65,12 +68,17 @@ function request(url: string, options: RequestInit = {}) {
   return new Request(`http://localhost${url}`, options);
 }
 
-function jsonRequest(url: string, method: string, body: unknown, uid?: string) {
+async function jsonRequest(
+  url: string,
+  method: string,
+  body: unknown,
+  uid?: string,
+) {
   return request(url, {
     method,
     headers: {
       'content-type': 'application/json',
-      ...(uid ? sessionHeaders(uid) : {}),
+      ...(uid ? await sessionHeaders(uid) : {}),
     },
     body: JSON.stringify(body),
   });
@@ -81,9 +89,9 @@ function defaultsFor(gameModule: AnyGameModule) {
 }
 
 /** Вернуть все редакции в published: матрица ролей не зависит от манифестов. */
-function publishAllModules() {
+async function publishAllModules() {
   for (const gameModule of MODULES) {
-    setModuleStatus(gameModule.id, 'published');
+    await setModuleStatus(gameModule.id, 'published');
   }
 }
 
@@ -101,7 +109,7 @@ function editionIds(body: GamesBody): string[] {
 
 async function listGames(uid?: string): Promise<GamesBody> {
   const res = await gamesGet(
-    request('/api/games', { headers: uid ? sessionHeaders(uid) : {} }),
+    request('/api/games', { headers: uid ? await sessionHeaders(uid) : {} }),
   );
   expect(res.status).toBe(200);
   return (await res.json()) as GamesBody;
@@ -110,18 +118,18 @@ async function listGames(uid?: string): Promise<GamesBody> {
 describe('/api/admin/games', () => {
   it('доступен только admin', async () => {
     for (const role of ['user', 'tester'] as const) {
-      const uid = createUser(`not-admin-${role}`, role);
+      const uid = await createUser(`not-admin-${role}`, role);
       const res = await adminGamesGet(
-        request('/api/admin/games', { headers: sessionHeaders(uid) }),
+        request('/api/admin/games', { headers: await sessionHeaders(uid) }),
       );
       expect(res.status).toBe(403);
     }
     const guest = await adminGamesGet(request('/api/admin/games'));
     expect(guest.status).toBe(401);
 
-    const admin = createUser('real-admin', 'admin');
+    const admin = await createUser('real-admin', 'admin');
     const ok = await adminGamesGet(
-      request('/api/admin/games', { headers: sessionHeaders(admin) }),
+      request('/api/admin/games', { headers: await sessionHeaders(admin) }),
     );
     expect(ok.status).toBe(200);
     const body = await ok.json();
@@ -131,10 +139,10 @@ describe('/api/admin/games', () => {
   });
 
   it('admin меняет статус и заголовок; сохраняется на диск', async () => {
-    const admin = createUser('games-admin', 'admin');
+    const admin = await createUser('games-admin', 'admin');
 
     const putStatus = await adminGamesPut(
-      jsonRequest(
+      await jsonRequest(
         '/api/admin/games',
         'PUT',
         { systemId: FIRST_MODULE.id, status: 'test' },
@@ -149,7 +157,7 @@ describe('/api/admin/games', () => {
     ).toBe('test');
 
     const putTitle = await adminGamesPut(
-      jsonRequest(
+      await jsonRequest(
         '/api/admin/games',
         'PUT',
         { siteTitle: 'Новый стол' },
@@ -171,10 +179,10 @@ describe('/api/admin/games', () => {
   });
 
   it('валидирует статус и систему', async () => {
-    const admin = createUser('validate-admin', 'admin');
+    const admin = await createUser('validate-admin', 'admin');
 
     const badStatus = await adminGamesPut(
-      jsonRequest(
+      await jsonRequest(
         '/api/admin/games',
         'PUT',
         { systemId: FIRST_MODULE.id, status: 'nonsense' },
@@ -184,7 +192,7 @@ describe('/api/admin/games', () => {
     expect(badStatus.status).toBe(400);
 
     const badSystem = await adminGamesPut(
-      jsonRequest(
+      await jsonRequest(
         '/api/admin/games',
         'PUT',
         { systemId: MISSING_SYSTEM, status: 'test' },
@@ -197,8 +205,8 @@ describe('/api/admin/games', () => {
 
 describe('отключённый плагин (enabled=false)', () => {
   it('/api/games скрывает его из создания и отдаёт список disabled', async () => {
-    publishAllModules();
-    setModuleEnabled(FIRST_MODULE.id, false);
+    await publishAllModules();
+    await setModuleEnabled(FIRST_MODULE.id, false);
     const guest = await listGames();
     const guestIds = editionIds(guest);
     expect(guestIds).not.toContain(FIRST_MODULE.id);
@@ -210,29 +218,34 @@ describe('отключённый плагин (enabled=false)', () => {
   });
 
   it('создание листа отключённой игры запрещено даже админу', async () => {
-    publishAllModules();
-    setModuleEnabled(SECOND_MODULE.id, false);
-    const admin = createUser('disabled-admin', 'admin');
+    await publishAllModules();
+    await setModuleEnabled(SECOND_MODULE.id, false);
+    const admin = await createUser('disabled-admin', 'admin');
     const payload = defaultsFor(SECOND_MODULE);
 
     const denied = await charactersPost(
-      jsonRequest('/api/characters', 'POST', payload, admin),
+      await jsonRequest('/api/characters', 'POST', payload, admin),
     );
     expect(denied.status).toBe(403);
     expect((await denied.json()).reason).toBe('module_disabled');
   });
 
   it('существующие листы не пропадают из списка', async () => {
-    publishAllModules();
-    const uid = createUser('owner-user');
+    await publishAllModules();
+    const uid = await createUser('owner-user');
     const created = await charactersPost(
-      jsonRequest('/api/characters', 'POST', defaultsFor(FIRST_MODULE), uid),
+      await jsonRequest(
+        '/api/characters',
+        'POST',
+        defaultsFor(FIRST_MODULE),
+        uid,
+      ),
     );
     expect(created.status).toBe(201);
 
-    setModuleEnabled(FIRST_MODULE.id, false);
+    await setModuleEnabled(FIRST_MODULE.id, false);
     const list = await charactersGet(
-      request('/api/characters', { headers: sessionHeaders(uid) }),
+      request('/api/characters', { headers: await sessionHeaders(uid) }),
     );
     expect(list.status).toBe(200);
     const body = await list.json();
@@ -242,9 +255,9 @@ describe('отключённый плагин (enabled=false)', () => {
 
 describe('админский API: метаданные плагинов и enabled', () => {
   it('GET отдаёт версию, схему, conformance и зависимости из манифеста', async () => {
-    const admin = createUser('meta-admin', 'admin');
+    const admin = await createUser('meta-admin', 'admin');
     const res = await adminGamesGet(
-      request('/api/admin/games', { headers: sessionHeaders(admin) }),
+      request('/api/admin/games', { headers: await sessionHeaders(admin) }),
     );
     expect(res.status).toBe(200);
     const body = await res.json();
@@ -267,9 +280,9 @@ describe('админский API: метаданные плагинов и enabl
   });
 
   it('GET отдаёт семейство игры и useHostTheme по умолчанию false', async () => {
-    const admin = createUser('theme-admin', 'admin');
+    const admin = await createUser('theme-admin', 'admin');
     const res = await adminGamesGet(
-      request('/api/admin/games', { headers: sessionHeaders(admin) }),
+      request('/api/admin/games', { headers: await sessionHeaders(admin) }),
     );
     expect(res.status).toBe(200);
     const body = (await res.json()) as {
@@ -281,11 +294,11 @@ describe('админский API: метаданные плагинов и enabl
   });
 
   it('PUT useHostTheme переключает стили и виден в /api/games', async () => {
-    publishAllModules();
-    const admin = createUser('theme-admin-2', 'admin');
+    await publishAllModules();
+    const admin = await createUser('theme-admin-2', 'admin');
 
     const res = await adminGamesPut(
-      jsonRequest(
+      await jsonRequest(
         '/api/admin/games',
         'PUT',
         { systemId: FIRST_MODULE.id, useHostTheme: true },
@@ -299,7 +312,7 @@ describe('админский API: метаданные плагинов и enabl
     expect(
       body.games.find((item) => item.id === FIRST_MODULE.id)?.useHostTheme,
     ).toBe(true);
-    expect(isModuleHostTheme(FIRST_MODULE.id)).toBe(true);
+    expect(await isModuleHostTheme(FIRST_MODULE.id)).toBe(true);
 
     const publicBody = (await listGames(admin)) as {
       games: {
@@ -314,11 +327,11 @@ describe('админский API: метаданные плагинов и enabl
   });
 
   it('PUT enabled переключает плагин, не меняя visibility', async () => {
-    const admin = createUser('toggle-admin', 'admin');
-    setModuleStatus(FIRST_MODULE.id, 'test');
+    const admin = await createUser('toggle-admin', 'admin');
+    await setModuleStatus(FIRST_MODULE.id, 'test');
 
     const off = await adminGamesPut(
-      jsonRequest(
+      await jsonRequest(
         '/api/admin/games',
         'PUT',
         { systemId: FIRST_MODULE.id, enabled: false },
@@ -339,7 +352,7 @@ describe('админский API: метаданные плагинов и enabl
     });
 
     const on = await adminGamesPut(
-      jsonRequest(
+      await jsonRequest(
         '/api/admin/games',
         'PUT',
         { systemId: FIRST_MODULE.id, enabled: true },
@@ -354,9 +367,9 @@ describe('админский API: метаданные плагинов и enabl
   });
 
   it('PUT enabled валидирует boolean и систему', async () => {
-    const admin = createUser('toggle-validate', 'admin');
+    const admin = await createUser('toggle-validate', 'admin');
     const badEnabled = await adminGamesPut(
-      jsonRequest(
+      await jsonRequest(
         '/api/admin/games',
         'PUT',
         { systemId: FIRST_MODULE.id, enabled: 'yes' },
@@ -366,7 +379,7 @@ describe('админский API: метаданные плагинов и enabl
     expect(badEnabled.status).toBe(400);
 
     const badSystem = await adminGamesPut(
-      jsonRequest(
+      await jsonRequest(
         '/api/admin/games',
         'PUT',
         { systemId: MISSING_SYSTEM, enabled: false },

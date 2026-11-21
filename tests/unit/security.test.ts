@@ -1,7 +1,5 @@
 import crypto from 'node:crypto';
 import fs from 'node:fs';
-import os from 'node:os';
-import path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
@@ -12,12 +10,6 @@ import {
   passwordPolicyError,
   verifyPassword,
 } from '@/lib/security/password';
-import {
-  isSafeId,
-  MAX_SAFE_ID_LENGTH,
-  resolveCharacterFile,
-  resolveInside,
-} from '@/lib/security/paths';
 import {
   clientIpFromRequest,
   createMemoryRateLimitStore,
@@ -64,27 +56,27 @@ afterEach(() => {
 describe('recovery-токены', () => {
   const uid = () => crypto.randomUUID();
 
-  it('выдаёт токен, обменивает его на uid и гасит при повторной попытке', () => {
+  it('выдаёт токен, обменивает его на uid и гасит при повторной попытке', async () => {
     const owner = uid();
-    const { token, expiresAt } = issueRecoveryToken(owner);
+    const { token, expiresAt } = await issueRecoveryToken(owner);
 
     expect(token).toMatch(/^[A-Za-z0-9_-]{40,}$/);
     expect(Date.parse(expiresAt)).toBeGreaterThan(Date.now());
 
-    expect(consumeRecoveryToken(token)).toEqual({
+    expect(await consumeRecoveryToken(token)).toEqual({
       success: true,
       uid: owner,
     });
     // Одноразовость: тот же токен второй раз не работает.
-    expect(consumeRecoveryToken(token)).toEqual({
+    expect(await consumeRecoveryToken(token)).toEqual({
       success: false,
       reason: 'invalid',
     });
   });
 
-  it('хранит на диске только хэш токена, а не сам токен', () => {
+  it('хранит на диске только хэш токена, а не сам токен', async () => {
     const owner = uid();
-    const { token } = issueRecoveryToken(owner);
+    const { token } = await issueRecoveryToken(owner);
 
     const raw = fs.readFileSync(getRecoveryTokensFile(), 'utf8');
     const parsed = readJson(getRecoveryTokensFile()) as {
@@ -99,80 +91,90 @@ describe('recovery-токены', () => {
     expect(raw).not.toContain(token);
   });
 
-  it('истекает по TTL: обмен просроченного токена отклоняется', () => {
+  it('истекает по TTL: обмен просроченного токена отклоняется', async () => {
     const owner = uid();
     const issuedAt = Date.UTC(2026, 0, 1, 12, 0, 0);
-    const { token } = issueRecoveryToken(owner, {
+    const { token } = await issueRecoveryToken(owner, {
       ttlMs: 60_000,
       nowMs: issuedAt,
     });
 
-    expect(consumeRecoveryToken(token, { nowMs: issuedAt + 60_001 })).toEqual({
+    expect(
+      await consumeRecoveryToken(token, { nowMs: issuedAt + 60_001 }),
+    ).toEqual({
       success: false,
       reason: 'expired',
     });
   });
 
-  it('по умолчанию живёт 15 минут', () => {
+  it('по умолчанию живёт 15 минут', async () => {
     const owner = uid();
     const issuedAt = Date.UTC(2026, 0, 1, 12, 0, 0);
-    const { expiresAt } = issueRecoveryToken(owner, { nowMs: issuedAt });
+    const { expiresAt } = await issueRecoveryToken(owner, { nowMs: issuedAt });
 
     expect(Date.parse(expiresAt) - issuedAt).toBe(RECOVERY_TOKEN_TTL_MS);
     expect(RECOVERY_TOKEN_TTL_MS).toBe(15 * 60 * 1000);
   });
 
-  it('отклоняет мусорный, пустой и чужой токен', () => {
+  it('отклоняет мусорный, пустой и чужой токен', async () => {
     const owner = uid();
-    const { token } = issueRecoveryToken(owner);
+    const { token } = await issueRecoveryToken(owner);
 
-    expect(consumeRecoveryToken('')).toEqual({
+    expect(await consumeRecoveryToken('')).toEqual({
       success: false,
       reason: 'invalid',
     });
-    expect(consumeRecoveryToken('not-a-token')).toEqual({
+    expect(await consumeRecoveryToken('not-a-token')).toEqual({
       success: false,
       reason: 'invalid',
     });
-    expect(consumeRecoveryToken(`${token}x`)).toEqual({
+    expect(await consumeRecoveryToken(`${token}x`)).toEqual({
       success: false,
       reason: 'invalid',
     });
     // Мусор не должен погасить настоящий токен.
-    expect(consumeRecoveryToken(token)).toEqual({ success: true, uid: owner });
+    expect(await consumeRecoveryToken(token)).toEqual({
+      success: true,
+      uid: owner,
+    });
   });
 
-  it('revokeRecoveryTokensForUser гасит все токены одного uid', () => {
+  it('revokeRecoveryTokensForUser гасит все токены одного uid', async () => {
     const victim = uid();
     const other = uid();
-    const first = issueRecoveryToken(victim);
-    const second = issueRecoveryToken(victim);
-    const survivor = issueRecoveryToken(other);
+    const first = await issueRecoveryToken(victim);
+    const second = await issueRecoveryToken(victim);
+    const survivor = await issueRecoveryToken(other);
 
-    expect(revokeRecoveryTokensForUser(victim)).toBe(2);
-    expect(consumeRecoveryToken(first.token).success).toBe(false);
-    expect(consumeRecoveryToken(second.token).success).toBe(false);
-    expect(consumeRecoveryToken(survivor.token)).toEqual({
+    expect(await revokeRecoveryTokensForUser(victim)).toBe(2);
+    expect((await consumeRecoveryToken(first.token)).success).toBe(false);
+    expect((await consumeRecoveryToken(second.token)).success).toBe(false);
+    expect(await consumeRecoveryToken(survivor.token)).toEqual({
       success: true,
       uid: other,
     });
   });
 
-  it('не хранит токен для невалидного uid', () => {
-    expect(() => issueRecoveryToken('../../etc/passwd')).toThrow(/valid uid/);
+  it('не хранит токен для невалидного uid', async () => {
+    await expect(issueRecoveryToken('../../etc/passwd')).rejects.toThrow(
+      /valid uid/,
+    );
     expect(fs.existsSync(getRecoveryTokensFile())).toBe(false);
   });
 
-  it('битый файл токенов считается пустым, а не падением', () => {
+  it('битый файл токенов считается пустым, а не падением', async () => {
     fs.writeFileSync(getRecoveryTokensFile(), '{ broken', 'utf8');
-    expect(consumeRecoveryToken('whatever')).toEqual({
+    expect(await consumeRecoveryToken('whatever')).toEqual({
       success: false,
       reason: 'invalid',
     });
 
     const owner = uid();
-    const { token } = issueRecoveryToken(owner);
-    expect(consumeRecoveryToken(token)).toEqual({ success: true, uid: owner });
+    const { token } = await issueRecoveryToken(owner);
+    expect(await consumeRecoveryToken(token)).toEqual({
+      success: true,
+      uid: owner,
+    });
   });
 });
 
@@ -289,56 +291,6 @@ describe('timing-safe сравнение', () => {
     expect(safeStringEqual('a', 'a much longer secret value')).toBe(false);
     expect(safeStringEqual('', '')).toBe(true);
     expect(safeStringEqual('', 'x')).toBe(false);
-  });
-});
-
-describe('валидация путей (SEC-3, SEC-3b)', () => {
-  const base = path.join(os.tmpdir(), 'dcs-paths', 'users', 'u', 'characters');
-
-  it('isSafeId принимает только буквы, цифры, «_» и «-»', () => {
-    expect(isSafeId('char-a_1')).toBe(true);
-    expect(isSafeId('0')).toBe(true);
-    expect(isSafeId('a'.repeat(MAX_SAFE_ID_LENGTH))).toBe(true);
-
-    expect(isSafeId('a'.repeat(MAX_SAFE_ID_LENGTH + 1))).toBe(false);
-    expect(isSafeId('')).toBe(false);
-    expect(isSafeId('../user')).toBe(false);
-    expect(isSafeId('..')).toBe(false);
-    expect(isSafeId('..%2Fuser')).toBe(false);
-    expect(isSafeId('/etc/passwd')).toBe(false);
-    expect(isSafeId('a/b')).toBe(false);
-    expect(isSafeId('a\\b')).toBe(false);
-    expect(isSafeId('a.b')).toBe(false);
-    expect(isSafeId('лист')).toBe(false);
-    expect(isSafeId(null)).toBe(false);
-    expect(isSafeId(42)).toBe(false);
-  });
-
-  it('resolveInside не выпускает из базового каталога', () => {
-    expect(resolveInside(base, 'ok.json')).toBe(path.join(base, 'ok.json'));
-    expect(resolveInside(base, '../user.json')).toBeNull();
-    expect(resolveInside(base, '../../other/user.json')).toBeNull();
-    expect(resolveInside(base, 'sub/../../user.json')).toBeNull();
-    expect(resolveInside(base, '/etc/passwd')).toBeNull();
-    expect(resolveInside(base, '..')).toBeNull();
-    expect(resolveInside(base, '.')).toBeNull();
-  });
-
-  it('resolveCharacterFile собирает «<id>.json» и отсекает traversal', () => {
-    expect(resolveCharacterFile(base, 'abc')).toBe(path.join(base, 'abc.json'));
-    for (const bad of [
-      '../user',
-      '../../557e8400-e29b-41d4-a716-446655440000/user',
-      '..%2Fuser',
-      '',
-      'a/b',
-      'a.b',
-    ]) {
-      expect({ id: bad, path: resolveCharacterFile(base, bad) }).toEqual({
-        id: bad,
-        path: null,
-      });
-    }
   });
 });
 

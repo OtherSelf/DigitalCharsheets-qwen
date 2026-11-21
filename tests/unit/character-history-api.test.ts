@@ -48,21 +48,21 @@ function changed(strength: number): HistoryChange {
   };
 }
 
-beforeEach(() => {
+beforeEach(async () => {
   dataDir = useTempDataDir();
   uid = newUid();
-  createUserFolder(uid, 'history-api-user', 'History API');
-  saveCharacterToServer(uid, makeDndCharacter({ id: CHARACTER_ID }));
-  headers = sessionHeaders(uid);
+  await createUserFolder(uid, 'history-api-user', 'History API');
+  await saveCharacterToServer(uid, makeDndCharacter({ id: CHARACTER_ID }));
+  headers = await sessionHeaders(uid);
 
   const foreignUid = newUid();
-  createUserFolder(foreignUid, 'history-foreign', 'Foreign');
-  saveCharacterToServer(foreignUid, makeDndCharacter({ id: FOREIGN_ID }));
+  await createUserFolder(foreignUid, 'history-foreign', 'Foreign');
+  await saveCharacterToServer(foreignUid, makeDndCharacter({ id: FOREIGN_ID }));
 
   // Оставляем только контролируемые ревизии, без create-маркера.
-  deleteCharacterHistory(uid, CHARACTER_ID);
+  await deleteCharacterHistory(uid, CHARACTER_ID);
   for (let index = 0; index < 3; index += 1) {
-    appendHistory(
+    await appendHistory(
       uid,
       CHARACTER_ID,
       {

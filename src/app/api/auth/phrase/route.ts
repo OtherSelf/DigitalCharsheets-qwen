@@ -16,7 +16,7 @@ import { getSessionUid, readSession } from '@/lib/session';
  */
 export async function POST(request: Request) {
   try {
-    const uid = getSessionUid(request);
+    const uid = await getSessionUid(request);
     if (!uid) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized.' },
@@ -52,7 +52,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const success = setRecoveryPhrase(uid, phrase);
+    const success = await setRecoveryPhrase(uid, phrase);
 
     if (!success) {
       return NextResponse.json(
@@ -63,7 +63,7 @@ export async function POST(request: Request) {
 
     // Новая фраза — новый секрет: чужие сессии (старые устройства) гасим,
     // текущую оставляем.
-    revokeAllSessionsForUser(uid, readSession(request)?.jti);
+    await revokeAllSessionsForUser(uid, (await readSession(request))?.jti);
 
     return NextResponse.json({ success: true });
   } catch (error) {

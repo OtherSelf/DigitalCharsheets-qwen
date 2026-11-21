@@ -8,11 +8,13 @@
 import { createSession } from '@/lib/session';
 
 /** Значение cookie-сессии для uid — то, что поставил бы `/api/auth`. */
-export function sessionCookie(uid: string): string {
-  return `dcs_session=${createSession(uid).value}`;
+export async function sessionCookie(uid: string): Promise<string> {
+  return `dcs_session=${(await createSession(uid)).value}`;
 }
 
-/** Заголовки запроса с сессией: `headers: sessionHeaders(uid)`. */
-export function sessionHeaders(uid: string): Record<string, string> {
-  return { cookie: sessionCookie(uid) };
+/** Заголовки запроса с сессией: `headers: await sessionHeaders(uid)`. */
+export async function sessionHeaders(
+  uid: string,
+): Promise<Record<string, string>> {
+  return { cookie: await sessionCookie(uid) };
 }

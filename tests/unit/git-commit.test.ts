@@ -76,24 +76,27 @@ afterEach(() => {
 });
 
 describe('readGitCheckout: разбор .git', () => {
-  it('читает SHA и ветку из распакованной ссылки', () => {
+  it('читает SHA и ветку из распакованной ссылки', async () => {
     const repo = makeRepo('repo', { branch: 'thfree-dev' });
 
-    expect(readGitCheckout(repo)).toEqual({
+    expect(await readGitCheckout(repo)).toEqual({
       commit: SHA,
       branch: 'thfree-dev',
     });
   });
 
-  it('находит .git выше по дереву (запуск из вложенного каталога)', () => {
+  it('находит .git выше по дереву (запуск из вложенного каталога)', async () => {
     const repo = makeRepo('nested');
     const deep = makeDir('nested', 'src', 'lib');
 
-    expect(findGitDir(deep)).toBe(path.join(repo, '.git'));
-    expect(readGitCheckout(deep)).toEqual({ commit: SHA, branch: 'main' });
+    expect(await findGitDir(deep)).toBe(path.join(repo, '.git'));
+    expect(await readGitCheckout(deep)).toEqual({
+      commit: SHA,
+      branch: 'main',
+    });
   });
 
-  it('понимает упакованные ссылки (packed-refs)', () => {
+  it('понимает упакованные ссылки (packed-refs)', async () => {
     const repo = makeRepo('packed', { branch: 'release' });
     const gitDir = path.join(repo, '.git');
     // Ссылка ещё не распакована: файла refs/heads/release нет, только packed-refs.
@@ -103,19 +106,19 @@ describe('readGitCheckout: разбор .git', () => {
       `# pack-refs with: peeled fully-peeled sorted\n${OTHER_SHA} refs/heads/release\n`,
     );
 
-    expect(readGitCheckout(repo)).toEqual({
+    expect(await readGitCheckout(repo)).toEqual({
       commit: OTHER_SHA,
       branch: 'release',
     });
   });
 
-  it('понимает detached HEAD (в HEAD лежит SHA)', () => {
+  it('понимает detached HEAD (в HEAD лежит SHA)', async () => {
     const repo = makeRepo('detached', { detached: true });
 
-    expect(readGitCheckout(repo)).toEqual({ commit: SHA, branch: null });
+    expect(await readGitCheckout(repo)).toEqual({ commit: SHA, branch: null });
   });
 
-  it('понимает worktree: `.git` — файл `gitdir: …`', () => {
+  it('понимает worktree: `.git` — файл `gitdir: …`', async () => {
     const repo = makeRepo('main-repo', { branch: 'wt-branch' });
     const worktree = makeDir('worktree');
     writeFile(
@@ -123,57 +126,57 @@ describe('readGitCheckout: разбор .git', () => {
       `gitdir: ${path.join(repo, '.git')}\n`,
     );
 
-    expect(readGitCheckout(worktree)).toEqual({
+    expect(await readGitCheckout(worktree)).toEqual({
       commit: SHA,
       branch: 'wt-branch',
     });
   });
 
-  it('приводит SHA к нижнему регистру', () => {
+  it('приводит SHA к нижнему регистру', async () => {
     const repo = makeRepo('upper');
     writeFile(
       path.join(repo, '.git', 'refs', 'heads', 'main'),
       `${SHA.toUpperCase()}\n`,
     );
 
-    expect(readGitCheckout(repo)?.commit).toBe(SHA);
+    expect((await readGitCheckout(repo))?.commit).toBe(SHA);
   });
 
-  it('не падает на битом/отсутствующем HEAD и возвращает null', () => {
+  it('не падает на битом/отсутствующем HEAD и возвращает null', async () => {
     const repo = makeRepo('broken');
     writeFile(path.join(repo, '.git', 'HEAD'), 'ref: refs/heads/gone\n');
-    expect(readGitCheckout(repo)).toBeNull();
+    expect(await readGitCheckout(repo)).toBeNull();
 
     writeFile(path.join(repo, '.git', 'HEAD'), 'not a sha\n');
-    expect(readGitCheckout(repo)).toBeNull();
+    expect(await readGitCheckout(repo)).toBeNull();
 
     fs.rmSync(path.join(repo, '.git', 'HEAD'));
-    expect(readGitCheckout(repo)).toBeNull();
+    expect(await readGitCheckout(repo)).toBeNull();
   });
 
-  it('возвращает null, если это не рабочая копия', () => {
+  it('возвращает null, если это не рабочая копия', async () => {
     const plain = makeDir('no-git');
-    expect(findGitDir(plain)).toBeNull();
-    expect(readGitCheckout(plain)).toBeNull();
+    expect(await findGitDir(plain)).toBeNull();
+    expect(await readGitCheckout(plain)).toBeNull();
   });
 });
 
 describe('getAppInfo: версия из рабочей копии', () => {
-  it('без env берёт commit и ветку из .git', () => {
+  it('без env берёт commit и ветку из .git', async () => {
     const repo = makeRepo('info-repo', { branch: 'thfree-dev' });
     resetGitCheckoutCache();
 
-    const info = getAppInfo({ cwd: repo });
+    const info = await getAppInfo({ cwd: repo });
     expect(info.version).toBe(APP_VERSION);
     expect(info.commit).toBe(SHA);
     expect(info.commitShort).toBe(SHA.slice(0, SHORT_COMMIT_LENGTH));
     expect(info.branch).toBe('thfree-dev');
   });
 
-  it('кэширует результат на каталог', () => {
+  it('кэширует результат на каталог', async () => {
     const repo = makeRepo('cache-repo', { branch: 'one' });
     resetGitCheckoutCache();
-    expect(getGitCheckoutInfo(repo)?.branch).toBe('one');
+    expect((await getGitCheckoutInfo(repo))?.branch).toBe('one');
 
     // Меняем HEAD — без сброса кэша значение прежнее (один процесс = одна
     // рабочая копия), после сброса читается заново.
@@ -181,33 +184,33 @@ describe('getAppInfo: версия из рабочей копии', () => {
       path.join(repo, '.git', 'refs', 'heads', 'one'),
       `${OTHER_SHA}\n`,
     );
-    expect(getGitCheckoutInfo(repo)?.commit).toBe(SHA);
+    expect((await getGitCheckoutInfo(repo))?.commit).toBe(SHA);
 
     resetGitCheckoutCache();
-    expect(getGitCheckoutInfo(repo)?.commit).toBe(OTHER_SHA);
+    expect((await getGitCheckoutInfo(repo))?.commit).toBe(OTHER_SHA);
   });
 
-  it('env важнее .git (Docker/CI задают коммит и ветку явно)', () => {
+  it('env важнее .git (Docker/CI задают коммит и ветку явно)', async () => {
     const repo = makeRepo('env-repo');
     vi.stubEnv('DCS_GIT_COMMIT', OTHER_SHA.toUpperCase());
     vi.stubEnv('DCS_GIT_BRANCH', 'from-ci');
     resetGitCheckoutCache();
 
-    const info = getAppInfo({ cwd: repo });
+    const info = await getAppInfo({ cwd: repo });
     // env отдаётся как есть (commitShort — уже нормализованный), .git не читается.
     expect(info.commit).toBe(OTHER_SHA.toUpperCase());
     expect(info.branch).toBe('from-ci');
     expect(info.commitShort).toBe(OTHER_SHA.slice(0, SHORT_COMMIT_LENGTH));
   });
 
-  it('в образе без .git commit остаётся null', () => {
+  it('в образе без .git commit остаётся null', async () => {
     const plain = makeDir('image-root');
     vi.stubEnv('DCS_GIT_COMMIT', '');
     vi.stubEnv('GIT_COMMIT', '');
     vi.stubEnv('VERCEL_GIT_COMMIT_SHA', '');
     resetGitCheckoutCache();
 
-    const info = getAppInfo({ cwd: plain });
+    const info = await getAppInfo({ cwd: plain });
     expect(info.commit).toBeNull();
     expect(info.commitShort).toBeNull();
     expect(info.branch).toBeNull();

@@ -1,5 +1,5 @@
 import crypto from 'crypto';
-import fs from 'fs';
+import fs from 'fs/promises';
 import path from 'path';
 
 import { getDataDir } from './data-dir';
@@ -34,10 +34,10 @@ export interface ServiceAdminReport {
   error?: string;
 }
 
-function writeCredentialsFile(
+async function writeCredentialsFile(
   username: string,
   password: string,
-): string | null {
+): Promise<string | null> {
   const file = path.join(getDataDir(), INITIAL_ADMIN_FILE);
   const content = [
     'Digital Character Sheets — initial administrator',
@@ -52,12 +52,12 @@ function writeCredentialsFile(
   ].join('\n');
 
   try {
-    fs.mkdirSync(getDataDir(), { recursive: true });
-    fs.writeFileSync(file, content, { encoding: 'utf8', mode: 0o600 });
+    await fs.mkdir(getDataDir(), { recursive: true });
+    await fs.writeFile(file, content, { encoding: 'utf8', mode: 0o600 });
     try {
-      // mode в writeFileSync действует только при создании файла; если файл
+      // mode в writeFile действует только при создании файла; если файл
       // остался от прошлого bootstrap — выставляем права явно.
-      fs.chmodSync(file, 0o600);
+      await fs.chmod(file, 0o600);
     } catch {
       /* Windows/некоторые ФС не поддерживают chmod — не критично */
     }
@@ -81,8 +81,8 @@ function candidateLogins(base: string): string[] {
  * Создать служебного администратора, если активных админов нет.
  * Возвращает `created: false`, когда админ уже есть или создать не удалось.
  */
-export function ensureServiceAdmin(): ServiceAdminReport {
-  const activeAdmin = listStoredUsers().some(
+export async function ensureServiceAdmin(): Promise<ServiceAdminReport> {
+  const activeAdmin = (await listStoredUsers()).some(
     (user) => user.role === 'admin' && !user.isBlocked,
   );
   if (activeAdmin) return { created: false };
@@ -92,9 +92,9 @@ export function ensureServiceAdmin(): ServiceAdminReport {
   const password = crypto.randomBytes(12).toString('base64url');
 
   for (const login of candidateLogins(requested)) {
-    if (resolveLogin(login)) continue;
+    if (await resolveLogin(login)) continue;
 
-    const created = createServiceAdmin(login, password, 'Administrator');
+    const created = await createServiceAdmin(login, password, 'Administrator');
     if (!created.success) {
       // `exists` — гонка с параллельным созданием; пробуем следующий логин.
       if (created.reason === 'exists') continue;
@@ -108,7 +108,8 @@ export function ensureServiceAdmin(): ServiceAdminReport {
       created: true,
       username: login,
       password,
-      credentialsFile: writeCredentialsFile(login, password) ?? undefined,
+      credentialsFile:
+        (await writeCredentialsFile(login, password)) ?? undefined,
     };
   }
 

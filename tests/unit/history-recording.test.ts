@@ -24,11 +24,11 @@ function character(): Character {
   return makeDndCharacter({ id: CHARACTER_ID }) as Character;
 }
 
-beforeEach(() => {
+beforeEach(async () => {
   dataDir = useTempDataDir();
   uid = newUid();
-  createUserFolder(uid, 'history-user', 'History');
-  saveCharacterToServer(uid, character());
+  await createUserFolder(uid, 'history-user', 'History');
+  await saveCharacterToServer(uid, character());
 });
 
 afterEach(() => {
@@ -36,22 +36,22 @@ afterEach(() => {
 });
 
 describe('history recording', () => {
-  it('создаёт маркер при создании листа', () => {
-    const read = readHistory(uid, CHARACTER_ID);
+  it('создаёт маркер при создании листа', async () => {
+    const read = await readHistory(uid, CHARACTER_ID);
 
     expect(read.revisions).toHaveLength(1);
     expect(read.revisions[0].source).toBe('create');
     expect(read.revisions[0].changes).toEqual([]);
   });
 
-  it('записывает diff успешного PUT', () => {
+  it('записывает diff успешного PUT', async () => {
     const current = character();
     const stats = current.stats as Record<string, number>;
-    updateCharacterOnServer(uid, CHARACTER_ID, {
+    await updateCharacterOnServer(uid, CHARACTER_ID, {
       stats: { ...stats, strength: 18 },
     });
 
-    const read = readHistory(uid, CHARACTER_ID);
+    const read = await readHistory(uid, CHARACTER_ID);
     expect(read.revisions).toHaveLength(2);
     const last = read.revisions[1];
     expect(last.source).toBe('save');
@@ -63,38 +63,38 @@ describe('history recording', () => {
     });
   });
 
-  it('не пишет ревизию для пустого патча и stale-записи', () => {
-    updateCharacterOnServer(uid, CHARACTER_ID, {
+  it('не пишет ревизию для пустого патча и stale-записи', async () => {
+    await updateCharacterOnServer(uid, CHARACTER_ID, {
       name: 'Ragnar Testborn',
     });
-    expect(readHistory(uid, CHARACTER_ID).revisions).toHaveLength(1);
+    expect((await readHistory(uid, CHARACTER_ID)).revisions).toHaveLength(1);
 
-    updateCharacterOnServer(
+    await updateCharacterOnServer(
       uid,
       CHARACTER_ID,
       { name: 'Fresh' },
       { writeToken: { page: 'page-1', seq: 2 } },
     );
-    const afterFresh = readHistory(uid, CHARACTER_ID);
+    const afterFresh = await readHistory(uid, CHARACTER_ID);
     expect(afterFresh.revisions).toHaveLength(2);
 
-    updateCharacterOnServer(
+    await updateCharacterOnServer(
       uid,
       CHARACTER_ID,
       { name: 'Stale' },
       { writeToken: { page: 'page-1', seq: 1 } },
     );
-    const afterStale = readHistory(uid, CHARACTER_ID);
+    const afterStale = await readHistory(uid, CHARACTER_ID);
     expect(afterStale.revisions).toHaveLength(2);
   });
 
-  it('удаляет историю вместе с листом', () => {
+  it('удаляет историю вместе с листом', async () => {
     const file = getHistoryFile(uid, CHARACTER_ID);
     expect(file).not.toBeNull();
     expect(fs.existsSync(file!)).toBe(true);
 
-    expect(deleteCharacterFromServer(uid, CHARACTER_ID)).toBe(true);
+    expect(await deleteCharacterFromServer(uid, CHARACTER_ID)).toBe(true);
     expect(fs.existsSync(file!)).toBe(false);
-    expect(readHistory(uid, CHARACTER_ID).revisions).toHaveLength(0);
+    expect((await readHistory(uid, CHARACTER_ID)).revisions).toHaveLength(0);
   });
 });

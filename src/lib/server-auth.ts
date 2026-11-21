@@ -1,4 +1,4 @@
-import fs from 'fs';
+import fs from 'fs/promises';
 
 import { getUserDir, getUserFile } from './data-dir';
 import { withDataLock } from './data-lock';
@@ -110,8 +110,13 @@ export function toLocalUser(user: StoredUser): LocalUser {
   };
 }
 
-export function userExists(uid: string): boolean {
-  return fs.existsSync(getUserFile(uid));
+export async function userExists(uid: string): Promise<boolean> {
+  try {
+    await fs.access(getUserFile(uid));
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 /**
@@ -119,7 +124,7 @@ export function userExists(uid: string): boolean {
  * каталога, если в JSON его нет, а `email` считается логином. Сама
  * нормализация живёт в `user-schema.ts` (её же использует startup-проверка).
  */
-export function getStoredUser(uid: string): StoredUser | null {
+export async function getStoredUser(uid: string): Promise<StoredUser | null> {
   return readStoredUser(uid);
 }
 
@@ -130,13 +135,13 @@ export function getStoredUser(uid: string): StoredUser | null {
  * `locked` — вызывающий уже держит `withDataLock` (вход по «протухшему»
  * индексу рождается внутри лока): вложенный лок — это взаимоблокировка.
  */
-function rehashPassword(
+async function rehashPassword(
   stored: StoredUser,
   password: string,
   options: { locked: boolean },
-): StoredUser {
-  const write = (): StoredUser => {
-    const fresh = readStoredUser(stored.uid) ?? stored;
+): Promise<StoredUser> {
+  const write = async (): Promise<StoredUser> => {
+    const fresh = (await readStoredUser(stored.uid)) ?? stored;
     // Пока проверялся пароль, его могли сменить: перезаписываем только если
     // на диске всё ещё старый хэш от этого же пароля.
     if (!verifyPassword(fresh.passwordHash, password).needsRehash) return fresh;
@@ -145,12 +150,12 @@ function rehashPassword(
       passwordHash: hashPassword(password),
       updatedAt: new Date().toISOString(),
     };
-    writeStoredUser(stored.uid, updated);
+    await writeStoredUser(stored.uid, updated);
     return updated;
   };
 
   try {
-    return options.locked ? write() : withDataLock(write);
+    return options.locked ? await write() : await withDataLock(write);
   } catch (e) {
     // Вход не должен падать из-за оптимизации хранения: следующий вход
     // попробует миграцию снова.
@@ -159,16 +164,16 @@ function rehashPassword(
   }
 }
 
-function authenticateExisting(
+async function authenticateExisting(
   uid: string,
   password: string,
   options: { locked?: boolean } = {},
-): AuthResult {
-  let stored = getStoredUser(uid);
+): Promise<AuthResult> {
+  let stored = await getStoredUser(uid);
   if (!stored) {
     // Индекс мог устареть (например, каталог удалили руками) — пересобираем.
-    rebuildLoginIndex();
-    stored = getStoredUser(uid);
+    await rebuildLoginIndex();
+    stored = await getStoredUser(uid);
   }
   if (!stored) {
     return {
@@ -196,14 +201,14 @@ function authenticateExisting(
     };
   }
   if (check.needsRehash) {
-    stored = rehashPassword(stored, password, {
+    stored = await rehashPassword(stored, password, {
       locked: options.locked === true,
     });
   }
   return {
     success: true,
     isNewUser: false,
-    user: toLocalUser(touchLastLogin(stored)),
+    user: toLocalUser(await touchLastLogin(stored)),
   };
 }
 
@@ -218,14 +223,14 @@ function authenticateExisting(
  * сужается до минимума, а чужие изменения не затираются снимком из начала
  * входа.
  */
-function touchLastLogin(stored: StoredUser): StoredUser {
+async function touchLastLogin(stored: StoredUser): Promise<StoredUser> {
   try {
-    const fresh = readStoredUser(stored.uid) ?? stored;
+    const fresh = (await readStoredUser(stored.uid)) ?? stored;
     const updated: StoredUser = {
       ...fresh,
       lastLoginAt: new Date().toISOString(),
     };
-    writeStoredUser(stored.uid, updated);
+    await writeStoredUser(stored.uid, updated);
     return updated;
   } catch (error) {
     console.error('Failed to update last login time:', error);
@@ -234,8 +239,8 @@ function touchLastLogin(stored: StoredUser): StoredUser {
 }
 
 /** Есть ли аккаунт с таким логином (регистр/пробелы нормализуются). */
-export function accountExists(username: string): boolean {
-  return resolveLogin(username) !== null;
+export async function accountExists(username: string): Promise<boolean> {
+  return (await resolveLogin(username)) !== null;
 }
 
 interface NewAccountOptions {
@@ -250,13 +255,13 @@ interface NewAccountOptions {
  * `options` нужен только служебному администратору (роль `admin` и флаг
  * «пароль сгенерирован»); обычная регистрация всегда создаёт `user`.
  */
-function persistNewAccount(
+async function persistNewAccount(
   login: string,
   passwordHash: string,
   displayName?: string,
   recoveryPhrase?: string,
   options: NewAccountOptions = {},
-): AuthResult {
+): Promise<AuthResult> {
   const uid = newUid();
   const now = new Date().toISOString();
   const user: StoredUser = {
@@ -281,12 +286,12 @@ function persistNewAccount(
     user.mustChangePassword = true;
   }
 
-  writeStoredUser(uid, user);
+  await writeStoredUser(uid, user);
 
-  const index = readLoginIndexForUpdate();
+  const index = await readLoginIndexForUpdate();
   index.logins[login] = uid;
   try {
-    writeLoginIndex(index);
+    await writeLoginIndex(index);
   } catch (e) {
     // Источник истины — user.json; индекс пересоберётся при следующем входе.
     console.error('Failed to update login index:', e);
@@ -302,12 +307,12 @@ function persistNewAccount(
  * 'exists'`), а не вход в существующий аккаунт. Вызывается из
  * `POST /api/auth/register`.
  */
-export function registerUser(
+export async function registerUser(
   username: string,
   password: string,
   displayName: string | undefined,
   recoveryPhrase: string,
-): AuthResult {
+): Promise<AuthResult> {
   const login = normalizeLogin(username);
   if (!login) {
     return {
@@ -332,7 +337,7 @@ export function registerUser(
     };
   }
 
-  if (resolveLogin(login)) {
+  if (await resolveLogin(login)) {
     return {
       success: false,
       error: 'This login is already registered.',
@@ -342,8 +347,8 @@ export function registerUser(
 
   // Регистрация под локом: иначе два параллельных запроса заведут два
   // аккаунта с одним логином.
-  return withDataLock(() => {
-    const index = readLoginIndexForUpdate();
+  return withDataLock(async () => {
+    const index = await readLoginIndexForUpdate();
     if (index.logins[login]) {
       return {
         success: false,
@@ -368,12 +373,12 @@ export function registerUser(
  * логин возвращает `reason: 'no_account'` и ничего не пишет на диск. Именно
  * так работает `POST /api/auth` — на странице /login регистрация отдельная.
  */
-export function authenticateUser(
+export async function authenticateUser(
   username: string,
   password: string,
   displayName?: string,
   options: AuthenticateOptions = {},
-): AuthResult {
+): Promise<AuthResult> {
   const login = normalizeLogin(username);
 
   if (!login) {
@@ -384,7 +389,7 @@ export function authenticateUser(
     };
   }
 
-  const existingUid = resolveLogin(login);
+  const existingUid = await resolveLogin(login);
   if (existingUid) return authenticateExisting(existingUid, password);
 
   if (options.allowRegistration === false) {
@@ -398,8 +403,8 @@ export function authenticateUser(
 
   // Регистрация: проверка «логин свободен» и создание каталога — под локом,
   // иначе два параллельных запроса заведут два аккаунта с одним логином.
-  return withDataLock(() => {
-    const index = readLoginIndexForUpdate();
+  return withDataLock(async () => {
+    const index = await readLoginIndexForUpdate();
     const racedUid = index.logins[login];
     // Лок уже взят: миграция хэша должна писать без вложенного лока.
     if (racedUid)
@@ -429,15 +434,15 @@ export interface UpdateProfileResult {
   reason?: 'not_found' | 'invalid_input' | 'invalid_password';
 }
 
-export function updateUserProfile(
+export async function updateUserProfile(
   currentUserId: string,
   newUsername: string,
   newDisplayName: string,
   newPassword?: string,
   newRecoveryPhrase?: string,
   options: UpdateProfileOptions = {},
-): UpdateProfileResult {
-  const stored = getStoredUser(currentUserId);
+): Promise<UpdateProfileResult> {
+  const stored = await getStoredUser(currentUserId);
   if (!stored) {
     return { success: false, reason: 'not_found', error: 'User not found.' };
   }
@@ -463,10 +468,10 @@ export function updateUserProfile(
   const displayName = (newDisplayName || '').trim() || stored.displayName;
 
   try {
-    return withDataLock((): UpdateProfileResult => {
+    return withDataLock(async (): Promise<UpdateProfileResult> => {
       // Перечитываем под локом: между проверкой и записью пароль мог сменить
       // администратор, и сверять текущий пароль нужно с актуальным файлом.
-      const current = getStoredUser(currentUserId);
+      const current = await getStoredUser(currentUserId);
       if (!current) {
         return {
           success: false,
@@ -489,7 +494,7 @@ export function updateUserProfile(
         }
       }
 
-      const index = readLoginIndexForUpdate();
+      const index = await readLoginIndexForUpdate();
 
       if (newLogin !== oldLogin) {
         const owner = index.logins[newLogin];
@@ -528,16 +533,16 @@ export function updateUserProfile(
 
       // user.json первым: он источник истины. Если запись индекса не удастся,
       // resolveLogin при промахе пересоберёт индекс из этого файла.
-      writeStoredUser(currentUserId, updated);
+      await writeStoredUser(currentUserId, updated);
 
       if (newLogin !== oldLogin) {
         delete index.logins[oldLogin];
         index.logins[newLogin] = currentUserId;
         try {
-          writeLoginIndex(index);
+          await writeLoginIndex(index);
         } catch (e) {
           console.error('Failed to update login index after rename:', e);
-          rebuildLoginIndex();
+          await rebuildLoginIndex();
         }
       }
 
@@ -574,10 +579,10 @@ export interface DeleteAccountResult {
   reason?: 'invalid_input' | 'invalid_password' | 'not_found' | 'failed';
 }
 
-export function deleteUserAccount(
+export async function deleteUserAccount(
   uid: string,
   password: string,
-): DeleteAccountResult {
+): Promise<DeleteAccountResult> {
   if (!isUid(uid)) {
     return { success: false, error: 'User not found.', reason: 'not_found' };
   }
@@ -590,53 +595,55 @@ export function deleteUserAccount(
   }
 
   try {
-    const result = withDataLock((): DeleteAccountResult => {
-      const stored = getStoredUser(uid);
-      if (!stored) {
-        return {
-          success: false,
-          error: 'User not found.',
-          reason: 'not_found',
-        };
-      }
-      if (!verifyPassword(stored.passwordHash, password).valid) {
-        return {
-          success: false,
-          error: 'Incorrect password.',
-          reason: 'invalid_password',
-        };
-      }
+    const result = await withDataLock(
+      async (): Promise<DeleteAccountResult> => {
+        const stored = await getStoredUser(uid);
+        if (!stored) {
+          return {
+            success: false,
+            error: 'User not found.',
+            reason: 'not_found',
+          };
+        }
+        if (!verifyPassword(stored.passwordHash, password).valid) {
+          return {
+            success: false,
+            error: 'Incorrect password.',
+            reason: 'invalid_password',
+          };
+        }
 
-      // Убираем из индекса все логины, указывающие на этот uid (обычно один).
-      const index = readLoginIndexForUpdate();
-      for (const [login, owner] of Object.entries(index.logins)) {
-        if (owner === uid) delete index.logins[login];
-      }
+        // Убираем из индекса все логины, указывающие на этот uid (обычно один).
+        const index = await readLoginIndexForUpdate();
+        for (const [login, owner] of Object.entries(index.logins)) {
+          if (owner === uid) delete index.logins[login];
+        }
 
-      fs.rmSync(getUserDir(uid), { recursive: true, force: true });
+        await fs.rm(getUserDir(uid), { recursive: true, force: true });
 
-      try {
-        writeLoginIndex(index);
-      } catch (e) {
-        // Индекс производный: его можно (и нужно) пересобрать из user.json
-        // оставшихся аккаунтов, чтобы удалённый логин точно не занимал uid.
-        console.error('Failed to update login index after deletion:', e);
-        rebuildLoginIndex();
-      }
+        try {
+          await writeLoginIndex(index);
+        } catch (e) {
+          // Индекс производный: его можно (и нужно) пересобрать из user.json
+          // оставшихся аккаунтов, чтобы удалённый логин точно не занимал uid.
+          console.error('Failed to update login index after deletion:', e);
+          await rebuildLoginIndex();
+        }
 
-      // In-memory карта порядка записей тоже не должна помнить удалённый лист.
-      resetWriteSeqGuard(uid);
+        // In-memory карта порядка записей тоже не должна помнить удалённый лист.
+        resetWriteSeqGuard(uid);
 
-      return { success: true };
-    });
+        return { success: true };
+      },
+    );
 
     // Выданные токены, сессии и гостевые ссылки пережили бы удаление профиля:
     // гасим. Ссылки лежат в общем shares.json, а не в каталоге пользователя.
     if (result.success) {
       try {
-        revokeRecoveryTokensForUser(uid);
-        revokeAllSessionsForUser(uid);
-        revokeSharesForUser(uid);
+        await revokeRecoveryTokensForUser(uid);
+        await revokeAllSessionsForUser(uid);
+        await revokeSharesForUser(uid);
       } catch (e) {
         console.error('Failed to revoke credentials after deletion:', e);
       }
@@ -656,19 +663,22 @@ export function deleteUserAccount(
  * Сохранить recovery-фразу. На диск уходит только хэш: сама фраза — секрет,
  * доказывающий владение аккаунтом.
  */
-export function setRecoveryPhrase(uid: string, phrase: string): boolean {
+export async function setRecoveryPhrase(
+  uid: string,
+  phrase: string,
+): Promise<boolean> {
   if (normalizePhrase(phrase) === '') {
     console.error('Failed to set recovery phrase: empty phrase');
     return false;
   }
   try {
-    return withDataLock(() => {
-      const stored = getStoredUser(uid);
+    return withDataLock(async () => {
+      const stored = await getStoredUser(uid);
       if (!stored) {
         console.error('Failed to set recovery phrase: user not found');
         return false;
       }
-      writeStoredUser(uid, {
+      await writeStoredUser(uid, {
         ...stored,
         recoveryPhrase: hashRecoveryPhrase(phrase),
         updatedAt: new Date().toISOString(),
@@ -703,11 +713,11 @@ export interface VerifyRecoveryResult {
   error?: string;
 }
 
-export function verifyRecovery(
+export async function verifyRecovery(
   username: string,
   recoveryPhraseInput: string,
-): VerifyRecoveryResult {
-  const uid = resolveLogin(username);
+): Promise<VerifyRecoveryResult> {
+  const uid = await resolveLogin(username);
   if (!uid) {
     return {
       success: false,
@@ -715,7 +725,7 @@ export function verifyRecovery(
       error: 'No account found with this username/email.',
     };
   }
-  const storedUser = getStoredUser(uid);
+  const storedUser = await getStoredUser(uid);
   if (!storedUser) {
     return {
       success: false,
@@ -743,15 +753,15 @@ export function verifyRecovery(
   // Легаси-фраза подтверждена — перезаписываем открытый текст хэшем.
   if (!isRecoveryPhraseHash(storedUser.recoveryPhrase)) {
     try {
-      withDataLock(() => {
-        const fresh = getStoredUser(uid);
+      await withDataLock(async () => {
+        const fresh = await getStoredUser(uid);
         if (
           !fresh?.recoveryPhrase ||
           isRecoveryPhraseHash(fresh.recoveryPhrase)
         ) {
           return;
         }
-        writeStoredUser(uid, {
+        await writeStoredUser(uid, {
           ...fresh,
           recoveryPhrase: hashRecoveryPhrase(fresh.recoveryPhrase),
           updatedAt: new Date().toISOString(),
@@ -786,11 +796,11 @@ export interface ResetWithTokenResult {
  * и получит новый. Обратный порядок был бы хуже: живой токен после смены
  * пароля — это второй ключ к аккаунту.
  */
-export function resetCredentialsWithToken(
+export async function resetCredentialsWithToken(
   token: string,
   newPassword: string,
   newRecoveryPhrase?: string,
-): ResetWithTokenResult {
+): Promise<ResetWithTokenResult> {
   const policyError = passwordPolicyError(newPassword);
   if (policyError) {
     return { success: false, reason: 'invalid_input', error: policyError };
@@ -807,7 +817,7 @@ export function resetCredentialsWithToken(
     };
   }
 
-  const consumed = consumeRecoveryToken(token);
+  const consumed = await consumeRecoveryToken(token);
   if (!consumed.success) {
     return {
       success: false,
@@ -817,40 +827,45 @@ export function resetCredentialsWithToken(
   }
 
   try {
-    const result = withDataLock((): ResetWithTokenResult => {
-      const stored = getStoredUser(consumed.uid);
-      if (!stored) {
-        return {
-          success: false,
-          reason: 'invalid_token',
-          error: 'Recovery token is invalid or expired.',
+    const result = await withDataLock(
+      async (): Promise<ResetWithTokenResult> => {
+        const stored = await getStoredUser(consumed.uid);
+        if (!stored) {
+          return {
+            success: false,
+            reason: 'invalid_token',
+            error: 'Recovery token is invalid or expired.',
+          };
+        }
+
+        const updated: StoredUser = {
+          ...stored,
+          passwordHash: hashPassword(newPassword),
+          updatedAt: new Date().toISOString(),
         };
-      }
+        if (
+          newRecoveryPhrase !== undefined &&
+          newRecoveryPhrase.trim() !== ''
+        ) {
+          updated.recoveryPhrase = hashRecoveryPhrase(newRecoveryPhrase);
+        }
+        // `email` — legacy-поле логина: логин живёт в `username`.
+        delete updated.email;
+        // Временный пароль, выданный администратором, больше не действует.
+        delete updated.mustChangePassword;
 
-      const updated: StoredUser = {
-        ...stored,
-        passwordHash: hashPassword(newPassword),
-        updatedAt: new Date().toISOString(),
-      };
-      if (newRecoveryPhrase !== undefined && newRecoveryPhrase.trim() !== '') {
-        updated.recoveryPhrase = hashRecoveryPhrase(newRecoveryPhrase);
-      }
-      // `email` — legacy-поле логина: логин живёт в `username`.
-      delete updated.email;
-      // Временный пароль, выданный администратором, больше не действует.
-      delete updated.mustChangePassword;
-
-      writeStoredUser(consumed.uid, updated);
-      return { success: true, uid: consumed.uid };
-    });
+        await writeStoredUser(consumed.uid, updated);
+        return { success: true, uid: consumed.uid };
+      },
+    );
 
     // Секреты сменились: гасим остальные токены и все живые сессии аккаунта.
     // Восстановление доступа — это «вернуть контроль», а не «войти на устройстве
     // злоумышленника»: создание сессии здесь и не предусмотрено.
     if (result.success) {
       try {
-        revokeRecoveryTokensForUser(consumed.uid);
-        revokeAllSessionsForUser(consumed.uid);
+        await revokeRecoveryTokensForUser(consumed.uid);
+        await revokeAllSessionsForUser(consumed.uid);
       } catch (e) {
         console.error('Failed to revoke recovery credentials:', e);
       }
@@ -880,8 +895,8 @@ export interface HashLegacyPhrasesReport {
  * data-dir. Миграция идемпотентна: значения-хэши и отсутствующие фразы не
  * трогаются.
  */
-export function hashLegacyRecoveryPhrases(): HashLegacyPhrasesReport {
-  const { records, issues } = scanUserRecords();
+export async function hashLegacyRecoveryPhrases(): Promise<HashLegacyPhrasesReport> {
+  const { records, issues } = await scanUserRecords();
   const report: HashLegacyPhrasesReport = {
     total: records.length,
     updated: 0,
@@ -893,14 +908,14 @@ export function hashLegacyRecoveryPhrases(): HashLegacyPhrasesReport {
     if (!phrase || isRecoveryPhraseHash(phrase)) continue;
 
     try {
-      withDataLock(() => {
-        const fresh = getStoredUser(record.uid);
+      await withDataLock(async () => {
+        const fresh = await getStoredUser(record.uid);
         if (
           !fresh?.recoveryPhrase ||
           isRecoveryPhraseHash(fresh.recoveryPhrase)
         )
           return;
-        writeStoredUser(record.uid, {
+        await writeStoredUser(record.uid, {
           ...fresh,
           recoveryPhrase: hashRecoveryPhrase(fresh.recoveryPhrase),
           updatedAt: new Date().toISOString(),
@@ -933,11 +948,11 @@ export interface CreateServiceAdminResult {
  * Логин выбирает вызывающий; здесь ещё раз проверяется занятость под локом —
  * между сканом и созданием мог проскочить параллельный запрос.
  */
-export function createServiceAdmin(
+export async function createServiceAdmin(
   username: string,
   password: string,
   displayName = 'Administrator',
-): CreateServiceAdminResult {
+): Promise<CreateServiceAdminResult> {
   const login = normalizeLogin(username);
   if (!login) {
     return {
@@ -956,8 +971,8 @@ export function createServiceAdmin(
   }
 
   try {
-    return withDataLock(() => {
-      const index = readLoginIndexForUpdate();
+    return withDataLock(async () => {
+      const index = await readLoginIndexForUpdate();
       if (index.logins[login]) {
         return {
           success: false,
@@ -966,7 +981,7 @@ export function createServiceAdmin(
         } as CreateServiceAdminResult;
       }
 
-      const created = persistNewAccount(
+      const created = await persistNewAccount(
         login,
         hashPassword(password),
         displayName,

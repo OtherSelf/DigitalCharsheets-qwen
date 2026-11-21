@@ -1,5 +1,5 @@
 import crypto from 'crypto';
-import fs from 'fs';
+import fs from 'fs/promises';
 import path from 'path';
 
 import { getHistoryFile } from './data-dir';
@@ -125,27 +125,27 @@ function historyFileFor(userId: string, characterId: string): string {
   return file;
 }
 
-function endsWithNewline(file: string): boolean {
-  const stat = fs.statSync(file);
+async function endsWithNewline(file: string): Promise<boolean> {
+  const stat = await fs.stat(file);
   if (stat.size === 0) return true;
-  const fd = fs.openSync(file, 'r');
+  const handle = await fs.open(file, 'r');
   try {
     const buffer = Buffer.alloc(1);
-    fs.readSync(fd, buffer, 0, 1, stat.size - 1);
+    await handle.read(buffer, 0, 1, stat.size - 1);
     return buffer[0] === 0x0a;
   } finally {
-    fs.closeSync(fd);
+    await handle.close();
   }
 }
 
-function writeTextAtomic(file: string, content: string): void {
+async function writeTextAtomic(file: string, content: string): Promise<void> {
   const tmp = `${file}.${process.pid.toString(36)}.${Date.now().toString(36)}.tmp`;
   try {
-    fs.writeFileSync(tmp, content, 'utf8');
-    fs.renameSync(tmp, file);
+    await fs.writeFile(tmp, content, 'utf8');
+    await fs.rename(tmp, file);
   } catch (error) {
     try {
-      if (fs.existsSync(tmp)) fs.unlinkSync(tmp);
+      await fs.unlink(tmp);
     } catch {
       /* best effort */
     }
@@ -153,11 +153,15 @@ function writeTextAtomic(file: string, content: string): void {
   }
 }
 
-function compactHistory(file: string, maxBytes: number, nowMs: number): void {
-  withDataLock(() => {
+async function compactHistory(
+  file: string,
+  maxBytes: number,
+  nowMs: number,
+): Promise<void> {
+  await withDataLock(async () => {
     let raw = '';
     try {
-      raw = fs.readFileSync(file, 'utf8');
+      raw = await fs.readFile(file, 'utf8');
     } catch {
       return;
     }
@@ -205,7 +209,7 @@ function compactHistory(file: string, maxBytes: number, nowMs: number): void {
       at: new Date(nowMs).toISOString(),
       dropped,
     };
-    writeTextAtomic(
+    await writeTextAtomic(
       file,
       `${JSON.stringify(marker)}\n${kept.length > 0 ? `${kept.join('\n')}\n` : ''}`,
     );
@@ -249,12 +253,12 @@ function reduceOversizedRecord(record: HistoryRevision): HistoryRevision {
  * `create`/`migration` могут быть пустыми. Ошибки файловой системы
  * пробрасываются — вызывающий решает, считать ли историю best-effort.
  */
-export function appendHistory(
+export async function appendHistory(
   userId: string,
   characterId: string,
   diff: HistoryDiffInput,
   options: AppendHistoryOptions = {},
-): void {
+): Promise<void> {
   const source = options.source ?? 'save';
   if (source === 'save' && diff.changes.length === 0) return;
 
@@ -270,34 +274,34 @@ export function appendHistory(
   }
   const lineBytes = Buffer.byteLength(`${line}\n`, 'utf8');
 
-  fs.mkdirSync(path.dirname(file), { recursive: true });
+  await fs.mkdir(path.dirname(file), { recursive: true });
 
   let currentBytes = 0;
   try {
-    currentBytes = fs.statSync(file).size;
+    currentBytes = (await fs.stat(file)).size;
   } catch {
     /* файла ещё нет */
   }
   if (currentBytes > 0 && currentBytes + lineBytes > maxBytes) {
-    compactHistory(file, maxBytes, nowMs);
+    await compactHistory(file, maxBytes, nowMs);
   }
 
-  const prefix = fs.existsSync(file) && !endsWithNewline(file) ? '\n' : '';
-  const fd = fs.openSync(file, 'a');
+  const prefix = currentBytes > 0 && !(await endsWithNewline(file)) ? '\n' : '';
+  const handle = await fs.open(file, 'a');
   try {
-    fs.writeSync(fd, `${prefix}${line}\n`);
+    await handle.write(`${prefix}${line}\n`);
   } finally {
-    fs.closeSync(fd);
+    await handle.close();
   }
 }
 
 /** Маркер создания листа (без полного diff). */
-export function appendCreateMarker(
+export async function appendCreateMarker(
   userId: string,
   characterId: string,
   options: Omit<AppendHistoryOptions, 'source'> = {},
-): void {
-  appendHistory(
+): Promise<void> {
+  await appendHistory(
     userId,
     characterId,
     { changes: [], summary: emptyHistorySummary() },
@@ -306,12 +310,12 @@ export function appendCreateMarker(
 }
 
 /** Маркер миграции листа (без полного diff). */
-export function appendMigrationMarker(
+export async function appendMigrationMarker(
   userId: string,
   characterId: string,
   options: Omit<AppendHistoryOptions, 'source'> = {},
-): void {
-  appendHistory(
+): Promise<void> {
+  await appendHistory(
     userId,
     characterId,
     { changes: [], summary: emptyHistorySummary() },
@@ -320,23 +324,23 @@ export function appendMigrationMarker(
 }
 
 /** Прочитать журнал; битые строки пропускаются, маркер компакции учитывается. */
-export function readHistory(
+export async function readHistory(
   userId: string,
   characterId: string,
-): HistoryReadResult {
+): Promise<HistoryReadResult> {
   const file = getHistoryFile(userId, characterId);
   if (!file) return emptyReadResult();
 
   let bytes = 0;
   try {
-    bytes = fs.statSync(file).size;
+    bytes = (await fs.stat(file)).size;
   } catch {
     return emptyReadResult();
   }
 
   let raw: string;
   try {
-    raw = fs.readFileSync(file, 'utf8');
+    raw = await fs.readFile(file, 'utf8');
   } catch {
     return emptyReadResult(bytes);
   }
@@ -381,16 +385,17 @@ export function readHistory(
 }
 
 /** Удалить журнал вместе с листом; ошибки не должны ломать удаление. */
-export function deleteCharacterHistory(
+export async function deleteCharacterHistory(
   userId: string,
   characterId: string,
-): boolean {
+): Promise<boolean> {
   const file = getHistoryFile(userId, characterId);
-  if (!file || !fs.existsSync(file)) return false;
+  if (!file) return false;
   try {
-    fs.unlinkSync(file);
+    await fs.unlink(file);
     return true;
   } catch (error) {
+    if ((error as NodeJS.ErrnoException)?.code === 'ENOENT') return false;
     console.error(`Failed to delete history for ${characterId}:`, error);
     return false;
   }

@@ -106,9 +106,9 @@ function logAdminReport(report: ServiceAdminReport): void {
  * Выполнить стартовую проверку. Повторный вызов в том же процессе и с тем же
  * `DCS_DATA_DIR` ничего не делает (кэш), `force: true` — для тестов.
  */
-export function runStartupMaintenance(
+export async function runStartupMaintenance(
   options: { force?: boolean } = {},
-): StartupReport {
+): Promise<StartupReport> {
   const dataDir = getDataDir();
   if (!options.force && cachedReport && cachedDataDir === dataDir) {
     return cachedReport;
@@ -124,7 +124,7 @@ export function runStartupMaintenance(
   };
 
   try {
-    report.profiles = normalizeUserProfiles();
+    report.profiles = await normalizeUserProfiles();
     logProfileReport(report.profiles);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
@@ -133,7 +133,7 @@ export function runStartupMaintenance(
   }
 
   try {
-    report.characters = normalizeAllCharacters();
+    report.characters = await normalizeAllCharacters();
     logCharacterReport(report.characters);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
@@ -142,7 +142,7 @@ export function runStartupMaintenance(
   }
 
   try {
-    rebuildLoginIndex();
+    await rebuildLoginIndex();
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     report.errors.push(`login index rebuild failed: ${message}`);
@@ -150,7 +150,7 @@ export function runStartupMaintenance(
   }
 
   try {
-    report.admin = ensureServiceAdmin();
+    report.admin = await ensureServiceAdmin();
     logAdminReport(report.admin);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
@@ -159,7 +159,7 @@ export function runStartupMaintenance(
   }
 
   try {
-    report.phrases = hashLegacyRecoveryPhrases();
+    report.phrases = await hashLegacyRecoveryPhrases();
     if (report.phrases.updated > 0) {
       console.info(
         `[dcs] startup: recovery-фразы переведены в хэши — ${report.phrases.updated}`,

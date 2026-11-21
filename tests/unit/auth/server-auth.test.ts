@@ -60,8 +60,8 @@ describe('normalizeLogin / uid', () => {
 });
 
 describe('authenticateUser', () => {
-  it('создаёт аккаунт при первом входе и пишет user.json + индекс', () => {
-    const result = authenticateUser('newbie', 'secret1', 'Newbie');
+  it('создаёт аккаунт при первом входе и пишет user.json + индекс', async () => {
+    const result = await authenticateUser('newbie', 'secret1', 'Newbie');
 
     expect(result.success).toBe(true);
     expect(result.isNewUser).toBe(true);
@@ -88,12 +88,12 @@ describe('authenticateUser', () => {
     // Индекс: логин указывает на этот uid.
     const index = readJson(loginIndexPath(dataDir));
     expect(index.logins.newbie).toBe(uid);
-    expect(resolveLogin('newbie')).toBe(uid);
+    expect(await resolveLogin('newbie')).toBe(uid);
   });
 
-  it('не перезаписывает существующий аккаунт и сохраняет uid', () => {
-    const first = authenticateUser('repeat', 'pass-one-1234');
-    const second = authenticateUser('repeat', 'pass-one-1234');
+  it('не перезаписывает существующий аккаунт и сохраняет uid', async () => {
+    const first = await authenticateUser('repeat', 'pass-one-1234');
+    const second = await authenticateUser('repeat', 'pass-one-1234');
 
     expect(first.isNewUser).toBe(true);
     expect(second.isNewUser).toBe(false);
@@ -101,17 +101,17 @@ describe('authenticateUser', () => {
     expect(second.user?.displayName).toBe('repeat');
   });
 
-  it('не пускает с неверным паролем', () => {
-    authenticateUser('repeat', 'pass-one-1234');
-    const result = authenticateUser('repeat', 'wrong');
+  it('не пускает с неверным паролем', async () => {
+    await authenticateUser('repeat', 'pass-one-1234');
+    const result = await authenticateUser('repeat', 'wrong');
 
     expect(result.success).toBe(false);
     expect(result.error).toBe('Incorrect password.');
   });
 
-  it('логин регистронезависим', () => {
-    const created = authenticateUser('CaseUser', 'pass-one-1234');
-    const login = authenticateUser('caseuser', 'pass-one-1234');
+  it('логин регистронезависим', async () => {
+    const created = await authenticateUser('CaseUser', 'pass-one-1234');
+    const login = await authenticateUser('caseuser', 'pass-one-1234');
 
     expect(login.success).toBe(true);
     expect(login.isNewUser).toBe(false);
@@ -120,12 +120,12 @@ describe('authenticateUser', () => {
     expect(login.user?.username).toBe('caseuser');
   });
 
-  it('displayName по умолчанию берётся из логина до @', () => {
-    const result = authenticateUser('player@table.ru', 'pass-one-1234');
+  it('displayName по умолчанию берётся из логина до @', async () => {
+    const result = await authenticateUser('player@table.ru', 'pass-one-1234');
     expect(result.user?.displayName).toBe('player');
   });
 
-  it('читает legacy-поле email вместо username', () => {
+  it('читает legacy-поле email вместо username', async () => {
     const uid = newUid();
     const paths = userPaths(dataDir, uid);
     fs.mkdirSync(paths.userDir, { recursive: true });
@@ -139,35 +139,35 @@ describe('authenticateUser', () => {
     );
 
     // uid берётся из каталога, логин — из email.
-    expect(getStoredUser(uid)?.username).toBe('legacy');
-    expect(getStoredUser(uid)?.uid).toBe(uid);
+    expect((await getStoredUser(uid))?.username).toBe('legacy');
+    expect((await getStoredUser(uid))?.uid).toBe(uid);
 
     // Индекс пересобирается сканом и видит такой профиль.
-    expect(resolveLogin('legacy')).toBe(uid);
+    expect(await resolveLogin('legacy')).toBe(uid);
 
-    const result = authenticateUser('legacy', 'pass-one-1234');
+    const result = await authenticateUser('legacy', 'pass-one-1234');
     expect(result.success).toBe(true);
     expect(result.user?.uid).toBe(uid);
   });
 
-  it('allowRegistration: false не создаёт аккаунт для свободного логина', () => {
-    const result = authenticateUser('ghost', 'pass-one-1234', undefined, {
+  it('allowRegistration: false не создаёт аккаунт для свободного логина', async () => {
+    const result = await authenticateUser('ghost', 'pass-one-1234', undefined, {
       allowRegistration: false,
     });
 
     expect(result.success).toBe(false);
     expect(result.reason).toBe('no_account');
     expect(result.error).toContain('No account found');
-    expect(accountExists('ghost')).toBe(false);
+    expect(await accountExists('ghost')).toBe(false);
     expect(fs.existsSync(path.join(dataDir, 'users'))).toBe(false);
   });
 
-  it('allowRegistration: false пускает существующий аккаунт и различает пароль', () => {
-    const created = authenticateUser('known', 'pass-one-1234');
-    const ok = authenticateUser('known', 'pass-one-1234', undefined, {
+  it('allowRegistration: false пускает существующий аккаунт и различает пароль', async () => {
+    const created = await authenticateUser('known', 'pass-one-1234');
+    const ok = await authenticateUser('known', 'pass-one-1234', undefined, {
       allowRegistration: false,
     });
-    const bad = authenticateUser('known', 'wrong', undefined, {
+    const bad = await authenticateUser('known', 'wrong', undefined, {
       allowRegistration: false,
     });
 
@@ -179,20 +179,20 @@ describe('authenticateUser', () => {
 });
 
 describe('accountExists / registerUser', () => {
-  it('accountExists нормализует логин и не создаёт аккаунт', () => {
-    const created = authenticateUser('Existing.User', 'pass-one-1234');
+  it('accountExists нормализует логин и не создаёт аккаунт', async () => {
+    const created = await authenticateUser('Existing.User', 'pass-one-1234');
 
-    expect(accountExists('existing.user')).toBe(true);
-    expect(accountExists('  EXISTING.USER  ')).toBe(true);
-    expect(accountExists('missing')).toBe(false);
-    expect(accountExists('')).toBe(false);
+    expect(await accountExists('existing.user')).toBe(true);
+    expect(await accountExists('  EXISTING.USER  ')).toBe(true);
+    expect(await accountExists('missing')).toBe(false);
+    expect(await accountExists('')).toBe(false);
 
     // Проверка существования — только чтение.
-    expect(resolveLogin('existing.user')).toBe(created.user?.uid);
+    expect(await resolveLogin('existing.user')).toBe(created.user?.uid);
   });
 
-  it('registerUser создаёт аккаунт с паролем и recovery-фразой', () => {
-    const result = registerUser(
+  it('registerUser создаёт аккаунт с паролем и recovery-фразой', async () => {
+    const result = await registerUser(
       '  New.User  ',
       'pass-one-1234',
       'New User',
@@ -222,21 +222,25 @@ describe('accountExists / registerUser', () => {
     expect(recoveryPhraseMatches(stored.recoveryPhrase, 'amber cobalt')).toBe(
       true,
     );
-    expect(resolveLogin('new.user')).toBe(uid);
+    expect(await resolveLogin('new.user')).toBe(uid);
 
     // Пароль из регистрации работает при входе.
-    expect(authenticateUser('new.user', 'pass-one-1234').user?.uid).toBe(uid);
-    expect(authenticateUser('new.user', 'pass-two-1234').success).toBe(false);
+    expect(
+      (await authenticateUser('new.user', 'pass-one-1234')).user?.uid,
+    ).toBe(uid);
+    expect((await authenticateUser('new.user', 'pass-two-1234')).success).toBe(
+      false,
+    );
   });
 
-  it('registerUser отклоняет занятый логин и ничего не перезаписывает', () => {
-    const first = registerUser(
+  it('registerUser отклоняет занятый логин и ничего не перезаписывает', async () => {
+    const first = await registerUser(
       'taken',
       'pass-one-1234',
       'First',
       'amber cobalt',
     );
-    const second = registerUser(
+    const second = await registerUser(
       'taken',
       'pass-two-1234',
       'Second',
@@ -259,8 +263,8 @@ describe('accountExists / registerUser', () => {
     );
   });
 
-  it('registerUser валидирует пароль и фразу', () => {
-    const shortPassword = registerUser(
+  it('registerUser валидирует пароль и фразу', async () => {
+    const shortPassword = await registerUser(
       'short-pass',
       '123',
       'Short',
@@ -269,7 +273,7 @@ describe('accountExists / registerUser', () => {
     expect(shortPassword.success).toBe(false);
     expect(shortPassword.reason).toBe('invalid_input');
 
-    const shortPhrase = registerUser(
+    const shortPhrase = await registerUser(
       'short-phrase',
       'pass-one-1234',
       'Short',
@@ -278,7 +282,7 @@ describe('accountExists / registerUser', () => {
     expect(shortPhrase.success).toBe(false);
     expect(shortPhrase.reason).toBe('invalid_input');
 
-    const noLogin = registerUser(
+    const noLogin = await registerUser(
       '   ',
       'pass-one-1234',
       'Nobody',
@@ -286,7 +290,7 @@ describe('accountExists / registerUser', () => {
     );
     expect(noLogin.success).toBe(false);
 
-    expect(accountExists('short-pass')).toBe(false);
-    expect(accountExists('short-phrase')).toBe(false);
+    expect(await accountExists('short-pass')).toBe(false);
+    expect(await accountExists('short-phrase')).toBe(false);
   });
 });

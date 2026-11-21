@@ -15,7 +15,7 @@ import { getSessionUid } from '@/lib/session';
  * (чужой идентификатор Firebase), `userId` и служебные ключи.
  */
 export async function GET(request: Request) {
-  const uid = getSessionUid(request);
+  const uid = await getSessionUid(request);
   if (!uid) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
@@ -23,7 +23,7 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const characterId = searchParams.get('characterId');
 
-  const characters = getCharactersFromServer(uid);
+  const characters = await getCharactersFromServer(uid);
 
   if (characterId) {
     // Один лист по `characterId`; чужой id неотличим от несуществующего.

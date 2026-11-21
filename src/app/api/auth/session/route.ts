@@ -18,7 +18,7 @@ import { getSessionUid } from '@/lib/session';
  * случае стирает локальный снимок и считает пользователя гостем.
  */
 export async function GET(request: Request) {
-  const uid = getSessionUid(request);
+  const uid = await getSessionUid(request);
   if (!uid) {
     return NextResponse.json(
       { success: false, error: 'Unauthorized.', reason: 'unauthorized' },
@@ -26,7 +26,7 @@ export async function GET(request: Request) {
     );
   }
 
-  const stored = getStoredUser(uid);
+  const stored = await getStoredUser(uid);
   if (!stored) {
     return NextResponse.json(
       { success: false, error: 'Unauthorized.', reason: 'unauthorized' },

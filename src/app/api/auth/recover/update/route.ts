@@ -89,7 +89,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const result = resetCredentialsWithToken(
+    const result = await resetCredentialsWithToken(
       token,
       newPassword,
       newRecoveryPhrase,

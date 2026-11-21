@@ -1,4 +1,5 @@
-import fs from 'fs';
+import fs from 'fs/promises';
+import type { Dirent } from 'node:fs';
 import path from 'path';
 
 import { healCharacterDerive } from './character-derive';
@@ -34,7 +35,7 @@ export interface NormalizeCharactersReport {
  * изменённые файлы. Вызывается из startup maintenance. Ошибки не бросаются:
  * один битый/чужой файл не должен мешать подняться серверу.
  */
-export function normalizeAllCharacters(): NormalizeCharactersReport {
+export async function normalizeAllCharacters(): Promise<NormalizeCharactersReport> {
   const report: NormalizeCharactersReport = {
     total: 0,
     updated: 0,
@@ -43,9 +44,9 @@ export function normalizeAllCharacters(): NormalizeCharactersReport {
     issues: [],
   };
 
-  let userDirs: fs.Dirent[] = [];
+  let userDirs: Dirent[];
   try {
-    userDirs = fs.readdirSync(getUsersDir(), { withFileTypes: true });
+    userDirs = await fs.readdir(getUsersDir(), { withFileTypes: true });
   } catch {
     return report;
   }
@@ -55,7 +56,7 @@ export function normalizeAllCharacters(): NormalizeCharactersReport {
     const charsDir = getCharactersDir(userEntry.name);
     let files: string[] = [];
     try {
-      files = fs.readdirSync(charsDir).filter((f) => f.endsWith('.json'));
+      files = (await fs.readdir(charsDir)).filter((f) => f.endsWith('.json'));
     } catch {
       continue;
     }
@@ -65,7 +66,7 @@ export function normalizeAllCharacters(): NormalizeCharactersReport {
       report.total += 1;
       let parsed: unknown;
       try {
-        parsed = JSON.parse(fs.readFileSync(full, 'utf8'));
+        parsed = JSON.parse(await fs.readFile(full, 'utf8'));
       } catch (error) {
         report.issues.push(
           `users/${userEntry.name}/characters/${file}: не читается (${error instanceof Error ? error.message : 'unknown'})`,
@@ -118,17 +119,19 @@ export function normalizeAllCharacters(): NormalizeCharactersReport {
           report.migrations += normalized.migrationsApplied;
           if (derivedChanged) report.derived += 1;
           const backupPath = `${full}.bak`;
-          if (!fs.existsSync(backupPath)) {
-            fs.copyFileSync(full, backupPath);
+          try {
+            await fs.access(backupPath);
+          } catch {
+            await fs.copyFile(full, backupPath);
           }
         }
-        withDataLock(() => writeJsonAtomic(full, rewritten));
+        await withDataLock(() => writeJsonAtomic(full, rewritten));
         report.updated += 1;
         // Маркер пишется после лока: appendHistory при компакции берёт тот же
         // data-lock, вложенный лок — взаимоблокировка.
         if (rewroteValues) {
           try {
-            appendMigrationMarker(userEntry.name, file.slice(0, -5));
+            await appendMigrationMarker(userEntry.name, file.slice(0, -5));
           } catch (historyError) {
             console.warn(
               `Failed to append migration marker for ${file}:`,

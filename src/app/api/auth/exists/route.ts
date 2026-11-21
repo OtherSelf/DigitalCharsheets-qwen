@@ -50,7 +50,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       success: true,
-      exists: accountExists(username),
+      exists: await accountExists(username),
     });
   } catch {
     return NextResponse.json(

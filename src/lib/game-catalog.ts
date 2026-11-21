@@ -1,4 +1,4 @@
-import fs from 'fs';
+import fs from 'fs/promises';
 import path from 'path';
 
 import {
@@ -91,13 +91,13 @@ function parseEntry(value: unknown): PluginCatalogEntry | undefined {
   };
 }
 
-export function readGameCatalog(): GameCatalog {
+export async function readGameCatalog(): Promise<GameCatalog> {
   const file = getGameCatalogFile();
   const fallback = emptyCatalog();
 
   let raw: unknown;
   try {
-    raw = JSON.parse(fs.readFileSync(file, 'utf8'));
+    raw = JSON.parse(await fs.readFile(file, 'utf8'));
   } catch {
     return fallback;
   }
@@ -146,38 +146,41 @@ export function readGameCatalog(): GameCatalog {
 }
 
 /** Видимость плагина: runtime-переопределение или `defaultStatus` манифеста. */
-export function getModuleStatus(
+export async function getModuleStatus(
   systemId: SystemId,
-  catalog: GameCatalog = readGameCatalog(),
-): ModuleStatus {
-  const override = catalog.plugins[systemId]?.visibility;
+  catalog?: GameCatalog,
+): Promise<ModuleStatus> {
+  const current = catalog ?? (await readGameCatalog());
+  const override = current.plugins[systemId]?.visibility;
   if (isModuleStatus(override)) return override;
   return getGameModule(systemId)?.defaultStatus ?? 'hidden';
 }
 
 /** Использовать ли для игры палитру и шрифт ядра вместо `ui.theme`. */
-export function isModuleHostTheme(
+export async function isModuleHostTheme(
   systemId: SystemId,
-  catalog: GameCatalog = readGameCatalog(),
-): boolean {
-  return catalog.plugins[systemId]?.useHostTheme ?? false;
+  catalog?: GameCatalog,
+): Promise<boolean> {
+  const current = catalog ?? (await readGameCatalog());
+  return current.plugins[systemId]?.useHostTheme ?? false;
 }
 
 /** Активен ли плагин (v1-каталог и отсутствие записи → enabled). */
-export function isModuleEnabled(
+export async function isModuleEnabled(
   systemId: SystemId,
-  catalog: GameCatalog = readGameCatalog(),
-): boolean {
-  return catalog.plugins[systemId]?.enabled ?? true;
+  catalog?: GameCatalog,
+): Promise<boolean> {
+  const current = catalog ?? (await readGameCatalog());
+  return current.plugins[systemId]?.enabled ?? true;
 }
 
 /** Матрица видимости; гость/обычный user — только published. */
-export function canAccessModule(
+export async function canAccessModule(
   role: UserRole | undefined,
   systemId: SystemId,
-  catalog: GameCatalog = readGameCatalog(),
-): boolean {
-  const status = getModuleStatus(systemId, catalog);
+  catalog?: GameCatalog,
+): Promise<boolean> {
+  const status = await getModuleStatus(systemId, catalog);
   if (status === 'published') return true;
   if (status === 'test') return role === 'tester' || role === 'admin';
   return role === 'admin';
@@ -187,42 +190,46 @@ export function canAccessModule(
  * Можно ли создавать листы плагина и показывать его в меню: плагин включён
  * и виден роли. Открытие существующих листов проверяется отдельно.
  */
-export function canCreateWithModule(
+export async function canCreateWithModule(
   role: UserRole | undefined,
   systemId: SystemId,
-  catalog: GameCatalog = readGameCatalog(),
-): boolean {
+  catalog?: GameCatalog,
+): Promise<boolean> {
   return (
-    isModuleEnabled(systemId, catalog) &&
-    canAccessModule(role, systemId, catalog)
+    (await isModuleEnabled(systemId, catalog)) &&
+    (await canAccessModule(role, systemId, catalog))
   );
 }
 
-export function listModuleAccess(
+export async function listModuleAccess(
   role: UserRole | undefined,
-  catalog: GameCatalog = readGameCatalog(),
-): ModuleAccessEntry[] {
-  return listGameModules().map((gameModule) => {
-    const status = getModuleStatus(gameModule.id, catalog);
-    const enabled = isModuleEnabled(gameModule.id, catalog);
-    return {
-      module: gameModule,
-      status,
-      enabled,
-      visible: enabled && canAccessModule(role, gameModule.id, catalog),
-    };
-  });
+  catalog?: GameCatalog,
+): Promise<ModuleAccessEntry[]> {
+  const current = catalog ?? (await readGameCatalog());
+  return Promise.all(
+    listGameModules().map(async (gameModule) => {
+      const status = await getModuleStatus(gameModule.id, current);
+      const enabled = await isModuleEnabled(gameModule.id, current);
+      return {
+        module: gameModule,
+        status,
+        enabled,
+        visible:
+          enabled && (await canAccessModule(role, gameModule.id, current)),
+      };
+    }),
+  );
 }
 
-function writeGameCatalog(next: GameCatalog): void {
+async function writeGameCatalog(next: GameCatalog): Promise<void> {
   const normalized: GameCatalog = {
     version: CATALOG_VERSION,
     plugins: next.plugins,
     ...(next.siteTitle ? { siteTitle: next.siteTitle } : {}),
   };
-  withDataLock(() => {
-    fs.mkdirSync(getSettingsDir(), { recursive: true });
-    writeJsonAtomic(getGameCatalogFile(), normalized);
+  await withDataLock(async () => {
+    await fs.mkdir(getSettingsDir(), { recursive: true });
+    await writeJsonAtomic(getGameCatalogFile(), normalized);
   });
 }
 
@@ -231,10 +238,12 @@ function withEntry(
   systemId: SystemId,
   patch: Partial<PluginCatalogEntry>,
 ): GameCatalog {
+  const entry = catalog.plugins[systemId];
   const current: PluginCatalogEntry = {
-    enabled: isModuleEnabled(systemId, catalog),
-    visibility: getModuleStatus(systemId, catalog),
-    useHostTheme: isModuleHostTheme(systemId, catalog),
+    enabled: entry?.enabled ?? true,
+    visibility:
+      entry?.visibility ?? getGameModule(systemId)?.defaultStatus ?? 'hidden',
+    useHostTheme: entry?.useHostTheme ?? false,
   };
   return {
     ...catalog,
@@ -242,61 +251,63 @@ function withEntry(
   };
 }
 
-export function setModuleStatus(
+export async function setModuleStatus(
   systemId: SystemId,
   status: ModuleStatus,
-): GameCatalog {
+): Promise<GameCatalog> {
   if (!getGameModule(systemId)) {
     throw new Error(`Неизвестный модуль игры: ${systemId}`);
   }
   if (!isModuleStatus(status)) {
     throw new Error(`Неизвестный статус видимости: ${status}`);
   }
-  const next = withEntry(readGameCatalog(), systemId, { visibility: status });
-  writeGameCatalog(next);
+  const next = withEntry(await readGameCatalog(), systemId, {
+    visibility: status,
+  });
+  await writeGameCatalog(next);
   return next;
 }
 
 /** Переключить игру на палитру и шрифт ядра (админка). */
-export function setModuleHostTheme(
+export async function setModuleHostTheme(
   systemId: SystemId,
   useHostTheme: boolean,
-): GameCatalog {
+): Promise<GameCatalog> {
   if (!getGameModule(systemId)) {
     throw new Error(`Неизвестный модуль игры: ${systemId}`);
   }
-  const next = withEntry(readGameCatalog(), systemId, {
+  const next = withEntry(await readGameCatalog(), systemId, {
     useHostTheme: Boolean(useHostTheme),
   });
-  writeGameCatalog(next);
+  await writeGameCatalog(next);
   return next;
 }
 
 /** Включить/выключить плагин (создание и меню; листы — read-only). */
-export function setModuleEnabled(
+export async function setModuleEnabled(
   systemId: SystemId,
   enabled: boolean,
-): GameCatalog {
+): Promise<GameCatalog> {
   if (!getGameModule(systemId)) {
     throw new Error(`Неизвестный модуль игры: ${systemId}`);
   }
-  const next = withEntry(readGameCatalog(), systemId, {
+  const next = withEntry(await readGameCatalog(), systemId, {
     enabled: Boolean(enabled),
   });
-  writeGameCatalog(next);
+  await writeGameCatalog(next);
   return next;
 }
 
 /** `null`/пустая строка — сбросить переопределение заголовка. */
-export function setSiteTitle(title: string | null): GameCatalog {
-  const catalog = readGameCatalog();
+export async function setSiteTitle(title: string | null): Promise<GameCatalog> {
+  const catalog = await readGameCatalog();
   const trimmed = (title ?? '').trim().slice(0, MAX_SITE_TITLE_LENGTH);
   const next: GameCatalog = {
     version: CATALOG_VERSION,
     plugins: catalog.plugins,
     ...(trimmed ? { siteTitle: trimmed } : {}),
   };
-  writeGameCatalog(next);
+  await writeGameCatalog(next);
   return next;
 }
 

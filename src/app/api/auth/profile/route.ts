@@ -20,7 +20,7 @@ import {
  */
 export async function PUT(request: Request) {
   try {
-    const uid = getSessionUid(request);
+    const uid = await getSessionUid(request);
     if (!uid) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized.' },
@@ -62,7 +62,7 @@ export async function PUT(request: Request) {
       );
     }
 
-    const result = updateUserProfile(
+    const result = await updateUserProfile(
       uid,
       newUsername,
       newDisplayName,
@@ -90,8 +90,8 @@ export async function PUT(request: Request) {
       (typeof newPassword === 'string' && newPassword.trim() !== '') ||
       newRecoveryPhrase !== undefined;
     if (credentialsChanged) {
-      const session = readSession(request);
-      revokeAllSessionsForUser(uid, session?.jti);
+      const session = await readSession(request);
+      await revokeAllSessionsForUser(uid, session?.jti);
     }
 
     return NextResponse.json({ success: true, user: result.user });
@@ -118,7 +118,7 @@ export async function PUT(request: Request) {
  */
 export async function DELETE(request: Request) {
   try {
-    const uid = getSessionUid(request);
+    const uid = await getSessionUid(request);
     if (!uid) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized.', reason: 'unauthorized' },
@@ -145,7 +145,7 @@ export async function DELETE(request: Request) {
       );
     }
 
-    const result = deleteUserAccount(uid, password);
+    const result = await deleteUserAccount(uid, password);
 
     if (!result.success) {
       const status =

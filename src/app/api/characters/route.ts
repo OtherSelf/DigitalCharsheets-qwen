@@ -31,12 +31,12 @@ import { Character } from '@/lib/types';
 
 // Список листов текущего пользователя; uid — только из сессии.
 export async function GET(request: Request) {
-  const uid = getSessionUid(request);
+  const uid = await getSessionUid(request);
   if (!uid) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const characters = getCharactersFromServer(uid);
+  const characters = await getCharactersFromServer(uid);
   return NextResponse.json(characters);
 }
 
@@ -51,7 +51,10 @@ export async function POST(request: Request) {
   }
   const body = parsedBody.body;
 
-  const access = requireModuleAccess(request, resolveRequestedSystemId(body));
+  const access = await requireModuleAccess(
+    request,
+    resolveRequestedSystemId(body),
+  );
   if (!access.ok) {
     return NextResponse.json(
       { success: false, error: access.error, reason: access.reason },
@@ -96,6 +99,6 @@ export async function POST(request: Request) {
   }
 
   const character = prepared.character as unknown as Character;
-  saveCharacterToServer(access.uid, character);
+  await saveCharacterToServer(access.uid, character);
   return NextResponse.json(character, { status: 201 });
 }

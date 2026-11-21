@@ -72,8 +72,8 @@ const TRAINING_CASES: (Record<string, boolean> | undefined)[] = [
 describe('паритет копий DH между редакциями', () => {
   it('арифметика характеристик совпадает', async () => {
     const [dh1, dh2] = await Promise.all([
-      loadEdition('dh1'),
-      loadEdition('dh2'),
+      await loadEdition('dh1'),
+      await loadEdition('dh2'),
     ]);
     if (!dh1 || !dh2) {
       // Одна из редакций удалена из сборки — сравнивать нечего.
@@ -97,8 +97,8 @@ describe('паритет копий DH между редакциями', () => {
 
   it('кумулятивная тренировка навыков совпадает', async () => {
     const [dh1, dh2] = await Promise.all([
-      loadEdition('dh1'),
-      loadEdition('dh2'),
+      await loadEdition('dh1'),
+      await loadEdition('dh2'),
     ]);
     if (!dh1 || !dh2) {
       expect(dh1 || dh2).toBeTruthy();

@@ -1,4 +1,4 @@
-import fs from 'fs';
+import fs from 'fs/promises';
 import path from 'path';
 
 import { resolveCharacterSystemId } from '@/games/character-system';
@@ -48,11 +48,11 @@ import {
  *   • логин остаётся уникальным ключом индекса.
  */
 
-function countCharacterFiles(uid: string): number {
+async function countCharacterFiles(uid: string): Promise<number> {
   try {
-    return fs
-      .readdirSync(getCharactersDir(uid))
-      .filter((file) => file.endsWith('.json')).length;
+    return (await fs.readdir(getCharactersDir(uid))).filter((file) =>
+      file.endsWith('.json'),
+    ).length;
   } catch {
     return 0;
   }
@@ -75,8 +75,8 @@ function toSummary(user: StoredUser, characterCount: number): AdminUserSummary {
 }
 
 /** Есть ли активный админ кроме `excludeUid`. */
-function hasOtherActiveAdmin(excludeUid: string): boolean {
-  return scanUserRecords().records.some(
+async function hasOtherActiveAdmin(excludeUid: string): Promise<boolean> {
+  return (await scanUserRecords()).records.some(
     (record) =>
       record.uid !== excludeUid &&
       record.user.role === 'admin' &&
@@ -90,15 +90,18 @@ export interface AdminUsersList {
 }
 
 /** Список всех валидных профилей для таблицы админки. */
-export function listUsersForAdmin(): AdminUsersList {
-  const users = scanUserRecords()
-    .records.map((record) =>
-      toSummary(record.user, countCharacterFiles(record.uid)),
+export async function listUsersForAdmin(): Promise<AdminUsersList> {
+  const records = (await scanUserRecords()).records;
+  const users = (
+    await Promise.all(
+      records.map(async (record) =>
+        toSummary(record.user, await countCharacterFiles(record.uid)),
+      ),
     )
-    .sort((a, b) => {
-      const byCreated = (b.createdAt ?? '').localeCompare(a.createdAt ?? '');
-      return byCreated !== 0 ? byCreated : a.username.localeCompare(b.username);
-    });
+  ).sort((a, b) => {
+    const byCreated = (b.createdAt ?? '').localeCompare(a.createdAt ?? '');
+    return byCreated !== 0 ? byCreated : a.username.localeCompare(b.username);
+  });
 
   const stats: AdminUsersStats = {
     totalUsers: users.length,
@@ -115,16 +118,16 @@ export function listUsersForAdmin(): AdminUsersList {
  * Листы пользователя для диалога «список чарлистов». `null` — профиля нет.
  * Отдаём только безопасную сводку: без backstory/notes и прочего содержимого.
  */
-export function listCharactersForAdmin(
+export async function listCharactersForAdmin(
   uid: string,
-): AdminCharacterSummary[] | null {
-  if (!readStoredUser(uid)) return null;
+): Promise<AdminCharacterSummary[] | null> {
+  if (!(await readStoredUser(uid))) return null;
 
   let files: string[] = [];
   try {
-    files = fs
-      .readdirSync(getCharactersDir(uid))
-      .filter((file) => file.endsWith('.json'));
+    files = (await fs.readdir(getCharactersDir(uid))).filter((file) =>
+      file.endsWith('.json'),
+    );
   } catch {
     return [];
   }
@@ -133,8 +136,8 @@ export function listCharactersForAdmin(
   for (const file of files) {
     const filePath = path.join(getCharactersDir(uid), file);
     try {
-      const stat = fs.statSync(filePath);
-      const raw = JSON.parse(fs.readFileSync(filePath, 'utf8')) as Record<
+      const stat = await fs.stat(filePath);
+      const raw = JSON.parse(await fs.readFile(filePath, 'utf8')) as Record<
         string,
         unknown
       >;
@@ -174,11 +177,11 @@ const invalid = (error: string): AdminActionResponse => ({
  * `password` означает «не менять» (клиент не отправляет его без ввода), а
  * `role`/`isBlocked` — явные действия с проверкой инвариантов.
  */
-export function updateUserByAdmin(
+export async function updateUserByAdmin(
   actorUid: string,
   targetUid: string,
   patch: AdminUserUpdatePatch,
-): AdminActionResponse {
+): Promise<AdminActionResponse> {
   if (!isUid(targetUid)) {
     return { success: false, error: 'User not found.', reason: 'not_found' };
   }
@@ -190,159 +193,161 @@ export function updateUserByAdmin(
     // Флаг нужен снаружи лока: после записи профиля гасим сессии, уже не
     // держа файловый мьютекс.
     let passwordChanged = false;
-    const result = withDataLock((): AdminActionResponse => {
-      const stored = readStoredUser(targetUid);
-      if (!stored) {
-        return {
-          success: false,
-          error: 'User not found.',
-          reason: 'not_found',
-        };
-      }
-
-      const updated: StoredUser = { ...stored };
-      let renamedFrom: string | null = null;
-      let hasChanges = false;
-
-      if (patch.displayName !== undefined) {
-        if (
-          typeof patch.displayName !== 'string' ||
-          !patch.displayName.trim()
-        ) {
-          return invalid('Display name is required.');
+    const result = await withDataLock(
+      async (): Promise<AdminActionResponse> => {
+        const stored = await readStoredUser(targetUid);
+        if (!stored) {
+          return {
+            success: false,
+            error: 'User not found.',
+            reason: 'not_found',
+          };
         }
-        updated.displayName = patch.displayName.trim();
-        hasChanges = true;
-      }
 
-      if (patch.username !== undefined) {
-        if (typeof patch.username !== 'string') {
-          return invalid('Username is required.');
-        }
-        const login = normalizeLogin(patch.username);
-        if (!login) return invalid('Username is required.');
+        const updated: StoredUser = { ...stored };
+        let renamedFrom: string | null = null;
+        let hasChanges = false;
 
-        const oldLogin = normalizeLogin(stored.username);
-        if (login !== oldLogin) {
-          const owner = resolveLogin(login);
-          if (owner && owner !== targetUid) {
-            return {
-              success: false,
-              error: 'This login is already taken.',
-              reason: 'username_taken',
-            } as AdminActionResponse;
+        if (patch.displayName !== undefined) {
+          if (
+            typeof patch.displayName !== 'string' ||
+            !patch.displayName.trim()
+          ) {
+            return invalid('Display name is required.');
           }
-          renamedFrom = oldLogin;
-          updated.username = login;
+          updated.displayName = patch.displayName.trim();
           hasChanges = true;
         }
-      }
 
-      if (patch.password !== undefined) {
-        if (typeof patch.password !== 'string') {
-          return invalid('Password is required.');
-        }
-        const policyError = passwordPolicyError(patch.password);
-        if (policyError) return invalid(policyError);
-        updated.passwordHash = hashPassword(patch.password);
-        // Стартовый пароль сменён — предупреждение больше не актуально.
-        delete updated.mustChangePassword;
-        passwordChanged = true;
-        hasChanges = true;
-      }
+        if (patch.username !== undefined) {
+          if (typeof patch.username !== 'string') {
+            return invalid('Username is required.');
+          }
+          const login = normalizeLogin(patch.username);
+          if (!login) return invalid('Username is required.');
 
-      if (patch.role !== undefined) {
-        if (!isUserRole(patch.role)) {
-          return invalid('Unknown role.');
+          const oldLogin = normalizeLogin(stored.username);
+          if (login !== oldLogin) {
+            const owner = await resolveLogin(login);
+            if (owner && owner !== targetUid) {
+              return {
+                success: false,
+                error: 'This login is already taken.',
+                reason: 'username_taken',
+              } as AdminActionResponse;
+            }
+            renamedFrom = oldLogin;
+            updated.username = login;
+            hasChanges = true;
+          }
         }
-        // Снять с себя админа нельзя (в т.ч. переведя себя в tester).
-        if (targetUid === actorUid && patch.role !== 'admin') {
-          return {
-            success: false,
-            error: 'You cannot remove your own administrator role.',
-            reason: 'self',
-          } as AdminActionResponse;
-        }
-        if (
-          patch.role !== 'admin' &&
-          stored.role === 'admin' &&
-          !hasOtherActiveAdmin(targetUid)
-        ) {
-          return {
-            success: false,
-            error: 'Cannot demote the last active administrator.',
-            reason: 'last_admin',
-          } as AdminActionResponse;
-        }
-        updated.role = patch.role;
-        hasChanges = true;
-      }
 
-      if (patch.isBlocked !== undefined) {
-        if (typeof patch.isBlocked !== 'boolean') {
-          return invalid('Blocked must be a boolean.');
+        if (patch.password !== undefined) {
+          if (typeof patch.password !== 'string') {
+            return invalid('Password is required.');
+          }
+          const policyError = passwordPolicyError(patch.password);
+          if (policyError) return invalid(policyError);
+          updated.passwordHash = hashPassword(patch.password);
+          // Стартовый пароль сменён — предупреждение больше не актуально.
+          delete updated.mustChangePassword;
+          passwordChanged = true;
+          hasChanges = true;
         }
-        if (patch.isBlocked && targetUid === actorUid) {
-          return {
-            success: false,
-            error: 'You cannot block your own account.',
-            reason: 'self',
-          } as AdminActionResponse;
+
+        if (patch.role !== undefined) {
+          if (!isUserRole(patch.role)) {
+            return invalid('Unknown role.');
+          }
+          // Снять с себя админа нельзя (в т.ч. переведя себя в tester).
+          if (targetUid === actorUid && patch.role !== 'admin') {
+            return {
+              success: false,
+              error: 'You cannot remove your own administrator role.',
+              reason: 'self',
+            } as AdminActionResponse;
+          }
+          if (
+            patch.role !== 'admin' &&
+            stored.role === 'admin' &&
+            !(await hasOtherActiveAdmin(targetUid))
+          ) {
+            return {
+              success: false,
+              error: 'Cannot demote the last active administrator.',
+              reason: 'last_admin',
+            } as AdminActionResponse;
+          }
+          updated.role = patch.role;
+          hasChanges = true;
         }
-        if (
-          patch.isBlocked &&
-          stored.role === 'admin' &&
-          !hasOtherActiveAdmin(targetUid)
-        ) {
-          return {
-            success: false,
-            error: 'Cannot block the last active administrator.',
-            reason: 'last_admin',
-          } as AdminActionResponse;
+
+        if (patch.isBlocked !== undefined) {
+          if (typeof patch.isBlocked !== 'boolean') {
+            return invalid('Blocked must be a boolean.');
+          }
+          if (patch.isBlocked && targetUid === actorUid) {
+            return {
+              success: false,
+              error: 'You cannot block your own account.',
+              reason: 'self',
+            } as AdminActionResponse;
+          }
+          if (
+            patch.isBlocked &&
+            stored.role === 'admin' &&
+            !(await hasOtherActiveAdmin(targetUid))
+          ) {
+            return {
+              success: false,
+              error: 'Cannot block the last active administrator.',
+              reason: 'last_admin',
+            } as AdminActionResponse;
+          }
+          updated.isBlocked = patch.isBlocked;
+          if (patch.isBlocked) {
+            updated.blockedAt = new Date().toISOString();
+          } else {
+            delete updated.blockedAt;
+          }
+          hasChanges = true;
         }
-        updated.isBlocked = patch.isBlocked;
-        if (patch.isBlocked) {
-          updated.blockedAt = new Date().toISOString();
-        } else {
-          delete updated.blockedAt;
+
+        if (!hasChanges) return invalid('Nothing to update.');
+
+        updated.schemaVersion = USER_SCHEMA_VERSION;
+        updated.updatedAt = new Date().toISOString();
+
+        // user.json — источник истины; индекс правим после него.
+        await writeStoredUser(targetUid, updated);
+
+        if (renamedFrom !== null) {
+          const index = await readLoginIndexForUpdate();
+          delete index.logins[renamedFrom];
+          index.logins[updated.username] = targetUid;
+          try {
+            await writeLoginIndex(index);
+          } catch (error) {
+            console.error(
+              'Failed to update login index after admin rename:',
+              error,
+            );
+            await rebuildLoginIndex();
+          }
         }
-        hasChanges = true;
-      }
 
-      if (!hasChanges) return invalid('Nothing to update.');
-
-      updated.schemaVersion = USER_SCHEMA_VERSION;
-      updated.updatedAt = new Date().toISOString();
-
-      // user.json — источник истины; индекс правим после него.
-      writeStoredUser(targetUid, updated);
-
-      if (renamedFrom !== null) {
-        const index = readLoginIndexForUpdate();
-        delete index.logins[renamedFrom];
-        index.logins[updated.username] = targetUid;
-        try {
-          writeLoginIndex(index);
-        } catch (error) {
-          console.error(
-            'Failed to update login index after admin rename:',
-            error,
-          );
-          rebuildLoginIndex();
-        }
-      }
-
-      return {
-        success: true,
-        user: toSummary(updated, countCharacterFiles(targetUid)),
-      };
-    });
+        return {
+          success: true,
+          user: toSummary(updated, await countCharacterFiles(targetUid)),
+        };
+      },
+    );
 
     // Пароль сменил администратор: все живые сессии пользователя гасим —
     // старый пароль больше не действует, значит и старые сессии не должны.
     if (result.success && passwordChanged) {
       try {
-        revokeAllSessionsForUser(targetUid);
+        await revokeAllSessionsForUser(targetUid);
       } catch (e) {
         console.error(
           'Failed to revoke sessions after admin password change:',
@@ -362,10 +367,10 @@ export function updateUserByAdmin(
 }
 
 /** Удалить чужой аккаунт вместе с листами и записью в индексе. */
-export function deleteUserByAdmin(
+export async function deleteUserByAdmin(
   actorUid: string,
   targetUid: string,
-): AdminActionResponse {
+): Promise<AdminActionResponse> {
   if (targetUid === actorUid) {
     return {
       success: false,
@@ -378,49 +383,54 @@ export function deleteUserByAdmin(
   }
 
   try {
-    const result = withDataLock((): AdminActionResponse => {
-      const stored = readStoredUser(targetUid);
-      if (!stored) {
-        return {
-          success: false,
-          error: 'User not found.',
-          reason: 'not_found',
-        } as AdminActionResponse;
-      }
-      if (stored.role === 'admin' && !hasOtherActiveAdmin(targetUid)) {
-        return {
-          success: false,
-          error: 'Cannot delete the last active administrator.',
-          reason: 'last_admin',
-        } as AdminActionResponse;
-      }
+    const result = await withDataLock(
+      async (): Promise<AdminActionResponse> => {
+        const stored = await readStoredUser(targetUid);
+        if (!stored) {
+          return {
+            success: false,
+            error: 'User not found.',
+            reason: 'not_found',
+          } as AdminActionResponse;
+        }
+        if (
+          stored.role === 'admin' &&
+          !(await hasOtherActiveAdmin(targetUid))
+        ) {
+          return {
+            success: false,
+            error: 'Cannot delete the last active administrator.',
+            reason: 'last_admin',
+          } as AdminActionResponse;
+        }
 
-      const index = readLoginIndexForUpdate();
-      for (const [login, owner] of Object.entries(index.logins)) {
-        if (owner === targetUid) delete index.logins[login];
-      }
+        const index = await readLoginIndexForUpdate();
+        for (const [login, owner] of Object.entries(index.logins)) {
+          if (owner === targetUid) delete index.logins[login];
+        }
 
-      fs.rmSync(getUserDir(targetUid), { recursive: true, force: true });
+        await fs.rm(getUserDir(targetUid), { recursive: true, force: true });
 
-      try {
-        writeLoginIndex(index);
-      } catch (error) {
-        console.error(
-          'Failed to update login index after admin delete:',
-          error,
-        );
-        rebuildLoginIndex();
-      }
-      resetWriteSeqGuard(targetUid);
+        try {
+          await writeLoginIndex(index);
+        } catch (error) {
+          console.error(
+            'Failed to update login index after admin delete:',
+            error,
+          );
+          await rebuildLoginIndex();
+        }
+        resetWriteSeqGuard(targetUid);
 
-      return { success: true } as AdminActionResponse;
-    });
+        return { success: true } as AdminActionResponse;
+      },
+    );
 
     // Гостевые ссылки лежат в общем shares.json, а не в каталоге пользователя:
     // после rm -rf их нужно погасить отдельно и уже вне withDataLock.
     if (result.success) {
       try {
-        revokeSharesForUser(targetUid);
+        await revokeSharesForUser(targetUid);
       } catch (error) {
         console.error(
           'Failed to revoke share links after admin delete:',

@@ -52,8 +52,8 @@ afterEach(() => {
 });
 
 describe('appendHistory/readHistory', () => {
-  it('пишет ревизию и читает её обратно', () => {
-    appendHistory(
+  it('пишет ревизию и читает её обратно', async () => {
+    await appendHistory(
       uid,
       CHARACTER_ID,
       {
@@ -63,7 +63,7 @@ describe('appendHistory/readHistory', () => {
       { nowMs: NOW },
     );
 
-    const read = readHistory(uid, CHARACTER_ID);
+    const read = await readHistory(uid, CHARACTER_ID);
 
     expect(read.revisions).toHaveLength(1);
     expect(read.revisions[0]).toMatchObject({
@@ -80,8 +80,8 @@ describe('appendHistory/readHistory', () => {
     expect(read.parseErrors).toBe(0);
   });
 
-  it('не создаёт файл для пустого save, но пишет create/migration маркеры', () => {
-    appendHistory(
+  it('не создаёт файл для пустого save, но пишет create/migration маркеры', async () => {
+    await appendHistory(
       uid,
       CHARACTER_ID,
       { changes: [], summary: summary(0) },
@@ -89,18 +89,18 @@ describe('appendHistory/readHistory', () => {
     );
     expect(fs.existsSync(historyFile())).toBe(false);
 
-    appendCreateMarker(uid, CHARACTER_ID, { nowMs: NOW });
-    appendMigrationMarker(uid, CHARACTER_ID, { nowMs: NOW + 1000 });
+    await appendCreateMarker(uid, CHARACTER_ID, { nowMs: NOW });
+    await appendMigrationMarker(uid, CHARACTER_ID, { nowMs: NOW + 1000 });
 
-    const read = readHistory(uid, CHARACTER_ID);
+    const read = await readHistory(uid, CHARACTER_ID);
     expect(read.revisions.map((revision) => revision.source)).toEqual([
       'create',
       'migration',
     ]);
   });
 
-  it('пропускает битый хвост и чинит перевод строки перед append', () => {
-    appendHistory(
+  it('пропускает битый хвост и чинит перевод строки перед append', async () => {
+    await appendHistory(
       uid,
       CHARACTER_ID,
       { changes: [changed('name', 'A', 'B')], summary: summary() },
@@ -108,28 +108,28 @@ describe('appendHistory/readHistory', () => {
     );
     fs.appendFileSync(historyFile(), '{"broken"', 'utf8');
 
-    const afterBroken = readHistory(uid, CHARACTER_ID);
+    const afterBroken = await readHistory(uid, CHARACTER_ID);
     expect(afterBroken.revisions).toHaveLength(1);
     expect(afterBroken.parseErrors).toBe(1);
 
-    appendHistory(
+    await appendHistory(
       uid,
       CHARACTER_ID,
       { changes: [changed('name', 'B', 'C')], summary: summary() },
       { nowMs: NOW + 1000 },
     );
 
-    const read = readHistory(uid, CHARACTER_ID);
+    const read = await readHistory(uid, CHARACTER_ID);
     expect(read.revisions).toHaveLength(2);
     expect(read.parseErrors).toBe(1);
     expect(fs.readFileSync(historyFile(), 'utf8').endsWith('\n')).toBe(true);
   });
 
-  it('компактит файл по лимиту и оставляет маркер обрезки', () => {
+  it('компактит файл по лимиту и оставляет маркер обрезки', async () => {
     const big = 'a'.repeat(4000);
     const maxBytes = 64 * 1024;
     for (let index = 0; index < 12; index += 1) {
-      appendHistory(
+      await appendHistory(
         uid,
         CHARACTER_ID,
         {
@@ -147,7 +147,7 @@ describe('appendHistory/readHistory', () => {
       );
     }
 
-    const read = readHistory(uid, CHARACTER_ID);
+    const read = await readHistory(uid, CHARACTER_ID);
     expect(read.truncated).toBe(true);
     expect(read.dropped).toBeGreaterThan(0);
     expect(read.revisions.length).toBeLessThan(12);
@@ -165,17 +165,17 @@ describe('appendHistory/readHistory', () => {
 });
 
 describe('deleteCharacterHistory', () => {
-  it('удаляет файл и не падает повторно', () => {
-    appendHistory(
+  it('удаляет файл и не падает повторно', async () => {
+    await appendHistory(
       uid,
       CHARACTER_ID,
       { changes: [changed('name', 'A', 'B')], summary: summary() },
       { nowMs: NOW },
     );
 
-    expect(deleteCharacterHistory(uid, CHARACTER_ID)).toBe(true);
+    expect(await deleteCharacterHistory(uid, CHARACTER_ID)).toBe(true);
     expect(fs.existsSync(historyFile())).toBe(false);
-    expect(deleteCharacterHistory(uid, CHARACTER_ID)).toBe(false);
-    expect(readHistory(uid, CHARACTER_ID).revisions).toHaveLength(0);
+    expect(await deleteCharacterHistory(uid, CHARACTER_ID)).toBe(false);
+    expect((await readHistory(uid, CHARACTER_ID)).revisions).toHaveLength(0);
   });
 });

@@ -68,7 +68,7 @@ describe('загрузка листа, формы и слотов через р�
     }
   });
 
-  it('неизвестный systemId не падает и не отдаёт слоты', async () => {
+  it('неизвестный systemId не падает и не отдаёт слоты', () => {
     expect(loadGameUiSlots('missing-plugin')).toBeUndefined();
   });
 });

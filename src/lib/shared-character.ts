@@ -96,11 +96,11 @@ export function sanitizeHistoryForShare(
   }));
 }
 
-function readSharedHistory(
+async function readSharedHistory(
   uid: string,
   characterId: string,
-): SharedHistoryPage {
-  const stored = readHistory(uid, characterId);
+): Promise<SharedHistoryPage> {
+  const stored = await readHistory(uid, characterId);
   const grouped = groupHistorySessions(stored.revisions);
   const selected: HistorySession[] = [];
   let changeCount = 0;
@@ -140,17 +140,19 @@ export interface ResolvedSharedSheet {
  * если владелец включил флаг, урезанная история. `null` — ссылка
  * недействительна или листа больше нет.
  */
-export function resolveSharedSheet(token: string): ResolvedSharedSheet | null {
-  const share = resolveShareToken(token);
+export async function resolveSharedSheet(
+  token: string,
+): Promise<ResolvedSharedSheet | null> {
+  const share = await resolveShareToken(token);
   if (!share) return null;
 
-  const character = getCharacterFromServer(share.uid, share.characterId);
+  const character = await getCharacterFromServer(share.uid, share.characterId);
   if (!character) return null;
 
   let history: SharedHistoryPage | null = null;
   if (share.includeHistory) {
     try {
-      history = readSharedHistory(share.uid, share.characterId);
+      history = await readSharedHistory(share.uid, share.characterId);
     } catch (error) {
       // История не должна закрывать доступ к листу: ссылка остаётся рабочей.
       console.error(
@@ -168,6 +170,8 @@ export function resolveSharedSheet(token: string): ResolvedSharedSheet | null {
 }
 
 /** Совместимый резолв только листа (метаданные/старые вызовы). */
-export function resolveSharedCharacter(token: string): Character | null {
-  return resolveSharedSheet(token)?.character ?? null;
+export async function resolveSharedCharacter(
+  token: string,
+): Promise<Character | null> {
+  return (await resolveSharedSheet(token))?.character ?? null;
 }

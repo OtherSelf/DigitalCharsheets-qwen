@@ -48,7 +48,7 @@ afterEach(() => {
 
 describe('GET /api/health', () => {
   it('200 и ok, когда data-dir доступен на запись', async () => {
-    const response = healthRoute();
+    const response = await healthRoute();
     expect(response.status).toBe(200);
     expect(response.headers.get('cache-control')).toContain('no-store');
 
@@ -69,7 +69,7 @@ describe('GET /api/health', () => {
   it('503 и degraded, когда data-dir недоступен', async () => {
     process.env.DCS_DATA_DIR = path.join(dataDir, 'missing-data-dir');
 
-    const response = healthRoute();
+    const response = await healthRoute();
     expect(response.status).toBe(503);
     expect(response.headers.get('cache-control')).toContain('no-store');
 
@@ -93,7 +93,7 @@ describe('GET /api/version', () => {
     vi.stubEnv('DCS_GIT_BRANCH', 'release/0.5');
     vi.stubEnv('DCS_BUILD_DATE', '2026-01-01T00:00:00.000Z');
 
-    const response = versionRoute();
+    const response = await versionRoute();
     expect(response.status).toBe(200);
     expect(response.headers.get('cache-control')).toContain('max-age=300');
 
@@ -121,7 +121,7 @@ describe('GET /api/version', () => {
     vi.stubEnv('VERCEL_GIT_COMMIT_REF', '');
     vi.stubEnv('DCS_BUILD_DATE', '');
 
-    const body = await versionRoute().json();
+    const body = await (await versionRoute()).json();
     expect(body.commit).toBeNull();
     expect(body.commitShort).toBeNull();
     expect(body.branch).toBeNull();
@@ -130,19 +130,19 @@ describe('GET /api/version', () => {
 });
 
 describe('buildId', () => {
-  it('в production — deploymentId из окружения (его выставляет next start)', () => {
+  it('в production — deploymentId из окружения (его выставляет next start)', async () => {
     vi.stubEnv('NODE_ENV', 'production');
     vi.stubEnv(
       'NEXT_DEPLOYMENT_ID',
       'abfe32f5ccc8f430a4d695c7b13deff4522e0546',
     );
 
-    expect(getAppInfo().buildId).toBe(
+    expect((await getAppInfo()).buildId).toBe(
       'abfe32f5ccc8f430a4d695c7b13deff4522e0546',
     );
   });
 
-  it('в production без deploymentId — .next/BUILD_ID с диска', () => {
+  it('в production без deploymentId — .next/BUILD_ID с диска', async () => {
     vi.stubEnv('NODE_ENV', 'production');
     vi.stubEnv('NEXT_DEPLOYMENT_ID', '');
 
@@ -154,29 +154,29 @@ describe('buildId', () => {
     );
 
     try {
-      expect(getAppInfo({ cwd }).buildId).toBe('icxnjkkrBwwuT9xbHVJN6');
+      expect((await getAppInfo({ cwd })).buildId).toBe('icxnjkkrBwwuT9xbHVJN6');
     } finally {
       removeDir(cwd);
     }
   });
 
-  it('вне production — случайный id процесса: стабилен и не равен commit', () => {
+  it('вне production — случайный id процесса: стабилен и не равен commit', async () => {
     vi.stubEnv('NODE_ENV', 'test');
     vi.stubEnv(
       'NEXT_DEPLOYMENT_ID',
       'abfe32f5ccc8f430a4d695c7b13deff4522e0546',
     );
 
-    const first = getAppInfo().buildId;
+    const first = (await getAppInfo()).buildId;
     expect(first).toMatch(/^[0-9a-f-]{36}$/);
     // Один процесс — один id: повторный запрос не должен выглядеть как деплой.
-    expect(getAppInfo().buildId).toBe(first);
+    expect((await getAppInfo()).buildId).toBe(first);
 
     // Рестарт процесса = потеря globalThis; только тогда id меняется (HMR его
     // сохраняет, поэтому вкладка не перезагружается на каждую правку).
     delete (globalThis as typeof globalThis & { __dcsBootId?: string })
       .__dcsBootId;
-    expect(getAppInfo().buildId).not.toBe(first);
+    expect((await getAppInfo()).buildId).not.toBe(first);
   });
 });
 

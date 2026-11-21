@@ -47,105 +47,111 @@ afterEach(() => {
   removeDir(dataDir);
 });
 
-function createUser(login: string, password = 'pass-1234-secure') {
-  const result = registerUser(login, password, login, 'alpha beta gamma');
+async function createUser(login: string, password = 'pass-1234-secure') {
+  const result = await registerUser(login, password, login, 'alpha beta gamma');
   expect(result.success).toBe(true);
   return result.user!.uid;
 }
 
 describe('deleteUserAccount', () => {
-  it('удаляет профиль, все листы и запись в индексе', () => {
-    const uid = createUser('deleteme');
-    saveCharacterToServer(uid, makeDndCharacter({ userId: uid }));
+  it('удаляет профиль, все листы и запись в индексе', async () => {
+    const uid = await createUser('deleteme');
+    await saveCharacterToServer(uid, makeDndCharacter({ userId: uid }));
 
     const paths = userPaths(dataDir, uid);
     expect(fs.existsSync(paths.userFile)).toBe(true);
     expect(fs.readdirSync(paths.charactersDir)).toHaveLength(1);
-    expect(resolveLogin('deleteme')).toBe(uid);
+    expect(await resolveLogin('deleteme')).toBe(uid);
 
-    const result = deleteUserAccount(uid, 'pass-1234-secure');
+    const result = await deleteUserAccount(uid, 'pass-1234-secure');
 
     expect(result.success).toBe(true);
     expect(fs.existsSync(paths.userDir)).toBe(false);
-    expect(getStoredUser(uid)).toBeNull();
-    expect(resolveLogin('deleteme')).toBeNull();
+    expect(await getStoredUser(uid)).toBeNull();
+    expect(await resolveLogin('deleteme')).toBeNull();
     expect(readJson(loginIndexPath(dataDir)).logins.deleteme).toBeUndefined();
   });
 
-  it('удаляет аккаунт без персонажей', () => {
-    const uid = createUser('empty-account');
+  it('удаляет аккаунт без персонажей', async () => {
+    const uid = await createUser('empty-account');
 
-    expect(deleteUserAccount(uid, 'pass-1234-secure').success).toBe(true);
+    expect((await deleteUserAccount(uid, 'pass-1234-secure')).success).toBe(
+      true,
+    );
     expect(fs.existsSync(userPaths(dataDir, uid).userDir)).toBe(false);
   });
 
-  it('не удаляет ничего при неверном пароле', () => {
-    const uid = createUser('protected');
-    saveCharacterToServer(uid, makeDndCharacter({ userId: uid }));
+  it('не удаляет ничего при неверном пароле', async () => {
+    const uid = await createUser('protected');
+    await saveCharacterToServer(uid, makeDndCharacter({ userId: uid }));
 
-    const result = deleteUserAccount(uid, 'wrong-password');
+    const result = await deleteUserAccount(uid, 'wrong-password');
 
     expect(result.success).toBe(false);
     expect(result.reason).toBe('invalid_password');
     expect(fs.existsSync(userPaths(dataDir, uid).userFile)).toBe(true);
-    expect(getCharactersFromServer(uid)).toHaveLength(1);
-    expect(resolveLogin('protected')).toBe(uid);
+    expect(await getCharactersFromServer(uid)).toHaveLength(1);
+    expect(await resolveLogin('protected')).toBe(uid);
     // Вход по-прежнему работает: аккаунт не тронут.
-    expect(authenticateUser('protected', 'pass-1234-secure').success).toBe(
-      true,
-    );
+    expect(
+      (await authenticateUser('protected', 'pass-1234-secure')).success,
+    ).toBe(true);
   });
 
-  it('отклоняет пустой пароль, не трогая данные', () => {
-    const uid = createUser('empty-pass');
+  it('отклоняет пустой пароль, не трогая данные', async () => {
+    const uid = await createUser('empty-pass');
 
     for (const password of ['', '   ']) {
-      const result = deleteUserAccount(uid, password);
+      const result = await deleteUserAccount(uid, password);
       expect(result.success).toBe(false);
       expect(result.reason).toBe('invalid_input');
     }
 
     expect(fs.existsSync(userPaths(dataDir, uid).userFile)).toBe(true);
-    expect(resolveLogin('empty-pass')).toBe(uid);
+    expect(await resolveLogin('empty-pass')).toBe(uid);
   });
 
-  it('возвращает not_found для неизвестного и невалидного uid', () => {
+  it('возвращает not_found для неизвестного и невалидного uid', async () => {
     const unknown = newUid();
-    const missing = deleteUserAccount(unknown, 'pass-1234-secure');
+    const missing = await deleteUserAccount(unknown, 'pass-1234-secure');
     expect(missing.success).toBe(false);
     expect(missing.reason).toBe('not_found');
 
     // uid попадает в путь, поэтому не-UUID отвергается до любых rm.
-    const traversal = deleteUserAccount('../users', 'pass-1234-secure');
+    const traversal = await deleteUserAccount('../users', 'pass-1234-secure');
     expect(traversal.success).toBe(false);
     expect(traversal.reason).toBe('not_found');
     expect(fs.existsSync(path.join(dataDir, 'users'))).toBe(false);
   });
 
-  it('не задевает другие аккаунты', () => {
-    const victim = createUser('shared-device');
-    const other = createUser('other-player');
-    saveCharacterToServer(victim, makeDndCharacter({ userId: victim }));
-    saveCharacterToServer(other, makeDndCharacter({ userId: other }));
+  it('не задевает другие аккаунты', async () => {
+    const victim = await createUser('shared-device');
+    const other = await createUser('other-player');
+    await saveCharacterToServer(victim, makeDndCharacter({ userId: victim }));
+    await saveCharacterToServer(other, makeDndCharacter({ userId: other }));
 
-    expect(deleteUserAccount(victim, 'pass-1234-secure').success).toBe(true);
+    expect((await deleteUserAccount(victim, 'pass-1234-secure')).success).toBe(
+      true,
+    );
 
     expect(fs.existsSync(userPaths(dataDir, victim).userDir)).toBe(false);
     expect(fs.existsSync(userPaths(dataDir, other).userFile)).toBe(true);
-    expect(getCharactersFromServer(other)).toHaveLength(1);
-    expect(resolveLogin('other-player')).toBe(other);
-    expect(authenticateUser('other-player', 'pass-1234-secure').success).toBe(
-      true,
-    );
+    expect(await getCharactersFromServer(other)).toHaveLength(1);
+    expect(await resolveLogin('other-player')).toBe(other);
+    expect(
+      (await authenticateUser('other-player', 'pass-1234-secure')).success,
+    ).toBe(true);
   });
 
-  it('после удаления повторная регистрация даёт новый uid и пустой список', () => {
-    const oldUid = createUser('reborn');
-    saveCharacterToServer(oldUid, makeDndCharacter({ userId: oldUid }));
+  it('после удаления повторная регистрация даёт новый uid и пустой список', async () => {
+    const oldUid = await createUser('reborn');
+    await saveCharacterToServer(oldUid, makeDndCharacter({ userId: oldUid }));
 
-    expect(deleteUserAccount(oldUid, 'pass-1234-secure').success).toBe(true);
+    expect((await deleteUserAccount(oldUid, 'pass-1234-secure')).success).toBe(
+      true,
+    );
 
-    const reborn = registerUser(
+    const reborn = await registerUser(
       'reborn',
       'new-pass-1234',
       'Reborn',
@@ -154,7 +160,7 @@ describe('deleteUserAccount', () => {
 
     expect(reborn.success).toBe(true);
     expect(reborn.user!.uid).not.toBe(oldUid);
-    expect(getCharactersFromServer(reborn.user!.uid)).toHaveLength(0);
+    expect(await getCharactersFromServer(reborn.user!.uid)).toHaveLength(0);
     expect(fs.existsSync(userPaths(dataDir, oldUid).userDir)).toBe(false);
   });
 });

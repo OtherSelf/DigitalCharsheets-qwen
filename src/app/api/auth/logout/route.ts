@@ -29,10 +29,10 @@ export async function POST(request: Request) {
   }
 
   if (revokeAll) {
-    const uid = getSessionUid(request);
-    if (uid) revokeAllSessionsForUser(uid);
+    const uid = await getSessionUid(request);
+    if (uid) await revokeAllSessionsForUser(uid);
   } else {
-    revokeSessionFromRequest(request);
+    await revokeSessionFromRequest(request);
   }
 
   const response = NextResponse.json({ success: true });

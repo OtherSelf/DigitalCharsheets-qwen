@@ -201,7 +201,7 @@ describe('GET /api/docs', () => {
   });
 
   it('грузит бандл Scalar со своего origin — CSP запрещает чужие скрипты', async () => {
-    const html = (await docsRoute().text()).replace(/\\\//g, '/');
+    const html = (await (await docsRoute()).text()).replace(/\\\//g, '/');
     // script-src 'self' в next.config.ts: бандл с CDN браузер не загрузит,
     // поэтому файл вендорится в public/vendor/scalar и отдаётся нами.
     expect(html).toMatch(

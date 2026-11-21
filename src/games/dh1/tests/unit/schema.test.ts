@@ -124,7 +124,7 @@ describe('character schema v1', () => {
     expect(character.gameSystem).toBe('Dungeons & Dragons');
   });
 
-  it('startup-обход переписывает legacy-файлы и второй проход идемпотентен', () => {
+  it('startup-обход переписывает legacy-файлы и второй проход идемпотентен', async () => {
     const uid = '11111111-1111-4111-8111-111111111111';
     const charsDir = path.join(dataDir, 'users', uid, 'characters');
     fs.mkdirSync(charsDir, { recursive: true });
@@ -142,7 +142,7 @@ describe('character schema v1', () => {
       'utf8',
     );
 
-    const first: NormalizeCharactersReport = normalizeAllCharacters();
+    const first: NormalizeCharactersReport = await normalizeAllCharacters();
     expect(first).toMatchObject({ total: 1, updated: 1 });
     // В файле был influence из старой формы — миграция сообщает об этом.
     expect(first.issues.join(' ')).toContain('поля 2e перенесены');
@@ -153,11 +153,11 @@ describe('character schema v1', () => {
       'corruption3',
     );
 
-    const second = normalizeAllCharacters();
+    const second = await normalizeAllCharacters();
     expect(second).toMatchObject({ total: 1, updated: 0, issues: [] });
   });
 
-  it('не перезаписывает файл с более новой версией схемы', () => {
+  it('не перезаписывает файл с более новой версией схемы', async () => {
     const uid = '22222222-2222-4222-8222-222222222222';
     const charsDir = path.join(dataDir, 'users', uid, 'characters');
     fs.mkdirSync(charsDir, { recursive: true });
@@ -170,7 +170,7 @@ describe('character schema v1', () => {
     const raw = JSON.stringify(future, null, 2);
     fs.writeFileSync(file, raw, 'utf8');
 
-    const report = normalizeAllCharacters();
+    const report = await normalizeAllCharacters();
     expect(report.updated).toBe(0);
     expect(report.issues.join(' ')).toContain('новее поддерживаемой');
     expect(fs.readFileSync(file, 'utf8')).toBe(raw);

@@ -1,5 +1,5 @@
 import crypto from 'crypto';
-import fs from 'fs';
+import fs from 'fs/promises';
 import path from 'path';
 
 import { getDataDir, getSessionSecretFile } from './data-dir';
@@ -41,7 +41,7 @@ interface CachedSecret {
 
 let cachedSecret: CachedSecret | null = null;
 
-function getSecret(): string {
+async function getSecret(): Promise<string> {
   const dataDir = getDataDir();
   if (cachedSecret && cachedSecret.dataDir === dataDir)
     return cachedSecret.secret;
@@ -55,7 +55,7 @@ function getSecret(): string {
 
   const file = getSessionSecretFile();
   try {
-    const existing = fs.readFileSync(file, 'utf8').trim();
+    const existing = (await fs.readFile(file, 'utf8')).trim();
     if (existing) {
       cachedSecret = { dataDir, secret: existing };
       return existing;
@@ -64,11 +64,11 @@ function getSecret(): string {
     // Файла ещё нет — создадим ниже.
   }
 
-  fs.mkdirSync(path.dirname(file), { recursive: true });
+  await fs.mkdir(path.dirname(file), { recursive: true });
   const generated = crypto.randomBytes(32).toString('hex');
   try {
     // 'wx' — не перезаписываем секрет, созданный параллельным запросом.
-    fs.writeFileSync(file, `${generated}\n`, {
+    await fs.writeFile(file, `${generated}\n`, {
       encoding: 'utf8',
       mode: 0o600,
       flag: 'wx',
@@ -77,7 +77,7 @@ function getSecret(): string {
     return generated;
   } catch (error) {
     if ((error as NodeJS.ErrnoException)?.code === 'EEXIST') {
-      const existing = fs.readFileSync(file, 'utf8').trim();
+      const existing = (await fs.readFile(file, 'utf8')).trim();
       cachedSecret = { dataDir, secret: existing };
       return existing;
     }
@@ -85,9 +85,9 @@ function getSecret(): string {
   }
 }
 
-function sign(uid: string, exp: number, jti: string): string {
+function sign(secret: string, uid: string, exp: number, jti: string): string {
   return crypto
-    .createHmac('sha256', getSecret())
+    .createHmac('sha256', secret)
     .update(`${uid}.${exp}.${jti}`)
     .digest('base64url');
 }
@@ -102,13 +102,14 @@ export interface CreatedSession {
  * Создать сессию: завести запись `jti` и собрать подписанную cookie.
  * Вызывается после успешного входа/регистрации.
  */
-export function createSession(uid: string): CreatedSession {
+export async function createSession(uid: string): Promise<CreatedSession> {
   const exp = Math.floor(Date.now() / 1000) + SESSION_TTL_SECONDS;
-  const { jti } = createSessionRecord(uid, {
+  const { jti } = await createSessionRecord(uid, {
     ttlMs: SESSION_TTL_SECONDS * 1000,
   });
+  const secret = await getSecret();
   return {
-    value: `${uid}.${exp}.${jti}.${sign(uid, exp, jti)}`,
+    value: `${uid}.${exp}.${jti}.${sign(secret, uid, exp, jti)}`,
     maxAge: SESSION_TTL_SECONDS,
     jti,
   };
@@ -124,9 +125,9 @@ export interface VerifiedSession {
  * Проверить подпись, срок и живость записи `jti`.
  * `null` — cookie не наша, просрочена или сессия отозвана.
  */
-export function verifySession(
+export async function verifySession(
   value: string | null | undefined,
-): VerifiedSession | null {
+): Promise<VerifiedSession | null> {
   if (!value) return null;
   const parts = value.split('.');
   if (parts.length !== 4) return null;
@@ -136,14 +137,15 @@ export function verifySession(
   if (!uid || !jti || !signature || !Number.isFinite(exp)) return null;
   if (exp * 1000 <= Date.now()) return null;
 
-  const expected = sign(uid, exp, jti);
+  const secret = await getSecret();
+  const expected = sign(secret, uid, exp, jti);
   const given = Buffer.from(signature);
   const want = Buffer.from(expected);
   if (given.length !== want.length) return null;
   if (!crypto.timingSafeEqual(given, want)) return null;
 
   // Подпись верна, но сессию могли погасить явно (logout, смена пароля).
-  if (!isSessionActive(jti, uid)) return null;
+  if (!(await isSessionActive(jti, uid))) return null;
 
   return { uid, jti, exp };
 }
@@ -170,7 +172,9 @@ export function parseCookieHeader(
 }
 
 /** Сессия из запроса: `null`, если cookie нет, она невалидна или погашена. */
-export function readSession(request: Request): VerifiedSession | null {
+export async function readSession(
+  request: Request,
+): Promise<VerifiedSession | null> {
   const cookies = parseCookieHeader(request.headers.get('cookie'));
   return verifySession(cookies[SESSION_COOKIE]);
 }
@@ -186,17 +190,19 @@ export function readSession(request: Request): VerifiedSession | null {
  * следующем запросе, поэтому «заблокировать» в админке сразу выкидывает
  * пользователя из всех вкладок.
  */
-export function getSessionUid(request: Request): string | null {
-  const session = readSession(request);
+export async function getSessionUid(request: Request): Promise<string | null> {
+  const session = await readSession(request);
   if (!session) return null;
-  const user = readStoredUser(session.uid);
+  const user = await readStoredUser(session.uid);
   if (!user || user.isBlocked) return null;
   return session.uid;
 }
 
 /** Погасить сессию из запроса (logout). `false` — сессии уже нет. */
-export function revokeSessionFromRequest(request: Request): boolean {
-  const session = readSession(request);
+export async function revokeSessionFromRequest(
+  request: Request,
+): Promise<boolean> {
+  const session = await readSession(request);
   if (!session) return false;
   return revokeSession(session.jti);
 }
@@ -214,8 +220,8 @@ function cookieSecureFlag(): boolean {
 }
 
 /** Заголовок Set-Cookie, который ставит сессию после входа. */
-export function sessionCookieHeader(uid: string): string {
-  const { value, maxAge } = createSession(uid);
+export async function sessionCookieHeader(uid: string): Promise<string> {
+  const { value, maxAge } = await createSession(uid);
   const parts = [
     `${SESSION_COOKIE}=${value}`,
     'Path=/',

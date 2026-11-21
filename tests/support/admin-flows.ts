@@ -25,14 +25,14 @@ export const params = (uid: string) => ({
   params: Promise.resolve({ uid }),
 });
 
-export function seedAdmin(username = 'admin', password = 'admin-pass-1') {
-  const result = createServiceAdmin(username, password, 'Administrator');
+export async function seedAdmin(username = 'admin', password = 'admin-pass-1') {
+  const result = await createServiceAdmin(username, password, 'Administrator');
   expect(result.success).toBe(true);
   return { uid: result.user!.uid, username, password };
 }
 
-export function seedUser(username = 'hero', password = 'user-pass-1234') {
-  const result = registerUser(
+export async function seedUser(username = 'hero', password = 'user-pass-1234') {
+  const result = await registerUser(
     username,
     password,
     'Hero',

@@ -18,7 +18,7 @@ async function until(
 ): Promise<void> {
   const deadline = Date.now() + timeoutMs;
   while (!predicate()) {
-    if (Date.now() > deadline) throw new Error('until(): timeout');
+    if (Date.now() > deadline) throw new Error('await until(): timeout');
     await wait(5);
   }
 }

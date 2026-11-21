@@ -38,9 +38,9 @@ describe('игра удалена, листы остались', () => {
     gameSystem: 'Removed Game',
   };
 
-  beforeEach(() => {
+  beforeEach(async () => {
     dataDir = useTempDataDir();
-    const registered = registerUser(
+    const registered = await registerUser(
       'ghost-user',
       'ghost-pass-1234',
       'Ghost',
@@ -48,7 +48,7 @@ describe('игра удалена, листы остались', () => {
     );
     expect(registered.success).toBe(true);
     uid = registered.user!.uid;
-    saveCharacterToServer(uid, character as never);
+    await saveCharacterToServer(uid, character as never);
   });
 
   afterEach(() => {
@@ -69,7 +69,7 @@ describe('игра удалена, листы остались', () => {
 
   it('список листов не теряет лист удалённой игры', async () => {
     const res = await charactersGet(
-      req('http://localhost/api/characters', 'GET', sessionHeaders(uid)),
+      req('http://localhost/api/characters', 'GET', await sessionHeaders(uid)),
     );
     expect(res.status).toBe(200);
     const body = await res.json();
@@ -82,7 +82,7 @@ describe('игра удалена, листы остались', () => {
       req(
         'http://localhost/api/export?characterId=ghost-1',
         'GET',
-        sessionHeaders(uid),
+        await sessionHeaders(uid),
       ),
     );
     expect(res.status).toBe(200);
@@ -95,7 +95,7 @@ describe('игра удалена, листы остались', () => {
 
   it('бэкап всех листов тоже не падает', async () => {
     const res = await exportGet(
-      req('http://localhost/api/export', 'GET', sessionHeaders(uid)),
+      req('http://localhost/api/export', 'GET', await sessionHeaders(uid)),
     );
     expect(res.status).toBe(200);
     const body = await res.json();

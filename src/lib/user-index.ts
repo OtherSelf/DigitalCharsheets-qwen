@@ -1,4 +1,5 @@
-import fs from 'fs';
+import fs from 'fs/promises';
+import type { Dirent } from 'node:fs';
 import path from 'path';
 
 import { getDataDir, getLoginIndexFile, getUsersDir } from './data-dir';
@@ -32,9 +33,9 @@ export function emptyLoginIndex(): LoginIndex {
 }
 
 /** Прочитать индекс с диска. `null` — файла нет или он битый. */
-function readIndexFile(): LoginIndex | null {
+async function readIndexFile(): Promise<LoginIndex | null> {
   try {
-    const parsed = JSON.parse(fs.readFileSync(getLoginIndexFile(), 'utf8'));
+    const parsed = JSON.parse(await fs.readFile(getLoginIndexFile(), 'utf8'));
     if (!parsed || typeof parsed !== 'object') return null;
     if (
       !parsed.logins ||
@@ -54,21 +55,21 @@ function readIndexFile(): LoginIndex | null {
   }
 }
 
-function writeIndexFile(index: LoginIndex): void {
-  fs.mkdirSync(path.dirname(getLoginIndexFile()), { recursive: true });
-  writeJsonAtomic(getLoginIndexFile(), index);
+async function writeIndexFile(index: LoginIndex): Promise<void> {
+  await fs.mkdir(path.dirname(getLoginIndexFile()), { recursive: true });
+  await writeJsonAtomic(getLoginIndexFile(), index);
 }
 
 /**
  * Пересобрать индекс сканом `users/* /user.json` и записать его на диск.
  * Битые/чужие каталоги пропускаются: индекс не должен ронять вход.
  */
-export function rebuildLoginIndex(): LoginIndex {
+export async function rebuildLoginIndex(): Promise<LoginIndex> {
   const index = emptyLoginIndex();
   const usersDir = getUsersDir();
-  let entries: fs.Dirent[] = [];
+  let entries: Dirent[];
   try {
-    entries = fs.readdirSync(usersDir, { withFileTypes: true });
+    entries = await fs.readdir(usersDir, { withFileTypes: true });
   } catch {
     entries = [];
   }
@@ -76,7 +77,7 @@ export function rebuildLoginIndex(): LoginIndex {
   for (const entry of entries) {
     if (!entry.isDirectory()) continue;
     try {
-      const raw = fs.readFileSync(
+      const raw = await fs.readFile(
         path.join(usersDir, entry.name, 'user.json'),
         'utf8',
       );
@@ -90,7 +91,7 @@ export function rebuildLoginIndex(): LoginIndex {
   }
 
   try {
-    writeIndexFile(index);
+    await writeIndexFile(index);
   } catch {
     // Каталог только для чтения / нет места: отдаём индекс в памяти,
     // следующий вход попробует пересобрать снова.
@@ -102,10 +103,10 @@ export function rebuildLoginIndex(): LoginIndex {
  * Индекс «для чтения». Если файла нет или он битый — пересобираем.
  * `rebuildIfMissing: false` — не трогать диск (используется в тестах/диагностике).
  */
-export function readLoginIndex(
+export async function readLoginIndex(
   options: { rebuildIfMissing?: boolean } = {},
-): LoginIndex {
-  const fromDisk = readIndexFile();
+): Promise<LoginIndex> {
+  const fromDisk = await readIndexFile();
   if (fromDisk) return fromDisk;
   if (options.rebuildIfMissing === false) return emptyLoginIndex();
   return rebuildLoginIndex();
@@ -115,13 +116,13 @@ export function readLoginIndex(
  * Индекс «для записи» (вызывать под `withDataLock`): если файла нет —
  * пересобираем, иначе дописываем к тому, что на диске.
  */
-export function readLoginIndexForUpdate(): LoginIndex {
-  return readIndexFile() ?? rebuildLoginIndex();
+export async function readLoginIndexForUpdate(): Promise<LoginIndex> {
+  return (await readIndexFile()) ?? rebuildLoginIndex();
 }
 
 /** Записать индекс на диск. Вызывать под `withDataLock`. */
-export function writeLoginIndex(index: LoginIndex): void {
-  writeIndexFile(index);
+export async function writeLoginIndex(index: LoginIndex): Promise<void> {
+  await writeIndexFile(index);
 }
 
 /**
@@ -156,16 +157,16 @@ function mayRebuildNow(dataDir: string, now: number): boolean {
  * минуту): это лечит рассинхронизацию после падения между записью user.json и
  * индекса, а также ручное удаление `index/logins.json`.
  */
-export function resolveLogin(login: string): string | null {
+export async function resolveLogin(login: string): Promise<string | null> {
   const normalized = normalizeLogin(login);
   if (!normalized) return null;
 
-  const index = readLoginIndex();
+  const index = await readLoginIndex();
   const found = index.logins[normalized];
   if (found) return found;
 
   if (!mayRebuildNow(getDataDir(), Date.now())) return null;
 
-  const rebuilt = rebuildLoginIndex();
+  const rebuilt = await rebuildLoginIndex();
   return rebuilt.logins[normalized] ?? null;
 }

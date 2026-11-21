@@ -65,7 +65,7 @@ describe('/api/characters', () => {
     const payload = { ...makeDndCharacter(), userId: 'чужой-uid' };
     delete (payload as any).id;
 
-    const res = await charactersPost(json(payload, sessionHeaders(uid)));
+    const res = await charactersPost(json(payload, await sessionHeaders(uid)));
     expect(res.status).toBe(201);
     const character = await res.json();
     expect(character.id).toBeTruthy();
@@ -73,7 +73,7 @@ describe('/api/characters', () => {
     expect(character.userId).toBe(uid);
 
     const list = await charactersGet(
-      req('http://localhost/api/characters', 'GET', sessionHeaders(uid)),
+      req('http://localhost/api/characters', 'GET', await sessionHeaders(uid)),
     );
     expect(list.status).toBe(200);
     const characters = await list.json();
@@ -83,18 +83,20 @@ describe('/api/characters', () => {
   it('PUT обновляет персонажа, неизвестный id даёт 404', async () => {
     const { uid } = await loginAs('user-api');
     const created = await (
-      await charactersPost(json({ ...makeDhCharacter() }, sessionHeaders(uid)))
+      await charactersPost(
+        json({ ...makeDhCharacter() }, await sessionHeaders(uid)),
+      )
     ).json();
 
     const updated = await characterPut(
-      json({ name: 'Updated Vex' }, sessionHeaders(uid)),
+      json({ name: 'Updated Vex' }, await sessionHeaders(uid)),
       params(created.id),
     );
     expect(updated.status).toBe(200);
     expect((await updated.json()).name).toBe('Updated Vex');
 
     const missing = await characterPut(
-      json({ name: 'X' }, sessionHeaders(uid)),
+      json({ name: 'X' }, await sessionHeaders(uid)),
       params('nope'),
     );
     expect(missing.status).toBe(404);
@@ -103,7 +105,9 @@ describe('/api/characters', () => {
   it('PUT без сессии — 401', async () => {
     const { uid } = await loginAs('user-api');
     const created = await (
-      await charactersPost(json({ ...makeDhCharacter() }, sessionHeaders(uid)))
+      await charactersPost(
+        json({ ...makeDhCharacter() }, await sessionHeaders(uid)),
+      )
     ).json();
 
     const res = await characterPut(json({ name: 'X' }), params(created.id));
@@ -115,14 +119,17 @@ describe('/api/characters', () => {
     const { uid } = await loginAs('user-api');
     const created = await (
       await charactersPost(
-        json({ ...makeDhCharacter({ experience: 0 }) }, sessionHeaders(uid)),
+        json(
+          { ...makeDhCharacter({ experience: 0 }) },
+          await sessionHeaders(uid),
+        ),
       )
     ).json();
 
     const fresh = await characterPut(
       json(
         { experience: 500, __page: 'page-x', __seq: 2 },
-        sessionHeaders(uid),
+        await sessionHeaders(uid),
       ),
       params(created.id),
     );
@@ -132,7 +139,7 @@ describe('/api/characters', () => {
     const stale = await characterPut(
       json(
         { experience: 100, __page: 'page-x', __seq: 1 },
-        sessionHeaders(uid),
+        await sessionHeaders(uid),
       ),
       params(created.id),
     );
@@ -140,7 +147,11 @@ describe('/api/characters', () => {
 
     const list = await (
       await charactersGet(
-        req('http://localhost/api/characters', 'GET', sessionHeaders(uid)),
+        req(
+          'http://localhost/api/characters',
+          'GET',
+          await sessionHeaders(uid),
+        ),
       )
     ).json();
     expect(list.find((c: any) => c.id === created.id).experience).toBe(500);
@@ -149,20 +160,26 @@ describe('/api/characters', () => {
   it('служебные __page/__seq/userId не попадают в файл листа', async () => {
     const { uid } = await loginAs('user-api');
     const created = await (
-      await charactersPost(json({ ...makeDhCharacter() }, sessionHeaders(uid)))
+      await charactersPost(
+        json({ ...makeDhCharacter() }, await sessionHeaders(uid)),
+      )
     ).json();
 
     await characterPut(
       json(
         { experience: 7, __page: 'page-y', __seq: 3, userId: 'чужой-uid' },
-        sessionHeaders(uid),
+        await sessionHeaders(uid),
       ),
       params(created.id),
     );
 
     const list = await (
       await charactersGet(
-        req('http://localhost/api/characters', 'GET', sessionHeaders(uid)),
+        req(
+          'http://localhost/api/characters',
+          'GET',
+          await sessionHeaders(uid),
+        ),
       )
     ).json();
     const saved = list.find((c: any) => c.id === created.id);
@@ -175,13 +192,15 @@ describe('/api/characters', () => {
   it('PUT с пустым/битым телом — 400, а не 500 (keepalive при уходе со страницы)', async () => {
     const { uid } = await loginAs('user-api');
     const created = await (
-      await charactersPost(json({ ...makeDhCharacter() }, sessionHeaders(uid)))
+      await charactersPost(
+        json({ ...makeDhCharacter() }, await sessionHeaders(uid)),
+      )
     ).json();
 
     const empty = await characterPut(
       new Request('http://localhost/api/test', {
         method: 'PUT',
-        headers: sessionHeaders(uid),
+        headers: await sessionHeaders(uid),
       }),
       params(created.id),
     );
@@ -190,7 +209,10 @@ describe('/api/characters', () => {
     const broken = await characterPut(
       new Request('http://localhost/api/test', {
         method: 'PUT',
-        headers: { 'content-type': 'application/json', ...sessionHeaders(uid) },
+        headers: {
+          'content-type': 'application/json',
+          ...(await sessionHeaders(uid)),
+        },
         body: '{ broken',
       }),
       params(created.id),
@@ -201,18 +223,20 @@ describe('/api/characters', () => {
   it('DELETE удаляет персонажа, повторный вызов — 404', async () => {
     const { uid } = await loginAs('user-api');
     const created = await (
-      await charactersPost(json({ ...makeDhCharacter() }, sessionHeaders(uid)))
+      await charactersPost(
+        json({ ...makeDhCharacter() }, await sessionHeaders(uid)),
+      )
     ).json();
     const url = `http://localhost/api/characters/${created.id}`;
 
     const first = await characterDelete(
-      req(url, 'DELETE', sessionHeaders(uid)),
+      req(url, 'DELETE', await sessionHeaders(uid)),
       params(created.id),
     );
     expect(first.status).toBe(200);
 
     const second = await characterDelete(
-      req(url, 'DELETE', sessionHeaders(uid)),
+      req(url, 'DELETE', await sessionHeaders(uid)),
       params(created.id),
     );
     expect(second.status).toBe(404);
@@ -239,7 +263,7 @@ describe('path traversal в /api/characters/[id] (SEC-3, SEC-3b)', () => {
     const created = await charactersPost(
       json(
         { ...makeDndCharacter({ name: `${username} sheet` }) },
-        sessionHeaders(uid),
+        await sessionHeaders(uid),
       ),
     );
     const sheet = await created.json();
@@ -255,7 +279,7 @@ describe('path traversal в /api/characters/[id] (SEC-3, SEC-3b)', () => {
     const res = await characterPut(
       json(
         { passwordHash: 'pwned', name: 'hijacked-pass-1234' },
-        sessionHeaders(uid),
+        await sessionHeaders(uid),
       ),
       params('../user'),
     );
@@ -279,16 +303,16 @@ describe('path traversal в /api/characters/[id] (SEC-3, SEC-3b)', () => {
     const before = profileOf(victim.uid);
 
     const res = await characterPut(
-      json({ passwordHash: 'pwned' }, sessionHeaders(attacker.uid)),
+      json({ passwordHash: 'pwned' }, await sessionHeaders(attacker.uid)),
       params(`../${victim.uid}/user`),
     );
 
     expect(res.status).toBe(400);
     expect(profileOf(victim.uid)).toEqual(before);
     // Вход под жертвой старым паролем всё ещё работает.
-    expect(authenticateUser('traversal-victim', 'test-pass-1234').success).toBe(
-      true,
-    );
+    expect(
+      (await authenticateUser('traversal-victim', 'test-pass-1234')).success,
+    ).toBe(true);
   });
 
   it('DELETE по «../../<uid>/user» не удаляет чужой профиль — 400', async () => {
@@ -299,7 +323,7 @@ describe('path traversal в /api/characters/[id] (SEC-3, SEC-3b)', () => {
       req(
         'http://localhost/api/characters/x',
         'DELETE',
-        sessionHeaders(attacker.uid),
+        await sessionHeaders(attacker.uid),
       ),
       params(`../${victim.uid}/user`),
     );
@@ -321,13 +345,17 @@ describe('path traversal в /api/characters/[id] (SEC-3, SEC-3b)', () => {
       '',
     ]) {
       const put = await characterPut(
-        json({ passwordHash: 'pwned' }, sessionHeaders(uid)),
+        json({ passwordHash: 'pwned' }, await sessionHeaders(uid)),
         params(id),
       );
       expect({ id, status: put.status }).toEqual({ id, status: 400 });
 
       const del = await characterDelete(
-        req('http://localhost/api/characters/x', 'DELETE', sessionHeaders(uid)),
+        req(
+          'http://localhost/api/characters/x',
+          'DELETE',
+          await sessionHeaders(uid),
+        ),
         params(id),
       );
       expect({ id, status: del.status }).toEqual({ id, status: 400 });
@@ -343,7 +371,7 @@ describe('path traversal в /api/characters/[id] (SEC-3, SEC-3b)', () => {
     const usersBefore = fs.readdirSync(path.join(dataDir, 'users')).sort();
 
     const res = await characterPut(
-      json({ passwordHash: 'pwned' }, sessionHeaders(uid)),
+      json({ passwordHash: 'pwned' }, await sessionHeaders(uid)),
       params('../../escaped/characters/pwned'),
     );
     expect(res.status).toBe(400);

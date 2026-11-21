@@ -1,5 +1,5 @@
 import crypto from 'crypto';
-import fs from 'fs';
+import fs from 'fs/promises';
 import path from 'path';
 
 import { getSessionsFile } from '../data-dir';
@@ -55,10 +55,10 @@ function emptySessionsFile(): SessionsFile {
 }
 
 /** Прочитать реестр. Битый/чужой файл = «живых сессий нет» (fail-closed). */
-function readSessionsFile(): SessionsFile {
+async function readSessionsFile(): Promise<SessionsFile> {
   let raw: string;
   try {
-    raw = fs.readFileSync(getSessionsFile(), 'utf8');
+    raw = await fs.readFile(getSessionsFile(), 'utf8');
   } catch {
     return emptySessionsFile();
   }
@@ -108,9 +108,9 @@ function readSessionsFile(): SessionsFile {
   return { version: FILE_VERSION, sessions };
 }
 
-function writeSessionsFile(file: SessionsFile): void {
-  fs.mkdirSync(path.dirname(getSessionsFile()), { recursive: true });
-  writeJsonAtomic(getSessionsFile(), file);
+async function writeSessionsFile(file: SessionsFile): Promise<void> {
+  await fs.mkdir(path.dirname(getSessionsFile()), { recursive: true });
+  await writeJsonAtomic(getSessionsFile(), file);
 }
 
 /** Выбросить просроченные и отозванные записи; при переполнении — старые. */
@@ -131,36 +131,36 @@ function pruneSessions(
 }
 
 /** Завести запись сессии; возвращает `jti` и срок жизни. */
-export function createSessionRecord(
+export async function createSessionRecord(
   uid: string,
   options: CreateSessionRecordOptions,
-): { jti: string; expiresAt: string } {
+): Promise<{ jti: string; expiresAt: string }> {
   const nowMs = options.nowMs ?? Date.now();
   const expiresAt = new Date(nowMs + options.ttlMs).toISOString();
   const jti = crypto.randomBytes(JTI_BYTES).toString('base64url');
 
-  withDataLock(() => {
-    const file = readSessionsFile();
+  await withDataLock(async () => {
+    const file = await readSessionsFile();
     const sessions = pruneSessions(file.sessions, nowMs);
     sessions[jti] = {
       uid,
       createdAt: new Date(nowMs).toISOString(),
       expiresAt,
     };
-    writeSessionsFile({ version: FILE_VERSION, sessions });
+    await writeSessionsFile({ version: FILE_VERSION, sessions });
   });
 
   return { jti, expiresAt };
 }
 
 /** Существует ли живая (не отозванная и не просроченная) запись. */
-export function isSessionActive(
+export async function isSessionActive(
   jti: string,
   uid?: string,
   nowMs: number = Date.now(),
-): boolean {
+): Promise<boolean> {
   if (typeof jti !== 'string' || jti === '') return false;
-  const record = readSessionsFile().sessions[jti];
+  const record = (await readSessionsFile()).sessions[jti];
   if (!record) return false;
   if (record.revokedAt) return false;
   if (Date.parse(record.expiresAt) <= nowMs) return false;
@@ -172,13 +172,13 @@ export function isSessionActive(
  * Погасить одну сессию (logout): запись удаляется. `false` — такой живой
  * сессии нет (повторный logout, чужой jti, истёкшая cookie).
  */
-export function revokeSession(jti: string): boolean {
+export async function revokeSession(jti: string): Promise<boolean> {
   if (typeof jti !== 'string' || jti === '') return false;
-  return withDataLock(() => {
-    const file = readSessionsFile();
+  return withDataLock(async () => {
+    const file = await readSessionsFile();
     if (!file.sessions[jti]) return false;
     delete file.sessions[jti];
-    writeSessionsFile({
+    await writeSessionsFile({
       version: FILE_VERSION,
       sessions: pruneSessions(file.sessions, Date.now()),
     });
@@ -191,13 +191,13 @@ export function revokeSession(jti: string): boolean {
  * живой — так смена пароля не выкидывает пользователя с того устройства, где
  * он её сделал. Возвращает число погашенных записей.
  */
-export function revokeAllSessionsForUser(
+export async function revokeAllSessionsForUser(
   uid: string,
   exceptJti?: string,
-): number {
+): Promise<number> {
   if (typeof uid !== 'string' || uid === '') return 0;
-  return withDataLock(() => {
-    const file = readSessionsFile();
+  return withDataLock(async () => {
+    const file = await readSessionsFile();
     let revoked = 0;
     for (const [jti, record] of Object.entries(file.sessions)) {
       if (record.uid !== uid) continue;
@@ -206,7 +206,7 @@ export function revokeAllSessionsForUser(
       revoked += 1;
     }
     if (revoked > 0) {
-      writeSessionsFile({
+      await writeSessionsFile({
         version: FILE_VERSION,
         sessions: pruneSessions(file.sessions, Date.now()),
       });
@@ -216,8 +216,10 @@ export function revokeAllSessionsForUser(
 }
 
 /** Живые `jti` (диагностика и тесты; наружу не отдаётся). */
-export function readActiveSessions(nowMs: number = Date.now()): string[] {
-  return Object.entries(readSessionsFile().sessions)
+export async function readActiveSessions(
+  nowMs: number = Date.now(),
+): Promise<string[]> {
+  return Object.entries((await readSessionsFile()).sessions)
     .filter(
       ([, record]) => !record.revokedAt && Date.parse(record.expiresAt) > nowMs,
     )
@@ -225,11 +227,11 @@ export function readActiveSessions(nowMs: number = Date.now()): string[] {
 }
 
 /** Сколько живых сессий у пользователя (для UI «выйти на всех устройствах»). */
-export function countActiveSessions(
+export async function countActiveSessions(
   uid: string,
   nowMs: number = Date.now(),
-): number {
-  return Object.values(readSessionsFile().sessions).filter(
+): Promise<number> {
+  return Object.values((await readSessionsFile()).sessions).filter(
     (record) =>
       record.uid === uid &&
       !record.revokedAt &&

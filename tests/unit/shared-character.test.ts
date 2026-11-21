@@ -52,13 +52,13 @@ describe('sanitizeCharacterForShare', () => {
 });
 
 describe('resolveSharedCharacter', () => {
-  it('возвращает лист по токену и не отдаёт uid владельца', () => {
+  it('возвращает лист по токену и не отдаёт uid владельца', async () => {
     const uid = newUid();
-    createUserFolder(uid, 'shared-user', 'Shared');
-    saveCharacterToServer(uid, makeDndCharacter({ id: 'char-1' }));
-    const { token } = issueShareToken(uid, 'char-1');
+    await createUserFolder(uid, 'shared-user', 'Shared');
+    await saveCharacterToServer(uid, makeDndCharacter({ id: 'char-1' }));
+    const { token } = await issueShareToken(uid, 'char-1');
 
-    const character = resolveSharedCharacter(token);
+    const character = await resolveSharedCharacter(token);
 
     expect(character).not.toBeNull();
     expect(character?.name).toBe('Ragnar Testborn');
@@ -66,18 +66,18 @@ describe('resolveSharedCharacter', () => {
     expect(character?.id).toBe('char-1');
   });
 
-  it('возвращает null для неизвестного или неверного токена', () => {
-    expect(resolveSharedCharacter('')).toBeNull();
-    expect(resolveSharedCharacter('a'.repeat(43))).toBeNull();
+  it('возвращает null для неизвестного или неверного токена', async () => {
+    expect(await resolveSharedCharacter('')).toBeNull();
+    expect(await resolveSharedCharacter('a'.repeat(43))).toBeNull();
   });
 
-  it('resolveSharedSheet отдаёт имя владельца и не утекает uid', () => {
+  it('resolveSharedSheet отдаёт имя владельца и не утекает uid', async () => {
     const uid = newUid();
-    createUserFolder(uid, 'shared-owner', 'Owner Name');
-    saveCharacterToServer(uid, makeDndCharacter({ id: 'char-1' }));
-    const { token } = issueShareToken(uid, 'char-1');
+    await createUserFolder(uid, 'shared-owner', 'Owner Name');
+    await saveCharacterToServer(uid, makeDndCharacter({ id: 'char-1' }));
+    const { token } = await issueShareToken(uid, 'char-1');
 
-    const shared = resolveSharedSheet(token);
+    const shared = await resolveSharedSheet(token);
 
     expect(shared?.ownerName).toBe('Owner Name');
     expect(shared?.character.userId).toBeUndefined();
@@ -159,11 +159,11 @@ describe('shared history', () => {
     expect(preview).toContain('"name":"Sword"');
   });
 
-  it('показывает историю только при includeHistory и без uid', () => {
+  it('показывает историю только при includeHistory и без uid', async () => {
     const uid = newUid();
-    createUserFolder(uid, 'shared-history', 'Shared History');
-    saveCharacterToServer(uid, makeDndCharacter({ id: 'char-1' }));
-    appendHistory(
+    await createUserFolder(uid, 'shared-history', 'Shared History');
+    await saveCharacterToServer(uid, makeDndCharacter({ id: 'char-1' }));
+    await appendHistory(
       uid,
       'char-1',
       {
@@ -180,13 +180,13 @@ describe('shared history', () => {
       { nowMs: Date.parse('2026-05-12T18:00:00.000Z') },
     );
 
-    const without = issueShareToken(uid, 'char-1');
-    expect(resolveSharedSheet(without.token)?.history).toBeNull();
+    const without = await issueShareToken(uid, 'char-1');
+    expect((await resolveSharedSheet(without.token))?.history).toBeNull();
 
-    const withHistory = issueShareToken(uid, 'char-1', {
+    const withHistory = await issueShareToken(uid, 'char-1', {
       includeHistory: true,
     });
-    const shared = resolveSharedSheet(withHistory.token);
+    const shared = await resolveSharedSheet(withHistory.token);
     const changes = shared?.history?.sessions.flatMap(
       (session) => session.changes,
     );

@@ -39,7 +39,7 @@ export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ uid: string }> },
 ) {
-  const auth = requireAdmin(request);
+  const auth = await requireAdmin(request);
   if (!auth.ok) return auth.response;
 
   const { uid } = await params;
@@ -61,7 +61,11 @@ export async function PATCH(
     );
   }
 
-  const result = updateUserByAdmin(auth.uid, uid, body as AdminUserUpdatePatch);
+  const result = await updateUserByAdmin(
+    auth.uid,
+    uid,
+    body as AdminUserUpdatePatch,
+  );
   if (!result.success) {
     return NextResponse.json(result, {
       status: statusForReason(result.reason),
@@ -75,11 +79,11 @@ export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ uid: string }> },
 ) {
-  const auth = requireAdmin(request);
+  const auth = await requireAdmin(request);
   if (!auth.ok) return auth.response;
 
   const { uid } = await params;
-  const result = deleteUserByAdmin(auth.uid, uid);
+  const result = await deleteUserByAdmin(auth.uid, uid);
   if (!result.success) {
     return NextResponse.json(result, {
       status: statusForReason(result.reason),

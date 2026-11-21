@@ -1,4 +1,5 @@
-import fs from 'fs';
+import fs from 'fs/promises';
+import fsSync from 'node:fs';
 
 import { NextResponse } from 'next/server';
 
@@ -18,21 +19,21 @@ import { getDataDir } from '@/lib/data-dir';
  */
 export const dynamic = 'force-dynamic';
 
-function checkDataDir(): 'ok' | 'error' {
+async function checkDataDir(): Promise<'ok' | 'error'> {
   try {
-    // accessSync проверяет и существование, и права; каталог не создаём —
+    // access проверяет и существование, и права; каталог не создаём —
     // healthcheck не должен иметь побочных эффектов.
-    fs.accessSync(getDataDir(), fs.constants.W_OK);
+    await fs.access(getDataDir(), fsSync.constants.W_OK);
     return 'ok';
   } catch {
     return 'error';
   }
 }
 
-export function GET() {
-  const checks = { dataDir: checkDataDir() };
+export async function GET() {
+  const checks = { dataDir: await checkDataDir() };
   const healthy = checks.dataDir === 'ok';
-  const info = getAppInfo();
+  const info = await getAppInfo();
 
   return NextResponse.json(
     {

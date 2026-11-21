@@ -49,7 +49,7 @@ function writeLegacyProfile(uid: string, content: Record<string, unknown>) {
 }
 
 describe('normalizeUserProfiles', () => {
-  it('дополняет профиль v2 ролями, блокировкой и версией схемы', () => {
+  it('дополняет профиль v2 ролями, блокировкой и версией схемы', async () => {
     const uid = newUid();
     const createdAt = '2025-01-02T03:04:05.000Z';
     const paths = writeLegacyProfile(uid, {
@@ -62,7 +62,7 @@ describe('normalizeUserProfiles', () => {
       updatedAt: createdAt,
     });
 
-    const report = normalizeUserProfiles();
+    const report = await normalizeUserProfiles();
     expect(report.total).toBe(1);
     expect(report.updated).toBe(1);
     expect(report.issues).toEqual([]);
@@ -82,7 +82,7 @@ describe('normalizeUserProfiles', () => {
     });
   });
 
-  it('сохраняет роль tester при миграции v3 → v4', () => {
+  it('сохраняет роль tester при миграции v3 → v4', async () => {
     const uid = newUid();
     const paths = writeLegacyProfile(uid, {
       schemaVersion: 3,
@@ -96,17 +96,17 @@ describe('normalizeUserProfiles', () => {
       updatedAt: '2025-01-01T00:00:00.000Z',
     });
 
-    const report = normalizeUserProfiles();
+    const report = await normalizeUserProfiles();
     expect(report.updated).toBe(1);
     expect(report.issues).toEqual([]);
 
     const stored = readJson(paths.userFile);
     expect(stored.role).toBe('tester');
     expect(stored.schemaVersion).toBe(USER_SCHEMA_VERSION);
-    expect(readStoredUser(uid)?.role).toBe('tester');
+    expect((await readStoredUser(uid))?.role).toBe('tester');
   });
 
-  it('неизвестную роль нормализует в user', () => {
+  it('неизвестную роль нормализует в user', async () => {
     const uid = newUid();
     const paths = writeLegacyProfile(uid, {
       schemaVersion: 3,
@@ -117,11 +117,11 @@ describe('normalizeUserProfiles', () => {
       role: 'superuser',
     });
 
-    normalizeUserProfiles();
+    await normalizeUserProfiles();
     expect(readJson(paths.userFile).role).toBe('user');
   });
 
-  it('читает legacy-поле email как логин и подставляет displayName', () => {
+  it('читает legacy-поле email как логин и подставляет displayName', async () => {
     const uid = newUid();
     const paths = writeLegacyProfile(uid, {
       schemaVersion: 1,
@@ -129,7 +129,7 @@ describe('normalizeUserProfiles', () => {
       passwordHash: sha256('pass-one-1234'),
     });
 
-    const report = normalizeUserProfiles();
+    const report = await normalizeUserProfiles();
     expect(report.updated).toBe(1);
 
     const stored = readJson(paths.userFile);
@@ -144,7 +144,7 @@ describe('normalizeUserProfiles', () => {
     expect(stored.email).toBe('Old@Example.com');
   });
 
-  it('сохраняет дату создания из mtime, а не «сегодня»', () => {
+  it('сохраняет дату создания из mtime, а не «сегодня»', async () => {
     const uid = newUid();
     const paths = writeLegacyProfile(uid, {
       uid,
@@ -155,14 +155,14 @@ describe('normalizeUserProfiles', () => {
     const past = new Date('2024-03-04T05:06:07.000Z');
     fs.utimesSync(paths.userFile, past, past);
 
-    normalizeUserProfiles();
+    await normalizeUserProfiles();
 
     const stored = readJson(paths.userFile);
     expect(stored.createdAt).toBe(past.toISOString());
     expect(stored.updatedAt).toBe(past.toISOString());
   });
 
-  it('идемпотентна: второй запуск ничего не переписывает', () => {
+  it('идемпотентна: второй запуск ничего не переписывает', async () => {
     const uid = newUid();
     writeLegacyProfile(uid, {
       uid,
@@ -171,12 +171,12 @@ describe('normalizeUserProfiles', () => {
       passwordHash: sha256('pass-one-1234'),
     });
 
-    expect(normalizeUserProfiles().updated).toBe(1);
-    const second = normalizeUserProfiles();
+    expect((await normalizeUserProfiles()).updated).toBe(1);
+    const second = await normalizeUserProfiles();
     expect(second.updated).toBe(0);
   });
 
-  it('не понижает schemaVersion более нового профиля', () => {
+  it('не понижает schemaVersion более нового профиля', async () => {
     const uid = newUid();
     const futureVersion = USER_SCHEMA_VERSION + 1;
     const paths = writeLegacyProfile(uid, {
@@ -192,12 +192,12 @@ describe('normalizeUserProfiles', () => {
     });
 
     // Более свежий инстанс мог дописать поля: понижать версию нельзя.
-    const report = normalizeUserProfiles();
+    const report = await normalizeUserProfiles();
     expect(report.updated).toBe(0);
     expect(readJson(paths.userFile).schemaVersion).toBe(futureVersion);
   });
 
-  it('не выдумывает passwordHash, но сообщает о нём', () => {
+  it('не выдумывает passwordHash, но сообщает о нём', async () => {
     const uid = newUid();
     const paths = writeLegacyProfile(uid, {
       schemaVersion: USER_SCHEMA_VERSION,
@@ -210,7 +210,7 @@ describe('normalizeUserProfiles', () => {
       updatedAt: '2025-01-01T00:00:00.000Z',
     });
 
-    const report = normalizeUserProfiles();
+    const report = await normalizeUserProfiles();
     expect(report.updated).toBe(0);
     expect(report.issues.some((issue) => issue.includes('passwordHash'))).toBe(
       true,
@@ -219,7 +219,7 @@ describe('normalizeUserProfiles', () => {
     expect(readJson(paths.userFile).passwordHash).toBeUndefined();
   });
 
-  it('пропускает битый user.json и каталоги не-UUID', () => {
+  it('пропускает битый user.json и каталоги не-UUID', async () => {
     const goodUid = newUid();
     writeLegacyProfile(goodUid, {
       uid: goodUid,
@@ -240,7 +240,7 @@ describe('normalizeUserProfiles', () => {
       JSON.stringify({ username: 'foreign', passwordHash: 'x' }),
     );
 
-    const report = normalizeUserProfiles();
+    const report = await normalizeUserProfiles();
     expect(report.total).toBe(1);
     expect(report.updated).toBe(1);
     expect(report.issues.some((issue) => issue.includes(brokenUid))).toBe(true);
@@ -248,12 +248,12 @@ describe('normalizeUserProfiles', () => {
       true,
     );
 
-    expect(readStoredUser(brokenUid)).toBeNull();
-    expect(readStoredUser('not-a-uid')).toBeNull();
-    expect(readStoredUser(goodUid)?.username).toBe('good');
+    expect(await readStoredUser(brokenUid)).toBeNull();
+    expect(await readStoredUser('not-a-uid')).toBeNull();
+    expect((await readStoredUser(goodUid))?.username).toBe('good');
   });
 
-  it('readStoredUser нормализует в памяти, не трогая файл', () => {
+  it('readStoredUser нормализует в памяти, не трогая файл', async () => {
     const uid = newUid();
     const paths = writeLegacyProfile(uid, {
       uid,
@@ -263,7 +263,7 @@ describe('normalizeUserProfiles', () => {
     });
     const before = fs.readFileSync(paths.userFile, 'utf8');
 
-    const user = readStoredUser(uid);
+    const user = await readStoredUser(uid);
     expect(user?.username).toBe('readonly');
     expect(user?.role).toBe('user');
     expect(user?.isBlocked).toBe(false);

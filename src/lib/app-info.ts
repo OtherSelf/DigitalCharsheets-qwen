@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import fs from 'node:fs';
+import fs from 'node:fs/promises';
 import path from 'node:path';
 
 import packageJson from '../../package.json';
@@ -89,11 +89,11 @@ function bootId(): string {
   return scope.__dcsBootId;
 }
 
-function buildIdFromDisk(cwd: string): string | null {
+async function buildIdFromDisk(cwd: string): Promise<string | null> {
   try {
-    const value = fs
-      .readFileSync(path.join(cwd, '.next', 'BUILD_ID'), 'utf8')
-      .trim();
+    const value = (
+      await fs.readFile(path.join(cwd, '.next', 'BUILD_ID'), 'utf8')
+    ).trim();
     return value === '' ? null : value;
   } catch {
     return null;
@@ -105,16 +105,20 @@ function buildIdFromDisk(cwd: string): string | null {
  * микросекунд, зато значение не кешируется в модуле и не расходится с текущим
  * содержимым диска (тесты подменяют `cwd`).
  */
-export function getBuildId(options: AppInfoOptions = {}): string {
+export async function getBuildId(
+  options: AppInfoOptions = {},
+): Promise<string> {
   if (process.env.NODE_ENV !== 'production') return bootId();
   return (
     firstNonEmpty(process.env.NEXT_DEPLOYMENT_ID) ??
-    buildIdFromDisk(options.cwd ?? process.cwd()) ??
+    (await buildIdFromDisk(options.cwd ?? process.cwd())) ??
     bootId()
   );
 }
 
-export function getAppInfo(options: AppInfoOptions = {}): AppInfo {
+export async function getAppInfo(
+  options: AppInfoOptions = {},
+): Promise<AppInfo> {
   const fromEnv = firstNonEmpty(
     process.env.DCS_GIT_COMMIT,
     process.env.GIT_COMMIT,
@@ -130,7 +134,7 @@ export function getAppInfo(options: AppInfoOptions = {}): AppInfo {
   // это лишний обход дерева на первый запрос.
   const checkout = fromEnv
     ? null
-    : getGitCheckoutInfo(options.cwd ?? process.cwd());
+    : await getGitCheckoutInfo(options.cwd ?? process.cwd());
 
   const commit = fromEnv ?? checkout?.commit ?? null;
 
@@ -141,7 +145,7 @@ export function getAppInfo(options: AppInfoOptions = {}): AppInfo {
     commitShort: shortenCommit(commit),
     branch: branchFromEnv ?? checkout?.branch ?? null,
     buildDate: firstNonEmpty(process.env.DCS_BUILD_DATE),
-    buildId: getBuildId(options),
+    buildId: await getBuildId(options),
     runtime: { node: process.version },
   };
 }

@@ -1,4 +1,5 @@
-import fs from 'fs';
+import fs from 'fs/promises';
+import type { Dirent } from 'node:fs';
 
 import { getUserDir, getUserFile, getUsersDir } from './data-dir';
 import { withDataLock } from './data-lock';
@@ -133,19 +134,19 @@ export function normalizeStoredUser(
  * Прочитать профиль с диска и нормализовать его в памяти.
  * `uid` обязан быть UUID: значение приходит из URL/сессии, а попадает в путь.
  */
-export function readStoredUser(uid: string): StoredUser | null {
+export async function readStoredUser(uid: string): Promise<StoredUser | null> {
   if (!isUid(uid)) return null;
   const file = getUserFile(uid);
 
   let mtimeIso: string;
   try {
-    mtimeIso = fs.statSync(file).mtime.toISOString();
+    mtimeIso = (await fs.stat(file)).mtime.toISOString();
   } catch {
     return null;
   }
 
   try {
-    const parsed = JSON.parse(fs.readFileSync(file, 'utf8')) as unknown;
+    const parsed = JSON.parse(await fs.readFile(file, 'utf8')) as unknown;
     if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
       return null;
     }
@@ -158,9 +159,12 @@ export function readStoredUser(uid: string): StoredUser | null {
 }
 
 /** Атомарно записать профиль (каталог создаётся при необходимости). */
-export function writeStoredUser(uid: string, data: StoredUser): void {
-  fs.mkdirSync(getUserDir(uid), { recursive: true });
-  writeJsonAtomic(getUserFile(uid), data);
+export async function writeStoredUser(
+  uid: string,
+  data: StoredUser,
+): Promise<void> {
+  await fs.mkdir(getUserDir(uid), { recursive: true });
+  await writeJsonAtomic(getUserFile(uid), data);
 }
 
 export interface ScanUserRecordsResult {
@@ -173,13 +177,13 @@ export interface ScanUserRecordsResult {
  * Пройти по `users/*` и разобрать все профили. Не бросает: один битый
  * каталог не должен мешать остальным (ни входу, ни админке).
  */
-export function scanUserRecords(): ScanUserRecordsResult {
+export async function scanUserRecords(): Promise<ScanUserRecordsResult> {
   const records: (ParsedUserRecord & { uid: string })[] = [];
   const issues: string[] = [];
 
-  let entries: fs.Dirent[] = [];
+  let entries: Dirent[];
   try {
-    entries = fs.readdirSync(getUsersDir(), { withFileTypes: true });
+    entries = await fs.readdir(getUsersDir(), { withFileTypes: true });
   } catch {
     return { records, issues };
   }
@@ -195,8 +199,8 @@ export function scanUserRecords(): ScanUserRecordsResult {
     let raw: string;
     let mtimeIso: string;
     try {
-      mtimeIso = fs.statSync(file).mtime.toISOString();
-      raw = fs.readFileSync(file, 'utf8');
+      mtimeIso = (await fs.stat(file)).mtime.toISOString();
+      raw = await fs.readFile(file, 'utf8');
     } catch {
       issues.push(`users/${entry.name}: нет user.json`);
       continue;
@@ -225,8 +229,8 @@ export function scanUserRecords(): ScanUserRecordsResult {
 }
 
 /** Только валидные профили — для админки и поиска активных админов. */
-export function listStoredUsers(): StoredUser[] {
-  return scanUserRecords().records.map((record) => record.user);
+export async function listStoredUsers(): Promise<StoredUser[]> {
+  return (await scanUserRecords()).records.map((record) => record.user);
 }
 
 export interface NormalizeProfilesReport {
@@ -240,8 +244,8 @@ export interface NormalizeProfilesReport {
  * `user.json` дополняются недостающими полями. Вызывается из
  * `src/instrumentation.ts` при каждом старте/перезапуске сервера.
  */
-export function normalizeUserProfiles(): NormalizeProfilesReport {
-  const { records, issues } = scanUserRecords();
+export async function normalizeUserProfiles(): Promise<NormalizeProfilesReport> {
+  const { records, issues } = await scanUserRecords();
   let updated = 0;
 
   for (const record of records) {
@@ -255,7 +259,7 @@ export function normalizeUserProfiles(): NormalizeProfilesReport {
     try {
       // Под локом: нормализация может идти параллельно с записью профиля
       // из другого процесса (несколько инстансов на одном data-dir).
-      withDataLock(() => writeStoredUser(record.uid, record.user));
+      await withDataLock(() => writeStoredUser(record.uid, record.user));
       updated += 1;
     } catch (error) {
       issues.push(

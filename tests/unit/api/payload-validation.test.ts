@@ -61,7 +61,7 @@ describe('валидация payload листа (SEC-10)', () => {
           evil: 'pwned',
           nestedExtra: { deep: true },
         },
-        sessionHeaders(uid),
+        await sessionHeaders(uid),
       ),
     );
 
@@ -82,7 +82,7 @@ describe('валидация payload листа (SEC-10)', () => {
     const res = await charactersPost(
       json(
         { ...makeDndCharacter(), stats: 'строка вместо блока' },
-        sessionHeaders(uid),
+        await sessionHeaders(uid),
       ),
     );
 
@@ -97,12 +97,14 @@ describe('валидация payload листа (SEC-10)', () => {
   it('PUT с неверным типом → 400 и файл не меняется', async () => {
     const { uid } = await loginAs('payload-put-bad');
     const created = await (
-      await charactersPost(json({ ...makeDndCharacter() }, sessionHeaders(uid)))
+      await charactersPost(
+        json({ ...makeDndCharacter() }, await sessionHeaders(uid)),
+      )
     ).json();
     const before = readJson(sheetFile(uid, created.id));
 
     const res = await characterPut(
-      json({ stats: 'строка вместо блока' }, sessionHeaders(uid)),
+      json({ stats: 'строка вместо блока' }, await sessionHeaders(uid)),
       params(created.id),
     );
 
@@ -114,13 +116,15 @@ describe('валидация payload листа (SEC-10)', () => {
   it('PUT отбрасывает поля вне схемы и служебные ключи', async () => {
     const { uid } = await loginAs('payload-put-extra');
     const created = await (
-      await charactersPost(json({ ...makeDndCharacter() }, sessionHeaders(uid)))
+      await charactersPost(
+        json({ ...makeDndCharacter() }, await sessionHeaders(uid)),
+      )
     ).json();
 
     const res = await characterPut(
       json(
         { name: 'Renamed Sheet', evil: 'pwned', userId: 'someone-else' },
-        sessionHeaders(uid),
+        await sessionHeaders(uid),
       ),
       params(created.id),
     );
@@ -137,16 +141,21 @@ describe('валидация payload листа (SEC-10)', () => {
     const huge = 'x'.repeat(1_100_000);
 
     const post = await charactersPost(
-      json({ ...makeDndCharacter(), backstory: huge }, sessionHeaders(uid)),
+      json(
+        { ...makeDndCharacter(), backstory: huge },
+        await sessionHeaders(uid),
+      ),
     );
     expect(post.status).toBe(413);
     expect((await post.json()).reason).toBe('payload_too_large');
 
     const created = await (
-      await charactersPost(json({ ...makeDndCharacter() }, sessionHeaders(uid)))
+      await charactersPost(
+        json({ ...makeDndCharacter() }, await sessionHeaders(uid)),
+      )
     ).json();
     const put = await characterPut(
-      json({ backstory: huge }, sessionHeaders(uid)),
+      json({ backstory: huge }, await sessionHeaders(uid)),
       params(created.id),
     );
     expect(put.status).toBe(413);

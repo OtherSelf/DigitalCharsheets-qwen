@@ -34,10 +34,10 @@ const DAY = 24 * 60 * 60 * 1000;
 let dataDir: string;
 let uid: string;
 
-function seed(): void {
+async function seed(): Promise<void> {
   uid = newUid();
-  createUserFolder(uid, 'share-user', 'Share User');
-  saveCharacterToServer(uid, makeDndCharacter({ id: CHARACTER_ID }));
+  await createUserFolder(uid, 'share-user', 'Share User');
+  await saveCharacterToServer(uid, makeDndCharacter({ id: CHARACTER_ID }));
 }
 
 function readShares(): {
@@ -48,9 +48,9 @@ function readShares(): {
   );
 }
 
-beforeEach(() => {
+beforeEach(async () => {
   dataDir = useTempDataDir();
-  seed();
+  await seed();
 });
 
 afterEach(() => {
@@ -58,8 +58,8 @@ afterEach(() => {
 });
 
 describe('issueShareToken', () => {
-  it('возвращает токен, хранит только его хэш и одну запись на лист', () => {
-    const first = issueShareToken(uid, CHARACTER_ID, { nowMs: NOW });
+  it('возвращает токен, хранит только его хэш и одну запись на лист', async () => {
+    const first = await issueShareToken(uid, CHARACTER_ID, { nowMs: NOW });
 
     expect(isShareToken(first.token)).toBe(true);
     expect(first.expiresAt).toBe(new Date(NOW + 30 * DAY).toISOString());
@@ -76,7 +76,7 @@ describe('issueShareToken', () => {
       includeHistory: false,
     });
 
-    const second = issueShareToken(uid, CHARACTER_ID, {
+    const second = await issueShareToken(uid, CHARACTER_ID, {
       expiresInDays: 7,
       nowMs: NOW + 1000,
     });
@@ -85,53 +85,58 @@ describe('issueShareToken', () => {
     expect(Object.keys(afterRotate.shares)).toEqual([
       hashShareToken(second.token),
     ]);
-    expect(resolveShareToken(first.token, { nowMs: NOW + 2000 })).toBeNull();
     expect(
-      resolveShareToken(second.token, { nowMs: NOW + 2000 }),
+      await resolveShareToken(first.token, { nowMs: NOW + 2000 }),
+    ).toBeNull();
+    expect(
+      await resolveShareToken(second.token, { nowMs: NOW + 2000 }),
     ).toMatchObject({ uid, characterId: CHARACTER_ID });
   });
 
-  it('включает историю только по явному флагу', () => {
-    const without = issueShareToken(uid, CHARACTER_ID, { nowMs: NOW });
+  it('включает историю только по явному флагу', async () => {
+    const without = await issueShareToken(uid, CHARACTER_ID, { nowMs: NOW });
     expect(
-      getShareForCharacter(uid, CHARACTER_ID, { nowMs: NOW })?.includeHistory,
+      (await getShareForCharacter(uid, CHARACTER_ID, { nowMs: NOW }))
+        ?.includeHistory,
     ).toBe(false);
 
-    const withHistory = issueShareToken(uid, CHARACTER_ID, {
+    const withHistory = await issueShareToken(uid, CHARACTER_ID, {
       nowMs: NOW + 1000,
       includeHistory: true,
     });
-    expect(resolveShareToken(without.token, { nowMs: NOW + 2000 })).toBeNull();
     expect(
-      resolveShareToken(withHistory.token, { nowMs: NOW + 2000 }),
+      await resolveShareToken(without.token, { nowMs: NOW + 2000 }),
+    ).toBeNull();
+    expect(
+      await resolveShareToken(withHistory.token, { nowMs: NOW + 2000 }),
     ).toMatchObject({ includeHistory: true });
     expect(
-      getShareForCharacter(uid, CHARACTER_ID, { nowMs: NOW + 2000 })
+      (await getShareForCharacter(uid, CHARACTER_ID, { nowMs: NOW + 2000 }))
         ?.includeHistory,
     ).toBe(true);
   });
 
-  it('поддерживает срок «до отзыва»', () => {
-    const { token, expiresAt } = issueShareToken(uid, CHARACTER_ID, {
+  it('поддерживает срок «до отзыва»', async () => {
+    const { token, expiresAt } = await issueShareToken(uid, CHARACTER_ID, {
       expiresInDays: null,
       nowMs: NOW,
     });
 
     expect(expiresAt).toBeNull();
     expect(
-      resolveShareToken(token, { nowMs: NOW + 10 * 365 * DAY }),
+      await resolveShareToken(token, { nowMs: NOW + 10 * 365 * DAY }),
     ).not.toBeNull();
   });
 
-  it('истекает по сроку, не удаляя запись при чтении', () => {
-    const { token } = issueShareToken(uid, CHARACTER_ID, {
+  it('истекает по сроку, не удаляя запись при чтении', async () => {
+    const { token } = await issueShareToken(uid, CHARACTER_ID, {
       expiresInDays: 7,
       nowMs: NOW,
     });
 
-    expect(resolveShareToken(token, { nowMs: NOW + 7 * DAY })).toBeNull();
+    expect(await resolveShareToken(token, { nowMs: NOW + 7 * DAY })).toBeNull();
     expect(
-      getShareForCharacter(uid, CHARACTER_ID, { nowMs: NOW + 7 * DAY }),
+      await getShareForCharacter(uid, CHARACTER_ID, { nowMs: NOW + 7 * DAY }),
     ).toBeNull();
     // Чтение не переписывает файл: запись остаётся до следующей записи/prune.
     expect(Object.keys(readShares().shares)).toHaveLength(1);
@@ -139,10 +144,10 @@ describe('issueShareToken', () => {
 });
 
 describe('resolveShareToken', () => {
-  it('возвращает владельца и id листа', () => {
-    const { token } = issueShareToken(uid, CHARACTER_ID, { nowMs: NOW });
+  it('возвращает владельца и id листа', async () => {
+    const { token } = await issueShareToken(uid, CHARACTER_ID, { nowMs: NOW });
 
-    expect(resolveShareToken(token, { nowMs: NOW })).toMatchObject({
+    expect(await resolveShareToken(token, { nowMs: NOW })).toMatchObject({
       uid,
       characterId: CHARACTER_ID,
       includeHistory: false,
@@ -150,13 +155,13 @@ describe('resolveShareToken', () => {
     });
   });
 
-  it('не подтверждает мусорный токен', () => {
-    expect(resolveShareToken('', { nowMs: NOW })).toBeNull();
-    expect(resolveShareToken('a'.repeat(43), { nowMs: NOW })).toBeNull();
+  it('не подтверждает мусорный токен', async () => {
+    expect(await resolveShareToken('', { nowMs: NOW })).toBeNull();
+    expect(await resolveShareToken('a'.repeat(43), { nowMs: NOW })).toBeNull();
   });
 
-  it('перестаёт работать для заблокированного владельца', () => {
-    const { token } = issueShareToken(uid, CHARACTER_ID, { nowMs: NOW });
+  it('перестаёт работать для заблокированного владельца', async () => {
+    const { token } = await issueShareToken(uid, CHARACTER_ID, { nowMs: NOW });
     const userFile = `${getUserDir(uid)}/user.json`;
     const user = readJson(userFile);
     fs.writeFileSync(
@@ -164,38 +169,44 @@ describe('resolveShareToken', () => {
       JSON.stringify({ ...user, isBlocked: true }, null, 2),
     );
 
-    expect(resolveShareToken(token, { nowMs: NOW })).toBeNull();
+    expect(await resolveShareToken(token, { nowMs: NOW })).toBeNull();
   });
 
-  it('перестаёт работать после удаления профиля', () => {
-    const { token } = issueShareToken(uid, CHARACTER_ID, { nowMs: NOW });
+  it('перестаёт работать после удаления профиля', async () => {
+    const { token } = await issueShareToken(uid, CHARACTER_ID, { nowMs: NOW });
     fs.rmSync(getUserDir(uid), { recursive: true, force: true });
 
-    expect(resolveShareToken(token, { nowMs: NOW })).toBeNull();
+    expect(await resolveShareToken(token, { nowMs: NOW })).toBeNull();
   });
 
-  it('переживает битый shares.json как fail closed', () => {
-    const { token } = issueShareToken(uid, CHARACTER_ID, { nowMs: NOW });
+  it('переживает битый shares.json как fail closed', async () => {
+    const { token } = await issueShareToken(uid, CHARACTER_ID, { nowMs: NOW });
     fs.writeFileSync(getSharesFile(), '{ broken', 'utf8');
 
-    expect(resolveShareToken(token, { nowMs: NOW })).toBeNull();
-    expect(getShareForCharacter(uid, CHARACTER_ID)).toBeNull();
+    expect(await resolveShareToken(token, { nowMs: NOW })).toBeNull();
+    expect(await getShareForCharacter(uid, CHARACTER_ID)).toBeNull();
 
     // Следующая выдача восстанавливает файл, а не падает на нём навсегда.
-    const recovered = issueShareToken(uid, CHARACTER_ID, { nowMs: NOW + 1 });
+    const recovered = await issueShareToken(uid, CHARACTER_ID, {
+      nowMs: NOW + 1,
+    });
     expect(
-      resolveShareToken(recovered.token, { nowMs: NOW + 1 }),
+      await resolveShareToken(recovered.token, { nowMs: NOW + 1 }),
     ).toMatchObject({ uid, characterId: CHARACTER_ID });
   });
 });
 
 describe('getShareForCharacter', () => {
-  it('не отдаёт токен и возвращает только метаданные', () => {
-    const { token, createdAt, expiresAt } = issueShareToken(uid, CHARACTER_ID, {
-      nowMs: NOW,
-    });
+  it('не отдаёт токен и возвращает только метаданные', async () => {
+    const { token, createdAt, expiresAt } = await issueShareToken(
+      uid,
+      CHARACTER_ID,
+      {
+        nowMs: NOW,
+      },
+    );
 
-    const share = getShareForCharacter(uid, CHARACTER_ID, { nowMs: NOW });
+    const share = await getShareForCharacter(uid, CHARACTER_ID, { nowMs: NOW });
     expect(share).toEqual({
       createdAt,
       expiresAt,
@@ -204,44 +215,44 @@ describe('getShareForCharacter', () => {
     expect(JSON.stringify(share)).not.toContain(token);
   });
 
-  it('возвращает null для чужого листа', () => {
-    issueShareToken(uid, CHARACTER_ID, { nowMs: NOW });
-    expect(getShareForCharacter(newUid(), CHARACTER_ID)).toBeNull();
+  it('возвращает null для чужого листа', async () => {
+    await issueShareToken(uid, CHARACTER_ID, { nowMs: NOW });
+    expect(await getShareForCharacter(newUid(), CHARACTER_ID)).toBeNull();
   });
 });
 
 describe('revoke', () => {
-  it('отзывает ссылку листа и не падает повторно', () => {
-    const { token } = issueShareToken(uid, CHARACTER_ID, { nowMs: NOW });
+  it('отзывает ссылку листа и не падает повторно', async () => {
+    const { token } = await issueShareToken(uid, CHARACTER_ID, { nowMs: NOW });
 
-    expect(revokeShareForCharacter(uid, CHARACTER_ID)).toBe(1);
-    expect(resolveShareToken(token, { nowMs: NOW })).toBeNull();
-    expect(revokeShareForCharacter(uid, CHARACTER_ID)).toBe(0);
+    expect(await revokeShareForCharacter(uid, CHARACTER_ID)).toBe(1);
+    expect(await resolveShareToken(token, { nowMs: NOW })).toBeNull();
+    expect(await revokeShareForCharacter(uid, CHARACTER_ID)).toBe(0);
   });
 
-  it('отзывает все ссылки пользователя', () => {
+  it('отзывает все ссылки пользователя', async () => {
     const secondCharacter = 'char-2';
-    saveCharacterToServer(uid, makeDndCharacter({ id: secondCharacter }));
-    const first = issueShareToken(uid, CHARACTER_ID, { nowMs: NOW });
-    const second = issueShareToken(uid, secondCharacter, { nowMs: NOW });
+    await saveCharacterToServer(uid, makeDndCharacter({ id: secondCharacter }));
+    const first = await issueShareToken(uid, CHARACTER_ID, { nowMs: NOW });
+    const second = await issueShareToken(uid, secondCharacter, { nowMs: NOW });
 
-    expect(revokeSharesForUser(uid)).toBe(2);
-    expect(resolveShareToken(first.token, { nowMs: NOW })).toBeNull();
-    expect(resolveShareToken(second.token, { nowMs: NOW })).toBeNull();
+    expect(await revokeSharesForUser(uid)).toBe(2);
+    expect(await resolveShareToken(first.token, { nowMs: NOW })).toBeNull();
+    expect(await resolveShareToken(second.token, { nowMs: NOW })).toBeNull();
   });
 });
 
 describe('cleanup hooks', () => {
-  it('удаление листа отзывает его ссылку', () => {
-    const { token } = issueShareToken(uid, CHARACTER_ID, { nowMs: NOW });
+  it('удаление листа отзывает его ссылку', async () => {
+    const { token } = await issueShareToken(uid, CHARACTER_ID, { nowMs: NOW });
 
-    expect(deleteCharacterFromServer(uid, CHARACTER_ID)).toBe(true);
-    expect(resolveShareToken(token, { nowMs: NOW })).toBeNull();
+    expect(await deleteCharacterFromServer(uid, CHARACTER_ID)).toBe(true);
+    expect(await resolveShareToken(token, { nowMs: NOW })).toBeNull();
     expect(Object.keys(readShares().shares)).toHaveLength(0);
   });
 
-  it('удаление аккаунта отзывает его ссылки', () => {
-    const registered = registerUser(
+  it('удаление аккаунта отзывает его ссылки', async () => {
+    const registered = await registerUser(
       'share-delete-account',
       'test-pass-1234',
       'Share Delete',
@@ -249,16 +260,19 @@ describe('cleanup hooks', () => {
     );
     const ownerUid = registered.user?.uid;
     expect(ownerUid).toBeTruthy();
-    saveCharacterToServer(
+    await saveCharacterToServer(
       ownerUid as string,
       makeDndCharacter({ id: 'char-delete' }),
     );
-    const { token } = issueShareToken(ownerUid as string, 'char-delete', {
+    const { token } = await issueShareToken(ownerUid as string, 'char-delete', {
       nowMs: NOW,
     });
 
-    const deleted = deleteUserAccount(ownerUid as string, 'test-pass-1234');
+    const deleted = await deleteUserAccount(
+      ownerUid as string,
+      'test-pass-1234',
+    );
     expect(deleted.success).toBe(true);
-    expect(resolveShareToken(token, { nowMs: NOW })).toBeNull();
+    expect(await resolveShareToken(token, { nowMs: NOW })).toBeNull();
   });
 });

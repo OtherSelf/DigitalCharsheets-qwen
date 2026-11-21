@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import fsp from 'node:fs/promises';
 import path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -18,11 +19,11 @@ import {
 } from '@tests/support';
 
 /**
- * Фолбэк на EXDEV в writeJsonAtomic (src/lib/server-storage.ts).
+ * Фолбэк на EXDEV в (await writeJsonAtomic(src/lib/server-storage.ts)).
  *
  * Ветка почти недостижима естественным путём: tmp лежит рядом с целевым файлом,
  * а такой rename EXDEV не даёт. Она нужна для FUSE/сетевых ФС, поэтому ошибка
- * инжектится в fs.renameSync — иначе ветка не выполнялась бы ни на одной машине.
+ * инжектится в fs/promises.rename — иначе ветка не выполнялась бы ни на одной машине.
  */
 
 const uid = 'user-exdev';
@@ -45,21 +46,21 @@ afterEach(() => {
 });
 
 describe('writeJsonAtomic: фолбэк при EXDEV', () => {
-  it('правка не теряется: данные записаны валидным JSON, .tmp удалён', () => {
-    saveCharacterToServer(
+  it('правка не теряется: данные записаны валидным JSON, .tmp удалён', async () => {
+    await saveCharacterToServer(
       uid,
       makeDndCharacter({ id: 'exdev-ok', userId: uid, name: 'Before' }),
     );
     const charsDir = userPaths(dataDir, uid).charactersDir;
 
-    const renameSpy = vi.spyOn(fs, 'renameSync').mockImplementation(() => {
-      throw exdev();
-    });
+    const renameSpy = vi.spyOn(fsp, 'rename').mockRejectedValue(exdev());
 
     let updated: { name?: string } | null = null;
     try {
       // Ошибка EXDEV не должна доходить до клиента: она штатно обрабатывается.
-      updated = updateCharacterOnServer(uid, 'exdev-ok', { name: 'After' });
+      updated = await updateCharacterOnServer(uid, 'exdev-ok', {
+        name: 'After',
+      });
     } finally {
       renameSpy.mockRestore();
     }
@@ -71,21 +72,19 @@ describe('writeJsonAtomic: фолбэк при EXDEV', () => {
     expect(fs.readdirSync(charsDir)).toEqual(['exdev-ok.json']);
   });
 
-  it('EXDEV + отказ прямой записи: ошибка наружу, оригинал цел, .tmp убран', () => {
-    saveCharacterToServer(
+  it('EXDEV + отказ прямой записи: ошибка наружу, оригинал цел, .tmp убран', async () => {
+    await saveCharacterToServer(
       uid,
       makeDndCharacter({ id: 'exdev-fail', userId: uid, name: 'Before' }),
     );
     const charsDir = userPaths(dataDir, uid).charactersDir;
     const filePath = path.join(charsDir, 'exdev-fail.json');
 
-    const renameSpy = vi.spyOn(fs, 'renameSync').mockImplementation(() => {
-      throw exdev();
-    });
+    const renameSpy = vi.spyOn(fsp, 'rename').mockRejectedValue(exdev());
     // Временный файл пишется через дескриптор, а прямая запись — по пути:
     // роняем только её, иначе до EXDEV-ветки дело не дойдёт.
-    const originalWrite = fs.writeFileSync.bind(fs);
-    const writeSpy = vi.spyOn(fs, 'writeFileSync').mockImplementation(((
+    const originalWrite = fsp.writeFile.bind(fsp);
+    const writeSpy = vi.spyOn(fsp, 'writeFile').mockImplementation((async (
       target: unknown,
       ...rest: unknown[]
     ) => {
@@ -98,12 +97,12 @@ describe('writeJsonAtomic: фолбэк при EXDEV', () => {
         target,
         ...rest,
       );
-    }) as typeof fs.writeFileSync);
+    }) as typeof fsp.writeFile);
 
     try {
-      expect(() =>
+      await expect(
         updateCharacterOnServer(uid, 'exdev-fail', { name: 'After' }),
-      ).toThrow(/ENOSPC/);
+      ).rejects.toThrow(/ENOSPC/);
     } finally {
       writeSpy.mockRestore();
       renameSpy.mockRestore();

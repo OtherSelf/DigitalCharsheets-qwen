@@ -16,11 +16,11 @@ export async function GET(
   request: Request,
   { params }: { params: Promise<{ uid: string }> },
 ) {
-  const auth = requireAdmin(request);
+  const auth = await requireAdmin(request);
   if (!auth.ok) return auth.response;
 
   const { uid } = await params;
-  const characters = listCharactersForAdmin(uid);
+  const characters = await listCharactersForAdmin(uid);
   if (characters === null) {
     return NextResponse.json(
       { success: false, error: 'User not found.', reason: 'not_found' },

@@ -34,11 +34,11 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
-  const uid = getSessionUid(request);
+  const uid = await getSessionUid(request);
   if (!uid) return error(401, 'Unauthorized.', 'unauthorized');
   if (!isSafeId(id)) return error(400, 'Invalid character id.', 'invalid_id');
 
-  const character = getCharacterFromServer(uid, id);
+  const character = await getCharacterFromServer(uid, id);
   if (!character) return error(404, 'Character not found.', 'not_found');
 
   const url = new URL(request.url);
@@ -66,7 +66,7 @@ export async function GET(
     beforeMs = parsed;
   }
 
-  const stored = readHistory(uid, id);
+  const stored = await readHistory(uid, id);
   const sessions = groupHistorySessions(stored.revisions);
   const filtered =
     beforeMs === null
@@ -116,15 +116,15 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
-  const uid = getSessionUid(request);
+  const uid = await getSessionUid(request);
   if (!uid) return error(401, 'Unauthorized.', 'unauthorized');
   if (!isSafeId(id)) return error(400, 'Invalid character id.', 'invalid_id');
 
-  const character = getCharacterFromServer(uid, id);
+  const character = await getCharacterFromServer(uid, id);
   if (!character) return error(404, 'Character not found.', 'not_found');
 
   return NextResponse.json(
-    { success: true, deleted: deleteCharacterHistory(uid, id) },
+    { success: true, deleted: await deleteCharacterHistory(uid, id) },
     { headers: NO_STORE },
   );
 }

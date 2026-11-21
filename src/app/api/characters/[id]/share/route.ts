@@ -47,14 +47,14 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
-  const uid = getSessionUid(request);
+  const uid = await getSessionUid(request);
   if (!uid) return error(401, 'Unauthorized.', 'unauthorized');
   if (!isSafeId(id)) return error(400, 'Invalid character id.', 'invalid_id');
 
-  const character = getCharacterFromServer(uid, id);
+  const character = await getCharacterFromServer(uid, id);
   if (!character) return error(404, 'Character not found.', 'not_found');
 
-  const share = getShareForCharacter(uid, id);
+  const share = await getShareForCharacter(uid, id);
   return NextResponse.json(
     share
       ? {
@@ -74,11 +74,11 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
-  const uid = getSessionUid(request);
+  const uid = await getSessionUid(request);
   if (!uid) return error(401, 'Unauthorized.', 'unauthorized');
   if (!isSafeId(id)) return error(400, 'Invalid character id.', 'invalid_id');
 
-  const character = getCharacterFromServer(uid, id);
+  const character = await getCharacterFromServer(uid, id);
   if (!character) return error(404, 'Character not found.', 'not_found');
 
   const parsedBody = await readJsonObject(request);
@@ -111,7 +111,7 @@ export async function POST(
   const includeHistory = rawIncludeHistory === true;
 
   try {
-    const share = issueShareToken(uid, id, {
+    const share = await issueShareToken(uid, id, {
       expiresInDays,
       includeHistory,
     });
@@ -137,13 +137,13 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
-  const uid = getSessionUid(request);
+  const uid = await getSessionUid(request);
   if (!uid) return error(401, 'Unauthorized.', 'unauthorized');
   if (!isSafeId(id)) return error(400, 'Invalid character id.', 'invalid_id');
 
   try {
     // Идемпотентно: даже если ссылки уже нет или лист удалён, ответ успешный.
-    revokeShareForCharacter(uid, id);
+    await revokeShareForCharacter(uid, id);
     return NextResponse.json({ success: true }, { headers: NO_STORE });
   } catch (cause) {
     console.error(`Failed to revoke share link for ${uid}/${id}:`, cause);

@@ -1,6 +1,6 @@
 import type { NextConfig } from 'next';
 
-import { getGitCheckoutInfo } from './src/lib/git-commit';
+import { readGitCheckoutSync } from './src/lib/git-commit';
 
 /**
  * ─── LANDMARK: SECURITY HEADERS ─────────────────────────────────────────────
@@ -34,7 +34,7 @@ const deploymentId = isDev
   ? undefined
   : process.env.DCS_GIT_COMMIT?.trim() ||
     process.env.GIT_COMMIT?.trim() ||
-    getGitCheckoutInfo()?.commit ||
+    readGitCheckoutSync()?.commit ||
     undefined;
 
 const contentSecurityPolicy = [

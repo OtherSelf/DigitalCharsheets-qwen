@@ -64,27 +64,27 @@ describe('GET /api/admin/users', () => {
     );
     expect(anonymous.status).toBe(401);
 
-    const user = seedUser();
+    const user = await seedUser();
     const forbidden = await adminUsersGet(
-      get('http://localhost/api/admin/users', sessionHeaders(user.uid)),
+      get('http://localhost/api/admin/users', await sessionHeaders(user.uid)),
     );
     expect(forbidden.status).toBe(403);
   });
 
   it('отдаёт пользователей, роли, блокировки и счётчики листов', async () => {
-    const admin = seedAdmin();
-    const user = seedUser();
-    saveCharacterToServer(
+    const admin = await seedAdmin();
+    const user = await seedUser();
+    await saveCharacterToServer(
       user.uid,
       makeDndCharacter({ userId: user.uid, id: 'dnd-1' }),
     );
-    saveCharacterToServer(
+    await saveCharacterToServer(
       user.uid,
       makeDhCharacter({ userId: user.uid, id: 'dh-1' }),
     );
 
     const res = await adminUsersGet(
-      get('http://localhost/api/admin/users', sessionHeaders(admin.uid)),
+      get('http://localhost/api/admin/users', await sessionHeaders(admin.uid)),
     );
     expect(res.status).toBe(200);
     const body = await res.json();
@@ -113,12 +113,12 @@ describe('GET /api/admin/users', () => {
 
 describe('PATCH /api/admin/users/[uid] (SEC-6)', () => {
   it('смена пароля администратором гасит сессии пользователя', async () => {
-    const admin = seedAdmin();
-    const user = seedUser();
+    const admin = await seedAdmin();
+    const user = await seedUser();
 
     // У пользователя есть живая сессия (телефон/браузер). Cookie берём один
     // раз: каждый вызов sessionHeaders заводит новую сессию.
-    const userCookie = { cookie: sessionCookie(user.uid) };
+    const userCookie = { cookie: await sessionCookie(user.uid) };
     const before = await charactersGet(
       new Request('http://localhost/api/characters', {
         method: 'GET',
@@ -128,7 +128,10 @@ describe('PATCH /api/admin/users/[uid] (SEC-6)', () => {
     expect(before.status).toBe(200);
 
     const res = await adminUserPatch(
-      patch({ password: 'admin-set-pass-1234' }, sessionHeaders(admin.uid)),
+      patch(
+        { password: 'admin-set-pass-1234' },
+        await sessionHeaders(admin.uid),
+      ),
       params(user.uid),
     );
     expect(res.status).toBe(200);
@@ -141,16 +144,20 @@ describe('PATCH /api/admin/users/[uid] (SEC-6)', () => {
       }),
     );
     expect(after.status).toBe(401);
-    expect(authenticateUser('hero', 'admin-set-pass-1234').success).toBe(true);
-    expect(authenticateUser('hero', 'user-pass-1234').success).toBe(false);
+    expect(
+      (await authenticateUser('hero', 'admin-set-pass-1234')).success,
+    ).toBe(true);
+    expect((await authenticateUser('hero', 'user-pass-1234')).success).toBe(
+      false,
+    );
   });
 });
 
 describe('PATCH /api/admin/users/[uid]', () => {
   it('меняет поля, логин и пароль; сессия админа не затрагивается', async () => {
-    const admin = seedAdmin();
-    const user = seedUser();
-    saveCharacterToServer(
+    const admin = await seedAdmin();
+    const user = await seedUser();
+    await saveCharacterToServer(
       user.uid,
       makeDndCharacter({ userId: user.uid, id: 'dnd-1' }),
     );
@@ -163,7 +170,7 @@ describe('PATCH /api/admin/users/[uid]', () => {
           password: 'new-pass-1234',
           role: 'admin',
         },
-        sessionHeaders(admin.uid),
+        await sessionHeaders(admin.uid),
       ),
       params(user.uid),
     );
@@ -176,43 +183,43 @@ describe('PATCH /api/admin/users/[uid]', () => {
       characterCount: 1,
     });
 
-    expect(resolveLogin('renamed.login')).toBe(user.uid);
-    expect(resolveLogin('hero')).toBeNull();
+    expect(await resolveLogin('renamed.login')).toBe(user.uid);
+    expect(await resolveLogin('hero')).toBeNull();
 
-    const stored = readStoredUser(user.uid)!;
+    const stored = (await readStoredUser(user.uid))!;
     expect(stored.displayName).toBe('Renamed Hero');
     expect(stored.role).toBe('admin');
     expect(stored.mustChangePassword).toBeUndefined();
 
     // Новый пароль работает, старый — нет.
-    expect(authenticateUser('renamed.login', 'new-pass-1234').success).toBe(
-      true,
-    );
-    expect(authenticateUser('renamed.login', 'user-pass-1234').success).toBe(
-      false,
-    );
+    expect(
+      (await authenticateUser('renamed.login', 'new-pass-1234')).success,
+    ).toBe(true);
+    expect(
+      (await authenticateUser('renamed.login', 'user-pass-1234')).success,
+    ).toBe(false);
   });
 
   it('не отдаёт занятый логин (409) и не ломает индекс', async () => {
-    const admin = seedAdmin();
-    const first = seedUser('first');
-    seedUser('second');
+    const admin = await seedAdmin();
+    const first = await seedUser('first');
+    await seedUser('second');
 
     const res = await adminUserPatch(
-      patch({ username: 'second' }, sessionHeaders(admin.uid)),
+      patch({ username: 'second' }, await sessionHeaders(admin.uid)),
       params(first.uid),
     );
     expect(res.status).toBe(409);
     expect((await res.json()).reason).toBe('username_taken');
-    expect(resolveLogin('first')).toBe(first.uid);
+    expect(await resolveLogin('first')).toBe(first.uid);
   });
 
   it('блокирует: вход 403, старые cookie и сессия перестают работать', async () => {
-    const admin = seedAdmin();
-    const user = seedUser();
+    const admin = await seedAdmin();
+    const user = await seedUser();
 
     const blocked = await adminUserPatch(
-      patch({ isBlocked: true }, sessionHeaders(admin.uid)),
+      patch({ isBlocked: true }, await sessionHeaders(admin.uid)),
       params(user.uid),
     );
     expect(blocked.status).toBe(200);
@@ -225,82 +232,83 @@ describe('PATCH /api/admin/users/[uid]', () => {
     expect(loginBody.reason).toBe('blocked');
 
     const chars = await charactersGet(
-      get('http://localhost/api/characters', sessionHeaders(user.uid)),
+      get('http://localhost/api/characters', await sessionHeaders(user.uid)),
     );
     expect(chars.status).toBe(401);
 
     const session = await sessionRoute(
-      get('http://localhost/api/auth/session', sessionHeaders(user.uid)),
+      get('http://localhost/api/auth/session', await sessionHeaders(user.uid)),
     );
     expect(session.status).toBe(401);
 
     // Разблокировка возвращает доступ.
     const unblocked = await adminUserPatch(
-      patch({ isBlocked: false }, sessionHeaders(admin.uid)),
+      patch({ isBlocked: false }, await sessionHeaders(admin.uid)),
       params(user.uid),
     );
     expect(unblocked.status).toBe(200);
     const charsAgain = await charactersGet(
-      get('http://localhost/api/characters', sessionHeaders(user.uid)),
+      get('http://localhost/api/characters', await sessionHeaders(user.uid)),
     );
     expect(charsAgain.status).toBe(200);
   });
 
   it('защищает от действий над собой', async () => {
-    const admin = seedAdmin();
+    const admin = await seedAdmin();
 
     const selfRole = await adminUserPatch(
-      patch({ role: 'user' }, sessionHeaders(admin.uid)),
+      patch({ role: 'user' }, await sessionHeaders(admin.uid)),
       params(admin.uid),
     );
     expect(selfRole.status).toBe(400);
     expect((await selfRole.json()).reason).toBe('self');
 
     const selfBlock = await adminUserPatch(
-      patch({ isBlocked: true }, sessionHeaders(admin.uid)),
+      patch({ isBlocked: true }, await sessionHeaders(admin.uid)),
       params(admin.uid),
     );
     expect(selfBlock.status).toBe(400);
     expect((await selfBlock.json()).reason).toBe('self');
   });
 
-  it('нельзя разжаловать/заблокировать последнего админа (защита в слое)', () => {
-    const admin = seedAdmin();
+  it('нельзя разжаловать/заблокировать последнего админа (защита в слое)', async () => {
+    const admin = await seedAdmin();
     const fakeActor = '00000000-0000-4000-8000-000000000000';
 
     expect(
-      updateUserByAdmin(fakeActor, admin.uid, { role: 'user' }).reason,
+      (await updateUserByAdmin(fakeActor, admin.uid, { role: 'user' })).reason,
     ).toBe('last_admin');
     expect(
-      updateUserByAdmin(fakeActor, admin.uid, { isBlocked: true }).reason,
+      (await updateUserByAdmin(fakeActor, admin.uid, { isBlocked: true }))
+        .reason,
     ).toBe('last_admin');
   });
 
   it('валидирует поля и существование пользователя', async () => {
-    const admin = seedAdmin();
+    const admin = await seedAdmin();
 
     const missing = await adminUserPatch(
-      patch({ displayName: '   ' }, sessionHeaders(admin.uid)),
+      patch({ displayName: '   ' }, await sessionHeaders(admin.uid)),
       params('00000000-0000-4000-8000-000000000001'),
     );
     expect(missing.status).toBe(404);
 
-    const user = seedUser();
+    const user = await seedUser();
     const shortPassword = await adminUserPatch(
-      patch({ password: '123' }, sessionHeaders(admin.uid)),
+      patch({ password: '123' }, await sessionHeaders(admin.uid)),
       params(user.uid),
     );
     expect(shortPassword.status).toBe(400);
     expect((await shortPassword.json()).reason).toBe('invalid_input');
 
     const emptyPatch = await adminUserPatch(
-      patch({}, sessionHeaders(admin.uid)),
+      patch({}, await sessionHeaders(admin.uid)),
       params(user.uid),
     );
     expect(emptyPatch.status).toBe(400);
 
     const badRole = await adminUserPatch(
-      patch({ role: 'root' }, sessionHeaders(admin.uid)),
+      patch({ role: 'root' }, await sessionHeaders(admin.uid)),
       params(user.uid),
     );
     expect(badRole.status).toBe(400);
@@ -309,9 +317,9 @@ describe('PATCH /api/admin/users/[uid]', () => {
 
 describe('DELETE /api/admin/users/[uid]', () => {
   it('удаляет чужой аккаунт, индекс и каталог с листами', async () => {
-    const admin = seedAdmin();
-    const user = seedUser();
-    saveCharacterToServer(
+    const admin = await seedAdmin();
+    const user = await seedUser();
+    await saveCharacterToServer(
       user.uid,
       makeDndCharacter({ userId: user.uid, id: 'dnd-1' }),
     );
@@ -319,26 +327,26 @@ describe('DELETE /api/admin/users/[uid]', () => {
     const res = await adminUserDelete(
       del(
         `http://localhost/api/admin/users/${user.uid}`,
-        sessionHeaders(admin.uid),
+        await sessionHeaders(admin.uid),
       ),
       params(user.uid),
     );
     expect(res.status).toBe(200);
 
     expect(fs.existsSync(userPaths(dataDir, user.uid).userDir)).toBe(false);
-    expect(resolveLogin(user.username)).toBeNull();
+    expect(await resolveLogin(user.username)).toBeNull();
     expect(readJson(loginIndexPath(dataDir)).logins[user.username]).toBe(
       undefined,
     );
   });
 
   it('не удаляет себя и несуществующего', async () => {
-    const admin = seedAdmin();
+    const admin = await seedAdmin();
 
     const self = await adminUserDelete(
       del(
         `http://localhost/api/admin/users/${admin.uid}`,
-        sessionHeaders(admin.uid),
+        await sessionHeaders(admin.uid),
       ),
       params(admin.uid),
     );
@@ -348,16 +356,18 @@ describe('DELETE /api/admin/users/[uid]', () => {
     const missing = await adminUserDelete(
       del(
         'http://localhost/api/admin/users/00000000-0000-4000-8000-000000000002',
-        sessionHeaders(admin.uid),
+        await sessionHeaders(admin.uid),
       ),
       params('00000000-0000-4000-8000-000000000002'),
     );
     expect(missing.status).toBe(404);
   });
 
-  it('нельзя удалить последнего админа (защита в слое)', () => {
-    const admin = seedAdmin();
+  it('нельзя удалить последнего админа (защита в слое)', async () => {
+    const admin = await seedAdmin();
     const fakeActor = '00000000-0000-4000-8000-000000000003';
-    expect(deleteUserByAdmin(fakeActor, admin.uid).reason).toBe('last_admin');
+    expect((await deleteUserByAdmin(fakeActor, admin.uid)).reason).toBe(
+      'last_admin',
+    );
   });
 });

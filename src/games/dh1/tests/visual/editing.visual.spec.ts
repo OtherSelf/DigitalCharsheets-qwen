@@ -487,7 +487,7 @@ test.describe(
           .getByText(/Not equipped \(1\)/)
           .first()
           .click();
-        await displayCard(page, 'Blade B').getByRole('checkbox').click();
+        (await displayCard(page, 'Blade B')).getByRole('checkbox').click();
         await expect(
           displayCard(page, 'Blade B').getByRole('checkbox'),
         ).toBeChecked();
@@ -502,7 +502,7 @@ test.describe(
         ).toBeChecked();
 
         // Выключаем A и сохраняем: правка B обязана уцелеть.
-        await editCard(page, 'Blade A').getByRole('checkbox').click();
+        (await editCard(page, 'Blade A')).getByRole('checkbox').click();
         await expect(
           editCard(page, 'Blade B').getByRole('checkbox'),
         ).toBeChecked();
@@ -572,7 +572,7 @@ test.describe(
         );
 
         // Снимаем экипировку: карточка в «Не экипировано» должна сохранить Pen.
-        await displayCard(page, 'Gun A').getByRole('checkbox').click();
+        (await displayCard(page, 'Gun A')).getByRole('checkbox').click();
         await equipment
           .getByText(/Not equipped \(2\)/)
           .first()

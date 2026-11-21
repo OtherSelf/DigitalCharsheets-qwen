@@ -72,7 +72,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const result = registerUser(
+    const result = await registerUser(
       username,
       password,
       displayName,
@@ -96,7 +96,10 @@ export async function POST(request: Request) {
       isNewUser: true,
       user: result.user,
     });
-    response.headers.set('Set-Cookie', sessionCookieHeader(result.user.uid));
+    response.headers.set(
+      'Set-Cookie',
+      await sessionCookieHeader(result.user.uid),
+    );
     return response;
   } catch {
     return NextResponse.json(

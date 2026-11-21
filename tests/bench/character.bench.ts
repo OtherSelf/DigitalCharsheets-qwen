@@ -36,20 +36,28 @@ function changedPair(): {
 
 test('normalize + derive', async ({ bench }) => {
   const sheet = bigSheet();
-  await bench('normalizeCharacterRecord (DH1, ~50 КБ notes)', () => {
-    normalizeCharacterRecord({ ...sheet });
-  }).run();
-  await bench('applyCharacterDerive (DH1)', () => {
-    applyCharacterDerive(sheet);
-  }).run();
+  (
+    await bench('normalizeCharacterRecord (DH1, ~50 КБ notes)', () => {
+      normalizeCharacterRecord({ ...sheet });
+    })
+  ).run();
+  (
+    await bench('applyCharacterDerive (DH1)', () => {
+      applyCharacterDerive(sheet);
+    })
+  ).run();
 });
 
 test('diffCharacterRecords', async ({ bench }) => {
   const { before, after } = changedPair();
-  await bench('DH1: все характеристики + notes', () => {
-    diffCharacterRecords(before, after);
-  }).run();
-  await bench('DH1: без изменений (ранний выход)', () => {
-    diffCharacterRecords(before, before);
-  }).run();
+  (
+    await bench('DH1: все характеристики + notes', () => {
+      diffCharacterRecords(before, after);
+    })
+  ).run();
+  (
+    await bench('DH1: без изменений (ранний выход)', () => {
+      diffCharacterRecords(before, before);
+    })
+  ).run();
 });
