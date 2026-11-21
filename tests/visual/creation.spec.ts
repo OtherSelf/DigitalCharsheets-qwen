@@ -2,6 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 
 import {
   fetchCharacters,
+  openApp,
   prepare,
   registerAccount,
   registerViaUI,
@@ -31,12 +32,22 @@ test.describe('авторизация через UI', () => {
     await prepare(context, { authenticated: false, theme: 'light' });
     const account = await registerAccount(page, 'auth-e2e', 'Auth E2E');
 
-    await page.goto('/login', { waitUntil: 'domcontentloaded' });
+    await openApp(page, '/login');
     await page
       .getByLabel('Username or Email', { exact: true })
       .fill(account.username);
     await page.getByLabel('Password', { exact: true }).fill('definitely-wrong');
+
+    // Ждём именно ответ 401: клик до гидратации не вызывает обработчик,
+    // а без ответа тест проверяет тост, которого ещё нет.
+    const wrongPassword = page.waitForResponse(
+      (response) =>
+        new URL(response.url()).pathname === '/api/auth' &&
+        response.request().method() === 'POST',
+      { timeout: 30_000 },
+    );
     await page.getByRole('button', { name: 'Sign In', exact: true }).click();
+    expect((await wrongPassword).status()).toBe(401);
 
     await expect(page.getByText('Invalid login or password.')).toBeVisible();
     expect(new URL(page.url()).pathname, 'остаёмся на /login').toBe('/login');
