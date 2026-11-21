@@ -39,6 +39,7 @@ import {
 } from '@/components/ui/select';
 import { useTranslation } from '@/context/language-context';
 import type { ModuleStatus } from '@/games/types';
+import { useViewportFlags } from '@/hooks/use-viewport-flags';
 
 interface AdminGame {
   id: string;
@@ -75,6 +76,7 @@ const STATUSES: ModuleStatus[] = ['published', 'test', 'hidden'];
  */
 export function AdminGamesSection() {
   const { t } = useTranslation();
+  const { isSmallScreen } = useViewportFlags();
   const [games, setGames] = useState<AdminGame[]>([]);
   const [siteTitle, setSiteTitle] = useState('');
   const [savedTitle, setSavedTitle] = useState<string | null>(null);
@@ -257,79 +259,67 @@ export function AdminGamesSection() {
               {error}
             </p>
           )}
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[820px] text-sm">
-              <thead>
-                <tr className="text-muted-foreground border-b text-left text-xs">
-                  <th className="py-2 pr-3 font-semibold">
-                    {t('admin.gameColumn')}
-                  </th>
-                  <th className="py-2 pr-3 font-semibold">
-                    {t('admin.editionColumn')}
-                  </th>
-                  <th className="py-2 pr-3 font-semibold">
-                    {t('admin.versionColumn')}
-                  </th>
-                  <th className="py-2 pr-3 font-semibold">
-                    {t('admin.defaultStatusColumn')}
-                  </th>
-                  <th className="py-2 pr-3 font-semibold">
-                    {t('admin.currentStatusColumn')}
-                  </th>
-                  <th className="py-2 pr-3 font-semibold">
-                    {t('admin.enabledColumn')}
-                  </th>
-                  <th className="py-2 pr-3 font-semibold">
-                    {t('admin.settingsColumn')}
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {games.map((game) => (
-                  <tr key={game.id} className="border-b last:border-0">
-                    <td className="py-2 pr-3">{t(game.gameNameKey)}</td>
-                    <td className="py-2 pr-3">{t(game.nameKey)}</td>
-                    <td className="py-2 pr-3 whitespace-nowrap">
-                      <Badge variant="outline">
-                        {game.version ? `v${game.version}` : '—'}
-                      </Badge>
-                      <span className="text-muted-foreground mt-1 block text-[11px]">
-                        {t('admin.schemaColumn')} {game.schemaVersion}
-                        {game.conformance ? ` · ${game.conformance}` : ''}
-                        {game.dependencies
-                          ? ` · ${t('admin.hostApiLabel')} ${game.dependencies.host}`
-                          : ''}
-                      </span>
-                    </td>
-                    <td className="py-2 pr-3">
-                      <Badge variant="outline">
-                        {statusLabel(game.defaultStatus)}
-                      </Badge>
-                    </td>
-                    <td className="py-2 pr-3">
-                      <Select
-                        value={game.status}
-                        disabled={isSaving}
-                        onValueChange={(value) =>
-                          void updateStatus(game.id, value as ModuleStatus)
-                        }
+          {/*
+            Телефон: карточка на игру. Таблица в 820 px на 412 px показывала
+            левую половину, а переключатели статуса и видимости уезжали за
+            экран; с md карточки прячутся, таблица возвращается.
+          */}
+          {isSmallScreen && (
+            <div className="space-y-3">
+              {games.map((game) => (
+                <div
+                  key={game.id}
+                  className="space-y-3 rounded-lg border p-3"
+                  data-testid={`admin-game-card-${game.id}`}
+                >
+                  <div className="flex flex-wrap items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold">
+                        {t(game.gameNameKey)}
+                      </p>
+                      <p className="text-muted-foreground text-xs">
+                        {t(game.nameKey)}
+                      </p>
+                    </div>
+                    <Badge variant="outline">
+                      {game.version ? `v${game.version}` : '—'}
+                    </Badge>
+                  </div>
+                  <p className="text-muted-foreground text-[11px]">
+                    {t('admin.schemaColumn')} {game.schemaVersion}
+                    {game.conformance ? ` · ${game.conformance}` : ''}
+                    {game.dependencies
+                      ? ` · ${t('admin.hostApiLabel')} ${game.dependencies.host}`
+                      : ''}
+                  </p>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge variant="outline">
+                      {statusLabel(game.defaultStatus)}
+                    </Badge>
+                    <Select
+                      value={game.status}
+                      disabled={isSaving}
+                      onValueChange={(value) =>
+                        void updateStatus(game.id, value as ModuleStatus)
+                      }
+                    >
+                      <SelectTrigger
+                        className="h-9 flex-1"
+                        aria-label={`${t('admin.currentStatusColumn')}: ${t(game.nameKey)}`}
                       >
-                        <SelectTrigger
-                          className="h-8 w-[150px]"
-                          aria-label={t('admin.currentStatusColumn')}
-                        >
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {STATUSES.map((value) => (
-                            <SelectItem key={value} value={value}>
-                              {statusLabel(value)}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </td>
-                    <td className="py-2 pr-3">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {STATUSES.map((value) => (
+                          <SelectItem key={value} value={value}>
+                            {statusLabel(value)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex items-center justify-between gap-2">
+                    <label className="flex items-center gap-2 text-sm">
                       <Checkbox
                         checked={game.enabled}
                         disabled={isSaving}
@@ -338,23 +328,123 @@ export function AdminGamesSection() {
                         }
                         aria-label={`${t('admin.enabledColumn')}: ${t(game.nameKey)}`}
                       />
-                    </td>
-                    <td className="py-2 pr-3">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        aria-label={`${t('admin.gameSettings')}: ${t(game.nameKey)}`}
-                        onClick={() => setSettingsGame(game)}
-                        disabled={isSaving}
-                      >
-                        <Settings className="h-4 w-4" />
-                      </Button>
-                    </td>
+                      {t('admin.enabledColumn')}
+                    </label>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      aria-label={`${t('admin.gameSettings')}: ${t(game.nameKey)}`}
+                      onClick={() => setSettingsGame(game)}
+                      disabled={isSaving}
+                    >
+                      <Settings className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {!isSmallScreen && (
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[820px] text-sm">
+                <thead>
+                  <tr className="text-muted-foreground border-b text-left text-xs">
+                    <th className="py-2 pr-3 font-semibold">
+                      {t('admin.gameColumn')}
+                    </th>
+                    <th className="py-2 pr-3 font-semibold">
+                      {t('admin.editionColumn')}
+                    </th>
+                    <th className="py-2 pr-3 font-semibold">
+                      {t('admin.versionColumn')}
+                    </th>
+                    <th className="py-2 pr-3 font-semibold">
+                      {t('admin.defaultStatusColumn')}
+                    </th>
+                    <th className="py-2 pr-3 font-semibold">
+                      {t('admin.currentStatusColumn')}
+                    </th>
+                    <th className="py-2 pr-3 font-semibold">
+                      {t('admin.enabledColumn')}
+                    </th>
+                    <th className="py-2 pr-3 font-semibold">
+                      {t('admin.settingsColumn')}
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {games.map((game) => (
+                    <tr key={game.id} className="border-b last:border-0">
+                      <td className="py-2 pr-3">{t(game.gameNameKey)}</td>
+                      <td className="py-2 pr-3">{t(game.nameKey)}</td>
+                      <td className="py-2 pr-3 whitespace-nowrap">
+                        <Badge variant="outline">
+                          {game.version ? `v${game.version}` : '—'}
+                        </Badge>
+                        <span className="text-muted-foreground mt-1 block text-[11px]">
+                          {t('admin.schemaColumn')} {game.schemaVersion}
+                          {game.conformance ? ` · ${game.conformance}` : ''}
+                          {game.dependencies
+                            ? ` · ${t('admin.hostApiLabel')} ${game.dependencies.host}`
+                            : ''}
+                        </span>
+                      </td>
+                      <td className="py-2 pr-3">
+                        <Badge variant="outline">
+                          {statusLabel(game.defaultStatus)}
+                        </Badge>
+                      </td>
+                      <td className="py-2 pr-3">
+                        <Select
+                          value={game.status}
+                          disabled={isSaving}
+                          onValueChange={(value) =>
+                            void updateStatus(game.id, value as ModuleStatus)
+                          }
+                        >
+                          <SelectTrigger
+                            className="h-8 w-[150px]"
+                            aria-label={t('admin.currentStatusColumn')}
+                          >
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {STATUSES.map((value) => (
+                              <SelectItem key={value} value={value}>
+                                {statusLabel(value)}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </td>
+                      <td className="py-2 pr-3">
+                        <Checkbox
+                          checked={game.enabled}
+                          disabled={isSaving}
+                          onCheckedChange={(checked) =>
+                            void updateEnabled(game.id, checked === true)
+                          }
+                          aria-label={`${t('admin.enabledColumn')}: ${t(game.nameKey)}`}
+                        />
+                      </td>
+                      <td className="py-2 pr-3">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          aria-label={`${t('admin.gameSettings')}: ${t(game.nameKey)}`}
+                          onClick={() => setSettingsGame(game)}
+                          disabled={isSaving}
+                        >
+                          <Settings className="h-4 w-4" />
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
           <p className="text-muted-foreground text-xs">
             {t('admin.gamesVisibilityNote')}
           </p>
