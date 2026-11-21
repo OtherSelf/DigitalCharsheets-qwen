@@ -312,7 +312,7 @@ export function ConditionsList<TEntry extends ConditionEntry = ConditionEntry>({
                   type="button"
                   variant="ghost"
                   size="icon"
-                  className="h-7 w-7"
+                  className="h-7 w-7 max-md:h-10 max-md:w-10"
                   aria-label={labels.remove}
                   onClick={() => remove(index)}
                 >

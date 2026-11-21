@@ -1292,7 +1292,7 @@ export const DndCombatSection = React.forwardRef<
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="text-destructive h-8 w-8 shrink-0"
+                      className="text-destructive h-8 w-8 shrink-0 max-md:h-10 max-md:w-10"
                       onClick={() => removeSpellcastingEntry(entry.id)}
                     >
                       <Trash2 className="h-3 w-3" />
@@ -1498,7 +1498,7 @@ export const DndCombatSection = React.forwardRef<
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="text-destructive h-8 w-8 shrink-0"
+                        className="text-destructive h-8 w-8 shrink-0 max-md:h-10 max-md:w-10"
                         onClick={() => removeAttack(atk.id)}
                       >
                         <Trash2 className="h-3 w-3" />
@@ -1675,7 +1675,7 @@ export const DndCombatSection = React.forwardRef<
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="text-destructive h-6 w-6"
+                      className="text-destructive h-6 w-6 max-md:h-10 max-md:w-10"
                       onClick={() => removeResource(res.id)}
                     >
                       <Trash2 className="h-3 w-3" />

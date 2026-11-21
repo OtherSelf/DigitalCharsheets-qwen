@@ -401,7 +401,7 @@ export function QuestJournalSheet({
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  className="text-destructive h-6 w-6 opacity-0 transition-opacity group-hover:opacity-100"
+                                  className="text-destructive h-6 w-6 opacity-0 transition-opacity group-hover:opacity-100 max-md:h-10 max-md:w-10"
                                   onClick={() =>
                                     deleteObjective(quest.id, obj.id)
                                   }
@@ -540,7 +540,7 @@ export function QuestJournalSheet({
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="text-destructive h-6 w-6"
+                              className="text-destructive h-6 w-6 max-md:h-10 max-md:w-10"
                               onClick={() => handleDeleteQuest(quest.id)}
                             >
                               <Trash2 className="h-4 w-4" />
