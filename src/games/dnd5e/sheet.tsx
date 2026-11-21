@@ -407,7 +407,10 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
             </div>
             <div className="grid grid-cols-2 gap-2">
               <div className="bg-background flex min-w-0 items-center justify-between rounded border px-2 py-1.5">
-                <span className="text-muted-foreground mr-1 truncate text-[8px] font-bold uppercase">
+                <span
+                  className="text-muted-foreground mr-1 text-[8px] leading-tight font-bold uppercase"
+                  title={t('dnd.passivePerception')}
+                >
                   {t('dnd.passivePerception')}
                 </span>
                 <span className="shrink-0 text-xs font-black">
@@ -415,7 +418,10 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
                 </span>
               </div>
               <div className="bg-background flex min-w-0 items-center justify-between rounded border px-2 py-1.5">
-                <span className="text-muted-foreground mr-1 truncate text-[8px] font-bold uppercase">
+                <span
+                  className="text-muted-foreground mr-1 text-[8px] leading-tight font-bold uppercase"
+                  title={t('dnd.proficiencyBonus')}
+                >
                   {t('dnd.proficiencyBonus')}
                 </span>
                 <span className="shrink-0 text-xs font-black">
