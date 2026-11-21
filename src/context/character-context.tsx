@@ -14,6 +14,7 @@ import { usePathname, useRouter } from 'next/navigation';
 
 import { getCharacterModule } from '@/games/character-system';
 import { useToast } from '@/hooks/use-toast';
+import { useViewportFlags } from '@/hooks/use-viewport-flags';
 import {
   parsePendingCharacter,
   PENDING_CHARACTER_KEY,
@@ -31,9 +32,6 @@ import { Character } from '@/lib/types';
 
 import { useTranslation } from './language-context';
 import { useLocalAuth } from './local-auth-context';
-
-export const MOBILE_BREAKPOINT = 768;
-export const DESKTOP_BREAKPOINT = 1300;
 
 export interface CharacterContextType {
   characters: Character[];
@@ -183,6 +181,7 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const { user, isUserLoading, lastAuthKind, logout } = useLocalAuth();
   const { t } = useTranslation();
+  const { isSmallScreen, isTabletScreen } = useViewportFlags();
 
   const [characters, setCharacters] = useState<Character[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -190,8 +189,6 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
   const [pendingDraft, setPendingDraft] = useState<DraftCharacter | null>(null);
 
   const [userPrefersCompact, setUserPrefersCompact] = useState(false);
-  const [isSmallScreen, setIsSmallScreen] = useState(false);
-  const [isTabletScreen, setIsTabletScreen] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [hideNotes, setHideNotes] = useState(false);
   const [showEditButtons, setShowEditButtons] = useState(true);
@@ -228,19 +225,6 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     hasUnsavedChangesRef.current = hasUnsavedChanges;
   }, [hasUnsavedChanges]);
-
-  useEffect(() => {
-    const handleResize = () => {
-      const width = window.innerWidth;
-      setIsSmallScreen(width < MOBILE_BREAKPOINT);
-      setIsTabletScreen(
-        width >= MOBILE_BREAKPOINT && width < DESKTOP_BREAKPOINT,
-      );
-    };
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
 
   // Единая точка изменения списка: ref обновляется синхронно, поэтому
   // следующие вызовы в том же тике видят актуальные данные.
