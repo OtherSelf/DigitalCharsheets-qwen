@@ -12,6 +12,7 @@ import { DemoLandingView } from '@/components/demo-landing-view';
 import { DynamicFavicon } from '@/components/dynamic-favicon';
 import { Header } from '@/components/header';
 import { ImportCharacterDialog } from '@/components/import-character-dialog';
+import { SiteFooter } from '@/components/layout/site-footer';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
@@ -262,6 +263,7 @@ export default function DashboardPage() {
               )}
             </CardContent>
           </Card>
+          <SiteFooter />
         </main>
       </div>
     </>

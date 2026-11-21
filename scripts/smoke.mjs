@@ -266,6 +266,15 @@ await check('GET /new/manual → 200', async () => {
   assertStatus(res, 200, 'GET /new/manual');
 });
 
+await check('GET /about → 200 (страница о проекте)', async () => {
+  const res = await request('/about');
+  assertStatus(res, 200, 'GET /about');
+  assert(
+    /text\/html/i.test(res.headers.get('content-type') || ''),
+    'GET /about: content-type не text/html',
+  );
+});
+
 await check('GET /stats-editor → 200', async () => {
   const res = await request('/stats-editor');
   assertStatus(res, 200, 'GET /stats-editor');

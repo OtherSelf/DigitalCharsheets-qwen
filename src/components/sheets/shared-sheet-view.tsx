@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import { DynamicFavicon } from '@/components/dynamic-favicon';
 import { Header } from '@/components/header';
 import { SharedHistoryView } from '@/components/history/shared-history-view';
+import { SiteFooter } from '@/components/layout/site-footer';
 import { CharacterSheet } from '@/components/sheets/character-sheet';
 import { SheetStateBanner } from '@/components/sheets/sheet-state-banner';
 import { UnknownSheetView } from '@/components/sheets/unknown-sheet-view';
@@ -156,6 +157,7 @@ export function SharedSheetView({
           ) : (
             <UnknownSheetView character={character} hideActions />
           )}
+          <SiteFooter />
         </main>
       </div>
     </SharedCharacterProvider>

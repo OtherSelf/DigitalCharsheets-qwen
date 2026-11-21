@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 import {
@@ -16,6 +17,7 @@ import {
 
 import { Header } from '@/components/header';
 import { AppVersion } from '@/components/layout/app-version';
+import { SiteFooter } from '@/components/layout/site-footer';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
@@ -349,427 +351,441 @@ export default function LoginPage() {
       {/* Единая шапка; на самой /login кнопка входа не нужна. */}
       <Header authAction="none" />
 
-      <main className="safe-area-bottom flex flex-1 items-center justify-center overflow-y-auto p-4">
-        <div className="w-full max-w-md py-6">
-          <div className="mb-6 text-center">
-            <div className="border-primary/20 bg-primary/10 mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full border">
-              <Scroll className="text-primary h-8 w-8" />
-            </div>
-            <h1 className="font-headline text-3xl font-bold tracking-tight">
-              Digital Character Sheets
-            </h1>
-            <p className="text-muted-foreground mt-2">
-              {t('auth.brandTagline')}
-            </p>
-          </div>
-
-          <Card className="border-primary/10 shadow-lg">
-            <CardHeader className="space-y-1 pb-4">
-              <div className="flex items-start justify-between gap-2">
-                <div>
-                  <CardTitle className="text-xl" data-testid="auth-card-title">
-                    {modeTitle}
-                  </CardTitle>
-                  <CardDescription>{modeDescription}</CardDescription>
-                </div>
-                {mode !== 'login' && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => switchMode('login')}
-                    title={t('auth.backToLogin')}
-                    aria-label={t('auth.backToLogin')}
-                  >
-                    <ArrowLeft className="h-4 w-4" />
-                  </Button>
-                )}
+      <main className="safe-area-bottom flex flex-1 flex-col overflow-y-auto p-4">
+        {/* Карточка центрируется в свободном месте, футер всегда внизу
+            прокрутки: в строковом flex он встал бы рядом с карточкой. */}
+        <div className="flex flex-1 items-center justify-center">
+          <div className="w-full max-w-md py-6">
+            <div className="mb-6 text-center">
+              <div className="border-primary/20 bg-primary/10 mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full border">
+                <Scroll className="text-primary h-8 w-8" />
               </div>
-            </CardHeader>
+              <h1 className="font-headline text-3xl font-bold tracking-tight">
+                Digital Character Sheets
+              </h1>
+              <p className="text-muted-foreground mt-2">
+                {t('auth.brandTagline')}
+              </p>
+            </div>
 
-            <CardContent>
-              {notice && (
-                <Alert className="mb-4" data-testid="auth-notice">
-                  <AlertDescription>{notice}</AlertDescription>
-                </Alert>
-              )}
-
-              {error && (
-                <Alert
-                  variant="destructive"
-                  className="mb-4"
-                  data-testid="auth-error"
-                >
-                  <AlertDescription>{error}</AlertDescription>
-                </Alert>
-              )}
-
-              {mode === 'login' && (
-                <form onSubmit={handleLogin} className="space-y-4">
-                  <div className="space-y-2">
-                    <label
-                      htmlFor="auth-username"
-                      className="flex items-center gap-2 text-sm font-medium"
+            <Card className="border-primary/10 shadow-lg">
+              <CardHeader className="space-y-1 pb-4">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <CardTitle
+                      className="text-xl"
+                      data-testid="auth-card-title"
                     >
-                      <User className="text-muted-foreground h-4 w-4" />
-                      {t('auth.usernameOrEmail')}
-                    </label>
-                    <Input
-                      id="auth-username"
-                      type="text"
-                      value={username}
-                      onChange={(e) => setUsername(e.target.value)}
-                      placeholder={t('auth.usernamePlaceholder')}
-                      autoComplete="username"
-                      required
-                      className="h-10"
-                    />
+                      {modeTitle}
+                    </CardTitle>
+                    <CardDescription>{modeDescription}</CardDescription>
                   </div>
-
-                  <div className="space-y-2">
-                    <label
-                      htmlFor="auth-password"
-                      className="flex items-center gap-2 text-sm font-medium"
+                  {mode !== 'login' && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => switchMode('login')}
+                      title={t('auth.backToLogin')}
+                      aria-label={t('auth.backToLogin')}
                     >
-                      <Lock className="text-muted-foreground h-4 w-4" />
-                      {t('auth.password')}
-                    </label>
-                    <PasswordInput
-                      id="auth-password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder={t('auth.passwordPlaceholder')}
-                      autoComplete="current-password"
-                      required
-                      className="h-10"
-                    />
-                  </div>
+                      <ArrowLeft className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+              </CardHeader>
 
-                  <div className="flex items-center justify-between">
+              <CardContent>
+                {notice && (
+                  <Alert className="mb-4" data-testid="auth-notice">
+                    <AlertDescription>{notice}</AlertDescription>
+                  </Alert>
+                )}
+
+                {error && (
+                  <Alert
+                    variant="destructive"
+                    className="mb-4"
+                    data-testid="auth-error"
+                  >
+                    <AlertDescription>{error}</AlertDescription>
+                  </Alert>
+                )}
+
+                {mode === 'login' && (
+                  <form onSubmit={handleLogin} className="space-y-4">
+                    <div className="space-y-2">
+                      <label
+                        htmlFor="auth-username"
+                        className="flex items-center gap-2 text-sm font-medium"
+                      >
+                        <User className="text-muted-foreground h-4 w-4" />
+                        {t('auth.usernameOrEmail')}
+                      </label>
+                      <Input
+                        id="auth-username"
+                        type="text"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                        placeholder={t('auth.usernamePlaceholder')}
+                        autoComplete="username"
+                        required
+                        className="h-10"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label
+                        htmlFor="auth-password"
+                        className="flex items-center gap-2 text-sm font-medium"
+                      >
+                        <Lock className="text-muted-foreground h-4 w-4" />
+                        {t('auth.password')}
+                      </label>
+                      <PasswordInput
+                        id="auth-password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder={t('auth.passwordPlaceholder')}
+                        autoComplete="current-password"
+                        required
+                        className="h-10"
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <Button
+                        type="button"
+                        variant="link"
+                        className="px-0 text-sm"
+                        onClick={() => switchMode('recover')}
+                      >
+                        {t('auth.forgotPassword')}
+                      </Button>
+                    </div>
+
+                    <Button
+                      type="submit"
+                      className="mt-2 h-10 w-full"
+                      disabled={isFormLoading}
+                    >
+                      {isFormLoading ? (
+                        <span className="flex items-center gap-2">
+                          <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                          {t('auth.checkingAccount')}
+                        </span>
+                      ) : (
+                        <span className="flex items-center gap-2">
+                          <LogIn className="h-4 w-4" />
+                          {t('auth.signIn')}
+                        </span>
+                      )}
+                    </Button>
+
+                    {/* LANDMARK: SEPARATE_REGISTER_BUTTON */}
+                    {/* Открывает форму регистрации, не уводя со страницы входа. */}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="h-10 w-full"
+                      onClick={() => switchMode('register')}
+                      data-testid="open-register"
+                    >
+                      <UserPlus className="mr-2 h-4 w-4" />
+                      {t('auth.createAccount')}
+                    </Button>
+                  </form>
+                )}
+
+                {mode === 'register' && (
+                  <form
+                    onSubmit={handleRegister}
+                    className="space-y-4"
+                    data-testid="register-form"
+                  >
+                    <div className="space-y-2">
+                      <label
+                        htmlFor="register-username"
+                        className="flex items-center gap-2 text-sm font-medium"
+                      >
+                        <User className="text-muted-foreground h-4 w-4" />
+                        {t('auth.usernameOrEmail')}
+                      </label>
+                      <Input
+                        id="register-username"
+                        type="text"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                        placeholder={t('auth.usernamePlaceholder')}
+                        autoComplete="username"
+                        required
+                        className="h-10"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label
+                        htmlFor="register-display-name"
+                        className="flex items-center gap-2 text-sm font-medium"
+                      >
+                        <AtSign className="text-muted-foreground h-4 w-4" />
+                        {t('auth.displayName')}
+                      </label>
+                      <Input
+                        id="register-display-name"
+                        type="text"
+                        value={displayName}
+                        onChange={(e) => setDisplayName(e.target.value)}
+                        placeholder={t('auth.displayNamePlaceholder')}
+                        autoComplete="nickname"
+                        required
+                        className="h-10"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label
+                        htmlFor="register-password"
+                        className="flex items-center gap-2 text-sm font-medium"
+                      >
+                        <Lock className="text-muted-foreground h-4 w-4" />
+                        {t('auth.password')}
+                      </label>
+                      <PasswordInput
+                        id="register-password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder={t('auth.passwordPlaceholder')}
+                        autoComplete="new-password"
+                        required
+                        className="h-10"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label
+                        htmlFor="register-recovery-phrase"
+                        className="flex items-center gap-2 text-sm font-medium"
+                      >
+                        <KeyRound className="text-muted-foreground h-4 w-4" />
+                        {t('auth.recoveryPhraseLabel')}
+                      </label>
+                      <Input
+                        id="register-recovery-phrase"
+                        type="text"
+                        value={recoveryPhrase}
+                        onChange={(e) => setRecoveryPhrase(e.target.value)}
+                        placeholder={t('auth.recoveryPhrasePlaceholder')}
+                        autoComplete="off"
+                        required
+                        className="h-10"
+                      />
+                      <p className="text-muted-foreground text-xs">
+                        {t('auth.recoveryPhraseHint')}
+                      </p>
+                    </div>
+
+                    <Button
+                      type="submit"
+                      className="mt-2 h-10 w-full"
+                      disabled={isFormLoading}
+                    >
+                      {isFormLoading ? (
+                        <span className="flex items-center gap-2">
+                          <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                          {t('auth.creatingAccount')}
+                        </span>
+                      ) : (
+                        <span className="flex items-center gap-2">
+                          <UserPlus className="h-4 w-4" />
+                          {t('auth.createAndSignIn')}
+                        </span>
+                      )}
+                    </Button>
+
                     <Button
                       type="button"
                       variant="link"
-                      className="px-0 text-sm"
-                      onClick={() => switchMode('recover')}
+                      className="w-full text-sm"
+                      onClick={() => switchMode('login')}
                     >
-                      {t('auth.forgotPassword')}
+                      {t('auth.backToLogin')}
                     </Button>
-                  </div>
+                  </form>
+                )}
 
-                  <Button
-                    type="submit"
-                    className="mt-2 h-10 w-full"
-                    disabled={isFormLoading}
-                  >
-                    {isFormLoading ? (
-                      <span className="flex items-center gap-2">
-                        <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                        {t('auth.checkingAccount')}
-                      </span>
-                    ) : (
-                      <span className="flex items-center gap-2">
-                        <LogIn className="h-4 w-4" />
-                        {t('auth.signIn')}
-                      </span>
-                    )}
-                  </Button>
+                {mode === 'recover' && recoveryStep === 'verify' && (
+                  <form onSubmit={handleRecoveryVerify} className="space-y-4">
+                    <div className="space-y-2">
+                      <label
+                        htmlFor="recover-username"
+                        className="flex items-center gap-2 text-sm font-medium"
+                      >
+                        <User className="text-muted-foreground h-4 w-4" />
+                        {t('auth.accountUsernameOrEmail')}
+                      </label>
+                      <Input
+                        id="recover-username"
+                        type="text"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                        placeholder={t('auth.usernamePlaceholder')}
+                        autoComplete="username"
+                        required
+                        className="h-10"
+                      />
+                    </div>
 
-                  {/* LANDMARK: SEPARATE_REGISTER_BUTTON */}
-                  {/* Открывает форму регистрации, не уводя со страницы входа. */}
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="h-10 w-full"
-                    onClick={() => switchMode('register')}
-                    data-testid="open-register"
-                  >
-                    <UserPlus className="mr-2 h-4 w-4" />
-                    {t('auth.createAccount')}
-                  </Button>
-                </form>
-              )}
+                    <div className="space-y-2">
+                      <label
+                        htmlFor="recover-phrase"
+                        className="flex items-center gap-2 text-sm font-medium"
+                      >
+                        <KeyRound className="text-muted-foreground h-4 w-4" />
+                        {t('auth.yourRecoveryPhrase')}
+                      </label>
+                      <Input
+                        id="recover-phrase"
+                        value={recoveryPhraseInput}
+                        onChange={(e) => setRecoveryPhraseInput(e.target.value)}
+                        placeholder={t('auth.recoveryPhrasePlaceholder')}
+                        autoComplete="off"
+                        required
+                        className="h-10"
+                      />
+                      <p className="text-muted-foreground text-xs">
+                        {t('auth.phraseMatchHint')}
+                      </p>
+                    </div>
 
-              {mode === 'register' && (
-                <form
-                  onSubmit={handleRegister}
-                  className="space-y-4"
-                  data-testid="register-form"
-                >
-                  <div className="space-y-2">
-                    <label
-                      htmlFor="register-username"
-                      className="flex items-center gap-2 text-sm font-medium"
+                    <Button
+                      type="submit"
+                      className="mt-2 h-10 w-full"
+                      disabled={isFormLoading}
                     >
-                      <User className="text-muted-foreground h-4 w-4" />
-                      {t('auth.usernameOrEmail')}
-                    </label>
-                    <Input
-                      id="register-username"
-                      type="text"
-                      value={username}
-                      onChange={(e) => setUsername(e.target.value)}
-                      placeholder={t('auth.usernamePlaceholder')}
-                      autoComplete="username"
-                      required
-                      className="h-10"
-                    />
-                  </div>
+                      {isFormLoading ? (
+                        <span className="flex items-center gap-2">
+                          <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                          {t('auth.verifying')}
+                        </span>
+                      ) : (
+                        <span className="flex items-center gap-2">
+                          <KeyRound className="h-4 w-4" />
+                          {t('auth.verifyContinue')}
+                        </span>
+                      )}
+                    </Button>
 
-                  <div className="space-y-2">
-                    <label
-                      htmlFor="register-display-name"
-                      className="flex items-center gap-2 text-sm font-medium"
+                    {/* LANDMARK: BACK_TO_LOGIN */}
+                    {/* Возврат к входу тем же переключателем, что и в регистрации. */}
+                    <Button
+                      type="button"
+                      variant="link"
+                      className="w-full text-sm"
+                      onClick={() => switchMode('login')}
+                      data-testid="back-to-login"
                     >
-                      <AtSign className="text-muted-foreground h-4 w-4" />
-                      {t('auth.displayName')}
-                    </label>
-                    <Input
-                      id="register-display-name"
-                      type="text"
-                      value={displayName}
-                      onChange={(e) => setDisplayName(e.target.value)}
-                      placeholder={t('auth.displayNamePlaceholder')}
-                      autoComplete="nickname"
-                      required
-                      className="h-10"
-                    />
-                  </div>
+                      {t('auth.backToLogin')}
+                    </Button>
+                  </form>
+                )}
 
-                  <div className="space-y-2">
-                    <label
-                      htmlFor="register-password"
-                      className="flex items-center gap-2 text-sm font-medium"
-                    >
-                      <Lock className="text-muted-foreground h-4 w-4" />
-                      {t('auth.password')}
-                    </label>
-                    <PasswordInput
-                      id="register-password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder={t('auth.passwordPlaceholder')}
-                      autoComplete="new-password"
-                      required
-                      className="h-10"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <label
-                      htmlFor="register-recovery-phrase"
-                      className="flex items-center gap-2 text-sm font-medium"
-                    >
-                      <KeyRound className="text-muted-foreground h-4 w-4" />
-                      {t('auth.recoveryPhraseLabel')}
-                    </label>
-                    <Input
-                      id="register-recovery-phrase"
-                      type="text"
-                      value={recoveryPhrase}
-                      onChange={(e) => setRecoveryPhrase(e.target.value)}
-                      placeholder={t('auth.recoveryPhrasePlaceholder')}
-                      autoComplete="off"
-                      required
-                      className="h-10"
-                    />
-                    <p className="text-muted-foreground text-xs">
-                      {t('auth.recoveryPhraseHint')}
-                    </p>
-                  </div>
-
-                  <Button
-                    type="submit"
-                    className="mt-2 h-10 w-full"
-                    disabled={isFormLoading}
+                {mode === 'recover' && recoveryStep === 'update' && (
+                  <form
+                    onSubmit={handleRecoveryUpdate}
+                    className="space-y-4"
+                    data-testid="recover-update-form"
                   >
-                    {isFormLoading ? (
-                      <span className="flex items-center gap-2">
-                        <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                        {t('auth.creatingAccount')}
-                      </span>
-                    ) : (
-                      <span className="flex items-center gap-2">
-                        <UserPlus className="h-4 w-4" />
-                        {t('auth.createAndSignIn')}
-                      </span>
-                    )}
-                  </Button>
+                    <div className="space-y-2">
+                      <label
+                        htmlFor="recover-new-password"
+                        className="flex items-center gap-2 text-sm font-medium"
+                      >
+                        <Lock className="text-muted-foreground h-4 w-4" />
+                        {t('common.newPassword')}
+                      </label>
+                      <PasswordInput
+                        id="recover-new-password"
+                        value={newRecoveryPassword}
+                        onChange={(e) => setNewRecoveryPassword(e.target.value)}
+                        placeholder={t('auth.passwordPlaceholder')}
+                        autoComplete="new-password"
+                        required
+                        className="h-10"
+                      />
+                    </div>
 
-                  <Button
-                    type="button"
-                    variant="link"
-                    className="w-full text-sm"
-                    onClick={() => switchMode('login')}
-                  >
-                    {t('auth.backToLogin')}
-                  </Button>
-                </form>
-              )}
+                    <div className="space-y-2">
+                      <label
+                        htmlFor="recover-new-phrase"
+                        className="flex items-center gap-2 text-sm font-medium"
+                      >
+                        <KeyRound className="text-muted-foreground h-4 w-4" />
+                        {t('auth.phrase')}
+                      </label>
+                      <Input
+                        id="recover-new-phrase"
+                        value={newRecoveryPhrase}
+                        onChange={(e) => setNewRecoveryPhrase(e.target.value)}
+                        placeholder={t('auth.recoveryPhrasePlaceholder')}
+                        autoComplete="off"
+                        required
+                        className="h-10"
+                      />
+                      <p className="text-muted-foreground text-xs">
+                        {t('auth.phraseHint')}
+                      </p>
+                    </div>
 
-              {mode === 'recover' && recoveryStep === 'verify' && (
-                <form onSubmit={handleRecoveryVerify} className="space-y-4">
-                  <div className="space-y-2">
-                    <label
-                      htmlFor="recover-username"
-                      className="flex items-center gap-2 text-sm font-medium"
+                    <Button
+                      type="submit"
+                      className="mt-2 h-10 w-full"
+                      disabled={isFormLoading}
                     >
-                      <User className="text-muted-foreground h-4 w-4" />
-                      {t('auth.accountUsernameOrEmail')}
-                    </label>
-                    <Input
-                      id="recover-username"
-                      type="text"
-                      value={username}
-                      onChange={(e) => setUsername(e.target.value)}
-                      placeholder={t('auth.usernamePlaceholder')}
-                      autoComplete="username"
-                      required
-                      className="h-10"
-                    />
-                  </div>
+                      {isFormLoading ? (
+                        <span className="flex items-center gap-2">
+                          <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                          {t('common.saving')}
+                        </span>
+                      ) : (
+                        <span className="flex items-center gap-2">
+                          <KeyRound className="h-4 w-4" />
+                          {t('auth.saveAndContinue')}
+                        </span>
+                      )}
+                    </Button>
 
-                  <div className="space-y-2">
-                    <label
-                      htmlFor="recover-phrase"
-                      className="flex items-center gap-2 text-sm font-medium"
+                    <Button
+                      type="button"
+                      variant="link"
+                      className="w-full text-sm"
+                      onClick={() => switchMode('login')}
+                      data-testid="back-to-login"
                     >
-                      <KeyRound className="text-muted-foreground h-4 w-4" />
-                      {t('auth.yourRecoveryPhrase')}
-                    </label>
-                    <Input
-                      id="recover-phrase"
-                      value={recoveryPhraseInput}
-                      onChange={(e) => setRecoveryPhraseInput(e.target.value)}
-                      placeholder={t('auth.recoveryPhrasePlaceholder')}
-                      autoComplete="off"
-                      required
-                      className="h-10"
-                    />
-                    <p className="text-muted-foreground text-xs">
-                      {t('auth.phraseMatchHint')}
-                    </p>
-                  </div>
+                      {t('auth.backToLogin')}
+                    </Button>
+                  </form>
+                )}
 
-                  <Button
-                    type="submit"
-                    className="mt-2 h-10 w-full"
-                    disabled={isFormLoading}
-                  >
-                    {isFormLoading ? (
-                      <span className="flex items-center gap-2">
-                        <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                        {t('auth.verifying')}
-                      </span>
-                    ) : (
-                      <span className="flex items-center gap-2">
-                        <KeyRound className="h-4 w-4" />
-                        {t('auth.verifyContinue')}
-                      </span>
-                    )}
-                  </Button>
+                <p className="text-muted-foreground mt-4 text-center text-xs">
+                  {t('auth.localDataNote')}
+                </p>
 
-                  {/* LANDMARK: BACK_TO_LOGIN */}
-                  {/* Возврат к входу тем же переключателем, что и в регистрации. */}
-                  <Button
-                    type="button"
-                    variant="link"
-                    className="w-full text-sm"
-                    onClick={() => switchMode('login')}
-                    data-testid="back-to-login"
-                  >
-                    {t('auth.backToLogin')}
-                  </Button>
-                </form>
-              )}
-
-              {mode === 'recover' && recoveryStep === 'update' && (
-                <form
-                  onSubmit={handleRecoveryUpdate}
-                  className="space-y-4"
-                  data-testid="recover-update-form"
-                >
-                  <div className="space-y-2">
-                    <label
-                      htmlFor="recover-new-password"
-                      className="flex items-center gap-2 text-sm font-medium"
-                    >
-                      <Lock className="text-muted-foreground h-4 w-4" />
-                      {t('common.newPassword')}
-                    </label>
-                    <PasswordInput
-                      id="recover-new-password"
-                      value={newRecoveryPassword}
-                      onChange={(e) => setNewRecoveryPassword(e.target.value)}
-                      placeholder={t('auth.passwordPlaceholder')}
-                      autoComplete="new-password"
-                      required
-                      className="h-10"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <label
-                      htmlFor="recover-new-phrase"
-                      className="flex items-center gap-2 text-sm font-medium"
-                    >
-                      <KeyRound className="text-muted-foreground h-4 w-4" />
-                      {t('auth.phrase')}
-                    </label>
-                    <Input
-                      id="recover-new-phrase"
-                      value={newRecoveryPhrase}
-                      onChange={(e) => setNewRecoveryPhrase(e.target.value)}
-                      placeholder={t('auth.recoveryPhrasePlaceholder')}
-                      autoComplete="off"
-                      required
-                      className="h-10"
-                    />
-                    <p className="text-muted-foreground text-xs">
-                      {t('auth.phraseHint')}
-                    </p>
-                  </div>
-
-                  <Button
-                    type="submit"
-                    className="mt-2 h-10 w-full"
-                    disabled={isFormLoading}
-                  >
-                    {isFormLoading ? (
-                      <span className="flex items-center gap-2">
-                        <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                        {t('common.saving')}
-                      </span>
-                    ) : (
-                      <span className="flex items-center gap-2">
-                        <KeyRound className="h-4 w-4" />
-                        {t('auth.saveAndContinue')}
-                      </span>
-                    )}
-                  </Button>
-
-                  <Button
-                    type="button"
-                    variant="link"
-                    className="w-full text-sm"
-                    onClick={() => switchMode('login')}
-                    data-testid="back-to-login"
-                  >
-                    {t('auth.backToLogin')}
-                  </Button>
-                </form>
-              )}
-
-              <p className="text-muted-foreground mt-4 text-center text-xs">
-                {t('auth.localDataNote')}
-              </p>
-
-              {/* Какая сборка запущена — видно и до входа: снимок экрана или
+                {/* Какая сборка запущена — видно и до входа: снимок экрана или
                   багрепорт сразу называют версию и коммит. */}
-              <div className="mt-1 flex justify-center">
-                <AppVersion />
-              </div>
-            </CardContent>
-          </Card>
+                <div className="mt-1 flex flex-wrap items-center justify-center gap-x-3">
+                  <AppVersion />
+                  <Link
+                    href="/about"
+                    className="text-muted-foreground text-[11px] underline underline-offset-2"
+                  >
+                    {t('footer.about')}
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
+        <SiteFooter />
       </main>
     </div>
   );

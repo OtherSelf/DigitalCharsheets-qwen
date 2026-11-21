@@ -8,6 +8,7 @@ import Loading from '@/app/loading';
 import { DynamicFavicon } from '@/components/dynamic-favicon';
 import { Header } from '@/components/header';
 import { GameThemeScope } from '@/components/layout/game-theme-scope';
+import { SiteFooter } from '@/components/layout/site-footer';
 import { ShareDialog } from '@/components/share/share-dialog';
 import { CharacterSheet } from '@/components/sheets/character-sheet';
 import { CompactSidebar } from '@/components/sheets/compact-sidebar';
@@ -273,6 +274,7 @@ export default function CharacterPage() {
                   />
                 </div>
               )}
+              <SiteFooter />
             </main>
           </div>
           {character && !isReadOnly && (
