@@ -858,3 +858,48 @@ export async function awardExperience(
   await dialog.getByRole('button', { name: labels.confirm }).click();
   await expect(dialog).toHaveCount(0);
 }
+
+/**
+ * Свайп по открытой правой шторке через CDP touch-события (Chromium).
+ * Обычные `page.mouse` не дают `pointerType: 'touch'`, поэтому жест не
+ * включился бы. Между шагами есть пауза: короткий свайп не должен набирать
+ * скорость выше порога закрытия.
+ */
+export async function swipeSheet(
+  page: Page,
+  options: {
+    direction?: 'right' | 'left';
+    distance?: number;
+    steps?: number;
+  } = {},
+): Promise<void> {
+  const { direction = 'right', distance = 220, steps = 6 } = options;
+  const dialog = page.getByRole('dialog').first();
+  const box = await dialog.boundingBox();
+  if (!box) throw new Error('swipeSheet: шторка не найдена');
+
+  const fromX = direction === 'right' ? box.x + 24 : box.x + box.width - 24;
+  const toX = fromX + (direction === 'right' ? distance : -distance);
+  const y = box.y + box.height / 2;
+
+  const client = await page.context().newCDPSession(page);
+  try {
+    await client.send('Input.dispatchTouchEvent', {
+      type: 'touchStart',
+      touchPoints: [{ x: fromX, y }],
+    });
+    for (let step = 1; step <= steps; step += 1) {
+      await client.send('Input.dispatchTouchEvent', {
+        type: 'touchMove',
+        touchPoints: [{ x: fromX + ((toX - fromX) * step) / steps, y }],
+      });
+      await page.waitForTimeout(20);
+    }
+    await client.send('Input.dispatchTouchEvent', {
+      type: 'touchEnd',
+      touchPoints: [],
+    });
+  } finally {
+    await client.detach();
+  }
+}
