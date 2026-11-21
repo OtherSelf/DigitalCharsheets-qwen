@@ -40,7 +40,7 @@ describe('dh2: чтение полей инвентаря', () => {
     expect(readWeight(item)).toBeUndefined();
   });
 
-  it('сумма веса не включает потерянные предметы', () => {
+  it('сумма веса умножает количество и не включает lost', () => {
     const items: InventoryItem[] = [
       {
         id: 'a',
@@ -55,6 +55,27 @@ describe('dh2: чтение полей инвентаря', () => {
     ];
 
     expect(inventoryTotals(items).weight).toBeCloseTo(1.8, 5);
+  });
+
+  it('предмет с количеством 2 даёт двойной вес', () => {
+    const totals = inventoryTotals([
+      {
+        id: 'qty',
+        name: 'Medkit',
+        status: 'default',
+        quantity: 2,
+        weight: 1.5,
+      },
+    ]);
+    expect(totals.weight).toBeCloseTo(3, 5);
+  });
+
+  it('пустой вес даёт 0, старое количество — 1', () => {
+    expect(
+      inventoryTotals([{ id: 'old', name: 'Rope', status: 'default' }]),
+    ).toEqual({
+      weight: 0,
+    });
   });
 
   it('сохраняет заданные значения и нормализует мусор', () => {
