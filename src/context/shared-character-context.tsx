@@ -16,7 +16,7 @@ import {
  * рендерится теми же секциями, но все мутации — no-op.
  *
  * Реальная защита от записи — серверная (у гостя нет cookie и PUT), а no-op
- * контекст + `inert` на обёртке лишь не дают UI выглядеть редактируемым.
+ * контекст и `readOnly` лишь не дают UI выглядеть редактируемым.
  */
 export function SharedCharacterProvider({
   character,
@@ -50,6 +50,7 @@ export function SharedCharacterProvider({
       setHideNotes: () => undefined,
       showEditButtons: false,
       setShowEditButtons: () => undefined,
+      readOnly: true,
       flushSaves: async () => undefined,
     }),
     [character],
