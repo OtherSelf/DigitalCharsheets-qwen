@@ -3,6 +3,7 @@ import { expect, test } from '@playwright/test';
 import {
   expectInputValue,
   expectNoRawI18nKeys,
+  expectThemeFont,
   gameCharacterId,
   openApp,
   openDialog,
@@ -296,3 +297,41 @@ test.describe('диалоги листа Dark Heresy 2e', { tag: '@plugin:dh2' }
     },
   );
 });
+
+/**
+ * Шрифт темы DH2: Cormorant SC в обеих локалях. Кириллица идёт из второго
+ * подмножества (`unicode-range`), поэтому RU-проверка ждёт загрузку и его.
+ */
+test.describe(
+  'лист Dark Heresy 2e — шрифт темы',
+  { tag: '@plugin:dh2' },
+  () => {
+    test(
+      'desktop: Cormorant SC в en и ru',
+      { tag: '@desktop' },
+      async ({ page, context }) => {
+        await prepare(context);
+        await openApp(page, sheetPath(gameCharacterId('dh2')));
+        await expectThemeFont(page, 'dhcormorantsc');
+
+        await prepare(context, { language: 'ru' });
+        await openApp(page, sheetPath(gameCharacterId('dh2')));
+        const { cyrillicLoaded } = await expectThemeFont(page, 'dhcormorantsc');
+        expect(cyrillicLoaded, 'кириллическое подмножество загружено').toBe(
+          true,
+        );
+        await expectNoRawI18nKeys(page, 'лист Dark Heresy 2e: шрифт (ru)');
+      },
+    );
+
+    test(
+      'mobile: шрифт темы применяется',
+      { tag: '@mobile' },
+      async ({ page, context }) => {
+        await prepare(context);
+        await openApp(page, sheetPath(gameCharacterId('dh2')));
+        await expectThemeFont(page, 'dhcormorantsc');
+      },
+    );
+  },
+);

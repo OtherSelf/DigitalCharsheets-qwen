@@ -140,7 +140,8 @@
           "card": "30 12% 18%",
           "border": "26 20% 40%"
         }
-      }
+      },
+      "font": "fonts.ts#pluginFont"
     }
   }
 }
