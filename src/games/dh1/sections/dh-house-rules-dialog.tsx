@@ -144,7 +144,7 @@ export function DhHouseRulesDialog({
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="text-destructive hover:text-destructive h-6 w-6 shrink-0"
+                        className="text-destructive hover:text-destructive h-6 w-6 shrink-0 max-md:h-10 max-md:w-10"
                         onClick={() => handleDeleteCustomRule(index)}
                       >
                         <Trash2 className="h-3 w-3" />

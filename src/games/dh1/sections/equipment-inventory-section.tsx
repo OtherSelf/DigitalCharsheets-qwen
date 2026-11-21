@@ -943,7 +943,7 @@ export const EquipmentInventorySection = React.forwardRef<
                                         weapon.notes ? 'secondary' : 'ghost'
                                       }
                                       size="icon"
-                                      className="h-7 w-7"
+                                      className="h-7 w-7 max-md:h-10 max-md:w-10"
                                     >
                                       <InfoIcon className="h-4 w-4" />
                                     </Button>
@@ -997,7 +997,7 @@ export const EquipmentInventorySection = React.forwardRef<
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  className="h-7 w-7"
+                                  className="h-7 w-7 max-md:h-10 max-md:w-10"
                                   onClick={() => removeMeleeWeapon(weapon.id)}
                                 >
                                   <Trash2 className="text-destructive h-4 w-4" />
@@ -1223,7 +1223,7 @@ export const EquipmentInventorySection = React.forwardRef<
                                             weapon.notes ? 'secondary' : 'ghost'
                                           }
                                           size="icon"
-                                          className="h-7 w-7"
+                                          className="h-7 w-7 max-md:h-10 max-md:w-10"
                                         >
                                           <InfoIcon className="h-4 w-4" />
                                         </Button>
@@ -1284,7 +1284,7 @@ export const EquipmentInventorySection = React.forwardRef<
                                     <Button
                                       variant="ghost"
                                       size="icon"
-                                      className="h-7 w-7"
+                                      className="h-7 w-7 max-md:h-10 max-md:w-10"
                                       onClick={() =>
                                         removeMeleeWeapon(weapon.id)
                                       }
@@ -1519,7 +1519,7 @@ export const EquipmentInventorySection = React.forwardRef<
                                         weapon.notes ? 'secondary' : 'ghost'
                                       }
                                       size="icon"
-                                      className="h-7 w-7"
+                                      className="h-7 w-7 max-md:h-10 max-md:w-10"
                                     >
                                       <InfoIcon className="h-4 w-4" />
                                     </Button>
@@ -1573,7 +1573,7 @@ export const EquipmentInventorySection = React.forwardRef<
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  className="h-7 w-7"
+                                  className="h-7 w-7 max-md:h-10 max-md:w-10"
                                   onClick={() => removeRangedWeapon(weapon.id)}
                                 >
                                   <Trash2 className="text-destructive h-4 w-4" />
@@ -1887,7 +1887,7 @@ export const EquipmentInventorySection = React.forwardRef<
                                             weapon.notes ? 'secondary' : 'ghost'
                                           }
                                           size="icon"
-                                          className="h-7 w-7"
+                                          className="h-7 w-7 max-md:h-10 max-md:w-10"
                                         >
                                           <InfoIcon className="h-4 w-4" />
                                         </Button>
@@ -1948,7 +1948,7 @@ export const EquipmentInventorySection = React.forwardRef<
                                     <Button
                                       variant="ghost"
                                       size="icon"
-                                      className="h-7 w-7"
+                                      className="h-7 w-7 max-md:h-10 max-md:w-10"
                                       onClick={() =>
                                         removeRangedWeapon(weapon.id)
                                       }

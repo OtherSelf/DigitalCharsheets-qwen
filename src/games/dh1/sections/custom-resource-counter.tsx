@@ -250,7 +250,7 @@ export function CustomResourceCounter({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="text-destructive h-6 w-6"
+                    className="text-destructive h-6 w-6 max-md:h-10 max-md:w-10"
                     onClick={() => removeResource(res.id)}
                     aria-label={t('dh1.removeResource')}
                   >
