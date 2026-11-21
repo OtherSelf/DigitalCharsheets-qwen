@@ -111,7 +111,12 @@ export function DndCompanionsSection({
           'hidden',
       )}
     >
-      <div className="relative mb-6 flex items-center justify-center">
+      {/*
+        На телефоне заголовок и «Add Companion» стоят в потоке и переносятся
+        на вторую строку: absolute-кнопка накладывалась на заголовок и резала
+        его до «Comp…». С md заголовок снова по центру, кнопка — справа.
+      */}
+      <div className="relative mb-6 flex flex-wrap items-center justify-between gap-2 md:justify-center">
         <CollapsibleTrigger asChild>
           <Button
             variant="ghost"
@@ -129,7 +134,7 @@ export function DndCompanionsSection({
           </Button>
         </CollapsibleTrigger>
         {showEditButtons && (
-          <div className="absolute top-1/2 right-0 -translate-y-1/2">
+          <div className="md:absolute md:top-1/2 md:right-0 md:-translate-y-1/2">
             <Button size="sm" variant="outline" onClick={handleAddCompanion}>
               <Plus className="mr-2 h-4 w-4" /> {t('dnd.addCompanion')}
             </Button>
