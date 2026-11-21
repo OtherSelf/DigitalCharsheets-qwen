@@ -457,7 +457,7 @@ export const Dh1Sheet = React.forwardRef<
                       <div className="text-muted-foreground mt-1 text-[8px] font-semibold uppercase">
                         {char.label}
                       </div>
-                      <div className="mt-1 mb-1 flex items-center justify-center gap-1">
+                      <div className="mt-1 mb-1 flex flex-col items-center justify-center gap-1">
                         {isCharacteristicsEditing ? (
                           <Input
                             type="number"
@@ -475,7 +475,7 @@ export const Dh1Sheet = React.forwardRef<
                             {val + bonus}
                           </div>
                         )}
-                        <div className="flex flex-col items-center gap-[1px]">
+                        <div className="grid grid-cols-2 justify-items-center gap-1">
                           {upgrades.map((checked, upgradeIdx) => (
                             <Checkbox
                               key={upgradeIdx}
@@ -527,8 +527,7 @@ export const Dh1Sheet = React.forwardRef<
                                   } as Partial<Character>);
                                 }
                               }}
-                              hideIndicator
-                              className="data-[state=checked]:bg-primary h-2.5 w-2.5"
+                              dot
                             />
                           ))}
                         </div>
@@ -1442,7 +1441,7 @@ export const Dh1Sheet = React.forwardRef<
                           <div className="text-muted-foreground mt-1 text-[8px] font-semibold uppercase">
                             {char.label}
                           </div>
-                          <div className="mt-1 mb-1 flex items-center justify-center gap-1">
+                          <div className="mt-1 mb-1 flex flex-col items-center justify-center gap-1">
                             {isCharacteristicsEditing ? (
                               <Input
                                 type="number"
@@ -1461,7 +1460,7 @@ export const Dh1Sheet = React.forwardRef<
                                 {val + bonus}
                               </div>
                             )}
-                            <div className="flex flex-col items-center gap-[1px]">
+                            <div className="grid grid-cols-2 justify-items-center gap-1">
                               {upgrades.map((checked, upgradeIdx) => (
                                 <Checkbox
                                   key={upgradeIdx}
@@ -1516,8 +1515,7 @@ export const Dh1Sheet = React.forwardRef<
                                       } as Partial<Character>);
                                     }
                                   }}
-                                  hideIndicator
-                                  className="data-[state=checked]:bg-primary h-2.5 w-2.5"
+                                  dot
                                 />
                               ))}
                             </div>
