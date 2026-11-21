@@ -356,7 +356,12 @@ export const MySheet = React.forwardRef<SheetHandle, GameSheetProps<MyCharacter>
 
 Sections (`sections/*.tsx`) and accordions are ordinary React; use the host UI
 kit (`@/components/ui/*`) and `useTranslation()`. If a section is part of the
-compact navigation, its `id` must match the `CompactNav` item id.
+compact navigation, its `id` must match the `CompactNav` item id: the page
+scrolls `main` to exactly that element. The rule is enforced, not assumed — the
+mobile scenario `контракт CompactNav` in `tests/visual/basic-pages.spec.ts`
+walks the rail buttons (`data-section-id`), checks that every id resolves to a
+non-empty element and that it lands in the frame, so a new edition is covered
+without test edits.
 
 `create-form.tsx` — receives one optional prop,
 `onCreated(characterId, completion?)`. It reads `useCharacterContext()`
