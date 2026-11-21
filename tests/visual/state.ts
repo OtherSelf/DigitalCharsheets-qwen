@@ -48,10 +48,17 @@ export interface VisualAccount {
   dndId: string;
   dhId: string;
   /**
-   * Гостевая ссылка на лист `characters.dnd`, если global-setup имел доступ
-   * к data-dir. Публичная страница /share/<token> не требует логина.
+   * Гостевые ссылки, если global-setup имел доступ к data-dir: основная — на
+   * лист `characters.dnd`, `dhToken` — на лист `characters.dh` (публичная
+   * страница /share/<token> не требует логина).
    */
-  share?: { token: string; historyToken?: string; characterId: string };
+  share?: {
+    token: string;
+    historyToken?: string;
+    characterId: string;
+    dhToken?: string;
+    dhCharacterId?: string;
+  };
 }
 
 export interface VisualState extends VisualAccount {
