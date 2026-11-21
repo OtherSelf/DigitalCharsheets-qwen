@@ -59,8 +59,10 @@ response contains no sheet data, no uid and the `noindex`/`no-store` headers.
 
 Read-only is enforced at two levels:
 
-- UI: a dedicated character context with no-op mutations, `inert` around the
-  sheet, no notes/journal dialogs and no edit/share controls;
+- UI: a dedicated character context with `readOnly` and no-op mutations; form
+  controls are read-only, narrative/experience sheets open in view mode without
+  edit/delete, and notes/journal dialog buttons, edit and share controls are
+  hidden. Collapsibles, info popovers and the history tab keep working;
 - server: there is no public mutation API, and every owner endpoint requires the
   session cookie.
 
