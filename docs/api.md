@@ -164,7 +164,7 @@ role → `403` (`tester` is not an administrator).
 | --- | --- | --- |
 | `GET` | `/api/admin/users` | Users, roles, block state, last login, sheet counts, stats. |
 | `GET` | `/api/admin/games` | Game catalog with default/current visibility and site title. |
-| `PUT` | `/api/admin/games` | Set one edition status (`published`/`test`/`hidden`) and/or the site title. |
+| `PUT` | `/api/admin/games` | Set one edition status (`published`/`test`/`hidden`), its `useHostTheme` flag and/or the site title. |
 | `PATCH` | `/api/admin/users/{uid}` | Update fields / password / role / block state. |
 | `DELETE` | `/api/admin/users/{uid}` | Delete the account, its sheets and index entries. |
 | `GET` | `/api/admin/users/{uid}/characters` | Read-only sheet summaries for one user. |

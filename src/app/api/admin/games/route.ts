@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 
+import { getGameDefinition } from '@/games/games';
 import {
   getGameModule,
   getPluginManifest,
@@ -10,9 +11,11 @@ import { requireAdmin } from '@/lib/admin-auth';
 import {
   getModuleStatus,
   isModuleEnabled,
+  isModuleHostTheme,
   isModuleStatus,
   readGameCatalog,
   setModuleEnabled,
+  setModuleHostTheme,
   setModuleStatus,
   setSiteTitle,
 } from '@/lib/game-catalog';
@@ -35,11 +38,14 @@ function catalogResponse() {
       return {
         id: gameModule.id,
         gameId: gameModule.gameId,
+        gameNameKey:
+          getGameDefinition(gameModule.gameId)?.nameKey ?? gameModule.nameKey,
         nameKey: gameModule.nameKey,
         descriptionKey: gameModule.descriptionKey,
         defaultStatus: gameModule.defaultStatus,
         status: getModuleStatus(gameModule.id, catalog),
         enabled: isModuleEnabled(gameModule.id, catalog),
+        useHostTheme: isModuleHostTheme(gameModule.id, catalog),
         // Метаданные плагина для админки из манифеста: версия, схема, зависимости.
         // tags хранятся, но в UI не выводятся.
         version: manifest?.version ?? null,
@@ -112,6 +118,31 @@ export async function PUT(request: Request) {
         );
       }
       setModuleEnabled(systemId, body.enabled);
+    }
+
+    if (body.useHostTheme !== undefined) {
+      const systemId = body.systemId as SystemId;
+      if (!systemId || !getGameModule(systemId)) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'Unknown game module.',
+            reason: 'unknown_system',
+          },
+          { status: 400 },
+        );
+      }
+      if (typeof body.useHostTheme !== 'boolean') {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'useHostTheme must be a boolean.',
+            reason: 'bad_request',
+          },
+          { status: 400 },
+        );
+      }
+      setModuleHostTheme(systemId, body.useHostTheme);
     }
 
     if (body.status !== undefined) {

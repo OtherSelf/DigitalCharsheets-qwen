@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 
 import { getPluginManifest } from '@/games/registry';
 import type { SystemId } from '@/games/types';
+import { useHostTheme } from '@/hooks/use-host-theme';
 import { usePluginFontClass } from '@/hooks/use-plugin-font';
 import { gameThemeCss } from '@/lib/game-theme';
 import { cn } from '@/lib/utils';
@@ -30,9 +31,13 @@ export function GameThemeScope({
   systemId?: string;
   children: ReactNode;
 }) {
-  const theme = systemId
+  const manifestTheme = systemId
     ? getPluginManifest(systemId as SystemId)?.ui?.theme
     : undefined;
+  // Админская настройка «стили ядра»: ни токены, ни шрифт плагина не
+  // применяются, поэтому обёртка не нужна вовсе.
+  const hostTheme = useHostTheme(manifestTheme ? systemId : undefined);
+  const theme = hostTheme ? undefined : manifestTheme;
   const fontClass = usePluginFontClass(theme?.font ? systemId : undefined);
   const css = gameThemeCss(systemId, theme);
   // Шрифт без токенов всё равно требует обёртки: иначе не будет ни

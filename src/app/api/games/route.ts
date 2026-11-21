@@ -6,6 +6,7 @@ import {
   canCreateWithModule,
   getModuleStatus,
   isModuleEnabled,
+  isModuleHostTheme,
   readGameCatalog,
 } from '@/lib/game-catalog';
 import { getRequestActor } from '@/lib/module-access';
@@ -39,6 +40,7 @@ export async function GET(request: Request) {
           descriptionKey: gameModule.descriptionKey,
           status: getModuleStatus(gameModule.id, catalog),
           enabled: isModuleEnabled(gameModule.id, catalog),
+          useHostTheme: isModuleHostTheme(gameModule.id, catalog),
         })),
     }))
     .filter((game) => game.editions.length > 0);

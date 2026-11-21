@@ -301,7 +301,7 @@ with `visibility` equal to its old status (§5.9 of the plugin plan).
   "version": 2,
   "plugins": {
     "dh1": { "enabled": true, "visibility": "published" },
-    "dh2": { "enabled": false, "visibility": "test" }
+    "dh2": { "enabled": false, "visibility": "test", "useHostTheme": true }
   },
   "siteTitle": "My table"
 }
@@ -311,6 +311,7 @@ with `visibility` equal to its old status (§5.9 of the plugin plan).
 | --- | --- |
 | `plugins[id].visibility` | `published` / `test` / `hidden` — who sees the plugin in creation and menus. Matrix: `published` → everyone, `test` → tester+admin, `hidden` → admin. Invalid values are ignored. |
 | `plugins[id].enabled` | Whether the plugin is active at all. `false` disappears from creation/menus/demo; existing sheets open **read-only** with a banner, JSON export keeps working (D9). Missing → `true`. |
+| `plugins[id].useHostTheme` | `true` — use the core palette and font instead of `ui.theme` on the sheet, `/share` and `/demo`. Missing → `false`. |
 | `siteTitle` | Optional header title override (≤80 chars). Empty/absent → built-in brand. |
 
 `enabled` and `visibility` are independent (D16): a hidden plugin can still be

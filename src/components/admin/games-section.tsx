@@ -3,7 +3,13 @@
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 
-import { ExternalLink, Loader2, Save, ShieldAlert } from 'lucide-react';
+import {
+  ExternalLink,
+  Loader2,
+  Save,
+  Settings,
+  ShieldAlert,
+} from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -15,7 +21,15 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -29,11 +43,13 @@ import type { ModuleStatus } from '@/games/types';
 interface AdminGame {
   id: string;
   gameId: string;
+  gameNameKey: string;
   nameKey: string;
   descriptionKey: string;
   defaultStatus: ModuleStatus;
   status: ModuleStatus;
   enabled: boolean;
+  useHostTheme: boolean;
   version: string | null;
   schemaVersion: number;
   tags: string[];
@@ -66,6 +82,7 @@ export function AdminGamesSection() {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState('');
   const [status, setStatus] = useState('');
+  const [settingsGame, setSettingsGame] = useState<AdminGame | null>(null);
 
   const apply = (data: AdminGamesResponse) => {
     if (data.games) setGames(data.games);
@@ -142,6 +159,36 @@ export function AdminGamesSection() {
         return;
       }
       apply(data);
+      setStatus(t('admin.gamesSaved'));
+    } catch {
+      setError(t('admin.gamesSaveFailed'));
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const saveHostTheme = async (systemId: string, useHostTheme: boolean) => {
+    setIsSaving(true);
+    setStatus('');
+    setError('');
+    try {
+      const res = await fetch('/api/admin/games', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ systemId, useHostTheme }),
+      });
+      const data = (await res
+        .json()
+        .catch(() => null)) as AdminGamesResponse | null;
+      if (!res.ok || !data?.success) {
+        setError(data?.error || t('admin.gamesSaveFailed'));
+        return;
+      }
+      apply(data);
+      setSettingsGame(
+        (current) =>
+          data.games?.find((game) => game.id === current?.id) ?? null,
+      );
       setStatus(t('admin.gamesSaved'));
     } catch {
       setError(t('admin.gamesSaveFailed'));
@@ -233,15 +280,15 @@ export function AdminGamesSection() {
                     {t('admin.enabledColumn')}
                   </th>
                   <th className="py-2 pr-3 font-semibold">
-                    {t('admin.demoColumn')}
+                    {t('admin.settingsColumn')}
                   </th>
                 </tr>
               </thead>
               <tbody>
                 {games.map((game) => (
                   <tr key={game.id} className="border-b last:border-0">
+                    <td className="py-2 pr-3">{t(game.gameNameKey)}</td>
                     <td className="py-2 pr-3">{t(game.nameKey)}</td>
-                    <td className="py-2 pr-3">{t(game.descriptionKey)}</td>
                     <td className="py-2 pr-3 whitespace-nowrap">
                       <Badge variant="outline">
                         {game.version ? `v${game.version}` : '—'}
@@ -293,18 +340,15 @@ export function AdminGamesSection() {
                       />
                     </td>
                     <td className="py-2 pr-3">
-                      {game.demo ? (
-                        <Button variant="ghost" size="sm" asChild>
-                          <Link href="/demo">
-                            <ExternalLink className="h-4 w-4" />
-                            <span className="sr-only">
-                              {t('admin.demoColumn')}
-                            </span>
-                          </Link>
-                        </Button>
-                      ) : (
-                        '—'
-                      )}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        aria-label={`${t('admin.gameSettings')}: ${t(game.nameKey)}`}
+                        onClick={() => setSettingsGame(game)}
+                        disabled={isSaving}
+                      >
+                        <Settings className="h-4 w-4" />
+                      </Button>
                     </td>
                   </tr>
                 ))}
@@ -355,6 +399,70 @@ export function AdminGamesSection() {
           {status}
         </p>
       )}
+
+      <Dialog
+        open={Boolean(settingsGame)}
+        onOpenChange={(open) => {
+          if (!open) setSettingsGame(null);
+        }}
+      >
+        {settingsGame && (
+          <DialogContent className="sm:max-w-lg">
+            <DialogHeader>
+              <DialogTitle>{t('admin.gameSettingsTitle')}</DialogTitle>
+              <DialogDescription>
+                {t(settingsGame.gameNameKey)} · {t(settingsGame.nameKey)}
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4">
+              <div className="space-y-1">
+                <p className="text-sm font-medium">
+                  {t('admin.appearanceSection')}
+                </p>
+                <div className="flex items-start justify-between gap-4 rounded-md border p-3">
+                  <div className="space-y-1">
+                    <Label htmlFor={`use-plugin-theme-${settingsGame.id}`}>
+                      {t('admin.usePluginTheme')}
+                    </Label>
+                    <p className="text-muted-foreground text-xs">
+                      {t('admin.usePluginThemeHint')}
+                    </p>
+                  </div>
+                  <Checkbox
+                    id={`use-plugin-theme-${settingsGame.id}`}
+                    checked={!settingsGame.useHostTheme}
+                    disabled={isSaving}
+                    onCheckedChange={(checked) =>
+                      void saveHostTheme(settingsGame.id, checked !== true)
+                    }
+                    aria-label={t('admin.usePluginTheme')}
+                  />
+                </div>
+                {settingsGame.useHostTheme && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => void saveHostTheme(settingsGame.id, false)}
+                    disabled={isSaving}
+                  >
+                    {t('admin.resetTheme')}
+                  </Button>
+                )}
+              </div>
+
+              {settingsGame.demo && (
+                <Button variant="outline" asChild>
+                  <Link href="/demo">
+                    <ExternalLink className="mr-2 h-4 w-4" />
+                    {t('admin.openDemo')}
+                  </Link>
+                </Button>
+              )}
+            </div>
+          </DialogContent>
+        )}
+      </Dialog>
     </div>
   );
 }
