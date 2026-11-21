@@ -15,6 +15,7 @@ import {
 import { getGameCatalogFile, getSettingsDir } from './data-dir';
 import { withDataLock } from './data-lock';
 import { writeJsonAtomic } from './fs-atomic';
+import { readThroughCache } from './read-cache';
 import type { UserRole } from './user-role';
 
 /**
@@ -91,17 +92,16 @@ function parseEntry(value: unknown): PluginCatalogEntry | undefined {
   };
 }
 
-export async function readGameCatalog(): Promise<GameCatalog> {
-  const file = getGameCatalogFile();
-  const fallback = emptyCatalog();
-
+function parseGameCatalog(rawText: string): GameCatalog {
   let raw: unknown;
   try {
-    raw = JSON.parse(await fs.readFile(file, 'utf8'));
+    raw = JSON.parse(rawText);
   } catch {
-    return fallback;
+    return emptyCatalog();
   }
-  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return fallback;
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
+    return emptyCatalog();
+  }
   const record = raw as Record<string, unknown>;
 
   const plugins: Record<string, PluginCatalogEntry> = {};
@@ -143,6 +143,15 @@ export async function readGameCatalog(): Promise<GameCatalog> {
     plugins,
     ...(siteTitle ? { siteTitle } : {}),
   };
+}
+
+export async function readGameCatalog(): Promise<GameCatalog> {
+  return (
+    (await readThroughCache<GameCatalog>(
+      getGameCatalogFile(),
+      parseGameCatalog,
+    )) ?? emptyCatalog()
+  );
 }
 
 /** Видимость плагина: runtime-переопределение или `defaultStatus` манифеста. */

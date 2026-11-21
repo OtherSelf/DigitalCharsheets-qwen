@@ -1,5 +1,7 @@
 import fs from 'fs/promises';
 
+import { invalidateCachedFile } from './read-cache';
+
 /**
  * ─── LANDMARK: ATOMIC WRITE ─────────────────────────────────────────────────
  * Раньше лист писался прямо в файл (`writeFileSync`). Если процесс падал/
@@ -33,6 +35,7 @@ export async function writeJsonAtomic(
     await handle.close();
     handle = null;
     await fs.rename(tmpPath, filePath);
+    invalidateCachedFile(filePath);
   } catch (error) {
     if (handle !== null) {
       try {
@@ -54,6 +57,7 @@ export async function writeJsonAtomic(
     // Покрыто тестами tests/unit/exdev-storage.test.ts.
     if ((error as NodeJS.ErrnoException)?.code === 'EXDEV') {
       await fs.writeFile(filePath, json, 'utf8');
+      invalidateCachedFile(filePath);
       try {
         await fs.unlink(tmpPath);
       } catch {

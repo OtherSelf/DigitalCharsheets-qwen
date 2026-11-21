@@ -5,6 +5,7 @@ import path from 'path';
 import { getSessionsFile } from '../data-dir';
 import { withDataLock } from '../data-lock';
 import { writeJsonAtomic } from '../fs-atomic';
+import { readJsonThroughCache } from '../read-cache';
 
 /**
  * ─── LANDMARK: SERVER-SIDE SESSIONS ─────────────────────────────────────────
@@ -55,14 +56,7 @@ function emptySessionsFile(): SessionsFile {
 }
 
 /** Прочитать реестр. Битый/чужой файл = «живых сессий нет» (fail-closed). */
-async function readSessionsFile(): Promise<SessionsFile> {
-  let raw: string;
-  try {
-    raw = await fs.readFile(getSessionsFile(), 'utf8');
-  } catch {
-    return emptySessionsFile();
-  }
-
+function parseSessionsFile(raw: string): SessionsFile {
   let parsed: unknown;
   try {
     parsed = JSON.parse(raw);
@@ -106,6 +100,13 @@ async function readSessionsFile(): Promise<SessionsFile> {
   }
 
   return { version: FILE_VERSION, sessions };
+}
+
+async function readSessionsFile(): Promise<SessionsFile> {
+  return (
+    (await readJsonThroughCache<SessionsFile>(getSessionsFile())) ??
+    emptySessionsFile()
+  );
 }
 
 async function writeSessionsFile(file: SessionsFile): Promise<void> {

@@ -5,6 +5,7 @@ import path from 'path';
 import { getDataDir, getLoginIndexFile, getUsersDir } from './data-dir';
 import { writeJsonAtomic } from './fs-atomic';
 import { normalizeLogin } from './ids';
+import { readThroughCache } from './read-cache';
 
 /**
  * ─── LANDMARK: LOGIN INDEX ──────────────────────────────────────────────────
@@ -34,25 +35,28 @@ export function emptyLoginIndex(): LoginIndex {
 
 /** Прочитать индекс с диска. `null` — файла нет или он битый. */
 async function readIndexFile(): Promise<LoginIndex | null> {
-  try {
-    const parsed = JSON.parse(await fs.readFile(getLoginIndexFile(), 'utf8'));
-    if (!parsed || typeof parsed !== 'object') return null;
+  return readThroughCache<LoginIndex>(getLoginIndexFile(), (raw) => {
+    const parsed = JSON.parse(raw) as unknown;
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      return null;
+    }
+    const rawLogins = (parsed as { logins?: unknown }).logins;
     if (
-      !parsed.logins ||
-      typeof parsed.logins !== 'object' ||
-      Array.isArray(parsed.logins)
+      !rawLogins ||
+      typeof rawLogins !== 'object' ||
+      Array.isArray(rawLogins)
     ) {
       return null;
     }
     const logins: Record<string, string> = {};
-    for (const [login, uid] of Object.entries(parsed.logins)) {
+    for (const [login, uid] of Object.entries(
+      rawLogins as Record<string, unknown>,
+    )) {
       const key = normalizeLogin(login);
       if (key && typeof uid === 'string' && uid) logins[key] = uid;
     }
     return { version: 1, logins };
-  } catch {
-    return null;
-  }
+  });
 }
 
 async function writeIndexFile(index: LoginIndex): Promise<void> {

@@ -13,6 +13,7 @@ import { withDataLock, withSheetLock } from './data-lock';
 import { writeJsonAtomic } from './fs-atomic';
 import { diffCharacterRecords } from './history-diff';
 import { isUid } from './ids';
+import { readThroughCache } from './read-cache';
 import { resolveCharacterFile } from './security/paths';
 import { revokeShareForCharacter } from './shares';
 import { Character } from './types';
@@ -56,6 +57,21 @@ const lastSeqBySheet = new Map<string, Map<string, number>>();
 /** Ключ per-sheet лока: один лист — один ресурс. */
 function sheetLockKey(userId: string, characterId: string): string {
   return `sheet:${userId}/${characterId}`;
+}
+
+/**
+ * Кэш списка листов на каталог. Подпись — inode+mtime каталога: атомарная
+ * запись заменяет файл через rename и меняет mtime каталога, поэтому список
+ * перечитывается после любой записи. Дополнительно инвалидируем явно из
+ * save/update/delete, не полагаясь на гранулярность mtime.
+ */
+const characterListCache = new Map<
+  string,
+  { signature: string; value: Character[] }
+>();
+
+function invalidateCharacterList(userId: string): void {
+  characterListCache.delete(getCharactersDir(userId));
 }
 
 export interface WriteToken {
@@ -112,12 +128,51 @@ export function resetWriteSeqGuard(
   }
 }
 
+/**
+ * Разобрать файл листа через кэш. Подпись `(ino, mtime, size)` меняется при
+ * записи через `writeJsonAtomic` (rename даёт новый inode), поэтому кэш не
+ * отдаёт старые данные после сохранения.
+ */
+function readCharacterFile(
+  filePath: string,
+  characterId: string,
+): Promise<Character | null> {
+  return readThroughCache<Character>(filePath, (raw) => {
+    try {
+      const parsed = JSON.parse(raw) as Record<string, unknown>;
+      const normalized = normalizeCharacterRecord(parsed);
+      return healCharacterDerive(
+        normalized.character as unknown as Record<string, unknown>,
+        typeof parsed.schemaVersion === 'number' ? parsed.schemaVersion : 0,
+      ) as unknown as Character;
+    } catch (error) {
+      console.error(`Character file ${characterId} is corrupted:`, error);
+      return null;
+    }
+  });
+}
+
 // ЧТЕНИЕ: все листы пользователя; битый файл пропускается, а не роняет список.
 // Каталог здесь не создаётся: у нового аккаунта листов ещё нет.
 export async function getCharactersFromServer(
   userId: string,
 ): Promise<Character[]> {
   const charsDir = getCharactersDir(userId);
+
+  let dirStat;
+  try {
+    dirStat = await fs.stat(charsDir);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException)?.code !== 'ENOENT') {
+      console.error(`Error reading characters directory for ${userId}:`, error);
+    }
+    return [];
+  }
+  const signature = `${dirStat.ino}:${dirStat.mtimeMs}`;
+  const cachedList = characterListCache.get(charsDir);
+  if (cachedList && cachedList.signature === signature) {
+    return cachedList.value;
+  }
 
   let files: string[];
   try {
@@ -134,23 +189,16 @@ export async function getCharactersFromServer(
   }
 
   const characters = await Promise.all(
-    files.map(async (file) => {
-      try {
-        const content = await fs.readFile(path.join(charsDir, file), 'utf8');
-        const parsed = JSON.parse(content) as Record<string, unknown>;
-        const normalized = normalizeCharacterRecord(parsed);
-        return healCharacterDerive(
-          normalized.character as unknown as Record<string, unknown>,
-          typeof parsed.schemaVersion === 'number' ? parsed.schemaVersion : 0,
-        ) as unknown as Character;
-      } catch (error) {
-        console.error(`Error reading character file ${file}:`, error);
-        return null;
-      }
-    }),
+    files.map((file) =>
+      readCharacterFile(path.join(charsDir, file), file.slice(0, -5)),
+    ),
   );
 
-  return characters.filter((character): character is Character => !!character);
+  const value = characters.filter(
+    (character): character is Character => !!character,
+  );
+  characterListCache.set(charsDir, { signature, value });
+  return value;
 }
 
 /**
@@ -164,25 +212,7 @@ export async function getCharacterFromServer(
   const filePath = resolveCharacterFile(getCharactersDir(userId), characterId);
   if (!filePath) return null;
 
-  let content: string;
-  try {
-    content = await fs.readFile(filePath, 'utf8');
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException)?.code === 'ENOENT') return null;
-    throw error;
-  }
-
-  try {
-    const parsed = JSON.parse(content) as Record<string, unknown>;
-    const normalized = normalizeCharacterRecord(parsed);
-    return healCharacterDerive(
-      normalized.character as unknown as Record<string, unknown>,
-      typeof parsed.schemaVersion === 'number' ? parsed.schemaVersion : 0,
-    ) as unknown as Character;
-  } catch (e) {
-    console.error(`Character file ${characterId} is corrupted:`, e);
-    return null;
-  }
+  return readCharacterFile(filePath, characterId);
 }
 
 // ЗАПИСЬ: лист всегда живёт в своём файле, поэтому конфликтов между
@@ -216,6 +246,7 @@ export async function saveCharacterToServer(
   await withSheetLock(sheetLockKey(userId, character.id), () =>
     writeJsonAtomic(filePath, derived as unknown as Character),
   );
+  invalidateCharacterList(userId);
   if (!existed) {
     // Маркер «лист создан» — без полного diff. История best-effort: её сбой
     // не должен отменять создание листа. Не-UUID (старые тесты/fixtures)
@@ -328,6 +359,7 @@ export async function updateCharacterOnServer(
       }
 
       await writeJsonAtomic(filePath, derived);
+      invalidateCharacterList(userId);
       return { character: derived, diff };
     },
   );
@@ -365,6 +397,7 @@ export async function deleteCharacterFromServer(
     } catch {
       return false;
     }
+    invalidateCharacterList(userId);
 
     resetWriteSeqGuard(userId, characterId);
     // Ссылка и журнал относятся к удалённому листу: убираем их best-effort,

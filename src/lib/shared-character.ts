@@ -40,9 +40,21 @@ function stripPrivateFields(value: unknown): unknown {
   return value;
 }
 
+/**
+ * Кэш очищенных копий: `getCharacterFromServer` возвращает один и тот же
+ * объект, пока файл не изменился, поэтому повторные гостевые запросы не
+ * копируют большой лист заново. Ключ — сам объект (WeakMap), запись
+ * инвалидируется естественно: после сохранения кэш чтения отдаёт новый объект.
+ */
+const sanitizedForShare = new WeakMap<Character, Character>();
+
 /** Копия листа без uid владельца и служебных полей; исходный объект не меняется. */
 export function sanitizeCharacterForShare(character: Character): Character {
-  return stripPrivateFields(character) as Character;
+  const cached = sanitizedForShare.get(character);
+  if (cached) return cached;
+  const sanitized = stripPrivateFields(character) as Character;
+  sanitizedForShare.set(character, sanitized);
+  return sanitized;
 }
 
 function stripPrivatePreview(preview: string): string {

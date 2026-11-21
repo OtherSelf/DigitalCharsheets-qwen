@@ -5,6 +5,7 @@ import { getUserDir, getUserFile, getUsersDir } from './data-dir';
 import { withDataLock } from './data-lock';
 import { writeJsonAtomic } from './fs-atomic';
 import { defaultDisplayName, isUid, normalizeLogin } from './ids';
+import { readThroughCache } from './read-cache';
 import { isUserRole, type UserRole } from './user-role';
 
 /**
@@ -136,26 +137,17 @@ export function normalizeStoredUser(
  */
 export async function readStoredUser(uid: string): Promise<StoredUser | null> {
   if (!isUid(uid)) return null;
-  const file = getUserFile(uid);
-
-  let mtimeIso: string;
-  try {
-    mtimeIso = (await fs.stat(file)).mtime.toISOString();
-  } catch {
-    return null;
-  }
-
-  try {
-    const parsed = JSON.parse(await fs.readFile(file, 'utf8')) as unknown;
+  return readThroughCache<StoredUser>(getUserFile(uid), (raw, stat) => {
+    const parsed = JSON.parse(raw) as unknown;
     if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
       return null;
     }
-    return normalizeStoredUser(uid, parsed as Record<string, unknown>, mtimeIso)
-      .user;
-  } catch (error) {
-    console.error(`Failed to read user profile ${uid}:`, error);
-    return null;
-  }
+    return normalizeStoredUser(
+      uid,
+      parsed as Record<string, unknown>,
+      new Date(stat.mtimeMs).toISOString(),
+    ).user;
+  });
 }
 
 /** Атомарно записать профиль (каталог создаётся при необходимости). */

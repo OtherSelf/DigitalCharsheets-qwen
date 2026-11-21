@@ -147,6 +147,23 @@ src/lib/* (server-only)
   only used to show/hide the menu item.
 - The data directory is selected by `DCS_DATA_DIR`; the default is `./data`.
 
+## Process-local read cache
+
+`sessions.json`, every `user.json`, `index/logins.json`,
+`settings/game-catalog.json` and each character sheet are parsed once and kept
+in memory. A read is a `stat` plus a signature check on `(ino, mtimeMs, size)`;
+`writeJsonAtomic` invalidates the entry after `rename`, so a write by the same
+process is visible on the next read. An external edit changes the signature and
+is picked up on the next `stat`.
+
+The cache assumes **one Node process per data directory** (D15). Write-through
+invalidation only knows this process's writes; a second process could still
+serve its own copy between edits. Session revocation and account blocking stay
+immediate because the write happens before the response and invalidates the
+sessions/profile entry; a corrupt `sessions.json` still means "no live
+sessions" (fail-closed). The cache stores only the value; it never changes what
+is written to disk.
+
 ## Auth and sessions
 
 - Identity is the immutable `uid` (UUID) stored in `users/<uid>/user.json`.
