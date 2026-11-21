@@ -3,6 +3,7 @@ import { expect, test } from '@playwright/test';
 import {
   expectNoHorizontalOverflow,
   expectNoRawI18nKeys,
+  expectThemeFont,
   gameCharacterId,
   openApp,
   openMobileSection,
@@ -210,6 +211,47 @@ test.describe('лист D&D — планшет', { tag: '@plugin:dnd5e' }, () =>
       await waitForScrollSettled(page);
       await expectNoHorizontalOverflow(page);
       await screenshotPage(page, 'sheet-dnd-tablet-compact-en.png');
+    },
+  );
+});
+
+/**
+ * T2: Forum в титуле/заголовках и крупных числах, но не в лейблах.
+ * Проверяем и `.font-headline`, и `.text-2xl`: если селектор сузили или
+ * правило потерялось, тест падает до сравнения снимков.
+ */
+test.describe('лист D&D — шрифт темы', { tag: '@plugin:dnd5e' }, () => {
+  const numberFamily = (page: import('@playwright/test').Page) =>
+    page
+      .locator('.text-2xl')
+      .first()
+      .evaluate((element) => getComputedStyle(element).fontFamily);
+
+  test(
+    'desktop: Forum в en и ru',
+    { tag: '@desktop' },
+    async ({ page, context }) => {
+      await prepare(context);
+      await openApp(page, sheetPath(gameCharacterId('dnd')));
+      await expectThemeFont(page, 'dhforum');
+      expect((await numberFamily(page)).toLowerCase()).toContain('dhforum');
+
+      await prepare(context, { language: 'ru' });
+      await openApp(page, sheetPath(gameCharacterId('dnd')));
+      const { cyrillicLoaded } = await expectThemeFont(page, 'dhforum');
+      expect(cyrillicLoaded, 'кириллическое подмножество загружено').toBe(true);
+      expect((await numberFamily(page)).toLowerCase()).toContain('dhforum');
+      await expectNoRawI18nKeys(page, 'лист D&D: шрифт (ru)');
+    },
+  );
+
+  test(
+    'mobile: Forum в заголовках',
+    { tag: '@mobile' },
+    async ({ page, context }) => {
+      await prepare(context);
+      await openApp(page, sheetPath(gameCharacterId('dnd')));
+      await expectThemeFont(page, 'dhforum');
     },
   );
 });

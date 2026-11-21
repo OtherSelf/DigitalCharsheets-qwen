@@ -109,7 +109,8 @@
           "border": "350 20% 32%",
           "ring": "355 60% 60%"
         }
-      }
+      },
+      "font": "fonts.ts#pluginFont"
     }
   }
 }
