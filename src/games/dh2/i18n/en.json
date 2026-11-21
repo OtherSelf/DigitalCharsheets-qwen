@@ -228,6 +228,8 @@
   "dh2.meleeWeapons": "Melee Weapons",
   "dh2.monthlyIncome": "Monthly Income",
   "dh2.inventoryLost": "Lost",
+  "dh2.inventoryQuantityShort": "Qty",
+  "dh2.inventoryWeightUnit": "Weight, kg",
   "dh2.inventoryTotals": "Total",
   "dh2.move": "Move",
   "dh2.moveFull": "Full Move",

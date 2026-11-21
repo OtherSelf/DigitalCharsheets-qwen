@@ -2213,47 +2213,60 @@ export const EquipmentInventorySection = React.forwardRef<
                             }
                             className="col-span-2 h-8 text-sm"
                           />
-                          <Input
-                            type="number"
-                            min={1}
-                            step={1}
-                            defaultValue={item.quantity ?? ''}
-                            placeholder="1"
-                            aria-label={t('common.quantity')}
-                            onChange={(e) =>
-                              setEditableInventory(
-                                editableInventory.map((i) =>
-                                  i.id === item.id
-                                    ? {
-                                        ...i,
-                                        quantity: parseQuantity(e.target.value),
-                                      }
-                                    : i,
-                                ),
-                              )
-                            }
-                            className="h-8 text-sm"
-                          />
-                          <Input
-                            type="number"
-                            min={0}
-                            step={0.1}
-                            defaultValue={item.weight ?? ''}
-                            aria-label={t('common.weight')}
-                            onChange={(e) =>
-                              setEditableInventory(
-                                editableInventory.map((i) =>
-                                  i.id === item.id
-                                    ? {
-                                        ...i,
-                                        weight: parseWeight(e.target.value),
-                                      }
-                                    : i,
-                                ),
-                              )
-                            }
-                            className="h-8 text-sm"
-                          />
+                          <div className="space-y-1">
+                            <span className="text-muted-foreground block text-[10px] leading-none">
+                              {t('dh2.inventoryQuantityShort')}
+                            </span>
+                            <Input
+                              type="number"
+                              min={1}
+                              step={1}
+                              defaultValue={item.quantity ?? ''}
+                              placeholder="1"
+                              aria-label={t('common.quantity')}
+                              onChange={(e) =>
+                                setEditableInventory(
+                                  editableInventory.map((i) =>
+                                    i.id === item.id
+                                      ? {
+                                          ...i,
+                                          quantity: parseQuantity(
+                                            e.target.value,
+                                          ),
+                                        }
+                                      : i,
+                                  ),
+                                )
+                              }
+                              className="h-8 text-sm"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <span className="text-muted-foreground block text-[10px] leading-none">
+                              {t('dh2.inventoryWeightUnit')}
+                            </span>
+                            <Input
+                              type="number"
+                              min={0}
+                              step={0.1}
+                              defaultValue={item.weight ?? ''}
+                              placeholder="0.0"
+                              aria-label={t('common.weight')}
+                              onChange={(e) =>
+                                setEditableInventory(
+                                  editableInventory.map((i) =>
+                                    i.id === item.id
+                                      ? {
+                                          ...i,
+                                          weight: parseWeight(e.target.value),
+                                        }
+                                      : i,
+                                  ),
+                                )
+                              }
+                              className="h-8 text-sm"
+                            />
+                          </div>
                           <div className="col-span-2 flex items-center justify-end gap-1">
                             <Checkbox
                               checked={readStatus(item) === 'lost'}
