@@ -641,7 +641,7 @@ test.describe('адаптивность', () => {
   );
 
   test(
-    'минимальный размер тач-целей в шапке',
+    'минимальный размер тач-целей в шапке и рейле',
     { tag: '@mobile' },
     async ({ page, context }) => {
       await prepare(context);
@@ -658,6 +658,18 @@ test.describe('адаптивность', () => {
         expect(box, 'кнопка должна иметь размер').not.toBeNull();
         expect(box!.width, 'ширина тач-цели').toBeGreaterThanOrEqual(32);
         expect(box!.height, 'высота тач-цели').toBeGreaterThanOrEqual(32);
+      }
+
+      // Кнопки компактного рейла — такие же цели, как шапка.
+      await openApp(page, sheetPath(getState().dhId));
+      const railButtons = page.locator('nav button[data-section-id]');
+      const railCount = await railButtons.count();
+      expect(railCount, 'в рейле есть кнопки').toBeGreaterThan(0);
+      for (let index = 0; index < railCount; index += 1) {
+        const box = await railButtons.nth(index).boundingBox();
+        expect(box, 'кнопка рейла имеет размер').not.toBeNull();
+        expect(box!.width, 'ширина кнопки рейла').toBeGreaterThanOrEqual(32);
+        expect(box!.height, 'высота кнопки рейла').toBeGreaterThanOrEqual(32);
       }
     },
   );
