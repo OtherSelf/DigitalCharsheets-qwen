@@ -125,6 +125,7 @@ describe('game-catalog', () => {
     expect(catalog.plugins[FIRST.id]).toEqual({
       enabled: false,
       visibility: FIRST.defaultStatus,
+      useHostTheme: false,
     });
     expect(isModuleEnabled(FIRST.id)).toBe(false);
     expect(getModuleStatus(FIRST.id)).toBe(FIRST.defaultStatus);
@@ -148,11 +149,13 @@ describe('game-catalog', () => {
     expect(readGameCatalog().plugins[SECOND.id]).toEqual({
       enabled: false,
       visibility: 'hidden',
+      useHostTheme: false,
     });
     setModuleEnabled(SECOND.id, true);
     expect(readGameCatalog().plugins[SECOND.id]).toEqual({
       enabled: true,
       visibility: 'hidden',
+      useHostTheme: false,
     });
   });
 

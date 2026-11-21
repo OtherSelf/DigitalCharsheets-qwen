@@ -21,7 +21,11 @@ import {
   listGameModules,
   type AnyGameModule,
 } from '@/games/registry';
-import { setModuleEnabled, setModuleStatus } from '@/lib/game-catalog';
+import {
+  isModuleHostTheme,
+  setModuleEnabled,
+  setModuleStatus,
+} from '@/lib/game-catalog';
 import { authenticateUser } from '@/lib/server-auth';
 import type { UserRole } from '@/lib/user-role';
 import { readStoredUser, writeStoredUser } from '@/lib/user-schema';
@@ -160,6 +164,7 @@ describe('/api/admin/games', () => {
     expect(stored.plugins[FIRST_MODULE.id]).toEqual({
       enabled: true,
       visibility: 'test',
+      useHostTheme: false,
     });
     expect(stored.siteTitle).toBe('Новый стол');
     expect(fs.existsSync(`${dataDir}/settings/game-catalog.json`)).toBe(true);
@@ -261,6 +266,53 @@ describe('админский API: метаданные плагинов и enabl
     }
   });
 
+  it('GET отдаёт семейство игры и useHostTheme по умолчанию false', async () => {
+    const admin = createUser('theme-admin', 'admin');
+    const res = await adminGamesGet(
+      request('/api/admin/games', { headers: sessionHeaders(admin) }),
+    );
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as {
+      games: { id: string; gameNameKey: string; useHostTheme: boolean }[];
+    };
+    const game = body.games.find((item) => item.id === FIRST_MODULE.id)!;
+    expect(game.gameNameKey).toBeTruthy();
+    expect(game.useHostTheme).toBe(false);
+  });
+
+  it('PUT useHostTheme переключает стили и виден в /api/games', async () => {
+    publishAllModules();
+    const admin = createUser('theme-admin-2', 'admin');
+
+    const res = await adminGamesPut(
+      jsonRequest(
+        '/api/admin/games',
+        'PUT',
+        { systemId: FIRST_MODULE.id, useHostTheme: true },
+        admin,
+      ),
+    );
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as {
+      games: { id: string; useHostTheme: boolean }[];
+    };
+    expect(
+      body.games.find((item) => item.id === FIRST_MODULE.id)?.useHostTheme,
+    ).toBe(true);
+    expect(isModuleHostTheme(FIRST_MODULE.id)).toBe(true);
+
+    const publicBody = (await listGames(admin)) as {
+      games: {
+        id: string;
+        editions: { id: string; useHostTheme?: boolean }[];
+      }[];
+    };
+    const edition = publicBody.games
+      .flatMap((game) => game.editions)
+      .find((item) => item.id === FIRST_MODULE.id);
+    expect(edition?.useHostTheme).toBe(true);
+  });
+
   it('PUT enabled переключает плагин, не меняя visibility', async () => {
     const admin = createUser('toggle-admin', 'admin');
     setModuleStatus(FIRST_MODULE.id, 'test');
@@ -283,6 +335,7 @@ describe('админский API: метаданные плагинов и enabl
     expect(stored.plugins[FIRST_MODULE.id]).toEqual({
       enabled: false,
       visibility: 'test',
+      useHostTheme: false,
     });
 
     const on = await adminGamesPut(

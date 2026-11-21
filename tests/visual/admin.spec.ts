@@ -173,3 +173,50 @@ test.describe('admin', () => {
     await screenshotPage(page, 'admin-delete-en.png');
   });
 });
+
+/**
+ * Настройки редакции: первая колонка показывает семейство, вторая — редакцию,
+ * а шестерёнка открывает окно тонких настроек (пока одно — стили ядра).
+ * Переключатель здесь не дёргаем: каталог общий на весь прогон.
+ */
+test.describe('admin — игры и редакции', () => {
+  test.skip(
+    !admin,
+    'нет админского аккаунта в .visual-state.json — запустите npm run test:visual',
+  );
+
+  test('семейство в «Игра», шестерёнка открывает настройки (en)', async ({
+    page,
+    context,
+  }) => {
+    await prepare(context, { account: 'admin', theme: 'light' });
+    await openApp(page, '/admin');
+
+    const heading = page.getByText('Games & editions').first();
+    await heading.scrollIntoViewIfNeeded();
+    await expect(
+      page.getByRole('columnheader', { name: 'Game' }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole('columnheader', { name: 'Edition' }),
+    ).toBeVisible();
+    const settingsButton = page
+      .getByRole('button', { name: /Game settings:/ })
+      .first();
+    const gameRow = settingsButton.locator('xpath=ancestor::tr');
+    await expect(gameRow.locator('td').nth(0)).not.toBeEmpty();
+    await expect(gameRow.locator('td').nth(1)).not.toBeEmpty();
+
+    await settingsButton.click();
+    const dialog = page.getByRole('dialog');
+    await expect(dialog).toBeVisible();
+    await expect(
+      dialog.getByRole('checkbox', { name: "Use the game's theme" }),
+    ).toBeChecked();
+    await expect(dialog.getByRole('link', { name: /Open demo/ })).toBeVisible();
+
+    await screenshotPage(page, 'admin-game-settings-en.png');
+    await page.keyboard.press('Escape');
+    await expect(dialog).not.toBeVisible();
+  });
+});
