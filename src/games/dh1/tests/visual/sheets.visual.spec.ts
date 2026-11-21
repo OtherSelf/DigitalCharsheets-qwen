@@ -240,3 +240,66 @@ test.describe('лист Dark Heresy 1e — планшет', { tag: '@plugin:dh1'
     },
   );
 });
+
+/**
+ * Шрифт темы DH1: заголовки идут Cormorant Garamond в обеих локалях.
+ * Проверяем не только класс на обёртке, но и фактическое семейство дочернего
+ * заголовка — CSS-модуль плагина должен победить утилиту `font-headline`.
+ */
+test.describe('лист Dark Heresy — шрифт темы', { tag: '@plugin:dh1' }, () => {
+  /**
+   * Хост-утилита `font-headline` тянет `space grotesk`, плагин подменяет
+   * семейство на `DHCormorant`. Проверка «первое семейство не хостовое и
+   * файл загружен» ловит и неприменённое правило, и незагруженный woff2.
+   */
+  const expectThemeFont = async (page: import('@playwright/test').Page) => {
+    await expect(page.locator('[data-font-ready]').first()).toBeAttached();
+    const { family, first, firstLoaded, cyrillicLoaded } = await page.evaluate(
+      async () => {
+        await document.fonts.ready;
+        const element = document.querySelector('.font-headline');
+        const family = element ? getComputedStyle(element).fontFamily : '';
+        const first = family.split(',')[0]?.trim().replace(/^"|"$/g, '') ?? '';
+        return {
+          family,
+          first,
+          firstLoaded: first
+            ? document.fonts.check(`600 16px "${first}"`)
+            : false,
+          cyrillicLoaded: first
+            ? document.fonts.check(`600 16px "${first}"`, 'Привет')
+            : false,
+        };
+      },
+    );
+    expect(first.toLowerCase()).toContain('dhcormorant');
+    expect(firstLoaded, `font-family: ${family}`).toBe(true);
+    return { family, cyrillicLoaded };
+  };
+
+  test(
+    'desktop: Cormorant Garamond в en и ru',
+    { tag: '@desktop' },
+    async ({ page, context }) => {
+      await prepare(context);
+      await openApp(page, sheetPath(gameCharacterId('dh')));
+      await expectThemeFont(page);
+
+      await prepare(context, { language: 'ru' });
+      await openApp(page, sheetPath(gameCharacterId('dh')));
+      const { cyrillicLoaded } = await expectThemeFont(page);
+      expect(cyrillicLoaded, 'кириллическое подмножество загружено').toBe(true);
+      await expectNoRawI18nKeys(page, 'лист Dark Heresy: шрифт (ru)');
+    },
+  );
+
+  test(
+    'mobile: шрифт темы применяется',
+    { tag: '@mobile' },
+    async ({ page, context }) => {
+      await prepare(context);
+      await openApp(page, sheetPath(gameCharacterId('dh')));
+      await expectThemeFont(page);
+    },
+  );
+});

@@ -110,6 +110,29 @@
       "HouseRulesDialog",
       "BulkEditor"
     ],
-    "entry": "ui.ts"
+    "entry": "ui.ts",
+    "theme": {
+      "tokens": {
+        "light": {
+          "primary": "42 55% 31%",
+          "primary-foreground": "40 40% 97%",
+          "accent": "45 35% 86%",
+          "accent-foreground": "30 25% 15%",
+          "border": "40 22% 74%",
+          "ring": "42 55% 31%",
+          "radius": "0.375rem"
+        },
+        "dark": {
+          "primary": "42 50% 62%",
+          "primary-foreground": "30 20% 10%",
+          "accent": "40 25% 26%",
+          "accent-foreground": "45 35% 92%",
+          "border": "40 15% 30%",
+          "ring": "42 50% 62%",
+          "radius": "0.375rem"
+        }
+      },
+      "font": "fonts.ts#pluginFont"
+    }
   }
 }

@@ -56,4 +56,6 @@ export const generatedUiLoaders: Readonly<
 
 export const generatedFontLoaders: Readonly<
   Record<string, () => Promise<PluginFont>>
-> = {};
+> = {
+  dh1: () => import('./dh1/fonts').then((module) => module.pluginFont),
+};
