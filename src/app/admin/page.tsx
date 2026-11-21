@@ -251,7 +251,7 @@ export default function AdminPage() {
     <div className="flex h-dvh flex-col">
       <Header title={t('admin.panel')} subtitle={t('admin.panelSubtitle')} />
 
-      <main className="safe-area-bottom flex-1 overflow-y-auto p-4 md:p-8">
+      <main className="safe-area-bottom flex flex-1 flex-col overflow-y-auto p-4 md:p-8 [&>*]:w-full [&>*]:min-w-0">
         <div className="mx-auto max-w-6xl space-y-6">
           {error && (
             <div className="bg-destructive/15 text-destructive rounded-md p-3 text-sm">

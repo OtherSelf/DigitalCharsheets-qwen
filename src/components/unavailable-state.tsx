@@ -41,7 +41,7 @@ export function UnavailableState({
   return (
     <div className="flex h-dvh flex-col">
       <Header backHref="/" />
-      <main className="flex flex-1 flex-col p-4 md:p-6">
+      <main className="flex flex-1 flex-col p-4 md:p-6 [&>*]:w-full [&>*]:min-w-0">
         <div className="flex flex-1 items-center justify-center">
           <Card className="w-full max-w-md" data-testid={testId}>
             <CardHeader>

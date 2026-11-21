@@ -33,46 +33,50 @@ export function SiteFooter() {
     : '';
 
   return (
-    <footer
-      data-testid="site-footer"
-      aria-label={t('footer.label')}
-      className="text-muted-foreground mt-8 border-t px-4 pt-3 pb-4 text-xs"
-    >
-      <div className="mx-auto flex max-w-3xl flex-wrap items-center justify-center gap-x-3 gap-y-1 text-center">
-        {info && (
-          <span
-            className="font-mono text-[11px] tracking-tight tabular-nums"
-            title={details}
-            data-testid="site-footer-version"
+    // Обёртка — flex-элемент страницы: `mt-auto` прижимает футер к низу
+    // экрана на короткой странице, а `shrink-0` не даёт ему схлопнуться.
+    <div className="mt-auto shrink-0 pt-8">
+      <footer
+        data-testid="site-footer"
+        aria-label={t('footer.label')}
+        className="text-muted-foreground border-t px-4 pt-3 pb-4 text-xs"
+      >
+        <div className="mx-auto flex max-w-3xl flex-wrap items-center justify-center gap-x-3 gap-y-1 text-center">
+          {info && (
+            <span
+              className="font-mono text-[11px] tracking-tight tabular-nums"
+              title={details}
+              data-testid="site-footer-version"
+            >
+              {formatVersionLabel(info)}
+            </span>
+          )}
+          {info?.branch && (
+            <span className="hidden md:inline" data-testid="site-footer-branch">
+              {info.branch}
+            </span>
+          )}
+          <a
+            className={linkClass}
+            href={REPOSITORY_URL}
+            target="_blank"
+            rel="noopener noreferrer"
           >
-            {formatVersionLabel(info)}
-          </span>
-        )}
-        {info?.branch && (
-          <span className="hidden md:inline" data-testid="site-footer-branch">
-            {info.branch}
-          </span>
-        )}
-        <a
-          className={linkClass}
-          href={REPOSITORY_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          {t('footer.repository')}
-        </a>
-        <a
-          className={linkClass}
-          href={LICENSE_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          {t('footer.license')}
-        </a>
-        <Link className={linkClass} href="/about">
-          {t('footer.about')}
-        </Link>
-      </div>
-    </footer>
+            {t('footer.repository')}
+          </a>
+          <a
+            className={linkClass}
+            href={LICENSE_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {t('footer.license')}
+          </a>
+          <Link className={linkClass} href="/about">
+            {t('footer.about')}
+          </Link>
+        </div>
+      </footer>
+    </div>
   );
 }

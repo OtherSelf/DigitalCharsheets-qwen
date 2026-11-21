@@ -255,7 +255,7 @@ export default function CharacterPage() {
                 onSectionChange={handleSectionChange}
               />
             )}
-            <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
+            <main className="flex flex-1 flex-col overflow-y-auto p-4 md:p-6 lg:p-8 [&>*]:w-full [&>*]:min-w-0">
               {isDisabled && (
                 <SheetStateBanner
                   testId="game-disabled-banner"
