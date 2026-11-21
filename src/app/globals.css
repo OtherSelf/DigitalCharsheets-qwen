@@ -412,3 +412,17 @@ body {
   flex: 1 1 auto;
   min-height: 0;
 }
+
+/* LANDMARK: IOS_FOCUS_ZOOM_GUARD
+   iOS Safari увеличивает страницу, когда фокус попадает в поле с
+   font-size меньше 16 px. Плотные поля листов (text-xs/10px, в том числе
+   при масштабе интерфейса 80%) зумили экран на каждом вводе. Правило
+   срабатывает только на фокусе: в покое плотные таблицы не меняются.
+   `!important` нужен потому, что утилиты `.text-*` объявлены с ним же. */
+@media (max-width: 767px) {
+  input:focus,
+  select:focus,
+  textarea:focus {
+    font-size: 16px !important;
+  }
+}
