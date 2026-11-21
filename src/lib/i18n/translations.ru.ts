@@ -49,6 +49,8 @@ export const ruTranslations: Record<string, string> = {
   'common.showEditButtons': 'Показать кнопки редактирования',
   'common.hideEditButtons': 'Скрыть кнопки редактирования',
   'common.inspiration': 'Вдохновение',
+  'common.decrease': 'Уменьшить',
+  'common.increase': 'Увеличить',
   'common.characterName': 'Имя персонажа',
   'common.description': 'Описание',
   'common.current': 'Текущее',
