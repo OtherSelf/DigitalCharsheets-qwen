@@ -325,6 +325,12 @@ bash scripts/visual.sh --base-url http://127.0.0.1:3000
   named after a section must contain the section. When the sheet is shorter than
   the viewport the scroll stops at the end: the section stays visible, which is
   what the test asserts instead of an exact zero offset.
+- Touch targets: ordinary buttons are at least 32×32 px below 768 px; the
+  dialog and sheet close buttons (test ids `dialog-close` / `sheet-close`) and
+  destructive icon buttons are at least 40×40 px. The DH characteristic dots
+  keep their 12 px look but have a 24×24 hit box (the `dot` prop of `Checkbox`):
+  the compact grid does not fit a bigger square, so a click test checks the edge
+  of the enlarged box.
 
 ### Admin screenshots
 
