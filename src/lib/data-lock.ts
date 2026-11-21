@@ -39,6 +39,56 @@ function delay(ms: number): Promise<void> {
  */
 let localTurn: Promise<void> = Promise.resolve();
 
+/**
+ * Состояние per-key локов. Ключ — `sheet:<uid>/<id>`; разные ключи пишутся
+ * параллельно, один и тот же — строго по очереди. Глобальный лок (регистрация,
+ * удаление аккаунта, каталог) исключает ВСЕ ключевые операции: он ждёт, пока
+ * activeKeys опустеет, а новые ключевые операции ждут, пока он снят.
+ *
+ * Это in-process координатор; сам файловый мьютекс (mkdir) остался только в
+ * глобальном локе. Однопроцессность подтверждена владельцем (Q9).
+ */
+let globalHeld = false;
+let globalWaiters = 0;
+let activeKeys = 0;
+const keyChains = new Map<string, Promise<void>>();
+const lockWaiters = new Set<() => void>();
+
+function notifyLockWaiters(): void {
+  for (const wake of lockWaiters) wake();
+  lockWaiters.clear();
+}
+
+async function waitUntil(predicate: () => boolean): Promise<void> {
+  while (!predicate()) {
+    await new Promise<void>((resolve) => {
+      lockWaiters.add(resolve);
+    });
+  }
+}
+
+/**
+ * Короткая критическая секция для изменения globalHeld/activeKeys. Без неё
+ * ключевой лок и глобальный могли одновременно увидеть «свободно» между
+ * двумя await и войти вместе.
+ */
+let decisionChain: Promise<void> = Promise.resolve();
+
+async function withDecision<T>(fn: () => T | Promise<T>): Promise<T> {
+  let release!: () => void;
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  const previous = decisionChain;
+  decisionChain = previous.then(() => gate);
+  await previous;
+  try {
+    return await fn();
+  } finally {
+    release();
+  }
+}
+
 async function lockAgeMs(lockDir: string): Promise<number> {
   try {
     return Date.now() - (await fs.stat(lockDir)).mtimeMs;
@@ -48,10 +98,56 @@ async function lockAgeMs(lockDir: string): Promise<number> {
 }
 
 /**
+ * Лок одного листа. Однофайловые записи разных листов не ждут друг друга;
+ * глобальные операции (удаление аккаунта/листа, каталог, сессии) ждут все
+ * ключевые и блокируют новые.
+ */
+export async function withSheetLock<T>(
+  key: string,
+  fn: () => Promise<T> | T,
+): Promise<T> {
+  const previous = keyChains.get(key) ?? Promise.resolve();
+  let releaseKey!: () => void;
+  const gate = new Promise<void>((resolve) => {
+    releaseKey = resolve;
+  });
+  const chain = previous.then(() => gate);
+  keyChains.set(key, chain);
+
+  await previous;
+  try {
+    // Право войти выдаётся короткой секцией: проверка globalHeld и
+    // activeKeys += 1 не должны пересекаться с глобальным локом.
+    for (;;) {
+      const acquired = await withDecision(() => {
+        // Если глобальный лок уже ждёт, новые ключевые не влезают вперёд:
+        // иначе поток записей мог бы откладывать удаление аккаунта бесконечно.
+        if (globalHeld || globalWaiters > 0) return false;
+        activeKeys += 1;
+        return true;
+      });
+      if (acquired) break;
+      await waitUntil(() => !globalHeld && globalWaiters === 0);
+    }
+    try {
+      return await fn();
+    } finally {
+      activeKeys -= 1;
+      notifyLockWaiters();
+    }
+  } finally {
+    releaseKey();
+    if (keyChains.get(key) === chain) keyChains.delete(key);
+    notifyLockWaiters();
+  }
+}
+
+/**
  * Выполнить `fn` под эксклюзивным локом каталога данных.
  * `fn` может быть асинхронным; лок держится до завершения его промиса.
  */
 export async function withDataLock<T>(fn: () => Promise<T> | T): Promise<T> {
+  globalWaiters += 1;
   let releaseLocal!: () => void;
   const localGate = new Promise<void>((resolve) => {
     releaseLocal = resolve;
@@ -61,6 +157,18 @@ export async function withDataLock<T>(fn: () => Promise<T> | T): Promise<T> {
   await previous;
 
   try {
+    // Глобальный лок исключает все per-key операции: ждём активные и
+    // блокируем новые, пока держим globalHeld. Право входа выдаёт та же
+    // короткая секция, что и у ключевых локов.
+    for (;;) {
+      const acquired = await withDecision(() => {
+        if (globalHeld || activeKeys > 0) return false;
+        globalHeld = true;
+        return true;
+      });
+      if (acquired) break;
+      await waitUntil(() => activeKeys === 0);
+    }
     const dataDir = getDataDir();
     await fs.mkdir(dataDir, { recursive: true });
     const lockDir = getDataLockDir();
@@ -100,6 +208,9 @@ export async function withDataLock<T>(fn: () => Promise<T> | T): Promise<T> {
       }
     }
   } finally {
+    globalHeld = false;
+    globalWaiters -= 1;
+    notifyLockWaiters();
     releaseLocal();
   }
 }

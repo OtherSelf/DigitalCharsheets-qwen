@@ -9,7 +9,7 @@ import {
 } from './character-history';
 import { normalizeCharacterRecord } from './character-version';
 import { getCharactersDir, getUserDir } from './data-dir';
-import { withDataLock } from './data-lock';
+import { withDataLock, withSheetLock } from './data-lock';
 import { writeJsonAtomic } from './fs-atomic';
 import { diffCharacterRecords } from './history-diff';
 import { isUid } from './ids';
@@ -52,6 +52,11 @@ async function ensureCharactersDir(userId: string): Promise<string> {
  */
 const MAX_TRACKED_PAGES = 8;
 const lastSeqBySheet = new Map<string, Map<string, number>>();
+
+/** Ключ per-sheet лока: один лист — один ресурс. */
+function sheetLockKey(userId: string, characterId: string): string {
+  return `sheet:${userId}/${characterId}`;
+}
 
 export interface WriteToken {
   page: string;
@@ -208,7 +213,7 @@ export async function saveCharacterToServer(
   const derived = applyCharacterDerive(
     normalized as unknown as Record<string, unknown>,
   );
-  await withDataLock(() =>
+  await withSheetLock(sheetLockKey(userId, character.id), () =>
     writeJsonAtomic(filePath, derived as unknown as Character),
   );
   if (!existed) {
@@ -263,66 +268,69 @@ export async function updateCharacterOnServer(
   // Чтение, проверка seq и запись — под одним локом. Иначе после перевода fs
   // на async два PUT могли прочитать один и тот же файл, оба пройти guard и
   // перезаписать друг друга в обратном порядке.
-  const result = await withDataLock(async () => {
-    let content: string;
-    try {
-      content = await fs.readFile(filePath, 'utf8');
-    } catch (error) {
-      if ((error as NodeJS.ErrnoException)?.code === 'ENOENT') return null;
-      throw error;
-    }
+  const result = await withSheetLock(
+    sheetLockKey(userId, characterId),
+    async () => {
+      let content: string;
+      try {
+        content = await fs.readFile(filePath, 'utf8');
+      } catch (error) {
+        if ((error as NodeJS.ErrnoException)?.code === 'ENOENT') return null;
+        throw error;
+      }
 
-    let character: Character;
-    try {
-      character = normalizeCharacterRecord(
-        JSON.parse(content) as Record<string, unknown>,
-      ).character;
-    } catch (e) {
-      // Битый файл: НЕ перезаписываем его молча — иначе потеряем остатки данных.
-      console.error(`Character file ${characterId} is corrupted:`, e);
-      throw new Error(`Character file ${characterId} is corrupted`);
-    }
+      let character: Character;
+      try {
+        character = normalizeCharacterRecord(
+          JSON.parse(content) as Record<string, unknown>,
+        ).character;
+      } catch (e) {
+        // Битый файл: НЕ перезаписываем его молча — иначе потеряем остатки данных.
+        console.error(`Character file ${characterId} is corrupted:`, e);
+        throw new Error(`Character file ${characterId} is corrupted`);
+      }
 
-    if (isStaleWrite(userId, characterId, options.writeToken)) {
-      console.warn(
-        `Ignoring stale write for ${userId}/${characterId} ` +
-          `(page ${options.writeToken?.page}, seq ${options.writeToken?.seq})`,
+      if (isStaleWrite(userId, characterId, options.writeToken)) {
+        console.warn(
+          `Ignoring stale write for ${userId}/${characterId} ` +
+            `(page ${options.writeToken?.page}, seq ${options.writeToken?.seq})`,
+        );
+        return { character, diff: null };
+      }
+
+      // Нормализация принимает «сырой» объект: спред Partial<Character> поверх
+      // union-типа TS вывести не может, а normalize всё равно пересобирает лист.
+      const updated: Character = normalizeCharacterRecord({
+        ...character,
+        ...data,
+      } as Record<string, unknown>).character;
+
+      // Производные пересчитываются до diff и до записи: в файл и в историю
+      // попадает то, что увидит игрок, а не то, что прислал клиент.
+      const derived = applyCharacterDerive(
+        updated as unknown as Record<string, unknown>,
+      ) as unknown as Character;
+
+      // Считаем diff до добавления userId владельца: служебные поля в историю не
+      // попадают, а сравнение идёт по содержанию листа.
+      const diff = diffCharacterRecords(
+        character as unknown as Record<string, unknown>,
+        derived as unknown as Record<string, unknown>,
       );
-      return { character, diff: null };
-    }
 
-    // Нормализация принимает «сырой» объект: спред Partial<Character> поверх
-    // union-типа TS вывести не может, а normalize всё равно пересобирает лист.
-    const updated: Character = normalizeCharacterRecord({
-      ...character,
-      ...data,
-    } as Record<string, unknown>).character;
+      // Привязка к владельцу. Поле не входит в тип Character (это метаданные,
+      // авторизация — по каталогу и cookie), но на диске оно должно быть: так
+      // «плоский» бэкап и диагностика видят, чей это лист. Дописываем, если лист
+      // пришёл из миграции/импорта без него.
+      const withOwner = derived as unknown as Record<string, unknown>;
+      if (!withOwner.userId) {
+        withOwner.userId = userId;
+      }
 
-    // Производные пересчитываются до diff и до записи: в файл и в историю
-    // попадает то, что увидит игрок, а не то, что прислал клиент.
-    const derived = applyCharacterDerive(
-      updated as unknown as Record<string, unknown>,
-    ) as unknown as Character;
-
-    // Считаем diff до добавления userId владельца: служебные поля в историю не
-    // попадают, а сравнение идёт по содержанию листа.
-    const diff = diffCharacterRecords(
-      character as unknown as Record<string, unknown>,
-      derived as unknown as Record<string, unknown>,
-    );
-
-    // Привязка к владельцу. Поле не входит в тип Character (это метаданные,
-    // авторизация — по каталогу и cookie), но на диске оно должно быть: так
-    // «плоский» бэкап и диагностика видят, чей это лист. Дописываем, если лист
-    // пришёл из миграции/импорта без него.
-    const withOwner = derived as unknown as Record<string, unknown>;
-    if (!withOwner.userId) {
-      withOwner.userId = userId;
-    }
-
-    await writeJsonAtomic(filePath, derived);
-    return { character: derived, diff };
-  });
+      await writeJsonAtomic(filePath, derived);
+      return { character: derived, diff };
+    },
+  );
 
   if (!result) return null;
 
