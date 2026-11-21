@@ -325,6 +325,11 @@ bash scripts/visual.sh --base-url http://127.0.0.1:3000
   named after a section must contain the section. When the sheet is shorter than
   the viewport the scroll stops at the end: the section stays visible, which is
   what the test asserts instead of an exact zero offset.
+- The guest page `/share/<token>` renders outside the compact mode: there is no
+  section rail, so the guest gets the whole sheet, and below 768 px the panels
+  are stacked by a rule in the plugin's `sheet.module.css`. `share.spec.ts`
+  asserts that neither the document nor `main` overflows and that all sections
+  are present, for both seeded sheets.
 - Touch targets: ordinary buttons are at least 32×32 px below 768 px; the
   dialog and sheet close buttons (test ids `dialog-close` / `sheet-close`) and
   destructive icon buttons are at least 40×40 px. The DH characteristic dots
