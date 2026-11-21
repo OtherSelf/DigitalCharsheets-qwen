@@ -55,13 +55,11 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${inter.variable} ${spaceGrotesk.variable} h-full`}
     >
-      <head>
-        <title>Digital Character Sheets</title>
-        <meta
-          name="viewport"
-          content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes"
-        />
-      </head>
+      {/*
+        Ни `<title>`, ни `<meta name="viewport">` здесь не дублируются: их
+        отдают `metadata` и `viewport` выше. App Router вставляет их в <head>
+        сам, а ручная копия давала два viewport-тега в документе.
+      */}
       <body className="font-body h-full overflow-x-hidden antialiased">
         <ThemeProvider
           attribute="class"
