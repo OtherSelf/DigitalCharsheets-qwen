@@ -13,6 +13,7 @@ import {
   signInViaUI,
   waitForScrollSettled,
 } from './helpers';
+import { readGuestShare } from './state';
 
 const isMobile = () => test.info().project.name === 'mobile';
 
@@ -637,6 +638,106 @@ test.describe('адаптивность', () => {
       expect(missingSections, 'секции из CompactNav не найдены в DOM').toEqual(
         [],
       );
+    },
+  );
+
+  test(
+    '/about: страница о проекте без логина',
+    { tag: '@mobile' },
+    async ({ page, context }) => {
+      await prepare(context, { authenticated: false });
+      await openApp(page, '/about');
+
+      await expect(
+        page.getByRole('heading', { name: 'About this project' }),
+      ).toBeVisible();
+      await expect(page.getByTestId('about-version')).toContainText(
+        '0.0.0-test',
+      );
+      for (const block of [
+        'What it is',
+        'Stack',
+        'Your data',
+        'Disclaimer',
+        'Links',
+      ]) {
+        await expect(
+          page.getByText(block, { exact: true }),
+          `блок «${block}»`,
+        ).toBeVisible();
+      }
+      await expect(page.getByTestId('site-footer')).toBeVisible();
+      await expectNoHorizontalOverflow(page);
+    },
+  );
+
+  test(
+    'футер ядра: версия, репозиторий, лицензия и /about',
+    { tag: '@mobile' },
+    async ({ page, context }) => {
+      await prepare(context);
+
+      const expectFooter = async (label: string) => {
+        const footer = page.getByTestId('site-footer');
+        await footer.scrollIntoViewIfNeeded();
+        await expect(footer, `${label}: футер есть`).toBeVisible();
+        await expect(
+          footer.getByTestId('site-footer-version'),
+          `${label}: версия в футере`,
+        ).toContainText('0.0.0-test');
+        await expect(footer.getByTestId('site-footer-version')).toContainText(
+          '0000000',
+        );
+
+        const repo = footer.getByRole('link', { name: 'Source code' });
+        await expect(repo).toHaveAttribute('target', '_blank');
+        await expect(repo).toHaveAttribute('rel', /noopener/);
+        await expect(repo).toHaveAttribute(
+          'href',
+          'https://github.com/OtherSelf/DigitalCharsheets-qwen',
+        );
+        await expect(
+          footer.getByRole('link', { name: 'MIT license' }),
+        ).toHaveAttribute('target', '_blank');
+        await expect(
+          footer.getByRole('link', { name: 'About' }),
+        ).toHaveAttribute('href', '/about');
+
+        // Ветка — только с `md`: на телефоне строка компактная.
+        await expect(footer.getByTestId('site-footer-branch')).toBeHidden();
+        await expectNoHorizontalOverflow(page);
+      };
+
+      for (const path of [
+        '/',
+        '/about',
+        '/login',
+        '/demo',
+        '/settings',
+        '/stats-editor',
+        '/new',
+      ]) {
+        await openApp(page, path);
+        await expectFooter(path);
+      }
+
+      await openApp(page, sheetPath(getState().dhId));
+      await expectFooter('лист персонажа');
+
+      await openApp(page, `/character/${getState().dhId}/history`);
+      await expectFooter('история листа');
+
+      // Админка — под админским аккаунтом.
+      await prepare(context, { account: 'admin' });
+      await openApp(page, '/admin');
+      await expectFooter('/admin');
+
+      // Гостевая ссылка — без логина.
+      const share = readGuestShare();
+      test.skip(!share, 'нет DCS_VISUAL_DATA_DIR: ссылка не засеяна');
+      await prepare(context, { authenticated: false });
+      await openApp(page, `/share/${share!.token}`);
+      await expectFooter('гостевая ссылка');
     },
   );
 
