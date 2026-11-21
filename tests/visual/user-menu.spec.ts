@@ -55,11 +55,9 @@ test.describe('profile menu', () => {
     await expect(
       menu.getByRole('menuitem', { name: 'Administration' }),
     ).toHaveCount(0);
-    // Подпись версии в подвале меню. Визуальный стенд задаёт фиктивный коммит
-    // (DCS_GIT_COMMIT=0000000), поэтому форма — «vX.Y.Z · 0000000»; регэксп
-    // намеренно свободный, чтобы работал и режим --base-url против чужого
-    // сервера.
-    await expect(menu.getByText(/v\d+\.\d+\.\d+/)).toBeVisible();
+    // Версия переехала в футер страницы: в меню профиля её больше нет,
+    // иначе подпись дублировалась бы в двух местах.
+    await expect(menu.getByText(/v\d+\.\d+\.\d+/)).toHaveCount(0);
 
     await screenshotPage(page, 'profile-menu-en.png');
   });
@@ -144,7 +142,7 @@ test.describe('profile menu', () => {
     await expect(
       menu.getByRole('menuitem', { name: 'Administration' }),
     ).toBeVisible();
-    await expect(menu.getByText(/v\d+\.\d+\.\d+/)).toBeVisible();
+    await expect(menu.getByText(/v\d+\.\d+\.\d+/)).toHaveCount(0);
 
     await screenshotPage(page, 'profile-menu-admin-en.png');
   });
@@ -174,7 +172,7 @@ test.describe('profile menu', () => {
     await expect(menu.getByRole('menuitem', { name: 'Админка' })).toHaveCount(
       0,
     );
-    await expect(menu.getByText(/v\d+\.\d+\.\d+/)).toBeVisible();
+    await expect(menu.getByText(/v\d+\.\d+\.\d+/)).toHaveCount(0);
 
     await screenshotPage(page, 'profile-menu-ru.png');
   });
