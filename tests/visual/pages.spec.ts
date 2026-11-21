@@ -839,6 +839,26 @@ test.describe('общие страницы', () => {
     ).toBeVisible();
   });
 
+  test('about — о проекте (en)', async ({ page, context }) => {
+    await prepare(context, { authenticated: false });
+    await openApp(page, '/about');
+
+    await expect(
+      page.getByRole('heading', { name: 'About this project' }),
+    ).toBeVisible();
+    await screenshotPage(page, 'about-en.png');
+  });
+
+  test('about — о проекте (ru)', async ({ page, context }) => {
+    await prepare(context, { authenticated: false, language: 'ru' });
+    await openApp(page, '/about');
+
+    await expect(
+      page.getByRole('heading', { name: 'О проекте' }),
+    ).toBeVisible();
+    await screenshotPage(page, 'about-ru.png');
+  });
+
   test('stats-editor — массовый редактор (en)', async ({ page, context }) => {
     await prepare(context);
     await openApp(page, '/stats-editor');
