@@ -13,9 +13,9 @@ import {
 import { getCharactersDir, getUserDir } from './data-dir';
 import { withDataLock } from './data-lock';
 import { isUid, normalizeLogin } from './ids';
-import { passwordPolicyError } from './security/password';
+import { hashPasswordAsync, passwordPolicyError } from './security/password';
 import { revokeAllSessionsForUser } from './security/sessions';
-import { hashPassword, type StoredUser } from './server-auth';
+import { type StoredUser } from './server-auth';
 import { resetWriteSeqGuard } from './server-storage';
 import { revokeSharesForUser } from './shares';
 import {
@@ -248,7 +248,7 @@ export async function updateUserByAdmin(
           }
           const policyError = passwordPolicyError(patch.password);
           if (policyError) return invalid(policyError);
-          updated.passwordHash = hashPassword(patch.password);
+          updated.passwordHash = await hashPasswordAsync(patch.password);
           // Стартовый пароль сменён — предупреждение больше не актуально.
           delete updated.mustChangePassword;
           passwordChanged = true;

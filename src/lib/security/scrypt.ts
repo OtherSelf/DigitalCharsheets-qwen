@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import { promisify } from 'util';
 
 /**
  * ─── LANDMARK: SCRYPT HASHES ────────────────────────────────────────────────
@@ -24,6 +25,13 @@ const KEY_LENGTH = 32;
 const MAX_N = 1_048_576;
 const MAX_R = 32;
 const MAX_P = 16;
+
+const scryptAsync = promisify(crypto.scrypt) as (
+  secret: string,
+  salt: Buffer,
+  keylen: number,
+  options: crypto.ScryptOptions,
+) => Promise<Buffer>;
 
 /** Похоже ли значение на scrypt-хэш этого формата. */
 export function isScryptHash(value: unknown): value is string {
@@ -86,6 +94,54 @@ export function verifySecretHash(stored: unknown, secret: string): boolean {
   let derived: Buffer;
   try {
     derived = crypto.scryptSync(secret, parsed.salt, parsed.hash.length, {
+      N: parsed.n,
+      r: parsed.r,
+      p: parsed.p,
+      maxmem: SCRYPT_MAXMEM,
+    });
+  } catch {
+    // Битые параметры в файле: это не совпадение, а испорченные данные.
+    return false;
+  }
+  if (derived.length !== parsed.hash.length) return false;
+  return crypto.timingSafeEqual(derived, parsed.hash);
+}
+
+/**
+ * Асинхронные варианты для запросного пути: scrypt считается в libuv-пуле,
+ * поэтому вход и смена пароля не блокируют event loop. Формат хэша, соль и
+ * параметры совпадают с синхронными версиями, поэтому старые значения
+ * читаются без миграции.
+ */
+export async function hashSecretAsync(secret: string): Promise<string> {
+  const salt = crypto.randomBytes(SALT_BYTES);
+  const derived = await scryptAsync(secret, salt, KEY_LENGTH, {
+    N: SCRYPT_N,
+    r: SCRYPT_R,
+    p: SCRYPT_P,
+    maxmem: SCRYPT_MAXMEM,
+  });
+  return [
+    SCRYPT_PREFIX,
+    SCRYPT_N,
+    SCRYPT_R,
+    SCRYPT_P,
+    salt.toString('base64url'),
+    derived.toString('base64url'),
+  ].join('$');
+}
+
+export async function verifySecretHashAsync(
+  stored: unknown,
+  secret: string,
+): Promise<boolean> {
+  if (!isScryptHash(stored)) return false;
+  const parsed = parseScryptHash(stored);
+  if (!parsed) return false;
+
+  let derived: Buffer;
+  try {
+    derived = await scryptAsync(secret, parsed.salt, parsed.hash.length, {
       N: parsed.n,
       r: parsed.r,
       p: parsed.p,

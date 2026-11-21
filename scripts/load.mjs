@@ -48,6 +48,7 @@ const DEFAULTS = {
   duration: 10,
   scenarios: ALL_SCENARIOS,
   keepData: false,
+  threadpoolSize: 0,
 };
 
 function usage() {
@@ -62,6 +63,7 @@ function usage() {
   --sheets N        листов на пользователя (по умолчанию 10)
   --duration SEC    длительность сценария (по умолчанию 10)
   --scenarios LIST  через запятую: ${ALL_SCENARIOS.join(', ')}
+  --threadpool-size N  UV_THREADPOOL_SIZE сервера (по умолчанию системный, 4)
   --keep-data       не удалять временный data-dir
   -h, --help        эта справка`;
 }
@@ -103,6 +105,9 @@ function parseArgs(argv) {
           .split(',')
           .map((value) => value.trim())
           .filter(Boolean);
+        break;
+      case '--threadpool-size':
+        options.threadpoolSize = Number(next());
         break;
       case '--keep-data':
         options.keepData = true;
@@ -414,6 +419,9 @@ async function main() {
     dataDir,
     port,
     loopDelayFile,
+    env: options.threadpoolSize
+      ? { UV_THREADPOOL_SIZE: String(options.threadpoolSize) }
+      : {},
   });
 
   const startedAt = new Date();
@@ -467,6 +475,7 @@ async function main() {
         sheetsPerUser: options.sheets,
         durationSec: options.duration,
         scenarios: scenarios.map((entry) => entry.name),
+        threadpoolSize: options.threadpoolSize || 'default',
       },
       note:
         options.appDir === process.cwd()

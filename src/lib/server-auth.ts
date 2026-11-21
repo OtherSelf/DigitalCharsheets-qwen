@@ -6,14 +6,15 @@ import { defaultDisplayName, isUid, newUid, normalizeLogin } from './ids';
 import { LocalUser } from './local-storage';
 import {
   hashPassword,
+  hashPasswordAsync,
   passwordPolicyError,
-  verifyPassword,
+  verifyPasswordAsync,
 } from './security/password';
 import {
-  hashRecoveryPhrase,
+  hashRecoveryPhraseAsync,
   isRecoveryPhraseHash,
   normalizePhrase,
-  recoveryPhraseMatches,
+  recoveryPhraseMatchesAsync,
 } from './security/phrase';
 import { revokeAllSessionsForUser } from './security/sessions';
 import {
@@ -144,10 +145,11 @@ async function rehashPassword(
     const fresh = (await readStoredUser(stored.uid)) ?? stored;
     // Пока проверялся пароль, его могли сменить: перезаписываем только если
     // на диске всё ещё старый хэш от этого же пароля.
-    if (!verifyPassword(fresh.passwordHash, password).needsRehash) return fresh;
+    if (!(await verifyPasswordAsync(fresh.passwordHash, password)).needsRehash)
+      return fresh;
     const updated: StoredUser = {
       ...fresh,
-      passwordHash: hashPassword(password),
+      passwordHash: await hashPasswordAsync(password),
       updatedAt: new Date().toISOString(),
     };
     await writeStoredUser(stored.uid, updated);
@@ -183,7 +185,7 @@ async function authenticateExisting(
     };
   }
 
-  const check = verifyPassword(stored.passwordHash, password);
+  const check = await verifyPasswordAsync(stored.passwordHash, password);
   if (!check.valid) {
     return {
       success: false,
@@ -280,7 +282,7 @@ async function persistNewAccount(
   if (recoveryPhrase !== undefined && recoveryPhrase.trim() !== '') {
     // На диск — только хэш: фраза доказывает владение аккаунтом (см.
     // security/phrase.ts).
-    user.recoveryPhrase = hashRecoveryPhrase(recoveryPhrase);
+    user.recoveryPhrase = await hashRecoveryPhraseAsync(recoveryPhrase);
   }
   if (options.mustChangePassword) {
     user.mustChangePassword = true;
@@ -358,7 +360,7 @@ export async function registerUser(
     }
     return persistNewAccount(
       login,
-      hashPassword(password),
+      await hashPasswordAsync(password),
       displayName,
       recoveryPhrase,
     );
@@ -410,7 +412,11 @@ export async function authenticateUser(
     if (racedUid)
       return authenticateExisting(racedUid, password, { locked: true });
 
-    return persistNewAccount(login, hashPassword(password), displayName);
+    return persistNewAccount(
+      login,
+      await hashPasswordAsync(password),
+      displayName,
+    );
   });
 }
 
@@ -481,7 +487,7 @@ export async function updateUserProfile(
       }
 
       if (changesPassword) {
-        const check = verifyPassword(
+        const check = await verifyPasswordAsync(
           current.passwordHash,
           options.currentPassword ?? '',
         );
@@ -512,7 +518,7 @@ export async function updateUserProfile(
         role: normalizeUserRole(current.role),
         isBlocked: !!current.isBlocked,
         passwordHash: changesPassword
-          ? hashPassword(newPassword as string)
+          ? await hashPasswordAsync(newPassword as string)
           : current.passwordHash,
         updatedAt: new Date().toISOString(),
       };
@@ -527,7 +533,8 @@ export async function updateUserProfile(
         if (newRecoveryPhrase.trim() === '') {
           delete updated.recoveryPhrase;
         } else {
-          updated.recoveryPhrase = hashRecoveryPhrase(newRecoveryPhrase);
+          updated.recoveryPhrase =
+            await hashRecoveryPhraseAsync(newRecoveryPhrase);
         }
       }
 
@@ -605,7 +612,7 @@ export async function deleteUserAccount(
             reason: 'not_found',
           };
         }
-        if (!verifyPassword(stored.passwordHash, password).valid) {
+        if (!(await verifyPasswordAsync(stored.passwordHash, password)).valid) {
           return {
             success: false,
             error: 'Incorrect password.',
@@ -680,7 +687,7 @@ export async function setRecoveryPhrase(
       }
       await writeStoredUser(uid, {
         ...stored,
-        recoveryPhrase: hashRecoveryPhrase(phrase),
+        recoveryPhrase: await hashRecoveryPhraseAsync(phrase),
         updatedAt: new Date().toISOString(),
       });
       return true;
@@ -742,7 +749,12 @@ export async function verifyRecovery(
     };
   }
 
-  if (!recoveryPhraseMatches(storedUser.recoveryPhrase, recoveryPhraseInput)) {
+  if (
+    !(await recoveryPhraseMatchesAsync(
+      storedUser.recoveryPhrase,
+      recoveryPhraseInput,
+    ))
+  ) {
     return {
       success: false,
       reason: 'mismatch',
@@ -763,7 +775,7 @@ export async function verifyRecovery(
         }
         await writeStoredUser(uid, {
           ...fresh,
-          recoveryPhrase: hashRecoveryPhrase(fresh.recoveryPhrase),
+          recoveryPhrase: await hashRecoveryPhraseAsync(fresh.recoveryPhrase),
           updatedAt: new Date().toISOString(),
         });
       });
@@ -840,14 +852,15 @@ export async function resetCredentialsWithToken(
 
         const updated: StoredUser = {
           ...stored,
-          passwordHash: hashPassword(newPassword),
+          passwordHash: await hashPasswordAsync(newPassword),
           updatedAt: new Date().toISOString(),
         };
         if (
           newRecoveryPhrase !== undefined &&
           newRecoveryPhrase.trim() !== ''
         ) {
-          updated.recoveryPhrase = hashRecoveryPhrase(newRecoveryPhrase);
+          updated.recoveryPhrase =
+            await hashRecoveryPhraseAsync(newRecoveryPhrase);
         }
         // `email` — legacy-поле логина: логин живёт в `username`.
         delete updated.email;
@@ -917,7 +930,7 @@ export async function hashLegacyRecoveryPhrases(): Promise<HashLegacyPhrasesRepo
           return;
         await writeStoredUser(record.uid, {
           ...fresh,
-          recoveryPhrase: hashRecoveryPhrase(fresh.recoveryPhrase),
+          recoveryPhrase: await hashRecoveryPhraseAsync(fresh.recoveryPhrase),
           updatedAt: new Date().toISOString(),
         });
         report.updated += 1;
@@ -983,7 +996,7 @@ export async function createServiceAdmin(
 
       const created = await persistNewAccount(
         login,
-        hashPassword(password),
+        await hashPasswordAsync(password),
         displayName,
         undefined,
         { role: 'admin', mustChangePassword: true },

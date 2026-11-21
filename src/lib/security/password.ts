@@ -1,6 +1,12 @@
 import crypto from 'crypto';
 
-import { hashSecret, isScryptHash, verifySecretHash } from './scrypt';
+import {
+  hashSecret,
+  hashSecretAsync,
+  isScryptHash,
+  verifySecretHash,
+  verifySecretHashAsync,
+} from './scrypt';
 import { safeStringEqual } from './timing';
 
 /**
@@ -77,4 +83,40 @@ export function passwordPolicyError(password: unknown): string | null {
     return `Password must be at most ${MAX_PASSWORD_LENGTH} characters.`;
   }
   return null;
+}
+
+/** Асинхронный хэш для запросного пути (не блокирует event loop). */
+export function hashPasswordAsync(password: string): Promise<string> {
+  return hashSecretAsync(password);
+}
+
+/**
+ * Асинхронная проверка для запросного пути. Логика и ответы совпадают с
+ * `verifyPassword`; старый sha256 проверяется тем же синхронным кодом.
+ */
+export async function verifyPasswordAsync(
+  storedHash: unknown,
+  password: unknown,
+): Promise<PasswordCheck> {
+  if (typeof storedHash !== 'string' || storedHash === '') {
+    return { valid: false, needsRehash: false };
+  }
+  if (typeof password !== 'string' || password === '') {
+    return { valid: false, needsRehash: false };
+  }
+
+  if (isScryptHash(storedHash)) {
+    return {
+      valid: await verifySecretHashAsync(storedHash, password),
+      needsRehash: false,
+    };
+  }
+
+  if (LEGACY_SHA256_RE.test(storedHash)) {
+    const legacy = crypto.createHash('sha256').update(password).digest('hex');
+    const valid = safeStringEqual(storedHash, legacy);
+    return { valid, needsRehash: valid };
+  }
+
+  return { valid: false, needsRehash: false };
 }

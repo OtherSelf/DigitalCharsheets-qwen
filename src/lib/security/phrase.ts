@@ -1,4 +1,10 @@
-import { hashSecret, isScryptHash, verifySecretHash } from './scrypt';
+import {
+  hashSecret,
+  hashSecretAsync,
+  isScryptHash,
+  verifySecretHash,
+  verifySecretHashAsync,
+} from './scrypt';
 import { safeStringEqual } from './timing';
 
 /**
@@ -61,4 +67,25 @@ export function recoveryPhraseMatches(stored: unknown, input: string): boolean {
   }
 
   return verifySecretHash(stored, normalized);
+}
+
+/** Асинхронный хэш фразы для запросного пути. */
+export function hashRecoveryPhraseAsync(phrase: string): Promise<string> {
+  return hashSecretAsync(normalizePhrase(phrase));
+}
+
+/** Асинхронная проверка фразы для запросного пути. */
+export async function recoveryPhraseMatchesAsync(
+  stored: unknown,
+  input: string,
+): Promise<boolean> {
+  const normalized = normalizePhrase(input);
+  if (!normalized) return false;
+  if (typeof stored !== 'string' || stored === '') return false;
+
+  if (!isRecoveryPhraseHash(stored)) {
+    return safeStringEqual(normalizePhrase(stored), normalized);
+  }
+
+  return verifySecretHashAsync(stored, normalized);
 }
