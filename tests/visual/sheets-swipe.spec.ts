@@ -47,7 +47,7 @@ test.describe('правые шторки — свайп', { tag: '@mobile' }, ()
   test('журнал опыта закрывается свайпом', async ({ page, context }) => {
     await prepare(context);
     await openApp(page, sheetPath(getState().dhId));
-    await openMobileSection(page, 'Progression');
+    await openMobileSection(page, 'Progression', 'progression-section');
 
     await page.getByRole('button', { name: 'XP log' }).click();
     const dialog = page.getByRole('dialog');
@@ -63,7 +63,7 @@ test.describe('правые шторки — свайп', { tag: '@mobile' }, ()
   }) => {
     await prepare(context);
     await openApp(page, sheetPath(getState().dhId));
-    await openMobileSection(page, 'Info');
+    await openMobileSection(page, 'Info', 'info-section');
 
     const backstory = page.getByRole('button', { name: 'Backstory' }).first();
     await backstory.scrollIntoViewIfNeeded();

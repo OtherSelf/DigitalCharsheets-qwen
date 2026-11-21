@@ -111,19 +111,23 @@ test.describe('лист D&D — чтение', { tag: '@plugin:dnd5e' }, () => {
 
       await screenshotPage(page, 'sheet-dnd-mobile-info-en.png');
 
-      await openMobileSection(page, 'Ability Scores');
+      await openMobileSection(page, 'Ability Scores', 'stats-section');
       await expect(
         page.locator('#saving-throws-card:visible').first(),
       ).toBeVisible();
       await screenshotPage(page, 'sheet-dnd-mobile-stats-en.png');
 
-      await openMobileSection(page, 'Combat Stats');
+      await openMobileSection(page, 'Combat Stats', 'combat-section');
       await expect(
         page.locator('#hit-points-card:visible').first(),
       ).toBeVisible();
       await screenshotPage(page, 'sheet-dnd-mobile-combat-en.png');
 
-      await openMobileSection(page, 'Inventory & Attunement');
+      await openMobileSection(
+        page,
+        'Inventory & Attunement',
+        'inventory-section',
+      );
       await expect(
         page.locator('#inventory-box:visible').first(),
       ).toBeVisible();

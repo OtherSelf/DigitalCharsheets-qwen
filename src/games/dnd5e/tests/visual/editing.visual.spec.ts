@@ -158,7 +158,7 @@ test.describe('редактирование D&D', { tag: '@plugin:dnd5e' }, () =
       await expect(statsBar.locator('input[type="number"]')).toHaveCount(6);
       await screenshotPage(page, 'sheet-dnd-mobile-edit-stats-en.png');
 
-      await openMobileSection(page, 'Ability Scores');
+      await openMobileSection(page, 'Ability Scores', 'stats-section');
       await discardUnsavedChanges(page);
       const skills = page.locator('#skills-card:visible').first();
       await startEditing(skills);
@@ -167,7 +167,11 @@ test.describe('редактирование D&D', { tag: '@plugin:dnd5e' }, () =
       );
       await screenshotPage(page, 'sheet-dnd-mobile-edit-skills-en.png');
 
-      await openMobileSection(page, 'Inventory & Attunement');
+      await openMobileSection(
+        page,
+        'Inventory & Attunement',
+        'inventory-section',
+      );
       await discardUnsavedChanges(page);
       const inventory = page.locator('#inventory-box:visible').first();
       await inventory

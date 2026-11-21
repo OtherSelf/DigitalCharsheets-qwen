@@ -88,13 +88,13 @@ test.describe('лист Dark Heresy — чтение', { tag: '@plugin:dh1' }, (
 
       await screenshotPage(page, 'sheet-dh-mobile-info-en.png');
 
-      await openMobileSection(page, 'Progression');
+      await openMobileSection(page, 'Progression', 'progression-section');
       await screenshotPage(page, 'sheet-dh-mobile-progression-en.png');
 
-      await openMobileSection(page, 'Skills');
+      await openMobileSection(page, 'Skills', 'skills-section');
       await screenshotPage(page, 'sheet-dh-mobile-skills-en.png');
 
-      await openMobileSection(page, 'Talents & Traits');
+      await openMobileSection(page, 'Talents & Traits', 'talents-section');
       await expect(page.getByText('Total Recall')).toBeVisible();
       await screenshotPage(page, 'sheet-dh-mobile-talents-en.png');
 

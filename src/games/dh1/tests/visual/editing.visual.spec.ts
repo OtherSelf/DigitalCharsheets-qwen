@@ -125,7 +125,7 @@ test.describe('редактирование Dark Heresy', { tag: '@plugin:dh1' }
       ).toHaveValue('34');
       await screenshotPage(page, 'sheet-dh-mobile-edit-characteristics-en.png');
 
-      await openMobileSection(page, 'Skills');
+      await openMobileSection(page, 'Skills', 'skills-section');
       const skills = page.locator('#skills-talents-content:visible').first();
       await startEditing(skills);
       await expectInputValue(skills, 'Awareness (Per)');

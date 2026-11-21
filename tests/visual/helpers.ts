@@ -379,17 +379,34 @@ export async function screenshotElement(
 export async function openMobileSection(
   page: Page,
   label: string,
-  sectionId?: string,
+  sectionId: string,
 ): Promise<void> {
   await page
     .getByRole('navigation')
     .getByRole('button', { name: label, exact: true })
     .click();
   await waitForScrollSettled(page);
+  // Скроллим ту же секцию, что выбрал пользователь, и тем же способом, что и
+  // приложение: считаем смещение внутри `main` и делим на эффективный масштаб
+  // (оболочка UI Scale живёт на `transform: scale()`). Сброс в начало
+  // страницы здесь недопустим: кадр секции обязан содержать саму секцию.
   await page.evaluate((id) => {
-    document.querySelector('main')?.scrollTo({ top: 0 });
-    if (id) document.getElementById(id)?.scrollIntoView({ block: 'start' });
-  }, sectionId ?? '');
+    const scroller = document.querySelector('main');
+    const element = document.getElementById(id);
+    if (!scroller || !element) return;
+    const scrollerRect = scroller.getBoundingClientRect();
+    const scale =
+      scroller.clientHeight > 0
+        ? scrollerRect.height / scroller.clientHeight
+        : 1;
+    const padding =
+      Number.parseFloat(getComputedStyle(scroller).paddingTop) || 0;
+    const top =
+      scroller.scrollTop +
+      (element.getBoundingClientRect().top - scrollerRect.top) / (scale || 1) -
+      padding;
+    scroller.scrollTo({ top });
+  }, sectionId);
   await waitForScrollSettled(page);
   await page.waitForTimeout(100);
 }
