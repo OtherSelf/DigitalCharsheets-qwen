@@ -9,7 +9,28 @@ import { X } from 'lucide-react';
 import { useTranslation } from '@/context/language-context';
 import { cn } from '@/lib/utils';
 
-const Sheet = SheetPrimitive.Root;
+/**
+ * Закрытие правой шторки свайпом: `SheetContent` не знает `onOpenChange`,
+ * поэтому Root передаёт колбэк через контекст. Значение `undefined` — шторка
+ * вне `Sheet` (или закрытие не контролируется), свайп просто выключен.
+ */
+const SheetOpenContext = React.createContext<
+  ((open: boolean) => void) | undefined
+>(undefined);
+
+function Sheet({
+  onOpenChange,
+  children,
+  ...props
+}: React.ComponentProps<typeof SheetPrimitive.Root>) {
+  return (
+    <SheetOpenContext.Provider value={onOpenChange}>
+      <SheetPrimitive.Root onOpenChange={onOpenChange} {...props}>
+        {children}
+      </SheetPrimitive.Root>
+    </SheetOpenContext.Provider>
+  );
+}
 
 const SheetTrigger = SheetPrimitive.Trigger;
 
@@ -56,17 +77,107 @@ interface SheetContentProps
     React.ComponentPropsWithoutRef<typeof SheetPrimitive.Content>,
     VariantProps<typeof sheetVariants> {}
 
+const SWIPE_IGNORE =
+  'input, textarea, select, [contenteditable="true"], [data-sheet-swipe-ignore]';
+const SWIPE_MIN_DISTANCE = 80;
+const SWIPE_MIN_RATIO = 0.25;
+const SWIPE_MIN_VELOCITY = 0.5;
+
 const SheetContent = React.forwardRef<
   React.ElementRef<typeof SheetPrimitive.Content>,
   SheetContentProps
->(({ side = 'right', className, children, ...props }, ref) => {
+>(({ side = 'right', className, style, children, ...props }, ref) => {
   const { t } = useTranslation();
+  const closeSheet = React.useContext(SheetOpenContext);
+  const [dragX, setDragX] = React.useState(0);
+  const [dragging, setDragging] = React.useState(false);
+  const gesture = React.useRef<{
+    pointerId: number;
+    startX: number;
+    startY: number;
+    startedAt: number;
+    active: boolean;
+  } | null>(null);
+
+  const horizontal = side === 'right' || side === 'left';
+  const swipeEnabled = horizontal && Boolean(closeSheet);
+
+  const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (!swipeEnabled || event.pointerType !== 'touch') return;
+    if ((event.target as HTMLElement | null)?.closest(SWIPE_IGNORE)) return;
+    gesture.current = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      startedAt: event.timeStamp,
+      active: false,
+    };
+  };
+
+  const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    const current = gesture.current;
+    if (!current || current.pointerId !== event.pointerId) return;
+
+    const dx = event.clientX - current.startX;
+    const dy = event.clientY - current.startY;
+
+    if (!current.active) {
+      const direction = side === 'right' ? dx > 0 : dx < 0;
+      if (!direction || Math.abs(dx) <= Math.abs(dy)) return;
+      current.active = true;
+      setDragging(true);
+      event.currentTarget.setPointerCapture?.(event.pointerId);
+    }
+
+    event.preventDefault();
+    setDragX(side === 'right' ? Math.max(0, dx) : Math.min(0, dx));
+  };
+
+  const finishGesture = (event: React.PointerEvent<HTMLDivElement>) => {
+    const current = gesture.current;
+    gesture.current = null;
+    if (!current?.active) return;
+
+    const dx = event.clientX - current.startX;
+    const width = event.currentTarget.offsetWidth;
+    const elapsed = Math.max(1, event.timeStamp - current.startedAt);
+    const velocity = Math.abs(dx) / elapsed;
+    const farEnough =
+      Math.abs(dx) > Math.max(SWIPE_MIN_DISTANCE, width * SWIPE_MIN_RATIO);
+
+    setDragging(false);
+    setDragX(0);
+    if (farEnough || velocity > SWIPE_MIN_VELOCITY) {
+      closeSheet?.(false);
+    }
+  };
+
+  const cancelGesture = () => {
+    gesture.current = null;
+    setDragging(false);
+    setDragX(0);
+  };
+
   return (
     <SheetPortal>
       <SheetOverlay />
       <SheetPrimitive.Content
         ref={ref}
-        className={cn(sheetVariants({ side }), className)}
+        className={cn(
+          sheetVariants({ side }),
+          dragging && 'select-none',
+          className,
+        )}
+        style={{
+          ...style,
+          touchAction: swipeEnabled ? 'pan-y' : undefined,
+          transform: dragX ? `translateX(${dragX}px)` : undefined,
+          transition: dragging ? 'none' : undefined,
+        }}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={finishGesture}
+        onPointerCancel={cancelGesture}
         {...props}
       >
         {children}
