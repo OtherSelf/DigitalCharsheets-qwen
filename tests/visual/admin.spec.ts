@@ -28,6 +28,8 @@ import { readAdminState } from './state';
 
 const admin = readAdminState();
 
+const isMobile = () => test.info().project.name === 'mobile';
+
 /** Открыть /admin под служебным админом и отфильтровать демо-аккаунты. */
 async function openAdminUsers(
   page: Page,
@@ -50,6 +52,42 @@ test.describe('admin', () => {
   test.skip(
     !admin,
     'нет админского аккаунта в .visual-state.json — запустите npm run test:visual',
+  );
+
+  test(
+    'mobile: игры — карточки и доступные переключатели',
+    { tag: '@mobile' },
+    async ({ page, context }) => {
+      await prepare(context, {
+        account: 'admin',
+        theme: 'light',
+        language: 'en',
+      });
+      await openApp(page, '/admin');
+
+      const cards = page.locator('[data-testid^="admin-game-card-"]');
+      await expect(cards.first()).toBeVisible();
+      await expectNoHorizontalOverflow(page);
+
+      // Таблица в 820 px на телефоне уезжала за экран вместе с селектом
+      // статуса и галочкой видимости; в карточке всё должно быть в пределах
+      // вьюпорта.
+      const offscreen = await cards.first().evaluate((card) => {
+        const width = window.innerWidth;
+        return Array.from(
+          card.querySelectorAll('button, input, [role="combobox"], label'),
+        )
+          .filter((element) => {
+            const box = element.getBoundingClientRect();
+            return box.width > 0 && (box.right > width + 1 || box.left < -1);
+          })
+          .map((element) => element.outerHTML.slice(0, 80));
+      });
+      expect(offscreen, 'в карточке нет элементов за экраном').toEqual([]);
+
+      await expect(cards.first().getByRole('combobox')).toBeVisible();
+      await expect(cards.first().getByRole('checkbox')).toBeVisible();
+    },
   );
 
   test('admin — список пользователей (en)', async ({ page, context }) => {
@@ -194,18 +232,30 @@ test.describe('admin — игры и редакции', () => {
 
     const heading = page.getByText('Games & editions').first();
     await heading.scrollIntoViewIfNeeded();
-    await expect(
-      page.getByRole('columnheader', { name: 'Game' }),
-    ).toBeVisible();
-    await expect(
-      page.getByRole('columnheader', { name: 'Edition' }),
-    ).toBeVisible();
     const settingsButton = page
       .getByRole('button', { name: /Game settings:/ })
       .first();
-    const gameRow = settingsButton.locator('xpath=ancestor::tr');
-    await expect(gameRow.locator('td').nth(0)).not.toBeEmpty();
-    await expect(gameRow.locator('td').nth(1)).not.toBeEmpty();
+
+    if (isMobile()) {
+      // На телефоне таблица заменена карточками: проверяем содержимое
+      // карточки, а не колонки.
+      const card = settingsButton.locator(
+        'xpath=ancestor::*[@data-testid][starts-with(@data-testid,"admin-game-card-")]',
+      );
+      await expect(card).toHaveCount(1);
+      await expect(card.getByRole('combobox')).toBeVisible();
+      await expect(card.getByRole('checkbox')).toBeVisible();
+    } else {
+      await expect(
+        page.getByRole('columnheader', { name: 'Game' }),
+      ).toBeVisible();
+      await expect(
+        page.getByRole('columnheader', { name: 'Edition' }),
+      ).toBeVisible();
+      const gameRow = settingsButton.locator('xpath=ancestor::tr');
+      await expect(gameRow.locator('td').nth(0)).not.toBeEmpty();
+      await expect(gameRow.locator('td').nth(1)).not.toBeEmpty();
+    }
 
     await settingsButton.click();
     const dialog = page.getByRole('dialog');
