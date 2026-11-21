@@ -78,6 +78,12 @@ export interface VisualStateFile {
    */
   guest?: VisualAccount;
   /**
+   * Второй администратор — только для проверки шрифта Sandbox. Отдельный,
+   * чтобы созданный лист не попадал на дашборд основного админа и в его
+   * снимки профильного меню.
+   */
+  sandboxAdmin?: VisualAccount;
+  /**
    * Служебный администратор временного сервера. Появляется, только когда
    * global-setup знает DCS_DATA_DIR (запуск через scripts/visual.sh). Без
    * него админские снимки честно пропускаются.
@@ -136,6 +142,9 @@ function readStateFile(): VisualStateFile {
     workers: parsed.workers.map(normalizeAccount),
     ...(parsed.admin ? { admin: normalizeAccount(parsed.admin) } : {}),
     ...(parsed.guest ? { guest: normalizeAccount(parsed.guest) } : {}),
+    ...(parsed.sandboxAdmin
+      ? { sandboxAdmin: normalizeAccount(parsed.sandboxAdmin) }
+      : {}),
   };
 }
 
@@ -212,6 +221,18 @@ export function readGuestShare(): NonNullable<VisualAccount['share']> | null {
   if (!fs.existsSync(STATE_FILE)) return null;
   const file = readStateFile();
   return file.guest?.share ?? null;
+}
+
+/**
+ * Администратор для сценария Sandbox: свой аккаунт, чтобы песочный лист не
+ * попадал в снимки основного админа. `null` — нет data-dir или аккаунт не
+ * подготовлен; тест тогда пропускается.
+ */
+export function readSandboxAdminState(): VisualState | null {
+  if (!fs.existsSync(STATE_FILE)) return null;
+  const file = readStateFile();
+  if (!file.sandboxAdmin) return null;
+  return { baseURL: file.baseURL, ...file.sandboxAdmin };
 }
 
 export function readAllAccounts(): VisualAccount[] {

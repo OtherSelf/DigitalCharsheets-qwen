@@ -9,14 +9,17 @@ import {
 import {
   collectPageErrors,
   expectNoRawI18nKeys,
+  expectThemeFont,
   getState,
   openApp,
   openRegisterForm,
   prepare,
   registerViaUI,
   screenshotPage,
+  sheetPath,
   signInViaUI,
 } from './helpers';
+import { readSandboxAdminState } from './state';
 
 /**
  * Общие (не зависящие от системы) страницы.
@@ -1075,4 +1078,34 @@ test.describe('демо и настройки профиля', () => {
 
     await screenshotPage(page, 'settings-delete-account-ru.png');
   });
+});
+
+/**
+ * Sandbox — единственная боевая игра без собственного visual-набора: её лист
+ * виден только сотрудникам, поэтому шрифт проверяем под админом. Персонажа
+ * создаём через API, чтобы не заводить фикстуру ради одного теста.
+ */
+test.describe('Sandbox — шрифт темы', () => {
+  test(
+    'заголовок карточки в Forum',
+    { tag: '@desktop' },
+    async ({ page, context }) => {
+      // Отдельный админ: воркеру sandbox-лист запрещён, а общий админ
+      // попал бы в снимки профильного меню с лишней карточкой.
+      test.skip(!readSandboxAdminState(), 'нет второго админа для Sandbox');
+      await prepare(context, { account: 'sandboxAdmin', theme: 'light' });
+      const created = await page.request.post('/api/characters', {
+        data: { systemId: 'sandbox', name: 'Sandbox Font' },
+      });
+      expect([200, 201], 'создание sandbox-листа').toContain(created.status());
+      const { id } = (await created.json()) as { id: string };
+
+      try {
+        await openApp(page, sheetPath(id));
+        await expectThemeFont(page, 'dhforum');
+      } finally {
+        await page.request.delete(`/api/characters/${id}`);
+      }
+    },
+  );
 });
