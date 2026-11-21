@@ -28,6 +28,7 @@ import type {
   BulkEditorValue,
 } from '@/games/types';
 import { useAllGameUiSlots } from '@/hooks/use-game-ui-slots';
+import { useViewportFlags } from '@/hooks/use-viewport-flags';
 import { type Character } from '@/lib/types';
 
 /**
@@ -83,6 +84,7 @@ function BulkTableCard({
   onSave: (charId: string) => void;
 }) {
   const { t } = useTranslation();
+  const { isSmallScreen } = useViewportFlags();
   const editionName = table.editionNameKey
     ? t(table.editionNameKey)
     : undefined;
@@ -100,66 +102,132 @@ function BulkTableCard({
         <CardTitle>{title}</CardTitle>
         <CardDescription>{t(table.descriptionKey)}</CardDescription>
       </CardHeader>
-      <CardContent className="overflow-x-auto">
-        <div className="space-y-2" style={{ minWidth: table.minWidth }}>
-          <div
-            className={`text-muted-foreground grid items-center ${gapClass} border-b pb-2 text-xs font-semibold`}
-            style={{ gridTemplateColumns: gridTemplate }}
-          >
-            <span>{t('common.characterName')}</span>
-            {table.columns.map((column) => (
-              <span key={column.key} className="text-center">
-                {t(column.labelKey)}
-              </span>
-            ))}
-            <span></span>
+      <CardContent>
+        {/*
+          Телефон: карточка на персонажа, поля в две колонки с подписями —
+          таблица с min-width 700–900 px на 412 px показывала только левую
+          половину и резала значения посреди слова.
+        */}
+        {isSmallScreen && (
+          <div className="space-y-3">
+            {characters.map((character) => {
+              const edit = edits[character.id];
+              if (!edit) return null;
+              return (
+                <div
+                  key={character.id}
+                  className="space-y-2 rounded-lg border p-3"
+                  data-testid={`bulk-card-${module.id}-${table.id}`}
+                >
+                  <p className="truncate text-sm font-semibold">
+                    {character.name}
+                  </p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {table.columns.map((column) => (
+                      <label key={column.key} className="space-y-1">
+                        <span className="text-muted-foreground block text-[10px] leading-tight font-semibold uppercase">
+                          {t(column.labelKey)}
+                        </span>
+                        <Input
+                          type={column.type ?? 'number'}
+                          value={edit.values[column.key] ?? ''}
+                          min={column.min}
+                          max={column.max}
+                          aria-label={t(column.labelKey)}
+                          onChange={(event) =>
+                            onChange(
+                              character.id,
+                              column.key,
+                              event.target.value,
+                            )
+                          }
+                          className="h-8 text-center text-sm"
+                        />
+                      </label>
+                    ))}
+                  </div>
+                  <Button
+                    size="sm"
+                    variant={edit.saved ? 'outline' : 'default'}
+                    onClick={() => onSave(character.id)}
+                    className="h-9 w-full"
+                  >
+                    {edit.saved ? (
+                      <Check className="h-4 w-4" />
+                    ) : (
+                      <Save className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+              );
+            })}
           </div>
+        )}
 
-          {characters.map((character) => {
-            const edit = edits[character.id];
-            if (!edit) return null;
-            return (
+        {!isSmallScreen && (
+          <div className="overflow-x-auto">
+            <div className="space-y-2" style={{ minWidth: table.minWidth }}>
               <div
-                key={character.id}
-                className={`grid items-center ${gapClass}`}
+                className={`text-muted-foreground grid items-center ${gapClass} border-b pb-2 text-xs font-semibold`}
                 style={{ gridTemplateColumns: gridTemplate }}
-                data-testid={`bulk-row-${module.id}-${table.id}`}
               >
-                <span
-                  className="truncate text-sm font-medium"
-                  title={character.name}
-                >
-                  {character.name}
-                </span>
+                <span>{t('common.characterName')}</span>
                 {table.columns.map((column) => (
-                  <Input
-                    key={column.key}
-                    type={column.type ?? 'number'}
-                    value={edit.values[column.key] ?? ''}
-                    min={column.min}
-                    max={column.max}
-                    onChange={(event) =>
-                      onChange(character.id, column.key, event.target.value)
-                    }
-                    className="h-8 text-center text-sm"
-                  />
+                  <span key={column.key} className="text-center">
+                    {t(column.labelKey)}
+                  </span>
                 ))}
-                <Button
-                  size="sm"
-                  variant={edit.saved ? 'outline' : 'default'}
-                  onClick={() => onSave(character.id)}
-                  className="h-8"
-                >
-                  {edit.saved ? (
-                    <Check className="h-4 w-4" />
-                  ) : (
-                    <Save className="h-4 w-4" />
-                  )}
-                </Button>
+                <span></span>
               </div>
-            );
-          })}
-        </div>
+
+              {characters.map((character) => {
+                const edit = edits[character.id];
+                if (!edit) return null;
+                return (
+                  <div
+                    key={character.id}
+                    className={`grid items-center ${gapClass}`}
+                    style={{ gridTemplateColumns: gridTemplate }}
+                    data-testid={`bulk-row-${module.id}-${table.id}`}
+                  >
+                    <span
+                      className="truncate text-sm font-medium"
+                      title={character.name}
+                    >
+                      {character.name}
+                    </span>
+                    {table.columns.map((column) => (
+                      <Input
+                        key={column.key}
+                        type={column.type ?? 'number'}
+                        value={edit.values[column.key] ?? ''}
+                        min={column.min}
+                        max={column.max}
+                        aria-label={t(column.labelKey)}
+                        onChange={(event) =>
+                          onChange(character.id, column.key, event.target.value)
+                        }
+                        className="h-8 text-center text-sm"
+                      />
+                    ))}
+                    <Button
+                      size="sm"
+                      variant={edit.saved ? 'outline' : 'default'}
+                      onClick={() => onSave(character.id)}
+                      className="h-8"
+                    >
+                      {edit.saved ? (
+                        <Check className="h-4 w-4" />
+                      ) : (
+                        <Save className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
