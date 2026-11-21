@@ -11,6 +11,7 @@ import {
   seededCharacterPayload,
   sheetPath,
   signInViaUI,
+  waitForScrollSettled,
 } from './helpers';
 
 const isMobile = () => test.info().project.name === 'mobile';
@@ -515,12 +516,12 @@ test.describe('адаптивность', () => {
       await prepare(context);
       await openApp(page, sheetPath(getState().dndId));
 
-      for (const [label, selector] of [
-        ['Ability Scores', '#saving-throws-card'],
-        ['Combat Stats', '#hit-points-card'],
-        ['Inventory & Attunement', '#inventory-box'],
+      for (const [label, selector, sectionId] of [
+        ['Ability Scores', '#saving-throws-card', 'stats-section'],
+        ['Combat Stats', '#hit-points-card', 'combat-section'],
+        ['Inventory & Attunement', '#inventory-box', 'inventory-section'],
       ] as const) {
-        await openMobileSection(page, label);
+        await openMobileSection(page, label, sectionId);
         await expect(page.locator(selector + ':visible').first()).toBeVisible();
         await expectNoHorizontalOverflow(page);
       }
@@ -535,8 +536,8 @@ test.describe('адаптивность', () => {
       await openApp(page, sheetPath(getState().dhId));
 
       for (const [label, selector, sectionId] of [
-        ['Skills', 'main', undefined],
-        ['Talents & Traits', 'main', undefined],
+        ['Skills', '#skills-section', 'skills-section'],
+        ['Talents & Traits', '#talents-section', 'talents-section'],
         ['Equipment', '#equipment-section', 'equipment-section'],
         ['Inventory', '#inventory-section', 'inventory-section'],
       ] as const) {
@@ -544,6 +545,98 @@ test.describe('адаптивность', () => {
         await expect(page.locator(selector + ':visible').first()).toBeVisible();
         await expectNoHorizontalOverflow(page);
       }
+    },
+  );
+
+  test(
+    'контракт CompactNav: каждый пункт рейла ведёт к своей секции',
+    { tag: '@mobile' },
+    async ({ page, context }) => {
+      await prepare(context);
+      const missingSections: string[] = [];
+      page.on('console', (message) => {
+        if (
+          message.type() === 'warning' &&
+          message.text().includes('[sheet]')
+        ) {
+          missingSections.push(message.text());
+        }
+      });
+
+      for (const characterId of [getState().dndId, getState().dhId]) {
+        await openApp(page, sheetPath(characterId));
+
+        const sectionIds = await page
+          .locator('nav button[data-section-id]')
+          .evaluateAll((nodes) =>
+            nodes.map((node) => (node as HTMLElement).dataset.sectionId ?? ''),
+          );
+        expect(sectionIds.length, 'в рейле есть пункты').toBeGreaterThan(0);
+
+        for (const sectionId of sectionIds) {
+          // Прокручиваем в конец, чтобы нажатие проверяло именно переход:
+          // со сброшенным в ноль скроллом секция и так оказалась бы сверху.
+          await page
+            .locator('main')
+            .evaluate((element) =>
+              element.scrollTo({ top: element.scrollHeight }),
+            );
+          await waitForScrollSettled(page);
+
+          await page
+            .locator(`nav button[data-section-id="${sectionId}"]`)
+            .click();
+          await waitForScrollSettled(page);
+
+          const geometry = await page.evaluate((id) => {
+            const scroller = document.querySelector('main');
+            const section = document.getElementById(id);
+            if (!scroller || !section) return null;
+            const scrollerRect = scroller.getBoundingClientRect();
+            const sectionRect = section.getBoundingClientRect();
+            return {
+              top: sectionRect.top - scrollerRect.top,
+              bottom: sectionRect.bottom - scrollerRect.top,
+              height: sectionRect.height,
+              padding:
+                Number.parseFloat(getComputedStyle(scroller).paddingTop) || 0,
+              viewport: scroller.clientHeight,
+              atBottom:
+                scroller.scrollTop + scroller.clientHeight >=
+                scroller.scrollHeight - 2,
+            };
+          }, sectionId);
+
+          expect(
+            geometry,
+            `секция «${sectionId}» не найдена в DOM`,
+          ).not.toBeNull();
+          const g = geometry!;
+          const description = `${sectionId}: верх в ${Math.round(g.top)} px от main, высота ${Math.round(g.height)}, у конца: ${g.atBottom}`;
+
+          // Якорь на скрытом по высоте узле проходил бы проверку
+          // существования, но ничего не показывал.
+          expect(g.height, `${sectionId}: секция не схлопнута`).toBeGreaterThan(
+            0,
+          );
+
+          // Обычный случай: верх секции у верха main, допуск — padding самого
+          // main (выше scrollport элемент встать не может, `scrollTop` не
+          // уходит в минус). Если лист кончился, а секция целиком помещается
+          // во viewport, прокрутка упирается в конец: над секцией остаются
+          // закреплённая полоса характеристик и карточка владений, и увести
+          // её выше физически нельзя.
+          const nearTop = g.top >= -8 && g.top <= g.padding + 8;
+          const visibleAtEnd =
+            g.atBottom && g.top >= -8 && g.bottom <= g.viewport + 8;
+          expect(nearTop || visibleAtEnd, description).toBe(true);
+          await expectNoHorizontalOverflow(page);
+        }
+      }
+
+      expect(missingSections, 'секции из CompactNav не найдены в DOM').toEqual(
+        [],
+      );
     },
   );
 
@@ -1312,7 +1405,7 @@ test.describe('содержимое листа', () => {
         'Arcana',
       );
     } else {
-      await openMobileSection(page, 'Combat Stats');
+      await openMobileSection(page, 'Combat Stats', 'combat-section');
       await expect(
         page.locator('#hit-points-card:visible').first(),
       ).toContainText('38');
@@ -1342,7 +1435,7 @@ test.describe('содержимое листа', () => {
       ).toContainText('Data-slate');
       await expect(page.getByText('Mono-sword')).toBeVisible();
     } else {
-      await openMobileSection(page, 'Talents & Traits');
+      await openMobileSection(page, 'Talents & Traits', 'talents-section');
       await expect(page.getByText('Total Recall')).toBeVisible();
 
       await openMobileSection(page, 'Equipment', 'equipment-section');

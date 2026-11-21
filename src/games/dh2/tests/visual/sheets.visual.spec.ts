@@ -109,13 +109,13 @@ test.describe('лист Dark Heresy 2e — чтение', { tag: '@plugin:dh2' }
 
       await screenshotPage(page, 'sheet-dh2-mobile-info-en.png');
 
-      await openMobileSection(page, 'Progression');
+      await openMobileSection(page, 'Progression', 'progression-section');
       await screenshotPage(page, 'sheet-dh2-mobile-progression-en.png');
 
-      await openMobileSection(page, 'Skills');
+      await openMobileSection(page, 'Skills', 'skills-section');
       await screenshotPage(page, 'sheet-dh2-mobile-skills-en.png');
 
-      await openMobileSection(page, 'Talents & Traits');
+      await openMobileSection(page, 'Talents & Traits', 'talents-section');
       await screenshotPage(page, 'sheet-dh2-mobile-talents-en.png');
 
       await openMobileSection(page, 'Equipment', 'equipment-section');
@@ -214,7 +214,7 @@ test.describe(
           'sheet-dh2-mobile-edit-characteristics-en.png',
         );
 
-        await openMobileSection(page, 'Skills');
+        await openMobileSection(page, 'Skills', 'skills-section');
         // На мобильном навыки и таланты — один блок `#skills-talents-content`.
         const skills = page.locator('#skills-talents-content:visible').first();
         await startEditing(skills);

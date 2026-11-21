@@ -135,13 +135,17 @@ test.describe('D&D — русская локаль', () => {
       ).toBeVisible();
       await screenshotPage(page, 'sheet-dnd-mobile-info-ru.png');
 
-      await openMobileSection(page, 'Характеристики');
+      await openMobileSection(page, 'Характеристики', 'stats-section');
       await screenshotPage(page, 'sheet-dnd-mobile-stats-ru.png');
 
-      await openMobileSection(page, 'Боевые параметры');
+      await openMobileSection(page, 'Боевые параметры', 'combat-section');
       await screenshotPage(page, 'sheet-dnd-mobile-combat-ru.png');
 
-      await openMobileSection(page, 'Инвентарь и настройка');
+      await openMobileSection(
+        page,
+        'Инвентарь и настройка',
+        'inventory-section',
+      );
       await screenshotPage(page, 'sheet-dnd-mobile-inventory-ru.png');
 
       await openMobileSection(page, 'Заклинания', 'spells-section');
@@ -160,13 +164,17 @@ test.describe('D&D — русская локаль', () => {
       await statsBar.getByTestId('compact-stats-edit-button').click();
       await screenshotPage(page, 'sheet-dnd-mobile-edit-stats-ru.png');
 
-      await openMobileSection(page, 'Характеристики');
+      await openMobileSection(page, 'Характеристики', 'stats-section');
       await discardUnsavedChanges(page);
       const skills = page.locator('#skills-card:visible').first();
       await startEditing(skills);
       await screenshotPage(page, 'sheet-dnd-mobile-edit-skills-ru.png');
 
-      await openMobileSection(page, 'Инвентарь и настройка');
+      await openMobileSection(
+        page,
+        'Инвентарь и настройка',
+        'inventory-section',
+      );
       await discardUnsavedChanges(page);
       const inventory = page.locator('#inventory-box:visible').first();
       await inventory
@@ -262,7 +270,7 @@ test.describe('Dark Heresy — русская локаль', () => {
       ).toBeVisible();
       await screenshotPage(page, 'sheet-dh-mobile-info-ru.png');
 
-      await openMobileSection(page, 'Навыки');
+      await openMobileSection(page, 'Навыки', 'skills-section');
       await screenshotPage(page, 'sheet-dh-mobile-skills-ru.png');
 
       await openMobileSection(page, 'Снаряжение', 'equipment-section');
@@ -289,7 +297,7 @@ test.describe('Dark Heresy — русская локаль', () => {
       ).toHaveValue('34');
       await screenshotPage(page, 'sheet-dh-mobile-edit-characteristics-ru.png');
 
-      await openMobileSection(page, 'Навыки');
+      await openMobileSection(page, 'Навыки', 'skills-section');
       const skills = page.locator('#skills-talents-content:visible').first();
       await startEditing(skills);
       await screenshotPage(page, 'sheet-dh-mobile-edit-skills-ru.png');
