@@ -40,7 +40,7 @@ export const SandboxSheet = React.forwardRef<
     <div className={styles.sheet} data-testid="sandbox-sheet">
       <Card className="border-primary/30">
         <CardHeader>
-          <CardTitle className="text-primary">
+          <CardTitle className="font-headline text-primary">
             {t('sandbox.sheetTitle')}
           </CardTitle>
         </CardHeader>
@@ -76,7 +76,9 @@ export const SandboxSheet = React.forwardRef<
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">{t('sandbox.notes')}</CardTitle>
+          <CardTitle className="font-headline text-base">
+            {t('sandbox.notes')}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <Textarea

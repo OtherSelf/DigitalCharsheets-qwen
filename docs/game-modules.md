@@ -421,8 +421,9 @@ core?" and is intentionally small:
 - a layout CSS module (`sheet.module.css`) with its own breakpoints, and a
   scoped `ui.theme` (light and dark tokens) — both without a single line in
   `src/app/globals.css`;
-- no custom font: it would need a licensed `.woff2`, and the `ui.theme.font`
-  contract is already covered by `tests/fixtures/example-plugin`.
+- a custom font (Forum): two `woff2` subsets and `OFL.txt` in `assets/`,
+  `@font-face` in `sheet.module.css` and `ui.theme.font` in the manifest; the
+  sheet's `CardTitle`s opt in with `font-headline`.
 
 The difference from the fixture below: `tests/fixtures/example-plugin` is
 copied into temporary folders by unit tests and is never built by Next; the

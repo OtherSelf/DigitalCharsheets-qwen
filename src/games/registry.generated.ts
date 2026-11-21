@@ -59,4 +59,5 @@ export const generatedFontLoaders: Readonly<
 > = {
   dh1: () => import('./dh1/fonts').then((module) => module.pluginFont),
   dh2: () => import('./dh2/fonts').then((module) => module.pluginFont),
+  sandbox: () => import('./sandbox/fonts').then((module) => module.pluginFont),
 };
