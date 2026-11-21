@@ -314,6 +314,17 @@ bash scripts/visual.sh --base-url http://127.0.0.1:3000
   even when the host owns the page around it.
 - Thresholds live in `src/lib/viewport.ts`; `tests/unit/viewport.test.ts` guards
   the numbers at 767/768/1299/1300 and the fractional width under browser zoom.
+- The compact navigation contract: every `CompactNav` item id has an element
+  with the same id in the DOM. The page scrolls `main` to it, and the
+  `контракт CompactNav` scenario in `basic-pages.spec.ts` walks the rail
+  buttons (`data-section-id`), asserts the element exists, is not collapsed and
+  lands in the frame. A missing id logs `[sheet]` on the console in dev and
+  fails that test.
+- `openMobileSection(page, label, sectionId)` requires the id and scrolls to
+  that section; it never resets the scroll to the top of the page. A screenshot
+  named after a section must contain the section. When the sheet is shorter than
+  the viewport the scroll stops at the end: the section stays visible, which is
+  what the test asserts instead of an exact zero offset.
 
 ### Admin screenshots
 

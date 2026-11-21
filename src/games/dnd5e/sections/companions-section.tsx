@@ -107,7 +107,7 @@ export function DndCompanionsSection({
       className={cn(
         'space-y-8',
         isCompactView &&
-          activeCompactSection !== 'companion-section' &&
+          activeCompactSection !== 'companions-section' &&
           'hidden',
       )}
     >

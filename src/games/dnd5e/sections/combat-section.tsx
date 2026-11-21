@@ -557,6 +557,7 @@ export const DndCombatSection = React.forwardRef<
 
     return (
       <div
+        id={`${idp}combat-section`}
         className={cn(
           'space-y-6 md:col-span-4',
           isCompactView &&

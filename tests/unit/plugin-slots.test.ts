@@ -161,8 +161,12 @@ describe('слоты-функции плагинов', () => {
       id: 'x',
       level: 20,
     } as never);
-    expect(navAt1?.some((item) => item.id === 'boons-section')).toBe(false);
-    expect(navAt20?.some((item) => item.id === 'boons-section')).toBe(true);
+    expect(navAt1?.some((item) => item.id === 'divine-boons-section')).toBe(
+      false,
+    );
+    expect(navAt20?.some((item) => item.id === 'divine-boons-section')).toBe(
+      true,
+    );
   });
 
   it('иконка вкладки каждой игры лежит в её папке', async () => {

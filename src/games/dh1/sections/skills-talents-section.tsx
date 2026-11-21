@@ -307,6 +307,7 @@ export const SkillsTalentsSection = React.forwardRef<
           {/* ==================== SKILLS SECTION ==================== */}
           {showSkills && (
             <Collapsible
+              id="skills-section"
               open={isSkillsOpen}
               onOpenChange={setIsSkillsOpen}
               className="w-full"
@@ -891,6 +892,7 @@ export const SkillsTalentsSection = React.forwardRef<
           {/* ==================== TALENTS & TRAITS SECTION ==================== */}
           {showTalents && (
             <Collapsible
+              id="talents-section"
               open={isTalentsOpen}
               onOpenChange={setIsTalentsOpen}
               className="w-full"

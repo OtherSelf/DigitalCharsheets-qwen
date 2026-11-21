@@ -53,6 +53,10 @@ export default function CharacterPage() {
   const { t } = useTranslation();
   const [activeCompactSection, setActiveCompactSection] =
     useState('info-section');
+  // Счётчик запросов на прокрутку: повторный тап по уже выбранному пункту
+  // рейла не меняет `activeCompactSection`, но вернуть пользователя к секции
+  // всё равно нужно — иначе со прокрученной страницы пункт «не работает».
+  const [sectionScrollRequest, setSectionScrollRequest] = useState(0);
   const [notesOpen, setNotesOpen] = useState(false);
   const [journalOpen, setJournalOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
@@ -105,6 +109,7 @@ export default function CharacterPage() {
       setJournalOpen(true);
     } else {
       setActiveCompactSection(id);
+      setSectionScrollRequest((request) => request + 1);
     }
   };
 
@@ -140,22 +145,52 @@ export default function CharacterPage() {
     а `scrollTop` — layout-пиксели.
   */
   useEffect(() => {
-    if (!isCompactView || activeCompactSection === 'info-section') return;
-    const element = document.getElementById(activeCompactSection);
-    const scroller = element?.closest('main');
-    if (!element || !(scroller instanceof HTMLElement)) return;
+    if (!isCompactView) return;
 
-    const scrollerRect = scroller.getBoundingClientRect();
-    const elementRect = element.getBoundingClientRect();
-    const scale =
-      scroller.clientHeight > 0
-        ? scrollerRect.height / scroller.clientHeight
-        : 1;
-    const top =
-      scroller.scrollTop + (elementRect.top - scrollerRect.top) / (scale || 1);
+    // Прокрутка откладывается на кадр: смена секции в том же коммите меняет
+    // высоту листа, и до пересчёта раскладки `scrollTop` ещё держит прежнее
+    // значение (браузер обрезает его лениво). Посчитанный по такому замеру
+    // target уводил секцию на сотни пикселей вниз.
+    const frame = requestAnimationFrame(() => {
+      const element = document.getElementById(activeCompactSection);
+      const scroller = element?.closest('main');
+      if (!element || !(scroller instanceof HTMLElement)) {
+        // Контракт плагина: id пункта CompactNav обязан совпадать с id секции.
+        // Молчаливый выход делал нарушение невидимым: тап по рейлу не двигал
+        // экран, а тест «секция видна» проходил, потому что компакт и так
+        // скрывает остальные секции.
+        if (process.env.NODE_ENV !== 'production') {
+          console.warn(
+            `[sheet] секция «${activeCompactSection}» из CompactNav не найдена в DOM`,
+          );
+        }
+        return;
+      }
 
-    scroller.scrollTo({ top, behavior: 'smooth' });
-  }, [activeCompactSection, isCompactView]);
+      const scrollerRect = scroller.getBoundingClientRect();
+      const elementRect = element.getBoundingClientRect();
+      const scale =
+        scroller.clientHeight > 0
+          ? scrollerRect.height / scroller.clientHeight
+          : 1;
+      const max = scroller.scrollHeight - scroller.clientHeight;
+      // Отступ `main` оставляем в кадре: без вычитания паддинга секция
+      // встаёт на самый край scrollport и её верхняя рамка обрезается.
+      const padding =
+        Number.parseFloat(getComputedStyle(scroller).paddingTop) || 0;
+      const top =
+        scroller.scrollTop +
+        (elementRect.top - scrollerRect.top) / (scale || 1) -
+        padding;
+
+      scroller.scrollTo({
+        top: Math.min(Math.max(top, 0), Math.max(max, 0)),
+        behavior: 'smooth',
+      });
+    });
+
+    return () => cancelAnimationFrame(frame);
+  }, [activeCompactSection, isCompactView, sectionScrollRequest]);
 
   if (!isLoaded) {
     return <Loading />;
