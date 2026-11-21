@@ -335,3 +335,30 @@ test.describe(
     );
   },
 );
+
+test(
+  'mobile: точки характеристик — зона нажатия 24x24',
+  { tag: '@mobile' },
+  async ({ page, context }) => {
+    await prepare(context);
+    await openApp(page, sheetPath(gameCharacterId('dh')));
+
+    // Точка на вид остаётся 12 px, но бокс 24x24: проверяем не пиксели, а
+    // попадание по краю увеличенной зоны — именно там раньше был промах.
+    const dot = page
+      .locator('[data-testid="characteristics-compact"] [role="checkbox"]')
+      .first();
+    await expect(dot).toHaveAttribute('aria-checked', 'false');
+    const box = await dot.boundingBox();
+    expect(box, 'точка характеристик имеет размер').not.toBeNull();
+    expect(box!.width, 'ширина зоны').toBeGreaterThanOrEqual(24);
+    expect(box!.height, 'высота зоны').toBeGreaterThanOrEqual(24);
+
+    // 10 px от центра — внутри зоны, но далеко за пределами видимых 12 px.
+    await page.mouse.click(
+      box!.x + box!.width / 2 + 10,
+      box!.y + box!.height / 2,
+    );
+    await expect(dot).toHaveAttribute('aria-checked', 'true');
+  },
+);

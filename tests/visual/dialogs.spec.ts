@@ -31,6 +31,16 @@ test.describe('диалоги — геометрия окна', () => {
     ).toBeVisible();
     // Даём отработать открытию (duration-200) и снимаем геометрию.
     await page.waitForTimeout(300);
+
+    if (isMobile()) {
+      // Единственный выход из диалога на телефоне — крестик: у него должна
+      // быть цель не меньше 40x40, иначе это гарантированный промах.
+      const close = dialog.getByTestId('dialog-close');
+      const closeBox = await close.boundingBox();
+      expect(closeBox, 'крестик диалога имеет размер').not.toBeNull();
+      expect(closeBox!.width, 'ширина крестика').toBeGreaterThanOrEqual(40);
+      expect(closeBox!.height, 'высота крестика').toBeGreaterThanOrEqual(40);
+    }
     const box = await dialog.boundingBox();
     const viewport = page.viewportSize();
     expect(box, 'у окна есть геометрия').not.toBeNull();
