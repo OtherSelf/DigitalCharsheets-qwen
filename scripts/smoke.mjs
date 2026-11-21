@@ -280,6 +280,29 @@ await check('GET /admin → 200 (страница админки существ�
   );
 });
 
+// ── иконка вкладки ────────────────────────────────────────────────────────
+// У ядра иконка живёт в конвенции Next (`app/favicon.ico` + `app/icon.png`):
+// на страницах без `DynamicFavicon` (`/login`, `/settings`, `/admin`) она
+// обязана быть, иначе браузер просит `/favicon.ico` и получает 404.
+for (const path of ['/favicon.ico', '/favicon-default.png']) {
+  await check(`GET ${path} → 200 (иконка вкладки)`, async () => {
+    const res = await request(path, { auth: false });
+    assertStatus(res, 200, `GET ${path}`);
+    const type = res.headers.get('content-type') || '';
+    assert(/image\//i.test(type), `GET ${path}: content-type = ${type}`);
+    return type;
+  });
+}
+
+await check('GET /login → ссылка на иконку в HTML', async () => {
+  const res = await request('/login');
+  assertStatus(res, 200, 'GET /login');
+  assert(
+    /<link[^>]+rel="(?:shortcut )?icon"/i.test(res.text),
+    'GET /login: в HTML нет link rel=icon',
+  );
+});
+
 await check('GET /api/openapi.json → 200 (OpenAPI 3.x)', async () => {
   const res = await request('/api/openapi.json', { auth: false });
   assertStatus(res, 200, 'GET /api/openapi.json');

@@ -641,6 +641,73 @@ test.describe('адаптивность', () => {
   );
 
   test(
+    'иконка вкладки: страницы ядра и листы игр',
+    { tag: '@mobile' },
+    async ({ page, context }) => {
+      await prepare(context);
+
+      // Эффективная иконка: ссылка, которой владеет компоновка листа, либо
+      // иконка ядра от Next (`app/favicon.ico`).
+      const iconHrefs = () =>
+        page.evaluate(() => {
+          const dynamic = document.getElementById(
+            'dynamic-favicon',
+          ) as HTMLLinkElement | null;
+          const all = Array.from(
+            document.querySelectorAll<HTMLLinkElement>("link[rel*='icon']"),
+          ).map((link) => link.href);
+          return dynamic ? [dynamic.href, ...all] : all;
+        });
+      const statusOf = (href: string) =>
+        page.evaluate(async (url) => {
+          const response = await fetch(url, { cache: 'no-store' });
+          return response.status;
+        }, href);
+
+      // Страницы ядра без DynamicFavicon — раньше здесь не было ни одной
+      // ссылки, и браузер получал 404 на /favicon.ico.
+      for (const path of [
+        '/',
+        '/login',
+        '/settings',
+        '/admin',
+        '/stats-editor',
+      ]) {
+        await openApp(page, path);
+        const icons = await iconHrefs();
+        expect(icons.length, `${path}: есть link rel=icon`).toBeGreaterThan(0);
+        for (const href of icons) {
+          expect(await statusOf(href), `${path}: ${href}`).toBe(200);
+        }
+      }
+
+      await openApp(page, sheetPath(getState().dndId));
+      const dndIcon = (await iconHrefs())[0];
+      expect(dndIcon, 'лист D&D: иконка').toBeTruthy();
+      expect(await statusOf(dndIcon), 'лист D&D: иконка отдаётся').toBe(200);
+
+      await openApp(page, sheetPath(getState().dhId));
+      const dhIcon = (await iconHrefs())[0];
+      expect(dhIcon, 'лист DH: иконка').toBeTruthy();
+      expect(await statusOf(dhIcon), 'лист DH: иконка отдаётся').toBe(200);
+      expect(dhIcon, 'у редакций разные иконки').not.toBe(dndIcon);
+
+      // SPA-переход: со листа на дашборд иконка возвращается к ядру.
+      await page
+        .getByRole('link', { name: /Back to dashboard/i })
+        .first()
+        .click();
+      await page.waitForURL((url) => url.pathname === '/');
+      // Эффект `DynamicFavicon` выполняется после коммита: даём ему кадр,
+      // иначе читаем ещё старую иконку.
+      await expect.poll(async () => (await iconHrefs())[0]).not.toBe(dhIcon);
+      const coreIcon = (await iconHrefs())[0];
+      expect(coreIcon, 'на дашборде иконка ядра').toBeTruthy();
+      expect(await statusOf(coreIcon), 'иконка ядра отдаётся').toBe(200);
+    },
+  );
+
+  test(
     'подпись версии в снимках не зависит от релиза',
     { tag: '@mobile' },
     async ({ page, context }) => {
