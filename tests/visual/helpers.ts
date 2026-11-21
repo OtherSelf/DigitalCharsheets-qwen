@@ -101,26 +101,25 @@ export async function prepare(
 
   // Подпись сборки в подвале и в меню берётся из `/api/version`. Фикстура
   // подменяет только её: иначе каждый выпуск меняет эталоны, а диф одного
-  // глифа проходит под порогом и эталон тихо врёт. `buildId` остаётся
-  // настоящим — по нему `BuildWatcher` решает, что сервер пересобрался.
-  await context.route('**/api/version', async (route) => {
-    const response = await route.fetch();
-    const payload = (await response.json().catch(() => ({}))) as Record<
-      string,
-      unknown
-    >;
-    await route.fulfill({
-      response,
-      json: {
-        ...payload,
+  // глифа проходит под порогом и эталон тихо врёт.
+  // Ответ статический, без похода на сервер: `route.fetch()` под четырьмя
+  // воркерами иногда падал с ECONNRESET и валил тест. `buildId` в фикстуре
+  // нет — `BuildWatcher` в этом случае просто ждёт (`decideBuildAction` →
+  // `wait`), а его собственный запрос идёт с `?t=`, мимо этого обработчика.
+  await context.route('**/api/version', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
         version: '0.0.0-test',
         commit: null,
         commitShort: '0000000',
         branch: 'test',
         buildDate: '2026-01-01T00:00:00.000Z',
-      },
-    });
-  });
+        buildId: null,
+      }),
+    }),
+  );
 
   // Сессия теперь httpOnly-cookie: localStorage-снимка недостаточно,
   // поэтому логинимся в cookie-jar контекста (он общий для страниц и
