@@ -80,7 +80,8 @@
           "accent": "150 20% 24%",
           "radius": "0.25rem"
         }
-      }
+      },
+      "font": "fonts.ts#pluginFont"
     }
   },
   "aliases": [
