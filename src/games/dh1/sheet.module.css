@@ -24,7 +24,7 @@
     flex-direction: column !important;
     align-items: stretch !important;
   }
-  .sheet :global(.sheet-panels) > * {
+  .sheet:global(:not(.is-compact)) :global(.sheet-panels) > * {
     flex: 0 0 auto !important;
     width: 100% !important;
     min-width: 0 !important;
@@ -46,6 +46,25 @@
   }
   .sheet:global(.is-compact) :global(.sheet-info-grid) > * {
     grid-column: 1 / -1 !important;
+  }
+}
+
+/*
+  Гостевая ссылка на телефоне (/share/<token>) — полный лист без компактного
+  режима: рейла секций там нет, поэтому панели складываются в колонку CSS-ом.
+  `!important` нужен, потому что разметка несёт `flex-row` утилитами.
+*/
+@media (max-width: 767px) {
+  /* Только некомпактный лист: в компакте панели и так скрыты по одной. */
+  .sheet:global(:not(.is-compact)) :global(.sheet-panels) {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+  .sheet:global(:not(.is-compact)) :global(.sheet-panels) > * {
+    flex: 0 0 auto !important;
+    width: 100% !important;
+    min-width: 0 !important;
   }
 }
 

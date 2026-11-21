@@ -2,6 +2,7 @@
 
 import { ReactNode, useMemo } from 'react';
 
+import { useViewportFlags } from '@/hooks/use-viewport-flags';
 import type { Character } from '@/lib/types';
 
 import {
@@ -25,6 +26,8 @@ export function SharedCharacterProvider({
   character: Character;
   children: ReactNode;
 }) {
+  const { isSmallScreen, isTabletScreen } = useViewportFlags();
+
   const value = useMemo<CharacterContextType>(
     () => ({
       characters: [character],
@@ -39,9 +42,12 @@ export function SharedCharacterProvider({
       loadError: false,
       retryCharacters: async () => undefined,
       toast: () => undefined,
+      // Гость видит весь лист: в `/share` нет компактного рейла, поэтому
+      // компактный режим означал бы «одна секция из шести без переключения».
+      // Флаги экрана при этом настоящие — от них зависит шапка и отступы.
       isCompactView: false,
-      isSmallScreen: false,
-      isTabletScreen: false,
+      isSmallScreen,
+      isTabletScreen,
       toggleCompactView: () => undefined,
       hasUnsavedChanges: false,
       setHasUnsavedChanges: () => undefined,
@@ -53,7 +59,7 @@ export function SharedCharacterProvider({
       readOnly: true,
       flushSaves: async () => undefined,
     }),
-    [character],
+    [character, isSmallScreen, isTabletScreen],
   );
 
   return (
