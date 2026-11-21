@@ -95,7 +95,7 @@ export function SharedSheetView({
           authAction="login"
         />
 
-        <main className="safe-area-bottom flex-1 overflow-y-auto p-3 sm:p-4 md:p-6 lg:p-8">
+        <main className="safe-area-bottom flex flex-1 flex-col overflow-y-auto p-3 sm:p-4 md:p-6 lg:p-8 [&>*]:w-full [&>*]:min-w-0">
           <SheetStateBanner
             testId="shared-read-only-banner"
             title={t('share.readOnlyTitle')}

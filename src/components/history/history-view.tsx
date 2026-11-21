@@ -338,7 +338,7 @@ export function HistoryView({ character }: { character: Character }) {
   return (
     <div className="flex h-dvh flex-col">
       <Header backHref={characterPath(character.id)} readOnly />
-      <main className="safe-area-bottom flex-1 overflow-y-auto p-3 sm:p-4 md:p-6 lg:p-8">
+      <main className="safe-area-bottom flex flex-1 flex-col overflow-y-auto p-3 sm:p-4 md:p-6 lg:p-8 [&>*]:w-full [&>*]:min-w-0">
         <div className="mx-auto max-w-4xl space-y-4" data-testid="history-page">
           <Card>
             <CardHeader>

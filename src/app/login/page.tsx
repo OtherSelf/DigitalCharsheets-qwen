@@ -16,7 +16,6 @@ import {
 } from 'lucide-react';
 
 import { Header } from '@/components/header';
-import { AppVersion } from '@/components/layout/app-version';
 import { SiteFooter } from '@/components/layout/site-footer';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -351,7 +350,7 @@ export default function LoginPage() {
       {/* Единая шапка; на самой /login кнопка входа не нужна. */}
       <Header authAction="none" />
 
-      <main className="safe-area-bottom flex flex-1 flex-col overflow-y-auto p-4">
+      <main className="safe-area-bottom flex flex-1 flex-col overflow-y-auto p-4 [&>*]:w-full [&>*]:min-w-0">
         {/* Карточка центрируется в свободном месте, футер всегда внизу
             прокрутки: в строковом flex он встал бы рядом с карточкой. */}
         <div className="flex flex-1 items-center justify-center">
@@ -769,18 +768,6 @@ export default function LoginPage() {
                 <p className="text-muted-foreground mt-4 text-center text-xs">
                   {t('auth.localDataNote')}
                 </p>
-
-                {/* Какая сборка запущена — видно и до входа: снимок экрана или
-                  багрепорт сразу называют версию и коммит. */}
-                <div className="mt-1 flex flex-wrap items-center justify-center gap-x-3">
-                  <AppVersion />
-                  <Link
-                    href="/about"
-                    className="text-muted-foreground text-[11px] underline underline-offset-2"
-                  >
-                    {t('footer.about')}
-                  </Link>
-                </div>
               </CardContent>
             </Card>
           </div>

@@ -158,7 +158,7 @@ export default function ManualCharacterCreationPage() {
     <div className="flex h-dvh flex-col">
       <Header />
 
-      <main className="safe-area-bottom flex-1 overflow-y-auto p-3 sm:p-4 md:p-6 lg:p-8">
+      <main className="safe-area-bottom flex flex-1 flex-col overflow-y-auto p-3 sm:p-4 md:p-6 lg:p-8 [&>*]:w-full [&>*]:min-w-0">
         <div className="mb-6 flex flex-col justify-between gap-4 sm:mb-8 sm:flex-row sm:items-center">
           <div className="flex flex-col gap-1">
             <h1 className="font-headline text-2xl font-bold tracking-tight sm:text-3xl">

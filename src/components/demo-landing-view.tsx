@@ -2,7 +2,6 @@
 
 import { DemoLanding } from '@/components/demo-landing';
 import { Header } from '@/components/header';
-import { AppVersion } from '@/components/layout/app-version';
 import { SiteFooter } from '@/components/layout/site-footer';
 
 /**
@@ -22,12 +21,9 @@ export function DemoLandingView() {
     <div className="bg-background flex h-dvh flex-col">
       <Header authAction="login" />
 
-      <main className="safe-area-bottom flex-1 overflow-y-auto px-4 py-8 pb-20">
+      <main className="safe-area-bottom flex flex-1 flex-col overflow-y-auto px-4 py-8 pb-20 [&>*]:w-full [&>*]:min-w-0">
         <div className="container mx-auto max-w-6xl">
           <DemoLanding createHref="/new" />
-          <div className="mt-8 flex justify-center">
-            <AppVersion />
-          </div>
         </div>
         <SiteFooter />
       </main>
