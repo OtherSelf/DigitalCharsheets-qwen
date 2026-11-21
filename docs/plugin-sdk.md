@@ -554,7 +554,7 @@ export const pluginFont: PluginFont = { className: '<id>-theme-font' };
   `document.fonts.ready`: the ready attribute arrives when the chunk is
   applied, the `woff2` may still load, and a screenshot taken earlier keeps the
   host face.
-- DH1 and DH2 are the first shipped games to declare `font`;
+- DH1, DH2 and D&D 5e are the shipped games that declare `font`;
   `tests/fixtures/example-plugin` still covers the object shape on its own.
 
 The core cannot be reached from a theme: there is no way to pass CSS, class

@@ -57,6 +57,7 @@ export const generatedUiLoaders: Readonly<
 export const generatedFontLoaders: Readonly<
   Record<string, () => Promise<PluginFont>>
 > = {
+  dnd5e: () => import('./dnd5e/fonts').then((module) => module.pluginFont),
   dh1: () => import('./dh1/fonts').then((module) => module.pluginFont),
   dh2: () => import('./dh2/fonts').then((module) => module.pluginFont),
   sandbox: () => import('./sandbox/fonts').then((module) => module.pluginFont),
