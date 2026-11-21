@@ -83,8 +83,10 @@ export function CompactSidebar({
     <TooltipProvider>
       <nav
         className={cn(
-          'bg-card z-20 flex flex-col items-center gap-2 border-r p-2',
-          'w-16',
+          'bg-card z-20 flex flex-col items-center gap-2 overflow-y-auto border-r p-2',
+          // На низком экране (360x640) рейл не помещается целиком: без
+          // прокрутки нижние кнопки уходили за границу окна.
+          'min-h-0 w-16',
         )}
       >
         {navItems.map((item) => (
