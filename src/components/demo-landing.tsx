@@ -149,7 +149,10 @@ export function DemoLanding({ createHref = '/new' }: DemoLandingProps) {
               <Button
                 key={demo.id}
                 variant={previewId === demo.id ? 'default' : 'outline'}
-                className="w-full justify-start"
+                // Подпись редакции в RU длиннее карточки: с `whitespace-nowrap`
+                // из базового класса кнопка задавала min-content грида и
+                // выталкивала карточку за край main на 412 px.
+                className="h-auto w-full justify-start py-2 text-left whitespace-normal"
                 onClick={() => setPreviewId(demo.id)}
               >
                 {demo.label}
