@@ -190,9 +190,52 @@ export async function waitForFontReady(page: Page): Promise<void> {
   await page.evaluate(() => document.fonts.ready);
 }
 
+/**
+ * Проверка шрифта темы плагина: обёртка получила `data-font-ready`, первое
+ * семейство заголовка содержит ожидаемый фрагмент (например `dhcormorant`),
+ * и файл действительно загружен. Возвращает признак кириллического
+ * подмножества для RU-проверок.
+ */
+export async function expectThemeFont(
+  page: Page,
+  family: string,
+): Promise<{ family: string; cyrillicLoaded: boolean }> {
+  await expect(page.locator('[data-font-ready]').first()).toBeAttached();
+  const result = await page.evaluate(async () => {
+    await document.fonts.ready;
+    const element = document.querySelector('.font-headline');
+    const family = element ? getComputedStyle(element).fontFamily : '';
+    const first = family.split(',')[0]?.trim().replace(/^"|"$/g, '') ?? '';
+    return {
+      family,
+      first,
+      firstLoaded: first ? document.fonts.check(`600 16px "${first}"`) : false,
+      cyrillicLoaded: first
+        ? document.fonts.check(`600 16px "${first}"`, 'Привет')
+        : false,
+    };
+  });
+  expect(result.first.toLowerCase()).toContain(family.toLowerCase());
+  expect(result.firstLoaded, `font-family: ${result.family}`).toBe(true);
+  return { family: result.family, cyrillicLoaded: result.cyrillicLoaded };
+}
+
+/**
+ * Тема со шрифтом помечает обёртку `data-font-expected`; до снимка ждём и
+ * `data-font-ready`, иначе часть кадров успевает сняться в хостовом шрифте.
+ */
+async function waitForThemeFont(page: Page): Promise<void> {
+  if ((await page.locator('[data-font-expected]').count()) === 0) return;
+  await page
+    .locator('[data-font-ready]')
+    .first()
+    .waitFor({ state: 'attached', timeout: 15_000 });
+  await page.evaluate(() => document.fonts.ready);
+}
+
 /** Убирает всё «живое» из кадра (фокус, hover, каретку). */
 async function settle(page: Page, resetScroll = true): Promise<void> {
-  await page.evaluate(() => document.fonts.ready);
+  await waitForThemeFont(page);
   await page.evaluate((reset) => {
     if (reset) window.scrollTo(0, 0);
     const active = document.activeElement;
@@ -257,6 +300,7 @@ export async function screenshotElement(
   name: string,
 ): Promise<void> {
   const page = locator.page();
+  await waitForThemeFont(locator.page());
   await locator.page().evaluate(() => document.fonts.ready);
   await locator.page().mouse.move(1, 1);
 
@@ -319,6 +363,7 @@ export async function screenshotElement(
   }
 
   await locator.scrollIntoViewIfNeeded();
+  await waitForThemeFont(locator.page());
   await locator.page().evaluate(() => document.fonts.ready);
   await locator.page().mouse.move(1, 1);
   await expect(locator).toHaveScreenshot(name);
@@ -448,7 +493,7 @@ export async function signInViaUI(
   // иначе тест падает таймаутом без причины.
   let lastStatus: number | string = '—';
   for (let attempt = 1; attempt <= 3; attempt += 1) {
-    await page.goto('/login', { waitUntil: 'domcontentloaded' });
+    await openApp(page, '/login');
     await page
       .getByLabel('Username or Email', { exact: true })
       .fill(state.username);
@@ -493,7 +538,7 @@ export async function openRegisterForm(
   options: { navigate?: boolean } = {},
 ): Promise<void> {
   if (options.navigate !== false) {
-    await page.goto('/login', { waitUntil: 'domcontentloaded' });
+    await openApp(page, '/login');
   }
   await page.getByTestId('open-register').click();
   await expect(page.getByTestId('register-form')).toBeVisible();

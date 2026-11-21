@@ -43,6 +43,7 @@ export function GameThemeScope({
     <div
       className={cn('contents', fontClass)}
       data-system={systemId}
+      data-font-expected={theme?.font ? '' : undefined}
       data-font-ready={fontClass ? '' : undefined}
     >
       {css ? <style>{css}</style> : null}
