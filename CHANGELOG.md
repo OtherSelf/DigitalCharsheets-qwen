@@ -11,6 +11,58 @@ format changes.
 
 ## [Unreleased]
 
+## [0.14.0] - 2026-11-21
+
+Every shipped game gets its own typeface, and right sheets close with a swipe.
+
+### Added
+
+- Dark Heresy 1e gets its own theme: a gold accent palette for both modes, a
+  matching border and focus ring, and a smaller radius. It was the last shipped
+  game still drawn in the host indigo.
+- Theme fonts in the shipped games: Cormorant Garamond (DH1), Cormorant SC
+  (DH2), Forum (D&D 5e and the sandbox). Each plugin keeps two `woff2` subsets
+  and the `OFL.txt` licence in `assets/`, declares `@font-face` with a Cyrillic
+  `unicode-range` in its sheet CSS module and opts in through `ui.theme.font`,
+  so the files load with the sheet chunk instead of every page. The theme wrapper
+  exposes `data-font-expected` and `data-font-ready`, and a screenshot waits for
+  both plus `document.fonts.ready`, so a baseline never catches the host face.
+- A plugin may import `next/font/local` (exact match; the rest of `next/*` stays
+  forbidden) when it prefers that route. `@font-face` in the game's CSS module
+  remains the recommendation: Turbopack hoists the CSS and preload links of a
+  font module imported from a lazy chunk into every page.
+- The admin Games table has a gear per edition that opens **Game settings**: a
+  "Use the game's theme" switch stored as `useHostTheme` in
+  `game-catalog.json`, applied without a rebuild to the sheet, `/share` and
+  `/demo`; a reset back to the game theme; and a link to the demo. The first
+  column now shows the game family and the second the edition.
+- Right sheets — notes, quest journal, experience log, narrative and backstory —
+  close with a rightward swipe on touch screens: the panel follows the finger and
+  closes past `max(80 px, 25% of the width)` or faster than 0.5 px/ms. Text
+  fields, selects and contenteditable areas are exempt, and vertical scrolling
+  stays with the browser; the close button, Escape and the overlay still work.
+
+### Changed
+
+- Plugin versions: `dh1` 1.8.0, `dh2` 1.8.0, `dnd5e` 1.6.0, `sandbox` 1.1.0.
+  The sheet `schemaVersion` is unchanged (Dark Heresy `5`, D&D 5e `2`), and
+  `PLUGIN_API_VERSION` stays `1.4.0`.
+- DH1 and DH2 inventory totals multiply a row's weight (and, for DH1, its price)
+  by the row's quantity: the stored numbers are per unit. There is no migration
+  — a row without a quantity reads as 1, so only rows already at 2 or more
+  change their totals.
+
+### Fixed
+
+- A guest share link is interactive again. The sheet is no longer `inert`:
+  inputs and textareas are read-only, checkboxes and switches are disabled, and
+  the narrative and experience log stay in view mode, so collapsing a section,
+  opening info popovers and switching the history tab work again. Server-side
+  write protection and the no-op mutations are unchanged.
+- The inventory edit fields are labelled "Qty / Weight, kg / Price, thrones"
+  (DH1) and "Qty / Weight, kg" (DH2) instead of three bare numbers that differed
+  only by their order.
+
 ## [0.13.0] - 2026-11-20
 
 Each game gets its own palette, and the sandbox game ships.
