@@ -721,6 +721,32 @@ test.describe('адаптивность', () => {
         await expectFooter(path);
       }
 
+      // Короткая страница: футер прижат к низу экрана, под ним нет пустоты,
+      // и он не растягивается на свободное место (высота — по контенту).
+      await openApp(page, '/new');
+      const geometry = await page.evaluate(() => {
+        const main = document.querySelector('main');
+        const footer = document.querySelector(
+          '[data-testid="site-footer"]',
+        ) as HTMLElement | null;
+        if (!main || !footer) return null;
+        const mainRect = main.getBoundingClientRect();
+        const footerRect = footer.getBoundingClientRect();
+        return {
+          scrollable: main.scrollHeight > main.clientHeight + 1,
+          gapBelow: Math.round(mainRect.bottom - footerRect.bottom),
+          footerHeight: Math.round(footerRect.height),
+          mainHeight: Math.round(mainRect.height),
+        };
+      });
+      expect(geometry, 'футер измерен').not.toBeNull();
+      expect(geometry!.scrollable, '/new не скроллится').toBe(false);
+      expect(geometry!.gapBelow, 'под футером нет пустоты').toBeLessThanOrEqual(
+        1,
+      );
+      // Футер — строка по контенту, а не половина экрана.
+      expect(geometry!.footerHeight).toBeLessThan(geometry!.mainHeight / 2);
+
       await openApp(page, sheetPath(getState().dhId));
       await expectFooter('лист персонажа');
 
@@ -809,18 +835,25 @@ test.describe('адаптивность', () => {
   );
 
   test(
-    'подпись версии в снимках не зависит от релиза',
+    'версия показывается только в футере',
     { tag: '@mobile' },
     async ({ page, context }) => {
       await prepare(context, { authenticated: false });
-      await openApp(page, '/login');
 
-      // Фикстура `/api/version` из `prepare()`: иначе эталон стареет при
-      // каждом выпуске, а диф одного глифа проходит под порогом.
-      const version = page.getByTestId('app-version');
-      await expect(version).toBeVisible();
-      await expect(version).toContainText('0.0.0-test');
-      await expect(version).toContainText('0000000');
+      // Версия раньше дублировалась в карточке логина, на лендинге и в меню
+      // профиля как временная подпись. Теперь единственное место — футер.
+      for (const path of ['/login', '/demo']) {
+        await openApp(page, path);
+        await expect(
+          page.getByTestId('app-version'),
+          `${path}: старой подписи нет`,
+        ).toHaveCount(0);
+        await page.getByTestId('site-footer').scrollIntoViewIfNeeded();
+        await expect(
+          page.getByTestId('site-footer-version'),
+          `${path}: версия в футере`,
+        ).toContainText('0.0.0-test');
+      }
     },
   );
 
