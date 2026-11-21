@@ -14,6 +14,7 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet';
 import { Textarea } from '@/components/ui/textarea';
+import { useCharacterContext } from '@/context/character-context';
 import { useTranslation } from '@/context/language-context';
 
 import { NarrativeMarkdown } from './narrative-markdown';
@@ -52,9 +53,10 @@ export function NarrativeSheet({
   open,
   onOpenChange,
 }: NarrativeSheetProps) {
+  const { readOnly } = useCharacterContext();
   const { t } = useTranslation();
   const [mode, setMode] = useState<NarrativeMode>(() =>
-    narrativeInitialMode(value),
+    readOnly ? 'view' : narrativeInitialMode(value),
   );
   const [draft, setDraft] = useState(value);
   const [showPreview, setShowPreview] = useState(false);
@@ -64,12 +66,12 @@ export function NarrativeSheet({
   // должен протекать в следующий просмотр.
   useEffect(() => {
     if (open && !wasOpen.current) {
-      setMode(narrativeInitialMode(value));
+      setMode(readOnly ? 'view' : narrativeInitialMode(value));
       setDraft(value);
       setShowPreview(false);
     }
     wasOpen.current = open;
-  }, [open, value]);
+  }, [open, value, readOnly]);
 
   const handleSave = () => {
     onSave(draft);
@@ -120,38 +122,44 @@ export function NarrativeSheet({
           </div>
         )}
 
-        <div className="flex items-center justify-between gap-2 border-t px-6 py-4">
-          {mode === 'view' ? (
-            <Button
-              type="button"
-              onClick={() => setMode('edit')}
-              className="gap-1.5"
-            >
-              <Pencil className="h-4 w-4" />
-              {t('common.edit')}
-            </Button>
-          ) : (
-            <>
+        {readOnly && mode === 'view' ? null : (
+          <div className="flex items-center justify-between gap-2 border-t px-6 py-4">
+            {mode === 'view' ? (
               <Button
                 type="button"
-                variant="ghost"
-                onClick={() => setShowPreview((previous) => !previous)}
+                onClick={() => setMode('edit')}
                 className="gap-1.5"
               >
-                <Eye className="h-4 w-4" />
-                {t('narrative.preview')}
+                <Pencil className="h-4 w-4" />
+                {t('common.edit')}
               </Button>
-              <div className="flex gap-2">
-                <Button type="button" variant="outline" onClick={handleCancel}>
-                  {t('common.cancel')}
+            ) : (
+              <>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setShowPreview((previous) => !previous)}
+                  className="gap-1.5"
+                >
+                  <Eye className="h-4 w-4" />
+                  {t('narrative.preview')}
                 </Button>
-                <Button type="button" onClick={handleSave}>
-                  {t('common.save')}
-                </Button>
-              </div>
-            </>
-          )}
-        </div>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleCancel}
+                  >
+                    {t('common.cancel')}
+                  </Button>
+                  <Button type="button" onClick={handleSave}>
+                    {t('common.save')}
+                  </Button>
+                </div>
+              </>
+            )}
+          </div>
+        )}
       </SheetContent>
     </Sheet>
   );

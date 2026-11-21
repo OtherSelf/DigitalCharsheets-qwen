@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { DynamicFavicon } from '@/components/dynamic-favicon';
 import { Header } from '@/components/header';
@@ -23,7 +23,8 @@ import type { Character } from '@/lib/types';
  * ─── LANDMARK: SHARED SHEET VIEW ───────────────────────────────────────────
  * Клиентская часть гостевой страницы: тот же диспетчер листов, что и на
  * `/character/<id>`, но без аккаунта, без сайдбара и диалогов. Провайдер
- * отдаёт один лист и no-op мутации, а `inert` не пускает фокус в поля.
+ * отдаёт один лист и no-op мутации; `readOnly` в контексте закрывает ввод,
+ * но оставляет рабочими свёртки, поповеры и вкладку истории.
  *
  * Это UX-защита: запись всё равно невозможна, потому что у гостя нет cookie,
  * а owner-API отвечает 401.
@@ -43,6 +44,43 @@ export function SharedSheetView({
   const gameModule = getCharacterModule(character);
   const uiSlots = useGameUiSlots(systemId);
   const historyConfig = gameModule?.history;
+  const sheetRef = useRef<HTMLDivElement>(null);
+
+  // Гостевая страница не должна давать ввод даже там, где секция показывает
+  // поле вне режима правки (заметки в поповерах, прямые переключатели).
+  // Контекст закрывает NarrativeSheet/ExperienceLog, а этот страж — остальные
+  // контролы, включая порталы Radix: их DOM живёт вне листа.
+  useEffect(() => {
+    const lock = () => {
+      document
+        .querySelectorAll<HTMLElement>(
+          'input, textarea, select, button[role="checkbox"], button[role="switch"]',
+        )
+        .forEach((element) => {
+          if (
+            element instanceof HTMLTextAreaElement ||
+            (element instanceof HTMLInputElement &&
+              element.type !== 'checkbox' &&
+              element.type !== 'radio')
+          ) {
+            if (!element.readOnly) element.readOnly = true;
+            return;
+          }
+          if (!element.hasAttribute('disabled')) {
+            element.setAttribute('disabled', '');
+          }
+        });
+    };
+    lock();
+    const observer = new MutationObserver(lock);
+    observer.observe(document.body, {
+      subtree: true,
+      childList: true,
+      attributes: true,
+      attributeFilter: ['readonly', 'disabled'],
+    });
+    return () => observer.disconnect();
+  }, []);
 
   return (
     <SharedCharacterProvider character={character}>
@@ -109,7 +147,7 @@ export function SharedSheetView({
               historyConfig={historyConfig}
             />
           ) : gameModule ? (
-            <div inert data-testid="shared-sheet-inert">
+            <div ref={sheetRef} data-testid="shared-sheet">
               <CharacterSheet
                 character={character}
                 activeCompactSection="info-section"

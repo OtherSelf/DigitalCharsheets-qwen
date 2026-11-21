@@ -11,6 +11,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
+import { useCharacterContext } from '@/context/character-context';
 
 /** Строка журнала опыта, приведённая к общему виду адаптером редакции. */
 export interface ExperienceLogRow {
@@ -60,6 +61,7 @@ export function ExperienceLogSheet({
   rows,
   onDelete,
 }: ExperienceLogSheetProps) {
+  const { readOnly } = useCharacterContext();
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="flex w-full flex-col p-0 sm:max-w-2xl">
@@ -90,15 +92,17 @@ export function ExperienceLogSheet({
                     <span className="text-primary font-semibold">
                       {row.cost}
                     </span>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      aria-label={deleteLabel}
-                      onClick={() => onDelete(row.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    {!readOnly && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        aria-label={deleteLabel}
+                        onClick={() => onDelete(row.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
                   </div>
                 </div>
               ))

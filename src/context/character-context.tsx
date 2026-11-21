@@ -78,6 +78,12 @@ export interface CharacterContextType {
   showEditButtons: boolean;
   setShowEditButtons: (val: boolean) => void;
   /**
+   * Только просмотр: гостевая ссылка. Отличается от `showEditButtons: false`
+   * тем, что даже «всегда доступные» поля заметок и переключатели данных
+   * должны быть закрыты.
+   */
+  readOnly: boolean;
+  /**
    * Дождаться сохранения того, что уже в очереди. Нужно перед действиями,
    * которые читают лист с сервера (создание гостевой ссылки, переход в
    * историю): иначе они увидят версию до последней правки.
@@ -854,6 +860,7 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
     setHideNotes,
     showEditButtons,
     setShowEditButtons,
+    readOnly: false,
     flushSaves,
   };
 
