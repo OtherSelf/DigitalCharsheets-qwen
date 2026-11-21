@@ -228,6 +228,8 @@
   "dh2.meleeWeapons": "Оружие ближнего боя",
   "dh2.monthlyIncome": "Ежемесячный доход",
   "dh2.inventoryLost": "Потеряно",
+  "dh2.inventoryQuantityShort": "Кол-во",
+  "dh2.inventoryWeightUnit": "Вес, кг",
   "dh2.inventoryTotals": "Итого",
   "dh2.move": "Перемещение",
   "dh2.moveFull": "Полный ход",
