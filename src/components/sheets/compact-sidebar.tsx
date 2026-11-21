@@ -94,6 +94,7 @@ export function CompactSidebar({
                 variant={activeSection === item.id ? 'secondary' : 'ghost'}
                 onClick={() => onSectionChange(item.id)}
                 aria-label={t(item.labelKey)}
+                data-section-id={item.id}
                 className="w-full"
                 size="icon"
               >

@@ -54,14 +54,14 @@ export function dnd5eCompactNav(
     },
     {
       labelKey: 'dnd.companions',
-      id: 'companion-section',
+      id: 'companions-section',
       icon: <PawPrint className="h-5 w-5" />,
     },
     ...(isLevel20
       ? [
           {
             labelKey: 'dnd.divineBoons',
-            id: 'boons-section',
+            id: 'divine-boons-section',
             icon: <Star className="h-5 w-5" />,
           },
         ]

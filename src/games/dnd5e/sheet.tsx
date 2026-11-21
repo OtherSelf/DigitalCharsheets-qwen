@@ -330,6 +330,10 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
       >
         {isCompactView && (
           <div
+            // В компакте характеристики живут в этой закреплённой полосе, а не
+            // в пустой обёртке грида, поэтому пункт рейла «Характеристики»
+            // ведёт сюда — иначе якорь был бы на нулевом по высоте узле.
+            id="stats-section"
             data-testid="compact-stats-bar"
             className="bg-card relative space-y-3 border-b px-4 py-3 shadow-sm"
           >
@@ -423,11 +427,17 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
         )}
 
         <div
+          id="info-section"
           className={cn(
             'flex flex-col items-stretch gap-6',
+            // В компактном режиме этот блок — экран «Информация», но внутри
+            // него живут и божественные дары: у них свой пункт рейла, поэтому
+            // скрывать блок при их выборе нельзя.
             isCompactView &&
               activeCompactSection &&
-              activeCompactSection !== 'info-section' &&
+              !['info-section', 'divine-boons-section'].includes(
+                activeCompactSection,
+              ) &&
               'hidden',
           )}
         >
@@ -654,6 +664,7 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
           />
 
           <div
+            id="inventory-section"
             className={cn(
               'space-y-6 md:col-span-3',
               isCompactView &&
