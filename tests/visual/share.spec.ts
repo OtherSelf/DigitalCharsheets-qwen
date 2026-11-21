@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 import {
+  expectNoHorizontalOverflow,
   expectNoRawI18nKeys,
   getState,
   openApp,
@@ -88,6 +89,54 @@ test.describe('гостевая ссылка', () => {
       await expect(page.getByTestId('shared-read-only-banner')).toBeVisible();
       await expectNoRawI18nKeys(page, 'гостевая ссылка mobile (en)');
       await screenshotPage(page, 'share-sheet-mobile-en.png');
+    },
+  );
+
+  test(
+    'mobile: гостевая ссылка DH — весь лист в одну колонку',
+    { tag: '@mobile' },
+    async ({ page, context }) => {
+      const share = readGuestShare();
+      test.skip(!share?.dhToken, 'нет DH-ссылки: данные не засеяны');
+
+      await prepare(context, { authenticated: false, language: 'en' });
+      await openApp(page, `/share/${share!.dhToken}`);
+
+      await expect(page.getByTestId('shared-read-only-banner')).toBeVisible();
+      await expectNoRawI18nKeys(page, 'гостевая ссылка DH mobile (en)');
+      await expectNoHorizontalOverflow(page);
+
+      // Внутренний скролл `main` — отдельная беда трёхпанельного DH-листа:
+      // документ может быть в порядке, а панели всё равно шире окна.
+      const mainOverflow = await page.evaluate(() => {
+        const main = document.querySelector('main');
+        if (!(main instanceof HTMLElement)) return null;
+        return main.scrollWidth - main.clientWidth;
+      });
+      expect(mainOverflow, 'main найден').not.toBeNull();
+      expect(
+        mainOverflow!,
+        'main не переполнен по горизонтали',
+      ).toBeLessThanOrEqual(1);
+
+      // Гость видит весь лист: компактного рейла в /share нет, поэтому
+      // компактный режим оставил бы ему одну секцию из шести.
+      await expect(page.getByRole('navigation')).toHaveCount(0);
+      for (const sectionId of [
+        'info-section',
+        'progression-section',
+        'skills-section',
+        'talents-section',
+        'equipment-section',
+        'inventory-section',
+      ]) {
+        await expect(
+          page.locator(`#${sectionId}`),
+          `секция ${sectionId} есть на гостевой странице`,
+        ).toHaveCount(1);
+      }
+
+      await screenshotPage(page, 'share-dh-mobile-en.png');
     },
   );
 

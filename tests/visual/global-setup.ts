@@ -816,6 +816,7 @@ function seedShareFixtures(workers: VisualAccount[]): void {
 
   workers.forEach((worker, index) => {
     const dndId = worker.characters.dnd;
+    const dhId = worker.characters.dh;
     if (!dndId) return;
     const token = shareTokenFor(index, 'plain');
     const historyToken = shareTokenFor(index, 'history');
@@ -841,10 +842,29 @@ function seedShareFixtures(workers: VisualAccount[]): void {
       expiresAt: null,
       includeHistory: true,
     };
+    // Второй токен — на второй лист набора: мобильная гостевая проверяется на
+    // двух раскладках, а лист второй редакции трёхпанельный и ломался по ширине.
+    let dhToken: string | undefined;
+    if (dhId) {
+      dhToken = shareTokenFor(index, 'dh');
+      const dhHash = crypto
+        .createHash('sha256')
+        .update(dhToken, 'utf8')
+        .digest('hex');
+      shares[dhHash] = {
+        uid: worker.user.uid,
+        characterId: dhId,
+        createdAt: '2026-01-10T10:02:00.000Z',
+        expiresAt: null,
+        includeHistory: false,
+      };
+    }
+
     worker.share = {
       token,
       historyToken,
       characterId: dndId,
+      ...(dhToken && dhId ? { dhToken, dhCharacterId: dhId } : {}),
     };
   });
 
@@ -856,7 +876,10 @@ function seedShareFixtures(workers: VisualAccount[]): void {
 }
 
 /** 43 символа base64url, уникальные на воркера. */
-function shareTokenFor(index: number, variant: 'plain' | 'history'): string {
+function shareTokenFor(
+  index: number,
+  variant: 'plain' | 'history' | 'dh',
+): string {
   const prefix = `visual${variant}${index.toString(36)}`;
   return (prefix + 'A'.repeat(43)).slice(0, 43);
 }
