@@ -506,55 +506,53 @@ core. It is data in the manifest, not code and not selectors:
   page). The dashboard, settings, dialogs and other games never see the
   tokens. Without a theme the host renders the page exactly as before.
 - `font` (optional, 1.4) is an entry point exporting a `PluginFont` — the
-  shape `next/font/local` returns (`variable`, `className`). The generator emits
-  a lazy loader in `generatedFontLoaders` (like `generatedUiLoaders`), so the
-  font module and its assets never enter the shared bundle; the host applies the
-  returned class on the same wrapper.
+  shape `next/font/local` returns (`variable`, `className`), or just
+  `{ className }`. The generator emits a lazy loader in
+  `generatedFontLoaders`; the host applies the returned class on the same
+  wrapper and sets `data-font-ready` once it is applied. If the chunk fails,
+  the wrapper keeps the host fonts.
 
 A static `woff2` is not an npm dependency: keep the used subsets and the
-`OFL.txt` license in the plugin's `assets/`, and import them with
-`next/font/local` (allowed by `scripts/plugins/boundaries.json`; the rest of
-`next/*` stays forbidden):
+`OFL.txt` license in the plugin's `assets/`. Declare both subsets in the game's
+CSS module with one family; the Cyrillic face is limited by `unicode-range`, so
+the files load with the sheet chunk, not with every page:
+
+```css
+/* src/games/<id>/sheet.module.css */
+@font-face {
+  font-family: '<PluginFont>';
+  src: url('./assets/<font>-latin.woff2') format('woff2');
+  font-weight: 600;
+  font-display: swap;
+}
+@font-face {
+  font-family: '<PluginFont>';
+  src: url('./assets/<font>-cyrillic.woff2') format('woff2');
+  font-weight: 600;
+  font-display: swap;
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+```
 
 ```ts
 // src/games/<id>/fonts.ts
-import localFont from 'next/font/local';
-
 import type { PluginFont } from '@/games/plugin-api';
 
-const latin = localFont({
-  src: './assets/<font>-latin.woff2',
-  weight: '600',
-  display: 'swap',
-  adjustFontFallback: 'Times New Roman',
-  variable: '--font-plugin-latin',
-});
-const cyrillic = localFont({
-  src: './assets/<font>-cyrillic.woff2',
-  weight: '600',
-  display: 'swap',
-  adjustFontFallback: 'Times New Roman',
-  variable: '--font-plugin-cyrillic',
-});
-
-export const pluginFont: PluginFont = {
-  variable: `${latin.variable} ${cyrillic.variable}`,
-};
+export const pluginFont: PluginFont = { className: '<id>-theme-font' };
 ```
 
-- Two subsets are two families: `PluginFont.variable` is a space-separated
-  list of classes, and the plugin's CSS chains them so Cyrillic text falls
-  through to the second one —
-  `font-family: var(--font-plugin-latin), var(--font-plugin-cyrillic), ...`.
-  Both host locales (`en` and `ru`) must render in the plugin font; a
-  latin-only file silently falls back to the host face in Cyrillic.
-- The host marks the wrapper with `data-font-ready` once the lazy chunk has
-  loaded and the class is applied. Visual tests wait for that attribute **and**
-  `document.fonts.ready`: the class appears before the `woff2` files finish.
-- If the chunk fails, the wrapper keeps the host fonts. No shipped game
-  declares `font` yet: the contract is exercised by
-  `tests/fixtures/example-plugin` (a same-shape object, because the fixture is
-  not built by Next).
+- The class must be non-empty: it is the host's signal to set
+  `data-font-ready`; the plugin's CSS decides where the family applies.
+- Two subsets, one family: a Latin-only file silently falls back to the host
+  face in Cyrillic, so both `en` and `ru` need a face with Cyrillic coverage.
+- `next/font/local` is allowed by `scripts/plugins/boundaries.json` (the rest of
+  `next/*` is not), but Turbopack hoists the CSS and preload links of a font
+  module imported from a lazy chunk into every page. Prefer `@font-face` in the
+  game's CSS module when the font belongs to the sheet only.
+- Visual tests wait for `data-font-ready` **and** `document.fonts.ready`: the
+  attribute arrives when the chunk is applied, the `woff2` may still load.
+- DH1 is the first shipped game to declare `font`;
+  `tests/fixtures/example-plugin` still covers the object shape on its own.
 
 The core cannot be reached from a theme: there is no way to pass CSS, class
 names or selectors. `tests/unit/game-theme.test.ts` checks the CSS generator
