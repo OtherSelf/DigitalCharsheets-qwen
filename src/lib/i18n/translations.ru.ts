@@ -539,6 +539,15 @@ export const ruTranslations: Record<string, string> = {
   'admin.schemaColumn': 'Схема',
   'admin.enabledColumn': 'Включён',
   'admin.demoColumn': 'Демо',
+  'admin.settingsColumn': 'Настройки',
+  'admin.gameSettings': 'Настройки игры',
+  'admin.gameSettingsTitle': 'Настройки игры',
+  'admin.appearanceSection': 'Оформление',
+  'admin.usePluginTheme': 'Использовать стили игры',
+  'admin.usePluginThemeHint':
+    'Цвета и шрифт берутся из игры. Выключите, чтобы использовать палитру и шрифт ядра.',
+  'admin.resetTheme': 'Сбросить к теме игры',
+  'admin.openDemo': 'Открыть демо',
   'admin.hostApiLabel': 'API хоста',
   'admin.gamesEnabledNote':
     'Отключённый плагин исчезает из создания и меню; его существующие листы открываются только для чтения (JSON-экспорт работает).',

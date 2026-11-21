@@ -36,6 +36,11 @@ import type { UserRole } from './user-role';
 export interface PluginCatalogEntry {
   enabled: boolean;
   visibility: ModuleStatus;
+  /**
+   * `true` — игра использует палитру и шрифт ядра вместо `ui.theme`.
+   * Дефолт `false`: стили плагина включены.
+   */
+  useHostTheme?: boolean;
 }
 
 export interface GameCatalog {
@@ -77,9 +82,13 @@ function parseEntry(value: unknown): PluginCatalogEntry | undefined {
   const visibility = isModuleStatus(record.visibility)
     ? record.visibility
     : undefined;
-  return visibility
-    ? { enabled, visibility }
-    : { enabled, visibility: 'published' };
+  const useHostTheme =
+    typeof record.useHostTheme === 'boolean' ? record.useHostTheme : undefined;
+  return {
+    enabled,
+    visibility: visibility ?? 'published',
+    ...(useHostTheme !== undefined ? { useHostTheme } : {}),
+  };
 }
 
 export function readGameCatalog(): GameCatalog {
@@ -144,6 +153,14 @@ export function getModuleStatus(
   const override = catalog.plugins[systemId]?.visibility;
   if (isModuleStatus(override)) return override;
   return getGameModule(systemId)?.defaultStatus ?? 'hidden';
+}
+
+/** Использовать ли для игры палитру и шрифт ядра вместо `ui.theme`. */
+export function isModuleHostTheme(
+  systemId: SystemId,
+  catalog: GameCatalog = readGameCatalog(),
+): boolean {
+  return catalog.plugins[systemId]?.useHostTheme ?? false;
 }
 
 /** Активен ли плагин (v1-каталог и отсутствие записи → enabled). */
@@ -217,6 +234,7 @@ function withEntry(
   const current: PluginCatalogEntry = {
     enabled: isModuleEnabled(systemId, catalog),
     visibility: getModuleStatus(systemId, catalog),
+    useHostTheme: isModuleHostTheme(systemId, catalog),
   };
   return {
     ...catalog,
@@ -235,6 +253,21 @@ export function setModuleStatus(
     throw new Error(`Неизвестный статус видимости: ${status}`);
   }
   const next = withEntry(readGameCatalog(), systemId, { visibility: status });
+  writeGameCatalog(next);
+  return next;
+}
+
+/** Переключить игру на палитру и шрифт ядра (админка). */
+export function setModuleHostTheme(
+  systemId: SystemId,
+  useHostTheme: boolean,
+): GameCatalog {
+  if (!getGameModule(systemId)) {
+    throw new Error(`Неизвестный модуль игры: ${systemId}`);
+  }
+  const next = withEntry(readGameCatalog(), systemId, {
+    useHostTheme: Boolean(useHostTheme),
+  });
   writeGameCatalog(next);
   return next;
 }

@@ -45,7 +45,7 @@ know what a level, a rank or a class is — the same rule as the rest of the cor
 `/admin` has a **Games & editions** section backed by
 `GET/PUT /api/admin/games` (admin only). For every installed plugin it shows
 the manifest data — version, sheet schema version, conformance tag and host API
-dependency — plus two independent switches stored in
+dependency — plus independent switches stored in
 `<data-dir>/settings/game-catalog.json` (v2):
 
 The line under the version badge reads `Schema <schemaVersion> · <conformance>
@@ -60,6 +60,7 @@ generator checks against the host. Version axes and their bump rules are in
 | --- | --- | --- |
 | Current visibility | `plugins[id].visibility` | Overrides the manifest `defaultStatus`: |
 | Enabled | `plugins[id].enabled` | `false` removes the plugin from creation, menus and `/demo`; existing sheets open read-only with a banner and JSON export still works (D9). |
+| Use the game's theme | `plugins[id].useHostTheme` | `true` replaces the plugin palette and font with the core ones on the sheet, `/share` and `/demo`; layout and CSS module stay. Default `false`. The gear button in the Settings column opens the per-edition dialog. |
 
 Tags from the manifest are stored but intentionally not displayed (D15).
 The visibility matrix:

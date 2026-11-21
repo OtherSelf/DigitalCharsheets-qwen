@@ -539,6 +539,15 @@ export const enTranslations: Record<string, string> = {
   'admin.schemaColumn': 'Schema',
   'admin.enabledColumn': 'Enabled',
   'admin.demoColumn': 'Demo',
+  'admin.settingsColumn': 'Settings',
+  'admin.gameSettings': 'Game settings',
+  'admin.gameSettingsTitle': 'Game settings',
+  'admin.appearanceSection': 'Appearance',
+  'admin.usePluginTheme': "Use the game's theme",
+  'admin.usePluginThemeHint':
+    'Colors and font come from the game. Turn off to use the core palette and font.',
+  'admin.resetTheme': 'Reset to the game theme',
+  'admin.openDemo': 'Open demo',
   'admin.hostApiLabel': 'host API',
   'admin.gamesEnabledNote':
     'A disabled plugin disappears from creation and menus; its existing sheets open read-only (JSON export still works).',
