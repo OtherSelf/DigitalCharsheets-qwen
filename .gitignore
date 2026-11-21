@@ -38,6 +38,7 @@ data/import-source.json
 # ==========================================
 # Testing & Coverage
 # ==========================================
+.perf-results/
 coverage/
 *.lcov
 .nyc_output
