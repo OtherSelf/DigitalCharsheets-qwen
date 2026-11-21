@@ -641,6 +641,32 @@ test.describe('адаптивность', () => {
   );
 
   test(
+    'stats-editor: карточки персонажей вместо широкой таблицы',
+    { tag: '@mobile' },
+    async ({ page, context }) => {
+      await prepare(context);
+      await openApp(page, '/stats-editor');
+
+      const cards = page.locator('[data-testid^="bulk-card-"]');
+      await expect(cards.first()).toBeVisible();
+      await expectNoHorizontalOverflow(page);
+
+      // Таблица с min-width 700–900 px на 412 px резала правые колонки
+      // посреди слова; в карточке каждое поле обязано быть в пределах экрана.
+      const offscreen = await cards.first().evaluate((card) => {
+        const width = window.innerWidth;
+        return Array.from(card.querySelectorAll('input, button')).filter(
+          (element) => {
+            const box = element.getBoundingClientRect();
+            return box.width > 0 && (box.right > width + 1 || box.left < -1);
+          },
+        ).length;
+      });
+      expect(offscreen, 'в карточке нет полей за экраном').toBe(0);
+    },
+  );
+
+  test(
     'минимальный размер тач-целей в шапке и рейле',
     { tag: '@mobile' },
     async ({ page, context }) => {

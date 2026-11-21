@@ -120,9 +120,19 @@ test.describe('редактирование Dark Heresy', { tag: '@plugin:dh1' }
 
       const characteristics = page.getByTestId('characteristics-compact');
       await startEditing(characteristics);
-      await expect(
-        characteristics.locator('input[type="number"]').nth(0),
-      ).toHaveValue('34');
+      const statInput = characteristics.locator('input[type="number"]').nth(0);
+      await expect(statInput).toHaveValue('34');
+
+      // iOS увеличивает страницу на фокусе в поле меньше 16 px: значение
+      // проверяем именно на фокусе, а не в покое — правило срабатывает там.
+      await statInput.focus();
+      const focusedFontSize = await statInput.evaluate(
+        (element) => getComputedStyle(element).fontSize,
+      );
+      expect(Number.parseFloat(focusedFontSize)).toBeGreaterThanOrEqual(16);
+      // Возвращаем покой: снимок фиксирует обычное состояние поля.
+      await statInput.blur();
+
       await screenshotPage(page, 'sheet-dh-mobile-edit-characteristics-en.png');
 
       await openMobileSection(page, 'Skills', 'skills-section');
