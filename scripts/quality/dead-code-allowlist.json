@@ -24,11 +24,6 @@
       "file": "src/games/plugin-api.ts",
       "name": "hasUiSlot",
       "reason": "публичный предикат слотов UI; часть контракта Plugin API (D3)"
-    },
-    {
-      "file": "src/games/dh1/dh-stats.ts",
-      "name": "statTotal",
-      "reason": "тест-сим паритета DH1/DH2 (tests/unit/dh-family-parity.test.ts импортирует модуль лениво и через структурный каст); прод-код DH1 считает итог через upgradeBonus"
     }
   ]
 }

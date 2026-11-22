@@ -55,10 +55,13 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const DEFAULT_ROOT = path.resolve(HERE, '../..');
 
 /**
- * Потолок `test-only` (храповик, D4). Число — фактический замер на коммите
- * `8d7cb47`; после удаления прод-мёртвого кода его нужно опускать.
+ * Потолок `test-only` (храповик, D4). 81 — фактический замер после того, как
+ * parity-тест DH1/DH2 перестал прятать ссылки за структурным кастом: к трём
+ * копиям-симам (`STAT_UPGRADE_STEP`, `statTotal`, `TRAINING_KEYS`) добавилось
+ * видимое использование. Новый тест-сим — осознанное изменение: удалить
+ * прод-мёртвое или поднять потолок в том же коммите.
  */
-export const TEST_ONLY_MAX = 78;
+export const TEST_ONLY_MAX = 81;
 
 /** Файлы, которые Next или генератор вызывает сам, а не по импорту. */
 const ENTRY_PATTERNS = [

@@ -10,37 +10,28 @@ import { describe, expect, it } from 'vitest';
  * (удаление игры не должно валить host-тесты).
  */
 
-interface StatsCopy {
-  STAT_UPGRADE_STEP: number;
-  upgradeBonus(upgrades: readonly boolean[] | undefined | null): number;
-  statTotal(
-    base: number | undefined,
-    upgrades: readonly boolean[] | undefined | null,
-  ): number;
-  statBonus(total: number | undefined): number;
-}
-
-interface TrainingCopy {
-  TRAINING_KEYS: readonly string[];
-  closeTraining(training?: Record<string, boolean>): Record<string, boolean>;
-  toggleTraining(
-    training: Record<string, boolean> | undefined,
-    key: string,
-    value: boolean,
-  ): Record<string, boolean>;
-}
+type StatsModule = typeof import('@/games/dh1/dh-stats');
+type TrainingModule = typeof import('@/games/dh1/skill-training');
 
 interface EditionCopy {
-  stats: StatsCopy;
-  training: TrainingCopy;
+  stats: StatsModule;
+  training: TrainingModule;
 }
 
+/**
+ * Модули берутся лениво: редакция может отсутствовать в сборке, и тогда
+ * сравнивать нечего. Тип — `typeof import(...)` dh1, а не локальный интерфейс:
+ * так `statTotal` и `toggleTraining` остаются видимыми ссылками для
+ * `deadcode:check` (иначе они выглядят мёртвыми и требуют allowlist).
+ */
 async function loadEdition(id: 'dh1' | 'dh2'): Promise<EditionCopy | null> {
   try {
-    const stats = (await import(`@/games/${id}/dh-stats`)) as StatsCopy;
+    const stats = (await import(
+      `@/games/${id}/dh-stats`
+    )) as unknown as StatsModule;
     const training = (await import(
       `@/games/${id}/skill-training`
-    )) as unknown as TrainingCopy;
+    )) as unknown as TrainingModule;
     return { stats, training };
   } catch {
     return null;

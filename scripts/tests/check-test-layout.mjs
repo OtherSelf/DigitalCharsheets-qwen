@@ -189,9 +189,9 @@ const GAME_MENTION_ALLOWANCE = {
     removeBy: 'остаётся: вход гейта',
   },
   'tests/unit/dh-family-parity.test.ts': {
-    max: 34,
+    max: 37,
     reason:
-      'паритет двух редакций DH — по правилу test:layout это host-level тест',
+      'паритет двух редакций DH — host-level тест; типы модулей добавлены, чтобы deadcode:check видел ссылки на statTotal/STAT_UPGRADE_STEP/TRAINING_KEYS',
     removeBy: 'остаётся: кросс-эдишн тест',
   },
   'tests/unit/exdev-storage.test.ts': {
@@ -392,6 +392,13 @@ function gameIds() {
 
 const GAME_IMPORT_RE = /['"]@\/games\/([^/'"]+)\/([^'"]+)['"]/g;
 
+/**
+ * Шаблонный импорт `@/games/${id}/...`: тест сам перебирает редакции, поэтому
+ * литеральные пути в нём — только типы. Без этого правила кросс-эдишн тест
+ * паритета выглядел «тестом одной редакции» и требовал переезда в плагин.
+ */
+const DYNAMIC_GAME_IMPORT_RE = /import\(\s*`@\/games\/\$\{/;
+
 /** id игр, чьи модули (не манифесты) импортирует файл. */
 function importedGames(source, ids) {
   const found = new Set();
@@ -436,7 +443,8 @@ for (const absolute of walk(UNIT_DIR)) {
   }
 
   const games = importedGames(source, gameIds());
-  if (games.size === 1) {
+  const dynamicAcrossEditions = DYNAMIC_GAME_IMPORT_RE.test(source);
+  if (games.size === 1 && !dynamicAcrossEditions) {
     const [game] = games;
     result.errors.push(
       `${name}: тест одной редакции (${game}) должен лежать в ` +
