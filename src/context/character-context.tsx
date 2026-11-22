@@ -33,6 +33,9 @@ import { Character } from '@/lib/types';
 import { useTranslation } from './language-context';
 import { useLocalAuth } from './local-auth-context';
 
+export type RefreshReason =
+  'bootstrap' | 'dashboard' | 'focus' | 'cross-tab' | 'retry';
+
 export interface CharacterContextType {
   characters: Character[];
   getCharacter: (id: string) => Character | undefined;
@@ -70,7 +73,7 @@ export interface CharacterContextType {
    * на страницу и при возврате фокуса в окно). Пропускает обновление, если
    * есть несохранённые правки или очередь сохранений.
    */
-  refreshCharacters: (options?: { force?: boolean }) => Promise<void>;
+  refreshCharacters: (reason?: RefreshReason) => Promise<void>;
   hideNotes: boolean;
   setHideNotes: (val: boolean) => void;
   showEditButtons: boolean;
@@ -246,14 +249,15 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
    * правки, которые ещё летят на сервер.
    */
   const refreshCharacters = useCallback(
-    async (options?: { force?: boolean }) => {
+    async (reason: RefreshReason = 'focus') => {
       if (!userRef.current) return;
       if (hasUnsavedChangesRef.current) return;
       if (saveQueueRef.current?.hasPending()) return;
       if (refreshInFlightRef.current) return;
       // Повторный GET в пределах 300 мс после загрузки не нужен; возврат на
-      // дашборд передаёт `force`, чтобы не потерять свежий список за этим окном.
-      if (!options?.force && Date.now() - lastCharactersLoadRef.current < 300) {
+      // дашборд и явный retry передают причину, которая это окно обходит.
+      const bypassDedupe = reason === 'dashboard' || reason === 'retry';
+      if (!bypassDedupe && Date.now() - lastCharactersLoadRef.current < 300) {
         return;
       }
 
@@ -596,7 +600,7 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
    */
   useEffect(() => {
     if (!user || pathname !== '/') return;
-    void refreshCharacters({ force: true });
+    void refreshCharacters('dashboard');
   }, [pathname, user, refreshCharacters]);
 
   /**
@@ -610,9 +614,11 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!user || pathname !== '/') return;
     const onVisible = () => {
-      if (document.visibilityState === 'visible') void refreshCharacters();
+      if (document.visibilityState === 'visible') {
+        void refreshCharacters('focus');
+      }
     };
-    const onFocus = () => void refreshCharacters();
+    const onFocus = () => void refreshCharacters('focus');
     document.addEventListener('visibilitychange', onVisible);
     window.addEventListener('focus', onFocus);
     return () => {
@@ -778,7 +784,7 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
    */
   const retryCharacters = useCallback(async () => {
     setLoadError(false);
-    await refreshCharacters({ force: true });
+    await refreshCharacters('retry');
   }, [refreshCharacters]);
 
   const getCharacter = useCallback(

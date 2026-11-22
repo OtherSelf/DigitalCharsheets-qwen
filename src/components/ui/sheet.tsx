@@ -163,12 +163,10 @@ const SheetContent = React.forwardRef<
       setDragX(side === 'right' ? width || 320 : -(width || 320));
       dismissTimer.current = setTimeout(() => {
         closeSheet?.(false);
-        // Сброс после закрытия: Radix оставляет `SheetContent` смонтированным,
-        // и следующее открытие иначе начнётся с панелью за краем экрана.
-        dismissTimer.current = setTimeout(() => {
-          setDismissing(false);
-          setDragX(0);
-        }, 0);
+        // Сброс — только в `onOpenAutoFocus`: Radix оставляет `SheetContent`
+        // смонтированным, а немедленный сброс вернул бы панель в кадр на
+        // exit-анимации. Следующее открытие сбрасывает состояние до отрисовки.
+        dismissTimer.current = null;
       }, 180);
       return;
     }
