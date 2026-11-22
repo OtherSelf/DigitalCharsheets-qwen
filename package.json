@@ -20,6 +20,7 @@
     "format": "npm run eol:fix && prettier --write .",
     "format:check": "npm run eol:check && prettier --check .",
     "typecheck": "tsc --noEmit",
+    "deadcode:check": "node scripts/quality/check-dead-code.mjs",
     "test": "vitest run",
     "test:plugin": "node scripts/tests/test-plugin.mjs",
     "test:layout": "node scripts/tests/check-test-layout.mjs",

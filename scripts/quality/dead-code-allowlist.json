@@ -1,0 +1,34 @@
+{
+  "allowed": [
+    {
+      "file": "src/games/plugin-api.ts",
+      "name": "GamePlugin",
+      "reason": "публичный контракт Plugin API: по нему пишутся сторонние плагины, удаление — отдельное решение (D3)"
+    },
+    {
+      "file": "src/games/plugin-api.ts",
+      "name": "ParsedEntryPoint",
+      "reason": "публичный тип разбора `<file>#<export>` из plugin.json; часть SDK, а не мёртвый код (D3)"
+    },
+    {
+      "file": "src/games/plugin-api.ts",
+      "name": "pluginDisplayName",
+      "reason": "публичный хелпер SDK для подписи плагина; экспортируется для сторонних плагинов (D3)"
+    },
+    {
+      "file": "src/games/plugin-api.ts",
+      "name": "pluginDescription",
+      "reason": "публичный хелпер SDK для описания плагина; экспортируется для сторонних плагинов (D3)"
+    },
+    {
+      "file": "src/games/plugin-api.ts",
+      "name": "hasUiSlot",
+      "reason": "публичный предикат слотов UI; часть контракта Plugin API (D3)"
+    },
+    {
+      "file": "src/games/dh1/dh-stats.ts",
+      "name": "statTotal",
+      "reason": "тест-сим паритета DH1/DH2 (tests/unit/dh-family-parity.test.ts импортирует модуль лениво и через структурный каст); прод-код DH1 считает итог через upgradeBonus"
+    }
+  ]
+}
