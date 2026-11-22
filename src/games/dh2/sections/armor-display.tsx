@@ -27,7 +27,7 @@ export const ArmorDisplay = ({
 }: {
   character: DH2Character;
   isCompactView: boolean;
-  /** Встроенный вид (вкладка «Информация»): без верхнего отступа десктопной колонки. */
+  /** Блок в своей карточке (мобильный «Информация»): без отступа десктопной колонки. */
   embedded?: boolean;
 }) => {
   const { t } = useTranslation();
@@ -72,11 +72,8 @@ export const ArmorDisplay = ({
       >
         <h4
           className={cn(
-            'w-full px-1 text-center font-bold',
+            'w-full truncate px-1 text-center font-bold',
             isCompactView ? 'text-[10px]' : 'text-xs',
-            embedded
-              ? 'text-[9px] leading-tight break-words whitespace-normal'
-              : 'truncate',
           )}
         >
           {title}
@@ -108,6 +105,7 @@ export const ArmorDisplay = ({
   };
   return (
     <div
+      data-testid="armor-display"
       className={cn(
         'grid w-full max-w-full grid-cols-3 gap-x-2 gap-y-4 overflow-hidden',
         embedded ? 'pt-0' : 'pt-8',

@@ -898,6 +898,7 @@ export const Dh1Sheet = React.forwardRef<
         )}
       >
         <div
+          id="info-section"
           className={cn(
             'lg:col-span-5',
             isCompactView &&
@@ -913,6 +914,11 @@ export const Dh1Sheet = React.forwardRef<
             creationReview={creationReview}
             onEditingChange={(v: boolean) => reportSectionEditing('info', v)}
           />
+          {isCompactView && (
+            <div className="bg-card text-card-foreground mt-6 rounded-lg border p-4">
+              <ArmorDisplay character={character} isCompactView embedded />
+            </div>
+          )}
         </div>
         <div
           className={cn(

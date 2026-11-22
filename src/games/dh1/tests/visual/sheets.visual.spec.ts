@@ -138,6 +138,13 @@ test.describe(
         await expect(info.getByText('(86-00)')).toBeVisible();
         await expect(info.getByText('(31-70)')).toBeVisible();
 
+        // Блок локаций — отдельная карточка внутри вкладки, а не строка
+        // внутри карточки «Информация»: эталон стережёт ширину и отступы.
+        await screenshotElement(
+          page.locator('[data-testid="armor-display"]:visible').first(),
+          'sheet-dh-mobile-armor-en.png',
+        );
+
         // Планшет: та же схема видна в правой колонке листа.
         await page.setViewportSize({ width: 1024, height: 768 });
         await page.waitForTimeout(500);

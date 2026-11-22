@@ -80,7 +80,6 @@ import {
 } from '../psy';
 import { statTotal } from '../stats';
 import type { DH2Character } from '../types';
-import { ArmorDisplay } from './armor-display';
 import { EditSaveButton } from './dh-ui-helpers';
 
 interface SectionProps {
@@ -403,7 +402,7 @@ export const InfoSection = ({
   };
 
   return (
-    <Card id="info-section">
+    <Card>
       <CardHeader
         className={cn(
           'flex flex-row items-center justify-between px-6 pt-3 pb-6',
@@ -812,15 +811,6 @@ export const InfoSection = ({
             {t('common.backstory')}
           </Button>
         </div>
-        {isCompactView && (
-          <div className="mt-4">
-            <ArmorDisplay
-              character={character}
-              isCompactView={isCompactView}
-              embedded
-            />
-          </div>
-        )}
       </CardContent>
 
       <NarrativeSheet

@@ -66,7 +66,6 @@ import { dh1ExperienceRows } from '../experience';
 import { isCreationFieldLocked } from '../field-policy';
 import { genderLabel, genderOptions, toGenderCode } from '../gender';
 import { type DarkHeresyCareerPath, type DH1Character } from '../types';
-import { ArmorDisplay } from './armor-display';
 import { EditSaveButton } from './dh-ui-helpers';
 
 // Наборы состояний объявляет редакция: компонент в ядре принимает их
@@ -318,7 +317,7 @@ export const InfoSection = ({
   if (!showInfo) return null;
 
   return (
-    <Card id="info-section">
+    <Card>
       <CardHeader
         className={cn(
           'flex flex-row items-center justify-between px-6 pt-3 pb-6',
@@ -825,15 +824,6 @@ export const InfoSection = ({
             </MetaBlock>
           )}
         </div>
-        {isCompactView && (
-          <div className="mt-4">
-            <ArmorDisplay
-              character={character}
-              isCompactView={isCompactView}
-              embedded
-            />
-          </div>
-        )}
       </CardContent>
     </Card>
   );
