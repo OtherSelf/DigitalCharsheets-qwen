@@ -57,3 +57,26 @@ test.describe('диалоги — геометрия окна', () => {
     expect(box!.x + box!.width).toBeLessThanOrEqual(viewport!.width + 1);
   });
 });
+
+test.describe('диалоги — закрытие и повторное открытие', () => {
+  test('крестик и клик по подложке закрывают, диалог открывается снова', async ({
+    page,
+    context,
+  }) => {
+    await prepare(context);
+    await openApp(page, sheetPath(getState().dndId));
+
+    let dialog = await openDialog(page, 'House Rules', isMobile());
+    await dialog.getByTestId('dialog-close').click();
+    await expect(dialog).not.toBeVisible();
+
+    dialog = await openDialog(page, 'House Rules', isMobile());
+    await expect(dialog).toBeVisible();
+    // Клик мимо окна (по подложке) — второй штатный способ закрытия.
+    await page.mouse.click(5, 5);
+    await expect(dialog).not.toBeVisible();
+
+    dialog = await openDialog(page, 'House Rules', isMobile());
+    await expect(dialog).toBeVisible();
+  });
+});

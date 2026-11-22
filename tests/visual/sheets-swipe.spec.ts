@@ -53,6 +53,62 @@ test.describe('правые шторки — свайп', { tag: '@mobile' }, ()
     await expect(dialog).toBeInViewport();
   });
 
+  test('длинный свайп не возвращает шторку в кадр до закрытия', async ({
+    page,
+    context,
+  }) => {
+    await prepare(context);
+    await openApp(page, sheetPath(getState().dhId));
+    const dialog = await openDialog(page, 'Notes', true);
+    const box = await dialog.boundingBox();
+    expect(box, 'у шторки есть геометрия').not.toBeNull();
+
+    const client = await page.context().newCDPSession(page);
+    const fromX = box!.x + 24;
+    const y = box!.y + box!.height / 2;
+    try {
+      await client.send('Input.dispatchTouchEvent', {
+        type: 'touchStart',
+        touchPoints: [{ x: fromX, y }],
+      });
+      for (let step = 1; step <= 6; step += 1) {
+        await client.send('Input.dispatchTouchEvent', {
+          type: 'touchMove',
+          touchPoints: [{ x: fromX + (220 * step) / 6, y }],
+        });
+        await page.waitForTimeout(20);
+      }
+      await client.send('Input.dispatchTouchEvent', {
+        type: 'touchEnd',
+        touchPoints: [],
+      });
+    } finally {
+      await client.detach();
+    }
+
+    // Сразу после отпускания панель должна уезжать только вправо. Если
+    // сбросить drag до нуля раньше close, кадр показывает рывок назад.
+    const samples: number[] = [];
+    for (let i = 0; i < 10; i += 1) {
+      const current = await dialog.boundingBox().catch(() => null);
+      if (current) samples.push(current.x);
+      await page.waitForTimeout(20);
+    }
+    expect(samples.some((x) => x > box!.x + 40)).toBe(true);
+    expect(
+      samples.filter((x) => x <= box!.x + 5),
+      'панель не должна возвращаться к исходной позиции',
+    ).toHaveLength(0);
+
+    await expect(dialog).not.toBeVisible();
+    await page
+      .getByRole('navigation')
+      .getByRole('button', { name: 'Notes', exact: true })
+      .click();
+    await expect(dialog).toBeVisible();
+    await expect(dialog).toBeInViewport();
+  });
+
   test('журнал заданий закрывается свайпом', async ({ page, context }) => {
     await prepare(context);
     await openApp(page, sheetPath(getState().dhId));

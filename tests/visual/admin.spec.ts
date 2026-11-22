@@ -269,4 +269,31 @@ test.describe('admin — игры и редакции', () => {
     await page.keyboard.press('Escape');
     await expect(dialog).not.toBeVisible();
   });
+
+  test('меню выбора закрывается по Escape и клику мимо', async ({
+    page,
+    context,
+  }) => {
+    await prepare(context, { account: 'admin', theme: 'light' });
+    await openApp(page, '/admin');
+
+    const combo = page.getByRole('combobox').first();
+    await combo.scrollIntoViewIfNeeded();
+    const listbox = page.getByRole('listbox');
+
+    await combo.click();
+    await expect(listbox).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(listbox).toBeHidden();
+
+    await combo.click();
+    await expect(listbox).toBeVisible();
+    await page.mouse.click(5, 5);
+    await expect(listbox).toBeHidden();
+
+    // Повторное открытие после закрытия: триггер не «залип».
+    await combo.click();
+    await expect(listbox).toBeVisible();
+    await page.keyboard.press('Escape');
+  });
 });
