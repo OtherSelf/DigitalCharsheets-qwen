@@ -44,6 +44,10 @@ import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { extractSpecifiers } from './lib/scan.mjs';
+
+export { extractSpecifiers };
+
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, '../..');
 const GAMES_DIR = join(ROOT, 'src/games');
@@ -58,33 +62,6 @@ const SOURCE_EXTENSIONS = ['.ts', '.tsx', '.mts'];
 // ────────────────────────────────────────────────────────────────────────────
 //  Чистые функции (их же использует tests/unit/plugin-boundaries.test.ts)
 // ────────────────────────────────────────────────────────────────────────────
-
-/**
- * Спецификаторы импортов файла: `import x from 'a'`, `import 'a'`,
- * `import('a')`, `export … from 'a'`, `require('a')`.
- *
- * Повтор одного и того же модуля в файле считается один раз — счётчики в
- * конфиге означают «сколько файлов плагинов импортируют модуль».
- *
- * @param {string} source
- * @returns {string[]}
- */
-export function extractSpecifiers(source) {
-  const patterns = [
-    /\bfrom\s+['"]([^'"]+)['"]/g,
-    /\bimport\s*\(\s*['"]([^'"]+)['"]\s*\)/g,
-    /\bimport\s+['"]([^'"]+)['"]/g,
-    /\brequire\s*\(\s*['"]([^'"]+)['"]\s*\)/g,
-  ];
-  const found = new Set();
-  for (const pattern of patterns) {
-    for (const match of source.matchAll(pattern)) {
-      const specifier = match[1].trim();
-      if (specifier) found.add(specifier);
-    }
-  }
-  return [...found];
-}
 
 /** Относительный ли спецификатор (`./x`, `../x`, `/x`). */
 export function isRelativeSpecifier(specifier) {

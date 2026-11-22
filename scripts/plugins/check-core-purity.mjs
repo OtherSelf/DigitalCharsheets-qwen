@@ -37,6 +37,13 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import {
+  stripCommentsOnly,
+  stripNonCode,
+} from './lib/scan.mjs';
+
+export { stripCommentsOnly, stripNonCode };
+
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 
 /** Каталоги ядра, где игровых знаний быть не должно. */
@@ -162,113 +169,6 @@ function listFiles(dir, kind = 'code') {
   return found;
 }
 
-/**
- * Заменить комментарии и содержимое литералов пробелами, сохранив переводы
- * строк: номера строк остаются исходными, а «игровые» слова внутри строк не
- * считаются кодом.
- *
- * Шаблонные литералы с `${...}` требуют стека: подстановка — снова код, и
- * внутри неё может быть свой шаблон. Без стека сканер «уезжает» в строковое
- * состояние и перестаёт видеть комментарии ниже.
- */
-export function stripNonCode(source) {
-  const out = source.split('');
-  const blank = (from, to) => {
-    for (let j = from; j < to; j += 1) {
-      if (out[j] !== '\n') out[j] = ' ';
-    }
-  };
-  let mode = 'code';
-  const templateStack = [];
-  let braceDepth = 0;
-  let i = 0;
-  while (i < source.length) {
-    const ch = source[i];
-    const next = source[i + 1];
-    if (mode === 'code') {
-      if (ch === '/' && next === '/') {
-        const end = source.indexOf('\n', i);
-        const stop = end === -1 ? source.length : end;
-        blank(i, stop);
-        i = stop;
-        continue;
-      }
-      if (ch === '/' && next === '*') {
-        const end = source.indexOf('*/', i + 2);
-        const stop = end === -1 ? source.length : end + 2;
-        blank(i, stop);
-        i = stop;
-        continue;
-      }
-      if (ch === '(' && next === '*') {
-        // Комментарий в JSX: {/* ... */}
-        const end = source.indexOf('*)', i + 2);
-        if (end !== -1) {
-          blank(i, end + 2);
-          i = end + 2;
-          continue;
-        }
-      }
-      if (ch === "'" || ch === '"') {
-        mode = ch;
-        blank(i, i + 1);
-        i += 1;
-        continue;
-      }
-      if (ch === '`') {
-        mode = '`';
-        blank(i, i + 1);
-        i += 1;
-        continue;
-      }
-      if (ch === '{') {
-        braceDepth += 1;
-        i += 1;
-        continue;
-      }
-      if (ch === '}') {
-        if (braceDepth > 0) {
-          braceDepth -= 1;
-        } else if (templateStack.length > 0) {
-          // `}` закрывает подстановку: это часть литерала, а не код.
-          blank(i, i + 1);
-          mode = '`';
-          templateStack.pop();
-        }
-        i += 1;
-        continue;
-      }
-      i += 1;
-      continue;
-    }
-
-    // Внутри строки или шаблона: сам литерал — не код, поэтому затираем его.
-    if (ch === '\\') {
-      blank(i, i + 2);
-      i += 2;
-      continue;
-    }
-    if (mode === '`' && ch === '$' && next === '{') {
-      // Подстановка — снова код; шаблон вернётся после закрывающей скобки.
-      blank(i, i + 2);
-      templateStack.push(braceDepth);
-      braceDepth = 0;
-      mode = 'code';
-      i += 2;
-      continue;
-    }
-    if (ch === mode) {
-      blank(i, i + 1);
-      mode = 'code';
-      i += 1;
-      continue;
-    }
-    blank(i, i + 1);
-    i += 1;
-  }
-  return out.join('');
-}
-
 function wordPattern(list) {
   const escaped = list.map((token) =>
     token.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
@@ -343,100 +243,6 @@ export function findCssViolations(source) {
     }
   });
   return violations;
-}
-
-/**
- * Убрать комментарии, сохранив литералы и содержимое строк: для поиска id
- * именно значения в кавычках и важны, а подписи в комментариях — нет.
- * Номера строк сохраняются.
- *
- * @param {string} source
- * @returns {string}
- */
-export function stripCommentsOnly(source) {
-  const out = source.split('');
-  const blank = (from, to) => {
-    for (let j = from; j < to; j += 1) {
-      if (out[j] !== '\n') out[j] = ' ';
-    }
-  };
-  let mode = 'code';
-  const templateStack = [];
-  let braceDepth = 0;
-  let i = 0;
-  while (i < source.length) {
-    const ch = source[i];
-    const next = source[i + 1];
-    if (mode === 'code') {
-      if (ch === '/' && next === '/') {
-        const end = source.indexOf('\n', i);
-        const stop = end === -1 ? source.length : end;
-        blank(i, stop);
-        i = stop;
-        continue;
-      }
-      if (ch === '/' && next === '*') {
-        const end = source.indexOf('*/', i + 2);
-        const stop = end === -1 ? source.length : end + 2;
-        blank(i, stop);
-        i = stop;
-        continue;
-      }
-      if (ch === '(' && next === '*') {
-        const end = source.indexOf('*)', i + 2);
-        if (end !== -1) {
-          blank(i, end + 2);
-          i = end + 2;
-          continue;
-        }
-      }
-      if (ch === "'" || ch === '"') {
-        mode = ch;
-        i += 1;
-        continue;
-      }
-      if (ch === '`') {
-        mode = '`';
-        i += 1;
-        continue;
-      }
-      if (ch === '{') {
-        braceDepth += 1;
-        i += 1;
-        continue;
-      }
-      if (ch === '}') {
-        if (braceDepth > 0) {
-          braceDepth -= 1;
-        } else if (templateStack.length > 0) {
-          mode = '`';
-          templateStack.pop();
-        }
-        i += 1;
-        continue;
-      }
-      i += 1;
-      continue;
-    }
-    if (ch === '\\') {
-      i += 2;
-      continue;
-    }
-    if (mode === '`' && ch === '$' && next === '{') {
-      templateStack.push(braceDepth);
-      braceDepth = 0;
-      mode = 'code';
-      i += 2;
-      continue;
-    }
-    if (ch === mode) {
-      mode = 'code';
-      i += 1;
-      continue;
-    }
-    i += 1;
-  }
-  return out.join('');
 }
 
 /**

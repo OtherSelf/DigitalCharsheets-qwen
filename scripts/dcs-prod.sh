@@ -46,19 +46,8 @@ COMMAND=""
 LOG_LINES=100
 ORIG_ARGS=("$@")
 
-# ── вывод ───────────────────────────────────────────────────────────────────
-if [ -t 1 ] && [ -z "${NO_COLOR:-}" ]; then
-  C_RESET=$'\033[0m'; C_DIM=$'\033[2m'; C_RED=$'\033[31m'
-  C_GREEN=$'\033[32m'; C_YELLOW=$'\033[33m'; C_BLUE=$'\033[36m'; C_BOLD=$'\033[1m'
-else
-  C_RESET=""; C_DIM=""; C_RED=""; C_GREEN=""; C_YELLOW=""; C_BLUE=""; C_BOLD=""
-fi
-
-step() { printf '%s▶%s %s\n' "$C_BLUE" "$C_RESET" "$*"; }
-ok()   { printf '%s✓%s %s\n' "$C_GREEN" "$C_RESET" "$*"; }
-warn() { printf '%s!%s %s\n' "$C_YELLOW" "$C_RESET" "$*" >&2; }
-die()  { printf '%s✗%s %s\n' "$C_RED" "$C_RESET" "$*" >&2; exit 1; }
-dim()  { printf '%s%s%s\n' "$C_DIM" "$*" "$C_RESET"; }
+source "${DCS_LIB_DIR:-$SCRIPT_DIR}/lib/common.sh"
+source "${DCS_LIB_DIR:-$SCRIPT_DIR}/lib/self-copy.sh"
 
 usage() {
   cat <<EOF
@@ -90,13 +79,6 @@ ${C_BOLD}Сценарии:${C_RESET}
   откатиться: git reset --hard <старый-коммит> && bash scripts/dcs-prod.sh restart
 EOF
 }
-
-need() {
-  local tool="$1" hint="${2:-}"
-  command -v "$tool" >/dev/null 2>&1 || die "нужен $tool${hint:+: $hint}"
-}
-
-have() { command -v "$1" >/dev/null 2>&1; }
 
 git_repo() { git -C "$APP_DIR" "$@"; }
 
@@ -236,29 +218,7 @@ print_summary() {
 # переписывает и его. Если файл внутри APP_DIR, работаем из временной копии,
 # иначе bash может дочитать уже изменённый файл на середине.
 guard_self_update() {
-  [ "$SKIP_PULL" -eq 1 ] && return 0
-  [ -n "${DCS_PROD_SELF_COPY:-}" ] && return 0
-  local self_path self_dir app_real tmp rc
-  self_path="${BASH_SOURCE[0]}"
-  self_dir=$(cd "$(dirname "$self_path")" 2>/dev/null && pwd -P) || return 0
-  app_real=$(cd "$APP_DIR" 2>/dev/null && pwd -P) || return 0
-  [ -n "$app_real" ] || return 0
-  case "$self_dir/" in
-    "$app_real"/*) ;;
-    *) return 0 ;;
-  esac
-  tmp=$(mktemp "${TMPDIR:-/tmp}/dcs-prod.XXXXXX.sh") \
-    || die "не удалось создать временную копию скрипта (TMPDIR=${TMPDIR:-/tmp})"
-  cp -p "$self_path" "$tmp" || die "не удалось скопировать скрипт в $tmp"
-  chmod 700 "$tmp"
-  dim "скрипт лежит внутри $APP_DIR — работаю из копии $tmp, чтобы обновление не переписало его на ходу"
-  if DCS_PROD_DIR="$APP_DIR" DCS_PROD_SELF_COPY=1 bash "$tmp" "${ORIG_ARGS[@]}"; then
-    rc=0
-  else
-    rc=$?
-  fi
-  rm -f "$tmp"
-  exit "$rc"
+  guard_self_copy "$SKIP_PULL" DCS_PROD_SELF_COPY dcs-prod "DCS_PROD_DIR=$APP_DIR"
 }
 
 cmd_deploy() {

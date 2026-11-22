@@ -31,6 +31,10 @@ import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { extractSpecifiers } from './lib/scan.mjs';
+
+export { extractSpecifiers };
+
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, '../..');
 
@@ -62,21 +66,6 @@ export const GAMES_CONTRACT = new Set([
 ]);
 
 const SOURCE_EXTENSIONS = /\.(ts|tsx|mts)$/;
-
-/** Спецификаторы импортов файла (статические, динамические, re-export, require). */
-export function extractSpecifiers(source) {
-  const patterns = [
-    /\bfrom\s+['"]([^'"]+)['"]/g,
-    /\bimport\s*\(\s*['"]([^'"]+)['"]\s*\)/g,
-    /\bimport\s+['"]([^'"]+)['"]/g,
-    /\brequire\s*\(\s*['"]([^'"]+)['"]\s*\)/g,
-  ];
-  const found = new Set();
-  for (const pattern of patterns) {
-    for (const match of source.matchAll(pattern)) found.add(match[1]);
-  }
-  return [...found];
-}
 
 function listSourceFiles(dir, root) {
   const found = [];
