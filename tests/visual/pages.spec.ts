@@ -899,6 +899,26 @@ test.describe('общие страницы', () => {
   });
 
   test(
+    'stats-editor — число вне min/max ограничивается',
+    { tag: '@fast' },
+    async ({ page, context }) => {
+      await prepare(context);
+      await openApp(page, '/stats-editor');
+
+      const row = page
+        .locator('[data-testid^="bulk-row-"], [data-testid^="bulk-card-"]')
+        .first();
+      const input = row.locator('input[type="number"]').first();
+      await input.fill('-5');
+      await expect(input).toHaveValue('-5');
+      await row.getByRole('button').last().click();
+
+      // min=0 у характеристик: сохранение не должно записать -5.
+      await expect(input).toHaveValue('0');
+    },
+  );
+
+  test(
     'stats-editor — вкладка DH Vitals (en)',
     { tag: '@desktop' },
     async ({ page, context }) => {

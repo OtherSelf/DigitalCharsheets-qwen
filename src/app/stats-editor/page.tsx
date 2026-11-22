@@ -29,6 +29,7 @@ import type {
 } from '@/games/types';
 import { useAllGameUiSlots } from '@/hooks/use-game-ui-slots';
 import { useViewportFlags } from '@/hooks/use-viewport-flags';
+import { normalizeBulkValues } from '@/lib/bulk-editor-values';
 import { type Character } from '@/lib/types';
 
 /**
@@ -243,7 +244,7 @@ export default function StatsEditorPage() {
   const [edits, setEdits] = useState<EditsState>({});
   const [saveStatus, setSaveStatus] = useState('');
 
-  const modules = listGameModules();
+  const modules = useMemo(() => listGameModules(), []);
   const slotsById = useAllGameUiSlots();
   const tables = useMemo<BulkTableEntry[]>(
     () =>
@@ -268,19 +269,31 @@ export default function StatsEditorPage() {
 
   useEffect(() => {
     if (!isLoaded) return;
-    const next: EditsState = {};
-    for (const { module, table } of tables) {
-      const rows: Record<string, TableEdit> = {};
-      for (const character of charactersFor(module.id, characters)) {
-        const values: Record<string, BulkEditorValue> = {};
-        for (const column of table.columns) {
-          values[column.key] = column.value(character);
+    // Сохраняем уже введённые значения: контекст обновляет `characters` после
+    // каждой правки, и полная переинициализация стирала бы ввод (в т.ч.
+    // нормализованное значение сразу после Save).
+    setEdits((previous) => {
+      const next: EditsState = {};
+      for (const { module, table } of tables) {
+        const key = tableKey(module, table);
+        const oldRows = previous[key] ?? {};
+        const rows: Record<string, TableEdit> = {};
+        for (const character of charactersFor(module.id, characters)) {
+          const existing = oldRows[character.id];
+          if (existing) {
+            rows[character.id] = existing;
+            continue;
+          }
+          const values: Record<string, BulkEditorValue> = {};
+          for (const column of table.columns) {
+            values[column.key] = column.value(character);
+          }
+          rows[character.id] = { values, saved: false };
         }
-        rows[character.id] = { values, saved: false };
+        next[key] = rows;
       }
-      next[tableKey(module, table)] = rows;
-    }
-    setEdits(next);
+      return next;
+    });
   }, [isLoaded, characters, tables]);
 
   const flashStatus = (message: string) => {
@@ -329,7 +342,11 @@ export default function StatsEditorPage() {
     table: BulkEditorTable<any>,
     character: Character,
     edit: TableEdit,
-  ) => table.apply(character, edit.values) as Record<string, unknown>;
+  ) =>
+    table.apply(character, normalizeBulkValues(table, edit.values)) as Record<
+      string,
+      unknown
+    >;
 
   const handleSaveRow = (
     module: AnyGameModule,
@@ -340,10 +357,11 @@ export default function StatsEditorPage() {
     const edit = edits[key]?.[charId];
     const character = characters.find((item) => item.id === charId);
     if (!edit || !character) return;
-    updateCharacter(charId, patchFor(table, character, edit) as never);
+    const values = normalizeBulkValues(table, edit.values);
+    updateCharacter(charId, table.apply(character, values) as never);
     setEdits((previous) => ({
       ...previous,
-      [key]: { ...previous[key], [charId]: { ...edit, saved: true } },
+      [key]: { ...previous[key], [charId]: { values, saved: true } },
     }));
     flashStatus(`${t(table.saveOneKey)} "${character.name || 'Unnamed'}"`);
   };
@@ -357,8 +375,9 @@ export default function StatsEditorPage() {
       for (const [charId, edit] of Object.entries(rows)) {
         const character = characters.find((item) => item.id === charId);
         if (!character) continue;
-        updateCharacter(charId, patchFor(table, character, edit) as never);
-        next[key] = { ...next[key], [charId]: { ...edit, saved: true } };
+        const values = normalizeBulkValues(table, edit.values);
+        updateCharacter(charId, table.apply(character, values) as never);
+        next[key] = { ...next[key], [charId]: { values, saved: true } };
       }
     }
     setEdits(next);
