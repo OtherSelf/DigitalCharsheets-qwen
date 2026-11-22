@@ -486,7 +486,8 @@ filtered with `grepInvert`, so the report has no skipped duplicates.
 1. lockfile check (`npm ci --dry-run`);
 2. line endings: LF in the index and the working tree (`npm run eol:check`);
 3. Prettier check;
-4. ESLint, plugin boundaries/registry, core purity and reverse imports;
+4. ESLint, plugin boundaries, core purity and reverse imports; regenerate the
+   plugin registry/dictionaries from the manifests (the files are not tracked);
 5. TypeScript;
 6. dead code: dead exports and files without importers
    (`npm run deadcode:check`);

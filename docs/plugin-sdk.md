@@ -420,7 +420,7 @@ host suites, and each line below names the file that actually checks it:
 
 | Check | Where |
 | --- | --- |
-| Generated `registry.generated.ts`, `i18n.generated.ts`, `games.generated.ts` match the manifests byte-for-byte | `npm run plugins:check` (`generate.mjs --check`); the unit suite re-renders `registry.generated.ts` |
+| Generated `registry.generated.ts`, `i18n.generated.ts`, `games.generated.ts` match the manifests byte-for-byte | `npm run plugins:check` (`generate.mjs --check`) after generation; the unit suite re-renders `registry.generated.ts` |
 | Generator output is prettier-clean for any plugin id | `tests/unit/plugins-generator.test.ts` |
 | Manifest ↔ module: id/gameId/order/defaultStatus/schemaVersion, entry points as real named exports, migration chain matches the module | `tests/unit/plugins-registry.test.ts` |
 | Defaults and demo pass the module's zod schema; en/ru dictionaries have the same keys; declared UI slots are implemented and non-empty; out-of-range data is rejected (negative TCK); portable JSON round-trip | `tests/unit/plugin-conformance.test.ts` |
@@ -477,7 +477,7 @@ ones:
 | `Неподдерживаемый диапазон pluginApi: "…"` | An unsupported range form | Use `*`, `1.2.3`, `^1.2.3`, `~1.2.3` or `>=1.2.3` |
 | `<field>: файл не найден (path#export)` | An entry point points at a missing file | Fix the path; it must stay inside the plugin folder |
 | `entry.module должен содержать имя экспорта` | `entry.module` is a bare file | Write `index.ts#<id>Module` |
-| `✗ src/games/registry.generated.ts устарел` | A manifest changed without regeneration | `npm run plugins:generate` and commit the generated files |
+| `✗ src/games/registry.generated.ts устарел` | A manifest changed without regeneration | Run `npm run plugins:generate`; the files are generated on `npm ci`, `predev`, `prebuild`, `pretest` and are not tracked in git |
 | `prettier --check` warns about a generated file | A generator bug, not a formatting nit | Do not hand-format: fix `renderRegistry` and add the case to `plugins-generator.test.ts` |
 
 ## Theming (`ui.theme`)

@@ -16,7 +16,8 @@
 #                    (next/core-web-vitals + next/typescript), границы
 #                    импортов плагинов (check-boundaries.mjs), чистота ядра и
 #                    импорты ядра (check-core-purity.mjs, check-core-imports.mjs)
-#                    и актуальность сгенерированного реестра (plugins:check)
+#                    и генерация реестра/словарей из манифестов
+#                    (registry.generated.ts и др. в git не хранятся)
 #    5/9 typecheck — tsc --noEmit отдельным шагом: падение видно до сборки и не
 #                    тонет в выводе next build
 #    6/9 мёртвый код — scripts/quality/check-dead-code.mjs: экспорты без ссылок
@@ -278,13 +279,13 @@ node scripts/plugins/check-core-imports.mjs \
   || die "Ядро импортирует папки игр (см. вывод выше; контракт — docs/game-modules.md § Import boundaries)"
 ok "ядро импортирует только контракт игр"
 
-# Реестр плагинов: `registry.generated.ts` обязан совпадать с манифестами.
-# Отдельная проверка нужна потому, что prebuild перегенерирует файл и молча
-# «починил» бы расхождение в рабочем дереве, а не в коммите.
-step "4/9 реестр плагинов (npm run plugins:check)"
-node scripts/plugins/generate.mjs --check \
-  || die "Реестр плагинов устарел: запустите npm run plugins:generate и закоммитьте src/games/registry.generated.ts"
-ok "реестр плагинов в синхроне"
+# Реестр, словари и семейства игр генерируются из манифестов и не хранятся в
+# git: чистая копия иначе не пройдёт typecheck и unit. Генерируем, а не
+# сверяем: сверять нечего, файла в индексе нет. Идемпотентно (~1 с).
+step "4/9 генерация реестра и словарей (scripts/plugins/generate.mjs)"
+node scripts/plugins/generate.mjs \
+  || die "Генерация реестра плагинов упала (см. вывод; манифест или скрипт)"
+ok "реестр, словари и семейства собраны из манифестов"
 
 # Раскладка тестов: лимит 400 строк на файл в tests/unit и запрет тестов одной
 # редакции в хосте (их место — src/games/<id>/tests/unit).

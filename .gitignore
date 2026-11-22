@@ -113,3 +113,6 @@ test-results/
 # ==========================================
 __pycache__/
 *.py[cod]
+
+# сгенерированные из манифестов: npm run plugins:generate (postinstall, prebuild, predev)
+src/games/*.generated.ts

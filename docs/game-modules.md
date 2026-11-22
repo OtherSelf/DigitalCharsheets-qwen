@@ -251,12 +251,15 @@ Rules:
   and legacy-normalization path is the plugin's, not the core's. `ui.slots` and
   `aliases` are optional; `dependencies.plugins` is reserved (D14).
 
-`registry.generated.ts` and `i18n.generated.ts` are produced by
-`npm run plugins:generate` (also `predev`/`prebuild`) from the manifests;
-`npm run plugins:check` is part of `npm run verify` and fails if either file is
-stale. `registry.ts` no longer contains a hand-written list — it only
-re-exports the generated plugins and helpers (`gameRegistry`,
-`listGamePlugins`, `getPluginManifest`).
+`registry.generated.ts`, `i18n.generated.ts` and `games.generated.ts` are
+produced by `npm run plugins:generate` from the manifests. They are **not
+tracked in git**: `postinstall`, `predev`, `prebuild`, `pretest` and the
+pre-deploy gate regenerate them, so a clean checkout gets them from `npm ci`.
+`npm run plugins:check` compares the files on disk with the manifests and is
+useful after a manual edit; `npm run verify` regenerates instead, because there
+is no committed copy to compare against. `registry.ts` no longer contains a
+hand-written list — it only re-exports the generated plugins and helpers
+(`gameRegistry`, `listGamePlugins`, `getPluginManifest`).
 
 `i18n.generated.ts` exists because `src/lib/i18n` must be importable before the
 registry is initialised (language context is imported by plugin UI slots); it

@@ -49,7 +49,11 @@
     "test:visual:report": "playwright show-report",
     "test:visual:fast": "bash scripts/visual.sh --grep @fast",
     "plugins:conformance": "vitest run tests/unit/plugin-conformance.test.ts",
-    "prestart": "npm run plugins:check"
+    "prestart": "npm run plugins:check",
+    "postinstall": "node scripts/plugins/generate.mjs",
+    "pretest": "node scripts/plugins/generate.mjs",
+    "pretypecheck": "node scripts/plugins/generate.mjs",
+    "predeadcode:check": "node scripts/plugins/generate.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^7.0.5",

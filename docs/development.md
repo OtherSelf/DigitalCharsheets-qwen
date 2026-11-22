@@ -16,6 +16,11 @@ npm ci
 npm run dev
 ```
 
+`npm ci` also generates `src/games/*.generated.ts` (registry, dictionaries,
+game families) via `postinstall`; the files are derived from
+`src/games/*/plugin.json` and are not tracked in git. If you removed them by
+hand, run `npm run plugins:generate`.
+
 Open <http://localhost:3000>. The first server start creates the data directory,
 checks/normalizes profiles and, if there is no active administrator, creates the
 bootstrap admin — watch the server console or
@@ -53,6 +58,8 @@ Deployment details, reverse proxy and environment variables:
 | `npm run eol:fix` | Rewrite CRLF → LF in the working tree; nothing else changes (`format` runs it first). |
 | `npm run typecheck` | `tsc --noEmit`. |
 | `npm run deadcode:check` | Dead exports and files without importers; allowlist with reasons and a `test-only` cap (also a step of `npm run verify`). |
+| `npm run plugins:generate` | Regenerate `src/games/*.generated.ts` from the manifests (also `postinstall`, `predev`, `prebuild`, `pretest`). |
+| `npm run plugins:check` | Compare the generated files on disk with the manifests (drift check after manual edits). |
 | `npm test` | Unit tests (Vitest). |
 | `npm run test:watch` | Vitest in watch mode. |
 | `npm run test:smoke` | HTTP smoke test against a running server (default `http://localhost:3000`). |
