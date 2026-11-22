@@ -11,6 +11,53 @@ format changes.
 
 ## [Unreleased]
 
+## [0.18.0] - 2026-11-22
+
+A one-click salary, a branded page for every error status, and a sandbox that
+shows the whole SDK.
+
+### Added
+
+- Dark Heresy 1e: a **Collect salary** button adds the monthly income to the
+  character's thrones in one operation and stays hidden while the income is
+  zero. The payout is additive and clamped to whole non-negative thrones below
+  the field ceiling; the capital and income inputs clamp too, and the edit
+  snapshot is taken from the current sheet so a save cannot roll the payout
+  back. No new fields, `schemaVersion` stays `5`.
+- Branded error pages for every status the app can answer — 400, 401, 403, 404,
+  409, 413, 429, 500 and 503 — each with an explanation, the code and a sensible
+  action (`src/lib/error-pages.ts`, `error-screen.tsx`). An unknown route gets a
+  branded 404 instead of the English Next stub, `/error/<code>` serves static
+  pages and `/error/404` answers a real `404`; `/admin` sends a non-admin to
+  `/error/403`; a chunk-load failure ends in 503 with reload, a render error is
+  500 with retry and the digest, and a root-layout crash still renders
+  `global-error`.
+- Field limits shared by the server and the forms: `src/games/shared/limits.ts`
+  sets bounds for ids, names, notes, arrays, money, experience, wounds,
+  quantities and weights, and all four edition schemas apply them (`max` on
+  strings, `int`/`min`/`max` on numbers, array sizes). A violation answers
+  `400 invalid_payload` with issues, and the create forms carry the same limits
+  (`min`/`max`/`step`/`maxLength`, `noValidate`), so the player sees the
+  localized message instead of the browser bubble.
+- The sandbox is now the full SDK reference: `schemaVersion` 3 with a 2→3
+  migration, `import`/`derive`/`derived`, all six UI slots, the complete theme
+  token set, a derived total, a nested companion entity, history, a legacy
+  import, a house-rules dialog and `CreateFormCompletion.openNotes` — one small
+  game that exercises every optional branch of the contract.
+- `npm run plugins:layout`, a gate over the canonical skeleton documented in the
+  new `docs/plugin-layout.md`: required files, test names without the edition
+  prefix, visual fixtures and a favicon. It runs in `npm run verify`, and the
+  three shipped editions were aligned to it — D&D 5e gained `schema-version.ts`,
+  DH tests dropped the `dh1-`/`dh2-` prefixes, `slots.tsx` became
+  `slots/index.tsx`.
+
+### Changed
+
+- Plugin versions: `dh1` 1.11.0, `dh2` 1.11.0, `dnd5e` 1.9.0, `sandbox` 1.2.0 —
+  the sandbox also moved its `schemaVersion` from 2 to 3 with a migration. The
+  Dark Heresy (`5`) and D&D 5e (`2`) sheet formats and `PLUGIN_API_VERSION`
+  (`1.4.0`) are unchanged.
+
 ## [0.17.0] - 2026-11-22
 
 The documentation now ships with the app: `/docs`, with search, on the same
