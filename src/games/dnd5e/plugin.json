@@ -3,7 +3,7 @@
   "pluginApi": "^1.0.0",
   "id": "dnd5e",
   "gameId": "dnd",
-  "version": "1.7.0",
+  "version": "1.8.0",
   "order": 10,
   "defaultStatus": "published",
   "name": {
