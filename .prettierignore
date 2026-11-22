@@ -6,6 +6,9 @@ build
 dist
 coverage
 
+# генерат fumadocs-mdx (см. source.config.ts)
+.source
+
 # тестовые артефакты
 playwright-report
 test-results

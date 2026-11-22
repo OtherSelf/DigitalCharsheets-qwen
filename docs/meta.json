@@ -1,0 +1,22 @@
+{
+  "title": "Documentation",
+  "pages": [
+    "architecture",
+    "plugin-sdk",
+    "game-modules",
+    "data-storage",
+    "api",
+    "security",
+    "sharing",
+    "character-history",
+    "decisions",
+    "adr",
+    "admin",
+    "export-format",
+    "development",
+    "i18n",
+    "testing",
+    "deployment",
+    "[API reference](/api/docs)"
+  ]
+}

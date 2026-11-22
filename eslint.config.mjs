@@ -20,6 +20,8 @@ const eslintConfig = [
       '.playwright-browsers/**',
       '.npm-cache/**',
       'public/vendor/**',
+      // типы коллекций fumadocs-mdx: генерируются из source.config.ts
+      '.source/**',
     ],
   },
   ...nextVitals,

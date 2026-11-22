@@ -15,9 +15,10 @@
 #    4/9 линт      — eslint .: hooks, async, React/Next-правила
 #                    (next/core-web-vitals + next/typescript), границы
 #                    импортов плагинов (check-boundaries.mjs), чистота ядра и
-#                    импорты ядра (check-core-purity.mjs, check-core-imports.mjs)
-#                    и генерация реестра/словарей из манифестов
-#                    (registry.generated.ts и др. в git не хранятся)
+#                    импорты ядра (check-core-purity.mjs, check-core-imports.mjs),
+#                    генерация реестра/словарей из манифестов
+#                    (registry.generated.ts и др. в git не хранятся) и сверка
+#                    docs/meta.json с картой docs/README.md (meta.mjs --check)
 #    5/9 typecheck — tsc --noEmit отдельным шагом: падение видно до сборки и не
 #                    тонет в выводе next build
 #    6/9 мёртвый код — scripts/quality/check-dead-code.mjs: экспорты без ссылок
@@ -286,6 +287,14 @@ step "4/9 генерация реестра и словарей (scripts/plugins
 node scripts/plugins/generate.mjs \
   || die "Генерация реестра плагинов упала (см. вывод; манифест или скрипт)"
 ok "реестр, словари и семейства собраны из манифестов"
+
+# Порядок страниц /docs выводится из карты docs/README.md, а docs/meta.json
+# коммитится. Здесь сверяем, а не перезаписываем: автогенерация молча
+# замаскировала бы рассинхрон, который ревью должен увидеть.
+step "4/9 карта документации (scripts/docs/meta.mjs --check)"
+node scripts/docs/meta.mjs --check \
+  || die "docs/meta.json расходится с картой docs/README.md (запустите npm run docs:generate)"
+ok "карта документации и meta.json в синхроне"
 
 # Раскладка тестов: лимит 400 строк на файл в tests/unit и запрет тестов одной
 # редакции в хосте (их место — src/games/<id>/tests/unit).

@@ -1,0 +1,9 @@
+{
+  "title": "ADR",
+  "pages": [
+    "0001-credentials-and-sessions",
+    "0002-legacy-migration-tooling",
+    "0003-derived-values-authority",
+    "0004-legacy-aliases"
+  ]
+}

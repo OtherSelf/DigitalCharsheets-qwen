@@ -1,5 +1,7 @@
 import type { NextConfig } from 'next';
 
+import { createMDX } from 'fumadocs-mdx/next';
+
 import { readGitCheckoutSync } from './src/lib/git-commit';
 
 /**
@@ -167,4 +169,17 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+/*
+  ─── LANDMARK: DOCS MDX (FUMADOCS) ──────────────────────────────────────────
+  Страница `/docs` рендерит существующие `docs/*.md` (см. `src/lib/docs/source.ts`).
+  Плагин добавляет Turbopack/webpack-лоадер MDX и meta-файлов, а также
+  собирает типы коллекций; сам конфиг приложения он не переписывает — все
+  ключи выше остаются как есть.
+
+  Macro API (`fumadocs-mdx/macro`) выбран, чтобы не генерировать `.source/`:
+  коллекция объявляется прямо в `src/lib/docs/source.ts`. Поэтому `dir`
+  документации задаётся там, а не здесь.
+*/
+const withMDX = createMDX();
+
+export default withMDX(nextConfig);

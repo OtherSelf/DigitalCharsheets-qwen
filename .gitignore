@@ -16,6 +16,8 @@ node_modules/
 # Next.js Build Output
 # ==========================================
 .next/
+# fumadocs-mdx: типы коллекций из source.config.ts, генерируются на build/dev
+.source/
 out/
 build/
 dist/
