@@ -2,8 +2,9 @@
 
 import { useEffect, useRef, useState } from 'react';
 
-import { Check, Copy, Link2, Share2, Trash2 } from 'lucide-react';
+import { Check, Copy, Share2 } from 'lucide-react';
 
+import { ShareActions } from '@/components/share/share-actions';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -320,28 +321,11 @@ export function ShareDialog({
                     {t('share.expiresAt')}: {formatDate(created.expiresAt)}
                   </p>
                 )}
-                <div className="flex flex-wrap gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setConfirmAction('regenerate')}
-                    disabled={busy}
-                    data-testid="share-regenerate"
-                  >
-                    <Link2 className="mr-2 h-4 w-4" />
-                    {t('share.regenerate')}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    onClick={() => setConfirmAction('revoke')}
-                    disabled={busy}
-                    data-testid="share-revoke"
-                  >
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    {t('share.revoke')}
-                  </Button>
-                </div>
+                <ShareActions
+                  busy={busy}
+                  onRegenerate={() => setConfirmAction('regenerate')}
+                  onRevoke={() => setConfirmAction('revoke')}
+                />
               </div>
             ) : active && status ? (
               <div className="space-y-3">
@@ -362,28 +346,11 @@ export function ShareDialog({
                 <p className="text-muted-foreground text-xs">
                   {t('share.linkOnce')}
                 </p>
-                <div className="flex flex-wrap gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setConfirmAction('regenerate')}
-                    disabled={busy}
-                    data-testid="share-regenerate"
-                  >
-                    <Link2 className="mr-2 h-4 w-4" />
-                    {t('share.regenerate')}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    onClick={() => setConfirmAction('revoke')}
-                    disabled={busy}
-                    data-testid="share-revoke"
-                  >
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    {t('share.revoke')}
-                  </Button>
-                </div>
+                <ShareActions
+                  busy={busy}
+                  onRegenerate={() => setConfirmAction('regenerate')}
+                  onRevoke={() => setConfirmAction('revoke')}
+                />
               </div>
             ) : (
               <div className="space-y-3">

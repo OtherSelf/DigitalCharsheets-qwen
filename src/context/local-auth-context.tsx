@@ -39,6 +39,55 @@ interface AccountExistsResult {
   error?: string;
 }
 
+interface AuthResponseData {
+  success?: boolean;
+  user?: LocalUser;
+  error?: string;
+  reason?: string;
+  isNewUser?: boolean;
+}
+
+type PostAuthResult =
+  | { ok: true; data: AuthResponseData & { user: LocalUser } }
+  | { ok: false; result: LoginResult };
+
+/** Общий POST для /api/auth и /api/auth/register: разбор и ошибки одинаковы. */
+async function postAuth(
+  path: string,
+  body: Record<string, unknown>,
+  label: 'login' | 'registration',
+): Promise<PostAuthResult> {
+  try {
+    const res = await fetch(path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    const data = (await res
+      .json()
+      .catch(() => null)) as AuthResponseData | null;
+
+    if (!res.ok || !data?.success || !data?.user) {
+      return {
+        ok: false,
+        result: {
+          success: false,
+          error: data?.error || `Server returned an error (${res.status}).`,
+          reason: data?.reason,
+        },
+      };
+    }
+
+    return { ok: true, data: data as AuthResponseData & { user: LocalUser } };
+  } catch (error) {
+    console.error(`[auth] ${label} failed:`, error);
+    return {
+      ok: false,
+      result: { success: false, error: 'Failed to connect to server.' },
+    };
+  }
+}
+
 /**
  * ─── LANDMARK: LAST AUTH KIND ───────────────────────────────────────────────
  * Чем закончилась последняя авторизация в этой вкладке: `register` — создан
@@ -163,30 +212,20 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
       password: string,
       displayName?: string,
     ): Promise<LoginResult> => {
-      try {
-        const res = await fetch('/api/auth', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, password, displayName }),
-        });
+      const auth = await postAuth(
+        '/api/auth',
+        { username, password, displayName },
+        'login',
+      );
+      if (!auth.ok) return auth.result;
 
-        const data = await res.json().catch(() => null);
-
-        if (!res.ok || !data?.success || !data?.user) {
-          return {
-            success: false,
-            error: data?.error || `Server returned an error (${res.status}).`,
-            reason: data?.reason,
-          };
-        }
-
-        restoreSession(data.user);
-        setLastAuthKind('login');
-        return { success: true, isNewUser: data.isNewUser, user: data.user };
-      } catch (error) {
-        console.error('[auth] login failed:', error);
-        return { success: false, error: 'Failed to connect to server.' };
-      }
+      restoreSession(auth.data.user);
+      setLastAuthKind('login');
+      return {
+        success: true,
+        isNewUser: auth.data.isNewUser,
+        user: auth.data.user,
+      };
     },
     [restoreSession],
   );
@@ -202,35 +241,16 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
       displayName: string,
       recoveryPhrase: string,
     ): Promise<LoginResult> => {
-      try {
-        const res = await fetch('/api/auth/register', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            username,
-            password,
-            displayName,
-            recoveryPhrase,
-          }),
-        });
+      const auth = await postAuth(
+        '/api/auth/register',
+        { username, password, displayName, recoveryPhrase },
+        'registration',
+      );
+      if (!auth.ok) return auth.result;
 
-        const data = await res.json().catch(() => null);
-
-        if (!res.ok || !data?.success || !data?.user) {
-          return {
-            success: false,
-            error: data?.error || `Server returned an error (${res.status}).`,
-            reason: data?.reason,
-          };
-        }
-
-        restoreSession(data.user);
-        setLastAuthKind('register');
-        return { success: true, isNewUser: true, user: data.user };
-      } catch (error) {
-        console.error('[auth] registration failed:', error);
-        return { success: false, error: 'Failed to connect to server.' };
-      }
+      restoreSession(auth.data.user);
+      setLastAuthKind('register');
+      return { success: true, isNewUser: true, user: auth.data.user };
     },
     [restoreSession],
   );
