@@ -39,11 +39,17 @@ export const sandboxBulkEditor: readonly BulkEditorTable<SandboxCharacter>[] = [
       max: 99,
       value: (character) => Number(character.stats?.[stat] ?? 0) || 10,
     })),
-    apply: (character, values) => ({
-      stats: {
+    apply: (character, values) => {
+      const stats = {
         ...character.stats,
         ...(values as Record<string, number>),
-      },
-    }),
+      };
+      return {
+        stats,
+        // `total` — производное поле: в патче его пересчитываем, чтобы
+        // локальный лист не показывал старую сумму до ответа сервера.
+        total: stats.might + stats.wits,
+      };
+    },
   },
 ];

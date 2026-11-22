@@ -70,9 +70,37 @@ export const SandboxSheet = React.forwardRef<
               </dt>
               <dd className="text-lg font-semibold">{character.stats.wits}</dd>
             </div>
+            <div>
+              <dt className="text-muted-foreground text-sm">
+                {t('sandbox.total')}
+              </dt>
+              <dd
+                className="text-primary text-lg font-semibold"
+                data-testid="sandbox-total"
+              >
+                {character.total}
+              </dd>
+            </div>
           </dl>
         </CardContent>
       </Card>
+
+      {character.companion && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="font-headline text-base">
+              {t('sandbox.companion')}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-1 text-sm">
+            <p className="font-medium">{character.companion.name}</p>
+            <p className="text-muted-foreground">
+              {t('sandbox.companionKind')}: {character.companion.kind}
+            </p>
+            <p className="text-muted-foreground">{character.companion.notes}</p>
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>

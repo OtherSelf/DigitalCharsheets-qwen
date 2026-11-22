@@ -2,10 +2,10 @@ import { ScrollText } from 'lucide-react';
 
 import type { CardSummary, PluginNavItem } from '@/games/types';
 
-import type { SandboxCharacter } from './types';
+import type { SandboxCharacter } from '../types';
 
 /**
- * Слоты эталонного плагина: шапка, мобильная навигация, карточка.
+ * Слоты эталонного плагина: подпись шапки, мобильная навигация и карточка.
  * `CompactNav` отдаёт иконку: без неё мобильная навигация рисует пустое
  * место, а контракт слота (`plugin-slots.test.ts`) требует `icon`.
  */
@@ -13,7 +13,7 @@ export function sandboxHeaderSubtitle(
   character: SandboxCharacter,
   t: (key: string) => string,
 ): string {
-  return `${t('sandbox.rank')}: ${character.rank}`;
+  return `${t('sandbox.rank')}: ${character.rank} | ${t('sandbox.systemName')}`;
 }
 
 export function sandboxCompactNav(
@@ -37,3 +37,5 @@ export function sandboxCardSummary(
     badgeVariant: 'outline',
   };
 }
+
+export { SandboxHeaderActions } from './header-actions';

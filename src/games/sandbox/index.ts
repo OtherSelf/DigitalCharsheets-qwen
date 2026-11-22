@@ -1,44 +1,55 @@
-import { CURRENT_SCHEMA_VERSION } from '@/games/plugin-api';
 import type {
   ExportTranslate,
   GameExportConfig,
   GameModule,
 } from '@/games/types';
 
+import { SANDBOX_CAPABILITIES } from './capabilities';
 import { createSandboxDefaults } from './defaults';
 import { createSandboxDemo } from './demo';
+import { deriveSandbox } from './derive';
+import { sandboxFindEmbedded, sandboxUpdateEmbedded } from './embedded';
 import { buildSandboxExcelSections } from './excel';
 import { buildSandboxPortableJson } from './export';
+import { sandboxHistory } from './history';
 import sandboxEn from './i18n/en.json';
 import sandboxRu from './i18n/ru.json';
+import {
+  sandboxConvertLegacyImport,
+  sandboxLegacyImportName,
+  sandboxMatchesLegacyImport,
+} from './legacy-import';
 import { mergeSandboxData } from './merge';
+import { migrateV1toV2, migrateV2toV3 } from './migrations';
 import { normalizeSandbox } from './normalize';
 import { sandboxCharacterSchema } from './schema';
+import { SANDBOX_SCHEMA_VERSION } from './schema-version';
 import { SANDBOX_SYSTEM_ID, type SandboxCharacter } from './types';
 
 /**
  * ─── LANDMARK: SANDBOX PLUGIN ──────────────────────────────────────────────
  * Живой эталон контракта плагина: собственная схема, дефолты, демо, экспорт,
- * React-лист и форма, i18n, UI-слоты, CSS-модуль раскладки и скоупленная
- * тема. `defaultStatus: 'test'` — игру видят только тестировщики и админ,
- * поэтому она не появляется у обычных пользователей, но остаётся в сборке
- * как работающий пример: удалить или добавить игру по-прежнему значит
- * «папка + `plugin.json` + пересборка», без правок ядра.
+ * React-лист и форма, i18n, все UI-слоты, CSS-модуль раскладки, скоупленная
+ * тема и шрифт. Дополнительно он проходит все необязательные ветки SDK:
+ * `derive`/`derived`, `import` (normalize/merge), `history`, legacy-импорт,
+ * вложенную сущность (`findEmbedded`/`updateEmbedded`) и полный набор
+ * capability-флагов.
+ *
+ * `defaultStatus: 'test'` — игру видят только тестировщики и админ, поэтому
+ * она не появляется у обычных пользователей, но остаётся в сборке как
+ * работающий пример: удалить или добавить игру по-прежнему значит «папка +
+ * `plugin.json` + пересборка», без правок ядра.
  */
 export const createDefaults = createSandboxDefaults;
 export const createDemo = createSandboxDemo;
 
-/**
- * Шаг цепочки миграций (`1 → 2` — дискриминант редакции): песочница проходит
- * тот же гейт, что и боевые плагины, включая миграции.
- */
-export function migrateV1toV2(
-  character: Readonly<Record<string, unknown>>,
-): Record<string, unknown> {
-  const next = { ...character };
-  delete next.edition;
-  return next;
-}
+/** Точка входа `plugin.json#derive`: пересчёт производных. */
+export const deriveCharacter = deriveSandbox;
+
+/** Точки входа `plugin.json#import`: тот же код, что в модуле. */
+export { mergeSandboxData, normalizeSandbox };
+
+export { migrateV1toV2, migrateV2toV3 } from './migrations';
 
 export function toPortableJson(
   character: SandboxCharacter,
@@ -63,10 +74,10 @@ export const sandboxModule: GameModule<SandboxCharacter> = {
   nameKey: 'sandbox.name',
   descriptionKey: 'sandbox.description',
   shortCode: 'sandbox',
-  schemaVersion: CURRENT_SCHEMA_VERSION,
+  schemaVersion: SANDBOX_SCHEMA_VERSION,
   schema: sandboxCharacterSchema,
   i18n: { en: sandboxEn, ru: sandboxRu },
-  capabilities: {},
+  capabilities: SANDBOX_CAPABILITIES,
   createDefaults,
   createDemo,
   components: {
@@ -80,5 +91,14 @@ export const sandboxModule: GameModule<SandboxCharacter> = {
   export: { toPortableJson, buildExcelSections },
   normalize: normalizeSandbox,
   merge: mergeSandboxData,
-  migrations: [{ from: 1, to: 2, migrate: migrateV1toV2 }],
+  migrations: [
+    { from: 1, to: 2, migrate: migrateV1toV2 },
+    { from: 2, to: 3, migrate: migrateV2toV3 },
+  ],
+  history: sandboxHistory,
+  matchesLegacyImport: sandboxMatchesLegacyImport,
+  legacyImportName: sandboxLegacyImportName,
+  convertLegacyImport: sandboxConvertLegacyImport,
+  findEmbedded: sandboxFindEmbedded,
+  updateEmbedded: sandboxUpdateEmbedded,
 };

@@ -7,6 +7,7 @@ import {
 } from '@/games/shared/merge';
 import type { GameExportConfig } from '@/games/types';
 
+import { deriveSandbox } from './derive';
 import type { SandboxCharacter } from './types';
 
 /**
@@ -14,6 +15,9 @@ import type { SandboxCharacter } from './types';
  * Слияние импортированных данных в лист песочницы. Цель и источник уже
  * нормализованы хостом и относятся к одной редакции, поэтому модулю остаётся
  * перенести свои поля по секциям `GameExportConfig`.
+ *
+ * `total` не копируется из источника: это производное поле, и после слияния
+ * его пересчитывает `deriveSandbox`, иначе сумма разошлась бы с `stats`.
  *
  * Требование контракта (SDK v1): `merge` есть у каждого плагина — иначе
  * импорт ветвится по игре в ядре.
@@ -38,6 +42,9 @@ export function mergeSandboxData(
   if (config.includeNarrative) {
     copyDefinedFields(merged, src, NARRATIVE_FIELDS);
   }
+  if (config.includeCompanions) {
+    copyDefinedFields(merged, src, ['companion']);
+  }
 
-  return merged as unknown as SandboxCharacter;
+  return deriveSandbox(merged as unknown as SandboxCharacter);
 }

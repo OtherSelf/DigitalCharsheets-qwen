@@ -15,13 +15,19 @@ export function buildSandboxExcelSections(
   if (config.includeBasicInfo) {
     sections.push({
       title: translate('sandbox.rank'),
-      rows: [[character.rank]],
+      rows: [[character.rank], [character.total]],
     });
   }
   if (config.includeStats) {
     sections.push({
       title: translate('sandbox.sheetTitle'),
       rows: [[character.stats.might, character.stats.wits]],
+    });
+  }
+  if (config.includeCompanions && character.companion) {
+    sections.push({
+      title: translate('sandbox.companion'),
+      rows: [[character.companion.name, character.companion.kind]],
     });
   }
   return sections;

@@ -3,7 +3,7 @@
   "pluginApi": "^1.0.0",
   "id": "sandbox",
   "gameId": "sandbox",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "order": 900,
   "defaultStatus": "test",
   "name": {
@@ -11,13 +11,13 @@
     "ru": "Песочница — тестовая игра"
   },
   "description": {
-    "en": "Live reference plugin: a small custom sheet, form, slots, own CSS module and a scoped theme. Visible to testers and admins only (defaultStatus \"test\") — it exists to prove that a game needs nothing from the core.",
-    "ru": "Живой эталон контракта: маленький собственный лист, форма, слоты, свой CSS-модуль и скоупленная тема. Видна только тестировщикам и админу (defaultStatus «test») — существует, чтобы доказывать: игре не нужно ничего от ядра."
+    "en": "Live reference plugin: a small custom sheet, form, every UI slot, own CSS module, a scoped theme and all optional SDK entry points (derive, import, history, legacy import, embedded entity). Visible to testers and admins only (defaultStatus \"test\") — it exists to prove that a game needs nothing from the core.",
+    "ru": "Живой эталон контракта: маленький собственный лист, форма, все UI-слоты, свой CSS-модуль, скоупленная тема и все необязательные точки SDK (derive, import, history, legacy-импорт, вложенная сущность). Видна только тестировщикам и админу (defaultStatus «test») — существует, чтобы доказывать: игре не нужно ничего от ядра."
   },
   "tags": ["sandbox", "test", "reference"],
   "author": "tests",
   "license": "MIT",
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "game": {
     "id": "sandbox",
     "order": 900,
@@ -53,6 +53,14 @@
     "json": "index.ts#toPortableJson",
     "excel": "index.ts#buildExcelSections"
   },
+  "import": {
+    "normalize": "index.ts#normalizeSandbox",
+    "merge": "index.ts#mergeSandboxData"
+  },
+  "derive": {
+    "entry": "index.ts#deriveCharacter"
+  },
+  "derived": ["total"],
   "migrations": [
     {
       "from": 1,
@@ -60,24 +68,55 @@
       "entry": "index.ts#migrateV1toV2",
       "description": "дискриминант редакции: systemId ставит хост",
       "removes": ["edition"]
+    },
+    {
+      "from": 2,
+      "to": 3,
+      "entry": "index.ts#migrateV2toV3",
+      "description": "производное total: сумма характеристик"
     }
   ],
   "tests": {
     "conformance": ">=1"
   },
   "ui": {
-    "slots": ["HeaderSubtitle", "CompactNav", "CardSummary", "BulkEditor"],
+    "slots": [
+      "HeaderActions",
+      "HeaderSubtitle",
+      "CompactNav",
+      "BulkEditor",
+      "CardSummary",
+      "HouseRulesDialog"
+    ],
     "entry": "ui.ts",
     "theme": {
       "tokens": {
         "light": {
+          "background": "150 25% 97%",
+          "foreground": "160 30% 12%",
+          "card": "150 20% 99%",
+          "card-foreground": "160 30% 12%",
           "primary": "150 45% 32%",
+          "primary-foreground": "150 30% 98%",
           "accent": "150 30% 88%",
+          "accent-foreground": "160 30% 15%",
+          "muted": "150 15% 92%",
+          "border": "150 18% 78%",
+          "ring": "150 45% 32%",
           "radius": "0.25rem"
         },
         "dark": {
+          "background": "160 20% 8%",
+          "foreground": "150 20% 94%",
+          "card": "160 18% 12%",
+          "card-foreground": "150 20% 94%",
           "primary": "150 45% 58%",
+          "primary-foreground": "160 30% 10%",
           "accent": "150 20% 24%",
+          "accent-foreground": "150 30% 92%",
+          "muted": "160 15% 18%",
+          "border": "160 15% 28%",
+          "ring": "150 45% 58%",
           "radius": "0.25rem"
         }
       },

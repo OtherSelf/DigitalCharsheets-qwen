@@ -12,15 +12,24 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useCharacterContext, useTranslation } from '@/games/plugin-host';
+import {
+  useCharacterContext,
+  useToast,
+  useTranslation,
+} from '@/games/plugin-host';
+import type { CreateFormProps } from '@/games/types';
 
 import { createSandboxDefaults } from './defaults';
 
-/** Форма создания эталонного плагина: без пропсов, контекст/API — от хоста. */
-export function SandboxCharacterForm({
-  onCreated,
-}: { onCreated?: (characterId: string) => void } = {}) {
+/**
+ * Форма создания эталонного плагина. Использует полный `CreateFormProps`:
+ * после создания сообщает id и просит хост один раз открыть «Заметки» —
+ * `CreateFormCompletion.openNotes`. Навигацию выполняет хост, `next/navigation`
+ * плагину недоступен.
+ */
+export function SandboxCharacterForm({ onCreated }: CreateFormProps = {}) {
   const { addCharacter } = useCharacterContext();
+  const { toast } = useToast();
   const { t } = useTranslation();
   const [name, setName] = React.useState('');
   const [rank, setRank] = React.useState('Novice');
@@ -31,7 +40,10 @@ export function SandboxCharacterForm({
     const created = await addCharacter(
       draft as unknown as Parameters<typeof addCharacter>[0],
     );
-    if (created) onCreated?.(created.id);
+    if (created) {
+      toast({ title: t('sandbox.created') });
+      onCreated?.(created.id, { openNotes: true });
+    }
   };
 
   return (
