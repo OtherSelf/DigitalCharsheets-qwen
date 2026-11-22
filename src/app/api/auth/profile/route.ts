@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 
+import { jsonError, unauthorized } from '@/lib/api/respond';
 import {
   AUTH_MUTATION_RATE_LIMIT,
   getAuthRateLimiter,
@@ -21,28 +22,18 @@ import {
 export async function PUT(request: Request) {
   try {
     const uid = await getSessionUid(request);
-    if (!uid) {
-      return NextResponse.json(
-        { success: false, error: 'Unauthorized.' },
-        { status: 401 },
-      );
-    }
+    if (!uid) return unauthorized();
 
     const limiter = getAuthRateLimiter().check(
       rateLimitKey('profile-update', request, uid),
       AUTH_MUTATION_RATE_LIMIT,
     );
     if (!limiter.allowed) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Too many attempts. Try again later.',
-          reason: 'rate_limited',
-        },
-        {
-          status: 429,
-          headers: { 'Retry-After': String(limiter.retryAfterSeconds) },
-        },
+      return jsonError(
+        429,
+        'Too many attempts. Try again later.',
+        'rate_limited',
+        { 'Retry-After': String(limiter.retryAfterSeconds) },
       );
     }
 
@@ -56,10 +47,7 @@ export async function PUT(request: Request) {
     } = body;
 
     if (!newUsername || !newDisplayName) {
-      return NextResponse.json(
-        { success: false, error: 'Username and display name are required.' },
-        { status: 400 },
-      );
+      return jsonError(400, 'Username and display name are required.');
     }
 
     const result = await updateUserProfile(
@@ -78,10 +66,7 @@ export async function PUT(request: Request) {
           : result.reason === 'not_found'
             ? 404
             : 400;
-      return NextResponse.json(
-        { success: false, error: result.error, reason: result.reason },
-        { status },
-      );
+      return jsonError(status, result.error || 'Update failed.', result.reason);
     }
 
     // Пароль/фраза сменились — гасим остальные устройства, оставляя текущую
@@ -97,10 +82,7 @@ export async function PUT(request: Request) {
     return NextResponse.json({ success: true, user: result.user });
   } catch (error) {
     console.error('Profile update error:', error);
-    return NextResponse.json(
-      { success: false, error: 'An unexpected error occurred.' },
-      { status: 500 },
-    );
+    return jsonError(500, 'An unexpected error occurred.');
   }
 }
 
@@ -119,12 +101,7 @@ export async function PUT(request: Request) {
 export async function DELETE(request: Request) {
   try {
     const uid = await getSessionUid(request);
-    if (!uid) {
-      return NextResponse.json(
-        { success: false, error: 'Unauthorized.', reason: 'unauthorized' },
-        { status: 401 },
-      );
-    }
+    if (!uid) return unauthorized();
 
     let password = '';
     try {
@@ -135,14 +112,7 @@ export async function DELETE(request: Request) {
     }
 
     if (!password.trim()) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Password is required.',
-          reason: 'invalid_input',
-        },
-        { status: 400 },
-      );
+      return jsonError(400, 'Password is required.', 'invalid_input');
     }
 
     const result = await deleteUserAccount(uid, password);
@@ -156,13 +126,10 @@ export async function DELETE(request: Request) {
             : result.reason === 'failed'
               ? 500
               : 400;
-      return NextResponse.json(
-        {
-          success: false,
-          error: result.error || 'Failed to delete the account.',
-          reason: result.reason,
-        },
-        { status },
+      return jsonError(
+        status,
+        result.error || 'Failed to delete the account.',
+        result.reason,
       );
     }
 
@@ -172,9 +139,6 @@ export async function DELETE(request: Request) {
     return response;
   } catch (error) {
     console.error('Account deletion error:', error);
-    return NextResponse.json(
-      { success: false, error: 'An unexpected error occurred.' },
-      { status: 500 },
-    );
+    return jsonError(500, 'An unexpected error occurred.');
   }
 }

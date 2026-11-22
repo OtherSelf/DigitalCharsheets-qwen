@@ -1,10 +1,13 @@
 import { NextResponse } from 'next/server';
 
+import {
+  jsonError,
+  NO_STORE,
+  withOwnedCharacter,
+  withOwner,
+} from '@/lib/api/respond';
 import { sharePath } from '@/lib/routes';
-import { isSafeId } from '@/lib/security/paths';
 import { readJsonObject } from '@/lib/security/payload';
-import { getCharacterFromServer } from '@/lib/server-storage';
-import { getSessionUid } from '@/lib/session';
 import {
   DEFAULT_SHARE_EXPIRY_DAYS,
   getShareForCharacter,
@@ -29,124 +32,96 @@ import {
  *   404 — листа нет/он чужой;
  *   500 — не удалось прочитать/записать реестр ссылок.
  */
-const NO_STORE = { 'Cache-Control': 'no-store' };
-
-function error(
-  status: 400 | 401 | 404 | 413 | 500,
-  message: string,
-  reason: string,
-) {
-  return NextResponse.json(
-    { success: false, error: message, reason },
-    { status, headers: NO_STORE },
-  );
-}
-
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const { id } = await params;
-  const uid = await getSessionUid(request);
-  if (!uid) return error(401, 'Unauthorized.', 'unauthorized');
-  if (!isSafeId(id)) return error(400, 'Invalid character id.', 'invalid_id');
-
-  const character = await getCharacterFromServer(uid, id);
-  if (!character) return error(404, 'Character not found.', 'not_found');
-
-  const share = await getShareForCharacter(uid, id);
-  return NextResponse.json(
-    share
-      ? {
-          success: true,
-          active: true,
-          createdAt: share.createdAt,
-          expiresAt: share.expiresAt,
-          includeHistory: share.includeHistory,
-        }
-      : { success: true, active: false },
-    { headers: NO_STORE },
-  );
+  return withOwnedCharacter(request, params, async ({ uid, id }) => {
+    const share = await getShareForCharacter(uid, id);
+    return NextResponse.json(
+      share
+        ? {
+            success: true,
+            active: true,
+            createdAt: share.createdAt,
+            expiresAt: share.expiresAt,
+            includeHistory: share.includeHistory,
+          }
+        : { success: true, active: false },
+      { headers: NO_STORE },
+    );
+  });
 }
 
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const { id } = await params;
-  const uid = await getSessionUid(request);
-  if (!uid) return error(401, 'Unauthorized.', 'unauthorized');
-  if (!isSafeId(id)) return error(400, 'Invalid character id.', 'invalid_id');
+  return withOwnedCharacter(request, params, async ({ uid, id }) => {
+    const parsedBody = await readJsonObject(request);
+    if (!parsedBody.ok) {
+      return jsonError(parsedBody.status, parsedBody.error, parsedBody.reason);
+    }
 
-  const character = await getCharacterFromServer(uid, id);
-  if (!character) return error(404, 'Character not found.', 'not_found');
+    const rawExpiry = parsedBody.body.expiresInDays;
+    const expiresInDays =
+      rawExpiry === undefined ? DEFAULT_SHARE_EXPIRY_DAYS : rawExpiry;
+    if (!isShareExpiryDays(expiresInDays)) {
+      return jsonError(
+        400,
+        'expiresInDays must be 7, 30, 90 or null.',
+        'invalid_expiry',
+      );
+    }
 
-  const parsedBody = await readJsonObject(request);
-  if (!parsedBody.ok) {
-    return error(parsedBody.status, parsedBody.error, parsedBody.reason);
-  }
+    const rawIncludeHistory = parsedBody.body.includeHistory;
+    if (
+      rawIncludeHistory !== undefined &&
+      typeof rawIncludeHistory !== 'boolean'
+    ) {
+      return jsonError(
+        400,
+        'includeHistory must be a boolean.',
+        'invalid_include_history',
+      );
+    }
+    const includeHistory = rawIncludeHistory === true;
 
-  const rawExpiry = parsedBody.body.expiresInDays;
-  const expiresInDays =
-    rawExpiry === undefined ? DEFAULT_SHARE_EXPIRY_DAYS : rawExpiry;
-  if (!isShareExpiryDays(expiresInDays)) {
-    return error(
-      400,
-      'expiresInDays must be 7, 30, 90 or null.',
-      'invalid_expiry',
-    );
-  }
-
-  const rawIncludeHistory = parsedBody.body.includeHistory;
-  if (
-    rawIncludeHistory !== undefined &&
-    typeof rawIncludeHistory !== 'boolean'
-  ) {
-    return error(
-      400,
-      'includeHistory must be a boolean.',
-      'invalid_include_history',
-    );
-  }
-  const includeHistory = rawIncludeHistory === true;
-
-  try {
-    const share = await issueShareToken(uid, id, {
-      expiresInDays,
-      includeHistory,
-    });
-    return NextResponse.json(
-      {
-        success: true,
-        token: share.token,
-        path: sharePath(share.token),
-        createdAt: share.createdAt,
-        expiresAt: share.expiresAt,
+    try {
+      const share = await issueShareToken(uid, id, {
+        expiresInDays,
         includeHistory,
-      },
-      { status: 201, headers: NO_STORE },
-    );
-  } catch (cause) {
-    console.error(`Failed to issue share link for ${uid}/${id}:`, cause);
-    return error(500, 'Failed to create share link.', 'failed');
-  }
+      });
+      return NextResponse.json(
+        {
+          success: true,
+          token: share.token,
+          path: sharePath(share.token),
+          createdAt: share.createdAt,
+          expiresAt: share.expiresAt,
+          includeHistory,
+        },
+        { status: 201, headers: NO_STORE },
+      );
+    } catch (cause) {
+      console.error(`Failed to issue share link for ${uid}/${id}:`, cause);
+      return jsonError(500, 'Failed to create share link.', 'failed');
+    }
+  });
 }
 
 export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const { id } = await params;
-  const uid = await getSessionUid(request);
-  if (!uid) return error(401, 'Unauthorized.', 'unauthorized');
-  if (!isSafeId(id)) return error(400, 'Invalid character id.', 'invalid_id');
-
-  try {
-    // Идемпотентно: даже если ссылки уже нет или лист удалён, ответ успешный.
-    await revokeShareForCharacter(uid, id);
-    return NextResponse.json({ success: true }, { headers: NO_STORE });
-  } catch (cause) {
-    console.error(`Failed to revoke share link for ${uid}/${id}:`, cause);
-    return error(500, 'Failed to revoke share link.', 'failed');
-  }
+  return withOwner(request, params, async ({ uid, id }) => {
+    try {
+      // Идемпотентно: даже если ссылки уже нет или лист удалён, ответ успешный.
+      await revokeShareForCharacter(uid, id);
+      return NextResponse.json({ success: true }, { headers: NO_STORE });
+    } catch (cause) {
+      console.error(`Failed to revoke share link for ${uid}/${id}:`, cause);
+      return jsonError(500, 'Failed to revoke share link.', 'failed');
+    }
+  });
 }

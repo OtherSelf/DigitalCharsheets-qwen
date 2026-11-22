@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 
+import { jsonError, unauthorized } from '@/lib/api/respond';
 import {
   AUTH_MUTATION_RATE_LIMIT,
   getAuthRateLimiter,
@@ -17,28 +18,18 @@ import { getSessionUid, readSession } from '@/lib/session';
 export async function POST(request: Request) {
   try {
     const uid = await getSessionUid(request);
-    if (!uid) {
-      return NextResponse.json(
-        { success: false, error: 'Unauthorized.' },
-        { status: 401 },
-      );
-    }
+    if (!uid) return unauthorized();
 
     const limiter = getAuthRateLimiter().check(
       rateLimitKey('phrase', request, uid),
       AUTH_MUTATION_RATE_LIMIT,
     );
     if (!limiter.allowed) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Too many attempts. Try again later.',
-          reason: 'rate_limited',
-        },
-        {
-          status: 429,
-          headers: { 'Retry-After': String(limiter.retryAfterSeconds) },
-        },
+      return jsonError(
+        429,
+        'Too many attempts. Try again later.',
+        'rate_limited',
+        { 'Retry-After': String(limiter.retryAfterSeconds) },
       );
     }
 
@@ -46,19 +37,13 @@ export async function POST(request: Request) {
     const { phrase } = body;
 
     if (!phrase) {
-      return NextResponse.json(
-        { success: false, error: 'Phrase is required.' },
-        { status: 400 },
-      );
+      return jsonError(400, 'Phrase is required.');
     }
 
     const success = await setRecoveryPhrase(uid, phrase);
 
     if (!success) {
-      return NextResponse.json(
-        { success: false, error: 'Failed to update recovery phrase.' },
-        { status: 500 },
-      );
+      return jsonError(500, 'Failed to update recovery phrase.');
     }
 
     // Новая фраза — новый секрет: чужие сессии (старые устройства) гасим,
@@ -67,9 +52,6 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    return NextResponse.json(
-      { success: false, error: 'An unexpected error occurred.' },
-      { status: 500 },
-    );
+    return jsonError(500, 'An unexpected error occurred.');
   }
 }

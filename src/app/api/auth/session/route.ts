@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 
+import { unauthorized } from '@/lib/api/respond';
 import { getStoredUser, toLocalUser } from '@/lib/server-auth';
 import { getSessionUid } from '@/lib/session';
 
@@ -19,20 +20,10 @@ import { getSessionUid } from '@/lib/session';
  */
 export async function GET(request: Request) {
   const uid = await getSessionUid(request);
-  if (!uid) {
-    return NextResponse.json(
-      { success: false, error: 'Unauthorized.', reason: 'unauthorized' },
-      { status: 401 },
-    );
-  }
+  if (!uid) return unauthorized();
 
   const stored = await getStoredUser(uid);
-  if (!stored) {
-    return NextResponse.json(
-      { success: false, error: 'Unauthorized.', reason: 'unauthorized' },
-      { status: 401 },
-    );
-  }
+  if (!stored) return unauthorized();
 
   return NextResponse.json({ success: true, user: toLocalUser(stored) });
 }

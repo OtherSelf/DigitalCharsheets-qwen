@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 
+import { jsonError } from '@/lib/api/respond';
 import {
   EXISTS_RATE_LIMIT,
   getAuthRateLimiter,
@@ -24,10 +25,7 @@ export async function POST(request: Request) {
     const { username } = body;
 
     if (typeof username !== 'string' || username.trim() === '') {
-      return NextResponse.json(
-        { success: false, error: 'Username/Email is required.' },
-        { status: 400 },
-      );
+      return jsonError(400, 'Username/Email is required.');
     }
 
     const limiter = getAuthRateLimiter().check(
@@ -35,16 +33,11 @@ export async function POST(request: Request) {
       EXISTS_RATE_LIMIT,
     );
     if (!limiter.allowed) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Too many checks. Try again later.',
-          reason: 'rate_limited',
-        },
-        {
-          status: 429,
-          headers: { 'Retry-After': String(limiter.retryAfterSeconds) },
-        },
+      return jsonError(
+        429,
+        'Too many checks. Try again later.',
+        'rate_limited',
+        { 'Retry-After': String(limiter.retryAfterSeconds) },
       );
     }
 
@@ -53,9 +46,6 @@ export async function POST(request: Request) {
       exists: await accountExists(username),
     });
   } catch {
-    return NextResponse.json(
-      { success: false, error: 'An unexpected error occurred.' },
-      { status: 500 },
-    );
+    return jsonError(500, 'An unexpected error occurred.');
   }
 }

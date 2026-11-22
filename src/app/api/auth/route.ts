@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 
+import { jsonError } from '@/lib/api/respond';
 import {
   getAuthRateLimiter,
   LOGIN_RATE_LIMIT,
@@ -28,12 +29,8 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { username, password, displayName } = body;
 
-    // Validate inputs
     if (!username || !password) {
-      return NextResponse.json(
-        { success: false, error: 'Username/Email and password are required.' },
-        { status: 400 },
-      );
+      return jsonError(400, 'Username/Email and password are required.');
     }
 
     // Ключ окна — IP + логин. Считаются неудачные попытки: успешный вход
@@ -42,16 +39,11 @@ export async function POST(request: Request) {
     const loginKey = rateLimitKey('login', request, String(username));
     const limiter = getAuthRateLimiter().check(loginKey, LOGIN_RATE_LIMIT);
     if (!limiter.allowed) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Too many login attempts. Try again later.',
-          reason: 'rate_limited',
-        },
-        {
-          status: 429,
-          headers: { 'Retry-After': String(limiter.retryAfterSeconds) },
-        },
+      return jsonError(
+        429,
+        'Too many login attempts. Try again later.',
+        'rate_limited',
+        { 'Retry-After': String(limiter.retryAfterSeconds) },
       );
     }
 
@@ -71,13 +63,10 @@ export async function POST(request: Request) {
         result.reason === 'no_account' ||
         result.reason === 'invalid_password'
       ) {
-        return NextResponse.json(
-          {
-            success: false,
-            error: 'Invalid login or password.',
-            reason: 'invalid_credentials',
-          },
-          { status: 401 },
+        return jsonError(
+          401,
+          'Invalid login or password.',
+          'invalid_credentials',
         );
       }
 
@@ -89,14 +78,7 @@ export async function POST(request: Request) {
           : result.reason === 'blocked'
             ? 403
             : 401;
-      return NextResponse.json(
-        {
-          success: false,
-          error: result.error || 'Login failed.',
-          reason: result.reason,
-        },
-        { status },
-      );
+      return jsonError(status, result.error || 'Login failed.', result.reason);
     }
 
     // Успешный вход обнуляет счётчик неудач для этой пары IP+логин.
@@ -114,9 +96,6 @@ export async function POST(request: Request) {
     );
     return response;
   } catch (error) {
-    return NextResponse.json(
-      { success: false, error: 'An unexpected error occurred.' },
-      { status: 500 },
-    );
+    return jsonError(500, 'An unexpected error occurred.');
   }
 }

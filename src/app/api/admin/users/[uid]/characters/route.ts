@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 
 import { requireAdmin } from '@/lib/admin-auth';
 import { listCharactersForAdmin } from '@/lib/admin-users';
+import { jsonError } from '@/lib/api/respond';
 
 /**
  * ─── LANDMARK: GET /api/admin/users/[uid]/characters ────────────────────────
@@ -22,10 +23,7 @@ export async function GET(
   const { uid } = await params;
   const characters = await listCharactersForAdmin(uid);
   if (characters === null) {
-    return NextResponse.json(
-      { success: false, error: 'User not found.', reason: 'not_found' },
-      { status: 404 },
-    );
+    return jsonError(404, 'User not found.', 'not_found');
   }
 
   return NextResponse.json({ success: true, uid, characters });

@@ -3,6 +3,7 @@ import crypto from 'node:crypto';
 import { NextResponse } from 'next/server';
 
 import { getGameModule } from '@/games/registry';
+import { jsonError } from '@/lib/api/respond';
 import {
   prepareNewCharacter,
   sanitizeCharacterPayload,
@@ -86,10 +87,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   const parsedBody = await readJsonObject(request);
   if (!parsedBody.ok) {
-    return NextResponse.json(
-      { success: false, error: parsedBody.error, reason: parsedBody.reason },
-      { status: parsedBody.status },
-    );
+    return jsonError(parsedBody.status, parsedBody.error, parsedBody.reason);
   }
   const body = parsedBody.body;
 
@@ -98,21 +96,15 @@ export async function POST(request: Request) {
     resolveRequestedSystemId(body),
   );
   if (!access.ok) {
-    return NextResponse.json(
-      { success: false, error: access.error, reason: access.reason },
-      { status: access.status },
-    );
+    return jsonError(access.status, access.error, access.reason);
   }
 
   const gameModule = getGameModule(access.systemId);
   if (!gameModule) {
-    return NextResponse.json(
-      {
-        success: false,
-        error: 'Не удалось определить игру/редакцию персонажа.',
-        reason: 'unknown_system',
-      },
-      { status: 400 },
+    return jsonError(
+      400,
+      'Не удалось определить игру/редакцию персонажа.',
+      'unknown_system',
     );
   }
 
@@ -129,14 +121,12 @@ export async function POST(request: Request) {
     userId: access.uid,
   });
   if (!prepared.ok) {
-    return NextResponse.json(
-      {
-        success: false,
-        error: 'Character data does not match the game schema.',
-        reason: 'invalid_payload',
-        issues: prepared.issues,
-      },
-      { status: 400 },
+    return jsonError(
+      400,
+      'Character data does not match the game schema.',
+      'invalid_payload',
+      undefined,
+      { issues: prepared.issues },
     );
   }
 

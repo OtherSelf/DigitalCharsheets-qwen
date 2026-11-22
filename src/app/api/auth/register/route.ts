@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 
+import { jsonError } from '@/lib/api/respond';
 import { passwordPolicyError } from '@/lib/security/password';
 import {
   getAuthRateLimiter,
@@ -27,10 +28,7 @@ export async function POST(request: Request) {
     const { username, password, displayName, recoveryPhrase } = body;
 
     if (!username || !password) {
-      return NextResponse.json(
-        { success: false, error: 'Username/Email and password are required.' },
-        { status: 400 },
-      );
+      return jsonError(400, 'Username/Email and password are required.');
     }
 
     const limiter = getAuthRateLimiter().check(
@@ -38,38 +36,24 @@ export async function POST(request: Request) {
       REGISTER_RATE_LIMIT,
     );
     if (!limiter.allowed) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Too many registrations. Try again later.',
-          reason: 'rate_limited',
-        },
-        {
-          status: 429,
-          headers: { 'Retry-After': String(limiter.retryAfterSeconds) },
-        },
+      return jsonError(
+        429,
+        'Too many registrations. Try again later.',
+        'rate_limited',
+        { 'Retry-After': String(limiter.retryAfterSeconds) },
       );
     }
 
     const policyError = passwordPolicyError(password);
     if (policyError) {
-      return NextResponse.json(
-        { success: false, error: policyError, reason: 'invalid_input' },
-        { status: 400 },
-      );
+      return jsonError(400, policyError, 'invalid_input');
     }
 
     if (
       typeof recoveryPhrase !== 'string' ||
       recoveryPhrase.trim().length < 5
     ) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Recovery phrase must be at least 5 characters.',
-        },
-        { status: 400 },
-      );
+      return jsonError(400, 'Recovery phrase must be at least 5 characters.');
     }
 
     const result = await registerUser(
@@ -81,13 +65,10 @@ export async function POST(request: Request) {
 
     if (!result.success || !result.user) {
       const status = result.reason === 'exists' ? 409 : 400;
-      return NextResponse.json(
-        {
-          success: false,
-          error: result.error || 'Registration failed.',
-          reason: result.reason,
-        },
-        { status },
+      return jsonError(
+        status,
+        result.error || 'Registration failed.',
+        result.reason,
       );
     }
 
@@ -102,9 +83,6 @@ export async function POST(request: Request) {
     );
     return response;
   } catch {
-    return NextResponse.json(
-      { success: false, error: 'An unexpected error occurred.' },
-      { status: 500 },
-    );
+    return jsonError(500, 'An unexpected error occurred.');
   }
 }

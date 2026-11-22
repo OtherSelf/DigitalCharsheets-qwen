@@ -6,6 +6,7 @@ import type {
   AdminUserUpdatePatch,
 } from '@/lib/admin-types';
 import { deleteUserByAdmin, updateUserByAdmin } from '@/lib/admin-users';
+import { jsonError } from '@/lib/api/respond';
 
 /**
  * ─── LANDMARK: PATCH/DELETE /api/admin/users/[uid] ──────────────────────────
@@ -48,17 +49,11 @@ export async function PATCH(
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json(
-      { success: false, error: 'Invalid or empty JSON body.' },
-      { status: 400 },
-    );
+    return jsonError(400, 'Invalid or empty JSON body.');
   }
 
   if (!body || typeof body !== 'object' || Array.isArray(body)) {
-    return NextResponse.json(
-      { success: false, error: 'Invalid or empty JSON body.' },
-      { status: 400 },
-    );
+    return jsonError(400, 'Invalid or empty JSON body.');
   }
 
   const result = await updateUserByAdmin(

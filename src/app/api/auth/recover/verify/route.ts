@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 
+import { jsonError } from '@/lib/api/respond';
 import {
   getAuthRateLimiter,
   rateLimitKey,
@@ -49,27 +50,19 @@ export async function POST(request: Request) {
     const verifyKey = rateLimitKey('recover-verify', request, username);
     const limiter = getAuthRateLimiter().check(verifyKey, RECOVERY_RATE_LIMIT);
     if (!limiter.allowed) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Too many recovery attempts. Try again later.',
-          reason: 'rate_limited',
-        },
-        {
-          status: 429,
-          headers: { 'Retry-After': String(limiter.retryAfterSeconds) },
-        },
+      return jsonError(
+        429,
+        'Too many recovery attempts. Try again later.',
+        'rate_limited',
+        { 'Retry-After': String(limiter.retryAfterSeconds) },
       );
     }
 
     if (username.trim() === '' || phrase.trim() === '') {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Username and recovery phrase are required.',
-          reason: 'invalid_input',
-        },
-        { status: 400 },
+      return jsonError(
+        400,
+        'Username and recovery phrase are required.',
+        'invalid_input',
       );
     }
 
@@ -80,14 +73,7 @@ export async function POST(request: Request) {
         `[security] recover/verify rejected: reason=${result.reason ?? 'unknown'}`,
       );
       await delay(FAILURE_DELAY_MS);
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Recovery verification failed.',
-          reason: 'recovery_failed',
-        },
-        { status: 400 },
-      );
+      return jsonError(400, 'Recovery verification failed.', 'recovery_failed');
     }
 
     getAuthRateLimiter().reset(verifyKey);
@@ -96,9 +82,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true, token, expiresAt });
   } catch (error) {
     console.error('Recovery verify error:', error);
-    return NextResponse.json(
-      { success: false, error: 'An unexpected error occurred.' },
-      { status: 500 },
-    );
+    return jsonError(500, 'An unexpected error occurred.');
   }
 }

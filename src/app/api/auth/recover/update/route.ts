@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 
+import { jsonError } from '@/lib/api/respond';
 import { passwordPolicyError } from '@/lib/security/password';
 import {
   getAuthRateLimiter,
@@ -42,36 +43,21 @@ export async function POST(request: Request) {
       RECOVERY_RATE_LIMIT,
     );
     if (!limiter.allowed) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Too many recovery attempts. Try again later.',
-          reason: 'rate_limited',
-        },
-        {
-          status: 429,
-          headers: { 'Retry-After': String(limiter.retryAfterSeconds) },
-        },
+      return jsonError(
+        429,
+        'Too many recovery attempts. Try again later.',
+        'rate_limited',
+        { 'Retry-After': String(limiter.retryAfterSeconds) },
       );
     }
 
     if (token.trim() === '') {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Recovery token is required.',
-          reason: 'invalid_token',
-        },
-        { status: 401 },
-      );
+      return jsonError(401, 'Recovery token is required.', 'invalid_token');
     }
 
     const policyError = passwordPolicyError(newPassword);
     if (policyError) {
-      return NextResponse.json(
-        { success: false, error: policyError, reason: 'invalid_input' },
-        { status: 400 },
-      );
+      return jsonError(400, policyError, 'invalid_input');
     }
 
     if (
@@ -79,13 +65,10 @@ export async function POST(request: Request) {
       newRecoveryPhrase.trim() !== '' &&
       newRecoveryPhrase.trim().length < 5
     ) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Recovery phrase must be at least 5 characters.',
-          reason: 'invalid_input',
-        },
-        { status: 400 },
+      return jsonError(
+        400,
+        'Recovery phrase must be at least 5 characters.',
+        'invalid_input',
       );
     }
 
@@ -96,18 +79,16 @@ export async function POST(request: Request) {
     );
     if (!result.success) {
       const status = result.reason === 'invalid_token' ? 401 : 400;
-      return NextResponse.json(
-        { success: false, error: result.error, reason: result.reason },
-        { status },
+      return jsonError(
+        status,
+        result.error || 'Recovery failed.',
+        result.reason,
       );
     }
 
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Recovery update error:', error);
-    return NextResponse.json(
-      { success: false, error: 'An unexpected error occurred.' },
-      { status: 500 },
-    );
+    return jsonError(500, 'An unexpected error occurred.');
   }
 }
