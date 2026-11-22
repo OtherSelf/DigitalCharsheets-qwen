@@ -4,9 +4,9 @@
  *  scripts/dh2e/generate.mjs — данные 2-й редакции для модуля dh2
  * ============================================================================
  *
- *  Эталон данных — контент-каталог workspace:
- *    content/dh2/catalog.json  (миры, бэкграунды, роли, пророчества, справочники)
- *    content/dh2/rules.json    (аптитюды, характеристики, таблицы XP, ступени)
+ *  Эталон данных — внешний контент-каталог (`DCS_CONTENT_DIR`):
+ *    catalog.json  (миры, бэкграунды, роли, пророчества, справочники)
+ *    rules.json    (аптитюды, характеристики, таблицы XP, ступени)
  *
  *  Скрипт живёт в папке плагина (`src/games/dh2/scripts/`): данные 2-й
  *  редакции — его собственность, а не тулинг ядра. Генерирует в
@@ -16,8 +16,8 @@
  *    dh2e-rules.ts       ступени, ранги навыков, таблицы 2-2/2-4/2-6
  *  и дописывает подписи в i18n/en.json, i18n/ru.json (только ключи `dh2.catalog.*`).
  *
- *  Runtime-зависимости от workspace нет: модуль читает только сгенерированные
- *  файлы. Пересборка — без флага, проверка дрейфа — `--check`; в `npm run
+ *  Runtime-зависимости от внешнего каталога нет: модуль читает только
+ *  сгенерированные файлы. Пересборка — без флага, проверка дрейфа — `--check`; в `npm run
  *  verify` дрейф ловит unit-тест плагина (`tests/unit/dh2e-freshness.test.ts`),
  *  а не корневой скрипт.
  *
@@ -37,9 +37,7 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 /** Корень репозитория: scripts → dh2 → games → src → корень. */
 const ROOT = resolve(HERE, '../../../..');
 const MODULE_DIR = resolve(HERE, '..');
-const CONTENT_DIR =
-  process.env.DCS_CONTENT_DIR ??
-  resolve(ROOT, '../DigitalCharsheets-workspace/content/dh2');
+const CONTENT_DIR = process.env.DCS_CONTENT_DIR ?? resolve(ROOT, 'content/dh2');
 
 const CHECK = process.argv.includes('--check');
 const I18N_PREFIX = 'dh2.catalog.';
@@ -60,7 +58,7 @@ const STAT_IDS = {
 
 const HEADER = `/**
  * ─── AUTO-GENERATED — НЕ РЕДАКТИРОВАТЬ ─────────────────────────────────────
- * Данные 2-й редакции из контент-каталога workspace (content/dh2).
+ * Данные 2-й редакции из внешнего контент-каталога (DCS_CONTENT_DIR).
  * Пересобрать: node src/games/dh2/scripts/generate.mjs.
  * Проверить дрейф: тот же файл с --check (или unit-тест dh2e-freshness).
  */
@@ -600,7 +598,9 @@ async function main() {
   for (const path of [catalogPath, rulesPath]) {
     if (!existsSync(path)) {
       console.error(`нет файла каталога: ${path}`);
-      console.error('укажите DCS_CONTENT_DIR (content/dh2 в workspace)');
+      console.error(
+        'укажите DCS_CONTENT_DIR на каталог с catalog.json/rules.json',
+      );
       process.exit(2);
     }
   }

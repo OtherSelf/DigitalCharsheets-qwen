@@ -103,7 +103,7 @@ different files and are expected:
 
 | Area | dh1 | dh2 | dnd5e | sandbox |
 | --- | --- | --- | --- | --- |
-| Data pack | `dark-heresy-data.ts`, `dark-heresy-ranks.ts`, `divination-i18n.ts` (hand-written) | `dh2e-*.ts` (generated from the workspace catalog) | `epic-boons.ts` (feature data) | inline demo data |
+| Data pack | `dark-heresy-data.ts`, `dark-heresy-ranks.ts`, `divination-i18n.ts` (hand-written) | `dh2e-*.ts` (generated from an external catalog) | `epic-boons.ts` (feature data) | inline demo data |
 | Edition helpers | `capabilities.ts`, `stats.ts`, `dh-stats.ts`, `field-policy.ts`, `experience.ts`, `gender.ts`, `inventory.ts` | same concept names, own copies | `embedded.ts` (companions), `derive.ts` | `capabilities.ts`, `derive.ts`, `embedded.ts`, `history.ts`, `legacy-import.ts` |
 | UI sections | eight DH sections | eight DH sections plus `requisition-block.tsx` | 14 5e sections | one small sheet |
 | Tests | 19 files | 24 files | 6 files | 3 files |

@@ -233,7 +233,7 @@ fine). If nginx already defines `$connection_upgrade`, drop the `map` block and
 keep only the `proxy_set_header` lines. A stale proxy config can look exactly
 like an application crash — check it before suspecting data migrations.
 
-The reference configs live in the workspace `nginx/` directory
+The reference configs live outside this repository (an operator directory)
 (`dcs.conf` for production, `dcs-dev.conf` for the dev bench); update both when
 the proxy setup changes.
 

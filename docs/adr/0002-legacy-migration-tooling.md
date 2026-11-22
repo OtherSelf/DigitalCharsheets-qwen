@@ -23,7 +23,7 @@ migration:
   authentication. It was **removed** during the security hardening
   ([api.md](../api.md), [security.md](../security.md));
 - the scripts, the export procedure and the real dumps lived in the dev
-  workspace, outside git. The procedure drifted from the code within weeks and
+  a separate directory outside git. The procedure drifted from the code within weeks and
   the dumps sat next to keys with `0777` permissions;
 - [`data-storage.md`](../data-storage.md) § Legacy data promised that the
   migration "can be re-run as a script", but the script was not published.

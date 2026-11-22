@@ -138,7 +138,7 @@ Deliberate exclusions — entry points and vendored code, not dead code:
 - plugin entry files (`games/<id>/{index,ui,sheet,create-form}`) and any
   `<file>#<export>` target named by `plugin.json`;
 - files marked `AUTO-GENERATED` (DH2 rule data is written by
-  `src/games/dh2/scripts/generate.mjs` from the workspace `content/dh2`);
+  `src/games/dh2/scripts/generate.mjs` from an external catalog (`DCS_CONTENT_DIR`);
 - targets of a dynamic `import()` in production code;
 - `src/components/ui/**` — the vendored shadcn kit: an unused `Dialog.close` is
   upstream API, not project dead code. A kit *file* without importers is still

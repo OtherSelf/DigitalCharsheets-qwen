@@ -100,17 +100,16 @@ behaviour.
 `src/games/dh2/dh2e-*.ts` are generated files: they carry the 2e reference
 data (home worlds, backgrounds, roles, aptitudes, divinations, skills,
 talents, disciplines, psychic powers, elite advances, XP cost tables) taken
-from the content catalog that lives in the workspace repository
-(`content/dh2/catalog.json` and `content/dh2/rules.json`).
+from an external content catalog (`catalog.json` and `rules.json`).
 
-The module never reads the workspace at runtime; the generated files are
+The module never reads that catalog at runtime; the generated files are
 committed. The generator lives in the plugin folder — the data pack belongs to
 the edition, not to the core tooling — so rebuild after the catalog changes
 with:
 
 ```sh
-node src/games/dh2/scripts/generate.mjs          # regenerate dh2e-*.ts + i18n keys
-node src/games/dh2/scripts/generate.mjs --check  # fail if the generated files are stale
+DCS_CONTENT_DIR=/path/to/content/dh2 node src/games/dh2/scripts/generate.mjs
+DCS_CONTENT_DIR=/path/to/content/dh2 node src/games/dh2/scripts/generate.mjs --check
 ```
 
 Elite advances carry a structured `prereq` list (characteristic minimum,
@@ -121,13 +120,13 @@ requirements it can compare (background, gender, characteristics, elites) and
 shows red warnings, while a `trait` stays a hint because traits are free text
 on the sheet.
 
-`DCS_CONTENT_DIR` overrides the catalog location (default:
-`../DigitalCharsheets-workspace/content/dh2`). The generator owns only the
-`dh2.catalog.*` slice of `src/games/dh2/i18n/{en,ru}.json`; every other key is
-hand-written. Drift is caught by the edition's own unit test
+`DCS_CONTENT_DIR` points to the external catalog (default `./content/dh2`).
+The generator owns only the `dh2.catalog.*` slice of
+`src/games/dh2/i18n/{en,ru}.json`; every other key is hand-written. Drift is
+caught by the edition's own unit test
 (`src/games/dh2/tests/unit/data-pack-freshness.test.ts`, part of `npm run verify`):
-when the workspace catalog is checked out, stale generated files fail the
-unit step; in CI without the workspace the test is skipped with a reason.
+when the catalog is present, stale generated files fail the unit step; without
+it the test is skipped with a reason.
 Nothing in `scripts/predeploy.sh` or `package.json` mentions the edition.
 
 ## Edition differences (dh1 vs dh2)
