@@ -45,6 +45,11 @@ export const ERROR_PAGE_ACTIONS: Readonly<
   503: { reload: true, home: true },
 };
 
+/** Действие в шапке: 401 ведёт на вход, остальные — по текущей сессии. */
+export function errorHeaderAction(code: ErrorPageCode): 'login' | 'auto' {
+  return code === 401 ? 'login' : 'auto';
+}
+
 /** Разобрать код из URL/`params`: строка `"404"` тоже допустима. */
 export function isErrorPageCode(
   value: string | number,

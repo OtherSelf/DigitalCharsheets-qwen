@@ -25,7 +25,11 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { useTranslation } from '@/context/language-context';
-import { ERROR_PAGE_ACTIONS, type ErrorPageCode } from '@/lib/error-pages';
+import {
+  ERROR_PAGE_ACTIONS,
+  errorHeaderAction,
+  type ErrorPageCode,
+} from '@/lib/error-pages';
 
 /**
  * ─── LANDMARK: ERROR SCREEN ────────────────────────────────────────────────
@@ -66,7 +70,7 @@ export function ErrorScreen({
   return (
     <AppFrame
       variant="plain"
-      header={{ backHref: '/', authAction: code === 401 ? 'login' : 'auto' }}
+      header={{ backHref: '/', authAction: errorHeaderAction(code) }}
     >
       <div className="flex flex-1 items-center justify-center">
         <Card
