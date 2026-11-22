@@ -65,13 +65,25 @@ function sheetLockKey(userId: string, characterId: string): string {
  * перечитывается после любой записи. Дополнительно инвалидируем явно из
  * save/update/delete, не полагаясь на гранулярность mtime.
  */
+interface CharacterListEntry {
+  character: Character;
+  updatedAt: string | null;
+}
+
 const characterListCache = new Map<
   string,
-  { signature: string; value: Character[] }
+  { signature: string; entries: CharacterListEntry[] }
 >();
 
 function invalidateCharacterList(userId: string): void {
   characterListCache.delete(getCharactersDir(userId));
+}
+
+export interface CharacterSummary {
+  id: string;
+  name: string;
+  systemId: string | null;
+  updatedAt: string | null;
 }
 
 export interface WriteToken {
@@ -154,9 +166,9 @@ function readCharacterFile(
 
 // ЧТЕНИЕ: все листы пользователя; битый файл пропускается, а не роняет список.
 // Каталог здесь не создаётся: у нового аккаунта листов ещё нет.
-export async function getCharactersFromServer(
+async function loadCharacterList(
   userId: string,
-): Promise<Character[]> {
+): Promise<CharacterListEntry[]> {
   const charsDir = getCharactersDir(userId);
 
   let dirStat;
@@ -171,7 +183,7 @@ export async function getCharactersFromServer(
   const signature = `${dirStat.ino}:${dirStat.mtimeMs}`;
   const cachedList = characterListCache.get(charsDir);
   if (cachedList && cachedList.signature === signature) {
-    return cachedList.value;
+    return cachedList.entries;
   }
 
   let files: string[];
@@ -188,17 +200,45 @@ export async function getCharactersFromServer(
     return [];
   }
 
-  const characters = await Promise.all(
-    files.map((file) =>
-      readCharacterFile(path.join(charsDir, file), file.slice(0, -5)),
-    ),
+  const loaded = await Promise.all(
+    files.map(async (file) => {
+      const filePath = path.join(charsDir, file);
+      const character = await readCharacterFile(filePath, file.slice(0, -5));
+      if (!character) return null;
+      let updatedAt: string | null = null;
+      try {
+        updatedAt = (await fs.stat(filePath)).mtime.toISOString();
+      } catch {
+        /* файл удалили между readdir и stat */
+      }
+      return { character, updatedAt };
+    }),
   );
 
-  const value = characters.filter(
-    (character): character is Character => !!character,
+  const entries = loaded.filter(
+    (entry): entry is CharacterListEntry => !!entry,
   );
-  characterListCache.set(charsDir, { signature, value });
-  return value;
+  characterListCache.set(charsDir, { signature, entries });
+  return entries;
+}
+
+export async function getCharactersFromServer(
+  userId: string,
+): Promise<Character[]> {
+  return (await loadCharacterList(userId)).map((entry) => entry.character);
+}
+
+/** Карточки для `?view=summary`: без полного листа, с mtime файла. */
+export async function getCharacterSummariesFromServer(
+  userId: string,
+): Promise<CharacterSummary[]> {
+  return (await loadCharacterList(userId)).map(({ character, updatedAt }) => ({
+    id: character.id,
+    name: character.name,
+    systemId:
+      typeof character.systemId === 'string' ? character.systemId : null,
+    updatedAt,
+  }));
 }
 
 /**

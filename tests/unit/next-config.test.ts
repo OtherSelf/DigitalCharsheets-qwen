@@ -83,3 +83,34 @@ describe('next.config: приватность гостевой ссылки', ()
     expect(headers.get('Referrer-Policy')).toBe('no-referrer');
   });
 });
+
+describe('next.config: кэш API списка', () => {
+  const getRule = async (source: string) => {
+    const headers = await nextConfig.headers?.();
+    const entry = headers!.find((item) => item.source === source);
+    expect(entry, `нет правила для ${source}`).toBeTruthy();
+    return new Map(entry!.headers.map((header) => [header.key, header.value]));
+  };
+
+  it('список листов — private, no-cache; подпути — no-store', async () => {
+    expect((await getRule('/api/characters')).get('Cache-Control')).toBe(
+      'private, no-cache',
+    );
+    expect((await getRule('/api/characters/:path+')).get('Cache-Control')).toBe(
+      'no-store',
+    );
+  });
+
+  it('HTML не попал под API-правило', async () => {
+    const headers = await nextConfig.headers?.();
+    const html = headers!.find(
+      (item) => item.source === '/((?!_next/static|api/characters).*)',
+    );
+    expect(html).toBeTruthy();
+    expect(
+      new Map(html!.headers.map((header) => [header.key, header.value])).get(
+        'Cache-Control',
+      ),
+    ).toBe('no-store');
+  });
+});

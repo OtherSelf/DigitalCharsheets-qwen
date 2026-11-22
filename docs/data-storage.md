@@ -2,7 +2,9 @@
 
 Everything the app owns lives in a single data directory on the host you
 control. There is no database: profiles, character sheets and the login index are
-JSON files, written through small, synchronous helpers in `src/lib/`.
+JSON files, written through atomic helpers in `src/lib/`; reads of unchanged
+files are served from a process-local cache (see
+[architecture.md](architecture.md#process-local-read-cache)).
 
 ## Overview
 
@@ -340,7 +342,9 @@ remains the source of truth if the index write fails.
   directory, fsyncs and renames it over the target. Readers see either the old
   complete file or the new complete file. If `rename` fails with `EXDEV`, the
   helper falls back to a direct write (documented in
-  `src/lib/fs-atomic.ts`).
+  `src/lib/fs-atomic.ts`). The file is written as compact JSON (no indentation):
+  the schema and fields are unchanged, old pretty-printed files are still read,
+  and the user-facing export stays pretty.
 - **Data lock** — `withDataLock()` creates `<data-dir>/.lock` with `mkdir`
   (atomic) for operations that touch more than one file (register, rename,
   delete, admin updates). Stale locks older than 30 seconds are removed; the

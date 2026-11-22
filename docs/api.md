@@ -104,7 +104,7 @@ Both endpoints are rate limited per IP + login: 5 attempts per 15 minutes, then
 
 | Method | Path | Auth | Purpose |
 | --- | --- | --- | --- |
-| `GET` | `/api/characters` | cookie | List the current user's sheets. |
+| `GET` | `/api/characters` | cookie | List the current user's sheets; `?view=summary` returns cards (`id`, `name`, `systemId`, `updatedAt`). |
 | `POST` | `/api/characters` | cookie | Create a sheet; the server assigns `id`/`userId`, fills missing fields from the edition defaults and validates the payload by the edition schema. |
 | `PUT` | `/api/characters/{id}` | cookie | Partial update; optional `__page`/`__seq` tokens drop late writes. |
 | `DELETE` | `/api/characters/{id}` | cookie | Delete a sheet. |
@@ -117,6 +117,12 @@ Both endpoints are rate limited per IP + login: 5 attempts per 15 minutes, then
 `{id}` must match `^[A-Za-z0-9_-]{1,64}$`; any other value (for example
 `..%2Fuser`) is rejected with `400` before the file system is touched. See
 [security.md](security.md) § Invariants.
+
+`GET /api/characters` sends an `ETag` and `Cache-Control: private, no-cache`.
+A repeated GET with a matching `If-None-Match` answers `304` without a body,
+so the dashboard does not re-download an unchanged list. The full response is
+the default; `?view=summary` is additive and returns one card per sheet, without
+the sheet body. HTML and `/share/*` keep `no-store`.
 
 Request bodies for sheets are validated against the edition schema
 (`src/games/<id>/schema.ts`): server-owned fields (`id`, `userId`, `systemId`)

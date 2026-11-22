@@ -60,8 +60,10 @@ describe('server-storage (файловое хранилище листов)', ()
       systemId: 'dnd5e',
       schemaVersion: CHARACTER_SCHEMA_VERSION,
     });
-    // Человекочитаемый JSON (отступ 2)
-    expect(fs.readFileSync(file, 'utf8')).toContain('\n  "id"');
+    // Компактный JSON: без отступов и переводов строк (Q4).
+    const raw = fs.readFileSync(file, 'utf8');
+    expect(raw).not.toContain('\n');
+    expect(JSON.parse(raw)).toMatchObject({ id: 'char-a' });
   });
 
   it('getCharactersFromServer на пустом каталоге возвращает [] и НЕ создаёт каталоги', async () => {

@@ -119,7 +119,22 @@ const nextConfig: NextConfig = {
           переопределить `Cache-Control` только на нестатике: вечно кэшируется
           лишь статика с хэшем в имени.
         */
-        source: '/((?!_next/static).*)',
+        source: '/((?!_next/static|api/characters).*)',
+        headers: [{ key: 'Cache-Control', value: 'no-store' }],
+      },
+      {
+        /*
+          Список листов — единственный API GET с валидатором: ETag/304
+          разрешают браузеру хранить копию, но требуют ревалидации. HTML и
+          остальные API остаются no-store (правило выше). Подпути
+          /api/characters/* — ссылки и история — по-прежнему no-store: в них
+          токен/приватные данные.
+        */
+        source: '/api/characters',
+        headers: [{ key: 'Cache-Control', value: 'private, no-cache' }],
+      },
+      {
+        source: '/api/characters/:path+',
         headers: [{ key: 'Cache-Control', value: 'no-store' }],
       },
       {

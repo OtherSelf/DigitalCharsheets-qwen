@@ -21,7 +21,7 @@ export async function writeJsonAtomic(
   data: unknown,
 ): Promise<void> {
   const tmpPath = `${filePath}.${process.pid.toString(36)}.${Date.now().toString(36)}.${Math.random().toString(36).slice(2, 8)}.tmp`;
-  const json = JSON.stringify(data, null, 2);
+  const json = JSON.stringify(data);
   let handle: Awaited<ReturnType<typeof fs.open>> | null = null;
   try {
     handle = await fs.open(tmpPath, 'w');

@@ -18,6 +18,7 @@ import {
   type HistoryTruncationMarker,
 } from './history-types';
 import { isUid } from './ids';
+import { invalidateCachedFile, readThroughCache } from './read-cache';
 
 /**
  * ─── LANDMARK: CHARACTER HISTORY STORE ──────────────────────────────────────
@@ -143,6 +144,7 @@ async function writeTextAtomic(file: string, content: string): Promise<void> {
   try {
     await fs.writeFile(tmp, content, 'utf8');
     await fs.rename(tmp, file);
+    invalidateCachedFile(file);
   } catch (error) {
     try {
       await fs.unlink(tmp);
@@ -293,6 +295,7 @@ export async function appendHistory(
   } finally {
     await handle.close();
   }
+  invalidateCachedFile(file);
 }
 
 /** Маркер создания листа (без полного diff). */
@@ -323,28 +326,7 @@ export async function appendMigrationMarker(
   );
 }
 
-/** Прочитать журнал; битые строки пропускаются, маркер компакции учитывается. */
-export async function readHistory(
-  userId: string,
-  characterId: string,
-): Promise<HistoryReadResult> {
-  const file = getHistoryFile(userId, characterId);
-  if (!file) return emptyReadResult();
-
-  let bytes = 0;
-  try {
-    bytes = (await fs.stat(file)).size;
-  } catch {
-    return emptyReadResult();
-  }
-
-  let raw: string;
-  try {
-    raw = await fs.readFile(file, 'utf8');
-  } catch {
-    return emptyReadResult(bytes);
-  }
-
+function parseHistory(raw: string, bytes: number): HistoryReadResult {
   const revisions: HistoryRevision[] = [];
   let truncated = false;
   let dropped = 0;
@@ -384,6 +366,23 @@ export async function readHistory(
   };
 }
 
+/** Прочитать журнал; битые строки пропускаются, маркер компакции учитывается. */
+export async function readHistory(
+  userId: string,
+  characterId: string,
+): Promise<HistoryReadResult> {
+  const file = getHistoryFile(userId, characterId);
+  if (!file) return emptyReadResult();
+
+  // Журнал ограничен 2 MiB на лист; разбор кэшируется по подписи файла.
+  // Хвостовое чтение не даёт контракту API: ответу нужны totalSessions и
+  // totalRevisions по всему файлу. Кэш убирает повторный parse страниц.
+  const result = await readThroughCache<HistoryReadResult>(file, (raw, stat) =>
+    parseHistory(raw, stat.size),
+  );
+  return result ?? emptyReadResult();
+}
+
 /** Удалить журнал вместе с листом; ошибки не должны ломать удаление. */
 export async function deleteCharacterHistory(
   userId: string,
@@ -393,6 +392,7 @@ export async function deleteCharacterHistory(
   if (!file) return false;
   try {
     await fs.unlink(file);
+    invalidateCachedFile(file);
     return true;
   } catch (error) {
     if ((error as NodeJS.ErrnoException)?.code === 'ENOENT') return false;

@@ -1,3 +1,5 @@
+import crypto from 'node:crypto';
+
 import { NextResponse } from 'next/server';
 
 import { getGameModule } from '@/games/registry';
@@ -12,6 +14,7 @@ import {
 import { readJsonObject } from '@/lib/security/payload';
 import {
   getCharactersFromServer,
+  getCharacterSummariesFromServer,
   saveCharacterToServer,
 } from '@/lib/server-storage';
 import { getSessionUid } from '@/lib/session';
@@ -29,15 +32,54 @@ import { Character } from '@/lib/types';
  * структура даёт `400` со списком полей, тело больше 1 МБ — `413`.
  */
 
-// Список листов текущего пользователя; uid — только из сессии.
+/**
+ * Список листов текущего пользователя; uid — только из сессии.
+ *
+ * `?view=summary` — аддитивный режим для карточек: только id/name/systemId/
+ * updatedAt, без полного листа. Без параметра ответ прежний.
+ *
+ * ETag считается по тем же байтам, что уходят клиенту, поэтому повторный GET
+ * с `If-None-Match` получает 304 и не скачивает список. `private, no-cache`
+ * разрешает браузеру хранить копию, но требует ревалидации; HTML и /share
+ * остаются `no-store` (LANDMARK: HTML_MUST_REVALIDATE).
+ */
 export async function GET(request: Request) {
   const uid = await getSessionUid(request);
   if (!uid) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const characters = await getCharactersFromServer(uid);
-  return NextResponse.json(characters);
+  const { searchParams } = new URL(request.url);
+  const data =
+    searchParams.get('view') === 'summary'
+      ? await getCharacterSummariesFromServer(uid)
+      : await getCharactersFromServer(uid);
+  const body = JSON.stringify(data);
+  const etag = `"${crypto
+    .createHash('sha256')
+    .update(body)
+    .digest('base64url')
+    .slice(0, 27)}"`;
+  const headers = {
+    'Cache-Control': 'private, no-cache',
+    ETag: etag,
+  };
+
+  const ifNoneMatch = request.headers.get('if-none-match');
+  if (
+    ifNoneMatch &&
+    ifNoneMatch
+      .split(',')
+      .map((value) => value.trim())
+      .includes(etag)
+  ) {
+    return new NextResponse(null, { status: 304, headers });
+  }
+
+  return new NextResponse(body, {
+    status: 200,
+    headers: { ...headers, 'Content-Type': 'application/json' },
+  });
 }
 
 // Создание листа: владелец — из сессии, доступ к редакции — по роли.

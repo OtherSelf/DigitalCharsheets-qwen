@@ -716,6 +716,27 @@ export const openApiDocument = {
         },
         additionalProperties: true,
       },
+      CharacterSummary: {
+        type: 'object',
+        required: ['id', 'name', 'systemId', 'updatedAt'],
+        properties: {
+          id: { type: 'string' },
+          name: { type: 'string' },
+          systemId: {
+            type: 'string',
+            enum: SYSTEM_IDS,
+            nullable: true,
+            description: 'Machine edition id, or null for a legacy sheet.',
+          },
+          updatedAt: {
+            type: 'string',
+            format: 'date-time',
+            nullable: true,
+            description: 'File mtime; null if it could not be read.',
+          },
+        },
+        additionalProperties: false,
+      },
       Character: {
         description:
           'A character sheet. Fields depend on the game/edition: the schema is ' +
@@ -1130,11 +1151,46 @@ export const openApiDocument = {
         tags: ['Characters'],
         operationId: 'listCharacters',
         summary: 'List own character sheets',
+        description:
+          'With `view=summary` returns only card fields (`id`, `name`, `systemId`, `updatedAt`); without it the full sheets are returned. The response carries an `ETag` and `Cache-Control: private, no-cache`: a repeated GET with a matching `If-None-Match` answers `304` without a body.',
+        parameters: [
+          {
+            name: 'view',
+            in: 'query',
+            required: false,
+            description: '`summary` — cards instead of full sheets.',
+            schema: { type: 'string', enum: ['summary'] },
+          },
+        ],
         responses: {
-          200: jsonResponse('Array of sheets.', {
-            type: 'array',
-            items: ref('Character'),
-          }),
+          200: {
+            description: 'Array of full sheets or summaries.',
+            headers: {
+              ETag: {
+                description: 'Opaque validator of the response body.',
+                schema: { type: 'string' },
+              },
+            },
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'array',
+                  items: {
+                    oneOf: [ref('Character'), ref('CharacterSummary')],
+                  },
+                },
+              },
+            },
+          },
+          304: {
+            description: 'Not modified: the client ETag still matches.',
+            headers: {
+              ETag: {
+                description: 'Same validator as the 200 response.',
+                schema: { type: 'string' },
+              },
+            },
+          },
           401: { $ref: '#/components/responses/Unauthorized' },
         },
       },
