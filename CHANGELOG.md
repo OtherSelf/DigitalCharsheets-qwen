@@ -11,6 +11,76 @@ format changes.
 
 ## [Unreleased]
 
+## [0.16.0] - 2026-11-22
+
+Reads and writes stop queueing, and the sheet list revalidates instead of
+re-downloading.
+
+### Added
+
+- `GET /api/characters?view=summary` returns one card per sheet (`id`, `name`,
+  `systemId`, `updatedAt`) instead of full bodies — the measured list drops from
+  31.3 KB to 1.0 KB (30×). The response carries an `ETag` and
+  `Cache-Control: private, no-cache`, and a matching `If-None-Match` answers
+  `304` with no body. The default response is unchanged, and HTML, `/share/*`
+  and the other API routes stay `no-store`.
+- Excel export runs in a Web Worker: the page builds the rows and hands them
+  over, the worker loads the vendored SheetJS from `public/vendor/xlsx` with
+  `importScripts`, serializes the workbook off the main thread and returns an
+  `ArrayBuffer`. Exporting a large sheet no longer freezes typing or scrolling;
+  the file format and name are unchanged, `script-src 'self'` needs no
+  exception, and a browser without Worker support falls back to the previous
+  dynamic import.
+- Performance checks, none of which are part of `npm run verify`:
+  `npm run bench` (vitest microbenchmarks), `npm run test:load` (six autocannon
+  scenarios on a throwaway server, `--assert` with calibrated thresholds),
+  `npm run test:race` (registration, one-sheet PUTs, logout and deletion during
+  a write) and `npm run test:perf` (Playwright `@perf`: LCP/CLS/first-input and
+  a JS chunk budget on `/demo` and `/login`, plus a check that the built worker
+  returns a non-empty xlsx). `autocannon` is a dev-only dependency.
+- A `no-emoji` unit test rejects pictographs in `src/`, `tests/` and `scripts/`;
+  arrows and `✓`/`⚠` are allowed.
+
+### Changed
+
+- Storage is asynchronous: file operations and the data lock use `fs/promises`
+  and a FIFO queue with a 5 ms step instead of blocking `Atomics.wait`, and
+  `updateCharacterOnServer` reads, checks `__seq` and writes under one lock.
+- Single-sheet writes take a per-sheet lock instead of the global one; the
+  global `mkdir` lock still covers registration, account deletion, the catalog
+  and sessions, and it has priority over new per-sheet locks.
+  `save-parallel` reached 325.6 rps against a 120 rps baseline (2.7×), the
+  fsync ceiling being about 256 rps.
+- `scrypt` runs in the libuv pool (`hashSecretAsync`/`verifySecretHashAsync`;
+  the hash format, N/r/p and salt are unchanged), so a login no longer holds the
+  event loop for ~50 ms: `login-storm` went from 21.7 to 46.7 rps.
+  `UV_THREADPOOL_SIZE=8`–`16` is now documented for the service unit.
+- Parsed JSON is cached per file and revalidated by `(ino, mtimeMs, size)`:
+  sessions, profiles, the login index, the game catalog and every sheet are
+  parsed once, `writeJsonAtomic` invalidates the entry, and an external edit is
+  picked up by the signature. Session revocation and account blocking stay
+  immediate, a corrupt `sessions.json` is still fail-closed, the history journal
+  parse is cached the same way, and guest requests no longer copy an unchanged
+  sheet.
+- Data files are written as compact JSON (same schema and fields; pretty files
+  are still read): a character file drops from 4.6 KB to 3.1 KB, while the
+  user-facing export stays pretty.
+- **One process per data directory** is a requirement, not a recommendation:
+  the read cache only knows this process's writes and per-sheet locks are
+  in-process, so `pm2 cluster`, several systemd instances or workers on one
+  data dir are unsupported.
+- Plugin versions are unchanged: `dh1` 1.9.0, `dh2` 1.9.0, `dnd5e` 1.7.0,
+  `sandbox` 1.1.0 — only their unit and visual tests were touched. The sheet
+  `schemaVersion` (Dark Heresy `5`, D&D 5e `2`) and `PLUGIN_API_VERSION`
+  (`1.4.0`) are unchanged.
+
+### Fixed
+
+- A burst of parallel writes no longer answers `500 Data directory is locked`
+  or stalls the event loop: the lock wait is a FIFO queue, not 50 pollers
+  colliding on `mkdir` (event-loop p99 fell from 729 ms to 12 ms at 50 virtual
+  users).
+
 ## [0.15.0] - 2026-11-22
 
 A public about page and a core footer, and the phone gets layouts that fit.
