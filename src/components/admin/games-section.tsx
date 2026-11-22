@@ -117,7 +117,10 @@ export function AdminGamesSection() {
     void load();
   }, [load]);
 
-  const updateStatus = async (systemId: string, next: ModuleStatus) => {
+  const saveGames = async (
+    patch: Record<string, unknown>,
+    after?: (data: AdminGamesResponse) => void,
+  ) => {
     setIsSaving(true);
     setStatus('');
     setError('');
@@ -125,7 +128,7 @@ export function AdminGamesSection() {
       const res = await fetch('/api/admin/games', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ systemId, status: next }),
+        body: JSON.stringify(patch),
       });
       const data = (await res
         .json()
@@ -135,6 +138,7 @@ export function AdminGamesSection() {
         return;
       }
       apply(data);
+      after?.(data);
       setStatus(t('admin.gamesSaved'));
     } catch {
       setError(t('admin.gamesSaveFailed'));
@@ -143,87 +147,21 @@ export function AdminGamesSection() {
     }
   };
 
-  const updateEnabled = async (systemId: string, enabled: boolean) => {
-    setIsSaving(true);
-    setStatus('');
-    setError('');
-    try {
-      const res = await fetch('/api/admin/games', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ systemId, enabled }),
-      });
-      const data = (await res
-        .json()
-        .catch(() => null)) as AdminGamesResponse | null;
-      if (!res.ok || !data?.success) {
-        setError(data?.error || t('admin.gamesSaveFailed'));
-        return;
-      }
-      apply(data);
-      setStatus(t('admin.gamesSaved'));
-    } catch {
-      setError(t('admin.gamesSaveFailed'));
-    } finally {
-      setIsSaving(false);
-    }
-  };
+  const updateStatus = (systemId: string, next: ModuleStatus) =>
+    saveGames({ systemId, status: next });
 
-  const saveHostTheme = async (systemId: string, useHostTheme: boolean) => {
-    setIsSaving(true);
-    setStatus('');
-    setError('');
-    try {
-      const res = await fetch('/api/admin/games', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ systemId, useHostTheme }),
-      });
-      const data = (await res
-        .json()
-        .catch(() => null)) as AdminGamesResponse | null;
-      if (!res.ok || !data?.success) {
-        setError(data?.error || t('admin.gamesSaveFailed'));
-        return;
-      }
-      apply(data);
+  const updateEnabled = (systemId: string, enabled: boolean) =>
+    saveGames({ systemId, enabled });
+
+  const saveHostTheme = (systemId: string, useHostTheme: boolean) =>
+    saveGames({ systemId, useHostTheme }, (data) => {
       setSettingsGame(
         (current) =>
           data.games?.find((game) => game.id === current?.id) ?? null,
       );
-      setStatus(t('admin.gamesSaved'));
-    } catch {
-      setError(t('admin.gamesSaveFailed'));
-    } finally {
-      setIsSaving(false);
-    }
-  };
+    });
 
-  const saveTitle = async (value: string | null) => {
-    setIsSaving(true);
-    setStatus('');
-    setError('');
-    try {
-      const res = await fetch('/api/admin/games', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ siteTitle: value }),
-      });
-      const data = (await res
-        .json()
-        .catch(() => null)) as AdminGamesResponse | null;
-      if (!res.ok || !data?.success) {
-        setError(data?.error || t('admin.gamesSaveFailed'));
-        return;
-      }
-      apply(data);
-      setStatus(t('admin.gamesSaved'));
-    } catch {
-      setError(t('admin.gamesSaveFailed'));
-    } finally {
-      setIsSaving(false);
-    }
-  };
+  const saveTitle = (value: string | null) => saveGames({ siteTitle: value });
 
   const statusLabel = (value: ModuleStatus) =>
     t(

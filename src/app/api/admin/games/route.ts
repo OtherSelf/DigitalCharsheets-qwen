@@ -8,6 +8,7 @@ import {
 } from '@/games/registry';
 import type { SystemId } from '@/games/types';
 import { requireAdmin } from '@/lib/admin-auth';
+import { jsonError } from '@/lib/api/respond';
 import {
   getModuleStatus,
   isModuleEnabled,
@@ -76,109 +77,63 @@ export async function PUT(request: Request) {
     unknown
   > | null;
   if (!body || typeof body !== 'object' || Array.isArray(body)) {
-    return NextResponse.json(
-      { success: false, error: 'Invalid JSON body.', reason: 'bad_request' },
-      { status: 400 },
-    );
+    return jsonError(400, 'Invalid JSON body.', 'bad_request');
   }
 
   try {
+    const usesSystem =
+      body.enabled !== undefined ||
+      body.useHostTheme !== undefined ||
+      body.status !== undefined;
+    let systemId: SystemId | undefined;
+    if (usesSystem) {
+      const raw = body.systemId;
+      if (typeof raw !== 'string' || !getGameModule(raw as SystemId)) {
+        return jsonError(400, 'Unknown game module.', 'unknown_system');
+      }
+      systemId = raw as SystemId;
+    }
+
     if (body.siteTitle !== undefined) {
       if (body.siteTitle !== null && typeof body.siteTitle !== 'string') {
-        return NextResponse.json(
-          {
-            success: false,
-            error: 'siteTitle must be a string or null.',
-            reason: 'bad_request',
-          },
-          { status: 400 },
+        return jsonError(
+          400,
+          'siteTitle must be a string or null.',
+          'bad_request',
         );
       }
       await setSiteTitle(body.siteTitle as string | null);
     }
 
-    if (body.systemId !== undefined && body.enabled !== undefined) {
-      const systemId = body.systemId as SystemId;
-      if (!systemId || !getGameModule(systemId)) {
-        return NextResponse.json(
-          {
-            success: false,
-            error: 'Unknown game module.',
-            reason: 'unknown_system',
-          },
-          { status: 400 },
-        );
-      }
+    if (body.enabled !== undefined) {
       if (typeof body.enabled !== 'boolean') {
-        return NextResponse.json(
-          {
-            success: false,
-            error: 'enabled must be a boolean.',
-            reason: 'bad_request',
-          },
-          { status: 400 },
-        );
+        return jsonError(400, 'enabled must be a boolean.', 'bad_request');
       }
-      await setModuleEnabled(systemId, body.enabled);
+      await setModuleEnabled(systemId!, body.enabled);
     }
 
     if (body.useHostTheme !== undefined) {
-      const systemId = body.systemId as SystemId;
-      if (!systemId || !getGameModule(systemId)) {
-        return NextResponse.json(
-          {
-            success: false,
-            error: 'Unknown game module.',
-            reason: 'unknown_system',
-          },
-          { status: 400 },
-        );
-      }
       if (typeof body.useHostTheme !== 'boolean') {
-        return NextResponse.json(
-          {
-            success: false,
-            error: 'useHostTheme must be a boolean.',
-            reason: 'bad_request',
-          },
-          { status: 400 },
-        );
+        return jsonError(400, 'useHostTheme must be a boolean.', 'bad_request');
       }
-      await setModuleHostTheme(systemId, body.useHostTheme);
+      await setModuleHostTheme(systemId!, body.useHostTheme);
     }
 
     if (body.status !== undefined) {
-      const systemId = body.systemId as SystemId;
-      if (!systemId || !getGameModule(systemId)) {
-        return NextResponse.json(
-          {
-            success: false,
-            error: 'Unknown game module.',
-            reason: 'unknown_system',
-          },
-          { status: 400 },
-        );
-      }
       if (!isModuleStatus(body.status)) {
-        return NextResponse.json(
-          {
-            success: false,
-            error: 'status must be published, test or hidden.',
-            reason: 'bad_status',
-          },
-          { status: 400 },
+        return jsonError(
+          400,
+          'status must be published, test or hidden.',
+          'bad_status',
         );
       }
-      await setModuleStatus(systemId, body.status);
+      await setModuleStatus(systemId!, body.status);
     }
   } catch (error) {
-    return NextResponse.json(
-      {
-        success: false,
-        error: error instanceof Error ? error.message : 'Failed to save.',
-        reason: 'write_failed',
-      },
-      { status: 500 },
+    return jsonError(
+      500,
+      error instanceof Error ? error.message : 'Failed to save.',
+      'write_failed',
     );
   }
 
