@@ -4,7 +4,6 @@ import type { ReactNode } from 'react';
 
 import { getPluginManifest } from '@/games/registry';
 import type { SystemId } from '@/games/types';
-import { useHostTheme } from '@/hooks/use-host-theme';
 import { usePluginFontClass } from '@/hooks/use-plugin-font';
 import { gameThemeCss } from '@/lib/game-theme';
 import { cn } from '@/lib/utils';
@@ -26,9 +25,16 @@ import { cn } from '@/lib/utils';
  */
 export function GameThemeScope({
   systemId,
+  hostTheme,
   children,
 }: {
   systemId?: string;
+  /**
+   * Флаг админки «стили ядра». Обязателен: страница обязана знать его до
+   * первого рендера. Если спрашивать `/api/games` из клиента, первый кадр
+   * рисует тему плагина и переключается — на экране это вспышка.
+   */
+  hostTheme: boolean;
   children: ReactNode;
 }) {
   const manifestTheme = systemId
@@ -36,7 +42,6 @@ export function GameThemeScope({
     : undefined;
   // Админская настройка «стили ядра»: ни токены, ни шрифт плагина не
   // применяются, поэтому обёртка не нужна вовсе.
-  const hostTheme = useHostTheme(manifestTheme ? systemId : undefined);
   const theme = hostTheme ? undefined : manifestTheme;
   const fontClass = usePluginFontClass(theme?.font ? systemId : undefined);
   const css = gameThemeCss(systemId, theme);

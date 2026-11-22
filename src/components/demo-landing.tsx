@@ -38,6 +38,11 @@ export function DemoLanding({ createHref = '/new' }: DemoLandingProps) {
   const { t } = useTranslation();
   const [previewId, setPreviewId] = useState<SystemId | null>(null);
   const [visibleIds, setVisibleIds] = useState<Set<string> | null>(null);
+  // Флаг «стили ядра» из того же ответа: иначе демо-лист показывает тему
+  // плагина и переключается после отдельного запроса (вспышка).
+  const [hostThemeById, setHostThemeById] = useState<Record<string, boolean>>(
+    {},
+  );
 
   // Видимость редакций — из каталога (роль читается на сервере).
   useEffect(() => {
@@ -46,17 +51,25 @@ export function DemoLanding({ createHref = '/new' }: DemoLandingProps) {
       .then(async (res) => {
         if (!res.ok) return null;
         return (await res.json().catch(() => null)) as {
-          games?: { editions?: { id: string }[] }[];
+          games?: {
+            editions?: { id: string; useHostTheme?: boolean }[];
+          }[];
         } | null;
       })
       .then((data) => {
         if (!active) return;
-        const ids = new Set(
-          (data?.games ?? []).flatMap((game) =>
-            (game.editions ?? []).map((edition) => edition.id),
+        const editions = (data?.games ?? []).flatMap(
+          (game) => game.editions ?? [],
+        );
+        setVisibleIds(new Set(editions.map((edition) => edition.id)));
+        setHostThemeById(
+          Object.fromEntries(
+            editions.map((edition) => [
+              edition.id,
+              Boolean(edition.useHostTheme),
+            ]),
           ),
         );
-        setVisibleIds(ids);
       })
       .catch(() => {
         if (active) {
@@ -184,7 +197,10 @@ export function DemoLanding({ createHref = '/new' }: DemoLandingProps) {
             </Button>
           </div>
 
-          <GameThemeScope systemId={activeCharacter.systemId}>
+          <GameThemeScope
+            systemId={activeCharacter.systemId}
+            hostTheme={Boolean(hostThemeById[activeCharacter.systemId ?? ''])}
+          >
             <div className="bg-card rounded-lg border p-4 md:p-6">
               <CharacterSheet
                 character={activeCharacter}

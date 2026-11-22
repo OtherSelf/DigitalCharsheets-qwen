@@ -68,6 +68,12 @@ export default function CharacterPage() {
   const systemId = character ? resolveCharacterSystemId(character) : undefined;
   const uiSlots = useGameUiSlots(systemId);
   const [disabledIds, setDisabledIds] = useState<string[]>([]);
+  // Флаг «стили ядра» по редакциям. `null` — ответа ещё нет: тему не рисуем,
+  // иначе первый кадр показывает тему плагина и переключается (вспышка).
+  const [hostThemeById, setHostThemeById] = useState<Record<
+    string,
+    boolean
+  > | null>(null);
 
   // Отключённые админом плагины: их листы открываются только для чтения.
   // Видимость по ролям приходит отдельно (/api/games), поэтому здесь нужен
@@ -76,12 +82,29 @@ export default function CharacterPage() {
     let active = true;
     void fetch('/api/games', { cache: 'no-store' })
       .then((res) => (res.ok ? res.json() : null))
-      .then((data: { disabled?: string[] } | null) => {
-        if (active && Array.isArray(data?.disabled)) {
-          setDisabledIds(data.disabled);
-        }
-      })
-      .catch(() => undefined);
+      .then(
+        (
+          data: {
+            disabled?: string[];
+            games?: { editions?: { id: string; useHostTheme?: boolean }[] }[];
+          } | null,
+        ) => {
+          if (!active) return;
+          if (Array.isArray(data?.disabled)) setDisabledIds(data.disabled);
+          const themes: Record<string, boolean> = {};
+          for (const game of data?.games ?? []) {
+            for (const edition of game.editions ?? []) {
+              themes[edition.id] = Boolean(edition.useHostTheme);
+            }
+          }
+          setHostThemeById(themes);
+        },
+      )
+      .catch(() => {
+        // Каталог недоступен — считаем флаг известным (тема плагина), иначе
+        // страница навсегда останется на экране загрузки.
+        if (active) setHostThemeById({});
+      });
     return () => {
       active = false;
     };
@@ -193,7 +216,7 @@ export default function CharacterPage() {
     return () => cancelAnimationFrame(frame);
   }, [activeCompactSection, isCompactView, sectionScrollRequest]);
 
-  if (!isLoaded) {
+  if (!isLoaded || hostThemeById === null) {
     return <Loading />;
   }
 
@@ -229,7 +252,10 @@ export default function CharacterPage() {
 
       <DynamicFavicon href={uiSlots?.favicon} />
 
-      <GameThemeScope systemId={systemId}>
+      <GameThemeScope
+        systemId={systemId}
+        hostTheme={systemId ? Boolean(hostThemeById[systemId]) : false}
+      >
         <div className="flex h-full flex-col">
           <Header
             readOnly={isReadOnly}
