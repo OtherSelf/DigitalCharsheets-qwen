@@ -138,6 +138,7 @@ export const enTranslations: Record<string, string> = {
   'common.charisma': 'Charisma',
   'common.createCharacter': 'Create Character',
   'common.nameMinLength': 'Name must be at least 2 characters.',
+  'common.fieldTooLong': 'This value is too long.',
   'common.none': 'None',
   'common.perception': 'Perception',
   'common.willpower': 'Willpower',

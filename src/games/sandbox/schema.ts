@@ -1,5 +1,6 @@
 import { z, type ZodType } from 'zod';
 
+import { FIELD_LIMITS } from '../shared/limits';
 import type { SandboxCharacter } from './types';
 
 /**
@@ -13,24 +14,24 @@ import type { SandboxCharacter } from './types';
  * молча вырезала бы их при сохранении.
  */
 export const sandboxCharacterSchema = z.looseObject({
-  id: z.string(),
-  name: z.string(),
+  id: z.string().min(1).max(FIELD_LIMITS.id),
+  name: z.string().max(FIELD_LIMITS.name),
   systemId: z.string().optional(),
   gameSystem: z.string().optional(),
   schemaVersion: z.number().optional(),
-  rank: z.string(),
+  rank: z.string().max(FIELD_LIMITS.short),
   stats: z.object({
-    might: z.number().min(1).max(99),
-    wits: z.number().min(1).max(99),
+    might: z.number().int().min(1).max(99),
+    wits: z.number().int().min(1).max(99),
   }),
-  total: z.number().min(2).max(198),
-  notes: z.string(),
+  total: z.number().int().min(2).max(198),
+  notes: z.string().max(FIELD_LIMITS.long),
   companion: z
     .looseObject({
-      id: z.string().min(1),
-      name: z.string(),
-      kind: z.string(),
-      notes: z.string(),
+      id: z.string().min(1).max(FIELD_LIMITS.id),
+      name: z.string().max(FIELD_LIMITS.name),
+      kind: z.string().max(FIELD_LIMITS.short),
+      notes: z.string().max(FIELD_LIMITS.note),
     })
     .optional(),
 }) satisfies ZodType<SandboxCharacter>;

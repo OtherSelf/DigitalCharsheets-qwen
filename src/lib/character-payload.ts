@@ -145,9 +145,15 @@ export function validateCharacterPatch(
           (issue) => `${issue.path.map(String).join('.')}|${issue.message}`,
         ),
   );
-  const introduced = validated.issues.filter(
-    (issue) => !preexisting.has(`${issue.path}|${issue.message}`),
-  );
+  // Патч, который трогает корень ошибочного поля, не может «спрятаться» за
+  // уже существующей ошибкой: иначе лист с именем в 300 символов принимал
+  // патч имени в 400 символов (тот же path + message считался preexisting).
+  const touchedRoots = new Set(Object.keys(data));
+  const introduced = validated.issues.filter((issue) => {
+    const root = issue.path.split('.')[0];
+    if (touchedRoots.has(root)) return true;
+    return !preexisting.has(`${issue.path}|${issue.message}`);
+  });
   if (introduced.length === 0) return { ok: true, data, dropped };
   return { ok: false, issues: introduced };
 }

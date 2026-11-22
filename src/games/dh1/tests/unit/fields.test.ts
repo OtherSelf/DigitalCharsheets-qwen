@@ -260,3 +260,43 @@ describe('DH1: новые блоки в JSON-экспорте', () => {
     );
   });
 });
+
+describe('DH1: границы полей листа', () => {
+  it('отрицательный капитал и дробный опыт отклоняются', () => {
+    const base = baseDh1({ id: 'bounds' });
+    expect(
+      dh1CharacterSchema.safeParse({
+        ...base,
+        wealth: { throneGelt: -1, monthlyIncome: 10 },
+      }).success,
+    ).toBe(false);
+    expect(
+      dh1CharacterSchema.safeParse({ ...base, experience: 1.5 }).success,
+    ).toBe(false);
+  });
+
+  it('отрицательные раны и слишком длинное имя отклоняются', () => {
+    const base = baseDh1({ id: 'bounds-2' });
+    expect(
+      dh1CharacterSchema.safeParse({
+        ...base,
+        wounds: { current: -1, max: 10 },
+      }).success,
+    ).toBe(false);
+    expect(
+      dh1CharacterSchema.safeParse({ ...base, name: 'x'.repeat(201) }).success,
+    ).toBe(false);
+  });
+
+  it('количество предметов ограничено сверху', () => {
+    const base = baseDh1({ id: 'bounds-3' });
+    const inventory = Array.from({ length: 501 }, (_, index) => ({
+      id: `item-${index}`,
+      name: `Item ${index}`,
+      status: 'default' as const,
+    }));
+    expect(dh1CharacterSchema.safeParse({ ...base, inventory }).success).toBe(
+      false,
+    );
+  });
+});

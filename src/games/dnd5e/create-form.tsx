@@ -37,6 +37,7 @@ import {
   useToast,
   useTranslation,
 } from '@/games/plugin-host';
+import { FIELD_LIMITS } from '@/games/shared/limits';
 import {
   buildInvalidFormAlert,
   focusFirstInvalidField,
@@ -222,7 +223,10 @@ export function DndCharacterForm({ onCreated }: CreateFormProps = {}) {
   const { t } = useTranslation();
 
   const formSchema = z.object({
-    name: z.string().min(2, t('common.nameMinLength')),
+    name: z
+      .string()
+      .min(2, t('common.nameMinLength'))
+      .max(FIELD_LIMITS.name, t('common.fieldTooLong')),
     characterClass: z.enum(DND_CLASSES as unknown as [string, ...string[]], {
       error: t('dnd.selectClassError'),
     }),
@@ -232,25 +236,30 @@ export function DndCharacterForm({ onCreated }: CreateFormProps = {}) {
     background: z.enum(DND_BACKGROUNDS as unknown as [string, ...string[]], {
       error: t('dnd.selectBackgroundError'),
     }),
-    alignment: z.string().optional(),
+    alignment: z.string().max(FIELD_LIMITS.short).optional(),
     level: z.coerce.number().int().min(1).max(20),
-    experiencePoints: z.coerce.number().int().optional(),
-    age: z.string().optional(),
-    eyes: z.string().optional(),
-    skin: z.string().optional(),
-    height: z.string().optional(),
-    weight: z.string().optional(),
-    hair: z.string().optional(),
-    backstory: z.string().optional(),
+    experiencePoints: z.coerce
+      .number()
+      .int()
+      .min(0)
+      .max(FIELD_LIMITS.experience)
+      .optional(),
+    age: z.string().max(FIELD_LIMITS.short).optional(),
+    eyes: z.string().max(FIELD_LIMITS.short).optional(),
+    skin: z.string().max(FIELD_LIMITS.short).optional(),
+    height: z.string().max(FIELD_LIMITS.short).optional(),
+    weight: z.string().max(FIELD_LIMITS.short).optional(),
+    hair: z.string().max(FIELD_LIMITS.short).optional(),
+    backstory: z.string().max(FIELD_LIMITS.long).optional(),
     strength: z.coerce.number().int().min(1).max(30),
     dexterity: z.coerce.number().int().min(1).max(30),
     constitution: z.coerce.number().int().min(1).max(30),
     intelligence: z.coerce.number().int().min(1).max(30),
     wisdom: z.coerce.number().int().min(1).max(30),
     charisma: z.coerce.number().int().min(1).max(30),
-    armorClass: z.coerce.number().int(),
-    speed: z.coerce.number().int(),
-    max: z.coerce.number().int(),
+    armorClass: z.coerce.number().int().min(0).max(100),
+    speed: z.coerce.number().int().min(0).max(1000),
+    max: z.coerce.number().int().min(0).max(FIELD_LIMITS.pool),
     spellcastingAbility: z
       .enum([
         'strength',
@@ -262,8 +271,8 @@ export function DndCharacterForm({ onCreated }: CreateFormProps = {}) {
         'none',
       ])
       .default('none'),
-    spellAttackBonus: z.string().optional(),
-    spellSaveDifficulty: z.coerce.number().int().optional(),
+    spellAttackBonus: z.string().max(FIELD_LIMITS.short).optional(),
+    spellSaveDifficulty: z.coerce.number().int().min(0).max(100).optional(),
   });
 
   // zod 4 разделяет типы входа и выхода (z.input/z.output, например из-за
@@ -359,7 +368,9 @@ export function DndCharacterForm({ onCreated }: CreateFormProps = {}) {
         <CardTitle>{t('dnd.characterDetails')}</CardTitle>
       </CardHeader>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit, handleInvalid)}>
+        {/* noValidate: иначе браузер блокирует submit своим min/max и не даёт
+            RHF показать локализованное сообщение и тост с фокусом. */}
+        <form noValidate onSubmit={form.handleSubmit(onSubmit, handleInvalid)}>
           <CardContent className="space-y-6">
             <div className="space-y-4">
               <h3 className="text-base font-medium">
@@ -375,6 +386,7 @@ export function DndCharacterForm({ onCreated }: CreateFormProps = {}) {
                       <FormControl>
                         <Input
                           placeholder={t('dnd.placeholderName')}
+                          maxLength={FIELD_LIMITS.name}
                           {...field}
                         />
                       </FormControl>
@@ -389,7 +401,13 @@ export function DndCharacterForm({ onCreated }: CreateFormProps = {}) {
                     <FormItem>
                       <FormLabel>{t('dnd.experiencePoints')}</FormLabel>
                       <FormControl>
-                        <Input type="number" placeholder="0" {...field} />
+                        <Input
+                          type="number"
+                          min={0}
+                          max={10_000_000}
+                          step={1}
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -607,6 +625,7 @@ export function DndCharacterForm({ onCreated }: CreateFormProps = {}) {
                   <FormControl>
                     <Textarea
                       placeholder={t('dnd.placeholderBackstory')}
+                      maxLength={FIELD_LIMITS.long}
                       {...field}
                     />
                   </FormControl>
@@ -713,7 +732,13 @@ export function DndCharacterForm({ onCreated }: CreateFormProps = {}) {
                     <FormItem>
                       <FormLabel>{t('dnd.armorClass')}</FormLabel>
                       <FormControl>
-                        <Input type="number" {...field} />
+                        <Input
+                          type="number"
+                          min={0}
+                          max={100}
+                          step={1}
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -726,7 +751,13 @@ export function DndCharacterForm({ onCreated }: CreateFormProps = {}) {
                     <FormItem>
                       <FormLabel>{t('dnd.speed')}</FormLabel>
                       <FormControl>
-                        <Input type="number" {...field} />
+                        <Input
+                          type="number"
+                          min={0}
+                          max={1000}
+                          step={1}
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -739,7 +770,13 @@ export function DndCharacterForm({ onCreated }: CreateFormProps = {}) {
                     <FormItem>
                       <FormLabel>{t('dnd.maxHitPoints')}</FormLabel>
                       <FormControl>
-                        <Input type="number" {...field} />
+                        <Input
+                          type="number"
+                          min={0}
+                          max={9999}
+                          step={1}
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -803,7 +840,14 @@ export function DndCharacterForm({ onCreated }: CreateFormProps = {}) {
                     <FormItem>
                       <FormLabel>{t('dnd.spellSaveDC')}</FormLabel>
                       <FormControl>
-                        <Input type="number" placeholder="8" {...field} />
+                        <Input
+                          type="number"
+                          min={0}
+                          max={100}
+                          step={1}
+                          placeholder="8"
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

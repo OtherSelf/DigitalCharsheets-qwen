@@ -193,6 +193,13 @@ Rules and invariants: [admin.md](admin.md).
   `403` wrong role or wrong password, `404` not found, `409` conflict (taken
   login, last administrator), `429` rate limited (with `Retry-After`),
   `500` unexpected server error.
+- Character bodies (`POST`/`PUT /api/characters`) are validated against the
+  edition schema: wrong types, fractional integers, negative counters/money,
+  over-long strings and oversized arrays return `400` with
+  `reason: "invalid_payload"` and an `issues` list (`path`, `message`). The
+  shared limits are in
+  [`src/games/shared/limits.ts`](../src/games/shared/limits.ts); a body over
+  1 MiB returns `413 reason: "payload_too_large"`.
 - Passwords: stored as salted `scrypt`; the policy is **12–128 characters** and
   applies when a password is set (registration, recovery, profile, admin).
   Login accepts any non-empty password and only checks the credential, so

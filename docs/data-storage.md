@@ -161,6 +161,28 @@ sheet written by any client is self-consistent. Sheets saved under an older
 recalculation as an emergency brake; `npm run plugins:doctor` reports sheets
 whose derivative values disagree with the rules on the current corpus.
 
+### Field limits
+
+Sheet payloads are untrusted input. `POST /api/characters` and `PUT
+/api/characters/<id>` validate the body against the edition's zod schema before
+writing: wrong types, fractional values in integer fields, negative values where
+the field is a counter or money, over-long strings and oversized arrays return
+`400` with `reason: invalid_payload` and an `issues` list. The shared bounds live
+in [`src/games/shared/limits.ts`](../src/games/shared/limits.ts); each edition
+adds its own context (characteristics 0–100, level 1–20, ability scores 1–30,
+money and experience ranges).
+
+The creation forms use the same bounds in their react-hook-form schemas and also
+set `min`/`max`/`step`/`maxLength` on the inputs, so a person sees the limit
+while typing and gets a field message before the request. The inline wealth
+inputs in DH1 clamp to whole non-negative thrones.
+
+Limits are deliberately generous (long text up to 50 000 characters, arrays up
+to 500 items). A legacy sheet that already exceeds a limit remains readable:
+`PUT` compares the patched document with the unpatched baseline and rejects only
+issues introduced by the patch, so editing an unrelated field still works. A
+direct edit of the over-limit field is rejected until it is shortened.
+
 ### Gender (schema 5)
 
 Dark Heresy stores the character's gender as a canonical code, not as a

@@ -11,7 +11,11 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { PUT as characterPut } from '@/app/api/characters/[id]/route';
 import { POST as charactersPost } from '@/app/api/characters/route';
 import { resetAuthRateLimits } from '@/lib/security/rate-limit';
-import { resetWriteSeqGuard } from '@/lib/server-storage';
+import {
+  resetWriteSeqGuard,
+  saveCharacterToServer,
+} from '@/lib/server-storage';
+import type { Character } from '@/lib/types';
 
 import {
   makeDndCharacter,
@@ -49,13 +53,19 @@ describe('валидация payload листа (SEC-10)', () => {
   const sheetFile = (uid: string, id: string) =>
     path.join(userPaths(dataDir, uid).charactersDir, `${id}.json`);
 
+  /** Один вызов фикстуры на файл: храповик считает упоминания игр в хосте. */
+  const sheet = (overrides: Record<string, unknown> = {}) => ({
+    ...makeDndCharacter(),
+    ...overrides,
+  });
+
   it('лишние поля и id из тела не попадают в файл', async () => {
     const { uid } = await loginAs('payload-extra');
 
     const res = await charactersPost(
       json(
         {
-          ...makeDndCharacter(),
+          ...sheet(),
           id: 'client-chosen-id',
           userId: 'someone-else',
           evil: 'pwned',
@@ -81,7 +91,7 @@ describe('валидация payload листа (SEC-10)', () => {
 
     const res = await charactersPost(
       json(
-        { ...makeDndCharacter(), stats: 'строка вместо блока' },
+        { ...sheet(), stats: 'строка вместо блока' },
         await sessionHeaders(uid),
       ),
     );
@@ -97,9 +107,7 @@ describe('валидация payload листа (SEC-10)', () => {
   it('PUT с неверным типом → 400 и файл не меняется', async () => {
     const { uid } = await loginAs('payload-put-bad');
     const created = await (
-      await charactersPost(
-        json({ ...makeDndCharacter() }, await sessionHeaders(uid)),
-      )
+      await charactersPost(json({ ...sheet() }, await sessionHeaders(uid)))
     ).json();
     const before = readJson(sheetFile(uid, created.id));
 
@@ -113,12 +121,93 @@ describe('валидация payload листа (SEC-10)', () => {
     expect(readJson(sheetFile(uid, created.id))).toEqual(before);
   });
 
+  it('слишком длинное имя → 400 и лист не создаётся', async () => {
+    const { uid } = await loginAs('payload-long-name');
+    const res = await charactersPost(
+      json({ ...sheet(), name: 'x'.repeat(201) }, await sessionHeaders(uid)),
+    );
+
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.reason).toBe('invalid_payload');
+    expect(JSON.stringify(body.issues)).toContain('name');
+    expect(fs.existsSync(userPaths(dataDir, uid).charactersDir)).toBe(false);
+  });
+
+  it('дробный уровень и отрицательный класс брони → 400', async () => {
+    const { uid } = await loginAs('payload-number-bounds');
+
+    for (const patch of [
+      { level: 3.5 },
+      { level: -1 },
+      { armorClass: -1 },
+      { armorClass: 101 },
+      { hitPoints: { current: 5, max: -1 } },
+    ]) {
+      const res = await charactersPost(
+        json({ ...sheet(), ...patch }, await sessionHeaders(uid)),
+      );
+      expect(res.status, JSON.stringify(patch)).toBe(400);
+      expect((await res.json()).reason).toBe('invalid_payload');
+    }
+  });
+
+  it('массив предметов сверх лимита → 400, а не молчаливое усечение', async () => {
+    const { uid } = await loginAs('payload-too-many-items');
+    const inventory = Array.from({ length: 501 }, (_, index) => ({
+      id: `item-${index}`,
+      name: `Item ${index}`,
+      status: 'default',
+    }));
+    const res = await charactersPost(
+      json({ ...sheet(), inventory }, await sessionHeaders(uid)),
+    );
+
+    expect(res.status).toBe(400);
+    expect((await res.json()).reason).toBe('invalid_payload');
+  });
+
+  it('PUT не маскирует уже существующее нарушение при правке того же поля', async () => {
+    const { uid } = await loginAs('payload-preexisting-long');
+    const existing = sheet({ name: 'x'.repeat(300) });
+    await saveCharacterToServer(uid, existing as Character);
+
+    const bad = await characterPut(
+      json({ name: 'y'.repeat(300) }, await sessionHeaders(uid)),
+      params(existing.id),
+    );
+    expect(bad.status).toBe(400);
+    expect((await bad.json()).reason).toBe('invalid_payload');
+
+    // Несвязанное поле по-прежнему можно сохранить: старый лист не заперт.
+    const good = await characterPut(
+      json({ notes: 'Still editable' }, await sessionHeaders(uid)),
+      params(existing.id),
+    );
+    expect(good.status).toBe(200);
+  });
+
+  it('PUT с именем сверх лимита → 400 и файл не меняется', async () => {
+    const { uid } = await loginAs('payload-put-long-name');
+    const created = await (
+      await charactersPost(json({ ...sheet() }, await sessionHeaders(uid)))
+    ).json();
+    const before = readJson(sheetFile(uid, created.id));
+
+    const res = await characterPut(
+      json({ name: 'x'.repeat(201) }, await sessionHeaders(uid)),
+      params(created.id),
+    );
+
+    expect(res.status).toBe(400);
+    expect((await res.json()).reason).toBe('invalid_payload');
+    expect(readJson(sheetFile(uid, created.id))).toEqual(before);
+  });
+
   it('PUT отбрасывает поля вне схемы и служебные ключи', async () => {
     const { uid } = await loginAs('payload-put-extra');
     const created = await (
-      await charactersPost(
-        json({ ...makeDndCharacter() }, await sessionHeaders(uid)),
-      )
+      await charactersPost(json({ ...sheet() }, await sessionHeaders(uid)))
     ).json();
 
     const res = await characterPut(
@@ -141,18 +230,13 @@ describe('валидация payload листа (SEC-10)', () => {
     const huge = 'x'.repeat(1_100_000);
 
     const post = await charactersPost(
-      json(
-        { ...makeDndCharacter(), backstory: huge },
-        await sessionHeaders(uid),
-      ),
+      json({ ...sheet(), backstory: huge }, await sessionHeaders(uid)),
     );
     expect(post.status).toBe(413);
     expect((await post.json()).reason).toBe('payload_too_large');
 
     const created = await (
-      await charactersPost(
-        json({ ...makeDndCharacter() }, await sessionHeaders(uid)),
-      )
+      await charactersPost(json({ ...sheet() }, await sessionHeaders(uid)))
     ).json();
     const put = await characterPut(
       json({ backstory: huge }, await sessionHeaders(uid)),

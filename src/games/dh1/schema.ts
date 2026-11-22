@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import { FIELD_LIMITS, idString, listOf } from '../shared/limits';
 import {
   conditionsSchema,
   darkHeresyBaseFields,
@@ -34,22 +35,21 @@ export const dh1CharacterSchema: z.ZodType<DH1Character> = z.looseObject({
   fatigue1st: fatigueSchema,
   identity: dh1IdentitySchema.optional(),
   carry: dh1CarrySchema.optional(),
-  traits: z.array(dh1ListEntrySchema).optional(),
-  mutations: z.array(dh1ListEntrySchema).optional(),
-  eliteAdvances: z.array(dh1ListEntrySchema).optional(),
+  traits: listOf(dh1ListEntrySchema).optional(),
+  mutations: listOf(dh1ListEntrySchema).optional(),
+  eliteAdvances: listOf(dh1ListEntrySchema, 100).optional(),
   psy: dh1PsySchema.optional(),
   insanityDetails: dh1InsanityDetailsSchema.optional(),
   corruptionDetails: dh1CorruptionDetailsSchema.optional(),
-  experienceLog: z
-    .array(
-      z.looseObject({
-        id: z.string(),
-        label: z.string(),
-        cost: z.number(),
-        createdAt: z.string(),
-        kind: z.enum(['award']).optional(),
-      }),
-    )
-    .optional(),
+  experienceLog: listOf(
+    z.looseObject({
+      id: idString(),
+      label: z.string().max(FIELD_LIMITS.name),
+      cost: z.number().int().min(0).max(FIELD_LIMITS.experience),
+      createdAt: z.string().max(64),
+      kind: z.enum(['award']).optional(),
+    }),
+    1000,
+  ).optional(),
   conditions: conditionsSchema.optional(),
 });

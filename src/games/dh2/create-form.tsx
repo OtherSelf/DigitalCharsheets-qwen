@@ -37,6 +37,7 @@ import {
   useToast,
   useTranslation,
 } from '@/games/plugin-host';
+import { FIELD_LIMITS } from '@/games/shared/limits';
 import type { CreateFormProps } from '@/games/types';
 import {
   buildInvalidFormAlert,
@@ -122,36 +123,63 @@ export function DarkHeresyCreateForm({ onCreated }: CreateFormProps) {
   const { t } = useTranslation();
 
   const formSchema = z.object({
-    name: z.string().min(2, t('common.nameMinLength')),
-    homeWorld: z.string({ error: t('dh2.selectHomeWorldError') }),
-    background: z.string({ error: t('dh2.selectBackgroundError') }),
-    role: z.string({ error: t('dh2.selectRoleError') }),
-    divination: z.string().optional(),
+    name: z
+      .string()
+      .min(2, t('common.nameMinLength'))
+      .max(FIELD_LIMITS.name, t('common.fieldTooLong')),
+    homeWorld: z
+      .string({ error: t('dh2.selectHomeWorldError') })
+      .max(FIELD_LIMITS.short),
+    background: z
+      .string({ error: t('dh2.selectBackgroundError') })
+      .max(FIELD_LIMITS.short),
+    role: z.string({ error: t('dh2.selectRoleError') }).max(FIELD_LIMITS.short),
+    divination: z.string().max(FIELD_LIMITS.short).optional(),
     gender: z.enum(GENDER_CODES).optional(),
-    insanity: z.coerce.number().int().min(0).optional(),
-    corruption: z.coerce.number().int().min(0).optional(),
-    backstory: z.string().optional(),
-    height: z.string().optional(),
-    weight: z.string().optional(),
-    age: z.string().optional(),
-    skinColor: z.string().optional(),
-    hairColor: z.string().optional(),
-    eyeColor: z.string().optional(),
-    experience: z.coerce.number().int().optional(),
-    totalExpSpent: z.coerce.number().int().optional(),
-    weaponSkill: z.coerce.number().int(),
-    ballisticSkill: z.coerce.number().int(),
-    strength: z.coerce.number().int(),
-    toughness: z.coerce.number().int(),
-    agility: z.coerce.number().int(),
-    intelligence: z.coerce.number().int(),
-    perception: z.coerce.number().int(),
-    willpower: z.coerce.number().int(),
-    fellowship: z.coerce.number().int(),
-    influence: z.coerce.number().int(),
-    wounds: z.coerce.number().int(),
-    fatePoints: z.coerce.number().int(),
-    creationAcquisitions: z.coerce.number().int().min(0).optional(),
+    insanity: z.coerce.number().int().min(0).max(FIELD_LIMITS.pool).optional(),
+    corruption: z.coerce
+      .number()
+      .int()
+      .min(0)
+      .max(FIELD_LIMITS.pool)
+      .optional(),
+    backstory: z.string().max(FIELD_LIMITS.long).optional(),
+    height: z.string().max(FIELD_LIMITS.short).optional(),
+    weight: z.string().max(FIELD_LIMITS.short).optional(),
+    age: z.string().max(FIELD_LIMITS.short).optional(),
+    skinColor: z.string().max(FIELD_LIMITS.short).optional(),
+    hairColor: z.string().max(FIELD_LIMITS.short).optional(),
+    eyeColor: z.string().max(FIELD_LIMITS.short).optional(),
+    experience: z.coerce
+      .number()
+      .int()
+      .min(0)
+      .max(FIELD_LIMITS.experience)
+      .optional(),
+    totalExpSpent: z.coerce
+      .number()
+      .int()
+      .min(0)
+      .max(FIELD_LIMITS.experience)
+      .optional(),
+    weaponSkill: z.coerce.number().int().min(0).max(FIELD_LIMITS.stat),
+    ballisticSkill: z.coerce.number().int().min(0).max(FIELD_LIMITS.stat),
+    strength: z.coerce.number().int().min(0).max(FIELD_LIMITS.stat),
+    toughness: z.coerce.number().int().min(0).max(FIELD_LIMITS.stat),
+    agility: z.coerce.number().int().min(0).max(FIELD_LIMITS.stat),
+    intelligence: z.coerce.number().int().min(0).max(FIELD_LIMITS.stat),
+    perception: z.coerce.number().int().min(0).max(FIELD_LIMITS.stat),
+    willpower: z.coerce.number().int().min(0).max(FIELD_LIMITS.stat),
+    fellowship: z.coerce.number().int().min(0).max(FIELD_LIMITS.stat),
+    influence: z.coerce.number().int().min(0).max(FIELD_LIMITS.stat),
+    wounds: z.coerce.number().int().min(0).max(FIELD_LIMITS.pool),
+    fatePoints: z.coerce.number().int().min(0).max(FIELD_LIMITS.pool),
+    creationAcquisitions: z.coerce
+      .number()
+      .int()
+      .min(0)
+      .max(FIELD_LIMITS.small)
+      .optional(),
   });
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -345,7 +373,9 @@ export function DarkHeresyCreateForm({ onCreated }: CreateFormProps) {
         <CardTitle>{t('dh2.characterDetails')}</CardTitle>
       </CardHeader>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit, handleInvalid)}>
+        {/* noValidate: иначе браузер блокирует submit своим min/max и не даёт
+            RHF показать локализованное сообщение и тост с фокусом. */}
+        <form noValidate onSubmit={form.handleSubmit(onSubmit, handleInvalid)}>
           <CardContent className="space-y-6">
             <section className="space-y-3">
               <h3 className="text-base font-medium">
@@ -362,6 +392,7 @@ export function DarkHeresyCreateForm({ onCreated }: CreateFormProps) {
                         <Input
                           {...field}
                           placeholder={t('dh2.placeholderJax')}
+                          maxLength={FIELD_LIMITS.name}
                         />
                       </FormControl>
                       <FormMessage />
@@ -774,7 +805,13 @@ export function DarkHeresyCreateForm({ onCreated }: CreateFormProps) {
                             )}
                           </FormLabel>
                           <FormControl>
-                            <Input type="number" {...field} />
+                            <Input
+                              type="number"
+                              min={0}
+                              max={100}
+                              step={1}
+                              {...field}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -894,7 +931,7 @@ export function DarkHeresyCreateForm({ onCreated }: CreateFormProps) {
                       <FormItem>
                         <FormLabel>{t(labelKey)}</FormLabel>
                         <FormControl>
-                          <Input type="number" {...field} />
+                          <Input type="number" min={0} step={1} {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -908,7 +945,13 @@ export function DarkHeresyCreateForm({ onCreated }: CreateFormProps) {
                     <FormItem>
                       <FormLabel>{t('dh2.creationAcquisitions')}</FormLabel>
                       <FormControl>
-                        <Input type="number" min={0} {...field} />
+                        <Input
+                          type="number"
+                          min={0}
+                          max={100}
+                          step={1}
+                          {...field}
+                        />
                       </FormControl>
                       <p
                         className={
@@ -970,7 +1013,11 @@ export function DarkHeresyCreateForm({ onCreated }: CreateFormProps) {
                   <FormItem>
                     <FormLabel>{t('common.backstory')}</FormLabel>
                     <FormControl>
-                      <Textarea {...field} className="min-h-[100px]" />
+                      <Textarea
+                        {...field}
+                        className="min-h-[100px]"
+                        maxLength={FIELD_LIMITS.long}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

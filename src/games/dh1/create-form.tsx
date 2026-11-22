@@ -37,6 +37,7 @@ import {
   useToast,
   useTranslation,
 } from '@/games/plugin-host';
+import { FIELD_LIMITS } from '@/games/shared/limits';
 import type { CreateFormCompletion, CreateFormProps } from '@/games/types';
 import {
   buildInvalidFormAlert,
@@ -115,38 +116,61 @@ export function DarkHeresyCreateForm({
   // Схема зависит от языка: тексты ошибок берутся из словаря, поэтому она
   // собирается внутри компонента, а не один раз на уровне модуля.
   const formSchema = z.object({
-    name: z.string().min(2, t('common.nameMinLength')),
+    name: z
+      .string()
+      .min(2, t('common.nameMinLength'))
+      .max(FIELD_LIMITS.name, t('common.fieldTooLong')),
     // Как и в dh2, обязательно только имя: мир, карьеру и пророчество можно
     // выбрать позже на листе (пустые creation-поля остаются редактируемыми).
-    homeWorld: z.string().optional(),
-    worldVariant: z.string().optional(),
-    careerPath: z.string().optional(),
-    backstory: z.string().optional(),
-    divination: z.string().optional(),
-    quirk: z.string().optional(),
-    height: z.string().optional(),
-    weight: z.string().optional(),
-    age: z.string().optional(),
-    skinColor: z.string().optional(),
-    hairColor: z.string().optional(),
-    eyeColor: z.string().optional(),
-    experience: z.coerce.number().int().optional(),
-    totalExpSpent: z.coerce.number().int().optional(),
-    weaponSkill: z.coerce.number().int(),
-    ballisticSkill: z.coerce.number().int(),
-    strength: z.coerce.number().int(),
-    toughness: z.coerce.number().int(),
-    agility: z.coerce.number().int(),
-    intelligence: z.coerce.number().int(),
-    perception: z.coerce.number().int(),
-    willpower: z.coerce.number().int(),
-    fellowship: z.coerce.number().int(),
-    wounds: z.coerce.number().int(),
-    fatePoints: z.coerce.number().int(),
-    insanity: z.coerce.number().int().min(0).optional(),
-    corruption: z.coerce.number().int().min(0).optional(),
+    homeWorld: z.string().max(FIELD_LIMITS.short).optional(),
+    worldVariant: z.string().max(FIELD_LIMITS.short).optional(),
+    careerPath: z.string().max(FIELD_LIMITS.short).optional(),
+    backstory: z.string().max(FIELD_LIMITS.long).optional(),
+    divination: z.string().max(FIELD_LIMITS.short).optional(),
+    quirk: z.string().max(FIELD_LIMITS.short).optional(),
+    height: z.string().max(FIELD_LIMITS.short).optional(),
+    weight: z.string().max(FIELD_LIMITS.short).optional(),
+    age: z.string().max(FIELD_LIMITS.short).optional(),
+    skinColor: z.string().max(FIELD_LIMITS.short).optional(),
+    hairColor: z.string().max(FIELD_LIMITS.short).optional(),
+    eyeColor: z.string().max(FIELD_LIMITS.short).optional(),
+    experience: z.coerce
+      .number()
+      .int()
+      .min(0)
+      .max(FIELD_LIMITS.experience)
+      .optional(),
+    totalExpSpent: z.coerce
+      .number()
+      .int()
+      .min(0)
+      .max(FIELD_LIMITS.experience)
+      .optional(),
+    weaponSkill: z.coerce.number().int().min(0).max(FIELD_LIMITS.stat),
+    ballisticSkill: z.coerce.number().int().min(0).max(FIELD_LIMITS.stat),
+    strength: z.coerce.number().int().min(0).max(FIELD_LIMITS.stat),
+    toughness: z.coerce.number().int().min(0).max(FIELD_LIMITS.stat),
+    agility: z.coerce.number().int().min(0).max(FIELD_LIMITS.stat),
+    intelligence: z.coerce.number().int().min(0).max(FIELD_LIMITS.stat),
+    perception: z.coerce.number().int().min(0).max(FIELD_LIMITS.stat),
+    willpower: z.coerce.number().int().min(0).max(FIELD_LIMITS.stat),
+    fellowship: z.coerce.number().int().min(0).max(FIELD_LIMITS.stat),
+    wounds: z.coerce.number().int().min(0).max(FIELD_LIMITS.pool),
+    fatePoints: z.coerce.number().int().min(0).max(FIELD_LIMITS.pool),
+    insanity: z.coerce.number().int().min(0).max(FIELD_LIMITS.pool).optional(),
+    corruption: z.coerce
+      .number()
+      .int()
+      .min(0)
+      .max(FIELD_LIMITS.pool)
+      .optional(),
     gender: z.enum(GENDER_CODES).optional(),
-    throneGelt: z.coerce.number().int().optional(),
+    throneGelt: z.coerce
+      .number()
+      .int()
+      .min(0)
+      .max(FIELD_LIMITS.money)
+      .optional(),
   });
 
   // zod 4 разделяет типы входа и выхода (z.input/z.output, например из-за
@@ -295,7 +319,9 @@ export function DarkHeresyCreateForm({
         <CardTitle>{t('dh1.characterDetails')}</CardTitle>
       </CardHeader>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit, handleInvalid)}>
+        {/* noValidate: иначе браузер блокирует submit своим min/max и не даёт
+            RHF показать локализованное сообщение и тост с фокусом. */}
+        <form noValidate onSubmit={form.handleSubmit(onSubmit, handleInvalid)}>
           <CardContent className="space-y-6">
             <div className="space-y-2">
               <h3 className="text-base font-medium">
@@ -311,6 +337,7 @@ export function DarkHeresyCreateForm({
                       <FormControl>
                         <Input
                           placeholder={t('dh1.placeholderJax')}
+                          maxLength={FIELD_LIMITS.name}
                           {...field}
                         />
                       </FormControl>
@@ -770,6 +797,7 @@ export function DarkHeresyCreateForm({
                   <FormControl>
                     <Textarea
                       placeholder={t('dh1.placeholderUnderhive')}
+                      maxLength={FIELD_LIMITS.long}
                       {...field}
                     />
                   </FormControl>
@@ -790,7 +818,7 @@ export function DarkHeresyCreateForm({
                     <FormItem>
                       <FormLabel>{t('dh1.experience')}</FormLabel>
                       <FormControl>
-                        <Input type="number" {...field} />
+                        <Input type="number" min={0} step={1} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -803,7 +831,7 @@ export function DarkHeresyCreateForm({
                     <FormItem>
                       <FormLabel>{t('dh1.totalExpSpent')}</FormLabel>
                       <FormControl>
-                        <Input type="number" {...field} />
+                        <Input type="number" min={0} step={1} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -824,7 +852,13 @@ export function DarkHeresyCreateForm({
                     <FormItem>
                       <FormLabel>{t('dh1.weaponSkill')}</FormLabel>
                       <FormControl>
-                        <Input type="number" {...field} />
+                        <Input
+                          type="number"
+                          min={0}
+                          max={100}
+                          step={1}
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -837,7 +871,13 @@ export function DarkHeresyCreateForm({
                     <FormItem>
                       <FormLabel>{t('dh1.ballisticSkill')}</FormLabel>
                       <FormControl>
-                        <Input type="number" {...field} />
+                        <Input
+                          type="number"
+                          min={0}
+                          max={100}
+                          step={1}
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -850,7 +890,13 @@ export function DarkHeresyCreateForm({
                     <FormItem>
                       <FormLabel>{t('dh1.strength')}</FormLabel>
                       <FormControl>
-                        <Input type="number" {...field} />
+                        <Input
+                          type="number"
+                          min={0}
+                          max={100}
+                          step={1}
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -863,7 +909,13 @@ export function DarkHeresyCreateForm({
                     <FormItem>
                       <FormLabel>{t('dh1.toughness')}</FormLabel>
                       <FormControl>
-                        <Input type="number" {...field} />
+                        <Input
+                          type="number"
+                          min={0}
+                          max={100}
+                          step={1}
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -876,7 +928,13 @@ export function DarkHeresyCreateForm({
                     <FormItem>
                       <FormLabel>{t('dh1.agility')}</FormLabel>
                       <FormControl>
-                        <Input type="number" {...field} />
+                        <Input
+                          type="number"
+                          min={0}
+                          max={100}
+                          step={1}
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -889,7 +947,13 @@ export function DarkHeresyCreateForm({
                     <FormItem>
                       <FormLabel>{t('dh1.intelligence')}</FormLabel>
                       <FormControl>
-                        <Input type="number" {...field} />
+                        <Input
+                          type="number"
+                          min={0}
+                          max={100}
+                          step={1}
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -902,7 +966,13 @@ export function DarkHeresyCreateForm({
                     <FormItem>
                       <FormLabel>{t('dh1.perception')}</FormLabel>
                       <FormControl>
-                        <Input type="number" {...field} />
+                        <Input
+                          type="number"
+                          min={0}
+                          max={100}
+                          step={1}
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -915,7 +985,13 @@ export function DarkHeresyCreateForm({
                     <FormItem>
                       <FormLabel>{t('dh1.willpower')}</FormLabel>
                       <FormControl>
-                        <Input type="number" {...field} />
+                        <Input
+                          type="number"
+                          min={0}
+                          max={100}
+                          step={1}
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -928,7 +1004,13 @@ export function DarkHeresyCreateForm({
                     <FormItem>
                       <FormLabel>{t('dh1.fellowship')}</FormLabel>
                       <FormControl>
-                        <Input type="number" {...field} />
+                        <Input
+                          type="number"
+                          min={0}
+                          max={100}
+                          step={1}
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -947,7 +1029,7 @@ export function DarkHeresyCreateForm({
                     <FormItem>
                       <FormLabel>{t('dh1.wounds')}</FormLabel>
                       <FormControl>
-                        <Input type="number" {...field} />
+                        <Input type="number" min={0} step={1} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -960,7 +1042,7 @@ export function DarkHeresyCreateForm({
                     <FormItem>
                       <FormLabel>{t('dh1.fatePoints')}</FormLabel>
                       <FormControl>
-                        <Input type="number" {...field} />
+                        <Input type="number" min={0} step={1} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -973,7 +1055,7 @@ export function DarkHeresyCreateForm({
                     <FormItem>
                       <FormLabel>{t('dh1.insanity')}</FormLabel>
                       <FormControl>
-                        <Input type="number" {...field} />
+                        <Input type="number" min={0} step={1} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -986,7 +1068,7 @@ export function DarkHeresyCreateForm({
                     <FormItem>
                       <FormLabel>{t('dh1.corruption')}</FormLabel>
                       <FormControl>
-                        <Input type="number" {...field} />
+                        <Input type="number" min={0} step={1} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -999,7 +1081,7 @@ export function DarkHeresyCreateForm({
                     <FormItem>
                       <FormLabel>{t('dh1.startingWealthThrones')}</FormLabel>
                       <FormControl>
-                        <Input type="number" {...field} />
+                        <Input type="number" min={0} step={1} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

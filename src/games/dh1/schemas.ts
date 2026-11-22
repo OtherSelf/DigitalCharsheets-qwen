@@ -1,5 +1,12 @@
 import { z } from 'zod';
 
+import {
+  FIELD_LIMITS,
+  idString,
+  listOf,
+  noteString,
+  shortString,
+} from '../shared/limits';
 import { inventoryItemSchema, questSchema } from '../shared/schemas';
 import {
   GENDER_CODES,
@@ -91,29 +98,29 @@ export const darkHeresyCoreStatUpgradesSchema: z.ZodType<DarkHeresyCoreStatUpgra
 
 /** Поля заметок к характеристикам; `influence` добавляет только dh2. */
 export const darkHeresyCoreStatNotesFields = {
-  weaponSkill: z.string().optional(),
-  ballisticSkill: z.string().optional(),
-  strength: z.string().optional(),
-  toughness: z.string().optional(),
-  agility: z.string().optional(),
-  intelligence: z.string().optional(),
-  perception: z.string().optional(),
-  willpower: z.string().optional(),
-  fellowship: z.string().optional(),
+  weaponSkill: noteString().optional(),
+  ballisticSkill: noteString().optional(),
+  strength: noteString().optional(),
+  toughness: noteString().optional(),
+  agility: noteString().optional(),
+  intelligence: noteString().optional(),
+  perception: noteString().optional(),
+  willpower: noteString().optional(),
+  fellowship: noteString().optional(),
 };
 
 export const darkHeresyCoreStatNotesSchema: z.ZodType<DarkHeresyCoreStatNotes> =
   z.looseObject(darkHeresyCoreStatNotesFields);
 
 export const fatigueSchema = z.looseObject({
-  current: z.number(),
-  notes: z.string().optional(),
+  current: z.number().int().min(0).max(FIELD_LIMITS.pool),
+  notes: noteString().optional(),
 });
 
 const skillSchema: z.ZodType<Skill> = z.looseObject({
-  id: z.string(),
-  name: z.string(),
-  notes: z.string(),
+  id: idString(),
+  name: z.string().max(FIELD_LIMITS.name),
+  notes: noteString(),
   type: z.enum(['basic', 'advanced']),
   training: z.looseObject({
     skilled: z.boolean(),
@@ -124,18 +131,19 @@ const skillSchema: z.ZodType<Skill> = z.looseObject({
 });
 
 const talentSchema: z.ZodType<Talent> = z.looseObject({
-  id: z.string(),
-  name: z.string(),
-  notes: z.string().optional(),
-  description: z.string().optional(),
+  id: idString(),
+  name: z.string().max(FIELD_LIMITS.name),
+  notes: noteString().optional(),
+  description: z.string().max(FIELD_LIMITS.long).optional(),
 });
 
 const armorPieceSchema = z.looseObject({
-  ap: z.number(),
-  type: z.string(),
-  mods: z.string(),
-  quality: z.string(),
-  weight: z.string().optional(),
+  ap: z.number().int().min(0).max(FIELD_LIMITS.small),
+  type: shortString(),
+  mods: shortString(),
+  quality: shortString(),
+  weight: shortString().optional(),
+  notes: noteString().optional(),
 });
 
 const bodyPartSchema = z.enum([
@@ -150,42 +158,42 @@ const bodyPartSchema = z.enum([
 const armorSchema = z.record(bodyPartSchema, armorPieceSchema.nullable());
 
 const meleeWeaponSchema = z.looseObject({
-  id: z.string(),
-  name: z.string(),
-  type: z.string(),
-  range: z.string(),
-  penetration: z.string(),
-  damage: z.string(),
-  traits: z.string(),
-  weight: z.string().optional(),
+  id: idString(),
+  name: z.string().max(FIELD_LIMITS.name),
+  type: shortString(),
+  range: shortString(),
+  penetration: shortString(),
+  damage: shortString(),
+  traits: shortString(),
+  weight: shortString().optional(),
   equipped: z.boolean().optional(),
-  notes: z.string().optional(),
+  notes: noteString().optional(),
 });
 
 const rangedWeaponSchema = z.looseObject({
-  id: z.string(),
-  name: z.string(),
-  type: z.string(),
-  range: z.string(),
-  rof: z.string(),
-  damage: z.string(),
-  penetration: z.string().optional(),
-  clip: z.number(),
-  clipSize: z.number(),
-  reload: z.string(),
-  traits: z.string(),
-  weight: z.string().optional(),
+  id: idString(),
+  name: z.string().max(FIELD_LIMITS.name),
+  type: shortString(),
+  range: shortString(),
+  rof: shortString(),
+  damage: shortString(),
+  penetration: shortString().optional(),
+  clip: z.number().int().min(0).max(FIELD_LIMITS.pool),
+  clipSize: z.number().int().min(0).max(FIELD_LIMITS.pool),
+  reload: shortString(),
+  traits: shortString(),
+  weight: shortString().optional(),
   equipped: z.boolean().optional(),
-  notes: z.string().optional(),
+  notes: noteString().optional(),
 });
 
 const equipmentSchema = z.looseObject({
   armor: armorSchema,
   weapons: z.looseObject({
-    melee: z.array(meleeWeaponSchema),
-    ranged: z.array(rangedWeaponSchema),
+    melee: listOf(meleeWeaponSchema, 200),
+    ranged: listOf(rangedWeaponSchema, 200),
   }),
-  armorWeight: z.string().optional(),
+  armorWeight: shortString().optional(),
 });
 
 /**
@@ -194,61 +202,61 @@ const equipmentSchema = z.looseObject({
  * что лист официально допускает ручной ввод.
  */
 const listEntrySchema = z.looseObject({
-  id: z.string(),
-  name: z.string(),
-  notes: z.string().optional(),
+  id: idString(),
+  name: z.string().max(FIELD_LIMITS.name),
+  notes: noteString().optional(),
 });
 
 const psyPowerSchema = z.looseObject({
-  id: z.string(),
-  name: z.string(),
-  threshold: z.string().optional(),
-  notes: z.string().optional(),
+  id: idString(),
+  name: z.string().max(FIELD_LIMITS.name),
+  threshold: shortString().optional(),
+  notes: noteString().optional(),
 });
 
 // looseObject: старые JSON несут identity.playerName — он не поле листа, но
 // парс не должен падать и не должен терять остальную идентичность.
 export const dh1IdentitySchema = z.looseObject({
   gender: z.enum(GENDER_CODES).optional(),
-  build: z.string().optional(),
-  handedness: z.string().optional(),
+  build: shortString().optional(),
+  handedness: shortString().optional(),
 });
 
 export const dh1CarrySchema = z.looseObject({
-  totalCarriedWeight: z.string().optional(),
-  carry: z.string().optional(),
-  lift: z.string().optional(),
-  push: z.string().optional(),
+  totalCarriedWeight: shortString().optional(),
+  carry: shortString().optional(),
+  lift: shortString().optional(),
+  push: shortString().optional(),
 });
 
 export const dh1PsySchema = z.looseObject({
-  rating: z.number().optional(),
-  discipline: z.string().optional(),
-  powers: z.array(psyPowerSchema).optional(),
-  testedAgainst: z.string().optional(),
+  rating: z.number().int().min(0).max(10).optional(),
+  discipline: shortString().optional(),
+  powers: listOf(psyPowerSchema, 100).optional(),
+  testedAgainst: shortString().optional(),
 });
 
 export const dh1InsanityDetailsSchema = z.looseObject({
-  degree: z.string().optional(),
-  traumaModifier: z.string().optional(),
-  disorders: z.string().optional(),
-  severity: z.string().optional(),
+  degree: shortString().optional(),
+  traumaModifier: shortString().optional(),
+  disorders: noteString().optional(),
+  severity: shortString().optional(),
 });
 
 export const dh1CorruptionDetailsSchema = z.looseObject({
-  degree: z.string().optional(),
-  test: z.string().optional(),
-  defilements: z.string().optional(),
+  degree: shortString().optional(),
+  test: shortString().optional(),
+  defilements: noteString().optional(),
 });
 
 export const dh1ListEntrySchema = listEntrySchema;
 
 const resourceSchema = z.looseObject({
-  id: z.string(),
-  description: z.string(),
-  current: z.number(),
-  max: z.number(),
-  notes: z.string().optional(),
+  id: idString(),
+  description: shortString(),
+  current: z.number().int().min(0).max(FIELD_LIMITS.pool),
+  max: z.number().int().min(0).max(FIELD_LIMITS.pool),
+  notes: noteString().optional(),
 });
 
 /**
@@ -256,85 +264,90 @@ const resourceSchema = z.looseObject({
  * апгрейдов и усталости — их добавляет схема редакции.
  */
 export const darkHeresyBaseFields = {
-  id: z.string(),
-  name: z.string(),
-  characterClass: z.string(),
+  id: idString(),
+  name: z.string().max(FIELD_LIMITS.name),
+  characterClass: shortString(),
   gameSystem: z.literal('Dark Heresy'),
-  backstory: z.string(),
-  notes: z.string(),
-  questLog: z.array(questSchema),
+  backstory: z.string().max(FIELD_LIMITS.long),
+  notes: z.string().max(FIELD_LIMITS.long),
+  questLog: listOf(questSchema),
   schemaVersion: z.number().int().optional(),
   homeWorld: homeWorldSchema,
-  worldVariant: z.string(),
+  worldVariant: shortString(),
   careerPath: careerPathSchema,
-  rank: z.string(),
-  divination: z.string(),
-  divinationEffect: z.string(),
-  quirk: z.string(),
-  height: z.string(),
-  weight: z.string(),
-  age: z.string(),
-  skinColor: z.string(),
-  hairColor: z.string(),
-  eyeColor: z.string(),
-  experience: z.number(),
-  totalExpSpent: z.number(),
-  alternatePath: z.string().nullable(),
-  advancedPath: z.string().nullable(),
+  rank: shortString(),
+  divination: shortString(),
+  divinationEffect: shortString(),
+  quirk: shortString(),
+  height: shortString(),
+  weight: shortString(),
+  age: shortString(),
+  skinColor: shortString(),
+  hairColor: shortString(),
+  eyeColor: shortString(),
+  experience: z.number().int().min(0).max(FIELD_LIMITS.experience),
+  totalExpSpent: z.number().int().min(0).max(FIELD_LIMITS.experience),
+  alternatePath: shortString().nullable(),
+  advancedPath: shortString().nullable(),
   wounds: z.looseObject({
-    current: z.number(),
-    max: z.number(),
-    notes: z.string().optional(),
+    current: z.number().int().min(0).max(FIELD_LIMITS.pool),
+    max: z.number().int().min(0).max(FIELD_LIMITS.pool),
+    notes: noteString().optional(),
   }),
   fatePoints: z.looseObject({
-    current: z.number(),
-    max: z.number(),
-    notes: z.string().optional(),
+    current: z.number().int().min(0).max(FIELD_LIMITS.pool),
+    max: z.number().int().min(0).max(FIELD_LIMITS.pool),
+    notes: noteString().optional(),
   }),
   insanityPoints: z.looseObject({
-    total: z.number(),
-    notes: z.string().optional(),
+    total: z.number().int().min(0).max(FIELD_LIMITS.pool),
+    notes: noteString().optional(),
   }),
   corruptionPoints: z.looseObject({
-    total: z.number(),
-    notes: z.string().optional(),
+    total: z.number().int().min(0).max(FIELD_LIMITS.pool),
+    notes: noteString().optional(),
   }),
   wealth: z.looseObject({
-    throneGelt: z.number(),
-    monthlyIncome: z.number(),
-    notes: z.string().optional(),
+    throneGelt: z.number().int().min(0).max(FIELD_LIMITS.money),
+    monthlyIncome: z.number().int().min(0).max(FIELD_LIMITS.money),
+    notes: noteString().optional(),
   }),
   movement: z.looseObject({
-    walkHalf: z.number(),
-    walkFull: z.number(),
-    charge: z.number(),
-    run: z.number(),
+    walkHalf: z.number().int().min(0).max(FIELD_LIMITS.pool),
+    walkFull: z.number().int().min(0).max(FIELD_LIMITS.pool),
+    charge: z.number().int().min(0).max(FIELD_LIMITS.pool),
+    run: z.number().int().min(0).max(FIELD_LIMITS.pool),
   }),
   equipment: equipmentSchema,
-  inventory: z.array(inventoryItemSchema),
-  skills: z.array(skillSchema),
-  talents: z.array(talentSchema),
-  criticalConditions: z.array(
+  inventory: listOf(inventoryItemSchema),
+  skills: listOf(skillSchema),
+  talents: listOf(talentSchema),
+  criticalConditions: listOf(
     z.looseObject({
-      id: z.string(),
-      name: z.string(),
-      notes: z.string().optional(),
+      id: idString(),
+      name: z.string().max(FIELD_LIMITS.name),
+      notes: noteString().optional(),
     }),
+    100,
   ),
-  customHouseRules: z
-    .array(z.object({ name: z.string(), description: z.string() }))
-    .optional(),
-  customResources: z.array(resourceSchema).optional(),
+  customHouseRules: listOf(
+    z.object({
+      name: z.string().max(FIELD_LIMITS.name),
+      description: z.string().max(FIELD_LIMITS.note),
+    }),
+    100,
+  ).optional(),
+  customResources: listOf(resourceSchema, 100).optional(),
 };
 
 export const conditionEntrySchema = z.looseObject({
-  id: z.string().min(1),
+  id: idString(),
   kind: z.enum(['disorder', 'corruption', 'mutation', 'rudiment']),
-  name: z.string(),
-  severity: z.string().optional(),
-  effect: z.string().optional(),
-  notes: z.string().optional(),
+  name: z.string().max(FIELD_LIMITS.name),
+  severity: shortString().optional(),
+  effect: noteString().optional(),
+  notes: noteString().optional(),
   source: z.enum(['manual', 'divination', 'legacy']).optional(),
 });
 
-export const conditionsSchema = z.array(conditionEntrySchema);
+export const conditionsSchema = listOf(conditionEntrySchema, 500);

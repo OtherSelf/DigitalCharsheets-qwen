@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import { listOf, noteString, shortString } from '../shared/limits';
 import {
   conditionsSchema,
   darkHeresyBaseFields,
@@ -21,7 +22,7 @@ export const dh2CharacterSchema: z.ZodType<DH2Character> = z.looseObject({
   systemId: z.literal('dh2').optional(),
   stats: z.looseObject({
     ...darkHeresyCoreStatsFields,
-    influence: z.number(),
+    influence: z.number().int().min(0).max(100),
   }),
   statUpgrades: z.looseObject({
     ...darkHeresyCoreStatUpgradesFields,
@@ -30,14 +31,14 @@ export const dh2CharacterSchema: z.ZodType<DH2Character> = z.looseObject({
   statNotes: z
     .looseObject({
       ...darkHeresyCoreStatNotesFields,
-      influence: z.string().optional(),
+      influence: noteString().optional(),
     })
     .optional(),
   startingChoices: z
     .looseObject({
-      roleTalent: z.string().optional(),
-      skills: z.array(z.string()),
-      talents: z.array(z.string()),
+      roleTalent: shortString().optional(),
+      skills: listOf(shortString(), 100),
+      talents: listOf(shortString(), 100),
     })
     .optional(),
   fatigue2nd: fatigueSchema,

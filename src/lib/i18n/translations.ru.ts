@@ -138,6 +138,7 @@ export const ruTranslations: Record<string, string> = {
   'common.charisma': 'Харизма',
   'common.createCharacter': 'Создать персонажа',
   'common.nameMinLength': 'Имя должно содержать не менее 2 символов.',
+  'common.fieldTooLong': 'Значение слишком длинное.',
   'common.none': 'Нет',
   'common.perception': 'Восприятие',
   'common.willpower': 'Сила воли',
