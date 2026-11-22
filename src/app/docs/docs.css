@@ -1,0 +1,23 @@
+/*
+  Стили сегмента `/docs`.
+  Сама тема Fumadocs подключена в `globals.css` (ей нужен общий Tailwind-корень
+  для `@plugin`/`@theme`), а здесь — только раскладка страницы документации.
+*/
+
+/*
+  Корень приложения не скроллится: `html, body { overflow: clip }` в
+  `globals.css` (LANDMARK ROOT_SCROLL_LOCK). Документация — длинные статьи,
+  поэтому прокрутка живёт в этом контейнере, а sticky-сайдбар и TOC Fumadocs
+  считают свою позицию от него, а не от `body`.
+*/
+.docs-scroll {
+  height: 100dvh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* Мобильная шторка сайдбара Fumadocs позиционируется fixed — контейнер её не
+   ломает, но фон под ней должен быть непрозрачным. */
+.docs-scroll > * {
+  min-height: 100%;
+}

@@ -1,5 +1,14 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
+/*
+  Документация `/docs` рендерится Fumadocs. Его тема и утилиты обязаны жить в
+  том же Tailwind-корне, иначе `@plugin`/`@theme`/`@source inline` из preset не
+  сработают. Импорт идёт ДО наших `@layer base` ниже, поэтому наши правила
+  `*` и `body` перекрывают глобальные правила библиотеки: приложение остаётся
+  со своими цветами.
+*/
+@import 'fumadocs-ui/css/neutral.css';
+@import 'fumadocs-ui/css/preset.css';
 @config '../../tailwind.config.mts';
 
 /*
