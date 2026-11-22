@@ -91,6 +91,11 @@ const SheetContent = React.forwardRef<
   const closeSheet = React.useContext(SheetOpenContext);
   const [dragX, setDragX] = React.useState(0);
   const [dragging, setDragging] = React.useState(false);
+  // Закрытие свайпом: доводим панель до края сами и только потом отдаём
+  // закрытие Radix. Если сначала сбросить `dragX` в 0, панель возвращается
+  // на место и лишь затем уезжает анимацией — на экране это рывок.
+  const [dismissing, setDismissing] = React.useState(false);
+  const dismissTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const gesture = React.useRef<{
     pointerId: number;
     startX: number;
@@ -102,8 +107,15 @@ const SheetContent = React.forwardRef<
   const horizontal = side === 'right' || side === 'left';
   const swipeEnabled = horizontal && Boolean(closeSheet);
 
+  React.useEffect(
+    () => () => {
+      if (dismissTimer.current) clearTimeout(dismissTimer.current);
+    },
+    [],
+  );
+
   const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (!swipeEnabled || event.pointerType !== 'touch') return;
+    if (!swipeEnabled || dismissing || event.pointerType !== 'touch') return;
     if ((event.target as HTMLElement | null)?.closest(SWIPE_IGNORE)) return;
     gesture.current = {
       pointerId: event.pointerId,
@@ -146,10 +158,13 @@ const SheetContent = React.forwardRef<
       Math.abs(dx) > Math.max(SWIPE_MIN_DISTANCE, width * SWIPE_MIN_RATIO);
 
     setDragging(false);
-    setDragX(0);
     if (farEnough || velocity > SWIPE_MIN_VELOCITY) {
-      closeSheet?.(false);
+      setDismissing(true);
+      setDragX(side === 'right' ? width || 320 : -(width || 320));
+      dismissTimer.current = setTimeout(() => closeSheet?.(false), 180);
+      return;
     }
+    setDragX(0);
   };
 
   const cancelGesture = () => {
@@ -173,6 +188,9 @@ const SheetContent = React.forwardRef<
           touchAction: swipeEnabled ? 'pan-y' : undefined,
           transform: dragX ? `translateX(${dragX}px)` : undefined,
           transition: dragging ? 'none' : undefined,
+          // Панель уже за краем экрана: exit-анимация Radix началась бы с
+          // `translateX(0)` и вернула бы её в кадр на один кадр — отключаем.
+          animation: dismissing ? 'none' : undefined,
         }}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
