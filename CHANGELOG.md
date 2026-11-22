@@ -11,6 +11,54 @@ format changes.
 
 ## [Unreleased]
 
+## [0.17.0] - 2026-11-22
+
+The documentation now ships with the app: `/docs`, with search, on the same
+origin.
+
+### Added
+
+- A documentation site at `/docs`: the existing `docs/*.md` and the four ADRs
+  are rendered in the app (Fumadocs) with the site's own header, footer and
+  language. There is no copy of the content and no external CDN, so the strict
+  `script-src 'self'` holds; `docs/README.md` becomes the index at `/docs`,
+  `/docs/<slug>` is a page, an unknown slug is a `404`, and each page keeps
+  exactly one `h1`.
+- Search over the documentation: a dialog in the docs header queries
+  `/api/search`, an index built over the pages' structured data. Only the
+  matches (3–20 KB per query) leave the server, not the ~450 KB of all indexes,
+  and the endpoint is limited to the same origin.
+- `/about` gained "Documentation" and "API reference" links, so the docs are
+  reachable from the app and not only from the repository README.
+- `npm run docs:generate` and `npm run docs:check`: `docs/meta.json` and
+  `docs/adr/meta.json` are generated from the map in `docs/README.md` and
+  checked by step 4 of `npm run verify`, so the sidebar order, the map and the
+  files cannot drift apart.
+- Coverage for the docs pipeline: every map row has a file and there are no
+  orphans, `meta.json` matches the generator, the frontmatter `title` repeats
+  the `# H1`, `description` repeats the map row and relative `*.md` links
+  resolve; the link-rewriting plugin is tested on a synthetic tree. Smoke
+  checks `/docs`, `/docs/architecture` (no `href="../"`, no external assets), an
+  unknown slug (`404`) and `/api/search`.
+
+### Changed
+
+- Every documentation page starts with YAML frontmatter (`title`,
+  `description`), which Fumadocs needs to build a page. The `# H1` stays, so the
+  site renders exactly one heading and GitHub keeps showing the title.
+- Links keep working in both views: `[api.md](api.md)` becomes `/docs/api`, an
+  ADR's `../data-storage.md` becomes `/docs/data-storage`, and paths to code
+  such as `../src/lib/session.ts` render as inline code instead of a dead link.
+- New dependencies: `fumadocs-core` 16.19.7, `fumadocs-ui` 16.19.7,
+  `fumadocs-mdx` 15.6.4 and `@types/mdx` 2.0.14 (84 transitive packages, no
+  second React or Next). `next.config.ts` wraps the existing config with
+  `createMDX()`, and the generated `.source/` types are ignored by git,
+  Prettier and ESLint.
+- Plugin versions are unchanged (`dh1` 1.10.0, `dh2` 1.10.0, `dnd5e` 1.8.0,
+  `sandbox` 1.1.0) because `src/games` was not touched. The sheet `schemaVersion`
+  (Dark Heresy `5`, D&D 5e `2`) and `PLUGIN_API_VERSION` (`1.4.0`) are
+  unchanged too.
+
 ## [0.16.2] - 2026-11-22
 
 A dead-code gate, a lighter repository and three phone fixes.
