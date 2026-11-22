@@ -33,8 +33,16 @@ function compile(schema: unknown) {
 const API_DIR = path.join(process.cwd(), 'src', 'app', 'api');
 const HTTP_METHODS = ['get', 'post', 'put', 'patch', 'delete'] as const;
 
-/** /api/docs и /api/openapi.json сами являются документацией, не API. */
-const DOCS_ONLY_PATHS = new Set(['/api/docs', '/api/openapi.json']);
+/**
+ * /api/docs и /api/openapi.json сами являются документацией, не API.
+ * /api/search — статический индекс поиска по `/docs`: он обслуживает UI
+ * документации, поэтому в публичной спеке его нет.
+ */
+const DOCS_ONLY_PATHS = new Set([
+  '/api/docs',
+  '/api/openapi.json',
+  '/api/search',
+]);
 
 function routeFiles(dir: string): string[] {
   const files: string[] = [];

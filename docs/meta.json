@@ -17,6 +17,6 @@
     "i18n",
     "testing",
     "deployment",
-    "[API reference](/api/docs)"
+    "external:[API reference](/api/docs)"
   ]
 }

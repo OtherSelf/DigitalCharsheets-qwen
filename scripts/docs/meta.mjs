@@ -25,8 +25,13 @@ const ROOT_META = 'meta.json';
 const ADR_DIR = 'adr';
 const ADR_META = 'adr/meta.json';
 const README = 'README.md';
-/** Пункт-ссылка в конце сайдбара: API-справочник живёт вне markdown-статей. */
-const API_LINK = '[API reference](/api/docs)';
+/**
+ * Пункт-ссылка в конце сайдбара: API-справочник живёт вне markdown-статей.
+ * `external:` обязателен: без него Fumadocs рендерит Next-ссылку и префетчит
+ * `/api/docs?_rsc=…`, а route handler на такой запрос не отвечает — страница
+ * `/docs` перестаёт доходить до `networkidle`.
+ */
+const API_LINK = 'external:[API reference](/api/docs)';
 
 /** Строка карты: `| [file](path) | description |`. */
 const MAP_ROW = /^\| \[(?<label>[^\]]+)\]\((?<path>[^)]+)\) \| (?<description>.+) \|$/;

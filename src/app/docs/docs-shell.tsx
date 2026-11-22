@@ -7,6 +7,8 @@ import { RootProvider } from 'fumadocs-ui/provider/next';
 import { useTranslation } from '@/context/language-context';
 import { docsUiTranslations } from '@/lib/docs/ui-translations';
 
+import { DocsSearchDialog } from './docs-search-dialog';
+
 /**
  * Клиентская часть оболочки `/docs`.
  *
@@ -28,6 +30,7 @@ export function DocsLayoutShell({
     <RootProvider
       theme={{ enabled: false }}
       i18n={{ locale: language, translations: docsUiTranslations(t) }}
+      search={{ SearchDialog: DocsSearchDialog }}
     >
       <div className="docs-scroll bg-fd-background text-fd-foreground">
         <DocsLayout
