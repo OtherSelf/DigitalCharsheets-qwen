@@ -11,6 +11,8 @@ format changes.
 
 ## [Unreleased]
 
+## [0.18.1] - 2026-11-22
+
 ### Added
 
 - `scripts/dcs-dev.bat`: a Windows launcher for the local dev server that needs
