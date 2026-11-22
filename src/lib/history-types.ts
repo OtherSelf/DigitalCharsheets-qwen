@@ -108,7 +108,6 @@ export interface HistoryTruncationMarker {
   dropped: number;
 }
 
-/** Что можно встретить в JSONL. */
 /** Результат чтения файла истории (до группировки в сессии). */
 export interface HistoryReadResult {
   revisions: HistoryRevision[];
