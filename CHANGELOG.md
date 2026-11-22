@@ -11,6 +11,8 @@ format changes.
 
 ## [Unreleased]
 
+## [0.18.2] - 2026-11-22
+
 ### Fixed
 
 - `scripts/dcs-dev.bat` on Windows: `cmd.exe` misparsed the multi-line batch
