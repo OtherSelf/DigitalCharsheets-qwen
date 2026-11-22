@@ -11,6 +11,13 @@ format changes.
 
 ## [Unreleased]
 
+### Fixed
+
+- `scripts/dcs-dev.bat` on Windows: `cmd.exe` misparsed the multi-line batch
+  with LF line endings and executed fragments of comments instead of the script.
+  The launcher is now a single line that runs `scripts/dcs-dev.mjs`, which keeps
+  the same commands and flags.
+
 ## [0.18.1] - 2026-11-22
 
 ### Added
