@@ -60,7 +60,7 @@ describe('server-storage (файловое хранилище листов)', ()
       systemId: 'dnd5e',
       schemaVersion: CHARACTER_SCHEMA_VERSION,
     });
-    // Компактный JSON: без отступов и переводов строк (Q4).
+    // Компактный JSON: без отступов и переводов строк.
     const raw = fs.readFileSync(file, 'utf8');
     expect(raw).not.toContain('\n');
     expect(JSON.parse(raw)).toMatchObject({ id: 'char-a' });

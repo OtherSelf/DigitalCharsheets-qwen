@@ -46,7 +46,8 @@ let localTurn: Promise<void> = Promise.resolve();
  * activeKeys опустеет, а новые ключевые операции ждут, пока он снят.
  *
  * Это in-process координатор; сам файловый мьютекс (mkdir) остался только в
- * глобальном локе. Однопроцессность подтверждена владельцем (Q9).
+ * глобальном локе. Однопроцессность — условие корректности (см.
+ * docs/architecture.md).
  */
 let globalHeld = false;
 let globalWaiters = 0;

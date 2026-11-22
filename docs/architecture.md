@@ -168,7 +168,7 @@ in memory. A read is a `stat` plus a signature check on `(ino, mtimeMs, size)`;
 process is visible on the next read. An external edit changes the signature and
 is picked up on the next `stat`.
 
-The cache assumes **one Node process per data directory** (D15). Write-through
+The cache assumes **one Node process per data directory**. Write-through
 invalidation only knows this process's writes; a second process could still
 serve its own copy between edits. Session revocation and account blocking stay
 immediate because the write happens before the response and invalidates the

@@ -529,7 +529,7 @@ cd - && npm run test:load -- --app-dir /tmp/dcs-perf-app --assert --warmup 3
 ```
 
 Calibrated gate (50 VU × 10 sheets, warmup 3 s; baseline and reasons are in the
-perf tracker and D20): all scenarios 0 errors/non-2xx; `save-parallel` RPS ≥ 239
+perf tracker): all scenarios 0 errors/non-2xx; `save-parallel` RPS ≥ 239
 (2× baseline, fsync ceiling ≈ 256 rps); p95 ≤ baseline for read-list/save/
 login/mixed; event-loop p99 ≤ 75 ms for the API scenarios and ≤ 200 ms for the
 HTML `share-page`. Without `--assert` the runner is report-only.
