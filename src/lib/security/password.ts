@@ -41,33 +41,51 @@ export function hashPassword(password: string): string {
   return hashSecret(password);
 }
 
+function invalidPasswordCheck(): PasswordCheck {
+  return { valid: false, needsRehash: false };
+}
+
+/** Пустой/нестроковый вход — отказ без обращения к хэшу. */
+function readPasswordInputs(
+  storedHash: unknown,
+  password: unknown,
+): { storedHash: string; password: string } | null {
+  if (typeof storedHash !== 'string' || storedHash === '') return null;
+  if (typeof password !== 'string' || password === '') return null;
+  return { storedHash, password };
+}
+
+/** Старый формат sha256: успешный вход требует перехэширования. */
+function verifyLegacySha256(
+  storedHash: string,
+  password: string,
+): PasswordCheck | null {
+  if (!LEGACY_SHA256_RE.test(storedHash)) return null;
+  const legacy = crypto.createHash('sha256').update(password).digest('hex');
+  const valid = safeStringEqual(storedHash, legacy);
+  return { valid, needsRehash: valid };
+}
+
 /** Проверить пароль по сохранённому значению. */
 export function verifyPassword(
   storedHash: unknown,
   password: unknown,
 ): PasswordCheck {
-  if (typeof storedHash !== 'string' || storedHash === '') {
-    return { valid: false, needsRehash: false };
-  }
-  if (typeof password !== 'string' || password === '') {
-    return { valid: false, needsRehash: false };
-  }
+  const input = readPasswordInputs(storedHash, password);
+  if (!input) return invalidPasswordCheck();
 
-  if (isScryptHash(storedHash)) {
+  if (isScryptHash(input.storedHash)) {
     return {
-      valid: verifySecretHash(storedHash, password),
+      valid: verifySecretHash(input.storedHash, input.password),
       needsRehash: false,
     };
   }
 
-  if (LEGACY_SHA256_RE.test(storedHash)) {
-    const legacy = crypto.createHash('sha256').update(password).digest('hex');
-    const valid = safeStringEqual(storedHash, legacy);
-    return { valid, needsRehash: valid };
-  }
-
-  // Неизвестный формат: fail-closed, без исключений на битом файле.
-  return { valid: false, needsRehash: false };
+  // Legacy sha256 — известный формат; всё остальное fail-closed.
+  return (
+    verifyLegacySha256(input.storedHash, input.password) ??
+    invalidPasswordCheck()
+  );
 }
 
 /** Асинхронный хэш для запросного пути (не блокирует event loop). */
@@ -83,25 +101,18 @@ export async function verifyPasswordAsync(
   storedHash: unknown,
   password: unknown,
 ): Promise<PasswordCheck> {
-  if (typeof storedHash !== 'string' || storedHash === '') {
-    return { valid: false, needsRehash: false };
-  }
-  if (typeof password !== 'string' || password === '') {
-    return { valid: false, needsRehash: false };
-  }
+  const input = readPasswordInputs(storedHash, password);
+  if (!input) return invalidPasswordCheck();
 
-  if (isScryptHash(storedHash)) {
+  if (isScryptHash(input.storedHash)) {
     return {
-      valid: await verifySecretHashAsync(storedHash, password),
+      valid: await verifySecretHashAsync(input.storedHash, input.password),
       needsRehash: false,
     };
   }
 
-  if (LEGACY_SHA256_RE.test(storedHash)) {
-    const legacy = crypto.createHash('sha256').update(password).digest('hex');
-    const valid = safeStringEqual(storedHash, legacy);
-    return { valid, needsRehash: valid };
-  }
-
-  return { valid: false, needsRehash: false };
+  return (
+    verifyLegacySha256(input.storedHash, input.password) ??
+    invalidPasswordCheck()
+  );
 }

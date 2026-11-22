@@ -85,26 +85,42 @@ export function parseScryptHash(value: string): ParsedScryptHash | null {
   return { n, r, p, salt, hash };
 }
 
+/** Разобрать сохранённое значение; `null` — не scrypt-хэш или битый формат. */
+function parseStoredHash(stored: unknown): ParsedScryptHash | null {
+  if (!isScryptHash(stored)) return null;
+  return parseScryptHash(stored);
+}
+
+/** Параметры проверки берутся из хэша: старые значения читаются без миграции. */
+function scryptOptions(parsed: ParsedScryptHash): crypto.ScryptOptions {
+  return { N: parsed.n, r: parsed.r, p: parsed.p, maxmem: SCRYPT_MAXMEM };
+}
+
+/** Сравнение производного ключа с сохранённым — только постоянное время. */
+function sameHash(parsed: ParsedScryptHash, derived: Buffer): boolean {
+  if (derived.length !== parsed.hash.length) return false;
+  return crypto.timingSafeEqual(derived, parsed.hash);
+}
+
 /** Совпадает ли секрет с сохранённым scrypt-хэшем (постоянное время). */
 export function verifySecretHash(stored: unknown, secret: string): boolean {
-  if (!isScryptHash(stored)) return false;
-  const parsed = parseScryptHash(stored);
+  const parsed = parseStoredHash(stored);
   if (!parsed) return false;
 
-  let derived: Buffer;
   try {
-    derived = crypto.scryptSync(secret, parsed.salt, parsed.hash.length, {
-      N: parsed.n,
-      r: parsed.r,
-      p: parsed.p,
-      maxmem: SCRYPT_MAXMEM,
-    });
+    return sameHash(
+      parsed,
+      crypto.scryptSync(
+        secret,
+        parsed.salt,
+        parsed.hash.length,
+        scryptOptions(parsed),
+      ),
+    );
   } catch {
     // Битые параметры в файле: это не совпадение, а испорченные данные.
     return false;
   }
-  if (derived.length !== parsed.hash.length) return false;
-  return crypto.timingSafeEqual(derived, parsed.hash);
 }
 
 /**
@@ -135,22 +151,21 @@ export async function verifySecretHashAsync(
   stored: unknown,
   secret: string,
 ): Promise<boolean> {
-  if (!isScryptHash(stored)) return false;
-  const parsed = parseScryptHash(stored);
+  const parsed = parseStoredHash(stored);
   if (!parsed) return false;
 
-  let derived: Buffer;
   try {
-    derived = await scryptAsync(secret, parsed.salt, parsed.hash.length, {
-      N: parsed.n,
-      r: parsed.r,
-      p: parsed.p,
-      maxmem: SCRYPT_MAXMEM,
-    });
+    return sameHash(
+      parsed,
+      await scryptAsync(
+        secret,
+        parsed.salt,
+        parsed.hash.length,
+        scryptOptions(parsed),
+      ),
+    );
   } catch {
     // Битые параметры в файле: это не совпадение, а испорченные данные.
     return false;
   }
-  if (derived.length !== parsed.hash.length) return false;
-  return crypto.timingSafeEqual(derived, parsed.hash);
 }
