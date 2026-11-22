@@ -35,6 +35,7 @@ const ALL_SPECS = [
   'basic-pages',
   'creation',
   'dialogs',
+  'docs',
   'locale',
   'pages',
   'tablet',
@@ -73,6 +74,13 @@ const RULES = [
     specs: 'spec',
   },
   {
+    // Код и конфиг документации: единственный затронутый экран — /docs.
+    // Правило идёт до общих `^src/...`, иначе общий `^src/lib/` даст `none`.
+    pattern:
+      /^(src\/app\/docs\/|src\/lib\/docs\/|src\/app\/api\/search\/|source\.config\.ts$)/,
+    specs: ['docs'],
+  },
+  {
     pattern: /^src\/lib\/translations/,
     specs: ['admin', 'locale', 'pages', 'themes', 'user-menu'],
   },
@@ -100,7 +108,7 @@ const RULES = [
   },
   {
     pattern: /^src\/app\/(globals\.css|layout\.tsx)$/,
-    specs: ['basic-pages', 'pages', 'tablet', 'themes'],
+    specs: ['basic-pages', 'pages', 'tablet', 'themes', 'docs'],
   },
   {
     pattern: /^(tailwind\.config|postcss\.config|next\.config)/,
@@ -146,7 +154,13 @@ const RULES = [
     specs: FAST,
   },
   {
-    pattern: /^(docs\/|README|scripts\/|tsconfig|eslint|prettier)/,
+    // Контент документации рендерится на /docs: правка статьи меняет кадр.
+    pattern: /^docs\//,
+    specs: ['docs'],
+  },
+  {
+    // README/CHANGELOG/скрипты и конфиги линта на вёрстку не влияют.
+    pattern: /^(README|scripts\/|tsconfig|eslint|prettier)/,
     specs: 'none',
   },
 ];

@@ -16,7 +16,7 @@ import path from 'node:path';
  * остаётся как есть.
  */
 
-export interface DocsLinkNode {
+interface DocsLinkNode {
   type: string;
   url?: string;
   value?: string;
@@ -40,10 +40,10 @@ function splitAnchor(href: string): { pathPart: string; anchor: string } {
 }
 
 /**
- * Решает судьбу одного `href`. Вынесено из плагина, чтобы проверяться
- * unit-тестом без MDX-сборки.
+ * Решает судьбу одного `href`. Отдельная функция — чтобы правило было
+ * очевидным; проверяется через сам плагин, без MDX-сборки.
  */
-export function resolveDocsHref(
+function resolveDocsHref(
   href: string,
   filePath: string,
   docsRoot = path.resolve(process.cwd(), 'docs'),

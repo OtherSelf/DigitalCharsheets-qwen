@@ -365,6 +365,59 @@ await check('GET /api/docs → 200 (Scalar HTML со своим бандлом)'
   return src;
 });
 
+// ── документация /docs ───────────────────────────────────────────────────────
+// Страница рендерит существующие docs/*.md через Fumadocs. Проверяем то, что
+// ломается незаметно: доступность, 404 на неизвестном слаге и отсутствие
+// внешних ассетов (CSP 'self' не даст их загрузить, страница останется пустой).
+await check('GET /docs → 200 (страница документации)', async () => {
+  const res = await request('/docs', { auth: false });
+  assertStatus(res, 200, 'GET /docs');
+  assert(
+    /text\/html/i.test(res.headers.get('content-type') || ''),
+    'GET /docs: content-type не text/html',
+  );
+  assert(
+    res.text.includes('/docs/architecture'),
+    'GET /docs: в оглавлении нет ссылки на /docs/architecture',
+  );
+  return `${Math.round(res.text.length / 1024)} КБ`;
+});
+
+await check('GET /docs/architecture → 200 и без внешних ссылок', async () => {
+  const res = await request('/docs/architecture', { auth: false });
+  assertStatus(res, 200, 'GET /docs/architecture');
+  assert(
+    !res.text.includes('href="../'),
+    'GET /docs/architecture: в HTML есть href="../"',
+  );
+  assert(
+    !/href="[^":/]+\.md/.test(res.text),
+    'GET /docs/architecture: ссылка на *.md не переписана в /docs/<slug>',
+  );
+  const external = res.text.match(
+    /<(?:script|link)[^>]+(?:src|href)="https?:\/\//,
+  );
+  assert(
+    external === null,
+    `GET /docs/architecture: внешний ассет (${external?.[0] ?? ''})`,
+  );
+  return `${Math.round(res.text.length / 1024)} КБ`;
+});
+
+await check('GET /docs/no-such-page → 404', async () => {
+  const res = await request('/docs/no-such-page', { auth: false });
+  assertStatus(res, 404, 'GET /docs/no-such-page');
+});
+
+await check('GET /api/search?query=csp → JSON с совпадениями', async () => {
+  const res = await request('/api/search?query=csp', { auth: false });
+  assertStatus(res, 200, 'GET /api/search');
+  const body = assertJson(res, 'GET /api/search');
+  assert(Array.isArray(body), 'GET /api/search: ответ не массив результатов');
+  assert(body.length > 0, 'GET /api/search: по «csp» ничего не найдено');
+  return `${body.length} результат(ов)`;
+});
+
 await check('GET /api/health → 200 (JSON, без сессии)', async () => {
   const res = await request('/api/health', { auth: false });
   assertStatus(res, 200, 'GET /api/health');
