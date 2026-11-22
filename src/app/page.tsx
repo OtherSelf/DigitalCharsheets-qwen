@@ -10,9 +10,8 @@ import { FileDown, PlusCircle, Scroll, Settings2 } from 'lucide-react';
 import { CharacterCard } from '@/components/characters/character-card';
 import { DemoLandingView } from '@/components/demo-landing-view';
 import { DynamicFavicon } from '@/components/dynamic-favicon';
-import { Header } from '@/components/header';
 import { ImportCharacterDialog } from '@/components/import-character-dialog';
-import { SiteFooter } from '@/components/layout/site-footer';
+import { AppFrame } from '@/components/layout/app-frame';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
@@ -87,10 +86,9 @@ export default function DashboardPage() {
   return (
     <>
       <DynamicFavicon />
-      <div className="flex h-dvh flex-col">
-        {/* LANDMARK: HEADER_WITH_MOBILE_ACTIONS */}
-        <Header
-          mobileActions={
+      <AppFrame
+        header={{
+          mobileActions: (
             <>
               <DropdownMenuItem asChild>
                 <Link
@@ -110,162 +108,159 @@ export default function DashboardPage() {
                 <span>{t('common.backupAll')}</span>
               </DropdownMenuItem>
             </>
-          }
-        />
-
-        <main className="safe-area-bottom flex flex-1 flex-col overflow-y-auto p-3 sm:p-4 md:p-6 lg:p-8 [&>*]:w-full [&>*]:min-w-0">
-          {/* LANDMARK: PENDING_DRAFT_BANNER
+          ),
+        }}
+      >
+        {/* LANDMARK: PENDING_DRAFT_BANNER
               Персонаж, начерченный гостем до входа, не создаётся автоматически
               в существующем аккаунте: он ждёт здесь явного решения. Иначе после
               входа список выглядел так, будто старые листы потерялись. */}
-          {pendingDraft && (
-            <Alert
-              className="border-primary/30 bg-primary/5 mb-6"
-              data-testid="pending-draft"
-            >
-              <Scroll className="text-primary h-4 w-4" />
-              <AlertDescription className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                <div className="min-w-0">
-                  <p className="text-foreground font-medium">
-                    {t('common.pendingDraftTitle')}
-                  </p>
-                  <p className="text-muted-foreground">
-                    {t('common.pendingDraftDesc').replace(
-                      '{name}',
-                      String(pendingDraft.name ?? '') || '—',
-                    )}
-                  </p>
-                </div>
-                <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
-                  <Button
-                    size="sm"
-                    onClick={createPendingDraft}
-                    data-testid="pending-draft-create"
-                  >
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    {t('common.pendingDraftCreate')}
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={discardPendingDraft}
-                    data-testid="pending-draft-discard"
-                  >
-                    {t('common.pendingDraftDiscard')}
-                  </Button>
-                </div>
-              </AlertDescription>
-            </Alert>
-          )}
+        {pendingDraft && (
+          <Alert
+            className="border-primary/30 bg-primary/5 mb-6"
+            data-testid="pending-draft"
+          >
+            <Scroll className="text-primary h-4 w-4" />
+            <AlertDescription className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div className="min-w-0">
+                <p className="text-foreground font-medium">
+                  {t('common.pendingDraftTitle')}
+                </p>
+                <p className="text-muted-foreground">
+                  {t('common.pendingDraftDesc').replace(
+                    '{name}',
+                    String(pendingDraft.name ?? '') || '—',
+                  )}
+                </p>
+              </div>
+              <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
+                <Button
+                  size="sm"
+                  onClick={createPendingDraft}
+                  data-testid="pending-draft-create"
+                >
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  {t('common.pendingDraftCreate')}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={discardPendingDraft}
+                  data-testid="pending-draft-discard"
+                >
+                  {t('common.pendingDraftDiscard')}
+                </Button>
+              </div>
+            </AlertDescription>
+          </Alert>
+        )}
 
-          <div className="mb-6 flex flex-col gap-4 sm:mb-8">
-            <div className="flex flex-col gap-2">
-              <h1 className="font-headline text-2xl font-bold sm:text-3xl">
-                {t('common.existingCharacters')}
-              </h1>
-              <p className="text-muted-foreground max-w-2xl text-sm sm:text-base">
-                {t('common.companionText')}
-              </p>
-            </div>
-            {/* LANDMARK: DESKTOP_BUTTON_GROUP */}
-            {/* На мобильном те же действия живут в нижней панели, поэтому
-                здесь группа скрыта до sm. */}
-            <div className="hidden w-auto flex-row gap-2 sm:flex">
-              <Button
-                variant="outline"
-                size="sm"
-                asChild
-                className="justify-start"
-              >
-                <Link href="/stats-editor">
-                  <Settings2 className="mr-2 h-4 w-4 shrink-0" />
-                  {t('common.statsEditor')}
-                </Link>
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={!user}
-                onClick={handleBackupAll}
-                className="justify-start"
-              >
-                <FileDown className="mr-2 h-4 w-4 shrink-0" />
-                {t('common.backupAll')}
-              </Button>
-            </div>
+        <div className="mb-6 flex flex-col gap-4 sm:mb-8">
+          <div className="flex flex-col gap-2">
+            <h1 className="font-headline text-2xl font-bold sm:text-3xl">
+              {t('common.existingCharacters')}
+            </h1>
+            <p className="text-muted-foreground max-w-2xl text-sm sm:text-base">
+              {t('common.companionText')}
+            </p>
           </div>
+          {/* LANDMARK: DESKTOP_BUTTON_GROUP */}
+          {/* На мобильном те же действия живут в нижней панели, поэтому
+                здесь группа скрыта до sm. */}
+          <div className="hidden w-auto flex-row gap-2 sm:flex">
+            <Button
+              variant="outline"
+              size="sm"
+              asChild
+              className="justify-start"
+            >
+              <Link href="/stats-editor">
+                <Settings2 className="mr-2 h-4 w-4 shrink-0" />
+                {t('common.statsEditor')}
+              </Link>
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={!user}
+              onClick={handleBackupAll}
+              className="justify-start"
+            >
+              <FileDown className="mr-2 h-4 w-4 shrink-0" />
+              {t('common.backupAll')}
+            </Button>
+          </div>
+        </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>{t('common.myCharacters')}</CardTitle>
-              <CardDescription>{t('common.allHeroes')}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {loadError && characters.length === 0 ? (
-                <div
-                  data-testid="characters-load-error"
-                  className="flex flex-col items-start gap-3 rounded-lg border p-4"
+        <Card>
+          <CardHeader>
+            <CardTitle>{t('common.myCharacters')}</CardTitle>
+            <CardDescription>{t('common.allHeroes')}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {loadError && characters.length === 0 ? (
+              <div
+                data-testid="characters-load-error"
+                className="flex flex-col items-start gap-3 rounded-lg border p-4"
+              >
+                <div>
+                  <p className="font-medium">{t('common.loadErrorTitle')}</p>
+                  <p className="text-muted-foreground text-sm">
+                    {t('common.loadErrorDesc')}
+                  </p>
+                </div>
+                <Button
+                  onClick={() => void handleRetry()}
+                  disabled={isRetrying}
                 >
-                  <div>
-                    <p className="font-medium">{t('common.loadErrorTitle')}</p>
-                    <p className="text-muted-foreground text-sm">
-                      {t('common.loadErrorDesc')}
-                    </p>
-                  </div>
+                  {t('common.retry')}
+                </Button>
+              </div>
+            ) : (
+              <div
+                className={cn(
+                  'grid gap-4',
+                  isCompactView
+                    ? 'grid-cols-1'
+                    : 'grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4',
+                )}
+              >
+                {characters.map((character) => (
+                  <CharacterCard key={character.id} character={character} />
+                ))}
+                {isCompactView ? (
                   <Button
-                    onClick={() => void handleRetry()}
-                    disabled={isRetrying}
+                    variant="outline"
+                    asChild
+                    className="border-muted-foreground/30 text-muted-foreground hover:border-accent hover:bg-accent/10 hover:text-accent-foreground flex h-16 w-full items-center justify-center rounded-lg border-2 border-dashed bg-transparent p-0 transition-colors duration-200 sm:h-20"
                   >
-                    {t('common.retry')}
+                    <Link href="/new">
+                      <PlusCircle className="mr-3 h-6 w-6 sm:mr-4 sm:h-8 sm:w-8" />
+                      <span className="text-sm font-semibold sm:text-base">
+                        {t('common.createNew')}
+                      </span>
+                    </Link>
                   </Button>
-                </div>
-              ) : (
-                <div
-                  className={cn(
-                    'grid gap-4',
-                    isCompactView
-                      ? 'grid-cols-1'
-                      : 'grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4',
-                  )}
-                >
-                  {characters.map((character) => (
-                    <CharacterCard key={character.id} character={character} />
-                  ))}
-                  {isCompactView ? (
-                    <Button
-                      variant="outline"
-                      asChild
-                      className="border-muted-foreground/30 text-muted-foreground hover:border-accent hover:bg-accent/10 hover:text-accent-foreground flex h-16 w-full items-center justify-center rounded-lg border-2 border-dashed bg-transparent p-0 transition-colors duration-200 sm:h-20"
-                    >
-                      <Link href="/new">
-                        <PlusCircle className="mr-3 h-6 w-6 sm:mr-4 sm:h-8 sm:w-8" />
-                        <span className="text-sm font-semibold sm:text-base">
-                          {t('common.createNew')}
-                        </span>
-                      </Link>
-                    </Button>
-                  ) : (
-                    <Button
-                      variant="outline"
-                      asChild
-                      className="border-muted-foreground/30 text-muted-foreground hover:border-accent hover:bg-accent/10 hover:text-accent-foreground flex h-full min-h-[180px] w-full flex-col items-center justify-center rounded-lg border-2 border-dashed bg-transparent p-0 transition-colors duration-200 sm:min-h-[200px]"
-                    >
-                      <Link href="/new">
-                        <PlusCircle className="mb-2 h-10 w-10 sm:h-12 sm:w-12" />
-                        <span className="text-sm font-semibold sm:text-base">
-                          {t('common.createNew')}
-                        </span>
-                      </Link>
-                    </Button>
-                  )}
-                  <ImportCharacterDialog isCompactView={isCompactView} />
-                </div>
-              )}
-            </CardContent>
-          </Card>
-          <SiteFooter />
-        </main>
-      </div>
+                ) : (
+                  <Button
+                    variant="outline"
+                    asChild
+                    className="border-muted-foreground/30 text-muted-foreground hover:border-accent hover:bg-accent/10 hover:text-accent-foreground flex h-full min-h-[180px] w-full flex-col items-center justify-center rounded-lg border-2 border-dashed bg-transparent p-0 transition-colors duration-200 sm:min-h-[200px]"
+                  >
+                    <Link href="/new">
+                      <PlusCircle className="mb-2 h-10 w-10 sm:h-12 sm:w-12" />
+                      <span className="text-sm font-semibold sm:text-base">
+                        {t('common.createNew')}
+                      </span>
+                    </Link>
+                  </Button>
+                )}
+                <ImportCharacterDialog isCompactView={isCompactView} />
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </AppFrame>
     </>
   );
 }

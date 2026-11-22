@@ -7,8 +7,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 
 import { AlertCircle, Save } from 'lucide-react';
 
-import { Header } from '@/components/header';
-import { SiteFooter } from '@/components/layout/site-footer';
+import { AppFrame } from '@/components/layout/app-frame';
 import { DeleteAccountCard } from '@/components/settings/delete-account-card';
 import { DisplaySettingsControls } from '@/components/settings/display-settings-controls';
 import { SessionsCard } from '@/components/settings/sessions-card';
@@ -103,153 +102,145 @@ export default function ProfileSettingsPage() {
   if (isUserLoading || !user || !isLoaded) return null;
 
   return (
-    <div className="flex h-dvh flex-col">
-      {/*
-        Единая шапка приложения. Заголовок страницы теперь в ней, а не в
-        отдельной самописной шапке. Стрелка «назад» нужна только когда
-        возврат ведёт не на главную: если мы пришли с дашборда, бренд-ссылка
-        уже ведёт домой, и дублировать её иконкой незачем.
-      */}
-      <Header
-        title={t('settings.profileSettings')}
-        backHref={!isFromDashboard ? backTarget : undefined}
-      />
+    <AppFrame
+      variant="wide"
+      header={{
+        title: t('settings.profileSettings'),
+        backHref: !isFromDashboard ? backTarget : undefined,
+      }}
+    >
+      <div className="mx-auto max-w-2xl space-y-6">
+        {error && (
+          <div className="bg-destructive/15 text-destructive flex items-center gap-2 rounded-md p-3 text-sm">
+            <AlertCircle className="h-4 w-4" />
+            <span>{error}</span>
+          </div>
+        )}
+        {success && (
+          <div className="rounded-md bg-green-100 p-3 text-sm text-green-800 dark:bg-green-900/30 dark:text-green-300">
+            {success}
+          </div>
+        )}
 
-      <main className="safe-area-bottom flex flex-1 flex-col overflow-y-auto p-4 md:p-8 [&>*]:w-full [&>*]:min-w-0">
-        <div className="mx-auto max-w-2xl space-y-6">
-          {error && (
-            <div className="bg-destructive/15 text-destructive flex items-center gap-2 rounded-md p-3 text-sm">
-              <AlertCircle className="h-4 w-4" />
-              <span>{error}</span>
-            </div>
-          )}
-          {success && (
-            <div className="rounded-md bg-green-100 p-3 text-sm text-green-800 dark:bg-green-900/30 dark:text-green-300">
-              {success}
-            </div>
-          )}
-
-          {/*
+        {/*
             ─── LANDMARK: GENERATED_ADMIN_PASSWORD_WARNING ───
             Если служебный админ создан при первом запуске, его пароль лежит в
             консоли и data/.initial-admin.txt. Напоминаем сменить его в карточке
             Security; после сохранения с новым паролем флаг снимается.
           */}
-          {user.mustChangePassword && (
-            <div className="rounded-md border border-amber-500/50 bg-amber-500/10 p-3 text-sm">
-              {t('admin.mustChangePassword')}
-            </div>
-          )}
+        {user.mustChangePassword && (
+          <div className="rounded-md border border-amber-500/50 bg-amber-500/10 p-3 text-sm">
+            {t('admin.mustChangePassword')}
+          </div>
+        )}
 
-          <form onSubmit={handleSave} className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>{t('settings.generalInformation')}</CardTitle>
-                <CardDescription>
-                  {t('settings.updateYourDisplayNameAndLogin')}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {user.role && user.role !== 'user' && (
-                  <p className="text-muted-foreground text-right text-xs">
-                    {t('settings.role')}:{' '}
-                    {t(
-                      user.role === 'admin'
-                        ? 'admin.roleAdmin'
-                        : 'admin.roleTester',
-                    )}
-                  </p>
-                )}
-                <div className="space-y-2">
-                  <Label htmlFor="displayName">{t('common.displayName')}</Label>
-                  <Input
-                    id="displayName"
-                    value={displayName}
-                    onChange={(e) => setDisplayName(e.target.value)}
-                    placeholder={t('settings.usernamePlaceholder')}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="username">{t('auth.login')}</Label>
-                  <Input
-                    id="username"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    placeholder={t('settings.emailPlaceholder')}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* LANDMARK: DISPLAY_SETTINGS_CARD */}
-            <Card>
-              <CardHeader>
-                <CardTitle>{t('settings.displaySettings')}</CardTitle>
-                <CardDescription>
-                  {t('settings.adjustUiAppearance')}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <DisplaySettingsControls resetClassName="w-full sm:w-auto" />
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>{t('settings.security')}</CardTitle>
-                <CardDescription>
-                  {t('settings.updatePasswordAndRecovery')}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="password">{t('common.newPassword')}</Label>
-                  <PasswordInput
-                    id="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder={t('settings.leaveBlankToKeepCurrent')}
-                  />
-                </div>
-                <Separator />
-                <div className="space-y-2">
-                  <Label htmlFor="recoveryPhrase">{t('auth.phrase')}</Label>
-                  <Input
-                    id="recoveryPhrase"
-                    value={recoveryPhrase}
-                    onChange={(e) => setRecoveryPhrase(e.target.value)}
-                    placeholder={
-                      user.hasRecoveryPhrase
-                        ? t('settings.updateRecoveryPhrase')
-                        : t('settings.addRecoveryPhrase')
-                    }
-                  />
-                </div>
-              </CardContent>
-              <CardFooter>
-                <Button type="submit" className="w-full" disabled={isSaving}>
-                  {isSaving ? (
-                    t('common.saving')
-                  ) : (
-                    <>
-                      <Save className="mr-2 h-4 w-4" />
-                      {t('common.saveChanges')}
-                    </>
+        <form onSubmit={handleSave} className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>{t('settings.generalInformation')}</CardTitle>
+              <CardDescription>
+                {t('settings.updateYourDisplayNameAndLogin')}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {user.role && user.role !== 'user' && (
+                <p className="text-muted-foreground text-right text-xs">
+                  {t('settings.role')}:{' '}
+                  {t(
+                    user.role === 'admin'
+                      ? 'admin.roleAdmin'
+                      : 'admin.roleTester',
                   )}
-                </Button>
-              </CardFooter>
-            </Card>
-          </form>
+                </p>
+              )}
+              <div className="space-y-2">
+                <Label htmlFor="displayName">{t('common.displayName')}</Label>
+                <Input
+                  id="displayName"
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
+                  placeholder={t('settings.usernamePlaceholder')}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="username">{t('auth.login')}</Label>
+                <Input
+                  id="username"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder={t('settings.emailPlaceholder')}
+                />
+              </div>
+            </CardContent>
+          </Card>
 
-          <SessionsCard />
+          {/* LANDMARK: DISPLAY_SETTINGS_CARD */}
+          <Card>
+            <CardHeader>
+              <CardTitle>{t('settings.displaySettings')}</CardTitle>
+              <CardDescription>
+                {t('settings.adjustUiAppearance')}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <DisplaySettingsControls resetClassName="w-full sm:w-auto" />
+            </CardContent>
+          </Card>
 
-          {/* LANDMARK: DANGER_ZONE_OUTSIDE_PROFILE_FORM
+          <Card>
+            <CardHeader>
+              <CardTitle>{t('settings.security')}</CardTitle>
+              <CardDescription>
+                {t('settings.updatePasswordAndRecovery')}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="password">{t('common.newPassword')}</Label>
+                <PasswordInput
+                  id="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder={t('settings.leaveBlankToKeepCurrent')}
+                />
+              </div>
+              <Separator />
+              <div className="space-y-2">
+                <Label htmlFor="recoveryPhrase">{t('auth.phrase')}</Label>
+                <Input
+                  id="recoveryPhrase"
+                  value={recoveryPhrase}
+                  onChange={(e) => setRecoveryPhrase(e.target.value)}
+                  placeholder={
+                    user.hasRecoveryPhrase
+                      ? t('settings.updateRecoveryPhrase')
+                      : t('settings.addRecoveryPhrase')
+                  }
+                />
+              </div>
+            </CardContent>
+            <CardFooter>
+              <Button type="submit" className="w-full" disabled={isSaving}>
+                {isSaving ? (
+                  t('common.saving')
+                ) : (
+                  <>
+                    <Save className="mr-2 h-4 w-4" />
+                    {t('common.saveChanges')}
+                  </>
+                )}
+              </Button>
+            </CardFooter>
+          </Card>
+        </form>
+
+        <SessionsCard />
+
+        {/* LANDMARK: DANGER_ZONE_OUTSIDE_PROFILE_FORM
               Вне <form>: у карточки свой диалог со своей формой; вложенные
               формы недопустимы и сломали бы submit профиля. */}
-          <DeleteAccountCard />
-        </div>
-        <SiteFooter />
-      </main>
-    </div>
+        <DeleteAccountCard />
+      </div>
+    </AppFrame>
   );
 }

@@ -6,8 +6,7 @@ import { useRouter } from 'next/navigation';
 
 import { Check, Save } from 'lucide-react';
 
-import { Header } from '@/components/header';
-import { SiteFooter } from '@/components/layout/site-footer';
+import { AppFrame } from '@/components/layout/app-frame';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
@@ -393,91 +392,86 @@ export default function StatsEditorPage() {
     );
 
   return (
-    <div className="flex h-dvh flex-col">
-      {/* LANDMARK: STATS_EDITOR_HEADER */}
-      {/* Та же шапка, что на остальных страницах. Стрелка «назад» не нужна:
-          бренд-ссылка ведёт домой, а редактор всегда открывается с дашборда. */}
-      <Header
-        title={t('common.bulkEditor')}
-        subtitle={t('common.bulkEditorDesc')}
-      />
-
-      <main className="safe-area-bottom flex flex-1 flex-col overflow-y-auto p-4 md:p-6 lg:p-8 [&>*]:w-full [&>*]:min-w-0">
-        <div className="mx-auto max-w-7xl space-y-6">
-          <div className="flex flex-wrap gap-2">
-            {tabs.map((tab) => (
-              <Button
-                key={tab.id}
-                variant={
-                  activeTabDescriptor?.id === tab.id ? 'default' : 'outline'
-                }
-                size="sm"
-                onClick={() => setActiveTab(tab.id)}
-              >
-                {tab.showCount
-                  ? `${t(tab.labelKey)} (${tabCount(tab.id)})`
-                  : t(tab.labelKey)}
-              </Button>
-            ))}
-          </div>
-
-          {saveStatus && (
-            <Alert>
-              <AlertDescription className="flex items-center gap-2">
-                <Check className="h-4 w-4 text-green-500" />
-                {saveStatus}
-              </AlertDescription>
-            </Alert>
-          )}
-
-          {activeTabDescriptor && (
-            <div className="space-y-6">
-              <div className="flex justify-end">
-                <Button onClick={() => handleSaveAll(activeTabDescriptor)}>
-                  <Save className="mr-2 h-4 w-4" />{' '}
-                  {t(activeTabDescriptor.saveAllLabelKey)}
-                </Button>
-              </div>
-
-              {tabCount(activeTabDescriptor.id) === 0 &&
-              activeTabDescriptor.emptyKey ? (
-                <Card>
-                  <CardContent className="text-muted-foreground py-12 text-center">
-                    {t(activeTabDescriptor.emptyKey)}
-                  </CardContent>
-                </Card>
-              ) : (
-                activeTables.map(({ module, table }) => {
-                  const rows = charactersFor(module.id, characters);
-                  if (rows.length === 0) return null;
-                  return (
-                    <BulkTableCard
-                      key={tableKey(module, table)}
-                      module={module}
-                      table={table}
-                      characters={rows}
-                      edits={edits[tableKey(module, table)] ?? {}}
-                      onChange={(charId, columnKey, raw) =>
-                        handleChange(module, table, charId, columnKey, raw)
-                      }
-                      onSave={(charId) => handleSaveRow(module, table, charId)}
-                    />
-                  );
-                })
-              )}
-            </div>
-          )}
-
-          {characters.length === 0 && (
-            <Card>
-              <CardContent className="text-muted-foreground py-12 text-center">
-                {t('common.noCharactersFound')}
-              </CardContent>
-            </Card>
-          )}
+    <AppFrame
+      variant="stats"
+      header={{
+        title: t('common.bulkEditor'),
+        subtitle: t('common.bulkEditorDesc'),
+      }}
+    >
+      <div className="mx-auto max-w-7xl space-y-6">
+        <div className="flex flex-wrap gap-2">
+          {tabs.map((tab) => (
+            <Button
+              key={tab.id}
+              variant={
+                activeTabDescriptor?.id === tab.id ? 'default' : 'outline'
+              }
+              size="sm"
+              onClick={() => setActiveTab(tab.id)}
+            >
+              {tab.showCount
+                ? `${t(tab.labelKey)} (${tabCount(tab.id)})`
+                : t(tab.labelKey)}
+            </Button>
+          ))}
         </div>
-        <SiteFooter />
-      </main>
-    </div>
+
+        {saveStatus && (
+          <Alert>
+            <AlertDescription className="flex items-center gap-2">
+              <Check className="h-4 w-4 text-green-500" />
+              {saveStatus}
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {activeTabDescriptor && (
+          <div className="space-y-6">
+            <div className="flex justify-end">
+              <Button onClick={() => handleSaveAll(activeTabDescriptor)}>
+                <Save className="mr-2 h-4 w-4" />{' '}
+                {t(activeTabDescriptor.saveAllLabelKey)}
+              </Button>
+            </div>
+
+            {tabCount(activeTabDescriptor.id) === 0 &&
+            activeTabDescriptor.emptyKey ? (
+              <Card>
+                <CardContent className="text-muted-foreground py-12 text-center">
+                  {t(activeTabDescriptor.emptyKey)}
+                </CardContent>
+              </Card>
+            ) : (
+              activeTables.map(({ module, table }) => {
+                const rows = charactersFor(module.id, characters);
+                if (rows.length === 0) return null;
+                return (
+                  <BulkTableCard
+                    key={tableKey(module, table)}
+                    module={module}
+                    table={table}
+                    characters={rows}
+                    edits={edits[tableKey(module, table)] ?? {}}
+                    onChange={(charId, columnKey, raw) =>
+                      handleChange(module, table, charId, columnKey, raw)
+                    }
+                    onSave={(charId) => handleSaveRow(module, table, charId)}
+                  />
+                );
+              })
+            )}
+          </div>
+        )}
+
+        {characters.length === 0 && (
+          <Card>
+            <CardContent className="text-muted-foreground py-12 text-center">
+              {t('common.noCharactersFound')}
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    </AppFrame>
   );
 }

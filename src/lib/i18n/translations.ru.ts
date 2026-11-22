@@ -602,6 +602,7 @@ export const ruTranslations: Record<string, string> = {
   'io.excel.no': 'Нет',
   // ─── admin: игры/редакции и заголовок сайта ───
   'common.loading': 'Загрузка…',
+  'common.skipToContent': 'К содержанию',
   'admin.gamesTitle': 'Игры и редакции',
   'admin.gamesDescription': 'Видимость редакций в мастере создания и меню.',
   'admin.gameColumn': 'Игра',

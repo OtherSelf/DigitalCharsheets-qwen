@@ -13,8 +13,7 @@ import {
   ScrollText,
 } from 'lucide-react';
 
-import { Header } from '@/components/header';
-import { SiteFooter } from '@/components/layout/site-footer';
+import { AppFrame } from '@/components/layout/app-frame';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -145,188 +144,176 @@ export default function ManualCharacterCreationPage() {
 
   if (!games) {
     return (
-      <div className="flex h-dvh flex-col">
-        <Header />
-        <main className="safe-area-bottom flex flex-1 items-center justify-center">
-          <Loader2 className="text-muted-foreground h-8 w-8 animate-spin" />
-        </main>
-      </div>
+      <AppFrame variant="centered" header={{}} footer={false}>
+        <Loader2 className="text-muted-foreground h-8 w-8 animate-spin" />
+      </AppFrame>
     );
   }
 
   return (
-    <div className="flex h-dvh flex-col">
-      <Header />
-
-      <main className="safe-area-bottom flex flex-1 flex-col overflow-y-auto p-3 sm:p-4 md:p-6 lg:p-8 [&>*]:w-full [&>*]:min-w-0">
-        <div className="mb-6 flex flex-col justify-between gap-4 sm:mb-8 sm:flex-row sm:items-center">
-          <div className="flex flex-col gap-1">
-            <h1 className="font-headline text-2xl font-bold tracking-tight sm:text-3xl">
-              {t('common.createNew')}
-            </h1>
-            <p className="text-muted-foreground text-sm sm:text-base">
-              {t('common.buildCharacterDesc')}
-            </p>
-          </div>
-
-          <div className="hidden md:block">
-            <Button variant="outline" size="sm" asChild>
-              <Link href="/">
-                <ChevronLeft className="mr-2 h-4 w-4" />
-                {t('common.backToDashboard')}
-              </Link>
-            </Button>
-          </div>
+    <AppFrame header={{}}>
+      <div className="mb-6 flex flex-col justify-between gap-4 sm:mb-8 sm:flex-row sm:items-center">
+        <div className="flex flex-col gap-1">
+          <h1 className="font-headline text-2xl font-bold tracking-tight sm:text-3xl">
+            {t('common.createNew')}
+          </h1>
+          <p className="text-muted-foreground text-sm sm:text-base">
+            {t('common.buildCharacterDesc')}
+          </p>
         </div>
 
-        <div className="mx-auto max-w-4xl">
-          {/* ─── LANDMARK: WIZARD_STEPS ─── */}
-          <ol
-            className="mb-6 flex flex-wrap items-center gap-2 text-sm"
-            data-testid="create-wizard-steps"
-          >
-            {steps.map((item) => {
-              const Icon = item.icon;
-              const isActive = item.number === step;
-              const isDone = item.number < step;
-              return (
-                <li key={item.number} className="flex items-center gap-2">
-                  <span
-                    className={
-                      isActive
-                        ? 'bg-primary text-primary-foreground flex h-7 items-center gap-1.5 rounded-full px-3 font-medium'
-                        : isDone
-                          ? 'bg-primary/15 text-primary flex h-7 items-center gap-1.5 rounded-full px-3'
-                          : 'bg-muted text-muted-foreground flex h-7 items-center gap-1.5 rounded-full px-3'
-                    }
-                  >
-                    <Icon className="h-3.5 w-3.5" />
-                    {item.label}
-                  </span>
-                </li>
-              );
-            })}
-          </ol>
+        <div className="hidden md:block">
+          <Button variant="outline" size="sm" asChild>
+            <Link href="/">
+              <ChevronLeft className="mr-2 h-4 w-4" />
+              {t('common.backToDashboard')}
+            </Link>
+          </Button>
+        </div>
+      </div>
 
-          {step === 1 && (
-            <Card data-testid="create-step-game">
-              <CardHeader>
-                <CardTitle>{t('games.chooseGame')}</CardTitle>
-                <CardDescription>{t('games.chooseGameDesc')}</CardDescription>
-              </CardHeader>
-              <CardContent className="grid gap-3 sm:grid-cols-2">
-                {games.map((catalogGame) => (
+      <div className="mx-auto max-w-4xl">
+        {/* ─── LANDMARK: WIZARD_STEPS ─── */}
+        <ol
+          className="mb-6 flex flex-wrap items-center gap-2 text-sm"
+          data-testid="create-wizard-steps"
+        >
+          {steps.map((item) => {
+            const Icon = item.icon;
+            const isActive = item.number === step;
+            const isDone = item.number < step;
+            return (
+              <li key={item.number} className="flex items-center gap-2">
+                <span
+                  className={
+                    isActive
+                      ? 'bg-primary text-primary-foreground flex h-7 items-center gap-1.5 rounded-full px-3 font-medium'
+                      : isDone
+                        ? 'bg-primary/15 text-primary flex h-7 items-center gap-1.5 rounded-full px-3'
+                        : 'bg-muted text-muted-foreground flex h-7 items-center gap-1.5 rounded-full px-3'
+                  }
+                >
+                  <Icon className="h-3.5 w-3.5" />
+                  {item.label}
+                </span>
+              </li>
+            );
+          })}
+        </ol>
+
+        {step === 1 && (
+          <Card data-testid="create-step-game">
+            <CardHeader>
+              <CardTitle>{t('games.chooseGame')}</CardTitle>
+              <CardDescription>{t('games.chooseGameDesc')}</CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-3 sm:grid-cols-2">
+              {games.map((catalogGame) => (
+                <button
+                  key={catalogGame.id}
+                  type="button"
+                  onClick={() =>
+                    go(`?game=${encodeURIComponent(catalogGame.id)}`)
+                  }
+                  className="hover:border-primary hover:bg-accent/40 focus-visible:ring-ring rounded-lg border p-4 text-left transition-colors focus-visible:ring-2 focus-visible:outline-none"
+                  data-testid={`create-game-${catalogGame.id}`}
+                >
+                  <div className="font-semibold">{t(catalogGame.nameKey)}</div>
+                  <p className="text-muted-foreground mt-1 text-sm">
+                    {t(catalogGame.descriptionKey)}
+                  </p>
+                  <p className="text-muted-foreground mt-3 text-xs">
+                    {catalogGame.editions
+                      .map((item) => t(item.nameKey))
+                      .join(' · ')}
+                  </p>
+                </button>
+              ))}
+            </CardContent>
+          </Card>
+        )}
+
+        {step === 2 && game && (
+          <Card data-testid="create-step-edition">
+            <CardHeader>
+              <CardTitle>{t('games.chooseEdition')}</CardTitle>
+              <CardDescription>{t('games.chooseEditionDesc')}</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-3 sm:grid-cols-2">
+                {game.editions.map((item) => (
                   <button
-                    key={catalogGame.id}
+                    key={item.id}
                     type="button"
                     onClick={() =>
-                      go(`?game=${encodeURIComponent(catalogGame.id)}`)
+                      go(
+                        `?game=${encodeURIComponent(game.id)}&edition=${encodeURIComponent(item.id)}`,
+                      )
                     }
                     className="hover:border-primary hover:bg-accent/40 focus-visible:ring-ring rounded-lg border p-4 text-left transition-colors focus-visible:ring-2 focus-visible:outline-none"
-                    data-testid={`create-game-${catalogGame.id}`}
+                    data-testid={`create-edition-${item.id}`}
                   >
-                    <div className="font-semibold">
-                      {t(catalogGame.nameKey)}
-                    </div>
+                    <div className="font-semibold">{t(item.nameKey)}</div>
                     <p className="text-muted-foreground mt-1 text-sm">
-                      {t(catalogGame.descriptionKey)}
-                    </p>
-                    <p className="text-muted-foreground mt-3 text-xs">
-                      {catalogGame.editions
-                        .map((item) => t(item.nameKey))
-                        .join(' · ')}
+                      {t(item.descriptionKey)}
                     </p>
                   </button>
                 ))}
-              </CardContent>
-            </Card>
-          )}
-
-          {step === 2 && game && (
-            <Card data-testid="create-step-edition">
-              <CardHeader>
-                <CardTitle>{t('games.chooseEdition')}</CardTitle>
-                <CardDescription>
-                  {t('games.chooseEditionDesc')}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid gap-3 sm:grid-cols-2">
-                  {game.editions.map((item) => (
-                    <button
-                      key={item.id}
-                      type="button"
-                      onClick={() =>
-                        go(
-                          `?game=${encodeURIComponent(game.id)}&edition=${encodeURIComponent(item.id)}`,
-                        )
-                      }
-                      className="hover:border-primary hover:bg-accent/40 focus-visible:ring-ring rounded-lg border p-4 text-left transition-colors focus-visible:ring-2 focus-visible:outline-none"
-                      data-testid={`create-edition-${item.id}`}
-                    >
-                      <div className="font-semibold">{t(item.nameKey)}</div>
-                      <p className="text-muted-foreground mt-1 text-sm">
-                        {t(item.descriptionKey)}
-                      </p>
-                    </button>
-                  ))}
-                </div>
-                <Button variant="outline" size="sm" onClick={() => go()}>
-                  <ChevronLeft className="mr-2 h-4 w-4" />
-                  {t('games.backToGames')}
-                </Button>
-              </CardContent>
-            </Card>
-          )}
-
-          {step === 3 && game && selectedModule && (
-            <div data-testid="create-step-form">
-              <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <h2 className="font-headline text-xl font-semibold">
-                    {t(game.nameKey)} · {t(selectedModule.nameKey)}
-                  </h2>
-                  <p className="text-muted-foreground text-sm">
-                    {t(selectedModule.descriptionKey)}
-                  </p>
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => go(`?game=${encodeURIComponent(game.id)}`)}
-                >
-                  <ChevronLeft className="mr-2 h-4 w-4" />
-                  {t('games.backToEditions')}
-                </Button>
               </div>
-              {!isUserLoading && !user && (
-                <div
-                  data-testid="guest-draft-banner"
-                  className="bg-muted/40 text-muted-foreground mb-4 rounded-md border border-dashed p-3 text-sm"
-                >
-                  {t('common.guestDraftBanner')}
-                </div>
-              )}
-              {Form ? (
-                <Form
-                  onCreated={(characterId, completion) =>
-                    // Плагин сам просит панель после создания (SDK:
-                    // CreateFormCompletion); ядро не знает правил игры.
-                    router.push(
-                      `${characterPath(characterId)}${
-                        completion?.openNotes ? '?panel=notes' : ''
-                      }`,
-                    )
-                  }
-                />
-              ) : (
-                <p className="text-destructive text-sm">{t('common.error')}</p>
-              )}
+              <Button variant="outline" size="sm" onClick={() => go()}>
+                <ChevronLeft className="mr-2 h-4 w-4" />
+                {t('games.backToGames')}
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {step === 3 && game && selectedModule && (
+          <div data-testid="create-step-form">
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h2 className="font-headline text-xl font-semibold">
+                  {t(game.nameKey)} · {t(selectedModule.nameKey)}
+                </h2>
+                <p className="text-muted-foreground text-sm">
+                  {t(selectedModule.descriptionKey)}
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => go(`?game=${encodeURIComponent(game.id)}`)}
+              >
+                <ChevronLeft className="mr-2 h-4 w-4" />
+                {t('games.backToEditions')}
+              </Button>
             </div>
-          )}
-        </div>
-        <SiteFooter />
-      </main>
-    </div>
+            {!isUserLoading && !user && (
+              <div
+                data-testid="guest-draft-banner"
+                className="bg-muted/40 text-muted-foreground mb-4 rounded-md border border-dashed p-3 text-sm"
+              >
+                {t('common.guestDraftBanner')}
+              </div>
+            )}
+            {Form ? (
+              <Form
+                onCreated={(characterId, completion) =>
+                  // Плагин сам просит панель после создания (SDK:
+                  // CreateFormCompletion); ядро не знает правил игры.
+                  router.push(
+                    `${characterPath(characterId)}${
+                      completion?.openNotes ? '?panel=notes' : ''
+                    }`,
+                  )
+                }
+              />
+            ) : (
+              <p className="text-destructive text-sm">{t('common.error')}</p>
+            )}
+          </div>
+        )}
+      </div>
+    </AppFrame>
   );
 }

@@ -3,9 +3,8 @@
 import { useEffect, useRef, useState } from 'react';
 
 import { DynamicFavicon } from '@/components/dynamic-favicon';
-import { Header } from '@/components/header';
 import { SharedHistoryView } from '@/components/history/shared-history-view';
-import { SiteFooter } from '@/components/layout/site-footer';
+import { AppFrame } from '@/components/layout/app-frame';
 import { CharacterSheet } from '@/components/sheets/character-sheet';
 import { SheetStateBanner } from '@/components/sheets/sheet-state-banner';
 import { UnknownSheetView } from '@/components/sheets/unknown-sheet-view';
@@ -87,79 +86,73 @@ export function SharedSheetView({
     <SharedCharacterProvider character={character}>
       <DynamicFavicon href={uiSlots?.favicon} />
 
-      <div className="flex h-dvh flex-col">
-        <Header
-          characterOverride={character}
-          readOnly
-          hideCompactToggle
-          authAction="login"
+      <AppFrame
+        header={{
+          characterOverride: character,
+          readOnly: true,
+          hideCompactToggle: true,
+          authAction: 'login',
+        }}
+      >
+        <SheetStateBanner
+          testId="shared-read-only-banner"
+          title={t('share.readOnlyTitle')}
+          hint={t('share.readOnlyHint')}
         />
 
-        <main className="safe-area-bottom flex flex-1 flex-col overflow-y-auto p-3 sm:p-4 md:p-6 lg:p-8 [&>*]:w-full [&>*]:min-w-0">
-          <SheetStateBanner
-            testId="shared-read-only-banner"
-            title={t('share.readOnlyTitle')}
-            hint={t('share.readOnlyHint')}
-          />
+        {ownerName && (
+          <p
+            className="text-muted-foreground mb-3 text-xs"
+            data-testid="shared-owner"
+          >
+            {t('share.ownerName')}: {ownerName}
+          </p>
+        )}
 
-          {ownerName && (
-            <p
-              className="text-muted-foreground mb-3 text-xs"
-              data-testid="shared-owner"
+        {history && (
+          <div
+            role="tablist"
+            aria-label={t('share.historyTab')}
+            className="mb-3 flex flex-wrap gap-2"
+          >
+            <Button
+              type="button"
+              role="tab"
+              aria-selected={tab === 'sheet'}
+              variant={tab === 'sheet' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setTab('sheet')}
+              data-testid="shared-tab-sheet"
             >
-              {t('share.ownerName')}: {ownerName}
-            </p>
-          )}
-
-          {history && (
-            <div
-              role="tablist"
-              aria-label={t('share.historyTab')}
-              className="mb-3 flex flex-wrap gap-2"
+              {t('share.sheetTab')}
+            </Button>
+            <Button
+              type="button"
+              role="tab"
+              aria-selected={tab === 'history'}
+              variant={tab === 'history' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setTab('history')}
+              data-testid="shared-tab-history"
             >
-              <Button
-                type="button"
-                role="tab"
-                aria-selected={tab === 'sheet'}
-                variant={tab === 'sheet' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setTab('sheet')}
-                data-testid="shared-tab-sheet"
-              >
-                {t('share.sheetTab')}
-              </Button>
-              <Button
-                type="button"
-                role="tab"
-                aria-selected={tab === 'history'}
-                variant={tab === 'history' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setTab('history')}
-                data-testid="shared-tab-history"
-              >
-                {t('share.historyTab')}
-              </Button>
-            </div>
-          )}
+              {t('share.historyTab')}
+            </Button>
+          </div>
+        )}
 
-          {tab === 'history' && history ? (
-            <SharedHistoryView
-              history={history}
-              historyConfig={historyConfig}
+        {tab === 'history' && history ? (
+          <SharedHistoryView history={history} historyConfig={historyConfig} />
+        ) : gameModule ? (
+          <div ref={sheetRef} data-testid="shared-sheet">
+            <CharacterSheet
+              character={character}
+              activeCompactSection="info-section"
             />
-          ) : gameModule ? (
-            <div ref={sheetRef} data-testid="shared-sheet">
-              <CharacterSheet
-                character={character}
-                activeCompactSection="info-section"
-              />
-            </div>
-          ) : (
-            <UnknownSheetView character={character} hideActions />
-          )}
-          <SiteFooter />
-        </main>
-      </div>
+          </div>
+        ) : (
+          <UnknownSheetView character={character} hideActions />
+        )}
+      </AppFrame>
     </SharedCharacterProvider>
   );
 }

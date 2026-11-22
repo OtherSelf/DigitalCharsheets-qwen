@@ -15,8 +15,7 @@ import {
   WifiOff,
 } from 'lucide-react';
 
-import { Header } from '@/components/header';
-import { SiteFooter } from '@/components/layout/site-footer';
+import { AppFrame } from '@/components/layout/app-frame';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -65,68 +64,67 @@ export function ErrorScreen({
   const hint = description ?? t(`error.${code}.description`);
 
   return (
-    <div className="flex h-dvh flex-col">
-      <Header backHref="/" authAction={code === 401 ? 'login' : 'auto'} />
-      <main className="flex flex-1 flex-col p-4 md:p-6 [&>*]:w-full [&>*]:min-w-0">
-        <div className="flex flex-1 items-center justify-center">
-          <Card
-            className="w-full max-w-lg"
-            data-testid={testId ?? `error-page-${code}`}
-            data-error-code={code}
-          >
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
-                {errorIcon(code)}
-                {heading}
-              </CardTitle>
-              <CardDescription className="space-y-2">
-                <span className="block">{hint}</span>
-                <span
-                  className="text-muted-foreground/70 block font-mono text-xs"
-                  aria-label={t('error.statusLabel')}
-                >
-                  {`HTTP ${code}`}
-                </span>
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-wrap gap-2">
-              {actions.retry && onRetry && (
-                <Button onClick={onRetry}>{t('common.retry')}</Button>
-              )}
-              {actions.reload && (
-                <Button
-                  variant={actions.retry && onRetry ? 'outline' : 'default'}
-                  onClick={() => window.location.reload()}
-                >
-                  {t('common.reloadPage')}
-                </Button>
-              )}
-              {actions.login && (
-                <Button asChild>
-                  <Link href="/login">{t('common.signIn')}</Link>
-                </Button>
-              )}
-              {actions.home && (
-                <Button variant="outline" asChild>
-                  <Link href="/">{t('common.backToDashboard')}</Link>
-                </Button>
-              )}
-              {actions.back && (
-                <Button variant="ghost" onClick={() => router.back()}>
-                  {t('common.back')}
-                </Button>
-              )}
-            </CardContent>
-            {digest && (
-              <p className="text-muted-foreground/70 px-6 pb-4 font-mono text-xs">
-                <span data-testid="error-digest">{`digest: ${digest}`}</span>
-              </p>
+    <AppFrame
+      variant="plain"
+      header={{ backHref: '/', authAction: code === 401 ? 'login' : 'auto' }}
+    >
+      <div className="flex flex-1 items-center justify-center">
+        <Card
+          className="w-full max-w-lg"
+          data-testid={testId ?? `error-page-${code}`}
+          data-error-code={code}
+        >
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              {errorIcon(code)}
+              {heading}
+            </CardTitle>
+            <CardDescription className="space-y-2">
+              <span className="block">{hint}</span>
+              <span
+                className="text-muted-foreground/70 block font-mono text-xs"
+                aria-label={t('error.statusLabel')}
+              >
+                {`HTTP ${code}`}
+              </span>
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-wrap gap-2">
+            {actions.retry && onRetry && (
+              <Button onClick={onRetry}>{t('common.retry')}</Button>
             )}
-          </Card>
-        </div>
-        <SiteFooter />
-      </main>
-    </div>
+            {actions.reload && (
+              <Button
+                variant={actions.retry && onRetry ? 'outline' : 'default'}
+                onClick={() => window.location.reload()}
+              >
+                {t('common.reloadPage')}
+              </Button>
+            )}
+            {actions.login && (
+              <Button asChild>
+                <Link href="/login">{t('common.signIn')}</Link>
+              </Button>
+            )}
+            {actions.home && (
+              <Button variant="outline" asChild>
+                <Link href="/">{t('common.backToDashboard')}</Link>
+              </Button>
+            )}
+            {actions.back && (
+              <Button variant="ghost" onClick={() => router.back()}>
+                {t('common.back')}
+              </Button>
+            )}
+          </CardContent>
+          {digest && (
+            <p className="text-muted-foreground/70 px-6 pb-4 font-mono text-xs">
+              <span data-testid="error-digest">{`digest: ${digest}`}</span>
+            </p>
+          )}
+        </Card>
+      </div>
+    </AppFrame>
   );
 }
 

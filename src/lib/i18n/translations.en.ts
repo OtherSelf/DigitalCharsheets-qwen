@@ -601,6 +601,7 @@ export const enTranslations: Record<string, string> = {
   'io.excel.no': 'No',
   // ─── admin: games/editions and the site title ───
   'common.loading': 'Loading…',
+  'common.skipToContent': 'Skip to content',
   'admin.gamesTitle': 'Games & editions',
   'admin.gamesDescription':
     'Visibility of editions in the creation wizard and menus.',

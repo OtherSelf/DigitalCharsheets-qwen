@@ -1,8 +1,7 @@
 'use client';
 
 import { DemoLanding } from '@/components/demo-landing';
-import { Header } from '@/components/header';
-import { SiteFooter } from '@/components/layout/site-footer';
+import { AppFrame } from '@/components/layout/app-frame';
 
 /**
  * ─── LANDMARK: SHARED_DEMO_LANDING_VIEW ────────────────────────────────────
@@ -17,15 +16,14 @@ import { SiteFooter } from '@/components/layout/site-footer';
  */
 export function DemoLandingView() {
   return (
-    <div className="bg-background flex h-dvh flex-col">
-      <Header authAction="login" />
-
-      <main className="safe-area-bottom flex flex-1 flex-col overflow-y-auto px-4 py-8 pb-20 [&>*]:w-full [&>*]:min-w-0">
-        <div className="container mx-auto max-w-6xl">
-          <DemoLanding createHref="/new" />
-        </div>
-        <SiteFooter />
-      </main>
-    </div>
+    <AppFrame
+      variant="demo"
+      className="bg-background"
+      header={{ authAction: 'login' }}
+    >
+      <div className="container mx-auto max-w-6xl">
+        <DemoLanding createHref="/new" />
+      </div>
+    </AppFrame>
   );
 }

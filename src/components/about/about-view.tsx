@@ -3,8 +3,7 @@
 
 import Link from 'next/link';
 
-import { Header } from '@/components/header';
-import { SiteFooter } from '@/components/layout/site-footer';
+import { AppFrame } from '@/components/layout/app-frame';
 import { Badge } from '@/components/ui/badge';
 import {
   Card,
@@ -44,100 +43,93 @@ export function AboutView() {
   ];
 
   return (
-    <div className="flex h-dvh flex-col">
-      <Header authAction="login" />
-
-      <main className="safe-area-bottom flex-1 overflow-y-auto p-4 md:p-8">
-        <div className="mx-auto max-w-3xl space-y-6">
-          <div className="space-y-2">
-            <h1 className="font-headline text-2xl font-bold tracking-tight md:text-3xl">
-              {t('about.title')}
-            </h1>
-            <p className="text-muted-foreground">{t('about.subtitle')}</p>
-            <div className="flex flex-wrap items-center gap-2 pt-1">
-              <Badge variant="outline">MIT</Badge>
-              {info && (
-                <Badge variant="secondary" data-testid="about-version">
-                  {formatVersionLabel(info)}
-                </Badge>
-              )}
-            </div>
-          </div>
-
-          {blocks.map((block) => (
-            <Card key={block.title}>
-              <CardHeader>
-                <CardTitle className="text-base">{block.title}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground text-sm leading-relaxed">
-                  {block.body}
-                </p>
-              </CardContent>
-            </Card>
-          ))}
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">
-                {t('about.linksTitle')}
-              </CardTitle>
-              <CardDescription>{t('about.linksBody')}</CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-wrap gap-2 text-sm">
-              <Link className="underline underline-offset-2" href="/docs">
-                {t('about.docs')}
-              </Link>
-              <span aria-hidden>·</span>
-              <a className="underline underline-offset-2" href="/api/docs">
-                {t('about.api')}
-              </a>
-              <span aria-hidden>·</span>
-              <a
-                className="underline underline-offset-2"
-                href={REPOSITORY_URL}
-                {...external}
-              >
-                {t('footer.repository')}
-              </a>
-              <span aria-hidden>·</span>
-              <a
-                className="underline underline-offset-2"
-                href={CHANGELOG_URL}
-                {...external}
-              >
-                CHANGELOG
-              </a>
-              <span aria-hidden>·</span>
-              <a
-                className="underline underline-offset-2"
-                href={LICENSE_URL}
-                {...external}
-              >
-                {t('footer.license')}
-              </a>
-              <span aria-hidden>·</span>
-              <a
-                className="underline underline-offset-2"
-                href={ISSUES_URL}
-                {...external}
-              >
-                {t('about.contacts')}
-              </a>
-            </CardContent>
-          </Card>
-
-          <div className="flex justify-center pt-2">
-            <Link
-              href="/"
-              className="text-muted-foreground text-sm underline underline-offset-2"
-            >
-              {t('common.backToDashboard')}
-            </Link>
+    <AppFrame variant="document" header={{ authAction: 'login' }}>
+      <div className="mx-auto max-w-3xl space-y-6">
+        <div className="space-y-2">
+          <h1 className="font-headline text-2xl font-bold tracking-tight md:text-3xl">
+            {t('about.title')}
+          </h1>
+          <p className="text-muted-foreground">{t('about.subtitle')}</p>
+          <div className="flex flex-wrap items-center gap-2 pt-1">
+            <Badge variant="outline">MIT</Badge>
+            {info && (
+              <Badge variant="secondary" data-testid="about-version">
+                {formatVersionLabel(info)}
+              </Badge>
+            )}
           </div>
         </div>
-        <SiteFooter />
-      </main>
-    </div>
+
+        {blocks.map((block) => (
+          <Card key={block.title}>
+            <CardHeader>
+              <CardTitle className="text-base">{block.title}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground text-sm leading-relaxed">
+                {block.body}
+              </p>
+            </CardContent>
+          </Card>
+        ))}
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">{t('about.linksTitle')}</CardTitle>
+            <CardDescription>{t('about.linksBody')}</CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-wrap gap-2 text-sm">
+            <Link className="underline underline-offset-2" href="/docs">
+              {t('about.docs')}
+            </Link>
+            <span aria-hidden>·</span>
+            <a className="underline underline-offset-2" href="/api/docs">
+              {t('about.api')}
+            </a>
+            <span aria-hidden>·</span>
+            <a
+              className="underline underline-offset-2"
+              href={REPOSITORY_URL}
+              {...external}
+            >
+              {t('footer.repository')}
+            </a>
+            <span aria-hidden>·</span>
+            <a
+              className="underline underline-offset-2"
+              href={CHANGELOG_URL}
+              {...external}
+            >
+              CHANGELOG
+            </a>
+            <span aria-hidden>·</span>
+            <a
+              className="underline underline-offset-2"
+              href={LICENSE_URL}
+              {...external}
+            >
+              {t('footer.license')}
+            </a>
+            <span aria-hidden>·</span>
+            <a
+              className="underline underline-offset-2"
+              href={ISSUES_URL}
+              {...external}
+            >
+              {t('about.contacts')}
+            </a>
+          </CardContent>
+        </Card>
+
+        <div className="flex justify-center pt-2">
+          <Link
+            href="/"
+            className="text-muted-foreground text-sm underline underline-offset-2"
+          >
+            {t('common.backToDashboard')}
+          </Link>
+        </div>
+      </div>
+    </AppFrame>
   );
 }

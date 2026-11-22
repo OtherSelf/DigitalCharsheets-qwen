@@ -22,8 +22,7 @@ import { UserBlockDialog } from '@/components/admin/user-block-dialog';
 import { UserCharactersDialog } from '@/components/admin/user-characters-dialog';
 import { UserDeleteDialog } from '@/components/admin/user-delete-dialog';
 import { UserEditDialog } from '@/components/admin/user-edit-dialog';
-import { Header } from '@/components/header';
-import { SiteFooter } from '@/components/layout/site-footer';
+import { AppFrame } from '@/components/layout/app-frame';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -248,204 +247,205 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="flex h-dvh flex-col">
-      <Header title={t('admin.panel')} subtitle={t('admin.panelSubtitle')} />
+    <AppFrame
+      variant="wide"
+      header={{
+        title: t('admin.panel'),
+        subtitle: t('admin.panelSubtitle'),
+      }}
+    >
+      <div className="mx-auto max-w-6xl space-y-6">
+        {error && (
+          <div className="bg-destructive/15 text-destructive rounded-md p-3 text-sm">
+            {error}
+          </div>
+        )}
 
-      <main className="safe-area-bottom flex flex-1 flex-col overflow-y-auto p-4 md:p-8 [&>*]:w-full [&>*]:min-w-0">
-        <div className="mx-auto max-w-6xl space-y-6">
-          {error && (
-            <div className="bg-destructive/15 text-destructive rounded-md p-3 text-sm">
-              {error}
-            </div>
-          )}
-
-          {/*
+        {/*
             ─── LANDMARK: ADMIN_STATS_GRID ───
             Две колонки уже на телефоне: четыре карточки в столбик отжимали
             таблицу ниже первого экрана, а подписи и так обрезаются
             (`truncate`).
           */}
-          <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
-            {statCards.map((card) => {
-              const Icon = card.icon;
-              return (
-                <Card key={card.key}>
-                  <CardContent className="flex items-center justify-between p-4">
-                    <div className="min-w-0">
-                      <p className="text-muted-foreground truncate text-xs font-medium tracking-wide uppercase">
-                        {card.label}
-                      </p>
-                      <p
-                        className="mt-1 text-2xl font-bold tabular-nums"
-                        data-testid="admin-stat-value"
-                      >
-                        {card.value}
-                      </p>
-                    </div>
-                    <Icon
-                      className="text-muted-foreground h-5 w-5 shrink-0"
-                      aria-hidden="true"
-                    />
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-
-          <AdminGamesSection />
-
-          <Card>
-            <CardHeader className="flex flex-col gap-3 space-y-0 sm:flex-row sm:items-center sm:justify-between">
-              <div className="min-w-0">
-                <CardTitle>{t('admin.usersTitle')}</CardTitle>
-                <CardDescription>
-                  {isFiltered
-                    ? t('admin.filteredDescription')
-                    : t('admin.usersDescription')}
-                </CardDescription>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="relative w-full sm:w-72">
-                  <Search
-                    className="text-muted-foreground pointer-events-none absolute top-1/2 left-2 h-4 w-4 -translate-y-1/2"
+        <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+          {statCards.map((card) => {
+            const Icon = card.icon;
+            return (
+              <Card key={card.key}>
+                <CardContent className="flex items-center justify-between p-4">
+                  <div className="min-w-0">
+                    <p className="text-muted-foreground truncate text-xs font-medium tracking-wide uppercase">
+                      {card.label}
+                    </p>
+                    <p
+                      className="mt-1 text-2xl font-bold tabular-nums"
+                      data-testid="admin-stat-value"
+                    >
+                      {card.value}
+                    </p>
+                  </div>
+                  <Icon
+                    className="text-muted-foreground h-5 w-5 shrink-0"
                     aria-hidden="true"
                   />
-                  <Input
-                    value={query}
-                    onChange={(event) => setQuery(event.target.value)}
-                    placeholder={t('admin.searchPlaceholder')}
-                    aria-label={t('admin.searchPlaceholder')}
-                    className="pl-8"
-                    data-testid="admin-search"
-                  />
-                </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  onClick={() => void load(true)}
-                  disabled={isRefreshing}
-                  aria-label={t('admin.refresh')}
-                  title={t('admin.refresh')}
-                >
-                  <RefreshCw
-                    className={
-                      isRefreshing ? 'h-4 w-4 animate-spin' : 'h-4 w-4'
-                    }
-                  />
-                </Button>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+
+        <AdminGamesSection />
+
+        <Card>
+          <CardHeader className="flex flex-col gap-3 space-y-0 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-w-0">
+              <CardTitle>{t('admin.usersTitle')}</CardTitle>
+              <CardDescription>
+                {isFiltered
+                  ? t('admin.filteredDescription')
+                  : t('admin.usersDescription')}
+              </CardDescription>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="relative w-full sm:w-72">
+                <Search
+                  className="text-muted-foreground pointer-events-none absolute top-1/2 left-2 h-4 w-4 -translate-y-1/2"
+                  aria-hidden="true"
+                />
+                <Input
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                  placeholder={t('admin.searchPlaceholder')}
+                  aria-label={t('admin.searchPlaceholder')}
+                  className="pl-8"
+                  data-testid="admin-search"
+                />
               </div>
-            </CardHeader>
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={() => void load(true)}
+                disabled={isRefreshing}
+                aria-label={t('admin.refresh')}
+                title={t('admin.refresh')}
+              >
+                <RefreshCw
+                  className={isRefreshing ? 'h-4 w-4 animate-spin' : 'h-4 w-4'}
+                />
+              </Button>
+            </div>
+          </CardHeader>
 
-            <CardContent>
-              {filteredUsers.length === 0 ? (
-                <div className="text-muted-foreground flex flex-col items-center gap-2 py-10 text-sm">
-                  <Users className="h-8 w-8" aria-hidden="true" />
-                  <p>
-                    {users.length === 0
-                      ? t('admin.noUsers')
-                      : t('admin.noSearchResults')}
-                  </p>
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>{t('admin.columnUser')}</TableHead>
-                        <TableHead className="hidden md:table-cell">
-                          {t('admin.columnRole')}
-                        </TableHead>
-                        <TableHead className="hidden md:table-cell">
-                          {t('admin.columnStatus')}
-                        </TableHead>
-                        <TableHead className="hidden md:table-cell">
-                          {t('admin.columnSheets')}
-                        </TableHead>
-                        <TableHead className="hidden md:table-cell">
-                          {t('admin.columnCreated')}
-                        </TableHead>
-                        <TableHead className="hidden md:table-cell">
-                          {t('admin.columnLastLogin')}
-                        </TableHead>
-                        <TableHead className="text-right">
-                          {t('admin.columnActions')}
-                        </TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredUsers.map((item) => {
-                        const isSelf = user?.uid === item.uid;
+          <CardContent>
+            {filteredUsers.length === 0 ? (
+              <div className="text-muted-foreground flex flex-col items-center gap-2 py-10 text-sm">
+                <Users className="h-8 w-8" aria-hidden="true" />
+                <p>
+                  {users.length === 0
+                    ? t('admin.noUsers')
+                    : t('admin.noSearchResults')}
+                </p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>{t('admin.columnUser')}</TableHead>
+                      <TableHead className="hidden md:table-cell">
+                        {t('admin.columnRole')}
+                      </TableHead>
+                      <TableHead className="hidden md:table-cell">
+                        {t('admin.columnStatus')}
+                      </TableHead>
+                      <TableHead className="hidden md:table-cell">
+                        {t('admin.columnSheets')}
+                      </TableHead>
+                      <TableHead className="hidden md:table-cell">
+                        {t('admin.columnCreated')}
+                      </TableHead>
+                      <TableHead className="hidden md:table-cell">
+                        {t('admin.columnLastLogin')}
+                      </TableHead>
+                      <TableHead className="text-right">
+                        {t('admin.columnActions')}
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredUsers.map((item) => {
+                      const isSelf = user?.uid === item.uid;
 
-                        const roleBadge = (
-                          <Badge
-                            variant={
-                              item.role === 'admin'
-                                ? 'default'
-                                : item.role === 'tester'
-                                  ? 'outline'
-                                  : 'secondary'
-                            }
-                          >
-                            {item.role === 'admin'
-                              ? t('admin.roleAdmin')
+                      const roleBadge = (
+                        <Badge
+                          variant={
+                            item.role === 'admin'
+                              ? 'default'
                               : item.role === 'tester'
-                                ? t('admin.roleTester')
-                                : t('admin.roleUser')}
-                          </Badge>
-                        );
-                        const statusBadge = (
-                          <Badge
-                            variant={item.isBlocked ? 'destructive' : 'outline'}
-                          >
-                            {item.isBlocked
-                              ? t('admin.statusBlocked')
-                              : t('admin.statusActive')}
-                          </Badge>
-                        );
-                        const sheetsButton = (
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 gap-1 px-2"
-                            onClick={() => setSheetsTarget(item)}
-                            aria-label={`${t('admin.viewSheets')}: ${item.displayName}`}
-                            title={t('admin.viewSheets')}
-                          >
-                            <ScrollText
-                              className="h-3.5 w-3.5"
-                              aria-hidden="true"
-                            />
-                            <span className="tabular-nums">
-                              {item.characterCount}
-                            </span>
-                          </Button>
-                        );
+                                ? 'outline'
+                                : 'secondary'
+                          }
+                        >
+                          {item.role === 'admin'
+                            ? t('admin.roleAdmin')
+                            : item.role === 'tester'
+                              ? t('admin.roleTester')
+                              : t('admin.roleUser')}
+                        </Badge>
+                      );
+                      const statusBadge = (
+                        <Badge
+                          variant={item.isBlocked ? 'destructive' : 'outline'}
+                        >
+                          {item.isBlocked
+                            ? t('admin.statusBlocked')
+                            : t('admin.statusActive')}
+                        </Badge>
+                      );
+                      const sheetsButton = (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 gap-1 px-2"
+                          onClick={() => setSheetsTarget(item)}
+                          aria-label={`${t('admin.viewSheets')}: ${item.displayName}`}
+                          title={t('admin.viewSheets')}
+                        >
+                          <ScrollText
+                            className="h-3.5 w-3.5"
+                            aria-hidden="true"
+                          />
+                          <span className="tabular-nums">
+                            {item.characterCount}
+                          </span>
+                        </Button>
+                      );
 
-                        return (
-                          <TableRow
-                            key={item.uid}
-                            data-uid={item.uid}
-                            data-username={item.username}
-                            data-testid="admin-user-row"
-                          >
-                            <TableCell>
-                              <div className="min-w-0">
-                                <div className="flex items-center gap-2">
-                                  <span className="truncate font-medium">
-                                    {item.displayName}
-                                  </span>
-                                  {isSelf && (
-                                    <Badge variant="outline">
-                                      {t('admin.you')}
-                                    </Badge>
-                                  )}
-                                </div>
-                                <p className="text-muted-foreground truncate text-xs">
-                                  @{item.username}
-                                </p>
-                                {/*
+                      return (
+                        <TableRow
+                          key={item.uid}
+                          data-uid={item.uid}
+                          data-username={item.username}
+                          data-testid="admin-user-row"
+                        >
+                          <TableCell>
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2">
+                                <span className="truncate font-medium">
+                                  {item.displayName}
+                                </span>
+                                {isSelf && (
+                                  <Badge variant="outline">
+                                    {t('admin.you')}
+                                  </Badge>
+                                )}
+                              </div>
+                              <p className="text-muted-foreground truncate text-xs">
+                                @{item.username}
+                              </p>
+                              {/*
                                   ─── LANDMARK: ADMIN_MOBILE_ROW_SUMMARY ───
                                   На телефоне таблица не помещается целиком.
                                   Вместо горизонтальной прокрутки прячем
@@ -454,101 +454,99 @@ export default function AdminPage() {
                                   Кнопки продублированы в DOM, но скрытая
                                   копия не попадает в accessibility tree.
                                 */}
-                                <div className="mt-1.5 flex flex-wrap items-center gap-1.5 md:hidden">
-                                  {roleBadge}
-                                  {statusBadge}
-                                  {sheetsButton}
-                                </div>
+                              <div className="mt-1.5 flex flex-wrap items-center gap-1.5 md:hidden">
+                                {roleBadge}
+                                {statusBadge}
+                                {sheetsButton}
                               </div>
-                            </TableCell>
-                            <TableCell className="hidden md:table-cell">
-                              {roleBadge}
-                            </TableCell>
-                            <TableCell className="hidden md:table-cell">
-                              {statusBadge}
-                            </TableCell>
-                            <TableCell className="hidden md:table-cell">
-                              {sheetsButton}
-                            </TableCell>
-                            <TableCell className="text-muted-foreground hidden text-xs whitespace-nowrap md:table-cell">
-                              {formatAdminDate(item.createdAt, language)}
-                            </TableCell>
-                            <TableCell className="text-muted-foreground hidden text-xs whitespace-nowrap md:table-cell">
-                              {formatAdminDate(item.lastLoginAt, language)}
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center justify-end gap-1">
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8"
-                                  onClick={() => setEditTarget(item)}
-                                  aria-label={`${t('admin.editUser')}: ${item.displayName}`}
-                                  title={t('admin.editUser')}
-                                >
-                                  <Pencil
-                                    className="h-4 w-4"
-                                    aria-hidden="true"
-                                  />
-                                </Button>
-                                {!isSelf && (
-                                  <>
-                                    <Button
-                                      type="button"
-                                      variant="ghost"
-                                      size="icon"
-                                      className="h-8 w-8"
-                                      onClick={() => setBlockTarget(item)}
-                                      aria-label={`${item.isBlocked ? t('admin.unblock') : t('admin.block')}: ${item.displayName}`}
-                                      title={
-                                        item.isBlocked
-                                          ? t('admin.unblock')
-                                          : t('admin.block')
-                                      }
-                                    >
-                                      {item.isBlocked ? (
-                                        <ShieldCheck
-                                          className="h-4 w-4"
-                                          aria-hidden="true"
-                                        />
-                                      ) : (
-                                        <Ban
-                                          className="h-4 w-4"
-                                          aria-hidden="true"
-                                        />
-                                      )}
-                                    </Button>
-                                    <Button
-                                      type="button"
-                                      variant="ghost"
-                                      size="icon"
-                                      className="text-destructive h-8 w-8"
-                                      onClick={() => setDeleteTarget(item)}
-                                      aria-label={`${t('common.delete')}: ${item.displayName}`}
-                                      title={t('common.delete')}
-                                    >
-                                      <Trash2
+                            </div>
+                          </TableCell>
+                          <TableCell className="hidden md:table-cell">
+                            {roleBadge}
+                          </TableCell>
+                          <TableCell className="hidden md:table-cell">
+                            {statusBadge}
+                          </TableCell>
+                          <TableCell className="hidden md:table-cell">
+                            {sheetsButton}
+                          </TableCell>
+                          <TableCell className="text-muted-foreground hidden text-xs whitespace-nowrap md:table-cell">
+                            {formatAdminDate(item.createdAt, language)}
+                          </TableCell>
+                          <TableCell className="text-muted-foreground hidden text-xs whitespace-nowrap md:table-cell">
+                            {formatAdminDate(item.lastLoginAt, language)}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center justify-end gap-1">
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={() => setEditTarget(item)}
+                                aria-label={`${t('admin.editUser')}: ${item.displayName}`}
+                                title={t('admin.editUser')}
+                              >
+                                <Pencil
+                                  className="h-4 w-4"
+                                  aria-hidden="true"
+                                />
+                              </Button>
+                              {!isSelf && (
+                                <>
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8"
+                                    onClick={() => setBlockTarget(item)}
+                                    aria-label={`${item.isBlocked ? t('admin.unblock') : t('admin.block')}: ${item.displayName}`}
+                                    title={
+                                      item.isBlocked
+                                        ? t('admin.unblock')
+                                        : t('admin.block')
+                                    }
+                                  >
+                                    {item.isBlocked ? (
+                                      <ShieldCheck
                                         className="h-4 w-4"
                                         aria-hidden="true"
                                       />
-                                    </Button>
-                                  </>
-                                )}
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-        <SiteFooter />
-      </main>
+                                    ) : (
+                                      <Ban
+                                        className="h-4 w-4"
+                                        aria-hidden="true"
+                                      />
+                                    )}
+                                  </Button>
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    className="text-destructive h-8 w-8"
+                                    onClick={() => setDeleteTarget(item)}
+                                    aria-label={`${t('common.delete')}: ${item.displayName}`}
+                                    title={t('common.delete')}
+                                  >
+                                    <Trash2
+                                      className="h-4 w-4"
+                                      aria-hidden="true"
+                                    />
+                                  </Button>
+                                </>
+                              )}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
 
       <UserEditDialog
         user={editTarget}
@@ -577,6 +575,6 @@ export default function AdminPage() {
           if (!open) setSheetsTarget(null);
         }}
       />
-    </div>
+    </AppFrame>
   );
 }

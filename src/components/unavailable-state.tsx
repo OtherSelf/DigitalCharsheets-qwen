@@ -4,8 +4,7 @@ import Link from 'next/link';
 
 import { AlertTriangle } from 'lucide-react';
 
-import { Header } from '@/components/header';
-import { SiteFooter } from '@/components/layout/site-footer';
+import { AppFrame } from '@/components/layout/app-frame';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -39,30 +38,26 @@ export function UnavailableState({
   const { t } = useTranslation();
 
   return (
-    <div className="flex h-dvh flex-col">
-      <Header backHref="/" />
-      <main className="flex flex-1 flex-col p-4 md:p-6 [&>*]:w-full [&>*]:min-w-0">
-        <div className="flex flex-1 items-center justify-center">
-          <Card className="w-full max-w-md" data-testid={testId}>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <AlertTriangle className="text-destructive h-5 w-5" />
-                {title}
-              </CardTitle>
-              <CardDescription>{description}</CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-wrap gap-2">
-              {actionLabel && onAction && (
-                <Button onClick={onAction}>{actionLabel}</Button>
-              )}
-              <Button variant="outline" asChild>
-                <Link href="/">{t('common.backToDashboard')}</Link>
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-        <SiteFooter />
-      </main>
-    </div>
+    <AppFrame variant="plain" header={{ backHref: '/' }}>
+      <div className="flex flex-1 items-center justify-center">
+        <Card className="w-full max-w-md" data-testid={testId}>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <AlertTriangle className="text-destructive h-5 w-5" />
+              {title}
+            </CardTitle>
+            <CardDescription>{description}</CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-wrap gap-2">
+            {actionLabel && onAction && (
+              <Button onClick={onAction}>{actionLabel}</Button>
+            )}
+            <Button variant="outline" asChild>
+              <Link href="/">{t('common.backToDashboard')}</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    </AppFrame>
   );
 }

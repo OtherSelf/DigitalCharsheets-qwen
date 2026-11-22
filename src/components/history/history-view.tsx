@@ -5,9 +5,8 @@ import Link from 'next/link';
 
 import { Loader2, Trash2 } from 'lucide-react';
 
-import { Header } from '@/components/header';
 import { HistorySummaryCard } from '@/components/history/history-summary-card';
-import { SiteFooter } from '@/components/layout/site-footer';
+import { AppFrame } from '@/components/layout/app-frame';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -337,99 +336,95 @@ export function HistoryView({ character }: { character: Character }) {
   };
 
   return (
-    <div className="flex h-dvh flex-col">
-      <Header backHref={characterPath(character.id)} readOnly />
-      <main className="safe-area-bottom flex flex-1 flex-col overflow-y-auto p-3 sm:p-4 md:p-6 lg:p-8 [&>*]:w-full [&>*]:min-w-0">
-        <div className="mx-auto max-w-4xl space-y-4" data-testid="history-page">
-          <HistorySummaryCard
-            totalRevisions={totalRevisions}
-            totalSessions={totalSessions}
-            storage={storage ?? undefined}
-            note={t('history.notBackup')}
-          >
-            <div className="flex flex-wrap gap-2">
-              <Button asChild variant="outline" size="sm">
-                <Link href={characterPath(character.id)}>
-                  {t('history.backToSheet')}
-                </Link>
+    <AppFrame
+      header={{ backHref: characterPath(character.id), readOnly: true }}
+    >
+      <div className="mx-auto max-w-4xl space-y-4" data-testid="history-page">
+        <HistorySummaryCard
+          totalRevisions={totalRevisions}
+          totalSessions={totalSessions}
+          storage={storage ?? undefined}
+          note={t('history.notBackup')}
+        >
+          <div className="flex flex-wrap gap-2">
+            <Button asChild variant="outline" size="sm">
+              <Link href={characterPath(character.id)}>
+                {t('history.backToSheet')}
+              </Link>
+            </Button>
+            {sessions.length > 0 && (
+              <Button
+                type="button"
+                variant="destructive"
+                size="sm"
+                onClick={() => setClearOpen(true)}
+                data-testid="history-clear"
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                {t('history.clear')}
               </Button>
-              {sessions.length > 0 && (
-                <Button
-                  type="button"
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => setClearOpen(true)}
-                  data-testid="history-clear"
-                >
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  {t('history.clear')}
-                </Button>
-              )}
-            </div>
-          </HistorySummaryCard>
+            )}
+          </div>
+        </HistorySummaryCard>
 
-          {error && (
-            <Card>
-              <CardContent className="flex flex-wrap items-center gap-3 pt-6">
-                <p className="text-destructive text-sm" role="alert">
-                  {error}
-                </p>
+        {error && (
+          <Card>
+            <CardContent className="flex flex-wrap items-center gap-3 pt-6">
+              <p className="text-destructive text-sm" role="alert">
+                {error}
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => window.location.reload()}
+              >
+                {t('common.retry')}
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {loading ? (
+          <div className="flex justify-center p-8">
+            <Loader2 className="text-muted-foreground h-6 w-6 animate-spin" />
+            <span className="sr-only">{t('common.loading')}</span>
+          </div>
+        ) : sessions.length === 0 ? (
+          <Card data-testid="history-empty">
+            <CardHeader>
+              <CardTitle className="text-base">{t('history.empty')}</CardTitle>
+              <CardDescription>{t('history.emptyHint')}</CardDescription>
+            </CardHeader>
+          </Card>
+        ) : (
+          <div className="space-y-4">
+            {sessions.map((session) => (
+              <SessionCard
+                key={session.id}
+                session={session}
+                historyConfig={historyConfig}
+              />
+            ))}
+            {cursor && (
+              <div className="flex justify-center">
                 <Button
                   type="button"
                   variant="outline"
-                  size="sm"
-                  onClick={() => window.location.reload()}
+                  onClick={() => void loadMore()}
+                  disabled={loadingMore}
+                  data-testid="history-load-more"
                 >
-                  {t('common.retry')}
+                  {loadingMore && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
+                  {t('history.showMore')}
                 </Button>
-              </CardContent>
-            </Card>
-          )}
-
-          {loading ? (
-            <div className="flex justify-center p-8">
-              <Loader2 className="text-muted-foreground h-6 w-6 animate-spin" />
-              <span className="sr-only">{t('common.loading')}</span>
-            </div>
-          ) : sessions.length === 0 ? (
-            <Card data-testid="history-empty">
-              <CardHeader>
-                <CardTitle className="text-base">
-                  {t('history.empty')}
-                </CardTitle>
-                <CardDescription>{t('history.emptyHint')}</CardDescription>
-              </CardHeader>
-            </Card>
-          ) : (
-            <div className="space-y-4">
-              {sessions.map((session) => (
-                <SessionCard
-                  key={session.id}
-                  session={session}
-                  historyConfig={historyConfig}
-                />
-              ))}
-              {cursor && (
-                <div className="flex justify-center">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => void loadMore()}
-                    disabled={loadingMore}
-                    data-testid="history-load-more"
-                  >
-                    {loadingMore && (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    )}
-                    {t('history.showMore')}
-                  </Button>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-        <SiteFooter />
-      </main>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
 
       <AlertDialog open={clearOpen} onOpenChange={setClearOpen}>
         <AlertDialogContent>
@@ -452,6 +447,6 @@ export function HistoryView({ character }: { character: Character }) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </AppFrame>
   );
 }

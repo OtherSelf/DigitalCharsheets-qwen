@@ -6,9 +6,8 @@ import { useParams, useRouter } from 'next/navigation';
 
 import Loading from '@/app/loading';
 import { DynamicFavicon } from '@/components/dynamic-favicon';
-import { Header } from '@/components/header';
+import { AppFrame } from '@/components/layout/app-frame';
 import { GameThemeScope } from '@/components/layout/game-theme-scope';
-import { SiteFooter } from '@/components/layout/site-footer';
 import { ShareDialog } from '@/components/share/share-dialog';
 import { CharacterSheet } from '@/components/sheets/character-sheet';
 import { CompactSidebar } from '@/components/sheets/compact-sidebar';
@@ -256,106 +255,110 @@ export default function CharacterPage() {
         systemId={systemId}
         hostTheme={systemId ? Boolean(hostThemeById[systemId]) : false}
       >
-        <div className="flex h-full flex-col">
-          <Header
-            readOnly={isReadOnly}
-            onNotesClick={isReadOnly ? undefined : () => setNotesOpen(true)}
-            onJournalClick={isReadOnly ? undefined : () => setJournalOpen(true)}
-            onShareClick={isReadOnly ? undefined : () => setShareOpen(true)}
-            onHistoryClick={
-              isReadOnly
-                ? undefined
-                : () => {
-                    sheetRef.current?.saveAll();
-                    void flushSaves().then(() =>
-                      router.push(historyPath(character.id)),
-                    );
-                  }
-            }
-          />
-          <div className="flex flex-1 overflow-hidden">
-            {isCompactView && !isReadOnly && (
+        <AppFrame
+          className="h-full"
+          variant="sheet"
+          header={{
+            readOnly: isReadOnly,
+            onNotesClick: isReadOnly ? undefined : () => setNotesOpen(true),
+            onJournalClick: isReadOnly ? undefined : () => setJournalOpen(true),
+            onShareClick: isReadOnly ? undefined : () => setShareOpen(true),
+            onHistoryClick: isReadOnly
+              ? undefined
+              : () => {
+                  sheetRef.current?.saveAll();
+                  void flushSaves().then(() =>
+                    router.push(historyPath(character.id)),
+                  );
+                },
+          }}
+          sidebar={
+            isCompactView && !isReadOnly ? (
               <CompactSidebar
                 character={character}
                 activeSection={activeCompactSection}
                 onSectionChange={handleSectionChange}
               />
-            )}
-            <main className="flex flex-1 flex-col overflow-y-auto p-4 md:p-6 lg:p-8 [&>*]:w-full [&>*]:min-w-0">
-              {isDisabled && (
-                <SheetStateBanner
-                  testId="game-disabled-banner"
-                  title={t('common.gameDisabled')}
-                  hint={t('common.gameDisabledHint')}
-                />
-              )}
-              {!gameModule ? (
-                <UnknownSheetView character={character} />
-              ) : (
-                <div inert={isDisabled}>
-                  <CharacterSheet
-                    ref={sheetRef}
-                    character={character}
-                    activeCompactSection={activeCompactSection}
-                  />
-                </div>
-              )}
-              <SiteFooter />
-            </main>
-          </div>
-          {character && !isReadOnly && (
+            ) : undefined
+          }
+          after={
             <>
-              <NotesSheet
-                character={character}
-                open={notesOpen}
-                onOpenChange={setNotesOpen}
-              />
-              <QuestJournalSheet
-                character={character}
-                open={journalOpen}
-                onOpenChange={setJournalOpen}
-              />
-              <ShareDialog
-                characterId={character.id}
-                open={shareOpen}
-                onOpenChange={setShareOpen}
-                onBeforeCreate={async () => {
-                  sheetRef.current?.saveAll();
-                  await flushSaves();
-                }}
-              />
+              {character && !isReadOnly && (
+                <>
+                  <NotesSheet
+                    character={character}
+                    open={notesOpen}
+                    onOpenChange={setNotesOpen}
+                  />
+                  <QuestJournalSheet
+                    character={character}
+                    open={journalOpen}
+                    onOpenChange={setJournalOpen}
+                  />
+                  <ShareDialog
+                    characterId={character.id}
+                    open={shareOpen}
+                    onOpenChange={setShareOpen}
+                    onBeforeCreate={async () => {
+                      sheetRef.current?.saveAll();
+                      await flushSaves();
+                    }}
+                  />
+                </>
+              )}
+              <AlertDialog
+                open={!!pendingSectionId}
+                onOpenChange={(open) => !open && setPendingSectionId(null)}
+              >
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>
+                      {t('common.unsavedChanges')}
+                    </AlertDialogTitle>
+                    <AlertDialogDescription>
+                      {t('common.unsavedChangesDesc')}
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel
+                      onClick={() => setPendingSectionId(null)}
+                    >
+                      {t('common.stayAndEdit')}
+                    </AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={() => confirmFailsafe(false)}
+                      className="border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                    >
+                      {t('common.discardAndContinue')}
+                    </AlertDialogAction>
+                    <AlertDialogAction onClick={() => confirmFailsafe(true)}>
+                      {t('auth.saveAndContinue')}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </>
+          }
+        >
+          {isDisabled && (
+            <SheetStateBanner
+              testId="game-disabled-banner"
+              title={t('common.gameDisabled')}
+              hint={t('common.gameDisabledHint')}
+            />
           )}
-          <AlertDialog
-            open={!!pendingSectionId}
-            onOpenChange={(open) => !open && setPendingSectionId(null)}
-          >
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>
-                  {t('common.unsavedChanges')}
-                </AlertDialogTitle>
-                <AlertDialogDescription>
-                  {t('common.unsavedChangesDesc')}
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel onClick={() => setPendingSectionId(null)}>
-                  {t('common.stayAndEdit')}
-                </AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={() => confirmFailsafe(false)}
-                  className="border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
-                >
-                  {t('common.discardAndContinue')}
-                </AlertDialogAction>
-                <AlertDialogAction onClick={() => confirmFailsafe(true)}>
-                  {t('auth.saveAndContinue')}
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </div>
+          {!gameModule ? (
+            <UnknownSheetView character={character} />
+          ) : (
+            <div inert={isDisabled}>
+              <CharacterSheet
+                ref={sheetRef}
+                character={character}
+                activeCompactSection={activeCompactSection}
+              />
+            </div>
+          )}
+        </AppFrame>
       </GameThemeScope>
     </>
   );
