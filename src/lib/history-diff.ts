@@ -1,3 +1,4 @@
+import { deepEqual } from './deep-equal';
 import {
   emptyHistorySummary,
   HISTORY_MAX_CHANGES,
@@ -63,21 +64,6 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
 
 function hasOwn(value: Record<string, unknown>, key: string): boolean {
   return Object.prototype.hasOwnProperty.call(value, key);
-}
-
-function deepEqual(a: unknown, b: unknown): boolean {
-  if (Object.is(a, b)) return true;
-  if (Array.isArray(a) && Array.isArray(b)) {
-    if (a.length !== b.length) return false;
-    return a.every((item, index) => deepEqual(item, b[index]));
-  }
-  if (isPlainObject(a) && isPlainObject(b)) {
-    const aKeys = Object.keys(a);
-    const bKeys = Object.keys(b);
-    if (aKeys.length !== bKeys.length) return false;
-    return aKeys.every((key) => hasOwn(b, key) && deepEqual(a[key], b[key]));
-  }
-  return false;
 }
 
 /**

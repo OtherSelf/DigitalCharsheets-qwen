@@ -1,3 +1,4 @@
+import { deepEqual } from './deep-equal';
 import {
   HISTORY_SESSION_GAP_MS,
   type HistoryChange,
@@ -21,34 +22,6 @@ import {
 export interface GroupSessionsOptions {
   /** Пауза, после которой начинается новая сессия. */
   gapMs?: number;
-}
-
-function deepEqual(a: unknown, b: unknown): boolean {
-  if (Object.is(a, b)) return true;
-  if (Array.isArray(a) && Array.isArray(b)) {
-    if (a.length !== b.length) return false;
-    return a.every((item, index) => deepEqual(item, b[index]));
-  }
-  if (
-    a !== null &&
-    b !== null &&
-    typeof a === 'object' &&
-    typeof b === 'object' &&
-    !Array.isArray(a) &&
-    !Array.isArray(b)
-  ) {
-    const aRecord = a as Record<string, unknown>;
-    const bRecord = b as Record<string, unknown>;
-    const aKeys = Object.keys(aRecord);
-    const bKeys = Object.keys(bRecord);
-    if (aKeys.length !== bKeys.length) return false;
-    return aKeys.every(
-      (key) =>
-        Object.prototype.hasOwnProperty.call(bRecord, key) &&
-        deepEqual(aRecord[key], bRecord[key]),
-    );
-  }
-  return false;
 }
 
 function storedEqual(

@@ -3,9 +3,10 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 
-import { History, Loader2, Trash2 } from 'lucide-react';
+import { Loader2, Trash2 } from 'lucide-react';
 
 import { Header } from '@/components/header';
+import { HistorySummaryCard } from '@/components/history/history-summary-card';
 import { SiteFooter } from '@/components/layout/site-footer';
 import {
   AlertDialog,
@@ -340,61 +341,32 @@ export function HistoryView({ character }: { character: Character }) {
       <Header backHref={characterPath(character.id)} readOnly />
       <main className="safe-area-bottom flex flex-1 flex-col overflow-y-auto p-3 sm:p-4 md:p-6 lg:p-8 [&>*]:w-full [&>*]:min-w-0">
         <div className="mx-auto max-w-4xl space-y-4" data-testid="history-page">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <History className="h-5 w-5" />
-                {t('history.title')}
-              </CardTitle>
-              <CardDescription>{t('history.subtitle')}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex flex-wrap gap-4 text-sm">
-                <span>
-                  {t('history.totalRevisions')}:{' '}
-                  <strong>{totalRevisions}</strong>
-                </span>
-                <span>
-                  {t('history.totalSessions')}: <strong>{totalSessions}</strong>
-                </span>
-                {storage?.oldestAt && (
-                  <span className="text-muted-foreground">
-                    {t('history.oldestLabel')}:{' '}
-                    {formatHistoryDate(storage.oldestAt, language, {
-                      dateStyle: 'medium',
-                    })}
-                  </span>
-                )}
-              </div>
-              <p className="text-muted-foreground text-xs">
-                {t('history.notBackup')}
-              </p>
-              {storage?.truncated && (
-                <p className="text-xs text-amber-700 dark:text-amber-300">
-                  {t('history.truncatedNotice')}
-                </p>
-              )}
-              <div className="flex flex-wrap gap-2">
-                <Button asChild variant="outline" size="sm">
-                  <Link href={characterPath(character.id)}>
-                    {t('history.backToSheet')}
-                  </Link>
+          <HistorySummaryCard
+            totalRevisions={totalRevisions}
+            totalSessions={totalSessions}
+            storage={storage ?? undefined}
+            note={t('history.notBackup')}
+          >
+            <div className="flex flex-wrap gap-2">
+              <Button asChild variant="outline" size="sm">
+                <Link href={characterPath(character.id)}>
+                  {t('history.backToSheet')}
+                </Link>
+              </Button>
+              {sessions.length > 0 && (
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => setClearOpen(true)}
+                  data-testid="history-clear"
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  {t('history.clear')}
                 </Button>
-                {sessions.length > 0 && (
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => setClearOpen(true)}
-                    data-testid="history-clear"
-                  >
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    {t('history.clear')}
-                  </Button>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+              )}
+            </div>
+          </HistorySummaryCard>
 
           {error && (
             <Card>
