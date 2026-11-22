@@ -27,7 +27,7 @@ import { Separator } from '@/components/ui/separator';
 import { useTranslation } from '@/context/language-context';
 import { useLocalAuth } from '@/context/local-auth-context';
 import { useUISettings } from '@/hooks/use-ui-settings';
-import { MIN_PASSWORD_LENGTH } from '@/lib/security/password';
+import { MIN_PASSWORD_LENGTH } from '@/lib/security/password-policy';
 
 export default function ProfileSettingsPage() {
   const { user, isUserLoading, restoreSession } = useLocalAuth();

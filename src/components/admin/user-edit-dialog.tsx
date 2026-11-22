@@ -26,7 +26,7 @@ import {
 import { useTranslation } from '@/context/language-context';
 import { useToast } from '@/hooks/use-toast';
 import type { AdminUserSummary } from '@/lib/admin-types';
-import { MIN_PASSWORD_LENGTH } from '@/lib/security/password';
+import { MIN_PASSWORD_LENGTH } from '@/lib/security/password-policy';
 import type { UserRole } from '@/lib/user-role';
 
 import { adminReasonMessage } from './admin-helpers';

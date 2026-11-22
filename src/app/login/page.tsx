@@ -31,7 +31,7 @@ import { PasswordInput } from '@/components/ui/password-input';
 import { useTranslation } from '@/context/language-context';
 import { useLocalAuth } from '@/context/local-auth-context';
 import { PENDING_CHARACTER_KEY } from '@/lib/pending-draft';
-import { MIN_PASSWORD_LENGTH } from '@/lib/security/password';
+import { MIN_PASSWORD_LENGTH } from '@/lib/security/password-policy';
 
 type AuthMode = 'login' | 'register' | 'recover';
 

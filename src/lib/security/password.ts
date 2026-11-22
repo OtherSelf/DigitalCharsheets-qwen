@@ -9,6 +9,12 @@ import {
 } from './scrypt';
 import { safeStringEqual } from './timing';
 
+export {
+  MAX_PASSWORD_LENGTH,
+  MIN_PASSWORD_LENGTH,
+  passwordPolicyError,
+} from './password-policy';
+
 /**
  * ─── LANDMARK: PASSWORD STORAGE ─────────────────────────────────────────────
  * Пароль на диске — соль + scrypt-хэш (формат и параметры в `scrypt.ts`),
@@ -16,14 +22,10 @@ import { safeStringEqual } from './timing';
  * префикса формата) читаются один раз: успешный вход возвращает
  * `needsRehash`, и вызывающий перезаписывает хэш.
  *
- * Политика длины — здесь же, чтобы все точки установки пароля (регистрация,
- * восстановление, профиль, админка, служебный админ) не расходились. Вход
- * длину не проверяет: иначе аккаунты, созданные до политики, потеряли бы
- * доступ, ничего не нарушив.
+ * Политика длины живёт в `password-policy.ts` — клиентские формы импортируют
+ * её, не подтягивая Node-криптографию. Вход длину не проверяет: иначе
+ * аккаунты, созданные до политики, потеряли бы доступ, ничего не нарушив.
  */
-
-export const MIN_PASSWORD_LENGTH = 12;
-export const MAX_PASSWORD_LENGTH = 128;
 
 /** sha256-хэш старого формата: 64 шестнадцатеричных символа. */
 const LEGACY_SHA256_RE = /^[0-9a-f]{64}$/;
@@ -66,23 +68,6 @@ export function verifyPassword(
 
   // Неизвестный формат: fail-closed, без исключений на битом файле.
   return { valid: false, needsRehash: false };
-}
-
-/**
- * Сообщение об ошибке политики пароля или `null`, если пароль допустим.
- * Один текст на все точки установки — клиент показывает его как есть.
- */
-export function passwordPolicyError(password: unknown): string | null {
-  if (typeof password !== 'string' || password === '') {
-    return 'Password is required.';
-  }
-  if (password.length < MIN_PASSWORD_LENGTH) {
-    return `Password must be at least ${MIN_PASSWORD_LENGTH} characters.`;
-  }
-  if (password.length > MAX_PASSWORD_LENGTH) {
-    return `Password must be at most ${MAX_PASSWORD_LENGTH} characters.`;
-  }
-  return null;
 }
 
 /** Асинхронный хэш для запросного пути (не блокирует event loop). */
