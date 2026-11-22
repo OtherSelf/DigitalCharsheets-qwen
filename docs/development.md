@@ -52,6 +52,7 @@ Deployment details, reverse proxy and environment variables:
 | `npm run eol:check` | LF in the index and the working tree; fails on CRLF (also a step of `npm run verify`). |
 | `npm run eol:fix` | Rewrite CRLF → LF in the working tree; nothing else changes (`format` runs it first). |
 | `npm run typecheck` | `tsc --noEmit`. |
+| `npm run deadcode:check` | Dead exports and files without importers; allowlist with reasons and a `test-only` cap (also a step of `npm run verify`). |
 | `npm test` | Unit tests (Vitest). |
 | `npm run test:watch` | Vitest in watch mode. |
 | `npm run test:smoke` | HTTP smoke test against a running server (default `http://localhost:3000`). |
@@ -63,9 +64,33 @@ Deployment details, reverse proxy and environment variables:
 | `npm run test:visual:prune` | List obsolete PNG baselines (`--write` to delete). |
 | `npm run test:visual:update` | Rewrite visual baselines. |
 | `npm run test:visual:report` | Open the Playwright HTML report. |
-| `npm run verify` | Full pre-deploy gate: lockfile + line endings + format + lint + typecheck + unit + build + smoke. |
+| `npm run verify` | Full pre-deploy gate: lockfile + line endings + format + lint + typecheck + dead code + unit + build + smoke. |
 
 Testing details: [testing.md](testing.md).
+
+### Dead code
+
+`npm run deadcode:check` walks the TypeScript program and fails on an exported
+symbol with no references outside its declaration file, and on a `src/` file
+nobody imports. It also keeps two ratchets: every allowlist entry needs a
+`reason` and must still be needed, and `test-only` exports may not exceed
+`TEST_ONLY_MAX`.
+
+Deliberate exclusions — entry points and vendored code, not dead code:
+
+- Next entry points: `src/app/**`, `src/instrumentation.ts`,
+  `src/middleware.ts`;
+- plugin entry files (`games/<id>/{index,ui,sheet,create-form}`) and any
+  `<file>#<export>` target named by `plugin.json`;
+- files marked `AUTO-GENERATED` (DH2 rule data is written by
+  `src/games/dh2/scripts/generate.mjs` from the workspace `content/dh2`);
+- targets of a dynamic `import()` in production code;
+- `src/components/ui/**` — the vendored shadcn kit: an unused `Dialog.close` is
+  upstream API, not project dead code. A kit *file* without importers is still
+  reported.
+
+What it does not see: unused local variables (ESLint `no-unused-vars`), unused
+npm dependencies, dead CSS, and binary assets such as `public/*.ico`.
 
 ## Code style
 

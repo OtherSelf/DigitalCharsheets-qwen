@@ -209,6 +209,10 @@ Rules:
   object; `demo`/`export`/`derive`/`migrations` at functions. The generator
   checks the files, the conformance test checks the exports against the module
   namespace.
+- Exports are checked by `npm run deadcode:check`: an export that nothing
+  references (and that `plugin.json` does not name) fails the gate. The public
+  surface of a plugin is its manifest entry points plus what host code imports;
+  everything else stays private.
 - `derive` and `derived` come in pairs: a declared entry point without a field
   list (or the other way round) fails the generator. Paths use `[]` for array
   items (`skills[].value`); every declared path must exist in the sheet.

@@ -9,6 +9,7 @@ the pre-deploy gate that ties them together. None of them touch your real
 ```bash
 npm test                    # unit tests (Vitest)
 npm run test:plugin -- dh1  # unit tests of one plugin (id, fixture name or path)
+npm run deadcode:check      # dead exports / files without importers
 npm run verify              # full pre-deploy gate
 npm run test:visual         # Playwright screenshot regression (full)
 npm run test:visual:full    # explicit alias for the full visual run
@@ -30,7 +31,10 @@ Shared helpers live in `tests/support/` and are imported as `@tests/support`
   `loginIndexPath()`;
 - `auth.ts` — `sessionCookie()`, `sessionHeaders()` (uid always comes from a
   signed session);
-- `fixtures.ts` — minimal `makeDndCharacter()` / `makeDhCharacter()`.
+- `fixtures.ts` — minimal `makeDndCharacter()` / `makeDhCharacter()`;
+- `server-storage.ts` — `createUserFolder()`, `userFolderExists()`,
+  `saveCharactersToServer()`: file-level fixtures for storage tests (production
+  code writes sheets through the API routes, not through these helpers).
 
 Game plugins carry their own tests next to the code:
 
@@ -484,9 +488,19 @@ filtered with `grepInvert`, so the report has no skipped duplicates.
 3. Prettier check;
 4. ESLint, plugin boundaries/registry, core purity and reverse imports;
 5. TypeScript;
-6. unit tests;
-7. production build;
-8. HTTP smoke test against a temporary server.
+6. dead code: dead exports and files without importers
+   (`npm run deadcode:check`);
+7. unit tests;
+8. production build;
+9. HTTP smoke test against a temporary server.
+
+The dead-code gate is a ratchet. An export with no references outside its own
+file fails the build, and so does a `src/` file nobody imports. Exceptions live
+in `scripts/quality/dead-code-allowlist.json` and must carry a `reason`; an
+entry that is no longer needed is itself an error. `test-only` exports are
+capped by `TEST_ONLY_MAX` in `scripts/quality/check-dead-code.mjs`: a new test
+seam must be a deliberate change (drop a production-dead export or raise the
+cap in the same commit).
 
 Useful flags: `--skip-build`, `--skip-unit`, `--skip-smoke`, `--base-url URL`,
 `--keep` (keep the temp data/logs). The real `./data` is never touched.
