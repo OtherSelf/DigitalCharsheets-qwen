@@ -23,7 +23,8 @@
 #    5/9 typecheck — tsc --noEmit отдельным шагом: падение видно до сборки и не
 #                    тонет в выводе next build
 #    6/9 мёртвый код — scripts/quality/check-dead-code.mjs: экспорты без ссылок
-#                    и файлы без импортёров (allowlist с reason, храповик)
+#                    и файлы без импортёров; дубли — check-duplicates.mjs
+#                    (jscpd, allowlist и порог не хуже baseline)
 #    7/9 unit      — vitest: авторизация, файловое хранилище, экспорт/импорт,
 #                    API-роуты (без сети, на временном каталоге данных)
 #    8/9 build     — next build (NODE_ENV=production); при EXDEV — повтор с
@@ -273,6 +274,11 @@ step "6/9 мёртвый код (scripts/quality/check-dead-code.mjs)"
 node scripts/quality/check-dead-code.mjs \
   || die "Найден мёртвый код (см. вывод; удалить или внести в allowlist с reason)"
 ok "мёртвого кода вне allowlist нет"
+
+step "6/9 дублирование (scripts/quality/check-duplicates.mjs)"
+node scripts/quality/check-duplicates.mjs \
+  || die "Дублирование выросло сверх baseline (см. вывод; разберите клон)"
+ok "дублирование в пределах baseline"
 
 # ── 7. unit-тесты ───────────────────────────────────────────────────────────
 if [ "$SKIP_UNIT" -eq 0 ]; then

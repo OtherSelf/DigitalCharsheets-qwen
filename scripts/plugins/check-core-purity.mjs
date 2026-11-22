@@ -37,10 +37,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import {
-  stripCommentsOnly,
-  stripNonCode,
-} from './lib/scan.mjs';
+import { stripCommentsOnly, stripNonCode } from './lib/scan.mjs';
 
 export { stripCommentsOnly, stripNonCode };
 
