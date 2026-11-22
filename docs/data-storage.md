@@ -1,3 +1,8 @@
+---
+title: "Data storage"
+description: "On-disk data layout, user schema, locks, atomic writes, backups, legacy Firebase schema"
+---
+
 # Data storage
 
 Everything the app owns lives in a single data directory on the host you

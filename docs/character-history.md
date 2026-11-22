@@ -1,3 +1,8 @@
+---
+title: "Character change history"
+description: "Change log: diff model, JSONL storage, history API and screen"
+---
+
 # Character change history
 
 Every successful save of a sheet can leave a compact record of what changed.

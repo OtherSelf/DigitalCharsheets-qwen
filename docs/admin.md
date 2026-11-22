@@ -1,3 +1,8 @@
+---
+title: "Administration"
+description: "/admin, roles, first administrator, profile checks, block/delete rules"
+---
+
 # Administration
 
 The admin panel lives at **`/admin`**. It is a normal Next.js page, but every

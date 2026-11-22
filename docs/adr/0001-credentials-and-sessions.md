@@ -1,3 +1,8 @@
+---
+title: "ADR 0001 — Credentials, sessions and recovery tokens"
+description: "ADR: password/phrase hashing, sessions with jti, recovery tokens, password policy"
+---
+
 # ADR 0001 — Credentials, sessions and recovery tokens
 
 Status: **accepted** (2026-11-12). Scope: how the application stores passwords

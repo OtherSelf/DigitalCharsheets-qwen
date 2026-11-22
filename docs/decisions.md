@@ -1,3 +1,8 @@
+---
+title: "Decisions (D)"
+description: "Legend for the D<n> references in docs: the architectural decisions and where each is enforced"
+---
+
 # Decisions (D)
 
 Architectural decisions referenced from the other pages of the docs as `D<n>`.

@@ -1,3 +1,8 @@
+---
+title: "ADR 0004 — Legacy game names never guess the edition"
+description: "ADR: legacy game names never guess the edition; unknown sheets open read-only"
+---
+
 # ADR 0004 — Legacy game names never guess the edition
 
 Status: **accepted** (2026-11-18). Scope: how a sheet without `systemId` is

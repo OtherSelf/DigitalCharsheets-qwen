@@ -1,3 +1,8 @@
+---
+title: "Sharing a character sheet"
+description: "Read-only guest links: owner flow, token model, public page, privacy"
+---
+
 # Sharing a character sheet
 
 A read-only guest link lets a game master, another player or a friend open one

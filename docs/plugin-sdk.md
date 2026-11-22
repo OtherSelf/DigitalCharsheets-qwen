@@ -1,3 +1,8 @@
+---
+title: "Plugin SDK (v1.4)"
+description: "SDK v1: manifest, entry points, sheet/form, UI slots, i18n, migrations, conformance"
+---
+
 # Plugin SDK (v1.4)
 
 How to add a game or an edition to Digital Character Sheets. Everything

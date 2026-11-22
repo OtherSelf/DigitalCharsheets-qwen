@@ -1,3 +1,8 @@
+---
+title: "Documentation"
+description: "Map of the engineering documentation: what each page covers, page conventions and the writing rules."
+---
+
 # Documentation
 
 Project documentation for **Digital Character Sheets**. The root
@@ -56,6 +61,11 @@ deploying lives here, one topic per page.
 ## Page template
 
 ````markdown
+---
+title: Title
+description: One line: what this page covers, matching its row in the map.
+---
+
 # Title
 
 One or two sentences: what this page answers and who it is for.
@@ -80,6 +90,15 @@ Commands, payloads or a minimal walkthrough.
 
 ## Conventions
 
+- **Frontmatter is required.** Every page starts with `title` and `description`.
+  `title` repeats the `# H1` below it byte for byte, `description` repeats the
+  page's row in the map. The app renders the page title from the `# H1`, so the
+  heading stays in the body and GitHub keeps showing it too; a mismatch fails
+  `npm run docs:check` (and therefore `npm run verify`).
+- **Order comes from the map.** `docs/meta.json` and `docs/adr/meta.json` are
+  generated from the map by `npm run docs:generate` and are never edited by hand.
+  A page that is not in the map fails `npm run docs:check`; after adding a page,
+  regenerate the metadata.
 - Language: **English**, matching the README. Code identifiers, file names and
   API fields stay as-is. The code itself, test names and tool diagnostics are
   Russian (that is the repository convention); this page set stays English.

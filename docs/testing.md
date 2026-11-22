@@ -1,3 +1,8 @@
+---
+title: "Testing"
+description: "Unit, smoke, visual regression, authoring rules and the pre-deploy gate"
+---
+
 # Testing
 
 Four layers: unit tests, an HTTP smoke test, Playwright visual regression, and

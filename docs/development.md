@@ -1,3 +1,8 @@
+---
+title: "Development"
+description: "Local setup, npm scripts, code style, formatting, lint, typecheck"
+---
+
 # Development
 
 Local setup, the npm scripts that matter day to day, and the code-style rules.

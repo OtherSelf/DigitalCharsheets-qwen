@@ -1,3 +1,8 @@
+---
+title: "Security model"
+description: "Threat model, trust boundaries, session/recovery/path invariants, limits, runbook"
+---
+
 # Security model
 
 Threat model, trust boundaries and the invariants every change must preserve.

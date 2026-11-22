@@ -1,3 +1,8 @@
+---
+title: "Deployment"
+description: "Production start, environment variables, data dir, HTTPS, backups"
+---
+
 # Deployment
 
 The app ships as a **self-hosted Next.js server** with a data directory on

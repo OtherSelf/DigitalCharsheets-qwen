@@ -1,3 +1,8 @@
+---
+title: "Game modules"
+description: "How a game/edition module is added, the registry contract and module layout"
+---
+
 # Game modules
 
 How a game or an edition is plugged into the app. Everything game-specific

@@ -1,3 +1,8 @@
+---
+title: "Architecture"
+description: "Stack, application layout, auth/session flow, startup checks, client state"
+---
+
 # Architecture
 
 A high-level look at how Digital Character Sheets is put together: the stack,

@@ -1,3 +1,8 @@
+---
+title: "HTTP API"
+description: "HTTP API, OpenAPI/Scalar docs, auth, endpoint map"
+---
+
 # HTTP API
 
 The API is served by Next.js route handlers under `src/app/api/`. It uses JSON

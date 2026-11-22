@@ -1,3 +1,8 @@
+---
+title: "ADR 0002 — Legacy migration tooling lives in the repository"
+description: "ADR: legacy migration tooling in the repo, no data dumps in git"
+---
+
 # ADR 0002 — Legacy migration tooling lives in the repository
 
 Status: **accepted** (2026-11-13). Scope: what happens to the Firebase-era

@@ -1,3 +1,8 @@
+---
+title: "ADR 0003 — The server decides derived values"
+description: "ADR: the server recomputes derived values (derive), the client never diverges"
+---
+
 # ADR 0003 — The server decides derived values
 
 Status: **accepted** (2026-11-18). Scope: who computes derivative fields of a

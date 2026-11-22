@@ -1,3 +1,8 @@
+---
+title: "Export format"
+description: "Portable JSON/Excel export envelope and import rules"
+---
+
 # Export format
 
 Digital Character Sheets uses one portable envelope for single-character and
