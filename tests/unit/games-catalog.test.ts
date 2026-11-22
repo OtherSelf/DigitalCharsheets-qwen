@@ -9,25 +9,26 @@ import {
   GET as charactersGet,
   POST as charactersPost,
 } from '@/app/api/characters/route';
-import { GET as gamesGet } from '@/app/api/games/route';
-import {
-  gamePlugins,
-  listGameModules,
-  type AnyGameModule,
-} from '@/games/registry';
+import { gamePlugins } from '@/games/registry';
 import { setModuleStatus, setSiteTitle } from '@/lib/game-catalog';
-import { authenticateUser } from '@/lib/server-auth';
-import type { UserRole } from '@/lib/user-role';
-import { readStoredUser, writeStoredUser } from '@/lib/user-schema';
 
 import { removeDir, sessionHeaders, useTempDataDir } from '@tests/support';
+import {
+  createUser,
+  defaultsFor,
+  editionIds,
+  FIRST_MODULE,
+  jsonRequest,
+  listGames,
+  MISSING_SYSTEM,
+  MODULES,
+  publishAllModules,
+  request,
+  SECOND_MODULE,
+  type GamesBody,
+} from '@tests/support/games-api';
 
 let dataDir: string;
-
-const MODULES = listGameModules();
-const [FIRST_MODULE, SECOND_MODULE] = MODULES;
-/** id, которого заведомо нет в реестре: «плагин не установлен». */
-const MISSING_SYSTEM = 'missing-plugin';
 
 beforeEach(() => {
   dataDir = useTempDataDir();
@@ -37,68 +38,6 @@ afterEach(() => {
   delete process.env.DCS_DATA_DIR;
   removeDir(dataDir);
 });
-
-async function createUser(
-  username: string,
-  role: UserRole = 'user',
-): Promise<string> {
-  const result = await authenticateUser(username, 'pass-one-1234');
-  const uid = result.user!.uid;
-  const stored = (await readStoredUser(uid))!;
-  await writeStoredUser(uid, { ...stored, role });
-  return uid;
-}
-
-function request(url: string, options: RequestInit = {}) {
-  return new Request(`http://localhost${url}`, options);
-}
-
-async function jsonRequest(
-  url: string,
-  method: string,
-  body: unknown,
-  uid?: string,
-) {
-  return request(url, {
-    method,
-    headers: {
-      'content-type': 'application/json',
-      ...(uid ? await sessionHeaders(uid) : {}),
-    },
-    body: JSON.stringify(body),
-  });
-}
-
-function defaultsFor(gameModule: AnyGameModule) {
-  return gameModule.createDefaults({ name: `Герой ${gameModule.id}` });
-}
-
-/** Вернуть все редакции в published: матрица ролей не зависит от манифестов. */
-async function publishAllModules() {
-  for (const gameModule of MODULES) {
-    await setModuleStatus(gameModule.id, 'published');
-  }
-}
-
-type GamesBody = {
-  games: { id: string; editions: { id: string; status: string }[] }[];
-  siteTitle: string | null;
-  disabled?: string[];
-};
-
-function editionIds(body: GamesBody): string[] {
-  return body.games.flatMap((game) =>
-    game.editions.map((edition) => edition.id),
-  );
-}
-
-async function listGames(uid?: string): Promise<GamesBody> {
-  const res = await gamesGet(
-    request('/api/games', { headers: uid ? await sessionHeaders(uid) : {} }),
-  );
-  expect(res.status).toBe(200);
-  return (await res.json()) as GamesBody;
-}
 
 describe('/api/games: видимость по ролям', () => {
   it('гость и user видят только published', async () => {
