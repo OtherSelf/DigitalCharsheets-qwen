@@ -501,7 +501,14 @@ npm run bench                 # microbenchmarks (vitest bench, report only)
 npm run test:race -- --assert # HTTP correctness races, exit 1 on failure
 npm run test:load -- --vus 50 --sheets 10 --duration 10 --warmup 3
 npm run test:load -- ... --assert
+npm run test:perf             # Playwright @perf: web-vitals, chunk budget, Excel worker
 ```
+
+`test:perf` runs against a throwaway production server, like `test:load`. It
+uses the local `.playwright-browsers` bundle when present, measures LCP/CLS and
+first-input on `/demo` and `/login`, sums initial JS chunks, and starts the
+built Excel worker directly to prove it returns a non-empty xlsx. Budgets live in
+`tests/perf/web-vitals.spec.ts` (LCP 4 s, CLS 0.1, first-input 500 ms, JS 5 MiB).
 
 `test:load` starts a throwaway production server with a temporary
 `DCS_DATA_DIR`, seeds 50 users × 10 sheets over HTTP, and runs six autocannon

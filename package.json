@@ -29,6 +29,7 @@
     "bench": "vitest bench --run",
     "test:load": "node scripts/load.mjs",
     "test:race": "node scripts/race.mjs",
+    "test:perf": "node scripts/perf-web.mjs",
     "check:build-id": "node scripts/check-build-id.mjs",
     "test:dev": "node scripts/dev-smoke.mjs",
     "verify": "bash scripts/predeploy.sh",

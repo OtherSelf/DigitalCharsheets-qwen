@@ -89,14 +89,22 @@ the owner is taken from the current session on import (the legacy Firestore
 import creates local accounts separately and runs the same character
 normalizer).
 
-## Lazy SheetJS
+## Lazy SheetJS and the Excel worker
 
-The Excel writer is `xlsx` (SheetJS). It is imported dynamically inside
-`exportCharacterToExcel`, so the library never enters the initial client graph:
-on the dashboard and the sheet page it is a separate chunk fetched only when the
-user presses "Export Excel". Measured on `next build`: the initial chunk set for
-`/` and `/admin` shrank from 2947 KB to 2578 KB and the SheetJS chunk (357 KB →
-469 KB after code splitting) moved from initial to lazy (712 KB of lazy chunks).
+The Excel writer is `xlsx` (SheetJS). It never enters the initial client graph:
+`exportCharacterToExcel` validates the sheet and builds the row arrays in the
+main thread, then hands them to a classic Web Worker. The worker loads the
+vendored `public/vendor/xlsx/xlsx.full.min.js` with `importScripts`, serializes
+the workbook off the main thread and returns an `ArrayBuffer`; the page turns it
+into a `Blob` download. On a 1000 × 4 sheet `XLSX.write` takes ~16 ms (bench),
+and that work no longer blocks typing or scrolling.
+
+If a Worker cannot be created (old browser, Node tests), the function falls
+back to the previous dynamic `import('xlsx')` + `writeFile` path, so the public
+behaviour and file format do not change. The vendored bundle is served from our
+own origin, so the CSP (`script-src 'self'`) needs no exception. Measured on
+`next build`: the initial chunk set for `/` and `/admin` shrank from 2947 KB to
+2578 KB; SheetJS is a worker/vendor asset fetched only on export.
 
 ## Where the code lives
 

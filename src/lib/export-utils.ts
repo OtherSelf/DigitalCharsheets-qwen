@@ -707,6 +707,57 @@ const EXCEL_COLUMNS = [
 ];
 
 /**
+ * Собрать книгу в Web Worker. `null` — воркер недоступен/упал: вызывающий
+ * откатывается на прежний синхронный путь в главном потоке.
+ */
+async function buildWorkbookInWorker(
+  rows: ExcelCell[][],
+  sheetName: string,
+  columns: { wch: number }[],
+): Promise<ArrayBuffer | null> {
+  if (typeof Worker === 'undefined') return null;
+  return new Promise((resolve) => {
+    let worker: Worker;
+    try {
+      worker = new Worker(new URL('./excel-export.worker.js', import.meta.url));
+    } catch {
+      resolve(null);
+      return;
+    }
+    const timer = setTimeout(() => {
+      worker.terminate();
+      resolve(null);
+    }, 30_000);
+    worker.onmessage = (
+      event: MessageEvent<{ ok: boolean; buffer?: ArrayBuffer }>,
+    ) => {
+      clearTimeout(timer);
+      worker.terminate();
+      resolve(event.data?.ok && event.data.buffer ? event.data.buffer : null);
+    };
+    worker.onerror = () => {
+      clearTimeout(timer);
+      worker.terminate();
+      resolve(null);
+    };
+    worker.postMessage({ rows, sheetName, columns });
+  });
+}
+
+/** Скачать готовый xlsx из ArrayBuffer (браузер). */
+function downloadWorkbook(buffer: ArrayBuffer, filename: string): void {
+  const blob = new Blob([buffer], {
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+/**
  * xlsx-выгрузка одного листа: `dcs_character_<имя>_<YYYY-MM-DD>.xlsx`.
  * Внутри — стандартный технический блок (appName/format/version/kind/дата),
  * затем человекочитаемый лист по секциям. Данные проверяются так же, как при
@@ -726,27 +777,26 @@ export const exportCharacterToExcel = async (
       return { success: false, error: `Экспорт отменён: ${errors.join(' ')}` };
     }
 
-    // SheetJS грузится только по действию экспорта: в начальном бандле
-    // библиотека на сотни килобайт не нужна никому, кто просто смотрит лист.
-    const XLSX = await import('xlsx');
-
-    const worksheet = XLSX.utils.aoa_to_sheet(
-      buildCharacterSheetRows(normalized, translate, now),
-    );
-    worksheet['!cols'] = EXCEL_COLUMNS;
-
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(
-      workbook,
-      worksheet,
-      excelSheetName(character),
-    );
-
+    const rows = buildCharacterSheetRows(normalized, translate, now);
+    const sheetName = excelSheetName(character);
     const filename = exportFileName('character', {
       name: character.name,
       date: now,
       extension: 'xlsx',
     });
+
+    const buffer = await buildWorkbookInWorker(rows, sheetName, EXCEL_COLUMNS);
+    if (buffer) {
+      downloadWorkbook(buffer, filename);
+      return { success: true, filename };
+    }
+
+    // Воркер недоступен (старый браузер/тестовый Node) — прежний путь.
+    const XLSX = await import('xlsx');
+    const worksheet = XLSX.utils.aoa_to_sheet(rows);
+    worksheet['!cols'] = EXCEL_COLUMNS;
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
     XLSX.writeFile(workbook, filename);
     return { success: true, filename };
   } catch (error) {
