@@ -138,7 +138,7 @@ sheet follows the edition instead of sharing a switch:
 | Area | dh1 (1e) | dh2 (2e) |
 | --- | --- | --- |
 | Progression | career path, rank, alternate/advanced paths (`dark-heresy-ranks.ts`) | no ranks or paths; manual XP journal |
-| Wealth | throne gelt and monthly income on the sheet | wealth hidden; Influence is the resource |
+| Wealth | throne gelt and monthly income on the sheet; the "Collect salary" button adds the monthly income to the current capital | wealth hidden; Influence is the resource |
 | Requisition | not a rule | Influence + availability/craftsmanship target (`influence.ts`) |
 | Psychic | one discipline plus a power list (`psy.discipline`) | free-text disciplines/powers, psy rating purchase hint, elite advances |
 | Identity | `identity.gender`/`build`/`handedness`; legacy `identity.playerName` is not a sheet field and is dropped from export | `gender` is shown; no player name |

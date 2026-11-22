@@ -7,6 +7,7 @@ import * as AccordionPrimitive from '@radix-ui/react-accordion';
 import {
   ChevronDown,
   ChevronRight,
+  Coins,
   Info as InfoIcon,
   Plus,
   Trash2,
@@ -64,6 +65,7 @@ import {
   RangedWeapon,
   type DH1Character,
 } from '../types';
+import { clampThrones, collectMonthlyIncome } from '../wealth';
 import { CustomResourceCounter } from './custom-resource-counter';
 import { EditSaveButton } from './dh-ui-helpers';
 
@@ -2288,7 +2290,10 @@ export const EquipmentInventorySection = React.forwardRef<
                               onBlur={(e) =>
                                 updateCharacter(character.id, {
                                   wealth: {
-                                    ...editableWealth,
+                                    ...(character.wealth ?? {
+                                      throneGelt: 0,
+                                      monthlyIncome: 0,
+                                    }),
                                     notes: e.target.value,
                                   },
                                 })
@@ -2303,7 +2308,14 @@ export const EquipmentInventorySection = React.forwardRef<
                     {(showEditButtons || isWealthEditing) && (
                       <EditSaveButton
                         editing={isWealthEditing}
-                        onEdit={() => setIsWealthEditing(true)}
+                        onEdit={() => {
+                          setEditableWealth({
+                            throneGelt: character.wealth?.throneGelt ?? 0,
+                            monthlyIncome: character.wealth?.monthlyIncome ?? 0,
+                            notes: character.wealth?.notes ?? '',
+                          });
+                          setIsWealthEditing(true);
+                        }}
                         onSave={handleSaveWealth}
                       />
                     )}
@@ -2319,10 +2331,13 @@ export const EquipmentInventorySection = React.forwardRef<
                               ? ''
                               : editableWealth.throneGelt
                           }
+                          min={0}
+                          max={1_000_000_000}
+                          step={1}
                           onChange={(e) =>
                             setEditableWealth((prev) => ({
                               ...prev,
-                              throneGelt: parseInt(e.target.value, 10) || 0,
+                              throneGelt: clampThrones(e.target.value),
                             }))
                           }
                         />
@@ -2336,10 +2351,13 @@ export const EquipmentInventorySection = React.forwardRef<
                               ? ''
                               : editableWealth.monthlyIncome
                           }
+                          min={0}
+                          max={1_000_000_000}
+                          step={1}
                           onChange={(e) =>
                             setEditableWealth((prev) => ({
                               ...prev,
-                              monthlyIncome: parseInt(e.target.value, 10) || 0,
+                              monthlyIncome: clampThrones(e.target.value),
                             }))
                           }
                         />
@@ -2361,6 +2379,30 @@ export const EquipmentInventorySection = React.forwardRef<
                       </div>
                     </div>
                   )}
+                  {!isWealthEditing &&
+                    (character.wealth?.monthlyIncome ?? 0) > 0 && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        className="mt-3"
+                        data-testid="dh1-collect-salary"
+                        title={t('dh1.collectSalaryHint')}
+                        onClick={() =>
+                          updateCharacter(character.id, {
+                            wealth: collectMonthlyIncome(
+                              character.wealth ?? {
+                                throneGelt: 0,
+                                monthlyIncome: 0,
+                              },
+                            ),
+                          })
+                        }
+                      >
+                        <Coins className="mr-2 h-4 w-4" />
+                        {t('dh1.collectSalary')}
+                      </Button>
+                    )}
                 </div>
                 <div className="bg-card space-y-4 rounded-lg border p-4 shadow-sm">
                   <div className="flex items-center justify-between border-b pb-2">

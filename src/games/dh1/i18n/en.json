@@ -338,6 +338,8 @@
   "dh1.meleeWeapons": "Melee Weapons",
   "dh1.memoryShards": "Memory Shards",
   "dh1.monthlyIncome": "Monthly Income",
+  "dh1.collectSalary": "Collect salary",
+  "dh1.collectSalaryHint": "Add the monthly income to current Throne Gelt",
   "dh1.move": "Move",
   "dh1.inventoryPrice": "Price",
   "dh1.inventoryQuantityShort": "Qty",

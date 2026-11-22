@@ -338,6 +338,8 @@
   "dh1.meleeWeapons": "Оружие ближнего боя",
   "dh1.memoryShards": "Осколки Памяти",
   "dh1.monthlyIncome": "Ежемесячный доход",
+  "dh1.collectSalary": "Получить зарплату",
+  "dh1.collectSalaryHint": "Добавить месячный доход к текущему тронному гельту",
   "dh1.move": "Перемещение",
   "dh1.inventoryPrice": "Цена",
   "dh1.inventoryQuantityShort": "Кол-во",

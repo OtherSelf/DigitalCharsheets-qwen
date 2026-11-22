@@ -308,3 +308,21 @@ test(
     await expect(dot).toHaveAttribute('aria-checked', 'true');
   },
 );
+
+test.describe('DH1: зарплата', { tag: '@plugin:dh1' }, () => {
+  test(
+    'кнопка прибавляет месячный доход к капиталу',
+    { tag: '@desktop' },
+    async ({ page, context }) => {
+      await prepare(context);
+      await openApp(page, sheetPath(gameCharacterId('dh')));
+
+      const inventory = page.locator('#inventory-section:visible').first();
+      await expect(inventory.getByText('240', { exact: true })).toBeVisible();
+      const salary = page.getByTestId('dh1-collect-salary');
+      await expect(salary).toHaveText(/Collect salary/i);
+      await salary.click();
+      await expect(inventory.getByText('330', { exact: true })).toBeVisible();
+    },
+  );
+});
