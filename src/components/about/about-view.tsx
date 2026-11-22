@@ -85,6 +85,14 @@ export function AboutView() {
               <CardDescription>{t('about.linksBody')}</CardDescription>
             </CardHeader>
             <CardContent className="flex flex-wrap gap-2 text-sm">
+              <Link className="underline underline-offset-2" href="/docs">
+                {t('about.docs')}
+              </Link>
+              <span aria-hidden>·</span>
+              <a className="underline underline-offset-2" href="/api/docs">
+                {t('about.api')}
+              </a>
+              <span aria-hidden>·</span>
               <a
                 className="underline underline-offset-2"
                 href={REPOSITORY_URL}

@@ -846,6 +846,16 @@ test.describe('общие страницы', () => {
     await expect(
       page.getByRole('heading', { name: 'About this project' }),
     ).toBeVisible();
+
+    // Входы в документацию: обе ссылки ниже первого экрана, поэтому проверяем
+    // адреса, а не пиксели (эталон остаётся снимком верхней части страницы).
+    await expect(
+      page.getByRole('link', { name: 'Documentation', exact: true }),
+    ).toHaveAttribute('href', '/docs');
+    await expect(
+      page.getByRole('link', { name: 'API reference', exact: true }),
+    ).toHaveAttribute('href', '/api/docs');
+
     await screenshotPage(page, 'about-en.png');
   });
 
@@ -856,6 +866,12 @@ test.describe('общие страницы', () => {
     await expect(
       page.getByRole('heading', { name: 'О проекте' }),
     ).toBeVisible();
+    await expect(
+      page.getByRole('link', { name: 'Документация', exact: true }),
+    ).toHaveAttribute('href', '/docs');
+    await expect(
+      page.getByRole('link', { name: 'Справочник API', exact: true }),
+    ).toHaveAttribute('href', '/api/docs');
     await screenshotPage(page, 'about-ru.png');
   });
 
