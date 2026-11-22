@@ -66,6 +66,7 @@ plain `start`.
 | `DCS_COOKIE_SECURE` | unset | `1` forces the `Secure` flag on the session cookie. It is already on by default in production; this variable is a compatible way to enable it in development. |
 | `DCS_COOKIE_INSECURE` | unset | `1` explicitly disables the `Secure` flag (local plain-HTTP development only). |
 | `DCS_ADMIN_USERNAME` | `admin` | Preferred login for the bootstrap administrator; `admin-2`, … if taken. |
+| `UV_THREADPOOL_SIZE` | `4` (Node default) | libuv pool for async fs and scrypt. `8`–`16` measured better under load (`8` gave 71 rps on login-storm vs 66.8 at the default); set it in the service unit. |
 | `PORT` | `3000` | HTTP port. |
 
 See [data-storage.md](data-storage.md) for the directory layout.
@@ -258,11 +259,16 @@ log for warnings.
 
 ## Scaling notes
 
-- One app instance per data directory is the simplest and recommended setup.
-- Multiple processes can share a data dir: the file lock serializes multi-file
-  writes and the login index is derived, but the stale-write guard for sheets is
-  in memory per process. Set `DCS_SESSION_SECRET` explicitly in that case so all
-  processes accept the same cookies.
+- **One app instance per data directory.** Reads are cached in process memory
+  (sessions, profiles, catalog, sheets); write-through invalidation only knows
+  this process's writes, and per-sheet locks are in-process (see
+  [architecture.md](architecture.md#process-local-read-cache)). Do not run
+  `pm2 cluster`, multiple systemd instances or workers on one data dir.
+- The global file lock still serializes multi-file writes (registration,
+  account deletion, catalog, sessions); single-sheet writes use per-key locks
+  and do not wait for each other.
+- `DCS_SESSION_SECRET` is only needed if the data dir is ephemeral or you
+  migrate it; with one process the generated `.session-secret` is enough.
 
 ## API documentation
 

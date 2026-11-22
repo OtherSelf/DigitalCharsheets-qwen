@@ -147,6 +147,18 @@ src/lib/* (server-only)
   only used to show/hide the menu item.
 - The data directory is selected by `DCS_DATA_DIR`; the default is `./data`.
 
+## Write coordination
+
+Two locks guard the data directory. `withDataLock()` is the global `mkdir`
+mutex used by multi-file operations: registration and login rename, account
+deletion, the game catalog, sessions/tokens/shares. `withSheetLock(key)` is an
+in-process per-sheet queue used by single-sheet saves; different sheets run in
+parallel, one sheet is serialized. A global operation waits for every active
+key lock and blocks new ones, and a key operation waits while a global lock is
+held (global has priority over new keys). The global `mkdir` lock remains
+cross-process; the per-key coordination is local, which is safe because one
+process per data dir is required (see below).
+
 ## Process-local read cache
 
 `sessions.json`, every `user.json`, `index/logins.json`,

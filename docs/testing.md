@@ -491,6 +491,46 @@ filtered with `grepInvert`, so the report has no skipped duplicates.
 Useful flags: `--skip-build`, `--skip-unit`, `--skip-smoke`, `--base-url URL`,
 `--keep` (keep the temp data/logs). The real `./data` is never touched.
 
+## Performance checks
+
+These checks are **not** part of `npm run verify`: load, race and fsync-heavy
+benchmarks are noisy and slow. Run them on demand from a built checkout.
+
+```bash
+npm run bench                 # microbenchmarks (vitest bench, report only)
+npm run test:race -- --assert # HTTP correctness races, exit 1 on failure
+npm run test:load -- --vus 50 --sheets 10 --duration 10 --warmup 3
+npm run test:load -- ... --assert
+```
+
+`test:load` starts a throwaway production server with a temporary
+`DCS_DATA_DIR`, seeds 50 users × 10 sheets over HTTP, and runs six autocannon
+scenarios: `read-list`, `save-own`, `save-parallel`, `mixed`, `login-storm`,
+`share-page`. It records p50/p95/p99, RPS, status codes, and the server's event
+loop delay (`perf_hooks.monitorEventLoopDelay`, loaded through a preload probe).
+Reports land in `.perf-results/` (gitignored), as JSON plus a markdown summary.
+
+The working copy lives on a 9p mount (`D:\` under WSL), which makes fsync and
+small-file I/O unrepresentative. For measurements, make a full copy on ext4 and
+build there, then point the runner at it:
+
+```bash
+tar -C . -cf - --exclude=node_modules --exclude=.next --exclude=.git \
+  --exclude=.perf-results . | tar -C /tmp/dcs-perf-app -xf -
+cd /tmp/dcs-perf-app && npm ci && npm run build
+cd - && npm run test:load -- --app-dir /tmp/dcs-perf-app --assert --warmup 3
+```
+
+Calibrated gate (50 VU × 10 sheets, warmup 3 s; baseline and reasons are in the
+perf tracker and D20): all scenarios 0 errors/non-2xx; `save-parallel` RPS ≥ 239
+(2× baseline, fsync ceiling ≈ 256 rps); p95 ≤ baseline for read-list/save/
+login/mixed; event-loop p99 ≤ 75 ms for the API scenarios and ≤ 200 ms for the
+HTML `share-page`. Without `--assert` the runner is report-only.
+
+`npm run bench` is report-only too: compare the medians with the figures in the
+perf tracker; a ±20–30 % drift is the review signal. Re-run `--warmup 3` before
+comparing load numbers: without warm-up the first seconds are JIT/GC noise.
+
 ## Related
 
 - [development.md](development.md) — scripts and code style

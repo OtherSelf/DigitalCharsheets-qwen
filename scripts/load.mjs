@@ -38,6 +38,19 @@ const ALL_SCENARIOS = [
   'share-page',
 ];
 
+/**
+ * Калиброванные пороги (стенд D13, 50 VU × 10 листов, warmup 3 с). Числа — не
+ * «красивые», а измеренные: baseline этапа 1 и fsync-потолок D20.
+ */
+const THRESHOLDS = {
+  'read-list': { p95Ms: 169, loopP99Ms: 75 },
+  'save-own': { p95Ms: 792, loopP99Ms: 75 },
+  'save-parallel': { rps: 239, p95Ms: 456, loopP99Ms: 75 },
+  mixed: { p95Ms: 361, loopP99Ms: 75 },
+  'login-storm': { p95Ms: 2312, loopP99Ms: 75 },
+  'share-page': { loopP99Ms: 200 },
+};
+
 const DEFAULTS = {
   appDir: process.cwd(),
   dataDir: '',
@@ -46,9 +59,11 @@ const DEFAULTS = {
   vus: 50,
   sheets: 10,
   duration: 10,
+  warmup: 0,
   scenarios: ALL_SCENARIOS,
   keepData: false,
   threadpoolSize: 0,
+  assert: false,
 };
 
 function usage() {
@@ -62,8 +77,10 @@ function usage() {
   --vus N           параллельных клиентов (по умолчанию 50)
   --sheets N        листов на пользователя (по умолчанию 10)
   --duration SEC    длительность сценария (по умолчанию 10)
+  --warmup SEC      прогрев сценария перед замером (по умолчанию 0)
   --scenarios LIST  через запятую: ${ALL_SCENARIOS.join(', ')}
   --threadpool-size N  UV_THREADPOOL_SIZE сервера (по умолчанию системный, 4)
+  --assert          exit 1, если сценарий не прошёл калиброванный порог
   --keep-data       не удалять временный data-dir
   -h, --help        эта справка`;
 }
@@ -100,6 +117,9 @@ function parseArgs(argv) {
       case '--duration':
         options.duration = Number(next());
         break;
+      case '--warmup':
+        options.warmup = Number(next());
+        break;
       case '--scenarios':
         options.scenarios = next()
           .split(',')
@@ -108,6 +128,9 @@ function parseArgs(argv) {
         break;
       case '--threadpool-size':
         options.threadpoolSize = Number(next());
+        break;
+      case '--assert':
+        options.assert = true;
         break;
       case '--keep-data':
         options.keepData = true;
@@ -121,7 +144,7 @@ function parseArgs(argv) {
         throw new Error(`Неизвестный флаг: ${arg}\n\n${usage()}`);
     }
   }
-  for (const key of ['vus', 'sheets', 'duration']) {
+  for (const key of ['vus', 'sheets', 'duration', 'warmup']) {
     if (!Number.isInteger(options[key]) || options[key] < 1) {
       throw new Error(`--${key} должен быть положительным целым.`);
     }
@@ -200,13 +223,13 @@ function buildScenarios({ users, vus, duration, baseUrl }) {
   const list = [];
 
   list.push(
-    scenario('read-list', async () => {
+    scenario('read-list', async (seconds = duration) => {
       const next = clientAssigner();
       return runAutocannon(
         {
           url: baseUrl,
           connections: vus,
-          duration,
+          duration: seconds,
           timeout: 30,
           setupClient(client) {
             const index = next();
@@ -227,12 +250,12 @@ function buildScenarios({ users, vus, duration, baseUrl }) {
 
   const saveScenario = (name, sheetIndexFor) => {
     const next = clientAssigner();
-    return scenario(name, () =>
+    return scenario(name, (seconds = duration) =>
       runAutocannon(
         {
           url: baseUrl,
           connections: vus,
-          duration,
+          duration: seconds,
           timeout: 30,
           setupClient(client) {
             const index = next();
@@ -280,13 +303,13 @@ function buildScenarios({ users, vus, duration, baseUrl }) {
   );
 
   list.push(
-    scenario('mixed', async () => {
+    scenario('mixed', async (seconds = duration) => {
       const next = clientAssigner();
       return runAutocannon(
         {
           url: baseUrl,
           connections: vus,
-          duration,
+          duration: seconds,
           timeout: 30,
           setupClient(client) {
             const index = next();
@@ -329,13 +352,13 @@ function buildScenarios({ users, vus, duration, baseUrl }) {
   );
 
   list.push(
-    scenario('login-storm', async () => {
+    scenario('login-storm', async (seconds = duration) => {
       const next = clientAssigner();
       return runAutocannon(
         {
           url: baseUrl,
           connections: vus,
-          duration,
+          duration: seconds,
           timeout: 30,
           setupClient(client) {
             const index = next();
@@ -359,7 +382,7 @@ function buildScenarios({ users, vus, duration, baseUrl }) {
   );
 
   list.push(
-    scenario('share-page', async () => {
+    scenario('share-page', async (seconds = duration) => {
       const next = clientAssigner();
       const tokens = users.map((user) => user.shares[0]).filter(Boolean);
       if (tokens.length === 0)
@@ -368,7 +391,7 @@ function buildScenarios({ users, vus, duration, baseUrl }) {
         {
           url: baseUrl,
           connections: vus,
-          duration,
+          duration: seconds,
           timeout: 30,
           setupClient(client) {
             const index = next();
@@ -445,6 +468,12 @@ async function main() {
   const results = [];
   for (const entry of scenarios) {
     process.stdout.write(`[perf] сценарий ${entry.name}...\n`);
+    if (options.warmup > 0) {
+      process.stdout.write(
+        `[perf] прогрев ${entry.name} ${options.warmup} с...\n`,
+      );
+      await entry.run(options.warmup);
+    }
     await server.resetLoopDelay();
     const raw = await entry.run();
     const loopDelay = await server.readLoopDelay();
@@ -462,6 +491,34 @@ async function main() {
     await delay(500);
   }
 
+  const failures = [];
+  for (const item of results) {
+    const { summary } = item;
+    const limits = THRESHOLDS[item.name] ?? {};
+    if (summary.errors > 0) {
+      failures.push(`${item.name}: errors ${summary.errors}`);
+    }
+    if (summary.non2xx > 0) {
+      failures.push(`${item.name}: non2xx ${summary.non2xx}`);
+    }
+    if (limits.rps !== undefined && summary.rps < limits.rps) {
+      failures.push(`${item.name}: rps ${summary.rps} < ${limits.rps}`);
+    }
+    if (limits.p95Ms !== undefined && summary.latencyMs.p95 > limits.p95Ms) {
+      failures.push(
+        `${item.name}: p95 ${summary.latencyMs.p95} > ${limits.p95Ms}`,
+      );
+    }
+    if (
+      limits.loopP99Ms !== undefined &&
+      (item.loopDelay?.p99Ms ?? 0) > limits.loopP99Ms
+    ) {
+      failures.push(
+        `${item.name}: loop p99 ${item.loopDelay?.p99Ms} > ${limits.loopP99Ms}`,
+      );
+    }
+  }
+
   const report = {
     meta: {
       startedAt: startedAt.toISOString(),
@@ -476,7 +533,10 @@ async function main() {
         durationSec: options.duration,
         scenarios: scenarios.map((entry) => entry.name),
         threadpoolSize: options.threadpoolSize || 'default',
+        warmupSec: options.warmup,
       },
+      thresholds: THRESHOLDS,
+      gate: { asserted: options.assert, failures },
       note:
         options.appDir === process.cwd()
           ? 'приложение запущено из рабочей копии (проверьте ФС: 9p искажает цифры)'
@@ -507,11 +567,21 @@ async function main() {
       `| ${item.name} | ${summary.rps} | ${summary.latencyMs.p50} | ${summary.latencyMs.p95} | ${summary.latencyMs.p99} | ${summary.errors} | ${summary.non2xx} | ${JSON.stringify(summary.statuses)} | ${item.loopDelay?.p99Ms ?? '—'} |`,
     );
   }
-  lines.push(
-    '',
-    'Ошибки и non-2xx — факт прогона, а не приговор: до этапа 7 это report-only.',
-    '',
-  );
+  lines.push('');
+  if (options.assert) {
+    lines.push(
+      failures.length === 0
+        ? 'Гейт: PASS (все пороги соблюдены).'
+        : `Гейт: FAIL — ${failures.length} нарушений:\n${failures
+            .map((failure) => `- ${failure}`)
+            .join('\n')}`,
+    );
+  } else {
+    lines.push(
+      'Ошибки и non-2xx — факт прогона: запустите с --assert для гейта.',
+    );
+  }
+  lines.push('');
   const mdFile = path.join(outDir, 'load.md');
   fs.writeFileSync(mdFile, lines.join('\n'), 'utf8');
 
@@ -523,6 +593,9 @@ async function main() {
   }
 
   process.stdout.write(`[perf] отчёт: ${jsonFile}\n[perf] сводка: ${mdFile}\n`);
+  if (options.assert && failures.length > 0) {
+    process.exitCode = 1;
+  }
 }
 
 main().catch((error) => {
