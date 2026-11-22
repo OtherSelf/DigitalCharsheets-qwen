@@ -145,6 +145,36 @@ export const enTranslations: Record<string, string> = {
   'common.fillRequiredFields': 'Fill in the required fields',
   'common.checkFields': 'Check the highlighted fields.',
   'common.retry': 'Retry',
+
+  // ─── ERROR STATUS PAGES (/error/<code>) ───
+  'error.statusLabel': 'HTTP status',
+  'error.400.title': 'Bad request',
+  'error.400.description':
+    'The server could not understand the request. Check the address or the data you sent, then try again.',
+  'error.401.title': 'Sign-in required',
+  'error.401.description':
+    'Your session is missing or has expired. Sign in to continue where you left off.',
+  'error.403.title': 'Access denied',
+  'error.403.description':
+    'This account does not have permission to open this page. If you expected access, sign in with another account or ask an administrator.',
+  'error.404.title': 'Page not found',
+  'error.404.description':
+    'The page may have been moved or deleted, or the link is outdated. Check the address and return to the dashboard.',
+  'error.409.title': 'Conflict',
+  'error.409.description':
+    'The data changed while you were working with it. Reload the page, check the latest version and repeat the action.',
+  'error.413.title': 'Request too large',
+  'error.413.description':
+    'The data you tried to send is larger than the server accepts. Reduce the file or the text and try again.',
+  'error.429.title': 'Too many requests',
+  'error.429.description':
+    'Too many attempts came from this address. Wait a few minutes and reload the page.',
+  'error.500.title': 'Internal server error',
+  'error.500.description':
+    'The server could not complete the request. Your data is intact: try again or reload the page.',
+  'error.503.title': 'Service unavailable',
+  'error.503.description':
+    'The server is updating or temporarily unavailable. Reload the page in a moment; unsaved changes in an open sheet are not affected.',
   'common.loadErrorTitle': 'Could not load characters',
   'common.loadErrorDesc':
     'The server did not respond. Check the connection and try again.',

@@ -407,6 +407,44 @@ await check('GET /docs/architecture → 200 и без внешних ссыло�
 await check('GET /docs/no-such-page → 404', async () => {
   const res = await request('/docs/no-such-page', { auth: false });
   assertStatus(res, 404, 'GET /docs/no-such-page');
+  assert(
+    res.text.includes('not-found-page'),
+    'GET /docs/no-such-page: 404 без брендированного экрана (not-found-page)',
+  );
+});
+
+// Статусные страницы: 404 отдаёт notFound(), остальные — обычные 200,
+// потому что это информационные страницы, а не ответ с этим статусом.
+await check('GET /no-such-route → 404 с экраном приложения', async () => {
+  const res = await request('/no-such-route-for-smoke', { auth: false });
+  assertStatus(res, 404, 'GET /no-such-route');
+  assert(
+    res.text.includes('not-found-page'),
+    'GET /no-such-route: 404 без брендированного экрана (not-found-page)',
+  );
+});
+
+await check('GET /error/403 → 200 со страницей статуса', async () => {
+  const res = await request('/error/403', { auth: false });
+  assertStatus(res, 200, 'GET /error/403');
+  assert(
+    res.text.includes('error-page-403'),
+    'GET /error/403: нет экрана error-page-403',
+  );
+});
+
+await check('GET /error/404 → 404 (настоящий notFound)', async () => {
+  const res = await request('/error/404', { auth: false });
+  assertStatus(res, 404, 'GET /error/404');
+  assert(
+    res.text.includes('not-found-page'),
+    'GET /error/404: нет экрана not-found-page',
+  );
+});
+
+await check('GET /error/418 → 404 (код вне контракта)', async () => {
+  const res = await request('/error/418', { auth: false });
+  assertStatus(res, 404, 'GET /error/418');
 });
 
 await check('GET /api/search?query=csp → JSON с совпадениями', async () => {

@@ -280,7 +280,7 @@ async function settle(page: Page, resetScroll = true): Promise<void> {
  * чтобы не ловить обычные сокращения/email в тексте.
  */
 const RAW_I18N_KEY_RE =
-  /\b(?:dh|dh1|dh2|dnd|dnd5e|common|games|auth|admin|io|settings)\.(?:[a-z][A-Za-z0-9_]*|data\.)/g;
+  /\b(?:dh|dh1|dh2|dnd|dnd5e|common|games|auth|admin|io|settings|error)\.(?:[a-z][A-Za-z0-9_]*|data\.)/g;
 
 export async function expectNoRawI18nKeys(
   page: Page,

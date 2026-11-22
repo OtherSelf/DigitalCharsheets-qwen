@@ -116,6 +116,7 @@ docs/                  This documentation
 | `/demo` | Demo landing, always the guest view |
 | `/stats-editor` | Bulk stats editor |
 | `/docs`, `/docs/<slug>` | Engineering documentation rendered from `docs/*.md` (public) |
+| `/error/<code>` | Informational page for a supported HTTP status (`400`, `401`, `403`, `409`, `413`, `429`, `500`, `503`); an unknown code is a real 404 |
 
 Sheet URLs are built by `characterPath()` in
 [`src/lib/routes.ts`](../src/lib/routes.ts); share URLs use `sharePath()`. There
@@ -250,9 +251,25 @@ does not prevent the server from starting.
   and shows a banner when the server reports another `buildId`; `ClientErrorGuard`
   does the same for chunk-load failures seen on `window`
   `error`/`unhandledrejection`. The banner only informs — nothing reloads on its
-  own, because the tab may hold unsaved input. Render errors are caught closer to
-  the source by the App Router `error.tsx`/`global-error.tsx` and by
-  `SheetErrorBoundary`, which offer "Retry" (remount) and "Reload page".
+  own, because the tab may hold unsaved input.
+
+### Error surfaces
+
+Every status the UI can explain has one screen and one source of truth
+(`src/lib/error-pages.ts`: the code list and the actions).
+
+| Surface | Status | What it shows |
+| --- | --- | --- |
+| `src/app/not-found.tsx` | 404 | unknown route and `notFound()`; branded `not-found-page`, not Next's English default |
+| `src/app/error.tsx` | 500 / 503 | segment render error; a chunk-load failure becomes 503 (the build changed) and offers reload, not retry |
+| `src/app/global-error.tsx` | 500 | root layout failed; no providers or Tailwind, inline styles and the same dictionaries |
+| `src/app/error/<code>/page.tsx` | 400/401/403/409/413/429/500/503 | linkable informational page; `/error/404` deliberately calls `notFound()` |
+| `UnavailableState`, `SheetErrorBoundary` | context-specific | inline cards inside a working page (load failed, plugin render failed) |
+
+Titles and hints live under `error.<code>.*` in both site languages; the screen
+never renders a raw status or an i18n key. The `Retry` action re-renders the
+segment and keeps unsaved input, while `Reload page` is used when the tab state
+has already diverged from the server (429, 503, chunk error).
 
 ## Related
 

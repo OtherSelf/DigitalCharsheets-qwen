@@ -19,6 +19,55 @@ import {
  */
 
 test.describe('устойчивость загрузки', () => {
+  test('неизвестный маршрут — брендированная 404, а не заглушка Next', async ({
+    page,
+    context,
+  }) => {
+    await prepare(context, { language: 'ru', authenticated: false });
+    const response = await page.goto('/no-such-route-for-error-page-test', {
+      waitUntil: 'domcontentloaded',
+    });
+    expect(response?.status()).toBe(404);
+    await openApp(page, '/no-such-route-for-error-page-test');
+
+    const state = page.getByTestId('not-found-page');
+    await expect(state).toBeVisible();
+    await expect(
+      state.getByText('Страница не найдена', { exact: true }),
+    ).toBeVisible();
+    await expect(state.getByText('HTTP 404', { exact: true })).toBeVisible();
+    await expectNoRawI18nKeys(page, 'not-found-page (ru)');
+  });
+
+  test('страница статуса объясняет 403 и даёт выход', async ({
+    page,
+    context,
+  }) => {
+    await prepare(context, { language: 'en', authenticated: false });
+    await openApp(page, '/error/403');
+
+    const state = page.getByTestId('error-page-403');
+    await expect(state).toBeVisible();
+    await expect(
+      state.getByText('Access denied', { exact: true }),
+    ).toBeVisible();
+    await expect(state.getByText('HTTP 403', { exact: true })).toBeVisible();
+    await expect(
+      state.getByRole('link', { name: 'Back to Dashboard' }),
+    ).toBeVisible();
+    await expectNoRawI18nKeys(page, 'error-page-403 (en)');
+  });
+
+  test('401 предлагает вход, а не «Повторить»', async ({ page, context }) => {
+    await prepare(context, { language: 'en', authenticated: false });
+    await openApp(page, '/error/401');
+
+    const state = page.getByTestId('error-page-401');
+    await expect(state).toBeVisible();
+    await expect(state.getByRole('link', { name: 'Sign In' })).toBeVisible();
+    await expect(state.getByRole('button', { name: 'Retry' })).toHaveCount(0);
+  });
+
   test('неизвестный id листа — экран «не найден», а не спиннер (ru)', async ({
     page,
     context,

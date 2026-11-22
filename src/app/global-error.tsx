@@ -15,7 +15,9 @@ import { ruTranslations } from '@/lib/i18n/translations.ru';
  * (до контекста не дотянуться), с фолбэком на язык браузера.
  *
  * Страница обязана содержать `<html>` и `<body>`: Next заменяет ею корневой
- * layout целиком.
+ * layout целиком. Это последний рубеж, поэтому здесь нет компонентов ядра —
+ * только словарь и минимальная разметка; код статуса виден, чтобы дежурный
+ * отличал падение layout от обычной 404.
  */
 const LANGUAGE_KEY = 'language';
 
@@ -69,6 +71,7 @@ export default function GlobalError({
       >
         <div
           data-testid="global-error"
+          data-error-code="500"
           style={{
             width: '100%',
             maxWidth: 520,
@@ -79,11 +82,14 @@ export default function GlobalError({
             boxShadow: '0 10px 30px rgba(15, 23, 42, 0.08)',
           }}
         >
-          <h1 style={{ margin: '0 0 12px', fontSize: 18 }}>
-            {t('common.error')}
+          <h1 style={{ margin: '0 0 8px', fontSize: 18 }}>
+            {t('error.500.title')}
           </h1>
+          <p style={{ margin: '0 0 6px', fontSize: 12, color: '#64748b' }}>
+            {'HTTP 500'}
+          </p>
           <p style={{ margin: '0 0 20px', fontSize: 14, color: '#475569' }}>
-            {t('common.errorHint')}
+            {t('error.500.description')}
           </p>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
             <button
@@ -117,6 +123,18 @@ export default function GlobalError({
               {t('common.reloadPage')}
             </button>
           </div>
+          {error.digest && (
+            <p
+              style={{
+                margin: '16px 0 0',
+                fontFamily: 'ui-monospace, SFMono-Regular, monospace',
+                fontSize: 11,
+                color: '#64748b',
+              }}
+            >
+              {`digest: ${error.digest}`}
+            </p>
+          )}
         </div>
       </body>
     </html>
