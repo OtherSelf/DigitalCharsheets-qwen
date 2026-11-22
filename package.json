@@ -37,6 +37,7 @@
     "plugins:generate": "node scripts/plugins/generate.mjs",
     "plugins:scaffold": "node scripts/plugins/scaffold.mjs",
     "plugins:check": "node scripts/plugins/generate.mjs --check",
+    "plugins:layout": "node scripts/plugins/check-layout.mjs",
     "docs:generate": "node scripts/docs/meta.mjs",
     "docs:check": "node scripts/docs/meta.mjs --check",
     "plugins:boundaries": "node scripts/plugins/check-boundaries.mjs",

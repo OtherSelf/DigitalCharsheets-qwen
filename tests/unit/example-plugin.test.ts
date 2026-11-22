@@ -91,9 +91,13 @@ describe('эталонный плагин: манифест', () => {
 
   it('UI-слоты объявлены в манифесте и лежат в ui.ts', () => {
     expect(exampleManifest.ui?.entry).toBe('ui.ts');
-    expect([...(exampleManifest.ui?.slots ?? [])].sort()).toEqual(
-      Object.keys(exampleUiSlots).sort(),
-    );
+    const declared = [...(exampleManifest.ui?.slots ?? [])].sort();
+    const implemented = Object.entries(exampleUiSlots)
+      .filter(([name, value]) => value !== undefined && name !== 'favicon')
+      .map(([name]) => name)
+      .sort();
+    expect(declared).toEqual(implemented);
+    expect(String(exampleUiSlots.favicon)).toContain('assets/favicon.png');
   });
 
   it('объявляет API, версию схемы и скрытую видимость', () => {

@@ -42,6 +42,22 @@ type Generator = {
   }): string[];
 };
 
+type Layout = {
+  checkPlugin(plugin: {
+    id: string;
+    dir: string;
+    manifest: Record<string, unknown>;
+  }): string[];
+};
+
+let layoutPromise: Promise<Layout> | undefined;
+function layout(): Promise<Layout> {
+  layoutPromise ??= import('../../scripts/plugins/check-layout.mjs').then(
+    (module) => module as unknown as Layout,
+  );
+  return layoutPromise;
+}
+
 let cached: Promise<Generator> | undefined;
 function generator(): Promise<Generator> {
   cached ??= import('../../scripts/plugins/generate.mjs').then(
@@ -111,6 +127,11 @@ describe('копия фикстуры под чужим id', () => {
         { dirName: PROBE_ID, manifest },
       ]),
     ).toEqual([]);
+  });
+
+  it('копия фикстуры проходит стандарт раскладки (скрытый 0.x)', async () => {
+    const { checkPlugin } = await layout();
+    expect(checkPlugin({ id: PROBE_ID, dir: pluginDir, manifest })).toEqual([]);
   });
 
   it('находится генератором на диске и попадает в реестр', async () => {
@@ -252,7 +273,9 @@ describe('копия фикстуры под чужим id', () => {
     }) as unknown as Record<string, unknown>;
     expect(withHostFields.userId).toBe('host-user');
     expect([...(fixtureManifest.ui?.slots ?? [])].sort()).toEqual(
-      Object.keys(uiSlots).sort(),
+      Object.keys(uiSlots)
+        .filter((name) => name !== 'favicon')
+        .sort(),
     );
     expect(uiSlots.BulkEditor?.length ?? 0).toBeGreaterThan(0);
     expect(

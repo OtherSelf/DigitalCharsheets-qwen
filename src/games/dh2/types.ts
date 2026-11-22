@@ -186,7 +186,7 @@ export interface DarkHeresyEquipment {
 }
 
 /**
- * Поля, одинаковые у dh1 и dh2. Характеристики, апгрейды, заметки к ним и
+ * Общие поля листа Dark Heresy. Характеристики, апгрейды, заметки к ним и
  * усталость добавляются редакциями — у них разный состав.
  */
 export interface DarkHeresyBase extends CharacterBase {

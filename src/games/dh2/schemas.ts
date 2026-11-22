@@ -19,7 +19,7 @@ const upgradeSchema = z.tuple([
 
 /** Поля характеристик; `influence` добавляет только dh2. */
 /**
- * Характеристика Dark Heresy: 0–100 (правило общее с dh1). Влияние
+ * Характеристика Dark Heresy: 0–100 (правило d100). Влияние
  * (`influence`) измеряется теми же пределами.
  */
 const coreStatSchema = z.number().int().min(0).max(100);

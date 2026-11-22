@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useCharacterContext, useTranslation } from '@/games/plugin-host';
 import type { SheetHandle } from '@/games/types';
 
+import styles from './sheet.module.css';
 import type { ExampleCharacter } from './types';
 
 /**
@@ -31,7 +32,7 @@ export const ExampleSheet = React.forwardRef<
   }));
 
   return (
-    <Card data-testid="example-sheet" className="space-y-4">
+    <Card data-testid="example-sheet" className={styles.sheet}>
       <CardHeader>
         <CardTitle>{t('example.sheetTitle')}</CardTitle>
       </CardHeader>

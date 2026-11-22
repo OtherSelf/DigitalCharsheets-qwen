@@ -15,9 +15,9 @@ import type { DH2Character } from '../types';
 
 /**
  * ─── LANDMARK: DH2 COMPACT NAV ─────────────────────────────────────────────
- * Пункты мобильного сайдбара 2-й редакции. Раньше список `dhItems` жил в
- * `src/components/sheets/compact-sidebar.tsx`; теперь — слот плагина
- * (`CompactNav`, этап 3). Ключи — с префиксом `dh2.`.
+ * Пункты мобильного сайдбара 2-й редакции. Это слот плагина
+ * (`CompactNav`): ядро только рисует рейл и прокручивает к секции. Ключи —
+ * с префиксом `dh2.`.
  */
 export function dh2CompactNav(
   _character: DH2Character,

@@ -17,6 +17,7 @@ deploying lives here, one topic per page.
 | [architecture.md](architecture.md) | Stack, application layout, auth/session flow, startup checks, client state |
 | [plugin-sdk.md](plugin-sdk.md) | **SDK v1**: manifest, entry points, sheet/form, UI slots, i18n, migrations, conformance |
 | [game-modules.md](game-modules.md) | How a game/edition module is added, the registry contract and module layout |
+| [plugin-layout.md](plugin-layout.md) | Canonical folder/file skeleton for a game plugin, naming rules for code and tests, and the automated layout gate |
 | [data-storage.md](data-storage.md) | On-disk data layout, user schema, locks, atomic writes, backups, legacy Firebase schema |
 | [api.md](api.md) | HTTP API, OpenAPI/Scalar docs, auth, endpoint map |
 | [security.md](security.md) | Threat model, trust boundaries, session/recovery/path invariants, limits, runbook |

@@ -21,8 +21,9 @@ manifests without it must be updated).
 
 A complete working example ships with the app: `src/games/sandbox` (visible to
 testers and admins only, `defaultStatus: "test"`) — own CSS module, scoped
-theme, slots, demo and export. Use it next to the scaffold when you want to see
-a finished plugin instead of a template.
+theme with the full token set, all six slots, demo, export, `derive`, `import`,
+history, legacy import and an embedded companion. Use it next to the scaffold
+when you want to see a finished plugin instead of a template.
 
 1. **Copy a template.** The smallest complete plugin is the conformance fixture
    [`tests/fixtures/example-plugin/`](../tests/fixtures/example-plugin): types,
@@ -81,7 +82,7 @@ npm run plugins:scaffold -- mygame --game myFamily --order 60 --title "My Game"
 | Dictionary keys and every `t('…')` | `example.*` | `<id>.*` (full namespace, no bare keys) |
 | `shortCode` | `example` | `<id>` (unique, lowercase) |
 | `author`, `tags`, `aliases` | `tests`, `example` | yours |
-| `schemaVersion` + `migrations` | `2`, one step | your version with steps `1 → … → schemaVersion` |
+| `schemaVersion` + `schema-version.ts` + `migrations` | `2`, one step | your version with steps `1 → … → schemaVersion` |
 
 After renaming run `npm run plugins:generate`, `npm run plugins:check` and
 `npm run verify`; the fixture gate (`tests/unit/plugin-template.test.ts`) does
@@ -109,6 +110,7 @@ src/games/<id>/
   index.ts             GameModule + named entry points (manifest `entry`)
   types.ts             sheet type (extends CharacterRecord)
   schema.ts            zod schema (schemaVersion matches the manifest)
+  schema-version.ts    one version literal shared by module and defaults
   defaults.ts          createDefaults() (no id)
   demo.ts              createDemo() (no id)
   export.ts            toPortableJson() fields for export 3.0
@@ -117,13 +119,21 @@ src/games/<id>/
   merge.ts             import merge (partial patch over an existing sheet), required
   create-form.tsx      custom creation form
   sheet.tsx            custom sheet, forwardRef<SheetHandle>
+  sheet.module.css     layout, responsive rules and @font-face
   ui.ts                optional UI slots (manifest `ui.entry`)
   slots/*.tsx          slot components/functions imported by ui.ts
+  sections/*.tsx       sheet sections and dialogs
   assets/*             icons and images imported by the plugin (favicon)
   bulk-editor.ts       tables for /stats-editor (ui.BulkEditor)
+  fonts.ts             PluginFont for ui.theme.font
   i18n/en.json, ru.json
   legacy-import.ts     optional Firestore/2.x importer for your game
+  tests/unit/*.test.ts plugin contract and mechanics tests
+  tests/visual/*       optional Playwright specs and fixtures
 ```
+
+The full skeleton, required files and naming rules are in
+[plugin-layout.md](plugin-layout.md); `npm run plugins:layout` checks them.
 
 Rules summary: keep everything game-specific inside the folder; do not import
 `next/*`, `@/app`, `@/lib/*` (except `@/lib/utils`, `@/lib/i18n`, `@/lib/form-validation`), `fs` or
@@ -568,7 +578,7 @@ export const pluginFont: PluginFont = { className: '<id>-theme-font' };
   `document.fonts.ready`: the ready attribute arrives when the chunk is
   applied, the `woff2` may still load, and a screenshot taken earlier keeps the
   host face.
-- DH1, DH2 and D&D 5e are the shipped games that declare `font`;
+- DH1, DH2, D&D 5e and sandbox are the shipped games that declare `font`;
   `tests/fixtures/example-plugin` still covers the object shape on its own.
 
 The core cannot be reached from a theme: there is no way to pass CSS, class

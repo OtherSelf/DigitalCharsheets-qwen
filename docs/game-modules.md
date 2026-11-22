@@ -23,7 +23,6 @@ src/games/
   games.ts                  game families: re-exports games.generated.ts
   character-system.ts       systemId resolution and i18n name keys for UI
   i18n/{en,ru}.ts           registry/wizard metadata (games.*)
-  i18n.generated.ts         plugin dictionaries from plugin.json#i18n
   shared/
     types.ts                game-agnostic primitives (CharacterBase, quests,
                             combat resources) — no game mechanics or translations
@@ -33,31 +32,41 @@ src/games/
     excel.ts                generic Excel section writer used by all modules
   dnd5e/
     plugin.json             manifest: id, order, entry points, i18n, demo
-    types.ts, schema.ts, defaults.ts, demo.ts
-    normalize.ts, merge.ts   legacy normalization + import merge
-    export.ts, excel.ts, epic-boons.ts
-    i18n/{en,ru}.ts
-    create-form.tsx, sheet.tsx, index.ts
-    sections/*.tsx          sheet sections (D&D moved here at plugin stage 0)
+    index.ts                module object + named entry points
+    types.ts, schema.ts, schema-version.ts, defaults.ts, demo.ts
+    normalize.ts, merge.ts  legacy normalization + import merge
+    export.ts, excel.ts, epic-boons.ts, embedded.ts
+    i18n/{en,ru}.json       dictionary (keys dnd.* and dnd5e.*)
+    create-form.tsx, sheet.tsx, sheet.module.css, fonts.ts
+    ui.ts, bulk-editor.ts   slots and bulk-editor tables
+    sections/*.tsx          sheet sections
     slots/*                 header/card/compact-nav slot components
-  dh1/                      fully self-contained edition module
+    tests/unit, tests/visual, tests/fixtures, tests/visual.json
+  dh1/                      independent 1e edition module
     plugin.json             manifest (own copy, not shared with dh2)
-    types.ts, schemas.ts, schema.ts, defaults.ts, demo.ts
-    normalize.ts, merge.ts   legacy normalization + import merge (own copies)
-    capabilities.ts, stats.ts
-    export.ts, excel.ts
+    index.ts                module object + named entry points
+    types.ts, schemas.ts, schema.ts, schema-version.ts, defaults.ts, demo.ts
+    normalize.ts, merge.ts  legacy normalization + import merge (own copies)
+    capabilities.ts, stats.ts, dh-stats.ts, field-policy.ts
+    export.ts, excel.ts, history.ts, legacy-import.ts
     dark-heresy-data.ts, dark-heresy-ranks.ts, divination-i18n.ts
-                            edition data pack (own copy, D10)
-    i18n/{en,ru}.ts, i18n/core-{en,ru}.ts   (games.dh1.* + dh1.*)
-    create-form.tsx, sheet.tsx
-    sections/*.tsx          sheet sections (own copies)
-    slots/*                 header/card/compact-nav slot components
-    index.ts
-  dh2/                      independent copy of dh1, actualized separately
-    (same file set; keys dh2.*)
-    dh2e-data.ts, dh2e-reference.ts, dh2e-rules.ts
-                            second-edition data pack, generated (see below)
+                            hand-written 1e reference data (own copy, D10)
+    create-form.tsx, sheet.tsx, sheet.module.css, fonts.ts
+    ui.ts, bulk-editor.ts, slots/*, sections/*
+    i18n/{en,ru}.json       dictionary (keys games.dh1.* and dh1.*)
+    tests/unit, tests/visual, tests/fixtures, tests/visual.json
+  dh2/                      independent 2e edition module
+    (same skeleton; keys games.dh2.* and dh2.*)
+    dh2e-data.ts, dh2e-reference.ts, dh2e-rules.ts, dh2e-*.ts
+                            generated 2e data pack (see below)
+    scripts/generate.mjs    generator for the data pack, lives with the edition
 ```
+
+The full skeleton, required files and naming rules are in
+[plugin-layout.md](plugin-layout.md) and checked by `npm run plugins:layout`.
+Two editions of one family are independent (D10): they share the skeleton, the
+concept file names and the test topics, but not mechanics, dictionaries or UI
+sections.
 
 ## Adding and removing a plugin
 
@@ -116,7 +125,7 @@ on the sheet.
 `../DigitalCharsheets-workspace/content/dh2`). The generator owns only the
 `dh2.catalog.*` slice of `src/games/dh2/i18n/{en,ru}.json`; every other key is
 hand-written. Drift is caught by the edition's own unit test
-(`src/games/dh2/tests/unit/dh2e-freshness.test.ts`, part of `npm run verify`):
+(`src/games/dh2/tests/unit/data-pack-freshness.test.ts`, part of `npm run verify`):
 when the workspace catalog is checked out, stale generated files fail the
 unit step; in CI without the workspace the test is skipped with a reason.
 Nothing in `scripts/predeploy.sh` or `package.json` mentions the edition.
@@ -329,10 +338,17 @@ per-game save handlers out of the page.
 ## Adding a new edition (example: `dh3`)
 
 1. **Module folder** `src/games/dh3/`:
-   Start by copying `src/games/dh1/` as a template (that is how `dh2`
-   began), then actualize it independently. Do **not** extract a shared
-   DH core: each edition owns its types, schema, defaults, capabilities,
-   stats, exports, translations, form, sheet and sections.
+   Start from the scaffold, not from a neighbouring edition:
+   `npm run plugins:scaffold -- dh3 --game darkHeresy --order 40`. The scaffold
+   copies `tests/fixtures/example-plugin` and leaves the required skeleton
+   (`index.ts`, `types.ts`, `schema.ts`, `schema-version.ts`, `defaults.ts`,
+   `demo.ts`, `normalize.ts`, `merge.ts`, `export.ts`, `excel.ts`,
+   `create-form.tsx`, `sheet.tsx`, `sheet.module.css`, `ui.ts`,
+   `bulk-editor.ts`, `fonts.ts`, `i18n/{en,ru}.json`, `tests/unit/`) in place.
+   Replace the fixture content with your edition; do **not** copy `dh1` or
+   `dh2` wholesale, and do not extract a shared DH core: each edition owns its
+   types, schema, defaults, capabilities, stats, exports, translations, form,
+   sheet and sections (D10).
    - `types.ts` — base Dark Heresy types + `DH3Character`; `systemId: 'dh3'`.
    - `schemas.ts` / `schema.ts` — base schema + full `ZodType<DH3Character>`.
    - `defaults.ts` — base defaults + `createDh3Defaults(input)`.
@@ -408,8 +424,9 @@ per-game save handlers out of the page.
 - Keep `LANDMARK` comments at the module boundary, registry, catalog and
   migration points.
 - Game data belongs to the module: a `src/lib/*` file that only a game reads
-  must move into `src/games/<id>/` (`epic-boons.ts` did in stage 0, the DH
-  data packs started as copies in dh1/dh2).
+  must live in `src/games/<id>/` (`epic-boons.ts`, the DH data packs).
+  The folder skeleton and naming rules are in
+  [plugin-layout.md](plugin-layout.md).
 - A module imports the core only through the lists in
   `scripts/plugins/boundaries.json` (`forbidden`, `allowed`, `legacy`) —
   see [Import boundaries](#import-boundaries).
@@ -424,7 +441,10 @@ core?" and is intentionally small:
 
 - its own schema, defaults, demo, export/Excel, migrations and i18n
   (`sandbox.*` keys in its own dictionaries);
-- a custom React sheet and creation form, all four UI slots and its own tab
+- all optional SDK branches: `derive`/`derived`, `import.normalize`/`merge`,
+  `history`, a legacy-import converter and a nested companion
+  (`findEmbedded`/`updateEmbedded`);
+- a custom React sheet and creation form, all six UI slots and its own tab
   icon (`assets/favicon.png`);
 - a layout CSS module (`sheet.module.css`) with its own breakpoints, and a
   scoped `ui.theme` (light and dark tokens) — both without a single line in

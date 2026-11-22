@@ -1,5 +1,4 @@
-import { CURRENT_SCHEMA_VERSION } from '@/games/plugin-api';
-
+import { PLUGIN_SCHEMA_VERSION } from './schema-version';
 import { EXAMPLE_SYSTEM_ID, type ExampleCharacter } from './types';
 
 /** Черновик листа: `id` присваивает сервер. */
@@ -14,7 +13,7 @@ export function createExampleDefaults(
     name,
     systemId: EXAMPLE_SYSTEM_ID,
     gameSystem: 'Example Game',
-    schemaVersion: CURRENT_SCHEMA_VERSION,
+    schemaVersion: PLUGIN_SCHEMA_VERSION,
     rank,
     stats: { might: 10, wits: 10 },
     notes: '',

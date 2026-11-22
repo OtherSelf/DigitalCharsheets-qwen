@@ -14,6 +14,7 @@ the pre-deploy gate that ties them together. None of them touch your real
 ```bash
 npm test                    # unit tests (Vitest)
 npm run test:plugin -- dh1  # unit tests of one plugin (id, fixture name or path)
+npm run plugins:layout      # plugin folder skeleton and test naming
 npm run deadcode:check      # dead exports / files without importers
 npm run verify              # full pre-deploy gate
 npm run test:visual         # Playwright screenshot regression (full)
@@ -54,9 +55,11 @@ Plugins never import the kit from production files: ESLint
 (`no-restricted-imports`) and `scripts/plugins/check-boundaries.mjs` allow
 `vitest`, `@playwright/test`, `@tests/*` and `node:fs` only under
 `src/games/<id>/tests/**`. Cross-plugin imports are forbidden there too, so a
-DH1 test cannot build on DH2's internals. The reference fixture
-(`tests/fixtures/example-plugin/tests`) proves that a plugin can ship its own
-test and run from the repo root.
+DH1 test cannot build on DH2's internals. The minimal fixture
+(`tests/fixtures/example-plugin`) has no tests of its own by design: it is
+copied by `plugins:scaffold` and by `plugin-template.test.ts`, and the host
+suites run its contract. A real plugin keeps tests in
+`src/games/<id>/tests/`.
 
 ## Test layout
 
@@ -73,6 +76,12 @@ enforces the limit and fails in both directions:
   `src/games/<id>/tests/unit/`, not in the host. A test that imports two
   editions (DH1/DH2 parity, shared labels) stays in `tests/unit` — it checks the
   contract between editions, and a plugin may not import another plugin.
+
+`npm run plugins:layout` (also a step of `npm run verify`) checks the folder
+skeleton described in [plugin-layout.md](plugin-layout.md): required files,
+test names without the plugin-id prefix, the visual config/fixtures pair and a
+non-empty favicon. It is a separate axis from `test:layout` (host file size)
+and from `plugins:conformance` (manifest ↔ module).
 
 ## Plugin conformance
 
@@ -122,7 +131,7 @@ Plugin-specific checks (bulk-editor table columns, custom slots) belong in
 - `tests/unit/openapi.test.ts` compares the OpenAPI spec with every
   `src/app/api/**/route.ts`; a new endpoint without documentation fails it.
 - Tests of one edition live in `src/games/<id>/tests/unit/` (for example
-  `dh1-fields`, `dh2-psy`) and are found by the same `npm test`. Tests that
+  `fields`, `psy`, `rules`) and are found by the same `npm test`. Tests that
   import two editions at once (DH parity, shared labels, schema versions) stay
   in `tests/unit`: a plugin test may not import another plugin.
 

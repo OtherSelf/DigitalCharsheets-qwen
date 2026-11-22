@@ -1,4 +1,3 @@
-import { CURRENT_SCHEMA_VERSION } from '@/games/plugin-api';
 import type {
   ExportTranslate,
   GameExportConfig,
@@ -14,6 +13,7 @@ import exampleRu from './i18n/ru.json';
 import { mergeExampleData } from './merge';
 import { normalizeExample } from './normalize';
 import { exampleCharacterSchema } from './schema';
+import { PLUGIN_SCHEMA_VERSION } from './schema-version';
 import { EXAMPLE_SYSTEM_ID, type ExampleCharacter } from './types';
 
 /**
@@ -62,7 +62,7 @@ export const exampleModule: GameModule<ExampleCharacter> = {
   nameKey: 'example.name',
   descriptionKey: 'example.description',
   shortCode: 'example',
-  schemaVersion: CURRENT_SCHEMA_VERSION,
+  schemaVersion: PLUGIN_SCHEMA_VERSION,
   schema: exampleCharacterSchema,
   i18n: { en: exampleEn, ru: exampleRu },
   capabilities: {},

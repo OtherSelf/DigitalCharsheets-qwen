@@ -1,4 +1,3 @@
-import { CURRENT_SCHEMA_VERSION } from '../plugin-api';
 import type { ExportTranslate, GameExportConfig, GameModule } from '../types';
 import { createDnd5eDefaults } from './defaults';
 import { createDnd5eDemo } from './demo';
@@ -18,6 +17,7 @@ import { mergeDnd5eData } from './merge';
 import { migrateDnd5eV1toV2 } from './migrations';
 import { normalizeDnd5e } from './normalize';
 import { dnd5eCharacterSchema } from './schema';
+import { DND5E_SCHEMA_VERSION } from './schema-version';
 import type { DnD5eCharacter } from './types';
 
 /**
@@ -68,7 +68,7 @@ export const dnd5eModule: GameModule<DnD5eCharacter> = {
   nameKey: 'games.dnd5e.name',
   descriptionKey: 'games.dnd5e.description',
   shortCode: 'dnd5e',
-  schemaVersion: CURRENT_SCHEMA_VERSION,
+  schemaVersion: DND5E_SCHEMA_VERSION,
   schema: dnd5eCharacterSchema,
   i18n: { en: dnd5eEn, ru: dnd5eRu },
   capabilities: { spells: true, companions: true },

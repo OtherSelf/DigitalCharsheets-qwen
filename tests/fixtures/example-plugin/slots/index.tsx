@@ -2,7 +2,7 @@ import { ScrollText } from 'lucide-react';
 
 import type { CardSummary, PluginNavItem } from '@/games/types';
 
-import type { ExampleCharacter } from './types';
+import type { ExampleCharacter } from '../types';
 
 /**
  * Слоты эталонного плагина: шапка, мобильная навигация, карточка.

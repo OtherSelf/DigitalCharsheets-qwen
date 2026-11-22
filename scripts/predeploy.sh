@@ -17,8 +17,9 @@
 #                    импортов плагинов (check-boundaries.mjs), чистота ядра и
 #                    импорты ядра (check-core-purity.mjs, check-core-imports.mjs),
 #                    генерация реестра/словарей из манифестов
-#                    (registry.generated.ts и др. в git не хранятся) и сверка
+#                    (registry.generated.ts и др. в git не хранятся), сверка
 #                    docs/meta.json с картой docs/README.md (meta.mjs --check)
+#                    и стандарт раскладки плагинов (check-layout.mjs)
 #    5/9 typecheck — tsc --noEmit отдельным шагом: падение видно до сборки и не
 #                    тонет в выводе next build
 #    6/9 мёртвый код — scripts/quality/check-dead-code.mjs: экспорты без ссылок
@@ -302,6 +303,13 @@ step "4/9 раскладка тестов (scripts/tests/check-test-layout.mjs)"
 node scripts/tests/check-test-layout.mjs \
   || die "Нарушена раскладка тестов (см. вывод выше; правила — scripts/tests/check-test-layout.mjs)"
 ok "раскладка тестов соблюдена"
+
+# Стандарт папки плагина: обязательный скелет, имена тестов по теме, визуальные
+# фикстуры и иконка. Имена игр гейт не знает — список читается из plugin.json.
+step "4/9 раскладка плагинов (scripts/plugins/check-layout.mjs)"
+node scripts/plugins/check-layout.mjs \
+  || die "Плагин не соответствует стандарту раскладки (см. вывод; docs/plugin-layout.md)"
+ok "плагины по стандарту раскладки"
 
 # ── 5. typecheck ────────────────────────────────────────────────────────────
 step "5/9 typecheck ($TSC --noEmit)"

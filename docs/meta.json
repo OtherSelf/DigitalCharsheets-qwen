@@ -4,6 +4,7 @@
     "architecture",
     "plugin-sdk",
     "game-modules",
+    "plugin-layout",
     "data-storage",
     "api",
     "security",
