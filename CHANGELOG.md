@@ -11,6 +11,13 @@ format changes.
 
 ## [Unreleased]
 
+### Added
+
+- `scripts/dcs-dev.bat`: a Windows launcher for the local dev server that needs
+  neither bash, WSL nor `screen`. It checks Node.js, installs dependencies,
+  starts `npm run dev` in a separate window, waits for `/api/health` and can
+  stop, restart, show status and follow the log.
+
 ## [0.18.0] - 2026-11-22
 
 A one-click salary, a branded page for every error status, and a sandbox that

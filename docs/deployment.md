@@ -58,6 +58,11 @@ module graph. Only `.next` is removed — `data/` and `node_modules/` stay. The
 first page after such a restart compiles from scratch, so it is slower than a
 plain `start`.
 
+Neither script runs on Windows. For a local test bench there,
+`scripts/dcs-dev.bat` starts the same dev server without `screen` or WSL — see
+[development.md](development.md#windows-dev-server). Production has no Windows
+variant: the deploy path stays Linux with systemd.
+
 ## Environment variables
 
 | Variable | Default | Purpose |

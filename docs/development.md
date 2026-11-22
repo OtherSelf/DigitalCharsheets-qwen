@@ -82,6 +82,39 @@ Deployment details, reverse proxy and environment variables:
 
 Testing details: [testing.md](testing.md).
 
+### Windows dev server
+
+[`scripts/dcs-dev.bat`](../scripts/dcs-dev.bat) is the Windows counterpart of
+[`scripts/dcs-dev.sh`](../scripts/dcs-dev.sh) for a local test bench: it needs
+neither bash, WSL nor `screen`. Run it from `cmd` (`.\` is not required):
+
+```bat
+scripts\dcs-dev.bat            :: start on http://127.0.0.1:3000
+scripts\dcs-dev.bat status
+scripts\dcs-dev.bat logs 500
+scripts\dcs-dev.bat restart
+scripts\dcs-dev.bat stop
+```
+
+It checks Node.js >= 22.12, runs `npm ci` only when `node_modules` is missing or
+`-f` is passed, starts `npm run dev` in a separate minimized window (output goes
+to `%LOCALAPPDATA%\dcs-dev\logs\dcs-dev-3000.log`, `DCS_LOG_DIR` overrides it)
+and waits for `200` from `/api/health`. `stop` kills the `node.exe` that listens
+on the port and nothing else; `restart` also deletes `.next`, because the
+Turbopack cache belongs to one dev-server process. The server outlives the
+script, so the console can be closed.
+
+Flags: `-p/--port` (default `3000`), `-H/--host` (default `127.0.0.1`; use
+`0.0.0.0` to reach the bench from another device), `--timeout` (seconds to wait
+for health), `-f/--force-install`, `--skip-install`, `--fresh` (delete `.next`
+before starting). Environment overrides: `DCS_PORT`, `DCS_HOST`,
+`DCS_READY_TIMEOUT`, `DCS_LOG_DIR`, `DCS_DATA_DIR` (passed to Next unchanged;
+the default is `<checkout>\data`).
+
+The script is development-only: production stays on Linux with
+[`scripts/dcs-prod.sh`](../scripts/dcs-prod.sh) and its systemd unit, see
+[deployment.md](deployment.md).
+
 ### Dead code
 
 `npm run deadcode:check` walks the TypeScript program and fails on an exported
