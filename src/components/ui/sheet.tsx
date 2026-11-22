@@ -161,7 +161,15 @@ const SheetContent = React.forwardRef<
     if (farEnough || velocity > SWIPE_MIN_VELOCITY) {
       setDismissing(true);
       setDragX(side === 'right' ? width || 320 : -(width || 320));
-      dismissTimer.current = setTimeout(() => closeSheet?.(false), 180);
+      dismissTimer.current = setTimeout(() => {
+        closeSheet?.(false);
+        // Сброс после закрытия: Radix оставляет `SheetContent` смонтированным,
+        // и следующее открытие иначе начнётся с панелью за краем экрана.
+        dismissTimer.current = setTimeout(() => {
+          setDismissing(false);
+          setDragX(0);
+        }, 0);
+      }, 180);
       return;
     }
     setDragX(0);
@@ -197,6 +205,14 @@ const SheetContent = React.forwardRef<
         onPointerUp={finishGesture}
         onPointerCancel={cancelGesture}
         {...props}
+        onOpenAutoFocus={(event) => {
+          // Шторка переживает закрытие: Radix держит `SheetContent`
+          // смонтированным. Без сброса следующее открытие показало бы панель
+          // за краем экрана (затемнение есть, окна нет).
+          setDismissing(false);
+          setDragX(0);
+          props.onOpenAutoFocus?.(event);
+        }}
       >
         {children}
         <SheetPrimitive.Close

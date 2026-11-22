@@ -35,6 +35,24 @@ test.describe('правые шторки — свайп', { tag: '@mobile' }, ()
     await expect(dialog).not.toBeVisible();
   });
 
+  test('после свайпа шторка открывается снова', async ({ page, context }) => {
+    await prepare(context);
+    await openApp(page, sheetPath(getState().dhId));
+    const dialog = await openDialog(page, 'Notes', true);
+
+    await swipeSheet(page);
+    await expect(dialog).not.toBeVisible();
+
+    await page
+      .getByRole('navigation')
+      .getByRole('button', { name: 'Notes', exact: true })
+      .click();
+    await expect(dialog).toBeVisible();
+    // Регресс: после закрытия свайпом панель оставалась за краем экрана —
+    // затемнение появлялось, а шторки не было.
+    await expect(dialog).toBeInViewport();
+  });
+
   test('журнал заданий закрывается свайпом', async ({ page, context }) => {
     await prepare(context);
     await openApp(page, sheetPath(getState().dhId));
