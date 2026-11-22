@@ -22,7 +22,7 @@ const spaceGrotesk = Space_Grotesk({
   variable: '--font-space-grotesk',
 });
 
-// Названия игр — из манифестов: новая игра не требует правок layout (этап 2).
+// Названия игр — из манифестов: новая игра не требует правок layout.
 const GAME_TITLES = [
   ...new Set(listGamePlugins().map((plugin) => plugin.manifest.game.name.en)),
 ];

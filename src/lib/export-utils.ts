@@ -589,8 +589,8 @@ export const importCharacterFromJSON = (file: File): Promise<ImportResult> => {
 /**
  * ─── LANDMARK: IMPORT MERGE ────────────────────────────────────────────────
  * Ядро только нормализует обе стороны и проверяет, что редакции совпадают;
- * какие поля сливать — решает плагин (`module.merge`, этап 2). Так в ядре
- * больше нет `isDnd/isDh1/isDh2`.
+ * какие поля сливать — решает плагин (`module.merge`). Ядро не знает
+ * конкретных редакций.
  */
 export const mergeImportedData = (
   targetCharacter: Character,

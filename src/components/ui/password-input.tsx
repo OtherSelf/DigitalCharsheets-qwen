@@ -12,8 +12,8 @@ import { Input } from './input';
 /**
  * Поле пароля с глазком. Тип переключается на `text`, значение и все
  * атрибуты (id, name, autocomplete, required, ref) остаются у самого
- * `<input>`: форма и авто-заполнение работают как раньше. Кнопка — обычный
- * `type="button"`, поэтому Enter по-прежнему отправляет форму.
+ * `<input>`: форма и авто-заполнение видят обычное поле. Кнопка — обычный
+ * `type="button"`, поэтому Enter отправляет форму.
  */
 export const PasswordInput = React.forwardRef<
   HTMLInputElement,
