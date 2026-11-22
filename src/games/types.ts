@@ -58,7 +58,6 @@ export interface GameDefinition {
 
 /** Языки интерфейса сайта; локали плагина могут быть шире. */
 export type SiteLanguage = 'en' | 'ru';
-export const SITE_LANGUAGES: readonly SiteLanguage[] = ['en', 'ru'];
 
 /** Строгие словари слоя сайта: общий слой, метаданные семейств игр. */
 export interface LocalizedMessages {

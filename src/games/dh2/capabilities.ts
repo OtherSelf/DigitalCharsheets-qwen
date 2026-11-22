@@ -25,5 +25,3 @@ export function getDarkHeresyCapabilities(
     fatigueField: 'fatigue2nd',
   };
 }
-
-export const DH2_CAPABILITIES = getDarkHeresyCapabilities();

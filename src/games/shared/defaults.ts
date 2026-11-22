@@ -38,10 +38,3 @@ export function readBoolean(
   const value = input[key];
   return typeof value === 'boolean' ? value : fallback;
 }
-
-export function readStringArray(input: DefaultsInput, key: string): string[] {
-  const value = input[key];
-  return Array.isArray(value)
-    ? value.filter((item): item is string => typeof item === 'string')
-    : [];
-}

@@ -109,8 +109,6 @@ export interface HistoryTruncationMarker {
 }
 
 /** Что можно встретить в JSONL. */
-export type HistoryRecord = HistoryRevision | HistoryTruncationMarker;
-
 /** Результат чтения файла истории (до группировки в сессии). */
 export interface HistoryReadResult {
   revisions: HistoryRevision[];
@@ -148,15 +146,6 @@ export interface HistoryStorageInfo {
   oldestAt: string | null;
 }
 
-/** Страница истории, которую отдаёт API. */
-export interface HistoryPage {
-  sessions: HistorySession[];
-  nextCursor: string | null;
-  totalSessions: number;
-  totalRevisions: number;
-  storage: HistoryStorageInfo;
-}
-
 /**
  * Урезанная история для гостевой ссылки: без байтов файла и без курсора,
  * только последние сессии. Значения уже прошли sanitize.
@@ -174,11 +163,4 @@ export interface SharedHistoryPage {
 /** Пустые счётчики — чтобы не собирать объект по месту. */
 export function emptyHistorySummary(): HistorySummary {
   return { changed: 0, added: 0, removed: 0, bulk: 0 };
-}
-
-/** Проверка служебной строки компакции. */
-export function isHistoryTruncationMarker(
-  record: HistoryRecord,
-): record is HistoryTruncationMarker {
-  return 'kind' in record && record.kind === 'truncated';
 }

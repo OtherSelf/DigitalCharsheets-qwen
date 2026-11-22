@@ -12,7 +12,6 @@
  * Заполнение пустого поля только записывает его: производные (DH2 aptitudes,
  * DH1 worldVariant) не пересчитываются, чтобы не тронуть купленную механику.
  */
-export type FieldEditPolicy = 'descriptive' | 'creation-empty' | 'mechanical';
 
 /**
  * «Задано» значит непустое: пустая строка/пробелы/пустой массив/undefined —

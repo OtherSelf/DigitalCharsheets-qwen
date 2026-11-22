@@ -9,3 +9,4 @@
 export * from './auth';
 export * from './data-dir';
 export * from './fixtures';
+export * from './server-storage';

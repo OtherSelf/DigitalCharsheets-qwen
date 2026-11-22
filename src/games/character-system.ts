@@ -1,4 +1,4 @@
-import { getGameDefinition, listGameDefinitions } from './games';
+import { listGameDefinitions } from './games';
 import type { PluginAlias } from './plugin-api';
 import {
   getGameModule,
@@ -86,22 +86,6 @@ export function getCharacterModule(
 ): AnyGameModule | undefined {
   const systemId = resolveCharacterSystemId(character);
   return systemId ? getGameModule(systemId) : undefined;
-}
-
-export interface SystemNameKeys {
-  gameNameKey?: string;
-  editionNameKey?: string;
-}
-
-export function getSystemNameKeys(
-  systemId: SystemId | undefined,
-): SystemNameKeys {
-  const gameModule = systemId ? getGameModule(systemId) : undefined;
-  if (!gameModule) return {};
-  return {
-    gameNameKey: getGameDefinition(gameModule.gameId)?.nameKey,
-    editionNameKey: gameModule.nameKey,
-  };
 }
 
 /**

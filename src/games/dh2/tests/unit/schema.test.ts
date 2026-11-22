@@ -6,14 +6,12 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { createDh2Defaults } from '@/games/dh2/defaults';
 import { DH2_SCHEMA_VERSION } from '@/games/dh2/schema-version';
 import type { DH2Character } from '@/games/dh2/types';
+import { CURRENT_SCHEMA_VERSION } from '@/games/plugin-api';
 import {
   normalizeAllCharacters,
   type NormalizeCharactersReport,
 } from '@/lib/character-schema';
-import {
-  CHARACTER_SCHEMA_VERSION,
-  normalizeCharacterRecord,
-} from '@/lib/character-version';
+import { normalizeCharacterRecord } from '@/lib/character-version';
 import { parseExportPayload } from '@/lib/export-utils';
 
 import { makeDndCharacter, removeDir, useTempDataDir } from '@tests/support';
@@ -132,7 +130,7 @@ describe('character schema v1', () => {
     const original = makeDndCharacter();
     const { character, changed } = normalizeCharacterRecord(original);
     expect(changed).toBe(true);
-    expect(character.schemaVersion).toBe(CHARACTER_SCHEMA_VERSION);
+    expect(character.schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
     expect(character.name).toBe(original.name);
     expect(character.gameSystem).toBe('Dungeons & Dragons');
   });

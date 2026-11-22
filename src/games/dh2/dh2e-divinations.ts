@@ -40,18 +40,6 @@ export function isDivinationId(value: string): boolean {
   return BY_ID.has(value);
 }
 
-export function divinationById(value: string) {
-  return BY_ID.get(value);
-}
-
-export function divinationTextKey(value: string): string {
-  return BY_ID.get(value)?.textKey ?? '';
-}
-
-export function divinationEffectKey(value: string): string {
-  return BY_ID.get(value)?.effectKey ?? '';
-}
-
 /**
  * Приводит значение к id 2-9: уже 2-9 остаётся, известный DH1-id переносится
  * на совместимую строку, всё остальное — пустая строка (текст уйдёт в notes).
@@ -60,12 +48,4 @@ export function resolveDivinationId(value: string): string {
   if (!value) return '';
   if (isDivinationId(value)) return value;
   return LEGACY_TO_D100[value] ?? '';
-}
-
-/** Строка 2-9 по броску d100 (для предпросмотра эффекта в форме). */
-export function divinationForRoll(roll: number): string {
-  const row = DH2E_DIVINATIONS.find(
-    (item) => roll >= item.from && roll <= item.to,
-  );
-  return row?.id ?? '';
 }

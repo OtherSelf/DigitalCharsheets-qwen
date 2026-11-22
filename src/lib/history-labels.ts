@@ -10,10 +10,6 @@ import type { HistoryChange, StoredValue } from './history-types';
  * перевод или печатать сырой JSON.
  */
 
-export interface HistoryLabelModule {
-  readonly history?: GameHistoryConfig;
-}
-
 /** `hitPoints.current` / `inventory_item` → «hitPoints · current». */
 export function humanizeHistoryPath(path: string): string {
   if (!path) return '';

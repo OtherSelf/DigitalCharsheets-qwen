@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { appendHistory } from '@/lib/character-history';
 import type { HistorySession } from '@/lib/history-types';
 import { newUid } from '@/lib/ids';
-import { createUserFolder, saveCharacterToServer } from '@/lib/server-storage';
+import { saveCharacterToServer } from '@/lib/server-storage';
 import {
   resolveSharedCharacter,
   resolveSharedSheet,
@@ -13,7 +13,12 @@ import {
 import { issueShareToken } from '@/lib/shares';
 import type { Character } from '@/lib/types';
 
-import { makeDndCharacter, removeDir, useTempDataDir } from '@tests/support';
+import {
+  createUserFolder,
+  makeDndCharacter,
+  removeDir,
+  useTempDataDir,
+} from '@tests/support';
 
 let dataDir: string;
 

@@ -59,14 +59,6 @@ const CHARACTERISTIC_APTITUDES = DH2E_APTITUDES.filter(
   (aptitude) => aptitude.group === 'characteristic',
 ).map((aptitude) => aptitude.id);
 
-const APTITUDE_LABELS = new Map(
-  DH2E_APTITUDES.map((aptitude) => [aptitude.id, aptitude.labelKey]),
-);
-
-export function aptitudeLabelKey(id: string): string {
-  return APTITUDE_LABELS.get(id) ?? id;
-}
-
 /** Характеристические аптитюды: из них игрок выбирает замену дублю. */
 export function characteristicAptitudes(): readonly string[] {
   return CHARACTERISTIC_APTITUDES;
@@ -171,23 +163,4 @@ export function deriveAptitudes(
   }
 
   return { profile, choices, duplicates, unresolved };
-}
-
-/** Сколько совпадений у покупки: 2, 1 или 0 (таблицы 2-2/2-4/2-6). */
-export function countAptitudeMatches(
-  slots: readonly Dh2eAptitudeSlot[],
-  profile: readonly string[],
-  chosen: Readonly<Record<string, string>> = {},
-): number {
-  let matches = 0;
-  slots.forEach((slot, index) => {
-    if (typeof slot === 'string') {
-      if (profile.includes(slot)) matches += 1;
-      return;
-    }
-    const picked = chosen[`buy.${index}`];
-    if (picked && profile.includes(picked)) matches += 1;
-    else if (slot.of.some((option) => profile.includes(option))) matches += 1;
-  });
-  return Math.min(matches, 2);
 }

@@ -304,16 +304,6 @@ export async function saveCharacterToServer(
   }
 }
 
-// ЗАПИСЬ: пачка листов (импорт/массовые операции) — по файлу на лист.
-export async function saveCharactersToServer(
-  userId: string,
-  characters: Character[],
-): Promise<void> {
-  for (const char of characters) {
-    await saveCharacterToServer(userId, char);
-  }
-}
-
 /**
  * ПЕРЕЗАПИСЬ: обновить один лист с защитой от запоздавших PUT.
  *
@@ -453,44 +443,4 @@ export async function deleteCharacterFromServer(
     await deleteCharacterHistory(userId, characterId);
     return true;
   });
-}
-
-// Есть ли у пользователя каталог (профиль или хотя бы черновик).
-export async function userFolderExists(userId: string): Promise<boolean> {
-  try {
-    const stat = await fs.stat(getUserDir(userId));
-    return stat.isDirectory();
-  } catch {
-    return false;
-  }
-}
-
-// Создать каталог и минимальный user.json, если профиля ещё нет.
-export async function createUserFolder(
-  userId: string,
-  username: string,
-  displayName: string,
-): Promise<void> {
-  await ensureUserDir(userId);
-  const userFile = path.join(getUserDir(userId), 'user.json');
-
-  try {
-    await fs.stat(userFile);
-    return;
-  } catch {
-    /* профиля ещё нет — создаём */
-  }
-
-  const userData = {
-    schemaVersion: 3,
-    uid: userId,
-    username,
-    displayName,
-    passwordHash: '',
-    role: 'user',
-    isBlocked: false,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  };
-  await writeJsonAtomic(userFile, userData);
 }

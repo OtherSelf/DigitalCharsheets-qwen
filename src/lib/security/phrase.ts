@@ -1,5 +1,4 @@
 import {
-  hashSecret,
   hashSecretAsync,
   isScryptHash,
   verifySecretHash,
@@ -42,11 +41,6 @@ export function normalizePhrase(phrase: unknown): string {
 /** Похоже ли значение на хэш фразы (а не на старый открытый текст). */
 export function isRecoveryPhraseHash(value: unknown): value is string {
   return isScryptHash(value);
-}
-
-/** Захэшировать фразу. Формат версионирован: параметры лежат в строке. */
-export function hashRecoveryPhrase(phrase: string): string {
-  return hashSecret(normalizePhrase(phrase));
 }
 
 /**

@@ -1,24 +1,18 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
 import {
-  addLocalCharacter,
   clearLocalUser,
-  deleteLocalCharacter,
-  getLocalCharacters,
   getLocalUser,
-  saveLocalCharacters,
   setLocalUser,
-  updateLocalCharacter,
   type LocalUser,
 } from '@/lib/local-storage';
 
-import { makeDndCharacter } from '@tests/support';
-
 /**
- * Клиентская сессия и листы в localStorage (src/lib/local-storage.ts).
+ * Клиентская сессия в localStorage (src/lib/local-storage.ts).
  *
- * Покрыто: SSR-заглушки без window, логин в digital_charsheets_user (с legacy
- * email), CRUD листов. Вместо браузера — MemoryStorage, объявленный ниже.
+ * Покрыто: SSR-заглушки без window и логин в digital_charsheets_user (с legacy
+ * email). Листы в браузере больше не хранятся — серверное хранилище заменило
+ * локальный режим. Вместо браузера — MemoryStorage, объявленный ниже.
  */
 
 /** Минимальная замена localStorage: node-окружение его не предоставляет. */
@@ -81,7 +75,6 @@ describe('local-storage: пользователь', () => {
     delete globals.window;
     try {
       expect(getLocalUser()).toBeNull();
-      expect(getLocalCharacters()).toEqual([]);
     } finally {
       globals.window = savedWindow;
     }
@@ -120,61 +113,5 @@ describe('local-storage: пользователь', () => {
 
   it('не падает на пустом хранилище', () => {
     expect(getLocalUser()).toBeNull();
-    expect(getLocalCharacters()).toEqual([]);
-  });
-});
-
-describe('local-storage: персонажи', () => {
-  it('сохраняет и читает список листов', () => {
-    const characters = [
-      makeDndCharacter({ id: 'x1' }),
-      makeDndCharacter({ id: 'x2' }),
-    ];
-    saveLocalCharacters(characters);
-    expect(getLocalCharacters().map((c) => c.id)).toEqual(['x1', 'x2']);
-  });
-
-  it('addLocalCharacter генерирует уникальный непустой id', () => {
-    const { id: _ignored, ...payload } = makeDndCharacter();
-
-    const first = addLocalCharacter(payload as any);
-    const second = addLocalCharacter(payload as any);
-
-    expect(first.id).toBeTruthy();
-    expect(second.id).toBeTruthy();
-    expect(first.id).not.toBe(second.id);
-    expect(getLocalCharacters()).toHaveLength(2);
-  });
-
-  it('updateLocalCharacter меняет только нужную запись', () => {
-    saveLocalCharacters([
-      makeDndCharacter({ id: 'a', name: 'A' }),
-      makeDndCharacter({ id: 'b', name: 'B' }),
-    ]);
-
-    updateLocalCharacter('b', { name: 'B2' });
-
-    const characters = getLocalCharacters();
-    expect(characters.find((c) => c.id === 'a')?.name).toBe('A');
-    expect(characters.find((c) => c.id === 'b')?.name).toBe('B2');
-  });
-
-  it('updateLocalCharacter игнорирует неизвестный id', () => {
-    saveLocalCharacters([makeDndCharacter({ id: 'a', name: 'A' })]);
-    updateLocalCharacter('nope', { name: 'X' });
-    expect(getLocalCharacters()[0].name).toBe('A');
-  });
-
-  it('deleteLocalCharacter удаляет только совпавший id', () => {
-    saveLocalCharacters([
-      makeDndCharacter({ id: 'a' }),
-      makeDndCharacter({ id: 'b' }),
-    ]);
-
-    deleteLocalCharacter('a');
-
-    expect(getLocalCharacters().map((c) => c.id)).toEqual(['b']);
-    deleteLocalCharacter('missing');
-    expect(getLocalCharacters()).toHaveLength(1);
   });
 });

@@ -4,23 +4,23 @@ import path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { CHARACTER_SCHEMA_VERSION } from '@/lib/character-version';
+import { CURRENT_SCHEMA_VERSION } from '@/games/plugin-api';
 import {
-  createUserFolder,
   deleteCharacterFromServer,
   getCharactersFromServer,
   resetWriteSeqGuard,
-  saveCharactersToServer,
   saveCharacterToServer,
   updateCharacterOnServer,
-  userFolderExists,
 } from '@/lib/server-storage';
 
 import {
+  createUserFolder,
   makeDhCharacter,
   makeDndCharacter,
   readJson,
   removeDir,
+  saveCharactersToServer,
+  userFolderExists,
   userPaths,
   useTempDataDir,
 } from '@tests/support';
@@ -58,7 +58,7 @@ describe('server-storage (файловое хранилище листов)', ()
     expect(readJson(file)).toEqual({
       ...character,
       systemId: 'dnd5e',
-      schemaVersion: CHARACTER_SCHEMA_VERSION,
+      schemaVersion: CURRENT_SCHEMA_VERSION,
     });
     // Компактный JSON: без отступов и переводов строк.
     const raw = fs.readFileSync(file, 'utf8');

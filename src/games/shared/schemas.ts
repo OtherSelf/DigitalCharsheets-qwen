@@ -44,15 +44,3 @@ export const questSchema = z.looseObject({
   locations: z.string().optional(),
   objectives: z.array(questObjectiveSchema).optional(),
 });
-
-/**
- * Схема конверта листа: минимальный набор, по которому ядро отличает
- * редакцию и версию файла. Используется серверными маршрутами создания и
- * импорта до полной валидации полей модулем.
- */
-export const characterEnvelopeSchema = z.looseObject({
-  id: z.string().min(1),
-  name: z.string(),
-  systemId: z.string().min(1).optional(),
-  schemaVersion: z.number().int().nonnegative().optional(),
-});

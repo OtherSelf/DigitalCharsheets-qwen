@@ -90,8 +90,6 @@ export interface BackupExport {
   characters: Partial<Character>[];
 }
 
-export type StandardExport = ExportData | BackupExport;
-
 export const sanitizeData = (data: any): any => {
   if (Array.isArray(data)) {
     return data.map(sanitizeData);

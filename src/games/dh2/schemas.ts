@@ -1,15 +1,7 @@
 import { z } from 'zod';
 
 import { inventoryItemSchema, questSchema } from '../shared/schemas';
-import {
-  GENDER_CODES,
-  type DarkHeresyBase,
-  type DarkHeresyCoreStatNotes,
-  type DarkHeresyCoreStats,
-  type DarkHeresyCoreStatUpgrades,
-  type Skill,
-  type Talent,
-} from './types';
+import { GENDER_CODES, type Skill, type Talent } from './types';
 
 /**
  * ─── LANDMARK: DARK_HERESY BASE SCHEMAS ───────────────────────────────────
@@ -44,9 +36,6 @@ export const darkHeresyCoreStatsFields = {
   fellowship: coreStatSchema,
 };
 
-export const darkHeresyCoreStatsSchema: z.ZodType<DarkHeresyCoreStats> =
-  z.looseObject(darkHeresyCoreStatsFields);
-
 /** Поля апгрейдов; `influence` добавляет только dh2. */
 export const darkHeresyCoreStatUpgradesFields = {
   weaponSkill: upgradeSchema,
@@ -60,9 +49,6 @@ export const darkHeresyCoreStatUpgradesFields = {
   fellowship: upgradeSchema,
 };
 
-export const darkHeresyCoreStatUpgradesSchema: z.ZodType<DarkHeresyCoreStatUpgrades> =
-  z.looseObject(darkHeresyCoreStatUpgradesFields);
-
 /** Поля заметок к характеристикам; `influence` добавляет только dh2. */
 export const darkHeresyCoreStatNotesFields = {
   weaponSkill: z.string().optional(),
@@ -75,9 +61,6 @@ export const darkHeresyCoreStatNotesFields = {
   willpower: z.string().optional(),
   fellowship: z.string().optional(),
 };
-
-export const darkHeresyCoreStatNotesSchema: z.ZodType<DarkHeresyCoreStatNotes> =
-  z.looseObject(darkHeresyCoreStatNotesFields);
 
 /** Схема одного апгрейда (+5/+10/+15/+20) — нужна dh2 для `influence`. */
 export const darkHeresyStatUpgradeSchema = upgradeSchema;
@@ -268,9 +251,6 @@ export const darkHeresyBaseFields = {
     .optional(),
   customResources: z.array(resourceSchema).optional(),
 };
-
-export const darkHeresyBaseSchema: z.ZodType<DarkHeresyBase> =
-  z.looseObject(darkHeresyBaseFields);
 
 export const conditionEntrySchema = z.looseObject({
   id: z.string().min(1),

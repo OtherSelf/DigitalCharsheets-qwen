@@ -6,7 +6,6 @@ import { getSharesFile, getUserDir } from '@/lib/data-dir';
 import { newUid } from '@/lib/ids';
 import { deleteUserAccount, registerUser } from '@/lib/server-auth';
 import {
-  createUserFolder,
   deleteCharacterFromServer,
   saveCharacterToServer,
 } from '@/lib/server-storage';
@@ -21,6 +20,7 @@ import {
 } from '@/lib/shares';
 
 import {
+  createUserFolder,
   makeDndCharacter,
   readJson,
   removeDir,

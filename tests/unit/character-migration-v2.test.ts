@@ -1,9 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  CHARACTER_SCHEMA_VERSION,
-  normalizeCharacterRecord,
-} from '@/lib/character-version';
+import { CURRENT_SCHEMA_VERSION } from '@/games/plugin-api';
+import { normalizeCharacterRecord } from '@/lib/character-version';
 
 import { hasPlugin, makeDhCharacter, makeDndCharacter } from '@tests/support';
 
@@ -36,7 +34,7 @@ describe('миграция листа v2: редакции', () => {
 
     expect(changed).toBe(true);
     expect(issues).toEqual([]);
-    expect(character.schemaVersion).toBe(CHARACTER_SCHEMA_VERSION);
+    expect(character.schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
     expect((character as any).systemId).toBe('dnd5e');
     expect(character.name).toBe(original.name);
     expect(character.gameSystem).toBe('Dungeons & Dragons');
@@ -177,12 +175,12 @@ describe('миграция листа v2: идемпотентность и гр
 
   it('файл новее поддерживаемой версии не трогаем', () => {
     const raw = makeDndCharacter({
-      schemaVersion: CHARACTER_SCHEMA_VERSION + 1,
+      schemaVersion: CURRENT_SCHEMA_VERSION + 1,
     });
     const result = normalize(raw);
     expect(result.changed).toBe(false);
     expect(result.issues.join(' ')).toContain('новее поддерживаемой');
-    expect(result.character.schemaVersion).toBe(CHARACTER_SCHEMA_VERSION + 1);
+    expect(result.character.schemaVersion).toBe(CURRENT_SCHEMA_VERSION + 1);
   });
 
   it('неизвестная система не помечается v2', () => {

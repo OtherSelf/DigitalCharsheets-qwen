@@ -1,8 +1,5 @@
 import { resolveCharacterSystemId } from '@/games/character-system';
-import {
-  CURRENT_SCHEMA_VERSION,
-  type NormalizeOptions,
-} from '@/games/plugin-api';
+import type { NormalizeOptions } from '@/games/plugin-api';
 import { getGameModule } from '@/games/registry';
 import type { CharacterMigration } from '@/games/types';
 
@@ -26,9 +23,6 @@ import type { Character } from './types';
  * `gameSystem` остаётся в данных как legacy-поле; единственный
  * дискриминант — `systemId`.
  */
-
-/** Текущая версия схемы листа; у плагина — `manifest.schemaVersion`. */
-export const CHARACTER_SCHEMA_VERSION = CURRENT_SCHEMA_VERSION;
 
 export interface ParsedCharacterRecord {
   character: Character;

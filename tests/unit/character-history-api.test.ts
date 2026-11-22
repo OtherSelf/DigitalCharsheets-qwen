@@ -7,9 +7,10 @@ import {
 import { appendHistory, deleteCharacterHistory } from '@/lib/character-history';
 import type { HistoryChange } from '@/lib/history-types';
 import { newUid } from '@/lib/ids';
-import { createUserFolder, saveCharacterToServer } from '@/lib/server-storage';
+import { saveCharacterToServer } from '@/lib/server-storage';
 
 import {
+  createUserFolder,
   makeDndCharacter,
   removeDir,
   sessionHeaders,

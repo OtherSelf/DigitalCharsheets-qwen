@@ -1502,5 +1502,3 @@ export const openApiDocument = {
     },
   },
 };
-
-export type OpenApiDocument = typeof openApiDocument;

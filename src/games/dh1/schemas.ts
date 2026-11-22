@@ -3,7 +3,6 @@ import { z } from 'zod';
 import { inventoryItemSchema, questSchema } from '../shared/schemas';
 import {
   GENDER_CODES,
-  type DarkHeresyBase,
   type DarkHeresyCoreStatNotes,
   type DarkHeresyCoreStats,
   type DarkHeresyCoreStatUpgrades,
@@ -327,9 +326,6 @@ export const darkHeresyBaseFields = {
     .optional(),
   customResources: z.array(resourceSchema).optional(),
 };
-
-export const darkHeresyBaseSchema: z.ZodType<DarkHeresyBase> =
-  z.looseObject(darkHeresyBaseFields);
 
 export const conditionEntrySchema = z.looseObject({
   id: z.string().min(1),

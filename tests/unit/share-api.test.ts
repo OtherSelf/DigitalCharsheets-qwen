@@ -6,10 +6,11 @@ import {
   POST as sharePost,
 } from '@/app/api/characters/[id]/share/route';
 import { newUid } from '@/lib/ids';
-import { createUserFolder, saveCharacterToServer } from '@/lib/server-storage';
+import { saveCharacterToServer } from '@/lib/server-storage';
 import { getShareForCharacter, resolveShareToken } from '@/lib/shares';
 
 import {
+  createUserFolder,
   makeDndCharacter,
   removeDir,
   sessionHeaders,

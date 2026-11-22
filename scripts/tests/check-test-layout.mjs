@@ -265,12 +265,6 @@ const GAME_MENTION_ALLOWANCE = {
       'сценарий использует живые редакции; переезжает в плагин или на итерацию реестра',
     removeBy: 'этап 5 трекера game-core',
   },
-  'tests/unit/local-storage.test.ts': {
-    max: 9,
-    reason:
-      'сценарий использует живые редакции; переезжает в плагин или на итерацию реестра',
-    removeBy: 'этап 5 трекера game-core',
-  },
   'tests/unit/openapi.test.ts': {
     max: 1,
     reason:
