@@ -11,6 +11,18 @@ format changes.
 
 ## [Unreleased]
 
+## [0.16.1] - 2026-11-22
+
+### Fixed
+
+- The login page no longer fails with "The original argument must be of type
+  Function". It imported the password-length constant from the server module,
+  which calls `promisify(crypto.scrypt)` while loading and has no `crypto.scrypt`
+  in a browser; the policy now lives in `security/password-policy.ts`, and a
+  unit test forbids client modules from importing `security/{password,scrypt,
+  phrase}`, `server-*` and `node:fs`/`node:crypto`. The API was never affected —
+  only the client bundle, so `/login` was the only broken screen.
+
 ## [0.16.0] - 2026-11-22
 
 Reads and writes stop queueing, and the sheet list revalidates instead of
