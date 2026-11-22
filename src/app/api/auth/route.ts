@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 
 import { jsonError } from '@/lib/api/respond';
+import { readAuthJson } from '@/lib/security/payload';
 import {
   getAuthRateLimiter,
   LOGIN_RATE_LIMIT,
@@ -26,8 +27,15 @@ import { sessionCookieHeader } from '@/lib/session';
  */
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    const { username, password, displayName } = body;
+    const parsedBody = await readAuthJson(request);
+    if (!parsedBody.ok) {
+      return jsonError(parsedBody.status, parsedBody.error, parsedBody.reason);
+    }
+    const { username, password, displayName } = parsedBody.body as {
+      username?: string;
+      password?: string;
+      displayName?: string;
+    };
 
     if (!username || !password) {
       return jsonError(400, 'Username/Email and password are required.');

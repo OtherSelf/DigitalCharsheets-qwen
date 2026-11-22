@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 
 import { jsonError } from '@/lib/api/respond';
 import { passwordPolicyError } from '@/lib/security/password';
+import { readAuthJson } from '@/lib/security/payload';
 import {
   getAuthRateLimiter,
   rateLimitKey,
@@ -25,10 +26,11 @@ import { resetCredentialsWithToken } from '@/lib/server-auth';
  */
 export async function POST(request: Request) {
   try {
-    const body = (await request.json().catch(() => null)) as Record<
-      string,
-      unknown
-    > | null;
+    const parsedBody = await readAuthJson(request);
+    if (!parsedBody.ok) {
+      return jsonError(parsedBody.status, parsedBody.error, parsedBody.reason);
+    }
+    const body = parsedBody.body;
 
     const token = typeof body?.token === 'string' ? body.token : '';
     const newPassword =

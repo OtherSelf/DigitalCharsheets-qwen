@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 
+import { readAuthJson } from '@/lib/security/payload';
 import { revokeAllSessionsForUser } from '@/lib/security/sessions';
 import {
   clearSessionCookieHeader,
@@ -21,12 +22,8 @@ import {
  */
 export async function POST(request: Request) {
   let revokeAll = false;
-  try {
-    const body = await request.json();
-    revokeAll = body?.all === true;
-  } catch {
-    // Пустое/битое тело — обычный logout.
-  }
+  const parsedBody = await readAuthJson(request);
+  if (parsedBody.ok) revokeAll = parsedBody.body.all === true;
 
   if (revokeAll) {
     const uid = await getSessionUid(request);

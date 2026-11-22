@@ -113,7 +113,7 @@ describe('POST /api/auth/register', () => {
     expect((await shortPhrase.json()).error).toContain('Recovery phrase');
   });
 
-  it('возвращает 500 (а не падает) на битом JSON', async () => {
+  it('возвращает 400 (а не падает) на битом JSON', async () => {
     const res = await registerRoute(
       new Request('http://localhost/api/auth/register', {
         method: 'POST',
@@ -121,7 +121,18 @@ describe('POST /api/auth/register', () => {
         body: '{ broken',
       }),
     );
-    expect(res.status).toBe(500);
+    expect(res.status).toBe(400);
+  });
+
+  it('отклоняет тело больше 16 КиБ', async () => {
+    const res = await registerRoute(
+      new Request('http://localhost/api/auth/register', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ username: 'x'.repeat(17 * 1024) }),
+      }),
+    );
+    expect(res.status).toBe(413);
   });
 });
 
@@ -154,7 +165,7 @@ describe('POST /api/auth/exists', () => {
     expect(limited).toBe(1);
   });
 
-  it('400 без логина и 500 на битом JSON', async () => {
+  it('400 без логина и на битом JSON', async () => {
     const empty = await existsRoute(json({ username: '   ' }));
     expect(empty.status).toBe(400);
 
@@ -165,7 +176,7 @@ describe('POST /api/auth/exists', () => {
         body: '{ broken',
       }),
     );
-    expect(broken.status).toBe(500);
+    expect(broken.status).toBe(400);
   });
 });
 
@@ -280,7 +291,7 @@ describe('POST /api/auth', () => {
     expect(correct.status).toBe(429);
   });
 
-  it('возвращает 500 (а не падает) на битом JSON', async () => {
+  it('возвращает 400 (а не падает) на битом JSON', async () => {
     const res = await loginRoute(
       new Request('http://localhost/api/auth', {
         method: 'POST',
@@ -288,7 +299,7 @@ describe('POST /api/auth', () => {
         body: '{ broken',
       }),
     );
-    expect(res.status).toBe(500);
+    expect(res.status).toBe(400);
   });
 });
 

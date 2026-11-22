@@ -26,3 +26,17 @@ export function sharePath(token: string): string {
 export function historyPath(characterId: string): string {
   return `${characterPath(characterId)}/history`;
 }
+
+/**
+ * Безопасный внутренний путь для `?from=`: только один ведущий `/`, без
+ * `//host` и обратных слэшей (браузер может нормализовать их в `/`).
+ */
+export function safeInternalPath(
+  value: string | null | undefined,
+  fallback = '/',
+): string {
+  if (!value) return fallback;
+  if (!value.startsWith('/') || value.startsWith('//')) return fallback;
+  if (value.includes('\\')) return fallback;
+  return value;
+}

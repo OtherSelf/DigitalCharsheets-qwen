@@ -121,6 +121,7 @@ export async function listUsersForAdmin(): Promise<AdminUsersList> {
 export async function listCharactersForAdmin(
   uid: string,
 ): Promise<AdminCharacterSummary[] | null> {
+  if (!isUid(uid)) return null;
   if (!(await readStoredUser(uid))) return null;
 
   let files: string[] = [];

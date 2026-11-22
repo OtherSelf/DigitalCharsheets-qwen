@@ -10,6 +10,8 @@
  */
 
 export const MAX_CHARACTER_BODY_BYTES = 1024 * 1024;
+/** Auth-тела маленькие: логин, пароль, фраза. 16 КиБ с запасом. */
+export const MAX_AUTH_BODY_BYTES = 16 * 1024;
 
 export type ReadJsonBodyResult =
   | { ok: true; body: Record<string, unknown> }
@@ -85,4 +87,9 @@ export async function readJsonObject(
   }
 
   return { ok: true, body: parsed as Record<string, unknown> };
+}
+
+/** JSON auth-запроса с коротким лимитом: защита от гигантских тел до парсинга. */
+export function readAuthJson(request: Request): Promise<ReadJsonBodyResult> {
+  return readJsonObject(request, MAX_AUTH_BODY_BYTES);
 }

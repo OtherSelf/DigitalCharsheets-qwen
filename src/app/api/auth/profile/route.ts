@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 
 import { jsonError, unauthorized } from '@/lib/api/respond';
+import { readAuthJson } from '@/lib/security/payload';
 import {
   AUTH_MUTATION_RATE_LIMIT,
   getAuthRateLimiter,
@@ -37,14 +38,23 @@ export async function PUT(request: Request) {
       );
     }
 
-    const body = await request.json();
+    const parsedBody = await readAuthJson(request);
+    if (!parsedBody.ok) {
+      return jsonError(parsedBody.status, parsedBody.error, parsedBody.reason);
+    }
     const {
       newUsername,
       newDisplayName,
       newPassword,
       newRecoveryPhrase,
       currentPassword,
-    } = body;
+    } = parsedBody.body as {
+      newUsername?: string;
+      newDisplayName?: string;
+      newPassword?: string;
+      newRecoveryPhrase?: string;
+      currentPassword?: string;
+    };
 
     if (!newUsername || !newDisplayName) {
       return jsonError(400, 'Username and display name are required.');
@@ -104,11 +114,15 @@ export async function DELETE(request: Request) {
     if (!uid) return unauthorized();
 
     let password = '';
-    try {
-      const body = await request.json();
-      password = typeof body?.password === 'string' ? body.password : '';
-    } catch {
-      // Пустое/битое тело — это «пароль не передан», а не 500.
+    const parsedBody = await readAuthJson(request);
+    if (!parsedBody.ok && parsedBody.status === 413) {
+      return jsonError(parsedBody.status, parsedBody.error, parsedBody.reason);
+    }
+    if (parsedBody.ok) {
+      password =
+        typeof parsedBody.body.password === 'string'
+          ? parsedBody.body.password
+          : '';
     }
 
     if (!password.trim()) {

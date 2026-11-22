@@ -27,6 +27,7 @@ import { Separator } from '@/components/ui/separator';
 import { useTranslation } from '@/context/language-context';
 import { useLocalAuth } from '@/context/local-auth-context';
 import { useUISettings } from '@/hooks/use-ui-settings';
+import { safeInternalPath } from '@/lib/routes';
 import { MIN_PASSWORD_LENGTH } from '@/lib/security/password-policy';
 
 export default function ProfileSettingsPage() {
@@ -36,8 +37,8 @@ export default function ProfileSettingsPage() {
   const searchParams = useSearchParams();
 
   // LANDMARK: BACK_NAVIGATION_LOGIC
-  const from = searchParams.get('from');
-  const backTarget = from && from.startsWith('/') ? from : '/';
+  // Только внутренний путь: `//evil.example` — уже внешний URL.
+  const backTarget = safeInternalPath(searchParams.get('from'));
   const isFromDashboard = backTarget === '/';
 
   const { isLoaded } = useUISettings();

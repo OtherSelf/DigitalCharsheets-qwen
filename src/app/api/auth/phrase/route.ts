@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 
 import { jsonError, unauthorized } from '@/lib/api/respond';
+import { readAuthJson } from '@/lib/security/payload';
 import {
   AUTH_MUTATION_RATE_LIMIT,
   getAuthRateLimiter,
@@ -33,8 +34,11 @@ export async function POST(request: Request) {
       );
     }
 
-    const body = await request.json();
-    const { phrase } = body;
+    const parsedBody = await readAuthJson(request);
+    if (!parsedBody.ok) {
+      return jsonError(parsedBody.status, parsedBody.error, parsedBody.reason);
+    }
+    const { phrase } = parsedBody.body as { phrase?: string };
 
     if (!phrase) {
       return jsonError(400, 'Phrase is required.');

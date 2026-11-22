@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 
 import { jsonError } from '@/lib/api/respond';
+import { readAuthJson } from '@/lib/security/payload';
 import {
   EXISTS_RATE_LIMIT,
   getAuthRateLimiter,
@@ -21,8 +22,11 @@ import { accountExists } from '@/lib/server-auth';
  */
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    const { username } = body;
+    const parsedBody = await readAuthJson(request);
+    if (!parsedBody.ok) {
+      return jsonError(parsedBody.status, parsedBody.error, parsedBody.reason);
+    }
+    const { username } = parsedBody.body;
 
     if (typeof username !== 'string' || username.trim() === '') {
       return jsonError(400, 'Username/Email is required.');

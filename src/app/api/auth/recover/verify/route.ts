@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 
 import { jsonError } from '@/lib/api/respond';
+import { readAuthJson } from '@/lib/security/payload';
 import {
   getAuthRateLimiter,
   rateLimitKey,
@@ -30,10 +31,11 @@ const FAILURE_DELAY_MS = 300;
 
 export async function POST(request: Request) {
   try {
-    const body = (await request.json().catch(() => null)) as Record<
-      string,
-      unknown
-    > | null;
+    const parsedBody = await readAuthJson(request);
+    if (!parsedBody.ok) {
+      return jsonError(parsedBody.status, parsedBody.error, parsedBody.reason);
+    }
+    const body = parsedBody.body;
 
     const username = typeof body?.username === 'string' ? body.username : '';
     // Старый клиент присылал `recoveryPhraseInput`; поле принимается, но
