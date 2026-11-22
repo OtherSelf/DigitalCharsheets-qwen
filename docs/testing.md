@@ -493,12 +493,15 @@ filtered with `grepInvert`, so the report has no skipped duplicates.
 3. Prettier check;
 4. ESLint, plugin boundaries, core purity and reverse imports; regenerate the
    plugin registry/dictionaries from the manifests (the files are not tracked);
+   check that `docs/meta.json` matches the map in `docs/README.md`;
 5. TypeScript;
 6. dead code: dead exports and files without importers
    (`npm run deadcode:check`);
-7. unit tests;
+7. unit tests, including documentation integrity (`docs-integrity`),
+   the meta generator (`docs-meta`) and the link rewriter (`docs-links`);
 8. production build;
-9. HTTP smoke test against a temporary server.
+9. HTTP smoke test against a temporary server, including `/docs` (200),
+   `/docs/no-such-page` (404) and `/api/search` (JSON results).
 
 The dead-code gate is a ratchet. An export with no references outside its own
 file fails the build, and so does a `src/` file nobody imports. Exceptions live

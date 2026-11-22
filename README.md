@@ -64,14 +64,15 @@ are in [docs/deployment.md](docs/deployment.md).
 ## Documentation
 
 Start at **[docs/README.md](docs/README.md)** — it explains the structure and
-rules for adding documentation. Useful pages:
+rules for adding documentation. The same pages are rendered by the app at
+`/docs` (no sign-in), and the API reference stays at `/api/docs`. Useful pages:
 
 - [Plugin SDK](docs/plugin-sdk.md) — how to add a game/edition (`plugin.json`,
   UI slots, i18n, migrations, conformance).
 - [Architecture](docs/architecture.md) — stack, auth/session, startup checks.
 - [Data storage](docs/data-storage.md) — on-disk layout and `user.json` schema.
 - [HTTP API](docs/api.md) — endpoints and the `/api/docs` / `/api/openapi.json`
-  reference.
+  reference; human-readable docs are at `/docs`.
 - [Administration](docs/admin.md) — `/admin`, roles, first administrator.
 - [Export format](docs/export-format.md) — portable JSON/Excel envelope.
 - [Development](docs/development.md) — setup, scripts, code style, release versions.

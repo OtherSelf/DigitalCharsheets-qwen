@@ -70,7 +70,7 @@ importer still accepts is summarised in
 | State | React contexts (`LocalAuthProvider`, `CharacterProvider`) + a small save queue |
 | Storage | Node `fs` + JSON files under a data directory; no DB |
 | Auth | Signed HttpOnly session cookie; per-user `user.json` |
-| API docs | OpenAPI 3.1 + Scalar at `/api/docs` |
+| API docs | OpenAPI 3.1 + Scalar at `/api/docs`; engineering docs at `/docs` |
 | Tests | Vitest, HTTP smoke script, Playwright visual regression |
 
 ## Application layout
@@ -115,6 +115,7 @@ docs/                  This documentation
 | `/admin` | Administrator panel (HTML shell; data via `/api/admin/*`) |
 | `/demo` | Demo landing, always the guest view |
 | `/stats-editor` | Bulk stats editor |
+| `/docs`, `/docs/<slug>` | Engineering documentation rendered from `docs/*.md` (public) |
 
 Sheet URLs are built by `characterPath()` in
 [`src/lib/routes.ts`](../src/lib/routes.ts); share URLs use `sharePath()`. There

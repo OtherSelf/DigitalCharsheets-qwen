@@ -65,6 +65,8 @@ Deployment details, reverse proxy and environment variables:
 | `npm run deadcode:check` | Dead exports and files without importers; allowlist with reasons and a `test-only` cap (also a step of `npm run verify`). |
 | `npm run plugins:generate` | Regenerate `src/games/*.generated.ts` from the manifests (also `postinstall`, `predev`, `prebuild`, `pretest`). |
 | `npm run plugins:check` | Compare the generated files on disk with the manifests (drift check after manual edits). |
+| `npm run docs:generate` | Regenerate `docs/meta.json` and `docs/adr/meta.json` from the map in `docs/README.md` (also `predev`). |
+| `npm run docs:check` | Compare the documentation meta files with the map (a step of `npm run verify`). |
 | `npm test` | Unit tests (Vitest). |
 | `npm run test:watch` | Vitest in watch mode. |
 | `npm run test:smoke` | HTTP smoke test against a running server (default `http://localhost:3000`). |

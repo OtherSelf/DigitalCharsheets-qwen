@@ -14,6 +14,7 @@ over the same origin as the UI and authenticates with a signed HttpOnly cookie.
 | --- | --- |
 | **`/api/docs`** | Scalar reference for the OpenAPI document. |
 | **`/api/openapi.json`** | The OpenAPI 3.1 document itself. |
+| **`/docs`** | Human-readable engineering documentation (the same `docs/*.md`, rendered by the app). |
 
 The source of truth is [`src/lib/openapi.ts`](../src/lib/openapi.ts). The Scalar
 UI is served by [`src/app/api/docs/route.ts`](../src/app/api/docs/route.ts) and
