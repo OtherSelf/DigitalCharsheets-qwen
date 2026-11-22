@@ -28,6 +28,35 @@ export function isServerDeriveEnabled(
 }
 
 /**
+ * Один сценарий `derive`: флаг сервера, редакция, плагин и (для `heal`)
+ * порог версии схемы. Чистая функция: только копия документа.
+ */
+function deriveWithPlugin(
+  character: Readonly<Record<string, unknown>>,
+  options: {
+    readonly env?: Readonly<Record<string, string | undefined>>;
+    readonly beforeVersion?: number;
+  } = {},
+): Record<string, unknown> {
+  if (!isServerDeriveEnabled(options.env)) return { ...character };
+
+  const systemId =
+    typeof character.systemId === 'string' ? character.systemId : undefined;
+  const plugin = systemId ? getGamePlugin(systemId) : undefined;
+  if (!plugin?.derive) return { ...character };
+
+  // `heal` догоняет только старые документы; свежие не пересчитываются.
+  if (
+    options.beforeVersion !== undefined &&
+    options.beforeVersion >= plugin.manifest.schemaVersion
+  ) {
+    return { ...character };
+  }
+
+  return plugin.derive(character) as Record<string, unknown>;
+}
+
+/**
  * Применить `derive` плагина к документу листа.
  *
  * Чистая обёртка: не пишет на диск и не знает, куда документ пойдёт дальше —
@@ -42,14 +71,7 @@ export function applyCharacterDerive(
     readonly env?: Readonly<Record<string, string | undefined>>;
   } = {},
 ): Record<string, unknown> {
-  if (!isServerDeriveEnabled(options.env)) return { ...character };
-
-  const systemId =
-    typeof character.systemId === 'string' ? character.systemId : undefined;
-  const plugin = systemId ? getGamePlugin(systemId) : undefined;
-  if (!plugin?.derive) return { ...character };
-
-  return plugin.derive(character) as Record<string, unknown>;
+  return deriveWithPlugin(character, options);
 }
 
 /**
@@ -69,13 +91,5 @@ export function healCharacterDerive(
     readonly env?: Readonly<Record<string, string | undefined>>;
   } = {},
 ): Record<string, unknown> {
-  if (!isServerDeriveEnabled(options.env)) return { ...character };
-
-  const systemId =
-    typeof character.systemId === 'string' ? character.systemId : undefined;
-  const plugin = systemId ? getGamePlugin(systemId) : undefined;
-  if (!plugin?.derive) return { ...character };
-  if (beforeVersion >= plugin.manifest.schemaVersion) return { ...character };
-
-  return plugin.derive(character) as Record<string, unknown>;
+  return deriveWithPlugin(character, { ...options, beforeVersion });
 }
