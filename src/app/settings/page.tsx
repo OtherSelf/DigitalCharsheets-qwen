@@ -5,11 +5,12 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
-import { AlertCircle, Minus, Plus, RotateCcw, Save } from 'lucide-react';
+import { AlertCircle, Save } from 'lucide-react';
 
 import { Header } from '@/components/header';
 import { SiteFooter } from '@/components/layout/site-footer';
 import { DeleteAccountCard } from '@/components/settings/delete-account-card';
+import { DisplaySettingsControls } from '@/components/settings/display-settings-controls';
 import { SessionsCard } from '@/components/settings/sessions-card';
 import { Button } from '@/components/ui/button';
 import {
@@ -40,18 +41,7 @@ export default function ProfileSettingsPage() {
   const backTarget = from && from.startsWith('/') ? from : '/';
   const isFromDashboard = backTarget === '/';
 
-  const {
-    textScale,
-    uiScale,
-    updateTextScale,
-    updateUiScale,
-    resetSettings,
-    minTextScale,
-    maxTextScale,
-    minUiScale,
-    maxUiScale,
-    isLoaded,
-  } = useUISettings();
+  const { isLoaded } = useUISettings();
 
   const [displayName, setDisplayName] = useState('');
   const [username, setUsername] = useState('');
@@ -199,85 +189,8 @@ export default function ProfileSettingsPage() {
                   {t('settings.adjustUiAppearance')}
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="space-y-3">
-                  <Label>{t('settings.fontSize')}</Label>
-                  <div className="flex items-center gap-3">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      onClick={() => updateTextScale(textScale - 0.1)}
-                      disabled={textScale <= minTextScale}
-                      aria-label={t('settings.decreaseTextSize')}
-                    >
-                      <Minus className="h-4 w-4" />
-                    </Button>
-                    <div className="flex-1 text-center font-medium tabular-nums">
-                      {Math.round(textScale * 100)}% (
-                      {(12 * textScale).toFixed(1)} pt)
-                    </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      onClick={() => updateTextScale(textScale + 0.1)}
-                      disabled={textScale >= maxTextScale}
-                      aria-label={t('settings.increaseTextSize')}
-                    >
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  <p className="text-muted-foreground text-xs">
-                    {t('settings.minFontSizeWarning')}
-                  </p>
-                </div>
-
-                <Separator />
-
-                <div className="space-y-3">
-                  <Label>{t('settings.uiScale')}</Label>
-                  <div className="flex items-center gap-3">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      onClick={() => updateUiScale(uiScale - 0.1)}
-                      disabled={uiScale <= minUiScale}
-                      aria-label={t('settings.decreaseUiScale')}
-                    >
-                      <Minus className="h-4 w-4" />
-                    </Button>
-                    <div className="flex-1 text-center font-medium tabular-nums">
-                      {Math.round(uiScale * 100)}%
-                    </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      onClick={() => updateUiScale(uiScale + 0.1)}
-                      disabled={uiScale >= maxUiScale}
-                      aria-label={t('settings.increaseUiScale')}
-                    >
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  <p className="text-muted-foreground text-xs">
-                    {t('settings.uiScaleWarning')}
-                  </p>
-                </div>
-
-                <div className="pt-2">
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    onClick={resetSettings}
-                    className="w-full sm:w-auto"
-                  >
-                    <RotateCcw className="mr-2 h-4 w-4" />
-                    {t('settings.resetToDefaults')}
-                  </Button>
-                </div>
+              <CardContent>
+                <DisplaySettingsControls resetClassName="w-full sm:w-auto" />
               </CardContent>
             </Card>
 
