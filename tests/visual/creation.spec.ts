@@ -274,3 +274,36 @@ test.describe('черновик гостя и вход в аккаунт', () =>
     ).toBeNull();
   });
 });
+
+test.describe('регистрация: вход и переход на главную', () => {
+  test('после регистрации без черновика открыта главная, сессия активна', async ({
+    page,
+    context,
+  }) => {
+    await prepare(context, { authenticated: false, language: 'en' });
+    const username = `reg-home-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    await registerViaUI(page, {
+      username,
+      password: 'register-pass-1234',
+      displayName: 'Register Home',
+      recoveryPhrase: 'register home phrase',
+    });
+
+    await expect(page).toHaveURL((url) => url.pathname === '/', {
+      timeout: 30_000,
+    });
+    await expect(
+      page.getByRole('heading', { name: 'Existing Characters' }),
+    ).toBeVisible();
+
+    // Вход действительно выполнен: та же cookie-сессия отдаёт профиль, а в
+    // шапке нет гостевой кнопки «Login / Register».
+    const session = await page.request.get('/api/auth/session');
+    expect(session.status()).toBe(200);
+    const body = (await session.json()) as { success?: boolean };
+    expect(body.success).toBe(true);
+    await expect(
+      page.getByRole('link', { name: 'Login / Register' }),
+    ).toHaveCount(0);
+  });
+});
