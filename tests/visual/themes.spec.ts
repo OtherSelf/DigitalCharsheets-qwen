@@ -1,21 +1,11 @@
 import { expect, test } from '@playwright/test';
 
-import {
-  getState,
-  openApp,
-  prepare,
-  screenshotPage,
-  sheetPath,
-} from './helpers';
+import { openApp, prepare, screenshotPage } from './helpers';
 
 /**
- * Темы проверяются по представителю, а не по полной матрице
- * «тема × язык × лист × viewport»:
- *   • dark — dashboard (en/ru) и верх обоих листов на desktop;
- *   • warm — только мобильный верх D&D.
- *
- * Контраст и палитра общие для компонентов, поэтому остальные комбинации
- * дают мало нового сигнала, но удваивают эталоны.
+ * Host-темы: dashboard и переключатель. Темы листов конкретных редакций
+ * снимаются в их плагинах (`tests/visual/themes.visual.spec.ts`), потому что
+ * палитра и вёрстка листа — знание игры, а не хоста.
  */
 test.describe('темы', () => {
   test('dashboard — тёмная тема (en)', async ({ page, context }) => {
@@ -72,84 +62,6 @@ test.describe('темы', () => {
       ).toBeVisible();
 
       await screenshotPage(page, 'theme-switcher-en.png');
-    },
-  );
-
-  test(
-    'лист D&D — тёмная тема (en)',
-    { tag: '@desktop' },
-    async ({ page, context }) => {
-      await prepare(context, { theme: 'dark' });
-      await openApp(page, sheetPath(getState().dndId));
-
-      await expect(
-        page.getByRole('heading', { name: 'Seraphina Vael' }),
-      ).toBeVisible();
-      await screenshotPage(page, 'sheet-dnd-dark-en.png');
-    },
-  );
-
-  test(
-    'лист D&D — тёплая тема (en)',
-    { tag: '@desktop' },
-    async ({ page, context }) => {
-      await prepare(context, { theme: 'warm' });
-      await openApp(page, sheetPath(getState().dndId));
-
-      await expect(
-        page.getByRole('heading', { name: 'Seraphina Vael' }),
-      ).toBeVisible();
-      await screenshotPage(page, 'sheet-dnd-warm-en.png');
-    },
-  );
-
-  test(
-    'лист DH — тёмная тема (en)',
-    { tag: '@desktop' },
-    async ({ page, context }) => {
-      await prepare(context, { theme: 'dark' });
-      await openApp(page, sheetPath(getState().dhId));
-
-      await expect(
-        page.getByRole('heading', { name: 'Lucius Varn' }),
-      ).toBeVisible();
-      await screenshotPage(page, 'sheet-dh-dark-en.png');
-    },
-  );
-
-  test(
-    'лист DH — тёплая тема (en)',
-    { tag: '@desktop' },
-    async ({ page, context }) => {
-      await prepare(context, { theme: 'warm' });
-      await openApp(page, sheetPath(getState().dhId));
-
-      await expect(
-        page.getByRole('heading', { name: 'Lucius Varn' }),
-      ).toBeVisible();
-      await screenshotPage(page, 'sheet-dh-warm-en.png');
-    },
-  );
-
-  test(
-    'лист D&D — тёмная тема на мобильном (en)',
-    { tag: '@mobile' },
-    async ({ page, context }) => {
-      await prepare(context, { theme: 'dark' });
-      await openApp(page, sheetPath(getState().dndId));
-
-      await screenshotPage(page, 'sheet-dnd-mobile-dark-en.png');
-    },
-  );
-
-  test(
-    'лист D&D — тёплая тема на мобильном (en)',
-    { tag: '@mobile' },
-    async ({ page, context }) => {
-      await prepare(context, { theme: 'warm' });
-      await openApp(page, sheetPath(getState().dndId));
-
-      await screenshotPage(page, 'sheet-dnd-mobile-warm-en.png');
     },
   );
 });

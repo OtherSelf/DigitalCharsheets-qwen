@@ -53,7 +53,7 @@ const GAME_MENTION_ALLOWANCE = {
   // Причина повторяется, чтобы у каждой записи было объяснение и срок.
 
   'tests/visual/pages.spec.ts': {
-    max: 23,
+    max: 11,
     reason:
       'host-страница на поставляемом наборе (D13/D24): снимается страница, лист — фикстура',
     removeBy: 'остаётся: host-страница',
@@ -65,12 +65,6 @@ const GAME_MENTION_ALLOWANCE = {
     removeBy: 'остаётся: host-страница',
   },
   'tests/visual/admin.spec.ts': {
-    max: 4,
-    reason:
-      'host-страница на поставляемом наборе (D13/D24): снимается страница, лист — фикстура',
-    removeBy: 'остаётся: host-страница',
-  },
-  'tests/visual/form-validation.spec.ts': {
     max: 4,
     reason:
       'host-страница на поставляемом наборе (D13/D24): снимается страница, лист — фикстура',
@@ -101,12 +95,6 @@ const GAME_MENTION_ALLOWANCE = {
     removeBy: 'остаётся: host-страница',
   },
   'tests/visual/fixtures.ts': {
-    max: 1,
-    reason:
-      'host-страница на поставляемом наборе (D13/D24): снимается страница, лист — фикстура',
-    removeBy: 'остаётся: host-страница',
-  },
-  'tests/visual/locale.spec.ts': {
     max: 1,
     reason:
       'host-страница на поставляемом наборе (D13/D24): снимается страница, лист — фикстура',
@@ -518,6 +506,21 @@ for (const absolute of mentionFiles) {
     result.errors.push(
       `${name}: ${count} игровых упоминаний > потолка ${allowance.max}. ` +
         'Храповик не разрешает рост.',
+    );
+  }
+}
+
+// Запись для удалённого/переименованного файла — такой же мёртвый долг, как
+// нулевое упоминание: без проверки он молча переживает перенос спека.
+const scannedNames = new Set(
+  mentionFiles.map((absolute) =>
+    relative(ROOT, absolute).split('\\').join('/'),
+  ),
+);
+for (const name of Object.keys(GAME_MENTION_ALLOWANCE)) {
+  if (!scannedNames.has(name)) {
+    result.errors.push(
+      `${name}: файла больше нет — удалите запись из GAME_MENTION_ALLOWANCE.`,
     );
   }
 }

@@ -39,14 +39,11 @@ test.describe('нет сырых i18n-ключей', () => {
 
     test(`листы персонажей ${suffix}`, async ({ page, context }) => {
       await prepare(context, { language: lang });
-      const state = getState();
-      for (const [id, label, name] of [
-        [state.dndId, 'лист D&D', 'Seraphina Vael'],
-        [state.dhId, 'лист DH', 'Lucius Varn'],
-      ] as const) {
+      // Сегменты и id — из состояния global-setup, а не списком редакций.
+      for (const [segment, id] of Object.entries(getState().characters)) {
+        if (!id) continue;
         await openApp(page, sheetPath(id));
-        await expect(page.getByRole('heading', { name })).toBeVisible();
-        await expectNoRawI18nKeys(page, `${label} ${suffix}`);
+        await expectNoRawI18nKeys(page, `лист ${segment} ${suffix}`);
       }
     });
   }

@@ -780,56 +780,6 @@ test.describe('общие страницы', () => {
     await screenshotPage(page, 'new-ru.png');
   });
 
-  test('new — форма D&D (en)', async ({ page, context }) => {
-    await prepare(context);
-    await openApp(page, '/new');
-
-    await page.getByTestId('create-game-dnd').click();
-    await page.getByTestId('create-edition-dnd5e').click();
-    await expect(
-      page.getByRole('button', { name: 'Create Character' }),
-    ).toBeVisible();
-    await page.locator('form').first().scrollIntoViewIfNeeded();
-
-    await screenshotPage(page, 'new-dnd-form-en.png');
-  });
-
-  test('new — форма D&D (ru)', async ({ page, context }) => {
-    await prepare(context, { language: 'ru' });
-    await openApp(page, '/new');
-
-    await page.getByTestId('create-game-dnd').click();
-    await page.getByTestId('create-edition-dnd5e').click();
-    await expect(page.locator('form').first()).toBeVisible();
-    await page.locator('form').first().scrollIntoViewIfNeeded();
-
-    await screenshotPage(page, 'new-dnd-form-ru.png');
-  });
-
-  test('new — форма Dark Heresy (en)', async ({ page, context }) => {
-    await prepare(context);
-    await openApp(page, '/new');
-
-    await page.getByTestId('create-game-darkHeresy').click();
-    await page.getByTestId('create-edition-dh1').click();
-    await expect(page.getByText('Home World').first()).toBeVisible();
-    await page.locator('form').first().scrollIntoViewIfNeeded();
-
-    await screenshotPage(page, 'new-dh-form-en.png');
-  });
-
-  test('new — форма Dark Heresy (ru)', async ({ page, context }) => {
-    await prepare(context, { language: 'ru' });
-    await openApp(page, '/new');
-
-    await page.getByTestId('create-game-darkHeresy').click();
-    await page.getByTestId('create-edition-dh1').click();
-    await expect(page.locator('form').first()).toBeVisible();
-    await page.locator('form').first().scrollIntoViewIfNeeded();
-
-    await screenshotPage(page, 'new-dh-form-ru.png');
-  });
-
   test('new/manual — алиас /new (en)', async ({ page, context }) => {
     await prepare(context);
     await openApp(page, '/new/manual');
@@ -917,47 +867,17 @@ test.describe('общие страницы', () => {
       await expect(input).toHaveValue('0');
     },
   );
-
-  test(
-    'stats-editor — вкладка DH Vitals (en)',
-    { tag: '@desktop' },
-    async ({ page, context }) => {
-      await prepare(context);
-      await openApp(page, '/stats-editor');
-
-      await page.getByRole('button', { name: /^Dark Heresy Vitals/ }).click();
-      await expect(page.getByText('Max Wounds').first()).toBeVisible();
-
-      await screenshotPage(page, 'stats-editor-dh-vitals-en.png');
-    },
-  );
-
-  test(
-    'stats-editor — вкладка D&D Vitals (en)',
-    { tag: '@desktop' },
-    async ({ page, context }) => {
-      await prepare(context);
-      await openApp(page, '/stats-editor');
-
-      await page.getByRole('button', { name: /^D&D Vitals/ }).click();
-      await expect(page.getByText('Max HP').first()).toBeVisible();
-
-      await screenshotPage(page, 'stats-editor-dnd-vitals-en.png');
-    },
-  );
 });
 
 /**
  * Демо-лендинг и профиль пользователя.
  *
  * Гостевая главная и /demo используют общий компонент DemoLanding. Базовый
- * лендинг снимается один раз — на гостевой главной (dashboard-guest), а /demo
- * проверяется assertions и превью листов. Превью листов внутри демо
- * (demo-dnd, demo-dh) остаются только en: сами листы уже покрыты на обоих
- * языках в sheet:dnd / sheet:dh.
+ * лендинг снимается один раз — на гостевой главной (dashboard-guest); превью
+ * конкретных редакций живут в их плагинах (`demo.visual.spec.ts`).
  */
 test.describe('демо и настройки профиля', () => {
-  test('demo — превью персонажей (en)', async ({ page, context }) => {
+  test('demo — лендинг (en)', async ({ page, context }) => {
     await prepare(context, { authenticated: false });
     await openApp(page, '/demo');
 
@@ -965,36 +885,6 @@ test.describe('демо и настройки профиля', () => {
       page.getByRole('heading', { name: 'Try Before You Commit' }),
     ).toBeVisible();
     await expect(page.getByText('Create Your Own Character')).toBeVisible();
-
-    await page
-      .getByRole('button', { name: 'Dungeons & Dragons · 5th Edition' })
-      .click();
-    await expect(page.getByText('Demo Mode Active')).toBeVisible();
-    await expect(page.getByText('Thorin Ironforge').first()).toBeVisible();
-    await screenshotPage(page, 'demo-dnd-en.png');
-
-    await page
-      .getByRole('button', { name: 'Dark Heresy · 1st Edition' })
-      .click();
-    await expect(page.getByText('Demo Mode Active')).toBeVisible();
-    await expect(page.getByText('Inquisitor Vane').first()).toBeVisible();
-    await screenshotPage(page, 'demo-dh-en.png');
-
-    await page
-      .getByRole('button', { name: 'Dark Heresy · 2nd Edition' })
-      .click();
-    await expect(page.getByText('Interrogator Vane').first()).toBeVisible();
-    await screenshotPage(page, 'demo-dh2-en.png');
-
-    // 2e-лист с пси и элитными: блок аптитюд/пси в info-секции.
-    // Демо-превью перерисовывается после выбора редакции, поэтому скролл
-    // повторяем, если узел успел перемонтироваться.
-    const infoSection = page.locator('#info-section');
-    await expect(infoSection).toBeVisible({ timeout: 15_000 });
-    await expect(async () => {
-      await infoSection.scrollIntoViewIfNeeded();
-    }).toPass({ timeout: 15_000 });
-    await screenshotPage(page, 'demo-dh2-info-en.png');
   });
 
   test('demo — превью персонажей (ru)', async ({ page, context }) => {
