@@ -11,17 +11,20 @@ const MAX_UI_SCALE = 1.5;
 
 const TEXT_KEY = 'ui-text-scale';
 const UI_KEY = 'ui-scale';
+const KEEP_AWAKE_KEY = 'ui-keep-awake';
 const LEGACY_FONT_PX_KEY = 'ui-font-size'; // from the first implementation
 
 type UISettingsState = {
   textScale: number;
   uiScale: number;
+  keepScreenAwake: boolean;
   isLoaded: boolean;
 };
 
 const SERVER_STATE: UISettingsState = {
   textScale: 1,
   uiScale: 1,
+  keepScreenAwake: false,
   isLoaded: false,
 };
 
@@ -59,6 +62,16 @@ function persist(key: string, value: number) {
   }
 }
 
+function readBool(key: string): boolean | null {
+  try {
+    const raw = localStorage.getItem(key);
+    if (raw === null) return null;
+    return raw === '1' || raw === 'true';
+  } catch {
+    return null;
+  }
+}
+
 function readNumber(key: string): number | null {
   try {
     const raw = localStorage.getItem(key);
@@ -76,6 +89,7 @@ function init() {
 
   let textScale = 1;
   let uiScale = 1;
+  const keepScreenAwake = readBool(KEEP_AWAKE_KEY) ?? false;
 
   const savedText = readNumber(TEXT_KEY);
   if (savedText !== null) {
@@ -92,6 +106,7 @@ function init() {
   setState({
     textScale: round2(textScale),
     uiScale: round2(uiScale),
+    keepScreenAwake,
     isLoaded: true,
   });
 }
@@ -119,9 +134,19 @@ export function updateUiScale(value: number) {
   setState({ uiScale: next });
 }
 
+export function updateKeepScreenAwake(value: boolean) {
+  try {
+    localStorage.setItem(KEEP_AWAKE_KEY, value ? '1' : '0');
+  } catch {
+    /* storage unavailable - ignore */
+  }
+  setState({ keepScreenAwake: value });
+}
+
 export function resetSettings() {
   updateTextScale(1);
   updateUiScale(1);
+  updateKeepScreenAwake(false);
 }
 
 export function useUISettings() {
@@ -134,9 +159,11 @@ export function useUISettings() {
   return {
     textScale: snapshot.textScale,
     uiScale: snapshot.uiScale,
+    keepScreenAwake: snapshot.keepScreenAwake,
     isLoaded: snapshot.isLoaded,
     updateTextScale,
     updateUiScale,
+    updateKeepScreenAwake,
     resetSettings,
     minTextScale: MIN_TEXT_SCALE,
     maxTextScale: MAX_TEXT_SCALE,

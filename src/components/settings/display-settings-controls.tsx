@@ -1,12 +1,19 @@
 'use client';
 
+import { useSyncExternalStore } from 'react';
+
 import { Minus, Plus, RotateCcw } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { useTranslation } from '@/context/language-context';
 import { useUISettings } from '@/hooks/use-ui-settings';
+import {
+  WAKE_LOCK_SERVER_STATE,
+  wakeLockController,
+} from '@/lib/screen-wake-lock';
 import { cn } from '@/lib/utils';
 
 /**
@@ -25,14 +32,21 @@ export function DisplaySettingsControls({
   const {
     textScale,
     uiScale,
+    keepScreenAwake,
     updateTextScale,
     updateUiScale,
+    updateKeepScreenAwake,
     resetSettings,
     minTextScale,
     maxTextScale,
     minUiScale,
     maxUiScale,
   } = useUISettings();
+  const wakeState = useSyncExternalStore(
+    wakeLockController.subscribe,
+    wakeLockController.getState,
+    () => WAKE_LOCK_SERVER_STATE,
+  );
 
   return (
     <div className={cn('space-y-6', className)}>
@@ -100,6 +114,36 @@ export function DisplaySettingsControls({
         <p className="text-muted-foreground text-xs">
           {t('settings.uiScaleWarning')}
         </p>
+      </div>
+
+      <Separator />
+
+      <div className="space-y-2">
+        <div className="flex items-center gap-2">
+          <Checkbox
+            id="keep-screen-awake"
+            checked={keepScreenAwake}
+            onCheckedChange={(checked) =>
+              updateKeepScreenAwake(checked === true)
+            }
+          />
+          <Label htmlFor="keep-screen-awake">
+            {t('settings.keepScreenAwake')}
+          </Label>
+        </div>
+        <p className="text-muted-foreground text-xs">
+          {t('settings.keepScreenAwakeHint')}
+        </p>
+        {!wakeState.supported && (
+          <p className="text-muted-foreground text-xs">
+            {t('settings.keepScreenAwakeUnsupported')}
+          </p>
+        )}
+        {wakeState.supported && wakeState.error && (
+          <p className="text-destructive text-xs">
+            {t('settings.keepScreenAwakeError')}
+          </p>
+        )}
       </div>
 
       <div className="pt-2">

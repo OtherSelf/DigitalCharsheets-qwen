@@ -514,6 +514,13 @@ export const enTranslations: Record<string, string> = {
   'settings.uiScale': 'UI Scale',
   'settings.uiScaleWarning':
     'Scale ranges from 50% to 150%. Changes apply instantly.',
+  'settings.keepScreenAwake': 'Keep the screen on',
+  'settings.keepScreenAwakeHint':
+    'Prevents the device from turning the screen off while the app is open (supported browsers only).',
+  'settings.keepScreenAwakeUnsupported':
+    'This browser does not support keeping the screen on.',
+  'settings.keepScreenAwakeError':
+    'The browser refused to keep the screen on. Check the site permissions.',
   'settings.resetToDefaults': 'Reset to defaults',
   'settings.sessionsTitle': 'Sessions',
   'settings.sessionsDescription':

@@ -4,10 +4,17 @@
 import { ReactNode, useEffect, useRef } from 'react';
 
 import { useUISettings } from '@/hooks/use-ui-settings';
+import { wakeLockController } from '@/lib/screen-wake-lock';
 
 export function UIScaleWrapper({ children }: { children: ReactNode }) {
-  const { uiScale } = useUISettings();
+  const { uiScale, keepScreenAwake } = useUISettings();
   const wrapperRef = useRef<HTMLDivElement>(null);
+
+  // Настройка «не выключать экран» живёт в UI-настройках; сам блокировщик
+  // переживает навигацию, потому что подключён здесь, а не на /settings.
+  useEffect(() => {
+    wakeLockController.setEnabled(keepScreenAwake);
+  }, [keepScreenAwake]);
 
   useEffect(() => {
     const el = wrapperRef.current;

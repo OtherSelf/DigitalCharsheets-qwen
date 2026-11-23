@@ -28,7 +28,8 @@ data directory on the host you control.
   enabled, versions, conformance, demo links).
 - Portable JSON export/import for one sheet or a full backup, plus Excel export.
 - English/Russian UI, light/dark/warm themes, compact sheet view, independent
-  text and UI scaling.
+  text and UI scaling, and an optional «keep the screen on» toggle in the display
+  settings for long sessions.
 - **Self-hosted:** run it on your own server or local machine. The app itself
   needs no database, cloud account or external service.
 

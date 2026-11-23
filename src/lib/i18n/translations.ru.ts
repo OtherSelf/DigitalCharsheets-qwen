@@ -517,6 +517,13 @@ export const ruTranslations: Record<string, string> = {
   'settings.uiScale': 'Масштаб интерфейса',
   'settings.uiScaleWarning':
     'Масштаб варьируется от 50% до 150%. Изменения применяются мгновенно.',
+  'settings.keepScreenAwake': 'Не выключать экран',
+  'settings.keepScreenAwakeHint':
+    'Не даёт устройству гасить экран, пока приложение открыто (только в поддерживающих браузерах).',
+  'settings.keepScreenAwakeUnsupported':
+    'Этот браузер не поддерживает удержание экрана включённым.',
+  'settings.keepScreenAwakeError':
+    'Браузер отказал в удержании экрана. Проверьте разрешения сайта.',
   'settings.resetToDefaults': 'Сбросить к стандартным настройкам',
   'settings.sessionsTitle': 'Сессии',
   'settings.sessionsDescription':
