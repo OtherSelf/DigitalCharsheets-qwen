@@ -44,11 +44,13 @@ src/games/<id>/
   tests/visual/*.visual.spec.ts  screenshots of this plugin (optional)
   tests/visual.json        visual coverage requirements (with visual specs)
   tests/fixtures/visual.ts seeded characters for the visual specs
+  tests/fixtures/*.json    legacy/unit data owned by the edition (optional)
 ```
 
 Every path in the tree above is required by the gate except `sections/`,
-`slots/`, and the visual trio (which becomes required as a set as soon as one
-of its files exists). `tests/unit/module.test.ts` and
+`slots/`, the visual trio (which becomes required as a set as soon as one
+of its files exists) and `tests/fixtures/*.json`, which is optional data for
+the edition's own unit tests. `tests/unit/module.test.ts` and
 `tests/unit/contract.test.ts` are required once the plugin is visible
 (`defaultStatus` is not `hidden`) or reaches version 1.0; a hidden `0.x`
 scaffold may start without them.

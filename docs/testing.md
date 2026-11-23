@@ -37,7 +37,9 @@ Shared helpers live in `tests/support/` and are imported as `@tests/support`
   `loginIndexPath()`;
 - `auth.ts` — `sessionCookie()`, `sessionHeaders()` (uid always comes from a
   signed session);
-- `fixtures.ts` — minimal `makeDndCharacter()` / `makeDhCharacter()`;
+- `fixtures.ts` — `makeCharacter(systemId, overrides)` builds the sheet through
+  the plugin's `createDefaults()` and adds only the service fields; there are no
+  per-edition factories;
 - `server-storage.ts` — `createUserFolder()`, `userFolderExists()`,
   `saveCharactersToServer()`: file-level fixtures for storage tests (production
   code writes sheets through the API routes, not through these helpers).
@@ -49,7 +51,12 @@ src/games/<id>/tests/
   unit/*.test.ts             # schema, defaults, demo, export, i18n, rules
   visual/*.visual.spec.ts    # plugin screens (tag @plugin:<id>)
   fixtures/visual.ts         # seeded characters (default export)
+  fixtures/*.json            # legacy/unit data owned by the edition
 ```
+
+The edition's legacy fixtures live next to its tests, not in the host:
+removing the plugin removes its data too, and the test reads the file by a path
+relative to itself, not to the process working directory.
 
 Plugins never import the kit from production files: ESLint
 (`no-restricted-imports`) and `scripts/plugins/check-boundaries.mjs` allow
@@ -60,6 +67,14 @@ DH1 test cannot build on DH2's internals. The minimal fixture
 copied by `plugins:scaffold` and by `plugin-template.test.ts`, and the host
 suites run its contract. A real plugin keeps tests in
 `src/games/<id>/tests/`.
+
+Host tests may use a live edition as a fixture (D24): a scenario about the API,
+storage, export, history or admin pipeline stays in `tests/unit`, with the sheet
+built by `makeCharacter(systemId)` from the plugin contract rather than by
+hand-written fields. The edition must be removable: a single-edition scenario is
+guarded with `it.runIf(hasPlugin(id))`, or it moves into the plugin. The
+`GAME_MENTION_ALLOWANCE` ratchet in `scripts/tests/check-test-layout.mjs` counts
+the remaining id/name literals; a new entry needs a reason and a real deadline.
 
 ## Test layout
 
