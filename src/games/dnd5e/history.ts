@@ -109,6 +109,7 @@ export const dnd5eHistory: GameHistoryConfig = {
     locations: 'common.questLocations',
   },
   collections: {
+    noteTabs: 'common.notes',
     inventory: 'common.inventory',
     equipment: 'common.inventory',
     attunementItems: 'dnd.attunement',

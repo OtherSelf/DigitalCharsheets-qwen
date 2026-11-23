@@ -33,9 +33,21 @@ export interface CharacterBase {
   systemId?: SystemId;
   backstory: string;
   notes: string;
+  /** Дополнительные вкладки заметок; отсутствуют у старых листов. */
+  noteTabs?: NoteTab[];
   questLog: Quest[];
   /** Версия формата файла листа; у legacy-файлов отсутствует. */
   schemaVersion?: number;
+}
+
+/**
+ * Дополнительная вкладка заметок. Первая вкладка — поле `notes`; здесь только
+ * дополнительные, поэтому `notes` остаётся совместимым с экспортом и шарингом.
+ */
+export interface NoteTab {
+  id: string;
+  title: string;
+  body: string;
 }
 
 /** Универсальный счётчик-ресурс (бой, дом. правила, способности). */

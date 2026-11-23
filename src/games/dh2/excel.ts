@@ -223,6 +223,7 @@ export function buildDh2ExcelSections(
       'dh2.excel.name',
       'dh2.excel.weaponType',
       'dh2.excel.range',
+      'dh2.weaponPenetration',
       'dh2.excel.damage',
       'dh2.excel.traits',
     ]);
@@ -231,6 +232,7 @@ export function buildDh2ExcelSections(
         weapon.name,
         weapon.type,
         weapon.range,
+        weapon.penetration,
         weapon.damage,
         weapon.traits,
       ]);
@@ -240,6 +242,7 @@ export function buildDh2ExcelSections(
         weapon.name,
         weapon.type,
         weapon.range,
+        weapon.penetration ?? '',
         weapon.damage,
         weapon.traits,
       ]);
@@ -255,6 +258,9 @@ export function buildDh2ExcelSections(
     w.section('dh2.excel.narrative');
     w.row('dh2.excel.backstory', character.backstory);
     w.row('common.notes', character.notes);
+    for (const tab of character.noteTabs ?? []) {
+      w.row(tab.title, tab.body);
+    }
   }
 
   if (config.includeQuestLog) {

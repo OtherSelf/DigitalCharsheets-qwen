@@ -33,6 +33,15 @@ export const inventoryItemSchema = z.looseObject({
   price: z.number().int().min(0).max(FIELD_LIMITS.money).optional(),
 });
 
+export const noteTabSchema = z.looseObject({
+  id: idString(),
+  title: shortString(),
+  body: z.string().max(FIELD_LIMITS.long),
+});
+
+/** Дополнительные вкладки заметок: не больше 10, как и в UI. */
+export const noteTabsSchema = listOf(noteTabSchema, 10);
+
 export const combatResourceSchema = z.looseObject({
   id: idString(),
   description: shortString(),

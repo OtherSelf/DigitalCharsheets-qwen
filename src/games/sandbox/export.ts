@@ -12,7 +12,10 @@ export function buildSandboxPortableJson(
     json.total = character.total;
   }
   if (config.includeStats) json.stats = character.stats;
-  if (config.includeNarrative) json.notes = character.notes;
+  if (config.includeNarrative) {
+    json.notes = character.notes;
+    json.noteTabs = character.noteTabs;
+  }
   if (config.includeCompanions && character.companion) {
     json.companion = character.companion;
   }

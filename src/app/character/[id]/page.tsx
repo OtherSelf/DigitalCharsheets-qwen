@@ -34,6 +34,7 @@ import {
   resolveSheetReadOnly,
 } from '@/games/character-system';
 import type { SheetHandle } from '@/games/types';
+import { useCompactSectionScroll } from '@/hooks/use-compact-section-scroll';
 import { useGameUiSlots } from '@/hooks/use-game-ui-slots';
 import { characterPath, historyPath } from '@/lib/routes';
 
@@ -156,64 +157,11 @@ export default function CharacterPage() {
     }
   };
 
-  /*
-    LANDMARK: SCROLL_ONLY_INSIDE_MAIN
-    Прокручиваем ТОЛЬКО контейнер контента, а не `scrollIntoView()`.
-    `scrollIntoView` двигает всех прокручиваемых предков, включая корень
-    документа; при масштабе интерфейса ≠ 100% у корня есть «излишек»
-    высоты, и он уезжал вместе с шапкой и левым меню. Здесь корень не
-    участвует вообще: считаем смещение секции внутри `<main>` и скроллим
-    его. Делим на эффективный масштаб (у оболочки `transform: scale()`),
-    потому что `getBoundingClientRect()` возвращает визуальные пиксели,
-    а `scrollTop` — layout-пиксели.
-  */
-  useEffect(() => {
-    if (!isCompactView) return;
-
-    // Прокрутка откладывается на кадр: смена секции в том же коммите меняет
-    // высоту листа, и до пересчёта раскладки `scrollTop` ещё держит прежнее
-    // значение (браузер обрезает его лениво). Посчитанный по такому замеру
-    // target уводил секцию на сотни пикселей вниз.
-    const frame = requestAnimationFrame(() => {
-      const element = document.getElementById(activeCompactSection);
-      const scroller = element?.closest('main');
-      if (!element || !(scroller instanceof HTMLElement)) {
-        // Контракт плагина: id пункта CompactNav обязан совпадать с id секции.
-        // Молчаливый выход делал нарушение невидимым: тап по рейлу не двигал
-        // экран, а тест «секция видна» проходил, потому что компакт и так
-        // скрывает остальные секции.
-        if (process.env.NODE_ENV !== 'production') {
-          console.warn(
-            `[sheet] секция «${activeCompactSection}» из CompactNav не найдена в DOM`,
-          );
-        }
-        return;
-      }
-
-      const scrollerRect = scroller.getBoundingClientRect();
-      const elementRect = element.getBoundingClientRect();
-      const scale =
-        scroller.clientHeight > 0
-          ? scrollerRect.height / scroller.clientHeight
-          : 1;
-      const max = scroller.scrollHeight - scroller.clientHeight;
-      // Отступ `main` оставляем в кадре: без вычитания паддинга секция
-      // встаёт на самый край scrollport и её верхняя рамка обрезается.
-      const padding =
-        Number.parseFloat(getComputedStyle(scroller).paddingTop) || 0;
-      const top =
-        scroller.scrollTop +
-        (elementRect.top - scrollerRect.top) / (scale || 1) -
-        padding;
-
-      scroller.scrollTo({
-        top: Math.min(Math.max(top, 0), Math.max(max, 0)),
-        behavior: 'smooth',
-      });
-    });
-
-    return () => cancelAnimationFrame(frame);
-  }, [activeCompactSection, isCompactView, sectionScrollRequest]);
+  useCompactSectionScroll(
+    activeCompactSection,
+    isCompactView,
+    sectionScrollRequest,
+  );
 
   if (!isLoaded || hostThemeById === null) {
     return <Loading />;

@@ -3,6 +3,7 @@ import path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
+import { getAccountTrashDir } from '@/lib/data-dir';
 import { newUid } from '@/lib/ids';
 import {
   authenticateUser,
@@ -72,6 +73,9 @@ describe('deleteUserAccount', () => {
 
     expect(result.success).toBe(true);
     expect(fs.existsSync(paths.userDir)).toBe(false);
+    // Каталог не потерян: он перемещён в теневую копию и будет очищен
+    // стартовым обслуживанием после срока.
+    expect(fs.readdirSync(getAccountTrashDir())).toHaveLength(1);
     expect(await getStoredUser(uid)).toBeNull();
     expect(await resolveLogin('deleteme')).toBeNull();
     expect(readJson(loginIndexPath(dataDir)).logins.deleteme).toBeUndefined();

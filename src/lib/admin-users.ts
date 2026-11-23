@@ -10,7 +10,7 @@ import {
   type AdminUserSummary,
   type AdminUserUpdatePatch,
 } from './admin-types';
-import { getCharactersDir, getUserDir } from './data-dir';
+import { getCharactersDir } from './data-dir';
 import { withDataLock } from './data-lock';
 import { isUid, normalizeLogin } from './ids';
 import { hashPasswordAsync, passwordPolicyError } from './security/password';
@@ -18,6 +18,7 @@ import { revokeAllSessionsForUser } from './security/sessions';
 import { type StoredUser } from './server-auth';
 import { resetWriteSeqGuard } from './server-storage';
 import { revokeSharesForUser } from './shares';
+import { moveAccountToTrash } from './trash';
 import {
   readLoginIndexForUpdate,
   rebuildLoginIndex,
@@ -414,7 +415,15 @@ export async function deleteUserByAdmin(
           if (owner === targetUid) delete index.logins[login];
         }
 
-        await fs.rm(getUserDir(targetUid), { recursive: true, force: true });
+        // Теневая копия вместо безвозвратного rm: срок и очистка — в trash.ts.
+        const moved = await moveAccountToTrash(targetUid);
+        if (!moved) {
+          return {
+            success: false,
+            error: 'Failed to move the account to trash.',
+            reason: 'failed',
+          } as AdminActionResponse;
+        }
 
         try {
           await writeLoginIndex(index);

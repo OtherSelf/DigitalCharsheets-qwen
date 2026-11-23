@@ -16,6 +16,7 @@ import { POST as loginRoute } from '@/app/api/auth/route';
 import { GET as sessionRoute } from '@/app/api/auth/session/route';
 import { GET as charactersGet } from '@/app/api/characters/route';
 import { deleteUserByAdmin, updateUserByAdmin } from '@/lib/admin-users';
+import { getAccountTrashDir } from '@/lib/data-dir';
 import { authenticateUser } from '@/lib/server-auth';
 import {
   resetWriteSeqGuard,
@@ -333,6 +334,7 @@ describe('DELETE /api/admin/users/[uid]', () => {
     expect(res.status).toBe(200);
 
     expect(fs.existsSync(userPaths(dataDir, user.uid).userDir)).toBe(false);
+    expect(fs.readdirSync(getAccountTrashDir())).toHaveLength(1);
     expect(await resolveLogin(user.username)).toBeNull();
     expect(readJson(loginIndexPath(dataDir)).logins[user.username]).toBe(
       undefined,

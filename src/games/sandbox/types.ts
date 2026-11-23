@@ -1,5 +1,7 @@
 import type { CharacterRecord } from '@/games/types';
 
+import type { NoteTab } from '../shared/types';
+
 /** ─── LANDMARK: EXAMPLE PLUGIN TYPES ──────────────────────────────────────
  * Тестовая игра: минимальный лист с именем, рангом, двумя характеристиками,
  * заметками и необязательным спутником. Показывает, что новая игра — это
@@ -35,5 +37,6 @@ export interface SandboxCharacter extends CharacterRecord {
   /** Производное поле: сумма характеристик (`derive`). */
   total: number;
   notes: string;
+  noteTabs?: NoteTab[];
   companion?: SandboxCompanion;
 }

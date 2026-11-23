@@ -62,8 +62,10 @@ response also carries `totalSessions`, `totalRevisions` and storage info
 
 - totals, the oldest stored change and a truncation notice;
 - sessions grouped by a 30-minute gap, with their markers;
-- every change with a plugin-provided label, a `before → after` pair, the
-  `added`/`removed` badge, keyed-array elements and truncated values;
+- sessions and the changes inside each session newest first;
+- every change with a plugin-provided label, the `added`/`removed` badge,
+  keyed-array elements and truncated values; long string values are rendered as
+  a compact line diff with context instead of two full copies;
 - “Show more” pagination and an empty state;
 - “Clear history” with a confirmation dialog.
 

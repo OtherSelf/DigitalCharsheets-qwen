@@ -7,7 +7,11 @@ import {
   noteString,
   shortString,
 } from '../shared/limits';
-import { inventoryItemSchema, questSchema } from '../shared/schemas';
+import {
+  inventoryItemSchema,
+  noteTabsSchema,
+  questSchema,
+} from '../shared/schemas';
 import {
   GENDER_CODES,
   type DarkHeresyCoreStatNotes,
@@ -270,6 +274,7 @@ export const darkHeresyBaseFields = {
   gameSystem: z.literal('Dark Heresy'),
   backstory: z.string().max(FIELD_LIMITS.long),
   notes: z.string().max(FIELD_LIMITS.long),
+  noteTabs: noteTabsSchema.optional(),
   questLog: listOf(questSchema),
   schemaVersion: z.number().int().optional(),
   homeWorld: homeWorldSchema,
@@ -289,11 +294,18 @@ export const darkHeresyBaseFields = {
   totalExpSpent: z.number().int().min(0).max(FIELD_LIMITS.experience),
   alternatePath: shortString().nullable(),
   advancedPath: shortString().nullable(),
-  wounds: z.looseObject({
-    current: z.number().int().min(0).max(FIELD_LIMITS.pool),
-    max: z.number().int().min(0).max(FIELD_LIMITS.pool),
-    notes: noteString().optional(),
-  }),
+  wounds: z
+    .looseObject({
+      // Тяжёлые ранения уводят вунды в минус до -max. Границы проверяются
+      // вместе: `-max` зависит от `max`, поэтому одного `min()` мало.
+      current: z.number().int().min(-FIELD_LIMITS.pool).max(FIELD_LIMITS.pool),
+      max: z.number().int().min(0).max(FIELD_LIMITS.pool),
+      notes: noteString().optional(),
+    })
+    .refine(
+      (value) => value.current >= -value.max && value.current <= value.max,
+      { message: 'Wounds must be between -max and max.' },
+    ),
   fatePoints: z.looseObject({
     current: z.number().int().min(0).max(FIELD_LIMITS.pool),
     max: z.number().int().min(0).max(FIELD_LIMITS.pool),

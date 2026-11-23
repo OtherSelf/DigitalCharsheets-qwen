@@ -8,6 +8,7 @@ import {
   hashLegacyRecoveryPhrases,
   type HashLegacyPhrasesReport,
 } from './server-auth';
+import { cleanupExpiredTrash, type TrashCleanupReport } from './trash';
 import { rebuildLoginIndex } from './user-index';
 import {
   normalizeUserProfiles,
@@ -29,7 +30,8 @@ import {
  *   4. если активного администратора нет — создать служебный аккаунт и
  *      вывести сгенерированный пароль в консоль + файл;
  *   5. перевести открытые recovery-фразы в хэши: копия `user.json` не должна
- *      выдавать фразу восстановления (см. security/phrase.ts).
+ *      выдавать фразу восстановления (см. security/phrase.ts);
+ *   6. удалить просроченные записи корзины и тени аккаунтов (trash.ts).
  *
  * Ошибки не пробрасываются: сервер должен подняться даже с частично битым
  * data-dir. Все проблемы уходят в лог и в отчёт (его используют тесты).
@@ -41,6 +43,7 @@ export interface StartupReport {
   characters: NormalizeCharactersReport | null;
   phrases: HashLegacyPhrasesReport | null;
   admin: ServiceAdminReport | null;
+  trash: TrashCleanupReport | null;
   errors: string[];
 }
 
@@ -120,6 +123,7 @@ export async function runStartupMaintenance(
     characters: null,
     phrases: null,
     admin: null,
+    trash: null,
     errors: [],
   };
 
@@ -172,6 +176,22 @@ export async function runStartupMaintenance(
     const message = error instanceof Error ? error.message : String(error);
     report.errors.push(`recovery phrase migration failed: ${message}`);
     console.error('[dcs] startup: recovery phrase migration failed:', error);
+  }
+
+  try {
+    report.trash = await cleanupExpiredTrash({ force: true });
+    if (report.trash.characters > 0 || report.trash.accounts > 0) {
+      console.info(
+        `[dcs] startup: очищено просроченное — листов ${report.trash.characters}, аккаунтов ${report.trash.accounts}`,
+      );
+    }
+    for (const issue of report.trash.errors) {
+      console.warn(`[dcs] startup: trash cleanup: ${issue}`);
+    }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    report.errors.push(`trash cleanup failed: ${message}`);
+    console.error('[dcs] startup: trash cleanup failed:', error);
   }
 
   cachedDataDir = dataDir;

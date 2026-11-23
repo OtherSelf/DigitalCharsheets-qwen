@@ -76,6 +76,18 @@ const GAME_MENTION_ALLOWANCE = {
       'host-страница на поставляемом наборе (D13/D24): снимается страница, лист — фикстура',
     removeBy: 'остаётся: host-страница',
   },
+  'tests/visual/archive.spec.ts': {
+    max: 2,
+    reason:
+      'host-страница на поставляемом наборе (D13/D24): снимается страница, лист — фикстура',
+    removeBy: 'остаётся: host-страница',
+  },
+  'tests/visual/narrative-preview.spec.ts': {
+    max: 1,
+    reason:
+      'host-сценарий вкладок заметок: временный лист создаётся через API, правила редакции не проверяются',
+    removeBy: 'остаётся: host-сценарий',
+  },
   'tests/visual/basic-pages.spec.ts': {
     max: 3,
     reason:

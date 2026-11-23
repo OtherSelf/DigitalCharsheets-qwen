@@ -5,6 +5,9 @@ import { describe, expect, it } from 'vitest';
 
 import { NarrativeMarkdown } from '@/components/sheets/narrative-markdown';
 import { narrativeInitialMode } from '@/components/sheets/narrative-sheet';
+import { listGameModules } from '@/games/registry';
+
+import { makeCharacter } from '@tests/support';
 
 const render = (value: string) =>
   renderToStaticMarkup(createElement(NarrativeMarkdown, { value }));
@@ -62,4 +65,38 @@ describe('NarrativeMarkdown: GFM и безопасность', () => {
     expect(html).not.toContain('onerror="alert');
     expect(html).toContain('&lt;script&gt;');
   });
+});
+
+/**
+ * `noteTabs` — аддитивное поле: старый лист без него валиден, а лимит 10
+ * вкладок держится схемой каждой редакции, а не только UI.
+ */
+describe('noteTabs: схема всех редакций', () => {
+  for (const gameModule of listGameModules()) {
+    const base = makeCharacter(gameModule.id);
+    const withTabs = {
+      ...base,
+      noteTabs: [{ id: 'tab-1', title: 'Tab', body: 'Text' }],
+    };
+
+    it(`${gameModule.id}: старый лист без noteTabs валиден`, () => {
+      expect(gameModule.schema.safeParse(base).success).toBe(true);
+    });
+
+    it(`${gameModule.id}: принимает дополнительные вкладки`, () => {
+      expect(gameModule.schema.safeParse(withTabs).success).toBe(true);
+    });
+
+    it(`${gameModule.id}: не принимает больше 10 вкладок`, () => {
+      const tooMany = {
+        ...base,
+        noteTabs: Array.from({ length: 11 }, (_, index) => ({
+          id: `tab-${index}`,
+          title: 'Tab',
+          body: '',
+        })),
+      };
+      expect(gameModule.schema.safeParse(tooMany).success).toBe(false);
+    });
+  }
 });

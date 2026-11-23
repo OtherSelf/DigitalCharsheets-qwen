@@ -279,12 +279,18 @@ describe('DH1: границы полей листа', () => {
     ).toBe(false);
   });
 
-  it('отрицательные раны и слишком длинное имя отклоняются', () => {
+  it('раны до -max допустимы, ниже предела — нет; длинное имя отклоняется', () => {
     const base = baseDh1({ id: 'bounds-2' });
     expect(
       dh1CharacterSchema.safeParse({
         ...base,
-        wounds: { current: -1, max: 10 },
+        wounds: { current: -10, max: 10 },
+      }).success,
+    ).toBe(true);
+    expect(
+      dh1CharacterSchema.safeParse({
+        ...base,
+        wounds: { current: -11, max: 10 },
       }).success,
     ).toBe(false);
     expect(

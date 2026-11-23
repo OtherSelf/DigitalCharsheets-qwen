@@ -217,6 +217,7 @@ export const dh2History: GameHistoryConfig = {
     'conditions.source': 'dh2.conditions.source',
   },
   collections: {
+    noteTabs: 'common.notes',
     criticalConditions: 'dh2.criticalConditions',
     'equipment.weapons.melee': 'dh2.meleeWeapons',
     'equipment.weapons.ranged': 'dh2.rangedWeapons',

@@ -34,6 +34,9 @@ interface CompactSidebarProps {
   character: Character;
   activeSection: string;
   onSectionChange: (id: string) => void;
+  /** `shared` — гостевой лист: только секции и заметки, без правки. */
+  mode?: 'owner' | 'shared';
+  onNotesClick?: () => void;
 }
 
 /**
@@ -47,6 +50,8 @@ export function CompactSidebar({
   character,
   activeSection,
   onSectionChange,
+  mode = 'owner',
+  onNotesClick,
 }: CompactSidebarProps) {
   const { t } = useTranslation();
   const { hideNotes, setHideNotes, showEditButtons, setShowEditButtons } =
@@ -57,27 +62,36 @@ export function CompactSidebar({
   const navItems = uiSlots?.CompactNav?.(character) ?? [];
   const HouseRulesDialogSlot = uiSlots?.HouseRulesDialog;
 
-  const extraSidebarItems = [
-    {
-      labelKey: 'common.notes',
-      id: 'notes-section',
-      icon: <BookText className="h-5 w-5" />,
-    },
-    {
-      labelKey: 'common.questJournal',
-      id: 'journal-section',
-      icon: <Scroll className="h-5 w-5" />,
-    },
-    ...(HouseRulesDialogSlot
+  const extraSidebarItems =
+    mode === 'shared'
       ? [
           {
-            labelKey: 'common.houseRules',
-            id: 'house-rules',
-            icon: <Scale className="h-5 w-5" />,
+            labelKey: 'common.notes',
+            id: 'notes-section',
+            icon: <BookText className="h-5 w-5" />,
           },
         ]
-      : []),
-  ];
+      : [
+          {
+            labelKey: 'common.notes',
+            id: 'notes-section',
+            icon: <BookText className="h-5 w-5" />,
+          },
+          {
+            labelKey: 'common.questJournal',
+            id: 'journal-section',
+            icon: <Scroll className="h-5 w-5" />,
+          },
+          ...(HouseRulesDialogSlot
+            ? [
+                {
+                  labelKey: 'common.houseRules',
+                  id: 'house-rules',
+                  icon: <Scale className="h-5 w-5" />,
+                },
+              ]
+            : []),
+        ];
 
   return (
     <TooltipProvider>
@@ -117,6 +131,10 @@ export function CompactSidebar({
               <Button
                 variant="ghost"
                 onClick={() => {
+                  if (item.id === 'notes-section' && onNotesClick) {
+                    onNotesClick();
+                    return;
+                  }
                   if (item.id === 'house-rules') {
                     setIsHouseRulesDialogOpen(true);
                   } else {
@@ -136,66 +154,72 @@ export function CompactSidebar({
           </Tooltip>
         ))}
 
-        <Separator className="my-2" />
+        {mode === 'owner' && (
+          <>
+            <Separator className="my-2" />
 
-        <Tooltip delayDuration={0}>
-          <TooltipTrigger asChild>
-            <Button
-              variant={hideNotes ? 'ghost' : 'secondary'}
-              onClick={() => setHideNotes(!hideNotes)}
-              aria-label={
-                hideNotes ? t('common.showNotes') : t('common.hideNotes')
-              }
-              className="w-full"
-              size="icon"
-            >
-              {hideNotes ? (
-                <EyeOff className="h-5 w-5" />
-              ) : (
-                <Eye className="h-5 w-5" />
-              )}
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side="right">
-            <p>{hideNotes ? t('common.showNotes') : t('common.hideNotes')}</p>
-          </TooltipContent>
-        </Tooltip>
+            <Tooltip delayDuration={0}>
+              <TooltipTrigger asChild>
+                <Button
+                  variant={hideNotes ? 'ghost' : 'secondary'}
+                  onClick={() => setHideNotes(!hideNotes)}
+                  aria-label={
+                    hideNotes ? t('common.showNotes') : t('common.hideNotes')
+                  }
+                  className="w-full"
+                  size="icon"
+                >
+                  {hideNotes ? (
+                    <EyeOff className="h-5 w-5" />
+                  ) : (
+                    <Eye className="h-5 w-5" />
+                  )}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                <p>
+                  {hideNotes ? t('common.showNotes') : t('common.hideNotes')}
+                </p>
+              </TooltipContent>
+            </Tooltip>
 
-        <Tooltip delayDuration={0}>
-          <TooltipTrigger asChild>
-            <Button
-              variant={showEditButtons ? 'secondary' : 'ghost'}
-              onClick={() => setShowEditButtons(!showEditButtons)}
-              aria-label={
-                showEditButtons
-                  ? t('common.hideEditButtons')
-                  : t('common.showEditButtons')
-              }
-              className="w-full"
-              size="icon"
-            >
-              {showEditButtons ? (
-                <Pencil className="h-5 w-5" />
-              ) : (
-                <PencilLine className="h-5 w-5" />
-              )}
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side="right">
-            <p>
-              {showEditButtons
-                ? t('common.hideEditButtons')
-                : t('common.showEditButtons')}
-            </p>
-          </TooltipContent>
-        </Tooltip>
+            <Tooltip delayDuration={0}>
+              <TooltipTrigger asChild>
+                <Button
+                  variant={showEditButtons ? 'secondary' : 'ghost'}
+                  onClick={() => setShowEditButtons(!showEditButtons)}
+                  aria-label={
+                    showEditButtons
+                      ? t('common.hideEditButtons')
+                      : t('common.showEditButtons')
+                  }
+                  className="w-full"
+                  size="icon"
+                >
+                  {showEditButtons ? (
+                    <Pencil className="h-5 w-5" />
+                  ) : (
+                    <PencilLine className="h-5 w-5" />
+                  )}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                <p>
+                  {showEditButtons
+                    ? t('common.hideEditButtons')
+                    : t('common.showEditButtons')}
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          </>
+        )}
 
         <div className="mt-auto flex flex-col items-center gap-2 pt-2">
           <Separator className="mb-2 w-full" />
           <LanguageToggle className="h-10 w-10" />
         </div>
 
-        {HouseRulesDialogSlot && (
+        {mode === 'owner' && HouseRulesDialogSlot && (
           <HouseRulesDialogSlot
             characterId={character.id}
             open={isHouseRulesDialogOpen}

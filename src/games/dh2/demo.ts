@@ -112,6 +112,7 @@ export function createDh2Demo(): DH2CharacterDraft {
             name: 'Lasgun',
             type: 'Basic',
             range: '100m',
+            penetration: '0',
             rof: 'S/3/-',
             damage: '1d10+3 E',
             clip: 60,

@@ -4,7 +4,7 @@
 
 import Link from 'next/link';
 
-import { FileDown, FileJson } from 'lucide-react';
+import { Archive, FileDown, FileJson } from 'lucide-react';
 
 import { DeleteCharacterDialog } from '@/components/characters/delete-character-dialog';
 import { Badge } from '@/components/ui/badge';
@@ -38,7 +38,8 @@ type CharacterCardProps = {
 
 export function CharacterCard({ character }: CharacterCardProps) {
   const { t } = useTranslation();
-  const { deleteCharacter, isCompactView, toast } = useCharacterContext();
+  const { archiveCharacter, deleteCharacter, isCompactView, toast } =
+    useCharacterContext();
 
   const gameModule = getCharacterModule(character);
   const gameDefinition = gameModule
@@ -115,6 +116,17 @@ export function CharacterCard({ character }: CharacterCardProps) {
             variant="outline"
             size="icon"
             className="h-8 w-8 shrink-0 sm:h-9 sm:w-9"
+            onClick={() => archiveCharacter(character.id)}
+            title={t('common.archiveCharacter')}
+            aria-label={t('common.archiveCharacter')}
+            data-testid="archive-character"
+          >
+            <Archive className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-8 w-8 shrink-0 sm:h-9 sm:w-9"
             onClick={handleExportJSON}
             title={t('io.exportJSON')}
           >
@@ -139,8 +151,19 @@ export function CharacterCard({ character }: CharacterCardProps) {
   }
 
   return (
-    <Card className="hover:shadow-primary/10 flex flex-col overflow-hidden transition-shadow duration-300 hover:shadow-lg">
-      <CardContent className="flex-grow p-4">
+    <Card className="hover:shadow-primary/10 relative flex flex-col overflow-hidden transition-shadow duration-300 hover:shadow-lg">
+      <Button
+        variant="ghost"
+        size="icon"
+        className="absolute top-2 right-2 z-10 h-8 w-8"
+        onClick={() => archiveCharacter(character.id)}
+        title={t('common.archiveCharacter')}
+        aria-label={t('common.archiveCharacter')}
+        data-testid="archive-character"
+      >
+        <Archive className="h-4 w-4" />
+      </Button>
+      <CardContent className="flex-grow p-4 pr-12">
         <Badge
           data-testid="edition-badge"
           variant={badgeVariant}

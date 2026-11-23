@@ -27,6 +27,7 @@ import {
   finishCreationReview,
   isCreationReview,
 } from '@/games/shared/creation-review';
+import { clampResourcePoints, clampWoundPoints } from '@/games/shared/points';
 import { cn } from '@/lib/utils';
 
 import { CreationReviewBanner } from './creation-review-banner';
@@ -212,8 +213,20 @@ export const Dh1Sheet = React.forwardRef<
 
   const handleSavePoints = React.useCallback(() => {
     updateCharacter(character.id, {
-      wounds: editablePoints.wounds,
-      fatePoints: editablePoints.fatePoints,
+      wounds: {
+        ...editablePoints.wounds,
+        current: clampWoundPoints(
+          editablePoints.wounds.current,
+          editablePoints.wounds.max,
+        ),
+      },
+      fatePoints: {
+        ...editablePoints.fatePoints,
+        current: clampResourcePoints(
+          editablePoints.fatePoints.current,
+          editablePoints.fatePoints.max,
+        ),
+      },
     });
     setIsPointsEditing(false);
   }, [character.id, editablePoints, updateCharacter]);
@@ -250,7 +263,10 @@ export const Dh1Sheet = React.forwardRef<
       const newVal = currentPoints.current + delta;
       dataToUpdate[pointType] = {
         ...currentPoints,
-        current: Math.min(newVal, currentPoints.max),
+        current:
+          pointType === 'wounds'
+            ? clampWoundPoints(newVal, currentPoints.max)
+            : clampResourcePoints(newVal, currentPoints.max),
       };
     } else {
       const currentPoints = getSimplePointsObject(character[pointType]);

@@ -35,6 +35,7 @@ export function SharedCharacterProvider({
       addCharacter: async () => undefined,
       updateCharacter: () => undefined,
       deleteCharacter: () => undefined,
+      archiveCharacter: () => undefined,
       pendingDraft: null,
       createPendingDraft: async () => undefined,
       discardPendingDraft: () => undefined,
@@ -42,10 +43,9 @@ export function SharedCharacterProvider({
       loadError: false,
       retryCharacters: async () => undefined,
       toast: () => undefined,
-      // Гость видит весь лист: в `/share` нет компактного рейла, поэтому
-      // компактный режим означал бы «одна секция из шести без переключения».
-      // Флаги экрана при этом настоящие — от них зависит шапка и отступы.
-      isCompactView: false,
+      // На телефоне гость получает тот же компактный рейл, что и владелец,
+      // но в режиме `shared`: только секции и заметки, без редакторов.
+      isCompactView: isSmallScreen,
       isSmallScreen,
       isTabletScreen,
       toggleCompactView: () => undefined,

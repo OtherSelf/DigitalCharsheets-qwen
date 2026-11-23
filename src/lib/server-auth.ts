@@ -1,6 +1,6 @@
 import fs from 'fs/promises';
 
-import { getUserDir, getUserFile } from './data-dir';
+import { getUserFile } from './data-dir';
 import { withDataLock } from './data-lock';
 import { defaultDisplayName, isUid, newUid, normalizeLogin } from './ids';
 import { LocalUser } from './local-storage';
@@ -31,6 +31,7 @@ import {
 } from './security/totp';
 import { resetWriteSeqGuard } from './server-storage';
 import { revokeSharesForUser } from './shares';
+import { moveAccountToTrash } from './trash';
 import {
   readLoginIndexForUpdate,
   rebuildLoginIndex,
@@ -774,7 +775,16 @@ export async function deleteUserAccount(
           if (owner === uid) delete index.logins[login];
         }
 
-        await fs.rm(getUserDir(uid), { recursive: true, force: true });
+        // Каталог не удаляем безвозвратно: теневая копия живёт
+        // TRASH_RETENTION_DAYS и чистится стартовым обслуживанием.
+        const moved = await moveAccountToTrash(uid);
+        if (!moved) {
+          return {
+            success: false,
+            error: 'Failed to move the account to trash.',
+            reason: 'failed',
+          };
+        }
 
         try {
           await writeLoginIndex(index);

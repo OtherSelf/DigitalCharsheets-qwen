@@ -1,6 +1,7 @@
 import { z, type ZodType } from 'zod';
 
 import { FIELD_LIMITS } from '../shared/limits';
+import { noteTabsSchema } from '../shared/schemas';
 import type { SandboxCharacter } from './types';
 
 /**
@@ -26,6 +27,7 @@ export const sandboxCharacterSchema = z.looseObject({
   }),
   total: z.number().int().min(2).max(198),
   notes: z.string().max(FIELD_LIMITS.long),
+  noteTabs: noteTabsSchema.optional(),
   companion: z
     .looseObject({
       id: z.string().min(1).max(FIELD_LIMITS.id),

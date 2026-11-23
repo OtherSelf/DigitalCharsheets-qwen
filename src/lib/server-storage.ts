@@ -8,15 +8,29 @@ import {
   deleteCharacterHistory,
 } from './character-history';
 import { normalizeCharacterRecord } from './character-version';
-import { getCharactersDir, getUserDir } from './data-dir';
+import {
+  getArchiveDir,
+  getArchiveFile,
+  getCharactersDir,
+  getTrashDir,
+  getTrashFile,
+  getTrashMetaFile,
+  getUserDir,
+} from './data-dir';
 import { withDataLock, withSheetLock } from './data-lock';
 import { writeJsonAtomic } from './fs-atomic';
 import { diffCharacterRecords } from './history-diff';
 import { isUid } from './ids';
 import { enforceCharacterQuota } from './quotas';
-import { readThroughCache } from './read-cache';
+import { invalidateCachedFile, readThroughCache } from './read-cache';
 import { resolveCharacterFile } from './security/paths';
 import { revokeShareForCharacter } from './shares';
+import {
+  createCharacterTrashMeta,
+  isTrashExpired,
+  moveFileOrDir,
+  readTrashMeta,
+} from './trash';
 import { Character } from './types';
 
 // Каталог пользователя создаётся при первой записи: профиль и листы
@@ -458,5 +472,369 @@ export async function deleteCharacterFromServer(
     }
     await deleteCharacterHistory(userId, characterId);
     return true;
+  });
+}
+
+// ─── LANDMARK: ARCHIVE AND TRASH ────────────────────────────────────────────
+// Архив и корзина — перемещение файла между каталогами, а не флаг в JSON.
+// Активный список читает только characters/, поэтому архивные и удалённые
+// листы не нужно фильтровать на каждом чтении. Всё, что меняет два каталога,
+// идёт под withDataLock — так PUT не допишет файл уже после перемещения.
+
+export interface ArchivedCharacterSummary extends CharacterSummary {
+  archivedAt: string;
+}
+
+export interface TrashedCharacterSummary extends CharacterSummary {
+  deletedAt: string;
+  expiresAt: string;
+}
+
+type FileSummary = CharacterSummary;
+
+async function readFileSummary(
+  filePath: string,
+  characterId: string,
+): Promise<FileSummary | null> {
+  try {
+    const parsed = JSON.parse(await fs.readFile(filePath, 'utf8')) as Record<
+      string,
+      unknown
+    >;
+    let updatedAt: string | null = null;
+    try {
+      updatedAt = (await fs.stat(filePath)).mtime.toISOString();
+    } catch {
+      // Файл исчез между чтением и stat: сводка всё равно пригодна.
+    }
+    return {
+      id: characterId,
+      name: typeof parsed.name === 'string' ? parsed.name : '',
+      systemId: typeof parsed.systemId === 'string' ? parsed.systemId : null,
+      updatedAt,
+    };
+  } catch {
+    // Битый файл не должен ронять список архива: пропускаем его.
+    return null;
+  }
+}
+
+async function listJsonFileNames(dir: string): Promise<string[]> {
+  try {
+    const entries = await fs.readdir(dir, { withFileTypes: true });
+    return entries
+      .filter((entry) => entry.isFile() && entry.name.endsWith('.json'))
+      .filter((entry) => !entry.name.endsWith('.meta.json'))
+      .map((entry) => entry.name);
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Архивировать лист: `characters/<id>.json` → `archive/<id>.json`.
+ * Повторный вызов идемпотентен: если файл уже в архиве, вернётся его сводка.
+ */
+export async function archiveCharacterFromServer(
+  userId: string,
+  characterId: string,
+): Promise<ArchivedCharacterSummary | null> {
+  const source = resolveCharacterFile(getCharactersDir(userId), characterId);
+  const destination = getArchiveFile(userId, characterId);
+  if (!source || !destination) return null;
+
+  return withDataLock(async () => {
+    try {
+      await fs.stat(source);
+    } catch {
+      // Источника нет: либо листа не существует, либо он уже в архиве.
+      const existing = await readFileSummary(destination, characterId);
+      if (!existing) return null;
+      let archivedAt: string;
+      try {
+        archivedAt = (await fs.stat(destination)).mtime.toISOString();
+      } catch {
+        return null;
+      }
+      invalidateCharacterList(userId);
+      return { ...existing, archivedAt };
+    }
+
+    await fs.mkdir(getArchiveDir(userId), { recursive: true });
+    await moveFileOrDir(source, destination);
+    const archivedAt = new Date().toISOString();
+    const summary = await readFileSummary(destination, characterId);
+    invalidateCharacterList(userId);
+    resetWriteSeqGuard(userId, characterId);
+    try {
+      await revokeShareForCharacter(userId, characterId, { locked: true });
+    } catch (error) {
+      console.error(
+        `Failed to revoke share link for archived character ${characterId}:`,
+        error,
+      );
+    }
+    return summary ? { ...summary, archivedAt } : null;
+  });
+}
+
+/** Вернуть лист из архива; квота листов проверяется как при создании. */
+export async function unarchiveCharacterFromServer(
+  userId: string,
+  characterId: string,
+): Promise<CharacterSummary | null> {
+  const source = getArchiveFile(userId, characterId);
+  const destination = resolveCharacterFile(
+    getCharactersDir(userId),
+    characterId,
+  );
+  if (!source || !destination) return null;
+
+  return withDataLock(async () => {
+    try {
+      await fs.stat(source);
+    } catch {
+      return null;
+    }
+
+    // Квота — не 500: роут превратит это в 409.
+    await enforceCharacterQuota(userId, { isNewSheet: true });
+
+    await fs.mkdir(getCharactersDir(userId), { recursive: true });
+    await moveFileOrDir(source, destination);
+    invalidateCharacterList(userId);
+    resetWriteSeqGuard(userId, characterId);
+    return readFileSummary(destination, characterId);
+  });
+}
+
+export async function listArchivedCharacters(
+  userId: string,
+): Promise<ArchivedCharacterSummary[]> {
+  const dir = getArchiveDir(userId);
+  const files = await listJsonFileNames(dir);
+  const entries = await Promise.all(
+    files.map(async (file) => {
+      const characterId = file.slice(0, -'.json'.length);
+      const filePath = path.join(dir, file);
+      const summary = await readFileSummary(filePath, characterId);
+      if (!summary) return null;
+      try {
+        const stat = await fs.stat(filePath);
+        return { ...summary, archivedAt: stat.mtime.toISOString() };
+      } catch {
+        return null;
+      }
+    }),
+  );
+  return entries
+    .filter((entry): entry is ArchivedCharacterSummary => !!entry)
+    .sort((a, b) => b.archivedAt.localeCompare(a.archivedAt));
+}
+
+/** Очистить архив навсегда: файлы, история и (на всякий случай) ссылки. */
+export async function clearArchive(userId: string): Promise<number> {
+  const dir = getArchiveDir(userId);
+  const files = await listJsonFileNames(dir);
+  if (files.length === 0) return 0;
+
+  return withDataLock(async () => {
+    let removed = 0;
+    for (const file of files) {
+      const characterId = file.slice(0, -'.json'.length);
+      try {
+        await fs.unlink(path.join(dir, file));
+        invalidateCachedFile(path.join(dir, file));
+        await deleteCharacterHistory(userId, characterId);
+        await revokeShareForCharacter(userId, characterId, { locked: true });
+        removed += 1;
+      } catch (error) {
+        console.error(
+          `Failed to clear archived character ${userId}/${characterId}:`,
+          error,
+        );
+      }
+    }
+    return removed;
+  });
+}
+
+async function readTrashedEntry(
+  userId: string,
+  characterId: string,
+  now: number = Date.now(),
+): Promise<TrashedCharacterSummary | null> {
+  const file = getTrashFile(userId, characterId);
+  const metaFile = getTrashMetaFile(userId, characterId);
+  if (!file || !metaFile) return null;
+
+  const summary = await readFileSummary(file, characterId);
+  if (!summary) return null;
+
+  let meta = await readTrashMeta(metaFile);
+  if (!meta || meta.kind !== 'character') {
+    // Метаданные могли не записаться: возраст файла — запасной ориентир.
+    try {
+      const stat = await fs.stat(file);
+      meta = createCharacterTrashMeta(characterId, stat.mtimeMs);
+    } catch {
+      return null;
+    }
+  }
+  if (isTrashExpired(meta, now)) return null;
+
+  return {
+    ...summary,
+    deletedAt: meta.deletedAt,
+    expiresAt: meta.expiresAt,
+  };
+}
+
+/**
+ * Удалить лист в корзину. `DELETE /api/characters/[id]` использует эту
+ * функцию; `deleteCharacterFromServer` остаётся окончательным удалением для
+ * очистки корзины и тестов.
+ */
+export async function trashCharacterFromServer(
+  userId: string,
+  characterId: string,
+  now: number = Date.now(),
+): Promise<TrashedCharacterSummary | null> {
+  const source = resolveCharacterFile(getCharactersDir(userId), characterId);
+  const destination = getTrashFile(userId, characterId);
+  const metaFile = getTrashMetaFile(userId, characterId);
+  if (!source || !destination || !metaFile) return null;
+
+  return withDataLock(async () => {
+    try {
+      await fs.stat(source);
+    } catch {
+      // Повторный DELETE не должен создавать вторую запись: отдаём уже
+      // существующую, если срок ещё не истёк.
+      return readTrashedEntry(userId, characterId, now);
+    }
+
+    await fs.mkdir(getTrashDir(userId), { recursive: true });
+    await moveFileOrDir(source, destination);
+    const meta = createCharacterTrashMeta(characterId, now);
+    try {
+      await writeJsonAtomic(metaFile, meta);
+    } catch (error) {
+      // Файл уже в корзине: метаданные — вспомогательные, восстановление
+      // умеет опираться на mtime. Не отдаём 500 из-за них.
+      console.error(
+        `Failed to write trash metadata for ${userId}/${characterId}:`,
+        error,
+      );
+    }
+
+    invalidateCharacterList(userId);
+    resetWriteSeqGuard(userId, characterId);
+    try {
+      await revokeShareForCharacter(userId, characterId, { locked: true });
+    } catch (error) {
+      console.error(
+        `Failed to revoke share link for deleted character ${characterId}:`,
+        error,
+      );
+    }
+    return readTrashedEntry(userId, characterId, now);
+  });
+}
+
+export async function listTrashedCharacters(
+  userId: string,
+  now: number = Date.now(),
+): Promise<TrashedCharacterSummary[]> {
+  const dir = getTrashDir(userId);
+  const files = await listJsonFileNames(dir);
+  const entries = await Promise.all(
+    files.map((file) => {
+      const characterId = file.slice(0, -'.json'.length);
+      return readTrashedEntry(userId, characterId, now);
+    }),
+  );
+  return entries
+    .filter((entry): entry is TrashedCharacterSummary => !!entry)
+    .sort((a, b) => b.deletedAt.localeCompare(a.deletedAt));
+}
+
+/** Вернуть лист из корзины. Просроченная запись не восстанавливается. */
+export async function restoreCharacterFromTrash(
+  userId: string,
+  characterId: string,
+  now: number = Date.now(),
+): Promise<CharacterSummary | null> {
+  const source = getTrashFile(userId, characterId);
+  const metaFile = getTrashMetaFile(userId, characterId);
+  const destination = resolveCharacterFile(
+    getCharactersDir(userId),
+    characterId,
+  );
+  if (!source || !metaFile || !destination) return null;
+
+  return withDataLock(async () => {
+    const entry = await readTrashedEntry(userId, characterId, now);
+    if (!entry) {
+      // Просрочено или уже удалено: чистим остатки, чтобы не копить мусор.
+      await purgeTrashEntryLocked(userId, characterId);
+      return null;
+    }
+
+    await enforceCharacterQuota(userId, { isNewSheet: true });
+    await fs.mkdir(getCharactersDir(userId), { recursive: true });
+    await moveFileOrDir(source, destination);
+    await fs.unlink(metaFile).catch(() => undefined);
+    invalidateCharacterList(userId);
+    resetWriteSeqGuard(userId, characterId);
+    return readFileSummary(destination, characterId);
+  });
+}
+
+async function purgeTrashEntryLocked(
+  userId: string,
+  characterId: string,
+): Promise<boolean> {
+  const file = getTrashFile(userId, characterId);
+  const metaFile = getTrashMetaFile(userId, characterId);
+  if (!file || !metaFile) return false;
+
+  let removed = false;
+  try {
+    await fs.unlink(file);
+    invalidateCachedFile(file);
+    removed = true;
+  } catch {
+    // Файла уже нет — не ошибка очистки.
+  }
+  await fs.unlink(metaFile).catch(() => undefined);
+  await deleteCharacterHistory(userId, characterId);
+  await revokeShareForCharacter(userId, characterId, { locked: true }).catch(
+    () => undefined,
+  );
+  if (removed) invalidateCharacterList(userId);
+  return removed;
+}
+
+export async function purgeTrashEntry(
+  userId: string,
+  characterId: string,
+): Promise<boolean> {
+  return withDataLock(() => purgeTrashEntryLocked(userId, characterId));
+}
+
+/** Очистить корзину целиком; возвращает число удалённых листов. */
+export async function purgeTrash(userId: string): Promise<number> {
+  const dir = getTrashDir(userId);
+  const files = await listJsonFileNames(dir);
+  if (files.length === 0) return 0;
+
+  return withDataLock(async () => {
+    let removed = 0;
+    for (const file of files) {
+      const characterId = file.slice(0, -'.json'.length);
+      if (await purgeTrashEntryLocked(userId, characterId)) removed += 1;
+    }
+    return removed;
   });
 }

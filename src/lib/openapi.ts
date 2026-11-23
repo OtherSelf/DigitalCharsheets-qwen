@@ -1418,10 +1418,141 @@ export const openApiDocument = {
       delete: {
         tags: ['Characters'],
         operationId: 'deleteCharacter',
-        summary: 'Delete a character sheet',
+        summary: 'Move a character sheet to trash',
+        description:
+          'Moves the sheet to `trash/` for 14 days instead of deleting it. Repeated calls are idempotent and return the same `expiresAt`; permanent removal is `DELETE /api/characters/trash/{id}`.',
         parameters: [paramRef('CharacterId')],
         responses: {
-          200: jsonResponse('Deleted.', ref('SimpleSuccess')),
+          200: jsonResponse('Moved to trash.', ref('SimpleSuccess')),
+          400: { $ref: '#/components/responses/BadRequest' },
+          401: { $ref: '#/components/responses/Unauthorized' },
+          404: { $ref: '#/components/responses/NotFound' },
+        },
+      },
+    },
+    '/api/characters/{id}/archive': {
+      post: {
+        tags: ['Characters'],
+        operationId: 'archiveCharacter',
+        summary: 'Move a sheet to the archive',
+        description:
+          'Moves the file from `characters/` to `archive/` and revokes its share link. Archived sheets are not in the active list and do not count toward the sheet limit.',
+        parameters: [paramRef('CharacterId')],
+        responses: {
+          200: jsonResponse('Archived.', ref('SimpleSuccess')),
+          400: { $ref: '#/components/responses/BadRequest' },
+          401: { $ref: '#/components/responses/Unauthorized' },
+          404: { $ref: '#/components/responses/NotFound' },
+        },
+      },
+      delete: {
+        tags: ['Characters'],
+        operationId: 'unarchiveCharacter',
+        summary: 'Restore a sheet from the archive',
+        description:
+          'Moves the file back to `characters/`. The sheet limit is checked again; a full account gets `409 quota_exceeded`.',
+        parameters: [paramRef('CharacterId')],
+        responses: {
+          200: jsonResponse('Restored.', ref('SimpleSuccess')),
+          400: { $ref: '#/components/responses/BadRequest' },
+          401: { $ref: '#/components/responses/Unauthorized' },
+          404: { $ref: '#/components/responses/NotFound' },
+          409: errorResponse(
+            'Account quota exceeded: 100 sheets or 50 MiB of data.',
+          ),
+        },
+      },
+    },
+    '/api/characters/{id}/restore': {
+      post: {
+        tags: ['Characters'],
+        operationId: 'restoreCharacter',
+        summary: 'Restore a sheet from trash',
+        description:
+          'Restores a deleted sheet if the 14-day retention window has not expired and the sheet limit allows it. An expired entry answers `404` and is cleaned up.',
+        parameters: [paramRef('CharacterId')],
+        responses: {
+          200: jsonResponse('Restored.', ref('SimpleSuccess')),
+          400: { $ref: '#/components/responses/BadRequest' },
+          401: { $ref: '#/components/responses/Unauthorized' },
+          404: { $ref: '#/components/responses/NotFound' },
+          409: errorResponse(
+            'Account quota exceeded: 100 sheets or 50 MiB of data.',
+          ),
+        },
+      },
+    },
+    '/api/characters/archive': {
+      get: {
+        tags: ['Characters'],
+        operationId: 'listArchive',
+        summary: 'List archived and deleted sheets',
+        description:
+          'Returns summaries for both tabs of `/archive`: `archive` (manual) and `trash` (deleted, with `deletedAt`/`expiresAt`). Expired trash entries are cleaned lazily at most once an hour.',
+        responses: {
+          200: jsonResponse('Archive and trash summaries.', {
+            type: 'object',
+            required: ['success', 'archive', 'trash', 'retentionDays'],
+            properties: {
+              success: { type: 'boolean' },
+              archive: { type: 'array', items: ref('CharacterSummary') },
+              trash: { type: 'array', items: ref('CharacterSummary') },
+              retentionDays: { type: 'integer' },
+            },
+          }),
+          401: { $ref: '#/components/responses/Unauthorized' },
+        },
+      },
+      delete: {
+        tags: ['Characters'],
+        operationId: 'clearArchive',
+        summary: 'Clear the archive permanently',
+        description:
+          'Deletes every archived sheet and its history. The trash is cleared separately.',
+        responses: {
+          200: jsonResponse('Archive cleared.', ref('SimpleSuccess')),
+          401: { $ref: '#/components/responses/Unauthorized' },
+        },
+      },
+    },
+    '/api/characters/trash': {
+      get: {
+        tags: ['Characters'],
+        operationId: 'listTrash',
+        summary: 'List deleted sheets',
+        responses: {
+          200: jsonResponse('Trash summaries.', {
+            type: 'object',
+            required: ['success', 'trash', 'retentionDays'],
+            properties: {
+              success: { type: 'boolean' },
+              trash: { type: 'array', items: ref('CharacterSummary') },
+              retentionDays: { type: 'integer' },
+            },
+          }),
+          401: { $ref: '#/components/responses/Unauthorized' },
+        },
+      },
+      delete: {
+        tags: ['Characters'],
+        operationId: 'purgeTrash',
+        summary: 'Purge the trash permanently',
+        description:
+          'Deletes every trashed sheet, its metadata and its history, without waiting for the retention period.',
+        responses: {
+          200: jsonResponse('Trash purged.', ref('SimpleSuccess')),
+          401: { $ref: '#/components/responses/Unauthorized' },
+        },
+      },
+    },
+    '/api/characters/trash/{id}': {
+      delete: {
+        tags: ['Characters'],
+        operationId: 'purgeTrashEntry',
+        summary: 'Purge one trashed sheet',
+        parameters: [paramRef('CharacterId')],
+        responses: {
+          200: jsonResponse('Trash entry purged.', ref('SimpleSuccess')),
           400: { $ref: '#/components/responses/BadRequest' },
           401: { $ref: '#/components/responses/Unauthorized' },
           404: { $ref: '#/components/responses/NotFound' },

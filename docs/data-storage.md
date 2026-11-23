@@ -27,6 +27,11 @@ files are served from a process-local cache (see
       user.json                 profile (schema v4, source of truth)
       characters/
         <character-id>.json     one file per character sheet (per-module schema)
+      archive/
+        <character-id>.json     manually archived sheet (not in the active list)
+      trash/
+        <character-id>.json     deleted sheet kept for the retention period
+        <character-id>.meta.json  deletedAt/expiresAt for the trash entry
       history/
         <character-id>.jsonl    append-only change log (one revision per line)
   settings/
@@ -41,6 +46,10 @@ files are served from a process-local cache (see
   .lock/                        short-lived directory mutex
   .state/
     rate-limit.json             debounced auth rate-limit snapshot
+  .trash/
+    users/
+      <uid>-<timestamp>/        shadow copy of a deleted account (14 days)
+        meta.json               deletedAt/expiresAt/uid
   .initial-admin.txt            generated bootstrap admin (0600, optional)
 ```
 
@@ -147,6 +156,16 @@ import (`applyDefaults`). The migration is idempotent and writes a file only
 when it changes. A rewrite caused by a migration or by a derived-value
 recalculation always leaves a `.bak` next to the sheet and appends a
 `migration` marker to its history, so a user can see why the numbers changed.
+
+### Notes tabs
+
+`notes` is always the first notes tab. Additional tabs live in the optional
+`noteTabs: [{ id, title, body }]` array (at most 10, `body` up to
+`FIELD_LIMITS.long`). The field is additive: sheets without it are valid and
+open without a migration, and `schemaVersion` does not change. The JSON/Excel
+export writes `notes` first and then each extra tab under its title; the
+read-only share page receives `noteTabs` through the normal character
+sanitizer.
 
 ### Sheets without an edition
 
@@ -298,6 +317,42 @@ reported but not rewritten.
 A backup is a copy of the whole data directory (or of the JSON export envelope,
 `docs/export-format.md`). Because migrations rewrite files in place, take a copy
 before upgrading a production data directory.
+
+## Archive and trash
+
+Two separate mechanisms keep a sheet out of the active list:
+
+- **Archive** (`users/<uid>/archive/<id>.json`) is a user decision. It can be
+  restored at any time or cleared permanently. The file is moved with
+  `rename`, so `/api/characters/[id]` returns 404 while the sheet is archived
+  and a previously issued share link is revoked. Archived sheets do not count
+  toward the per-account sheet limit, but their bytes still count toward the
+  byte limit.
+- **Trash** (`users/<uid>/trash/<id>.json` plus `<id>.meta.json`) holds a
+  deleted sheet for `TRASH_RETENTION_DAYS` (14 days). `DELETE
+  /api/characters/[id]` moves the sheet there; `POST
+  /api/characters/[id]/restore` puts it back and checks the sheet limit again.
+  Expired entries are removed by `cleanupExpiredTrash` (`src/lib/trash.ts`):
+  on startup, and lazily (at most once an hour) when the archive API is read.
+
+Deleting an account no longer removes the directory: `moveAccountToTrash`
+moves it to `.trash/users/<uid>-<timestamp>` and writes `meta.json`. The login
+index entry, sessions, recovery tokens and share links are revoked immediately,
+so the account cannot log in while the copy exists. The copy is purged after
+the same 14 days. Restoration is an operator action:
+
+```bash
+npm run trash -- list
+npm run trash -- restore-account <uid>
+npm run trash -- purge [--all] [--yes]
+```
+
+`restore-account` moves the directory back to `users/<uid>`, removes the
+service `meta.json` and deletes the derived login index; it is rebuilt on the
+next login. The password, TOTP secret and sheets come back with the directory.
+The user-facing “delete account” dialog still says the action is irreversible:
+the account is inaccessible and cannot be restored by the user, while the
+operator copy is a safety net, not a feature promise.
 
 ## Character history (change log)
 

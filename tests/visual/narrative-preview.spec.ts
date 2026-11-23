@@ -1,6 +1,14 @@
 import { expect, test } from '@playwright/test';
 
-import { getState, openApp, openDialog, prepare, sheetPath } from './helpers';
+import {
+  getState,
+  openApp,
+  openDialog,
+  prepare,
+  screenshotPage,
+  seedTempAccountSheet,
+  sheetPath,
+} from './helpers';
 
 /**
  * `NarrativeSheet` — общий компонент заметок и предыстории для всех редакций.
@@ -47,6 +55,37 @@ test.describe('предпросмотр заметок: действия в ка
           .getByRole('button', { name: 'Cancel', exact: true })
           .click();
       }
+    },
+  );
+});
+
+/**
+ * Дополнительные вкладки заметок: добавляем вкладку, пишем текст и сохраняем.
+ * Временный аккаунт не трогает seeded-листы других сценариев.
+ */
+test.describe('вкладки заметок', () => {
+  test(
+    'desktop: добавить вкладку и сохранить (en)',
+    { tag: ['@fast', '@desktop'] },
+    async ({ page, context }) => {
+      await prepare(context, { authenticated: false });
+      const id = await seedTempAccountSheet(page, 'dnd5e');
+      await openApp(page, sheetPath(id));
+
+      const dialog = await openDialog(page, 'Notes', false);
+      await dialog.getByTestId('notes-tab-add').click();
+      await dialog.getByTestId('notes-tab-title-input').fill('Faction');
+      await dialog.getByTestId('notes-tab-title-input').press('Enter');
+
+      await expect(dialog.getByRole('tab', { name: 'Faction' })).toBeVisible();
+      await dialog.getByTestId('notes-textarea').fill('Faction notes');
+      await dialog.getByTestId('notes-save').click();
+      // После сохранения Sheet возвращается в режим просмотра: Save исчезает,
+      // а текст вкладки виден в markdown.
+      await expect(dialog.getByTestId('notes-edit')).toBeVisible();
+      await expect(dialog.getByText('Faction notes')).toBeVisible();
+
+      await screenshotPage(page, 'notes-tabs-desktop-en.png');
     },
   );
 });

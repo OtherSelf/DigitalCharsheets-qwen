@@ -120,22 +120,13 @@ test.describe('гостевая ссылка', () => {
         'main не переполнен по горизонтали',
       ).toBeLessThanOrEqual(1);
 
-      // Гость видит весь лист: компактного рейла в /share нет, поэтому
-      // компактный режим оставил бы ему одну секцию из шести.
-      await expect(page.getByRole('navigation')).toHaveCount(0);
-      for (const sectionId of [
-        'info-section',
-        'progression-section',
-        'skills-section',
-        'talents-section',
-        'equipment-section',
-        'inventory-section',
-      ]) {
-        await expect(
-          page.locator(`#${sectionId}`),
-          `секция ${sectionId} есть на гостевой странице`,
-        ).toHaveCount(1);
-      }
+      // На телефоне гость получает тот же компактный рейл, что и владелец:
+      // одна секция и переключение, а не вся простыня сразу.
+      const rail = page.locator('nav [data-section-id]').first();
+      await expect(rail, 'компактный рейл гостя').toBeVisible();
+      await expect(page.locator('#info-section')).toBeVisible();
+      await rail.click();
+      await expect(page.locator('#info-section')).toBeVisible();
 
       await screenshotPage(page, 'share-dh-mobile-en.png');
     },

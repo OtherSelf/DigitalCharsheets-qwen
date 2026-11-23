@@ -5,6 +5,7 @@ import {
   openApp,
   openDialog,
   prepare,
+  registerAccount,
   screenshotPage,
   seededCharacterPayload,
   sheetPath,
@@ -294,3 +295,63 @@ test.describe(
     );
   },
 );
+
+/**
+ * Продвинутый путь DH1: диалог выбора обязан закрываться Esc и кликом мимо,
+ * а выбранный путь — оставаться заблокированным. Раньше Radix намеренно
+ * отменял оба способа закрытия, и игрок не мог выйти без выбора.
+ */
+test.describe('DH1: выбор продвинутого пути', { tag: '@plugin:dh1' }, () => {
+  test('Esc и клик мимо закрывают диалог, путь остаётся выбранным', async ({
+    page,
+  }) => {
+    test.skip(isMobile(), 'Esc/backdrop проверяются в desktop-проекте');
+    await prepare(page.context(), { authenticated: false, theme: 'light' });
+    const account = await registerAccount(page, 'dh1-path', 'DH1 Path');
+    const created = await page.request.post('/api/characters', {
+      data: {
+        systemId: 'dh1',
+        name: 'DH1 Path',
+        careerPath: 'Adept',
+        totalExpSpent: 6000,
+      },
+    });
+    expect([200, 201], 'создание листа').toContain(created.status());
+    const { id } = (await created.json()) as { id: string };
+
+    await signInViaUI(page, account);
+    await openApp(page, sheetPath(id));
+
+    const progression = page.locator('#progression-section');
+    await expect(progression).toBeVisible();
+    await progression.getByTestId('edit-button').click();
+
+    const select = progression.getByRole('button', {
+      name: 'Select Advanced Path',
+      exact: true,
+    });
+    await expect(select).toBeVisible();
+
+    await select.click();
+    const dialog = page.getByTestId('advanced-path-dialog');
+    await expect(dialog).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(dialog).toHaveCount(0);
+
+    await select.click();
+    await expect(dialog).toBeVisible();
+    await page.mouse.click(5, 5);
+    await expect(dialog).toHaveCount(0);
+
+    // Выбор фиксируется сразу и больше не предлагает «изменить».
+    await select.click();
+    await dialog.getByTestId('choice-Comptroller').click();
+    await expect(dialog).toHaveCount(0);
+    await expect(
+      progression.getByText('Comptroller', { exact: true }),
+    ).toBeVisible();
+    await expect(
+      progression.getByRole('button', { name: 'Change Advanced Path' }),
+    ).toHaveCount(0);
+  });
+});

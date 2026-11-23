@@ -358,11 +358,12 @@ bash scripts/visual.sh --base-url http://127.0.0.1:3000
   named after a section must contain the section. When the sheet is shorter than
   the viewport the scroll stops at the end: the section stays visible, which is
   what the test asserts instead of an exact zero offset.
-- The guest page `/share/<token>` renders outside the compact mode: there is no
-  section rail, so the guest gets the whole sheet, and below 768 px the panels
-  are stacked by a rule in the plugin's `sheet.module.css`. `share.spec.ts`
-  asserts that neither the document nor `main` overflows and that all sections
-  are present, for both seeded sheets.
+- The guest page `/share/<token>` uses the same compact rail below 768 px as
+  the owner, but in `shared` mode: sections and read-only notes, no journal,
+  house rules, edit toggles or editors. On `md+` it renders the full sheet, and
+  panels are stacked by a rule in the plugin's `sheet.module.css`.
+  `share.spec.ts` asserts that neither the document nor `main` overflows, that
+  the rail is present on mobile and that the active section is visible.
 - Inputs take `font-size: 16px` on focus below 768 px (`globals.css`), so iOS
   does not zoom the page; the mobile editing scenario asserts the computed size
   on a focused field and blurs it before taking the screenshot.
@@ -537,6 +538,26 @@ cap in the same commit).
 
 Useful flags: `--skip-build`, `--skip-unit`, `--skip-smoke`, `--base-url URL`,
 `--keep` (keep the temp data/logs). The real `./data` is never touched.
+
+## External stand smoke
+
+`npm run test:stand` is an opt-in browser check against a running stand (dev or
+production). It is not part of `verify` or CI: the stand is deployed manually,
+the test needs network access, and it creates a temporary character. Credentials
+come from the environment and are never committed:
+
+```bash
+DCS_STAND_URL=https://<host> \
+DCS_STAND_LOGIN=<login> \
+DCS_STAND_PASSWORD=<password> \
+npm run test:stand
+```
+
+It signs in, opens the dashboard, the archive page, a temporary sheet and its
+history, archives/restores the sheet, creates a read-only link and checks the
+mobile guest sheet for a compact section rail. The temporary sheet is moved to
+trash and purged in `finally`. Without the three variables the script prints a
+skip message and exits 0.
 
 ## Performance checks
 

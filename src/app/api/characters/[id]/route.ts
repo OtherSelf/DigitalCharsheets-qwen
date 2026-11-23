@@ -6,8 +6,8 @@ import { QuotaExceededError } from '@/lib/quotas';
 import { isSafeId } from '@/lib/security/paths';
 import { readJsonObject } from '@/lib/security/payload';
 import {
-  deleteCharacterFromServer,
   getCharacterFromServer,
+  trashCharacterFromServer,
   updateCharacterOnServer,
   type WriteToken,
 } from '@/lib/server-storage';
@@ -157,7 +157,7 @@ export async function PUT(
   return NextResponse.json(updated);
 }
 
-// DELETE: Remove a character file
+// DELETE: перенести лист в корзину; окончательное удаление — trash/archive API.
 export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
@@ -176,10 +176,16 @@ export async function DELETE(
     );
   }
 
-  const deleted = await deleteCharacterFromServer(uid, id);
-  if (!deleted) {
+  const trashed = await trashCharacterFromServer(uid, id);
+  if (!trashed) {
     return NextResponse.json({ error: 'Character not found' }, { status: 404 });
   }
 
-  return NextResponse.json({ success: true });
+  return NextResponse.json({
+    success: true,
+    trashed: true,
+    id: trashed.id,
+    deletedAt: trashed.deletedAt,
+    expiresAt: trashed.expiresAt,
+  });
 }

@@ -6,6 +6,8 @@ import { DynamicFavicon } from '@/components/dynamic-favicon';
 import { SharedHistoryView } from '@/components/history/shared-history-view';
 import { AppFrame } from '@/components/layout/app-frame';
 import { CharacterSheet } from '@/components/sheets/character-sheet';
+import { CompactSidebar } from '@/components/sheets/compact-sidebar';
+import { NotesSheet } from '@/components/sheets/notes-sheet';
 import { SheetStateBanner } from '@/components/sheets/sheet-state-banner';
 import { UnknownSheetView } from '@/components/sheets/unknown-sheet-view';
 import { Button } from '@/components/ui/button';
@@ -15,7 +17,9 @@ import {
   getCharacterModule,
   resolveCharacterSystemId,
 } from '@/games/character-system';
+import { useCompactSectionScroll } from '@/hooks/use-compact-section-scroll';
 import { useGameUiSlots } from '@/hooks/use-game-ui-slots';
+import { useViewportFlags } from '@/hooks/use-viewport-flags';
 import type { SharedHistoryPage } from '@/lib/history-types';
 import type { Character } from '@/lib/types';
 
@@ -39,7 +43,13 @@ export function SharedSheetView({
   ownerName?: string;
 }) {
   const { t } = useTranslation();
+  const { isSmallScreen: isCompactView } = useViewportFlags();
   const [tab, setTab] = useState<'sheet' | 'history'>('sheet');
+  const [activeCompactSection, setActiveCompactSection] =
+    useState('info-section');
+  const [notesOpen, setNotesOpen] = useState(false);
+
+  useCompactSectionScroll(activeCompactSection, isCompactView);
   const systemId = resolveCharacterSystemId(character);
   const gameModule = getCharacterModule(character);
   const uiSlots = useGameUiSlots(systemId);
@@ -93,6 +103,24 @@ export function SharedSheetView({
           hideCompactToggle: true,
           authAction: 'login',
         }}
+        sidebar={
+          isCompactView ? (
+            <CompactSidebar
+              character={character}
+              activeSection={activeCompactSection}
+              onSectionChange={setActiveCompactSection}
+              mode="shared"
+              onNotesClick={() => setNotesOpen(true)}
+            />
+          ) : undefined
+        }
+        after={
+          <NotesSheet
+            character={character}
+            open={notesOpen}
+            onOpenChange={setNotesOpen}
+          />
+        }
       >
         <SheetStateBanner
           testId="shared-read-only-banner"
@@ -146,7 +174,7 @@ export function SharedSheetView({
           <div ref={sheetRef} data-testid="shared-sheet">
             <CharacterSheet
               character={character}
-              activeCompactSection="info-section"
+              activeCompactSection={activeCompactSection}
             />
           </div>
         ) : (

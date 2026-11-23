@@ -61,6 +61,62 @@ export function getHistoryDir(uid: string): string {
 }
 
 /**
+ * Каталог ручного архива: `<data-dir>/users/<uid>/archive`.
+ * Лист лежит здесь, пока владелец не вернёт его или не очистит архив;
+ * активный список и квота листов его не видят.
+ */
+export function getArchiveDir(uid: string): string {
+  return path.join(getUserDir(uid), 'archive');
+}
+
+/**
+ * Файл архивного листа: `archive/<id>.json`. `null` — id небезопасен или
+ * путь вышел за каталог архива.
+ */
+export function getArchiveFile(
+  uid: string,
+  characterId: string,
+): string | null {
+  if (!isSafeId(characterId)) return null;
+  return resolveInside(getArchiveDir(uid), `${characterId}.json`);
+}
+
+/**
+ * Каталог корзины листов: `<data-dir>/users/<uid>/trash`.
+ * Здесь лежат удалённые листы до истечения срока (`TRASH_RETENTION_DAYS`).
+ */
+export function getTrashDir(uid: string): string {
+  return path.join(getUserDir(uid), 'trash');
+}
+
+/** Файл листа в корзине: `trash/<id>.json`; `null` — небезопасный id. */
+export function getTrashFile(uid: string, characterId: string): string | null {
+  if (!isSafeId(characterId)) return null;
+  return resolveInside(getTrashDir(uid), `${characterId}.json`);
+}
+
+/**
+ * Метаданные записи корзины: `trash/<id>.meta.json`. Отдельный файл, чтобы
+ * не добавлять служебные поля в JSON листа и не менять схему редакции.
+ */
+export function getTrashMetaFile(
+  uid: string,
+  characterId: string,
+): string | null {
+  if (!isSafeId(characterId)) return null;
+  return resolveInside(getTrashDir(uid), `${characterId}.meta.json`);
+}
+
+/**
+ * Корень теневых копий удалённых аккаунтов: `<data-dir>/.trash/users`.
+ * Каталог намеренно вне `users/`, чтобы восстановление индекса логинов,
+ * нормализация профилей и обычные чтения не видели удалённый аккаунт.
+ */
+export function getAccountTrashDir(): string {
+  return path.join(getDataDir(), '.trash', 'users');
+}
+
+/**
  * Файл истории одного листа: `history/<id>.jsonl`. `null` — id небезопасен
  * или путь вышел за каталог истории (та же защита, что у листа).
  */

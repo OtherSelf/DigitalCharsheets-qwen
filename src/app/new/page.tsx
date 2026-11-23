@@ -88,6 +88,42 @@ function fallbackCatalog(): CatalogGame[] {
     .filter((game) => game.editions.length > 0);
 }
 
+function CreateStepHeader({
+  title,
+  description,
+  backLabel,
+  onBack,
+  testId,
+}: {
+  title: string;
+  description: string;
+  backLabel: string;
+  onBack: () => void;
+  testId: string;
+}) {
+  return (
+    <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+      <div className="min-w-0">
+        <h2 className="font-headline text-xl font-semibold break-words">
+          {title}
+        </h2>
+        <p className="text-muted-foreground text-sm">{description}</p>
+      </div>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={onBack}
+        className="shrink-0"
+        aria-label={backLabel}
+        data-testid={testId}
+      >
+        <ChevronLeft className="mr-2 h-4 w-4" />
+        <span className="hidden sm:inline">{backLabel}</span>
+      </Button>
+    </div>
+  );
+}
+
 export default function ManualCharacterCreationPage() {
   const { t } = useTranslation();
   const { user, isUserLoading } = useLocalAuth();
@@ -161,15 +197,6 @@ export default function ManualCharacterCreationPage() {
             {t('common.buildCharacterDesc')}
           </p>
         </div>
-
-        <div className="hidden md:block">
-          <Button variant="outline" size="sm" asChild>
-            <Link href="/">
-              <ChevronLeft className="mr-2 h-4 w-4" />
-              {t('common.backToDashboard')}
-            </Link>
-          </Button>
-        </div>
       </div>
 
       <div className="mx-auto max-w-4xl">
@@ -202,92 +229,89 @@ export default function ManualCharacterCreationPage() {
         </ol>
 
         {step === 1 && (
-          <Card data-testid="create-step-game">
-            <CardHeader>
-              <CardTitle>{t('games.chooseGame')}</CardTitle>
-              <CardDescription>{t('games.chooseGameDesc')}</CardDescription>
-            </CardHeader>
-            <CardContent className="grid gap-3 sm:grid-cols-2">
-              {games.map((catalogGame) => (
-                <button
-                  key={catalogGame.id}
-                  type="button"
-                  onClick={() =>
-                    go(`?game=${encodeURIComponent(catalogGame.id)}`)
-                  }
-                  className="hover:border-primary hover:bg-accent/40 focus-visible:ring-ring rounded-lg border p-4 text-left transition-colors focus-visible:ring-2 focus-visible:outline-none"
-                  data-testid={`create-game-${catalogGame.id}`}
-                >
-                  <div className="font-semibold">{t(catalogGame.nameKey)}</div>
-                  <p className="text-muted-foreground mt-1 text-sm">
-                    {t(catalogGame.descriptionKey)}
-                  </p>
-                  <p className="text-muted-foreground mt-3 text-xs">
-                    {catalogGame.editions
-                      .map((item) => t(item.nameKey))
-                      .join(' · ')}
-                  </p>
-                </button>
-              ))}
-            </CardContent>
-          </Card>
-        )}
-
-        {step === 2 && game && (
-          <Card data-testid="create-step-edition">
-            <CardHeader>
-              <CardTitle>{t('games.chooseEdition')}</CardTitle>
-              <CardDescription>{t('games.chooseEditionDesc')}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid gap-3 sm:grid-cols-2">
-                {game.editions.map((item) => (
+          <>
+            <CreateStepHeader
+              title={t('games.chooseGame')}
+              description={t('games.chooseGameDesc')}
+              backLabel={t('common.backToDashboard')}
+              onBack={() => router.push('/')}
+              testId="create-back-dashboard"
+            />
+            <Card data-testid="create-step-game">
+              <CardContent className="grid gap-3 pt-6 sm:grid-cols-2">
+                {games.map((catalogGame) => (
                   <button
-                    key={item.id}
+                    key={catalogGame.id}
                     type="button"
                     onClick={() =>
-                      go(
-                        `?game=${encodeURIComponent(game.id)}&edition=${encodeURIComponent(item.id)}`,
-                      )
+                      go(`?game=${encodeURIComponent(catalogGame.id)}`)
                     }
                     className="hover:border-primary hover:bg-accent/40 focus-visible:ring-ring rounded-lg border p-4 text-left transition-colors focus-visible:ring-2 focus-visible:outline-none"
-                    data-testid={`create-edition-${item.id}`}
+                    data-testid={`create-game-${catalogGame.id}`}
                   >
-                    <div className="font-semibold">{t(item.nameKey)}</div>
+                    <div className="font-semibold">
+                      {t(catalogGame.nameKey)}
+                    </div>
                     <p className="text-muted-foreground mt-1 text-sm">
-                      {t(item.descriptionKey)}
+                      {t(catalogGame.descriptionKey)}
+                    </p>
+                    <p className="text-muted-foreground mt-3 text-xs">
+                      {catalogGame.editions
+                        .map((item) => t(item.nameKey))
+                        .join(' · ')}
                     </p>
                   </button>
                 ))}
-              </div>
-              <Button variant="outline" size="sm" onClick={() => go()}>
-                <ChevronLeft className="mr-2 h-4 w-4" />
-                {t('games.backToGames')}
-              </Button>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </>
+        )}
+
+        {step === 2 && game && (
+          <>
+            <CreateStepHeader
+              title={t('games.chooseEdition')}
+              description={t('games.chooseEditionDesc')}
+              backLabel={t('games.backToGames')}
+              onBack={() => go()}
+              testId="create-back-games"
+            />
+            <Card data-testid="create-step-edition">
+              <CardContent className="space-y-4 pt-6">
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {game.editions.map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() =>
+                        go(
+                          `?game=${encodeURIComponent(game.id)}&edition=${encodeURIComponent(item.id)}`,
+                        )
+                      }
+                      className="hover:border-primary hover:bg-accent/40 focus-visible:ring-ring rounded-lg border p-4 text-left transition-colors focus-visible:ring-2 focus-visible:outline-none"
+                      data-testid={`create-edition-${item.id}`}
+                    >
+                      <div className="font-semibold">{t(item.nameKey)}</div>
+                      <p className="text-muted-foreground mt-1 text-sm">
+                        {t(item.descriptionKey)}
+                      </p>
+                    </button>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </>
         )}
 
         {step === 3 && game && selectedModule && (
           <div data-testid="create-step-form">
-            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <h2 className="font-headline text-xl font-semibold">
-                  {t(game.nameKey)} · {t(selectedModule.nameKey)}
-                </h2>
-                <p className="text-muted-foreground text-sm">
-                  {t(selectedModule.descriptionKey)}
-                </p>
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => go(`?game=${encodeURIComponent(game.id)}`)}
-              >
-                <ChevronLeft className="mr-2 h-4 w-4" />
-                {t('games.backToEditions')}
-              </Button>
-            </div>
+            <CreateStepHeader
+              title={`${t(game.nameKey)} · ${t(selectedModule.nameKey)}`}
+              description={t(selectedModule.descriptionKey)}
+              backLabel={t('games.backToEditions')}
+              onBack={() => go(`?game=${encodeURIComponent(game.id)}`)}
+              testId="create-back-editions"
+            />
             {!isUserLoading && !user && (
               <div
                 data-testid="guest-draft-banner"

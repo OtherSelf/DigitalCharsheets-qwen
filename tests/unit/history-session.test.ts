@@ -200,6 +200,20 @@ describe('collapseSessionChanges', () => {
     ]);
   });
 
+  it('свежие изменения сверху', () => {
+    const result = collapseSessionChanges([
+      changed('name', 'A', 'B'),
+      changed('age', '1', '2'),
+      changed('height', '1', '2'),
+    ]);
+
+    expect(result.map((change) => change.path)).toEqual([
+      'height',
+      'age',
+      'name',
+    ]);
+  });
+
   it('оставляет последний bulk для одного пути', () => {
     const result = collapseSessionChanges([
       { kind: 'bulk', path: 'items', count: 1 },

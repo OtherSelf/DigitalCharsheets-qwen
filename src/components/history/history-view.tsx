@@ -40,7 +40,9 @@ import type {
   StoredValue,
 } from '@/lib/history-types';
 import { characterPath } from '@/lib/routes';
+import { diffTextLines, type TextDiff } from '@/lib/text-diff';
 import type { Character } from '@/lib/types';
+import { cn } from '@/lib/utils';
 
 /**
  * ─── LANDMARK: HISTORY VIEW ─────────────────────────────────────────────────
@@ -119,6 +121,58 @@ function ValueText({
   );
 }
 
+function textValue(value: StoredValue | undefined): string | undefined {
+  if (!value || value.truncated === true) return undefined;
+  return typeof value.value === 'string' ? value.value : undefined;
+}
+
+function TextDiffView({ diff }: { diff: TextDiff }) {
+  const { t } = useTranslation();
+
+  return (
+    <div className="min-w-0 space-y-1">
+      <div className="bg-muted/40 max-h-64 overflow-auto rounded border p-2 font-mono text-xs">
+        {diff.lines.map((line, index) => {
+          if (line.kind === 'skip') {
+            return (
+              <div
+                key={`skip-${index}`}
+                className="text-muted-foreground py-0.5 select-none"
+              >
+                … {line.count} {t('history.diffSkipped')}
+              </div>
+            );
+          }
+          const prefix =
+            line.kind === 'add' ? '+' : line.kind === 'remove' ? '-' : ' ';
+          return (
+            <div
+              key={`${line.kind}-${index}`}
+              className={cn(
+                'break-words whitespace-pre-wrap',
+                line.kind === 'add' &&
+                  'bg-emerald-100/70 text-emerald-950 dark:bg-emerald-950/50 dark:text-emerald-100',
+                line.kind === 'remove' &&
+                  'bg-rose-100/70 text-rose-950 dark:bg-rose-950/50 dark:text-rose-100',
+              )}
+            >
+              <span className="text-muted-foreground mr-1 select-none">
+                {prefix}
+              </span>
+              {line.text || ' '}
+            </div>
+          );
+        })}
+      </div>
+      {diff.truncated && (
+        <p className="text-muted-foreground text-[11px]">
+          {t('history.diffTruncated')}
+        </p>
+      )}
+    </div>
+  );
+}
+
 function ChangeRow({
   change,
   historyConfig,
@@ -137,6 +191,25 @@ function ChangeRow({
     change.key !== undefined &&
     change.field === undefined &&
     (change.kind === 'added' || change.kind === 'removed');
+  const beforeText = textValue(change.before);
+  const afterText = textValue(change.after);
+  const textDiff =
+    change.kind === 'changed' &&
+    beforeText !== undefined &&
+    afterText !== undefined
+      ? diffTextLines(
+          formatHistoryValue(change.before, {
+            config: historyConfig,
+            path: fieldPath,
+            t,
+          }),
+          formatHistoryValue(change.after, {
+            config: historyConfig,
+            path: fieldPath,
+            t,
+          }),
+        )
+      : null;
 
   return (
     <div data-testid="history-change" className="border-b py-3 last:border-b-0">
@@ -173,6 +246,8 @@ function ChangeRow({
             ))}
           </div>
         </div>
+      ) : textDiff ? (
+        <TextDiffView diff={textDiff} />
       ) : (
         <div className="grid gap-2 sm:grid-cols-2">
           {change.before !== undefined && (

@@ -96,17 +96,20 @@ function mergeScalar(
 }
 
 /**
- * Свернуть изменения одной сессии. Порядок первого появления сохраняется:
- * так таймлайн не «прыгает» между рендерами.
+ * Свернуть изменения одной сессии. Порядок — по последнему появлению ключа
+ * по убыванию: свежие правки сверху. Внутри одного ключа остаются первое
+ * «было» и последнее «стало» — сворачивание не теряет историю значения.
  */
 export function collapseSessionChanges(
   changes: readonly HistoryChange[],
 ): HistoryChange[] {
   const merged = new Map<string, HistoryChange>();
-  const order: string[] = [];
+  const lastSeen = new Map<string, number>();
 
-  for (const change of changes) {
+  for (let index = 0; index < changes.length; index += 1) {
+    const change = changes[index];
     const key = changeKey(change);
+    lastSeen.set(key, index);
     const existing = merged.get(key);
 
     if (!existing) {
@@ -114,7 +117,6 @@ export function collapseSessionChanges(
         ...change,
         ...(change.values ? { values: [...change.values] } : {}),
       });
-      order.push(key);
       continue;
     }
 
@@ -146,7 +148,29 @@ export function collapseSessionChanges(
     }
   }
 
-  return order
+  return [...merged.keys()]
+    .sort((left, right) => {
+      const leftChange = merged.get(left);
+      const rightChange = merged.get(right);
+      // Для одного массива «добавлено» показываем раньше «удалено»: иначе
+      // глазами это читается как удаление до добавления, хотя свёртка
+      // сохраняет оба набора.
+      if (
+        leftChange?.path === rightChange?.path &&
+        leftChange?.kind === 'array-add' &&
+        rightChange?.kind === 'array-remove'
+      ) {
+        return -1;
+      }
+      if (
+        leftChange?.path === rightChange?.path &&
+        leftChange?.kind === 'array-remove' &&
+        rightChange?.kind === 'array-add'
+      ) {
+        return 1;
+      }
+      return (lastSeen.get(right) ?? 0) - (lastSeen.get(left) ?? 0);
+    })
     .map((key) => merged.get(key))
     .filter((change): change is HistoryChange => change !== undefined);
 }

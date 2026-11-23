@@ -5,7 +5,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 
-import { FileDown, PlusCircle, Scroll, Settings2 } from 'lucide-react';
+import { Archive, FileDown, PlusCircle, Scroll, Settings2 } from 'lucide-react';
 
 import { CharacterCard } from '@/components/characters/character-card';
 import { DemoLandingView } from '@/components/demo-landing-view';
@@ -193,9 +193,23 @@ export default function DashboardPage() {
         </div>
 
         <Card>
-          <CardHeader>
-            <CardTitle>{t('common.myCharacters')}</CardTitle>
-            <CardDescription>{t('common.allHeroes')}</CardDescription>
+          <CardHeader className="flex flex-row items-start justify-between gap-3">
+            <div className="min-w-0">
+              <CardTitle>{t('common.myCharacters')}</CardTitle>
+              <CardDescription>{t('common.allHeroes')}</CardDescription>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              asChild
+              className="shrink-0"
+              data-testid="open-archive"
+            >
+              <Link href="/archive">
+                <Archive className="mr-2 h-4 w-4" />
+                <span className="hidden sm:inline">{t('common.archive')}</span>
+              </Link>
+            </Button>
           </CardHeader>
           <CardContent>
             {loadError && characters.length === 0 ? (

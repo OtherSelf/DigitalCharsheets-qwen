@@ -65,6 +65,7 @@ export function buildDh2PortableJson(
   if (config.includeNarrative) {
     result.backstory = character.backstory;
     result.notes = character.notes;
+    result.noteTabs = character.noteTabs;
   }
 
   if (config.includeProgression) {

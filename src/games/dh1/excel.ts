@@ -253,6 +253,9 @@ export function buildDh1ExcelSections(
     w.section('dh1.excel.narrative');
     w.row('dh1.excel.backstory', character.backstory);
     w.row('common.notes', character.notes);
+    for (const tab of character.noteTabs ?? []) {
+      w.row(tab.title, tab.body);
+    }
   }
 
   if (config.includeQuestLog) {

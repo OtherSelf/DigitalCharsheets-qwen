@@ -44,6 +44,8 @@ export interface CharacterContextType {
   ) => Promise<Character | undefined>;
   updateCharacter: (id: string, data: Partial<Character>) => void;
   deleteCharacter: (id: string) => void;
+  /** Убрать лист с главной в архив; при ошибке список перечитывается. */
+  archiveCharacter: (id: string) => void;
   /**
    * Черновик персонажа, который гость соберёт до входа. При входе в
    * существующий аккаунт он НЕ создаётся сам — дашборд показывает плашку,
@@ -781,6 +783,38 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
     setPendingDraft(null);
   }, []);
 
+  const archiveCharacter = useCallback(
+    (id: string) => {
+      if (!user) return;
+      const characterToArchive = charactersRef.current.find((c) => c.id === id);
+      applyCharacters((prev) => prev.filter((c) => c.id !== id));
+      fetch(`/api/characters/${encodeURIComponent(id)}/archive`, {
+        method: 'POST',
+      })
+        .then(async (res) => {
+          if (!res.ok) throw new Error(`archive_failed_${res.status}`);
+          if (characterToArchive) {
+            toast({
+              title: t('common.characterArchived'),
+              description: t('common.characterArchivedDesc'),
+            });
+          }
+        })
+        .catch((err) => {
+          console.error('Failed to archive character:', err);
+          toast({
+            variant: 'destructive',
+            title: t('common.error'),
+            description: t('common.archiveFailed'),
+          });
+          // Оптимистичное удаление могло быть ошибкой: возвращаем список с
+          // сервера, иначе карточка исчезнет до перезагрузки.
+          void refreshCharacters('retry');
+        });
+    },
+    [user, applyCharacters, toast, t, refreshCharacters],
+  );
+
   const deleteCharacter = useCallback(
     (id: string) => {
       if (!user) return;
@@ -845,6 +879,7 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
     addCharacter,
     updateCharacter,
     deleteCharacter,
+    archiveCharacter,
     pendingDraft,
     createPendingDraft,
     discardPendingDraft,

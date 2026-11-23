@@ -25,6 +25,16 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -77,6 +87,7 @@ export function QuestJournalSheet({
   const [newObjectiveText, setNewObjectiveText] = useState<
     Record<string, string>
   >({});
+  const [questToDelete, setQuestToDelete] = useState<Quest | null>(null);
 
   const saveLog = (newLog: Quest[]) => {
     setQuestLog(newLog);
@@ -206,6 +217,12 @@ export function QuestJournalSheet({
     );
   };
 
+  const getProgressPercent = (quest: Quest): number => {
+    if (!quest.objectives || quest.objectives.length === 0) return 0;
+    const done = quest.objectives.filter((o) => o.completed).length;
+    return Math.round((done / quest.objectives.length) * 100);
+  };
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="flex w-full flex-col p-0 sm:max-w-2xl">
@@ -294,6 +311,23 @@ export function QuestJournalSheet({
                         </div>
                       </AccordionTrigger>
                       <AccordionContent className="bg-muted/5 space-y-4 border-t px-4 pt-2 pb-4">
+                        {quest.objectives && quest.objectives.length > 0 && (
+                          <div
+                            className="bg-muted h-1.5 w-full overflow-hidden rounded-full"
+                            role="progressbar"
+                            aria-valuemin={0}
+                            aria-valuemax={100}
+                            aria-valuenow={getProgressPercent(quest)}
+                            aria-label={t('common.questProgress')}
+                          >
+                            <div
+                              className="bg-primary h-full transition-[width]"
+                              style={{
+                                width: `${getProgressPercent(quest)}%`,
+                              }}
+                            />
+                          </div>
+                        )}
                         <div className="flex gap-2">
                           <Select
                             value={quest.priority || 'side'}
@@ -401,10 +435,13 @@ export function QuestJournalSheet({
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  className="text-destructive h-6 w-6 opacity-0 transition-opacity group-hover:opacity-100 max-md:h-10 max-md:w-10"
+                                  className="text-destructive/70 hover:text-destructive h-6 w-6 shrink-0 max-md:h-10 max-md:w-10"
                                   onClick={() =>
                                     deleteObjective(quest.id, obj.id)
                                   }
+                                  title={t('common.deleteObjective')}
+                                  aria-label={t('common.deleteObjective')}
+                                  data-testid={`delete-objective-${obj.id}`}
                                 >
                                   <Trash2 className="h-3 w-3" />
                                 </Button>
@@ -541,7 +578,10 @@ export function QuestJournalSheet({
                               variant="ghost"
                               size="icon"
                               className="text-destructive h-6 w-6 max-md:h-10 max-md:w-10"
-                              onClick={() => handleDeleteQuest(quest.id)}
+                              onClick={() => setQuestToDelete(quest)}
+                              title={t('common.deleteQuest')}
+                              aria-label={t('common.deleteQuest')}
+                              data-testid="delete-quest"
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
@@ -572,6 +612,37 @@ export function QuestJournalSheet({
           </div>
         </ScrollArea>
       </SheetContent>
+
+      <AlertDialog
+        open={questToDelete !== null}
+        onOpenChange={(next) => {
+          if (!next) setQuestToDelete(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {t('common.deleteQuestConfirm')}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('common.deleteQuestConfirmDesc')}
+              {questToDelete ? ` «${questToDelete.title}»` : ''}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (questToDelete) handleDeleteQuest(questToDelete.id);
+                setQuestToDelete(null);
+              }}
+              data-testid="delete-quest-confirm"
+            >
+              {t('common.delete')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Sheet>
   );
 }

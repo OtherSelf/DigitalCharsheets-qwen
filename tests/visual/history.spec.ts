@@ -168,7 +168,8 @@ test.describe('история DH: подписи и значения без ко
       await openApp(page, historyUrl(id));
       await expectNoRawI18nKeys(page, 'история DH2');
       await expect(page.getByText('Gender', { exact: true })).toBeVisible();
-      await expect(page.getByText('Female', { exact: true })).toBeVisible();
+      // Пол в диффе — строка «+Female», поэтому ищем подстроку, а не точный текст.
+      await expect(page.getByText('Female', { exact: false })).toBeVisible();
       await expect(
         page.getByText('Elite Advances', { exact: true }),
       ).toBeVisible();

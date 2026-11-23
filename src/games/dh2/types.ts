@@ -150,6 +150,8 @@ export interface RangedWeapon {
   name: string;
   type: string;
   range: string;
+  /** Бронепробитие (Бро.) по таблице оружия; в старых листах отсутствует. */
+  penetration?: string;
   rof: string;
   damage: string;
   clip: number;

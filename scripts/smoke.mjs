@@ -1305,12 +1305,21 @@ await check('DELETE /api/characters/<id> → 200', async () => {
   assertStatus(res, 200, 'DELETE персонажа');
 });
 
-await check('DELETE повторно → 404 (файл действительно удалён)', async () => {
-  const res = await api(`/characters/${encodeURIComponent(characterId)}`, {
-    method: 'DELETE',
-  });
-  assertStatus(res, 404, 'повторный DELETE');
-});
+await check(
+  'DELETE повторно → 200 (запись уже в корзине, срок не сброшен)',
+  async () => {
+    const res = await api(`/characters/${encodeURIComponent(characterId)}`, {
+      method: 'DELETE',
+    });
+    assertStatus(res, 200, 'повторный DELETE');
+    const body = assertJson(res, 'повторный DELETE');
+    assert(body.trashed === true, 'повторный DELETE: trashed !== true');
+    assert(
+      typeof body.expiresAt === 'string' && body.expiresAt.length > 0,
+      'повторный DELETE: нет expiresAt',
+    );
+  },
+);
 
 // 5. Восстановление доступа
 await check('POST /api/auth/phrase → фраза сохраняется', async () => {

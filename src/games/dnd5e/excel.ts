@@ -199,6 +199,9 @@ export function buildDnd5eExcelSections(
     w.section('dnd.excel.narrative');
     w.row('dnd.excel.backstory', character.backstory);
     w.row('common.notes', character.notes);
+    for (const tab of character.noteTabs ?? []) {
+      w.row(tab.title, tab.body);
+    }
     w.row('dnd.excel.personalityTraits', w.list(character.personalityTraits));
     w.row('dnd.excel.ideals', w.list(character.ideals));
     w.row('dnd.excel.bonds', w.list(character.bonds));

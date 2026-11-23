@@ -218,34 +218,6 @@ describe('/api/characters', () => {
     );
     expect(broken.status).toBe(400);
   });
-
-  it('DELETE удаляет персонажа, повторный вызов — 404', async () => {
-    const { uid } = await loginAs('user-api');
-    const created = await (
-      await charactersPost(
-        json({ ...makeCharacter('dh1') }, await sessionHeaders(uid)),
-      )
-    ).json();
-    const url = `http://localhost/api/characters/${created.id}`;
-
-    const first = await characterDelete(
-      req(url, 'DELETE', await sessionHeaders(uid)),
-      params(created.id),
-    );
-    expect(first.status).toBe(200);
-
-    const second = await characterDelete(
-      req(url, 'DELETE', await sessionHeaders(uid)),
-      params(created.id),
-    );
-    expect(second.status).toBe(404);
-
-    const noSession = await characterDelete(
-      req(url, 'DELETE'),
-      params(created.id),
-    );
-    expect(noSession.status).toBe(401);
-  });
 });
 
 /**

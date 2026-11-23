@@ -6,6 +6,7 @@ import { BookOpen, Lock } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ChoiceDialog } from '@/components/ui/choice-dialog';
 import {
   Dialog,
   DialogContent,
@@ -1210,35 +1211,24 @@ export const ProgressionSection = ({
                   </p>
 
                   {(editableAdvancedPath ?? character.advancedPath) ? (
-                    <div className="flex items-center gap-2">
-                      <span className="border-primary/20 bg-primary/10 text-primary rounded border px-2 py-0.5 text-[10px] font-semibold">
+                    <p className="text-sm">
+                      <span className="text-muted-foreground">
                         {t('dh1.advancedPath')}:{' '}
-                        {t(
-                          RANK_KEYS[
-                            editableAdvancedPath ?? character.advancedPath!
-                          ] ||
-                            (editableAdvancedPath ?? character.advancedPath!),
-                        )}
                       </span>
-                      {isProgressionEditing &&
-                        editableTotalExpSpent >= advancedPathThreshold && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="h-6 px-2 text-[10px]"
-                            onClick={() => setIsAdvancedPathModalOpen(true)}
-                          >
-                            {t('dh1.changeAdvancedPath')}
-                          </Button>
-                        )}
-                    </div>
+                      {t(
+                        RANK_KEYS[
+                          editableAdvancedPath ?? character.advancedPath!
+                        ] ||
+                          (editableAdvancedPath ?? character.advancedPath!),
+                      )}
+                    </p>
                   ) : (
                     isProgressionEditing &&
                     editableTotalExpSpent >= advancedPathThreshold && (
                       <Button
                         size="sm"
                         variant="outline"
-                        className="h-6 px-2 text-[10px]"
+                        className="h-7 px-2 text-xs"
                         onClick={() => setIsAdvancedPathModalOpen(true)}
                       >
                         {t('dh1.selectAdvancedPath')}
@@ -1247,15 +1237,17 @@ export const ProgressionSection = ({
                   )}
 
                   {(editableAlternatePath ?? character.alternatePath) && (
-                    <span className="border-secondary/20 bg-secondary/20 text-secondary-foreground rounded border px-2 py-0.5 text-[10px] font-semibold">
-                      {t('dh1.alternatePath')}:{' '}
+                    <p className="text-sm">
+                      <span className="text-muted-foreground">
+                        {t('dh1.alternatePath')}:{' '}
+                      </span>
                       {t(
                         RANK_KEYS[
                           editableAlternatePath ?? character.alternatePath!
                         ] ||
                           (editableAlternatePath ?? character.alternatePath!),
                       )}
-                    </span>
+                    </p>
                   )}
                 </div>
 
@@ -1280,63 +1272,45 @@ export const ProgressionSection = ({
         </CardContent>
       </Card>
 
-      <Dialog
+      <ChoiceDialog
         open={isAdvancedPathModalOpen}
         onOpenChange={setIsAdvancedPathModalOpen}
-      >
-        <DialogContent
-          className="sm:max-w-md"
-          onInteractOutside={(e) => e.preventDefault()}
-          onEscapeKeyDown={(e) => e.preventDefault()}
-        >
-          <DialogHeader>
-            <DialogTitle>{t('dh1.selectAdvancedPathTitle')}</DialogTitle>
-            <DialogDescription>
-              {t('dh1.selectAdvancedPathDesc')}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid grid-cols-1 gap-4 py-4">
-            {possibleAdvancedPaths &&
-              Object.values(possibleAdvancedPaths).map((path) => (
-                <Button
-                  key={path.name}
-                  onClick={() => handleSelectAdvancedPath(path.name)}
-                  className="h-12 text-base"
-                >
-                  {t('dh1.choose')} {t(RANK_KEYS[path.name] || path.name)}
-                </Button>
-              ))}
-          </div>
-        </DialogContent>
-      </Dialog>
+        title={t('dh1.selectAdvancedPathTitle')}
+        description={t('dh1.selectAdvancedPathDesc')}
+        cancelLabel={t('common.cancel')}
+        testId="advanced-path-dialog"
+        options={
+          possibleAdvancedPaths
+            ? Object.values(possibleAdvancedPaths).map((path) => ({
+                value: path.name,
+                label: `${t('dh1.choose')} ${t(RANK_KEYS[path.name] || path.name)}`,
+              }))
+            : []
+        }
+        onSelect={handleSelectAdvancedPath}
+      />
 
-      <Dialog
+      <ChoiceDialog
         open={isAlternateRankModalOpen}
         onOpenChange={setIsAlternateRankModalOpen}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t('dh1.selectAlternateRankTitle')}</DialogTitle>
-            <DialogDescription>
-              {t('dh1.selectAlternateRankDesc')}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid grid-cols-1 gap-4 py-4">
-            <Button
-              onClick={() => handleSelectAlternateRank(null)}
-              className="h-12 text-base"
-            >
-              {t('dh1.choose')} {t('dh1.rankInditor')}
-            </Button>
-            <Button
-              onClick={() => handleSelectAlternateRank('Chirurgeon')}
-              className="h-12 text-base"
-            >
-              {t('dh1.choose')} {t('dh1.rankChirurgeon')}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+        title={t('dh1.selectAlternateRankTitle')}
+        description={t('dh1.selectAlternateRankDesc')}
+        cancelLabel={t('common.cancel')}
+        testId="alternate-rank-dialog"
+        options={[
+          {
+            value: 'Inditor',
+            label: `${t('dh1.choose')} ${t('dh1.rankInditor')}`,
+          },
+          {
+            value: 'Chirurgeon',
+            label: `${t('dh1.choose')} ${t('dh1.rankChirurgeon')}`,
+          },
+        ]}
+        onSelect={(value) =>
+          handleSelectAlternateRank(value === 'Inditor' ? null : value)
+        }
+      />
 
       <Dialog open={isSpendOpen} onOpenChange={setIsSpendOpen}>
         <DialogContent>

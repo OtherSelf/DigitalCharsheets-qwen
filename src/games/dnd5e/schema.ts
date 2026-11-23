@@ -10,6 +10,7 @@ import {
 import {
   combatResourceSchema,
   inventoryItemSchema,
+  noteTabsSchema,
   questSchema,
 } from '../shared/schemas';
 import type { DnD5eCharacter } from './types';
@@ -226,6 +227,7 @@ export const dnd5eCharacterSchema: z.ZodType<DnD5eCharacter> = z.looseObject({
   systemId: z.literal('dnd5e').optional(),
   backstory: z.string().max(FIELD_LIMITS.long),
   notes: z.string().max(FIELD_LIMITS.long),
+  noteTabs: noteTabsSchema.optional(),
   questLog: listOf(questSchema),
   schemaVersion: z.number().int().optional(),
   /** Уровень 5e: 1–20, выше в правилах не бывает. */

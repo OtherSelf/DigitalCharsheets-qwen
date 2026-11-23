@@ -357,6 +357,7 @@ export const EquipmentInventorySection = React.forwardRef<
         name: t('dh2.newRangedWeapon'),
         type: '',
         range: '',
+        penetration: '',
         rof: '',
         damage: '',
         clip: 0,
@@ -1576,6 +1577,23 @@ export const EquipmentInventorySection = React.forwardRef<
                                 </div>
                                 <div className="space-y-1">
                                   {' '}
+                                  <Label>
+                                    {t('dh2.weaponPenetration')}
+                                  </Label>{' '}
+                                  <Input
+                                    defaultValue={weapon.penetration ?? ''}
+                                    onChange={(e) =>
+                                      handleRangedWeaponChange(
+                                        weapon.id,
+                                        'penetration',
+                                        e.target.value,
+                                      )
+                                    }
+                                    className="h-7 text-xs"
+                                  />{' '}
+                                </div>
+                                <div className="space-y-1">
+                                  {' '}
                                   <Label>{t('dh2.weaponRof')}</Label>{' '}
                                   <Input
                                     defaultValue={weapon.rof}
@@ -1686,6 +1704,12 @@ export const EquipmentInventorySection = React.forwardRef<
                                     {t('dh2.weaponRange')}:
                                   </strong>{' '}
                                   {weapon.range || '-'}
+                                </div>
+                                <div>
+                                  <strong className="text-muted-foreground">
+                                    {t('dh2.weaponPenetration')}:
+                                  </strong>{' '}
+                                  {weapon.penetration || '-'}
                                 </div>
                                 <div>
                                   <strong className="text-muted-foreground">
@@ -1930,6 +1954,23 @@ export const EquipmentInventorySection = React.forwardRef<
                                     </div>
                                     <div className="space-y-1">
                                       {' '}
+                                      <Label>
+                                        {t('dh2.weaponPenetration')}
+                                      </Label>{' '}
+                                      <Input
+                                        defaultValue={weapon.penetration ?? ''}
+                                        onChange={(e) =>
+                                          handleRangedWeaponChange(
+                                            weapon.id,
+                                            'penetration',
+                                            e.target.value,
+                                          )
+                                        }
+                                        className="h-7 text-xs"
+                                      />{' '}
+                                    </div>
+                                    <div className="space-y-1">
+                                      {' '}
                                       <Label>{t('dh2.weaponRof')}</Label>{' '}
                                       <Input
                                         defaultValue={weapon.rof}
@@ -2048,6 +2089,12 @@ export const EquipmentInventorySection = React.forwardRef<
                                         {t('dh2.weaponRange')}:
                                       </strong>{' '}
                                       {weapon.range || '-'}
+                                    </div>
+                                    <div>
+                                      <strong className="text-muted-foreground">
+                                        {t('dh2.weaponPenetration')}:
+                                      </strong>{' '}
+                                      {weapon.penetration || '-'}
                                     </div>
                                     <div>
                                       <strong className="text-muted-foreground">
