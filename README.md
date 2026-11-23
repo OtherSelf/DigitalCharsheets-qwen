@@ -27,6 +27,8 @@ data directory on the host you control.
   read-only list of a user's sheets, and plugin management (visibility,
   enabled, versions, conformance, demo links).
 - Portable JSON export/import for one sheet or a full backup, plus Excel export.
+- Optional two-factor authentication (TOTP) with QR enrollment and one-time
+  backup codes.
 - English/Russian UI, light/dark/warm themes, compact sheet view, independent
   text and UI scaling, and an optional «keep the screen on» toggle in the display
   settings for long sessions.

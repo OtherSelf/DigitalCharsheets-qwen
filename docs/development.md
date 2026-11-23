@@ -143,6 +143,8 @@ Deliberate exclusions — entry points and vendored code, not dead code:
 - `src/components/ui/**` — the vendored shadcn kit: an unused `Dialog.close` is
   upstream API, not project dead code. A kit *file* without importers is still
   reported.
+- `src/lib/qr-codegen.ts` — vendored QR encoder (Project Nayuki, MIT); the
+  license header stays, and `src/lib/qr-svg.ts` is its only caller.
 
 What it does not see: unused local variables (ESLint `no-unused-vars`), unused
 npm dependencies, dead CSS, and binary assets such as `public/*.ico`.

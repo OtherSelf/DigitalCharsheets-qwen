@@ -23,6 +23,7 @@ interface TotpResponse {
   reason?: string;
   secret?: string;
   otpauthUri?: string;
+  qrDataUrl?: string;
   backupCodes?: string[];
 }
 
@@ -38,6 +39,7 @@ export function TotpCard() {
   const [password, setPassword] = useState('');
   const [code, setCode] = useState('');
   const [pendingSecret, setPendingSecret] = useState<string | null>(null);
+  const [pendingQr, setPendingQr] = useState<string | null>(null);
   const [backupCodes, setBackupCodes] = useState<string[] | null>(null);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
@@ -92,6 +94,7 @@ export function TotpCard() {
         return;
       }
       setPendingSecret(data.secret);
+      setPendingQr(data.qrDataUrl ?? null);
       setBackupCodes(null);
       setCode('');
     });
@@ -104,6 +107,7 @@ export function TotpCard() {
         return;
       }
       setPendingSecret(null);
+      setPendingQr(null);
       setBackupCodes(data.backupCodes);
       setPassword('');
       setCode('');
@@ -121,6 +125,7 @@ export function TotpCard() {
         return;
       }
       setPendingSecret(null);
+      setPendingQr(null);
       setBackupCodes(null);
       setPassword('');
       setCode('');
@@ -173,6 +178,17 @@ export function TotpCard() {
         {pendingSecret && (
           <div className="space-y-2 rounded-md border p-3">
             <p className="text-sm">{t('settings.twoFactorSecretHint')}</p>
+            {pendingQr && (
+              // eslint-disable-next-line @next/next/no-img-element -- QR is a local data URL, next/image optimizer is disabled
+              <img
+                src={pendingQr}
+                alt={t('settings.twoFactorQrAlt')}
+                data-testid="totp-qr"
+                width={192}
+                height={192}
+                className="mx-auto h-48 w-48 bg-white p-1"
+              />
+            )}
             <code
               className="bg-muted block rounded p-2 text-sm break-all"
               data-testid="totp-secret"

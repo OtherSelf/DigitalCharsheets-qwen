@@ -72,6 +72,7 @@ describe('TOTP-роуты', () => {
     expect(setup.status).toBe(200);
     const setupBody = await setup.json();
     expect(setupBody.otpauthUri).toContain('otpauth://totp/');
+    expect(setupBody.qrDataUrl).toMatch(/^data:image\/svg\+xml;base64,/);
     expect(
       fs.readFileSync(userPaths(dataDir, login.uid).userFile, 'utf8'),
     ).not.toContain(setupBody.secret);

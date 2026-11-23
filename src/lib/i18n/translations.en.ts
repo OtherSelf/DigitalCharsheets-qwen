@@ -481,6 +481,7 @@ export const enTranslations: Record<string, string> = {
   'settings.twoFactorEnabled': 'Enabled',
   'settings.twoFactorDisabled': 'Not enabled',
   'settings.twoFactorSetup': 'Set up two-factor authentication',
+  'settings.twoFactorQrAlt': 'QR code for the authenticator app',
   'settings.twoFactorSecretHint':
     'Add this secret to your authenticator app, then enter the current code.',
   'settings.twoFactorEnable': 'Enable',

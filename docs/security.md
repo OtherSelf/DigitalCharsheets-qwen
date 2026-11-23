@@ -244,7 +244,9 @@ TOTP (RFC 6238) is optional per account and implemented on `node:crypto`:
 30-second steps, 6 digits, a ±1 step window, and an anti-replay `lastStep`.
 The secret is encrypted with AES-256-GCM under `DCS_TOTP_KEY` (or the generated
 `<data-dir>/.totp-key` when the variable is unset); ten one-time
-backup codes are stored only as keyed hashes and shown once. Enrollment,
+backup codes are stored only as keyed hashes and shown once. The setup response
+includes a locally generated SVG QR code (no external QR service receives the
+secret). Enrollment,
 disabling and backup-code regeneration require the current password, and a
 successful code (or backup code) is required after the password at sign-in.
 Recovery and an administrator password reset disable TOTP, so a lost device

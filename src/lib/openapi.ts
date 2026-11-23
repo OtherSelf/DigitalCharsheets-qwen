@@ -290,7 +290,7 @@ export const openApiDocument = {
       },
       TotpSetupResponse: {
         type: 'object',
-        required: ['success', 'secret', 'otpauthUri'],
+        required: ['success', 'secret', 'otpauthUri', 'qrDataUrl'],
         properties: {
           success: { type: 'boolean' },
           secret: {
@@ -298,6 +298,11 @@ export const openApiDocument = {
             description: 'Base32 secret, shown exactly once.',
           },
           otpauthUri: { type: 'string' },
+          qrDataUrl: {
+            type: 'string',
+            description:
+              'SVG QR code for `otpauthUri` as a data URL; generated locally, never sent to a third party.',
+          },
         },
         additionalProperties: false,
       },

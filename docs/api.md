@@ -88,7 +88,7 @@ contract version in [`src/lib/openapi.ts`](../src/lib/openapi.ts)
 | `PUT` | `/api/auth/profile` | cookie | Update own login, display name, password, recovery phrase. Changing the password or the recovery phrase requires `currentPassword` (`403 invalid_password` otherwise) and revokes the account's other sessions. |
 | `DELETE` | `/api/auth/profile` | cookie | Delete own account and all sheets; requires the current password. |
 | `POST` | `/api/auth/phrase` | cookie | Set own recovery phrase; requires `currentPassword` (`403 invalid_password` otherwise). Revokes the account's other sessions. |
-| `POST` | `/api/auth/totp/setup` | cookie | Start TOTP enrollment; returns the base32 secret and `otpauth://` URI once. Requires `currentPassword`; `503` when `DCS_TOTP_KEY` is unset. |
+| `POST` | `/api/auth/totp/setup` | cookie | Start TOTP enrollment; returns the base32 secret, `otpauth://` URI and a locally generated SVG QR (`qrDataUrl`) once. Requires `currentPassword`; `503` only if the installation cannot store a key. |
 | `POST` | `/api/auth/totp/enable` | cookie | Confirm the code, enable TOTP and return ten backup codes once. Revokes other sessions. |
 | `POST` | `/api/auth/totp/disable` | cookie | Disable TOTP; requires `currentPassword` and a current TOTP/backup code. Revokes other sessions. |
 | `POST` | `/api/auth/totp/backup-codes` | cookie | Replace backup codes; requires `currentPassword`. Old codes stop working immediately. |

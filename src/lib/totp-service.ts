@@ -1,4 +1,5 @@
 import { withDataLock } from './data-lock';
+import { qrSvgDataUrl } from './qr-svg';
 import { verifyPasswordAsync } from './security/password';
 import {
   decryptTotpSecret,
@@ -44,6 +45,8 @@ interface TotpSetupSuccess {
   success: true;
   secret: string;
   otpauthUri: string;
+  /** SVG data-URL с QR для `otpauthUri` (локально, без внешнего сервиса). */
+  qrDataUrl: string;
 }
 
 interface TotpEnabledSuccess {
@@ -110,10 +113,12 @@ export async function startTotpSetup(
         totpBackupCodes: [],
         updatedAt: new Date().toISOString(),
       });
+      const otpauthUri = totpOtpauthUri(secret, user.username);
       return {
         success: true,
         secret,
-        otpauthUri: totpOtpauthUri(secret, user.username),
+        otpauthUri,
+        qrDataUrl: qrSvgDataUrl(otpauthUri),
       };
     },
   );

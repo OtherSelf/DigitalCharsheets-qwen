@@ -483,6 +483,7 @@ export const ruTranslations: Record<string, string> = {
   'settings.twoFactorEnabled': 'Включена',
   'settings.twoFactorDisabled': 'Не включена',
   'settings.twoFactorSetup': 'Настроить двухфакторную аутентификацию',
+  'settings.twoFactorQrAlt': 'QR-код для приложения-аутентификатора',
   'settings.twoFactorSecretHint':
     'Добавьте этот секрет в приложение-аутентификатор и введите текущий код.',
   'settings.twoFactorEnable': 'Включить',
