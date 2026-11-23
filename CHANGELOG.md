@@ -11,6 +11,47 @@ format changes.
 
 ## [Unreleased]
 
+## [0.18.4] - 2026-11-23
+
+### Added
+
+- `plugin.json#shortCode` — a required, unique and untranslated short code per
+  edition (`dh1e`, `dh2e`, `dnd5e`, `sandbox`). The generator rejects a
+  duplicate, conformance compares the manifest with the module constant, and the
+  core gates (purity, test layout) read the code from the manifest instead of
+  keeping their own list of game ids.
+
+### Changed
+
+- Game visual screens moved into the plugin folders: locale, sheet themes, `/new`
+  forms, demo previews, stats-editor vitals and form validation now live under
+  `src/games/<id>/tests/visual/` together with their baselines. The host keeps
+  login, dashboard, admin, history, share, settings and docs, and the sheet i18n
+  cycle iterates the editions seeded by the registry instead of a hardcoded list.
+- Character fixtures belong to the editions: the `dh1`/`dh2` legacy JSON moved to
+  `src/games/dh{1,2}/tests/fixtures/`, `makeCharacter` builds a sheet through the
+  plugin's `createDefaults`, and the per-edition factories
+  `makeDndCharacter`/`makeDhCharacter` are gone.
+- Plugin versions: `dh1` 1.12.0, `dh2` 1.13.0, `dnd5e` 1.10.0, `sandbox` 1.3.0.
+  Sheet `schemaVersion` (Dark Heresy `5`, D&D 5e `2`, sandbox `3`) and
+  `PLUGIN_API_VERSION` (`1.4.0`) are unchanged.
+
+### Fixed
+
+- DH1 rejected a negative experience cost: the UI stores a penalty as a negative
+  `cost`, but the schema required `>= 0`, so the write failed and the experience
+  did not change. The field now accepts down to `-10 000 000`, and the visual
+  scenario for an award plus a penalty starts from 100 XP.
+- The sandbox sheet on a phone: `#info-section` now exists, so the
+  compact-navigation item lands on the section instead of a `console.warn`;
+  rank and notes are read-only outside edit mode like the real editions, the
+  rank field has a label, and stat values carry hover titles.
+- The notes preview no longer pushes Save/Cancel off the screen: the header and
+  the bottom bar keep their size and the scroll area may shrink, so a long
+  markdown document leaves both buttons in the viewport at 412×500.
+- `scripts/quality/check-duplicates.mjs` is stored as `100644`: the executable
+  bit produced a permanent mode-only diff on Windows and network shares.
+
 ## [0.18.3] - 2026-11-22
 
 ### Added

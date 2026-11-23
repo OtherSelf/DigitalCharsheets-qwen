@@ -4,7 +4,7 @@
   "id": "dnd5e",
   "gameId": "dnd",
   "shortCode": "dnd5e",
-  "version": "1.9.0",
+  "version": "1.10.0",
   "order": 10,
   "defaultStatus": "published",
   "name": {
