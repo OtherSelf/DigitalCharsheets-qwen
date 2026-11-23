@@ -88,13 +88,13 @@ export function NarrativeSheet({
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="flex w-full flex-col p-0 sm:max-w-2xl">
-        <SheetHeader className="border-b px-6 pt-6 pb-4">
+        <SheetHeader className="shrink-0 border-b px-6 pt-6 pb-4">
           <SheetTitle>{title}</SheetTitle>
           <SheetDescription>{description}</SheetDescription>
         </SheetHeader>
 
         {mode === 'view' ? (
-          <ScrollArea className="flex-grow">
+          <ScrollArea className="min-h-0 flex-grow">
             <div className="px-6 py-4">
               {draft.trim() ? (
                 <NarrativeMarkdown value={draft} />
@@ -106,9 +106,9 @@ export function NarrativeSheet({
             </div>
           </ScrollArea>
         ) : (
-          <div className="flex flex-grow flex-col px-6 py-4">
+          <div className="flex min-h-0 flex-grow flex-col px-6 py-4">
             {showPreview ? (
-              <ScrollArea className="bg-muted/30 min-h-[240px] flex-grow rounded-md border p-3">
+              <ScrollArea className="bg-muted/30 min-h-0 flex-grow rounded-md border p-3">
                 <NarrativeMarkdown value={draft} />
               </ScrollArea>
             ) : (
@@ -123,7 +123,7 @@ export function NarrativeSheet({
         )}
 
         {readOnly && mode === 'view' ? null : (
-          <div className="flex items-center justify-between gap-2 border-t px-6 py-4">
+          <div className="flex shrink-0 items-center justify-between gap-2 border-t px-6 py-4">
             {mode === 'view' ? (
               <Button
                 type="button"
