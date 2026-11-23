@@ -230,6 +230,40 @@ const dndCharacter = {
 const sha256 = (value) =>
   crypto.createHash('sha256').update(value).digest('hex');
 
+const BASE32_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+function base32Decode(secret) {
+  let bits = 0;
+  let value = 0;
+  const bytes = [];
+  for (const char of secret.toUpperCase().replace(/=+$/, '')) {
+    const index = BASE32_ALPHABET.indexOf(char);
+    if (index === -1) throw new Error('bad base32');
+    value = (value << 5) | index;
+    bits += 5;
+    if (bits >= 8) {
+      bytes.push((value >>> (bits - 8)) & 0xff);
+      bits -= 8;
+    }
+  }
+  return Buffer.from(bytes);
+}
+function totpCode(secret, step) {
+  const counter = Buffer.alloc(8);
+  counter.writeBigUInt64BE(BigInt(step));
+  const digest = crypto
+    .createHmac('sha1', base32Decode(secret))
+    .update(counter)
+    .digest();
+  const offset = digest[digest.length - 1] & 0x0f;
+  const binary =
+    ((digest[offset] & 0x7f) << 24) |
+    ((digest[offset + 1] & 0xff) << 16) |
+    ((digest[offset + 2] & 0xff) << 8) |
+    (digest[offset + 3] & 0xff);
+  return String(binary % 1_000_000).padStart(6, '0');
+}
+const totpStep = () => Math.floor(Date.now() / 30_000);
+
 let userId = null;
 let characterId = null;
 
@@ -1617,6 +1651,116 @@ await check('мутация с same-origin Origin проходит', async () =>
     headers: { origin },
   });
   assert(res.status !== 403, `same-origin Origin: ${res.status}`);
+});
+
+// 6.5 TOTP: ключ создаётся в data-dir, полный цикл через HTTP.
+await check('TOTP: setup/enable/вход/backup-код/disable', async () => {
+  const totpUser = `smoke-totp-${stamp}`;
+  const totpPassword = 'smoke-totp-pass-1234';
+  const registered = await api('/auth/register', {
+    method: 'POST',
+    body: {
+      username: totpUser,
+      password: totpPassword,
+      displayName: 'Smoke TOTP',
+      recoveryPhrase: 'alpha bravo charlie delta echo foxtrot',
+    },
+    auth: false,
+  });
+  assertStatus(registered, 200, 'TOTP: регистрация');
+  const registration = assertJson(registered, 'TOTP: регистрация');
+  assert(
+    registration.user?.totpEnabled === false,
+    'TOTP: totpEnabled должен быть false',
+  );
+
+  const setup = await api('/auth/totp/setup', {
+    method: 'POST',
+    body: { currentPassword: totpPassword },
+  });
+  assertStatus(setup, 200, 'TOTP: setup');
+  const setupBody = assertJson(setup, 'TOTP: setup');
+  assert(
+    typeof setupBody.secret === 'string' && setupBody.secret.length >= 16,
+    'TOTP: setup не вернул секрет',
+  );
+  assert(
+    typeof setupBody.otpauthUri === 'string' &&
+      setupBody.otpauthUri.startsWith('otpauth://totp/'),
+    'TOTP: setup не вернул otpauth-URI',
+  );
+
+  const enabled = await api('/auth/totp/enable', {
+    method: 'POST',
+    body: { code: totpCode(setupBody.secret, totpStep()) },
+  });
+  assertStatus(enabled, 200, 'TOTP: enable');
+  const enabledBody = assertJson(enabled, 'TOTP: enable');
+  assert(
+    Array.isArray(enabledBody.backupCodes) &&
+      enabledBody.backupCodes.length === 10,
+    'TOTP: enable не вернул 10 backup-кодов',
+  );
+
+  const withoutCode = await api('/auth', {
+    method: 'POST',
+    body: { username: totpUser, password: totpPassword },
+    auth: false,
+  });
+  assertStatus(withoutCode, 401, 'TOTP: вход без кода');
+  assert(
+    assertJson(withoutCode, 'TOTP: вход без кода').reason === 'totp_required',
+    'TOTP: reason != totp_required',
+  );
+
+  const withCode = await api('/auth', {
+    method: 'POST',
+    body: {
+      username: totpUser,
+      password: totpPassword,
+      totpCode: totpCode(setupBody.secret, totpStep() + 1),
+    },
+    auth: false,
+  });
+  assertStatus(withCode, 200, 'TOTP: вход с кодом');
+
+  const withBackup = await api('/auth', {
+    method: 'POST',
+    body: {
+      username: totpUser,
+      password: totpPassword,
+      totpCode: enabledBody.backupCodes[0],
+    },
+    auth: false,
+  });
+  assertStatus(withBackup, 200, 'TOTP: вход с backup-кодом');
+
+  const reusedBackup = await api('/auth', {
+    method: 'POST',
+    body: {
+      username: totpUser,
+      password: totpPassword,
+      totpCode: enabledBody.backupCodes[0],
+    },
+    auth: false,
+  });
+  assertStatus(reusedBackup, 401, 'TOTP: повтор backup-кода');
+
+  const disabled = await api('/auth/totp/disable', {
+    method: 'POST',
+    body: {
+      currentPassword: totpPassword,
+      code: enabledBody.backupCodes[1],
+    },
+  });
+  assertStatus(disabled, 200, 'TOTP: disable');
+
+  const afterDisable = await api('/auth', {
+    method: 'POST',
+    body: { username: totpUser, password: totpPassword },
+    auth: false,
+  });
+  assertStatus(afterDisable, 200, 'TOTP: вход после disable');
 });
 
 // 7. Уборка
