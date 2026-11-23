@@ -11,6 +11,52 @@ format changes.
 
 ## [Unreleased]
 
+## [0.18.3] - 2026-11-22
+
+### Added
+
+- `npm run dedupe:check`, step 6 of `npm run verify` next to the dead-code gate:
+  jscpd over `src` (game folders excluded), `tests` and `scripts`, with an
+  allowlist for editions, dictionaries, generated files, fixtures and vendored
+  code, and a threshold that may only go down (baseline 45 clones / 720 lines;
+  the tree is at 20 / 320). `jscpd@4.3.0` is a dev-only dependency.
+
+### Changed
+
+- Thirteen page shells share one `AppFrame` (`h-dvh` + header + `main` + footer,
+  variants for wide, compact, stats, sheet, centered, plain, document and demo
+  layouts, a `sidebar` rail and `after` overlays, plus a skip link), so the
+  header and footer now exist in one place instead of thirteen.
+- API routes use shared `jsonError` and `withOwnedCharacter`/`withOwner`
+  helpers: 56 inline `success: false` envelopes across 14 routes went through
+  them, with response shapes and `Retry-After` unchanged.
+- The DH2 data pack is decoupled from a local checkout: `generate.mjs` reads
+  only `DCS_CONTENT_DIR` (default `./content/dh2`), the freshness test skips
+  without it, and the regenerated `dh2e-*` files no longer mention a workspace.
+- Duplicated helpers are now single: password/secret verification shares one
+  hash parser and constant-time compare, `derive` apply and heal share one
+  scenario, history diff and session share `deepEqual`, the delete dialog,
+  share actions and `postAuth` have one implementation each, and the scripts
+  share `common.sh`, `wait-http.sh`, `self-copy.sh` and one source scanner.
+- Plugin versions: `dh2` 1.12.0 (regenerated data pack); `dh1` 1.11.0,
+  `dnd5e` 1.9.0 and `sandbox` 1.2.0 are unchanged. Sheet `schemaVersion` and
+  `PLUGIN_API_VERSION` (`1.4.0`) are unchanged.
+
+### Fixed
+
+- The bulk stats editor keeps what the player typed: `modules` is memoized and
+  the init effect no longer recreates `characters`/`tables` on every render, so
+  input and Save no longer snap back to the server value; numbers are clamped to
+  the column `min`/`max` and a value cannot become `NaN`.
+- `/api/auth/*` rejects a body over 16 KiB with `413` before `JSON.parse` and
+  answers `400` for malformed JSON instead of `500`. `safeInternalPath` keeps
+  `/settings?from=` on a single leading `/` (no `//host`, no backslashes), and
+  `listCharactersForAdmin` validates the uid before touching the directory, so
+  a path traversal through `/api/admin/users/<uid>/characters` is closed.
+- `/about` no longer repeats the footer: the header lost the MIT badge and the
+  version label, and the links block keeps documentation, API reference and
+  changelog only.
+
 ## [0.18.2] - 2026-11-22
 
 ### Fixed
