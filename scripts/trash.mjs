@@ -32,6 +32,20 @@ function accountTrashDir() {
   return path.join(dataDir(), '.trash', 'users');
 }
 
+/**
+ * Перемещение с фолбэком на EXDEV: data-dir может лежать на 9p/overlayfs,
+ * где rename между каталогами запрещён. Копируем и удаляем источник.
+ */
+function movePath(source, destination) {
+  try {
+    fs.renameSync(source, destination);
+  } catch (error) {
+    if (error?.code !== 'EXDEV') throw error;
+    fs.cpSync(source, destination, { recursive: true, force: true });
+    fs.rmSync(source, { recursive: true, force: true });
+  }
+}
+
 function readJson(file) {
   try {
     return JSON.parse(fs.readFileSync(file, 'utf8'));
@@ -131,7 +145,7 @@ function cmdRestore(target) {
   }
 
   fs.mkdirSync(path.dirname(destination), { recursive: true });
-  fs.renameSync(item.dir, destination);
+  movePath(item.dir, destination);
   try {
     fs.unlinkSync(path.join(destination, 'meta.json'));
   } catch {
