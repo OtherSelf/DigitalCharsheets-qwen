@@ -4,6 +4,7 @@ import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { createDh1Defaults } from '@/games/dh1/defaults';
+import { dh1CharacterSchema } from '@/games/dh1/schema';
 import { DH1_SCHEMA_VERSION } from '@/games/dh1/schema-version';
 import type { DH1Character } from '@/games/dh1/types';
 import { CURRENT_SCHEMA_VERSION } from '@/games/plugin-api';
@@ -62,6 +63,21 @@ afterEach(() => {
 });
 
 describe('character schema v1', () => {
+  it('experienceLog принимает штраф (отрицательный cost)', () => {
+    const draft = legacyDh1({
+      experienceLog: [
+        {
+          id: 'xp-penalty',
+          label: 'Penalty',
+          cost: -50,
+          createdAt: '2026-11-23T00:00:00.000Z',
+          kind: 'award',
+        },
+      ],
+    });
+    expect(() => dh1CharacterSchema.parse(draft)).not.toThrow();
+  });
+
   it('переводит legacy DH sentence → stable ID и ставит версию', () => {
     const legacy = legacyDh1({
       divination: '',

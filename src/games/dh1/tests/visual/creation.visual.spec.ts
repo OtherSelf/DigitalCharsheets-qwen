@@ -252,7 +252,9 @@ test.describe('начисление опыта на листе DH', { tag: '@plu
     await prepare(page.context(), { authenticated: false, theme: 'light' });
     const account = await registerAccount(page, 'dh1-award', 'DH1 Award');
     const created = await page.request.post('/api/characters', {
-      data: { systemId: 'dh1', name: 'DH1 Award' },
+      // Запас опыта: штраф проверяется без ухода в отрицательный итог
+      // (схема листа допускает experience >= 0).
+      data: { systemId: 'dh1', name: 'DH1 Award', experience: 100 },
     });
     expect([200, 201], 'создание листа').toContain(created.status());
     const { id } = (await created.json()) as { id: string };

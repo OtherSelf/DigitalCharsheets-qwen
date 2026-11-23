@@ -45,7 +45,11 @@ export const dh1CharacterSchema: z.ZodType<DH1Character> = z.looseObject({
     z.looseObject({
       id: idString(),
       label: z.string().max(FIELD_LIMITS.name),
-      cost: z.number().int().min(0).max(FIELD_LIMITS.experience),
+      cost: z
+        .number()
+        .int()
+        .min(-FIELD_LIMITS.experience)
+        .max(FIELD_LIMITS.experience),
       createdAt: z.string().max(64),
       kind: z.enum(['award']).optional(),
     }),
