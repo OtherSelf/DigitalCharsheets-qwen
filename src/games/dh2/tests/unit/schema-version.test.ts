@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import { describe, expect, it } from 'vitest';
 
@@ -13,11 +14,16 @@ import { normalizeCharacterRecord } from '@/lib/character-version';
  * поля DH1 уходят в `notes`, строки 2-9 дополняются, а версия формата у
  * модуля своя — глобальная `CURRENT_SCHEMA_VERSION` для этого не меняется.
  *
- * Легаси-фикстуры общие для хоста и редакций и лежат в `tests/unit/fixtures`
- * (AGENTS.md § 4), поэтому путь считается от корня воркспейса.
+ * Легаси-фикстура живёт в папке редакции (`tests/fixtures`), а не в хосте:
+ * удаление игры уносит и её данные, а путь считается от файла теста, а не от
+ * текущего каталога запуска.
  */
 
-const FIXTURES = path.join(process.cwd(), 'tests', 'unit', 'fixtures');
+const FIXTURES = path.join(
+  path.dirname(fileURLToPath(import.meta.url)),
+  '..',
+  'fixtures',
+);
 
 function fixture(name: string): Record<string, unknown> {
   return JSON.parse(fs.readFileSync(path.join(FIXTURES, name), 'utf8'));
