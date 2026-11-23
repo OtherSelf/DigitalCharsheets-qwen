@@ -121,6 +121,23 @@ export function getSessionsFile(): string {
 }
 
 /**
+ * Служебное состояние процесса, которое не является данными пользователя:
+ * `<data-dir>/.state`. Здесь живёт снапшот лимитера; каталог не бэкапится
+ * отдельно и может быть потерян без потери аккаунтов.
+ */
+export function getStateDir(): string {
+  return path.join(getDataDir(), '.state');
+}
+
+/**
+ * Снапшот истории лимитера: `<data-dir>/.state/rate-limit.json`.
+ * Нужен, чтобы перезапуск процесса не обнулял счётчики неудачных попыток.
+ */
+export function getRateLimitStateFile(): string {
+  return path.join(getStateDir(), 'rate-limit.json');
+}
+
+/**
  * Реестр гостевых ссылок: `<data-dir>/shares.json`.
  * Ключ записи — хэш токена, сам токен на диске не хранится (см.
  * `src/lib/shares.ts`). Одна запись на пару `uid + characterId`.

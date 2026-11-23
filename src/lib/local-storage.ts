@@ -15,6 +15,8 @@ export interface LocalUser {
   isBlocked?: boolean;
   /** Пароль был сгенерирован при первом запуске — стоит сменить. */
   mustChangePassword?: boolean;
+  /** TOTP включён и подтверждён кодом. */
+  totpEnabled?: boolean;
 }
 
 const STORAGE_KEYS = {

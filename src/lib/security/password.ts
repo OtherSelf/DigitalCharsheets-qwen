@@ -3,6 +3,7 @@ import crypto from 'crypto';
 import {
   hashSecret,
   hashSecretAsync,
+  isCurrentScryptParams,
   isScryptHash,
   verifySecretHash,
   verifySecretHashAsync,
@@ -77,7 +78,7 @@ export function verifyPassword(
   if (isScryptHash(input.storedHash)) {
     return {
       valid: verifySecretHash(input.storedHash, input.password),
-      needsRehash: false,
+      needsRehash: !isCurrentScryptParams(input.storedHash),
     };
   }
 
@@ -107,7 +108,7 @@ export async function verifyPasswordAsync(
   if (isScryptHash(input.storedHash)) {
     return {
       valid: await verifySecretHashAsync(input.storedHash, input.password),
-      needsRehash: false,
+      needsRehash: !isCurrentScryptParams(input.storedHash),
     };
   }
 

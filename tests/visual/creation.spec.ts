@@ -94,7 +94,7 @@ test.describe('авторизация через UI', () => {
  */
 
 const GUEST_PASSWORD = 'visual-pass-1234';
-const GUEST_PHRASE = 'amber cobalt lantern';
+const GUEST_PHRASE = 'amber cobalt lantern silver ember frost';
 
 /** Минимальный D&D-лист, который уже есть у аккаунта до входа гостя. */
 function existingDndCharacter(name: string) {
@@ -286,7 +286,7 @@ test.describe('регистрация: вход и переход на глав�
       username,
       password: 'register-pass-1234',
       displayName: 'Register Home',
-      recoveryPhrase: 'register home phrase',
+      recoveryPhrase: 'register home phrase silver ember frost',
     });
 
     await expect(page).toHaveURL((url) => url.pathname === '/', {

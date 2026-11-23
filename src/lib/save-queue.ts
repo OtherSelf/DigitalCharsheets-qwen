@@ -27,8 +27,8 @@ export interface SaveQueueOptions<T extends object> {
     data: Partial<T>,
     meta?: SaveMeta,
   ) => Promise<number | null>;
-  /** Окончательная ошибка: все попытки исчерпаны. */
-  onError?: (id: string, data: Partial<T>) => void;
+  /** Окончательная ошибка: все попытки исчерпаны. `status` — последний HTTP-код. */
+  onError?: (id: string, data: Partial<T>, status: number | null) => void;
   /** Пауза перед отправкой, чтобы накопить правки. По умолчанию 250 мс. */
   settleMs?: number;
   /** Сколько всего попыток отправки делать. По умолчанию 3. */
@@ -182,7 +182,7 @@ export function createSaveQueue<T extends object>(
           // Не теряем правку: держим до следующей попытки.
           entry.failed = { ...batch, ...(entry.failed ?? {}) } as Partial<T>;
           entry.failedMeta = newestMeta(entry.failedMeta, batchMeta);
-          onError?.(id, batch);
+          onError?.(id, batch, status);
           if (!entry.retryTimer) {
             entry.retryTimer = setTimeoutFn(() => {
               entry.retryTimer = null;

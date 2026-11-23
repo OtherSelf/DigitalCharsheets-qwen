@@ -69,7 +69,10 @@ describe('POST /api/auth/register', () => {
     // Фраза лежит хэшем: копия user.json не должна её выдавать.
     expect(isRecoveryPhraseHash(stored.recoveryPhrase)).toBe(true);
     expect(
-      recoveryPhraseMatches(stored.recoveryPhrase, 'amber cobalt lantern'),
+      recoveryPhraseMatches(
+        stored.recoveryPhrase,
+        'amber cobalt lantern silver ember frost',
+      ),
     ).toBe(true);
     expect(readJson(loginIndexPath(dataDir)).logins['api-user']).toBe(uid);
   });
@@ -80,7 +83,7 @@ describe('POST /api/auth/register', () => {
       'occupied',
       'test-pass-5678',
       'Second',
-      'zulu yankee',
+      'zulu yankee xray whiskey victor uniform',
     );
 
     expect(second.res.status).toBe(409);
@@ -91,7 +94,7 @@ describe('POST /api/auth/register', () => {
     expect(
       recoveryPhraseMatches(
         readJson(userPaths(dataDir, first.uid).userFile).recoveryPhrase,
-        'amber cobalt lantern',
+        'amber cobalt lantern silver ember frost',
       ),
     ).toBe(true);
   });
@@ -111,6 +114,21 @@ describe('POST /api/auth/register', () => {
     );
     expect(shortPhrase.status).toBe(400);
     expect((await shortPhrase.json()).error).toContain('Recovery phrase');
+  });
+
+  it('отвергает фразу короче политики на регистрации', async () => {
+    const res = await registerRoute(
+      json({
+        username: 'short-phrase',
+        password: 'test-pass-1234',
+        displayName: 'Short',
+        recoveryPhrase: '12345',
+      }),
+    );
+
+    expect(res.status).toBe(400);
+    expect((await res.json()).reason).toBe('invalid_phrase');
+    expect(fs.existsSync(path.join(dataDir, 'users'))).toBe(false);
   });
 
   it('возвращает 400 (а не падает) на битом JSON', async () => {

@@ -48,7 +48,12 @@ afterEach(() => {
 });
 
 async function createUser(login: string, password = 'pass-1234-secure') {
-  const result = await registerUser(login, password, login, 'alpha beta gamma');
+  const result = await registerUser(
+    login,
+    password,
+    login,
+    'alpha beta gamma delta epsilon zeta',
+  );
   expect(result.success).toBe(true);
   return result.user!.uid;
 }
@@ -164,7 +169,7 @@ describe('deleteUserAccount', () => {
       'reborn',
       'new-pass-1234',
       'Reborn',
-      'delta epsilon zeta',
+      'delta epsilon zeta eta theta iota',
     );
 
     expect(reborn.success).toBe(true);

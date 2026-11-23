@@ -9,10 +9,11 @@ import { readThroughCache } from './read-cache';
 import { isUserRole, type UserRole } from './user-role';
 
 /**
- * ─── LANDMARK: USER PROFILE SCHEMA v4 ──────────────────────────────────────
+ * ─── LANDMARK: USER PROFILE SCHEMA v5 ──────────────────────────────────────
  * `users/<uid>/user.json` — источник истины по аккаунту. v4 добавила роль
- * `tester` (видит test-редакции, но не админку); неизвестная роль
- * нормализуется в `user` (fail-closed). На старте приложения шаблон
+ * `tester` (видит test-редакции, но не админку); v5 — опциональный TOTP
+ * (`totp` и `totpBackupCodes`). Неизвестная роль нормализуется в `user`
+ * (fail-closed). На старте приложения шаблон
  * проверяется: недостающие поля дописываются значениями по умолчанию,
  * существующие не перезаписываются.
  *
@@ -26,7 +27,17 @@ import { isUserRole, type UserRole } from './user-role';
  * /admin, а вход по пустому хешу и так невозможен.
  */
 
-export const USER_SCHEMA_VERSION = 4;
+export const USER_SCHEMA_VERSION = 5;
+
+/** Второй фактор: секрет в шифре, `enabledAt` отсутствует до подтверждения. */
+export interface StoredTotp {
+  /** `v1.<iv>.<tag>.<cipher>`; ключ — `DCS_TOTP_KEY`, AAD — uid. */
+  secret: string;
+  /** Момент подтверждения; без него TOTP не требуется при входе. */
+  enabledAt?: string;
+  /** Последний принятый шаг: защита от повторного использования кода. */
+  lastStep?: number;
+}
 
 export interface StoredUser {
   schemaVersion?: number;
@@ -43,6 +54,9 @@ export interface StoredUser {
   /** Пароль сгенерирован при первом запуске — предложить сменить. */
   mustChangePassword?: boolean;
   recoveryPhrase?: string;
+  totp?: StoredTotp;
+  /** Ключевые хэши одноразовых backup-кодов (сами коды не хранятся). */
+  totpBackupCodes?: string[];
   createdAt?: string;
   updatedAt?: string;
   originalFirebaseId?: string;

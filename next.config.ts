@@ -3,6 +3,7 @@ import type { NextConfig } from 'next';
 import { createMDX } from 'fumadocs-mdx/next';
 
 import { readGitCheckoutSync } from './src/lib/git-commit';
+import { buildContentSecurityPolicy } from './src/lib/security/csp';
 
 /**
  * ─── LANDMARK: SECURITY HEADERS ─────────────────────────────────────────────
@@ -39,27 +40,14 @@ const deploymentId = isDev
     readGitCheckoutSync()?.commit ||
     undefined;
 
-const contentSecurityPolicy = [
-  "default-src 'self'",
-  [
-    "script-src 'self' 'unsafe-inline'",
-    // HMR и React Refresh в dev собирают код через eval.
-    isDev ? "'unsafe-eval'" : '',
-  ]
-    .filter(Boolean)
-    .join(' '),
-  "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https://placehold.co https://images.unsplash.com https://picsum.photos",
-  "font-src 'self' data:",
-  ["connect-src 'self'", isDev ? 'ws: wss:' : ''].filter(Boolean).join(' '),
-  "media-src 'self' blob: data:",
-  "object-src 'none'",
-  "base-uri 'self'",
-  "form-action 'self'",
-  "frame-ancestors 'none'",
-]
-  .filter(Boolean)
-  .join('; ');
+/*
+  CSP отдаётся статически: замер nonce-варианта (proxy + dynamic rendering всех
+  страниц) дал p95 21–22 мс против 6–10 мс, поэтому строгая политика отложена
+  и остаточный риск зафиксирован в docs/security.md и ADR. `script-src`
+  по-прежнему с `'unsafe-inline'`; `buildContentSecurityPolicy` умеет собрать
+  и nonce-вариант, когда решим вернуться.
+*/
+const contentSecurityPolicy = buildContentSecurityPolicy({ isDev });
 
 const securityHeaders = [
   { key: 'Content-Security-Policy', value: contentSecurityPolicy },
@@ -151,6 +139,14 @@ const nextConfig: NextConfig = {
             value: 'public, max-age=31536000, immutable',
           },
         ],
+      },
+      {
+        /*
+          Страница входа — служебная: в поиске она бесполезна, а ссылка на неё
+          в выдаче выглядит как приглашение оставить пароль на чужом сайте.
+        */
+        source: '/login',
+        headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }],
       },
       {
         /*

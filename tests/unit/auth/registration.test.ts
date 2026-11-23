@@ -162,7 +162,10 @@ describe('авторизация: регистрация и вход', () => {
     const res = await phraseRoute(
       jsonRequest(
         PHRASE_URL,
-        { phrase: 'amber cobalt lantern' },
+        {
+          phrase: 'amber cobalt lantern silver ember frost',
+          currentPassword: PASSWORD,
+        },
         cookieFor(user.uid),
       ),
     );

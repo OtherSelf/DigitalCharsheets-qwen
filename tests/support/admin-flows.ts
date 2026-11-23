@@ -36,7 +36,7 @@ export async function seedUser(username = 'hero', password = 'user-pass-1234') {
     username,
     password,
     'Hero',
-    'amber cobalt lantern',
+    'amber cobalt lantern silver ember frost',
   );
   expect(result.success).toBe(true);
   return { uid: result.user!.uid, username, password };

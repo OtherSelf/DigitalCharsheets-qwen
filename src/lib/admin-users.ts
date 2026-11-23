@@ -252,6 +252,10 @@ export async function updateUserByAdmin(
           updated.passwordHash = await hashPasswordAsync(patch.password);
           // Стартовый пароль сменён — предупреждение больше не актуально.
           delete updated.mustChangePassword;
+          // Сброс пароля администратором отключает TOTP: иначе пользователь
+          // без устройства не сможет войти даже с новым паролем.
+          delete updated.totp;
+          delete updated.totpBackupCodes;
           passwordChanged = true;
           hasChanges = true;
         }

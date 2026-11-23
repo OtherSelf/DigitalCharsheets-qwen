@@ -57,9 +57,11 @@ npm run build
 npm start
 ```
 
-Set `DCS_DATA_DIR` to a persistent writable directory and `DCS_COOKIE_SECURE=1`
-when running behind HTTPS. The full environment-variable table and backup notes
-are in [docs/deployment.md](docs/deployment.md).
+Set `DCS_DATA_DIR` to a persistent writable directory and run behind HTTPS; the
+session cookie is `Secure` and uses the `__Host-` prefix in production by
+default. `DCS_COOKIE_INSECURE=1` is a local-http opt-out only. The full
+environment-variable table and backup notes are in
+[docs/deployment.md](docs/deployment.md).
 
 ## Documentation
 
@@ -79,6 +81,8 @@ rules for adding documentation. The same pages are rendered by the app at
 - [Changelog](CHANGELOG.md) — released app, plugin and SDK versions.
 - [Testing](docs/testing.md) — unit, smoke, visual and pre-deploy checks.
 - [Deployment](docs/deployment.md) — production start, env vars, backups.
+- [Security policy](SECURITY.md) — reporting a vulnerability, scope, secure
+  configuration and known residual risks.
 
 ## Tech stack
 

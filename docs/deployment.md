@@ -73,6 +73,7 @@ variant: the deploy path stays Linux with systemd.
 | `DCS_BUILD_DATE` | unset | Build date shown in the version tooltip (`null` when unset). |
 | `DCS_SESSION_SECRET` | `<data-dir>/.session-secret` | HMAC key for session cookies. Set explicitly if several instances/processes share one data dir or if the data dir is ephemeral. |
 | `DCS_HISTORY_MAX_BYTES` | `2097152` (2 MiB) | Per-sheet history limit, clamped to 64 KiB … 64 MiB. Older revisions are dropped with a truncation marker. |
+| `DCS_TOTP_KEY` | unset | 32 random bytes, base64 (`openssl rand -base64 32`). Encrypts TOTP secrets and keys the backup-code hashes. Without it TOTP enrollment is disabled (`503 totp_unavailable`); keep it out of data-directory backups. Losing/changing it makes existing TOTP secrets unreadable — affected users need a recovery phrase, a backup code, or an administrator password reset (all of which disable TOTP). |
 | `DCS_COOKIE_SECURE` | unset | `1` forces the `Secure` flag on the session cookie. It is already on by default in production; this variable is a compatible way to enable it in development. |
 | `DCS_COOKIE_INSECURE` | unset | `1` explicitly disables the `Secure` flag (local plain-HTTP development only). |
 | `DCS_ADMIN_USERNAME` | `admin` | Preferred login for the bootstrap administrator; `admin-2`, … if taken. |
@@ -187,8 +188,9 @@ The app does not terminate TLS itself. Run it behind a reverse proxy (nginx,
 Caddy, Traefik, …) and:
 
 - forward `Host` and `X-Forwarded-Proto`;
-- keep `NODE_ENV=production` so the session cookie is `Secure` (`DCS_COOKIE_SECURE=1`
-  is equivalent, `DCS_COOKIE_INSECURE=1` is for local development only);
+- keep `NODE_ENV=production` so the session cookie is `Secure` and uses the
+  `__Host-` prefix (`DCS_COOKIE_INSECURE=1` is for local development only);
+- set `DCS_TOTP_KEY` if two-factor authentication is used;
 - proxy with **HTTP/1.1** and pass `Upgrade`/`Connection`;
 - allow long-lived responses (long `proxy_read_timeout`).
 
@@ -219,7 +221,10 @@ location / {
 
     proxy_set_header Host $host;
     proxy_set_header X-Real-IP $remote_addr;
-    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    # Overwrite, not append: the application trusts the last X-Forwarded-For
+    # hop, so a client-supplied value must not survive. `$proxy_add_x_forwarded_for`
+    # appends the client header and would let it choose its own rate-limit bucket.
+    proxy_set_header X-Forwarded-For $remote_addr;
     proxy_set_header X-Forwarded-Proto $scheme;
 
     proxy_connect_timeout 10s;
@@ -230,7 +235,25 @@ location / {
 
 `map` must live in the `http {}` context (an included `conf.d/*.conf` file is
 fine). If nginx already defines `$connection_upgrade`, drop the `map` block and
-keep only the `proxy_set_header` lines. A stale proxy config can look exactly
+keep only the `proxy_set_header` lines.
+
+The application has its own sliding-window limiter, but a second echelon at the
+edge keeps the Node process out of a flood entirely. Declare the zone in `http {}`
+and apply it to auth mutations (tune the rate to your traffic):
+
+```nginx
+limit_req_zone $binary_remote_addr zone=dcs_auth:10m rate=20r/m;
+
+location = /api/auth {
+    limit_req zone=dcs_auth burst=5 nodelay;
+    proxy_pass http://127.0.0.1:3000;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $remote_addr;
+    proxy_set_header X-Forwarded-Proto $scheme;
+}
+```
+ A stale proxy config can look exactly
 like an application crash — check it before suspecting data migrations.
 
 The reference configs live outside this repository (an operator directory)

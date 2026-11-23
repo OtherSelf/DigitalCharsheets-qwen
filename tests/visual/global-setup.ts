@@ -417,7 +417,10 @@ async function seedAccount(
       '/api/auth/phrase',
       authed({
         method: 'POST',
-        body: JSON.stringify({ phrase: VISUAL_RECOVERY_PHRASE }),
+        body: JSON.stringify({
+          phrase: VISUAL_RECOVERY_PHRASE,
+          currentPassword: PASSWORD,
+        }),
       }),
     );
     if (phrase.status !== 200 || !phrase.body.success) {
@@ -744,7 +747,10 @@ async function seedAdminFixtures(
         {
           method: 'POST',
           headers: { cookie: first.cookie },
-          body: JSON.stringify({ phrase: VISUAL_RECOVERY_PHRASE }),
+          body: JSON.stringify({
+            phrase: VISUAL_RECOVERY_PHRASE,
+            currentPassword: credentials.password,
+          }),
         },
       );
       if (phrase.status !== 200 || !phrase.body.success) {

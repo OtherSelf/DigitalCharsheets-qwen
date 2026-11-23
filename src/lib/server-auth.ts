@@ -16,11 +16,19 @@ import {
   normalizePhrase,
   recoveryPhraseMatchesAsync,
 } from './security/phrase';
+import { phrasePolicyError } from './security/phrase-policy';
+import { isCurrentScryptParams } from './security/scrypt';
 import { revokeAllSessionsForUser } from './security/sessions';
 import {
   consumeRecoveryToken,
   revokeRecoveryTokensForUser,
 } from './security/tokens';
+import {
+  decryptTotpSecret,
+  findBackupCodeIndex,
+  getTotpKey,
+  verifyTotpCode,
+} from './security/totp';
 import { resetWriteSeqGuard } from './server-storage';
 import { revokeSharesForUser } from './shares';
 import {
@@ -71,10 +79,22 @@ interface AuthResult {
    *   invalid_password — аккаунт есть, пароль не совпал;
    *   blocked          — аккаунт заблокирован администратором;
    *   exists           — регистрация отклонена: логин уже занят;
+   *   invalid_phrase   — не прошла политика recovery-фразы;
+   *   totp_required    — пароль верный, но нужен второй фактор;
+   *   totp_invalid     — код/backup-код не подошёл или уже использован;
+   *   totp_unavailable — TOTP включён, но ключ `DCS_TOTP_KEY` недоступен;
    *   invalid_input    — не прошли серверные проверки полей.
    */
   reason?:
-    'no_account' | 'invalid_password' | 'blocked' | 'exists' | 'invalid_input';
+    | 'no_account'
+    | 'invalid_password'
+    | 'blocked'
+    | 'exists'
+    | 'invalid_phrase'
+    | 'totp_required'
+    | 'totp_invalid'
+    | 'totp_unavailable'
+    | 'invalid_input';
 }
 
 export interface AuthenticateOptions {
@@ -87,6 +107,8 @@ export interface AuthenticateOptions {
    * скрипты) могли по-прежнему создавать аккаунт первым входом.
    */
   allowRegistration?: boolean;
+  /** Код TOTP или backup-код; проверяется только при включённом TOTP. */
+  totpCode?: string;
 }
 
 /**
@@ -109,6 +131,7 @@ export function toLocalUser(user: StoredUser): LocalUser {
     role: normalizeUserRole(user.role),
     isBlocked: !!user.isBlocked,
     mustChangePassword: !!user.mustChangePassword,
+    totpEnabled: !!user.totp?.enabledAt,
   };
 }
 
@@ -170,7 +193,7 @@ async function rehashPassword(
 async function authenticateExisting(
   uid: string,
   password: string,
-  options: { locked?: boolean } = {},
+  options: { locked?: boolean; totpCode?: string } = {},
 ): Promise<AuthResult> {
   let stored = await getStoredUser(uid);
   if (!stored) {
@@ -203,6 +226,69 @@ async function authenticateExisting(
       reason: 'blocked',
     };
   }
+  // Второй фактор проверяется только после верного пароля: иначе ответ
+  // `totp_required` выдавал бы существование аккаунта.
+  if (stored.totp?.enabledAt) {
+    const key = getTotpKey();
+    if (!key) {
+      return {
+        success: false,
+        error: 'Two-factor authentication is temporarily unavailable.',
+        reason: 'totp_unavailable',
+      };
+    }
+    const code = (options.totpCode ?? '').trim();
+    if (!code) {
+      return {
+        success: false,
+        error: 'Two-factor authentication code is required.',
+        reason: 'totp_required',
+      };
+    }
+    const secret = decryptTotpSecret(stored.totp.secret, key, stored.uid);
+    if (!secret) {
+      return {
+        success: false,
+        error: 'Two-factor authentication is temporarily unavailable.',
+        reason: 'totp_unavailable',
+      };
+    }
+    const step = verifyTotpCode(secret, code, Date.now());
+    if (step !== null) {
+      if (stored.totp.lastStep !== undefined && step <= stored.totp.lastStep) {
+        return {
+          success: false,
+          error: 'Two-factor authentication code has already been used.',
+          reason: 'totp_invalid',
+        };
+      }
+      stored = await updateTotpState(
+        stored,
+        { lastStep: step },
+        options.locked,
+      );
+    } else {
+      const backupIndex = findBackupCodeIndex(
+        code,
+        stored.totpBackupCodes ?? [],
+        key,
+        stored.uid,
+      );
+      if (backupIndex === -1) {
+        return {
+          success: false,
+          error: 'Invalid two-factor authentication code.',
+          reason: 'totp_invalid',
+        };
+      }
+      stored = await updateTotpState(
+        stored,
+        { usedBackupIndex: backupIndex },
+        options.locked,
+      );
+    }
+  }
+
   if (check.needsRehash) {
     stored = await rehashPassword(stored, password, {
       locked: options.locked === true,
@@ -213,6 +299,45 @@ async function authenticateExisting(
     isNewUser: false,
     user: toLocalUser(await touchLastLogin(stored)),
   };
+}
+
+/**
+ * Обновить TOTP-состояние после входа: последний шаг (anti-replay) или
+ * израсходованный backup-код. `locked` — вызывающий уже держит глобальный лок.
+ */
+async function updateTotpState(
+  stored: StoredUser,
+  update: { lastStep?: number; usedBackupIndex?: number },
+  locked?: boolean,
+): Promise<StoredUser> {
+  const write = async (): Promise<StoredUser> => {
+    const fresh = (await readStoredUser(stored.uid)) ?? stored;
+    const currentTotp = fresh.totp;
+    if (!currentTotp?.enabledAt) return fresh;
+    const updated: StoredUser = {
+      ...fresh,
+      totp: { ...currentTotp },
+      updatedAt: new Date().toISOString(),
+    };
+    if (update.lastStep !== undefined) {
+      updated.totp = { ...currentTotp, lastStep: update.lastStep };
+    }
+    if (update.usedBackupIndex !== undefined) {
+      updated.totpBackupCodes = (fresh.totpBackupCodes ?? []).filter(
+        (_code, index) => index !== update.usedBackupIndex,
+      );
+    }
+    await writeStoredUser(stored.uid, updated);
+    return updated;
+  };
+  try {
+    return locked ? await write() : await withDataLock(write);
+  } catch (e) {
+    // Вход не должен падать из-за best-effort обновления anti-replay:
+    // код уже проверен, но повтор в окне возможен — это лучше 500.
+    console.error('Failed to update TOTP state:', e);
+    return stored;
+  }
 }
 
 /**
@@ -332,11 +457,12 @@ export async function registerUser(
       reason: 'invalid_input',
     };
   }
-  if (!recoveryPhrase || recoveryPhrase.trim().length < 5) {
+  const phraseError = phrasePolicyError(recoveryPhrase);
+  if (phraseError) {
     return {
       success: false,
-      error: 'Recovery phrase must be at least 5 characters.',
-      reason: 'invalid_input',
+      error: phraseError,
+      reason: 'invalid_phrase',
     };
   }
 
@@ -393,7 +519,11 @@ export async function authenticateUser(
   }
 
   const existingUid = await resolveLogin(login);
-  if (existingUid) return authenticateExisting(existingUid, password);
+  if (existingUid) {
+    return authenticateExisting(existingUid, password, {
+      totpCode: options.totpCode,
+    });
+  }
 
   if (options.allowRegistration === false) {
     return {
@@ -411,7 +541,10 @@ export async function authenticateUser(
     const racedUid = index.logins[login];
     // Лок уже взят: миграция хэша должна писать без вложенного лока.
     if (racedUid)
-      return authenticateExisting(racedUid, password, { locked: true });
+      return authenticateExisting(racedUid, password, {
+        locked: true,
+        totpCode: options.totpCode,
+      });
 
     return persistNewAccount(
       login,
@@ -438,7 +571,8 @@ export interface UpdateProfileResult {
   success: boolean;
   user?: LocalUser;
   error?: string;
-  reason?: 'not_found' | 'invalid_input' | 'invalid_password';
+  reason?:
+    'not_found' | 'invalid_input' | 'invalid_phrase' | 'invalid_password';
 }
 
 export async function updateUserProfile(
@@ -459,6 +593,16 @@ export async function updateUserProfile(
     const policyError = passwordPolicyError(newPassword);
     if (policyError) {
       return { success: false, reason: 'invalid_input', error: policyError };
+    }
+  }
+  if (newRecoveryPhrase !== undefined && newRecoveryPhrase.trim() !== '') {
+    const phraseError = phrasePolicyError(newRecoveryPhrase);
+    if (phraseError) {
+      return {
+        success: false,
+        reason: 'invalid_phrase',
+        error: phraseError,
+      };
     }
   }
 
@@ -487,7 +631,9 @@ export async function updateUserProfile(
         };
       }
 
-      if (changesPassword) {
+      // Новый пароль или новая фраза — это смена секрета аккаунта: одной
+      // живой cookie для неё мало (SEC-21). Логин/имя меняются без пароля.
+      if (changesPassword || newRecoveryPhrase !== undefined) {
         const check = await verifyPasswordAsync(
           current.passwordHash,
           options.currentPassword ?? '',
@@ -700,6 +846,90 @@ export async function setRecoveryPhrase(
   }
 }
 
+export type ChangeRecoveryPhraseReason =
+  | 'invalid_password'
+  | 'invalid_phrase'
+  | 'invalid_input'
+  | 'not_found'
+  | 'failed';
+
+export interface ChangeRecoveryPhraseResult {
+  success: boolean;
+  reason?: ChangeRecoveryPhraseReason;
+  error?: string;
+}
+
+/**
+ * Сменить фразу из живой сессии. В отличие от `setRecoveryPhrase` (внутренняя
+ * запись для тестов и миграций), здесь обязателен текущий пароль: украденная
+ * cookie не должна превращаться в постоянный захват аккаунта (SEC-21).
+ * Пароль сверяется под локом с актуальным файлом, как в `updateUserProfile`.
+ */
+export async function changeRecoveryPhrase(
+  uid: string,
+  phrase: string,
+  currentPassword: string | undefined,
+): Promise<ChangeRecoveryPhraseResult> {
+  if (!currentPassword || currentPassword === '') {
+    return {
+      success: false,
+      reason: 'invalid_password',
+      error: 'Current password is incorrect.',
+    };
+  }
+  if (normalizePhrase(phrase) === '') {
+    return {
+      success: false,
+      reason: 'invalid_input',
+      error: 'Phrase is required.',
+    };
+  }
+  const phraseError = phrasePolicyError(phrase);
+  if (phraseError) {
+    return {
+      success: false,
+      reason: 'invalid_phrase',
+      error: phraseError,
+    };
+  }
+  try {
+    return await withDataLock(async (): Promise<ChangeRecoveryPhraseResult> => {
+      const stored = await getStoredUser(uid);
+      if (!stored) {
+        return {
+          success: false,
+          reason: 'not_found',
+          error: 'User not found.',
+        };
+      }
+      const check = await verifyPasswordAsync(
+        stored.passwordHash,
+        currentPassword,
+      );
+      if (!check.valid) {
+        return {
+          success: false,
+          reason: 'invalid_password',
+          error: 'Current password is incorrect.',
+        };
+      }
+      await writeStoredUser(uid, {
+        ...stored,
+        recoveryPhrase: await hashRecoveryPhraseAsync(phrase),
+        updatedAt: new Date().toISOString(),
+      });
+      return { success: true };
+    });
+  } catch (e) {
+    console.error('Error changing recovery phrase:', e);
+    return {
+      success: false,
+      reason: 'failed',
+      error: 'Failed to update recovery phrase.',
+    };
+  }
+}
+
 /**
  * ─── LANDMARK: RECOVERY VERIFY ──────────────────────────────────────────────
  * Проверка recovery-фразы: фраза сравнивается целиком (состав и порядок слов),
@@ -713,7 +943,8 @@ export async function setRecoveryPhrase(
  * Старый формат (фраза открытым текстом) принимается один раз: сразу после
  * успешного совпадения значение перезаписывается хэшем.
  */
-export type RecoveryFailureReason = 'no_account' | 'no_phrase' | 'mismatch';
+export type RecoveryFailureReason =
+  'no_account' | 'no_phrase' | 'mismatch' | 'blocked';
 
 export interface VerifyRecoveryResult {
   success: boolean;
@@ -743,6 +974,16 @@ export async function verifyRecovery(
     };
   }
 
+  // Блокировка — это отказ администратора, а не проверка фразы. Ответ
+  // остаётся единым (`recovery_failed`), чтобы не выдавать статус аккаунта.
+  if (storedUser.isBlocked) {
+    return {
+      success: false,
+      reason: 'blocked',
+      error: 'Recovery verification failed.',
+    };
+  }
+
   if (!storedUser.recoveryPhrase) {
     return {
       success: false,
@@ -764,20 +1005,30 @@ export async function verifyRecovery(
     };
   }
 
-  // Легаси-фраза подтверждена — перезаписываем открытый текст хэшем.
-  if (!isRecoveryPhraseHash(storedUser.recoveryPhrase)) {
+  // Фраза подтверждена: открытый текст (легаси) и старые параметры scrypt
+  // перезаписываем текущими. Иначе после повышения N старый хэш остался бы
+  // навсегда, а открытая фраза — секретом на диске.
+  const phraseNeedsPlaintextMigration = !isRecoveryPhraseHash(
+    storedUser.recoveryPhrase,
+  );
+  const phraseNeedsParamMigration =
+    isRecoveryPhraseHash(storedUser.recoveryPhrase) &&
+    !isCurrentScryptParams(storedUser.recoveryPhrase);
+  if (phraseNeedsPlaintextMigration || phraseNeedsParamMigration) {
     try {
       await withDataLock(async () => {
         const fresh = await getStoredUser(uid);
-        if (
-          !fresh?.recoveryPhrase ||
-          isRecoveryPhraseHash(fresh.recoveryPhrase)
-        ) {
+        if (!fresh?.recoveryPhrase) return;
+        const freshIsPlaintext = !isRecoveryPhraseHash(fresh.recoveryPhrase);
+        if (!freshIsPlaintext && isCurrentScryptParams(fresh.recoveryPhrase)) {
           return;
         }
+        const valueToHash = freshIsPlaintext
+          ? fresh.recoveryPhrase
+          : recoveryPhraseInput;
         await writeStoredUser(uid, {
           ...fresh,
-          recoveryPhrase: await hashRecoveryPhraseAsync(fresh.recoveryPhrase),
+          recoveryPhrase: await hashRecoveryPhraseAsync(valueToHash),
           updatedAt: new Date().toISOString(),
         });
       });
@@ -791,7 +1042,8 @@ export async function verifyRecovery(
   return { success: true, user: toLocalUser(storedUser) };
 }
 
-export type ResetWithTokenReason = 'invalid_token' | 'invalid_input' | 'failed';
+export type ResetWithTokenReason =
+  'invalid_token' | 'invalid_input' | 'invalid_phrase' | 'failed';
 
 export interface ResetWithTokenResult {
   success: boolean;
@@ -819,16 +1071,15 @@ export async function resetCredentialsWithToken(
   if (policyError) {
     return { success: false, reason: 'invalid_input', error: policyError };
   }
-  if (
-    newRecoveryPhrase !== undefined &&
-    newRecoveryPhrase.trim() !== '' &&
-    newRecoveryPhrase.trim().length < 5
-  ) {
-    return {
-      success: false,
-      reason: 'invalid_input',
-      error: 'Recovery phrase must be at least 5 characters.',
-    };
+  if (newRecoveryPhrase !== undefined && newRecoveryPhrase.trim() !== '') {
+    const phraseError = phrasePolicyError(newRecoveryPhrase);
+    if (phraseError) {
+      return {
+        success: false,
+        reason: 'invalid_phrase',
+        error: phraseError,
+      };
+    }
   }
 
   const consumed = await consumeRecoveryToken(token);
@@ -844,7 +1095,9 @@ export async function resetCredentialsWithToken(
     const result = await withDataLock(
       async (): Promise<ResetWithTokenResult> => {
         const stored = await getStoredUser(consumed.uid);
-        if (!stored) {
+        if (!stored || stored.isBlocked) {
+          // Заблокированный не должен менять пароль/фразу даже по токену:
+          // токен уже сожжён выше, ответ не отличается от невалидного.
           return {
             success: false,
             reason: 'invalid_token',
@@ -868,6 +1121,10 @@ export async function resetCredentialsWithToken(
         delete updated.email;
         // Временный пароль, выданный администратором, больше не действует.
         delete updated.mustChangePassword;
+        // Восстановление доступа отключает второй фактор: иначе потеря
+        // устройства оставила бы аккаунт без входа даже после сброса пароля.
+        delete updated.totp;
+        delete updated.totpBackupCodes;
 
         await writeStoredUser(consumed.uid, updated);
         return { success: true, uid: consumed.uid };

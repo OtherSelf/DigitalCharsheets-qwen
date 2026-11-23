@@ -8,13 +8,17 @@ import {
   rateLimitKey,
 } from '@/lib/security/rate-limit';
 import { revokeAllSessionsForUser } from '@/lib/security/sessions';
-import { setRecoveryPhrase } from '@/lib/server-auth';
+import { changeRecoveryPhrase } from '@/lib/server-auth';
 import { getSessionUid, readSession } from '@/lib/session';
 
 /**
  * Установка recovery-фразы. Раньше сюда приходил `username` и uid вычислялся
  * из него — то есть фразу можно было поставить любому аккаунту, зная логин.
  * Теперь uid берётся из сессии: менять можно только свой профиль.
+ *
+ * Фраза — второй ключ к аккаунту, поэтому одной сессии для её смены мало:
+ * нужен текущий пароль. Иначе украденная cookie превращается в постоянный
+ * захват аккаунта через recovery.
  */
 export async function POST(request: Request) {
   try {
@@ -38,16 +42,31 @@ export async function POST(request: Request) {
     if (!parsedBody.ok) {
       return jsonError(parsedBody.status, parsedBody.error, parsedBody.reason);
     }
-    const { phrase } = parsedBody.body as { phrase?: string };
+    const { phrase, currentPassword } = parsedBody.body as {
+      phrase?: string;
+      currentPassword?: string;
+    };
 
     if (!phrase) {
       return jsonError(400, 'Phrase is required.');
     }
 
-    const success = await setRecoveryPhrase(uid, phrase);
+    const result = await changeRecoveryPhrase(uid, phrase, currentPassword);
 
-    if (!success) {
-      return jsonError(500, 'Failed to update recovery phrase.');
+    if (!result.success) {
+      const status =
+        result.reason === 'invalid_password'
+          ? 403
+          : result.reason === 'not_found'
+            ? 404
+            : result.reason === 'failed'
+              ? 500
+              : 400;
+      return jsonError(
+        status,
+        result.error || 'Failed to update recovery phrase.',
+        result.reason,
+      );
     }
 
     // Новая фраза — новый секрет: чужие сессии (старые устройства) гасим,

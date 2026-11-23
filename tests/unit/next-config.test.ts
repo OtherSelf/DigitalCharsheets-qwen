@@ -67,6 +67,16 @@ describe('next.config: заголовки безопасности (SEC-11)', ()
   });
 });
 
+describe('next.config: страница входа не индексируется', () => {
+  it('отдаёт X-Robots-Tag noindex для /login', async () => {
+    const headers = await nextConfig.headers?.();
+    const entry = headers!.find((item) => item.source === '/login');
+    expect(entry, 'нет правила для /login').toBeTruthy();
+    const header = entry!.headers.find((item) => item.key === 'X-Robots-Tag');
+    expect(header?.value).toContain('noindex');
+  });
+});
+
 describe('next.config: приватность гостевой ссылки', () => {
   const getShareHeaders = async () => {
     const headers = await nextConfig.headers?.();

@@ -182,6 +182,12 @@ export const enTranslations: Record<string, string> = {
   'common.sheetUnavailable': 'Sheet unavailable',
   'common.sheetUnavailableHint':
     'The game plugin failed to render. Your data is intact — JSON export is still available.',
+  'common.quotaExceeded':
+    'Account storage limit reached. Delete character sheets or free space.',
+  'common.quotaExceededSheets':
+    'Character limit reached (100 sheets). Delete a sheet to create a new one.',
+  'common.quotaExceededBytes':
+    'Account storage limit reached (50 MiB). Delete sheets or history to free space.',
   'common.saveFailed': 'Could not save changes',
   'common.saveFailedDesc':
     'The latest edits are not on the server. Check your connection — they will be resent automatically.',
@@ -304,10 +310,22 @@ export const enTranslations: Record<string, string> = {
   'auth.saveAndContinue': 'Save & Continue',
   'auth.changeRecoveryPhrase': 'Change Recovery Phrase',
   'auth.phraseDesc':
-    'This phrase is used to recover your account if you forget your password. Make it memorable! (e.g., "french butter dragon")',
+    'This phrase is used to recover your account if you forget your password. Use at least 6 words or 24 characters (e.g., "french butter dragon silver ember frost").',
   'auth.enterRecoveryPhrase': 'Enter your recovery phrase',
-  'auth.phraseMinLength': 'Phrase must be at least 5 characters.',
+  'auth.phraseMinLength':
+    'Recovery phrase must be at least 6 words or 24 characters (max 256).',
+  'auth.phrasePolicy': 'Use at least 6 words or 24 characters (max 256).',
   'auth.phraseUpdateFailed': 'Failed to update phrase.',
+  'auth.totpCode': 'Two-factor code',
+  'auth.totpCodePlaceholder': '6 digits or a backup code',
+  'auth.totpRequired': 'Enter the code from your authenticator app.',
+  'auth.totpInvalid': 'The code did not match. Try the next code.',
+  'auth.totpUnavailable':
+    'Two-factor authentication is temporarily unavailable. Contact the administrator.',
+  'auth.currentPassword': 'Current password',
+  'auth.currentPasswordPlaceholder': 'Enter your current password',
+  'auth.currentPasswordRequired':
+    'Enter your current password to set a recovery phrase.',
   'auth.savePhrase': 'Save Phrase',
   'auth.login': 'Login',
   'auth.phrase': 'New Recovery Phrase',
@@ -351,7 +369,8 @@ export const enTranslations: Record<string, string> = {
   'auth.enterUsernamePassword':
     'Please enter both username/email and password.',
   'auth.fillAllFields': 'Please fill in all fields.',
-  'auth.authPhraseMinLength': 'Recovery phrase must be at least 5 characters.',
+  'auth.authPhraseMinLength':
+    'Recovery phrase must be at least 6 words or 24 characters (max 256).',
   'auth.noAccountFound':
     'No account found with this login. Create an account first.',
   'auth.accountExists':
@@ -370,7 +389,7 @@ export const enTranslations: Record<string, string> = {
     'The recovery code has expired. Verify the phrase again.',
   'auth.recoverySuccess':
     'Credentials updated. Sign in with your new password.',
-  'auth.phraseExample': 'e.g., french butter dragon',
+  'auth.phraseExample': 'e.g., french butter dragon silver ember frost',
   'auth.secureAccountTitle': 'Secure Your Account',
   'auth.secureAccountDesc':
     'Welcome! Please set up a recovery phrase to secure your account in case you forget your password.',
@@ -456,11 +475,35 @@ export const enTranslations: Record<string, string> = {
   'settings.generalInformation': 'General Information',
   'settings.updateYourDisplayNameAndLogin':
     'Update your display name and login',
+  'settings.twoFactor': 'Two-factor authentication',
+  'settings.twoFactorDesc':
+    'Require a code from an authenticator app in addition to your password.',
+  'settings.twoFactorEnabled': 'Enabled',
+  'settings.twoFactorDisabled': 'Not enabled',
+  'settings.twoFactorSetup': 'Set up two-factor authentication',
+  'settings.twoFactorSecretHint':
+    'Add this secret to your authenticator app, then enter the current code.',
+  'settings.twoFactorEnable': 'Enable',
+  'settings.twoFactorDisable': 'Disable',
+  'settings.twoFactorRegenerate': 'New backup codes',
+  'settings.twoFactorBackupCodes': 'Backup codes (shown once)',
+  'settings.twoFactorBackupHint':
+    'Store them offline: each code works once if you lose the device.',
+  'settings.twoFactorUnavailable':
+    'Two-factor authentication is not configured on this installation.',
+  'settings.twoFactorInvalid': 'The code did not match.',
+  'settings.twoFactorRequired': 'Enter your password and a current code.',
   'settings.security': 'Security',
   'settings.updatePasswordAndRecovery':
     'Update your password and recovery phrase.',
   'settings.leaveBlankToKeepCurrent': 'Leave blank to keep current password',
   'settings.updateRecoveryPhrase': 'Enter new recovery phrase',
+  'settings.currentPassword': 'Current password',
+  'settings.currentPasswordPlaceholder': 'Enter your current password',
+  'settings.currentPasswordHint':
+    'Required to change the password or the recovery phrase.',
+  'settings.currentPasswordRequired':
+    'Enter your current password to change the password or recovery phrase.',
   'settings.saved': 'Settings saved successfully!',
   'settings.saveFailed': 'Failed to save settings.',
   'settings.displaySettings': 'Display Settings',

@@ -8,4 +8,4 @@
  * сам хост.
  */
 
-export const VISUAL_RECOVERY_PHRASE = 'amber cobalt lantern';
+export const VISUAL_RECOVERY_PHRASE = 'amber cobalt lantern silver ember frost';

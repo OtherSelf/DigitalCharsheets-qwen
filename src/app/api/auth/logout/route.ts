@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import { readAuthJson } from '@/lib/security/payload';
 import { revokeAllSessionsForUser } from '@/lib/security/sessions';
 import {
-  clearSessionCookieHeader,
+  clearSessionCookieHeaders,
   getSessionUid,
   revokeSessionFromRequest,
 } from '@/lib/session';
@@ -33,6 +33,8 @@ export async function POST(request: Request) {
   }
 
   const response = NextResponse.json({ success: true });
-  response.headers.set('Set-Cookie', clearSessionCookieHeader());
+  for (const header of clearSessionCookieHeaders()) {
+    response.headers.append('Set-Cookie', header);
+  }
   return response;
 }

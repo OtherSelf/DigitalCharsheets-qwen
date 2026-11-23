@@ -1,3 +1,10 @@
+import fs from 'node:fs';
+import fsp from 'node:fs/promises';
+import { isIP } from 'node:net';
+import path from 'node:path';
+
+import { getDataDir, getRateLimitStateFile } from '../data-dir';
+
 /**
  * ─── LANDMARK: RATE LIMIT ───────────────────────────────────────────────────
  * Sliding window по ключу `действие:IP:логин`. Нужен, чтобы подбор пароля и
@@ -68,6 +75,12 @@ export const REGISTER_RATE_LIMIT: RateLimitRule = {
   windowMs: 10 * 60_000,
 };
 
+/** Поиск по документации: 30 запросов в минуту на IP (GET, без сессии). */
+export const SEARCH_RATE_LIMIT: RateLimitRule = {
+  limit: 30,
+  windowMs: 60_000,
+};
+
 /** Auth-мутации под сессией (смена пароля/фразы): 10 за 10 минут. */
 export const AUTH_MUTATION_RATE_LIMIT: RateLimitRule = {
   limit: 10,
@@ -99,6 +112,161 @@ export function createMemoryRateLimitStore(): RateLimitStore {
     },
     clear(): void {
       buckets.clear();
+    },
+  };
+}
+
+const SNAPSHOT_VERSION = 1;
+const SNAPSHOT_FLUSH_MS = 1_000;
+const SNAPSHOT_TTL_MS = 60 * 60_000;
+const OVERFLOW_KEY = '__overflow__';
+
+interface SnapshotFile {
+  version: number;
+  buckets: Record<string, number[]>;
+}
+
+export interface SnapshotStoreOptions {
+  /** Задержка записи на диск (тесты ставят 0). */
+  flushDelayMs?: number;
+  /** Потолок числа ключей (тесты ставят маленький). */
+  maxKeys?: number;
+  now?: () => number;
+}
+
+export interface SnapshotRateLimitStore extends RateLimitStore {
+  /** Сбросить снапшот на диск сейчас (тесты и завершение процесса). */
+  flushNow(): Promise<void>;
+}
+
+/**
+ * ─── LANDMARK: PERSISTENT RATE LIMIT ────────────────────────────────────────
+ * История лимита должна переживать рестарт, но не может стоить fsync на
+ * каждый логин: auth-путь и так под scrypt, а `withDataLock` — глобальный лок
+ * всего каталога данных. Поэтому память остаётся источником истины, а на диск
+ * ложится debounced-снапшот (не чаще раза в секунду) атомарной заменой.
+ *
+ * При переполнении карты новые ключи не вытесняют активные бакеты (иначе флуд
+ * уникальными IP/логинами обнулял бы счётчик жертвы): они считаются по общему
+ * overflow-ключу, то есть отказ fail-closed.
+ */
+export function createSnapshotRateLimitStore(
+  filePath: string,
+  options: SnapshotStoreOptions = {},
+): SnapshotRateLimitStore {
+  const maxKeys = options.maxKeys ?? MAX_STORE_KEYS;
+  const flushDelayMs = options.flushDelayMs ?? SNAPSHOT_FLUSH_MS;
+  const now = options.now ?? (() => Date.now());
+  const buckets = new Map<string, number[]>();
+  let loaded = false;
+  let timer: ReturnType<typeof setTimeout> | null = null;
+  let flushing: Promise<void> | null = null;
+  let dirty = false;
+
+  function load(): void {
+    if (loaded) return;
+    loaded = true;
+    try {
+      const raw = fs.readFileSync(filePath, 'utf8');
+      const parsed = JSON.parse(raw) as SnapshotFile;
+      if (
+        parsed?.version !== SNAPSHOT_VERSION ||
+        typeof parsed.buckets !== 'object' ||
+        parsed.buckets === null
+      ) {
+        return;
+      }
+      const cutoff = now() - SNAPSHOT_TTL_MS;
+      for (const [key, value] of Object.entries(parsed.buckets)) {
+        if (!Array.isArray(value)) continue;
+        const timestamps = value.filter(
+          (timestamp) =>
+            typeof timestamp === 'number' &&
+            Number.isFinite(timestamp) &&
+            timestamp > cutoff,
+        );
+        if (timestamps.length > 0) buckets.set(key, timestamps);
+      }
+    } catch {
+      // Нет файла или он битый: начинаем с пустой истории. Это безопаснее,
+      // чем падать на старте из-за служебного кеша.
+    }
+  }
+
+  /** Куда писать ключ: он сам, overflow или новый ключ, если есть место. */
+  function targetKey(key: string): string {
+    if (buckets.has(key) || buckets.size < maxKeys) return key;
+    return OVERFLOW_KEY;
+  }
+
+  function scheduleFlush(): void {
+    dirty = true;
+    if (timer) return;
+    timer = setTimeout(() => {
+      timer = null;
+      void flush();
+    }, flushDelayMs);
+    // Таймер не должен держать процесс живым (тесты, CLI-скрипты).
+    if (typeof timer.unref === 'function') timer.unref();
+  }
+
+  async function flush(): Promise<void> {
+    if (flushing) return flushing;
+    if (!dirty) return;
+    dirty = false;
+    const cutoff = now() - SNAPSHOT_TTL_MS;
+    const payload: SnapshotFile = { version: SNAPSHOT_VERSION, buckets: {} };
+    for (const [key, timestamps] of buckets) {
+      const fresh = timestamps.filter((timestamp) => timestamp > cutoff);
+      if (fresh.length > 0) payload.buckets[key] = fresh;
+    }
+    flushing = (async () => {
+      try {
+        await fsp.mkdir(path.dirname(filePath), { recursive: true });
+        const tmp = `${filePath}.${process.pid}.tmp`;
+        await fsp.writeFile(tmp, JSON.stringify(payload), 'utf8');
+        await fsp.rename(tmp, filePath);
+      } catch {
+        // Служебное состояние: следующий flush попробует снова.
+        dirty = true;
+      } finally {
+        flushing = null;
+      }
+    })();
+    return flushing;
+  }
+
+  return {
+    read(key: string): readonly number[] {
+      load();
+      return buckets.get(targetKey(key)) ?? [];
+    },
+    write(key: string, timestamps: number[]): void {
+      load();
+      if (timestamps.length === 0) {
+        buckets.delete(key);
+        if (key === OVERFLOW_KEY) buckets.delete(OVERFLOW_KEY);
+        scheduleFlush();
+        return;
+      }
+      const target = targetKey(key);
+      buckets.delete(target);
+      buckets.set(target, timestamps);
+      scheduleFlush();
+    },
+    clear(): void {
+      load();
+      buckets.clear();
+      scheduleFlush();
+    },
+    async flushNow(): Promise<void> {
+      load();
+      if (timer) {
+        clearTimeout(timer);
+        timer = null;
+      }
+      dirty = true;
+      await flush();
     },
   };
 }
@@ -157,13 +325,22 @@ export function createRateLimiter(
 }
 
 let authRateLimiter: RateLimiter | null = null;
+let authRateLimiterDataDir = '';
 
 /**
  * Общий лимитер всех `/api/auth*`. Синглтон, чтобы память не обнулялась на
- * каждый роут; в тестах сбрасывается `resetAuthRateLimits()`.
+ * каждый роут; в тестах сбрасывается `resetAuthRateLimits()`. Снапшот
+ * привязан к текущему data-dir: тесты меняют `DCS_DATA_DIR`, и история
+ * одного временного каталога не должна попадать в другой.
  */
 export function getAuthRateLimiter(): RateLimiter {
-  if (!authRateLimiter) authRateLimiter = createRateLimiter();
+  const dataDir = getDataDir();
+  if (!authRateLimiter || authRateLimiterDataDir !== dataDir) {
+    authRateLimiter = createRateLimiter({
+      store: createSnapshotRateLimitStore(getRateLimitStateFile()),
+    });
+    authRateLimiterDataDir = dataDir;
+  }
   return authRateLimiter;
 }
 
@@ -172,20 +349,49 @@ export function resetAuthRateLimits(): void {
   getAuthRateLimiter().reset();
 }
 
+/** Разобрать один адрес заголовка: только валидный IP, иначе null. */
+function parseClientIp(value: string | null | undefined): string | null {
+  const trimmed = value?.trim();
+  if (!trimmed) return null;
+  const candidate =
+    trimmed.startsWith('[') && trimmed.endsWith(']')
+      ? trimmed.slice(1, -1)
+      : trimmed;
+  return isIP(candidate) ? candidate : null;
+}
+
 /**
- * IP клиента. За nginx доверяем `x-forwarded-for`/`x-real-ip`; значения
- * нормализуются (первый адрес списка — клиент). Если прокси нет, ключ станет
- * `unknown` — лимит всё равно работает, но общий на всех.
+ * IP клиента. Граница доверия — nginx: он перезаписывает `X-Forwarded-For`
+ * (`$remote_addr`), поэтому клиентское значение не может оказаться справа.
+ * Берём последний адрес списка, а не первый: первый клиент дописывает сам, и
+ * именно на нём держался обход лимита. Мусор в последнем адресе даёт
+ * `unknown`, а не «следующий слева» — иначе подделка снова прошла бы.
+ *
+ * `X-Real-IP` — тот же уровень доверия (nginx ставит `$remote_addr`); если
+ * заголовков нет, ключ `unknown` — лимит общий, но fail-closed.
  */
 export function clientIpFromRequest(request: Request): string {
   const forwarded = request.headers.get('x-forwarded-for');
   if (forwarded) {
-    const first = forwarded.split(',')[0]?.trim();
-    if (first) return first;
+    const parts = forwarded
+      .split(',')
+      .map((part) => part.trim())
+      .filter(Boolean);
+    const last =
+      parts.length > 0 ? parseClientIp(parts[parts.length - 1]) : null;
+    return last ?? 'unknown';
   }
-  const realIp = request.headers.get('x-real-ip');
-  if (realIp && realIp.trim()) return realIp.trim();
-  return 'unknown';
+  const realIp = parseClientIp(request.headers.get('x-real-ip'));
+  return realIp ?? 'unknown';
+}
+
+/**
+ * Ключ «на аккаунт», без IP: второй эшелон против распределённого перебора,
+ * когда IP меняется (ротация XFF, ботнет). Логин нормализуется так же, как в
+ * ключе с IP.
+ */
+export function accountRateLimitKey(action: string, login: string): string {
+  return `${action}:account:${String(login).toLowerCase().trim()}`;
 }
 
 /** Ключ лимитера: `действие:IP:логин` — один логин не блокирует другой. */

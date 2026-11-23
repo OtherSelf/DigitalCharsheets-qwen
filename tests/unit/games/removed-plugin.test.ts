@@ -44,7 +44,7 @@ describe('игра удалена, листы остались', () => {
       'ghost-user',
       'ghost-pass-1234',
       'Ghost',
-      'amber cobalt lantern',
+      'amber cobalt lantern silver ember frost',
     );
     expect(registered.success).toBe(true);
     uid = registered.user!.uid;

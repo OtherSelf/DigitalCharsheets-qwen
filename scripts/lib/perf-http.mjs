@@ -74,7 +74,7 @@ export async function httpRequest(
       : [];
   let session = null;
   for (const value of setCookies) {
-    const match = /^dcs_session=([^;]+)/.exec(value);
+    const match = /^(?:__Host-)?dcs_session=([^;]+)/.exec(value);
     if (match) {
       session = match[1];
       break;
@@ -91,7 +91,7 @@ export async function httpRequest(
 }
 
 export function cookieOf(session) {
-  return `dcs_session=${session}`;
+  return `__Host-dcs_session=${session}`;
 }
 
 function mtimeMs(file) {

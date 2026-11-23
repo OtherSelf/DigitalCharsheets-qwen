@@ -196,7 +196,7 @@ describe('accountExists / registerUser', () => {
       '  New.User  ',
       'pass-one-1234',
       'New User',
-      '  Amber Cobalt  ',
+      '  Amber Cobalt Silver Ember Frost  ',
     );
 
     expect(result.success).toBe(true);
@@ -219,9 +219,12 @@ describe('accountExists / registerUser', () => {
     );
     // Фраза хранится хэшем, а не открытым текстом.
     expect(isRecoveryPhraseHash(stored.recoveryPhrase)).toBe(true);
-    expect(recoveryPhraseMatches(stored.recoveryPhrase, 'amber cobalt')).toBe(
-      true,
-    );
+    expect(
+      recoveryPhraseMatches(
+        stored.recoveryPhrase,
+        'amber cobalt silver ember frost',
+      ),
+    ).toBe(true);
     expect(await resolveLogin('new.user')).toBe(uid);
 
     // Пароль из регистрации работает при входе.
@@ -238,13 +241,13 @@ describe('accountExists / registerUser', () => {
       'taken',
       'pass-one-1234',
       'First',
-      'amber cobalt',
+      'amber cobalt silver ember frost',
     );
     const second = await registerUser(
       'taken',
       'pass-two-1234',
       'Second',
-      'zulu yankee',
+      'zulu yankee xray whiskey victor uniform',
     );
 
     expect(second.success).toBe(false);
@@ -258,9 +261,12 @@ describe('accountExists / registerUser', () => {
       true,
     );
     expect(isRecoveryPhraseHash(stored.recoveryPhrase)).toBe(true);
-    expect(recoveryPhraseMatches(stored.recoveryPhrase, 'zulu yankee')).toBe(
-      false,
-    );
+    expect(
+      recoveryPhraseMatches(
+        stored.recoveryPhrase,
+        'zulu yankee xray whiskey victor uniform',
+      ),
+    ).toBe(false);
   });
 
   it('registerUser валидирует пароль и фразу', async () => {
@@ -268,7 +274,7 @@ describe('accountExists / registerUser', () => {
       'short-pass',
       '123',
       'Short',
-      'amber cobalt',
+      'amber cobalt silver ember frost',
     );
     expect(shortPassword.success).toBe(false);
     expect(shortPassword.reason).toBe('invalid_input');
@@ -280,13 +286,13 @@ describe('accountExists / registerUser', () => {
       'ab',
     );
     expect(shortPhrase.success).toBe(false);
-    expect(shortPhrase.reason).toBe('invalid_input');
+    expect(shortPhrase.reason).toBe('invalid_phrase');
 
     const noLogin = await registerUser(
       '   ',
       'pass-one-1234',
       'Nobody',
-      'amber cobalt',
+      'amber cobalt silver ember frost',
     );
     expect(noLogin.success).toBe(false);
 

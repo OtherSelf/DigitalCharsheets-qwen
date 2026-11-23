@@ -1,7 +1,8 @@
+import type { Stats } from 'node:fs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { listGameModules } from '@/games/registry';
 import { getSessionsFile } from '@/lib/data-dir';
@@ -71,6 +72,32 @@ describe('readThroughCache', () => {
 
     await fs.writeFile(file, JSON.stringify({ value: 'third' }), 'utf8');
     expect(await readJsonThroughCache(file)).toEqual({ value: 'third' });
+  });
+
+  it('гонка чтения не кэширует устаревшее значение с новой подписью', async () => {
+    const file = path.join(dataDir, 'race.json');
+    await fs.writeFile(file, JSON.stringify({ value: 'old' }), 'utf8');
+
+    const statA = { ino: 1, mtimeMs: 1_000, size: 10 } as unknown as Stats;
+    const statB = { ino: 2, mtimeMs: 2_000, size: 20 } as unknown as Stats;
+    const readSpy = vi
+      .spyOn(fs, 'readFile')
+      .mockResolvedValueOnce(JSON.stringify({ value: 'old' }));
+    const statSpy = vi
+      .spyOn(fs, 'stat')
+      .mockResolvedValueOnce(statA)
+      .mockResolvedValueOnce(statB);
+
+    // Файл изменился между readFile и вторым stat: значение «old» относится
+    // к старой подписи и не должно осесть в кэше под подписью statB.
+    expect(await readJsonThroughCache(file)).toEqual({ value: 'old' });
+
+    readSpy.mockRestore();
+    await fs.writeFile(file, JSON.stringify({ value: 'new' }), 'utf8');
+    statSpy.mockResolvedValue(statB);
+
+    expect(await readJsonThroughCache(file)).toEqual({ value: 'new' });
+    statSpy.mockRestore();
   });
 
   it('лист обновляется после сохранения', async () => {

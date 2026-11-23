@@ -153,10 +153,16 @@ let sessionCookie = '';
 
 async function request(
   pathname,
-  { method = 'GET', body, redirect = 'manual', auth = true } = {},
+  {
+    method = 'GET',
+    body,
+    redirect = 'manual',
+    auth = true,
+    headers: extraHeaders,
+  } = {},
 ) {
   const url = `${opts.baseUrl}${pathname}`;
-  const headers = {};
+  const headers = { ...(extraHeaders || {}) };
   if (body !== undefined) headers['content-type'] = 'application/json';
   if (auth && sessionCookie) headers.cookie = sessionCookie;
 
@@ -193,7 +199,7 @@ const api = (pathname, options) => request(`/api${pathname}`, options);
 const stamp = Date.now().toString(36);
 const username = `smoke-${stamp}-${Math.random().toString(36).slice(2, 7)}`;
 const password = 'smoke-pass-1234';
-const recoveryPhrase = 'alpha bravo charlie';
+const recoveryPhrase = 'alpha bravo charlie delta echo foxtrot';
 
 const dndCharacter = {
   gameSystem: 'Dungeons & Dragons',
@@ -626,7 +632,7 @@ await check(
         username,
         password,
         displayName: 'Smoke Tester',
-        recoveryPhrase: 'amber cobalt lantern',
+        recoveryPhrase: 'amber cobalt lantern silver ember frost',
       },
       auth: false,
     });
@@ -652,7 +658,7 @@ await check(
       'POST /api/auth/register: фраза должна быть установлена сразу',
     );
     assert(
-      sessionCookie.startsWith('dcs_session='),
+      /^(__Host-)?dcs_session=/.test(sessionCookie),
       'POST /api/auth/register: не выдал сессионную cookie',
     );
     userId = body.user.uid;
@@ -689,7 +695,7 @@ await check('POST /api/auth/register → 409 на занятый логин', as
       username,
       password: 'another-pass',
       displayName: 'Duplicate',
-      recoveryPhrase: 'zulu yankee',
+      recoveryPhrase: 'zulu yankee xray whiskey victor uniform',
     },
     auth: false,
   });
@@ -758,7 +764,7 @@ await check('POST /api/auth/register → 400 на пароль короче 12',
       username: `${username}-short`,
       password: '123',
       displayName: 'Short',
-      recoveryPhrase: 'amber cobalt lantern',
+      recoveryPhrase: 'amber cobalt lantern silver ember frost',
     },
     auth: false,
   });
@@ -1128,7 +1134,7 @@ if (opts.dataDir) {
       const parsed = JSON.parse(raw);
       assert(parsed.uid === userId, `user.json: uid = ${parsed.uid}`);
       assert(
-        parsed.schemaVersion === 4,
+        parsed.schemaVersion === 5,
         `user.json: schemaVersion = ${parsed.schemaVersion}`,
       );
       assert(parsed.role === 'user', `user.json: role = ${parsed.role}`);
@@ -1276,7 +1282,7 @@ await check('DELETE повторно → 404 (файл действительн�
 await check('POST /api/auth/phrase → фраза сохраняется', async () => {
   const res = await api('/auth/phrase', {
     method: 'POST',
-    body: { phrase: recoveryPhrase },
+    body: { phrase: recoveryPhrase, currentPassword: password },
   });
   assertStatus(res, 200, 'POST /api/auth/phrase');
   assert(
@@ -1288,6 +1294,18 @@ await check('POST /api/auth/phrase → фраза сохраняется', async
 await check('POST /api/auth/phrase без фразы → 400', async () => {
   const res = await api('/auth/phrase', { method: 'POST', body: {} });
   assertStatus(res, 400, 'phrase без фразы');
+});
+
+await check('POST /api/auth/phrase без пароля → 403', async () => {
+  const res = await api('/auth/phrase', {
+    method: 'POST',
+    body: { phrase: 'another quiet phrase' },
+  });
+  assertStatus(res, 403, 'phrase без текущего пароля');
+  assert(
+    assertJson(res, 'phrase без пароля').reason === 'invalid_password',
+    'phrase без пароля: reason не invalid_password',
+  );
 });
 
 await check('POST /api/auth/recover/verify без полей → 400', async () => {
@@ -1322,7 +1340,7 @@ await check('POST /api/auth/recover/update без токена → 401', async (
       // Логин в теле ничего не доказывает — раньше этого хватало для захвата.
       username,
       newPassword: 'pwned-pass-123',
-      newRecoveryPhrase: 'x y z',
+      newRecoveryPhrase: 'x y z silver ember frost',
     },
     auth: false,
   });
@@ -1369,7 +1387,7 @@ await check(
       body: {
         token: recoveryToken,
         newPassword: password,
-        newRecoveryPhrase: 'delta echo foxtrot',
+        newRecoveryPhrase: 'delta echo foxtrot golf hotel india',
       },
       auth: false,
     });
@@ -1509,6 +1527,96 @@ await check('11-я неудачная попытка входа → 429 с Retry
   );
   assert(statuses[10] === 429, `11-я попытка: ${statuses[10]}, ожидали 429`);
   assert(Number(retryAfter) > 0, `Retry-After = ${retryAfter}`);
+});
+
+// 6.2 Подделка XFF (SEC-13): последний адрес дописывает прокси, клиентская
+// часть вращается — ключ лимита должен остаться прежним.
+await check(
+  'ротация XFF не обходит лимит при фиксированном последнем хопе',
+  async () => {
+    const probe = `xff-${stamp}-${Math.random().toString(36).slice(2, 7)}`;
+    const statuses = [];
+
+    for (let attempt = 1; attempt <= 11; attempt += 1) {
+      const res = await api('/auth', {
+        method: 'POST',
+        body: { username: probe, password: 'wrong-pass-1234' },
+        auth: false,
+        headers: {
+          'x-forwarded-for': `203.0.113.${attempt}, 198.51.100.50`,
+        },
+      });
+      statuses.push(res.status);
+    }
+
+    assert(
+      statuses.slice(0, 10).every((status) => status === 401),
+      `XFF-ротация, первые 10: ${statuses.join(', ')}, ожидали 401`,
+    );
+    assert(
+      statuses[10] === 429,
+      `XFF-ротация, 11-я: ${statuses[10]}, ожидали 429 (лимит обойдён)`,
+    );
+  },
+);
+
+// 6.3 Поиск по документации: лимит на IP (SEC-15, публичный GET).
+await check('после 30 запросов /api/search → 429 с Retry-After', async () => {
+  const headers = { 'x-forwarded-for': '203.0.113.77' };
+  for (let attempt = 1; attempt <= 30; attempt += 1) {
+    const res = await api('/search?query=security', { auth: false, headers });
+    assertStatus(res, 200, `search, попытка ${attempt}`);
+  }
+  const limited = await api('/search?query=security', { auth: false, headers });
+  assertStatus(limited, 429, 'search после лимита');
+  assert(
+    Number(limited.headers.get('retry-after')) > 0,
+    'search: нет Retry-After',
+  );
+});
+
+// 6.4 Браузерные границы: noindex /login, CSP-решение, CSRF-origin.
+await check('GET /login: X-Robots-Tag noindex', async () => {
+  const res = await request('/login', { auth: false });
+  assertStatus(res, 200, 'GET /login');
+  assert(
+    (res.headers.get('x-robots-tag') || '').includes('noindex'),
+    'GET /login: нет X-Robots-Tag noindex',
+  );
+});
+
+await check(
+  'CSP: зафиксированное решение (unsafe-inline, без nonce)',
+  async () => {
+    const res = await request('/login', { auth: false });
+    const csp = res.headers.get('content-security-policy') || '';
+    assert(csp.includes("script-src 'self' 'unsafe-inline'"), `CSP: ${csp}`);
+    assert(!csp.includes('nonce-'), `CSP неожиданно с nonce: ${csp}`);
+    assert(csp.includes("frame-ancestors 'none'"), `CSP: ${csp}`);
+  },
+);
+
+await check('мутация с чужим Origin → 403 csrf_origin', async () => {
+  const res = await api('/auth/exists', {
+    method: 'POST',
+    body: { username },
+    auth: false,
+    headers: { origin: 'https://evil.example' },
+  });
+  assertStatus(res, 403, 'exists с чужим Origin');
+  const body = assertJson(res, 'exists с чужим Origin');
+  assert(body.reason === 'csrf_origin', `csrf reason = ${body.reason}`);
+});
+
+await check('мутация с same-origin Origin проходит', async () => {
+  const origin = new URL(opts.baseUrl).origin;
+  const res = await api('/auth/exists', {
+    method: 'POST',
+    body: { username },
+    auth: false,
+    headers: { origin },
+  });
+  assert(res.status !== 403, `same-origin Origin: ${res.status}`);
 });
 
 // 7. Уборка

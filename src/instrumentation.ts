@@ -12,6 +12,11 @@
 export async function register(): Promise<void> {
   if (process.env.NEXT_RUNTIME !== 'nodejs') return;
 
+  // Битый `DCS_TOTP_KEY` должен падать на старте, а не при первом входе
+  // пользователя с включённым вторым фактором.
+  const { validateTotpKeyConfig } = await import('./lib/security/totp');
+  validateTotpKeyConfig();
+
   const { runStartupMaintenance } = await import('./lib/startup');
   runStartupMaintenance();
 }

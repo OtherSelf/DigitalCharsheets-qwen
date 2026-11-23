@@ -262,7 +262,7 @@ describe('cleanup hooks', () => {
       'share-delete-account',
       'test-pass-1234',
       'Share Delete',
-      'amber cobalt lantern',
+      'amber cobalt lantern silver ember frost',
     );
     const ownerUid = registered.user?.uid;
     expect(ownerUid).toBeTruthy();

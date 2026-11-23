@@ -39,7 +39,7 @@ test.describe(
             username,
             password,
             displayName: 'Policy DH2',
-            recoveryPhrase: 'amber cobalt lantern',
+            recoveryPhrase: 'amber cobalt lantern silver ember frost',
           },
         });
         expect([200, 201], 'регистрация аккаунта').toContain(
@@ -118,7 +118,7 @@ test.describe('блок опыта', { tag: '@plugin:dh2' }, () => {
         username,
         password,
         displayName: `XP ${systemId}`,
-        recoveryPhrase: 'amber cobalt lantern',
+        recoveryPhrase: 'amber cobalt lantern silver ember frost',
       },
     });
     expect([200, 201], 'регистрация аккаунта').toContain(registered.status());
@@ -195,7 +195,7 @@ test.describe('Безумие и Порча: плюс и минус', { tag: '@p
           username,
           password,
           displayName: 'Points DH2',
-          recoveryPhrase: 'amber cobalt lantern',
+          recoveryPhrase: 'amber cobalt lantern silver ember frost',
         },
       });
       expect([200, 201], 'регистрация аккаунта').toContain(registered.status());
@@ -260,7 +260,7 @@ test.describe('локации попаданий на мобильном', { tag
           username,
           password,
           displayName: 'Hits QA',
-          recoveryPhrase: 'amber cobalt lantern',
+          recoveryPhrase: 'amber cobalt lantern silver ember frost',
         },
       });
       expect([200, 201], 'регистрация аккаунта').toContain(registered.status());
@@ -301,7 +301,7 @@ test.describe(
             username,
             password,
             displayName: 'Resources QA',
-            recoveryPhrase: 'amber cobalt lantern',
+            recoveryPhrase: 'amber cobalt lantern silver ember frost',
           },
         });
         expect([200, 201], 'регистрация аккаунта').toContain(

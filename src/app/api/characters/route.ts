@@ -12,6 +12,7 @@ import {
   requireModuleAccess,
   resolveRequestedSystemId,
 } from '@/lib/module-access';
+import { QuotaExceededError } from '@/lib/quotas';
 import { readJsonObject } from '@/lib/security/payload';
 import {
   getCharactersFromServer,
@@ -131,6 +132,17 @@ export async function POST(request: Request) {
   }
 
   const character = prepared.character as unknown as Character;
-  await saveCharacterToServer(access.uid, character);
+  try {
+    await saveCharacterToServer(access.uid, character);
+  } catch (error) {
+    if (error instanceof QuotaExceededError) {
+      return jsonError(409, error.message, 'quota_exceeded', undefined, {
+        limit: error.reason,
+        sheets: error.usage.sheets,
+        bytes: error.usage.bytes,
+      });
+    }
+    throw error;
+  }
   return NextResponse.json(character, { status: 201 });
 }

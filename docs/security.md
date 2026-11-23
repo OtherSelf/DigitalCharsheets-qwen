@@ -99,7 +99,11 @@ src/lib (session, storage, auth)    ← path and format validation
    set the cookie.
 4. **Recovery phrase is a full-match secret.** Comparison is
    `normalize → compare all words`, never «any single word», and the stored
-   value is a hash.
+   value is a hash. Setting or changing it from a live session requires the
+   current password, so a stolen cookie alone cannot turn into a permanent
+   takeover through the recovery flow. New phrases need at least 6 words or 24
+   characters (max 256); the policy applies when a phrase is set, so existing
+   shorter phrases keep opening their accounts.
 5. **Paths derived from request data stay inside the data directory.** Every
    id matches `^[A-Za-z0-9_-]{1,64}$` and the resolved path is checked against
    its base directory.
@@ -145,9 +149,9 @@ Password hashing rules
   ([`src/lib/security/sessions.ts`](../src/lib/security/sessions.ts)), and
   `getSessionUid` accepts a cookie only while that record is alive.
 - Revocation is immediate and covers logout, password change, phrase change,
-  recovery (all sessions) and an administrator setting a new password. The
-  password change itself requires the current password — one live session is not
-  enough to take an unlocked device's account away.
+  recovery (all sessions) and an administrator setting a new password. Password
+  and recovery-phrase changes require the current password — one live session is
+  not enough to take an unlocked device's account away.
 - Session lifetime is 14 days. «Sign out everywhere» on `/settings` calls
   `POST /api/auth/logout` with `{ "all": true }` and revokes every session of the
   account.
@@ -189,9 +193,19 @@ window, so only failures count):
 | `POST /api/auth/recover/update` | 5 / 15 min | `429`, `Retry-After` |
 | `PUT /api/auth/profile`, `POST /api/auth/phrase` | 10 / 10 min | `429`, `Retry-After` |
 
-The client IP is taken from `x-forwarded-for` / `x-real-ip`; behind nginx the
-proxy must overwrite those headers, otherwise everyone shares one bucket.
-[api.md](api.md) lists the contract per endpoint.
+The limiter keeps a debounced snapshot in `<data-dir>/.state/rate-limit.json`, so
+a restart does not reset the windows. Logins and recovery also have a
+per-account counter without the IP: the IP bucket can be rotated, the account
+bucket cannot. When the in-memory map is full, new keys share an overflow bucket
+instead of evicting active ones (fail-closed).
+
+The client IP is the **last** `x-forwarded-for` hop: nginx overwrites the header
+with `$remote_addr`, so the value written by the proxy is the only trusted one
+and client-supplied entries cannot rotate the bucket. `x-real-ip` is trusted at
+the same boundary. Without the headers the key is `unknown` (one shared bucket,
+fail-closed). The application listens on loopback only; a direct exposure of the
+port makes the headers forgeable. [api.md](api.md) lists the contract per
+endpoint.
 
 ## Browser-side boundaries
 
@@ -199,14 +213,54 @@ Every response carries the headers from `next.config.ts`:
 
 | Header | Value | Why |
 | --- | --- | --- |
-| `Content-Security-Policy` | `default-src 'self'`, inline styles/scripts for Next, `object-src 'none'`, `base-uri 'self'`, `form-action 'self'`, `frame-ancestors 'none'` | XSS containment: no third-party script host, no plugin objects, no form posts elsewhere |
+| `Content-Security-Policy` | `default-src 'self'`, `script-src 'self' 'unsafe-inline'`, inline styles for Next, `object-src 'none'`, `base-uri 'self'`, `form-action 'self'`, `frame-ancestors 'none'` | No third-party script host, no plugin objects, no form posts elsewhere. `'unsafe-inline'` remains a documented residual risk (see below) |
 | `X-Frame-Options` | `DENY` | Clickjacking: the app cannot be embedded in someone else's page |
 | `X-Content-Type-Options` | `nosniff` | No MIME sniffing of uploads/responses |
 | `Referrer-Policy` | `strict-origin-when-cross-origin` | No full URL (and no sheet ids) leaks to external hosts |
 | `Permissions-Policy` | camera/microphone/geolocation/payment/usb disabled | The app needs none of them |
+| `X-Robots-Tag` on `/login` | `noindex, nofollow` | The sign-in page is useless in search results |
 | `X-Robots-Tag` on `/share/*` | `noindex, nofollow, noarchive` | The share token is in the URL; it must not enter search indexes |
 | `Cache-Control` on `/share/*` | `no-store` | Revocation takes effect immediately; no CDN/proxy copy of a sheet |
 | `Referrer-Policy` on `/share/*` | `no-referrer` | The token must not leak to an external host through a referer |
+
+### CSP: measured decision
+
+A strict nonce policy was prototyped in `proxy.ts` with `connection()` in the
+root layout (Next can only inject a per-request nonce into dynamically rendered
+pages). On the reference machine it made **every** page dynamic: p95 for `/` and
+`/login` grew from **6–10 ms to 21–22 ms** (about 2–3x), while the project has a
+performance budget. The nonce prototype was therefore not adopted:
+`script-src` keeps `'unsafe-inline'`.
+
+Residual risk: CSP does not contain inline script injection. Mitigations: React
+escapes all rendered values, there is no `dangerouslySetInnerHTML` in `src/`,
+the app has no third-party script hosts, and the session cookie is HttpOnly.
+`buildContentSecurityPolicy()` already supports a nonce; the decision is
+revisited if the rendering cost changes or the app starts rendering raw HTML.
+
+### Two-factor authentication
+
+TOTP (RFC 6238) is optional per account and implemented on `node:crypto`:
+30-second steps, 6 digits, a ±1 step window, and an anti-replay `lastStep`.
+The secret is encrypted with AES-256-GCM under `DCS_TOTP_KEY`; ten one-time
+backup codes are stored only as keyed hashes and shown once. Enrollment,
+disabling and backup-code regeneration require the current password, and a
+successful code (or backup code) is required after the password at sign-in.
+Recovery and an administrator password reset disable TOTP, so a lost device
+cannot lock the owner out permanently; losing `DCS_TOTP_KEY` makes existing
+secrets unreadable (backup codes do not depend on the secret, but their hashes
+do use the key).
+
+### CSRF and session cookie
+
+Mutations under `/api/*` pass through `src/proxy.ts` (`Origin` + `Sec-Fetch-Site`
+check); a foreign origin answers `403 csrf_origin`. Requests without those
+headers (curl, smoke, API clients) are allowed — they are not CSRF targets.
+`SameSite=Lax` stays as the second layer.
+
+The session cookie is `__Host-dcs_session` in production (`Secure`, `Path=/`, no
+`Domain`), the legacy `dcs_session` name is accepted for 14 days after the
+transition and cleared together with the new one.
 
 `X-Powered-By` is disabled (`poweredByHeader: false`) and the image optimizer is
 off (`images: { unoptimized: true }`): with no `next/image` in the app the
@@ -225,7 +279,7 @@ Secrets and where they live:
 | --- | --- | --- |
 | Session signing key | `DCS_SESSION_SECRET` or `<data-dir>/.session-secret` | Replace the value/file and restart: every cookie and every `sessions.json` record becomes unusable (users sign in again) |
 | Account passwords | `users/<uid>/user.json` (`passwordHash`) | `PUT /api/auth/profile` (current password required), recovery flow, or the administrator |
-| Recovery phrases | `users/<uid>/user.json` (`recoveryPhrase`) | Profile/phrase endpoints or the recovery flow (both rotate the hash and revoke other sessions) |
+| Recovery phrases | `users/<uid>/user.json` (`recoveryPhrase`) | Profile/phrase endpoints (current password required) or the recovery flow (both rotate the hash and revoke other sessions) |
 | Recovery tokens | `<data-dir>/tokens.json` | `recover/update` burns the used token; `revokeRecoveryTokensForUser` / password reset kills the rest; deleting the file is always safe |
 | Sessions | `<data-dir>/sessions.json` | Logout (`{ "all": true }`), password/phrase change, admin password change; deleting the file logs everyone out |
 | Share links | `<data-dir>/shares.json` (hashes only) | `DELETE /api/characters/{id}/share` (owner), deleting the sheet/account, or deleting the file revokes every link |

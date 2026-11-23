@@ -15,7 +15,7 @@ import { promisify } from 'util';
 
 const SCRYPT_PREFIX = 'scrypt';
 /** ~16 МБ памяти и ~50 мс на проверку — ощутимо для перебора, терпимо для входа. */
-const SCRYPT_N = 16384;
+const SCRYPT_N = 32768;
 const SCRYPT_R = 8;
 const SCRYPT_P = 1;
 const SCRYPT_MAXMEM = 64 * 1024 * 1024;
@@ -83,6 +83,21 @@ export function parseScryptHash(value: string): ParsedScryptHash | null {
   const hash = Buffer.from(hashB64, 'base64url');
   if (salt.length < 8 || hash.length < 16) return null;
   return { n, r, p, salt, hash };
+}
+
+/**
+ * Совпадают ли параметры хэша с текущими константами. Нужно для прозрачного
+ * перехеширования: после повышения N старые значения продолжают проверяться,
+ * но при первом успешном входе/проверке фразы перезаписываются.
+ */
+export function isCurrentScryptParams(stored: unknown): boolean {
+  const parsed = parseStoredHash(stored);
+  return (
+    !!parsed &&
+    parsed.n === SCRYPT_N &&
+    parsed.r === SCRYPT_R &&
+    parsed.p === SCRYPT_P
+  );
 }
 
 /** Разобрать сохранённое значение; `null` — не scrypt-хэш или битый формат. */

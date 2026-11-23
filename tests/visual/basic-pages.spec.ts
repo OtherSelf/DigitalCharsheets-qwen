@@ -1380,7 +1380,7 @@ test(
         username,
         password,
         displayName: 'Long Name',
-        recoveryPhrase: 'amber cobalt lantern',
+        recoveryPhrase: 'amber cobalt lantern silver ember frost',
       },
     });
     expect([200, 201], 'регистрация аккаунта').toContain(registered.status());
@@ -1519,7 +1519,7 @@ test.describe('вид листа: компактный и обычный', () =>
           username,
           password,
           displayName: 'Compact Dupes',
-          recoveryPhrase: 'amber cobalt lantern',
+          recoveryPhrase: 'amber cobalt lantern silver ember frost',
         },
       });
       expect([200, 201], 'регистрация аккаунта').toContain(registered.status());
@@ -1609,7 +1609,7 @@ test.describe('синхронизация между вкладками', () => 
         username,
         password,
         displayName: 'Cross Tab',
-        recoveryPhrase: 'amber cobalt lantern',
+        recoveryPhrase: 'amber cobalt lantern silver ember frost',
       },
     });
     expect([200, 201], 'регистрация аккаунта').toContain(registered.status());

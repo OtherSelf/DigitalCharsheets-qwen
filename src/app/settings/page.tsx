@@ -11,6 +11,7 @@ import { AppFrame } from '@/components/layout/app-frame';
 import { DeleteAccountCard } from '@/components/settings/delete-account-card';
 import { DisplaySettingsControls } from '@/components/settings/display-settings-controls';
 import { SessionsCard } from '@/components/settings/sessions-card';
+import { TotpCard } from '@/components/settings/totp-card';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -29,6 +30,7 @@ import { useLocalAuth } from '@/context/local-auth-context';
 import { useUISettings } from '@/hooks/use-ui-settings';
 import { safeInternalPath } from '@/lib/routes';
 import { MIN_PASSWORD_LENGTH } from '@/lib/security/password-policy';
+import { phrasePolicyError } from '@/lib/security/phrase-policy';
 
 export default function ProfileSettingsPage() {
   const { user, isUserLoading, restoreSession } = useLocalAuth();
@@ -47,6 +49,7 @@ export default function ProfileSettingsPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [recoveryPhrase, setRecoveryPhrase] = useState('');
+  const [currentPassword, setCurrentPassword] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -71,6 +74,17 @@ export default function ProfileSettingsPage() {
       return;
     }
 
+    const changesPassword = password.trim() !== '';
+    const changesPhrase = recoveryPhrase.trim() !== '';
+    if (changesPhrase && phrasePolicyError(recoveryPhrase)) {
+      setError(t('auth.phrasePolicy'));
+      return;
+    }
+    if ((changesPassword || changesPhrase) && !currentPassword) {
+      setError(t('settings.currentPasswordRequired'));
+      return;
+    }
+
     setIsSaving(true);
     try {
       const res = await fetch('/api/auth/profile', {
@@ -81,6 +95,10 @@ export default function ProfileSettingsPage() {
           newDisplayName: displayName,
           newPassword: password || undefined,
           newRecoveryPhrase: recoveryPhrase || undefined,
+          // Пароль нужен только при смене секрета: смена имени/логина его
+          // не требует.
+          currentPassword:
+            changesPassword || changesPhrase ? currentPassword : undefined,
         }),
       });
 
@@ -90,6 +108,7 @@ export default function ProfileSettingsPage() {
         setSuccess(t('settings.saved'));
         setPassword('');
         setRecoveryPhrase('');
+        setCurrentPassword('');
       } else {
         setError(data.error || t('settings.saveFailed'));
       }
@@ -197,12 +216,28 @@ export default function ProfileSettingsPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
+                <Label htmlFor="currentPassword">
+                  {t('settings.currentPassword')}
+                </Label>
+                <PasswordInput
+                  id="currentPassword"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  placeholder={t('settings.currentPasswordPlaceholder')}
+                  autoComplete="current-password"
+                />
+                <p className="text-muted-foreground text-xs">
+                  {t('settings.currentPasswordHint')}
+                </p>
+              </div>
+              <div className="space-y-2">
                 <Label htmlFor="password">{t('common.newPassword')}</Label>
                 <PasswordInput
                   id="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder={t('settings.leaveBlankToKeepCurrent')}
+                  autoComplete="new-password"
                 />
               </div>
               <Separator />
@@ -234,6 +269,8 @@ export default function ProfileSettingsPage() {
             </CardFooter>
           </Card>
         </form>
+
+        <TotpCard />
 
         <SessionsCard />
 

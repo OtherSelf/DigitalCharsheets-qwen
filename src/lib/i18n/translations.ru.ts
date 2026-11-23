@@ -189,6 +189,12 @@ export const ruTranslations: Record<string, string> = {
   'common.sheetUnavailable': 'Лист недоступен',
   'common.sheetUnavailableHint':
     'Плагин игры не смог отрисовать лист. Данные не потеряны — JSON-экспорт по-прежнему доступен.',
+  'common.quotaExceeded':
+    'Достигнут лимит хранилища аккаунта. Удалите листы или освободите место.',
+  'common.quotaExceededSheets':
+    'Достигнут лимит листов (100). Удалите лист, чтобы создать новый.',
+  'common.quotaExceededBytes':
+    'Достигнут лимит хранилища аккаунта (50 МиБ). Удалите листы или историю.',
   'common.saveFailed': 'Не удалось сохранить изменения',
   'common.saveFailedDesc':
     'Последние правки не попали на сервер. Проверьте соединение — отправка повторится автоматически.',
@@ -306,10 +312,22 @@ export const ruTranslations: Record<string, string> = {
   'auth.saveAndContinue': 'Сохранить и продолжить',
   'auth.changeRecoveryPhrase': 'Изменить фразу восстановления',
   'auth.phraseDesc':
-    'Эта фраза используется для восстановления вашей учетной записи, если вы забудете пароль. Сделайте ее запоминающейся! (например, "французский масляный дракон")',
+    'Эта фраза используется для восстановления вашей учетной записи, если вы забудете пароль. Нужно не меньше 6 слов или 24 символов (например, "французский масляный дракон серебряный янтарь мороз").',
   'auth.enterRecoveryPhrase': 'Введите вашу фразу восстановления',
-  'auth.phraseMinLength': 'Фраза должна содержать не менее 5 символов.',
+  'auth.phraseMinLength':
+    'Нужно не меньше 6 слов или 24 символов (максимум 256).',
+  'auth.phrasePolicy': 'Нужно не меньше 6 слов или 24 символов (максимум 256).',
   'auth.phraseUpdateFailed': 'Не удалось обновить фразу.',
+  'auth.totpCode': 'Код двухфакторной аутентификации',
+  'auth.totpCodePlaceholder': '6 цифр или резервный код',
+  'auth.totpRequired': 'Введите код из приложения-аутентификатора.',
+  'auth.totpInvalid': 'Код не подошёл. Попробуйте следующий.',
+  'auth.totpUnavailable':
+    'Двухфакторная аутентификация временно недоступна. Обратитесь к администратору.',
+  'auth.currentPassword': 'Текущий пароль',
+  'auth.currentPasswordPlaceholder': 'Введите текущий пароль',
+  'auth.currentPasswordRequired':
+    'Введите текущий пароль, чтобы задать фразу восстановления.',
   'auth.savePhrase': 'Сохранить фразу',
   'auth.login': 'Логин',
   'auth.phrase': 'Новая фраза восстановления',
@@ -353,7 +371,7 @@ export const ruTranslations: Record<string, string> = {
   'auth.enterUsernamePassword': 'Введите логин/email и пароль.',
   'auth.fillAllFields': 'Заполните все поля.',
   'auth.authPhraseMinLength':
-    'Фраза восстановления должна содержать не менее 5 символов.',
+    'Нужно не меньше 6 слов или 24 символов (максимум 256).',
   'auth.noAccountFound':
     'Аккаунт с таким логином не найден. Сначала создайте аккаунт.',
   'auth.accountExists':
@@ -373,7 +391,8 @@ export const ruTranslations: Record<string, string> = {
     'Код восстановления истёк. Проверьте фразу ещё раз.',
   'auth.recoverySuccess':
     'Данные для входа обновлены. Войдите с новым паролем.',
-  'auth.phraseExample': 'например, french butter dragon',
+  'auth.phraseExample':
+    'например, французский масляный дракон серебряный янтарь мороз',
   'auth.secureAccountTitle': 'Защитите аккаунт',
   'auth.secureAccountDesc':
     'Добро пожаловать! Настройте фразу восстановления, чтобы сохранить доступ к аккаунту, если забудете пароль.',
@@ -458,12 +477,36 @@ export const ruTranslations: Record<string, string> = {
   'settings.profileSettings': 'Настройки профиля',
   'settings.generalInformation': 'Общая информация',
   'settings.updateYourDisplayNameAndLogin': 'Обновить никнейм и логин',
+  'settings.twoFactor': 'Двухфакторная аутентификация',
+  'settings.twoFactorDesc':
+    'Требовать код из приложения-аутентификатора в дополнение к паролю.',
+  'settings.twoFactorEnabled': 'Включена',
+  'settings.twoFactorDisabled': 'Не включена',
+  'settings.twoFactorSetup': 'Настроить двухфакторную аутентификацию',
+  'settings.twoFactorSecretHint':
+    'Добавьте этот секрет в приложение-аутентификатор и введите текущий код.',
+  'settings.twoFactorEnable': 'Включить',
+  'settings.twoFactorDisable': 'Выключить',
+  'settings.twoFactorRegenerate': 'Новые резервные коды',
+  'settings.twoFactorBackupCodes': 'Резервные коды (показываются один раз)',
+  'settings.twoFactorBackupHint':
+    'Сохраните их офлайн: каждый код срабатывает один раз, если устройство потеряно.',
+  'settings.twoFactorUnavailable':
+    'Двухфакторная аутентификация не настроена на этой инсталляции.',
+  'settings.twoFactorInvalid': 'Код не подошёл.',
+  'settings.twoFactorRequired': 'Введите пароль и текущий код.',
   'settings.security': 'Безопасность',
   'settings.updatePasswordAndRecovery':
     'Обновите пароль и фразу для восстановления.',
   'settings.leaveBlankToKeepCurrent':
     'Оставьте пустым чтобы сохранить текущий пароль',
   'settings.updateRecoveryPhrase': 'Введите новую фразу для восстановления',
+  'settings.currentPassword': 'Текущий пароль',
+  'settings.currentPasswordPlaceholder': 'Введите текущий пароль',
+  'settings.currentPasswordHint':
+    'Нужен для смены пароля или фразы восстановления.',
+  'settings.currentPasswordRequired':
+    'Введите текущий пароль, чтобы сменить пароль или фразу восстановления.',
   'settings.saved': 'Настройки успешно сохранены!',
   'settings.saveFailed': 'Не удалось сохранить настройки.',
   'settings.displaySettings': 'Настройки отображения',

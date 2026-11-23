@@ -14,8 +14,10 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { PasswordInput } from '@/components/ui/password-input';
 import { useTranslation } from '@/context/language-context';
 import { useLocalAuth } from '@/context/local-auth-context';
+import { phrasePolicyError } from '@/lib/security/phrase-policy';
 
 /**
  * ─── LANDMARK: RECOVERY PHRASE SETUP ────────────────────────────────────────
@@ -33,6 +35,7 @@ export function RecoveryModal() {
   const { user, updateUserPhrase } = useLocalAuth();
 
   const [newRecoveryPhrase, setNewRecoveryPhrase] = useState('');
+  const [currentPassword, setCurrentPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [isOpen, setIsOpen] = useState(false);
@@ -49,6 +52,7 @@ export function RecoveryModal() {
   useEffect(() => {
     if (user) {
       setNewRecoveryPhrase('');
+      setCurrentPassword('');
       setError('');
       setHasShownModal(false);
     }
@@ -76,6 +80,7 @@ export function RecoveryModal() {
       setIsOpen(false);
       // Reopening must start from a clean draft, not the last attempt.
       setNewRecoveryPhrase('');
+      setCurrentPassword('');
       setError('');
 
       // Clean URL
@@ -90,8 +95,12 @@ export function RecoveryModal() {
     e.stopPropagation();
     setError('');
 
-    if (!newRecoveryPhrase || newRecoveryPhrase.trim().length < 5) {
-      setError(t('auth.phraseMinLength'));
+    if (phrasePolicyError(newRecoveryPhrase)) {
+      setError(t('auth.phrasePolicy'));
+      return;
+    }
+    if (!currentPassword) {
+      setError(t('auth.currentPasswordRequired'));
       return;
     }
 
@@ -100,7 +109,10 @@ export function RecoveryModal() {
       const res = await fetch('/api/auth/phrase', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phrase: newRecoveryPhrase }),
+        body: JSON.stringify({
+          phrase: newRecoveryPhrase,
+          currentPassword,
+        }),
       });
       const data = await res.json();
       if (data.success) {
@@ -109,6 +121,7 @@ export function RecoveryModal() {
         // The saved values are no longer a draft: drop them before the
         // modal can be opened again.
         setNewRecoveryPhrase('');
+        setCurrentPassword('');
         setError('');
 
         setTimeout(() => {
@@ -154,6 +167,23 @@ export function RecoveryModal() {
             />
             <p className="text-muted-foreground text-xs">
               {t('auth.phraseHint')}
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <label htmlFor="current-password" className="text-sm font-medium">
+              {t('auth.currentPassword')}
+            </label>
+            <PasswordInput
+              id="current-password"
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+              placeholder={t('auth.currentPasswordPlaceholder')}
+              autoComplete="current-password"
+              required
+            />
+            <p className="text-muted-foreground text-xs">
+              {t('auth.currentPasswordRequired')}
             </p>
           </div>
 

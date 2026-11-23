@@ -200,7 +200,7 @@ test.describe('login: вход, регистрация, восстановлен
       username: `ui-register-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
       password: 'visual-pass-1234',
       displayName: 'UI Register',
-      recoveryPhrase: 'amber cobalt lantern',
+      recoveryPhrase: 'amber cobalt lantern silver ember frost',
     };
 
     await registerViaUI(page, account);
@@ -245,7 +245,7 @@ test.describe('login: вход, регистрация, восстановлен
       username: `ui-delete-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
       password: 'visual-pass-1234',
       displayName: 'Delete Me',
-      recoveryPhrase: 'amber cobalt lantern',
+      recoveryPhrase: 'amber cobalt lantern silver ember frost',
     };
 
     await registerViaUI(page, account);
@@ -491,7 +491,7 @@ test.describe('общие страницы', () => {
           username,
           password,
           displayName: 'Review',
-          recoveryPhrase: 'amber cobalt lantern',
+          recoveryPhrase: 'amber cobalt lantern silver ember frost',
         },
       });
       expect([200, 201], 'регистрация аккаунта').toContain(registered.status());
@@ -623,7 +623,7 @@ test.describe('общие страницы', () => {
           username,
           password,
           displayName: 'Review Batch',
-          recoveryPhrase: 'amber cobalt lantern',
+          recoveryPhrase: 'amber cobalt lantern silver ember frost',
         },
       });
       expect([200, 201], 'регистрация аккаунта').toContain(registered.status());
@@ -707,7 +707,7 @@ test.describe('общие страницы', () => {
           username,
           password,
           displayName: 'Review Mobile',
-          recoveryPhrase: 'amber cobalt lantern',
+          recoveryPhrase: 'amber cobalt lantern silver ember frost',
         },
       });
       expect([200, 201], 'регистрация аккаунта').toContain(registered.status());

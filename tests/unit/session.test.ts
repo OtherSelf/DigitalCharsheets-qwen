@@ -10,9 +10,12 @@ import {
 } from '@/lib/security/sessions';
 import {
   clearSessionCookieHeader,
+  clearSessionCookieHeaders,
   createSession,
   parseCookieHeader,
+  readSession,
   SESSION_COOKIE,
+  SESSION_COOKIE_HOST,
   sessionCookieHeader,
   verifySession,
 } from '@/lib/session';
@@ -152,13 +155,35 @@ describe('cookie сессии: флаги', () => {
     expect(header).not.toMatch(/Secure/);
   });
 
-  it('в production Secure ставится по умолчанию, включая очистку', async () => {
+  it('в production ставит __Host-, Secure и чистит оба имени', async () => {
     vi.stubEnv('NODE_ENV', 'production');
 
-    expect(await sessionCookieHeader(UID)).toMatch(/; Secure/);
+    const header = await sessionCookieHeader(UID);
+    expect(header).toMatch(new RegExp(`^${SESSION_COOKIE_HOST}=`));
+    expect(header).toMatch(/; Secure/);
+    expect(header).not.toMatch(/Domain=/);
+    expect(header).toMatch(/Path=\//);
     expect(clearSessionCookieHeader()).toMatch(/; Secure/);
 
+    const cleared = clearSessionCookieHeaders();
+    expect(cleared).toHaveLength(2);
+    expect(cleared[0]).toMatch(new RegExp(`^${SESSION_COOKIE_HOST}=;`));
+    expect(cleared[1]).toMatch(new RegExp(`^${SESSION_COOKIE}=;`));
+
     vi.unstubAllEnvs();
+  });
+
+  it('принимает и новое, и старое имя cookie', async () => {
+    const session = await createSession(UID);
+    const withHost = new Request('http://localhost/api/auth/session', {
+      headers: { cookie: `${SESSION_COOKIE_HOST}=${session.value}` },
+    });
+    const withLegacy = new Request('http://localhost/api/auth/session', {
+      headers: { cookie: `${SESSION_COOKIE}=${session.value}` },
+    });
+
+    expect((await readSession(withHost))?.uid).toBe(UID);
+    expect((await readSession(withLegacy))?.uid).toBe(UID);
   });
 
   it('DCS_COOKIE_INSECURE=1 — осознанный opt-out для локальной разработки', async () => {

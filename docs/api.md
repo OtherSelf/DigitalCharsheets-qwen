@@ -32,7 +32,9 @@ Adding an endpoint without documenting it fails the unit tests.
 ## Authentication
 
 - `POST /api/auth` (login) and `POST /api/auth/register` set the
-  `dcs_session` cookie: `<uid>.<exp>.<jti>.<hmac>`, `HttpOnly; SameSite=Lax`,
+  session cookie: `__Host-dcs_session` in production (`dcs_session` is still
+  accepted for 14 days after the transition), `<uid>.<exp>.<jti>.<hmac>`,
+  `HttpOnly; SameSite=Lax`,
   `Secure` in production, 14 days. `jti` names a server-side session record, so
   logout and credential changes revoke the cookie immediately.
 - Send the cookie with every request that touches user data. The browser does
@@ -77,15 +79,19 @@ contract version in [`src/lib/openapi.ts`](../src/lib/openapi.ts)
 
 | Method | Path | Auth | Purpose |
 | --- | --- | --- | --- |
-| `POST` | `/api/auth` | — | Log in; unknown login and wrong password share one `401` (no account enumeration), blocked → 403, too many attempts → 429. Password length is not checked here. |
-| `POST` | `/api/auth/register` | — | Create an account with a recovery phrase and sign in; password policy 12–128 characters. |
+| `POST` | `/api/auth` | — | Log in; unknown login and wrong password share one `401` (no account enumeration), blocked → 403, too many attempts → 429. Password length is not checked here. With TOTP enabled, send `totpCode` (6 digits or a backup code); without it the answer is `401 totp_required`, with a wrong one `401 totp_invalid`. |
+| `POST` | `/api/auth/register` | — | Create an account with a recovery phrase and sign in; password policy 12–128 characters, recovery phrase at least 6 words or 24 characters (max 256). |
 | `POST` | `/api/auth/exists` | — | Check whether a login is taken (rate limited: 20 / 10 minutes per IP + login). |
 | `GET` | `/api/auth/session` | cookie | Current profile snapshot (role, block state, etc.). |
 | `GET` | `/api/games` | optional cookie | Games/editions visible to the current role; also the site-title override. |
 | `POST` | `/api/auth/logout` | optional cookie | Revoke the current session and clear the cookie. Body `{ "all": true }` revokes every session of the account («sign out everywhere»). |
-| `PUT` | `/api/auth/profile` | cookie | Update own login, display name, password, recovery phrase. Changing the password requires `currentPassword` (`403 invalid_password` otherwise) and revokes the account's other sessions. |
+| `PUT` | `/api/auth/profile` | cookie | Update own login, display name, password, recovery phrase. Changing the password or the recovery phrase requires `currentPassword` (`403 invalid_password` otherwise) and revokes the account's other sessions. |
 | `DELETE` | `/api/auth/profile` | cookie | Delete own account and all sheets; requires the current password. |
-| `POST` | `/api/auth/phrase` | cookie | Set own recovery phrase. |
+| `POST` | `/api/auth/phrase` | cookie | Set own recovery phrase; requires `currentPassword` (`403 invalid_password` otherwise). Revokes the account's other sessions. |
+| `POST` | `/api/auth/totp/setup` | cookie | Start TOTP enrollment; returns the base32 secret and `otpauth://` URI once. Requires `currentPassword`; `503` when `DCS_TOTP_KEY` is unset. |
+| `POST` | `/api/auth/totp/enable` | cookie | Confirm the code, enable TOTP and return ten backup codes once. Revokes other sessions. |
+| `POST` | `/api/auth/totp/disable` | cookie | Disable TOTP; requires `currentPassword` and a current TOTP/backup code. Revokes other sessions. |
+| `POST` | `/api/auth/totp/backup-codes` | cookie | Replace backup codes; requires `currentPassword`. Old codes stop working immediately. |
 | `POST` | `/api/auth/recover/verify` | — | Check the whole recovery phrase; on success return a single-use token (`{token, expiresAt}`). No session cookie is set. |
 | `POST` | `/api/auth/recover/update` | — | Exchange that token for a new password (and optionally a new phrase); the token is burned. |
 | `POST` | `/api/auth/recover` | — | Legacy alias of `recover/update`; requires a token. The old `username` + three-words body was removed because words from sheets do not prove account ownership. |
@@ -104,7 +110,14 @@ Recovery flow:
 
 Both endpoints are rate limited per IP + login: 5 attempts per 15 minutes, then
 `429` with `Retry-After`. Recovery phrases are stored as hashes, so neither a
-`user.json` copy nor the API response reveals them.
+`user.json` copy nor the API response reveals them. A new phrase must contain at
+least 6 words or 24 characters (max 256); existing shorter phrases keep working
+for sign-in and recovery, because the policy applies only when a phrase is set.
+
+Account quotas: each account may hold at most 100 character sheets and 50 MiB
+under `users/<uid>/` (including `history/`). Creating a sheet or growing past
+the limit answers `409 { reason: "quota_exceeded", limit: "sheets" | "bytes" }`.
+Accounts already over a limit keep read/save-without-growth access.
 
 ### Characters
 

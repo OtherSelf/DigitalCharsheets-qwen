@@ -116,7 +116,7 @@ export const openApiDocument = {
     description: [
       `REST API for Digital Character Sheets — ${GAME_TITLES.join(' and ')} sheets.`,
       '',
-      'Authentication uses the HttpOnly `dcs_session` cookie. Obtain it via',
+      'Authentication uses the HttpOnly `__Host-dcs_session` cookie in production (`dcs_session` is still accepted for 14 days after the transition). Obtain it via',
       '`POST /api/auth` (login) or `POST /api/auth/register`, then send it with',
       '`credentials: include` / the browser cookie jar.',
     ].join('\n'),
@@ -151,9 +151,9 @@ export const openApiDocument = {
       cookieAuth: {
         type: 'apiKey',
         in: 'cookie',
-        name: 'dcs_session',
+        name: '__Host-dcs_session',
         description:
-          'Signed HttpOnly session cookie `<uid>.<exp>.<jti>.<hmac>`, 14 days, `Secure` in production. Set only by /api/auth and /api/auth/register; revocation is server-side (logout, credential change, administrator action).',
+          'Signed HttpOnly session cookie `<uid>.<exp>.<jti>.<hmac>`, 14 days, `Secure` in production. Production uses the `__Host-` prefix; the legacy `dcs_session` name is accepted for 14 days after the transition. Set only by /api/auth and /api/auth/register; revocation is server-side (logout, credential change, administrator action).',
       },
     },
     parameters: {
@@ -274,6 +274,69 @@ export const openApiDocument = {
             type: 'string',
             description: 'Optional, only used if the account is created.',
           },
+          totpCode: {
+            type: 'string',
+            description:
+              'TOTP code or one-time backup code. Required when the account has two-factor authentication enabled; a missing code answers `401 totp_required`, a wrong one `401 totp_invalid`.',
+          },
+        },
+        additionalProperties: false,
+      },
+      TotpSetupRequest: {
+        type: 'object',
+        required: ['currentPassword'],
+        properties: { currentPassword: { type: 'string' } },
+        additionalProperties: false,
+      },
+      TotpSetupResponse: {
+        type: 'object',
+        required: ['success', 'secret', 'otpauthUri'],
+        properties: {
+          success: { type: 'boolean' },
+          secret: {
+            type: 'string',
+            description: 'Base32 secret, shown exactly once.',
+          },
+          otpauthUri: { type: 'string' },
+        },
+        additionalProperties: false,
+      },
+      TotpCodeRequest: {
+        type: 'object',
+        required: ['code'],
+        properties: {
+          code: { type: 'string', description: '6-digit TOTP code.' },
+        },
+        additionalProperties: false,
+      },
+      TotpDisableRequest: {
+        type: 'object',
+        required: ['currentPassword', 'code'],
+        properties: {
+          currentPassword: { type: 'string' },
+          code: {
+            type: 'string',
+            description: 'Current TOTP code or a backup code.',
+          },
+        },
+        additionalProperties: false,
+      },
+      TotpBackupCodesRequest: {
+        type: 'object',
+        required: ['currentPassword'],
+        properties: { currentPassword: { type: 'string' } },
+        additionalProperties: false,
+      },
+      TotpBackupCodesResponse: {
+        type: 'object',
+        required: ['success', 'backupCodes'],
+        properties: {
+          success: { type: 'boolean' },
+          backupCodes: {
+            type: 'array',
+            items: { type: 'string' },
+            description: 'Ten one-time codes, shown exactly once.',
+          },
         },
         additionalProperties: false,
       },
@@ -290,7 +353,7 @@ export const openApiDocument = {
               'Password policy: at least 12 characters. Stored as a salted scrypt hash.',
           },
           displayName: { type: 'string' },
-          recoveryPhrase: { type: 'string', minLength: 5 },
+          recoveryPhrase: ref('RecoveryPhrase'),
         },
         additionalProperties: false,
       },
@@ -621,13 +684,14 @@ export const openApiDocument = {
               'Password policy: at least 12 characters. Omit or send an empty string to keep the current password.',
           },
           newRecoveryPhrase: {
-            type: 'string',
-            description: 'Empty string removes the phrase.',
+            anyOf: [ref('RecoveryPhrase'), { const: '' }],
+            description:
+              'New phrase (at least 6 words or 24 characters, max 256). An empty string removes the phrase; both require `currentPassword`.',
           },
           currentPassword: {
             type: 'string',
             description:
-              'Required when `newPassword` is set: re-authentication before rotating the password.',
+              'Required when `newPassword` or `newRecoveryPhrase` is present (including an empty phrase that removes it): re-authentication before rotating account secrets.',
           },
         },
         additionalProperties: false,
@@ -638,10 +702,24 @@ export const openApiDocument = {
         properties: { password: { type: 'string' } },
         additionalProperties: false,
       },
+      RecoveryPhrase: {
+        type: 'string',
+        maxLength: 256,
+        anyOf: [{ minLength: 24 }, { pattern: '^\\s*\\S+(\\s+\\S+){5,}\\s*$' }],
+        description:
+          'At least 6 words or 24 characters (normalized: case and extra spaces ignored), at most 256 characters.',
+      },
       PhraseRequest: {
         type: 'object',
-        required: ['phrase'],
-        properties: { phrase: { type: 'string', minLength: 5 } },
+        required: ['phrase', 'currentPassword'],
+        properties: {
+          phrase: ref('RecoveryPhrase'),
+          currentPassword: {
+            type: 'string',
+            description:
+              'Current account password. One live session is not enough to rotate the recovery phrase.',
+          },
+        },
         additionalProperties: false,
       },
       RecoveryToken: {
@@ -656,9 +734,9 @@ export const openApiDocument = {
           token: ref('RecoveryToken'),
           newPassword: { type: 'string', minLength: 12, maxLength: 128 },
           newRecoveryPhrase: {
-            type: 'string',
-            minLength: 5,
-            description: 'Optional; when omitted the current phrase is kept.',
+            ...ref('RecoveryPhrase'),
+            description:
+              'Optional; when omitted the current phrase is kept. When present, must satisfy the phrase policy.',
           },
         },
         additionalProperties: false,
@@ -692,7 +770,7 @@ export const openApiDocument = {
         properties: {
           token: ref('RecoveryToken'),
           newPassword: { type: 'string', minLength: 12, maxLength: 128 },
-          newRecoveryPhrase: { type: 'string', minLength: 5 },
+          newRecoveryPhrase: ref('RecoveryPhrase'),
         },
         additionalProperties: false,
       },
@@ -942,7 +1020,7 @@ export const openApiDocument = {
         operationId: 'login',
         summary: 'Log in',
         description:
-          'Checks the password and sets the `dcs_session` cookie. Does not create accounts: unknown login returns 404.',
+          'Checks the password and sets the session cookie (`__Host-dcs_session` in production). Does not create accounts: unknown login returns 404.',
         security: [],
         requestBody: jsonBody(ref('LoginRequest')),
         responses: {
@@ -950,7 +1028,8 @@ export const openApiDocument = {
             ...jsonResponse('Session cookie set.', ref('AuthSessionResponse')),
             headers: {
               'Set-Cookie': {
-                description: '`dcs_session=<uid>.<exp>.<hmac>`',
+                description:
+                  '`__Host-dcs_session=<uid>.<exp>.<jti>.<hmac>` in production (legacy `dcs_session` accepted during the transition).',
                 schema: { type: 'string' },
               },
             },
@@ -1045,7 +1124,7 @@ export const openApiDocument = {
         operationId: 'updateProfile',
         summary: 'Update own profile',
         description:
-          'Changes login, display name, password and/or recovery phrase. A blank `newPassword` keeps the current password; a new password must satisfy the 12–128 character policy. Limited to 10 changes per 10 minutes.',
+          'Changes login, display name, password and/or recovery phrase. A blank `newPassword` keeps the current password; a new password must satisfy the 12–128 character policy. `currentPassword` is required when the password or the recovery phrase changes. Limited to 10 changes per 10 minutes.',
         requestBody: jsonBody(ref('ProfileUpdateRequest')),
         responses: {
           200: jsonResponse('Updated profile.', ref('AuthUserResponse')),
@@ -1078,13 +1157,101 @@ export const openApiDocument = {
         tags: ['Authentication'],
         operationId: 'setRecoveryPhrase',
         summary: 'Set own recovery phrase',
+        description:
+          'Sets the recovery phrase for the session owner. Requires the current account password: a stolen session cookie alone must not grant permanent account takeover through the recovery flow. Other sessions of the account are revoked; the current one stays.',
         requestBody: jsonBody(ref('PhraseRequest')),
         responses: {
           200: jsonResponse('Phrase saved.', ref('SimpleSuccess')),
           400: { $ref: '#/components/responses/BadRequest' },
           401: { $ref: '#/components/responses/Unauthorized' },
+          403: errorResponse('Current password is incorrect.'),
           429: { $ref: '#/components/responses/RateLimited' },
           500: { $ref: '#/components/responses/ServerError' },
+        },
+      },
+    },
+    '/api/auth/totp/setup': {
+      post: {
+        tags: ['Authentication'],
+        operationId: 'setupTotp',
+        summary: 'Start TOTP enrollment',
+        description:
+          'Requires the current password and returns the base32 secret and `otpauth://` URI exactly once. Answers `503 totp_unavailable` when `DCS_TOTP_KEY` is not configured.',
+        requestBody: jsonBody(ref('TotpSetupRequest')),
+        responses: {
+          200: jsonResponse('Secret generated.', ref('TotpSetupResponse')),
+          400: { $ref: '#/components/responses/BadRequest' },
+          401: { $ref: '#/components/responses/Unauthorized' },
+          403: errorResponse('Current password is incorrect.'),
+          409: errorResponse('Two-factor authentication is already enabled.'),
+          429: { $ref: '#/components/responses/RateLimited' },
+          503: errorResponse('DCS_TOTP_KEY is not configured.'),
+        },
+      },
+    },
+    '/api/auth/totp/enable': {
+      post: {
+        tags: ['Authentication'],
+        operationId: 'enableTotp',
+        summary: 'Confirm TOTP and get backup codes',
+        description:
+          'Verifies the current code, enables the second factor and returns ten one-time backup codes exactly once. Other sessions are revoked.',
+        requestBody: jsonBody(ref('TotpCodeRequest')),
+        responses: {
+          200: jsonResponse(
+            'Two-factor authentication enabled.',
+            ref('TotpBackupCodesResponse'),
+          ),
+          400: { $ref: '#/components/responses/BadRequest' },
+          401: { $ref: '#/components/responses/Unauthorized' },
+          403: errorResponse('Invalid two-factor code.'),
+          409: errorResponse('Start the setup first.'),
+          429: { $ref: '#/components/responses/RateLimited' },
+          503: errorResponse('DCS_TOTP_KEY is not configured.'),
+        },
+      },
+    },
+    '/api/auth/totp/disable': {
+      post: {
+        tags: ['Authentication'],
+        operationId: 'disableTotp',
+        summary: 'Disable TOTP',
+        description:
+          'Requires the current password and a valid TOTP or backup code; revokes other sessions.',
+        requestBody: jsonBody(ref('TotpDisableRequest')),
+        responses: {
+          200: jsonResponse(
+            'Two-factor authentication disabled.',
+            ref('SimpleSuccess'),
+          ),
+          400: { $ref: '#/components/responses/BadRequest' },
+          401: { $ref: '#/components/responses/Unauthorized' },
+          403: errorResponse('Invalid password or two-factor code.'),
+          409: errorResponse('Two-factor authentication is not enabled.'),
+          429: { $ref: '#/components/responses/RateLimited' },
+          503: errorResponse('DCS_TOTP_KEY is not configured.'),
+        },
+      },
+    },
+    '/api/auth/totp/backup-codes': {
+      post: {
+        tags: ['Authentication'],
+        operationId: 'regenerateTotpBackupCodes',
+        summary: 'Regenerate backup codes',
+        description:
+          'Requires the current password and replaces all existing backup codes.',
+        requestBody: jsonBody(ref('TotpBackupCodesRequest')),
+        responses: {
+          200: jsonResponse(
+            'New backup codes.',
+            ref('TotpBackupCodesResponse'),
+          ),
+          400: { $ref: '#/components/responses/BadRequest' },
+          401: { $ref: '#/components/responses/Unauthorized' },
+          403: errorResponse('Current password is incorrect.'),
+          409: errorResponse('Two-factor authentication is not enabled.'),
+          429: { $ref: '#/components/responses/RateLimited' },
+          503: errorResponse('DCS_TOTP_KEY is not configured.'),
         },
       },
     },
@@ -1205,6 +1372,9 @@ export const openApiDocument = {
           201: jsonResponse('Created sheet.', ref('Character')),
           400: { $ref: '#/components/responses/BadRequest' },
           401: { $ref: '#/components/responses/Unauthorized' },
+          409: errorResponse(
+            'Account quota exceeded: 100 sheets or 50 MiB of data.',
+          ),
           413: errorResponse('Request body exceeds 1 MiB.'),
         },
       },
@@ -1233,6 +1403,9 @@ export const openApiDocument = {
           400: { $ref: '#/components/responses/BadRequest' },
           401: { $ref: '#/components/responses/Unauthorized' },
           404: { $ref: '#/components/responses/NotFound' },
+          409: errorResponse(
+            'Account quota exceeded: 100 sheets or 50 MiB of data.',
+          ),
           413: errorResponse('Request body exceeds 1 MiB.'),
           500: { $ref: '#/components/responses/ServerError' },
         },

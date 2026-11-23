@@ -31,6 +31,7 @@ import { useTranslation } from '@/context/language-context';
 import { useLocalAuth } from '@/context/local-auth-context';
 import { PENDING_CHARACTER_KEY } from '@/lib/pending-draft';
 import { MIN_PASSWORD_LENGTH } from '@/lib/security/password-policy';
+import { phrasePolicyError } from '@/lib/security/phrase-policy';
 
 type AuthMode = 'login' | 'register' | 'recover';
 
@@ -53,6 +54,10 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [recoveryPhrase, setRecoveryPhrase] = useState('');
+  // Второй фактор запрашивается только после верного пароля: сервер отвечает
+  // `totp_required`, и форма показывает поле кода.
+  const [totpCode, setTotpCode] = useState('');
+  const [totpRequired, setTotpRequired] = useState(false);
 
   // Восстановление доступа: шаг 1 — проверка фразы, шаг 2 — новые пароль и
   // фраза. Токен из шага 1 живёт только в состоянии страницы: сессия на
@@ -77,6 +82,8 @@ export default function LoginPage() {
     setNewRecoveryPassword('');
     setNewRecoveryPhrase('');
     setRecoveryPhraseInput('');
+    setTotpCode('');
+    setTotpRequired(false);
   };
 
   const isFormLoading = isLoading;
@@ -130,8 +137,11 @@ export default function LoginPage() {
     ) {
       return t('auth.accountExists');
     }
-    if (/recovery phrase/i.test(result.error || '')) {
-      return t('auth.authPhraseMinLength');
+    if (
+      result.reason === 'invalid_phrase' ||
+      /recovery phrase/i.test(result.error || '')
+    ) {
+      return t('auth.phrasePolicy');
     }
     if (/4 characters/i.test(result.error || '')) {
       return t('common.passwordMinLength');
@@ -176,10 +186,26 @@ export default function LoginPage() {
       return;
     }
 
-    const result = await login(username, password);
+    const result = await login(
+      username,
+      password,
+      undefined,
+      totpCode.trim() || undefined,
+    );
 
     if (result.success) {
       afterSuccessfulLogin(result);
+    } else if (result.reason === 'totp_required') {
+      setTotpRequired(true);
+      setError(t('auth.totpRequired'));
+      setIsLoading(false);
+    } else if (result.reason === 'totp_invalid') {
+      setTotpRequired(true);
+      setError(t('auth.totpInvalid'));
+      setIsLoading(false);
+    } else if (result.reason === 'totp_unavailable') {
+      setError(t('auth.totpUnavailable'));
+      setIsLoading(false);
     } else {
       setError(mapLoginError(result));
       setIsLoading(false);
@@ -199,8 +225,8 @@ export default function LoginPage() {
       setError(t('common.passwordMinLength'));
       return;
     }
-    if (recoveryPhrase.trim().length < 5) {
-      setError(t('auth.authPhraseMinLength'));
+    if (phrasePolicyError(recoveryPhrase)) {
+      setError(t('auth.phrasePolicy'));
       return;
     }
 
@@ -282,8 +308,8 @@ export default function LoginPage() {
       setError(t('common.passwordMinLength'));
       return;
     }
-    if (newRecoveryPhrase.trim().length < 5) {
-      setError(t('auth.phraseMinLength'));
+    if (phrasePolicyError(newRecoveryPhrase)) {
+      setError(t('auth.phrasePolicy'));
       return;
     }
 
@@ -446,6 +472,28 @@ export default function LoginPage() {
                       className="h-10"
                     />
                   </div>
+
+                  {totpRequired && (
+                    <div className="space-y-2">
+                      <label
+                        htmlFor="auth-totp"
+                        className="flex items-center gap-2 text-sm font-medium"
+                      >
+                        <KeyRound className="text-muted-foreground h-4 w-4" />
+                        {t('auth.totpCode')}
+                      </label>
+                      <Input
+                        id="auth-totp"
+                        value={totpCode}
+                        onChange={(e) => setTotpCode(e.target.value)}
+                        placeholder={t('auth.totpCodePlaceholder')}
+                        autoComplete="one-time-code"
+                        inputMode="numeric"
+                        required
+                        className="h-10"
+                      />
+                    </div>
+                  )}
 
                   <div className="flex items-center justify-between">
                     <Button

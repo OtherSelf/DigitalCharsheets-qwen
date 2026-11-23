@@ -162,7 +162,7 @@ describe('сессии: отзыв и повторная аутентифика�
       await recoverVerifyRoute(
         json({
           username: 'recover-revoke',
-          recoveryPhrase: 'amber cobalt lantern',
+          recoveryPhrase: 'amber cobalt lantern silver ember frost',
         }),
       )
     ).json();

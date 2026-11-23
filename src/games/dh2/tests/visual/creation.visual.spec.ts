@@ -559,7 +559,7 @@ test.describe(
         username,
         password: 'visual-pass-1234',
         displayName: 'Guest DH2',
-        recoveryPhrase: 'amber cobalt lantern',
+        recoveryPhrase: 'amber cobalt lantern silver ember frost',
       });
 
       await page.waitForURL(

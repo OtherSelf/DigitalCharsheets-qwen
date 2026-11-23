@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { jsonError } from '@/lib/api/respond';
 import { passwordPolicyError } from '@/lib/security/password';
 import { readAuthJson } from '@/lib/security/payload';
+import { phrasePolicyError } from '@/lib/security/phrase-policy';
 import {
   getAuthRateLimiter,
   rateLimitKey,
@@ -59,11 +60,12 @@ export async function POST(request: Request) {
       return jsonError(400, policyError, 'invalid_input');
     }
 
-    if (
-      typeof recoveryPhrase !== 'string' ||
-      recoveryPhrase.trim().length < 5
-    ) {
-      return jsonError(400, 'Recovery phrase must be at least 5 characters.');
+    if (typeof recoveryPhrase !== 'string') {
+      return jsonError(400, 'Recovery phrase is required.', 'invalid_phrase');
+    }
+    const phraseError = phrasePolicyError(recoveryPhrase);
+    if (phraseError) {
+      return jsonError(400, phraseError, 'invalid_phrase');
     }
 
     const result = await registerUser(

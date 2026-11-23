@@ -32,6 +32,13 @@ import { readStoredUser } from './user-schema';
  */
 
 export const SESSION_COOKIE = 'dcs_session';
+/**
+ * Production-имя с префиксом `__Host-`: браузер гарантирует, что такую cookie
+ * поставил только текущий origin (Secure, Path=/, без Domain), поэтому
+ * поддомен не может её перезаписать. Старое имя читается ещё 14 дней, чтобы
+ * переход не разлогинивал пользователей.
+ */
+export const SESSION_COOKIE_HOST = '__Host-dcs_session';
 const SESSION_TTL_SECONDS = 14 * 24 * 60 * 60;
 
 interface CachedSecret {
@@ -176,7 +183,14 @@ export async function readSession(
   request: Request,
 ): Promise<VerifiedSession | null> {
   const cookies = parseCookieHeader(request.headers.get('cookie'));
-  return verifySession(cookies[SESSION_COOKIE]);
+  // Новое имя приоритетнее; старое принимается 14 дней после перехода.
+  for (const name of [SESSION_COOKIE_HOST, SESSION_COOKIE]) {
+    const value = cookies[name];
+    if (!value) continue;
+    const session = await verifySession(value);
+    if (session) return session;
+  }
+  return null;
 }
 
 /**
@@ -219,11 +233,16 @@ function cookieSecureFlag(): boolean {
   return process.env.NODE_ENV === 'production';
 }
 
+/** Имя сессионной cookie для текущего окружения. */
+export function sessionCookieName(): string {
+  return cookieSecureFlag() ? SESSION_COOKIE_HOST : SESSION_COOKIE;
+}
+
 /** Заголовок Set-Cookie, который ставит сессию после входа. */
 export async function sessionCookieHeader(uid: string): Promise<string> {
   const { value, maxAge } = await createSession(uid);
   const parts = [
-    `${SESSION_COOKIE}=${value}`,
+    `${sessionCookieName()}=${value}`,
     'Path=/',
     'HttpOnly',
     'SameSite=Lax',
@@ -233,15 +252,25 @@ export async function sessionCookieHeader(uid: string): Promise<string> {
   return parts.join('; ');
 }
 
-/** Заголовок Set-Cookie, который стирает сессию при выходе. */
-export function clearSessionCookieHeader(): string {
-  const parts = [
-    `${SESSION_COOKIE}=`,
-    'Path=/',
-    'HttpOnly',
-    'SameSite=Lax',
-    'Max-Age=0',
-  ];
+/** Значение Set-Cookie, стирающее одну сессионную cookie. */
+function clearCookieValue(name: string): string {
+  const parts = [`${name}=`, 'Path=/', 'HttpOnly', 'SameSite=Lax', 'Max-Age=0'];
   if (cookieSecureFlag()) parts.push('Secure');
   return parts.join('; ');
+}
+
+/** Заголовок Set-Cookie, который стирает текущую сессию при выходе. */
+export function clearSessionCookieHeader(): string {
+  return clearCookieValue(sessionCookieName());
+}
+
+/**
+ * Заголовки очистки обеих сессионных cookie: новое имя и переходное старое.
+ * Массив, потому что несколько `Set-Cookie` нельзя склеивать запятой.
+ */
+export function clearSessionCookieHeaders(): string[] {
+  return [
+    clearCookieValue(SESSION_COOKIE_HOST),
+    clearCookieValue(SESSION_COOKIE),
+  ];
 }

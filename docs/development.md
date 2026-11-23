@@ -134,7 +134,7 @@ nobody imports. It also keeps two ratchets: every allowlist entry needs a
 Deliberate exclusions — entry points and vendored code, not dead code:
 
 - Next entry points: `src/app/**`, `src/instrumentation.ts`,
-  `src/middleware.ts`;
+  `src/proxy.ts` (Next 16; middleware переименован);
 - plugin entry files (`games/<id>/{index,ui,sheet,create-form}`) and any
   `<file>#<export>` target named by `plugin.json`;
 - files marked `AUTO-GENERATED` (DH2 rule data is written by

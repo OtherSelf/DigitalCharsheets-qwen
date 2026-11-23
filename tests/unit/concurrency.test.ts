@@ -108,7 +108,7 @@ describe('параллельные аккаунты', () => {
           'race-register@example.test',
           'pass-one-1234',
           'Race',
-          'alpha beta gamma',
+          'alpha beta gamma delta epsilon zeta',
         ),
       ),
     );

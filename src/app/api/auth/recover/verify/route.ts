@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { jsonError } from '@/lib/api/respond';
 import { readAuthJson } from '@/lib/security/payload';
 import {
+  accountRateLimitKey,
   getAuthRateLimiter,
   rateLimitKey,
   RECOVERY_RATE_LIMIT,
@@ -50,13 +51,25 @@ export async function POST(request: Request) {
     // Успешная проверка сбрасывает счётчик: окно считает неудачные попытки,
     // а не любые.
     const verifyKey = rateLimitKey('recover-verify', request, username);
-    const limiter = getAuthRateLimiter().check(verifyKey, RECOVERY_RATE_LIMIT);
+    const accountKey = accountRateLimitKey('recover-verify', username);
+    const authLimiter = getAuthRateLimiter();
+    const limiter = authLimiter.check(verifyKey, RECOVERY_RATE_LIMIT);
     if (!limiter.allowed) {
       return jsonError(
         429,
         'Too many recovery attempts. Try again later.',
         'rate_limited',
         { 'Retry-After': String(limiter.retryAfterSeconds) },
+      );
+    }
+    // Второй эшелон на аккаунт: ротация IP не должна обходить лимит.
+    const accountLimiter = authLimiter.check(accountKey, RECOVERY_RATE_LIMIT);
+    if (!accountLimiter.allowed) {
+      return jsonError(
+        429,
+        'Too many recovery attempts. Try again later.',
+        'rate_limited',
+        { 'Retry-After': String(accountLimiter.retryAfterSeconds) },
       );
     }
 
@@ -78,7 +91,8 @@ export async function POST(request: Request) {
       return jsonError(400, 'Recovery verification failed.', 'recovery_failed');
     }
 
-    getAuthRateLimiter().reset(verifyKey);
+    authLimiter.reset(verifyKey);
+    authLimiter.reset(accountKey);
 
     const { token, expiresAt } = await issueRecoveryToken(result.user.uid);
     return NextResponse.json({ success: true, token, expiresAt });

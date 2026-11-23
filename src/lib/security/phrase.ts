@@ -1,3 +1,4 @@
+import { normalizePhrase } from './phrase-policy';
 import {
   hashSecretAsync,
   isScryptHash,
@@ -5,6 +6,8 @@ import {
   verifySecretHashAsync,
 } from './scrypt';
 import { safeStringEqual } from './timing';
+
+export { normalizePhrase, normalizePhraseWords } from './phrase-policy';
 
 /**
  * ─── LANDMARK: RECOVERY PHRASE ──────────────────────────────────────────────
@@ -21,22 +24,6 @@ import { safeStringEqual } from './timing';
  * разбиение по пробелам работают для кириллицы и латиницы одинаково, в отличие
  * от `\b`-регулярки, которая на кириллице не срабатывала.
  */
-
-/** Слова фразы в каноническом виде. */
-export function normalizePhraseWords(phrase: unknown): string[] {
-  if (typeof phrase !== 'string') return [];
-  return phrase
-    .toLowerCase()
-    .normalize('NFC')
-    .trim()
-    .split(/\s+/)
-    .filter((word) => word.length > 0);
-}
-
-/** Каноническая строка фразы: слова через один пробел. */
-export function normalizePhrase(phrase: unknown): string {
-  return normalizePhraseWords(phrase).join(' ');
-}
 
 /** Похоже ли значение на хэш фразы (а не на старый открытый текст). */
 export function isRecoveryPhraseHash(value: unknown): value is string {

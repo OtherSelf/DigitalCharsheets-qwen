@@ -83,7 +83,7 @@ async function registerTempAccount(
       username,
       password,
       displayName: label,
-      recoveryPhrase: 'amber cobalt lantern',
+      recoveryPhrase: 'amber cobalt lantern silver ember frost',
     },
   });
   expect([200, 201], 'регистрация аккаунта').toContain(registered.status());

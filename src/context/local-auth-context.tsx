@@ -110,6 +110,7 @@ interface LocalAuthContextType {
     username: string,
     password: string,
     displayName?: string,
+    totpCode?: string,
   ) => Promise<LoginResult>;
   register: (
     username: string,
@@ -211,10 +212,11 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
       username: string,
       password: string,
       displayName?: string,
+      totpCode?: string,
     ): Promise<LoginResult> => {
       const auth = await postAuth(
         '/api/auth',
-        { username, password, displayName },
+        { username, password, displayName, totpCode },
         'login',
       );
       if (!auth.ok) return auth.result;

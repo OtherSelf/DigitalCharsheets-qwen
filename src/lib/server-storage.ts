@@ -13,6 +13,7 @@ import { withDataLock, withSheetLock } from './data-lock';
 import { writeJsonAtomic } from './fs-atomic';
 import { diffCharacterRecords } from './history-diff';
 import { isUid } from './ids';
+import { enforceCharacterQuota } from './quotas';
 import { readThroughCache } from './read-cache';
 import { resolveCharacterFile } from './security/paths';
 import { revokeShareForCharacter } from './shares';
@@ -270,8 +271,10 @@ export async function saveCharacterToServer(
   }
   await ensureCharactersDir(userId);
   let existed = true;
+  let currentBytes = 0;
   try {
-    await fs.stat(filePath);
+    const stat = await fs.stat(filePath);
+    currentBytes = stat.size;
   } catch {
     existed = false;
   }
@@ -283,6 +286,13 @@ export async function saveCharacterToServer(
   const derived = applyCharacterDerive(
     normalized as unknown as Record<string, unknown>,
   );
+  // Квота проверяется до записи: новый лист или рост объёма сверх лимита
+  // получают 409, а существующее превышение можно править без роста.
+  await enforceCharacterQuota(userId, {
+    isNewSheet: !existed,
+    currentFileBytes: currentBytes,
+    nextFileBytes: Buffer.byteLength(JSON.stringify(derived), 'utf8'),
+  });
   await withSheetLock(sheetLockKey(userId, character.id), () =>
     writeJsonAtomic(filePath, derived as unknown as Character),
   );
@@ -387,6 +397,12 @@ export async function updateCharacterOnServer(
       if (!withOwner.userId) {
         withOwner.userId = userId;
       }
+
+      await enforceCharacterQuota(userId, {
+        isNewSheet: false,
+        currentFileBytes: Buffer.byteLength(content, 'utf8'),
+        nextFileBytes: Buffer.byteLength(JSON.stringify(derived), 'utf8'),
+      });
 
       await writeJsonAtomic(filePath, derived);
       invalidateCharacterList(userId);

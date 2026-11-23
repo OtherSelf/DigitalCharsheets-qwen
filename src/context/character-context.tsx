@@ -330,11 +330,14 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
       settleMs: SAVE_SETTLE_MS,
       maxAttempts: SAVE_MAX_ATTEMPTS,
       retryDelayMs: SAVE_RETRY_DELAY_MS,
-      onError: () => {
+      onError: (_id, _data, status) => {
         toastRef.current({
           variant: 'destructive',
           title: tRef.current('common.saveFailed'),
-          description: tRef.current('common.saveFailedDesc'),
+          description:
+            status === 409
+              ? tRef.current('common.quotaExceeded')
+              : tRef.current('common.saveFailedDesc'),
         });
       },
     });
@@ -630,6 +633,24 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
   const isCompactView = isSmallScreen || userPrefersCompact;
   const toggleCompactView = () => setUserPrefersCompact((prev) => !prev);
 
+  const quotaToast = useCallback(
+    async (res: Response): Promise<boolean> => {
+      if (res.status !== 409) return false;
+      const body = await res.json().catch(() => null);
+      const key =
+        body?.limit === 'sheets'
+          ? 'common.quotaExceededSheets'
+          : 'common.quotaExceededBytes';
+      toast({
+        variant: 'destructive',
+        title: t('common.error'),
+        description: t(key),
+      });
+      return true;
+    },
+    [toast, t],
+  );
+
   const addCharacter = useCallback(
     async (characterData: Omit<Character, 'id' | 'userId'>) => {
       if (!user) {
@@ -649,6 +670,7 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
           body: JSON.stringify(characterData),
         });
         if (!res.ok) {
+          if (await quotaToast(res)) return undefined;
           throw new Error(`Failed to create character: HTTP ${res.status}`);
         }
         const newCharacter: Character = await res.json();
@@ -664,7 +686,7 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
         return undefined;
       }
     },
-    [user, toast, t, router, applyCharacters],
+    [user, toast, t, router, applyCharacters, quotaToast],
   );
 
   const updateCharacter = useCallback(
@@ -735,6 +757,7 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
         body: JSON.stringify(draft),
       });
       if (!res.ok) {
+        if (await quotaToast(res)) return;
         throw new Error(`Failed to create character: HTTP ${res.status}`);
       }
       const newCharacter: Character = await res.json();
@@ -751,7 +774,7 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
         description: t('io.failedToCreateCharacter'),
       });
     }
-  }, [user, applyCharacters, router, toast, t]);
+  }, [user, applyCharacters, router, toast, t, quotaToast]);
 
   const discardPendingDraft = useCallback(() => {
     removeSession(PENDING_CHARACTER_KEY);

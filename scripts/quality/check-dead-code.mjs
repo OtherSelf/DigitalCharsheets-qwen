@@ -60,14 +60,20 @@ const DEFAULT_ROOT = path.resolve(HERE, '../..');
  * копиям-симам (`STAT_UPGRADE_STEP`, `statTotal`, `TRAINING_KEYS`) добавилось
  * видимое использование. Новый тест-сим — осознанное изменение: удалить
  * прод-мёртвое или поднять потолок в том же коммите.
+ *
+ * 93 — осознанное повышение в SEC2: лимитер-снапшот, квоты, CSP/CSRF и TOTP
+ * проверяются юнитами через те же экспорты, которыми пользуется рантайм.
+ * Прод-мёртвых экспортов в этих модулях нет; новые имена не должны тянуть
+ * потолок дальше без такой же причины.
  */
-export const TEST_ONLY_MAX = 81;
+export const TEST_ONLY_MAX = 93;
 
 /** Файлы, которые Next или генератор вызывает сам, а не по импорту. */
 const ENTRY_PATTERNS = [
   /^src\/app\//,
   /^src\/instrumentation\.ts$/,
   /^src\/middleware\.ts$/,
+  /^src\/proxy\.ts$/,
   /^src\/games\/[^/]+\/(index|ui|sheet|create-form)\.(ts|tsx)$/,
   /\.generated\.ts$/,
 ];

@@ -125,7 +125,7 @@ describe('openApiDocument', () => {
       {
         type: 'apiKey',
         in: 'cookie',
-        name: 'dcs_session',
+        name: '__Host-dcs_session',
       },
     );
     expect(Object.keys(openApiDocument.paths).length).toBeGreaterThan(10);

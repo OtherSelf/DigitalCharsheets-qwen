@@ -127,7 +127,7 @@ that form now answer `404`.
 
 ```
 Browser
-  │  cookie: dcs_session=<uid>.<exp>.<jti>.<hmac>
+  │  cookie: __Host-dcs_session=<uid>.<exp>.<jti>.<hmac>
   ▼
 Next.js route handler
   │  getSessionUid(request)  → verifies HMAC + expiry, reads user.json

@@ -38,6 +38,8 @@ files are served from a process-local cache (see
   shares.json                   read-only share links (hashed tokens)
   .session-secret               HMAC key for session cookies (0600)
   .lock/                        short-lived directory mutex
+  .state/
+    rate-limit.json             debounced auth rate-limit snapshot
   .initial-admin.txt            generated bootstrap admin (0600, optional)
 ```
 
@@ -45,19 +47,19 @@ files are served from a process-local cache (see
 renaming an account only rewrites `user.json` and the index entry — the
 directory and sheets stay where they are.
 
-## `user.json` (schema v4)
+## `user.json` (schema v5)
 
 ```json
 {
-  "schemaVersion": 4,
+  "schemaVersion": 5,
   "uid": "9d1f0d4e-2c0f-4b5e-9f8a-4a1b2c3d4e5f",
   "username": "hero@example.com",
   "displayName": "Hero",
-  "passwordHash": "scrypt$16384$8$1$<salt>$<hash>",
+  "passwordHash": "scrypt$32768$8$1$<salt>$<hash>",
   "role": "user",
   "isBlocked": false,
   "lastLoginAt": "2026-01-01T00:00:00.000Z",
-  "recoveryPhrase": "scrypt$16384$8$1$<salt>$<hash>",
+  "recoveryPhrase": "scrypt$32768$8$1$<salt>$<hash>",
   "createdAt": "2026-01-01T00:00:00.000Z",
   "updatedAt": "2026-01-01T00:00:00.000Z"
 }
@@ -75,6 +77,8 @@ directory and sheets stay where they are.
 | `lastLoginAt` | Updated on successful login; absent before the first login. |
 | `mustChangePassword` | Present only for the bootstrap admin; removed after a password change. |
 | `recoveryPhrase` | Salted `scrypt` hash of the normalized phrase (`src/lib/security/phrase.ts`). The phrase itself is never stored; older plaintext values are re-hashed on the first successful verification and by the startup pass. |
+| `totp` | Optional second factor: `{ secret, enabledAt?, lastStep? }`. `secret` is AES-256-GCM ciphertext (`v1.<iv>.<tag>.<cipher>`) keyed by `DCS_TOTP_KEY` with the uid as AAD; `enabledAt` is absent while enrollment is pending; `lastStep` blocks code replay. |
+| `totpBackupCodes` | Keyed hashes of up to ten one-time backup codes; the codes themselves are shown once and never stored. |
 | `createdAt`/`updatedAt` | ISO timestamps; missing values are filled from file mtime. |
 | `originalFirebaseId` | Present only on accounts imported from the old Firebase export. |
 
@@ -362,6 +366,25 @@ creation/menus, not to reading or exporting existing sheets.
 It is safe to delete: `resolveLogin()` rebuilds it by scanning
 `users/*/user.json`. Mutations happen under the data-dir lock. `user.json`
 remains the source of truth if the index write fails.
+
+## Account limits
+
+Each account is capped at **100 character sheets** and **50 MiB** of data under
+`users/<uid>/`, including `history/` (it grows on every save and would otherwise
+bypass the limit). Checks live in [`src/lib/quotas.ts`](../src/lib/quotas.ts) and
+run before a sheet is written; the API answers `409 quota_exceeded` with
+`limit: "sheets" | "bytes"`.
+
+Accounts that already exceed a limit (created before the cap) are grandfathered:
+reading and saving without growing the total still work, but creating a new
+sheet or growing past the limit returns `409`. Deleting sheets or history frees
+the quota immediately.
+
+`.state/rate-limit.json` is ephemeral operational state, not account data: it
+stores the debounced sliding-window history so a restart does not reset the
+auth limiter. Restoring an old copy at worst restores old counters; losing it
+only resets the windows. The file is written atomically without the global data
+lock, at most about once per second.
 
 ## Write safety
 

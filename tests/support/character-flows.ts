@@ -24,7 +24,7 @@ export const CHARACTERS_URL = 'http://localhost/api/characters';
 export const EXPORT_URL = 'http://localhost/api/export';
 
 export const PASSWORD = 'secret-pass-1234';
-export const RECOVERY_PHRASE = 'amber cobalt lantern';
+export const RECOVERY_PHRASE = 'amber cobalt lantern silver ember frost';
 
 export const jsonRequest = (
   url: string,

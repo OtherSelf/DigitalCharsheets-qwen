@@ -80,10 +80,16 @@ export async function readThroughCache<T>(
     value = null;
   }
 
-  // Пока читали, файл мог измениться: подпись берём после чтения, но значение
-  // относится к прочитанному тексту. Следующее чтение сверит подпись ещё раз.
-  const after = (await statOrNull(filePath)) ?? before;
-  cache.set(filePath, { signature: signature(after), value });
+  // Пока читали, файл мог измениться. Значение относится к ПРОЧИТАННОМУ
+  // тексту, поэтому кэшировать его с новой подписью нельзя: следующее чтение
+  // приняло бы устаревшее значение за свежее (отозванная сессия, блокировка).
+  // Если подпись не совпала — значение возвращаем, но не кэшируем.
+  const after = await statOrNull(filePath);
+  if (after && signature(after) === beforeSignature) {
+    cache.set(filePath, { signature: beforeSignature, value });
+  } else {
+    cache.delete(filePath);
+  }
   return value;
 }
 

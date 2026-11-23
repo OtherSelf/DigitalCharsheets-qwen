@@ -10,7 +10,7 @@ import {
 import { revokeAllSessionsForUser } from '@/lib/security/sessions';
 import { deleteUserAccount, updateUserProfile } from '@/lib/server-auth';
 import {
-  clearSessionCookieHeader,
+  clearSessionCookieHeaders,
   getSessionUid,
   readSession,
 } from '@/lib/session';
@@ -149,7 +149,9 @@ export async function DELETE(request: Request) {
 
     const response = NextResponse.json({ success: true });
     // Сессия больше не нужна: профиля нет, cookie стираем сразу.
-    response.headers.set('Set-Cookie', clearSessionCookieHeader());
+    for (const header of clearSessionCookieHeaders()) {
+      response.headers.append('Set-Cookie', header);
+    }
     return response;
   } catch (error) {
     console.error('Account deletion error:', error);

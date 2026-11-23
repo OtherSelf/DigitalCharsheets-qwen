@@ -5,7 +5,6 @@
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { POST as phraseRoute } from '@/app/api/auth/phrase/route';
 import { POST as recoverRoute } from '@/app/api/auth/recover/route';
 import { POST as recoverUpdateRoute } from '@/app/api/auth/recover/update/route';
 import { POST as recoverVerifyRoute } from '@/app/api/auth/recover/verify/route';
@@ -59,7 +58,7 @@ describe('recovery-роуты (SEC-1, SEC-4)', () => {
 
   async function userWithPhrase(
     username = 'recover-api',
-    phrase = 'amber cobalt lantern',
+    phrase = 'amber cobalt lantern silver ember frost',
   ) {
     const uid = await createUser(username);
     expect(await setRecoveryPhrase(uid, phrase)).toBe(true);
@@ -69,39 +68,13 @@ describe('recovery-роуты (SEC-1, SEC-4)', () => {
   const storedPhrase = (uid: string) =>
     readJson(userPaths(dataDir, uid).userFile).recoveryPhrase;
 
-  it('/api/auth/phrase без сессии — 401', async () => {
-    await userWithPhrase();
-    const res = await phraseRoute(json({ phrase: 'Alpha Beta' }));
-    expect(res.status).toBe(401);
-  });
-
-  it('/api/auth/phrase сохраняет фразу хэшем текущему пользователю', async () => {
-    const uid = await createUser();
-    const res = await phraseRoute(
-      json({ phrase: 'Alpha Beta' }, await sessionHeaders(uid)),
-    );
-
-    expect(res.status).toBe(200);
-    expect((await res.json()).success).toBe(true);
-    const stored = storedPhrase(uid);
-    expect(isRecoveryPhraseHash(stored)).toBe(true);
-    expect(stored).not.toContain('alpha');
-    expect(recoveryPhraseMatches(stored, 'alpha beta')).toBe(true);
-  });
-
-  it('/api/auth/phrase валидирует поля', async () => {
-    const uid = await createUser();
-    const res = await phraseRoute(json({}, await sessionHeaders(uid)));
-    expect(res.status).toBe(400);
-  });
-
   it('recover/verify отдаёт токен, но НЕ ставит сессию', async () => {
     await userWithPhrase();
 
     const res = await recoverVerifyRoute(
       json({
         username: 'recover-api',
-        recoveryPhrase: 'amber cobalt lantern',
+        recoveryPhrase: 'amber cobalt lantern silver ember frost',
       }),
     );
 
@@ -121,7 +94,7 @@ describe('recovery-роуты (SEC-1, SEC-4)', () => {
     expect(noPhrase.status).toBe(400);
 
     const noUsername = await recoverVerifyRoute(
-      json({ recoveryPhrase: 'amber cobalt lantern' }),
+      json({ recoveryPhrase: 'amber cobalt lantern silver ember frost' }),
     );
     expect(noUsername.status).toBe(400);
 
@@ -181,7 +154,10 @@ describe('recovery-роуты (SEC-1, SEC-4)', () => {
     await userWithPhrase('enum-api');
 
     const noAccount = await recoverVerifyRoute(
-      json({ username: 'nobody-here', recoveryPhrase: 'amber cobalt lantern' }),
+      json({
+        username: 'nobody-here',
+        recoveryPhrase: 'amber cobalt lantern silver ember frost',
+      }),
     );
     const wrongPhrase = await recoverVerifyRoute(
       json({ username: 'enum-api', recoveryPhrase: 'wrong phrase here' }),
@@ -201,7 +177,7 @@ describe('recovery-роуты (SEC-1, SEC-4)', () => {
         // Логин ничего не доказывает — раньше этого хватало для захвата.
         username: 'recover-api',
         newPassword: 'pwned-pass-1234',
-        newRecoveryPhrase: 'x y z',
+        newRecoveryPhrase: 'x y z silver ember frost',
       }),
     );
 
@@ -221,7 +197,7 @@ describe('recovery-роуты (SEC-1, SEC-4)', () => {
     const verified = await recoverVerifyRoute(
       json({
         username: 'recover-api',
-        recoveryPhrase: 'amber cobalt lantern',
+        recoveryPhrase: 'amber cobalt lantern silver ember frost',
       }),
     );
     const { token } = await verified.json();
@@ -230,7 +206,7 @@ describe('recovery-роуты (SEC-1, SEC-4)', () => {
       json({
         token,
         newPassword: 'fresh-password',
-        newRecoveryPhrase: 'new amber cobalt',
+        newRecoveryPhrase: 'new amber cobalt silver ember frost',
       }),
     );
     expect(res.status).toBe(200);
@@ -240,9 +216,12 @@ describe('recovery-роуты (SEC-1, SEC-4)', () => {
     expect((await authenticateUser('recover-api', 'pass1')).success).toBe(
       false,
     );
-    expect(recoveryPhraseMatches(storedPhrase(uid), 'new amber cobalt')).toBe(
-      true,
-    );
+    expect(
+      recoveryPhraseMatches(
+        storedPhrase(uid),
+        'new amber cobalt silver ember frost',
+      ),
+    ).toBe(true);
   });
 
   it('токен одноразовый: повторный update → 401', async () => {
@@ -251,7 +230,7 @@ describe('recovery-роуты (SEC-1, SEC-4)', () => {
     const verified = await recoverVerifyRoute(
       json({
         username: 'recover-api',
-        recoveryPhrase: 'amber cobalt lantern',
+        recoveryPhrase: 'amber cobalt lantern silver ember frost',
       }),
     );
     const { token } = await verified.json();
@@ -281,7 +260,7 @@ describe('recovery-роуты (SEC-1, SEC-4)', () => {
       await recoverVerifyRoute(
         json({
           username: 'recover-api',
-          recoveryPhrase: 'amber cobalt lantern',
+          recoveryPhrase: 'amber cobalt lantern silver ember frost',
         }),
       )
     ).json();
@@ -301,14 +280,19 @@ describe('recovery-роуты (SEC-1, SEC-4)', () => {
       json({
         token,
         newPassword: 'test-pass-12345',
-        newRecoveryPhrase: 'gamma delta',
+        newRecoveryPhrase: 'gamma delta silver ember frost',
       }),
     );
     expect(ok.status).toBe(200);
     expect(
       (await authenticateUser('recover-api', 'test-pass-12345')).success,
     ).toBe(true);
-    expect(recoveryPhraseMatches(storedPhrase(uid), 'gamma delta')).toBe(true);
+    expect(
+      recoveryPhraseMatches(
+        storedPhrase(uid),
+        'gamma delta silver ember frost',
+      ),
+    ).toBe(true);
   });
 
   it('legacy /api/auth/recover — только по токену, без слов из листов', async () => {
@@ -329,7 +313,7 @@ describe('recovery-роуты (SEC-1, SEC-4)', () => {
       await recoverVerifyRoute(
         json({
           username: 'legacy-api',
-          recoveryPhrase: 'amber cobalt lantern',
+          recoveryPhrase: 'amber cobalt lantern silver ember frost',
         }),
       )
     ).json();
@@ -343,7 +327,10 @@ describe('recovery-роуты (SEC-1, SEC-4)', () => {
     ).toBe(true);
     // Фраза не менялась: в теле её не было.
     expect(
-      recoveryPhraseMatches(storedPhrase(uid), 'amber cobalt lantern'),
+      recoveryPhraseMatches(
+        storedPhrase(uid),
+        'amber cobalt lantern silver ember frost',
+      ),
     ).toBe(true);
   });
 

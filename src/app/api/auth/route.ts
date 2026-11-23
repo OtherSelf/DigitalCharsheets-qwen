@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { jsonError } from '@/lib/api/respond';
 import { readAuthJson } from '@/lib/security/payload';
 import {
+  accountRateLimitKey,
   getAuthRateLimiter,
   LOGIN_RATE_LIMIT,
   rateLimitKey,
@@ -31,10 +32,11 @@ export async function POST(request: Request) {
     if (!parsedBody.ok) {
       return jsonError(parsedBody.status, parsedBody.error, parsedBody.reason);
     }
-    const { username, password, displayName } = parsedBody.body as {
+    const { username, password, displayName, totpCode } = parsedBody.body as {
       username?: string;
       password?: string;
       displayName?: string;
+      totpCode?: string;
     };
 
     if (!username || !password) {
@@ -45,7 +47,9 @@ export async function POST(request: Request) {
     // сбрасывает окно, иначе человек, который несколько раз переключался
     // между аккаунтами (или ждал в очереди с общим NAT), упирался бы в 429.
     const loginKey = rateLimitKey('login', request, String(username));
-    const limiter = getAuthRateLimiter().check(loginKey, LOGIN_RATE_LIMIT);
+    const accountKey = accountRateLimitKey('login', String(username));
+    const authLimiter = getAuthRateLimiter();
+    const limiter = authLimiter.check(loginKey, LOGIN_RATE_LIMIT);
     if (!limiter.allowed) {
       return jsonError(
         429,
@@ -54,9 +58,21 @@ export async function POST(request: Request) {
         { 'Retry-After': String(limiter.retryAfterSeconds) },
       );
     }
+    // Второй эшелон: лимит на аккаунт не зависит от IP и не обходится
+    // распределённым перебором.
+    const accountLimiter = authLimiter.check(accountKey, LOGIN_RATE_LIMIT);
+    if (!accountLimiter.allowed) {
+      return jsonError(
+        429,
+        'Too many login attempts. Try again later.',
+        'rate_limited',
+        { 'Retry-After': String(accountLimiter.retryAfterSeconds) },
+      );
+    }
 
     const result = await authenticateUser(username, password, displayName, {
       allowRegistration: false,
+      totpCode,
     });
 
     if (!result.success || !result.user) {
@@ -85,12 +101,16 @@ export async function POST(request: Request) {
           ? 400
           : result.reason === 'blocked'
             ? 403
-            : 401;
+            : result.reason === 'totp_unavailable'
+              ? 503
+              : 401;
       return jsonError(status, result.error || 'Login failed.', result.reason);
     }
 
-    // Успешный вход обнуляет счётчик неудач для этой пары IP+логин.
-    getAuthRateLimiter().reset(loginKey);
+    // Успешный вход обнуляет счётчик неудач и для пары IP+логин, и для
+    // аккаунта.
+    authLimiter.reset(loginKey);
+    authLimiter.reset(accountKey);
 
     // Сессия — подписанная httpOnly-cookie; дальше uid берётся только из неё.
     const response = NextResponse.json({

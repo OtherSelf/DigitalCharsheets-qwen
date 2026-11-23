@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 
 import { getCharacterModule } from '@/games/character-system';
 import { validateCharacterPatch } from '@/lib/character-payload';
+import { QuotaExceededError } from '@/lib/quotas';
 import { isSafeId } from '@/lib/security/paths';
 import { readJsonObject } from '@/lib/security/payload';
 import {
@@ -130,6 +131,18 @@ export async function PUT(
       { writeToken },
     );
   } catch (error) {
+    if (error instanceof QuotaExceededError) {
+      return NextResponse.json(
+        {
+          error: error.message,
+          reason: 'quota_exceeded',
+          limit: error.reason,
+          sheets: error.usage.sheets,
+          bytes: error.usage.bytes,
+        },
+        { status: 409 },
+      );
+    }
     console.error(`Failed to write character ${id} for ${uid}:`, error);
     return NextResponse.json(
       { error: 'Failed to write character' },

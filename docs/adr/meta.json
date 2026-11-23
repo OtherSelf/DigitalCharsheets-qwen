@@ -4,6 +4,7 @@
     "0001-credentials-and-sessions",
     "0002-legacy-migration-tooling",
     "0003-derived-values-authority",
-    "0004-legacy-aliases"
+    "0004-legacy-aliases",
+    "0005-scrypt-parameters"
   ]
 }

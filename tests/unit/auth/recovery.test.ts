@@ -175,6 +175,35 @@ describe('recovery: проверка фразы и сброс по токену'
     );
   });
 
+  it('заблокированный не проходит recovery и не меняет пароль', async () => {
+    const uid = await setupAccount('blocked-recovery', 'pass-one-1234');
+    const file = userPaths(dataDir, uid).userFile;
+    const stored = readJson(file) as Record<string, unknown>;
+    stored.isBlocked = true;
+    fs.writeFileSync(file, JSON.stringify(stored), 'utf8');
+
+    const verified = await verifyRecovery(
+      'blocked-recovery',
+      'alpha beta gamma',
+    );
+    expect(verified.success).toBe(false);
+    expect(verified.reason).toBe('blocked');
+
+    const { token } = await issueRecoveryToken(uid);
+    const reset = await resetCredentialsWithToken(token, 'new-pass-1234');
+    expect(reset.success).toBe(false);
+    expect(reset.reason).toBe('invalid_token');
+
+    // Пароль не изменился: вход с новым паролем не проходит, со старым —
+    // блокировка (пароль верный).
+    expect(
+      (await authenticateUser('blocked-recovery', 'new-pass-1234')).success,
+    ).toBe(false);
+    expect(
+      (await authenticateUser('blocked-recovery', 'pass-one-1234')).reason,
+    ).toBe('blocked');
+  });
+
   it('resetCredentialsWithToken меняет пароль и фразу, старый пароль не работает', async () => {
     const uid = await setupAccount('resetme', 'old-pass-1234');
     const { token } = await issueRecoveryToken(uid);
@@ -182,7 +211,7 @@ describe('recovery: проверка фразы и сброс по токену'
     const reset = await resetCredentialsWithToken(
       token,
       'fresh-pass-1234',
-      '  New Phrase Here ',
+      '  New Phrase Here Silver Ember Frost ',
     );
     expect(reset.success).toBe(true);
     expect(reset.uid).toBe(uid);
@@ -194,9 +223,10 @@ describe('recovery: проверка фразы и сброс по токену'
       false,
     );
     // Новая фраза сравнивается целиком и хранится хэшем.
-    expect((await verifyRecovery('resetme', 'new phrase here')).success).toBe(
-      true,
-    );
+    expect(
+      (await verifyRecovery('resetme', 'new phrase here silver ember frost'))
+        .success,
+    ).toBe(true);
     expect(isRecoveryPhraseHash(storedPhrase(uid))).toBe(true);
   });
 
@@ -204,14 +234,20 @@ describe('recovery: проверка фразы и сброс по токену'
     await setupAccount('victim', 'old-pass-1234');
 
     expect(
-      (await resetCredentialsWithToken('', 'pwned-pass-1234', 'x y z')).success,
+      (
+        await resetCredentialsWithToken(
+          '',
+          'pwned-pass-1234',
+          'x y z silver ember frost',
+        )
+      ).success,
     ).toBe(false);
     expect(
       (
         await resetCredentialsWithToken(
           'not-a-token',
           'pwned-pass-1234',
-          'x y z',
+          'x y z silver ember frost',
         )
       ).reason,
     ).toBe('invalid_token');

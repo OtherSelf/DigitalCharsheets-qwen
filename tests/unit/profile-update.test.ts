@@ -210,7 +210,8 @@ describe('updateUserProfile', () => {
       'recovery',
       'recovery',
       undefined,
-      '  Альфа Бета Гамма  ',
+      '  Альфа Бета Гамма Дельта Эпсилон Дзета  ',
+      { currentPassword: 'pass-one-1234' },
     );
 
     expect(result.success).toBe(true);
@@ -219,7 +220,60 @@ describe('updateUserProfile', () => {
     const stored = readJson(userPaths(dataDir, uid).userFile).recoveryPhrase;
     expect(isRecoveryPhraseHash(stored)).toBe(true);
     expect(stored).not.toContain('альфа');
-    expect(recoveryPhraseMatches(stored, 'альфа бета гамма')).toBe(true);
+    expect(
+      recoveryPhraseMatches(stored, 'альфа бета гамма дельта эпсилон дзета'),
+    ).toBe(true);
+  });
+
+  it('не меняет фразу без текущего пароля или с неверным', async () => {
+    const uid = (await authenticateUser('phrase-guard', 'pass-one-1234')).user!
+      .uid;
+    await updateUserProfile(
+      uid,
+      'phrase-guard',
+      'phrase-guard',
+      undefined,
+      'one two three four five six',
+      { currentPassword: 'pass-one-1234' },
+    );
+    const before = readJson(userPaths(dataDir, uid).userFile)
+      .recoveryPhrase as string;
+
+    const withoutPassword = await updateUserProfile(
+      uid,
+      'phrase-guard',
+      'phrase-guard',
+      undefined,
+      'four five six seven eight nine',
+    );
+    expect(withoutPassword.success).toBe(false);
+    expect(withoutPassword.reason).toBe('invalid_password');
+
+    const wrongPassword = await updateUserProfile(
+      uid,
+      'phrase-guard',
+      'phrase-guard',
+      undefined,
+      'four five six seven eight nine',
+      { currentPassword: 'not-my-pass-1234' },
+    );
+    expect(wrongPassword.success).toBe(false);
+    expect(wrongPassword.reason).toBe('invalid_password');
+
+    // Удаление фразы — тоже смена секрета, без пароля нельзя.
+    const clearWithoutPassword = await updateUserProfile(
+      uid,
+      'phrase-guard',
+      'phrase-guard',
+      undefined,
+      '  ',
+    );
+    expect(clearWithoutPassword.success).toBe(false);
+    expect(clearWithoutPassword.reason).toBe('invalid_password');
+
+    expect(readJson(userPaths(dataDir, uid).userFile).recoveryPhrase).toBe(
+      before,
+    );
   });
 
   it('undefined сохраняет recovery-фразу, пустая строка — сбрасывает', async () => {
@@ -229,7 +283,8 @@ describe('updateUserProfile', () => {
       'phrase',
       'phrase',
       undefined,
-      'one two three',
+      'one two three four five six',
+      { currentPassword: 'pass-one-1234' },
     );
 
     const keptBefore = readJson(
@@ -240,7 +295,9 @@ describe('updateUserProfile', () => {
     expect(readJson(userPaths(dataDir, uid).userFile).recoveryPhrase).toBe(
       keptBefore,
     );
-    expect(recoveryPhraseMatches(keptBefore, 'one two three')).toBe(true);
+    expect(
+      recoveryPhraseMatches(keptBefore, 'one two three four five six'),
+    ).toBe(true);
 
     const cleared = await updateUserProfile(
       uid,
@@ -248,6 +305,7 @@ describe('updateUserProfile', () => {
       'phrase',
       undefined,
       '  ',
+      { currentPassword: 'pass-one-1234' },
     );
     expect(cleared.user?.hasRecoveryPhrase).toBe(false);
     expect(

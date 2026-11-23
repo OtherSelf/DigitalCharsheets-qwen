@@ -1,6 +1,12 @@
 import { createFromSource } from 'fumadocs-core/search/server';
 
+import { jsonError } from '@/lib/api/respond';
 import { docsSource } from '@/lib/docs/source';
+import {
+  getAuthRateLimiter,
+  rateLimitKey,
+  SEARCH_RATE_LIMIT,
+} from '@/lib/security/rate-limit';
 
 /**
  * ─── LANDMARK: DOCS SEARCH (/api/search) ────────────────────────────────────
@@ -17,4 +23,24 @@ import { docsSource } from '@/lib/docs/source';
  */
 export const dynamic = 'force-dynamic';
 
-export const { GET } = createFromSource(docsSource);
+const searchHandler = createFromSource(docsSource);
+
+/**
+ * Лимит по IP: поиск строит ответ по индексу в памяти, но не должен быть
+ * бесплатным способом нагрузить процесс. GET, поэтому сессия не обязательна.
+ */
+export async function GET(request: Request) {
+  const limiter = getAuthRateLimiter().check(
+    rateLimitKey('search', request),
+    SEARCH_RATE_LIMIT,
+  );
+  if (!limiter.allowed) {
+    return jsonError(
+      429,
+      'Too many search requests. Try again later.',
+      'rate_limited',
+      { 'Retry-After': String(limiter.retryAfterSeconds) },
+    );
+  }
+  return searchHandler.GET(request);
+}

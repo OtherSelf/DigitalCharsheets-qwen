@@ -11,15 +11,14 @@ import {
   verifyPassword,
 } from '@/lib/security/password';
 import {
-  clientIpFromRequest,
   createMemoryRateLimitStore,
   createRateLimiter,
   LOGIN_RATE_LIMIT,
-  rateLimitKey,
   RECOVERY_RATE_LIMIT,
 } from '@/lib/security/rate-limit';
 import {
   hashSecret,
+  isCurrentScryptParams,
   isScryptHash,
   verifySecretHash,
 } from '@/lib/security/scrypt';
@@ -258,27 +257,6 @@ describe('rate limit', () => {
     );
     expect(writes).toEqual(['k', 'k']);
   });
-
-  it('складывает ключ из действия, IP и нормализованного логина', () => {
-    const request = new Request('http://localhost/api/auth', {
-      method: 'POST',
-      headers: { 'x-forwarded-for': '203.0.113.7, 10.0.0.1' },
-    });
-
-    expect(clientIpFromRequest(request)).toBe('203.0.113.7');
-    expect(rateLimitKey('login', request, '  Hero@Example.com ')).toBe(
-      'login:203.0.113.7:hero@example.com',
-    );
-
-    const realIp = new Request('http://localhost/api/auth', {
-      headers: { 'x-real-ip': '198.51.100.9' },
-    });
-    expect(clientIpFromRequest(realIp)).toBe('198.51.100.9');
-
-    const anonymous = new Request('http://localhost/api/auth');
-    expect(clientIpFromRequest(anonymous)).toBe('unknown');
-    expect(rateLimitKey('exists', anonymous)).toBe('exists:unknown:');
-  });
 });
 
 describe('timing-safe сравнение', () => {
@@ -300,7 +278,7 @@ describe('пароли: scrypt и прозрачная миграция', () => 
     const second = hashPassword('correct horse battery');
 
     expect(first).toMatch(
-      /^scrypt\$16384\$8\$1\$[A-Za-z0-9_-]+\$[A-Za-z0-9_-]+$/,
+      /^scrypt\$32768\$8\$1\$[A-Za-z0-9_-]+\$[A-Za-z0-9_-]+$/,
     );
     // Одинаковые пароли выглядят по-разному: соль на каждое значение своя.
     expect(first).not.toBe(second);
@@ -310,6 +288,30 @@ describe('пароли: scrypt и прозрачная миграция', () => 
       needsRehash: false,
     });
     expect(verifyPassword(second, 'correct horse battery').valid).toBe(true);
+  });
+
+  it('старые параметры scrypt помечаются на перехеширование', () => {
+    const salt = crypto.randomBytes(16);
+    const derived = crypto.scryptSync('old-pass-1234', salt, 32, {
+      N: 16384,
+      r: 8,
+      p: 1,
+      maxmem: 64 * 1024 * 1024,
+    });
+    const oldHash = [
+      'scrypt',
+      16384,
+      8,
+      1,
+      salt.toString('base64url'),
+      derived.toString('base64url'),
+    ].join('$');
+
+    expect(isCurrentScryptParams(oldHash)).toBe(false);
+    expect(verifyPassword(oldHash, 'old-pass-1234')).toEqual({
+      valid: true,
+      needsRehash: true,
+    });
   });
 
   it('неверный пароль и битый хэш отклоняются без исключений', () => {

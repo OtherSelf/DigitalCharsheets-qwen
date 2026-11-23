@@ -76,8 +76,12 @@ provider, state in a JSON data directory. Before this decision:
 - Old `sha256` hashes remain readable only through the migration path; nothing
   writes them anymore.
 - The CSP keeps `'unsafe-inline'` for scripts and styles because Next.js
-  bootstraps with inline payloads. A nonce-based policy would require
-  middleware and is a separate decision, not a regression of this one.
+  bootstraps with inline payloads. A nonce-based policy was prototyped later
+  (Next 16 `proxy.ts` + `connection()`): it forces dynamic rendering of every
+  page and raised p95 of `/` and `/login` from 6–10 ms to 21–22 ms, so it was
+  rejected for now. The residual risk is documented in
+  [security.md](../security.md); `buildContentSecurityPolicy()` can emit the
+  nonce variant when the rendering budget allows it.
 
 ## Alternatives considered
 

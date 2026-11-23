@@ -19,7 +19,7 @@ export async function registerAs(
   username: string,
   password = TEST_PASSWORD,
   displayName?: string,
-  recoveryPhrase = 'amber cobalt lantern',
+  recoveryPhrase = 'amber cobalt lantern silver ember frost',
 ) {
   const res = await registerRoute(
     json({ username, password, displayName, recoveryPhrase }),
