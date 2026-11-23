@@ -4,6 +4,7 @@ import * as React from 'react';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useCharacterContext, useTranslation } from '@/games/plugin-host';
 import type { SheetHandle } from '@/games/types';
@@ -37,7 +38,7 @@ export const SandboxSheet = React.forwardRef<
   }));
 
   return (
-    <div className={styles.sheet} data-testid="sandbox-sheet">
+    <div id="info-section" className={styles.sheet} data-testid="sandbox-sheet">
       <Card className="border-primary/30">
         <CardHeader>
           <CardTitle className="font-headline text-primary">
@@ -46,10 +47,14 @@ export const SandboxSheet = React.forwardRef<
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="flex items-center gap-3">
-            <span className="text-muted-foreground text-sm">
+            <Label
+              htmlFor="sandbox-rank"
+              className="text-muted-foreground text-sm"
+            >
               {t('sandbox.rank')}
-            </span>
+            </Label>
             <Input
+              id="sandbox-rank"
               value={character.rank}
               readOnly={!showEditButtons}
               onChange={(event) =>
@@ -62,13 +67,23 @@ export const SandboxSheet = React.forwardRef<
               <dt className="text-muted-foreground text-sm">
                 {t('sandbox.stat.might')}
               </dt>
-              <dd className="text-lg font-semibold">{character.stats.might}</dd>
+              <dd
+                className="text-lg font-semibold"
+                title={`${t('sandbox.stat.might')}: ${character.stats.might}`}
+              >
+                {character.stats.might}
+              </dd>
             </div>
             <div>
               <dt className="text-muted-foreground text-sm">
                 {t('sandbox.stat.wits')}
               </dt>
-              <dd className="text-lg font-semibold">{character.stats.wits}</dd>
+              <dd
+                className="text-lg font-semibold"
+                title={`${t('sandbox.stat.wits')}: ${character.stats.wits}`}
+              >
+                {character.stats.wits}
+              </dd>
             </div>
             <div>
               <dt className="text-muted-foreground text-sm">
@@ -77,6 +92,7 @@ export const SandboxSheet = React.forwardRef<
               <dd
                 className="text-primary text-lg font-semibold"
                 data-testid="sandbox-total"
+                title={`${t('sandbox.total')}: ${character.total}`}
               >
                 {character.total}
               </dd>
@@ -111,6 +127,7 @@ export const SandboxSheet = React.forwardRef<
         <CardContent>
           <Textarea
             value={notes}
+            readOnly={!showEditButtons}
             onChange={(event) => setNotes(event.target.value)}
             aria-label={t('sandbox.notes')}
           />
