@@ -1,5 +1,8 @@
 import crypto from 'node:crypto';
+import fs from 'node:fs';
+import path from 'node:path';
 
+import { getDataDir, getTotpKeyFile } from '../data-dir';
 import { safeStringEqual } from './timing';
 
 /**
@@ -134,20 +137,75 @@ function parseTotpKey(raw = process.env.DCS_TOTP_KEY): Buffer | null {
   return key;
 }
 
-let cachedKey: { env: string; key: Buffer | null } | null = null;
+let cachedKey: { env: string; dataDir: string; key: Buffer } | null = null;
 
-/** Ключ TOTP или null, если второй фактор не настроен на инсталляции. */
-export function getTotpKey(): Buffer | null {
-  const env = process.env.DCS_TOTP_KEY ?? '';
-  if (!cachedKey || cachedKey.env !== env) {
-    cachedKey = { env, key: parseTotpKey(env) };
+function readOrCreateKeyFile(): Buffer {
+  const file = getTotpKeyFile();
+  try {
+    const existing = fs.readFileSync(file, 'utf8').trim();
+    const key = parseTotpKey(existing);
+    if (!key) throw new TotpKeyError('TOTP key file is empty.');
+    return key;
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException)?.code !== 'ENOENT') throw error;
   }
-  return cachedKey.key;
+
+  const generated = crypto.randomBytes(32).toString('base64');
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  try {
+    fs.writeFileSync(file, `${generated}\n`, {
+      encoding: 'utf8',
+      mode: 0o600,
+      flag: 'wx',
+    });
+    return Buffer.from(generated, 'base64');
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException)?.code === 'EEXIST') {
+      const existing = fs.readFileSync(file, 'utf8').trim();
+      const key = parseTotpKey(existing);
+      if (!key) throw new TotpKeyError('TOTP key file is empty.');
+      return key;
+    }
+    throw error;
+  }
 }
 
-/** Проверка конфигурации при старте: заданный, но битый ключ — ошибка. */
+/**
+ * Ключ TOTP. `DCS_TOTP_KEY` приоритетнее; без него используется
+ * `<data-dir>/.totp-key`, который создаётся при первом обращении. Это делает
+ * второй фактор доступным «из коробки»; цена — ключ лежит рядом с данными и
+ * попадает в их бэкап. Для раздельного хранения задайте env.
+ */
+export function getTotpKey(): Buffer | null {
+  const env = process.env.DCS_TOTP_KEY ?? '';
+  const dataDir = getDataDir();
+  if (cachedKey && cachedKey.env === env && cachedKey.dataDir === dataDir) {
+    return cachedKey.key;
+  }
+  const key = env.trim() ? parseTotpKey(env) : readOrCreateKeyFile();
+  if (!key) throw new TotpKeyError('TOTP key is not configured.');
+  cachedKey = { env, dataDir, key };
+  return key;
+}
+
+/**
+ * Проверка конфигурации при старте: заданный env или существующий файл с
+ * битым ключом — ошибка. Отсутствие ключа допустимо: он создастся при
+ * первом включении TOTP.
+ */
 export function validateTotpKeyConfig(): void {
-  parseTotpKey();
+  const env = process.env.DCS_TOTP_KEY ?? '';
+  if (env.trim()) {
+    parseTotpKey(env);
+    return;
+  }
+  try {
+    const existing = fs.readFileSync(getTotpKeyFile(), 'utf8').trim();
+    if (existing) parseTotpKey(existing);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException)?.code === 'ENOENT') return;
+    throw error;
+  }
 }
 
 /** Зашифровать секрет: `v1.<iv>.<tag>.<cipher>` (base64url), AAD = uid. */

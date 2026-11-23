@@ -1,5 +1,6 @@
 import crypto from 'node:crypto';
 import fs from 'node:fs';
+import path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
@@ -47,6 +48,17 @@ describe('TOTP-роуты', () => {
     const res = await setupRoute(json({}, await sessionHeaders(uid)));
     expect(res.status).toBe(403);
     expect((await res.json()).reason).toBe('invalid_password');
+  });
+
+  it('setup без DCS_TOTP_KEY создаёт ключ в data-dir', async () => {
+    delete process.env.DCS_TOTP_KEY;
+    const { uid } = await loginAs('totp-file-key-route');
+    const res = await setupRoute(
+      json({ currentPassword: TEST_PASSWORD }, await sessionHeaders(uid)),
+    );
+    expect(res.status).toBe(200);
+    expect((await res.json()).secret).toBeTruthy();
+    expect(fs.existsSync(path.join(dataDir, '.totp-key'))).toBe(true);
   });
 
   it('полный цикл: setup → enable → вход с кодом → disable', async () => {

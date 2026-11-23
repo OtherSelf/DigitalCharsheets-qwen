@@ -1,5 +1,6 @@
 import crypto from 'node:crypto';
 import fs from 'node:fs';
+import path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
@@ -118,6 +119,21 @@ describe('TOTP: enrollment, вход и backup-коды', () => {
     );
   });
 
+  it('работает без DCS_TOTP_KEY: ключ создаётся в data-dir', async () => {
+    delete process.env.DCS_TOTP_KEY;
+    const uid = await createUser('totp-file-key');
+    const setup = await startTotpSetup(uid, PASSWORD);
+    expect(setup.success).toBe(true);
+    if (!setup.success) return;
+
+    const keyFile = path.join(dataDir, '.totp-key');
+    expect(fs.existsSync(keyFile)).toBe(true);
+    expect(fs.statSync(keyFile).mode & 0o777).toBe(0o600);
+
+    const enabled = await enableTotp(uid, codeFor(setup.secret, 0));
+    expect(enabled.success).toBe(true);
+  });
+
   it('восстановление доступа отключает TOTP', async () => {
     const uid = await createUser('totp-recover');
     const setup = await startTotpSetup(uid, PASSWORD);
@@ -137,7 +153,7 @@ describe('TOTP: enrollment, вход и backup-коды', () => {
     ).toBe(true);
   });
 
-  it('без DCS_TOTP_KEY включение недоступно, а вход не обходится', async () => {
+  it('без DCS_TOTP_KEY вход не обходится паролем', async () => {
     const uid = await createUser('totp-nokey');
     const setup = await startTotpSetup(uid, PASSWORD);
     if (!setup.success) throw new Error('setup failed');
@@ -146,6 +162,6 @@ describe('TOTP: enrollment, вход и backup-коды', () => {
     delete process.env.DCS_TOTP_KEY;
     const unavailable = await authenticateUser('totp-nokey', PASSWORD);
     expect(unavailable.success).toBe(false);
-    expect(unavailable.reason).toBe('totp_unavailable');
+    expect(unavailable.reason).toBe('totp_required');
   });
 });

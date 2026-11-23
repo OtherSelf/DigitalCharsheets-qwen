@@ -71,9 +71,10 @@ The default configuration is conservative, but the operator must:
    can rotate their rate-limit bucket.
 2. Keep `NODE_ENV=production` so the session cookie is `Secure` and uses the
    `__Host-` prefix.
-3. Set `DCS_TOTP_KEY` (32 random bytes, base64) if TOTP is used, and keep it out
-   of backups of the data directory. Losing the key disables TOTP for enrolled
-   users (backup codes, recovery phrase or an administrator reset remain).
+3. For TOTP, either set `DCS_TOTP_KEY` (32 random bytes, base64) and keep it out
+   of data-directory backups, or rely on the generated `<data-dir>/.totp-key`
+   (0600). Losing the key disables TOTP for enrolled users (backup codes,
+   recovery phrase or an administrator reset remain).
 4. Protect the data directory: it contains password and recovery-phrase hashes,
    TOTP secrets and account data. Backups must be encrypted.
 5. Never commit `data/`, `.secrets/` or environment files; the repository

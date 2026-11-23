@@ -97,6 +97,15 @@ export function getGameCatalogFile(): string {
   return path.join(getSettingsDir(), 'game-catalog.json');
 }
 
+/**
+ * Ключ TOTP, если `DCS_TOTP_KEY` не задан: `<data-dir>/.totp-key` (0600).
+ * Файл создаётся при первом включении второго фактора; бэкап data-dir
+ * содержит и его, поэтому для раздельного хранения ключа задайте env.
+ */
+export function getTotpKeyFile(): string {
+  return path.join(getDataDir(), '.totp-key');
+}
+
 /** Ключ подписи сессионных cookie: `<data-dir>/.session-secret`. */
 export function getSessionSecretFile(): string {
   return path.join(getDataDir(), '.session-secret');

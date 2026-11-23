@@ -73,7 +73,7 @@ variant: the deploy path stays Linux with systemd.
 | `DCS_BUILD_DATE` | unset | Build date shown in the version tooltip (`null` when unset). |
 | `DCS_SESSION_SECRET` | `<data-dir>/.session-secret` | HMAC key for session cookies. Set explicitly if several instances/processes share one data dir or if the data dir is ephemeral. |
 | `DCS_HISTORY_MAX_BYTES` | `2097152` (2 MiB) | Per-sheet history limit, clamped to 64 KiB … 64 MiB. Older revisions are dropped with a truncation marker. |
-| `DCS_TOTP_KEY` | unset | 32 random bytes, base64 (`openssl rand -base64 32`). Encrypts TOTP secrets and keys the backup-code hashes. Without it TOTP enrollment is disabled (`503 totp_unavailable`); keep it out of data-directory backups. Losing/changing it makes existing TOTP secrets unreadable — affected users need a recovery phrase, a backup code, or an administrator password reset (all of which disable TOTP). |
+| `DCS_TOTP_KEY` | `<data-dir>/.totp-key` | 32 random bytes, base64 (`openssl rand -base64 32`). Encrypts TOTP secrets and keys the backup-code hashes. When unset, a key is generated once into `<data-dir>/.totp-key` (0600), so TOTP works out of the box; that file is part of the data-directory backup. Set the variable to keep the key separate from the data. Losing/changing it makes existing TOTP secrets unreadable — affected users need a recovery phrase, a backup code, or an administrator password reset (all of which disable TOTP). |
 | `DCS_COOKIE_SECURE` | unset | `1` forces the `Secure` flag on the session cookie. It is already on by default in production; this variable is a compatible way to enable it in development. |
 | `DCS_COOKIE_INSECURE` | unset | `1` explicitly disables the `Secure` flag (local plain-HTTP development only). |
 | `DCS_ADMIN_USERNAME` | `admin` | Preferred login for the bootstrap administrator; `admin-2`, … if taken. |
@@ -190,7 +190,8 @@ Caddy, Traefik, …) and:
 - forward `Host` and `X-Forwarded-Proto`;
 - keep `NODE_ENV=production` so the session cookie is `Secure` and uses the
   `__Host-` prefix (`DCS_COOKIE_INSECURE=1` is for local development only);
-- set `DCS_TOTP_KEY` if two-factor authentication is used;
+- set `DCS_TOTP_KEY` if two-factor authentication is used and the key must
+  live outside the data-directory backup (otherwise `.totp-key` is generated);
 - proxy with **HTTP/1.1** and pass `Upgrade`/`Connection`;
 - allow long-lived responses (long `proxy_read_timeout`).
 

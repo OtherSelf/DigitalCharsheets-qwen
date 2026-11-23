@@ -242,14 +242,17 @@ revisited if the rendering cost changes or the app starts rendering raw HTML.
 
 TOTP (RFC 6238) is optional per account and implemented on `node:crypto`:
 30-second steps, 6 digits, a ±1 step window, and an anti-replay `lastStep`.
-The secret is encrypted with AES-256-GCM under `DCS_TOTP_KEY`; ten one-time
+The secret is encrypted with AES-256-GCM under `DCS_TOTP_KEY` (or the generated
+`<data-dir>/.totp-key` when the variable is unset); ten one-time
 backup codes are stored only as keyed hashes and shown once. Enrollment,
 disabling and backup-code regeneration require the current password, and a
 successful code (or backup code) is required after the password at sign-in.
 Recovery and an administrator password reset disable TOTP, so a lost device
-cannot lock the owner out permanently; losing `DCS_TOTP_KEY` makes existing
-secrets unreadable (backup codes do not depend on the secret, but their hashes
-do use the key).
+cannot lock the owner out permanently; losing `DCS_TOTP_KEY`/`.totp-key` makes
+existing secrets unreadable (backup codes do not depend on the secret, but their
+hashes do use the key). Keeping the key in the data directory is the default
+trade-off for an out-of-the-box feature; set the environment variable to keep it
+outside the backup.
 
 ### CSRF and session cookie
 

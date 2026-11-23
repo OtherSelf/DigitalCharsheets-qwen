@@ -37,6 +37,7 @@ files are served from a process-local cache (see
   sessions.json                 live session records (uid per `jti`)
   shares.json                   read-only share links (hashed tokens)
   .session-secret               HMAC key for session cookies (0600)
+  .totp-key                     TOTP encryption/backup key, if env is unset (0600)
   .lock/                        short-lived directory mutex
   .state/
     rate-limit.json             debounced auth rate-limit snapshot
