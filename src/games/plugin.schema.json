@@ -10,6 +10,7 @@
     "pluginApi",
     "id",
     "gameId",
+    "shortCode",
     "version",
     "order",
     "defaultStatus",
@@ -47,6 +48,11 @@
       "description": "Идентификатор семейства игр (редакции группируются по нему).",
       "type": "string",
       "pattern": "^[a-zA-Z][a-zA-Z0-9]*$"
+    },
+    "shortCode": {
+      "description": "Короткий код редакции для админки (dh1e, dh2e); уникален среди плагинов и не переводится.",
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*$"
     },
     "version": {
       "description": "Версия плагина (semver).",

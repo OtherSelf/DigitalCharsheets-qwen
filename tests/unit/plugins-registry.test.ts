@@ -87,6 +87,7 @@ function exampleManifest(
     pluginApi: '^1.0.0',
     id: 'example',
     gameId: 'exampleGame',
+    shortCode: 'example',
     version: '0.1.0',
     order: 90,
     defaultStatus: 'hidden',

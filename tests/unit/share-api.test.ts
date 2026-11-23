@@ -11,7 +11,7 @@ import { getShareForCharacter, resolveShareToken } from '@/lib/shares';
 
 import {
   createUserFolder,
-  makeDndCharacter,
+  makeCharacter,
   removeDir,
   sessionHeaders,
   useTempDataDir,
@@ -47,14 +47,17 @@ beforeEach(async () => {
   dataDir = useTempDataDir();
   uid = newUid();
   await createUserFolder(uid, 'share-api-user', 'Share API');
-  await saveCharacterToServer(uid, makeDndCharacter({ id: CHARACTER_ID }));
+  await saveCharacterToServer(
+    uid,
+    makeCharacter('dnd5e', { id: CHARACTER_ID }),
+  );
   headers = await sessionHeaders(uid);
 
   const foreignUid = newUid();
   await createUserFolder(foreignUid, 'share-foreign-user', 'Foreign');
   await saveCharacterToServer(
     foreignUid,
-    makeDndCharacter({ id: FOREIGN_CHARACTER_ID }),
+    makeCharacter('dnd5e', { id: FOREIGN_CHARACTER_ID }),
   );
 });
 

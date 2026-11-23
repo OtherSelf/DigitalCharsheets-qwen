@@ -15,8 +15,7 @@ import {
 
 import {
   createUserFolder,
-  makeDhCharacter,
-  makeDndCharacter,
+  makeCharacter,
   readJson,
   removeDir,
   saveCharactersToServer,
@@ -47,7 +46,7 @@ afterEach(() => {
 
 describe('server-storage (файловое хранилище листов)', () => {
   it('сохраняет персонажа в отдельный файл data/users/<uid>/characters/<id>.json', async () => {
-    const character = makeDndCharacter({ id: 'char-a', userId: uid });
+    const character = makeCharacter('dnd5e', { id: 'char-a', userId: uid });
     await saveCharacterToServer(uid, character);
 
     const file = path.join(
@@ -55,10 +54,14 @@ describe('server-storage (файловое хранилище листов)', ()
       'char-a.json',
     );
     expect(fs.existsSync(file)).toBe(true);
-    expect(readJson(file)).toEqual({
-      ...character,
+    // Сервер нормализует лист и пересчитывает производные (ADR 0003),
+    // поэтому проверяем контрактные поля, а не побайтовое равенство.
+    expect(readJson(file)).toMatchObject({
+      id: 'char-a',
+      userId: uid,
       systemId: 'dnd5e',
       schemaVersion: CURRENT_SCHEMA_VERSION,
+      name: character.name,
     });
     // Компактный JSON: без отступов и переводов строк.
     const raw = fs.readFileSync(file, 'utf8');
@@ -77,8 +80,8 @@ describe('server-storage (файловое хранилище листов)', ()
 
   it('читает все сохранённые листы', async () => {
     await saveCharactersToServer(uid, [
-      makeDndCharacter({ id: 'a', userId: uid, name: 'Alpha' }),
-      makeDhCharacter({ id: 'b', userId: uid, name: 'Beta' }),
+      makeCharacter('dnd5e', { id: 'a', userId: uid, name: 'Alpha' }),
+      makeCharacter('dh1', { id: 'b', userId: uid, name: 'Beta' }),
     ]);
 
     const characters = await getCharactersFromServer(uid);
@@ -90,7 +93,7 @@ describe('server-storage (файловое хранилище листов)', ()
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     await saveCharacterToServer(
       uid,
-      makeDndCharacter({ id: 'good', userId: uid }),
+      makeCharacter('dnd5e', { id: 'good', userId: uid }),
     );
     const charsDir = userPaths(dataDir, uid).charactersDir;
     fs.writeFileSync(path.join(charsDir, 'broken.json'), '{ not json');
@@ -105,7 +108,7 @@ describe('server-storage (файловое хранилище листов)', ()
   it('обновляет только переданные поля и возвращает результат', async () => {
     await saveCharacterToServer(
       uid,
-      makeDndCharacter({ id: 'upd', userId: uid }),
+      makeCharacter('dnd5e', { id: 'upd', userId: uid }),
     );
 
     const updated = await updateCharacterOnServer(uid, 'upd', {
@@ -124,7 +127,10 @@ describe('server-storage (файловое хранилище листов)', ()
   });
 
   it('дописывает userId владельца, если лист пришёл без него (миграция/импорт)', async () => {
-    const ownerless = makeDndCharacter({ id: 'ownerless', name: 'No Owner' });
+    const ownerless = makeCharacter('dnd5e', {
+      id: 'ownerless',
+      name: 'No Owner',
+    });
     delete (ownerless as any).userId;
 
     // saveCharacterToServer пишет объект как есть, поэтому кладём файл напрямую.
@@ -148,7 +154,7 @@ describe('server-storage (файловое хранилище листов)', ()
   it('удаляет файл персонажа и сообщает об отсутствии при повторе', async () => {
     await saveCharacterToServer(
       uid,
-      makeDndCharacter({ id: 'del', userId: uid }),
+      makeCharacter('dnd5e', { id: 'del', userId: uid }),
     );
 
     expect(await deleteCharacterFromServer(uid, 'del')).toBe(true);
@@ -179,7 +185,7 @@ describe('server-storage (файловое хранилище листов)', ()
   });
 
   it('изоляция: данные пишутся в DCS_DATA_DIR, если он задан', async () => {
-    const character = makeDndCharacter({ id: 'isolated', userId: uid });
+    const character = makeCharacter('dnd5e', { id: 'isolated', userId: uid });
     await saveCharacterToServer(uid, character);
 
     const inTemp = path.join(
@@ -202,7 +208,7 @@ describe('server-storage (файловое хранилище листов)', ()
   it('пишет через временный файл+rename и не оставляет .tmp после успеха', async () => {
     await saveCharacterToServer(
       uid,
-      makeDndCharacter({ id: 'atomic', userId: uid }),
+      makeCharacter('dnd5e', { id: 'atomic', userId: uid }),
     );
     await updateCharacterOnServer(uid, 'atomic', { name: 'Atomic Renamed' });
 
@@ -216,7 +222,7 @@ describe('server-storage (файловое хранилище листов)', ()
   it('если rename падает — файл листа остаётся прежним (не обрезанным)', async () => {
     await saveCharacterToServer(
       uid,
-      makeDndCharacter({ id: 'safe', userId: uid, name: 'Before' }),
+      makeCharacter('dnd5e', { id: 'safe', userId: uid, name: 'Before' }),
     );
     const charsDir = userPaths(dataDir, uid).charactersDir;
 
@@ -260,7 +266,7 @@ describe('server-storage (файловое хранилище листов)', ()
   it('отбрасывает запоздавшую запись с меньшим seq', async () => {
     await saveCharacterToServer(
       uid,
-      makeDndCharacter({ id: 'race', userId: uid, name: 'Start' }),
+      makeCharacter('dnd5e', { id: 'race', userId: uid, name: 'Start' }),
     );
 
     const newer = await updateCharacterOnServer(
@@ -289,7 +295,7 @@ describe('server-storage (файловое хранилище листов)', ()
   it('принимает повтор с тем же seq (идемпотентная досылка keepalive)', async () => {
     await saveCharacterToServer(
       uid,
-      makeDndCharacter({ id: 'idem', userId: uid }),
+      makeCharacter('dnd5e', { id: 'idem', userId: uid }),
     );
 
     await updateCharacterOnServer(
@@ -310,7 +316,7 @@ describe('server-storage (файловое хранилище листов)', ()
   it('независимые загрузки страниц не блокируют друг друга', async () => {
     await saveCharacterToServer(
       uid,
-      makeDndCharacter({ id: 'tabs', userId: uid }),
+      makeCharacter('dnd5e', { id: 'tabs', userId: uid }),
     );
 
     await updateCharacterOnServer(

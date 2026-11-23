@@ -14,7 +14,7 @@ import {
   importCharacterFromJSON,
 } from '@/lib/export-utils';
 
-import { makeDhCharacter, makeDndCharacter } from '@tests/support';
+import { makeCharacter } from '@tests/support';
 import { fileOf, meta } from '@tests/support/export-fixtures';
 
 // xlsx 0.20 в Node подхватывает fs только при CJS-загрузке; под vitest (ESM)
@@ -28,7 +28,7 @@ describe('importCharacterFromJSON (только формат dcs-export v2)', ()
       fileOf({
         metadata: meta('character', { config: DEFAULT_EXPORT_CONFIG }),
         character: {
-          ...makeDndCharacter(),
+          ...makeCharacter('dnd5e', { name: 'Ragnar Testborn' }),
           userId: 'user-x',
           migratedFromUid: 'fb-1',
         },
@@ -47,8 +47,8 @@ describe('importCharacterFromJSON (только формат dcs-export v2)', ()
       fileOf({
         metadata: meta('backup', { account: 'petya' }),
         characters: [
-          makeDndCharacter({ id: 'a' }),
-          makeDhCharacter({ id: 'b' }),
+          makeCharacter('dnd5e', { id: 'a' }),
+          makeCharacter('dh1', { id: 'b' }),
         ],
       }),
     );
@@ -64,7 +64,7 @@ describe('importCharacterFromJSON (только формат dcs-export v2)', ()
     const result = await importCharacterFromJSON(
       fileOf({
         metadata: meta('backup', { characterCount: 99 }),
-        characters: [makeDndCharacter({ id: 'a' })],
+        characters: [makeCharacter('dnd5e', { id: 'a' })],
       }),
     );
 
@@ -81,7 +81,7 @@ describe('importCharacterFromJSON (только формат dcs-export v2)', ()
           exportDate: 'x',
           config: {},
         },
-        character: makeDndCharacter(),
+        character: makeCharacter('dnd5e'),
       }),
     );
 
@@ -90,11 +90,13 @@ describe('importCharacterFromJSON (только формат dcs-export v2)', ()
   });
 
   it('отклоняет старый бэкап-массив и голый лист', async () => {
-    const array = await importCharacterFromJSON(fileOf([makeDndCharacter()]));
+    const array = await importCharacterFromJSON(
+      fileOf([makeCharacter('dnd5e')]),
+    );
     expect(array.success).toBe(false);
     expect(array.error).toMatch(/формат/i);
 
-    const bare = await importCharacterFromJSON(fileOf(makeDndCharacter()));
+    const bare = await importCharacterFromJSON(fileOf(makeCharacter('dnd5e')));
     expect(bare.success).toBe(false);
     expect(bare.error).toMatch(/формат/i);
   });
@@ -103,7 +105,7 @@ describe('importCharacterFromJSON (только формат dcs-export v2)', ()
     const foreign = await importCharacterFromJSON(
       fileOf({
         metadata: { ...meta('character'), appName: 'OtherApp' },
-        character: makeDndCharacter(),
+        character: makeCharacter('dnd5e'),
       }),
     );
     expect(foreign.success).toBe(false);
@@ -112,7 +114,7 @@ describe('importCharacterFromJSON (только формат dcs-export v2)', ()
     const newer = await importCharacterFromJSON(
       fileOf({
         metadata: { ...meta('character'), version: '4.0' },
-        character: makeDndCharacter(),
+        character: makeCharacter('dnd5e'),
       }),
     );
     expect(newer.success).toBe(false);

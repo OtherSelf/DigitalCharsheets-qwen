@@ -13,7 +13,7 @@ import * as XLSX from 'xlsx';
 import { exportCharacterToExcel } from '@/lib/export-utils';
 import { translations } from '@/lib/i18n';
 
-import { hasPlugin, makeDhCharacter, makeDndCharacter } from '@tests/support';
+import { hasPlugin, makeCharacter } from '@tests/support';
 
 // xlsx 0.20 в Node подхватывает fs только при CJS-загрузке; под vitest (ESM)
 // детект не срабатывает, и writeFile/readFile уходят в браузерную ветку.
@@ -43,7 +43,10 @@ describe('exportCharacterToExcel (xlsx)', () => {
     process.chdir(tmp);
     try {
       const result = await exportCharacterToExcel(
-        makeDndCharacter() as any,
+        makeCharacter('dnd5e', {
+          id: 'dnd-1',
+          name: 'Ragnar Testborn',
+        }) as any,
         date,
       );
 
@@ -66,7 +69,10 @@ describe('exportCharacterToExcel (xlsx)', () => {
     process.chdir(tmp);
     try {
       const result = await exportCharacterToExcel(
-        makeDndCharacter() as any,
+        makeCharacter('dnd5e', {
+          id: 'dnd-1',
+          name: 'Ragnar Testborn',
+        }) as any,
         date,
       );
       expect(result.success).toBe(true);
@@ -103,7 +109,7 @@ describe('exportCharacterToExcel (xlsx)', () => {
     async () => {
       process.chdir(tmp);
       try {
-        const character = makeDhCharacter({
+        const character = makeCharacter('dh1', {
           systemId: 'dh2',
           edition: '2nd',
           fatigue1st: { current: 2, notes: 'beaten' },
@@ -144,7 +150,10 @@ describe('exportCharacterToExcel (xlsx)', () => {
     process.chdir(tmp);
     try {
       const result = await exportCharacterToExcel(
-        makeDndCharacter() as any,
+        makeCharacter('dnd5e', {
+          id: 'dnd-1',
+          name: 'Ragnar Testborn',
+        }) as any,
         date,
         (key) => translations.ru[key] ?? key,
       );
@@ -168,7 +177,7 @@ describe('exportCharacterToExcel (xlsx)', () => {
         .readdirSync(tmp)
         .filter((f) => f.endsWith('.xlsx')).length;
       const result = await exportCharacterToExcel(
-        makeDndCharacter({ name: '' }) as any,
+        makeCharacter('dnd5e', { name: '' }) as any,
         date,
       );
 

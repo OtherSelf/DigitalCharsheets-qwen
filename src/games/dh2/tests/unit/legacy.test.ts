@@ -5,8 +5,6 @@ import {
   resolveLegacySystemId,
 } from '@/games/character-system';
 
-import { makeDhCharacter } from '@tests/support';
-
 /**
  * ─── LANDMARK: DH2 LEGACY ALIASES ─────────────────────────────────────────
  * Legacy-поля 2-й редакции разрешает плагин своим `plugin.json#aliases`
@@ -27,15 +25,16 @@ describe('dh2: legacy-маппинг редакции', () => {
 
   it('Legacy-лист DH 2e нормализуется в dh2', () => {
     expect(
-      resolveCharacterSystemId(
-        makeDhCharacter({ systemId: undefined, edition: '2nd' }),
-      ),
+      resolveCharacterSystemId({
+        gameSystem: 'Dark Heresy',
+        edition: '2nd',
+      }),
     ).toBe('dh2');
   });
 
   it('без edition 2-я редакция не угадывается', () => {
     expect(
-      resolveCharacterSystemId(makeDhCharacter({ systemId: undefined })),
+      resolveCharacterSystemId({ gameSystem: 'Dark Heresy' }),
     ).toBeUndefined();
   });
 });

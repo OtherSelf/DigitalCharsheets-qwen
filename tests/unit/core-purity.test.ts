@@ -188,4 +188,78 @@ describe('гейт чистоты ядра', () => {
     expect(result.cssAllowed).toEqual([]);
     expect(result.staleCssAllowlist).toEqual([]);
   });
+
+  it('выводит токены из манифестов: новый плагин появляется, удалённый исчезает', async () => {
+    const { gameTokens } =
+      (await import('../../scripts/plugins/lib/manifests.mjs')) as unknown as {
+        gameTokens(gamesDir: string): {
+          ids: string[];
+          shortCodes: string[];
+          names: string[];
+          mentions: string[];
+        };
+      };
+    const root = mkdtempSync(join(tmpdir(), 'dcs-tokens-'));
+    createdRoots.push(root);
+    const gamesDir = join(root, 'games');
+    mkdirSync(join(gamesDir, 'probe'), { recursive: true });
+    writeFileSync(
+      join(gamesDir, 'probe/plugin.json'),
+      JSON.stringify({
+        id: 'probe',
+        gameId: 'probeGame',
+        shortCode: 'probe',
+        defaultStatus: 'published',
+        name: { en: 'Probe — Minimal', ru: 'Проба — минимальная' },
+        game: { name: { en: 'Probe Game', ru: 'Игра Проба' } },
+        aliases: [{ gameSystem: 'Probe Legacy' }],
+      }),
+      'utf8',
+    );
+
+    const tokens = gameTokens(gamesDir);
+    expect(tokens.ids).toContain('probe');
+    expect(tokens.shortCodes).toContain('probe');
+    expect(tokens.names).toEqual(
+      expect.arrayContaining(['probe', 'probeGame', 'Probe Game']),
+    );
+    expect(tokens.mentions).toEqual(
+      expect.arrayContaining(['probe', 'Probe Game', 'Probe Legacy']),
+    );
+
+    rmSync(join(gamesDir, 'probe'), { recursive: true, force: true });
+    expect(gameTokens(gamesDir).ids).not.toContain('probe');
+  });
+
+  it('не считает тестовый плагин упоминанием в host-тестах', async () => {
+    const { gameTokens } =
+      (await import('../../scripts/plugins/lib/manifests.mjs')) as unknown as {
+        gameTokens(gamesDir: string): {
+          ids: string[];
+          names: string[];
+          mentions: string[];
+        };
+      };
+    const root = mkdtempSync(join(tmpdir(), 'dcs-tokens-test-'));
+    createdRoots.push(root);
+    mkdirSync(join(root, 'probe'), { recursive: true });
+    writeFileSync(
+      join(root, 'probe/plugin.json'),
+      JSON.stringify({
+        id: 'probe',
+        gameId: 'probeGame',
+        shortCode: 'probe',
+        defaultStatus: 'test',
+        name: { en: 'Probe', ru: 'Проба' },
+        game: { name: { en: 'Probe Game', ru: 'Игра Проба' } },
+      }),
+      'utf8',
+    );
+
+    const tokens = gameTokens(root);
+    expect(tokens.ids).toContain('probe');
+    expect(tokens.names).toContain('probe');
+    expect(tokens.mentions).not.toContain('probe');
+    expect(tokens.mentions).not.toContain('Probe Game');
+  });
 });

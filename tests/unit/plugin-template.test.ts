@@ -294,7 +294,8 @@ describe('копия фикстуры под чужим id', () => {
     expect(manifest.game.order).toBe(manifest.order);
     const entry = fs.readFileSync(path.join(pluginDir, 'index.ts'), 'utf8');
     expect(entry).toContain(`export const ${PROBE_ID}Module`);
-    // `shortCode` — поле модуля, не манифеста: схема лишних полей не терпит.
+    // `shortCode` объявлен и в манифесте, и в модуле; conformance сверяет пару.
+    expect(manifest.shortCode).toBe(PROBE_ID);
     expect(entry).toContain(`shortCode: '${PROBE_ID}'`);
   });
 });

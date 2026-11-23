@@ -11,7 +11,7 @@ import { saveCharacterToServer } from '@/lib/server-storage';
 
 import {
   createUserFolder,
-  makeDndCharacter,
+  makeCharacter,
   removeDir,
   sessionHeaders,
   useTempDataDir,
@@ -53,12 +53,18 @@ beforeEach(async () => {
   dataDir = useTempDataDir();
   uid = newUid();
   await createUserFolder(uid, 'history-api-user', 'History API');
-  await saveCharacterToServer(uid, makeDndCharacter({ id: CHARACTER_ID }));
+  await saveCharacterToServer(
+    uid,
+    makeCharacter('dnd5e', { id: CHARACTER_ID }),
+  );
   headers = await sessionHeaders(uid);
 
   const foreignUid = newUid();
   await createUserFolder(foreignUid, 'history-foreign', 'Foreign');
-  await saveCharacterToServer(foreignUid, makeDndCharacter({ id: FOREIGN_ID }));
+  await saveCharacterToServer(
+    foreignUid,
+    makeCharacter('dnd5e', { id: FOREIGN_ID }),
+  );
 
   // Оставляем только контролируемые ревизии, без create-маркера.
   await deleteCharacterHistory(uid, CHARACTER_ID);

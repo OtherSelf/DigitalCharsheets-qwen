@@ -20,8 +20,7 @@ import { resolveLogin } from '@/lib/user-index';
 import { readStoredUser, USER_SCHEMA_VERSION } from '@/lib/user-schema';
 
 import {
-  makeDhCharacter,
-  makeDndCharacter,
+  makeCharacter,
   readJson,
   removeDir,
   sessionHeaders,
@@ -153,11 +152,16 @@ describe('GET /api/admin/users/[uid]/characters', () => {
     const user = await seedUser();
     await saveCharacterToServer(
       user.uid,
-      makeDndCharacter({ userId: user.uid, id: 'dnd-1' }),
+      makeCharacter('dnd5e', {
+        userId: user.uid,
+        id: 'dnd-1',
+        name: 'Ragnar Testborn',
+        level: 3,
+      }),
     );
     await saveCharacterToServer(
       user.uid,
-      makeDhCharacter({ userId: user.uid, id: 'dh-1' }),
+      makeCharacter('dh1', { userId: user.uid, id: 'dh-1' }),
     );
 
     const res = await adminCharactersGet(

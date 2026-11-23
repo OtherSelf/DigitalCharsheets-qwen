@@ -1,13 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
+import { createDh1Defaults } from '@/games/dh1/defaults';
 import { buildDh1ExcelSections } from '@/games/dh1/excel';
 import { buildDh1PortableJson } from '@/games/dh1/export';
 import { normalizeDh1 } from '@/games/dh1/normalize';
 import { dh1CharacterSchema } from '@/games/dh1/schema';
 import { DH1_SCHEMA_VERSION } from '@/games/dh1/schema-version';
 import type { GameExportConfig } from '@/games/types';
-
-import { makeDhCharacter } from '@tests/support';
 
 /**
  * ─── LANDMARK: DH1 CONDITIONS TESTS ──────────────────────────────────────
@@ -35,12 +34,15 @@ const EXPORT_ALL: GameExportConfig = {
 };
 
 /**
- * Полный лист 1e: `makeDhCharacter` — облегчённая заготовка миграций, в ней
- * нет обязательных полей базы, которые требует схема.
+ * Полный лист 1e собирает фабрика редакции; тест добавляет только поля,
+ * которые проверяет.
  */
 function baseDh1(overrides: Record<string, unknown> = {}) {
   return {
-    ...makeDhCharacter(overrides),
+    id: 'dh1-fixture',
+    userId: 'user-test',
+    ...createDh1Defaults(overrides),
+    name: 'Acolyte Vex',
     characterClass: 'Adept',
     backstory: '',
     notes: '',

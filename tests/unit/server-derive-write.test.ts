@@ -12,7 +12,7 @@ import {
 } from '@/lib/server-storage';
 
 import {
-  makeDndCharacter,
+  makeCharacter,
   readJson,
   removeDir,
   useTempDataDir,
@@ -44,7 +44,7 @@ afterEach(() => {
 
 /** Согласованный по правилам лист: strength 20, level 5, мастерство +3. */
 function sheet(overrides: Record<string, unknown> = {}) {
-  return makeDndCharacter({
+  return makeCharacter('dnd5e', {
     id: 'char-derive',
     userId: uid,
     level: 5,

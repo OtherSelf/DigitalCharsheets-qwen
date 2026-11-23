@@ -18,7 +18,7 @@ import { resolveLogin } from '@/lib/user-index';
 
 import {
   loginIndexPath,
-  makeDndCharacter,
+  makeCharacter,
   readJson,
   removeDir,
   userPaths,
@@ -56,7 +56,7 @@ async function createUser(login: string, password = 'pass-1234-secure') {
 describe('deleteUserAccount', () => {
   it('удаляет профиль, все листы и запись в индексе', async () => {
     const uid = await createUser('deleteme');
-    await saveCharacterToServer(uid, makeDndCharacter({ userId: uid }));
+    await saveCharacterToServer(uid, makeCharacter('dnd5e', { userId: uid }));
 
     const paths = userPaths(dataDir, uid);
     expect(fs.existsSync(paths.userFile)).toBe(true);
@@ -83,7 +83,7 @@ describe('deleteUserAccount', () => {
 
   it('не удаляет ничего при неверном пароле', async () => {
     const uid = await createUser('protected');
-    await saveCharacterToServer(uid, makeDndCharacter({ userId: uid }));
+    await saveCharacterToServer(uid, makeCharacter('dnd5e', { userId: uid }));
 
     const result = await deleteUserAccount(uid, 'wrong-password');
 
@@ -127,8 +127,14 @@ describe('deleteUserAccount', () => {
   it('не задевает другие аккаунты', async () => {
     const victim = await createUser('shared-device');
     const other = await createUser('other-player');
-    await saveCharacterToServer(victim, makeDndCharacter({ userId: victim }));
-    await saveCharacterToServer(other, makeDndCharacter({ userId: other }));
+    await saveCharacterToServer(
+      victim,
+      makeCharacter('dnd5e', { userId: victim }),
+    );
+    await saveCharacterToServer(
+      other,
+      makeCharacter('dnd5e', { userId: other }),
+    );
 
     expect((await deleteUserAccount(victim, 'pass-1234-secure')).success).toBe(
       true,
@@ -145,7 +151,10 @@ describe('deleteUserAccount', () => {
 
   it('после удаления повторная регистрация даёт новый uid и пустой список', async () => {
     const oldUid = await createUser('reborn');
-    await saveCharacterToServer(oldUid, makeDndCharacter({ userId: oldUid }));
+    await saveCharacterToServer(
+      oldUid,
+      makeCharacter('dnd5e', { userId: oldUid }),
+    );
 
     expect((await deleteUserAccount(oldUid, 'pass-1234-secure')).success).toBe(
       true,

@@ -31,9 +31,9 @@ when you want to see a finished plugin instead of a template.
    sheet and form, UI slots and `plugin.json`.
 2. **Create the folder** `src/games/<id>/` (the folder name must equal `plugin.json#id`).
 3. **Write `plugin.json`** (see [Manifest](#manifest)): `id`, `gameId`,
-   `version`, `order`, `name`/`description` (at least one of `en`/`ru`),
-   `schemaVersion`, the family block `game`, entry points, `sheet`, `i18n`,
-   `demo`, `export`, `migrations`.
+   `shortCode`, `version`, `order`, `name`/`description` (at least one of
+   `en`/`ru`), `schemaVersion`, the family block `game`, entry points, `sheet`,
+   `i18n`, `demo`, `export`, `migrations`.
 4. **Implement the module** in `index.ts` and export it from the `entry.module`
    point: `index.ts#<id>Module`. Export the other entry points the manifest
    references (`createDemo`, `toPortableJson`, `buildExcelSections`, …).
@@ -88,11 +88,13 @@ After renaming run `npm run plugins:generate`, `npm run plugins:check` and
 `npm run verify`; the fixture gate (`tests/unit/plugin-template.test.ts`) does
 the same on a renamed copy, so a rename that misses a field fails CI.
 
-Four values are declared **twice** — in the manifest and in the module object —
-and the generator plus `plugins-registry.test.ts` compare them field by field:
-`id`, `gameId` (and `game.id`), `order`, `defaultStatus`. Change both, or the
-contract fails with `expected 'published' to be 'hidden'`. `schemaVersion` is
-the same story (`plugin.json` and the module).
+Five values are declared **twice** — in the manifest and in the module object —
+and the generator plus `plugins-registry.test.ts` / `plugin-conformance.test.ts`
+compare them field by field: `id`, `gameId` (and `game.id`), `shortCode`,
+`order`, `defaultStatus`. Change both, or the contract fails with
+`expected 'published' to be 'hidden'`. `schemaVersion` is the same story
+(`plugin.json` and the module). `shortCode` is also unique across plugins, so
+two editions cannot share an admin badge.
 
 Display names and descriptions must be genuinely translated: the i18n suite
 fails on a `ru` value that is byte-identical to `en` (`ZZ Probe` works as a
@@ -173,6 +175,7 @@ Validated by `scripts/plugins/generate.mjs` (Ajv) on every generation/verify.
   "pluginApi": "^1.0.0",
   "id": "dh1",
   "gameId": "darkHeresy",
+  "shortCode": "dh1e",
   "version": "1.0.0",
   "order": 20,
   "defaultStatus": "published",
@@ -437,7 +440,7 @@ host suites, and each line below names the file that actually checks it:
 | --- | --- |
 | Generated `registry.generated.ts`, `i18n.generated.ts`, `games.generated.ts` match the manifests byte-for-byte | `npm run plugins:check` (`generate.mjs --check`) after generation; the unit suite re-renders `registry.generated.ts` |
 | Generator output is prettier-clean for any plugin id | `tests/unit/plugins-generator.test.ts` |
-| Manifest ↔ module: id/gameId/order/defaultStatus/schemaVersion, entry points as real named exports, migration chain matches the module | `tests/unit/plugins-registry.test.ts` |
+| Manifest ↔ module: id/gameId/shortCode/order/defaultStatus/schemaVersion, entry points as real named exports, migration chain matches the module | `tests/unit/plugins-registry.test.ts`, `tests/unit/plugin-conformance.test.ts` |
 | Defaults and demo pass the module's zod schema; en/ru dictionaries have the same keys; declared UI slots are implemented and non-empty; out-of-range data is rejected (negative TCK); portable JSON round-trip | `tests/unit/plugin-conformance.test.ts` |
 | UI slots are exactly the declared set (no extras), load lazily, `CompactNav` items carry `icon` and full i18n keys | `tests/unit/plugin-slots.test.ts` |
 | Every plugin declares `BulkEditor`; the `stats` tab comes first; table ids are unique and prefixed with the plugin id; every label key exists in both languages; the save patch does not mutate the sheet | `tests/unit/bulk-editor.test.ts` |

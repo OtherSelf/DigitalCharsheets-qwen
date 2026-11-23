@@ -82,7 +82,7 @@ describe('conformance: авто-обнаружение плагинов', () => 
     expect(registered).toEqual(found);
   });
 
-  it('манифест ↔ модуль: id, gameId, schemaVersion', () => {
+  it('манифест ↔ модуль: id, gameId, shortCode, schemaVersion', () => {
     for (const { dirName, manifest } of discovered) {
       const plugin = gamePlugins.find(
         (item) => item.manifest.id === manifest.id,
@@ -91,6 +91,7 @@ describe('conformance: авто-обнаружение плагинов', () => 
       const gameModule = plugin!.module;
       expect(gameModule.id, dirName).toBe(manifest.id);
       expect(gameModule.gameId, dirName).toBe(manifest.gameId);
+      expect(gameModule.shortCode, dirName).toBe(manifest.shortCode);
       expect(gameModule.schemaVersion, dirName).toBe(manifest.schemaVersion);
     }
   });

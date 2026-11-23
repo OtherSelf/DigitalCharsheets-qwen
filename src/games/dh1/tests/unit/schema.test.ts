@@ -3,6 +3,7 @@ import path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
+import { createDh1Defaults } from '@/games/dh1/defaults';
 import { DH1_SCHEMA_VERSION } from '@/games/dh1/schema-version';
 import type { DH1Character } from '@/games/dh1/types';
 import { CURRENT_SCHEMA_VERSION } from '@/games/plugin-api';
@@ -13,12 +14,30 @@ import {
 import { normalizeCharacterRecord } from '@/lib/character-version';
 import { parseExportPayload } from '@/lib/export-utils';
 
-import {
-  makeDhCharacter,
-  makeDndCharacter,
-  removeDir,
-  useTempDataDir,
-} from '@tests/support';
+import { removeDir, useTempDataDir } from '@tests/support';
+
+/**
+ * Legacy-лист 1e: фабрика редакции плюс поля 2e (`influence`), из-за которых
+ * и запускается миграция. Поля — предмет проверки, поэтому живут в тесте.
+ */
+function legacyDh1(overrides: Record<string, unknown> = {}) {
+  const base = createDh1Defaults(overrides);
+  return {
+    id: 'dh1-legacy-fixture',
+    userId: 'user-test',
+    ...base,
+    name: 'Acolyte Vex',
+    stats: {
+      ...(base.stats as Record<string, unknown>),
+      influence: 5,
+    },
+    statUpgrades: {
+      ...(base.statUpgrades as Record<string, unknown>),
+      influence: [false, false, false, false],
+    },
+    ...overrides,
+  };
+}
 
 /**
  * ─── LANDMARK: DH1 CHARACTER SCHEMA TESTS ────────────────────────────────
@@ -44,7 +63,7 @@ afterEach(() => {
 
 describe('character schema v1', () => {
   it('переводит legacy DH sentence → stable ID и ставит версию', () => {
-    const legacy = makeDhCharacter({
+    const legacy = legacyDh1({
       divination: '',
       divinationEffect: 'Minor Mutation.',
     });
@@ -62,7 +81,7 @@ describe('character schema v1', () => {
 
   it('идемпотентна: второй проход ничего не меняет', () => {
     const first = normalizeCharacterRecord(
-      makeDhCharacter({
+      legacyDh1({
         divination: '',
         divinationEffect: '+2 Insanity Points.',
       }),
@@ -78,7 +97,7 @@ describe('character schema v1', () => {
 
   it('сохраняет неизвестное кастомное пророчество и сообщает о нём', () => {
     const { character, issues } = normalizeCharacterRecord(
-      makeDhCharacter({
+      legacyDh1({
         divination: 'Knowledge is power, guard it well.',
         divinationEffect: '+3 Intelligence.',
       }),
@@ -99,7 +118,7 @@ describe('character schema v1', () => {
         exportDate: '2026-11-11T00:00:00.000Z',
         characterCount: 1,
       },
-      character: makeDhCharacter({
+      character: legacyDh1({
         divination: '',
         divinationEffect: '+2 Agility, +1 Fate Point.',
       }),
@@ -114,7 +133,12 @@ describe('character schema v1', () => {
   });
 
   it('ставит версию D&D-листу без изменения полей', () => {
-    const original = makeDndCharacter();
+    const original = {
+      id: 'dnd-1',
+      userId: 'user-test',
+      gameSystem: 'Dungeons & Dragons',
+      name: 'D&D legacy fixture',
+    };
     const { character, changed } = normalizeCharacterRecord(original);
     expect(changed).toBe(true);
     expect(character.schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
@@ -130,7 +154,7 @@ describe('character schema v1', () => {
     fs.writeFileSync(
       file,
       JSON.stringify(
-        makeDhCharacter({
+        legacyDh1({
           divination: '',
           divinationEffect: '+3 Corruption Points.',
         }),
@@ -160,7 +184,7 @@ describe('character schema v1', () => {
     const charsDir = path.join(dataDir, 'users', uid, 'characters');
     fs.mkdirSync(charsDir, { recursive: true });
     const file = path.join(charsDir, 'future.json');
-    const future = makeDhCharacter({
+    const future = legacyDh1({
       schemaVersion: DH1_SCHEMA_VERSION + 1,
       divination: 'mutationWithout',
       divinationEffect: 'minorMutation',

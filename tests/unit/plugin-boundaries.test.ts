@@ -249,7 +249,7 @@ describe('проверка границ', () => {
       'dh1/tests/unit/rules.test.ts':
         "import { describe } from 'vitest';\n" +
         "import { readFileSync } from 'node:fs';\n" +
-        "import { makeDhCharacter } from '@tests/support';\n" +
+        "import { makeCharacter } from '@tests/support';\n" +
         "import { page } from '@/app/page';",
     });
     expect(report.errors).toEqual([]);

@@ -14,7 +14,7 @@ import {
 import { normalizeCharacterRecord } from '@/lib/character-version';
 import { parseExportPayload } from '@/lib/export-utils';
 
-import { makeDndCharacter, removeDir, useTempDataDir } from '@tests/support';
+import { removeDir, useTempDataDir } from '@tests/support';
 
 /**
  * ─── LANDMARK: DH2 CHARACTER SCHEMA TESTS ────────────────────────────────
@@ -126,7 +126,12 @@ describe('character schema v1', () => {
   });
 
   it('ставит версию D&D-листу без изменения полей', () => {
-    const original = makeDndCharacter();
+    const original = {
+      id: 'dnd-1',
+      userId: 'user-test',
+      gameSystem: 'Dungeons & Dragons',
+      name: 'D&D legacy fixture',
+    };
     const { character, changed } = normalizeCharacterRecord(original);
     expect(changed).toBe(true);
     expect(character.schemaVersion).toBe(CURRENT_SCHEMA_VERSION);

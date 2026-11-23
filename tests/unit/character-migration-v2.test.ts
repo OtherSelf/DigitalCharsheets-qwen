@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { CURRENT_SCHEMA_VERSION } from '@/games/plugin-api';
 import { normalizeCharacterRecord } from '@/lib/character-version';
 
-import { hasPlugin, makeDhCharacter, makeDndCharacter } from '@tests/support';
+import { hasPlugin, makeCharacter } from '@tests/support';
 
 /**
  * ─── LANDMARK: CHARACTER MIGRATION v2 TESTS ────────────────────────────────
@@ -23,13 +23,13 @@ function normalize(raw: any) {
 
 function dhWithStats(overrides: Record<string, unknown> = {}) {
   // Legacy-лист не объявляет `systemId` — его разрешают поля игры.
-  const base = makeDhCharacter({ systemId: undefined, ...overrides });
+  const base = makeCharacter('dh1', { systemId: undefined, ...overrides });
   return base;
 }
 
 describe('миграция листа v2: редакции', () => {
   it('dnd5e: gameSystem → systemId, версия 2, поля не меняются', () => {
-    const original = makeDndCharacter();
+    const original = makeCharacter('dnd5e', { systemId: undefined });
     const { character, changed, issues } = normalize(original);
 
     expect(changed).toBe(true);
@@ -42,9 +42,9 @@ describe('миграция листа v2: редакции', () => {
 
   it('dh без edition не угадывается: лист остаётся как есть', () => {
     const legacy = dhWithStats({
-      stats: { ...makeDhCharacter().stats, influence: 30 },
+      stats: { ...makeCharacter('dh1').stats, influence: 30 },
       statUpgrades: {
-        ...makeDhCharacter().statUpgrades,
+        ...makeCharacter('dh1').statUpgrades,
         influence: [false, false, false, false],
       },
     });
@@ -73,6 +73,11 @@ describe('миграция листа v2: редакции', () => {
     () => {
       const legacy = dhWithStats({
         edition: '2nd',
+        stats: { ...makeCharacter('dh1').stats, influence: 30 },
+        statUpgrades: {
+          ...makeCharacter('dh1').statUpgrades,
+          influence: [false, false, false, false],
+        },
         fatigue2nd: { current: 2, notes: 'second edition' },
       });
       const { character } = normalize(legacy);
@@ -113,9 +118,9 @@ describe('миграция листа v2: редакции', () => {
   it("edition '1st' → dh1, конфликтующие 2e-значения уходят в notes и отчёт", () => {
     const legacy = dhWithStats({
       edition: '1st',
-      stats: { ...makeDhCharacter().stats, influence: 42 },
+      stats: { ...makeCharacter('dh1').stats, influence: 42 },
       statUpgrades: {
-        ...makeDhCharacter().statUpgrades,
+        ...makeCharacter('dh1').statUpgrades,
         influence: [true, false, false, false],
       },
       statNotes: { influence: 'peer of the Ordo' },
@@ -150,7 +155,7 @@ describe('миграция листа v2: идемпотентность и гр
   it('второй прогон ничего не меняет и не дублирует notes', () => {
     const legacy = dhWithStats({
       edition: '1st',
-      stats: { ...makeDhCharacter().stats, influence: 42 },
+      stats: { ...makeCharacter('dh1').stats, influence: 42 },
       fatigue2nd: { current: 4 },
     });
     const first = normalize(legacy);
@@ -166,7 +171,7 @@ describe('миграция листа v2: идемпотентность и гр
   });
 
   it('уже v2-лист не меняется', () => {
-    const first = normalize(makeDhCharacter({ edition: '2nd' }));
+    const first = normalize(makeCharacter('dh1', { edition: '2nd' }));
     const raw = first.character as any;
     const second = normalize(raw);
     expect(second.changed).toBe(false);
@@ -174,7 +179,7 @@ describe('миграция листа v2: идемпотентность и гр
   });
 
   it('файл новее поддерживаемой версии не трогаем', () => {
-    const raw = makeDndCharacter({
+    const raw = makeCharacter('dnd5e', {
       schemaVersion: CURRENT_SCHEMA_VERSION + 1,
     });
     const result = normalize(raw);

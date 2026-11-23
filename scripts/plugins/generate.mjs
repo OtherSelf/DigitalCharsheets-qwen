@@ -29,7 +29,7 @@
  *           src/games/registry.ts, scripts/predeploy.sh.
  * ============================================================================
  */
-import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -43,6 +43,10 @@ import {
   PLUGIN_API_VERSION,
   PLUGIN_MANIFEST_VERSION,
 } from '../../src/games/plugin-api.constants.mjs';
+import {
+  collectManifests as collectManifestsFrom,
+  MANIFEST_FILE,
+} from './lib/manifests.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 export const ROOT = resolve(HERE, '../..');
@@ -51,10 +55,17 @@ export const SCHEMA_PATH = join(GAMES_DIR, 'plugin.schema.json');
 export const REGISTRY_PATH = join(GAMES_DIR, 'registry.generated.ts');
 export const I18N_REGISTRY_PATH = join(GAMES_DIR, 'i18n.generated.ts');
 export const GAMES_DEFS_PATH = join(GAMES_DIR, 'games.generated.ts');
-export const MANIFEST_FILE = 'plugin.json';
+export { MANIFEST_FILE };
 
-/** Каталоги `src/games/*`, которые являются ядром, а не плагинами. */
-const CORE_GAMES_DIRS = new Set(['shared', 'i18n']);
+/**
+ * Собрать манифесты плагинов (папки с `plugin.json`).
+ *
+ * @param {string} [gamesDir]
+ * @returns {{dirName: string, dir: string, manifest: any}[]}
+ */
+export function collectManifests(gamesDir = GAMES_DIR) {
+  return collectManifestsFrom(gamesDir);
+}
 
 /**
  * Проверка одного плагина: id = имя папки, файлы точек входа существуют,
@@ -223,6 +234,7 @@ export function validatePluginFolder({ gamesDir, dirName, manifest }) {
 export function validateCollection(plugins) {
   const errors = [];
   const seenIds = new Map();
+  const seenShortCodes = new Map();
   const seenOrders = new Map();
   const games = new Map();
 
@@ -233,6 +245,15 @@ export function validateCollection(plugins) {
       );
     }
     seenIds.set(manifest.id, dirName);
+
+    if (manifest.shortCode !== undefined) {
+      if (seenShortCodes.has(manifest.shortCode)) {
+        errors.push(
+          `дублирующийся shortCode "${manifest.shortCode}" (${seenShortCodes.get(manifest.shortCode)} и ${dirName})`,
+        );
+      }
+      seenShortCodes.set(manifest.shortCode, dirName);
+    }
 
     if (seenOrders.has(manifest.order)) {
       errors.push(
@@ -280,30 +301,6 @@ export function validateCollection(plugins) {
   }
 
   return errors;
-}
-
-/**
- * Собрать манифесты плагинов (папки с `plugin.json`).
- *
- * @param {string} [gamesDir]
- * @returns {{dirName: string, dir: string, manifest: any}[]}
- */
-export function collectManifests(gamesDir = GAMES_DIR) {
-  const result = [];
-  for (const entry of readdirSync(gamesDir, { withFileTypes: true })) {
-    if (!entry.isDirectory() || CORE_GAMES_DIRS.has(entry.name)) continue;
-    const dir = join(gamesDir, entry.name);
-    const manifestPath = join(dir, MANIFEST_FILE);
-    if (!existsSync(manifestPath)) continue;
-    let manifest;
-    try {
-      manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
-    } catch (error) {
-      throw new Error(`${manifestPath}: некорректный JSON — ${error.message}`);
-    }
-    result.push({ dirName: entry.name, dir, manifest });
-  }
-  return result.sort((a, b) => a.dirName.localeCompare(b.dirName, 'en'));
 }
 
 /** Валидатор Ajv по `plugin.schema.json`. */

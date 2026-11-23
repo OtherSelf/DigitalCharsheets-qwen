@@ -4,8 +4,7 @@ import {
   resolveCharacterSystemId,
   resolveLegacySystemId,
 } from '@/games/character-system';
-
-import { makeDndCharacter } from '@tests/support';
+import { createDnd5eDefaults } from '@/games/dnd5e/defaults';
 
 /**
  * ─── LANDMARK: DND5E LEGACY ALIASES ───────────────────────────────────────
@@ -26,6 +25,6 @@ describe('dnd5e: legacy-маппинг редакции', () => {
   });
 
   it('Legacy-лист D&D нормализуется в dnd5e', () => {
-    expect(resolveCharacterSystemId(makeDndCharacter())).toBe('dnd5e');
+    expect(resolveCharacterSystemId(createDnd5eDefaults())).toBe('dnd5e');
   });
 });

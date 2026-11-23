@@ -26,8 +26,7 @@ import { readStoredUser } from '@/lib/user-schema';
 
 import {
   loginIndexPath,
-  makeDhCharacter,
-  makeDndCharacter,
+  makeCharacter,
   readJson,
   removeDir,
   sessionCookie,
@@ -76,11 +75,11 @@ describe('GET /api/admin/users', () => {
     const user = await seedUser();
     await saveCharacterToServer(
       user.uid,
-      makeDndCharacter({ userId: user.uid, id: 'dnd-1' }),
+      makeCharacter('dnd5e', { userId: user.uid, id: 'dnd-1' }),
     );
     await saveCharacterToServer(
       user.uid,
-      makeDhCharacter({ userId: user.uid, id: 'dh-1' }),
+      makeCharacter('dh1', { userId: user.uid, id: 'dh-1' }),
     );
 
     const res = await adminUsersGet(
@@ -159,7 +158,7 @@ describe('PATCH /api/admin/users/[uid]', () => {
     const user = await seedUser();
     await saveCharacterToServer(
       user.uid,
-      makeDndCharacter({ userId: user.uid, id: 'dnd-1' }),
+      makeCharacter('dnd5e', { userId: user.uid, id: 'dnd-1' }),
     );
 
     const res = await adminUserPatch(
@@ -321,7 +320,7 @@ describe('DELETE /api/admin/users/[uid]', () => {
     const user = await seedUser();
     await saveCharacterToServer(
       user.uid,
-      makeDndCharacter({ userId: user.uid, id: 'dnd-1' }),
+      makeCharacter('dnd5e', { userId: user.uid, id: 'dnd-1' }),
     );
 
     const res = await adminUserDelete(

@@ -19,7 +19,7 @@ import {
   parseExportPayload,
 } from '@/lib/export-utils';
 
-import { makeDhCharacter, makeDndCharacter } from '@tests/support';
+import { makeCharacter } from '@tests/support';
 
 // xlsx 0.20 в Node подхватывает fs только при CJS-загрузке; под vitest (ESM)
 // детект не срабатывает, и writeFile/readFile уходят в браузерную ветку.
@@ -56,7 +56,7 @@ describe('export format', () => {
 
   it('buildCharacterExport: конверт с metadata и без служебных полей', () => {
     const payload = buildCharacterExport(
-      makeDndCharacter() as any,
+      makeCharacter('dnd5e', { name: 'Ragnar Testborn' }) as any,
       DEFAULT_EXPORT_CONFIG,
       date,
     );
@@ -76,7 +76,10 @@ describe('export format', () => {
 
   it('buildBackupExport: список целиком, account и characterCount', () => {
     const payload = buildBackupExport(
-      [makeDndCharacter({ id: 'a' }), makeDhCharacter({ id: 'b' })] as any,
+      [
+        makeCharacter('dnd5e', { id: 'a' }),
+        makeCharacter('dh1', { id: 'b' }),
+      ] as any,
       'petya',
       date,
     );
@@ -94,7 +97,7 @@ describe('export format', () => {
   it('build отказывается экспортировать лист без имени', () => {
     expect(() =>
       buildCharacterExport(
-        makeDndCharacter({ name: '' }) as any,
+        makeCharacter('dnd5e', { name: '' }) as any,
         DEFAULT_EXPORT_CONFIG,
       ),
     ).toThrow(/Экспорт отменён/);
@@ -119,7 +122,7 @@ describe('export format', () => {
 
   it('round-trip: build → parse возвращает тот же набор', () => {
     const payload = buildBackupExport(
-      [makeDndCharacter({ id: 'a' })] as any,
+      [makeCharacter('dnd5e', { id: 'a' })] as any,
       'petya',
       date,
     );

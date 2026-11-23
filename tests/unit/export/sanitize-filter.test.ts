@@ -14,7 +14,7 @@ import {
   sanitizeData,
 } from '@/lib/export-utils';
 
-import { hasPlugin, makeDhCharacter, makeDndCharacter } from '@tests/support';
+import { hasPlugin, makeCharacter } from '@tests/support';
 import { allOff } from '@tests/support/export-fixtures';
 
 // xlsx 0.20 в Node подхватывает fs только при CJS-загрузке; под vitest (ESM)
@@ -73,7 +73,7 @@ describe('sanitizeData', () => {
 describe('filterCharacterForExport', () => {
   it('при всех выключенных флагах оставляет только id и gameSystem', () => {
     const filtered = filterCharacterForExport(
-      makeDndCharacter() as any,
+      makeCharacter('dnd5e', { id: 'dnd-1' }) as any,
       allOff,
     );
     expect(filtered).toEqual({
@@ -86,7 +86,14 @@ describe('filterCharacterForExport', () => {
 
   it('базовая информация, статы и боевые поля D&D попадают в экспорт', () => {
     const filtered = filterCharacterForExport(
-      makeDndCharacter() as any,
+      makeCharacter('dnd5e', {
+        name: 'Ragnar Testborn',
+        characterClass: 'Fighter',
+        race: 'Human',
+        hitPoints: { current: 24, max: 28 },
+        armorClass: 17,
+        proficiencyBonus: 2,
+      }) as any,
       DEFAULT_EXPORT_CONFIG,
     );
 
@@ -104,7 +111,12 @@ describe('filterCharacterForExport', () => {
 
   it('для Dark Heresy берёт поля своей системы', () => {
     const filtered = filterCharacterForExport(
-      makeDhCharacter() as any,
+      makeCharacter('dh1', {
+        name: 'Acolyte Vex',
+        careerPath: 'Adept',
+        homeWorld: 'Hive World',
+        wounds: { current: 10, max: 10, notes: '' },
+      }) as any,
       DEFAULT_EXPORT_CONFIG,
     );
 
@@ -123,7 +135,7 @@ describe('filterCharacterForExport', () => {
   it.runIf(hasPlugin('dh2'))(
     'не теряет поля DH v2: fatigue2nd, criticalConditions, customResources',
     () => {
-      const dh = makeDhCharacter({
+      const dh = makeCharacter('dh1', {
         systemId: 'dh2',
         edition: '2nd',
         fatigue1st: { current: 2, notes: 'beaten' },
@@ -158,7 +170,7 @@ describe('filterCharacterForExport', () => {
       includeNarrative: false,
     };
     const filtered = filterCharacterForExport(
-      makeDndCharacter({ backstory: 'secret' }) as any,
+      makeCharacter('dnd5e', { backstory: 'secret' }) as any,
       config,
     );
 

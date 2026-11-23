@@ -11,7 +11,7 @@ import { registerUser } from '@/lib/server-auth';
 import { saveCharacterToServer } from '@/lib/server-storage';
 
 import {
-  makeDndCharacter,
+  makeCharacter,
   removeDir,
   sessionHeaders,
   useTempDataDir,
@@ -32,7 +32,7 @@ describe('игра удалена, листы остались', () => {
   let dataDir: string;
   let uid: string;
   const character = {
-    ...makeDndCharacter({ id: 'ghost-1', userId: 'ghost-user' }),
+    ...makeCharacter('dnd5e', { id: 'ghost-1', userId: 'ghost-user' }),
     name: 'Ghost of a Removed Game',
     systemId: 'removed-game',
     gameSystem: 'Removed Game',

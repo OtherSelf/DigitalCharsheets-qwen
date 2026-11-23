@@ -37,11 +37,13 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { gameTokens } from './lib/manifests.mjs';
 import { stripCommentsOnly, stripNonCode } from './lib/scan.mjs';
 
 export { stripCommentsOnly, stripNonCode };
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
+const GAMES_DIR = join(ROOT, 'src/games');
 
 /** Каталоги ядра, где игровых знаний быть не должно. */
 export const CORE_DIRS = [
@@ -55,15 +57,17 @@ export const CORE_DIRS = [
   'src/games/shared',
 ];
 
+/**
+ * Имена и id игр — из манифестов (`plugin.json`), а не литералами: новый
+ * плагин попадает под гейт без правки скрипта, удалённый исчезает. Имена
+ * включают `gameId`, `shortCode`, отображаемые имена игры/плагина и
+ * legacy-алиасы; `GAME_FIELDS` остаётся курируемым (поля в манифесте не
+ * объявлены).
+ */
+const TOKENS = gameTokens(GAMES_DIR);
+
 /** Имена игр/плагинов; в коде ядра их быть не должно вообще. */
-export const GAME_NAMES = [
-  'dnd5e',
-  'dh1',
-  'dh2',
-  'Dungeons',
-  'Dark Heresy',
-  'darkHeresy',
-];
+export const GAME_NAMES = TOKENS.names;
 
 /** Игровые поля: конкретные игры, их механики и подписи. */
 export const GAME_FIELDS = [
@@ -124,12 +128,12 @@ export const CSS_GAME_TOKENS = [
 export const CSS_ALLOWLIST = [];
 
 /**
- * Точные id игр. `stripNonCode` затирает содержимое литералов, поэтому
- * `if (systemId === 'dh1')` раньше проходил незамеченным. id ищутся отдельно
- * и только целиком: подпись «Dark Heresy» в словаре — данные, а не знание
- * ядра, и остаётся разрешённой.
+ * Точные id и shortCode игр. `stripNonCode` затирает содержимое литералов,
+ * поэтому `if (systemId === 'dh1')` раньше проходил незамеченным. id ищутся
+ * отдельно и только целиком: подпись «Dark Heresy» в словаре — данные, а не
+ * знание ядра, и остаётся разрешённой.
  */
-export const GAME_IDS = ['dnd5e', 'dh1', 'dh2'];
+export const GAME_IDS = [...TOKENS.ids, ...TOKENS.shortCodes];
 
 /**
  * Исключения для id в литералах: данные i18n и подобные таблицы, где id —

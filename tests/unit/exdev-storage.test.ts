@@ -11,7 +11,7 @@ import {
 } from '@/lib/server-storage';
 
 import {
-  makeDndCharacter,
+  makeCharacter,
   readJson,
   removeDir,
   userPaths,
@@ -49,7 +49,7 @@ describe('writeJsonAtomic: фолбэк при EXDEV', () => {
   it('правка не теряется: данные записаны валидным JSON, .tmp удалён', async () => {
     await saveCharacterToServer(
       uid,
-      makeDndCharacter({ id: 'exdev-ok', userId: uid, name: 'Before' }),
+      makeCharacter('dnd5e', { id: 'exdev-ok', userId: uid, name: 'Before' }),
     );
     const charsDir = userPaths(dataDir, uid).charactersDir;
 
@@ -75,7 +75,7 @@ describe('writeJsonAtomic: фолбэк при EXDEV', () => {
   it('EXDEV + отказ прямой записи: ошибка наружу, оригинал цел, .tmp убран', async () => {
     await saveCharacterToServer(
       uid,
-      makeDndCharacter({ id: 'exdev-fail', userId: uid, name: 'Before' }),
+      makeCharacter('dnd5e', { id: 'exdev-fail', userId: uid, name: 'Before' }),
     );
     const charsDir = userPaths(dataDir, uid).charactersDir;
     const filePath = path.join(charsDir, 'exdev-fail.json');

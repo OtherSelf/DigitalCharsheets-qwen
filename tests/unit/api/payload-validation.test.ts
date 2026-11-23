@@ -18,7 +18,7 @@ import {
 import type { Character } from '@/lib/types';
 
 import {
-  makeDndCharacter,
+  makeCharacter,
   readJson,
   removeDir,
   sessionHeaders,
@@ -55,7 +55,7 @@ describe('валидация payload листа (SEC-10)', () => {
 
   /** Один вызов фикстуры на файл: храповик считает упоминания игр в хосте. */
   const sheet = (overrides: Record<string, unknown> = {}) => ({
-    ...makeDndCharacter(),
+    ...makeCharacter('dnd5e'),
     ...overrides,
   });
 

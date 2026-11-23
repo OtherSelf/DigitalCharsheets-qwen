@@ -21,7 +21,7 @@ import {
 
 import {
   createUserFolder,
-  makeDndCharacter,
+  makeCharacter,
   readJson,
   removeDir,
   useTempDataDir,
@@ -37,7 +37,10 @@ let uid: string;
 async function seed(): Promise<void> {
   uid = newUid();
   await createUserFolder(uid, 'share-user', 'Share User');
-  await saveCharacterToServer(uid, makeDndCharacter({ id: CHARACTER_ID }));
+  await saveCharacterToServer(
+    uid,
+    makeCharacter('dnd5e', { id: CHARACTER_ID }),
+  );
 }
 
 function readShares(): {
@@ -232,7 +235,10 @@ describe('revoke', () => {
 
   it('отзывает все ссылки пользователя', async () => {
     const secondCharacter = 'char-2';
-    await saveCharacterToServer(uid, makeDndCharacter({ id: secondCharacter }));
+    await saveCharacterToServer(
+      uid,
+      makeCharacter('dnd5e', { id: secondCharacter }),
+    );
     const first = await issueShareToken(uid, CHARACTER_ID, { nowMs: NOW });
     const second = await issueShareToken(uid, secondCharacter, { nowMs: NOW });
 
@@ -262,7 +268,7 @@ describe('cleanup hooks', () => {
     expect(ownerUid).toBeTruthy();
     await saveCharacterToServer(
       ownerUid as string,
-      makeDndCharacter({ id: 'char-delete' }),
+      makeCharacter('dnd5e', { id: 'char-delete' }),
     );
     const { token } = await issueShareToken(ownerUid as string, 'char-delete', {
       nowMs: NOW,

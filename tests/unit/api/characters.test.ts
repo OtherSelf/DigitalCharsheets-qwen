@@ -21,8 +21,7 @@ import { authenticateUser } from '@/lib/server-auth';
 import { resetWriteSeqGuard } from '@/lib/server-storage';
 
 import {
-  makeDhCharacter,
-  makeDndCharacter,
+  makeCharacter,
   readJson,
   removeDir,
   sessionHeaders,
@@ -55,14 +54,14 @@ describe('/api/characters', () => {
   });
 
   it('POST без сессии — 401 и ничего не пишет', async () => {
-    const res = await charactersPost(json(makeDndCharacter()));
+    const res = await charactersPost(json(makeCharacter('dnd5e')));
     expect(res.status).toBe(401);
     expect(fs.existsSync(path.join(dataDir, 'users'))).toBe(false);
   });
 
   it('POST создаёт персонажа (201) и GET его возвращает', async () => {
     const { uid } = await loginAs('user-api');
-    const payload = { ...makeDndCharacter(), userId: 'чужой-uid' };
+    const payload = { ...makeCharacter('dnd5e'), userId: 'чужой-uid' };
     delete (payload as any).id;
 
     const res = await charactersPost(json(payload, await sessionHeaders(uid)));
@@ -84,7 +83,7 @@ describe('/api/characters', () => {
     const { uid } = await loginAs('user-api');
     const created = await (
       await charactersPost(
-        json({ ...makeDhCharacter() }, await sessionHeaders(uid)),
+        json({ ...makeCharacter('dh1') }, await sessionHeaders(uid)),
       )
     ).json();
 
@@ -106,7 +105,7 @@ describe('/api/characters', () => {
     const { uid } = await loginAs('user-api');
     const created = await (
       await charactersPost(
-        json({ ...makeDhCharacter() }, await sessionHeaders(uid)),
+        json({ ...makeCharacter('dh1') }, await sessionHeaders(uid)),
       )
     ).json();
 
@@ -120,7 +119,7 @@ describe('/api/characters', () => {
     const created = await (
       await charactersPost(
         json(
-          { ...makeDhCharacter({ experience: 0 }) },
+          { ...makeCharacter('dh1', { experience: 0 }) },
           await sessionHeaders(uid),
         ),
       )
@@ -161,7 +160,7 @@ describe('/api/characters', () => {
     const { uid } = await loginAs('user-api');
     const created = await (
       await charactersPost(
-        json({ ...makeDhCharacter() }, await sessionHeaders(uid)),
+        json({ ...makeCharacter('dh1') }, await sessionHeaders(uid)),
       )
     ).json();
 
@@ -193,7 +192,7 @@ describe('/api/characters', () => {
     const { uid } = await loginAs('user-api');
     const created = await (
       await charactersPost(
-        json({ ...makeDhCharacter() }, await sessionHeaders(uid)),
+        json({ ...makeCharacter('dh1') }, await sessionHeaders(uid)),
       )
     ).json();
 
@@ -224,7 +223,7 @@ describe('/api/characters', () => {
     const { uid } = await loginAs('user-api');
     const created = await (
       await charactersPost(
-        json({ ...makeDhCharacter() }, await sessionHeaders(uid)),
+        json({ ...makeCharacter('dh1') }, await sessionHeaders(uid)),
       )
     ).json();
     const url = `http://localhost/api/characters/${created.id}`;
@@ -262,7 +261,7 @@ describe('path traversal в /api/characters/[id] (SEC-3, SEC-3b)', () => {
     const { uid } = await registerAs(username, 'test-pass-1234', username);
     const created = await charactersPost(
       json(
-        { ...makeDndCharacter({ name: `${username} sheet` }) },
+        { ...makeCharacter('dnd5e', { name: `${username} sheet` }) },
         await sessionHeaders(uid),
       ),
     );

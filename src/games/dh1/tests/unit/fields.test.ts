@@ -7,15 +7,16 @@ import { dh1IdentitySchema } from '@/games/dh1/schemas';
 import { DarkHeresyHomeWorlds } from '@/games/dh1/types';
 import type { GameExportConfig } from '@/games/types';
 
-import { makeDhCharacter } from '@tests/support';
-
 /**
- * Полный лист 1e: `makeDhCharacter` — облегчённая заготовка миграций, в ней
- * нет обязательных полей базы (`characterClass`, `backstory`, `fatigue1st`…).
+ * Полный лист 1e собирает фабрика редакции; тест добавляет только поля,
+ * которые проверяет (в фабрике их нет по определению).
  */
 function baseDh1(overrides: Record<string, unknown> = {}) {
   return {
-    ...makeDhCharacter(overrides),
+    id: 'dh1-fixture',
+    userId: 'user-test',
+    ...createDh1Defaults(overrides),
+    name: 'Acolyte Vex',
     characterClass: 'Adept',
     backstory: '',
     notes: '',
@@ -46,7 +47,10 @@ function baseDh1(overrides: Record<string, unknown> = {}) {
  */
 describe('DH1: аддитивные поля листа', () => {
   it('legacy-лист без новых блоков проходит схему', () => {
-    const parsed = dh1CharacterSchema.parse(baseDh1());
+    const raw = baseDh1();
+    // Legacy-лист ещё не знал структурного identity — проверяем именно его.
+    delete (raw as Record<string, unknown>).identity;
+    const parsed = dh1CharacterSchema.parse(raw);
     expect(parsed.identity).toBeUndefined();
     expect(parsed.psy).toBeUndefined();
     expect(parsed.traits).toBeUndefined();

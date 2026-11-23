@@ -27,13 +27,14 @@ import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { gameTokens, tokenAlternation } from '../plugins/lib/manifests.mjs';
+
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const UNIT_DIR = join(ROOT, 'tests/unit');
 const VISUAL_DIR = join(ROOT, 'tests/visual');
 const SUPPORT_DIR = join(ROOT, 'tests/support');
 const GAMES_DIR = join(ROOT, 'src/games');
 const LIMIT = 400;
-const CORE_GAMES_DIRS = new Set(['shared', 'i18n']);
 
 /**
  * Игровые упоминания в `tests/visual` и `tests/support`: сценарий одной
@@ -43,140 +44,145 @@ const CORE_GAMES_DIRS = new Set(['shared', 'i18n']);
  *
  * Счёт — вхождения идентификаторов и строк (`Dungeons`, `dnd5e`,
  * `makeDndCharacter`, `sheet-dnd-…`), а не строки: имя селектора и имя
- * фикстуры одинаково важны.
+ * фикстуры одинаково важны. Набор токенов — из манифестов (см.
+ * `GAME_TOKEN_RE`), поэтому новый опубликованный плагин попадает под храповик
+ * без правки скрипта.
  */
 const GAME_MENTION_ALLOWANCE = {
+  // Host-сценарий проверяет API/страницу/пайплайн, а не правила редакции (D24).
+  // Причина повторяется, чтобы у каждой записи было объяснение и срок.
+
   'tests/visual/pages.spec.ts': {
     max: 23,
     reason:
-      'общие страницы проверяются на живых играх; сценарии редакций переезжают в плагины',
-    removeBy: 'этап 8 трекера плагинов',
+      'host-страница на поставляемом наборе (D13/D24): снимается страница, лист — фикстура',
+    removeBy: 'остаётся: host-страница',
   },
   'tests/visual/i18n-raw.spec.ts': {
     max: 6,
-    reason: 'сырые ключи словарей проверяются на реальных редакциях',
-    removeBy: 'этап 8 трекера плагинов',
-  },
-  'tests/support/fixtures.ts': {
-    max: 6,
     reason:
-      'makeDndCharacter/makeDhCharacter — тест-кит хоста; +1 (systemId в DH-фикстуре) ' +
-      'осознанно после ADR 0004: лист без редакции больше не угадывается',
-    removeBy: 'этап 8 трекера плагинов',
+      'host-страница на поставляемом наборе (D13/D24): снимается страница, лист — фикстура',
+    removeBy: 'остаётся: host-страница',
   },
   'tests/visual/admin.spec.ts': {
     max: 4,
-    reason: 'админка проверяется на листах двух редакций',
-    removeBy: 'этап 8 трекера плагинов',
+    reason:
+      'host-страница на поставляемом наборе (D13/D24): снимается страница, лист — фикстура',
+    removeBy: 'остаётся: host-страница',
   },
   'tests/visual/form-validation.spec.ts': {
     max: 4,
-    reason: 'валидация формы проверяется на живых редакциях',
-    removeBy: 'этап 8 трекера плагинов',
+    reason:
+      'host-страница на поставляемом наборе (D13/D24): снимается страница, лист — фикстура',
+    removeBy: 'остаётся: host-страница',
   },
   'tests/visual/history.spec.ts': {
     max: 4,
-    reason: 'история листа проверяется на живых редакциях',
-    removeBy: 'этап 8 трекера плагинов',
+    reason:
+      'host-страница на поставляемом наборе (D13/D24): снимается страница, лист — фикстура',
+    removeBy: 'остаётся: host-страница',
   },
   'tests/visual/basic-pages.spec.ts': {
     max: 3,
-    reason: 'базовые страницы используют листы редакций',
-    removeBy: 'этап 8 трекера плагинов',
+    reason:
+      'host-страница на поставляемом наборе (D13/D24): снимается страница, лист — фикстура',
+    removeBy: 'остаётся: host-страница',
   },
   'tests/visual/creation.spec.ts': {
     max: 3,
-    reason: 'мастер создания проверяется на живых редакциях',
-    removeBy: 'этап 8 трекера плагинов',
+    reason:
+      'host-страница на поставляемом наборе (D13/D24): снимается страница, лист — фикстура',
+    removeBy: 'остаётся: host-страница',
   },
   'tests/visual/helpers.ts': {
     max: 3,
-    reason: 'хелперы визуальных тестов знают имена редакций для навигации',
-    removeBy: 'этап 8 трекера плагинов',
+    reason:
+      'host-страница на поставляемом наборе (D13/D24): снимается страница, лист — фикстура',
+    removeBy: 'остаётся: host-страница',
   },
   'tests/visual/fixtures.ts': {
     max: 1,
-    reason: 'фикстуры визуальных тестов ссылаются на лист DH',
-    removeBy: 'этап 8 трекера плагинов',
+    reason:
+      'host-страница на поставляемом наборе (D13/D24): снимается страница, лист — фикстура',
+    removeBy: 'остаётся: host-страница',
   },
   'tests/visual/locale.spec.ts': {
     max: 1,
-    reason: 'локаль проверяется на листе D&D',
-    removeBy: 'этап 8 трекера плагинов',
+    reason:
+      'host-страница на поставляемом наборе (D13/D24): снимается страница, лист — фикстура',
+    removeBy: 'остаётся: host-страница',
   },
   'tests/support/character-payloads.ts': {
     max: 1,
-    reason: 'тестовая payload-фабрика знает имя системы',
-    removeBy: 'этап 8 трекера плагинов',
-  },
-  // Host unit-тесты: потолки сняты на 2026-11-20 (этап 5 game-core). Числа
-  // могут только уменьшаться: сценарий редакции переезжает в
-  // `src/games/<id>/tests/`, а тест контракта идёт по реестру.
-  'tests/unit/account-deletion.test.ts': {
-    max: 6,
     reason:
-      'сценарий использует живые редакции; переезжает в плагин или на итерацию реестра',
-    removeBy: 'этап 5 трекера game-core',
+      'host-сценарий на живых редакциях (D24): проверяется пайплайн, а не правила игры',
+    removeBy: 'остаётся: host-сценарий',
+  },
+  'tests/unit/account-deletion.test.ts': {
+    max: 5,
+    reason:
+      'host-сценарий на живых редакциях (D24): проверяется пайплайн, а не правила игры',
+    removeBy: 'остаётся: host-сценарий',
   },
   'tests/unit/admin/bootstrap.test.ts': {
-    max: 7,
+    max: 5,
     reason:
-      'сценарий использует живые редакции; переезжает в плагин или на итерацию реестра',
-    removeBy: 'этап 5 трекера game-core',
+      'host-сценарий на живых редакциях (D24): проверяется пайплайн, а не правила игры',
+    removeBy: 'остаётся: host-сценарий',
   },
   'tests/unit/admin/users.test.ts': {
-    max: 6,
+    max: 4,
     reason:
-      'сценарий использует живые редакции; переезжает в плагин или на итерацию реестра',
-    removeBy: 'этап 5 трекера game-core',
+      'host-сценарий на живых редакциях (D24): проверяется пайплайн, а не правила игры',
+    removeBy: 'остаётся: host-сценарий',
   },
   'tests/unit/admin-helpers.test.ts': {
     max: 23,
     reason:
-      'сценарий использует живые редакции; переезжает в плагин или на итерацию реестра',
-    removeBy: 'этап 5 трекера game-core',
+      'host-сценарий на живых редакциях (D24): проверяется пайплайн, а не правила игры',
+    removeBy: 'остаётся: host-сценарий',
   },
   'tests/unit/api/auth-sessions.test.ts': {
-    max: 3,
+    max: 2,
     reason:
-      'сценарий использует живые редакции; переезжает в плагин или на итерацию реестра',
-    removeBy: 'этап 5 трекера game-core',
+      'host-сценарий на живых редакциях (D24): проверяется пайплайн, а не правила игры',
+    removeBy: 'остаётся: host-сценарий',
   },
   'tests/unit/api/characters.test.ts': {
-    max: 11,
+    max: 9,
     reason:
-      'сценарий использует живые редакции; переезжает в плагин или на итерацию реестра',
-    removeBy: 'этап 5 трекера game-core',
+      'host-сценарий на живых редакциях (D24): проверяется пайплайн, а не правила игры',
+    removeBy: 'остаётся: host-сценарий',
   },
   'tests/unit/api/export.test.ts': {
-    max: 3,
+    max: 2,
     reason:
-      'сценарий использует живые редакции; переезжает в плагин или на итерацию реестра',
-    removeBy: 'этап 5 трекера game-core',
+      'host-сценарий на живых редакциях (D24): проверяется пайплайн, а не правила игры',
+    removeBy: 'остаётся: host-сценарий',
   },
   'tests/unit/api/payload-validation.test.ts': {
-    max: 7,
+    max: 1,
     reason:
-      'сценарий использует живые редакции; переезжает в плагин или на итерацию реестра',
-    removeBy: 'этап 5 трекера game-core',
+      'host-сценарий на живых редакциях (D24): проверяется пайплайн, а не правила игры',
+    removeBy: 'остаётся: host-сценарий',
   },
   'tests/unit/bulk-editor.test.ts': {
     max: 2,
     reason:
-      'сценарий использует живые редакции; переезжает в плагин или на итерацию реестра',
-    removeBy: 'этап 5 трекера game-core',
+      'host-сценарий на живых редакциях (D24): проверяется пайплайн, а не правила игры',
+    removeBy: 'остаётся: host-сценарий',
   },
   'tests/unit/character-history-api.test.ts': {
-    max: 3,
+    max: 2,
     reason:
-      'сценарий использует живые редакции; переезжает в плагин или на итерацию реестра',
-    removeBy: 'этап 5 трекера game-core',
+      'host-сценарий на живых редакциях (D24): проверяется пайплайн, а не правила игры',
+    removeBy: 'остаётся: host-сценарий',
   },
   'tests/unit/character-migration-v2.test.ts': {
     max: 31,
     reason:
-      'сценарий использует живые редакции; переезжает в плагин или на итерацию реестра',
-    removeBy: 'этап 5 трекера game-core',
+      'host-сценарий на живых редакциях (D24): проверяется пайплайн, а не правила игры',
+    removeBy: 'остаётся: host-сценарий',
   },
   'tests/unit/core-imports.test.ts': {
     max: 9,
@@ -184,51 +190,51 @@ const GAME_MENTION_ALLOWANCE = {
     removeBy: 'остаётся: вход гейта',
   },
   'tests/unit/core-purity.test.ts': {
-    max: 12,
+    max: 11,
     reason: 'id игры — вход гейта чистоты ядра, а не знание хоста',
     removeBy: 'остаётся: вход гейта',
   },
   'tests/unit/dh-family-parity.test.ts': {
     max: 37,
     reason:
-      'паритет двух редакций DH — host-level тест; типы модулей добавлены, чтобы deadcode:check видел ссылки на statTotal/STAT_UPGRADE_STEP/TRAINING_KEYS',
+      'паритет двух редакций DH — host-level тест; модули перебираются по реестру',
     removeBy: 'остаётся: кросс-эдишн тест',
   },
   'tests/unit/exdev-storage.test.ts': {
-    max: 3,
+    max: 2,
     reason:
-      'сценарий использует живые редакции; переезжает в плагин или на итерацию реестра',
-    removeBy: 'этап 5 трекера game-core',
+      'host-сценарий на живых редакциях (D24): проверяется пайплайн, а не правила игры',
+    removeBy: 'остаётся: host-сценарий',
   },
   'tests/unit/export/excel.test.ts': {
-    max: 11,
+    max: 9,
     reason:
-      'сценарий использует живые редакции; переезжает в плагин или на итерацию реестра',
-    removeBy: 'этап 5 трекера game-core',
+      'host-сценарий на живых редакциях (D24): проверяется пайплайн, а не правила игры',
+    removeBy: 'остаётся: host-сценарий',
   },
   'tests/unit/export/format.test.ts': {
-    max: 7,
+    max: 5,
     reason:
-      'сценарий использует живые редакции; переезжает в плагин или на итерацию реестра',
-    removeBy: 'этап 5 трекера game-core',
+      'host-сценарий на живых редакциях (D24): проверяется пайплайн, а не правила игры',
+    removeBy: 'остаётся: host-сценарий',
   },
   'tests/unit/export/import.test.ts': {
-    max: 12,
+    max: 10,
     reason:
-      'сценарий использует живые редакции; переезжает в плагин или на итерацию реестра',
-    removeBy: 'этап 5 трекера game-core',
+      'host-сценарий на живых редакциях (D24): проверяется пайплайн, а не правила игры',
+    removeBy: 'остаётся: host-сценарий',
   },
   'tests/unit/export/merge.test.ts': {
-    max: 16,
-    reason:
-      'сценарий использует живые редакции; переезжает в плагин или на итерацию реестра',
-    removeBy: 'этап 5 трекера game-core',
-  },
-  'tests/unit/export/sanitize-filter.test.ts': {
     max: 14,
     reason:
-      'сценарий использует живые редакции; переезжает в плагин или на итерацию реестра',
-    removeBy: 'этап 5 трекера game-core',
+      'host-сценарий на живых редакциях (D24): проверяется пайплайн, а не правила игры',
+    removeBy: 'остаётся: host-сценарий',
+  },
+  'tests/unit/export/sanitize-filter.test.ts': {
+    max: 12,
+    reason:
+      'host-сценарий на живых редакциях (D24): проверяется пайплайн, а не правила игры',
+    removeBy: 'остаётся: host-сценарий',
   },
   'tests/unit/game-theme.test.ts': {
     max: 7,
@@ -236,117 +242,116 @@ const GAME_MENTION_ALLOWANCE = {
     removeBy: 'остаётся: вход проверки',
   },
   'tests/unit/games/removed-plugin.test.ts': {
-    max: 2,
+    max: 1,
     reason:
-      'сценарий использует живые редакции; переезжает в плагин или на итерацию реестра',
-    removeBy: 'этап 5 трекера game-core',
+      'host-сценарий на живых редакциях (D24): проверяется пайплайн, а не правила игры',
+    removeBy: 'остаётся: host-сценарий',
   },
   'tests/unit/history-diff.test.ts': {
     max: 2,
     reason:
-      'сценарий использует живые редакции; переезжает в плагин или на итерацию реестра',
-    removeBy: 'этап 5 трекера game-core',
+      'host-сценарий на живых редакциях (D24): проверяется пайплайн, а не правила игры',
+    removeBy: 'остаётся: host-сценарий',
   },
   'tests/unit/history-labels.test.ts': {
     max: 2,
     reason:
-      'сценарий использует живые редакции; переезжает в плагин или на итерацию реестра',
-    removeBy: 'этап 5 трекера game-core',
+      'host-сценарий на живых редакциях (D24): проверяется пайплайн, а не правила игры',
+    removeBy: 'остаётся: host-сценарий',
   },
   'tests/unit/history-recording.test.ts': {
-    max: 2,
+    max: 1,
     reason:
-      'сценарий использует живые редакции; переезжает в плагин или на итерацию реестра',
-    removeBy: 'этап 5 трекера game-core',
+      'host-сценарий на живых редакциях (D24): проверяется пайплайн, а не правила игры',
+    removeBy: 'остаётся: host-сценарий',
   },
   'tests/unit/i18n-hardcoded.test.ts': {
     max: 3,
     reason:
-      'сценарий использует живые редакции; переезжает в плагин или на итерацию реестра',
-    removeBy: 'этап 5 трекера game-core',
+      'host-сценарий на живых редакциях (D24): проверяется пайплайн, а не правила игры',
+    removeBy: 'остаётся: host-сценарий',
   },
   'tests/unit/openapi.test.ts': {
     max: 1,
     reason:
-      'сценарий использует живые редакции; переезжает в плагин или на итерацию реестра',
-    removeBy: 'этап 5 трекера game-core',
+      'host-сценарий на живых редакциях (D24): проверяется пайплайн, а не правила игры',
+    removeBy: 'остаётся: host-сценарий',
   },
   'tests/unit/pending-draft.test.ts': {
     max: 1,
     reason:
-      'сценарий использует живые редакции; переезжает в плагин или на итерацию реестра',
-    removeBy: 'этап 5 трекера game-core',
+      'host-сценарий на живых редакциях (D24): проверяется пайплайн, а не правила игры',
+    removeBy: 'остаётся: host-сценарий',
   },
   'tests/unit/plugin-boundaries.test.ts': {
-    max: 20,
+    max: 19,
     reason: 'id игры — вход проверки границ плагинов',
     removeBy: 'остаётся: вход гейта',
   },
   'tests/unit/plugin-slots.test.ts': {
     max: 8,
     reason:
-      'сценарий использует живые редакции; переезжает в плагин или на итерацию реестра',
-    removeBy: 'этап 5 трекера game-core',
+      'host-сценарий на живых редакциях (D24): проверяется пайплайн, а не правила игры',
+    removeBy: 'остаётся: host-сценарий',
   },
   'tests/unit/plugins-derive.test.ts': {
     max: 4,
     reason:
-      'сценарий использует живые редакции; переезжает в плагин или на итерацию реестра',
-    removeBy: 'этап 5 трекера game-core',
+      'host-сценарий на живых редакциях (D24): проверяется пайплайн, а не правила игры',
+    removeBy: 'остаётся: host-сценарий',
   },
   'tests/unit/plugins-generator.test.ts': {
     max: 4,
-    reason:
-      'сценарий использует живые редакции; переезжает в плагин или на итерацию реестра',
-    removeBy: 'этап 5 трекера game-core',
+    reason: 'id игры — вход проверки генератора реестра',
+    removeBy: 'остаётся: вход проверки',
   },
   'tests/unit/profile-update.test.ts': {
-    max: 4,
+    max: 3,
     reason:
-      'сценарий использует живые редакции; переезжает в плагин или на итерацию реестра',
-    removeBy: 'этап 5 трекера game-core',
+      'host-сценарий на живых редакциях (D24): проверяется пайплайн, а не правила игры',
+    removeBy: 'остаётся: host-сценарий',
   },
   'tests/unit/server-derive-flag.test.ts': {
     max: 2,
     reason:
-      'сценарий использует живые редакции; переезжает в плагин или на итерацию реестра',
-    removeBy: 'этап 5 трекера game-core',
+      'host-сценарий на живых редакциях (D24): проверяется пайплайн, а не правила игры',
+    removeBy: 'остаётся: host-сценарий',
   },
   'tests/unit/server-derive-write.test.ts': {
-    max: 2,
+    max: 1,
     reason:
-      'сценарий использует живые редакции; переезжает в плагин или на итерацию реестра',
-    removeBy: 'этап 5 трекера game-core',
+      'host-сценарий на живых редакциях (D24): проверяется пайплайн, а не правила игры',
+    removeBy: 'остаётся: host-сценарий',
   },
   'tests/unit/server-storage.test.ts': {
-    max: 16,
+    max: 14,
     reason:
-      'сценарий использует живые редакции; переезжает в плагин или на итерацию реестра',
-    removeBy: 'этап 5 трекера game-core',
+      'host-сценарий на живых редакциях (D24): проверяется пайплайн, а не правила игры',
+    removeBy: 'остаётся: host-сценарий',
   },
   'tests/unit/share-api.test.ts': {
-    max: 3,
+    max: 2,
     reason:
-      'сценарий использует живые редакции; переезжает в плагин или на итерацию реестра',
-    removeBy: 'этап 5 трекера game-core',
+      'host-сценарий на живых редакциях (D24): проверяется пайплайн, а не правила игры',
+    removeBy: 'остаётся: host-сценарий',
   },
   'tests/unit/shared-character.test.ts': {
-    max: 5,
-    reason:
-      'сценарий использует живые редакции; переезжает в плагин или на итерацию реестра',
-    removeBy: 'этап 5 трекера game-core',
-  },
-  'tests/unit/shares.test.ts': {
     max: 4,
     reason:
-      'сценарий использует живые редакции; переезжает в плагин или на итерацию реестра',
-    removeBy: 'этап 5 трекера game-core',
+      'host-сценарий на живых редакциях (D24): проверяется пайплайн, а не правила игры',
+    removeBy: 'остаётся: host-сценарий',
+  },
+  'tests/unit/shares.test.ts': {
+    max: 3,
+    reason:
+      'host-сценарий на живых редакциях (D24): проверяется пайплайн, а не правила игры',
+    removeBy: 'остаётся: host-сценарий',
   },
   'tests/unit/translations.test.ts': {
     max: 15,
     reason:
-      'сценарий использует живые редакции; переезжает в плагин или на итерацию реестра',
-    removeBy: 'этап 5 трекера game-core',
+      'host-сценарий на живых редакциях (D24): проверяется пайплайн, а не правила игры',
+    removeBy: 'остаётся: host-сценарий',
   },
   'tests/unit/visual-naming.test.ts': {
     max: 2,
@@ -361,11 +366,11 @@ const GAME_MENTION_ALLOWANCE = {
  */
 const EXCEPTIONS = {
   'plugins-registry.test.ts': {
-    max: 528,
+    max: 504,
     reason:
-      'conformance-раннер плагинов; после перевода на discovery вырос на циклы ' +
-      'по обнаруженным модулям, дробление — следующий шаг',
-    removeBy: 'этап 10',
+      'conformance-раннер плагинов: манифесты, реестр и миграции; дробление — ' +
+      'отдельная задача, файл может только уменьшаться',
+    removeBy: 'остаётся: conformance-раннер',
   },
 };
 
@@ -379,15 +384,9 @@ function walk(dir, acc = []) {
   return acc;
 }
 
-/** Игровые плагины — по папкам с исходниками, а не по списку в скрипте. */
+/** Игровые плагины — по манифестам, а не по списку в скрипте. */
 function gameIds() {
-  return new Set(
-    readdirSync(GAMES_DIR, { withFileTypes: true })
-      .filter(
-        (entry) => entry.isDirectory() && !CORE_GAMES_DIRS.has(entry.name),
-      )
-      .map((entry) => entry.name),
-  );
+  return new Set(gameTokens(GAMES_DIR).ids);
 }
 
 const GAME_IMPORT_RE = /['"]@\/games\/([^/'"]+)\/([^'"]+)['"]/g;
@@ -454,8 +453,16 @@ for (const absolute of walk(UNIT_DIR)) {
 }
 
 // ── игровые упоминания в visual/support ────────────────────────────────────
-const GAME_TOKEN_RE =
-  /dnd5e|dh1e|dh2e|dh1|dh2|Dungeons|Dark Heresy|makeDndCharacter|makeDhCharacter/g;
+/**
+ * Токены упоминаний выводятся из манифестов опубликованных плагинов
+ * (`id`, `shortCode`, отображаемые имена игры и legacy-алиасы).
+ */
+const GAME_TOKEN_RE = new RegExp(
+  `(?:^|[^A-Za-z0-9_$])(${tokenAlternation(
+    gameTokens(GAMES_DIR).mentions,
+  )})(?![A-Za-z0-9_$])`,
+  'g',
+);
 
 function walkByExtension(dir, extensions, acc = []) {
   let entries = [];

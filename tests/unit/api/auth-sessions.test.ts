@@ -26,7 +26,7 @@ import { resetWriteSeqGuard } from '@/lib/server-storage';
 
 import {
   loginIndexPath,
-  makeDndCharacter,
+  makeCharacter,
   readJson,
   removeDir,
   sessionHeaders,
@@ -207,7 +207,7 @@ describe('DELETE /api/auth/profile', () => {
   it('неверный пароль — 403, аккаунт и листы целы', async () => {
     const { uid } = await loginAs('delete-wrong-pass');
     await charactersPost(
-      json({ ...makeDndCharacter() }, await sessionHeaders(uid)),
+      json({ ...makeCharacter('dnd5e') }, await sessionHeaders(uid)),
     );
 
     const res = await profileDelete(
@@ -225,7 +225,7 @@ describe('DELETE /api/auth/profile', () => {
   it('верный пароль — 200, каталог и индекс удалены, cookie стёрта', async () => {
     const { uid } = await loginAs('delete-me');
     await charactersPost(
-      json({ ...makeDndCharacter() }, await sessionHeaders(uid)),
+      json({ ...makeCharacter('dnd5e') }, await sessionHeaders(uid)),
     );
 
     const res = await profileDelete(

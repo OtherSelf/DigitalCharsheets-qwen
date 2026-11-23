@@ -206,6 +206,7 @@ Every module folder has a `plugin.json` (`src/games/plugin.schema.json`):
   "pluginApi": "^1.0.0",
   "id": "dh1",
   "gameId": "darkHeresy",
+  "shortCode": "dh1e",
   "version": "1.0.0",
   "order": 20,
   "defaultStatus": "published",
@@ -319,7 +320,7 @@ per-game save handlers out of the page.
 | `order` | Sort order in the creation wizard and admin lists. |
 | `defaultStatus` | `published` / `test` / `hidden`; runtime override in the game catalog. |
 | `nameKey`, `descriptionKey` | i18n keys; names are never stored in sheets. |
-| `shortCode` | Locale-independent edition code for the admin character list (`dnd5e`, `dh1e`, `dh2e`); not translated, the full game + edition goes to the tooltip. |
+| `shortCode` | Locale-independent edition code for the admin character list (`dnd5e`, `dh1e`, `dh2e`); declared in `plugin.json#shortCode` and duplicated in the module, not translated, the full game + edition goes to the tooltip (D29). |
 | `schemaVersion` | Sheet format written by the module: `2` for `dnd5e`, `5` for `dh1`/`dh2`; manifests declare it and the migration chain ends here. |
 | `schema` | Zod schema; `ZodType<TCharacter>` makes `tsc` check it against the type. |
 | `i18n` | Declared locales (`en`/`ru` plus optional extras), merged by the core with an en↔ru fallback. |
@@ -512,6 +513,34 @@ CSS debt would be pinned by the `CSS_ALLOWLIST` ratchet in
 `scripts/plugins/check-core-purity.mjs` (`max` lines per file, `removeBy`): the
 number can only go down, and the entry is deleted with the last block. The list
 is empty now — the sheet layout lives in the plugins' CSS modules.
+
+### What counts as game knowledge
+
+Game knowledge is anything that makes the core depend on one edition:
+
+- an edition id (`dh1`, `dnd5e`) or short code (`dh1e`) that selects a branch,
+  including one hidden in a string literal (`if (systemId === 'dh1')`);
+- a game or family display name used to choose behaviour;
+- a sheet field that exists only in one edition (`weaponSkill`,
+  `proficiencyBonus`, …), and a layout selector for one game (`.dh-sheet`).
+
+The same values are **not** knowledge when they are data read from the
+contract: a `systemId` in an API request (D3), a value in `plugin.json`, a plugin
+dictionary entry, or a generated registry entry. That is why the gate scans
+code and string literals separately: a comment or a translated label is data, a
+literal in a condition is a branch.
+
+`GAME_FIELDS` stays a curated list: sheet fields are not declared in the
+manifest, so the gate cannot derive them. Ids, short codes and display names
+must come from the contract (`plugin.json`, D2/D7), so a new plugin is covered
+without editing the script; a new mechanic still needs its field added to
+`GAME_FIELDS` with a comment.
+
+Tests follow the same line. A scenario of one edition lives in
+`src/games/<id>/tests/`. A host test may use a live edition as a fixture (D24),
+but its subject must be host behaviour (API, storage, export, history, admin),
+and removing the edition must not break the suite: either the scenario is
+guarded with `it.runIf(hasPlugin(id))` or it moves into the plugin.
 
 ## Related
 

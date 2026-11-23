@@ -5,8 +5,7 @@ import {
   resolveLegacySystemId,
   resolveSheetReadOnly,
 } from '@/games/character-system';
-
-import { makeDhCharacter } from '@tests/support';
+import { createDh1Defaults } from '@/games/dh1/defaults';
 
 /**
  * ─── LANDMARK: DH1 LEGACY ALIASES ─────────────────────────────────────────
@@ -30,9 +29,10 @@ describe('dh1: legacy-маппинг редакции', () => {
     expect(resolveCharacterSystemId({ gameSystem: 'Dark Heresy' })).toBe(
       undefined,
     );
-    expect(
-      resolveCharacterSystemId(makeDhCharacter({ systemId: undefined })),
-    ).toBe(undefined);
+    // Фабрика ставит systemId; legacy-лист его не знает — убираем поле.
+    const legacy = createDh1Defaults();
+    delete (legacy as { systemId?: string }).systemId;
+    expect(resolveCharacterSystemId(legacy)).toBe(undefined);
   });
 
   it('неизвестная редакция не превращается в dh1', () => {
@@ -45,7 +45,7 @@ describe('dh1: legacy-маппинг редакции', () => {
   });
 
   it('явный systemId работает и без legacy-полей', () => {
-    expect(resolveCharacterSystemId(makeDhCharacter())).toBe('dh1');
+    expect(resolveCharacterSystemId(createDh1Defaults())).toBe('dh1');
   });
 
   it('лист без редакции открывается read-only с причиной plugin_missing', () => {

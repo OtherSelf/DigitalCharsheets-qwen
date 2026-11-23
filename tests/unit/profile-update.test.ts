@@ -19,7 +19,7 @@ import { saveCharacterToServer } from '@/lib/server-storage';
 import { resolveLogin } from '@/lib/user-index';
 
 import {
-  makeDndCharacter,
+  makeCharacter,
   readJson,
   removeDir,
   userPaths,
@@ -55,7 +55,7 @@ describe('updateUserProfile', () => {
   it('меняет displayName, сохраняя uid, пароль и персонажей', async () => {
     const uid = (await authenticateUser('hero', 'pass-1234-secure', 'Old Name'))
       .user!.uid;
-    await saveCharacterToServer(uid, makeDndCharacter({ userId: uid }));
+    await saveCharacterToServer(uid, makeCharacter('dnd5e', { userId: uid }));
 
     const result = await updateUserProfile(uid, 'hero', '  New Name  ');
 
@@ -76,7 +76,7 @@ describe('updateUserProfile', () => {
   it('при смене логина uid и каталог НЕ меняются, листы остаются на месте', async () => {
     const uid = (await authenticateUser('oldlogin', 'pass-1234-secure', 'Hero'))
       .user!.uid;
-    await saveCharacterToServer(uid, makeDndCharacter({ userId: uid }));
+    await saveCharacterToServer(uid, makeCharacter('dnd5e', { userId: uid }));
 
     const result = await updateUserProfile(uid, 'newlogin', 'Hero');
 
@@ -121,7 +121,10 @@ describe('updateUserProfile', () => {
     const first = (await authenticateUser('first', 'pass-one-1234')).user!.uid;
     const second = (await authenticateUser('second', 'pass-two-1234')).user!
       .uid;
-    await saveCharacterToServer(first, makeDndCharacter({ userId: first }));
+    await saveCharacterToServer(
+      first,
+      makeCharacter('dnd5e', { userId: first }),
+    );
 
     const result = await updateUserProfile(first, 'second', 'First');
 

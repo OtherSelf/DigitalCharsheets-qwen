@@ -15,7 +15,7 @@ import type { Character } from '@/lib/types';
 
 import {
   createUserFolder,
-  makeDndCharacter,
+  makeCharacter,
   removeDir,
   useTempDataDir,
 } from '@tests/support';
@@ -32,7 +32,7 @@ afterEach(() => {
 
 describe('sanitizeCharacterForShare', () => {
   it('рекурсивно убирает userId и служебные поля, не мутируя лист', () => {
-    const source = makeDndCharacter({
+    const source = makeCharacter('dnd5e', {
       id: 'char-1',
       userId: 'owner-1',
       __page: 'page-1',
@@ -60,7 +60,13 @@ describe('resolveSharedCharacter', () => {
   it('возвращает лист по токену и не отдаёт uid владельца', async () => {
     const uid = newUid();
     await createUserFolder(uid, 'shared-user', 'Shared');
-    await saveCharacterToServer(uid, makeDndCharacter({ id: 'char-1' }));
+    await saveCharacterToServer(
+      uid,
+      makeCharacter('dnd5e', {
+        id: 'char-1',
+        name: 'Ragnar Testborn',
+      }),
+    );
     const { token } = await issueShareToken(uid, 'char-1');
 
     const character = await resolveSharedCharacter(token);
@@ -79,7 +85,13 @@ describe('resolveSharedCharacter', () => {
   it('resolveSharedSheet отдаёт имя владельца и не утекает uid', async () => {
     const uid = newUid();
     await createUserFolder(uid, 'shared-owner', 'Owner Name');
-    await saveCharacterToServer(uid, makeDndCharacter({ id: 'char-1' }));
+    await saveCharacterToServer(
+      uid,
+      makeCharacter('dnd5e', {
+        id: 'char-1',
+        name: 'Ragnar Testborn',
+      }),
+    );
     const { token } = await issueShareToken(uid, 'char-1');
 
     const shared = await resolveSharedSheet(token);
@@ -167,7 +179,13 @@ describe('shared history', () => {
   it('показывает историю только при includeHistory и без uid', async () => {
     const uid = newUid();
     await createUserFolder(uid, 'shared-history', 'Shared History');
-    await saveCharacterToServer(uid, makeDndCharacter({ id: 'char-1' }));
+    await saveCharacterToServer(
+      uid,
+      makeCharacter('dnd5e', {
+        id: 'char-1',
+        name: 'Ragnar Testborn',
+      }),
+    );
     await appendHistory(
       uid,
       'char-1',

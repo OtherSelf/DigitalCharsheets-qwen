@@ -14,7 +14,7 @@ import type { Character } from '@/lib/types';
 
 import {
   createUserFolder,
-  makeDndCharacter,
+  makeCharacter,
   removeDir,
   useTempDataDir,
 } from '@tests/support';
@@ -25,7 +25,7 @@ let dataDir: string;
 let uid: string;
 
 function character(): Character {
-  return makeDndCharacter({ id: CHARACTER_ID }) as Character;
+  return makeCharacter('dnd5e', { id: CHARACTER_ID }) as Character;
 }
 
 beforeEach(async () => {
@@ -62,14 +62,14 @@ describe('history recording', () => {
     expect(last.changes).toContainEqual({
       kind: 'changed',
       path: 'stats.strength',
-      before: { value: 16 },
+      before: { value: 10 },
       after: { value: 18 },
     });
   });
 
   it('не пишет ревизию для пустого патча и stale-записи', async () => {
     await updateCharacterOnServer(uid, CHARACTER_ID, {
-      name: 'Ragnar Testborn',
+      name: 'Test Character',
     });
     expect((await readHistory(uid, CHARACTER_ID)).revisions).toHaveLength(1);
 

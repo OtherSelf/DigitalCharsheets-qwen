@@ -3,6 +3,7 @@
   "pluginApi": "^1.0.0",
   "id": "sandbox",
   "gameId": "sandbox",
+  "shortCode": "sandbox",
   "version": "1.2.0",
   "order": 900,
   "defaultStatus": "test",

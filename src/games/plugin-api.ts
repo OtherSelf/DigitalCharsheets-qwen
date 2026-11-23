@@ -162,6 +162,8 @@ export interface PluginManifest {
   readonly pluginApi: string;
   readonly id: string;
   readonly gameId: string;
+  /** Короткий код редакции для админки (`dh1e`); уникален, не переводится. */
+  readonly shortCode: string;
   readonly version: string;
   readonly order: number;
   readonly defaultStatus: ModuleStatus;

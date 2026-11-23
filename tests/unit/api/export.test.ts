@@ -14,7 +14,7 @@ import { resetAuthRateLimits } from '@/lib/security/rate-limit';
 import { resetWriteSeqGuard } from '@/lib/server-storage';
 
 import {
-  makeDndCharacter,
+  makeCharacter,
   readJson,
   removeDir,
   sessionHeaders,
@@ -49,7 +49,7 @@ describe('/api/export', () => {
     const { uid } = await loginAs('user-exp');
     const created = await (
       await charactersPost(
-        json({ ...makeDndCharacter() }, await sessionHeaders(uid)),
+        json({ ...makeCharacter('dnd5e') }, await sessionHeaders(uid)),
       )
     ).json();
 
@@ -83,7 +83,7 @@ describe('/api/export', () => {
     const { uid } = await loginAs('user-exp');
     const created = await (
       await charactersPost(
-        json({ ...makeDndCharacter() }, await sessionHeaders(uid)),
+        json({ ...makeCharacter('dnd5e') }, await sessionHeaders(uid)),
       )
     ).json();
 
