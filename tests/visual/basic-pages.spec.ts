@@ -651,9 +651,6 @@ test.describe('адаптивность', () => {
       await expect(
         page.getByRole('heading', { name: 'About this project' }),
       ).toBeVisible();
-      await expect(page.getByTestId('about-version')).toContainText(
-        '0.0.0-test',
-      );
       for (const block of [
         'What it is',
         'Stack',

@@ -4,16 +4,8 @@
 import Link from 'next/link';
 
 import { AppFrame } from '@/components/layout/app-frame';
-import { Badge } from '@/components/ui/badge';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useTranslation } from '@/context/language-context';
-import { formatVersionLabel, useAppVersion } from '@/lib/use-app-version';
 
 /**
  * ─── LANDMARK: ABOUT PAGE (/about) ─────────────────────────────────────────
@@ -23,8 +15,6 @@ import { formatVersionLabel, useAppVersion } from '@/lib/use-app-version';
  */
 const REPOSITORY_URL = 'https://github.com/OtherSelf/DigitalCharsheets-qwen';
 const CHANGELOG_URL = `${REPOSITORY_URL}/blob/main/CHANGELOG.md`;
-const LICENSE_URL = `${REPOSITORY_URL}/blob/main/LICENSE`;
-const ISSUES_URL = `${REPOSITORY_URL}/issues`;
 
 const external = {
   target: '_blank',
@@ -33,7 +23,6 @@ const external = {
 
 export function AboutView() {
   const { t } = useTranslation();
-  const info = useAppVersion();
 
   const blocks: Array<{ title: string; body: string }> = [
     { title: t('about.whatTitle'), body: t('about.whatBody') },
@@ -50,14 +39,6 @@ export function AboutView() {
             {t('about.title')}
           </h1>
           <p className="text-muted-foreground">{t('about.subtitle')}</p>
-          <div className="flex flex-wrap items-center gap-2 pt-1">
-            <Badge variant="outline">MIT</Badge>
-            {info && (
-              <Badge variant="secondary" data-testid="about-version">
-                {formatVersionLabel(info)}
-              </Badge>
-            )}
-          </div>
         </div>
 
         {blocks.map((block) => (
@@ -76,7 +57,6 @@ export function AboutView() {
         <Card>
           <CardHeader>
             <CardTitle className="text-base">{t('about.linksTitle')}</CardTitle>
-            <CardDescription>{t('about.linksBody')}</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-wrap gap-2 text-sm">
             <Link className="underline underline-offset-2" href="/docs">
@@ -89,34 +69,10 @@ export function AboutView() {
             <span aria-hidden>·</span>
             <a
               className="underline underline-offset-2"
-              href={REPOSITORY_URL}
-              {...external}
-            >
-              {t('footer.repository')}
-            </a>
-            <span aria-hidden>·</span>
-            <a
-              className="underline underline-offset-2"
               href={CHANGELOG_URL}
               {...external}
             >
               CHANGELOG
-            </a>
-            <span aria-hidden>·</span>
-            <a
-              className="underline underline-offset-2"
-              href={LICENSE_URL}
-              {...external}
-            >
-              {t('footer.license')}
-            </a>
-            <span aria-hidden>·</span>
-            <a
-              className="underline underline-offset-2"
-              href={ISSUES_URL}
-              {...external}
-            >
-              {t('about.contacts')}
             </a>
           </CardContent>
         </Card>

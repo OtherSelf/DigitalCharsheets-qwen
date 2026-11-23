@@ -64,11 +64,8 @@ export const enTranslations: Record<string, string> = {
   'about.disclaimerBody':
     'The project is unofficial and is not affiliated with the publishers of the game systems. Rules text and trademarks belong to their owners; the application only stores what you enter.',
   'about.linksTitle': 'Links',
-  'about.linksBody':
-    'Documentation, API reference, source code, changelog, license and issue tracker.',
   'about.docs': 'Documentation',
   'about.api': 'API reference',
-  'about.contacts': 'Issues',
   // Docs shell (/docs): content stays English, these are the controls only.
   'docs.title': 'Documentation',
   'docs.search': 'Search',
