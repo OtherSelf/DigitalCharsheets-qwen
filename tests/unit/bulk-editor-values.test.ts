@@ -1,10 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { BulkEditorColumn, BulkEditorTable } from '@/games/types';
-import {
-  normalizeBulkValue,
-  normalizeBulkValues,
-} from '@/lib/bulk-editor-values';
+import { normalizeBulkValues } from '@/lib/bulk-editor-values';
 
 function column(overrides: Partial<BulkEditorColumn<any>> = {}) {
   return {
@@ -35,21 +32,29 @@ function table(columns: BulkEditorColumn<any>[]): BulkEditorTable<any> {
   } as unknown as BulkEditorTable<any>;
 }
 
+function normalize(
+  raw: string | number,
+  overrides: Partial<BulkEditorColumn<any>> = {},
+) {
+  return normalizeBulkValues(table([column(overrides)]), { value: raw }).value;
+}
+
 describe('normalizeBulkValue', () => {
   it('ограничивает число снизу и сверху', () => {
-    expect(normalizeBulkValue(column(), '-10')).toBe(0);
-    expect(normalizeBulkValue(column(), '150')).toBe(100);
-    expect(normalizeBulkValue(column({ min: 5, max: 10 }), '7')).toBe(7);
+    expect(normalize('-10')).toBe(0);
+    expect(normalize('150')).toBe(100);
+    expect(normalize('7', { min: 5, max: 10 })).toBe(7);
   });
 
   it('битое/пустое число не превращается в NaN', () => {
-    expect(normalizeBulkValue(column(), '')).toBe(0);
-    expect(normalizeBulkValue(column({ min: 3 }), 'abc')).toBe(3);
+    expect(normalize('')).toBe(0);
+    expect(normalize('abc', { min: 3 })).toBe(3);
   });
 
   it('текст не приводит к числу', () => {
-    const text = column({ type: 'text', min: undefined, max: undefined });
-    expect(normalizeBulkValue(text, '  Sword ')).toBe('  Sword ');
+    expect(
+      normalize('  Sword ', { type: 'text', min: undefined, max: undefined }),
+    ).toBe('  Sword ');
   });
 
   it('нормализует всю строку таблицы', () => {

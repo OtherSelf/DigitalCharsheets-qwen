@@ -11,7 +11,7 @@ import type {
  * защищают от ручного ввода, а `parseInt('') || 0` раньше молча писал 0.
  * Текст не трогаем — его ограничения задаёт схема редакции на сервере.
  */
-export function normalizeBulkValue(
+function normalizeBulkValue(
   column: BulkEditorColumn<any>,
   raw: unknown,
 ): BulkEditorValue {
