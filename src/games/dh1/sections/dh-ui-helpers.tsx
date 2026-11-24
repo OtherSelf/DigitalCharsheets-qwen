@@ -25,9 +25,11 @@ export const EditSaveButton = ({
   onEdit: () => void;
   onSave: () => void;
 }) => {
+  const { t } = useTranslation();
   return editing ? (
     <Button
       data-testid="save-button"
+      aria-label={t('common.save')}
       size="icon"
       onClick={onSave}
       className="h-7 w-7"
@@ -37,6 +39,7 @@ export const EditSaveButton = ({
   ) : (
     <Button
       data-testid="edit-button"
+      aria-label={t('common.edit')}
       size="icon"
       variant="outline"
       onClick={onEdit}
