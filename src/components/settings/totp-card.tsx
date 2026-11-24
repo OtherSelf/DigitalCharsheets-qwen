@@ -179,15 +179,25 @@ export function TotpCard() {
           <div className="space-y-2 rounded-md border p-3">
             <p className="text-sm">{t('settings.twoFactorSecretHint')}</p>
             {pendingQr && (
-              // eslint-disable-next-line @next/next/no-img-element -- QR is a local data URL, next/image optimizer is disabled
-              <img
-                src={pendingQr}
-                alt={t('settings.twoFactorQrAlt')}
-                data-testid="totp-qr"
-                width={192}
-                height={192}
-                className="mx-auto h-48 w-48 bg-white p-1"
-              />
+              <div
+                className="bg-muted/30 mx-auto w-full max-w-xs rounded-xl border p-4"
+                data-testid="totp-qr-frame"
+              >
+                <div className="mx-auto w-fit rounded-lg bg-white p-3 shadow-sm ring-1 ring-black/5">
+                  {/* eslint-disable-next-line @next/next/no-img-element -- QR is a local data URL, next/image optimizer is disabled */}
+                  <img
+                    src={pendingQr}
+                    alt={t('settings.twoFactorQrAlt')}
+                    data-testid="totp-qr"
+                    width={240}
+                    height={240}
+                    className="h-60 w-60"
+                  />
+                </div>
+                <p className="text-muted-foreground mt-3 text-center text-xs">
+                  {t('settings.twoFactorQrHint')}
+                </p>
+              </div>
             )}
             <code
               className="bg-muted block rounded p-2 text-sm break-all"

@@ -14,10 +14,20 @@ describe('QR для otpauth-URI', () => {
     expect(svg).toContain('<svg');
     expect(svg).toContain('shape-rendering="crispEdges"');
     expect(svg).toContain('<path d="M');
+    // Не чисто чёрный: QR остаётся контрастным, но мягче в интерфейсе.
+    expect(svg).toContain('fill="#1f2937"');
+    expect(svg).not.toContain('fill="#000000"');
     // Тихая зона 4 модуля с каждой стороны: viewBox больше матрицы QR.
     const viewBox = /viewBox="0 0 (\d+) \d+"/.exec(svg);
     expect(viewBox).not.toBeNull();
     expect(Number(viewBox![1])).toBeGreaterThan(21);
+  });
+
+  it('принимает цвета модулей и фона', () => {
+    const url = qrSvgDataUrl(URI, { dark: '#334155', light: '#f8fafc' });
+    const svg = Buffer.from(url.split(',')[1], 'base64').toString('utf8');
+    expect(svg).toContain('fill="#334155"');
+    expect(svg).toContain('fill="#f8fafc"');
   });
 
   it('разный текст даёт разные QR', () => {

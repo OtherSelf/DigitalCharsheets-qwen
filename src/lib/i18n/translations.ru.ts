@@ -535,6 +535,8 @@ export const ruTranslations: Record<string, string> = {
   'settings.twoFactorDisabled': 'Не включена',
   'settings.twoFactorSetup': 'Настроить двухфакторную аутентификацию',
   'settings.twoFactorQrAlt': 'QR-код для приложения-аутентификатора',
+  'settings.twoFactorQrHint':
+    'Отсканируйте код в приложении-аутентификаторе. Если не получается — введите секрет ниже.',
   'settings.twoFactorSecretHint':
     'Добавьте этот секрет в приложение-аутентификатор и введите текущий код.',
   'settings.twoFactorEnable': 'Включить',
@@ -633,6 +635,10 @@ export const ruTranslations: Record<string, string> = {
   'io.failedToCreateCharacter': 'Не удалось создать персонажа.',
   'io.importExport': 'Импорт/Экспорт',
   'io.exportCharacter': 'Экспорт персонажа',
+  'io.chooseJsonFile': 'Выбрать JSON-файл',
+  'io.chooseJsonFileHint':
+    'Только файл, экспортированный из Digital Character Sheets.',
+  'io.selectedFile': 'Выбран',
   'io.importCharacter': 'Импорт персонажа (только JSON)',
   'io.exportDesc':
     'Выберите разделы данных, которые вы хотите включить в JSON-экспорт.',

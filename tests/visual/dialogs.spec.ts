@@ -80,3 +80,30 @@ test.describe('диалоги — закрытие и повторное отк�
     await expect(dialog).toBeVisible();
   });
 });
+
+/**
+ * Подтверждения (AlertDialog): раньше Radix AlertDialog жёстко блокировал
+ * клик мимо, поэтому окно нельзя было закрыть привычным способом. Теперь
+ * используется Dialog-обёртка с role=alertdialog, и оба способа работают.
+ */
+test.describe('AlertDialog — закрытие', () => {
+  test('Escape и клик мимо закрывают подтверждение удаления', async ({
+    page,
+    context,
+  }) => {
+    await prepare(context);
+    await openApp(page, '/');
+
+    const trigger = page.getByTestId('delete-character').first();
+    await trigger.click();
+    const dialog = page.getByRole('alertdialog');
+    await expect(dialog).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(dialog).not.toBeVisible();
+
+    await trigger.click();
+    await expect(dialog).toBeVisible();
+    await page.mouse.click(5, 5);
+    await expect(dialog).not.toBeVisible();
+  });
+});

@@ -534,6 +534,8 @@ export const enTranslations: Record<string, string> = {
   'settings.twoFactorDisabled': 'Not enabled',
   'settings.twoFactorSetup': 'Set up two-factor authentication',
   'settings.twoFactorQrAlt': 'QR code for the authenticator app',
+  'settings.twoFactorQrHint':
+    'Scan this code with your authenticator app. If scanning fails, enter the secret below.',
   'settings.twoFactorSecretHint':
     'Add this secret to your authenticator app, then enter the current code.',
   'settings.twoFactorEnable': 'Enable',
@@ -631,6 +633,10 @@ export const enTranslations: Record<string, string> = {
   'io.failedToCreateCharacter': 'Failed to create character.',
   'io.importExport': 'Import/Export',
   'io.exportCharacter': 'Export Character',
+  'io.chooseJsonFile': 'Choose JSON file',
+  'io.chooseJsonFileHint':
+    'Only a file exported from Digital Character Sheets.',
+  'io.selectedFile': 'Selected',
   'io.importCharacter': 'Import Character (JSON only)',
   'io.exportDesc':
     'Select the data sections you want to include in the JSON export.',

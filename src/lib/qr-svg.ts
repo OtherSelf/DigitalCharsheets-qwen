@@ -5,7 +5,16 @@ import { qrcodegen } from './qr-codegen';
  * Секрет не должен уходить третьей стороне, поэтому кодирование локальное.
  * Уровень коррекции M — разумный баланс размера и устойчивости к бликам.
  */
-export function qrSvgDataUrl(text: string): string {
+export interface QrSvgOptions {
+  /** Цвет модулей; не чисто чёрный, чтобы код выглядел мягче в теме. */
+  dark?: string;
+  /** Цвет фона и тихой зоны. */
+  light?: string;
+}
+
+export function qrSvgDataUrl(text: string, options: QrSvgOptions = {}): string {
+  const dark = options.dark ?? '#1f2937';
+  const light = options.light ?? '#ffffff';
   const qr = qrcodegen.QrCode.encodeText(text, qrcodegen.QrCode.Ecc.MEDIUM);
   const margin = 4;
   const dimension = qr.size + margin * 2;
@@ -29,7 +38,7 @@ export function qrSvgDataUrl(text: string): string {
   const svg =
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${dimension} ${dimension}" ` +
     `role="img" shape-rendering="crispEdges">` +
-    `<rect width="${dimension}" height="${dimension}" fill="#ffffff"/>` +
-    `<path d="${parts.join('')}" fill="#000000"/></svg>`;
+    `<rect width="${dimension}" height="${dimension}" fill="${light}"/>` +
+    `<path d="${parts.join('')}" fill="${dark}"/></svg>`;
   return `data:image/svg+xml;base64,${Buffer.from(svg, 'utf8').toString('base64')}`;
 }

@@ -36,6 +36,7 @@ export function DeleteCharacterDialog({
           variant="destructive"
           size="icon"
           className="h-8 w-8 shrink-0 sm:h-9 sm:w-9"
+          data-testid="delete-character"
         >
           <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
         </Button>

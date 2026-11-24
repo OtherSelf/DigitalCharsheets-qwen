@@ -364,6 +364,12 @@ bash scripts/visual.sh --base-url http://127.0.0.1:3000
   panels are stacked by a rule in the plugin's `sheet.module.css`.
   `share.spec.ts` asserts that neither the document nor `main` overflows, that
   the rail is present on mobile and that the active section is visible.
+- Dialogs, Sheets and confirmations close on Escape and on an outside click.
+  `AlertDialog` is a thin `Dialog` wrapper with `role="alertdialog"` because
+  Radix `AlertDialog` blocks outside clicks by design; the confirmation still
+  looks like an alert dialog. `tests/unit/dialog-dismiss.test.ts` guards that no
+  component reintroduces `preventDefault` on `onEscapeKeyDown`,
+  `onInteractOutside` or `onPointerDownOutside`.
 - Inputs take `font-size: 16px` on focus below 768 px (`globals.css`), so iOS
   does not zoom the page; the mobile editing scenario asserts the computed size
   on a focused field and blurs it before taking the screenshot.

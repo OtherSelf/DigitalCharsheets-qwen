@@ -6,6 +6,7 @@ import {
   type Page,
 } from '@playwright/test';
 
+import { qrSvgDataUrl } from '../../src/lib/qr-svg';
 import {
   collectPageErrors,
   expectNoRawI18nKeys,
@@ -14,6 +15,7 @@ import {
   openApp,
   openRegisterForm,
   prepare,
+  registerAccount,
   registerViaUI,
   screenshotPage,
   sheetPath,
@@ -1054,4 +1056,51 @@ test.describe('Sandbox — шрифт темы', () => {
       }
     },
   );
+});
+
+/**
+ * QR для TOTP: рамка, размер и цвет. Секрет показывается один раз, поэтому
+ * снимок делается сразу после setup; дальше аккаунт удаляется вместе с
+ * временными данными визуального прогона.
+ */
+test('settings — QR двухфакторной аутентификации (en)', async ({
+  page,
+  context,
+}) => {
+  await prepare(context, { authenticated: false });
+  const account = await registerAccount(page, 'totp', 'TOTP Visual');
+  await signInViaUI(page, account);
+  await openApp(page, '/settings');
+
+  // Секрет и QR генерируются на сервере заново; для эталона подменяем
+  // ответ setup фиксированными значениями, иначе снимок меняется от запуска
+  // к запуску. Стиль QR при этом настоящий — его рисует qrSvgDataUrl.
+  const fixedUri =
+    'otpauth://totp/Digital%20Character%20Sheets:visual%40example.com?secret=JBSWY3DPEHPK3PXP&issuer=Digital%20Character%20Sheets';
+  await page.route('**/api/auth/totp/setup', async (route) => {
+    const response = await route.fetch();
+    const body = (await response.json()) as Record<string, unknown>;
+    await route.fulfill({
+      response,
+      json: {
+        ...body,
+        secret: 'JBSWY3DPEHPK3PXP',
+        qrDataUrl: qrSvgDataUrl(fixedUri),
+      },
+    });
+  });
+
+  await page.locator('#totp-password').fill(account.password);
+  await page
+    .getByRole('button', {
+      name: 'Set up two-factor authentication',
+      exact: true,
+    })
+    .click();
+
+  const frame = page.getByTestId('totp-qr-frame');
+  await expect(frame).toBeVisible();
+  await frame.scrollIntoViewIfNeeded();
+  await expectNoRawI18nKeys(page, 'QR TOTP (en)');
+  await screenshotPage(page, 'settings-totp-qr-en.png');
 });

@@ -26,6 +26,7 @@ import {
 } from '@/lib/export-utils';
 import { characterPath } from '@/lib/routes';
 import { Character } from '@/lib/types';
+import { cn } from '@/lib/utils';
 
 interface ImportCharacterDialogProps {
   isCompactView: boolean;
@@ -41,12 +42,14 @@ export function ImportCharacterDialog({
   const [importError, setImportError] = useState<string | null>(null);
   const [importSuccess, setImportSuccess] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
+  const [fileName, setFileName] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    setFileName(file.name);
     setImportError(null);
     setImportSuccess(false);
     setIsImporting(true);
@@ -117,6 +120,7 @@ export function ImportCharacterDialog({
           setOpen(false);
           setImportSuccess(false);
           if (fileInputRef.current) fileInputRef.current.value = '';
+          setFileName('');
           if (lastCreatedCharId) {
             router.push(characterPath(lastCreatedCharId));
           }
@@ -132,8 +136,17 @@ export function ImportCharacterDialog({
     }
   };
 
+  const handleOpenChange = (next: boolean) => {
+    if (!next) {
+      setImportError(null);
+      setImportSuccess(false);
+      setFileName('');
+    }
+    setOpen(next);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         {isCompactView ? (
           <Button
@@ -161,13 +174,36 @@ export function ImportCharacterDialog({
 
         <div className="space-y-4 py-4">
           <input
+            id="import-character-file"
             type="file"
-            accept=".json"
+            accept=".json,application/json"
             ref={fileInputRef}
             onChange={handleFileSelect}
             disabled={isImporting}
-            className="file:bg-primary file:text-primary-foreground hover:file:bg-primary/90 block w-full text-sm text-gray-500 file:mr-4 file:rounded-md file:border-0 file:px-4 file:py-2 file:text-sm file:font-semibold disabled:opacity-50"
+            className="sr-only"
+            data-testid="import-file-input"
           />
+          <label
+            htmlFor="import-character-file"
+            data-testid="import-file-label"
+            className={cn(
+              'hover:border-primary hover:bg-accent/30 flex cursor-pointer flex-col items-center gap-2 rounded-lg border-2 border-dashed p-6 text-center transition-colors',
+              isImporting && 'pointer-events-none opacity-60',
+            )}
+          >
+            <FileUp className="text-muted-foreground h-8 w-8" />
+            <span className="text-sm font-medium">
+              {t('io.chooseJsonFile')}
+            </span>
+            <span className="text-muted-foreground text-xs">
+              {t('io.chooseJsonFileHint')}
+            </span>
+            {fileName && (
+              <span className="text-muted-foreground max-w-full truncate text-xs">
+                {t('io.selectedFile')}: {fileName}
+              </span>
+            )}
+          </label>
 
           {importError && (
             <Alert variant="destructive">
