@@ -5,9 +5,25 @@
 import { useState } from 'react';
 import Link from 'next/link';
 
+import {
+  closestCenter,
+  DndContext,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type Announcements,
+  type DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  rectSortingStrategy,
+  SortableContext,
+  sortableKeyboardCoordinates,
+} from '@dnd-kit/sortable';
 import { Archive, PlusCircle, Scroll } from 'lucide-react';
 
-import { CharacterCard } from '@/components/characters/character-card';
+import { SortableCharacterCard } from '@/components/characters/sortable-character-card';
 import { DemoLandingView } from '@/components/demo-landing-view';
 import { DynamicFavicon } from '@/components/dynamic-favicon';
 import { ImportCharacterDialog } from '@/components/import-character-dialog';
@@ -38,10 +54,53 @@ export default function DashboardPage() {
     pendingDraft,
     createPendingDraft,
     discardPendingDraft,
+    reorderCharacters,
+    toast,
   } = useCharacterContext();
   const { user, isUserLoading } = useLocalAuth();
   const { t } = useTranslation();
   const [isRetrying, setIsRetrying] = useState(false);
+
+  // Перетаскивание карточек: тянем только за ручку (сенсоры навешаны на неё),
+  // поэтому клик по карточке и выделение текста не превращаются в drag.
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
+  );
+  const orderedIds = characters.map((character) => character.id);
+  const nameById = new Map(
+    characters.map((character) => [character.id, character.name]),
+  );
+  const announcements: Announcements = {
+    onDragStart: ({ active }) =>
+      t('common.reorderPicked', {
+        name: nameById.get(String(active.id)) ?? '',
+      }),
+    onDragOver: ({ over }) =>
+      t('common.reorderOver', { name: nameById.get(String(over?.id)) ?? '' }),
+    onDragEnd: () => t('common.reorderDropped'),
+    onDragCancel: () => t('common.reorderCancelled'),
+  };
+
+  const handleDragEnd = ({ active, over }: DragEndEvent) => {
+    if (!over || active.id === over.id) return;
+    const oldIndex = orderedIds.indexOf(String(active.id));
+    const newIndex = orderedIds.indexOf(String(over.id));
+    if (oldIndex < 0 || newIndex < 0) return;
+
+    void reorderCharacters(arrayMove(orderedIds, oldIndex, newIndex)).then(
+      (saved) => {
+        if (saved) return;
+        toast({
+          title: t('common.error'),
+          description: t('common.reorderFailed'),
+          variant: 'destructive',
+        });
+      },
+    );
+  };
 
   const handleRetry = async () => {
     setIsRetrying(true);
@@ -159,50 +218,70 @@ export default function DashboardPage() {
                 </Button>
               </div>
             ) : (
-              <div
-                className={cn(
-                  'grid gap-4',
-                  isCompactView
-                    ? 'grid-cols-1'
-                    : // Колонок столько, сколько помещается при минимальной
-                      // ширине карточки 18rem (288px): 3 на планшете, 4 на
-                      // 1440, 5 на 1760. Прежняя лестница `lg:3 xl:4` не
-                      // давала пятой и оставляла «мёртвую» полосу 1280–1300.
-                      '[grid-template-columns:repeat(auto-fill,minmax(18rem,1fr))]',
-                )}
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
+                accessibility={{
+                  announcements,
+                  screenReaderInstructions: {
+                    draggable: t('common.reorderHint'),
+                  },
+                }}
               >
-                {characters.map((character) => (
-                  <CharacterCard key={character.id} character={character} />
-                ))}
-                {isCompactView ? (
-                  <Button
-                    variant="outline"
-                    asChild
-                    className="border-muted-foreground/30 text-muted-foreground hover:border-accent hover:bg-accent/10 hover:text-accent-foreground flex h-16 w-full items-center justify-center rounded-lg border-2 border-dashed bg-transparent p-0 transition-colors duration-200 sm:h-20"
+                <SortableContext
+                  items={orderedIds}
+                  strategy={rectSortingStrategy}
+                >
+                  <div
+                    className={cn(
+                      'grid gap-4',
+                      isCompactView
+                        ? 'grid-cols-1'
+                        : // Колонок столько, сколько помещается при минимальной
+                          // ширине карточки 18rem (288px): 3 на планшете, 4 на
+                          // 1440, 5 на 1760. Прежняя лестница `lg:3 xl:4` не
+                          // давала пятой и оставляла «мёртвую» полосу 1280–1300.
+                          '[grid-template-columns:repeat(auto-fill,minmax(18rem,1fr))]',
+                    )}
                   >
-                    <Link href="/new">
-                      <PlusCircle className="mr-3 h-6 w-6 sm:mr-4 sm:h-8 sm:w-8" />
-                      <span className="text-sm font-semibold sm:text-base">
-                        {t('common.createNew')}
-                      </span>
-                    </Link>
-                  </Button>
-                ) : (
-                  <Button
-                    variant="outline"
-                    asChild
-                    className="border-muted-foreground/30 text-muted-foreground hover:border-accent hover:bg-accent/10 hover:text-accent-foreground flex h-full min-h-[180px] w-full flex-col items-center justify-center rounded-lg border-2 border-dashed bg-transparent p-0 transition-colors duration-200 sm:min-h-[200px]"
-                  >
-                    <Link href="/new">
-                      <PlusCircle className="mb-2 h-10 w-10 sm:h-12 sm:w-12" />
-                      <span className="text-sm font-semibold sm:text-base">
-                        {t('common.createNew')}
-                      </span>
-                    </Link>
-                  </Button>
-                )}
-                <ImportCharacterDialog isCompactView={isCompactView} />
-              </div>
+                    {characters.map((character) => (
+                      <SortableCharacterCard
+                        key={character.id}
+                        character={character}
+                      />
+                    ))}
+                    {isCompactView ? (
+                      <Button
+                        variant="outline"
+                        asChild
+                        className="border-muted-foreground/30 text-muted-foreground hover:border-accent hover:bg-accent/10 hover:text-accent-foreground flex h-16 w-full items-center justify-center rounded-lg border-2 border-dashed bg-transparent p-0 transition-colors duration-200 sm:h-20"
+                      >
+                        <Link href="/new">
+                          <PlusCircle className="mr-3 h-6 w-6 sm:mr-4 sm:h-8 sm:w-8" />
+                          <span className="text-sm font-semibold sm:text-base">
+                            {t('common.createNew')}
+                          </span>
+                        </Link>
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        asChild
+                        className="border-muted-foreground/30 text-muted-foreground hover:border-accent hover:bg-accent/10 hover:text-accent-foreground flex h-full min-h-[180px] w-full flex-col items-center justify-center rounded-lg border-2 border-dashed bg-transparent p-0 transition-colors duration-200 sm:min-h-[200px]"
+                      >
+                        <Link href="/new">
+                          <PlusCircle className="mb-2 h-10 w-10 sm:h-12 sm:w-12" />
+                          <span className="text-sm font-semibold sm:text-base">
+                            {t('common.createNew')}
+                          </span>
+                        </Link>
+                      </Button>
+                    )}
+                    <ImportCharacterDialog isCompactView={isCompactView} />
+                  </div>
+                </SortableContext>
+              </DndContext>
             )}
           </CardContent>
         </Card>

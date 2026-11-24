@@ -47,6 +47,12 @@ export interface CharacterContextType {
   /** Убрать лист с главной в архив; при ошибке список перечитывается. */
   archiveCharacter: (id: string) => void;
   /**
+   * Переставить карточки (drag-and-drop). Порядок меняется сразу, `PUT
+   * /api/characters/order` уходит в фон; при ошибке список возвращается как
+   * было. Возвращает `false`, если сохранить не удалось.
+   */
+  reorderCharacters: (order: string[]) => Promise<boolean>;
+  /**
    * Черновик персонажа, который гость соберёт до входа. При входе в
    * существующий аккаунт он НЕ создаётся сам — дашборд показывает плашку,
    * а персонаж появляется по кнопке `createPendingDraft`.
@@ -235,6 +241,38 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
       setCharacters(next);
     },
     [],
+  );
+
+  const reorderCharacters = useCallback(
+    async (order: string[]) => {
+      const previous = charactersRef.current;
+      const byId = new Map(previous.map((char) => [char.id, char]));
+      const next: Character[] = [];
+      for (const id of order) {
+        const char = byId.get(id);
+        if (!char) continue;
+        next.push(char);
+        byId.delete(id);
+      }
+      // Страховка: карточка, которой не было в присланном порядке (новая из
+      // другой вкладки), не теряется, а остаётся в конце.
+      for (const char of previous) if (byId.has(char.id)) next.push(char);
+
+      applyCharacters(() => next);
+      try {
+        const response = await fetch('/api/characters/order', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ order: next.map((char) => char.id) }),
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return true;
+      } catch {
+        applyCharacters(() => previous);
+        return false;
+      }
+    },
+    [applyCharacters],
   );
 
   /**
@@ -875,6 +913,7 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
 
   const value = {
     characters,
+    reorderCharacters,
     getCharacter,
     addCharacter,
     updateCharacter,

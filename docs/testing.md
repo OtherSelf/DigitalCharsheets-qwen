@@ -141,8 +141,10 @@ Plugin-specific checks (bulk-editor table columns, custom slots) belong in
   dictionary keys per edition,
   OpenAPI document and route coverage, admin API and bootstrap, health/version,
   the read-only share registry/API (`shares.json`, rotation, expiry,
-  revocation, cleanup), and the character history (diff engine, JSONL store,
-  compaction, recording, owner-only API, labels).
+  revocation, cleanup), the character history (diff engine, JSONL store,
+  compaction, recording, owner-only API, labels), and the dashboard order
+  (`characterOrder` normalization, `PUT /api/characters/order`, "most recently
+  modified first" as the default).
 - `tests/unit/openapi.test.ts` compares the OpenAPI spec with every
   `src/app/api/**/route.ts`; a new endpoint without documentation fails it.
 - `tests/unit/docs-api.test.ts` compares the endpoint map in `docs/api.md`
@@ -486,6 +488,8 @@ OS or missing fonts.
 | `i18n-raw.spec.ts` | No raw translation keys in the rendered UI |
 | `language.spec.ts` | First-frame language: server-rendered `lang`/strings for cookie and `Accept-Language`, switch without reload, profile save |
 | `tablet.spec.ts` | Host-only tablet 1024×768 screens: dashboard and settings |
+| `layout-width.spec.ts` | Content cap (1760px, centered) and card grid: five columns at 1760+, four at 1440, three at 1024, two at 768, one at 393 |
+| `character-order.spec.ts` | Drag-and-drop card order with the keyboard, `PUT /api/characters/order`, persistence after reload; restores the original order afterwards |
 
 Game sheets are hosted by the plugins, not by `tests/visual`:
 

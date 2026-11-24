@@ -143,7 +143,18 @@ src/lib/* (server-only)
 ```
 
 - UI pages are mostly client components; they fetch the API with the cookie.
+- The dashboard orders cards by the user's saved order (`user.json#characterOrder`,
+  `PUT /api/characters/order`); without it the most recently modified sheet comes
+  first. Dragging a card's handle rewrites the order in the profile only — sheet
+  files, exports and the DATA `rev` contract are untouched. The drag layer is
+  `@dnd-kit` (pointer + keyboard sensors); the pointer activator is the handle,
+  so clicking a card still opens the sheet.
+- Pages are capped by `--content-max` (1760px) in `AppFrame` and the header;
+  the card grid uses `repeat(auto-fill, minmax(18rem, 1fr))`, so the number of
+  columns follows the available width (up to five) instead of a breakpoint
+  ladder.
 - The core footer (`SiteFooter`: version, commit, branch, repository, license,
+
   `/about`) is rendered at the end of each page's scrollable `main`, not in the
   root layout: pages own `h-dvh` shells and scroll their own `main`, so a bar
   under `{children}` would sit outside the viewport and never appear. A shared

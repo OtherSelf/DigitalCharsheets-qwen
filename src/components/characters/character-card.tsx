@@ -2,6 +2,7 @@
 
 'use client';
 
+import type { ReactNode } from 'react';
 import Link from 'next/link';
 
 import { Archive, FileDown, FileJson } from 'lucide-react';
@@ -34,9 +35,15 @@ import { type Character } from '@/lib/types';
 
 type CharacterCardProps = {
   character: Character;
+  /**
+   * Ручка перетаскивания (drag-and-drop из дашборда). Карточка сама её не
+   * создаёт: порядок и сенсоры живут в дашборде, а карточка только отводит
+   * место слева, чтобы ручка не перекрывала бейдж и заголовок.
+   */
+  dragHandle?: ReactNode;
 };
 
-export function CharacterCard({ character }: CharacterCardProps) {
+export function CharacterCard({ character, dragHandle }: CharacterCardProps) {
   const { t, tUnsafe } = useTranslation();
   const { archiveCharacter, deleteCharacter, isCompactView, toast } =
     useCharacterContext();
@@ -85,8 +92,13 @@ export function CharacterCard({ character }: CharacterCardProps) {
 
   if (isCompactView) {
     return (
-      <Card className="compact-mobile-card hover:shadow-primary/10 flex flex-row items-stretch overflow-hidden p-2 transition-shadow duration-300 hover:shadow-lg sm:flex-row">
-        <div className="flex min-w-0 flex-1 flex-col justify-center px-3 sm:px-4">
+      <Card className="compact-mobile-card hover:shadow-primary/10 group relative flex flex-row items-stretch overflow-hidden p-2 transition-shadow duration-300 hover:shadow-lg sm:flex-row">
+        {dragHandle && (
+          <div className="absolute inset-y-0 left-0 z-10 flex w-8 items-center justify-center">
+            {dragHandle}
+          </div>
+        )}
+        <div className="flex min-w-0 flex-1 flex-col justify-center pr-3 pl-10 sm:pr-4">
           <div className="flex flex-wrap items-baseline gap-2">
             <CardTitle className="sm:text-md font-headline line-clamp-1 text-sm break-words">
               {character.name}
@@ -155,7 +167,12 @@ export function CharacterCard({ character }: CharacterCardProps) {
   }
 
   return (
-    <Card className="hover:shadow-primary/10 relative flex flex-col overflow-hidden transition-shadow duration-300 hover:shadow-lg">
+    <Card className="hover:shadow-primary/10 group relative flex flex-col overflow-hidden transition-shadow duration-300 hover:shadow-lg">
+      {dragHandle && (
+        <div className="absolute inset-y-0 left-0 z-10 flex w-8 items-center justify-center">
+          {dragHandle}
+        </div>
+      )}
       <Button
         variant="ghost"
         size="icon"
@@ -167,7 +184,7 @@ export function CharacterCard({ character }: CharacterCardProps) {
       >
         <Archive className="h-4 w-4" />
       </Button>
-      <CardContent className="flex-grow p-4 pr-12">
+      <CardContent className="flex-grow py-4 pr-12 pl-10">
         <Badge
           data-testid="edition-badge"
           variant={badgeVariant}

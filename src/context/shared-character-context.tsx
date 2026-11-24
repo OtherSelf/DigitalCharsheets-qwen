@@ -36,6 +36,7 @@ export function SharedCharacterProvider({
       updateCharacter: () => undefined,
       deleteCharacter: () => undefined,
       archiveCharacter: () => undefined,
+      reorderCharacters: async () => false,
       pendingDraft: null,
       createPendingDraft: async () => undefined,
       discardPendingDraft: () => undefined,
