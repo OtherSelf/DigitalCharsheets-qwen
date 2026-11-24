@@ -47,11 +47,11 @@ function AdminCharacterDetails({
 }: {
   character: AdminCharacterSummary;
 }) {
-  const { t } = useTranslation();
+  const { tUnsafe } = useTranslation();
   const slots = useGameUiSlots(character.systemId ?? undefined);
   const summary = slots?.CardSummary?.(
     character.sheet as unknown as CharacterRecord,
-    t,
+    tUnsafe,
   );
   return (
     <TableCell data-testid="admin-sheet-details">
@@ -74,7 +74,7 @@ export function UserCharactersDialog({
   user,
   onOpenChange,
 }: UserCharactersDialogProps) {
-  const { t, language } = useTranslation();
+  const { t, tUnsafe, language } = useTranslation();
 
   const [characters, setCharacters] = useState<AdminCharacterSummary[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -154,7 +154,7 @@ export function UserCharactersDialog({
                 </TableHeader>
                 <TableBody>
                   {characters.map((character) => {
-                    const gameBadge = adminGameBadge(character, t);
+                    const gameBadge = adminGameBadge(character, tUnsafe);
                     return (
                       <TableRow key={character.id}>
                         <TableCell className="font-medium">

@@ -1,7 +1,9 @@
 // ─── LANDMARK: TRANSLATIONS_COMMON ───
 // Общий слой (common/auth/admin/settings/demo/io). Ключи игр живут в
 // src/games/<id>/i18n; сборка — в src/lib/i18n/index.ts.
-export const ruTranslations: Record<string, string> = {
+// `satisfies`, а не аннотация `Record<string, string>`: иначе `keyof` даёт
+// `string` и `TranslationKey` теряет все ключи.
+export const ruTranslations = {
   'common.dashboard': 'Панель управления',
   'common.newCharacter': 'Новый персонаж',
   'common.existingCharacters': 'Существующие персонажи',
@@ -840,4 +842,4 @@ export const ruTranslations: Record<string, string> = {
   'share.createError': 'Не удалось создать ссылку.',
   'share.revokeError': 'Не удалось отозвать ссылку.',
   'share.expiryError': 'Выберите допустимый срок.',
-};
+} satisfies Record<string, string>;

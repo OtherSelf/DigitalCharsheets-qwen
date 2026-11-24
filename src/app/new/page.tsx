@@ -125,7 +125,7 @@ function CreateStepHeader({
 }
 
 export default function ManualCharacterCreationPage() {
-  const { t } = useTranslation();
+  const { t, tUnsafe } = useTranslation();
   const { user, isUserLoading } = useLocalAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -250,14 +250,14 @@ export default function ManualCharacterCreationPage() {
                     data-testid={`create-game-${catalogGame.id}`}
                   >
                     <div className="font-semibold">
-                      {t(catalogGame.nameKey)}
+                      {tUnsafe(catalogGame.nameKey)}
                     </div>
                     <p className="text-muted-foreground mt-1 text-sm">
-                      {t(catalogGame.descriptionKey)}
+                      {tUnsafe(catalogGame.descriptionKey)}
                     </p>
                     <p className="text-muted-foreground mt-3 text-xs">
                       {catalogGame.editions
-                        .map((item) => t(item.nameKey))
+                        .map((item) => tUnsafe(item.nameKey))
                         .join(' · ')}
                     </p>
                   </button>
@@ -291,9 +291,11 @@ export default function ManualCharacterCreationPage() {
                       className="hover:border-primary hover:bg-accent/40 focus-visible:ring-ring rounded-lg border p-4 text-left transition-colors focus-visible:ring-2 focus-visible:outline-none"
                       data-testid={`create-edition-${item.id}`}
                     >
-                      <div className="font-semibold">{t(item.nameKey)}</div>
+                      <div className="font-semibold">
+                        {tUnsafe(item.nameKey)}
+                      </div>
                       <p className="text-muted-foreground mt-1 text-sm">
-                        {t(item.descriptionKey)}
+                        {tUnsafe(item.descriptionKey)}
                       </p>
                     </button>
                   ))}
@@ -306,8 +308,8 @@ export default function ManualCharacterCreationPage() {
         {step === 3 && game && selectedModule && (
           <div data-testid="create-step-form">
             <CreateStepHeader
-              title={`${t(game.nameKey)} · ${t(selectedModule.nameKey)}`}
-              description={t(selectedModule.descriptionKey)}
+              title={`${tUnsafe(game.nameKey)} · ${tUnsafe(selectedModule.nameKey)}`}
+              description={tUnsafe(selectedModule.descriptionKey)}
               backLabel={t('games.backToEditions')}
               onBack={() => go(`?game=${encodeURIComponent(game.id)}`)}
               testId="create-back-editions"

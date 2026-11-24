@@ -1,7 +1,8 @@
 // ─── LANDMARK: TRANSLATIONS_GAMES_CORE ───
 // Метаданные реестра: названия/описания игр и шаги мастера создания.
 // Язык: ru. Правила: docs/i18n.md.
-export const ru: Record<string, string> = {
+// `satisfies` сохраняет литеральные ключи для `TranslationKey`.
+export const ru = {
   'games.stepGame': 'Игра',
   'games.stepEdition': 'Редакция',
   'games.stepCharacter': 'Персонаж',
@@ -12,4 +13,4 @@ export const ru: Record<string, string> = {
     'Шаг 2: у редакций разные правила и листы персонажа.',
   'games.backToGames': 'Назад к играм',
   'games.backToEditions': 'Назад к редакциям',
-};
+} satisfies Record<string, string>;

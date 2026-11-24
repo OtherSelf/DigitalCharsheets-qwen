@@ -125,7 +125,7 @@ export function Header({
     showEditButtons,
     setShowEditButtons,
   } = useCharacterContext();
-  const { t } = useTranslation();
+  const { t, tUnsafe } = useTranslation();
   const siteTitle = useSiteTitle();
   const { user } = useLocalAuth();
   const params = useParams<{ id: string }>();
@@ -154,8 +154,8 @@ export function Header({
   const uiSlots = useGameUiSlots(systemId);
   const HeaderActions = uiSlots?.HeaderActions;
   const characterSubtitle = displayCharacter
-    ? (uiSlots?.HeaderSubtitle?.(displayCharacter, t) ??
-      (gameModule ? t(gameModule.nameKey) : ''))
+    ? (uiSlots?.HeaderSubtitle?.(displayCharacter, tUnsafe) ??
+      (gameModule ? tUnsafe(gameModule.nameKey) : ''))
     : undefined;
 
   // Пока сессия не прочитана на клиенте, гостем считаем любого без user:

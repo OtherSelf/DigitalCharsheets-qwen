@@ -50,7 +50,7 @@ export function UserEditDialog({
   onOpenChange,
   onSaved,
 }: UserEditDialogProps) {
-  const { t } = useTranslation();
+  const { t, tUnsafe } = useTranslation();
   const { toast } = useToast();
 
   const [displayName, setDisplayName] = useState('');
@@ -112,7 +112,7 @@ export function UserEditDialog({
 
       if (!res.ok || !data?.success || !data?.user) {
         setError(
-          adminReasonMessage(data?.reason, t) ||
+          adminReasonMessage(data?.reason, tUnsafe) ||
             data?.error ||
             t('admin.saveFailed'),
         );

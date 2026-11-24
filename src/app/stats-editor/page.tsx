@@ -84,15 +84,15 @@ function BulkTableCard({
   onChange: (charId: string, columnKey: string, raw: string) => void;
   onSave: (charId: string) => void;
 }) {
-  const { t } = useTranslation();
+  const { t, tUnsafe } = useTranslation();
   const { isSmallScreen } = useViewportFlags();
   const editionName = table.editionNameKey
-    ? t(table.editionNameKey)
+    ? tUnsafe(table.editionNameKey)
     : undefined;
   const count = `(${characters.length})`;
   const title = editionName
-    ? `${t(table.titleKey)} · ${editionName} ${count}`
-    : `${t(table.titleKey)} ${count}`;
+    ? `${tUnsafe(table.titleKey)} · ${editionName} ${count}`
+    : `${tUnsafe(table.titleKey)} ${count}`;
   const gapClass = table.gap === 2 ? 'gap-2' : 'gap-1';
   const gridTemplate =
     table.gridTemplate ?? `180px repeat(${table.columns.length}, 1fr) 60px`;
@@ -101,7 +101,7 @@ function BulkTableCard({
     <Card>
       <CardHeader>
         <CardTitle>{title}</CardTitle>
-        <CardDescription>{t(table.descriptionKey)}</CardDescription>
+        <CardDescription>{tUnsafe(table.descriptionKey)}</CardDescription>
       </CardHeader>
       <CardContent>
         {/*
@@ -127,14 +127,14 @@ function BulkTableCard({
                     {table.columns.map((column) => (
                       <label key={column.key} className="space-y-1">
                         <span className="text-muted-foreground block text-[10px] leading-tight font-semibold uppercase">
-                          {t(column.labelKey)}
+                          {tUnsafe(column.labelKey)}
                         </span>
                         <Input
                           type={column.type ?? 'number'}
                           value={edit.values[column.key] ?? ''}
                           min={column.min}
                           max={column.max}
-                          aria-label={t(column.labelKey)}
+                          aria-label={tUnsafe(column.labelKey)}
                           onChange={(event) =>
                             onChange(
                               character.id,
@@ -175,7 +175,7 @@ function BulkTableCard({
                 <span>{t('common.characterName')}</span>
                 {table.columns.map((column) => (
                   <span key={column.key} className="text-center">
-                    {t(column.labelKey)}
+                    {tUnsafe(column.labelKey)}
                   </span>
                 ))}
                 <span></span>
@@ -204,7 +204,7 @@ function BulkTableCard({
                         value={edit.values[column.key] ?? ''}
                         min={column.min}
                         max={column.max}
-                        aria-label={t(column.labelKey)}
+                        aria-label={tUnsafe(column.labelKey)}
                         onChange={(event) =>
                           onChange(character.id, column.key, event.target.value)
                         }
@@ -237,7 +237,7 @@ function BulkTableCard({
 export default function StatsEditorPage() {
   const { user, isUserLoading } = useLocalAuth();
   const { characters, updateCharacter, isLoaded } = useCharacterContext();
-  const { t } = useTranslation();
+  const { t, tUnsafe } = useTranslation();
   const router = useRouter();
 
   const [activeTab, setActiveTab] = useState('stats');
@@ -363,7 +363,9 @@ export default function StatsEditorPage() {
       ...previous,
       [key]: { ...previous[key], [charId]: { values, saved: true } },
     }));
-    flashStatus(`${t(table.saveOneKey)} "${character.name || 'Unnamed'}"`);
+    flashStatus(
+      `${tUnsafe(table.saveOneKey)} "${character.name || 'Unnamed'}"`,
+    );
   };
 
   const handleSaveAll = (tab: BulkEditorTab) => {
@@ -381,7 +383,7 @@ export default function StatsEditorPage() {
       }
     }
     setEdits(next);
-    flashStatus(t(tab.saveAllDoneKey));
+    flashStatus(tUnsafe(tab.saveAllDoneKey));
   };
 
   // isUserLoading: сессия читается из localStorage в useEffect, поэтому на
@@ -430,8 +432,8 @@ export default function StatsEditorPage() {
               onClick={() => setActiveTab(tab.id)}
             >
               {tab.showCount
-                ? `${t(tab.labelKey)} (${tabCount(tab.id)})`
-                : t(tab.labelKey)}
+                ? `${tUnsafe(tab.labelKey)} (${tabCount(tab.id)})`
+                : tUnsafe(tab.labelKey)}
             </Button>
           ))}
         </div>
@@ -450,7 +452,7 @@ export default function StatsEditorPage() {
             <div className="flex justify-end">
               <Button onClick={() => handleSaveAll(activeTabDescriptor)}>
                 <Save className="mr-2 h-4 w-4" />{' '}
-                {t(activeTabDescriptor.saveAllLabelKey)}
+                {tUnsafe(activeTabDescriptor.saveAllLabelKey)}
               </Button>
             </div>
 
@@ -458,7 +460,7 @@ export default function StatsEditorPage() {
             activeTabDescriptor.emptyKey ? (
               <Card>
                 <CardContent className="text-muted-foreground py-12 text-center">
-                  {t(activeTabDescriptor.emptyKey)}
+                  {tUnsafe(activeTabDescriptor.emptyKey)}
                 </CardContent>
               </Card>
             ) : (

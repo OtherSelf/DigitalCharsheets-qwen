@@ -55,6 +55,7 @@ export const SCHEMA_PATH = join(GAMES_DIR, 'plugin.schema.json');
 export const REGISTRY_PATH = join(GAMES_DIR, 'registry.generated.ts');
 export const I18N_REGISTRY_PATH = join(GAMES_DIR, 'i18n.generated.ts');
 export const GAMES_DEFS_PATH = join(GAMES_DIR, 'games.generated.ts');
+export const I18N_KEYS_PATH = join(GAMES_DIR, 'i18n.keys.generated.ts');
 export { MANIFEST_FILE };
 
 /**
@@ -701,6 +702,66 @@ ${gameKeys('ru')}
 }
 
 /**
+ * Текст `i18n.keys.generated.ts` — объединение ключей всех словарей плагинов.
+ *
+ * Нужно типизированному `t()`: ключи JSON-словарей известны только генератору,
+ * а рантайм-тип `PluginLocalizedMessages` их стирает до `Record<string,
+ * string>`. Файл в git не хранится (как и остальные `*.generated.ts`) и
+ * пересобирается `postinstall`/`prebuild`/`pretypecheck`.
+ *
+ * @param {{dirName: string, manifest: any}[]} plugins
+ */
+export function renderI18nKeys(plugins) {
+  const sorted = [...plugins].sort((a, b) =>
+    a.manifest.id.localeCompare(b.manifest.id, 'en'),
+  );
+  const keys = new Set();
+
+  for (const { manifest } of sorted) {
+    for (const locale of Object.keys(manifest.i18n)) {
+      const rel = manifest.i18n[locale];
+      const file = join(GAMES_DIR, manifest.id, rel);
+      if (!existsSync(file)) continue;
+      const raw = readFileSync(file, 'utf8');
+      if (rel.endsWith('.json')) {
+        try {
+          for (const key of Object.keys(JSON.parse(raw))) keys.add(key);
+        } catch {
+          // Битый JSON ловит валидация манифеста, здесь не падаем вторым разом.
+        }
+      } else {
+        // Legacy `.ts`-словарь (D13): тот же плоский вид `'key': 'value'`.
+        for (const match of raw.matchAll(/^\s*'([^']+)'\s*:/gm)) {
+          keys.add(match[1]);
+        }
+      }
+    }
+  }
+
+  for (const game of collectGameDefinitions(plugins)) {
+    keys.add(`games.generated.${game.id}.name`);
+    keys.add(`games.generated.${game.id}.description`);
+  }
+
+  const union = [...keys]
+    .sort((a, b) => a.localeCompare(b, 'en'))
+    .map((key) => `  | ${tsString(key)}`)
+    .join('\n');
+
+  return `/**
+ * ─── AUTO-GENERATED — НЕ РЕДАКТИРОВАТЬ ─────────────────────────────────────
+ * Ключи словарей плагинов, сгенерированные из \`src/games/<id>/i18n/*\` и
+ * манифестов. Используются типом \`TranslationKey\` в src/lib/i18n/keys.ts.
+ *
+ * Пересобрать:  npm run plugins:generate
+ * Проверить:    npm run plugins:check
+ */
+export type PluginTranslationKey =
+${union};
+`;
+}
+
+/**
  * Предупреждения набора: манифест валиден, но описывает контракт не полностью.
  *
  * Сейчас это пустая цепочка миграций при `schemaVersion > 1`: гейт на неё
@@ -779,6 +840,7 @@ export function buildRegistry({
     content: renderRegistry(plugins),
     i18nContent: renderI18nRegistry(plugins),
     gamesContent: renderGameDefinitions(plugins),
+    i18nKeysContent: renderI18nKeys(plugins),
   };
 }
 
@@ -803,8 +865,14 @@ function main(argv) {
     return 0;
   }
 
-  const { plugins, warnings, content, i18nContent, gamesContent } =
-    buildRegistry();
+  const {
+    plugins,
+    warnings,
+    content,
+    i18nContent,
+    gamesContent,
+    i18nKeysContent,
+  } = buildRegistry();
   const summary = plugins
     .map((plugin) => `${plugin.id}@${plugin.version} (order ${plugin.order})`)
     .join(', ');
@@ -826,6 +894,7 @@ function main(argv) {
       ['registry.generated.ts', REGISTRY_PATH, content],
       ['i18n.generated.ts', I18N_REGISTRY_PATH, i18nContent],
       ['games.generated.ts', GAMES_DEFS_PATH, gamesContent],
+      ['i18n.keys.generated.ts', I18N_KEYS_PATH, i18nKeysContent],
     ];
     let failed = false;
     for (const [label, filePath, expected] of targets) {
@@ -849,7 +918,7 @@ function main(argv) {
     }
     if (failed) return 1;
     console.log(
-      `✓ registry.generated.ts, i18n.generated.ts и games.generated.ts в синхроне · ${summary}`,
+      `✓ registry/i18n/games/i18n.keys.generated.ts в синхроне · ${summary}`,
     );
     return 0;
   }
@@ -857,6 +926,7 @@ function main(argv) {
   writeFileSync(REGISTRY_PATH, content, 'utf8');
   writeFileSync(I18N_REGISTRY_PATH, i18nContent, 'utf8');
   writeFileSync(GAMES_DEFS_PATH, gamesContent, 'utf8');
+  writeFileSync(I18N_KEYS_PATH, i18nKeysContent, 'utf8');
   console.log(
     `✓ registry/i18n/games.generated.ts: ${plugins.length} плагин(ов) · ${summary}`,
   );

@@ -35,7 +35,7 @@ interface ImportCharacterDialogProps {
 export function ImportCharacterDialog({
   isCompactView,
 }: ImportCharacterDialogProps) {
-  const { t } = useTranslation();
+  const { t, tUnsafe } = useTranslation();
   const { addCharacter } = useCharacterContext();
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -60,7 +60,7 @@ export function ImportCharacterDialog({
       const key = result.reason
         ? IMPORT_ERROR_I18N_KEYS[result.reason]
         : undefined;
-      setImportError(key ? t(key) : result.error || t('io.unknownError'));
+      setImportError(key ? tUnsafe(key) : result.error || t('io.unknownError'));
       setIsImporting(false);
       return;
     }

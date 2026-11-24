@@ -75,7 +75,7 @@ const STATUSES: ModuleStatus[] = ['published', 'test', 'hidden'];
  * листов — это явно написано в подсказке.
  */
 export function AdminGamesSection() {
-  const { t } = useTranslation();
+  const { t, tUnsafe } = useTranslation();
   const { isSmallScreen } = useViewportFlags();
   const [games, setGames] = useState<AdminGame[]>([]);
   const [siteTitle, setSiteTitle] = useState('');
@@ -213,10 +213,10 @@ export function AdminGamesSection() {
                   <div className="flex flex-wrap items-start justify-between gap-2">
                     <div className="min-w-0">
                       <p className="text-sm font-semibold">
-                        {t(game.gameNameKey)}
+                        {tUnsafe(game.gameNameKey)}
                       </p>
                       <p className="text-muted-foreground text-xs">
-                        {t(game.nameKey)}
+                        {tUnsafe(game.nameKey)}
                       </p>
                     </div>
                     <Badge variant="outline">
@@ -243,7 +243,7 @@ export function AdminGamesSection() {
                     >
                       <SelectTrigger
                         className="h-9 flex-1"
-                        aria-label={`${t('admin.currentStatusColumn')}: ${t(game.nameKey)}`}
+                        aria-label={`${t('admin.currentStatusColumn')}: ${tUnsafe(game.nameKey)}`}
                       >
                         <SelectValue />
                       </SelectTrigger>
@@ -264,14 +264,14 @@ export function AdminGamesSection() {
                         onCheckedChange={(checked) =>
                           void updateEnabled(game.id, checked === true)
                         }
-                        aria-label={`${t('admin.enabledColumn')}: ${t(game.nameKey)}`}
+                        aria-label={`${t('admin.enabledColumn')}: ${tUnsafe(game.nameKey)}`}
                       />
                       {t('admin.enabledColumn')}
                     </label>
                     <Button
                       variant="ghost"
                       size="icon"
-                      aria-label={`${t('admin.gameSettings')}: ${t(game.nameKey)}`}
+                      aria-label={`${t('admin.gameSettings')}: ${tUnsafe(game.nameKey)}`}
                       onClick={() => setSettingsGame(game)}
                       disabled={isSaving}
                     >
@@ -314,8 +314,8 @@ export function AdminGamesSection() {
                 <tbody>
                   {games.map((game) => (
                     <tr key={game.id} className="border-b last:border-0">
-                      <td className="py-2 pr-3">{t(game.gameNameKey)}</td>
-                      <td className="py-2 pr-3">{t(game.nameKey)}</td>
+                      <td className="py-2 pr-3">{tUnsafe(game.gameNameKey)}</td>
+                      <td className="py-2 pr-3">{tUnsafe(game.nameKey)}</td>
                       <td className="py-2 pr-3 whitespace-nowrap">
                         <Badge variant="outline">
                           {game.version ? `v${game.version}` : '—'}
@@ -363,14 +363,14 @@ export function AdminGamesSection() {
                           onCheckedChange={(checked) =>
                             void updateEnabled(game.id, checked === true)
                           }
-                          aria-label={`${t('admin.enabledColumn')}: ${t(game.nameKey)}`}
+                          aria-label={`${t('admin.enabledColumn')}: ${tUnsafe(game.nameKey)}`}
                         />
                       </td>
                       <td className="py-2 pr-3">
                         <Button
                           variant="ghost"
                           size="icon"
-                          aria-label={`${t('admin.gameSettings')}: ${t(game.nameKey)}`}
+                          aria-label={`${t('admin.gameSettings')}: ${tUnsafe(game.nameKey)}`}
                           onClick={() => setSettingsGame(game)}
                           disabled={isSaving}
                         >
@@ -439,7 +439,8 @@ export function AdminGamesSection() {
             <DialogHeader>
               <DialogTitle>{t('admin.gameSettingsTitle')}</DialogTitle>
               <DialogDescription>
-                {t(settingsGame.gameNameKey)} · {t(settingsGame.nameKey)}
+                {tUnsafe(settingsGame.gameNameKey)} ·{' '}
+                {tUnsafe(settingsGame.nameKey)}
               </DialogDescription>
             </DialogHeader>
 

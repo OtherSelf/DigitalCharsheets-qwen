@@ -36,7 +36,7 @@ export function UserBlockDialog({
   onOpenChange,
   onDone,
 }: UserBlockDialogProps) {
-  const { t } = useTranslation();
+  const { t, tUnsafe } = useTranslation();
   const { toast } = useToast();
 
   const [isSaving, setIsSaving] = useState(false);
@@ -70,7 +70,7 @@ export function UserBlockDialog({
 
       if (!res.ok || !data?.success) {
         setError(
-          adminReasonMessage(data?.reason, t) ||
+          adminReasonMessage(data?.reason, tUnsafe) ||
             data?.error ||
             t('admin.saveFailed'),
         );

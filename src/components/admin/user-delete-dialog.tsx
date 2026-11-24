@@ -38,7 +38,7 @@ export function UserDeleteDialog({
   onOpenChange,
   onDone,
 }: UserDeleteDialogProps) {
-  const { t } = useTranslation();
+  const { t, tUnsafe } = useTranslation();
   const { toast } = useToast();
 
   const [confirmName, setConfirmName] = useState('');
@@ -80,7 +80,7 @@ export function UserDeleteDialog({
 
       if (!res.ok || !data?.success) {
         setError(
-          adminReasonMessage(data?.reason, t) ||
+          adminReasonMessage(data?.reason, tUnsafe) ||
             data?.error ||
             t('admin.deleteFailed'),
         );

@@ -24,12 +24,12 @@ export function DocsLayoutShell({
   tree,
   children,
 }: Readonly<{ tree: PageTreeRoot; children: React.ReactNode }>) {
-  const { t, language } = useTranslation();
+  const { t, tUnsafe, language } = useTranslation();
 
   return (
     <RootProvider
       theme={{ enabled: false }}
-      i18n={{ locale: language, translations: docsUiTranslations(t) }}
+      i18n={{ locale: language, translations: docsUiTranslations(tUnsafe) }}
       search={{ SearchDialog: DocsSearchDialog }}
     >
       <div className="docs-scroll bg-fd-background text-fd-foreground">

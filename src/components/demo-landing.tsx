@@ -36,7 +36,7 @@ interface DemoLandingProps {
 }
 
 export function DemoLanding({ createHref = '/new' }: DemoLandingProps) {
-  const { t } = useTranslation();
+  const { t, tUnsafe } = useTranslation();
   const [previewId, setPreviewId] = useState<SystemId | null>(null);
   const [visibleIds, setVisibleIds] = useState<Set<string> | null>(null);
   // Флаг «стили ядра» из того же ответа: иначе демо-лист показывает тему
@@ -102,8 +102,8 @@ export function DemoLanding({ createHref = '/new' }: DemoLandingProps) {
       return {
         id: gameModule.id,
         label: gameDefinition
-          ? `${t(gameDefinition.nameKey)} · ${t(gameModule.nameKey)}`
-          : t(gameModule.nameKey),
+          ? `${tUnsafe(gameDefinition.nameKey)} · ${tUnsafe(gameModule.nameKey)}`
+          : tUnsafe(gameModule.nameKey),
         character: {
           ...(gameModule.createDemo() as unknown as Record<string, unknown>),
           id: `demo-${gameModule.id}`,

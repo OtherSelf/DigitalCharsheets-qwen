@@ -1,7 +1,9 @@
 // ─── LANDMARK: TRANSLATIONS_COMMON ───
 // Shared layer (common/auth/admin/settings/demo/io). Game keys live in
 // src/games/<id>/i18n; the merged result is built in src/lib/i18n/index.ts.
-export const enTranslations: Record<string, string> = {
+// `satisfies`, а не аннотация `Record<string, string>`: иначе `keyof` даёт
+// `string` и `TranslationKey` теряет все ключи.
+export const enTranslations = {
   'common.dashboard': 'Dashboard',
   'common.newCharacter': 'New Character',
   'common.existingCharacters': 'Existing Characters',
@@ -842,4 +844,4 @@ export const enTranslations: Record<string, string> = {
   'share.createError': 'Failed to create the link.',
   'share.revokeError': 'Failed to revoke the link.',
   'share.expiryError': 'Choose a valid lifetime.',
-};
+} satisfies Record<string, string>;

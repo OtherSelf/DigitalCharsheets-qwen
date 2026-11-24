@@ -37,7 +37,7 @@ type CharacterCardProps = {
 };
 
 export function CharacterCard({ character }: CharacterCardProps) {
-  const { t } = useTranslation();
+  const { t, tUnsafe } = useTranslation();
   const { archiveCharacter, deleteCharacter, isCompactView, toast } =
     useCharacterContext();
 
@@ -48,13 +48,13 @@ export function CharacterCard({ character }: CharacterCardProps) {
   // Подпись и цвет бейджа — слот плагина (этап 3); у ядра остаётся
   // нейтральный вариант, если слот не загрузился/не задан.
   const uiSlots = useGameUiSlots(resolveCharacterSystemId(character));
-  const summary = uiSlots?.CardSummary?.(character, t);
+  const summary = uiSlots?.CardSummary?.(character, tUnsafe);
   const summaryText = summary?.text ?? '';
   const badgeVariant = summary?.badgeVariant ?? 'secondary';
   // Бейдж «игра · редакция» целиком из реестра и i18n.
   const systemLabel =
     gameDefinition && gameModule
-      ? `${t(gameDefinition.nameKey)} · ${t(gameModule.nameKey)}`
+      ? `${tUnsafe(gameDefinition.nameKey)} · ${tUnsafe(gameModule.nameKey)}`
       : character.gameSystem;
 
   const handleDelete = () => {
@@ -73,7 +73,7 @@ export function CharacterCard({ character }: CharacterCardProps) {
   };
 
   const handleExportExcel = async () => {
-    const result = await exportCharacterToExcel(character, new Date(), t);
+    const result = await exportCharacterToExcel(character, new Date(), tUnsafe);
     if (!result.success) {
       toast({
         variant: 'destructive',

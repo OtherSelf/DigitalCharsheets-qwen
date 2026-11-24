@@ -98,11 +98,11 @@ function ValueText({
   historyConfig?: GameHistoryConfig;
   path?: string;
 }) {
-  const { t } = useTranslation();
+  const { t, tUnsafe } = useTranslation();
   const text = formatHistoryValue(value, {
     config: historyConfig,
     path,
-    t,
+    t: tUnsafe,
   });
   const truncated = value.truncated === true;
 
@@ -180,8 +180,8 @@ function ChangeRow({
   change: HistoryChange;
   historyConfig?: GameHistoryConfig;
 }) {
-  const { t } = useTranslation();
-  const label = resolveHistoryLabel(change, historyConfig, t);
+  const { t, tUnsafe } = useTranslation();
+  const label = resolveHistoryLabel(change, historyConfig, tUnsafe);
   const fieldPath = change.field
     ? `${change.path}.${change.field}`
     : change.path;
@@ -201,12 +201,12 @@ function ChangeRow({
           formatHistoryValue(change.before, {
             config: historyConfig,
             path: fieldPath,
-            t,
+            t: tUnsafe,
           }),
           formatHistoryValue(change.after, {
             config: historyConfig,
             path: fieldPath,
-            t,
+            t: tUnsafe,
           }),
         )
       : null;
@@ -240,7 +240,7 @@ function ChangeRow({
                 {formatHistoryValue(value, {
                   config: historyConfig,
                   path: fieldPath,
-                  t,
+                  t: tUnsafe,
                 })}
               </code>
             ))}
@@ -279,7 +279,7 @@ export function SessionCard({
   session: HistorySession;
   historyConfig?: GameHistoryConfig;
 }) {
-  const { t, language } = useTranslation();
+  const { language, t } = useTranslation();
 
   return (
     <Card data-testid="history-session">
@@ -325,7 +325,7 @@ export function SessionCard({
 }
 
 export function HistoryView({ character }: { character: Character }) {
-  const { t, language } = useTranslation();
+  const { t } = useTranslation();
   const historyConfig = getCharacterModule(character)?.history;
   const [sessions, setSessions] = useState<HistorySession[]>([]);
   const [cursor, setCursor] = useState<string | null>(null);

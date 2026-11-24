@@ -53,7 +53,7 @@ export function CompactSidebar({
   mode = 'owner',
   onNotesClick,
 }: CompactSidebarProps) {
-  const { t } = useTranslation();
+  const { t, tUnsafe } = useTranslation();
   const { hideNotes, setHideNotes, showEditButtons, setShowEditButtons } =
     useCharacterContext();
   const [isHouseRulesDialogOpen, setIsHouseRulesDialogOpen] = useState(false);
@@ -109,7 +109,7 @@ export function CompactSidebar({
               <Button
                 variant={activeSection === item.id ? 'secondary' : 'ghost'}
                 onClick={() => onSectionChange(item.id)}
-                aria-label={t(item.labelKey)}
+                aria-label={tUnsafe(item.labelKey)}
                 data-section-id={item.id}
                 className="w-full"
                 size="icon"
@@ -118,7 +118,7 @@ export function CompactSidebar({
               </Button>
             </TooltipTrigger>
             <TooltipContent side="right">
-              <p>{t(item.labelKey)}</p>
+              <p>{tUnsafe(item.labelKey)}</p>
             </TooltipContent>
           </Tooltip>
         ))}
@@ -141,7 +141,7 @@ export function CompactSidebar({
                     onSectionChange(item.id);
                   }
                 }}
-                aria-label={t(item.labelKey)}
+                aria-label={tUnsafe(item.labelKey)}
                 className="w-full"
                 size="icon"
               >
@@ -149,7 +149,7 @@ export function CompactSidebar({
               </Button>
             </TooltipTrigger>
             <TooltipContent side="right">
-              <p>{t(item.labelKey)}</p>
+              <p>{tUnsafe(item.labelKey)}</p>
             </TooltipContent>
           </Tooltip>
         ))}

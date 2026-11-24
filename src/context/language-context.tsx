@@ -12,6 +12,8 @@ import {
   interpolate,
   pluralForm,
   translations,
+  type PluralKey,
+  type TranslationKey,
   type TranslationVars,
 } from '@/lib/i18n';
 import {
@@ -29,13 +31,18 @@ export type { Language };
 interface LanguageContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
-  /** Перевод с подстановкой `{name}`/`{count}`. */
-  t: (key: string, vars?: TranslationVars) => string;
+  /** Перевод с подстановкой `{name}`/`{count}`; ключ проверяет `tsc`. */
+  t: (key: TranslationKey, vars?: TranslationVars) => string;
+  /**
+   * Ключ, собранный из данных (`dh1.${kind}Abbr`): проверки нет, потому что
+   * его нельзя вывести статически. Единственная разрешённая дверь.
+   */
+  tUnsafe: (key: string, vars?: TranslationVars) => string;
   /**
    * Перевод с формой числа: ключ `<key>_<form>` (`_one`/`_few`/`_many`),
    * фолбэк — `<key>_other`, затем сам ключ. `count` подставляется всегда.
    */
-  tPlural: (key: string, count: number, vars?: TranslationVars) => string;
+  tPlural: (key: PluralKey, count: number, vars?: TranslationVars) => string;
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(
@@ -118,17 +125,24 @@ export function LanguageProvider({
   const dict = translations[language];
   // Ключи всегда полные (`namespace.key`): suffix-fallback эпохи перехода
   // удалён; namespaced-ключи проверяет tests/unit/translations.test.ts.
-  const t = (key: string, vars?: TranslationVars) =>
+  const translate = (key: string, vars?: TranslationVars) =>
     interpolate(dict[key] ?? key, vars);
 
-  const tPlural = (key: string, count: number, vars?: TranslationVars) => {
+  const t = (key: TranslationKey, vars?: TranslationVars) =>
+    translate(key, vars);
+  const tUnsafe = (key: string, vars?: TranslationVars) => translate(key, vars);
+
+  const tPlural = (key: PluralKey, count: number, vars?: TranslationVars) => {
     const form = pluralForm(language, count);
-    const template = dict[`${key}_${form}`] ?? dict[`${key}_other`] ?? dict[key];
+    const template =
+      dict[`${key}_${form}`] ?? dict[`${key}_other`] ?? dict[key];
     return interpolate(template ?? key, { count, ...vars });
   };
 
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t, tPlural }}>
+    <LanguageContext.Provider
+      value={{ language, setLanguage, t, tUnsafe, tPlural }}
+    >
       {children}
     </LanguageContext.Provider>
   );

@@ -57,6 +57,7 @@ export const translations: Record<string, Record<string, string>> = {
  * Живут рядом со словарями, потому что правило «плейсхолдеры одинаковы во
  * всех локалях» проверяется тестами словарей.
  */
+export type { PluralKey, TranslationKey } from './keys';
 export {
   interpolate,
   pluralForm,
