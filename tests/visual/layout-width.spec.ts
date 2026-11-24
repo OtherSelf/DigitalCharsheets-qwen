@@ -77,3 +77,31 @@ test.describe('ширина контента и сетка карточек', { 
     await expect.poll(() => columnCount(page), { timeout: 5_000 }).toBe(1);
   });
 });
+
+test.describe('карточки в ряду', { tag: ['@fast', '@desktop'] }, () => {
+  test('одной высоты, даже если бейдж длиннее', async ({ page, context }) => {
+    await prepare(context);
+    await openApp(page, '/');
+    await page.setViewportSize({ width: 1440, height: 900 });
+
+    const rows = await page
+      .getByTestId('character-card')
+      .evaluateAll((cards) => {
+        const byTop = new Map<number, number[]>();
+        for (const card of cards) {
+          const rect = card.getBoundingClientRect();
+          const top = Math.round(rect.top);
+          byTop.set(top, [...(byTop.get(top) ?? []), Math.round(rect.height)]);
+        }
+        return [...byTop.values()];
+      });
+
+    expect(rows.length, 'в фикстуре несколько карточек').toBeGreaterThan(0);
+    for (const [index, heights] of rows.entries()) {
+      expect(
+        new Set(heights).size,
+        `ряд ${index + 1}: высоты ${heights.join(', ')}`,
+      ).toBe(1);
+    }
+  });
+});

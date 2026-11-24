@@ -193,7 +193,7 @@ export default function DashboardPage() {
               data-testid="open-archive"
             >
               <Link href="/archive" aria-label={t('common.archive')}>
-                <Archive className="mr-2 h-4 w-4" />
+                <Archive className="h-4 w-4 sm:mr-2" />
                 <span className="hidden sm:inline">{t('common.archive')}</span>
               </Link>
             </Button>

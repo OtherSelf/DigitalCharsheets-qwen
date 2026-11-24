@@ -45,7 +45,11 @@ test.describe('порядок карточек', { tag: ['@fast', '@desktop'] },
     await handles.first().focus();
     // Space — взять, стрелка — переместить, Space — отпустить (dnd-kit).
     await page.keyboard.press('Space');
+    // dnd-kit обрабатывает клавиши через сенсор и анонсы — даём кадр-другой,
+    // иначе на загруженной машине ArrowRight иногда приходит до захвата.
+    await page.waitForTimeout(150);
     await page.keyboard.press('ArrowRight');
+    await page.waitForTimeout(150);
     const saved = page.waitForResponse(
       (response) =>
         response.url().includes('/api/characters/order') &&

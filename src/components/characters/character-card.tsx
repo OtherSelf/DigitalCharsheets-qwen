@@ -92,7 +92,7 @@ export function CharacterCard({ character, dragHandle }: CharacterCardProps) {
 
   if (isCompactView) {
     return (
-      <Card className="compact-mobile-card hover:shadow-primary/10 group relative flex flex-row items-stretch overflow-hidden p-2 transition-shadow duration-300 hover:shadow-lg sm:flex-row">
+      <Card className="compact-mobile-card hover:shadow-primary/10 group relative flex h-full flex-row items-stretch overflow-hidden p-2 transition-shadow duration-300 hover:shadow-lg sm:flex-row">
         {dragHandle && (
           <div className="absolute inset-y-0 left-0 z-10 flex w-8 items-center justify-center">
             {dragHandle}
@@ -124,8 +124,10 @@ export function CharacterCard({ character, dragHandle }: CharacterCardProps) {
               {t('common.view')}
             </Link>
           </Button>
+          {/* Как на десктопе (ручка/архив в углу): архив — вторичное
+              действие, поэтому ghost, а не такая же обводка, как у экспорта. */}
           <Button
-            variant="outline"
+            variant="ghost"
             size="icon"
             className="h-11 w-11 shrink-0 sm:h-9 sm:w-9"
             onClick={() => archiveCharacter(character.id)}
@@ -167,7 +169,7 @@ export function CharacterCard({ character, dragHandle }: CharacterCardProps) {
   }
 
   return (
-    <Card className="hover:shadow-primary/10 group relative flex flex-col overflow-hidden transition-shadow duration-300 hover:shadow-lg">
+    <Card className="hover:shadow-primary/10 group relative flex h-full flex-col overflow-hidden transition-shadow duration-300 hover:shadow-lg">
       {dragHandle && (
         <div className="absolute inset-y-0 left-0 z-10 flex w-8 items-center justify-center">
           {dragHandle}
