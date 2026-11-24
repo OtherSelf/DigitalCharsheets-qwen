@@ -143,6 +143,12 @@ src/lib/* (server-only)
 ```
 
 - UI pages are mostly client components; they fetch the API with the cookie.
+- Each card carries its edition accent: `gameAccentCss` turns
+  `plugin.json#ui.theme` into `--card-accent`/`--card-accent-strong` (the
+  stronger tone keeps the small badge text at AA), and the card uses them only
+  for the badge and the left strip — buttons and borders keep host colours. The
+  admin "core styles" flag (`edition.useHostTheme`) turns the accent off, the
+  same way it turns off the edition theme on sheets.
 - The dashboard orders cards by the user's saved order (`user.json#characterOrder`,
   `PUT /api/characters/order`); without it the most recently modified sheet comes
   first. Dragging a card's handle rewrites the order in the profile only — sheet

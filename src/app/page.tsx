@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import Link from 'next/link';
 
 import {
@@ -41,6 +41,11 @@ import {
 import { useCharacterContext } from '@/context/character-context';
 import { useTranslation } from '@/context/language-context';
 import { useLocalAuth } from '@/context/local-auth-context';
+import { resolveCharacterSystemId } from '@/games/character-system';
+import { getPluginManifest } from '@/games/registry';
+import type { SystemId } from '@/games/types';
+import { useEditionThemeFlags } from '@/hooks/use-edition-theme';
+import { gameAccentCss } from '@/lib/game-theme';
 import { cn } from '@/lib/utils';
 
 // LANDMARK: MAIN_DASHBOARD_PAGE
@@ -70,6 +75,26 @@ export default function DashboardPage() {
     }),
   );
   const orderedIds = characters.map((character) => character.id);
+
+  // Акцент редакции: один `<style>` на страницу, только для видимых редакций,
+  // у которых админ не включил «стили ядра». Пока флагов нет — нейтральные
+  // карточки, чтобы не было вспышки чужой темы.
+  const themeFlags = useEditionThemeFlags();
+  const accentCss = useMemo(() => {
+    if (!themeFlags) return '';
+    const seen = new Set<string>();
+    let css = '';
+    for (const character of characters) {
+      const systemId = resolveCharacterSystemId(character);
+      if (!systemId || seen.has(systemId) || themeFlags[systemId]) continue;
+      seen.add(systemId);
+      css += gameAccentCss(
+        systemId,
+        getPluginManifest(systemId as SystemId)?.ui?.theme,
+      );
+    }
+    return css;
+  }, [characters, themeFlags]);
   const nameById = new Map(
     characters.map((character) => [character.id, character.name]),
   );
@@ -229,6 +254,7 @@ export default function DashboardPage() {
                   },
                 }}
               >
+                {accentCss ? <style>{accentCss}</style> : null}
                 <SortableContext
                   items={orderedIds}
                   strategy={rectSortingStrategy}
@@ -245,12 +271,18 @@ export default function DashboardPage() {
                           '[grid-template-columns:repeat(auto-fill,minmax(18rem,1fr))]',
                     )}
                   >
-                    {characters.map((character) => (
-                      <SortableCharacterCard
-                        key={character.id}
-                        character={character}
-                      />
-                    ))}
+                    {characters.map((character) => {
+                      const systemId = resolveCharacterSystemId(character);
+                      return (
+                        <SortableCharacterCard
+                          key={character.id}
+                          character={character}
+                          accent={Boolean(
+                            themeFlags && systemId && !themeFlags[systemId],
+                          )}
+                        />
+                      );
+                    })}
                     {isCompactView ? (
                       <Button
                         variant="outline"

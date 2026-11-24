@@ -19,7 +19,14 @@ import { type Character } from '@/lib/types';
  * неё же (Space/стрелки) — это даёт доступную перестановку без отдельного
  * режима «сортировка».
  */
-export function SortableCharacterCard({ character }: { character: Character }) {
+export function SortableCharacterCard({
+  character,
+  accent,
+}: {
+  character: Character;
+  /** Красить карточку акцентом редакции (см. `gameAccentCss`). */
+  accent?: boolean;
+}) {
   const { t } = useTranslation();
   const {
     attributes,
@@ -48,6 +55,7 @@ export function SortableCharacterCard({ character }: { character: Character }) {
     >
       <CharacterCard
         character={character}
+        accent={accent}
         dragHandle={
           <button
             ref={setActivatorNodeRef}

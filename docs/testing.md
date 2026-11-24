@@ -488,6 +488,7 @@ OS or missing fonts.
 | `i18n-raw.spec.ts` | No raw translation keys in the rendered UI |
 | `language.spec.ts` | First-frame language: server-rendered `lang`/strings for cookie and `Accept-Language`, switch without reload, profile save |
 | `tablet.spec.ts` | Host-only tablet 1024×768 screens: dashboard and settings |
+| `a11y.spec.ts` | axe gate on the key host screens and the D&D sheet, plus the Russian locale and the dark/warm dashboard (accent contrast); fails on `serious`/`critical` |
 | `layout-width.spec.ts` | Content cap (1760px, centered) and card grid: five columns at 1760+, four at 1440, three at 1024, two at 768, one at 393 |
 | `character-order.spec.ts` | Drag-and-drop card order with the keyboard, `PUT /api/characters/order`, persistence after reload; restores the original order afterwards |
 

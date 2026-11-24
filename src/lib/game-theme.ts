@@ -55,3 +55,57 @@ export function gameThemeCss(
   if (dark) rules.push(`html.dark ${scope}{${dark}}`);
   return rules.join('');
 }
+
+/**
+ * Акцент карточки персонажа на дашборде: только одна переменная
+ * `--card-accent`, а не вся тема игры. Иначе `data-system` перекрашивал бы
+ * кнопку «Просмотр листа» (`--primary`), рамку и hover-состояния — это уже не
+ * «акцент», а полная тема карточки.
+ *
+ * Светлый набор — на самой карточке, тёмный — под `html.dark`, как у
+ * `gameThemeCss`; вызывающий ставит на карточку `data-card-accent="<id>"`.
+ */
+/**
+ * Приглушить/осветлить HSL-строку плагина (`H S% L%`) до контрастного текста.
+ * Бейдж — мелкий текст, поэтому чистый `--primary` на 10–12% подложке не
+ * проходит AA: в светлой/тёплой теме текст темнее на 12 п.п., в тёмной —
+ * светлее. Возвращает готовый `hsl(...)`, чтобы не полагаться на
+ * `color-mix()` в старых браузерах.
+ */
+function contrastColor(
+  value: string | undefined,
+  delta: number,
+): string | null {
+  if (!value) return null;
+  const match = /^(\d+(?:\.\d+)?)\s+(\d+(?:\.\d+)?)%\s+(\d+(?:\.\d+)?)%$/.exec(
+    value.trim(),
+  );
+  if (!match) return null;
+  const [, h, s, l] = match;
+  const lightness = Math.min(95, Math.max(8, Number(l) + delta));
+  return `hsl(${h} ${s}% ${lightness}%)`;
+}
+
+export function gameAccentCss(
+  systemId: string | undefined,
+  theme: GameTheme | undefined,
+): string {
+  if (!systemId || !SYSTEM_ID_RE.test(systemId) || !theme) return '';
+  const light = theme.tokens?.light?.primary;
+  const dark = theme.tokens?.dark?.primary ?? light;
+  const scope = `[data-card-accent="${systemId}"]`;
+  const rules: string[] = [];
+  if (light) {
+    const strong = contrastColor(light, -12);
+    rules.push(
+      `${scope}{--card-accent:${light};${strong ? `--card-accent-strong:${strong};` : ''}}`,
+    );
+  }
+  if (dark) {
+    const strong = contrastColor(dark, 12);
+    rules.push(
+      `html.dark ${scope}{--card-accent:${dark};${strong ? `--card-accent-strong:${strong};` : ''}}`,
+    );
+  }
+  return rules.join('');
+}

@@ -8,7 +8,6 @@ import Link from 'next/link';
 import { Archive, FileDown, FileJson } from 'lucide-react';
 
 import { DeleteCharacterDialog } from '@/components/characters/delete-character-dialog';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -24,6 +23,7 @@ import {
   resolveCharacterSystemId,
 } from '@/games/character-system';
 import { getGameDefinition } from '@/games/games';
+import type { CardBadgeVariant } from '@/games/types';
 import { useGameUiSlots } from '@/hooks/use-game-ui-slots';
 import {
   DEFAULT_EXPORT_CONFIG,
@@ -32,6 +32,7 @@ import {
 } from '@/lib/export-utils';
 import { characterPath } from '@/lib/routes';
 import { type Character } from '@/lib/types';
+import { cn } from '@/lib/utils';
 
 type CharacterCardProps = {
   character: Character;
@@ -41,9 +42,71 @@ type CharacterCardProps = {
    * место слева, чтобы ручка не перекрывала бейдж и заголовок.
    */
   dragHandle?: ReactNode;
+  /**
+   * Красить карточку акцентом редакции: тонкая полоса слева и фон бейджа в
+   * `--card-accent` (его объявляет `gameAccentCss` на `data-card-accent`).
+   * `false` — админ включил «стили ядра» или у редакции нет темы.
+   */
+  accent?: boolean;
 };
 
-export function CharacterCard({ character, dragHandle }: CharacterCardProps) {
+/** Бейдж «игра / редакция»: две строки, игра — жирным. */
+function EditionBadge({
+  game,
+  edition,
+  fallback,
+  accent,
+  variant,
+  className,
+}: {
+  game?: string;
+  edition?: string;
+  fallback: string;
+  accent?: boolean;
+  variant: CardBadgeVariant;
+  className?: string;
+}) {
+  return (
+    <div
+      data-testid="edition-badge"
+      className={cn(
+        'inline-flex max-w-full flex-col items-start rounded-lg border px-2.5 py-1 leading-tight',
+        !accent &&
+          (variant === 'secondary'
+            ? 'bg-secondary text-secondary-foreground border-transparent'
+            : 'border-border text-foreground'),
+        className,
+      )}
+      // `hsl(var(--card-accent) …)` не генерируется Tailwind как utility (var
+      // в произвольном значении), поэтому акцент задаём инлайном: переменная
+      // наследуется от карточки с `data-card-accent`.
+      style={
+        accent
+          ? {
+              color: 'var(--card-accent-strong, hsl(var(--card-accent)))',
+              backgroundColor: 'hsl(var(--card-accent) / 0.10)',
+              borderColor: 'hsl(var(--card-accent) / 0.40)',
+            }
+          : undefined
+      }
+    >
+      <span className="text-[11px] font-semibold sm:text-xs">
+        {game ?? fallback}
+      </span>
+      {edition && (
+        <span className="text-[10px] font-normal sm:text-[11px]">
+          {edition}
+        </span>
+      )}
+    </div>
+  );
+}
+
+export function CharacterCard({
+  character,
+  dragHandle,
+  accent = false,
+}: CharacterCardProps) {
   const { t, tUnsafe } = useTranslation();
   const { archiveCharacter, deleteCharacter, isCompactView, toast } =
     useCharacterContext();
@@ -57,12 +120,14 @@ export function CharacterCard({ character, dragHandle }: CharacterCardProps) {
   const uiSlots = useGameUiSlots(resolveCharacterSystemId(character));
   const summary = uiSlots?.CardSummary?.(character, tUnsafe);
   const summaryText = summary?.text ?? '';
-  const badgeVariant = summary?.badgeVariant ?? 'secondary';
-  // Бейдж «игра · редакция» целиком из реестра и i18n.
-  const systemLabel =
-    gameDefinition && gameModule
-      ? `${tUnsafe(gameDefinition.nameKey)} · ${tUnsafe(gameModule.nameKey)}`
-      : character.gameSystem;
+  const badgeVariant: CardBadgeVariant = summary?.badgeVariant ?? 'secondary';
+  const systemId = resolveCharacterSystemId(character);
+  // Бейдж «игра / редакция»: две строки, чтобы длинные названия не ломали
+  // карточку; названия — из реестра и i18n, не из ядра.
+  const gameLabel = gameDefinition
+    ? tUnsafe(gameDefinition.nameKey)
+    : undefined;
+  const editionLabel = gameModule ? tUnsafe(gameModule.nameKey) : undefined;
 
   const handleDelete = () => {
     deleteCharacter(character.id);
@@ -92,7 +157,16 @@ export function CharacterCard({ character, dragHandle }: CharacterCardProps) {
 
   if (isCompactView) {
     return (
-      <Card className="compact-mobile-card hover:shadow-primary/10 group relative flex h-full flex-row items-stretch overflow-hidden p-2 transition-shadow duration-300 hover:shadow-lg sm:flex-row">
+      <Card
+        className={cn(
+          'compact-mobile-card hover:shadow-primary/10 group relative flex h-full flex-row items-stretch overflow-hidden p-2 transition-shadow duration-300 hover:shadow-lg sm:flex-row',
+          accent && 'border-l-4',
+        )}
+        data-card-accent={accent ? systemId : undefined}
+        style={
+          accent ? { borderLeftColor: 'hsl(var(--card-accent))' } : undefined
+        }
+      >
         {dragHandle && (
           <div className="absolute inset-y-0 left-0 z-10 flex w-8 items-center justify-center">
             {dragHandle}
@@ -107,13 +181,14 @@ export function CharacterCard({ character, dragHandle }: CharacterCardProps) {
           <CardDescription className="mt-0.5 line-clamp-1 text-xs break-words">
             {summaryText}
           </CardDescription>
-          <Badge
-            data-testid="edition-badge"
+          <EditionBadge
+            game={gameLabel}
+            edition={editionLabel}
+            fallback={character.gameSystem ?? ''}
+            accent={accent}
             variant={badgeVariant}
-            className="system-badge mt-2 w-fit max-w-full text-xs"
-          >
-            {systemLabel}
-          </Badge>
+            className="system-badge mt-2 w-fit text-xs"
+          />
         </div>
         <div className="actions-wrapper flex min-w-0 flex-1 items-center justify-end gap-1 p-2 sm:gap-2">
           <Button asChild size="sm" className="h-8 min-w-0 flex-1 px-2 sm:h-9">
@@ -169,7 +244,13 @@ export function CharacterCard({ character, dragHandle }: CharacterCardProps) {
   }
 
   return (
-    <Card className="hover:shadow-primary/10 group relative flex h-full flex-col overflow-hidden transition-shadow duration-300 hover:shadow-lg">
+    <Card
+      className={cn(
+        'hover:shadow-primary/10 group relative flex h-full flex-col overflow-hidden transition-shadow duration-300 hover:shadow-lg',
+        accent && 'border-l-4 border-l-[hsl(var(--card-accent))]',
+      )}
+      data-card-accent={accent ? systemId : undefined}
+    >
       {dragHandle && (
         <div className="absolute inset-y-0 left-0 z-10 flex w-8 items-center justify-center">
           {dragHandle}
@@ -187,13 +268,14 @@ export function CharacterCard({ character, dragHandle }: CharacterCardProps) {
         <Archive className="h-4 w-4" />
       </Button>
       <CardContent className="flex-grow py-4 pr-12 pl-10">
-        <Badge
-          data-testid="edition-badge"
+        <EditionBadge
+          game={gameLabel}
+          edition={editionLabel}
+          fallback={character.gameSystem ?? ''}
+          accent={accent}
           variant={badgeVariant}
-          className="mb-2 text-xs sm:text-sm"
-        >
-          {systemLabel}
-        </Badge>
+          className="mb-2"
+        />
         <CardTitle className="font-headline mb-1 text-base break-words sm:text-lg">
           {character.name}
         </CardTitle>

@@ -302,14 +302,14 @@ test.describe('общие страницы', () => {
       await expect(page.getByText('Seraphina Vael')).toBeVisible();
       await expect(page.getByText('Lucius Varn')).toBeVisible();
 
-      // Бейдж — полное «игра · редакция» из реестра и i18n.
+      // Бейдж — две строки: игра (жирным) и редакция; обе из реестра и i18n.
+      // Бейдж — две строки; редакция приходит из локали плагина. Порядок
+      // карточек зависит от mtime, поэтому проверяем состав, а не позиции.
       const badges = page.getByTestId('edition-badge');
-      await expect(
-        badges.filter({ hasText: 'Warhammer 40k: Dark Heresy · 1st Edition' }),
-      ).toHaveCount(1);
-      await expect(
-        badges.filter({ hasText: 'Dungeons & Dragons · 5th Edition' }),
-      ).toHaveCount(1);
+      await expect(badges).toHaveCount(3);
+      await expect(badges.filter({ hasText: '1st Edition' })).toHaveCount(1);
+      await expect(badges.filter({ hasText: '2nd Edition' })).toHaveCount(1);
+      await expect(badges.filter({ hasText: '5th Edition' })).toHaveCount(1);
 
       await expectNoRawI18nKeys(page, 'dashboard (en)');
       await screenshotPage(page, 'dashboard-en.png');
@@ -328,11 +328,11 @@ test.describe('общие страницы', () => {
       ).toBeVisible();
 
       // Название редакции локализовано вместе с игрой.
-      await expect(
-        page
-          .getByTestId('edition-badge')
-          .filter({ hasText: 'Warhammer 40k: Dark Heresy · 1-я редакция' }),
-      ).toHaveCount(1);
+      const badges = page.getByTestId('edition-badge');
+      await expect(badges).toHaveCount(3);
+      await expect(badges.filter({ hasText: '1-я редакция' })).toHaveCount(1);
+      await expect(badges.filter({ hasText: '2-я редакция' })).toHaveCount(1);
+      await expect(badges.filter({ hasText: '5-я редакция' })).toHaveCount(1);
 
       await expectNoRawI18nKeys(page, 'dashboard (ru)');
       await screenshotPage(page, 'dashboard-ru.png');

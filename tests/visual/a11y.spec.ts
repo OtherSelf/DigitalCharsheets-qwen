@@ -147,3 +147,33 @@ test.describe('axe: русская локаль', { tag: '@fast' }, () => {
     expect(blocking, '/ (ru): axe serious/critical').toEqual([]);
   });
 });
+
+// Акцент редакции на карточках задаётся цветом плагина (`--card-accent`) и в
+// тёмной/тёплой теме берётся другой набор токенов — контраст проверяем там же.
+for (const theme of ['dark', 'warm'] as const) {
+  test.describe(`axe: ${theme}`, { tag: ['@fast', '@desktop'] }, () => {
+    test(`dashboard (${theme}): нет serious/critical`, async ({
+      page,
+      context,
+    }) => {
+      await prepare(context, { theme });
+      await openApp(page, '/');
+
+      const results = await new AxeBuilder({ page })
+        .withTags(['wcag2a', 'wcag2aa'])
+        .analyze();
+      const blocking = results.violations
+        .filter(
+          (violation) =>
+            violation.impact === 'serious' || violation.impact === 'critical',
+        )
+        .map((violation) => ({
+          id: violation.id,
+          nodes: violation.nodes
+            .map((node) => node.target.join(' '))
+            .slice(0, 5),
+        }));
+      expect(blocking, `/ (${theme}): axe serious/critical`).toEqual([]);
+    });
+  });
+}
