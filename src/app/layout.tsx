@@ -23,7 +23,10 @@ import { LANGUAGE_COOKIE, resolveLanguage } from '@/lib/language';
   заголовки рисовались системным фолбэком с другими метриками. `Manrope` —
   геометрический гротеск, ближайший к прежнему заголовочному шрифту.
 */
-const inter = Inter({ subsets: ['latin', 'cyrillic'], variable: '--font-inter' });
+const inter = Inter({
+  subsets: ['latin', 'cyrillic'],
+  variable: '--font-inter',
+});
 const manrope = Manrope({
   subsets: ['latin', 'cyrillic'],
   variable: '--font-headline',

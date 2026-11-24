@@ -11,8 +11,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useLocalAuth } from '@/context/local-auth-context';
 import { useTranslation } from '@/context/language-context';
+import { useLocalAuth } from '@/context/local-auth-context';
 import { downloadJSON } from '@/lib/download';
 import { buildBackupExport, exportFileName } from '@/lib/export-utils';
 import { type Character } from '@/lib/types';
@@ -65,7 +65,10 @@ export function ToolsMenu() {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuItem asChild>
-          <Link href="/stats-editor" className="flex cursor-pointer items-center">
+          <Link
+            href="/stats-editor"
+            className="flex cursor-pointer items-center"
+          >
             <Settings2 className="mr-2 h-4 w-4" />
             <span>{t('common.statsEditor')}</span>
           </Link>
