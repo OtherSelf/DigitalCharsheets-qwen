@@ -63,3 +63,30 @@ test.describe('документация', () => {
     expect(scrolled?.top ?? 0).toBeGreaterThan(1000);
   });
 });
+
+test.describe('документация: «наверх»', () => {
+  test('кнопка в конце статьи возвращает к началу @fast', async ({
+    page,
+    context,
+  }) => {
+    await prepare(context, { authenticated: false });
+    await openApp(page, '/docs/architecture');
+
+    const scroller = page.locator('.docs-scroll');
+    await scroller.evaluate((element) => element.scrollTo({ top: 5000 }));
+    await expect
+      .poll(async () => scroller.evaluate((element) => element.scrollTop))
+      .toBeGreaterThan(0);
+
+    const backToTop = page.getByTestId('docs-back-to-top');
+    await backToTop.scrollIntoViewIfNeeded();
+    await expect(backToTop).toHaveAccessibleName('Back to top');
+    await backToTop.click();
+
+    await expect
+      .poll(async () => scroller.evaluate((element) => element.scrollTop), {
+        timeout: 5_000,
+      })
+      .toBe(0);
+  });
+});

@@ -5,6 +5,8 @@ import defaultMdxComponents from 'fumadocs-ui/mdx';
 
 import { docsSource } from '@/lib/docs/source';
 
+import { DocsBackToTop } from '../docs-back-to-top';
+
 /**
  * Одна страница документации. Маршрут ловит и `/docs`, и `/docs/<slug>`,
  * и `/docs/adr/<slug>`: корень — это `docs/README.md` с пустым slug.
@@ -52,6 +54,7 @@ export default async function DocsArticlePage({
     <DocsPage toc={toc} full={page.data.full}>
       <DocsBody>
         <MDX components={defaultMdxComponents} />
+        <DocsBackToTop />
       </DocsBody>
     </DocsPage>
   );
