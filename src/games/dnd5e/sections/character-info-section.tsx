@@ -258,7 +258,7 @@ const DetailSelectField = ({
         </SelectContent>
       </Select>
     ) : (
-      <span className="truncate text-sm font-semibold">
+      <span className="line-clamp-2 text-sm font-semibold">
         {value ? t(translationKeys[value] || value) : '-'}
       </span>
     )}
