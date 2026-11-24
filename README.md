@@ -96,6 +96,8 @@ local JSON storage · Vitest · Playwright.
 
 MIT — see [LICENSE](LICENSE).
 
+Source code: <https://github.com/digitalcharsheets/digital-character-sheets>.
+
 This project is not affiliated with Wizards of the Coast or Games Workshop.
 D&D 5e and Dark Heresy are trademarks of their respective owners. This software
 is provided under the MIT License, but game rules and text remain subject to

@@ -16,7 +16,8 @@ import { formatVersionLabel, useAppVersion } from '@/lib/use-app-version';
  * Отдельного запроса к API нет: `useAppVersion()` делит кэш с подписью в меню.
  * Пока данных нет, строка версии пустая, а ссылки видны — подвал не прыгает.
  */
-const REPOSITORY_URL = 'https://github.com/OtherSelf/DigitalCharsheets-qwen';
+const REPOSITORY_URL =
+  'https://github.com/digitalcharsheets/digital-character-sheets';
 const LICENSE_URL = `${REPOSITORY_URL}/blob/main/LICENSE`;
 
 const linkClass =

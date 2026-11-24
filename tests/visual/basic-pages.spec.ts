@@ -695,7 +695,7 @@ test.describe('адаптивность', () => {
         await expect(repo).toHaveAttribute('rel', /noopener/);
         await expect(repo).toHaveAttribute(
           'href',
-          'https://github.com/OtherSelf/DigitalCharsheets-qwen',
+          'https://github.com/digitalcharsheets/digital-character-sheets',
         );
         await expect(
           footer.getByRole('link', { name: 'MIT license' }),

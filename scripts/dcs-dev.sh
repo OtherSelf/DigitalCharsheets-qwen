@@ -32,7 +32,7 @@
 
 set -Eeuo pipefail
 
-REPO_URL="${DCS_REPO_URL:-https://github.com/OtherSelf/DigitalCharsheets-qwen}"
+REPO_URL="${DCS_REPO_URL:-https://github.com/digitalcharsheets/digital-character-sheets}"
 BRANCH="${DCS_BRANCH:-main}"
 APP_DIR="${DCS_APP_DIR:-/opt/dcs-dev}"
 PORT="${DCS_PORT:-3001}"

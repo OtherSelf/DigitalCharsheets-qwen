@@ -13,7 +13,8 @@ import { useTranslation } from '@/context/language-context';
  * Тексты — краткие, но по делу: стек, версия, лицензия, где лежат данные,
  * что проект не affiliated с правообладателями.
  */
-const REPOSITORY_URL = 'https://github.com/OtherSelf/DigitalCharsheets-qwen';
+const REPOSITORY_URL =
+  'https://github.com/digitalcharsheets/digital-character-sheets';
 const CHANGELOG_URL = `${REPOSITORY_URL}/blob/main/CHANGELOG.md`;
 
 const external = {
