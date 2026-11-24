@@ -794,13 +794,7 @@ test.describe('адаптивность', () => {
 
       // Страницы ядра без DynamicFavicon — раньше здесь не было ни одной
       // ссылки, и браузер получал 404 на /favicon.ico.
-      for (const path of [
-        '/',
-        '/login',
-        '/settings',
-        '/admin',
-        '/stats-editor',
-      ]) {
+      for (const path of ['/', '/login', '/settings', '/stats-editor']) {
         await openApp(page, path);
         const icons = await iconHrefs();
         expect(icons.length, `${path}: есть link rel=icon`).toBeGreaterThan(0);
@@ -808,6 +802,20 @@ test.describe('адаптивность', () => {
           expect(await statusOf(href), `${path}: ${href}`).toBe(200);
         }
       }
+
+      // Админка — под админским аккаунтом: обычному пользователю страница
+      // отдаёт 403 с клиентским редиректом, и проверять там иконки нечего.
+      await prepare(context, { account: 'admin' });
+      await openApp(page, '/admin');
+      const adminIcons = await iconHrefs();
+      expect(adminIcons.length, '/admin: есть link rel=icon').toBeGreaterThan(
+        0,
+      );
+      for (const href of adminIcons) {
+        expect(await statusOf(href), `/admin: ${href}`).toBe(200);
+      }
+
+      await prepare(context);
 
       await openApp(page, sheetPath(getState().dndId));
       const dndIcon = (await iconHrefs())[0];
