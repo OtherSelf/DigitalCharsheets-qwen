@@ -305,22 +305,26 @@ test.describe('адаптивность', () => {
     await prepare(context);
     await openApp(page, '/');
 
-    const menu = page.getByRole('button', { name: 'Open menu' });
-    const backup = page.getByRole('button', { name: 'Backup All' });
+    // Инструменты живут в одном меню шапки на всех ширинах (UI-3): отдельных
+    // кнопок на дашборде больше нет.
+    const tools = page.getByTestId('tools-menu-trigger');
     const compactToggle = page.getByRole('button', {
       name: /switch to (compact|default) view/i,
     });
 
+    await expect(tools).toBeVisible();
     if (isMobile()) {
-      await expect(menu).toBeVisible();
-      await expect(backup).not.toBeVisible();
       // На телефоне кнопка переключения вида не нужна.
       await expect(compactToggle).not.toBeVisible();
     } else {
-      await expect(menu).not.toBeVisible();
-      await expect(backup).toBeVisible();
       await expect(compactToggle).toBeVisible();
     }
+
+    await tools.click();
+    await expect(page.getByTestId('tools-backup')).toBeVisible();
+    await expect(
+      page.getByRole('menuitem', { name: 'Stats Editor' }),
+    ).toBeVisible();
   });
 
   test('единая шапка: бренд на дашборде и чистый /settings из меню', async ({
@@ -938,7 +942,7 @@ test.describe('адаптивность', () => {
       await openApp(page, '/');
 
       const targets = [
-        page.getByRole('button', { name: 'Open menu' }),
+        page.getByTestId('tools-menu-trigger'),
         page.getByRole('button', { name: /toggle theme/i }),
         page.getByRole('button', { name: /^EN$/ }),
       ];

@@ -10,6 +10,7 @@ import {
   Eye,
   EyeOff,
   History as HistoryIcon,
+  House,
   LogIn,
   Menu,
   Monitor,
@@ -17,7 +18,6 @@ import {
   PencilLine,
   Scroll,
   Share2,
-  Shield,
   Smartphone,
 } from 'lucide-react';
 
@@ -40,6 +40,7 @@ import { cn } from '@/lib/utils';
 
 import { LanguageToggle } from './layout/language-toggle';
 import { ThemeToggle } from './layout/theme-toggle';
+import { ToolsMenu } from './layout/tools-menu';
 import { UserNav } from './layout/user-nav';
 import { Button } from './ui/button';
 import { Separator } from './ui/separator';
@@ -240,7 +241,9 @@ export function Header({
             className="flex min-w-0 items-center gap-2"
             aria-label={t('common.backToDashboard')}
           >
-            <Shield className="text-primary h-6 w-6 shrink-0" />
+            {/* Домик означает «на главную»; щит остался только у админки в
+                меню профиля, иначе одна иконка значила две вещи. */}
+            <House className="text-primary h-6 w-6 shrink-0" />
             {/*
             На широких экранах бренд виден всегда; на листе персонажа текст
             скрыт (там важнее имя), на служебных страницах — скрыт только на
@@ -540,6 +543,9 @@ export function Header({
                 <span className="sr-only">{compactLabel}</span>
               </Button>
             )}
+            {/* На листе инструменты не дублируются: у него свои действия, а
+                лишняя кнопка в шапке ломала «одну строку» на планшете. */}
+            {!displayCharacter && <ToolsMenu />}
             {/* LANDMARK: SMART_LANGUAGE_TOGGLE */}
             {(!displayCharacter || !isCompactView || !isSmallScreen) && (
               <LanguageToggle />

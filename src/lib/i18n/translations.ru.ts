@@ -121,6 +121,7 @@ export const ruTranslations = {
   'docs.title': 'Документация',
   'docs.search': 'Поиск',
   'docs.openSearch': 'Открыть поиск',
+  'docs.backToTop': 'Наверх',
   'docs.closeSearch': 'Закрыть поиск',
   'docs.onThisPage': 'На этой странице',
   'docs.noHeadings': 'Заголовков нет',
@@ -332,6 +333,7 @@ export const ruTranslations = {
     'Выберите игровую систему для вашего нового персонажа.',
   'common.selectGameSystemPlaceholder': 'Выберите игровую систему...',
   'common.backToDashboard': 'Назад на панель управления',
+  'common.tools': 'Инструменты',
   'common.statsEditor': 'Редактор характеристик',
   'common.backupAll': 'Резервное копирование всего',
   'common.bulkEditor': 'Массовый редактор',
@@ -727,6 +729,9 @@ export const ruTranslations = {
   'admin.gameSettings': 'Настройки игры',
   'admin.gameSettingsTitle': 'Настройки игры',
   'admin.appearanceSection': 'Оформление',
+  'admin.showOnDemo': 'Показывать на демо',
+  'admin.showOnDemoHint':
+    'На демо-лендинге показываются опубликованные редакции, не больше трёх.',
   'admin.usePluginTheme': 'Использовать стили игры',
   'admin.usePluginThemeHint':
     'Цвета и шрифт берутся из игры. Выключите, чтобы использовать палитру и шрифт ядра.',

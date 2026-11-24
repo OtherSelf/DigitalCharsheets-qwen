@@ -121,6 +121,7 @@ export const enTranslations = {
   'docs.title': 'Documentation',
   'docs.search': 'Search',
   'docs.openSearch': 'Open search',
+  'docs.backToTop': 'Back to top',
   'docs.closeSearch': 'Close search',
   'docs.onThisPage': 'On this page',
   'docs.noHeadings': 'No headings',
@@ -324,6 +325,7 @@ export const enTranslations = {
     'Choose the game system for your new character.',
   'common.selectGameSystemPlaceholder': 'Select a game system...',
   'common.backToDashboard': 'Back to Dashboard',
+  'common.tools': 'Tools',
   'common.statsEditor': 'Stats Editor',
   'common.backupAll': 'Backup All',
   'common.bulkEditor': 'Bulk Editor',
@@ -728,6 +730,9 @@ export const enTranslations = {
   'admin.gameSettings': 'Game settings',
   'admin.gameSettingsTitle': 'Game settings',
   'admin.appearanceSection': 'Appearance',
+  'admin.showOnDemo': 'Show on demo',
+  'admin.showOnDemoHint':
+    'Published editions appear on the demo landing, at most three.',
   'admin.usePluginTheme': "Use the game's theme",
   'admin.usePluginThemeHint':
     'Colors and font come from the game. Turn off to use the core palette and font.',

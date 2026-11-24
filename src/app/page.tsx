@@ -5,7 +5,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 
-import { Archive, FileDown, PlusCircle, Scroll, Settings2 } from 'lucide-react';
+import { Archive, PlusCircle, Scroll } from 'lucide-react';
 
 import { CharacterCard } from '@/components/characters/character-card';
 import { DemoLandingView } from '@/components/demo-landing-view';
@@ -22,12 +22,9 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { useCharacterContext } from '@/context/character-context';
 import { useTranslation } from '@/context/language-context';
 import { useLocalAuth } from '@/context/local-auth-context';
-import { buildBackupExport, exportFileName } from '@/lib/export-utils';
-import { type Character } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
 // LANDMARK: MAIN_DASHBOARD_PAGE
@@ -55,24 +52,6 @@ export default function DashboardPage() {
     }
   };
 
-  // «Backup All»: сервер отдаёт листы, клиент упаковывает их в стандартный
-  // конверт и называет файл по шаблону dcs_characters_all_<логин>_<дата>.json.
-  const handleBackupAll = async () => {
-    if (!user) return;
-    try {
-      const res = await fetch('/api/export');
-      if (!res.ok) {
-        console.error('Backup export failed:', res.status, await res.text());
-        return;
-      }
-      const exported = await res.json();
-      const backup = buildBackupExport(exported as Character[], user.username);
-      downloadJSON(backup, exportFileName('backup', { login: user.username }));
-    } catch (error) {
-      console.error('Backup export failed:', error);
-    }
-  };
-
   if (!isLoaded || isUserLoading) {
     return <PageLoader />;
   }
@@ -85,31 +64,7 @@ export default function DashboardPage() {
   return (
     <>
       <DynamicFavicon />
-      <AppFrame
-        header={{
-          mobileActions: (
-            <>
-              <DropdownMenuItem asChild>
-                <Link
-                  href="/stats-editor"
-                  className="flex cursor-pointer items-center"
-                >
-                  <Settings2 className="mr-2 h-4 w-4" />
-                  <span>{t('common.statsEditor')}</span>
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                className="flex cursor-pointer items-center"
-                disabled={!user}
-                onClick={handleBackupAll}
-              >
-                <FileDown className="mr-2 h-4 w-4" />
-                <span>{t('common.backupAll')}</span>
-              </DropdownMenuItem>
-            </>
-          ),
-        }}
-      >
+      <AppFrame header={{}}>
         {/* LANDMARK: PENDING_DRAFT_BANNER
               Персонаж, начерченный гостем до входа, не создаётся автоматически
               в существующем аккаунте: он ждёт здесь явного решения. Иначе после
@@ -163,32 +118,6 @@ export default function DashboardPage() {
               {t('common.companionText')}
             </p>
           </div>
-          {/* LANDMARK: DESKTOP_BUTTON_GROUP */}
-          {/* На мобильном те же действия живут в нижней панели, поэтому
-                здесь группа скрыта до sm. */}
-          <div className="hidden w-auto flex-row gap-2 sm:flex">
-            <Button
-              variant="outline"
-              size="sm"
-              asChild
-              className="justify-start"
-            >
-              <Link href="/stats-editor">
-                <Settings2 className="mr-2 h-4 w-4 shrink-0" />
-                {t('common.statsEditor')}
-              </Link>
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={!user}
-              onClick={handleBackupAll}
-              className="justify-start"
-            >
-              <FileDown className="mr-2 h-4 w-4 shrink-0" />
-              {t('common.backupAll')}
-            </Button>
-          </div>
         </div>
 
         <Card>
@@ -204,7 +133,7 @@ export default function DashboardPage() {
               className="shrink-0"
               data-testid="open-archive"
             >
-              <Link href="/archive">
+              <Link href="/archive" aria-label={t('common.archive')}>
                 <Archive className="mr-2 h-4 w-4" />
                 <span className="hidden sm:inline">{t('common.archive')}</span>
               </Link>
@@ -276,18 +205,4 @@ export default function DashboardPage() {
       </AppFrame>
     </>
   );
-}
-
-function downloadJSON(data: unknown, filename: string) {
-  const blob = new Blob([JSON.stringify(data, null, 2)], {
-    type: 'application/json',
-  });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
 }
