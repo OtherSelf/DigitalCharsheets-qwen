@@ -4,7 +4,9 @@ import { listCatalog } from '@/games/character-system';
 import { listGameModules } from '@/games/registry';
 import {
   canCreateWithModule,
+  DEMO_MAX,
   getModuleStatus,
+  isModuleDemo,
   isModuleEnabled,
   isModuleHostTheme,
   readGameCatalog,
@@ -17,6 +19,10 @@ import { getRequestActor } from '@/lib/module-access';
  *   • гость и user — только published;
  *   • tester      — published + test;
  *   • admin       — все, включая hidden.
+ *
+ * Отдельно отдаётся `demo` — список для демо-лендинга: только опубликованные и
+ * включённые редакции с флагом «на демо», не больше `DEMO_MAX`, в порядке
+ * реестра. Он не зависит от роли: гость и админ видят одинаковое демо.
  *
  * Используется мастером создания (/new) и шапкой сайта (переопределённый
  * заголовок из game-catalog.json). Секретов здесь нет: только ключи i18n.
@@ -51,6 +57,23 @@ export async function GET(request: Request) {
     }
   }
 
+  // Демо-лендинг: роль не участвует, иначе админ видел бы на демо больше.
+  const demoEditions = [];
+  for (const gameModule of listGameModules()) {
+    if (!(await isModuleEnabled(gameModule.id, catalog))) continue;
+    if ((await getModuleStatus(gameModule.id, catalog)) !== 'published') {
+      continue;
+    }
+    if (!(await isModuleDemo(gameModule.id, catalog))) continue;
+    demoEditions.push({
+      id: gameModule.id,
+      nameKey: gameModule.nameKey,
+      descriptionKey: gameModule.descriptionKey,
+      useHostTheme: await isModuleHostTheme(gameModule.id, catalog),
+    });
+    if (demoEditions.length >= DEMO_MAX) break;
+  }
+
   // Отключённые плагины нужны странице листа для read-only режима.
   const disabled = [];
   for (const gameModule of listGameModules()) {
@@ -64,6 +87,7 @@ export async function GET(request: Request) {
     role: actor.role,
     siteTitle: catalog.siteTitle ?? null,
     games,
+    demo: demoEditions,
     disabled,
   });
 }

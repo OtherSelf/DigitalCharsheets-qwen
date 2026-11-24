@@ -1753,7 +1753,7 @@ export const openApiDocument = {
         operationId: 'adminUpdateGames',
         summary: 'Update visibility or site title (admin)',
         description:
-          'Changes the status of one edition (`published`, `test`, `hidden`) and/or the optional site title. Hiding affects creation and menus, not opening existing sheets.',
+          'Changes the status of one edition (`published`, `test`, `hidden`), its demo visibility and/or the optional site title. Hiding affects creation and menus, not opening existing sheets.',
         requestBody: jsonBody({
           type: 'object',
           properties: {
@@ -1768,6 +1768,11 @@ export const openApiDocument = {
             siteTitle: {
               type: ['string', 'null'],
               maxLength: 80,
+            },
+            showOnDemo: {
+              type: 'boolean',
+              description:
+                'Show the edition on the demo landing. Only published, enabled editions appear there, at most three (`DEMO_MAX`), regardless of the caller role.',
             },
           },
           additionalProperties: false,

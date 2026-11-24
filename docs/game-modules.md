@@ -550,3 +550,13 @@ guarded with `it.runIf(hasPlugin(id))` or it moves into the plugin.
 - [i18n.md](i18n.md) — dictionary layers and rules
 - [`src/games/types.ts`](../src/games/types.ts),
   [`src/games/registry.ts`](../src/games/registry.ts)
+
+## Demo landing
+
+The guest landing (`/` without a session and `/demo`) lists published editions
+that carry the demo flag. The flag lives in `game-catalog.json`
+(`plugins.<id>.demo`), defaults to `published` so existing installations keep
+their demo list, and is toggled by an admin in **/admin → Games & editions**
+(`showOnDemo` in the admin API). At most `DEMO_MAX` (3) editions are shown, in
+registry order. The list is computed by the server for every visitor, so a guest
+and an admin see the same demo.

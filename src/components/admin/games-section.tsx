@@ -56,7 +56,10 @@ interface AdminGame {
   tags: string[];
   dependencies: { host: string; plugins: Record<string, string> } | null;
   conformance: string | null;
+  /** У редакции есть демо-персонаж (манифест). */
   demo: boolean;
+  /** Редакция показывается на демо-лендинге (настройка админа). */
+  showOnDemo: boolean;
 }
 
 interface AdminGamesResponse {
@@ -155,6 +158,14 @@ export function AdminGamesSection() {
 
   const saveHostTheme = (systemId: string, useHostTheme: boolean) =>
     saveGames({ systemId, useHostTheme }, (data) => {
+      setSettingsGame(
+        (current) =>
+          data.games?.find((game) => game.id === current?.id) ?? null,
+      );
+    });
+
+  const saveShowOnDemo = (systemId: string, showOnDemo: boolean) =>
+    saveGames({ systemId, showOnDemo }, (data) => {
       setSettingsGame(
         (current) =>
           data.games?.find((game) => game.id === current?.id) ?? null,
@@ -445,6 +456,26 @@ export function AdminGamesSection() {
             </DialogHeader>
 
             <div className="space-y-4">
+              <div className="flex items-start justify-between gap-4 rounded-md border p-3">
+                <div className="space-y-1">
+                  <Label htmlFor={`show-on-demo-${settingsGame.id}`}>
+                    {t('admin.showOnDemo')}
+                  </Label>
+                  <p className="text-muted-foreground text-xs">
+                    {t('admin.showOnDemoHint')}
+                  </p>
+                </div>
+                <Checkbox
+                  id={`show-on-demo-${settingsGame.id}`}
+                  checked={settingsGame.showOnDemo}
+                  disabled={isSaving}
+                  onCheckedChange={(checked) =>
+                    void saveShowOnDemo(settingsGame.id, checked === true)
+                  }
+                  aria-label={t('admin.showOnDemo')}
+                />
+              </div>
+
               <div className="space-y-1">
                 <p className="text-sm font-medium">
                   {t('admin.appearanceSection')}

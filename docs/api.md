@@ -91,7 +91,7 @@ contract version in [`src/lib/openapi.ts`](../src/lib/openapi.ts)
 | `POST` | `/api/auth/register` | — | Create an account with a recovery phrase and sign in; password policy 12–128 characters, recovery phrase at least 6 words or 24 characters (max 256). |
 | `POST` | `/api/auth/exists` | — | Check whether a login is taken (rate limited: 20 / 10 minutes per IP + login). |
 | `GET` | `/api/auth/session` | cookie | Current profile snapshot (role, block state, etc.). |
-| `GET` | `/api/games` | optional cookie | Games/editions visible to the current role; also the site-title override. |
+| `GET` | `/api/games` | optional cookie | Games/editions visible to the current role, the site-title override, and a role-independent `demo` list (published editions with the demo flag, at most three). |
 | `POST` | `/api/auth/logout` | optional cookie | Revoke the current session and clear the cookie. Body `{ "all": true }` revokes every session of the account («sign out everywhere»). |
 | `PUT` | `/api/auth/profile` | cookie | Update own login, display name, password, recovery phrase. Changing the password or the recovery phrase requires `currentPassword` (`403 invalid_password` otherwise) and revokes the account's other sessions. |
 | `DELETE` | `/api/auth/profile` | cookie | Delete own account and all sheets; requires the current password. |
@@ -213,7 +213,7 @@ role → `403` (`tester` is not an administrator).
 | --- | --- | --- |
 | `GET` | `/api/admin/users` | Users, roles, block state, last login, sheet counts, stats. |
 | `GET` | `/api/admin/games` | Game catalog with default/current visibility and site title. |
-| `PUT` | `/api/admin/games` | Set one edition status (`published`/`test`/`hidden`), its `useHostTheme` flag and/or the site title. |
+| `PUT` | `/api/admin/games` | Set one edition status (`published`/`test`/`hidden`), its `useHostTheme`/`showOnDemo` flags and/or the site title. |
 | `PATCH` | `/api/admin/users/{uid}` | Update fields / password / role / block state. |
 | `DELETE` | `/api/admin/users/{uid}` | Delete the account, its sheets and index entries. |
 | `GET` | `/api/admin/users/{uid}/characters` | Read-only sheet summaries for one user. |

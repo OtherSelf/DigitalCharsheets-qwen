@@ -11,10 +11,12 @@ import { requireAdmin } from '@/lib/admin-auth';
 import { jsonError } from '@/lib/api/respond';
 import {
   getModuleStatus,
+  isModuleDemo,
   isModuleEnabled,
   isModuleHostTheme,
   isModuleStatus,
   readGameCatalog,
+  setModuleDemo,
   setModuleEnabled,
   setModuleHostTheme,
   setModuleStatus,
@@ -45,6 +47,7 @@ async function catalogResponse() {
       status: await getModuleStatus(gameModule.id, catalog),
       enabled: await isModuleEnabled(gameModule.id, catalog),
       useHostTheme: await isModuleHostTheme(gameModule.id, catalog),
+      showOnDemo: await isModuleDemo(gameModule.id, catalog),
       // Метаданные плагина для админки из манифеста: версия, схема, зависимости.
       // tags хранятся, но в UI не выводятся.
       version: manifest?.version ?? null,
@@ -84,7 +87,8 @@ export async function PUT(request: Request) {
     const usesSystem =
       body.enabled !== undefined ||
       body.useHostTheme !== undefined ||
-      body.status !== undefined;
+      body.status !== undefined ||
+      body.showOnDemo !== undefined;
     let systemId: SystemId | undefined;
     if (usesSystem) {
       const raw = body.systemId;
@@ -117,6 +121,13 @@ export async function PUT(request: Request) {
         return jsonError(400, 'useHostTheme must be a boolean.', 'bad_request');
       }
       await setModuleHostTheme(systemId!, body.useHostTheme);
+    }
+
+    if (body.showOnDemo !== undefined) {
+      if (typeof body.showOnDemo !== 'boolean') {
+        return jsonError(400, 'showOnDemo must be a boolean.', 'bad_request');
+      }
+      await setModuleDemo(systemId!, body.showOnDemo);
     }
 
     if (body.status !== undefined) {

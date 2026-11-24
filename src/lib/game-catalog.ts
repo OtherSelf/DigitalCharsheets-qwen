@@ -42,6 +42,12 @@ export interface PluginCatalogEntry {
    * Дефолт `false`: стили плагина включены.
    */
   useHostTheme?: boolean;
+  /**
+   * `true` — редакция показывается на демо-лендинге. Дефолт — «как
+   * `defaultStatus` манифеста», чтобы уже опубликованные редакции продолжали
+   * попадать на демо без миграции каталога. Выбирает админ, лимит — `DEMO_MAX`.
+   */
+  demo?: boolean;
 }
 
 export interface GameCatalog {
@@ -61,6 +67,8 @@ export interface ModuleAccessEntry {
 }
 
 export const CATALOG_VERSION = 2 as const;
+/** Сколько редакций демо-лендинг показывает максимум (PROD-5). */
+export const DEMO_MAX = 3;
 const MAX_SITE_TITLE_LENGTH = 80;
 
 export function isModuleStatus(value: unknown): value is ModuleStatus {
@@ -85,10 +93,12 @@ function parseEntry(value: unknown): PluginCatalogEntry | undefined {
     : undefined;
   const useHostTheme =
     typeof record.useHostTheme === 'boolean' ? record.useHostTheme : undefined;
+  const demo = typeof record.demo === 'boolean' ? record.demo : undefined;
   return {
     enabled,
     visibility: visibility ?? 'published',
     ...(useHostTheme !== undefined ? { useHostTheme } : {}),
+    ...(demo !== undefined ? { demo } : {}),
   };
 }
 
@@ -174,6 +184,36 @@ export async function isModuleHostTheme(
   return current.plugins[systemId]?.useHostTheme ?? false;
 }
 
+/**
+ * Показывать ли редакцию на демо. Дефолт — «опубликована»: так демо-лендинг
+ * после перехода на флаг не опустел у существующих установок. Тестовые и
+ * скрытые редакции на демо не попадают, даже если флаг включён.
+ */
+export async function isModuleDemo(
+  systemId: SystemId,
+  catalog?: GameCatalog,
+): Promise<boolean> {
+  const current = catalog ?? (await readGameCatalog());
+  const explicit = current.plugins[systemId]?.demo;
+  if (explicit !== undefined) return explicit;
+  return getGameModule(systemId)?.defaultStatus === 'published';
+}
+
+/** Включить/выключить показ редакции на демо (админка). */
+export async function setModuleDemo(
+  systemId: SystemId,
+  demo: boolean,
+): Promise<GameCatalog> {
+  if (!getGameModule(systemId)) {
+    throw new Error(`Неизвестный модуль игры: ${systemId}`);
+  }
+  const next = withEntry(await readGameCatalog(), systemId, {
+    demo: Boolean(demo),
+  });
+  await writeGameCatalog(next);
+  return next;
+}
+
 /** Активен ли плагин (v1-каталог и отсутствие записи → enabled). */
 export async function isModuleEnabled(
   systemId: SystemId,
@@ -253,6 +293,7 @@ function withEntry(
     visibility:
       entry?.visibility ?? getGameModule(systemId)?.defaultStatus ?? 'hidden',
     useHostTheme: entry?.useHostTheme ?? false,
+    ...(entry?.demo !== undefined ? { demo: entry.demo } : {}),
   };
   return {
     ...catalog,

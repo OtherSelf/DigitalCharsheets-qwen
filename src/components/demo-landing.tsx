@@ -52,16 +52,14 @@ export function DemoLanding({ createHref = '/new' }: DemoLandingProps) {
       .then(async (res) => {
         if (!res.ok) return null;
         return (await res.json().catch(() => null)) as {
-          games?: {
-            editions?: { id: string; useHostTheme?: boolean }[];
-          }[];
+          demo?: { id: string; useHostTheme?: boolean }[];
         } | null;
       })
       .then((data) => {
         if (!active) return;
-        const editions = (data?.games ?? []).flatMap(
-          (game) => game.editions ?? [],
-        );
+        // Список демо сервер считает сам: роль и `visibility` здесь не
+        // участвуют, иначе админ видел бы на демо больше гостя (PROD-5).
+        const editions = data?.demo ?? [];
         setVisibleIds(new Set(editions.map((edition) => edition.id)));
         setHostThemeById(
           Object.fromEntries(

@@ -64,6 +64,8 @@ export async function publishAllModules() {
 
 export type GamesBody = {
   games: { id: string; editions: { id: string; status: string }[] }[];
+  /** Порядок демо-лендинга: только published, «на демо», максимум DEMO_MAX. */
+  demo: { id: string }[];
   siteTitle: string | null;
   disabled?: string[];
 };
