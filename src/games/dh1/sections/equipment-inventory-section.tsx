@@ -84,12 +84,24 @@ const defaultEquipment = {
 const ARMOR_TYPES = [
   'Primitive',
   'Advanced',
-  'Flack',
+  'Flak',
   'Mesh',
   'Carapace',
   'Power',
   'Force',
 ];
+
+/**
+ * В сохранённых листах мог остаться `Flack` (значение прежнего селекта):
+ * сравниваем и показываем его как `Flak`, иначе селект не находил опцию, а
+ * лист рисовал сырую строку вместо перевода.
+ */
+const ARMOR_TYPE_ALIASES: Readonly<Record<string, string>> = { Flack: 'Flak' };
+
+function normalizeArmorType(type: string | null | undefined): string {
+  if (!type) return '';
+  return ARMOR_TYPE_ALIASES[type] ?? type;
+}
 
 /** Вес оружия переехал в инвентарь: при сохранении оружия старое поле убираем. */
 function withoutWeaponWeight<T extends object>(weapon: T): T {
@@ -476,10 +488,11 @@ export const EquipmentInventorySection = React.forwardRef<
     }));
     // Helper to translate armor type for display
     const displayArmorType = (type: string | undefined | null) => {
-      if (!type) return '-';
-      const translationKey = `dh1.armorType${type}`;
+      const normalized = normalizeArmorType(type);
+      if (!normalized) return '-';
+      const translationKey = `dh1.armorType${normalized}`;
       const translated = t(translationKey);
-      return translated === translationKey ? type : translated;
+      return translated === translationKey ? normalized : translated;
     };
 
     // Helper to translate armor quality for display
@@ -645,7 +658,9 @@ export const EquipmentInventorySection = React.forwardRef<
                                       <div className="space-y-1">
                                         <Label>{t('dh1.armorType')}</Label>
                                         <Select
-                                          value={armorPiece?.type ?? ''}
+                                          value={normalizeArmorType(
+                                            armorPiece?.type,
+                                          )}
                                           onValueChange={(value) =>
                                             handleArmorChange(
                                               part,
@@ -792,7 +807,9 @@ export const EquipmentInventorySection = React.forwardRef<
                                         </TableCell>
                                         <TableCell>
                                           <Select
-                                            value={armorPiece?.type ?? ''}
+                                            value={normalizeArmorType(
+                                              armorPiece?.type,
+                                            )}
                                             onValueChange={(value) =>
                                               handleArmorChange(
                                                 part,
