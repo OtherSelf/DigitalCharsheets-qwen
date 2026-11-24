@@ -164,7 +164,11 @@ export default function DashboardPage() {
                   'grid gap-4',
                   isCompactView
                     ? 'grid-cols-1'
-                    : 'grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4',
+                    : // Колонок столько, сколько помещается при минимальной
+                      // ширине карточки 18rem (288px): 3 на планшете, 4 на
+                      // 1440, 5 на 1760. Прежняя лестница `lg:3 xl:4` не
+                      // давала пятой и оставляла «мёртвую» полосу 1280–1300.
+                      '[grid-template-columns:repeat(auto-fill,minmax(18rem,1fr))]',
                 )}
               >
                 {characters.map((character) => (

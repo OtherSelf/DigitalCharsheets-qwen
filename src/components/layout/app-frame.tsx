@@ -56,10 +56,27 @@ export function AppFrame({
   footer?: boolean;
 }) {
   const { t } = useTranslation();
-  const main = (
-    <main id="main-content" className={cn(MAIN_CLASS[variant], mainClassName)}>
+  const content = (
+    <div className="mx-auto flex w-full max-w-[var(--content-max)] flex-1 flex-col [&>*]:w-full [&>*]:min-w-0">
       {children}
       {footer && <SiteFooter />}
+    </div>
+  );
+  const main = (
+    <main id="main-content" className={cn(MAIN_CLASS[variant], mainClassName)}>
+      {/*
+        Ограничение ширины не нужно центрированным экранам (`centered`:
+        логин/восстановление) — там сама карточка узкая, а лишний flex-контейнер
+        ломал вертикальное центрирование.
+      */}
+      {variant === 'centered' ? (
+        <>
+          {children}
+          {footer && <SiteFooter />}
+        </>
+      ) : (
+        content
+      )}
     </main>
   );
 

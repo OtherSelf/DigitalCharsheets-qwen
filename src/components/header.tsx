@@ -217,117 +217,124 @@ export function Header({
       <header
         data-testid={isGuest ? 'guest-header' : 'app-header'}
         className={cn(
-          'app-header bg-background/95 supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b p-3 backdrop-blur md:p-4 xl:p-6',
+          'app-header bg-background/95 supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50 border-b p-3 backdrop-blur md:p-4 xl:p-6',
           params.id && 'is-character-sheet',
         )}
       >
-        {/* ─── LANDMARK: HEADER_IDENTITY ─── */}
-        <div className="header-identity flex min-w-0 flex-1 items-center gap-2 md:gap-4">
-          {backHref && (
-            <Button
-              variant="ghost"
-              size="icon"
-              asChild
-              className="h-9 w-9 shrink-0"
-            >
-              <Link href={backHref} aria-label={t('common.back')}>
-                <ArrowLeft className="h-5 w-5" />
-              </Link>
-            </Button>
-          )}
+        {/*
+          Внутренний контейнер той же ширины, что и контент `AppFrame`: фон и
+          нижняя граница шапки тянутся на всю ширину, а бренд и действия
+          выровнены по контенту. На ширинах до `--content-max` это ничего не
+          меняет.
+        */}
+        <div className="header-inner mx-auto flex w-full max-w-[var(--content-max)] flex-wrap items-center justify-between gap-x-4 gap-y-2">
+          {/* ─── LANDMARK: HEADER_IDENTITY ─── */}
+          <div className="header-identity flex min-w-0 flex-1 items-center gap-2 md:gap-4">
+            {backHref && (
+              <Button
+                variant="ghost"
+                size="icon"
+                asChild
+                className="h-9 w-9 shrink-0"
+              >
+                <Link href={backHref} aria-label={t('common.back')}>
+                  <ArrowLeft className="h-5 w-5" />
+                </Link>
+              </Button>
+            )}
 
-          <Link
-            href="/"
-            className="flex min-w-0 items-center gap-2"
-            aria-label={t('common.backToDashboard')}
-          >
-            {/* Домик означает «на главную»; щит остался только у админки в
+            <Link
+              href="/"
+              className="flex min-w-0 items-center gap-2"
+              aria-label={t('common.backToDashboard')}
+            >
+              {/* Домик означает «на главную»; щит остался только у админки в
                 меню профиля, иначе одна иконка значила две вещи. */}
-            <House className="text-primary h-6 w-6 shrink-0" />
-            {/*
+              <House className="text-primary h-6 w-6 shrink-0" />
+              {/*
             На широких экранах бренд виден всегда; на листе персонажа текст
             скрыт (там важнее имя), на служебных страницах — скрыт только на
             телефоне, где рядом стоит заголовок.
           */}
-            <span className={brandTextClass}>
-              {siteTitle || 'Digital Character Sheets'}
-            </span>
-          </Link>
+              <span className={brandTextClass}>
+                {siteTitle || 'Digital Character Sheets'}
+              </span>
+            </Link>
 
-          {/* ─── LANDMARK: HEADER_IDENTITY_CHARACTER_INFO ─── */}
-          {/* Имя и система живут в одной строке и на десктопе, и в compact
+            {/* ─── LANDMARK: HEADER_IDENTITY_CHARACTER_INFO ─── */}
+            {/* Имя и система живут в одной строке и на десктопе, и в compact
               view, поэтому размеры шрифта ужаты. */}
-          {displayCharacter ? (
-            <>
-              <Separator
-                orientation="vertical"
-                className="hidden h-8 shrink-0 md:block"
-              />
-              <div className="flex min-w-0 flex-col gap-0">
-                <h2
-                  className={`font-headline truncate font-bold tracking-tight ${isCompactView ? 'text-sm md:text-base lg:text-lg' : 'text-lg xl:text-xl'}`}
-                  title={displayCharacter.name}
-                >
-                  {displayCharacter.name}
-                </h2>
-                <p
-                  className={`text-muted-foreground truncate ${isCompactView ? 'text-[10px] md:text-xs' : 'text-xs xl:text-sm'}`}
-                >
-                  {characterSubtitle}
-                </p>
-              </div>
-            </>
-          ) : title ? (
-            <>
-              <Separator
-                orientation="vertical"
-                className="hidden h-8 shrink-0 md:block"
-              />
-              <div className="flex min-w-0 flex-col gap-0">
-                <h1 className="font-headline truncate text-lg font-bold tracking-tight xl:text-xl">
-                  {title}
-                </h1>
-                {subtitle && (
-                  <p className="text-muted-foreground truncate text-xs xl:text-sm">
-                    {subtitle}
+            {displayCharacter ? (
+              <>
+                <Separator
+                  orientation="vertical"
+                  className="hidden h-8 shrink-0 md:block"
+                />
+                <div className="flex min-w-0 flex-col gap-0">
+                  <h2
+                    className={`font-headline truncate font-bold tracking-tight ${isCompactView ? 'text-sm md:text-base lg:text-lg' : 'text-lg xl:text-xl'}`}
+                    title={displayCharacter.name}
+                  >
+                    {displayCharacter.name}
+                  </h2>
+                  <p
+                    className={`text-muted-foreground truncate ${isCompactView ? 'text-[10px] md:text-xs' : 'text-xs xl:text-sm'}`}
+                  >
+                    {characterSubtitle}
                   </p>
-                )}
-              </div>
-            </>
-          ) : null}
-          {/* ─── END LANDMARK: HEADER_IDENTITY_CHARACTER_INFO ─── */}
+                </div>
+              </>
+            ) : title ? (
+              <>
+                <Separator
+                  orientation="vertical"
+                  className="hidden h-8 shrink-0 md:block"
+                />
+                <div className="flex min-w-0 flex-col gap-0">
+                  <h1 className="font-headline truncate text-lg font-bold tracking-tight xl:text-xl">
+                    {title}
+                  </h1>
+                  {subtitle && (
+                    <p className="text-muted-foreground truncate text-xs xl:text-sm">
+                      {subtitle}
+                    </p>
+                  )}
+                </div>
+              </>
+            ) : null}
+            {/* ─── END LANDMARK: HEADER_IDENTITY_CHARACTER_INFO ─── */}
 
-          {displayCharacter && HeaderActions && !readOnly && (
-            <HeaderActions
-              character={displayCharacter}
-              isCompactView={isCompactView}
-            />
-          )}
-        </div>
+            {displayCharacter && HeaderActions && !readOnly && (
+              <HeaderActions
+                character={displayCharacter}
+                isCompactView={isCompactView}
+              />
+            )}
+          </div>
 
-        {/* ─── LANDMARK: HEADER_ACTIONS ─── */}
-        <div className="header-actions flex flex-wrap items-center justify-end gap-2">
-          {/* LANDMARK: MOBILE_ACTIONS_MENU */}
-          {/* На sm+ те же действия уже стоят в строке шапки. */}
-          {mobileActions && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="h-9 w-9 sm:hidden"
-                >
-                  <Menu className="h-4 w-4" />
-                  <span className="sr-only">{t('common.openMenu')}</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                {mobileActions}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
+          {/* ─── LANDMARK: HEADER_ACTIONS ─── */}
+          <div className="header-actions flex flex-wrap items-center justify-end gap-2">
+            {/* LANDMARK: MOBILE_ACTIONS_MENU */}
+            {/* На sm+ те же действия уже стоят в строке шапки. */}
+            {mobileActions && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-9 w-9 sm:hidden"
+                  >
+                    <Menu className="h-4 w-4" />
+                    <span className="sr-only">{t('common.openMenu')}</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  {mobileActions}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
 
-          {/* ─── LANDMARK: HEADER_SHEET_ACTIONS ───
+            {/* ─── LANDMARK: HEADER_SHEET_ACTIONS ───
             Инструменты листа: «Заметки», «Журнал заданий» и тумблеры
             «заметки»/«правка». Показываются только иконки, подпись —
             в подсказке при наведении (Tooltip) и в `aria-label`.
@@ -337,50 +344,160 @@ export function Header({
             Подписи занимали до 310 px и на планшете (768–1299 px) ломали
             шапку на две строки, поэтому здесь только иконки: группа остаётся
             слева, иконки приложения — справа. */}
-          {displayCharacter && !isSmallScreen && !readOnly && (
-            <div className="header-sheet-actions flex flex-wrap items-center gap-2">
-              {(onNotesClick || onJournalClick) && (
-                <div className="flex items-center gap-1.5 md:gap-2">
-                  {onNotesClick && (
+            {displayCharacter && !isSmallScreen && !readOnly && (
+              <div className="header-sheet-actions flex flex-wrap items-center gap-2">
+                {(onNotesClick || onJournalClick) && (
+                  <div className="flex items-center gap-1.5 md:gap-2">
+                    {onNotesClick && (
+                      <Tooltip delayDuration={0}>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={onNotesClick}
+                            aria-label={t('common.notes')}
+                            className="h-8 w-8 md:h-9 md:w-9"
+                          >
+                            <BookText className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom">
+                          <p>{t('common.notes')}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    )}
+                    {onJournalClick && (
+                      <Tooltip delayDuration={0}>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={onJournalClick}
+                            aria-label={t('common.questJournalTitle')}
+                            className="h-8 w-8 md:h-9 md:w-9"
+                          >
+                            <Scroll className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom">
+                          <p>{t('common.questJournalTitle')}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    )}
+                  </div>
+                )}
+                {onShareClick && (
+                  <div className="flex items-center gap-1.5 md:gap-2">
                     <Tooltip delayDuration={0}>
                       <TooltipTrigger asChild>
                         <Button
                           variant="outline"
                           size="icon"
-                          onClick={onNotesClick}
-                          aria-label={t('common.notes')}
+                          onClick={onShareClick}
+                          aria-label={t('share.button')}
+                          data-testid="share-button"
                           className="h-8 w-8 md:h-9 md:w-9"
                         >
-                          <BookText className="h-4 w-4" />
+                          <Share2 className="h-4 w-4" />
                         </Button>
                       </TooltipTrigger>
                       <TooltipContent side="bottom">
-                        <p>{t('common.notes')}</p>
+                        <p>{t('share.button')}</p>
                       </TooltipContent>
                     </Tooltip>
-                  )}
-                  {onJournalClick && (
+                  </div>
+                )}
+                {onHistoryClick && (
+                  <div className="flex items-center gap-1.5 md:gap-2">
                     <Tooltip delayDuration={0}>
                       <TooltipTrigger asChild>
                         <Button
                           variant="outline"
                           size="icon"
-                          onClick={onJournalClick}
-                          aria-label={t('common.questJournalTitle')}
+                          onClick={onHistoryClick}
+                          aria-label={t('history.button')}
+                          data-testid="history-button"
                           className="h-8 w-8 md:h-9 md:w-9"
                         >
-                          <Scroll className="h-4 w-4" />
+                          <HistoryIcon className="h-4 w-4" />
                         </Button>
                       </TooltipTrigger>
                       <TooltipContent side="bottom">
-                        <p>{t('common.questJournalTitle')}</p>
+                        <p>{t('history.button')}</p>
                       </TooltipContent>
                     </Tooltip>
-                  )}
+                  </div>
+                )}
+                <div className="flex items-center gap-1.5 md:gap-2 md:border-r md:border-l md:px-2">
+                  <Tooltip delayDuration={0}>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant={hideNotes ? 'ghost' : 'secondary'}
+                        size="icon"
+                        onClick={() => setHideNotes(!hideNotes)}
+                        aria-label={
+                          hideNotes
+                            ? t('common.showNotes')
+                            : t('common.hideNotes')
+                        }
+                        aria-pressed={!hideNotes}
+                        className="h-8 w-8 md:h-9 md:w-9"
+                      >
+                        {hideNotes ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom">
+                      <p>
+                        {hideNotes
+                          ? t('common.showNotes')
+                          : t('common.hideNotes')}
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                  <Tooltip delayDuration={0}>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant={showEditButtons ? 'secondary' : 'ghost'}
+                        size="icon"
+                        onClick={() => setShowEditButtons(!showEditButtons)}
+                        aria-label={
+                          showEditButtons
+                            ? t('common.hideEditButtons')
+                            : t('common.showEditButtons')
+                        }
+                        aria-pressed={showEditButtons}
+                        className="h-8 w-8 md:h-9 md:w-9"
+                      >
+                        {showEditButtons ? (
+                          <Pencil className="h-4 w-4" />
+                        ) : (
+                          <PencilLine className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom">
+                      <p>
+                        {showEditButtons
+                          ? t('common.hideEditButtons')
+                          : t('common.showEditButtons')}
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
                 </div>
-              )}
-              {onShareClick && (
-                <div className="flex items-center gap-1.5 md:gap-2">
+              </div>
+            )}
+
+            {/* ─── LANDMARK: HEADER_VIEW_ACTIONS ───
+            Иконки приложения: компактный вид, язык, тема, профиль. */}
+            <div className="header-view-actions flex items-center gap-2">
+              {isSmallScreen &&
+                displayCharacter &&
+                !readOnly &&
+                onShareClick && (
                   <Tooltip delayDuration={0}>
                     <TooltipTrigger asChild>
                       <Button
@@ -389,7 +506,6 @@ export function Header({
                         onClick={onShareClick}
                         aria-label={t('share.button')}
                         data-testid="share-button"
-                        className="h-8 w-8 md:h-9 md:w-9"
                       >
                         <Share2 className="h-4 w-4" />
                       </Button>
@@ -398,10 +514,11 @@ export function Header({
                       <p>{t('share.button')}</p>
                     </TooltipContent>
                   </Tooltip>
-                </div>
-              )}
-              {onHistoryClick && (
-                <div className="flex items-center gap-1.5 md:gap-2">
+                )}
+              {isSmallScreen &&
+                displayCharacter &&
+                !readOnly &&
+                onHistoryClick && (
                   <Tooltip delayDuration={0}>
                     <TooltipTrigger asChild>
                       <Button
@@ -410,7 +527,6 @@ export function Header({
                         onClick={onHistoryClick}
                         aria-label={t('history.button')}
                         data-testid="history-button"
-                        className="h-8 w-8 md:h-9 md:w-9"
                       >
                         <HistoryIcon className="h-4 w-4" />
                       </Button>
@@ -419,139 +535,34 @@ export function Header({
                       <p>{t('history.button')}</p>
                     </TooltipContent>
                   </Tooltip>
-                </div>
-              )}
-              <div className="flex items-center gap-1.5 md:gap-2 md:border-r md:border-l md:px-2">
-                <Tooltip delayDuration={0}>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant={hideNotes ? 'ghost' : 'secondary'}
-                      size="icon"
-                      onClick={() => setHideNotes(!hideNotes)}
-                      aria-label={
-                        hideNotes
-                          ? t('common.showNotes')
-                          : t('common.hideNotes')
-                      }
-                      aria-pressed={!hideNotes}
-                      className="h-8 w-8 md:h-9 md:w-9"
-                    >
-                      {hideNotes ? (
-                        <EyeOff className="h-4 w-4" />
-                      ) : (
-                        <Eye className="h-4 w-4" />
-                      )}
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom">
-                    <p>
-                      {hideNotes
-                        ? t('common.showNotes')
-                        : t('common.hideNotes')}
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-                <Tooltip delayDuration={0}>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant={showEditButtons ? 'secondary' : 'ghost'}
-                      size="icon"
-                      onClick={() => setShowEditButtons(!showEditButtons)}
-                      aria-label={
-                        showEditButtons
-                          ? t('common.hideEditButtons')
-                          : t('common.showEditButtons')
-                      }
-                      aria-pressed={showEditButtons}
-                      className="h-8 w-8 md:h-9 md:w-9"
-                    >
-                      {showEditButtons ? (
-                        <Pencil className="h-4 w-4" />
-                      ) : (
-                        <PencilLine className="h-4 w-4" />
-                      )}
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom">
-                    <p>
-                      {showEditButtons
-                        ? t('common.hideEditButtons')
-                        : t('common.showEditButtons')}
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-              </div>
-            </div>
-          )}
-
-          {/* ─── LANDMARK: HEADER_VIEW_ACTIONS ───
-            Иконки приложения: компактный вид, язык, тема, профиль. */}
-          <div className="header-view-actions flex items-center gap-2">
-            {isSmallScreen && displayCharacter && !readOnly && onShareClick && (
-              <Tooltip delayDuration={0}>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={onShareClick}
-                    aria-label={t('share.button')}
-                    data-testid="share-button"
-                  >
-                    <Share2 className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="bottom">
-                  <p>{t('share.button')}</p>
-                </TooltipContent>
-              </Tooltip>
-            )}
-            {isSmallScreen &&
-              displayCharacter &&
-              !readOnly &&
-              onHistoryClick && (
-                <Tooltip delayDuration={0}>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={onHistoryClick}
-                      aria-label={t('history.button')}
-                      data-testid="history-button"
-                    >
-                      <HistoryIcon className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom">
-                    <p>{t('history.button')}</p>
-                  </TooltipContent>
-                </Tooltip>
-              )}
-            {!isSmallScreen && !hideCompactToggle && (
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={toggleCompactView}
-                aria-label={compactLabel}
-                title={compactLabel}
-                data-testid={isGuest ? 'guest-compact-toggle' : undefined}
-              >
-                {isCompactView ? (
-                  <Monitor className="h-4 w-4" />
-                ) : (
-                  <Smartphone className="h-4 w-4" />
                 )}
-                <span className="sr-only">{compactLabel}</span>
-              </Button>
-            )}
-            {/* На листе инструменты не дублируются: у него свои действия, а
+              {!isSmallScreen && !hideCompactToggle && (
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={toggleCompactView}
+                  aria-label={compactLabel}
+                  title={compactLabel}
+                  data-testid={isGuest ? 'guest-compact-toggle' : undefined}
+                >
+                  {isCompactView ? (
+                    <Monitor className="h-4 w-4" />
+                  ) : (
+                    <Smartphone className="h-4 w-4" />
+                  )}
+                  <span className="sr-only">{compactLabel}</span>
+                </Button>
+              )}
+              {/* На листе инструменты не дублируются: у него свои действия, а
                 лишняя кнопка в шапке ломала «одну строку» на планшете. */}
-            {!displayCharacter && <ToolsMenu />}
-            {/* LANDMARK: SMART_LANGUAGE_TOGGLE */}
-            {(!displayCharacter || !isCompactView || !isSmallScreen) && (
-              <LanguageToggle />
-            )}
-            <ThemeToggle />
-            {authControls}
+              {!displayCharacter && <ToolsMenu />}
+              {/* LANDMARK: SMART_LANGUAGE_TOGGLE */}
+              {(!displayCharacter || !isCompactView || !isSmallScreen) && (
+                <LanguageToggle />
+              )}
+              <ThemeToggle />
+              {authControls}
+            </div>
           </div>
         </div>
       </header>
