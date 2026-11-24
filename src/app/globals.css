@@ -17,6 +17,42 @@
 */
 @custom-variant dark (&:where(.dark, .dark *));
 
+/*
+  ─── LANDMARK: THEME_SCALE ─────────────────────────────────────────────────
+  Одна шкала для CSS и JS. `--breakpoint-xl` повторяет `DESKTOP_MIN` из
+  `src/lib/viewport.ts` (1300), а не Tailwind-дефолтные 1280: иначе в полосе
+  1280–1299 CSS и JS дают разные флаги раскладки.
+
+  Типографика масштабируется множителем `--text-scale` через переменные
+  темы, а не через `!important` поверх утилит: `.text-2xl` и `sm:text-3xl`
+  теперь читают один и тот же `--text-2xl`/`--text-3xl`, поэтому адаптивные
+  варианты снова работают, а масштаб текста остаётся независимым от layout.
+*/
+@theme {
+  --breakpoint-xl: 1300px;
+
+  --text-xs: calc(0.75rem * var(--text-scale));
+  --text-xs--line-height: calc(1rem * var(--text-scale));
+  --text-sm: calc(0.875rem * var(--text-scale));
+  --text-sm--line-height: calc(1.25rem * var(--text-scale));
+  --text-base: calc(1rem * var(--text-scale));
+  --text-base--line-height: calc(1.5rem * var(--text-scale));
+  --text-lg: calc(1.125rem * var(--text-scale));
+  --text-lg--line-height: calc(1.75rem * var(--text-scale));
+  --text-xl: calc(1.25rem * var(--text-scale));
+  --text-xl--line-height: calc(1.75rem * var(--text-scale));
+  --text-2xl: calc(1.5rem * var(--text-scale));
+  --text-2xl--line-height: calc(2rem * var(--text-scale));
+  --text-3xl: calc(1.875rem * var(--text-scale));
+  --text-3xl--line-height: calc(2.25rem * var(--text-scale));
+  --text-4xl: calc(2.25rem * var(--text-scale));
+  --text-4xl--line-height: calc(2.5rem * var(--text-scale));
+  --text-5xl: calc(3rem * var(--text-scale));
+  --text-5xl--line-height: 1;
+  --text-6xl: calc(3.75rem * var(--text-scale));
+  --text-6xl--line-height: 1;
+}
+
 /* FONT FIX: Explicitly map the body font to the loaded Inter variable with fallbacks */
 body {
   font-family: var(--font-inter, 'Inter', sans-serif);
@@ -66,12 +102,12 @@ body > div:first-child {
     --card-foreground: 228 10% 12%;
     --popover: 264 16% 93.9%;
     --popover-foreground: 228 10% 12%;
-    --primary: 232 53% 63%;
+    --primary: 232 53% 55%;
     --primary-foreground: 0 0% 100%;
     --secondary: 210 24% 91%;
     --secondary-foreground: 228 10% 12%;
     --muted: 210 24% 91%;
-    --muted-foreground: 228 10% 45%;
+    --muted-foreground: 228 10% 40%;
     --accent: 210 24% 89%;
     --accent-foreground: 228 10% 12%;
     --destructive: 0 84.2% 60.2%;
@@ -102,12 +138,12 @@ body > div:first-child {
     --card-foreground: 228 10% 12%;
     --popover: 65 33% 94%;
     --popover-foreground: 228 10% 12%;
-    --primary: 232 53% 63%;
+    --primary: 232 53% 55%;
     --primary-foreground: 0 0% 100%;
     --secondary: 60 20% 90%;
     --secondary-foreground: 228 10% 12%;
     --muted: 60 20% 90%;
-    --muted-foreground: 228 10% 45%;
+    --muted-foreground: 228 10% 40%;
     --accent: 60 20% 88%;
     --accent-foreground: 228 10% 12%;
     --destructive: 0 84.2% 60.2%;
@@ -132,7 +168,7 @@ body > div:first-child {
     --card-foreground: 0 0% 98%;
     --popover: 227 12% 15%;
     --popover-foreground: 0 0% 98%;
-    --primary: 232 53% 63%;
+    --primary: 232 53% 55%;
     --primary-foreground: 0 0% 100%;
     --secondary: 0 0% 14.9%;
     --secondary-foreground: 0 0% 98%;
@@ -366,51 +402,9 @@ body > div:first-child {
   --ui-scale: 1;
 }
 
-/* Inherited text gets scaled exactly once, at the body. No compounding. */
+/* Наследуемый текст масштабируется один раз, на body: без компаундинга. */
 body {
   font-size: calc(1rem * var(--text-scale));
-}
-
-/* Explicit Tailwind text utilities: absolute rem base * scale, so nesting is safe. */
-.text-xs {
-  font-size: calc(0.75rem * var(--text-scale)) !important;
-  line-height: calc(1rem * var(--text-scale)) !important;
-}
-.text-sm {
-  font-size: calc(0.875rem * var(--text-scale)) !important;
-  line-height: calc(1.25rem * var(--text-scale)) !important;
-}
-.text-base {
-  font-size: calc(1rem * var(--text-scale)) !important;
-  line-height: calc(1.5rem * var(--text-scale)) !important;
-}
-.text-lg {
-  font-size: calc(1.125rem * var(--text-scale)) !important;
-  line-height: calc(1.75rem * var(--text-scale)) !important;
-}
-.text-xl {
-  font-size: calc(1.25rem * var(--text-scale)) !important;
-  line-height: calc(1.75rem * var(--text-scale)) !important;
-}
-.text-2xl {
-  font-size: calc(1.5rem * var(--text-scale)) !important;
-  line-height: calc(2rem * var(--text-scale)) !important;
-}
-.text-3xl {
-  font-size: calc(1.875rem * var(--text-scale)) !important;
-  line-height: calc(2.25rem * var(--text-scale)) !important;
-}
-.text-4xl {
-  font-size: calc(2.25rem * var(--text-scale)) !important;
-  line-height: calc(2.5rem * var(--text-scale)) !important;
-}
-.text-5xl {
-  font-size: calc(3rem * var(--text-scale)) !important;
-  line-height: 1 !important;
-}
-.text-6xl {
-  font-size: calc(3.75rem * var(--text-scale)) !important;
-  line-height: 1 !important;
 }
 
 /* LANDMARK: SCALED_PAGE_STRETCH
@@ -427,11 +421,12 @@ body {
    font-size меньше 16 px. Плотные поля листов (text-xs/10px, в том числе
    при масштабе интерфейса 80%) зумили экран на каждом вводе. Правило
    срабатывает только на фокусе: в покое плотные таблицы не меняются.
-   `!important` нужен потому, что утилиты `.text-*` объявлены с ним же. */
+   `.text-*` больше не объявлены с `!important`, так что правило фокуса
+   перебивает утилиту по специфичности. */
 @media (max-width: 767px) {
   input:focus,
   select:focus,
   textarea:focus {
-    font-size: 16px !important;
+    font-size: 16px;
   }
 }
