@@ -11,7 +11,7 @@ describe('TranslationKey', () => {
   it('принимает ключи ядра, плагинов и сгенерированных семейств', () => {
     const host: TranslationKey = 'common.dashboard';
     const plugin: TranslationKey = 'dh1.homeWorld';
-    const generated: TranslationKey = 'games.generated.darkHeresy.name';
+    const generated: TranslationKey = 'games.stepGame';
 
     expect([host, plugin, generated]).toHaveLength(3);
   });
