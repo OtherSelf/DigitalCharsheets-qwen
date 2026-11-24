@@ -35,7 +35,9 @@ export function DeleteCharacterDialog({
         <Button
           variant="destructive"
           size="icon"
-          className="h-8 w-8 shrink-0 sm:h-9 sm:w-9"
+          className="h-11 w-11 shrink-0 sm:h-9 sm:w-9"
+          title={t('common.delete')}
+          aria-label={t('common.delete')}
           data-testid="delete-character"
         >
           <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />

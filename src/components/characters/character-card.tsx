@@ -115,7 +115,7 @@ export function CharacterCard({ character }: CharacterCardProps) {
           <Button
             variant="outline"
             size="icon"
-            className="h-8 w-8 shrink-0 sm:h-9 sm:w-9"
+            className="h-11 w-11 shrink-0 sm:h-9 sm:w-9"
             onClick={() => archiveCharacter(character.id)}
             title={t('common.archiveCharacter')}
             aria-label={t('common.archiveCharacter')}
@@ -126,18 +126,22 @@ export function CharacterCard({ character }: CharacterCardProps) {
           <Button
             variant="outline"
             size="icon"
-            className="h-8 w-8 shrink-0 sm:h-9 sm:w-9"
+            className="h-11 w-11 shrink-0 sm:h-9 sm:w-9"
             onClick={handleExportJSON}
             title={t('io.exportJSON')}
+            aria-label={t('io.exportJSON')}
+            data-testid="export-json"
           >
             <FileJson className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
           </Button>
           <Button
             variant="outline"
             size="icon"
-            className="h-8 w-8 shrink-0 sm:h-9 sm:w-9"
+            className="h-11 w-11 shrink-0 sm:h-9 sm:w-9"
             onClick={handleExportExcel}
             title={t('io.exportSheet')}
+            aria-label={t('io.exportSheet')}
+            data-testid="export-excel"
           >
             <FileDown className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
           </Button>
@@ -155,7 +159,7 @@ export function CharacterCard({ character }: CharacterCardProps) {
       <Button
         variant="ghost"
         size="icon"
-        className="absolute top-2 right-2 z-10 h-8 w-8"
+        className="absolute top-2 right-2 z-10 h-11 w-11 sm:h-9 sm:w-9"
         onClick={() => archiveCharacter(character.id)}
         title={t('common.archiveCharacter')}
         aria-label={t('common.archiveCharacter')}
@@ -187,18 +191,22 @@ export function CharacterCard({ character }: CharacterCardProps) {
         <Button
           variant="outline"
           size="icon"
-          className="h-8 w-8 shrink-0 sm:h-9 sm:w-9"
+          className="h-11 w-11 shrink-0 sm:h-9 sm:w-9"
           onClick={handleExportJSON}
           title={t('io.exportJSON')}
+          aria-label={t('io.exportJSON')}
+          data-testid="export-json"
         >
           <FileJson className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
         </Button>
         <Button
           variant="outline"
           size="icon"
-          className="h-8 w-8 shrink-0 sm:h-9 sm:w-9"
+          className="h-11 w-11 shrink-0 sm:h-9 sm:w-9"
           onClick={handleExportExcel}
           title={t('io.exportSheet')}
+          aria-label={t('io.exportSheet')}
+          data-testid="export-excel"
         >
           <FileDown className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
         </Button>
