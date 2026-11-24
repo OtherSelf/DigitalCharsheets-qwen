@@ -53,7 +53,7 @@ Adding an endpoint without documenting it fails the unit tests.
 | Method | Path | Auth | Purpose |
 | --- | --- | --- | --- |
 | `GET` | `/api/health` | — | Liveness/readiness for Docker, reverse proxies and monitoring. `200` when the data directory is writable, `503` with `status: degraded` otherwise. No paths or secrets; `Cache-Control: no-store`. |
-| `GET` | `/api/version` | — | Application name, version, commit/build date (from env, otherwise `null`), 7-character `commitShort` and Node runtime. No dependency list. |
+| `GET` | `/api/version` | — | Application name, version, commit/branch/build date (from env, otherwise `null`), 7-character `commitShort`, deployment `buildId` and Node runtime. No dependency list. |
 
 `commit`/`branch` on `/api/version` come from `DCS_GIT_COMMIT` /
 `DCS_GIT_BRANCH` (or `GIT_COMMIT` / `VERCEL_GIT_COMMIT_SHA` and
@@ -64,6 +64,12 @@ application runs from a checkout, they are read from the local `.git`: `HEAD` �
 any source the fields are `null`. `commitShort` is the first 7 characters of `commit`,
 lowercased — the form the UI shows in the profile menu (`v0.3.0 · a077aef`);
 it is `null` whenever `commit` is.
+
+`buildId` is the identity of the running build, not the package version: in
+production it is the Next `deploymentId` (the commit SHA), falling back to
+`.next/BUILD_ID`, and in development a random id generated once per server
+process. The client compares it with the id it loaded to detect a redeploy (see
+[deployment.md](deployment.md)).
 
 The label (`v0.5.1 · a077aef`) is rendered in the profile menu and on `/login`
 and `/demo`; `src/components/layout/app-version.tsx` fetches `/api/version` once
@@ -132,6 +138,21 @@ Accounts already over a limit keep read/save-without-growth access.
 | `DELETE` | `/api/characters/{id}/share` | cookie | Revoke the link; idempotent. |
 | `GET` | `/api/characters/{id}/history` | cookie | Change-history sessions, newest first (`limit`, `before` cursor). |
 | `DELETE` | `/api/characters/{id}/history` | cookie | Clear the change log; the sheet is untouched. |
+| `POST` | `/api/characters/{id}/archive` | cookie | Move the sheet to the archive and revoke its share link; archived sheets leave the active list and do not count toward the limit. |
+| `DELETE` | `/api/characters/{id}/archive` | cookie | Restore the sheet from the archive; the limit is checked again (`409 quota_exceeded`). |
+| `POST` | `/api/characters/{id}/restore` | cookie | Restore a sheet from the trash within the 14-day window; an expired entry answers `404` (`409 quota_exceeded` when full). |
+| `GET` | `/api/characters/archive` | cookie | Archive and trash summaries for `/archive` (`archive`, `trash`, `retentionDays`); expired trash entries are cleaned lazily at most once an hour. |
+| `DELETE` | `/api/characters/archive` | cookie | Clear the archive permanently, including histories; the trash is cleared separately. |
+| `GET` | `/api/characters/trash` | cookie | Trash summaries (`trash`, `retentionDays`). |
+| `DELETE` | `/api/characters/trash` | cookie | Purge the trash permanently without waiting for the retention period. |
+| `DELETE` | `/api/characters/trash/{id}` | cookie | Purge one trashed sheet; `404` when it is gone or expired. |
+
+An archived sheet leaves the active list and does not count toward the sheet
+limit; restoring from the archive re-checks the limit. Deleted sheets stay in
+`trash/` for 14 days (`deletedAt`/`expiresAt`), and `/archive` shows both tabs.
+Account deletion keeps a shadow copy under
+`data/.trash/users/<uid>-<timestamp>/` for the same 14 days. Storage details:
+[data-storage.md](data-storage.md) § Archive and trash.
 
 `{id}` must match `^[A-Za-z0-9_-]{1,64}$`; any other value (for example
 `..%2Fuser`) is rejected with `400` before the file system is touched. See
