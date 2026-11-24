@@ -369,6 +369,24 @@ body > div:first-child {
   }
 }
 
+/* LANDMARK: CARD_EDITION_ACCENT
+   Карточка персонажа с акцентом редакции: цвет приходит инлайном только как
+   переменная `--card-accent` (`gameAccentCss`), а контур и hover-кольцо
+   рисуются здесь. Иначе слева была цветная полоса, а рамка оставалась серой —
+   карточка выглядела незаконченной. Это правило ядра: оно ничего не знает об
+   играх, только о собственном `data-card-accent`. */
+[data-card-accent] {
+  border-color: hsl(var(--card-accent) / 0.35);
+}
+
+[data-card-accent]:hover,
+[data-card-accent]:focus-within {
+  border-color: hsl(var(--card-accent) / 0.55);
+  box-shadow:
+    0 0 0 3px hsl(var(--card-accent) / 0.18),
+    0 10px 15px -3px hsl(var(--card-accent) / 0.12);
+}
+
 /* LANDMARK: NARROW_TABLET_HEADER_LABELS
    Узкий планшет (768..1023): убираем второстепенные подписи, чтобы имя
    персонажа не сжималось до пары букв. Значения остаются на месте:
