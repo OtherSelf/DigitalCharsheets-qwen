@@ -145,6 +145,9 @@ Plugin-specific checks (bulk-editor table columns, custom slots) belong in
   compaction, recording, owner-only API, labels).
 - `tests/unit/openapi.test.ts` compares the OpenAPI spec with every
   `src/app/api/**/route.ts`; a new endpoint without documentation fails it.
+- `tests/unit/docs-api.test.ts` compares the endpoint map in `docs/api.md`
+  with the OpenAPI document (methods and paths); a new operation must appear
+  in both.
 - Tests of one edition live in `src/games/<id>/tests/unit/` (for example
   `fields`, `psy`, `rules`) and are found by the same `npm test`. Tests that
   import two editions at once (DH parity, shared labels, schema versions) stay
