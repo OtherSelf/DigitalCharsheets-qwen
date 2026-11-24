@@ -11,6 +11,83 @@ format changes.
 
 ## [Unreleased]
 
+## [0.19.0] - 2026-11-24
+
+Two-factor sign-in, an archive with a 14-day trash, and a security pass.
+
+### Added
+
+- Two-factor authentication (TOTP, RFC 6238 on `node:crypto`): `POST
+  /api/auth/totp/setup` returns the base32 secret, an `otpauth://` URI and a QR
+  generated on the server (`src/lib/qr-codegen.ts`, the vendored Project Nayuki
+  encoder, MIT), so the secret never leaves the installation; `enable` returns
+  ten one-time backup codes, and `disable`/`backup-codes` need the current
+  password. The secret is AES-256-GCM ciphertext keyed by `DCS_TOTP_KEY` or by a
+  key created at `<data-dir>/.totp-key` (0600), `lastStep` blocks a replayed
+  code, and recovery or an admin reset switches 2FA off. Sign-in without the code
+  answers `401 totp_required`, with a wrong one `401 totp_invalid`.
+- Archive and trash: `archive/` and `trash/` inside every account, `GET
+  /api/characters/archive`, `POST /api/characters/{id}/archive`, `POST
+  /api/characters/{id}/restore`, `GET|DELETE /api/characters/trash`, an
+  `/archive` page with both lists and an "Archive" action on character cards.
+  Deleted sheets stay for 14 days with `deletedAt`/`expiresAt` metadata and are
+  purged automatically; account deletion leaves a shadow copy in
+  `data/.trash/users/<uid>-<timestamp>/` for the same 14 days. `npm run trash`
+  (`scripts/trash.mjs`) lists, purges and restores by hand.
+- Note tabs: an additive `noteTabs` field (up to 10) in every edition schema,
+  tabs in the notes sheet, and coverage in JSON/Excel export and history.
+- "Keep the screen on" in display settings (Screen Wake Lock API, re-requested
+  after `visibilitychange`, a no-op without support), remembered across reloads.
+- `npm run test:stand` (`scripts/stand-smoke.mjs`), an opt-in eight-step check
+  against a real stand, plus `SECURITY.md` and ADR 0005 for the scrypt
+  parameters.
+
+### Changed
+
+- Security pass (SEC2): changing the recovery phrase requires the current
+  password on `/api/auth/phrase` and `PUT /api/auth/profile`; one phrase policy
+  on every path (at least 6 words or 24 characters, max 256) while old short
+  phrases still open their accounts; the client IP is the last hop of
+  `X-Forwarded-For` and nginx overwrites the header; the rate limiter keeps a
+  debounced snapshot in `<data-dir>/.state/rate-limit.json` and also counts per
+  account, so rotating the IP does not reset the window; CSRF checks (`Origin` +
+  `Sec-Fetch-Site`) live in `src/proxy.ts`; the session cookie is
+  `__Host-dcs_session` in production (the old `dcs_session` is still read for 14
+  days); `/api/search` is rate limited and `/login` answers `X-Robots-Tag:
+  noindex`; quotas are 100 sheets and 50 MiB per account, grandfathered for
+  accounts already over them; `user.json` moves to schema v5 and scrypt to
+  N=2^15, parameters are rehashed on the next successful sign-in. A nonce CSP
+  was prototyped and rejected with a measurement (p95 6–10 → 21–22 ms), and the
+  residual risk is written down in `docs/security.md`.
+- The phone `/share` page uses the same read-only compact rail as the owner
+  instead of a full desktop sheet.
+- The import dialog has a localized drop zone instead of a native file input, so
+  no Russian browser strings leak into the English UI; confirmation dialogs are
+  `role="alertdialog"`, and Esc or a click outside closes them.
+- Dark Heresy wounds accept negative values down to `-max`; DH1 Rank is readable
+  and asks for the advanced path once in a dialog; DH2 ranged weapons carry
+  armour penetration in the type, schema, cards, Excel and demo; the quest
+  journal has a visible delete-target action, quest confirmation and a progress
+  bar; the creation wizard has one header per step and "Back" outside the card;
+  a session's history changes are listed newest first with a line-by-line diff
+  for text values.
+- Plugin versions: `dh1` 1.13.0, `dh2` 1.14.0, `dnd5e` 1.11.0, `sandbox` 1.4.0.
+  Sheet `schemaVersion` (Dark Heresy `5`, D&D 5e `2`, sandbox `3`) and
+  `PLUGIN_API_VERSION` (`1.4.0`) are unchanged.
+
+### Fixed
+
+- TOTP setup no longer answers `503 totp_unavailable` when `DCS_TOTP_KEY` is
+  unset: the key is created on first use. A broken environment value or a broken
+  key file still fails at startup.
+- `scripts/trash.mjs` restores an account on 9p and overlayfs, where `rename`
+  between `.trash` and `users/` fails with `EXDEV`; the copy-and-remove fallback
+  matches the runtime.
+- The read cache no longer stores a parsed value when the file signature does not
+  match.
+- The TOTP QR renders at 240×240 with `#1f2937` modules and a quiet zone instead
+  of an unstyled black square.
+
 ## [0.18.4] - 2026-11-23
 
 ### Added
