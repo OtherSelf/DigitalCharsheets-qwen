@@ -11,6 +11,78 @@ format changes.
 
 ## [Unreleased]
 
+## [0.20.0] - 2026-11-25
+
+The interface speaks the user's language from the first frame, and the dashboard
+becomes a workspace.
+
+### Added
+
+- The interface language is known on the server: a `dcs_language` cookie,
+  `Accept-Language` with q-weights, `<html lang>` and a first frame that is
+  already in the right language — no flash and no mismatched tabs. The choice is
+  stored in the profile (schema v6, `language`) and survives clearing the cookie;
+  `PUT /api/auth/preferences` sets it, sign-in copies the profile language into
+  the cookie, and an old `localStorage` choice migrates with one reload.
+- Translation keys are typed: `TranslationKey` covers core and plugin keys
+  (`i18n.keys.generated.ts`), a typo now fails `tsc`, `t(key, vars)`
+  interpolates and `tPlural` picks an `Intl.PluralRules` form
+  (`_one`/`_few`/`_many`/`_other`), so Russian counts read correctly. Plugins
+  keep an untyped `t` because they build keys from their own data. Quest dates
+  follow the UI locale instead of a hardcoded one.
+- Drag-and-drop card ordering: a handle on each card (on hover on desktop,
+  always visible on the phone, Space/arrows from the keyboard), an optimistic
+  reorder through `PUT /api/characters/order` with a rollback on failure, and the
+  order stored in the profile; the default list is "freshest first". Unknown ids
+  are dropped and the order is capped at 500 entries.
+- One tools menu in the header (stats editor, backup of all sheets) instead of
+  three duplicate entry points.
+- The admin "Show on demo" switch per edition: the demo list is built from
+  published, enabled and marked editions, at most `DEMO_MAX = 3`, and no longer
+  depends on who is looking.
+- An accessibility gate: axe `wcag2a`/`wcag2aa` on `/`, `/demo`, `/login`,
+  `/settings`, `/admin`, `/docs` and the D&D sheet, part of the fast set, with an
+  allowlist and a ceiling for the known sheet debt. Card actions are 44 px on the
+  phone and carry names, D&D section buttons, checkboxes and numeric fields are
+  labelled, and the DH `EditSaveButton` takes its name from the dictionary.
+- A "back to top" button at the end of a documentation article, and a unit test
+  that compares the endpoint map in `docs/api.md` with the OpenAPI document
+  (archive, trash and `buildId` included).
+
+### Changed
+
+- Typography: the headline font is Manrope with Latin and Cyrillic subsets —
+  Space Grotesk had no Cyrillic, so Russian headings fell back to a system font.
+  The scale now reads `--text-*` from `@theme`, so adaptive variants work again
+  and the 22 `!important` overrides are gone; `--breakpoint-xl` is 1300 px,
+  matching `viewport.ts`. Muted text and primary buttons were darkened to AA
+  (4.97:1 and 5.47:1).
+- Layout: content width is capped at `--content-max` (1760 px) for the frame and
+  the header, the dashboard grid is `auto-fill minmax(18rem, 1fr)` (5/4/3/2/1
+  columns instead of breakpoint steps), and cards in a row share one height.
+- Character cards take their accent from the edition theme — a left bar, the
+  badge backdrop and a hover ring (`--card-accent`, with a darker strong tone for
+  small text) — and the badge shows the game and the edition on two lines. The
+  accent respects the admin "core styles" flag.
+- The header's home icon is a house instead of a shield; the shield stays for the
+  admin entry in the profile menu.
+- Dark Heresy armour type reads `Flak` and a legacy `Flack` value is translated;
+  D&D alignment wraps to two lines instead of being cut.
+- Repository links point to `https://github.com/digitalcharsheets/digital-character-sheets`.
+- New dependencies: `@dnd-kit/core`, `@dnd-kit/sortable`, `@dnd-kit/utilities`
+  (runtime) and `@axe-core/playwright` (dev).
+- Plugin versions: `dh1` 1.14.0, `dh2` 1.15.0, `dnd5e` 1.12.0, `sandbox` 1.5.0.
+  Sheet `schemaVersion` (Dark Heresy `5`, D&D 5e `2`, sandbox `3`) and
+  `PLUGIN_API_VERSION` (`1.4.0`) are unchanged.
+
+### Fixed
+
+- `notFound()` from a route answers `404` instead of `200` (the root Suspense
+  boundary masked the status), `/error/404` renders the real not-found page again
+  (a type guard narrowed a string to a number), and `predeploy` checks the 404
+  route through `_not-found`. The old `src/app/loading.tsx` is replaced by
+  `PageLoader`.
+
 ## [0.19.0] - 2026-11-24
 
 Two-factor sign-in, an archive with a 14-day trash, and a security pass.
