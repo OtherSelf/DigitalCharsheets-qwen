@@ -90,6 +90,7 @@ directory and sheets stay where they are.
 | `totp` | Optional second factor: `{ secret, enabledAt?, lastStep? }`. `secret` is AES-256-GCM ciphertext (`v1.<iv>.<tag>.<cipher>`) keyed by `DCS_TOTP_KEY` with the uid as AAD; `enabledAt` is absent while enrollment is pending; `lastStep` blocks code replay. |
 | `totpBackupCodes` | Keyed hashes of up to ten one-time backup codes; the codes themselves are shown once and never stored. |
 | `language` | Optional chosen UI language (`en` or `ru`). Missing means "never picked": the first document then follows the `dcs_language` cookie or `Accept-Language`. Login copies it into the cookie; `PUT /api/auth/preferences` rewrites it. |
+| `characterOrder` | Optional dashboard order: sheet ids in display order. Missing or empty means "most recently modified first". Unknown ids are ignored (a sheet may be deleted elsewhere), new sheets go last; `PUT /api/characters/order` rewrites it, capped at 500 ids. Sheet files and exports are not touched. |
 | `createdAt`/`updatedAt` | ISO timestamps; missing values are filled from file mtime. |
 | `originalFirebaseId` | Present only on accounts imported from the old Firebase export. |
 

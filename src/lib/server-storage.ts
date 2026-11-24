@@ -230,9 +230,12 @@ async function loadCharacterList(
     }),
   );
 
-  const entries = loaded.filter(
-    (entry): entry is CharacterListEntry => !!entry,
-  );
+  const entries = loaded
+    .filter((entry): entry is CharacterListEntry => !!entry)
+    // Порядок по умолчанию — «свежие сверху»: `readdir` отдаёт файлы в
+    // произвольном (хотя и стабильном) порядке, и карточки прыгали после
+    // пересоздания каталога. Пользовательский порядок накладывается поверх.
+    .sort((a, b) => (b.updatedAt ?? '').localeCompare(a.updatedAt ?? ''));
   characterListCache.set(charsDir, { signature, entries });
   return entries;
 }

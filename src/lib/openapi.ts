@@ -848,6 +848,33 @@ export const openApiDocument = {
         },
         additionalProperties: false,
       },
+      CharacterOrderInput: {
+        type: 'object',
+        required: ['order'],
+        additionalProperties: false,
+        properties: {
+          order: {
+            type: 'array',
+            maxItems: 500,
+            items: { type: 'string', pattern: '^[A-Za-z0-9_-]{1,64}$' },
+            description:
+              'Sheet ids in display order. Unknown ids are ignored; omitted sheets go last.',
+          },
+        },
+      },
+      CharacterOrderResponse: {
+        type: 'object',
+        required: ['success', 'order'],
+        additionalProperties: false,
+        properties: {
+          success: { type: 'boolean', enum: [true] },
+          order: {
+            type: 'array',
+            items: { type: 'string' },
+            description: 'Normalized order actually stored in the profile.',
+          },
+        },
+      },
       Character: {
         description:
           'A character sheet. Fields depend on the game/edition: the schema is ' +
@@ -1370,7 +1397,7 @@ export const openApiDocument = {
         operationId: 'listCharacters',
         summary: 'List own character sheets',
         description:
-          'With `view=summary` returns only card fields (`id`, `name`, `systemId`, `updatedAt`); without it the full sheets are returned. The response carries an `ETag` and `Cache-Control: private, no-cache`: a repeated GET with a matching `If-None-Match` answers `304` without a body.',
+          'With `view=summary` returns only card fields (`id`, `name`, `systemId`, `updatedAt`); without it the full sheets are returned. The list follows the order saved by `PUT /api/characters/order`; with no saved order, the most recently modified sheet comes first. The response carries an `ETag` and `Cache-Control: private, no-cache`: a repeated GET with a matching `If-None-Match` answers `304` without a body.',
         parameters: [
           {
             name: 'view',
@@ -1427,6 +1454,22 @@ export const openApiDocument = {
             'Account quota exceeded: 100 sheets or 50 MiB of data.',
           ),
           413: errorResponse('Request body exceeds 1 MiB.'),
+        },
+      },
+    },
+    '/api/characters/order': {
+      put: {
+        tags: ['Characters'],
+        operationId: 'saveCharacterOrder',
+        summary: 'Save the order of character cards',
+        description:
+          'Stores the dashboard order in the profile (`user.json#characterOrder`). The body is a list of sheet ids: unknown or deleted ids are ignored, duplicates are dropped, and the list is capped at 500. The next `GET /api/characters` (both views) returns sheets in this order; sheets not mentioned keep their place at the end. Ordering never rewrites sheet files.',
+        requestBody: jsonBody(ref('CharacterOrderInput')),
+        responses: {
+          200: jsonResponse('Order saved.', ref('CharacterOrderResponse')),
+          400: { $ref: '#/components/responses/BadRequest' },
+          401: { $ref: '#/components/responses/Unauthorized' },
+          429: errorResponse('Too many order updates. Try again later.'),
         },
       },
     },

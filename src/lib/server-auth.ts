@@ -1,5 +1,6 @@
 import fs from 'fs/promises';
 
+import { normalizeCharacterOrder } from './character-order';
 import { getUserFile } from './data-dir';
 import { withDataLock } from './data-lock';
 import { defaultDisplayName, isUid, newUid, normalizeLogin } from './ids';
@@ -576,6 +577,39 @@ export interface UpdateProfileResult {
   error?: string;
   reason?:
     'not_found' | 'invalid_input' | 'invalid_phrase' | 'invalid_password';
+}
+
+/**
+ * Сохранить пользовательский порядок карточек.
+ *
+ * Как и язык, это не смена профиля с паролем: приходит на каждое перетаскивание
+ * и пишется под data-lock, чтобы не откатить параллельную правку админа.
+ */
+export async function updateUserCharacterOrder(
+  currentUserId: string,
+  order: readonly string[],
+): Promise<StoredUser | null> {
+  const normalized = normalizeCharacterOrder(order) ?? [];
+  return withDataLock(async () => {
+    const fresh = await readStoredUser(currentUserId);
+    if (!fresh) return null;
+    const current = fresh.characterOrder ?? [];
+    if (
+      current.length === normalized.length &&
+      current.every((id, index) => id === normalized[index])
+    ) {
+      return fresh;
+    }
+
+    const updated: StoredUser = {
+      ...fresh,
+      schemaVersion: USER_SCHEMA_VERSION,
+      characterOrder: normalized,
+      updatedAt: new Date().toISOString(),
+    };
+    await writeStoredUser(currentUserId, updated);
+    return updated;
+  });
 }
 
 /**

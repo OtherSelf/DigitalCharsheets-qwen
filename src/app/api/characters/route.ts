@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server';
 
 import { getGameModule } from '@/games/registry';
 import { jsonError } from '@/lib/api/respond';
+import { applyCharacterOrder } from '@/lib/character-order';
 import {
   prepareNewCharacter,
   sanitizeCharacterPayload,
@@ -14,6 +15,7 @@ import {
 } from '@/lib/module-access';
 import { QuotaExceededError } from '@/lib/quotas';
 import { readJsonObject } from '@/lib/security/payload';
+import { getStoredUser } from '@/lib/server-auth';
 import {
   getCharactersFromServer,
   getCharacterSummariesFromServer,
@@ -52,10 +54,14 @@ export async function GET(request: Request) {
   }
 
   const { searchParams } = new URL(request.url);
-  const data =
-    searchParams.get('view') === 'summary'
-      ? await getCharacterSummariesFromServer(uid)
-      : await getCharactersFromServer(uid);
+  const summaryView = searchParams.get('view') === 'summary';
+  // Порядок карточек — из профиля: неизвестные id игнорируются, новые листы
+  // идут после заданных. Для `?view=summary` действует то же правило.
+  const profile = await getStoredUser(uid);
+  const order = profile?.characterOrder;
+  const data = summaryView
+    ? applyCharacterOrder(await getCharacterSummariesFromServer(uid), order)
+    : applyCharacterOrder(await getCharactersFromServer(uid), order);
   const body = JSON.stringify(data);
   const etag = `"${crypto
     .createHash('sha256')

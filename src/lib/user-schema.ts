@@ -1,6 +1,7 @@
 import fs from 'fs/promises';
 import type { Dirent } from 'node:fs';
 
+import { normalizeCharacterOrder } from './character-order';
 import { getUserDir, getUserFile, getUsersDir } from './data-dir';
 import { withDataLock } from './data-lock';
 import { writeJsonAtomic } from './fs-atomic';
@@ -64,6 +65,11 @@ export interface StoredUser {
    * берёт cookie или `Accept-Language`, а не навязанный `en`.
    */
   language?: Language;
+  /**
+   * Пользовательский порядок карточек (id листов). Отсутствие — порядок по
+   * mtime («свежие сверху»); неизвестные id при выдаче игнорируются.
+   */
+  characterOrder?: string[];
   createdAt?: string;
   updatedAt?: string;
   originalFirebaseId?: string;
@@ -145,6 +151,15 @@ export function normalizeStoredUser(
     старым аккаунтам `en`. Невалидное значение (ручная правка, чужая локаль)
     снимаем, чтобы клиент не упал на неизвестном языке.
   */
+  if (user.characterOrder !== undefined) {
+    const order = normalizeCharacterOrder(user.characterOrder);
+    if (order) user.characterOrder = order;
+    else {
+      missing.push('characterOrder');
+      delete user.characterOrder;
+    }
+  }
+
   if (user.language !== undefined) {
     const language = parseLanguage(user.language);
     if (language) user.language = language;

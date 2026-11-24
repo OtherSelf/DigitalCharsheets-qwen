@@ -132,8 +132,9 @@ Accounts already over a limit keep read/save-without-growth access.
 
 | Method | Path | Auth | Purpose |
 | --- | --- | --- | --- |
-| `GET` | `/api/characters` | cookie | List the current user's sheets; `?view=summary` returns cards (`id`, `name`, `systemId`, `updatedAt`). |
+| `GET` | `/api/characters` | cookie | List the current user's sheets; `?view=summary` returns cards (`id`, `name`, `systemId`, `updatedAt`). The order follows `PUT /api/characters/order`, otherwise the most recently modified sheet comes first. |
 | `POST` | `/api/characters` | cookie | Create a sheet; the server assigns `id`/`userId`, fills missing fields from the edition defaults and validates the payload by the edition schema. |
+| `PUT` | `/api/characters/order` | cookie | Save the dashboard order: `{ "order": ["id", …] }` (≤500). Unknown ids are ignored, omitted sheets go last; stored in `user.json#characterOrder`. |
 | `PUT` | `/api/characters/{id}` | cookie | Partial update; optional `__page`/`__seq` tokens drop late writes. |
 | `DELETE` | `/api/characters/{id}` | cookie | Delete a sheet. |
 | `GET` | `/api/characters/{id}/share` | cookie | Status of the read-only link, without the token (`active`, `createdAt`, `expiresAt`). |
