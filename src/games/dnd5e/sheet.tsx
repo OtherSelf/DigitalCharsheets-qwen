@@ -343,6 +343,9 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
                 size="icon"
                 variant="ghost"
                 className="h-6 w-6"
+                aria-label={
+                  isStatsEditing ? t('common.save') : t('common.edit')
+                }
                 onClick={() => {
                   if (isStatsEditing) {
                     handleSaveStats();
@@ -396,7 +399,7 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
                         <span className="text-xs font-black">
                           {mod >= 0 ? `+${mod}` : mod}
                         </span>
-                        <span className="text-muted-foreground/60 text-[8px]">
+                        <span className="text-muted-foreground text-[8px]">
                           {val}
                         </span>
                       </>
@@ -559,6 +562,11 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
                     size="icon"
                     variant="ghost"
                     className="h-7 w-7"
+                    aria-label={
+                      isOtherProficienciesEditing
+                        ? t('common.save')
+                        : t('common.edit')
+                    }
                     onClick={() => {
                       if (isOtherProficienciesEditing) {
                         handleSaveOtherProf();

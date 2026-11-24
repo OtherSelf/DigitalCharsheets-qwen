@@ -96,5 +96,5 @@
 }
 
 :global([data-system='dh1']) :global(.font-headline) {
-  font-family: 'DHCormorant', var(--font-space-grotesk), sans-serif;
+  font-family: 'DHCormorant', var(--font-headline), sans-serif;
 }

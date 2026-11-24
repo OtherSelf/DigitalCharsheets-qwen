@@ -61,5 +61,5 @@
 
 :global([data-system='dnd5e']) :global(.font-headline),
 :global([data-system='dnd5e']) :global(.text-2xl) {
-  font-family: 'DHForum', var(--font-space-grotesk), sans-serif;
+  font-family: 'DHForum', var(--font-headline), sans-serif;
 }

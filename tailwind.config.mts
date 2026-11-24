@@ -11,7 +11,7 @@ export default {
       // FONT FIX: Reference the CSS variables instead of raw font names
       fontFamily: {
         body: ['var(--font-inter)', 'sans-serif'],
-        headline: ['var(--font-space-grotesk)', 'sans-serif'],
+        headline: ['var(--font-headline)', 'sans-serif'],
         code: ['monospace'],
       },
       colors: {

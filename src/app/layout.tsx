@@ -1,6 +1,6 @@
 // src/app/layout.tsx
 import type { Metadata, Viewport } from 'next';
-import { Inter, Space_Grotesk } from 'next/font/google';
+import { Inter, Manrope } from 'next/font/google';
 import { cookies, headers } from 'next/headers';
 
 import './globals.css';
@@ -18,10 +18,15 @@ import { listGamePlugins } from '@/games/registry';
 import { getAppInfo } from '@/lib/app-info';
 import { LANGUAGE_COOKIE, resolveLanguage } from '@/lib/language';
 
-const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
-const spaceGrotesk = Space_Grotesk({
-  subsets: ['latin'],
-  variable: '--font-space-grotesk',
+/*
+  Обе гарнитуры — с кириллицей: `Space Grotesk` её не содержит, и русские
+  заголовки рисовались системным фолбэком с другими метриками. `Manrope` —
+  геометрический гротеск, ближайший к прежнему заголовочному шрифту.
+*/
+const inter = Inter({ subsets: ['latin', 'cyrillic'], variable: '--font-inter' });
+const manrope = Manrope({
+  subsets: ['latin', 'cyrillic'],
+  variable: '--font-headline',
 });
 
 // Названия игр — из манифестов: новая игра не требует правок layout.
@@ -73,7 +78,7 @@ export default async function RootLayout({
     <html
       lang={language}
       suppressHydrationWarning
-      className={`${inter.variable} ${spaceGrotesk.variable} h-full`}
+      className={`${inter.variable} ${manrope.variable} h-full`}
     >
       {/*
         Ни `<title>`, ни `<meta name="viewport">` здесь не дублируются: их

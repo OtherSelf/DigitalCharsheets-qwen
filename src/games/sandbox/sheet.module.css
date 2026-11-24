@@ -54,5 +54,5 @@
 }
 
 :global([data-system='sandbox']) :global(.font-headline) {
-  font-family: 'DHForum', var(--font-space-grotesk), sans-serif;
+  font-family: 'DHForum', var(--font-headline), sans-serif;
 }
