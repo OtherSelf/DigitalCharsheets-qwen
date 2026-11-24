@@ -446,5 +446,7 @@
   "dnd5e.bulkVitalsSaved": "Все статы D&D сохранены!",
   "dnd5e.systemName": "Dungeons & Dragons",
   "games.dnd5e.description": "Текущая редакция D&D: d20, преимущество и три столпа игры.",
-  "games.dnd5e.name": "5-я редакция"
+  "games.dnd5e.name": "5-я редакция",
+  "dnd.proficient": "Владение",
+  "dnd.expertise": "Компетентность"
 }

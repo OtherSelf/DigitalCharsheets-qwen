@@ -172,10 +172,12 @@ const EditSaveButton = ({
   editing: boolean;
   onEdit: () => void;
   onSave: () => void;
-}) =>
-  editing ? (
+}) => {
+  const { t } = useTranslation();
+  return editing ? (
     <Button
       data-testid="save-button"
+      aria-label={t('common.save')}
       size="icon"
       variant="ghost"
       onClick={onSave}
@@ -186,6 +188,7 @@ const EditSaveButton = ({
   ) : (
     <Button
       data-testid="edit-button"
+      aria-label={t('common.edit')}
       size="icon"
       variant="outline"
       onClick={onEdit}
@@ -194,6 +197,7 @@ const EditSaveButton = ({
       <Edit className="h-4 w-4" />
     </Button>
   );
+};
 
 const DetailField = ({
   label,

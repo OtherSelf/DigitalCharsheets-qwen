@@ -28,10 +28,12 @@ const EditSaveButton = ({
   editing: boolean;
   onEdit: () => void;
   onSave: () => void;
-}) =>
-  editing ? (
+}) => {
+  const { t } = useTranslation();
+  return editing ? (
     <Button
       data-testid="save-button"
+      aria-label={t('common.save')}
       size="icon"
       variant="ghost"
       onClick={onSave}
@@ -42,6 +44,7 @@ const EditSaveButton = ({
   ) : (
     <Button
       data-testid="edit-button"
+      aria-label={t('common.edit')}
       size="icon"
       variant="outline"
       onClick={onEdit}
@@ -50,6 +53,7 @@ const EditSaveButton = ({
       <Edit className="h-4 w-4" />
     </Button>
   );
+};
 
 interface InventorySectionProps {
   /**
@@ -138,6 +142,7 @@ export const DndInventorySection = React.forwardRef<
                 {isMoneyEditing ? (
                   <Input
                     type="number"
+                    aria-label={t('dnd.money')}
                     value={currency[c as keyof typeof currency]}
                     onChange={(e) =>
                       setCurrency({

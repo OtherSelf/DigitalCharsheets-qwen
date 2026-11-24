@@ -202,6 +202,7 @@ export function HouseRulesDialog({
                           variant="ghost"
                           size="icon"
                           className="text-destructive hover:text-destructive h-6 w-6 shrink-0"
+                          aria-label={t('common.delete')}
                           onClick={() => handleDeleteCustomRule(index)}
                         >
                           <Trash2 className="h-3 w-3" />

@@ -166,6 +166,7 @@ export const DndDivineBoonsSection = React.forwardRef<
                                     variant="ghost"
                                     size="icon"
                                     className="text-destructive hover:text-destructive ml-2 h-6 w-6 shrink-0"
+                                    aria-label={t('common.delete')}
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       handleDeleteBoon(i);

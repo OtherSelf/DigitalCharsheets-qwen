@@ -113,10 +113,12 @@ const EditSaveButton = ({
   editing: boolean;
   onEdit: () => void;
   onSave: () => void;
-}) =>
-  editing ? (
+}) => {
+  const { t } = useTranslation();
+  return editing ? (
     <Button
       data-testid="save-button"
+      aria-label={t('common.save')}
       size="icon"
       variant="ghost"
       onClick={onSave}
@@ -127,6 +129,7 @@ const EditSaveButton = ({
   ) : (
     <Button
       data-testid="edit-button"
+      aria-label={t('common.edit')}
       size="icon"
       variant="outline"
       onClick={onEdit}
@@ -135,6 +138,7 @@ const EditSaveButton = ({
       <Edit className="h-4 w-4" />
     </Button>
   );
+};
 
 export interface ProgressionData {
   characterClass: string;
@@ -379,6 +383,7 @@ export function DndProgressionSection({
                   {/* Тумблер виден и вне режима редактирования: включение
                       мультикласса сразу открывает выбор классов. */}
                   <Checkbox
+                    aria-label={t('dnd.multiclass')}
                     checked={progressionData.isMulticlass}
                     onCheckedChange={(v) => {
                       const isChecked = !!v;
@@ -422,6 +427,7 @@ export function DndProgressionSection({
                               </Select>
                               <Input
                                 type="number"
+                                aria-label={t('dnd.classLevel')}
                                 value={mc.level}
                                 onChange={(e) => {
                                   const rawVal = parseInt(e.target.value) || 1;
@@ -561,6 +567,7 @@ export function DndProgressionSection({
                   <div className="flex gap-2">
                     <Input
                       type="number"
+                      aria-label={t('dnd.expToCount')}
                       value={expToCount}
                       onChange={(e) =>
                         setExpToCount(parseInt(e.target.value) || 0)

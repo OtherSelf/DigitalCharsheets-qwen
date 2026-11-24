@@ -60,10 +60,12 @@ const EditSaveButton = ({
   editing: boolean;
   onEdit: () => void;
   onSave: () => void;
-}) =>
-  editing ? (
+}) => {
+  const { t } = useTranslation();
+  return editing ? (
     <Button
       data-testid="save-button"
+      aria-label={t('common.save')}
       size="icon"
       variant="ghost"
       onClick={onSave}
@@ -74,6 +76,7 @@ const EditSaveButton = ({
   ) : (
     <Button
       data-testid="edit-button"
+      aria-label={t('common.edit')}
       size="icon"
       variant="outline"
       onClick={onEdit}
@@ -82,6 +85,7 @@ const EditSaveButton = ({
       <Edit className="h-4 w-4" />
     </Button>
   );
+};
 
 interface SavesSkillsSectionProps {
   /**
@@ -181,6 +185,7 @@ export function DndSavesSkillsSection({
                 className="border-muted flex items-center gap-2 border-b py-1 last:border-0"
               >
                 <Checkbox
+                  aria-label={t('dnd.proficient')}
                   checked={st.proficient}
                   onCheckedChange={(v) => {
                     const updated = savingThrows.map((s, idx) =>
@@ -195,6 +200,7 @@ export function DndSavesSkillsSection({
                     <div className="flex flex-col items-center gap-0.5">
                       <Input
                         type="number"
+                        aria-label={t('dnd.modifier')}
                         value={
                           originalSt.manualModifier === undefined
                             ? ''
@@ -284,6 +290,7 @@ export function DndSavesSkillsSection({
                 className="border-muted flex items-center gap-1.5 border-b py-1 last:border-0"
               >
                 <Checkbox
+                  aria-label={t('dnd.proficient')}
                   checked={sk.proficient}
                   onCheckedChange={(v) => {
                     const updated = skills.map((s, idx) =>
@@ -300,6 +307,7 @@ export function DndSavesSkillsSection({
                   }}
                 />
                 <Checkbox
+                  aria-label={t('dnd.expertise')}
                   checked={sk.expertise || false}
                   disabled={!sk.proficient}
                   onCheckedChange={(v) => {
@@ -316,6 +324,7 @@ export function DndSavesSkillsSection({
                     <div className="flex flex-col items-center gap-0.5">
                       <Input
                         type="number"
+                        aria-label={t('dnd.modifier')}
                         value={
                           originalSk.manualModifier === undefined
                             ? ''

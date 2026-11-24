@@ -446,5 +446,7 @@
   "dnd5e.bulkVitalsSaved": "All D&D vitals saved!",
   "dnd5e.systemName": "Dungeons & Dragons",
   "games.dnd5e.description": "The current D&D edition: d20, advantage and three pillars of play.",
-  "games.dnd5e.name": "5th Edition"
+  "games.dnd5e.name": "5th Edition",
+  "dnd.proficient": "Proficient",
+  "dnd.expertise": "Expertise"
 }

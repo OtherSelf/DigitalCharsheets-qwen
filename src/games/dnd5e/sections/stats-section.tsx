@@ -72,6 +72,7 @@ const StatBox = ({
               variant={notes ? 'secondary' : 'ghost'}
               size="icon"
               className="absolute top-1 right-1 h-5 w-5"
+              aria-label={`${t('common.notesFor')} ${label}`}
             >
               <Info className="h-3 w-3" />
             </Button>
@@ -101,6 +102,7 @@ const StatBox = ({
         {editing ? (
           <Input
             type="number"
+            aria-label={t('common.addNotes')}
             min={1}
             max={30}
             value={value === 0 ? '' : value}
@@ -146,10 +148,12 @@ const EditSaveButton = ({
   editing: boolean;
   onEdit: () => void;
   onSave: () => void;
-}) =>
-  editing ? (
+}) => {
+  const { t } = useTranslation();
+  return editing ? (
     <Button
       data-testid="save-button"
+      aria-label={t('common.save')}
       size="icon"
       variant="ghost"
       onClick={onSave}
@@ -160,6 +164,7 @@ const EditSaveButton = ({
   ) : (
     <Button
       data-testid="edit-button"
+      aria-label={t('common.edit')}
       size="icon"
       variant="outline"
       onClick={onEdit}
@@ -168,6 +173,7 @@ const EditSaveButton = ({
       <Edit className="h-4 w-4" />
     </Button>
   );
+};
 
 interface StatsSectionProps {
   /**

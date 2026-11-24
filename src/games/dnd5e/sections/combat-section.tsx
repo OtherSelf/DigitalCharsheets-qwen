@@ -54,10 +54,12 @@ const EditSaveButton = ({
   editing: boolean;
   onEdit: () => void;
   onSave: () => void;
-}) =>
-  editing ? (
+}) => {
+  const { t } = useTranslation();
+  return editing ? (
     <Button
       data-testid="save-button"
+      aria-label={t('common.save')}
       size="icon"
       variant="ghost"
       onClick={onSave}
@@ -68,6 +70,7 @@ const EditSaveButton = ({
   ) : (
     <Button
       data-testid="edit-button"
+      aria-label={t('common.edit')}
       size="icon"
       variant="outline"
       onClick={onEdit}
@@ -76,6 +79,7 @@ const EditSaveButton = ({
       <Edit className="h-4 w-4" />
     </Button>
   );
+};
 
 interface CombatStats {
   armorClass: number;
@@ -586,6 +590,7 @@ export const DndCombatSection = React.forwardRef<
               {isCombatStatsEditing ? (
                 <Input
                   type="number"
+                  aria-label={t('dnd.armorClass')}
                   value={
                     combatStats.armorClass === 0 ? '' : combatStats.armorClass
                   }
@@ -621,6 +626,7 @@ export const DndCombatSection = React.forwardRef<
               {isCombatStatsEditing ? (
                 <Input
                   type="number"
+                  aria-label={t('dnd.speed')}
                   value={combatStats.speed === 0 ? '' : combatStats.speed}
                   onChange={(e) =>
                     setCombatStats({
@@ -701,6 +707,7 @@ export const DndCombatSection = React.forwardRef<
                   {isHpEditing ? (
                     <Input
                       type="number"
+                      aria-label={t('dnd.maximum')}
                       value={
                         combatStats.hitPoints.max === 0
                           ? ''
@@ -730,6 +737,7 @@ export const DndCombatSection = React.forwardRef<
                   {isHpEditing ? (
                     <Input
                       type="number"
+                      aria-label={t('common.current')}
                       value={
                         combatStats.hitPoints.current === 0
                           ? ''
@@ -761,6 +769,7 @@ export const DndCombatSection = React.forwardRef<
                   {isHpEditing ? (
                     <Input
                       type="number"
+                      aria-label={t('dnd.temp')}
                       value={
                         combatStats.temporaryHitPoints === 0
                           ? ''
@@ -856,6 +865,7 @@ export const DndCombatSection = React.forwardRef<
                     size="icon"
                     variant="outline"
                     className="h-6 w-6"
+                    aria-label={`${t('dnd.successes')} −`}
                     onClick={() =>
                       handleDeathSaveChange(
                         'successes',
@@ -882,6 +892,7 @@ export const DndCombatSection = React.forwardRef<
                     size="icon"
                     variant="outline"
                     className="h-6 w-6"
+                    aria-label={`${t('dnd.successes')} +`}
                     onClick={() =>
                       handleDeathSaveChange(
                         'successes',
@@ -902,6 +913,7 @@ export const DndCombatSection = React.forwardRef<
                     size="icon"
                     variant="outline"
                     className="h-6 w-6"
+                    aria-label={`${t('dnd.failures')} −`}
                     onClick={() =>
                       handleDeathSaveChange(
                         'failures',
@@ -928,6 +940,7 @@ export const DndCombatSection = React.forwardRef<
                     size="icon"
                     variant="outline"
                     className="h-6 w-6"
+                    aria-label={`${t('dnd.failures')} +`}
                     onClick={() =>
                       handleDeathSaveChange(
                         'failures',
@@ -1271,6 +1284,7 @@ export const DndCombatSection = React.forwardRef<
                   {isSpellcastingEditing ? (
                     <Input
                       type="number"
+                      aria-label={t('dnd.spellSaveDC')}
                       value={entry.saveDC === 0 ? '' : entry.saveDC}
                       onChange={(e) =>
                         handleSpellcastingFieldChange(
@@ -1565,6 +1579,7 @@ export const DndCombatSection = React.forwardRef<
                       </span>
                       <Input
                         type="number"
+                        aria-label={t('dnd.maximum')}
                         value={res.max === 0 ? '' : res.max}
                         onChange={(e) =>
                           handleResourceFieldChange(
@@ -1694,6 +1709,7 @@ export const DndCombatSection = React.forwardRef<
                 />
                 <Input
                   type="number"
+                  aria-label={t('common.resourceName')}
                   value={newResourceMax === 0 ? '' : newResourceMax}
                   onChange={(e) =>
                     setNewResourceMax(parseInt(e.target.value) || 1)
