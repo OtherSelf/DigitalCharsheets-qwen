@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { dh1CreationHintsMarkdown } from '@/games/dh1/creation-hints';
 import { translations } from '@/lib/i18n';
+import type { Language } from '@/lib/language';
 
 /**
  * ─── LANDMARK: DH1 CREATION HINTS TESTS ───────────────────────────────────
@@ -10,7 +11,7 @@ import { translations } from '@/lib/i18n';
  * сломать текст dh1, даже если сценарии двух плагинов совпадают.
  */
 
-function translate(lang: 'en' | 'ru') {
+function translate(lang: Language) {
   return (key: string): string => translations[lang][key] ?? key;
 }
 

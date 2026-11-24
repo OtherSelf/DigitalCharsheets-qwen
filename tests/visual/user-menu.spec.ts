@@ -1,5 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 
+import type { Language } from '@/lib/language';
+
 import { openApp, prepare, screenshotPage } from './helpers';
 import { readAdminState } from './state';
 
@@ -22,7 +24,7 @@ const admin = readAdminState();
 
 async function openUserMenu(
   page: Page,
-  language: 'en' | 'ru' = 'en',
+  language: Language = 'en',
 ): Promise<void> {
   await page
     .getByRole('button', {

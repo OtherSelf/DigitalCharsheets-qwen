@@ -2,6 +2,8 @@ import type { ComponentType, ReactNode, Ref } from 'react';
 
 import type { ZodType } from 'zod';
 
+import type { Language } from '@/lib/language';
+
 /**
  * ─── LANDMARK: GAME_MODULE_CONTRACT ────────────────────────────────────────
  * Контракт модуля игры/редакции: единственный способ, которым ядро
@@ -57,7 +59,7 @@ export interface GameDefinition {
 }
 
 /** Языки интерфейса сайта; локали плагина могут быть шире. */
-export type SiteLanguage = 'en' | 'ru';
+export type SiteLanguage = Language;
 
 /** Строгие словари слоя сайта: общий слой, метаданные семейств игр. */
 export interface LocalizedMessages {

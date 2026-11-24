@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { dh2CreationHintsMarkdown } from '@/games/dh2/creation-hints';
 import { translations } from '@/lib/i18n';
+import type { Language } from '@/lib/language';
 
 /**
  * ─── LANDMARK: DH2 CREATION HINTS TESTS ───────────────────────────────────
@@ -9,7 +10,7 @@ import { translations } from '@/lib/i18n';
  * словаря. Проверка живёт рядом с редакцией и не зависит от соседней игры.
  */
 
-function translate(lang: 'en' | 'ru') {
+function translate(lang: Language) {
   return (key: string): string => translations[lang][key] ?? key;
 }
 

@@ -7,7 +7,7 @@ import {
   type Page,
 } from '@playwright/test';
 
-import { LANGUAGE_COOKIE } from '@/lib/language';
+import { LANGUAGE_COOKIE, type Language } from '@/lib/language';
 
 import { VISUAL_RECOVERY_PHRASE } from './fixtures';
 import {
@@ -55,7 +55,7 @@ export const MOTION_CSS = `
 
 export interface PrepareOptions {
   theme?: 'light' | 'dark' | 'warm';
-  language?: 'en' | 'ru';
+  language?: Language;
   /** false — гость (например, страница /login). */
   authenticated?: boolean;
   /**

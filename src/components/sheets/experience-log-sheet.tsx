@@ -12,6 +12,7 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet';
 import { useCharacterContext } from '@/context/character-context';
+import type { Language } from '@/lib/language';
 
 /** Строка журнала опыта, приведённая к общему виду адаптером редакции. */
 export interface ExperienceLogRow {
@@ -30,12 +31,12 @@ export interface ExperienceLogSheetProps {
   description: string;
   empty: string;
   deleteLabel: string;
-  language: 'en' | 'ru';
+  language: Language;
   rows: readonly ExperienceLogRow[];
   onDelete: (id: string) => void;
 }
 
-function formatEntryDate(iso: string, language: 'en' | 'ru'): string {
+function formatEntryDate(iso: string, language: Language): string {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return '';
   return new Intl.DateTimeFormat(language === 'ru' ? 'ru-RU' : 'en-GB').format(

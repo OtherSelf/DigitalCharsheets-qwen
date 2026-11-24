@@ -1,5 +1,7 @@
 import { expect, test, type BrowserContext, type Page } from '@playwright/test';
 
+import type { Language } from '@/lib/language';
+
 import {
   expectNoHorizontalOverflow,
   openApp,
@@ -34,7 +36,7 @@ const isMobile = () => test.info().project.name === 'mobile';
 async function openAdminUsers(
   page: Page,
   context: BrowserContext,
-  language: 'en' | 'ru' = 'en',
+  language: Language = 'en',
 ): Promise<void> {
   await prepare(context, { account: 'admin', theme: 'light', language });
   await openApp(page, '/admin');

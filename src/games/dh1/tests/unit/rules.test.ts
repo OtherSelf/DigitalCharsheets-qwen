@@ -28,6 +28,7 @@ import {
 import { STARTING_PACKAGES } from '@/games/dh1/starting-packages';
 import { DarkHeresyCareerPaths, DarkHeresyHomeWorlds } from '@/games/dh1/types';
 import { translations } from '@/lib/i18n';
+import type { Language } from '@/lib/language';
 
 /**
  * Сверка справочных данных Dark Heresy с базовой книгой правил
@@ -69,7 +70,7 @@ const CORE_CAREERS = [
   'Tech-Priest',
 ] as const;
 
-const t = (lang: 'en' | 'ru', key: string) => translations[lang][key];
+const t = (lang: Language, key: string) => translations[lang][key];
 
 function expectTranslation(key: string, label: string) {
   // Ключи DH1 проверяются как есть: у dh1 есть собственные данные

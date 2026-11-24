@@ -1,6 +1,7 @@
 import { getGameDefinition } from '@/games/games';
 import { getGameModule } from '@/games/registry';
 import type { AdminActionReason } from '@/lib/admin-types';
+import type { Language } from '@/lib/language';
 
 type Translate = (key: string) => string;
 
@@ -29,7 +30,7 @@ export function adminReasonMessage(
 /** Дата в коротком формате текущей локали; null/мусор — прочерк. */
 export function formatAdminDate(
   iso: string | null,
-  language: 'en' | 'ru',
+  language: Language,
 ): string {
   if (!iso) return '—';
   const date = new Date(iso);

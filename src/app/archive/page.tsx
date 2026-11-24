@@ -28,6 +28,7 @@ import {
 import { useTranslation } from '@/context/language-context';
 import { useLocalAuth } from '@/context/local-auth-context';
 import { useToast } from '@/hooks/use-toast';
+import type { Language } from '@/lib/language';
 
 /**
  * ─── LANDMARK: ARCHIVE PAGE (/archive) ──────────────────────────────────────
@@ -57,7 +58,7 @@ type Tab = 'archive' | 'trash';
 
 function formatDate(
   value: string | null | undefined,
-  language: 'en' | 'ru',
+  language: Language,
 ): string {
   if (!value) return '—';
   const date = new Date(value);

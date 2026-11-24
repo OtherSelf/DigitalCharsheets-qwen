@@ -1,4 +1,5 @@
 import type { GameHistoryConfig } from '@/games/types';
+import type { Language } from '@/lib/language';
 
 import type { HistoryChange, StoredValue } from './history-types';
 
@@ -252,7 +253,7 @@ export function formatHistoryValue(
 /** Дата/время для таймлайна; язык выбирает вызывающий. */
 export function formatHistoryDate(
   iso: string,
-  language: 'en' | 'ru',
+  language: Language,
   options: Intl.DateTimeFormatOptions = {
     dateStyle: 'medium',
     timeStyle: 'short',

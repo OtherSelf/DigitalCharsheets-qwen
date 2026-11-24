@@ -3,6 +3,8 @@ import path from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
+import type { Language } from '@/lib/language';
+
 import { readJson } from '@tests/support';
 
 /**
@@ -37,7 +39,7 @@ const PROJECTS = [
 interface PluginVisualConfig {
   pluginId: string;
   nameSegment: string;
-  requiredLangs?: Record<string, Array<'en' | 'ru'>>;
+  requiredLangs?: Record<string, Array<Language>>;
   requiredSections?: Record<string, string[]>;
   requiredEditSections?: Record<string, string[]>;
   requiredRuEditSections?: Record<string, string[]>;
@@ -72,7 +74,7 @@ interface ParsedName {
   game?: string;
   extras: string[];
   extraText: string;
-  lang: 'en' | 'ru';
+  lang: Language;
 }
 
 // Страницы могут содержать дефис (stats-editor), поэтому берём самый
@@ -97,7 +99,7 @@ function parseName(name: string): ParsedName {
     ) ?? base.split('-')[0];
   const rest = base === page ? [] : base.slice(page.length + 1).split('-');
   const game = GAMES.has(rest[0]) ? rest[0] : undefined;
-  const lang = rest[rest.length - 1] as 'en' | 'ru';
+  const lang = rest[rest.length - 1] as Language;
   const extras = rest.slice(game ? 1 : 0, -1);
   return { name, page, game, extras, extraText: extras.join('-'), lang };
 }
@@ -202,7 +204,7 @@ describe('визуальные тесты: имена эталонов', () => {
 
 // ── Матрица обязательного покрытия ─────────────────────────────────────────
 // Хостовые экраны (не принадлежат ни одной игре) — часть контракта хоста.
-const HOST_REQUIRED_LANGS: Record<string, Array<'en' | 'ru'>> = {
+const HOST_REQUIRED_LANGS: Record<string, Array<Language>> = {
   login: ['en', 'ru'],
   dashboard: ['en', 'ru'],
   // `/` и `/demo` — один DemoLanding; лендинг снимается как dashboard-guest.
@@ -211,7 +213,7 @@ const HOST_REQUIRED_LANGS: Record<string, Array<'en' | 'ru'>> = {
   'stats-editor': ['en', 'ru'],
 };
 
-type Lang = 'en' | 'ru';
+type Lang = Language;
 const REQUIRED_LANGS: Record<string, Lang[]> = { ...HOST_REQUIRED_LANGS };
 const REQUIRED_SECTIONS: Record<string, string[]> = {};
 const REQUIRED_EDIT_SECTIONS: Record<string, string[]> = {};
