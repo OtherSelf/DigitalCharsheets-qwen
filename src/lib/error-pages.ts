@@ -50,10 +50,27 @@ export function errorHeaderAction(code: ErrorPageCode): 'login' | 'auto' {
   return code === 401 ? 'login' : 'auto';
 }
 
-/** Разобрать код из URL/`params`: строка `"404"` тоже допустима. */
-export function isErrorPageCode(
-  value: string | number,
-): value is ErrorPageCode {
+/**
+ * Код из контракта — число. Строку (`params.code` из URL) сначала разбирает
+ * `parseErrorPageCode`: предикат, который объявляет строку числом, врёт о типе,
+ * и `code === 404` для `"404"` не срабатывает.
+ */
+function isErrorPageCode(value: unknown): value is ErrorPageCode {
+  return (
+    typeof value === 'number' &&
+    (ERROR_PAGE_CODES as readonly number[]).includes(value)
+  );
+}
+
+/**
+ * Разобрать код из URL/`params`. `null` — код вне контракта, вызывающий
+ * отдаёт `notFound()`. Возвращает уже `ErrorPageCode`, поэтому вызывающему не
+ * приходится сужать `string | number` самому.
+ */
+export function parseErrorPageCode(
+  value: string | number | null | undefined,
+): ErrorPageCode | null {
+  if (value === null || value === undefined) return null;
   const code = typeof value === 'number' ? value : Number(value);
-  return (ERROR_PAGE_CODES as readonly number[]).includes(code);
+  return isErrorPageCode(code) ? code : null;
 }

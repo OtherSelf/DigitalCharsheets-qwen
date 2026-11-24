@@ -6,7 +6,9 @@
 //
 //  Проблема: на overlayfs / 9p (virtiofs, WSL, Docker Desktop, некоторые
 //  sandbox-ФС) `rename()` между каталогами возвращает EXDEV, и `next build`
-//  падает на переносе `.next/export/{404,500}.html` → `.next/server/pages/`.
+//  падает на переносе страниц ошибок из `.next/export/` в
+//  `.next/server/pages/` (`500.html`; `404.html` появляется только вместе с
+//  пререндеренными страницами).
 //
 //  Что делает: подменяет fs.rename / fs.renameSync / fs.promises.rename так,
 //  что при EXDEV файл/каталог копируется и исходник удаляется. На нормальной

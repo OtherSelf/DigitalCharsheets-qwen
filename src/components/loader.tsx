@@ -18,3 +18,20 @@ export function Loader({ className }: { className?: string }) {
     </svg>
   );
 }
+
+/**
+ * Полноэкранный индикатор загрузки страницы.
+ *
+ * Отдельным компонентом, а не `app/loading.tsx`: файл `loading.tsx` в App
+ * Router создаёт Suspense-границу вокруг страницы, и на динамическом маршруте
+ * сервер отдаёт оболочку с заглушкой раньше, чем страница успевает вызвать
+ * `notFound()` — настоящий 404 превращался в 200 с экраном «не найдено» в
+ * теле ответа. Индикатор нужен страницам, которые ждут данные на клиенте.
+ */
+export function PageLoader() {
+  return (
+    <div className="flex h-screen w-full items-center justify-center">
+      <Loader />
+    </div>
+  );
+}

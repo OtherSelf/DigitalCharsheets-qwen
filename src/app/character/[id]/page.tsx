@@ -4,10 +4,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 
-import Loading from '@/app/loading';
 import { DynamicFavicon } from '@/components/dynamic-favicon';
 import { AppFrame } from '@/components/layout/app-frame';
 import { GameThemeScope } from '@/components/layout/game-theme-scope';
+import { PageLoader } from '@/components/loader';
 import { ShareDialog } from '@/components/share/share-dialog';
 import { CharacterSheet } from '@/components/sheets/character-sheet';
 import { CompactSidebar } from '@/components/sheets/compact-sidebar';
@@ -164,7 +164,7 @@ export default function CharacterPage() {
   );
 
   if (!isLoaded || hostThemeById === null) {
-    return <Loading />;
+    return <PageLoader />;
   }
 
   if (!character) {

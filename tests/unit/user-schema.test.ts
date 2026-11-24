@@ -273,3 +273,70 @@ describe('normalizeUserProfiles', () => {
     expect(fs.existsSync(loginIndexPath(dataDir))).toBe(false);
   });
 });
+
+describe('язык профиля (v6)', () => {
+  it('переносит выбранный язык через миграцию v5 → v6', async () => {
+    const uid = newUid();
+    const paths = writeLegacyProfile(uid, {
+      schemaVersion: 5,
+      uid,
+      username: 'russian-user',
+      displayName: 'Russian User',
+      passwordHash: sha256('pass-one-1234'),
+      language: 'ru',
+    });
+
+    const report = await normalizeUserProfiles();
+    expect(report.updated).toBe(1);
+
+    const stored = readJson(paths.userFile);
+    expect(stored.schemaVersion).toBe(USER_SCHEMA_VERSION);
+    expect(stored.language).toBe('ru');
+    expect((await readStoredUser(uid))?.language).toBe('ru');
+  });
+
+  it('нормализует регион и регистр значения', async () => {
+    const uid = newUid();
+    const paths = writeLegacyProfile(uid, {
+      uid,
+      username: 'region-user',
+      displayName: 'Region User',
+      passwordHash: sha256('pass-one-1234'),
+      language: 'RU-ru',
+    });
+
+    await normalizeUserProfiles();
+    expect(readJson(paths.userFile).language).toBe('ru');
+  });
+
+  it('снимает неизвестный язык, не навязывая умолчание', async () => {
+    const uid = newUid();
+    const paths = writeLegacyProfile(uid, {
+      uid,
+      username: 'german-user',
+      displayName: 'German User',
+      passwordHash: sha256('pass-one-1234'),
+      language: 'de',
+    });
+
+    await normalizeUserProfiles();
+
+    const stored = readJson(paths.userFile);
+    expect(stored).not.toHaveProperty('language');
+    expect((await readStoredUser(uid))?.language).toBeUndefined();
+  });
+
+  it('не добавляет язык старому профилю: выбор остаётся за cookie', async () => {
+    const uid = newUid();
+    const paths = writeLegacyProfile(uid, {
+      schemaVersion: 2,
+      uid,
+      username: 'old-user',
+      displayName: 'Old User',
+      passwordHash: sha256('pass-one-1234'),
+    });
+
+    await normalizeUserProfiles();
+    expect(readJson(paths.userFile)).not.toHaveProperty('language');
+  });
+});

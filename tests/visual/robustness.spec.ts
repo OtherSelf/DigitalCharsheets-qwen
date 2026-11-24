@@ -10,7 +10,7 @@ import {
 
 /**
  * ─── LANDMARK: RESILIENCE UI ──────────────────────────────────────────────
- * Сбой загрузки не должен превращаться в вечный спиннер `app/loading.tsx`
+ * Сбой загрузки не должен превращаться в вечный индикатор загрузки
  * (именно так выглядел упавший прокси: HTML есть, данные 200, а клиент
  * завис). Проверяем два состояния:
  *   • неизвестный/удалённый id → «Персонаж не найден» + выход на главную;
@@ -37,6 +37,43 @@ test.describe('устойчивость загрузки', () => {
     ).toBeVisible();
     await expect(state.getByText('HTTP 404', { exact: true })).toBeVisible();
     await expectNoRawI18nKeys(page, 'not-found-page (ru)');
+  });
+
+  test('несуществующая статья документации — 404 с брендированным экраном', async ({
+    page,
+    context,
+  }) => {
+    await prepare(context, { language: 'ru', authenticated: false });
+    const response = await page.goto('/docs/no-such-page', {
+      waitUntil: 'domcontentloaded',
+    });
+    expect(response?.status()).toBe(404);
+
+    // Экран рендерится на клиенте: статус отдаёт сервер, разметку — гидратация.
+    const state = page.getByTestId('not-found-page');
+    await expect(state).toBeVisible();
+    await expect(
+      state.getByText('Страница не найдена', { exact: true }),
+    ).toBeVisible();
+  });
+
+  test('/error/404 — настоящий 404, /error/403 — информационная 200', async ({
+    page,
+    context,
+  }) => {
+    await prepare(context, { language: 'en', authenticated: false });
+
+    const notFound = await page.goto('/error/404', {
+      waitUntil: 'domcontentloaded',
+    });
+    expect(notFound?.status()).toBe(404);
+    await expect(page.getByTestId('not-found-page')).toBeVisible();
+
+    const info = await page.goto('/error/403', {
+      waitUntil: 'domcontentloaded',
+    });
+    expect(info?.status()).toBe(200);
+    await expect(page.getByTestId('error-page-403')).toBeVisible();
   });
 
   test('страница статуса объясняет 403 и даёт выход', async ({

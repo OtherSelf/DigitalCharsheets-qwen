@@ -29,6 +29,7 @@ import { Input } from '@/components/ui/input';
 import { PasswordInput } from '@/components/ui/password-input';
 import { useTranslation } from '@/context/language-context';
 import { useLocalAuth } from '@/context/local-auth-context';
+import type { Language } from '@/lib/language';
 import { PENDING_CHARACTER_KEY } from '@/lib/pending-draft';
 import { MIN_PASSWORD_LENGTH } from '@/lib/security/password-policy';
 import { phrasePolicyError } from '@/lib/security/phrase-policy';
@@ -42,7 +43,7 @@ interface AuthFailure {
 
 export default function LoginPage() {
   const { login, register, accountExists } = useLocalAuth();
-  const { t } = useTranslation();
+  const { language, setLanguage, t } = useTranslation();
   const router = useRouter();
 
   const [mode, setMode] = useState<AuthMode>('login');
@@ -90,8 +91,19 @@ export default function LoginPage() {
 
   const afterSuccessfulLogin = (result: {
     isNewUser?: boolean;
-    user?: { hasRecoveryPhrase?: boolean };
+    user?: { hasRecoveryPhrase?: boolean; language?: Language };
   }) => {
+    /*
+      Профиль помнит язык, выбранный на другом устройстве: сервер уже поставил
+      cookie и следующий документ отрендерится на нём, но текущая вкладка —
+      SPA, и провайдер живёт со старым состоянием. Догоняем его до перехода,
+      иначе дашборд после входа оказался бы на другом языке, чем следующий
+      переход по ссылке.
+    */
+    if (result.user?.language && result.user.language !== language) {
+      setLanguage(result.user.language);
+    }
+
     // Вход в существующий аккаунт: гостевой черновик персонажа НЕ создаётся
     // автоматически (CharacterProvider оставит его плашкой на дашборде),
     // поэтому здесь обычный переход на главную.

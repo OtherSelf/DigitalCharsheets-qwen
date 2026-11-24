@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 
 import { ErrorScreen } from '@/components/errors/error-screen';
-import { ERROR_PAGE_CODES, isErrorPageCode } from '@/lib/error-pages';
+import { ERROR_PAGE_CODES, parseErrorPageCode } from '@/lib/error-pages';
 
 /**
  * ─── LANDMARK: ERROR STATUS PAGES (/error/<code>) ──────────────────────────
@@ -16,8 +16,6 @@ import { ERROR_PAGE_CODES, isErrorPageCode } from '@/lib/error-pages';
  * корневой `not-found.tsx`, поэтому `/error/404` ведёт себя как обычный
  * промах маршрута.
  */
-export const dynamicParams = false;
-
 export function generateStaticParams() {
   return ERROR_PAGE_CODES.filter((code) => code !== 404).map((code) => ({
     code: String(code),
@@ -41,8 +39,10 @@ export default async function ErrorStatusPage({
   params: Promise<{ code: string }>;
 }) {
   const { code } = await params;
-  if (!isErrorPageCode(code)) notFound();
-  if (code === 404) notFound();
+  const status = parseErrorPageCode(code);
+  // 404 — единственный код, который отдаёт настоящий ответ с этим статусом:
+  // информационная страница для него была бы ответом 200 на промах маршрута.
+  if (!status || status === 404) notFound();
 
-  return <ErrorScreen code={code} testId={`error-page-${code}`} />;
+  return <ErrorScreen code={status} testId={`error-page-${status}`} />;
 }

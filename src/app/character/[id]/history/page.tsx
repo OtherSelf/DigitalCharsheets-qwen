@@ -2,8 +2,8 @@
 
 import { useParams } from 'next/navigation';
 
-import Loading from '@/app/loading';
 import { HistoryView } from '@/components/history/history-view';
+import { PageLoader } from '@/components/loader';
 import { UnavailableState } from '@/components/unavailable-state';
 import { useCharacterContext } from '@/context/character-context';
 import { useTranslation } from '@/context/language-context';
@@ -19,7 +19,7 @@ export default function CharacterHistoryPage() {
   const { t } = useTranslation();
   const character = getCharacter(params.id);
 
-  if (!isLoaded) return <Loading />;
+  if (!isLoaded) return <PageLoader />;
 
   if (loadError) {
     return (

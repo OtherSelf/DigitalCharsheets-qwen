@@ -5,16 +5,18 @@ import { getUserDir, getUserFile, getUsersDir } from './data-dir';
 import { withDataLock } from './data-lock';
 import { writeJsonAtomic } from './fs-atomic';
 import { defaultDisplayName, isUid, normalizeLogin } from './ids';
+import { parseLanguage, type Language } from './language';
 import { readThroughCache } from './read-cache';
 import { isUserRole, type UserRole } from './user-role';
 
 /**
- * ─── LANDMARK: USER PROFILE SCHEMA v5 ──────────────────────────────────────
+ * ─── LANDMARK: USER PROFILE SCHEMA v6 ──────────────────────────────────────
  * `users/<uid>/user.json` — источник истины по аккаунту. v4 добавила роль
  * `tester` (видит test-редакции, но не админку); v5 — опциональный TOTP
- * (`totp` и `totpBackupCodes`). Неизвестная роль нормализуется в `user`
- * (fail-closed). На старте приложения шаблон
- * проверяется: недостающие поля дописываются значениями по умолчанию,
+ * (`totp` и `totpBackupCodes`); v6 — выбранный язык интерфейса (`language`),
+ * который переживает очистку cookie и переезд на другое устройство.
+ * Неизвестная роль нормализуется в `user` (fail-closed). На старте приложения
+ * шаблон проверяется: недостающие поля дописываются значениями по умолчанию,
  * существующие не перезаписываются.
  *
  * Проверка идемпотентна: файл пишется только если после нормализации его
@@ -27,7 +29,7 @@ import { isUserRole, type UserRole } from './user-role';
  * /admin, а вход по пустому хешу и так невозможен.
  */
 
-export const USER_SCHEMA_VERSION = 5;
+export const USER_SCHEMA_VERSION = 6;
 
 /** Второй фактор: секрет в шифре, `enabledAt` отсутствует до подтверждения. */
 export interface StoredTotp {
@@ -57,6 +59,11 @@ export interface StoredUser {
   totp?: StoredTotp;
   /** Ключевые хэши одноразовых backup-кодов (сами коды не хранятся). */
   totpBackupCodes?: string[];
+  /**
+   * Выбранный язык интерфейса. Отсутствие — «язык не выбран»: первый кадр
+   * берёт cookie или `Accept-Language`, а не навязанный `en`.
+   */
+  language?: Language;
   createdAt?: string;
   updatedAt?: string;
   originalFirebaseId?: string;
@@ -130,6 +137,21 @@ export function normalizeStoredUser(
   if (!user.updatedAt) {
     missing.push('updatedAt');
     user.updatedAt = user.createdAt;
+  }
+
+  /*
+    Язык не «дозаполняем»: отсутствие поля означает «выбор не сделан», и
+    первый кадр должен слушать cookie/`Accept-Language`, а не записывать всем
+    старым аккаунтам `en`. Невалидное значение (ручная правка, чужая локаль)
+    снимаем, чтобы клиент не упал на неизвестном языке.
+  */
+  if (user.language !== undefined) {
+    const language = parseLanguage(user.language);
+    if (language) user.language = language;
+    else {
+      missing.push('language');
+      delete user.language;
+    }
   }
 
   // Более новый профиль (schemaVersion больше текущего) не трогаем: его мог

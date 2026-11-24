@@ -36,7 +36,9 @@ Adding an endpoint without documenting it fails the unit tests.
   accepted for 14 days after the transition), `<uid>.<exp>.<jti>.<hmac>`,
   `HttpOnly; SameSite=Lax`,
   `Secure` in production, 14 days. `jti` names a server-side session record, so
-  logout and credential changes revoke the cookie immediately.
+  logout and credential changes revoke the cookie immediately. Login also
+  repeats the profile language in the `dcs_language` cookie when the account has
+  one, so a new device renders the first document in that language.
 - Send the cookie with every request that touches user data. The browser does
   this automatically for same-origin requests.
 - The server resolves the uid from the cookie only; `userId` in a query/body is
@@ -94,6 +96,7 @@ contract version in [`src/lib/openapi.ts`](../src/lib/openapi.ts)
 | `PUT` | `/api/auth/profile` | cookie | Update own login, display name, password, recovery phrase. Changing the password or the recovery phrase requires `currentPassword` (`403 invalid_password` otherwise) and revokes the account's other sessions. |
 | `DELETE` | `/api/auth/profile` | cookie | Delete own account and all sheets; requires the current password. |
 | `POST` | `/api/auth/phrase` | cookie | Set own recovery phrase; requires `currentPassword` (`403 invalid_password` otherwise). Revokes the account's other sessions. |
+| `PUT` | `/api/auth/preferences` | cookie | Save own interface language (`{"language": "en"}` or `"ru"`); written to the profile and repeated in the `dcs_language` cookie. `400 invalid_language` for any other value. |
 | `POST` | `/api/auth/totp/setup` | cookie | Start TOTP enrollment; returns the base32 secret, `otpauth://` URI and a locally generated SVG QR (`qrDataUrl`) once. Requires `currentPassword`; `503` only if the installation cannot store a key. |
 | `POST` | `/api/auth/totp/enable` | cookie | Confirm the code, enable TOTP and return ten backup codes once. Revokes other sessions. |
 | `POST` | `/api/auth/totp/disable` | cookie | Disable TOTP; requires `currentPassword` and a current TOTP/backup code. Revokes other sessions. |

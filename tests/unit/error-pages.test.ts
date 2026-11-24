@@ -3,13 +3,13 @@ import { describe, expect, it } from 'vitest';
 import {
   ERROR_PAGE_ACTIONS,
   ERROR_PAGE_CODES,
-  isErrorPageCode,
+  parseErrorPageCode,
 } from '@/lib/error-pages';
 import { translations } from '@/lib/i18n';
 
 /**
  * ─── LANDMARK: ERROR STATUS CONTRACT ───────────────────────────────────────
- * `/error/<code>` — статический маршрут, поэтому расхождение между списком
+ * `/error/<code>` рендерится на запрос, поэтому расхождение между списком
  * кодов, словарями и ссылками видно только в браузере. Здесь проверяется
  * контракт целиком: у каждого кода есть заголовок и объяснение в обеих
  * локалях, действия не пустые, путь собирается из одного места.
@@ -52,11 +52,12 @@ describe('error pages: контракт статусов', () => {
     expect(ERROR_PAGE_ACTIONS[429].retry).toBeUndefined();
   });
 
-  it('isErrorPageCode принимает число и строку, отвергает мусор', () => {
-    expect(isErrorPageCode(404)).toBe(true);
-    expect(isErrorPageCode('503')).toBe(true);
-    expect(isErrorPageCode(418)).toBe(false);
-    expect(isErrorPageCode('nope')).toBe(false);
+  it('parseErrorPageCode разбирает строку из URL и отвергает чужие коды', () => {
+    expect(parseErrorPageCode('404')).toBe(404);
+    expect(parseErrorPageCode(503)).toBe(503);
+    expect(parseErrorPageCode('418')).toBeNull();
+    expect(parseErrorPageCode('nope')).toBeNull();
+    expect(parseErrorPageCode(undefined)).toBeNull();
   });
 
   it('404 не претендует на статическую страницу: его отдаёт notFound()', async () => {

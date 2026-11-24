@@ -7,6 +7,8 @@ import {
   type Page,
 } from '@playwright/test';
 
+import { LANGUAGE_COOKIE } from '@/lib/language';
+
 import { VISUAL_RECOVERY_PHRASE } from './fixtures';
 import {
   readAdminState,
@@ -20,12 +22,25 @@ import {
  * Общие помощники визуальных тестов.
  *
  * Правила детерминизма:
- *   - тема и язык кладутся в localStorage ДО загрузки приложения (init script),
+ *   - язык кладётся в cookie (его читает root layout на сервере, поэтому
+ *     первый кадр уже на нужном языке) и в localStorage — как зеркало для
+ *     `storage`-событий и аварийной страницы;
+ *   - тема кладётся в localStorage ДО загрузки приложения (init script),
  *     поэтому next-themes не мигает и не зависит от prefers-color-scheme;
  *   - анимации/переходы гасятся CSS-инъекцией и опцией `animations: disabled`;
  *   - каретка и фокус убираются, мышь уводится в угол;
  *   - шрифты дожидаемся через document.fonts.ready.
  */
+
+/** Абсолютный адрес временного сервера: `context.addCookies` ждёт URL. */
+export function servedUrl(path = '/'): string {
+  const configured = test.info().project.use.baseURL;
+  const base =
+    typeof configured === 'string' && configured
+      ? configured
+      : process.env.DCS_VISUAL_BASE_URL || 'http://127.0.0.1:3000';
+  return new URL(path, base).toString();
+}
 
 export const MOTION_CSS = `
   *, *::before, *::after {
@@ -149,6 +164,16 @@ export async function prepare(
       );
     }
   }
+
+  /*
+    Язык — cookie до первой навигации: root layout читает её на сервере, так
+    что HTML и снимок совпадают с ожидаемым языком без клиентского
+    переключения. Ставим после входа: вход переносит в cookie язык профиля, а
+    у снимка язык задан сценарием — сценарий обязан победить.
+  */
+  await context.addCookies([
+    { name: LANGUAGE_COOKIE, value: language, url: servedUrl() },
+  ]);
 
   await context.addInitScript(
     ({ user, theme, language }) => {

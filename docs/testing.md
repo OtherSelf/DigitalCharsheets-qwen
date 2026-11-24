@@ -19,7 +19,7 @@ npm run deadcode:check      # dead exports / files without importers
 npm run verify              # full pre-deploy gate
 npm run test:visual         # Playwright screenshot regression (full)
 npm run test:visual:full    # explicit alias for the full visual run
-npm run test:visual:fast    # screenshots tagged @fast (~30 tests)
+npm run test:visual:fast    # screenshots tagged @fast (~40 tests)
 npm run test:visual:changed # only specs affected by the current diff
 npm run test:visual:prune   # list obsolete PNG baselines
 npm run test:visual:update  # rewrite baselines
@@ -484,6 +484,7 @@ OS or missing fonts.
 | `history.spec.ts` | Character history timeline, empty state, and DH1/DH2 label/code checks |
 | `robustness.spec.ts` | Load failures: not-found and retry screens |
 | `i18n-raw.spec.ts` | No raw translation keys in the rendered UI |
+| `language.spec.ts` | First-frame language: server-rendered `lang`/strings for cookie and `Accept-Language`, switch without reload, profile save |
 | `tablet.spec.ts` | Host-only tablet 1024×768 screens: dashboard and settings |
 
 Game sheets are hosted by the plugins, not by `tests/visual`:
@@ -504,7 +505,7 @@ Game sheets are hosted by the plugins, not by `tests/visual`:
 
 Tests that only make sense in one project are tagged `@desktop`/`@mobile` and
 filtered with `grepInvert`, so the report has no skipped duplicates.
-`npm run test:visual:fast` (`@fast`, ~30 tests) is the iteration subset.
+`npm run test:visual:fast` (`@fast`, ~40 tests) is the iteration subset.
 
 ### Limits
 

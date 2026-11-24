@@ -6,26 +6,34 @@ import { useEffect } from 'react';
 
 import { enTranslations } from '@/lib/i18n/translations.en';
 import { ruTranslations } from '@/lib/i18n/translations.ru';
+import {
+  LANGUAGE_STORAGE_KEY,
+  parseLanguage,
+  readLanguageCookie,
+  type Language,
+} from '@/lib/language';
 
 /**
  * ─── LANDMARK: GLOBAL ERROR BOUNDARY ────────────────────────────────────────
  * Ошибка корневого layout: React уже не рендерит приложение, поэтому здесь нет
  * ни провайдеров, ни Tailwind-классов из `globals.css` — только словари и
- * инлайн-стили. Язык берём из того же `localStorage`, что и `LanguageProvider`
- * (до контекста не дотянуться), с фолбэком на язык браузера.
+ * инлайн-стили. Язык берём из cookie (её пишет `LanguageProvider`), из
+ * `localStorage` как зеркала и, наконец, из языка браузера.
  *
  * Страница обязана содержать `<html>` и `<body>`: Next заменяет ею корневой
  * layout целиком. Это последний рубеж, поэтому здесь нет компонентов ядра —
  * только словарь и минимальная разметка; код статуса виден, чтобы дежурный
  * отличал падение layout от обычной 404.
  */
-const LANGUAGE_KEY = 'language';
+function pickLanguage(): Language {
+  const fromCookie = readLanguageCookie();
+  if (fromCookie) return fromCookie;
 
-function pickLanguage(): 'en' | 'ru' {
   try {
-    const saved = window.localStorage.getItem(LANGUAGE_KEY);
-    if (saved === 'ru') return 'ru';
-    if (saved === 'en') return 'en';
+    const saved = parseLanguage(
+      window.localStorage.getItem(LANGUAGE_STORAGE_KEY),
+    );
+    if (saved) return saved;
   } catch {
     // Хранилище недоступно — решаем по языку браузера.
   }

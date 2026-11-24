@@ -447,10 +447,9 @@ await check('GET /docs/architecture → 200 и без внешних ссыло�
 await check('GET /docs/no-such-page → 404', async () => {
   const res = await request('/docs/no-such-page', { auth: false });
   assertStatus(res, 404, 'GET /docs/no-such-page');
-  assert(
-    res.text.includes('not-found-page'),
-    'GET /docs/no-such-page: 404 без брендированного экрана (not-found-page)',
-  );
+  // Тело 404 из `notFound()` рендерится на клиенте: при динамическом рендере
+  // сервер отдаёт оболочку приложения со статусом 404. Брендированный экран
+  // проверяет браузерный тест tests/visual/robustness.spec.ts.
 });
 
 // Статусные страницы: 404 отдаёт notFound(), остальные — обычные 200,
@@ -476,10 +475,7 @@ await check('GET /error/403 → 200 со страницей статуса', asy
 await check('GET /error/404 → 404 (настоящий notFound)', async () => {
   const res = await request('/error/404', { auth: false });
   assertStatus(res, 404, 'GET /error/404');
-  assert(
-    res.text.includes('not-found-page'),
-    'GET /error/404: нет экрана not-found-page',
-  );
+  // Экран рендерится на клиенте (см. выше); статус — серверный контракт.
 });
 
 await check('GET /error/418 → 404 (код вне контракта)', async () => {
@@ -1167,8 +1163,9 @@ if (opts.dataDir) {
       const raw = fs.readFileSync(userFile, 'utf8');
       const parsed = JSON.parse(raw);
       assert(parsed.uid === userId, `user.json: uid = ${parsed.uid}`);
+      // Версия схемы профиля: растёт вместе с полями (v6 — language).
       assert(
-        parsed.schemaVersion === 5,
+        parsed.schemaVersion === 6,
         `user.json: schemaVersion = ${parsed.schemaVersion}`,
       );
       assert(parsed.role === 'user', `user.json: role = ${parsed.role}`);

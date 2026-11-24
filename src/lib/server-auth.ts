@@ -3,6 +3,7 @@ import fs from 'fs/promises';
 import { getUserFile } from './data-dir';
 import { withDataLock } from './data-lock';
 import { defaultDisplayName, isUid, newUid, normalizeLogin } from './ids';
+import type { Language } from './language';
 import { LocalUser } from './local-storage';
 import {
   hashPassword,
@@ -133,6 +134,7 @@ export function toLocalUser(user: StoredUser): LocalUser {
     isBlocked: !!user.isBlocked,
     mustChangePassword: !!user.mustChangePassword,
     totpEnabled: !!user.totp?.enabledAt,
+    language: user.language,
   };
 }
 
@@ -574,6 +576,34 @@ export interface UpdateProfileResult {
   error?: string;
   reason?:
     'not_found' | 'invalid_input' | 'invalid_phrase' | 'invalid_password';
+}
+
+/**
+ * Сохранить выбранный язык интерфейса.
+ *
+ * Не через `updateUserProfile`: смена языка не требует пароля, не трогает
+ * логин и индекс, и приходит на каждое переключение в UI. Профиль
+ * перечитывается под локом, чтобы не откатить параллельную правку админа
+ * (роль, блокировка, логин).
+ */
+export async function updateUserLanguage(
+  currentUserId: string,
+  language: Language,
+): Promise<StoredUser | null> {
+  return withDataLock(async () => {
+    const fresh = await readStoredUser(currentUserId);
+    if (!fresh) return null;
+    if (fresh.language === language) return fresh;
+
+    const updated: StoredUser = {
+      ...fresh,
+      schemaVersion: USER_SCHEMA_VERSION,
+      language,
+      updatedAt: new Date().toISOString(),
+    };
+    await writeStoredUser(currentUserId, updated);
+    return updated;
+  });
 }
 
 export async function updateUserProfile(

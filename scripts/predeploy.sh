@@ -29,7 +29,7 @@
 #                    API-роуты (без сети, на временном каталоге данных)
 #    8/9 build     — next build (NODE_ENV=production); при EXDEV — повтор с
 #                    scripts/lib/fs-rename-fallback.cjs, затем проверка того, что
-#                    .next/server/pages/{404,500}.html на месте
+#                    .next/server/pages/500.html и маршрут 404 на месте
 #    9/9 smoke     — поднимает `next start` на свободном порту с ВРЕМЕННЫМ
 #                    каталогом данных (DCS_DATA_DIR), гоняет по HTTP
 #                    scripts/smoke.mjs и гасит сервер
@@ -326,11 +326,20 @@ fi
 # (смоук на живом сервере) нет смысла. Проверяем результат, а не механизм:
 # если будущая версия Next перестанет переносить эти файлы, чек упадёт и
 # напомнит, что шим scripts/lib/fs-rename-fallback.cjs больше не нужен.
-for page in 404 500; do
-  [ -s ".next/server/pages/$page.html" ] \
-    || die "Нет .next/server/pages/$page.html — сборка не доехала до конца (EXDEV? см. _RUN_INSTRUCTIONS.md, раздел «EXDEV при next build» и docs/data-storage.md)"
-done
-ok "артефакты .next/server/pages/{404,500}.html на месте"
+#
+# `pages/404.html` появляется только вместе с пререндеренными страницами: при
+# полностью динамическом рендере (язык из cookie читает root layout) Next
+# отдаёт 404 маршрутом `/_not-found`, а не готовым файлом. Поэтому 404
+# проверяется по артефакту маршрута, а перенос через rename — по 500.html.
+[ -s ".next/server/pages/500.html" ] \
+  || die "Нет .next/server/pages/500.html — сборка не доехала до конца (EXDEV? см. _RUN_INSTRUCTIONS.md, раздел «EXDEV при next build» и docs/data-storage.md)"
+if [ -s ".next/server/pages/404.html" ]; then
+  ok "артефакты .next/server/pages/{404,500}.html на месте"
+elif [ -s ".next/server/app/_not-found/page.js" ]; then
+  ok "артефакты страниц ошибок на месте (404 — маршрутом /_not-found, 500.html перенесён)"
+else
+  die "Нет страницы 404: ни .next/server/pages/404.html, ни маршрута .next/server/app/_not-found — сборка неполная"
+fi
 
 # ── 9. smoke-тест на временном сервере ──────────────────────────────────────
 if [ "$SKIP_SMOKE" -eq 1 ]; then

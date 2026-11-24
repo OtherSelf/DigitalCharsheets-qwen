@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 
 import { jsonError } from '@/lib/api/respond';
+import { languageCookieHeader } from '@/lib/language';
 import { readAuthJson } from '@/lib/security/payload';
 import {
   accountRateLimitKey,
@@ -118,10 +119,21 @@ export async function POST(request: Request) {
       isNewUser: result.isNewUser,
       user: result.user,
     });
-    response.headers.set(
+    response.headers.append(
       'Set-Cookie',
       await sessionCookieHeader(result.user.uid),
     );
+    /*
+      Язык из профиля переносим в cookie: он выбран на другом устройстве, а
+      первый HTML этого — cookie или `Accept-Language`. Профиль без языка
+      (старый аккаунт) ничего не навязывает.
+    */
+    if (result.user.language) {
+      response.headers.append(
+        'Set-Cookie',
+        languageCookieHeader(result.user.language),
+      );
+    }
     return response;
   } catch (error) {
     return jsonError(500, 'An unexpected error occurred.');

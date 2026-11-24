@@ -204,7 +204,7 @@ intersected by browsers and can silently break the UI.
 
 Next serves pages as a stream (RSC/HTML + client chunks). With the default
 upstream protocol (`HTTP/1.0`) and no upgrade handling, the browser can receive
-the page shell and stay on `app/loading.tsx` **forever**, even though `/api/*`
+the page shell and stay on the loading indicator **forever**, even though `/api/*`
 answers `200` — the page never hydrates. Working `location /`:
 
 ```nginx

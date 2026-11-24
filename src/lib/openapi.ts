@@ -254,6 +254,12 @@ export const openApiDocument = {
             description:
               'True for the generated bootstrap administrator until the password is changed.',
           },
+          language: {
+            type: 'string',
+            enum: ['en', 'ru'],
+            description:
+              'Chosen UI language. Absent when the account never picked one; the first document then follows the `dcs_language` cookie or `Accept-Language`.',
+          },
         },
         additionalProperties: true,
       },
@@ -732,6 +738,28 @@ export const openApiDocument = {
         description:
           'Single-use token from POST /api/auth/recover/verify. Valid for 15 minutes, burned on a successful exchange, and never returned as a session cookie.',
       },
+      LanguagePreference: {
+        type: 'object',
+        required: ['language'],
+        properties: {
+          language: {
+            type: 'string',
+            enum: ['en', 'ru'],
+            description:
+              'Site language: `en` or `ru`. The same value is repeated by the `dcs_language` cookie so the next HTML is rendered in it.',
+          },
+        },
+        additionalProperties: false,
+      },
+      LanguagePreferenceResult: {
+        type: 'object',
+        required: ['success', 'language'],
+        properties: {
+          success: { type: 'boolean' },
+          language: { type: 'string', enum: ['en', 'ru'] },
+        },
+        additionalProperties: false,
+      },
       RecoveryRequest: {
         type: 'object',
         required: ['token', 'newPassword'],
@@ -1170,6 +1198,24 @@ export const openApiDocument = {
           400: { $ref: '#/components/responses/BadRequest' },
           401: { $ref: '#/components/responses/Unauthorized' },
           403: errorResponse('Current password is incorrect.'),
+          429: { $ref: '#/components/responses/RateLimited' },
+          500: { $ref: '#/components/responses/ServerError' },
+        },
+      },
+    },
+    '/api/auth/preferences': {
+      put: {
+        tags: ['Authentication'],
+        operationId: 'updatePreferences',
+        summary: 'Save own interface language',
+        description:
+          'Stores the chosen UI language in the session owner profile and repeats it in the `dcs_language` cookie, so the next document (including a fresh device after login) is rendered in it. Requires a session; rate-limited like other auth mutations.',
+        requestBody: jsonBody(ref('LanguagePreference')),
+        responses: {
+          200: jsonResponse('Language saved.', ref('LanguagePreferenceResult')),
+          400: { $ref: '#/components/responses/BadRequest' },
+          401: { $ref: '#/components/responses/Unauthorized' },
+          404: errorResponse('User not found.'),
           429: { $ref: '#/components/responses/RateLimited' },
           500: { $ref: '#/components/responses/ServerError' },
         },

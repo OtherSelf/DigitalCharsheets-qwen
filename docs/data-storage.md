@@ -57,11 +57,11 @@ files are served from a process-local cache (see
 renaming an account only rewrites `user.json` and the index entry — the
 directory and sheets stay where they are.
 
-## `user.json` (schema v5)
+## `user.json` (schema v6)
 
 ```json
 {
-  "schemaVersion": 5,
+  "schemaVersion": 6,
   "uid": "9d1f0d4e-2c0f-4b5e-9f8a-4a1b2c3d4e5f",
   "username": "hero@example.com",
   "displayName": "Hero",
@@ -89,6 +89,7 @@ directory and sheets stay where they are.
 | `recoveryPhrase` | Salted `scrypt` hash of the normalized phrase (`src/lib/security/phrase.ts`). The phrase itself is never stored; older plaintext values are re-hashed on the first successful verification and by the startup pass. |
 | `totp` | Optional second factor: `{ secret, enabledAt?, lastStep? }`. `secret` is AES-256-GCM ciphertext (`v1.<iv>.<tag>.<cipher>`) keyed by `DCS_TOTP_KEY` with the uid as AAD; `enabledAt` is absent while enrollment is pending; `lastStep` blocks code replay. |
 | `totpBackupCodes` | Keyed hashes of up to ten one-time backup codes; the codes themselves are shown once and never stored. |
+| `language` | Optional chosen UI language (`en` or `ru`). Missing means "never picked": the first document then follows the `dcs_language` cookie or `Accept-Language`. Login copies it into the cookie; `PUT /api/auth/preferences` rewrites it. |
 | `createdAt`/`updatedAt` | ISO timestamps; missing values are filled from file mtime. |
 | `originalFirebaseId` | Present only on accounts imported from the old Firebase export. |
 

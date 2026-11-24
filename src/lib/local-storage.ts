@@ -1,3 +1,4 @@
+import type { Language } from '@/lib/language';
 import type { UserRole } from '@/lib/user-role';
 
 /**
@@ -17,6 +18,8 @@ export interface LocalUser {
   mustChangePassword?: boolean;
   /** TOTP включён и подтверждён кодом. */
   totpEnabled?: boolean;
+  /** Выбранный язык профиля: снимок нужен, чтобы догнать cookie на новом устройстве. */
+  language?: Language;
 }
 
 const STORAGE_KEYS = {

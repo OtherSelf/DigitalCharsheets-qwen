@@ -1,6 +1,7 @@
 // src/app/layout.tsx
 import type { Metadata, Viewport } from 'next';
 import { Inter, Space_Grotesk } from 'next/font/google';
+import { cookies, headers } from 'next/headers';
 
 import './globals.css';
 
@@ -15,6 +16,7 @@ import { LanguageProvider } from '@/context/language-context';
 import { LocalAuthProvider } from '@/context/local-auth-context';
 import { listGamePlugins } from '@/games/registry';
 import { getAppInfo } from '@/lib/app-info';
+import { LANGUAGE_COOKIE, resolveLanguage } from '@/lib/language';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 const spaceGrotesk = Space_Grotesk({
@@ -48,9 +50,28 @@ export default async function RootLayout({
     не годится — Next удаляет атрибут до гидратации.
   */
   const { buildId } = await getAppInfo();
+
+  /*
+    Язык читается на сервере, чтобы первый же HTML был отдан с правильными
+    `<html lang>` и текстами: клиентский выбор языка после гидратации давал
+    английский кадр и «прыжок» вёрстки. Cookie и `Accept-Language` —
+    динамические API, поэтому страницы рендерятся на запрос; HTML всё равно
+    отдаётся `no-store` (LANDMARK: HTML_MUST_REVALIDATE в next.config.ts),
+    так что этот выбор не отнимает у документа HTTP-кэш, только экономию
+    пререндера.
+  */
+  const [cookieStore, requestHeaders] = await Promise.all([
+    cookies(),
+    headers(),
+  ]);
+  const language = resolveLanguage({
+    cookie: cookieStore.get(LANGUAGE_COOKIE)?.value,
+    acceptLanguage: requestHeaders.get('accept-language'),
+  });
+
   return (
     <html
-      lang="en"
+      lang={language}
       suppressHydrationWarning
       className={`${inter.variable} ${spaceGrotesk.variable} h-full`}
     >
@@ -68,7 +89,7 @@ export default async function RootLayout({
           disableTransitionOnChange
         >
           <LocalAuthProvider>
-            <LanguageProvider>
+            <LanguageProvider initialLanguage={language}>
               <CharacterProvider>
                 {/* LANDMARK: UI_SCALE_WRAPPER_INTEGRATION */}
                 <UIScaleWrapper>

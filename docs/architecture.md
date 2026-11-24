@@ -241,8 +241,15 @@ does not prevent the server from starting.
 - `CharacterProvider` loads the user's sheets from `/api/characters`, applies
   pending drafts/edits and saves through a queue. The server additionally drops
   late writes using `__page`/`__seq` tokens.
-- UI language (`en`/`ru`) and theme are stored in localStorage; sheets support a
-  compact view and independent text/UI scaling.
+- The UI language is a `dcs_language` cookie (`en`/`ru`, one year,
+  `SameSite=Lax`, not `HttpOnly`) mirrored into `user.json#language`; the theme
+  stays in localStorage. The root layout reads the cookie and
+  `Accept-Language` on the server, so the first document already carries the
+  right `<html lang>` and strings — every page is rendered per request, which
+  costs no HTTP caching because HTML is `no-store` anyway. Switching the
+  language updates the attribute, the cookie and, for a signed-in user, the
+  profile without a reload. Sheets support a compact view and independent
+  text/UI scaling.
 - `GET /api/games` returns the games/editions visible to the current role and
   the optional site-title override; the creation wizard and `/demo` render from
   it. The header caches the title for the session.
@@ -270,6 +277,13 @@ Titles and hints live under `error.<code>.*` in both site languages; the screen
 never renders a raw status or an i18n key. The `Retry` action re-renders the
 segment and keeps unsaved input, while `Reload page` is used when the tab state
 has already diverged from the server (429, 503, chunk error).
+
+Pages are rendered per request, so a `notFound()` thrown by a page answers the
+correct `404` status with a shell that hydrates the branded screen on the client;
+an unmatched route still gets the screen server-rendered. The smoke test checks
+the status, and `tests/visual/robustness.spec.ts` checks what a browser shows.
+The root `loading.tsx` was removed for that reason: with the Suspense boundary in
+place the shell was flushed first and the same `notFound()` answered `200`.
 
 ## Related
 

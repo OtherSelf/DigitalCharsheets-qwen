@@ -12,6 +12,7 @@ import { DemoLandingView } from '@/components/demo-landing-view';
 import { DynamicFavicon } from '@/components/dynamic-favicon';
 import { ImportCharacterDialog } from '@/components/import-character-dialog';
 import { AppFrame } from '@/components/layout/app-frame';
+import { PageLoader } from '@/components/loader';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
@@ -28,8 +29,6 @@ import { useLocalAuth } from '@/context/local-auth-context';
 import { buildBackupExport, exportFileName } from '@/lib/export-utils';
 import { type Character } from '@/lib/types';
 import { cn } from '@/lib/utils';
-
-import Loading from './loading';
 
 // LANDMARK: MAIN_DASHBOARD_PAGE
 export default function DashboardPage() {
@@ -75,7 +74,7 @@ export default function DashboardPage() {
   };
 
   if (!isLoaded || isUserLoading) {
-    return <Loading />;
+    return <PageLoader />;
   }
 
   // LANDMARK: UNREGISTERED_DEMO_VIEW_REDIRECT
