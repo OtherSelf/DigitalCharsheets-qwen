@@ -44,7 +44,7 @@ const PAGES: {
   { name: 'docs', path: '/docs', account: 'guest' },
 ];
 
-test.describe('axe: ключевые экраны', () => {
+test.describe('axe: ключевые экраны', { tag: '@fast' }, () => {
   for (const entry of PAGES) {
     test(`${entry.name}: нет serious/critical`, async ({ page, context }) => {
       await prepare(context, {
@@ -124,5 +124,26 @@ test.describe('axe: ключевые экраны', () => {
         nodes: violation.nodes.map((node) => node.target.join(' ')).slice(0, 5),
       }));
     expect(blocking, 'лист: axe serious/critical').toEqual([]);
+  });
+});
+
+test.describe('axe: русская локаль', { tag: '@fast' }, () => {
+  test('dashboard (ru): нет serious/critical', async ({ page, context }) => {
+    await prepare(context, { language: 'ru' });
+    await openApp(page, '/');
+
+    const results = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa'])
+      .analyze();
+    const blocking = results.violations
+      .filter(
+        (violation) =>
+          violation.impact === 'serious' || violation.impact === 'critical',
+      )
+      .map((violation) => ({
+        id: violation.id,
+        nodes: violation.nodes.map((node) => node.target.join(' ')).slice(0, 5),
+      }));
+    expect(blocking, '/ (ru): axe serious/critical').toEqual([]);
   });
 });
