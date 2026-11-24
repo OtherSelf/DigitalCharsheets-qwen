@@ -20,6 +20,7 @@ import { useTranslation } from '@/context/language-context';
 import { getGameDefinition } from '@/games/games';
 import { listGameModules } from '@/games/registry';
 import { type SystemId } from '@/games/types';
+import { splitPlaceholder } from '@/lib/i18n';
 import { type Character } from '@/lib/types';
 
 /**
@@ -115,7 +116,10 @@ export function DemoLanding({ createHref = '/new' }: DemoLandingProps) {
     demos.find((demo) => demo.id === previewId)?.character ?? null;
 
   // Имя персонажа в переводе остаётся подстановкой внутри фразы.
-  const [hintBeforeName, hintAfterName] = t('demo.modeHint').split('{name}');
+  const [hintBeforeName, hintAfterName] = splitPlaceholder(
+    t('demo.modeHint'),
+    'name',
+  );
 
   return (
     <>

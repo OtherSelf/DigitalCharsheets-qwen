@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 
-import { format } from 'date-fns';
 import {
   CheckCircle2,
   ChevronDown,
@@ -56,6 +55,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useCharacterContext } from '@/context/character-context';
 import { useTranslation } from '@/context/language-context';
 import { useToast } from '@/hooks/use-toast';
+import { formatHistoryDate } from '@/lib/history-labels';
 import { type Character, type Quest, type QuestObjective } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
@@ -77,7 +77,7 @@ export function QuestJournalSheet({
 }: QuestJournalSheetProps) {
   const { updateCharacter } = useCharacterContext();
   const { toast } = useToast();
-  const { t } = useTranslation();
+  const { language, t } = useTranslation();
 
   const [questLog, setQuestLog] = useState<Quest[]>(
     (character.questLog as Quest[] | undefined) ?? [],
@@ -543,7 +543,11 @@ export function QuestJournalSheet({
                         <div className="flex items-center justify-between border-t pt-2">
                           <span className="text-muted-foreground text-[10px]">
                             {t('common.updated')}{' '}
-                            {format(new Date(quest.updatedAt), 'MMM d, yyyy')}
+                            {formatHistoryDate(quest.updatedAt, language, {
+                              month: 'short',
+                              day: 'numeric',
+                              year: 'numeric',
+                            })}
                           </span>
                           <div className="flex gap-1">
                             <Button

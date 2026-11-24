@@ -51,3 +51,15 @@ export const translations: Record<string, Record<string, string>> = {
     ...moduleDictionaries.map((messages) => pluginMessagesFor(messages, 'ru')),
   ]),
 };
+
+/**
+ * Форматирование переведённых строк: подстановка `{name}` и формы числа.
+ * Живут рядом со словарями, потому что правило «плейсхолдеры одинаковы во
+ * всех локалях» проверяется тестами словарей.
+ */
+export {
+  interpolate,
+  pluralForm,
+  splitPlaceholder,
+  type TranslationVars,
+} from './interpolate';

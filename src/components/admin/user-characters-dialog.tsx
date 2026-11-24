@@ -121,7 +121,7 @@ export function UserCharactersDialog({
       <DialogContent className="max-w-2xl" data-testid="admin-sheets-dialog">
         <DialogHeader>
           <DialogTitle>
-            {t('admin.sheetsTitle').replace('{name}', user?.displayName ?? '')}
+            {t('admin.sheetsTitle', { name: user?.displayName ?? '' })}
           </DialogTitle>
           <DialogDescription>
             {user ? `@${user.username} · ${user.characterCount}` : ''}

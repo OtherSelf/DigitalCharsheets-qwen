@@ -114,7 +114,7 @@ export function UserDeleteDialog({
 
           <div className="space-y-2">
             <Label htmlFor="admin-delete-confirm">
-              {t('admin.deleteConfirmLabel').replace('{username}', expected)}
+              {t('admin.deleteConfirmLabel', { username: expected })}
             </Label>
             <Input
               id="admin-delete-confirm"

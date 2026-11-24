@@ -8,7 +8,12 @@ import React, {
   useState,
 } from 'react';
 
-import { translations } from '@/lib/i18n';
+import {
+  interpolate,
+  pluralForm,
+  translations,
+  type TranslationVars,
+} from '@/lib/i18n';
 import {
   DEFAULT_LANGUAGE,
   isLanguage,
@@ -24,7 +29,13 @@ export type { Language };
 interface LanguageContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
-  t: (key: string) => string;
+  /** Перевод с подстановкой `{name}`/`{count}`. */
+  t: (key: string, vars?: TranslationVars) => string;
+  /**
+   * Перевод с формой числа: ключ `<key>_<form>` (`_one`/`_few`/`_many`),
+   * фолбэк — `<key>_other`, затем сам ключ. `count` подставляется всегда.
+   */
+  tPlural: (key: string, count: number, vars?: TranslationVars) => string;
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(
@@ -104,15 +115,20 @@ export function LanguageProvider({
     }
   }, []);
 
-  const t = (key: string) => {
-    const dict = translations[language];
-    // Ключи всегда полные (`namespace.key`): suffix-fallback эпохи перехода
-    // удалён; namespaced-ключи проверяет tests/unit/translations.test.ts.
-    return dict[key] ?? key;
+  const dict = translations[language];
+  // Ключи всегда полные (`namespace.key`): suffix-fallback эпохи перехода
+  // удалён; namespaced-ключи проверяет tests/unit/translations.test.ts.
+  const t = (key: string, vars?: TranslationVars) =>
+    interpolate(dict[key] ?? key, vars);
+
+  const tPlural = (key: string, count: number, vars?: TranslationVars) => {
+    const form = pluralForm(language, count);
+    const template = dict[`${key}_${form}`] ?? dict[`${key}_other`] ?? dict[key];
+    return interpolate(template ?? key, { count, ...vars });
   };
 
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t }}>
+    <LanguageContext.Provider value={{ language, setLanguage, t, tPlural }}>
       {children}
     </LanguageContext.Provider>
   );

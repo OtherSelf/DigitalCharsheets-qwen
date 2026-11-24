@@ -73,7 +73,7 @@ function readMainNotes(character: Character): string {
  */
 export function NotesSheet({ character, open, onOpenChange }: NotesSheetProps) {
   const { readOnly, updateCharacter } = useCharacterContext();
-  const { t } = useTranslation();
+  const { t, tPlural } = useTranslation();
   const { toast } = useToast();
 
   const tabs = readTabs(character);
@@ -416,10 +416,7 @@ export function NotesSheet({ character, open, onOpenChange }: NotesSheetProps) {
 
         {tabs.length >= MAX_EXTRA_TABS && !readOnly && (
           <p className={cn('text-muted-foreground border-t px-6 py-2 text-xs')}>
-            {t('common.noteTabLimit').replace(
-              '{count}',
-              String(MAX_EXTRA_TABS),
-            )}
+            {tPlural('common.noteTabLimit', MAX_EXTRA_TABS)}
           </p>
         )}
       </SheetContent>
