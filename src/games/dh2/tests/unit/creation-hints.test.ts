@@ -42,7 +42,7 @@ describe('dh2: подсказки создания', () => {
     expect(markdown).toContain('Mutant');
     expect(markdown).toContain('Fanatic');
     expect(markdown).toContain('Twisted Flesh');
-    expect(markdown).toContain('Death to All Who Oppose Me!');
+    expect(markdown).toContain('Hatred against the current foe');
   });
 
   it('показывает уже сделанные выборы и стартовые данные', () => {

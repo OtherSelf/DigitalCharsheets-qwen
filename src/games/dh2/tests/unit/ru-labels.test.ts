@@ -84,7 +84,9 @@ describe('dh2: подписи характеристик', () => {
       /^dh2\.catalog\.divination\.d100-\d+$/.test(key),
     );
     expect(labels).toHaveLength(25);
-    expect(ru['dh2.catalog.divination.d100-02']).toBe('');
+    expect(ru['dh2.catalog.divination.d100-02']).toBe(
+      'Слушай стену: она знает, кто за дверью.',
+    );
     expect(ru['dh2.catalog.divination.d100-02.effect']).toBe(
       'Повысьте Восприятие персонажа на +5 и дайте ему ментальное расстройство Фобия (см. стр. 352).',
     );

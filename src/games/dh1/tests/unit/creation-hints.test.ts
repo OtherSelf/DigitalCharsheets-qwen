@@ -45,7 +45,7 @@ describe('dh1: подсказки создания', () => {
 
   it('включает пророчество и причуду', () => {
     expect(markdown).toContain('Divination');
-    expect(markdown).toContain('');
+    expect(markdown).toContain('Flesh is a draft; someone is already editing.');
     expect(markdown).toContain('Quirk');
     expect(markdown).toContain('Hairy Knuckles');
   });

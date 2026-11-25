@@ -5,6 +5,7 @@
 // `string` и `TranslationKey` теряет все ключи.
 export const enTranslations = {
   'common.dashboard': 'Dashboard',
+  'common.sampleBadge': 'Sample',
   'common.newCharacter': 'New Character',
   'common.existingCharacters': 'Existing Characters',
   'common.companionText':

@@ -149,6 +149,7 @@ const DetailField = ({
 const CreationField = ({
   label,
   value,
+  sample,
   selectedValue,
   placeholder,
   editing,
@@ -161,6 +162,8 @@ const CreationField = ({
 }: {
   label: string;
   value: string;
+  /** Текст — образец, а не замороженная фраза игрока. */
+  sample?: boolean;
   /** Сырое значение для предвыбора в Select (не локализованная подпись). */
   selectedValue?: string;
   placeholder: string;
@@ -211,6 +214,11 @@ const CreationField = ({
           )}
         >
           {value || '-'}
+          {sample && value ? (
+            <span className="text-muted-foreground ml-1 text-[10px] uppercase">
+              {t('common.sampleBadge')}
+            </span>
+          ) : null}
         </p>
       ) : (
         <Select
@@ -288,7 +296,7 @@ export const InfoSection = ({
   creationReview,
 }: SectionProps) => {
   const { updateCharacter, showEditButtons } = useCharacterContext();
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const [isInfoEditing, setIsInfoEditing] = React.useState(false);
   /**
    * Список состояний правится своей кнопкой: импланты, рудименты, мутации и
@@ -576,7 +584,11 @@ export const InfoSection = ({
               />
               <CreationField
                 label={t('dh1.divination')}
-                value={divinationLabel(character.divination, t, 'dh1')}
+                value={
+                  character.divinationText?.[language] ??
+                  divinationLabel(character.divination, t, 'dh1')
+                }
+                sample={!character.divinationText?.[language]}
                 selectedValue={character.divination}
                 placeholder={t('dh1.selectDivination')}
                 editing={isInfoEditing}
@@ -599,11 +611,10 @@ export const InfoSection = ({
               />
               <DetailField
                 label={t('dh1.divinationEffect')}
-                value={divinationEffectLabel(
-                  character.divinationEffect,
-                  t,
-                  'dh1',
-                )}
+                value={
+                  character.divinationEffectText?.[language] ??
+                  divinationEffectLabel(character.divinationEffect, t, 'dh1')
+                }
                 editing={false}
                 isCompactView={isCompactView}
               />

@@ -80,7 +80,7 @@ describe('character schema v1', () => {
 
   it('переводит legacy DH sentence → stable ID и ставит версию', () => {
     const legacy = legacyDh1({
-      divination: '',
+      divination: 'Flesh is a draft; someone is already editing.',
       divinationEffect: 'Minor Mutation.',
     });
 
@@ -98,7 +98,7 @@ describe('character schema v1', () => {
   it('идемпотентна: второй проход ничего не меняет', () => {
     const first = normalizeCharacterRecord(
       legacyDh1({
-        divination: '',
+        divination: 'Sleep is a door that does not lock.',
         divinationEffect: '+2 Insanity Points.',
       }),
     );
@@ -135,7 +135,7 @@ describe('character schema v1', () => {
         characterCount: 1,
       },
       character: legacyDh1({
-        divination: '',
+        divination: 'Unease is cheap insurance.',
         divinationEffect: '+2 Agility, +1 Fate Point.',
       }),
     };
@@ -171,7 +171,7 @@ describe('character schema v1', () => {
       file,
       JSON.stringify(
         legacyDh1({
-          divination: '',
+          divination: 'What is hidden rots faster than what shows.',
           divinationEffect: '+3 Corruption Points.',
         }),
         null,

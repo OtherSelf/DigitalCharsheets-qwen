@@ -135,30 +135,15 @@ describe('Dark Heresy: справочные данные против базов
     }
   });
 
-  it('эффекты пророчеств совпадают с книгой', () => {
-    // Ключевые строки Таблицы 1-18 (стр. 60–61).
-    expect(
-      DIVINATIONS.find(
-        (d) => d.divination === '',
-      )?.effect,
-    ).toBe('+2 Insanity Points.');
-    expect(
-      DIVINATIONS.find(
-        (d) => d.divination === '',
-      )?.effect,
-    ).toBe('+3 Corruption Points.');
-    expect(
-      DIVINATIONS.find(
-        (d) => d.divination === '',
-      )?.effect,
-    ).toBe('+2 Toughness, +2 Willpower.');
-    expect(
-      DIVINATIONS.find(
-        (d) =>
-          d.divination ===
-          '',
-      )?.effect,
-    ).toBe('+3 Fellowship.');
+  it('эффекты пророчеств соответствуют таблице', () => {
+    // Эффекты — механика: id строки не зависит от того, каким текстом
+    // подписано пророчество (текст заменяется образцом).
+    const effectOf = (id: string) =>
+      DIVINATIONS.find((d) => d.id === id)?.effect;
+    expect(effectOf('darkDreams')).toBe('+2 Insanity Points.');
+    expect(effectOf('sinsHidden')).toBe('+3 Corruption Points.');
+    expect(effectOf('noSubstituteForZeal')).toBe('+2 Toughness, +2 Willpower.');
+    expect(effectOf('boonToBrothers')).toBe('+3 Fellowship.');
   });
 
   it('варианты «прошлого» совпадают по количеству с Таблицами 1-14…1-17 и И-1-2…И-1-5', () => {

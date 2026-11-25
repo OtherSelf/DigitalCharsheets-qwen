@@ -5,6 +5,7 @@
 // `string` и `TranslationKey` теряет все ключи.
 export const ruTranslations = {
   'common.dashboard': 'Панель управления',
+  'common.sampleBadge': 'Пример',
   'common.newCharacter': 'Новый персонаж',
   'common.existingCharacters': 'Существующие персонажи',
   'common.companionText':
