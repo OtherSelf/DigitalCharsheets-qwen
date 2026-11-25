@@ -84,11 +84,11 @@ describe('DH1 v6 → v7: замороженный текст пророчест�
   });
 
   it('модуль объявляет версию 7 и шаг 6 → 7', () => {
-    const module = getGameModule('dh1');
+    const gameModule = getGameModule('dh1');
 
-    expect(module?.schemaVersion).toBe(7);
+    expect(gameModule?.schemaVersion).toBe(7);
     expect(
-      module?.migrations?.some((step) => step.from === 6 && step.to === 7),
+      gameModule?.migrations?.some((step) => step.from === 6 && step.to === 7),
     ).toBe(true);
   });
 });

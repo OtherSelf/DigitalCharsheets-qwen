@@ -82,11 +82,11 @@ describe('DH2 v5 → v6: замороженный текст пророчест�
   });
 
   it('модуль объявляет версию 6 и шаг 5 → 6', () => {
-    const module = getGameModule('dh2');
+    const gameModule = getGameModule('dh2');
 
-    expect(module?.schemaVersion).toBe(6);
+    expect(gameModule?.schemaVersion).toBe(6);
     expect(
-      module?.migrations?.some((step) => step.from === 5 && step.to === 6),
+      gameModule?.migrations?.some((step) => step.from === 5 && step.to === 6),
     ).toBe(true);
   });
 });
