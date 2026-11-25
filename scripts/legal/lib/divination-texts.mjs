@@ -79,3 +79,69 @@ export function isFrozen(value) {
     (item) => typeof item === 'string' && item.trim().length > 0,
   );
 }
+
+/**
+ * Обратный поиск: старая установка могла хранить в `divination` саму фразу
+ * (до миграции v1), а не id. Ищем точное совпадение текста в словаре.
+ * @param {'dh1'|'dh2'} system
+ * @param {string} value
+ * @param {Record<string, Record<string, string>>} dictionaries
+ */
+export function findIdByText(system, value, dictionaries) {
+  const prefix =
+    system === 'dh1' ? 'dh1.data.divination.' : 'dh2.catalog.divination.';
+  const needle = value.trim();
+  for (const dict of Object.values(dictionaries)) {
+    for (const [key, text] of Object.entries(dict)) {
+      if (!key.startsWith(prefix) || key.endsWith('.effect')) continue;
+      if (typeof text === 'string' && text.trim() === needle) {
+        return key.slice(prefix.length);
+      }
+    }
+  }
+  return undefined;
+}
+
+/**
+ * То же для эффекта DH1: `divinationEffect` мог хранить фразу.
+ * @param {string} value
+ * @param {Record<string, Record<string, string>>} dictionaries
+ */
+export function findEffectIdByText(value, dictionaries) {
+  const prefix = 'dh1.data.divinationEffect.';
+  const needle = value.trim();
+  for (const dict of Object.values(dictionaries)) {
+    for (const [key, text] of Object.entries(dict)) {
+      if (!key.startsWith(prefix)) continue;
+      if (typeof text === 'string' && text.trim() === needle) {
+        return key.slice(prefix.length);
+      }
+    }
+  }
+  return undefined;
+}
+
+/**
+ * Есть ли для этого id текст хотя бы в одной локали.
+ * @param {'dh1'|'dh2'} system
+ * @param {string} id
+ * @param {Record<string, Record<string, string>>} dictionaries
+ */
+export function hasDivinationText(system, id, dictionaries) {
+  const key = divinationKey(system, id);
+  return Object.values(dictionaries).some(
+    (dict) => typeof dict[key] === 'string' && dict[key].trim().length > 0,
+  );
+}
+
+/**
+ * Есть ли текст эффекта (DH1).
+ * @param {string} effectId
+ * @param {Record<string, Record<string, string>>} dictionaries
+ */
+export function hasEffectText(effectId, dictionaries) {
+  const key = divinationEffectKey('dh1', effectId);
+  return Object.values(dictionaries).some(
+    (dict) => typeof dict[key] === 'string' && dict[key].trim().length > 0,
+  );
+}

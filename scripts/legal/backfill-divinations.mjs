@@ -6,15 +6,25 @@
  * `divinationText`/`divinationEffectText` в обеих локалях, демо-листы
  * пропускает.
  *
+ * Старые листы без `systemId` разрешаются по алиасам манифестов, а если в
+ * `divination` лежит фраза вместо id — по обратному поиску в словаре.
+ *
  *   node scripts/legal/backfill-divinations.mjs --dry-run
- *   node scripts/legal/backfill-divinations.mjs --backup
+ *   node scripts/legal/backfill-divinations.mjs --backup --explain
  *
  * Коды возврата: 0 — успех, 1 — ошибка, 2 — остались незамороженные листы.
  */
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { freezeFields, isFrozen } from './lib/divination-texts.mjs';
+import {
+  findEffectIdByText,
+  findIdByText,
+  freezeFields,
+  hasDivinationText,
+  hasEffectText,
+  isFrozen,
+} from './lib/divination-texts.mjs';
 
 const args = process.argv.slice(2);
 
@@ -28,7 +38,8 @@ const hasFlag = (name) => args.includes(name);
 
 const dryRun = hasFlag('--dry-run');
 const withBackup = hasFlag('--backup');
-const json = hasFlag('--json');
+const asJson = hasFlag('--json');
+const explain = hasFlag('--explain');
 
 const dataDir = path.resolve(
   argValue('--data-dir') ?? process.env.DCS_DATA_DIR ?? './data',
@@ -44,10 +55,14 @@ const stats = {
   skippedNoId: 0,
   unknownId: 0,
   unknownSystem: 0,
+  otherSystem: 0,
   demo: 0,
   failed: 0,
   dryRun,
 };
+
+/** @type {{ file: string, reason: string, systemId?: string, gameSystem?: string, edition?: string, divination?: string }[]} */
+const skipped = [];
 
 /** @param {'dh1'|'dh2'} system */
 function loadDictionaries(system) {
@@ -58,6 +73,63 @@ function loadDictionaries(system) {
     dictionaries[lang] = JSON.parse(fs.readFileSync(file, 'utf8'));
   }
   return dictionaries;
+}
+
+/**
+ * Legacy-алиасы из манифестов: `{gameSystem, edition} → systemId`.
+ * Тот же принцип, что в приложении: чем специфичнее совпадение, тем выше
+ * приоритет.
+ */
+function loadAliases() {
+  /** @type {{ id: string, gameSystem?: string, edition?: string }[]} */
+  const aliases = [];
+  for (const name of fs.readdirSync(i18nRoot)) {
+    const manifest = path.join(i18nRoot, name, 'plugin.json');
+    if (!fs.existsSync(manifest)) continue;
+    const parsed = JSON.parse(fs.readFileSync(manifest, 'utf8'));
+    for (const alias of parsed.aliases ?? []) {
+      aliases.push({ id: parsed.id, ...alias });
+    }
+  }
+  return aliases;
+}
+
+/**
+ * @param {Record<string, unknown>} character
+ * @param {{ id: string, gameSystem?: string, edition?: string }[]} aliases
+ * @returns {{ system?: 'dh1'|'dh2', reason: string }}
+ */
+function resolveSystem(character, aliases) {
+  const explicit = character.systemId;
+  if (typeof explicit === 'string' && explicit) {
+    return explicit === 'dh1' || explicit === 'dh2'
+      ? { system: explicit, reason: 'systemId' }
+      : { reason: 'otherSystem' };
+  }
+
+  /** @type {{ id: string, score: number } | undefined} */
+  let best;
+  for (const alias of aliases) {
+    if (
+      alias.gameSystem !== undefined &&
+      alias.gameSystem !== character.gameSystem
+    ) {
+      continue;
+    }
+    if (alias.edition !== undefined && alias.edition !== character.edition) {
+      continue;
+    }
+    if (alias.gameSystem === undefined && alias.edition === undefined) continue;
+    const score =
+      (alias.gameSystem !== undefined ? 1 : 0) +
+      (alias.edition !== undefined ? 1 : 0);
+    if (!best || score > best.score) best = { id: alias.id, score };
+  }
+
+  if (!best) return { reason: 'unknownSystem' };
+  return best.id === 'dh1' || best.id === 'dh2'
+    ? { system: best.id, reason: 'alias' }
+    : { reason: 'otherSystem' };
 }
 
 function readJson(file) {
@@ -98,17 +170,12 @@ function characterFiles() {
   return files;
 }
 
-/** @param {Record<string, unknown>} character */
-function systemOf(character) {
-  const systemId = character.systemId;
-  return systemId === 'dh1' || systemId === 'dh2' ? systemId : undefined;
-}
-
 function main() {
   const dictionaries = {
     dh1: loadDictionaries('dh1'),
     dh2: loadDictionaries('dh2'),
   };
+  const aliases = loadAliases();
 
   for (const file of characterFiles()) {
     stats.scanned += 1;
@@ -117,7 +184,7 @@ function main() {
       character = readJson(file);
     } catch (error) {
       stats.failed += 1;
-      console.error(`не JSON: ${file}: ${error.message}`);
+      skipped.push({ file, reason: `bad json: ${error.message}` });
       continue;
     }
 
@@ -126,34 +193,67 @@ function main() {
       continue;
     }
 
-    const system = systemOf(character);
-    if (!system) {
-      stats.unknownSystem += 1;
+    const resolved = resolveSystem(character, aliases);
+    if (!resolved.system) {
+      if (resolved.reason === 'otherSystem') stats.otherSystem += 1;
+      else stats.unknownSystem += 1;
+      skipped.push({
+        file,
+        reason: resolved.reason,
+        systemId: character.systemId,
+        gameSystem: character.gameSystem,
+        edition: character.edition,
+        divination: character.divination,
+      });
       continue;
     }
+    const system = resolved.system;
 
-    const id =
+    let id =
       typeof character.divination === 'string' ? character.divination : '';
-    if (!id) {
+    if (!id.trim()) {
       stats.skippedNoId += 1;
       continue;
+    }
+    if (!hasDivinationText(system, id, dictionaries[system])) {
+      const fromText = findIdByText(system, id, dictionaries[system]);
+      if (fromText) {
+        id = fromText;
+        character.divination = id;
+      }
     }
     if (isFrozen(character.divinationText)) {
       stats.already += 1;
       continue;
     }
 
-    const effectId =
+    let effectId =
       typeof character.divinationEffect === 'string'
         ? character.divinationEffect
         : system === 'dh2'
           ? id
           : '';
+    if (
+      system === 'dh1' &&
+      effectId &&
+      !hasEffectText(effectId, dictionaries.dh1)
+    ) {
+      const fromText = findEffectIdByText(effectId, dictionaries.dh1);
+      if (fromText) {
+        effectId = fromText;
+        character.divinationEffect = effectId;
+      }
+    }
 
     const frozen = freezeFields(system, { id, effectId }, dictionaries[system]);
     if (!isFrozen(frozen.text)) {
       stats.unknownId += 1;
-      console.error(`неизвестное пророчество: ${system}/${id} (${file})`);
+      skipped.push({
+        file,
+        reason: 'unknownId',
+        systemId: system,
+        divination: id,
+      });
       continue;
     }
 
@@ -167,16 +267,23 @@ function main() {
     stats.filled += 1;
   }
 
-  if (json) {
-    process.stdout.write(`${JSON.stringify(stats)}\n`);
+  const report = explain ? { ...stats, skipped } : stats;
+  if (asJson) {
+    process.stdout.write(`${JSON.stringify(report)}\n`);
   } else {
     const mode = dryRun ? ' (dry-run, без записи)' : '';
     console.log(
       `сканировано ${stats.scanned}, заморожено ${stats.filled}, уже ${stats.already}, ` +
         `без id ${stats.skippedNoId}, неизвестный id ${stats.unknownId}, ` +
-        `без systemId ${stats.unknownSystem}, демо ${stats.demo}, ошибок ${stats.failed}${mode}`,
+        `без systemId ${stats.unknownSystem}, чужая система ${stats.otherSystem}, ` +
+        `демо ${stats.demo}, ошибок ${stats.failed}${mode}`,
     );
     if (withBackup && !dryRun) console.log(`бэкап: ${backupRoot}`);
+    if (skipped.length > 0 && !asJson) {
+      for (const item of skipped) {
+        console.log(`  - ${item.reason}: ${item.file}`);
+      }
+    }
   }
 
   const remaining = stats.unknownId + stats.unknownSystem;

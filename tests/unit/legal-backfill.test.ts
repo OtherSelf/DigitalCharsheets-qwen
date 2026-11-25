@@ -56,6 +56,19 @@ beforeEach(() => {
   root = fs.mkdtempSync(path.join(os.tmpdir(), 'dcs-backfill-'));
   dataDir = path.join(root, 'data');
 
+  w(path.join(root, 'i18n/dh1/plugin.json'), {
+    id: 'dh1',
+    aliases: [{ gameSystem: 'Dark Heresy', edition: '1st' }],
+  });
+  w(path.join(root, 'i18n/dh2/plugin.json'), {
+    id: 'dh2',
+    aliases: [{ gameSystem: 'Dark Heresy', edition: '2nd' }],
+  });
+  w(path.join(root, 'i18n/dnd5e/plugin.json'), {
+    id: 'dnd5e',
+    aliases: [{ gameSystem: 'Dungeons & Dragons' }],
+  });
+
   w(path.join(root, 'i18n/dh1/i18n/en.json'), {
     'dh1.data.divination.painOfBullet': 'EN prophecy',
     'dh1.data.divinationEffect.toughness1': 'EN effect',
@@ -176,5 +189,71 @@ describe('legal:backfill', () => {
 
     expect(result.code).toBe(2);
     expect(result.json.unknownId).toBe(1);
+  });
+
+  it('разрешает legacy-лист по алиасу манифеста', () => {
+    w(path.join(dataDir, 'users/u1/characters/legacy-dh2.json'), {
+      id: 'legacy-dh2',
+      gameSystem: 'Dark Heresy',
+      edition: '2nd',
+      schemaVersion: 1,
+      divination: 'd100-10',
+    });
+
+    const result = run([]);
+
+    expect(result.json.filled).toBe(3);
+    expect(result.json.unknownSystem).toBe(0);
+    const file = JSON.parse(
+      fs.readFileSync(
+        path.join(dataDir, 'users/u1/characters/legacy-dh2.json'),
+        'utf8',
+      ),
+    );
+    expect(file.divinationText).toEqual({
+      en: 'EN prophecy 2',
+      ru: 'RU prophecy 2',
+    });
+  });
+
+  it('находит id, если в divination лежит фраза', () => {
+    w(path.join(dataDir, 'users/u1/characters/phrase.json'), {
+      id: 'phrase',
+      gameSystem: 'Dark Heresy',
+      edition: '1st',
+      schemaVersion: 1,
+      divination: 'RU prophecy',
+      divinationEffect: 'RU effect',
+    });
+
+    const result = run([]);
+
+    expect(result.json.filled).toBe(3);
+    const file = JSON.parse(
+      fs.readFileSync(
+        path.join(dataDir, 'users/u1/characters/phrase.json'),
+        'utf8',
+      ),
+    );
+    expect(file.divination).toBe('painOfBullet');
+    expect(file.divinationEffect).toBe('toughness1');
+    expect(file.divinationText).toEqual({
+      en: 'EN prophecy',
+      ru: 'RU prophecy',
+    });
+  });
+
+  it('чужую систему пропускает и считает отдельно', () => {
+    w(path.join(dataDir, 'users/u1/characters/dnd.json'), {
+      id: 'dnd',
+      gameSystem: 'Dungeons & Dragons',
+      divination: 'x',
+    });
+
+    const result = run([]);
+
+    expect(result.json.otherSystem).toBe(1);
+    expect(result.json.unknownSystem).toBe(0);
+    expect(result.json.filled).toBe(2);
   });
 });
