@@ -603,9 +603,9 @@ export const InfoSection = ({
                     isCreationFieldLocked(character.divination)
                   }
                   isCompactView={isCompactView}
-                  options={DIVINATIONS.map(({ id }) => ({
+                  options={DIVINATIONS.map(({ id, roll }) => ({
                     value: id,
-                    label: t(divinationKey(id, 'dh1')),
+                    label: `${roll} · ${t(divinationKey(id, 'dh1'))}`,
                   }))}
                   onSelect={(next) =>
                     updateCharacter(character.id, {

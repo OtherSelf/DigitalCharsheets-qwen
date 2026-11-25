@@ -111,6 +111,13 @@ const POSITIVE_CONDITION_KINDS = ['implant', 'blessing'] as const;
 
 const CONDITION_SOURCES = ['manual', 'divination', 'legacy'] as const;
 
+/** Дальность строки d100 для подписи в списке: «02–05», «100». */
+function rollRange(from: number, to: number): string {
+  const pad = (value: number) =>
+    value === 100 ? '100' : String(value).padStart(2, '0');
+  return from === to ? pad(from) : `${pad(from)}–${pad(to)}`;
+}
+
 const DetailField = ({
   label,
   value,
@@ -659,7 +666,7 @@ export const InfoSection = ({
                   isCompactView={isCompactView}
                   options={DH2E_DIVINATIONS.map((divination) => ({
                     value: divination.id,
-                    label: divinationLabel(divination.id, t),
+                    label: `${rollRange(divination.from, divination.to)} · ${divinationLabel(divination.id, t)}`,
                   }))}
                   onSelect={(next) =>
                     updateCharacter(character.id, {

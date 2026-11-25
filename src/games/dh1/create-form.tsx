@@ -603,9 +603,9 @@ export function DarkHeresyCreateForm({
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {DIVINATIONS.map(({ id }) => (
+                          {DIVINATIONS.map(({ id, roll }) => (
                             <SelectItem key={id} value={id}>
-                              {t(divinationKey(id, 'dh1'))}
+                              {roll} · {t(divinationKey(id, 'dh1'))}
                             </SelectItem>
                           ))}
                         </SelectContent>
