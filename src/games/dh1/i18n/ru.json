@@ -790,5 +790,6 @@
   "dh1.worldVariant": "Вариант мира",
   "dh1.wounds": "Раны",
   "games.dh1.description": "Классическая Dark Heresy: девять характеристик и усталость 1-й редакции.",
-  "games.dh1.name": "1-я редакция"
+  "games.dh1.name": "1-я редакция",
+  "dh1.divinationText": "Своя формулировка"
 }

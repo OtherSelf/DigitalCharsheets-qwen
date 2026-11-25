@@ -658,6 +658,21 @@ export const InfoSection = ({
                   updateCharacter(character.id, { divination: next })
                 }
               />
+              <DetailField
+                label={t('dh2.divinationText')}
+                value={character.divinationText?.[language] ?? ''}
+                editing={isInfoEditing}
+                onBlur={(e) => {
+                  const next = e.target.value.trim();
+                  const current = character.divinationText ?? {};
+                  updateCharacter(character.id, {
+                    divinationText: next
+                      ? { ...current, [language]: next }
+                      : current,
+                  });
+                }}
+                isCompactView={isCompactView}
+              />
               <ReadOnlyField
                 label={t('dh2.divinationEffect')}
                 value={

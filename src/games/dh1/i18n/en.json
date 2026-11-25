@@ -790,5 +790,6 @@
   "dh1.worldVariant": "World Variant",
   "dh1.wounds": "Wounds",
   "games.dh1.description": "Classic Dark Heresy: nine characteristics and first-edition fatigue.",
-  "games.dh1.name": "1st Edition"
+  "games.dh1.name": "1st Edition",
+  "dh1.divinationText": "Custom wording"
 }

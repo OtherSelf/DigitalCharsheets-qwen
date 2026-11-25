@@ -610,6 +610,21 @@ export const InfoSection = ({
                 }
               />
               <DetailField
+                label={t('dh1.divinationText')}
+                value={character.divinationText?.[language] ?? ''}
+                editing={isInfoEditing}
+                onBlur={(e) => {
+                  const next = e.target.value.trim();
+                  const current = character.divinationText ?? {};
+                  updateCharacter(character.id, {
+                    divinationText: next
+                      ? { ...current, [language]: next }
+                      : current,
+                  });
+                }}
+                isCompactView={isCompactView}
+              />
+              <DetailField
                 label={t('dh1.divinationEffect')}
                 value={
                   character.divinationEffectText?.[language] ??
