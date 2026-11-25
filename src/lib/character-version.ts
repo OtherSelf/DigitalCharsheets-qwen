@@ -110,6 +110,16 @@ export function normalizeCharacterRecord(
     };
   }
 
+  if (
+    options.startup &&
+    incomingVersion < targetVersion &&
+    typeof gameModule.auditCharacter === 'function'
+  ) {
+    for (const issue of gameModule.auditCharacter(character as never)) {
+      issues.push(issue);
+    }
+  }
+
   if (typeof gameModule.normalize !== 'function') {
     issues.push(
       `плагин "${systemId}" не умеет нормализовать лист; файл оставлен без изменений`,

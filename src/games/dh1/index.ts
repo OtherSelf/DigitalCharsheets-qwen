@@ -33,6 +33,16 @@ import type { DH1Character } from './types';
  * манифестов, поэтому точки входа — отдельные экспорты, а не только поля
  * объекта модуля; тест сверяет манифест с реальным набором экспортов.
  */
+/** Предупреждение при старте: у legacy-листа нет замороженного текста. */
+function auditCharacter(character: DH1Character): readonly string[] {
+  if (!character.divination) return [];
+  const frozen = character.divinationText;
+  if (frozen?.en || frozen?.ru) return [];
+  return [
+    `пророчество ${character.divination} без замороженного текста: в листе будет образец`,
+  ];
+}
+
 export const createDefaults = createDh1Defaults;
 
 /**
@@ -91,6 +101,7 @@ export const dh1Module: GameModule<DH1Character> = {
   },
   createDefaults,
   createDemo,
+  auditCharacter,
   normalize: normalizeDh1,
   merge: mergeDh1Data,
   components: {

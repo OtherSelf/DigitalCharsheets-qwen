@@ -91,4 +91,17 @@ describe('DH1 v6 → v7: замороженный текст пророчест�
       gameModule?.migrations?.some((step) => step.from === 6 && step.to === 7),
     ).toBe(true);
   });
+
+  it('предупреждает о legacy-листе без замороженного текста', () => {
+    const audit = getGameModule('dh1')?.auditCharacter;
+    expect(audit).toBeDefined();
+    expect(audit!({ divination: 'painOfBullet' } as never)).toHaveLength(1);
+    expect(
+      audit!({
+        divination: 'painOfBullet',
+        divinationText: { ru: 'x' },
+      } as never),
+    ).toHaveLength(0);
+    expect(audit!({ divination: '' } as never)).toHaveLength(0);
+  });
 });

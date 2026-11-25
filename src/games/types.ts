@@ -139,6 +139,8 @@ export interface ExcelSection {
  */
 export interface NormalizeOptions {
   readonly applyDefaults?: boolean;
+  /** Стартовая нормализация data-dir: плагин может добавить диагностику. */
+  readonly startup?: boolean;
 }
 
 /**
@@ -580,6 +582,12 @@ export interface GameModule<
     raw: Readonly<Record<string, unknown>>,
     options?: NormalizeOptions,
   ): NormalizeResult<TCharacter>;
+
+  /**
+   * Диагностика листа при стартовой нормализации: плагин возвращает
+   * предупреждения, ядро пишет их в лог. Ничего не меняет.
+   */
+  auditCharacter?(character: TCharacter): readonly string[];
 
   /** Узнаёт ли плагин legacy-запись (по её `gameSystem`/полям). */
   matchesLegacyImport?(raw: Readonly<Record<string, unknown>>): boolean;

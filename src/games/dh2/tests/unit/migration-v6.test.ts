@@ -89,4 +89,14 @@ describe('DH2 v5 → v6: замороженный текст пророчест�
       gameModule?.migrations?.some((step) => step.from === 5 && step.to === 6),
     ).toBe(true);
   });
+
+  it('предупреждает о legacy-листе без замороженного текста', () => {
+    const audit = getGameModule('dh2')?.auditCharacter;
+    expect(audit).toBeDefined();
+    expect(audit!({ divination: 'd100-10' } as never)).toHaveLength(1);
+    expect(
+      audit!({ divination: 'd100-10', divinationText: { ru: 'x' } } as never),
+    ).toHaveLength(0);
+    expect(audit!({ divination: '' } as never)).toHaveLength(0);
+  });
 });

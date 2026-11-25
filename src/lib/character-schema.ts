@@ -82,6 +82,7 @@ export async function normalizeAllCharacters(): Promise<NormalizeCharactersRepor
 
       const normalized: ParsedCharacterRecord = normalizeCharacterRecord(
         parsed as Record<string, unknown>,
+        { startup: true },
       );
       for (const issue of normalized.issues) {
         report.issues.push(
