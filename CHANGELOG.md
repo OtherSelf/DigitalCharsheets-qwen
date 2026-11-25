@@ -11,6 +11,32 @@ format changes.
 
 ## [Unreleased]
 
+## [0.23.0] - 2026-11-25
+
+Dark Heresy sheets keep the phrase a player saw, while the built-in text
+becomes an example.
+
+### Changed
+
+- DH1/DH2 divination and role texts are replaced with invented examples. A
+  sheet shows `divinationText`/`divinationEffectText` (both locales) when the
+  0.22.0 backfill filled them, otherwise the example with a "Sample" badge.
+- Divination is edited as text in the sheet; the row picker stays for creation
+  and import review and resets the frozen text when the row changes.
+- Divination options show the d100 range (`02–03 · …`); DH1 ranges come from
+  table 1-18.
+- Startup logs a warning when a pre-0.23.0 sheet still has a divination id
+  without frozen text.
+
+### Fixed
+
+- `divinationText`/`divinationEffectText` were dropped by the API allowlist on
+  save; the zod schemas now include them.
+
+### Plugin versions
+
+- dh1 1.17.0, dh2 1.18.0.
+
 ## [0.22.0] - 2026-11-25
 
 Dark Heresy sheets keep the divination text a player already sees, ahead of
