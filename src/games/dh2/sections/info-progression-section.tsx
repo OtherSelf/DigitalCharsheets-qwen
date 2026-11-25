@@ -114,6 +114,7 @@ const CONDITION_SOURCES = ['manual', 'divination', 'legacy'] as const;
 const DetailField = ({
   label,
   value,
+  sample,
   editing,
   onChange,
   onBlur,
@@ -121,12 +122,15 @@ const DetailField = ({
 }: {
   label: string;
   value: string;
+  /** Текст — образец, а не замороженная фраза игрока. */
+  sample?: boolean;
   editing: boolean;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onBlur?: (e: React.FocusEvent<HTMLInputElement>) => void;
   isCompactView: boolean;
 }) => {
   const id = React.useId();
+  const { t } = useTranslation();
   return (
     <div className="space-y-1">
       <Label
@@ -154,6 +158,11 @@ const DetailField = ({
           )}
         >
           {value || '-'}
+          {sample && value ? (
+            <span className="text-muted-foreground ml-1 text-[10px] uppercase">
+              {t('common.sampleBadge')}
+            </span>
+          ) : null}
         </p>
       )}
     </div>
@@ -636,43 +645,49 @@ export const InfoSection = ({
                   .join(', ')}
                 isCompactView={isCompactView}
               />
-              <CreationField
-                label={t('dh2.divination')}
-                value={
-                  character.divinationText?.[language] ??
-                  divinationLabel(character.divination, t)
-                }
-                sample={!character.divinationText?.[language]}
-                selectedValue={character.divination}
-                placeholder={t('dh2.selectDivination')}
-                editing={isInfoEditing}
-                locked={
-                  !creationReview && isCreationFieldLocked(character.divination)
-                }
-                isCompactView={isCompactView}
-                options={DH2E_DIVINATIONS.map((divination) => ({
-                  value: divination.id,
-                  label: divinationLabel(divination.id, t),
-                }))}
-                onSelect={(next) =>
-                  updateCharacter(character.id, { divination: next })
-                }
-              />
-              <DetailField
-                label={t('dh2.divinationText')}
-                value={character.divinationText?.[language] ?? ''}
-                editing={isInfoEditing}
-                onBlur={(e) => {
-                  const next = e.target.value.trim();
-                  const current = character.divinationText ?? {};
-                  updateCharacter(character.id, {
-                    divinationText: next
-                      ? { ...current, [language]: next }
-                      : current,
-                  });
-                }}
-                isCompactView={isCompactView}
-              />
+              {creationReview || !character.divination ? (
+                <CreationField
+                  label={t('dh2.divination')}
+                  value={divinationLabel(character.divination, t)}
+                  selectedValue={character.divination}
+                  placeholder={t('dh2.selectDivination')}
+                  editing={isInfoEditing}
+                  locked={
+                    !creationReview &&
+                    isCreationFieldLocked(character.divination)
+                  }
+                  isCompactView={isCompactView}
+                  options={DH2E_DIVINATIONS.map((divination) => ({
+                    value: divination.id,
+                    label: divinationLabel(divination.id, t),
+                  }))}
+                  onSelect={(next) =>
+                    updateCharacter(character.id, {
+                      divination: next,
+                      divinationText: {},
+                    })
+                  }
+                />
+              ) : (
+                <DetailField
+                  label={t('dh2.divination')}
+                  value={
+                    character.divinationText?.[language] ??
+                    divinationLabel(character.divination, t)
+                  }
+                  sample={!character.divinationText?.[language]}
+                  editing={isInfoEditing}
+                  onBlur={(e) =>
+                    updateCharacter(character.id, {
+                      divinationText: {
+                        ...(character.divinationText ?? {}),
+                        [language]: e.target.value.trim(),
+                      },
+                    })
+                  }
+                  isCompactView={isCompactView}
+                />
+              )}
               <ReadOnlyField
                 label={t('dh2.divinationEffect')}
                 value={
