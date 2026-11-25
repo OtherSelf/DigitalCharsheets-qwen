@@ -11,6 +11,61 @@ format changes.
 
 ## [Unreleased]
 
+## [0.21.0] - 2026-11-25
+
+Dark Heresy sheets can be ordered by hand, and the 1e legacy block moves into
+the notes.
+
+### Added
+
+- A skill characteristic: `Skill.characteristic` (a code from `stats`) replaces
+  the `(Инт)` suffix in the name, the DH1/DH2 skill table gained a "Хар."
+  column, notes became an icon next to the name, the Excel export carries the
+  characteristic and history shows its code. An old suffix is parsed for display
+  only and moved into the field by the next edit.
+- Reordering where it matters: skills (basic and advanced lists separately),
+  talents, inventory and quest journal rows drag with a shared `sortable-rows`
+  helper — pointer with an 8 px threshold, keyboard sensor, screen-reader
+  announcements, a 24×24 handle on the desktop and 32 px on the phone. The order
+  is saved as an ordinary sheet update, and the journal's up/down arrows are
+  gone.
+- Weapons reorder by dragging: melee and ranged are one visible list, dropping
+  onto the other group moves the weapon and flips "Equipped", and the array
+  stays grouped. In edit mode "Add weapon" now sits above the list.
+- Conditions have their own Edit/Save button independent of "Info", and `kind`
+  gained `implant`/`blessing` with a positive badge driven by a prop, so the core
+  does not name games.
+- Custom resources in compact edit mode can change the name and "Max"; on the
+  desktop the notes icon moved next to the name.
+- Quest cards: the title is editable in the expanded card (before, only at
+  creation), notes default to three rows and the field has a label.
+
+### Changed
+
+- The DH1 sheet format is now `schemaVersion` 6: `migrateDh1V5toV6` moves
+  `traits`, `eliteAdvances`, Insanity degree/modifier and Corruption degree/test
+  into a "Наследие" notes tab (`noteTabs`, id `dh1-legacy`) and removes them
+  from the sheet, the UI and the JSON export; importing an older file still
+  accepts them.
+- Panels collapse towards the edge they will occupy, so the cursor does not
+  travel across the screen; house rules write to the sheet immediately and lost
+  their "Save changes" button; the sort handle is a narrow cell without a box
+  (a thin frame on hover/focus), and guest links render no handles and no gutter
+  column.
+- "Hide notes" and "Hide edit buttons" now also cover the DH characteristics in
+  the middle panel and the compact bar, the D&D compact bar and the companion
+  sheet.
+- Plugin versions: `dh1` 1.15.0, `dh2` 1.16.0, `dnd5e` 1.13.0 (`sandbox` stays
+  1.5.0). `PLUGIN_API_VERSION` (`1.4.0`) is unchanged.
+
+### Fixed
+
+- The skills table no longer logs a hydration error: the drag wrapper wraps the
+  table instead of putting a `div` inside `<tbody>`.
+- Table headers line up with their content again, the inventory label aligns
+  with the name instead of the handle, and compact columns narrow to 24 px so
+  all flags fit at 412 px.
+
 ## [0.20.0] - 2026-11-25
 
 The interface speaks the user's language from the first frame, and the dashboard
