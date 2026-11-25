@@ -83,7 +83,9 @@ function DragHandle({
       data-testid="reorder-handle"
       // `touch-none` обязателен: иначе на телефоне drag начинается вместе со
       // скроллом страницы. На телефоне цель не меньше 32 px (§9 AGENTS).
-      className="text-muted-foreground/70 hover:text-foreground focus-visible:ring-ring flex h-6 w-6 shrink-0 cursor-grab touch-none items-center justify-center rounded transition-opacity focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset active:cursor-grabbing max-sm:h-8 max-sm:w-8 max-sm:opacity-100 sm:opacity-0 sm:group-focus-within:opacity-100 sm:group-hover:opacity-100"
+      // Ручка всегда видна и всегда в своей ячейке: скрытая «по наведению»
+      // ручка не читалась как действие, а рамка задаёт границу строки.
+      className="border-border/70 text-muted-foreground/80 hover:border-foreground/30 hover:text-foreground focus-visible:ring-ring flex h-6 w-6 shrink-0 cursor-grab touch-none items-center justify-center rounded-md border bg-transparent transition-colors focus-visible:ring-2 focus-visible:outline-none active:cursor-grabbing max-sm:h-8 max-sm:w-8"
     >
       <GripVertical aria-hidden className="h-4 w-4" />
     </button>

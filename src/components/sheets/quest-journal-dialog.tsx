@@ -304,9 +304,9 @@ export function QuestJournalSheet({
                             value={quest.id}
                             className="bg-background overflow-hidden rounded-lg border shadow-sm"
                           >
-                            <div className="flex items-stretch">
+                            <div className="flex items-center gap-1 pr-1 pl-2">
                               {handle}
-                              <AccordionTrigger className="hover:bg-muted/50 flex-1 px-4 py-3 transition-colors hover:no-underline">
+                              <AccordionTrigger className="hover:bg-muted/50 flex-1 rounded-md px-2 py-3 transition-colors hover:no-underline">
                                 <div className="flex w-full items-center justify-between gap-2 pr-2">
                                   <div className="flex min-w-0 flex-1 items-center gap-2">
                                     {getPriorityBadge(quest.priority)}
@@ -335,6 +335,27 @@ export function QuestJournalSheet({
                               </AccordionTrigger>
                             </div>
                             <AccordionContent className="bg-muted/5 space-y-4 border-t px-4 pt-2 pb-4">
+                              <div className="space-y-1">
+                                <Label className="text-muted-foreground flex items-center gap-1 text-[10px] font-bold uppercase">
+                                  <ScrollText className="h-3 w-3" />{' '}
+                                  {t('common.name')}
+                                </Label>
+                                <Input
+                                  defaultValue={quest.title}
+                                  aria-label={t('common.name')}
+                                  onBlur={(e) => {
+                                    const title = e.target.value.trim();
+                                    if (title && title !== quest.title) {
+                                      updateQuest(quest.id, { title });
+                                      return;
+                                    }
+                                    // Пустое название не сохраняем: строка без
+                                    // имени не находится ни поиском, ни в списке.
+                                    e.target.value = quest.title;
+                                  }}
+                                  className="h-7 text-xs"
+                                />
+                              </div>
                               {quest.objectives &&
                                 quest.objectives.length > 0 && (
                                   <div
@@ -576,10 +597,12 @@ export function QuestJournalSheet({
                                       notes: e.target.value,
                                     })
                                   }
+                                  aria-label={t('common.questNotes')}
                                   placeholder={t(
                                     'common.questNotesPlaceholder',
                                   )}
-                                  className="min-h-[50px] text-xs"
+                                  rows={3}
+                                  className="min-h-[76px] text-xs"
                                 />
                               </div>
 

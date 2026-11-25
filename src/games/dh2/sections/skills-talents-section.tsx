@@ -126,76 +126,74 @@ const SkillTable = ({
   );
 
   return (
-    <div className="overflow-hidden rounded-lg border">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead
-              className={cn('w-2/5', compact && 'w-[35%] p-1 text-xs')}
-            >
-              {t('common.name')}
-            </TableHead>
-            <TableHead
-              className={cn(
-                'w-[52px] px-1 text-center',
-                compact && 'w-6 p-0 text-[10px]',
-              )}
-              title={t('dh2.characteristic')}
-            >
-              {t('dh2.characteristicShort')}
-            </TableHead>
-            <TableHead
-              className={cn(
-                'w-[60px] px-1 text-center',
-                compact && 'w-6 p-0 text-[10px]',
-              )}
-              // На телефоне слово «Умелый» шире самой галочки и съедает
-              // колонку названия: подпись остаётся для скринридера.
-              aria-label={t('dh2.skilled')}
-            >
-              {compact ? (
-                <Check aria-hidden className="mx-auto h-3.5 w-3.5" />
-              ) : (
-                t('dh2.skilled')
-              )}
-            </TableHead>
-            <TableHead
-              className={cn(
-                'w-[60px] px-1 text-center',
-                compact && 'w-6 p-0 text-[10px]',
-              )}
-            >
-              +10
-            </TableHead>
-            <TableHead
-              className={cn(
-                'w-[60px] px-1 text-center',
-                compact && 'w-6 p-0 text-[10px]',
-              )}
-            >
-              +20
-            </TableHead>
-            {showPlus30 && (
+    <SortableRows ids={skillIds} labelById={labelsById} onReorder={onReorder}>
+      <div className="overflow-hidden rounded-lg border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-8 p-0" aria-hidden />
+              <TableHead className="w-8 p-0" aria-hidden />
+              <TableHead
+                className={cn('w-2/5 px-2 text-xs', compact && 'w-[35%] p-1')}
+              >
+                {t('common.name')}
+              </TableHead>
+              <TableHead
+                className={cn(
+                  'w-[52px] px-1 text-center',
+                  compact && 'w-6 p-0 text-[10px]',
+                )}
+                title={t('dh2.characteristic')}
+              >
+                {t('dh2.characteristicShort')}
+              </TableHead>
+              <TableHead
+                className={cn(
+                  'w-[60px] px-1 text-center',
+                  compact && 'w-6 p-0 text-[10px]',
+                )}
+                // На телефоне слово «Умелый» шире самой галочки и съедает
+                // колонку названия: подпись остаётся для скринридера.
+                aria-label={t('dh2.skilled')}
+              >
+                {compact ? (
+                  <Check aria-hidden className="mx-auto h-3.5 w-3.5" />
+                ) : (
+                  t('dh2.skilled')
+                )}
+              </TableHead>
               <TableHead
                 className={cn(
                   'w-[60px] px-1 text-center',
                   compact && 'w-6 p-0 text-[10px]',
                 )}
               >
-                +30
+                +10
               </TableHead>
-            )}
-            {editing && (
-              <TableHead className={cn(compact && 'p-1')}></TableHead>
-            )}
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          <SortableRows
-            ids={skillIds}
-            labelById={labelsById}
-            onReorder={onReorder}
-          >
+              <TableHead
+                className={cn(
+                  'w-[60px] px-1 text-center',
+                  compact && 'w-6 p-0 text-[10px]',
+                )}
+              >
+                +20
+              </TableHead>
+              {showPlus30 && (
+                <TableHead
+                  className={cn(
+                    'w-[60px] px-1 text-center',
+                    compact && 'w-6 p-0 text-[10px]',
+                  )}
+                >
+                  +30
+                </TableHead>
+              )}
+              {editing && (
+                <TableHead className={cn(compact && 'p-1')}></TableHead>
+              )}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {skills.map((skill) => {
               const {
                 name: resolvedName,
@@ -212,56 +210,61 @@ const SkillTable = ({
                 <SortableRow key={skill.id} id={skill.id} label={displayName}>
                   {(handle) => (
                     <>
-                      <TableCell className={cn(compact && 'p-1')}>
-                        <div className="flex items-start gap-1">
-                          {handle}
-                          {!hideNotes && (
-                            <Popover>
-                              <PopoverTrigger asChild>
-                                <Button
-                                  variant={skill.notes ? 'secondary' : 'ghost'}
-                                  size="icon"
-                                  className="h-7 w-7 shrink-0"
-                                  aria-label={`${t('common.notesFor')} ${displayName}`}
-                                >
-                                  <InfoIcon className="h-4 w-4" />
-                                </Button>
-                              </PopoverTrigger>
-                              <PopoverContent className="w-64">
-                                <Label className="mb-2 block text-xs">
-                                  {t('common.notesFor')} {displayName}
-                                </Label>
-                                <Textarea
-                                  defaultValue={skill.notes || ''}
-                                  onBlur={(e) =>
-                                    onNotesChange(skill.id, e.target.value)
-                                  }
-                                  placeholder={`${t('common.addNotes')}...`}
-                                  className="mt-2 min-h-[100px] text-sm"
-                                />
-                              </PopoverContent>
-                            </Popover>
-                          )}
-                          {editing ? (
-                            <Input
-                              defaultValue={skill.name}
-                              onChange={(e) =>
-                                onNameChange(skill.id, e.target.value)
-                              }
-                              aria-label={t('common.name')}
-                              className="h-8 min-w-[120px] text-xs"
-                            />
-                          ) : (
-                            <p
-                              className={cn(
-                                'font-medium break-words whitespace-normal',
-                                compact && 'text-xs',
-                              )}
-                            >
-                              {displayName}
-                            </p>
-                          )}
-                        </div>
+                      <TableCell className={cn('w-8 p-0 text-center')}>
+                        {handle}
+                      </TableCell>
+                      <TableCell className={cn('w-8 p-0 text-center')}>
+                        {!hideNotes && (
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className={cn(
+                                  'h-7 w-7 shrink-0',
+                                  skill.notes && 'text-primary',
+                                )}
+                                aria-label={`${t('common.notesFor')} ${displayName}`}
+                              >
+                                <InfoIcon className="h-4 w-4" />
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-64">
+                              <Label className="mb-2 block text-xs">
+                                {t('common.notesFor')} {displayName}
+                              </Label>
+                              <Textarea
+                                defaultValue={skill.notes || ''}
+                                onBlur={(e) =>
+                                  onNotesChange(skill.id, e.target.value)
+                                }
+                                placeholder={`${t('common.addNotes')}...`}
+                                className="mt-2 min-h-[100px] text-sm"
+                              />
+                            </PopoverContent>
+                          </Popover>
+                        )}
+                      </TableCell>
+                      <TableCell className={cn('px-2', compact && 'p-1')}>
+                        {editing ? (
+                          <Input
+                            defaultValue={skill.name}
+                            onChange={(e) =>
+                              onNameChange(skill.id, e.target.value)
+                            }
+                            aria-label={t('common.name')}
+                            className="h-8 min-w-[120px] text-xs"
+                          />
+                        ) : (
+                          <p
+                            className={cn(
+                              'font-medium break-words whitespace-normal',
+                              compact && 'text-xs',
+                            )}
+                          >
+                            {displayName}
+                          </p>
+                        )}
                       </TableCell>
                       <TableCell
                         className={cn('px-1 text-center', compact && 'p-1')}
@@ -384,10 +387,10 @@ const SkillTable = ({
                 </SortableRow>
               );
             })}
-          </SortableRows>
-        </TableBody>
-      </Table>
-    </div>
+          </TableBody>
+        </Table>
+      </div>
+    </SortableRows>
   );
 };
 
@@ -841,33 +844,34 @@ export const SkillsTalentsSection = React.forwardRef<
               <CollapsibleContent className="w-full">
                 {isTalentsEditing ? (
                   <div className="space-y-4">
-                    <ul className="space-y-3">
-                      <SortableRows
-                        ids={talentIds}
-                        labelById={talentLabels}
-                        onReorder={reorderTalents}
-                      >
+                    <SortableRows
+                      ids={talentIds}
+                      labelById={talentLabels}
+                      onReorder={reorderTalents}
+                    >
+                      <ul className="space-y-3">
                         {(editableTalents ?? []).map((talent) => (
                           <SortableItem
                             as="li"
                             key={talent.id}
                             id={talent.id}
                             label={talent.name}
-                            className="bg-background space-y-2 rounded-md border p-3"
+                            className="space-y-2 rounded-md border bg-transparent p-2"
                           >
                             {(handle) => (
                               <>
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-1">
                                   {handle}
                                   {!hideNotes && (
                                     <Popover>
                                       <PopoverTrigger asChild>
                                         <Button
-                                          variant={
-                                            talent.notes ? 'secondary' : 'ghost'
-                                          }
+                                          variant="ghost"
                                           size="icon"
-                                          className="h-9 w-9 shrink-0"
+                                          className={cn(
+                                            'h-9 w-9 shrink-0',
+                                            talent.notes && 'text-primary',
+                                          )}
                                         >
                                           <InfoIcon className="h-4 w-4" />
                                         </Button>
@@ -945,9 +949,9 @@ export const SkillsTalentsSection = React.forwardRef<
                             )}
                           </SortableItem>
                         ))}
-                      </SortableRows>
-                    </ul>
-                    <div className="bg-background space-y-2 rounded-md border p-3">
+                      </ul>
+                    </SortableRows>
+                    <div className="space-y-2 rounded-md border bg-transparent p-2">
                       <Input
                         placeholder={t('dh2.newTalentPlaceholder')}
                         value={newTalentName}
@@ -979,13 +983,13 @@ export const SkillsTalentsSection = React.forwardRef<
                             key={talent.id}
                             id={talent.id}
                             label={talent.name}
-                            className="bg-background overflow-hidden rounded-md border"
+                            className="overflow-hidden rounded-md border bg-transparent"
                           >
                             {(handle) => (
                               <Collapsible>
                                 <div
                                   className={cn(
-                                    'flex items-start gap-2 p-3',
+                                    'flex items-start gap-1 p-2',
                                     isCompactView ? 'text-xs' : 'text-sm',
                                   )}
                                 >
@@ -994,11 +998,12 @@ export const SkillsTalentsSection = React.forwardRef<
                                     <Popover>
                                       <PopoverTrigger asChild>
                                         <Button
-                                          variant={
-                                            talent.notes ? 'secondary' : 'ghost'
-                                          }
+                                          variant="ghost"
                                           size="icon"
-                                          className="mt-0.5 h-6 w-6 shrink-0"
+                                          className={cn(
+                                            'mt-0.5 h-6 w-6 shrink-0',
+                                            talent.notes && 'text-primary',
+                                          )}
                                         >
                                           <InfoIcon className="h-4 w-4" />
                                         </Button>
@@ -1032,7 +1037,7 @@ export const SkillsTalentsSection = React.forwardRef<
                                   <div className="flex-grow">
                                     <CollapsibleTrigger className="hover:bg-accent/50 -mx-2 flex w-full items-center justify-between rounded px-2 py-1 text-left transition-colors">
                                       <p className="text-foreground flex-grow font-medium break-words">
-                                        &bull; {talent.name}
+                                        {talent.name}
                                       </p>
                                       {talent.description && (
                                         <ChevronDown className="ml-2 h-4 w-4 shrink-0 transition-transform duration-200 data-[state=open]:rotate-180" />

@@ -54,6 +54,37 @@ test.describe('диалоги DH1 — журнал заданий', { tag: '@plu
       await screenshotPage(page, 'dialog-dh-quest-journal-ru.png');
     },
   );
+
+  /**
+   * Раскрытая карточка задания: здесь живут редактируемое название и заметки.
+   * Снимок держит оба поля и высоту «Заметок» (три строки по умолчанию).
+   */
+  test(
+    'журнал заданий — раскрытая карточка (en)',
+    { tag: '@desktop' },
+    async ({ page, context }) => {
+      await prepare(context);
+      await openApp(page, sheetPath(gameCharacterId('dh')));
+
+      const dialog = await openDialog(page, 'Quest Journal', false);
+      await dialog
+        .getByRole('button')
+        .filter({ hasText: 'The Reliquary of Saint Veren' })
+        .first()
+        .click();
+
+      const title = dialog.getByLabel('Name', { exact: true });
+      await expect(title).toBeVisible();
+      await expect(title).toHaveValue('The Reliquary of Saint Veren');
+      const notes = dialog.getByLabel('Notes', { exact: true });
+      await expect(notes).toBeVisible();
+      // Раскрытие аккордеона анимировано: снимок берём после того, как
+      // содержимое перестало менять высоту.
+      await page.waitForTimeout(400);
+
+      await screenshotPage(page, 'dialog-dh-quest-journal-expanded-en.png');
+    },
+  );
 });
 
 test.describe('диалоги DH1 — домашние правила', { tag: '@plugin:dh1' }, () => {

@@ -2464,7 +2464,9 @@ export const EquipmentInventorySection = React.forwardRef<
                   ) : (
                     <>
                       <div className="text-muted-foreground hidden grid-cols-[minmax(0,1fr)_3rem_3.5rem] gap-2 px-1 text-xs md:grid">
-                        <span>{t('common.items')}</span>
+                        {/* Ярлык встаёт над названием: слева в строке —
+                            ячейка ручки и чекбокс «потеряно». */}
+                        <span className="pl-[52px]">{t('common.items')}</span>
                         <span className="text-right">
                           {t('common.quantity')}
                         </span>

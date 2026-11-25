@@ -61,12 +61,17 @@ test.describe('перестановка строк листа dh1', { tag: '@plu
     { tag: ['@fast', '@desktop'] },
     async ({ page, context }) => {
       await prepare(context);
+      // Гидрация: обвязка drag не должна вставлять <div> внутрь <tbody>.
+      const nestingErrors: string[] = [];
+      page.on('console', (message) => {
+        if (message.type() === 'error') nestingErrors.push(message.text());
+      });
       const id = gameCharacterId('dh');
       const original = await readSheet(page, id);
 
       await openApp(page, sheetPath(id));
       const table = page.locator('#skills-section table').first();
-      const names = table.locator('tbody tr td:first-child p');
+      const names = table.locator('tbody tr td:nth-child(3) p');
       const before = await names.allTextContents();
       expect(
         before.length,
@@ -101,7 +106,7 @@ test.describe('перестановка строк листа dh1', { tag: '@plu
       await page.waitForLoadState('networkidle');
       await expect
         .poll(() =>
-          table.locator('tbody tr td:first-child p').allTextContents(),
+          table.locator('tbody tr td:nth-child(3) p').allTextContents(),
         )
         .toEqual(expected);
 
@@ -118,6 +123,13 @@ test.describe('перестановка строк листа dh1', { tag: '@plu
         )
         .map((violation) => violation.id);
       expect(blocking, 'навыки: axe serious/critical').toEqual([]);
+
+      expect(
+        nestingErrors.filter((text) =>
+          /cannot be a child|hydration|did not match/i.test(text),
+        ),
+        'гидрация: нет ошибок вложенности DOM',
+      ).toEqual([]);
 
       const restored = await page.request.put(`/api/characters/${id}`, {
         data: { skills: original.skills ?? [] },
