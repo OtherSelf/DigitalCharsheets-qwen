@@ -123,7 +123,7 @@ export const enTranslations = {
     'Accounts, sheets, history and sessions live in the data directory of this server. Nothing is sent to third parties: no analytics, no external fonts at runtime, no trackers. A share link is read-only and can be revoked at any time.',
   'about.disclaimerTitle': 'Disclaimer',
   'about.disclaimerBody':
-    'The project is unofficial and is not affiliated with the publishers of the game systems. Rules text and trademarks belong to their owners; the application only stores what you enter.',
+    'The project is unofficial and is not affiliated with the publishers of the game systems. Rules text and trademarks belong to their owners. The build ships no rulebook text: labels, numbers and short mechanical statements; example phrases are invented for the demo, and your own text stays in your sheet.',
   'about.linksTitle': 'Links',
   'about.docs': 'Documentation',
   'about.api': 'API reference',
