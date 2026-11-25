@@ -537,7 +537,9 @@ filtered with `grepInvert`, so the report has no skipped duplicates.
 3. Prettier check;
 4. ESLint, plugin boundaries, core purity and reverse imports; regenerate the
    plugin registry/dictionaries from the manifests (the files are not tracked);
-   check that `docs/meta.json` matches the map in `docs/README.md`;
+   check that `docs/meta.json` matches the map in `docs/README.md`; legal scan
+   (`scripts/legal/scan.mjs`) — skipped unless `DCS_LEGAL_MARKERS` points to a
+   private list of phrases;
 5. TypeScript;
 6. dead code: dead exports and files without importers
    (`npm run deadcode:check`);
@@ -554,6 +556,12 @@ entry that is no longer needed is itself an error. `test-only` exports are
 capped by `TEST_ONLY_MAX` in `scripts/quality/check-dead-code.mjs`: a new test
 seam must be a deliberate change (drop a production-dead export or raise the
 cap in the same commit).
+
+The legal scan searches tracked files for phrases from a private marker list.
+The list is never committed: point `DCS_LEGAL_MARKERS` at it before running
+`npm run verify` or `npm run legal:scan`. Without the variable the step is
+skipped, so CI without secrets stays green; add `--build .next` to scan the
+built client bundles as well.
 
 Useful flags: `--skip-build`, `--skip-unit`, `--skip-smoke`, `--base-url URL`,
 `--keep` (keep the temp data/logs). The real `./data` is never touched.
