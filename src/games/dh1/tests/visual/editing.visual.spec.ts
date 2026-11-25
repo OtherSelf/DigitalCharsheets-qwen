@@ -216,7 +216,8 @@ test.describe('состояния Безумия/Порчи', { tag: '@plugin:dh
       await openApp(page, sheetPath(id));
 
       const info = page.locator('#info-section:visible').first();
-      await startEditing(info);
+      // У списка состояний своя кнопка правки, отдельно от всей «Информации».
+      await info.getByTestId('conditions-edit').click();
 
       const before = await info.getByTestId('condition-entry').count();
       await info.getByRole('button', { name: 'Add condition' }).click();
@@ -237,14 +238,14 @@ test.describe('состояния Безумия/Порчи', { tag: '@plugin:dh
         return body.includes('Проверка состояния') && body.includes('Заметка');
       });
 
-      await info.getByTestId('save-button').first().click();
+      await info.getByTestId('conditions-save').click();
       await openApp(page, sheetPath(id));
 
       const reloaded = page.locator('#info-section:visible').first();
       await expect(reloaded.getByText('Проверка состояния')).toBeVisible();
       await expect(reloaded.getByText('Disorder')).toBeVisible();
 
-      await startEditing(reloaded);
+      await reloaded.getByTestId('conditions-edit').click();
       const stored = reloaded.getByTestId('condition-entry').last();
       await stored.getByRole('button', { name: 'Remove condition' }).click();
       await page.waitForResponse((response) => {
@@ -255,7 +256,7 @@ test.describe('состояния Безумия/Порчи', { tag: '@plugin:dh
         );
       });
 
-      await reloaded.getByTestId('save-button').first().click();
+      await reloaded.getByTestId('conditions-save').click();
       await openApp(page, sheetPath(id));
       await expect(
         page

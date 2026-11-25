@@ -20,15 +20,21 @@ export const EditSaveButton = ({
   editing,
   onEdit,
   onSave,
+  testId,
 }: {
   editing: boolean;
   onEdit: () => void;
   onSave: () => void;
+  /**
+   * Свой префикс для `data-testid`: в одной секции бывает несколько кнопок
+   * правки (например, «Информация» и отдельный список состояний).
+   */
+  testId?: string;
 }) => {
   const { t } = useTranslation();
   return editing ? (
     <Button
-      data-testid="save-button"
+      data-testid={testId ? `${testId}-save` : 'save-button'}
       aria-label={t('common.save')}
       size="icon"
       onClick={onSave}
@@ -38,7 +44,7 @@ export const EditSaveButton = ({
     </Button>
   ) : (
     <Button
-      data-testid="edit-button"
+      data-testid={testId ? `${testId}-edit` : 'edit-button'}
       aria-label={t('common.edit')}
       size="icon"
       variant="outline"

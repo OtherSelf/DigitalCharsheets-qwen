@@ -287,15 +287,21 @@ const CreationField = ({
 /** Компактный блок полей листа: заголовок + сетка полей. */
 const MetaBlock = ({
   title,
+  action,
   children,
 }: {
   title: string;
+  /** Кнопка правки блока: у состояний она своя, отдельно от всей «Информации». */
+  action?: React.ReactNode;
   children: React.ReactNode;
 }) => (
   <div className="space-y-2">
-    <h4 className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-      {title}
-    </h4>
+    <div className="flex items-center justify-between gap-2">
+      <h4 className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+        {title}
+      </h4>
+      {action}
+    </div>
     <div className="grid grid-cols-2 gap-x-4 gap-y-3 md:grid-cols-3">
       {children}
     </div>
@@ -312,11 +318,17 @@ export const InfoSection = ({
   const { updateCharacter, showEditButtons } = useCharacterContext();
   const { t } = useTranslation();
   const [isInfoEditing, setIsInfoEditing] = React.useState(false);
+  /**
+   * Список состояний правится своей кнопкой: импланты, рудименты, мутации и
+   * осквернения живут отдельной жизнью от паспортных полей листа, и включать
+   * ради них правку всей «Информации» неудобно.
+   */
+  const [isConditionsEditing, setIsConditionsEditing] = React.useState(false);
   const [isBackstoryOpen, setIsBackstoryOpen] = React.useState(false);
 
   React.useEffect(() => {
-    onEditingChange?.(isInfoEditing);
-  }, [isInfoEditing, onEditingChange]);
+    onEditingChange?.(isInfoEditing || isConditionsEditing);
+  }, [isInfoEditing, isConditionsEditing, onEditingChange]);
 
   const conditionLabels: ConditionsLabels = React.useMemo(
     () => ({
@@ -790,7 +802,19 @@ export const InfoSection = ({
               </div>
             </MetaBlock>
 
-            <MetaBlock title={t('dh2.condition')}>
+            <MetaBlock
+              title={t('dh2.condition')}
+              action={
+                (showEditButtons || isConditionsEditing) && (
+                  <EditSaveButton
+                    editing={isConditionsEditing}
+                    onEdit={() => setIsConditionsEditing(true)}
+                    onSave={() => setIsConditionsEditing(false)}
+                    testId="conditions"
+                  />
+                )
+              }
+            >
               <div className="col-span-2 md:col-span-3">
                 <div className="mt-4">
                   <ConditionsList
@@ -799,7 +823,7 @@ export const InfoSection = ({
                     positiveKinds={POSITIVE_CONDITION_KINDS}
                     sources={CONDITION_SOURCES}
                     labels={conditionLabels}
-                    editing={isInfoEditing}
+                    editing={isConditionsEditing}
                     isCompactView={isCompactView}
                     onChange={(next) =>
                       updateCharacter(character.id, { conditions: next })

@@ -126,6 +126,37 @@ function formatWeight(value: number | undefined): string {
   return Number.isInteger(value) ? String(value) : value.toFixed(1);
 }
 
+type WeaponLike = { id: string; name: string; equipped?: boolean };
+
+/**
+ * Перестановка оружия в видимом порядке и обратно в сгруппированный массив:
+ * снаряжённые сверху, затем «не экипировано». Элемент, брошенный на другую
+ * группу, получает её флаг `equipped`; скрытые (свёрнутые) остаются в конце.
+ */
+function reorderWeaponGroup<T extends WeaponLike>(
+  all: readonly T[],
+  visible: readonly T[],
+  from: number,
+  to: number,
+): T[] | null {
+  const moved = visible[from];
+  const target = visible[to];
+  if (!moved || !target) return null;
+  const reordered = moveItem(visible, from, to).map((weapon) =>
+    weapon.id === moved.id
+      ? { ...weapon, equipped: Boolean(target.equipped) }
+      : weapon,
+  );
+  const hidden = all.filter(
+    (weapon) => !visible.some((item) => item.id === weapon.id),
+  );
+  return [
+    ...reordered.filter((weapon) => weapon.equipped),
+    ...reordered.filter((weapon) => !weapon.equipped),
+    ...hidden,
+  ];
+}
+
 interface EquipmentInventorySectionProps {
   character: DH2Character;
   isCompactView: boolean;
@@ -227,6 +258,41 @@ export const EquipmentInventorySection = React.forwardRef<
       });
       setIsRangedWeaponsEditing(false);
     }, [character.id, character.equipment, editableEquipment, updateCharacter]);
+    /** Общая часть: видимый список оружия -> сгруппированный массив. */
+    const applyWeaponMove = (
+      kind: 'melee' | 'ranged',
+      next: ReturnType<typeof reorderWeaponGroup>,
+    ) => {
+      if (!next) return;
+      const editing =
+        kind === 'melee' ? isMeleeWeaponsEditing : isRangedWeaponsEditing;
+      if (editing) {
+        setEditableEquipment((prev) => ({
+          ...prev,
+          weapons: { ...prev.weapons, [kind]: next },
+        }));
+        return;
+      }
+      updateCharacter(character.id, {
+        equipment: {
+          ...character.equipment,
+          weapons: { ...character.equipment.weapons, [kind]: next },
+        },
+      });
+    };
+
+    const reorderMeleeWeapons = (from: number, to: number) =>
+      applyWeaponMove(
+        'melee',
+        reorderWeaponGroup(meleeWeaponsAll, meleeWeaponVisible, from, to),
+      );
+
+    const reorderRangedWeapons = (from: number, to: number) =>
+      applyWeaponMove(
+        'ranged',
+        reorderWeaponGroup(rangedWeaponsAll, rangedWeaponVisible, from, to),
+      );
+
     const handleSaveInventory = React.useCallback(() => {
       updateCharacter(character.id, { inventory: editableInventory });
       setIsInventoryEditing(false);
@@ -526,6 +592,26 @@ export const EquipmentInventorySection = React.forwardRef<
     const unequippedRangedWeapons = (
       currentEquipment.weapons?.ranged ?? []
     ).filter((w) => w.equipped === false || w.equipped === undefined);
+    // Видимый порядок для перетаскивания: снаряжённые, затем раскрытые
+    // «не экипировано». Свёрнутая группа не участвует: в неё нельзя бросить.
+    const meleeWeaponsAll = currentEquipment.weapons?.melee ?? [];
+    const rangedWeaponsAll = currentEquipment.weapons?.ranged ?? [];
+    const meleeWeaponVisible = [
+      ...equippedMeleeWeapons,
+      ...(openWeaponSlot === 'melee' ? unequippedMeleeWeapons : []),
+    ];
+    const rangedWeaponVisible = [
+      ...equippedRangedWeapons,
+      ...(openWeaponSlot === 'ranged' ? unequippedRangedWeapons : []),
+    ];
+    const meleeWeaponIds = meleeWeaponVisible.map((w) => w.id);
+    const rangedWeaponIds = rangedWeaponVisible.map((w) => w.id);
+    const meleeWeaponLabels = Object.fromEntries(
+      meleeWeaponsAll.map((w) => [w.id, w.name]),
+    );
+    const rangedWeaponLabels = Object.fromEntries(
+      rangedWeaponsAll.map((w) => [w.id, w.name]),
+    );
 
     return (
       <>
@@ -894,80 +980,604 @@ export const EquipmentInventorySection = React.forwardRef<
                     </CollapsibleContent>
                   </Collapsible>
                 </div>
-                <div className="space-y-4" data-testid="melee-weapons">
-                  <div>
-                    <div className="mb-2 flex items-center justify-between">
-                      <h4 className="text-lg font-semibold">
+                <SortableRows
+                  ids={meleeWeaponIds}
+                  labelById={meleeWeaponLabels}
+                  onReorder={reorderMeleeWeapons}
+                >
+                  <div className="space-y-4" data-testid="melee-weapons">
+                    {isMeleeWeaponsEditing && (
+                      <Button
+                        data-testid="add-melee-weapon"
+                        onClick={addMeleeWeapon}
+                        size="sm"
+                        className="mb-2 w-full"
+                      >
+                        <Plus className="mr-2 h-4 w-4" /> {t('common.add')}{' '}
                         {t('dh2.meleeWeapons')}
-                      </h4>
-                      {(showEditButtons || isMeleeWeaponsEditing) && (
-                        <EditSaveButton
-                          editing={isMeleeWeaponsEditing}
-                          onEdit={() =>
-                            beginEquipmentEditing(() =>
-                              setIsMeleeWeaponsEditing(true),
-                            )
-                          }
-                          onSave={handleSaveMeleeWeapons}
-                        />
-                      )}
-                    </div>
-                    <div className="space-y-2">
-                      {equippedMeleeWeapons.map((weapon) => (
-                        <div
-                          key={weapon.id}
-                          className="bg-background/50 space-y-2 rounded-lg border p-3"
-                        >
-                          <div className="flex items-start justify-between">
-                            {isMeleeWeaponsEditing ? (
-                              <Input
-                                defaultValue={weapon.name}
-                                onChange={(e) =>
-                                  handleMeleeWeaponChange(
-                                    weapon.id,
-                                    'name',
-                                    e.target.value,
-                                  )
-                                }
-                                className="h-8 text-sm font-semibold"
-                              />
-                            ) : (
-                              <h5 className="text-sm font-semibold break-words">
-                                {weapon.name}
-                              </h5>
-                            )}
-                            <div className="ml-2 flex shrink-0 items-center gap-1">
-                              {!hideNotes && (
-                                <Popover>
-                                  <PopoverTrigger asChild>
-                                    <Button
-                                      variant={
-                                        weapon.notes ? 'secondary' : 'ghost'
+                      </Button>
+                    )}
+
+                    <div>
+                      <div className="mb-2 flex items-center justify-between">
+                        <h4 className="text-lg font-semibold">
+                          {t('dh2.meleeWeapons')}
+                        </h4>
+                        {(showEditButtons || isMeleeWeaponsEditing) && (
+                          <EditSaveButton
+                            editing={isMeleeWeaponsEditing}
+                            onEdit={() =>
+                              beginEquipmentEditing(() =>
+                                setIsMeleeWeaponsEditing(true),
+                              )
+                            }
+                            onSave={handleSaveMeleeWeapons}
+                          />
+                        )}
+                      </div>
+                      <div className="space-y-2">
+                        {equippedMeleeWeapons.map((weapon) => (
+                          <SortableItem
+                            key={weapon.id}
+                            id={weapon.id}
+                            label={weapon.name}
+                          >
+                            {(handle) => (
+                              <div className="bg-background/50 space-y-2 rounded-lg border p-3">
+                                <div className="flex items-start justify-between">
+                                  {handle}
+                                  {isMeleeWeaponsEditing ? (
+                                    <Input
+                                      defaultValue={weapon.name}
+                                      onChange={(e) =>
+                                        handleMeleeWeaponChange(
+                                          weapon.id,
+                                          'name',
+                                          e.target.value,
+                                        )
                                       }
-                                      size="icon"
-                                      className="h-7 w-7 max-md:h-10 max-md:w-10"
-                                    >
-                                      <InfoIcon className="h-4 w-4" />
-                                    </Button>
-                                  </PopoverTrigger>
-                                  <PopoverContent className="w-64">
-                                    <Label className="mb-2 block text-xs">
-                                      {t('common.notesFor')} {weapon.name}
-                                    </Label>
-                                    <Textarea
-                                      defaultValue={weapon.notes || ''}
-                                      {...(isMeleeWeaponsEditing
-                                        ? {
-                                            onChange: (e) =>
-                                              handleMeleeWeaponChange(
-                                                weapon.id,
-                                                'notes',
-                                                e.target.value,
-                                              ),
+                                      className="h-8 text-sm font-semibold"
+                                    />
+                                  ) : (
+                                    <h5 className="text-sm font-semibold break-words">
+                                      {weapon.name}
+                                    </h5>
+                                  )}
+                                  <div className="ml-2 flex shrink-0 items-center gap-1">
+                                    {!hideNotes && (
+                                      <Popover>
+                                        <PopoverTrigger asChild>
+                                          <Button
+                                            variant={
+                                              weapon.notes
+                                                ? 'secondary'
+                                                : 'ghost'
+                                            }
+                                            size="icon"
+                                            className="h-7 w-7 max-md:h-10 max-md:w-10"
+                                          >
+                                            <InfoIcon className="h-4 w-4" />
+                                          </Button>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-64">
+                                          <Label className="mb-2 block text-xs">
+                                            {t('common.notesFor')} {weapon.name}
+                                          </Label>
+                                          <Textarea
+                                            defaultValue={weapon.notes || ''}
+                                            {...(isMeleeWeaponsEditing
+                                              ? {
+                                                  onChange: (e) =>
+                                                    handleMeleeWeaponChange(
+                                                      weapon.id,
+                                                      'notes',
+                                                      e.target.value,
+                                                    ),
+                                                }
+                                              : {
+                                                  onBlur: (e) =>
+                                                    updateCharacter(
+                                                      character.id,
+                                                      {
+                                                        equipment: {
+                                                          ...character.equipment,
+                                                          weapons: {
+                                                            ...character
+                                                              .equipment
+                                                              .weapons,
+                                                            melee: (
+                                                              character
+                                                                .equipment
+                                                                .weapons
+                                                                .melee ?? []
+                                                            ).map((w) =>
+                                                              w.id === weapon.id
+                                                                ? {
+                                                                    ...w,
+                                                                    notes:
+                                                                      e.target
+                                                                        .value,
+                                                                  }
+                                                                : w,
+                                                            ),
+                                                          },
+                                                        },
+                                                      },
+                                                    ),
+                                                })}
+                                            placeholder={t(
+                                              'dh2.addNotesPlaceholder',
+                                            )}
+                                            className="mt-2 min-h-[100px] text-sm"
+                                          />
+                                        </PopoverContent>
+                                      </Popover>
+                                    )}
+                                    {isMeleeWeaponsEditing && (
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-7 w-7 max-md:h-10 max-md:w-10"
+                                        onClick={() =>
+                                          removeMeleeWeapon(weapon.id)
+                                        }
+                                      >
+                                        <Trash2 className="text-destructive h-4 w-4" />
+                                      </Button>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+                                  {isMeleeWeaponsEditing ? (
+                                    <>
+                                      <div className="space-y-1">
+                                        {' '}
+                                        <Label>
+                                          {t('dh2.weaponType')}
+                                        </Label>{' '}
+                                        <Input
+                                          defaultValue={weapon.type}
+                                          onChange={(e) =>
+                                            handleMeleeWeaponChange(
+                                              weapon.id,
+                                              'type',
+                                              e.target.value,
+                                            )
                                           }
-                                        : {
-                                            onBlur: (e) =>
-                                              updateCharacter(character.id, {
+                                          className="h-7 text-xs"
+                                        />{' '}
+                                      </div>
+                                      <div className="space-y-1">
+                                        {' '}
+                                        <Label>
+                                          {t('dh2.weaponRange')}
+                                        </Label>{' '}
+                                        <Input
+                                          defaultValue={weapon.range}
+                                          onChange={(e) =>
+                                            handleMeleeWeaponChange(
+                                              weapon.id,
+                                              'range',
+                                              e.target.value,
+                                            )
+                                          }
+                                          className="h-7 text-xs"
+                                        />{' '}
+                                      </div>
+                                      <div className="space-y-1">
+                                        {' '}
+                                        <Label>
+                                          {t('dh2.weaponDamage')}
+                                        </Label>{' '}
+                                        <Input
+                                          defaultValue={weapon.damage}
+                                          onChange={(e) =>
+                                            handleMeleeWeaponChange(
+                                              weapon.id,
+                                              'damage',
+                                              e.target.value,
+                                            )
+                                          }
+                                          className="h-7 text-xs"
+                                        />{' '}
+                                      </div>
+                                      <div className="space-y-1">
+                                        {' '}
+                                        <Label>
+                                          {t('dh2.weaponPenetration')}
+                                        </Label>{' '}
+                                        <Input
+                                          defaultValue={weapon.penetration}
+                                          onChange={(e) =>
+                                            handleMeleeWeaponChange(
+                                              weapon.id,
+                                              'penetration',
+                                              e.target.value,
+                                            )
+                                          }
+                                          className="h-7 text-xs"
+                                        />{' '}
+                                      </div>
+                                      <div className="col-span-2 space-y-1">
+                                        {' '}
+                                        <Label>
+                                          {t('dh2.weaponTraits')}
+                                        </Label>{' '}
+                                        <Input
+                                          defaultValue={weapon.traits}
+                                          onChange={(e) =>
+                                            handleMeleeWeaponChange(
+                                              weapon.id,
+                                              'traits',
+                                              e.target.value,
+                                            )
+                                          }
+                                          className="h-7 text-xs"
+                                        />{' '}
+                                      </div>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <div>
+                                        <strong className="text-muted-foreground">
+                                          {t('dh2.weaponType')}:
+                                        </strong>{' '}
+                                        {weapon.type || '-'}
+                                      </div>
+                                      <div>
+                                        <strong className="text-muted-foreground">
+                                          {t('dh2.weaponRange')}:
+                                        </strong>{' '}
+                                        {weapon.range || '-'}
+                                      </div>
+                                      <div>
+                                        <strong className="text-muted-foreground">
+                                          {t('dh2.weaponDamage')}:
+                                        </strong>{' '}
+                                        {weapon.damage || '-'}
+                                      </div>
+                                      <div>
+                                        <strong className="text-muted-foreground">
+                                          {t('dh2.weaponPenetration')}:
+                                        </strong>{' '}
+                                        {weapon.penetration || '-'}
+                                      </div>
+                                      <div className="col-span-2">
+                                        <strong className="text-muted-foreground">
+                                          {t('dh2.weaponTraits')}:
+                                        </strong>{' '}
+                                        <span className="break-words">
+                                          {weapon.traits || '-'}
+                                        </span>
+                                      </div>
+                                    </>
+                                  )}
+                                </div>
+                                <div className="flex items-center space-x-2 pt-2">
+                                  <Checkbox
+                                    checked={!!weapon.equipped}
+                                    onCheckedChange={(c) =>
+                                      isMeleeWeaponsEditing
+                                        ? handleMeleeWeaponChange(
+                                            weapon.id,
+                                            'equipped',
+                                            !!c,
+                                          )
+                                        : updateCharacter(character.id, {
+                                            equipment: {
+                                              ...character.equipment,
+                                              weapons: {
+                                                ...character.equipment.weapons,
+                                                melee: (
+                                                  character.equipment.weapons
+                                                    .melee ?? []
+                                                ).map((w) =>
+                                                  w.id === weapon.id
+                                                    ? { ...w, equipped: !!c }
+                                                    : w,
+                                                ),
+                                              },
+                                            },
+                                          })
+                                    }
+                                  />
+                                  <Label className="text-xs">
+                                    {t('dh2.equipped')}
+                                  </Label>
+                                </div>
+                              </div>
+                            )}
+                          </SortableItem>
+                        ))}
+                      </div>
+                    </div>
+                    <Accordion
+                      type="single"
+                      collapsible
+                      className="w-full"
+                      value={
+                        openWeaponSlot === 'melee' ? 'unequipped-melee' : ''
+                      }
+                      onValueChange={(value) =>
+                        setOpenWeaponSlot(
+                          value === 'unequipped-melee' ? 'melee' : null,
+                        )
+                      }
+                    >
+                      <AccordionItem
+                        value="unequipped-melee"
+                        className="border-b-0"
+                      >
+                        <AccordionPrimitive.Header className="flex w-full">
+                          <AccordionPrimitive.Trigger
+                            data-testid="unequipped-melee-trigger"
+                            className="flex flex-1 items-center justify-between py-2 text-sm font-medium [&[data-state=open]>svg]:rotate-180"
+                          >
+                            <span>
+                              {t('dh2.notEquipped')} (
+                              <span className="text-muted-foreground">
+                                {unequippedMeleeWeapons.length}
+                              </span>
+                              )
+                            </span>
+                            <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
+                          </AccordionPrimitive.Trigger>
+                        </AccordionPrimitive.Header>
+                        <AccordionContent>
+                          <div className="space-y-2">
+                            {unequippedMeleeWeapons.map((weapon) => (
+                              <SortableItem
+                                key={weapon.id}
+                                id={weapon.id}
+                                label={weapon.name}
+                              >
+                                {(handle) => (
+                                  <div className="bg-background/50 space-y-2 rounded-lg border p-3">
+                                    <div className="flex items-start justify-between">
+                                      {handle}
+                                      {isMeleeWeaponsEditing ? (
+                                        <Input
+                                          defaultValue={weapon.name}
+                                          onChange={(e) =>
+                                            handleMeleeWeaponChange(
+                                              weapon.id,
+                                              'name',
+                                              e.target.value,
+                                            )
+                                          }
+                                          className="h-8 text-sm font-semibold"
+                                        />
+                                      ) : (
+                                        <h5 className="text-sm font-semibold break-words">
+                                          {weapon.name}
+                                        </h5>
+                                      )}
+                                      <div className="ml-2 flex shrink-0 items-center gap-1">
+                                        {!hideNotes && (
+                                          <Popover>
+                                            <PopoverTrigger asChild>
+                                              <Button
+                                                variant={
+                                                  weapon.notes
+                                                    ? 'secondary'
+                                                    : 'ghost'
+                                                }
+                                                size="icon"
+                                                className="h-7 w-7 max-md:h-10 max-md:w-10"
+                                              >
+                                                <InfoIcon className="h-4 w-4" />
+                                              </Button>
+                                            </PopoverTrigger>
+                                            <PopoverContent className="w-64">
+                                              <Label className="mb-2 block text-xs">
+                                                {t('common.notesFor')}{' '}
+                                                {weapon.name}
+                                              </Label>
+                                              <Textarea
+                                                defaultValue={
+                                                  weapon.notes || ''
+                                                }
+                                                {...(isMeleeWeaponsEditing
+                                                  ? {
+                                                      onChange: (e) =>
+                                                        handleMeleeWeaponChange(
+                                                          weapon.id,
+                                                          'notes',
+                                                          e.target.value,
+                                                        ),
+                                                    }
+                                                  : {
+                                                      onBlur: (e) =>
+                                                        updateCharacter(
+                                                          character.id,
+                                                          {
+                                                            equipment: {
+                                                              ...character.equipment,
+                                                              weapons: {
+                                                                ...character
+                                                                  .equipment
+                                                                  .weapons,
+                                                                melee: (
+                                                                  character
+                                                                    .equipment
+                                                                    .weapons
+                                                                    .melee ?? []
+                                                                ).map((w) =>
+                                                                  w.id ===
+                                                                  weapon.id
+                                                                    ? {
+                                                                        ...w,
+                                                                        notes:
+                                                                          e
+                                                                            .target
+                                                                            .value,
+                                                                      }
+                                                                    : w,
+                                                                ),
+                                                              },
+                                                            },
+                                                          },
+                                                        ),
+                                                    })}
+                                                placeholder={t(
+                                                  'dh2.addNotesPlaceholder',
+                                                )}
+                                                className="mt-2 min-h-[100px] text-sm"
+                                              />
+                                            </PopoverContent>
+                                          </Popover>
+                                        )}
+                                        {isMeleeWeaponsEditing && (
+                                          <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-7 w-7 max-md:h-10 max-md:w-10"
+                                            onClick={() =>
+                                              removeMeleeWeapon(weapon.id)
+                                            }
+                                          >
+                                            <Trash2 className="text-destructive h-4 w-4" />
+                                          </Button>
+                                        )}
+                                      </div>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+                                      {isMeleeWeaponsEditing ? (
+                                        <>
+                                          <div className="space-y-1">
+                                            {' '}
+                                            <Label>
+                                              {t('dh2.weaponType')}
+                                            </Label>{' '}
+                                            <Input
+                                              defaultValue={weapon.type}
+                                              onChange={(e) =>
+                                                handleMeleeWeaponChange(
+                                                  weapon.id,
+                                                  'type',
+                                                  e.target.value,
+                                                )
+                                              }
+                                              className="h-7 text-xs"
+                                            />{' '}
+                                          </div>
+                                          <div className="space-y-1">
+                                            {' '}
+                                            <Label>
+                                              {t('dh2.weaponRange')}
+                                            </Label>{' '}
+                                            <Input
+                                              defaultValue={weapon.range}
+                                              onChange={(e) =>
+                                                handleMeleeWeaponChange(
+                                                  weapon.id,
+                                                  'range',
+                                                  e.target.value,
+                                                )
+                                              }
+                                              className="h-7 text-xs"
+                                            />{' '}
+                                          </div>
+                                          <div className="space-y-1">
+                                            {' '}
+                                            <Label>
+                                              {t('dh2.weaponDamage')}
+                                            </Label>{' '}
+                                            <Input
+                                              defaultValue={weapon.damage}
+                                              onChange={(e) =>
+                                                handleMeleeWeaponChange(
+                                                  weapon.id,
+                                                  'damage',
+                                                  e.target.value,
+                                                )
+                                              }
+                                              className="h-7 text-xs"
+                                            />{' '}
+                                          </div>
+                                          <div className="space-y-1">
+                                            {' '}
+                                            <Label>
+                                              {t('dh2.weaponPenetration')}
+                                            </Label>{' '}
+                                            <Input
+                                              defaultValue={weapon.penetration}
+                                              onChange={(e) =>
+                                                handleMeleeWeaponChange(
+                                                  weapon.id,
+                                                  'penetration',
+                                                  e.target.value,
+                                                )
+                                              }
+                                              className="h-7 text-xs"
+                                            />{' '}
+                                          </div>
+                                          <div className="col-span-2 space-y-1">
+                                            {' '}
+                                            <Label>
+                                              {t('dh2.weaponTraits')}
+                                            </Label>{' '}
+                                            <Input
+                                              defaultValue={weapon.traits}
+                                              onChange={(e) =>
+                                                handleMeleeWeaponChange(
+                                                  weapon.id,
+                                                  'traits',
+                                                  e.target.value,
+                                                )
+                                              }
+                                              className="h-7 text-xs"
+                                            />{' '}
+                                          </div>
+                                        </>
+                                      ) : (
+                                        <>
+                                          <div>
+                                            <strong className="text-muted-foreground">
+                                              {t('dh2.weaponType')}:
+                                            </strong>{' '}
+                                            {weapon.type || '-'}
+                                          </div>
+                                          <div>
+                                            <strong className="text-muted-foreground">
+                                              {t('dh2.weaponRange')}:
+                                            </strong>{' '}
+                                            {weapon.range || '-'}
+                                          </div>
+                                          <div>
+                                            <strong className="text-muted-foreground">
+                                              {t('dh2.weaponDamage')}:
+                                            </strong>{' '}
+                                            {weapon.damage || '-'}
+                                          </div>
+                                          <div>
+                                            <strong className="text-muted-foreground">
+                                              {t('dh2.weaponPenetration')}:
+                                            </strong>{' '}
+                                            {weapon.penetration || '-'}
+                                          </div>
+                                          <div className="col-span-2">
+                                            <strong className="text-muted-foreground">
+                                              {t('dh2.weaponTraits')}:
+                                            </strong>{' '}
+                                            <span className="break-words">
+                                              {weapon.traits || '-'}
+                                            </span>
+                                          </div>
+                                        </>
+                                      )}
+                                    </div>
+                                    <div className="flex items-center space-x-2 pt-2">
+                                      <Checkbox
+                                        checked={!!weapon.equipped}
+                                        onCheckedChange={(c) =>
+                                          isMeleeWeaponsEditing
+                                            ? handleMeleeWeaponChange(
+                                                weapon.id,
+                                                'equipped',
+                                                !!c,
+                                              )
+                                            : updateCharacter(character.id, {
                                                 equipment: {
                                                   ...character.equipment,
                                                   weapons: {
@@ -980,570 +1590,820 @@ export const EquipmentInventorySection = React.forwardRef<
                                                       w.id === weapon.id
                                                         ? {
                                                             ...w,
-                                                            notes:
-                                                              e.target.value,
+                                                            equipped: !!c,
                                                           }
                                                         : w,
                                                     ),
                                                   },
                                                 },
-                                              }),
-                                          })}
-                                      placeholder={t('dh2.addNotesPlaceholder')}
-                                      className="mt-2 min-h-[100px] text-sm"
-                                    />
-                                  </PopoverContent>
-                                </Popover>
-                              )}
-                              {isMeleeWeaponsEditing && (
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-7 w-7 max-md:h-10 max-md:w-10"
-                                  onClick={() => removeMeleeWeapon(weapon.id)}
-                                >
-                                  <Trash2 className="text-destructive h-4 w-4" />
-                                </Button>
-                              )}
-                            </div>
+                                              })
+                                        }
+                                      />
+                                      <Label className="text-xs">
+                                        {t('dh2.equipped')}
+                                      </Label>
+                                    </div>
+                                  </div>
+                                )}
+                              </SortableItem>
+                            ))}
                           </div>
-                          <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
-                            {isMeleeWeaponsEditing ? (
-                              <>
-                                <div className="space-y-1">
-                                  {' '}
-                                  <Label>{t('dh2.weaponType')}</Label>{' '}
-                                  <Input
-                                    defaultValue={weapon.type}
-                                    onChange={(e) =>
-                                      handleMeleeWeaponChange(
-                                        weapon.id,
-                                        'type',
-                                        e.target.value,
-                                      )
-                                    }
-                                    className="h-7 text-xs"
-                                  />{' '}
-                                </div>
-                                <div className="space-y-1">
-                                  {' '}
-                                  <Label>{t('dh2.weaponRange')}</Label>{' '}
-                                  <Input
-                                    defaultValue={weapon.range}
-                                    onChange={(e) =>
-                                      handleMeleeWeaponChange(
-                                        weapon.id,
-                                        'range',
-                                        e.target.value,
-                                      )
-                                    }
-                                    className="h-7 text-xs"
-                                  />{' '}
-                                </div>
-                                <div className="space-y-1">
-                                  {' '}
-                                  <Label>{t('dh2.weaponDamage')}</Label>{' '}
-                                  <Input
-                                    defaultValue={weapon.damage}
-                                    onChange={(e) =>
-                                      handleMeleeWeaponChange(
-                                        weapon.id,
-                                        'damage',
-                                        e.target.value,
-                                      )
-                                    }
-                                    className="h-7 text-xs"
-                                  />{' '}
-                                </div>
-                                <div className="space-y-1">
-                                  {' '}
-                                  <Label>
-                                    {t('dh2.weaponPenetration')}
-                                  </Label>{' '}
-                                  <Input
-                                    defaultValue={weapon.penetration}
-                                    onChange={(e) =>
-                                      handleMeleeWeaponChange(
-                                        weapon.id,
-                                        'penetration',
-                                        e.target.value,
-                                      )
-                                    }
-                                    className="h-7 text-xs"
-                                  />{' '}
-                                </div>
-                                <div className="col-span-2 space-y-1">
-                                  {' '}
-                                  <Label>{t('dh2.weaponTraits')}</Label>{' '}
-                                  <Input
-                                    defaultValue={weapon.traits}
-                                    onChange={(e) =>
-                                      handleMeleeWeaponChange(
-                                        weapon.id,
-                                        'traits',
-                                        e.target.value,
-                                      )
-                                    }
-                                    className="h-7 text-xs"
-                                  />{' '}
-                                </div>
-                              </>
-                            ) : (
-                              <>
-                                <div>
-                                  <strong className="text-muted-foreground">
-                                    {t('dh2.weaponType')}:
-                                  </strong>{' '}
-                                  {weapon.type || '-'}
-                                </div>
-                                <div>
-                                  <strong className="text-muted-foreground">
-                                    {t('dh2.weaponRange')}:
-                                  </strong>{' '}
-                                  {weapon.range || '-'}
-                                </div>
-                                <div>
-                                  <strong className="text-muted-foreground">
-                                    {t('dh2.weaponDamage')}:
-                                  </strong>{' '}
-                                  {weapon.damage || '-'}
-                                </div>
-                                <div>
-                                  <strong className="text-muted-foreground">
-                                    {t('dh2.weaponPenetration')}:
-                                  </strong>{' '}
-                                  {weapon.penetration || '-'}
-                                </div>
-                                <div className="col-span-2">
-                                  <strong className="text-muted-foreground">
-                                    {t('dh2.weaponTraits')}:
-                                  </strong>{' '}
-                                  <span className="break-words">
-                                    {weapon.traits || '-'}
-                                  </span>
-                                </div>
-                              </>
-                            )}
-                          </div>
-                          <div className="flex items-center space-x-2 pt-2">
-                            <Checkbox
-                              checked={!!weapon.equipped}
-                              onCheckedChange={(c) =>
-                                isMeleeWeaponsEditing
-                                  ? handleMeleeWeaponChange(
-                                      weapon.id,
-                                      'equipped',
-                                      !!c,
-                                    )
-                                  : updateCharacter(character.id, {
-                                      equipment: {
-                                        ...character.equipment,
-                                        weapons: {
-                                          ...character.equipment.weapons,
-                                          melee: (
-                                            character.equipment.weapons.melee ??
-                                            []
-                                          ).map((w) =>
-                                            w.id === weapon.id
-                                              ? { ...w, equipped: !!c }
-                                              : w,
-                                          ),
-                                        },
-                                      },
-                                    })
-                              }
-                            />
-                            <Label className="text-xs">
-                              {t('dh2.equipped')}
-                            </Label>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                        </AccordionContent>
+                      </AccordionItem>
+                    </Accordion>
                   </div>
-                  <Accordion
-                    type="single"
-                    collapsible
-                    className="w-full"
-                    value={openWeaponSlot === 'melee' ? 'unequipped-melee' : ''}
-                    onValueChange={(value) =>
-                      setOpenWeaponSlot(
-                        value === 'unequipped-melee' ? 'melee' : null,
-                      )
-                    }
-                  >
-                    <AccordionItem
-                      value="unequipped-melee"
-                      className="border-b-0"
-                    >
-                      <AccordionPrimitive.Header className="flex w-full">
-                        <AccordionPrimitive.Trigger
-                          data-testid="unequipped-melee-trigger"
-                          className="flex flex-1 items-center justify-between py-2 text-sm font-medium [&[data-state=open]>svg]:rotate-180"
-                        >
-                          <span>
-                            {t('dh2.notEquipped')} (
-                            <span className="text-muted-foreground">
-                              {unequippedMeleeWeapons.length}
-                            </span>
-                            )
-                          </span>
-                          <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
-                        </AccordionPrimitive.Trigger>
-                      </AccordionPrimitive.Header>
-                      <AccordionContent>
-                        <div className="space-y-2">
-                          {unequippedMeleeWeapons.map((weapon) => (
-                            <div
-                              key={weapon.id}
-                              className="bg-background/50 space-y-2 rounded-lg border p-3"
-                            >
-                              <div className="flex items-start justify-between">
-                                {isMeleeWeaponsEditing ? (
-                                  <Input
-                                    defaultValue={weapon.name}
-                                    onChange={(e) =>
-                                      handleMeleeWeaponChange(
-                                        weapon.id,
-                                        'name',
-                                        e.target.value,
-                                      )
-                                    }
-                                    className="h-8 text-sm font-semibold"
-                                  />
-                                ) : (
-                                  <h5 className="text-sm font-semibold break-words">
-                                    {weapon.name}
-                                  </h5>
-                                )}
-                                <div className="ml-2 flex shrink-0 items-center gap-1">
-                                  {!hideNotes && (
-                                    <Popover>
-                                      <PopoverTrigger asChild>
-                                        <Button
-                                          variant={
-                                            weapon.notes ? 'secondary' : 'ghost'
-                                          }
-                                          size="icon"
-                                          className="h-7 w-7 max-md:h-10 max-md:w-10"
-                                        >
-                                          <InfoIcon className="h-4 w-4" />
-                                        </Button>
-                                      </PopoverTrigger>
-                                      <PopoverContent className="w-64">
-                                        <Label className="mb-2 block text-xs">
-                                          {t('common.notesFor')} {weapon.name}
-                                        </Label>
-                                        <Textarea
-                                          defaultValue={weapon.notes || ''}
-                                          {...(isMeleeWeaponsEditing
-                                            ? {
-                                                onChange: (e) =>
-                                                  handleMeleeWeaponChange(
-                                                    weapon.id,
-                                                    'notes',
-                                                    e.target.value,
-                                                  ),
-                                              }
-                                            : {
-                                                onBlur: (e) =>
-                                                  updateCharacter(
-                                                    character.id,
-                                                    {
-                                                      equipment: {
-                                                        ...character.equipment,
-                                                        weapons: {
-                                                          ...character.equipment
-                                                            .weapons,
-                                                          melee: (
-                                                            character.equipment
-                                                              .weapons.melee ??
-                                                            []
-                                                          ).map((w) =>
-                                                            w.id === weapon.id
-                                                              ? {
-                                                                  ...w,
-                                                                  notes:
-                                                                    e.target
-                                                                      .value,
-                                                                }
-                                                              : w,
-                                                          ),
-                                                        },
-                                                      },
-                                                    },
-                                                  ),
-                                              })}
-                                          placeholder={t(
-                                            'dh2.addNotesPlaceholder',
-                                          )}
-                                          className="mt-2 min-h-[100px] text-sm"
-                                        />
-                                      </PopoverContent>
-                                    </Popover>
-                                  )}
-                                  {isMeleeWeaponsEditing && (
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      className="h-7 w-7 max-md:h-10 max-md:w-10"
-                                      onClick={() =>
-                                        removeMeleeWeapon(weapon.id)
-                                      }
-                                    >
-                                      <Trash2 className="text-destructive h-4 w-4" />
-                                    </Button>
-                                  )}
-                                </div>
-                              </div>
-                              <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
-                                {isMeleeWeaponsEditing ? (
-                                  <>
-                                    <div className="space-y-1">
-                                      {' '}
-                                      <Label>{t('dh2.weaponType')}</Label>{' '}
-                                      <Input
-                                        defaultValue={weapon.type}
-                                        onChange={(e) =>
-                                          handleMeleeWeaponChange(
-                                            weapon.id,
-                                            'type',
-                                            e.target.value,
-                                          )
-                                        }
-                                        className="h-7 text-xs"
-                                      />{' '}
-                                    </div>
-                                    <div className="space-y-1">
-                                      {' '}
-                                      <Label>{t('dh2.weaponRange')}</Label>{' '}
-                                      <Input
-                                        defaultValue={weapon.range}
-                                        onChange={(e) =>
-                                          handleMeleeWeaponChange(
-                                            weapon.id,
-                                            'range',
-                                            e.target.value,
-                                          )
-                                        }
-                                        className="h-7 text-xs"
-                                      />{' '}
-                                    </div>
-                                    <div className="space-y-1">
-                                      {' '}
-                                      <Label>
-                                        {t('dh2.weaponDamage')}
-                                      </Label>{' '}
-                                      <Input
-                                        defaultValue={weapon.damage}
-                                        onChange={(e) =>
-                                          handleMeleeWeaponChange(
-                                            weapon.id,
-                                            'damage',
-                                            e.target.value,
-                                          )
-                                        }
-                                        className="h-7 text-xs"
-                                      />{' '}
-                                    </div>
-                                    <div className="space-y-1">
-                                      {' '}
-                                      <Label>
-                                        {t('dh2.weaponPenetration')}
-                                      </Label>{' '}
-                                      <Input
-                                        defaultValue={weapon.penetration}
-                                        onChange={(e) =>
-                                          handleMeleeWeaponChange(
-                                            weapon.id,
-                                            'penetration',
-                                            e.target.value,
-                                          )
-                                        }
-                                        className="h-7 text-xs"
-                                      />{' '}
-                                    </div>
-                                    <div className="col-span-2 space-y-1">
-                                      {' '}
-                                      <Label>
-                                        {t('dh2.weaponTraits')}
-                                      </Label>{' '}
-                                      <Input
-                                        defaultValue={weapon.traits}
-                                        onChange={(e) =>
-                                          handleMeleeWeaponChange(
-                                            weapon.id,
-                                            'traits',
-                                            e.target.value,
-                                          )
-                                        }
-                                        className="h-7 text-xs"
-                                      />{' '}
-                                    </div>
-                                  </>
-                                ) : (
-                                  <>
-                                    <div>
-                                      <strong className="text-muted-foreground">
-                                        {t('dh2.weaponType')}:
-                                      </strong>{' '}
-                                      {weapon.type || '-'}
-                                    </div>
-                                    <div>
-                                      <strong className="text-muted-foreground">
-                                        {t('dh2.weaponRange')}:
-                                      </strong>{' '}
-                                      {weapon.range || '-'}
-                                    </div>
-                                    <div>
-                                      <strong className="text-muted-foreground">
-                                        {t('dh2.weaponDamage')}:
-                                      </strong>{' '}
-                                      {weapon.damage || '-'}
-                                    </div>
-                                    <div>
-                                      <strong className="text-muted-foreground">
-                                        {t('dh2.weaponPenetration')}:
-                                      </strong>{' '}
-                                      {weapon.penetration || '-'}
-                                    </div>
-                                    <div className="col-span-2">
-                                      <strong className="text-muted-foreground">
-                                        {t('dh2.weaponTraits')}:
-                                      </strong>{' '}
-                                      <span className="break-words">
-                                        {weapon.traits || '-'}
-                                      </span>
-                                    </div>
-                                  </>
-                                )}
-                              </div>
-                              <div className="flex items-center space-x-2 pt-2">
-                                <Checkbox
-                                  checked={!!weapon.equipped}
-                                  onCheckedChange={(c) =>
-                                    isMeleeWeaponsEditing
-                                      ? handleMeleeWeaponChange(
-                                          weapon.id,
-                                          'equipped',
-                                          !!c,
-                                        )
-                                      : updateCharacter(character.id, {
-                                          equipment: {
-                                            ...character.equipment,
-                                            weapons: {
-                                              ...character.equipment.weapons,
-                                              melee: (
-                                                character.equipment.weapons
-                                                  .melee ?? []
-                                              ).map((w) =>
-                                                w.id === weapon.id
-                                                  ? { ...w, equipped: !!c }
-                                                  : w,
-                                              ),
-                                            },
-                                          },
-                                        })
-                                  }
-                                />
-                                <Label className="text-xs">
-                                  {t('dh2.equipped')}
-                                </Label>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </AccordionContent>
-                    </AccordionItem>
-                  </Accordion>
-                  {isMeleeWeaponsEditing && (
-                    <div className="pt-2">
+                </SortableRows>
+                <SortableRows
+                  ids={rangedWeaponIds}
+                  labelById={rangedWeaponLabels}
+                  onReorder={reorderRangedWeapons}
+                >
+                  <div className="space-y-4" data-testid="ranged-weapons">
+                    {isRangedWeaponsEditing && (
                       <Button
-                        data-testid="add-melee-weapon"
-                        onClick={addMeleeWeapon}
+                        data-testid="add-ranged-weapon"
+                        onClick={addRangedWeapon}
                         size="sm"
-                        className="w-full"
+                        className="mb-2 w-full"
                       >
                         <Plus className="mr-2 h-4 w-4" /> {t('common.add')}{' '}
-                        {t('dh2.meleeWeapons')}
-                      </Button>
-                    </div>
-                  )}
-                </div>
-                <div className="space-y-4" data-testid="ranged-weapons">
-                  <div>
-                    <div className="mb-2 flex items-center justify-between">
-                      <h4 className="text-lg font-semibold">
                         {t('dh2.rangedWeapons')}
-                      </h4>
-                      {(showEditButtons || isRangedWeaponsEditing) && (
-                        <EditSaveButton
-                          editing={isRangedWeaponsEditing}
-                          onEdit={() =>
-                            beginEquipmentEditing(() =>
-                              setIsRangedWeaponsEditing(true),
-                            )
-                          }
-                          onSave={handleSaveRangedWeapons}
-                        />
-                      )}
-                    </div>
-                    <div className="space-y-2">
-                      {equippedRangedWeapons.map((weapon) => (
-                        <div
-                          key={weapon.id}
-                          className="bg-background/50 space-y-2 rounded-lg border p-3"
-                        >
-                          <div className="flex items-start justify-between">
-                            {isRangedWeaponsEditing ? (
-                              <Input
-                                defaultValue={weapon.name}
-                                onChange={(e) =>
-                                  handleRangedWeaponChange(
-                                    weapon.id,
-                                    'name',
-                                    e.target.value,
-                                  )
-                                }
-                                className="h-8 text-sm font-semibold"
-                              />
-                            ) : (
-                              <h5 className="text-sm font-semibold break-words">
-                                {weapon.name}
-                              </h5>
-                            )}
-                            <div className="ml-2 flex shrink-0 items-center gap-1">
-                              {!hideNotes && (
-                                <Popover>
-                                  <PopoverTrigger asChild>
-                                    <Button
-                                      variant={
-                                        weapon.notes ? 'secondary' : 'ghost'
+                      </Button>
+                    )}
+
+                    <div>
+                      <div className="mb-2 flex items-center justify-between">
+                        <h4 className="text-lg font-semibold">
+                          {t('dh2.rangedWeapons')}
+                        </h4>
+                        {(showEditButtons || isRangedWeaponsEditing) && (
+                          <EditSaveButton
+                            editing={isRangedWeaponsEditing}
+                            onEdit={() =>
+                              beginEquipmentEditing(() =>
+                                setIsRangedWeaponsEditing(true),
+                              )
+                            }
+                            onSave={handleSaveRangedWeapons}
+                          />
+                        )}
+                      </div>
+                      <div className="space-y-2">
+                        {equippedRangedWeapons.map((weapon) => (
+                          <SortableItem
+                            key={weapon.id}
+                            id={weapon.id}
+                            label={weapon.name}
+                          >
+                            {(handle) => (
+                              <div className="bg-background/50 space-y-2 rounded-lg border p-3">
+                                <div className="flex items-start justify-between">
+                                  {handle}
+                                  {isRangedWeaponsEditing ? (
+                                    <Input
+                                      defaultValue={weapon.name}
+                                      onChange={(e) =>
+                                        handleRangedWeaponChange(
+                                          weapon.id,
+                                          'name',
+                                          e.target.value,
+                                        )
                                       }
-                                      size="icon"
-                                      className="h-7 w-7 max-md:h-10 max-md:w-10"
-                                    >
-                                      <InfoIcon className="h-4 w-4" />
-                                    </Button>
-                                  </PopoverTrigger>
-                                  <PopoverContent className="w-64">
-                                    <Label className="mb-2 block text-xs">
-                                      {t('common.notesFor')} {weapon.name}
-                                    </Label>
-                                    <Textarea
-                                      defaultValue={weapon.notes || ''}
-                                      {...(isRangedWeaponsEditing
-                                        ? {
-                                            onChange: (e) =>
-                                              handleRangedWeaponChange(
-                                                weapon.id,
-                                                'notes',
-                                                e.target.value,
-                                              ),
+                                      className="h-8 text-sm font-semibold"
+                                    />
+                                  ) : (
+                                    <h5 className="text-sm font-semibold break-words">
+                                      {weapon.name}
+                                    </h5>
+                                  )}
+                                  <div className="ml-2 flex shrink-0 items-center gap-1">
+                                    {!hideNotes && (
+                                      <Popover>
+                                        <PopoverTrigger asChild>
+                                          <Button
+                                            variant={
+                                              weapon.notes
+                                                ? 'secondary'
+                                                : 'ghost'
+                                            }
+                                            size="icon"
+                                            className="h-7 w-7 max-md:h-10 max-md:w-10"
+                                          >
+                                            <InfoIcon className="h-4 w-4" />
+                                          </Button>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-64">
+                                          <Label className="mb-2 block text-xs">
+                                            {t('common.notesFor')} {weapon.name}
+                                          </Label>
+                                          <Textarea
+                                            defaultValue={weapon.notes || ''}
+                                            {...(isRangedWeaponsEditing
+                                              ? {
+                                                  onChange: (e) =>
+                                                    handleRangedWeaponChange(
+                                                      weapon.id,
+                                                      'notes',
+                                                      e.target.value,
+                                                    ),
+                                                }
+                                              : {
+                                                  onBlur: (e) =>
+                                                    updateCharacter(
+                                                      character.id,
+                                                      {
+                                                        equipment: {
+                                                          ...character.equipment,
+                                                          weapons: {
+                                                            ...character
+                                                              .equipment
+                                                              .weapons,
+                                                            ranged: (
+                                                              character
+                                                                .equipment
+                                                                .weapons
+                                                                .ranged ?? []
+                                                            ).map((w) =>
+                                                              w.id === weapon.id
+                                                                ? {
+                                                                    ...w,
+                                                                    notes:
+                                                                      e.target
+                                                                        .value,
+                                                                  }
+                                                                : w,
+                                                            ),
+                                                          },
+                                                        },
+                                                      },
+                                                    ),
+                                                })}
+                                            placeholder={t(
+                                              'dh2.addNotesPlaceholder',
+                                            )}
+                                            className="mt-2 min-h-[100px] text-sm"
+                                          />
+                                        </PopoverContent>
+                                      </Popover>
+                                    )}
+                                    {isRangedWeaponsEditing && (
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-7 w-7 max-md:h-10 max-md:w-10"
+                                        onClick={() =>
+                                          removeRangedWeapon(weapon.id)
+                                        }
+                                      >
+                                        <Trash2 className="text-destructive h-4 w-4" />
+                                      </Button>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+                                  {isRangedWeaponsEditing ? (
+                                    <>
+                                      <div className="space-y-1">
+                                        {' '}
+                                        <Label>
+                                          {t('dh2.weaponType')}
+                                        </Label>{' '}
+                                        <Input
+                                          defaultValue={weapon.type}
+                                          onChange={(e) =>
+                                            handleRangedWeaponChange(
+                                              weapon.id,
+                                              'type',
+                                              e.target.value,
+                                            )
                                           }
-                                        : {
-                                            onBlur: (e) =>
-                                              updateCharacter(character.id, {
+                                          className="h-7 text-xs"
+                                        />{' '}
+                                      </div>
+                                      <div className="space-y-1">
+                                        {' '}
+                                        <Label>
+                                          {t('dh2.weaponRange')}
+                                        </Label>{' '}
+                                        <Input
+                                          defaultValue={weapon.range}
+                                          onChange={(e) =>
+                                            handleRangedWeaponChange(
+                                              weapon.id,
+                                              'range',
+                                              e.target.value,
+                                            )
+                                          }
+                                          className="h-7 text-xs"
+                                        />{' '}
+                                      </div>
+                                      <div className="space-y-1">
+                                        {' '}
+                                        <Label>
+                                          {t('dh2.weaponPenetration')}
+                                        </Label>{' '}
+                                        <Input
+                                          defaultValue={
+                                            weapon.penetration ?? ''
+                                          }
+                                          onChange={(e) =>
+                                            handleRangedWeaponChange(
+                                              weapon.id,
+                                              'penetration',
+                                              e.target.value,
+                                            )
+                                          }
+                                          className="h-7 text-xs"
+                                        />{' '}
+                                      </div>
+                                      <div className="space-y-1">
+                                        {' '}
+                                        <Label>{t('dh2.weaponRof')}</Label>{' '}
+                                        <Input
+                                          defaultValue={weapon.rof}
+                                          onChange={(e) =>
+                                            handleRangedWeaponChange(
+                                              weapon.id,
+                                              'rof',
+                                              e.target.value,
+                                            )
+                                          }
+                                          className="h-7 text-xs"
+                                        />{' '}
+                                      </div>
+                                      <div className="space-y-1">
+                                        {' '}
+                                        <Label>
+                                          {t('dh2.weaponDamage')}
+                                        </Label>{' '}
+                                        <Input
+                                          defaultValue={weapon.damage}
+                                          onChange={(e) =>
+                                            handleRangedWeaponChange(
+                                              weapon.id,
+                                              'damage',
+                                              e.target.value,
+                                            )
+                                          }
+                                          className="h-7 text-xs"
+                                        />{' '}
+                                      </div>
+                                      <div className="space-y-1">
+                                        {' '}
+                                        <Label>
+                                          {t('dh2.weaponClip')}
+                                        </Label>{' '}
+                                        <Input
+                                          type="number"
+                                          defaultValue={
+                                            weapon.clip === 0 ? '' : weapon.clip
+                                          }
+                                          onChange={(e) =>
+                                            handleRangedWeaponChange(
+                                              weapon.id,
+                                              'clip',
+                                              e.target.value,
+                                            )
+                                          }
+                                          className="h-7 text-xs"
+                                        />{' '}
+                                      </div>
+                                      <div className="space-y-1">
+                                        {' '}
+                                        <Label>
+                                          {t('dh2.weaponClipSize')}
+                                        </Label>{' '}
+                                        <Input
+                                          type="number"
+                                          defaultValue={
+                                            weapon.clipSize === 0
+                                              ? ''
+                                              : weapon.clipSize
+                                          }
+                                          onChange={(e) =>
+                                            handleRangedWeaponChange(
+                                              weapon.id,
+                                              'clipSize',
+                                              e.target.value,
+                                            )
+                                          }
+                                          className="h-7 text-xs"
+                                        />{' '}
+                                      </div>
+                                      <div className="col-span-2 space-y-1">
+                                        {' '}
+                                        <Label>
+                                          {t('dh2.weaponReload')}
+                                        </Label>{' '}
+                                        <Input
+                                          defaultValue={weapon.reload}
+                                          onChange={(e) =>
+                                            handleRangedWeaponChange(
+                                              weapon.id,
+                                              'reload',
+                                              e.target.value,
+                                            )
+                                          }
+                                          className="h-7 text-xs"
+                                        />{' '}
+                                      </div>
+                                      <div className="col-span-2 space-y-1">
+                                        {' '}
+                                        <Label>
+                                          {t('dh2.weaponTraits')}
+                                        </Label>{' '}
+                                        <Input
+                                          defaultValue={weapon.traits}
+                                          onChange={(e) =>
+                                            handleRangedWeaponChange(
+                                              weapon.id,
+                                              'traits',
+                                              e.target.value,
+                                            )
+                                          }
+                                          className="h-7 text-xs"
+                                        />{' '}
+                                      </div>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <div>
+                                        <strong className="text-muted-foreground">
+                                          {t('dh2.weaponType')}:
+                                        </strong>{' '}
+                                        {weapon.type || '-'}
+                                      </div>
+                                      <div>
+                                        <strong className="text-muted-foreground">
+                                          {t('dh2.weaponRange')}:
+                                        </strong>{' '}
+                                        {weapon.range || '-'}
+                                      </div>
+                                      <div>
+                                        <strong className="text-muted-foreground">
+                                          {t('dh2.weaponPenetration')}:
+                                        </strong>{' '}
+                                        {weapon.penetration || '-'}
+                                      </div>
+                                      <div>
+                                        <strong className="text-muted-foreground">
+                                          {t('dh2.weaponRof')}:
+                                        </strong>{' '}
+                                        {weapon.rof || '-'}
+                                      </div>
+                                      <div>
+                                        <strong className="text-muted-foreground">
+                                          {t('dh2.weaponDamage')}:
+                                        </strong>{' '}
+                                        {weapon.damage || '-'}
+                                      </div>
+                                      <div>
+                                        <strong className="text-muted-foreground">
+                                          {t('dh2.weaponClip')}:
+                                        </strong>{' '}
+                                        {weapon.clip} / {weapon.clipSize}
+                                      </div>
+                                      <div>
+                                        <strong className="text-muted-foreground">
+                                          {t('dh2.weaponReload')}:
+                                        </strong>{' '}
+                                        {weapon.reload || '-'}
+                                      </div>
+                                      <div className="col-span-2">
+                                        <strong className="text-muted-foreground">
+                                          {t('dh2.weaponTraits')}:
+                                        </strong>{' '}
+                                        <span className="break-words">
+                                          {weapon.traits || '-'}
+                                        </span>
+                                      </div>
+                                    </>
+                                  )}
+                                </div>
+                                <div className="flex items-center space-x-2 pt-2">
+                                  <Checkbox
+                                    checked={!!weapon.equipped}
+                                    onCheckedChange={(c) =>
+                                      isRangedWeaponsEditing
+                                        ? handleRangedWeaponChange(
+                                            weapon.id,
+                                            'equipped',
+                                            !!c,
+                                          )
+                                        : updateCharacter(character.id, {
+                                            equipment: {
+                                              ...character.equipment,
+                                              weapons: {
+                                                ...character.equipment.weapons,
+                                                ranged: (
+                                                  character.equipment.weapons
+                                                    .ranged ?? []
+                                                ).map((w) =>
+                                                  w.id === weapon.id
+                                                    ? { ...w, equipped: !!c }
+                                                    : w,
+                                                ),
+                                              },
+                                            },
+                                          })
+                                    }
+                                  />
+                                  <Label className="text-xs">
+                                    {t('dh2.equipped')}
+                                  </Label>
+                                </div>
+                              </div>
+                            )}
+                          </SortableItem>
+                        ))}
+                      </div>
+                    </div>
+                    <Accordion
+                      type="single"
+                      collapsible
+                      className="w-full"
+                      value={
+                        openWeaponSlot === 'ranged' ? 'unequipped-ranged' : ''
+                      }
+                      onValueChange={(value) =>
+                        setOpenWeaponSlot(
+                          value === 'unequipped-ranged' ? 'ranged' : null,
+                        )
+                      }
+                    >
+                      <AccordionItem
+                        value="unequipped-ranged"
+                        className="border-b-0"
+                      >
+                        <AccordionPrimitive.Header className="flex w-full">
+                          <AccordionPrimitive.Trigger
+                            data-testid="unequipped-ranged-trigger"
+                            className="flex flex-1 items-center justify-between py-2 text-sm font-medium [&[data-state=open]>svg]:rotate-180"
+                          >
+                            <span>
+                              {t('dh2.notEquipped')} (
+                              <span className="text-muted-foreground">
+                                {unequippedRangedWeapons.length}
+                              </span>
+                              )
+                            </span>
+                            <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
+                          </AccordionPrimitive.Trigger>
+                        </AccordionPrimitive.Header>
+                        <AccordionContent>
+                          <div className="space-y-2">
+                            {unequippedRangedWeapons.map((weapon) => (
+                              <SortableItem
+                                key={weapon.id}
+                                id={weapon.id}
+                                label={weapon.name}
+                              >
+                                {(handle) => (
+                                  <div className="bg-background/50 space-y-2 rounded-lg border p-3">
+                                    <div className="flex items-start justify-between">
+                                      {handle}
+                                      {isRangedWeaponsEditing ? (
+                                        <Input
+                                          defaultValue={weapon.name}
+                                          onChange={(e) =>
+                                            handleRangedWeaponChange(
+                                              weapon.id,
+                                              'name',
+                                              e.target.value,
+                                            )
+                                          }
+                                          className="h-8 text-sm font-semibold"
+                                        />
+                                      ) : (
+                                        <h5 className="text-sm font-semibold break-words">
+                                          {weapon.name}
+                                        </h5>
+                                      )}
+                                      <div className="ml-2 flex shrink-0 items-center gap-1">
+                                        {!hideNotes && (
+                                          <Popover>
+                                            <PopoverTrigger asChild>
+                                              <Button
+                                                variant={
+                                                  weapon.notes
+                                                    ? 'secondary'
+                                                    : 'ghost'
+                                                }
+                                                size="icon"
+                                                className="h-7 w-7 max-md:h-10 max-md:w-10"
+                                              >
+                                                <InfoIcon className="h-4 w-4" />
+                                              </Button>
+                                            </PopoverTrigger>
+                                            <PopoverContent className="w-64">
+                                              <Label className="mb-2 block text-xs">
+                                                {t('common.notesFor')}{' '}
+                                                {weapon.name}
+                                              </Label>
+                                              <Textarea
+                                                defaultValue={
+                                                  weapon.notes || ''
+                                                }
+                                                {...(isRangedWeaponsEditing
+                                                  ? {
+                                                      onChange: (e) =>
+                                                        handleRangedWeaponChange(
+                                                          weapon.id,
+                                                          'notes',
+                                                          e.target.value,
+                                                        ),
+                                                    }
+                                                  : {
+                                                      onBlur: (e) =>
+                                                        updateCharacter(
+                                                          character.id,
+                                                          {
+                                                            equipment: {
+                                                              ...character.equipment,
+                                                              weapons: {
+                                                                ...character
+                                                                  .equipment
+                                                                  .weapons,
+                                                                ranged: (
+                                                                  character
+                                                                    .equipment
+                                                                    .weapons
+                                                                    .ranged ??
+                                                                  []
+                                                                ).map((w) =>
+                                                                  w.id ===
+                                                                  weapon.id
+                                                                    ? {
+                                                                        ...w,
+                                                                        notes:
+                                                                          e
+                                                                            .target
+                                                                            .value,
+                                                                      }
+                                                                    : w,
+                                                                ),
+                                                              },
+                                                            },
+                                                          },
+                                                        ),
+                                                    })}
+                                                placeholder={t(
+                                                  'dh2.addNotesPlaceholder',
+                                                )}
+                                                className="mt-2 min-h-[100px] text-sm"
+                                              />
+                                            </PopoverContent>
+                                          </Popover>
+                                        )}
+                                        {isRangedWeaponsEditing && (
+                                          <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-7 w-7 max-md:h-10 max-md:w-10"
+                                            onClick={() =>
+                                              removeRangedWeapon(weapon.id)
+                                            }
+                                          >
+                                            <Trash2 className="text-destructive h-4 w-4" />
+                                          </Button>
+                                        )}
+                                      </div>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+                                      {isRangedWeaponsEditing ? (
+                                        <>
+                                          <div className="space-y-1">
+                                            {' '}
+                                            <Label>
+                                              {t('dh2.weaponType')}
+                                            </Label>{' '}
+                                            <Input
+                                              defaultValue={weapon.type}
+                                              onChange={(e) =>
+                                                handleRangedWeaponChange(
+                                                  weapon.id,
+                                                  'type',
+                                                  e.target.value,
+                                                )
+                                              }
+                                              className="h-7 text-xs"
+                                            />{' '}
+                                          </div>
+                                          <div className="space-y-1">
+                                            {' '}
+                                            <Label>
+                                              {t('dh2.weaponRange')}
+                                            </Label>{' '}
+                                            <Input
+                                              defaultValue={weapon.range}
+                                              onChange={(e) =>
+                                                handleRangedWeaponChange(
+                                                  weapon.id,
+                                                  'range',
+                                                  e.target.value,
+                                                )
+                                              }
+                                              className="h-7 text-xs"
+                                            />{' '}
+                                          </div>
+                                          <div className="space-y-1">
+                                            {' '}
+                                            <Label>
+                                              {t('dh2.weaponPenetration')}
+                                            </Label>{' '}
+                                            <Input
+                                              defaultValue={
+                                                weapon.penetration ?? ''
+                                              }
+                                              onChange={(e) =>
+                                                handleRangedWeaponChange(
+                                                  weapon.id,
+                                                  'penetration',
+                                                  e.target.value,
+                                                )
+                                              }
+                                              className="h-7 text-xs"
+                                            />{' '}
+                                          </div>
+                                          <div className="space-y-1">
+                                            {' '}
+                                            <Label>
+                                              {t('dh2.weaponRof')}
+                                            </Label>{' '}
+                                            <Input
+                                              defaultValue={weapon.rof}
+                                              onChange={(e) =>
+                                                handleRangedWeaponChange(
+                                                  weapon.id,
+                                                  'rof',
+                                                  e.target.value,
+                                                )
+                                              }
+                                              className="h-7 text-xs"
+                                            />{' '}
+                                          </div>
+                                          <div className="space-y-1">
+                                            {' '}
+                                            <Label>
+                                              {t('dh2.weaponDamage')}
+                                            </Label>{' '}
+                                            <Input
+                                              defaultValue={weapon.damage}
+                                              onChange={(e) =>
+                                                handleRangedWeaponChange(
+                                                  weapon.id,
+                                                  'damage',
+                                                  e.target.value,
+                                                )
+                                              }
+                                              className="h-7 text-xs"
+                                            />{' '}
+                                          </div>
+                                          <div className="space-y-1">
+                                            {' '}
+                                            <Label>
+                                              {t('dh2.weaponClip')}
+                                            </Label>{' '}
+                                            <Input
+                                              type="number"
+                                              defaultValue={
+                                                weapon.clip === 0
+                                                  ? ''
+                                                  : weapon.clip
+                                              }
+                                              onChange={(e) =>
+                                                handleRangedWeaponChange(
+                                                  weapon.id,
+                                                  'clip',
+                                                  e.target.value,
+                                                )
+                                              }
+                                              className="h-7 text-xs"
+                                            />{' '}
+                                          </div>
+                                          <div className="space-y-1">
+                                            {' '}
+                                            <Label>
+                                              {t('dh2.weaponClipSize')}
+                                            </Label>{' '}
+                                            <Input
+                                              type="number"
+                                              defaultValue={
+                                                weapon.clipSize === 0
+                                                  ? ''
+                                                  : weapon.clipSize
+                                              }
+                                              onChange={(e) =>
+                                                handleRangedWeaponChange(
+                                                  weapon.id,
+                                                  'clipSize',
+                                                  e.target.value,
+                                                )
+                                              }
+                                              className="h-7 text-xs"
+                                            />{' '}
+                                          </div>
+                                          <div className="col-span-2 space-y-1">
+                                            {' '}
+                                            <Label>
+                                              {t('dh2.weaponReload')}
+                                            </Label>{' '}
+                                            <Input
+                                              defaultValue={weapon.reload}
+                                              onChange={(e) =>
+                                                handleRangedWeaponChange(
+                                                  weapon.id,
+                                                  'reload',
+                                                  e.target.value,
+                                                )
+                                              }
+                                              className="h-7 text-xs"
+                                            />{' '}
+                                          </div>
+                                          <div className="col-span-2 space-y-1">
+                                            {' '}
+                                            <Label>
+                                              {t('dh2.weaponTraits')}
+                                            </Label>{' '}
+                                            <Input
+                                              defaultValue={weapon.traits}
+                                              onChange={(e) =>
+                                                handleRangedWeaponChange(
+                                                  weapon.id,
+                                                  'traits',
+                                                  e.target.value,
+                                                )
+                                              }
+                                              className="h-7 text-xs"
+                                            />{' '}
+                                          </div>
+                                        </>
+                                      ) : (
+                                        <>
+                                          <div>
+                                            <strong className="text-muted-foreground">
+                                              {t('dh2.weaponType')}:
+                                            </strong>{' '}
+                                            {weapon.type || '-'}
+                                          </div>
+                                          <div>
+                                            <strong className="text-muted-foreground">
+                                              {t('dh2.weaponRange')}:
+                                            </strong>{' '}
+                                            {weapon.range || '-'}
+                                          </div>
+                                          <div>
+                                            <strong className="text-muted-foreground">
+                                              {t('dh2.weaponPenetration')}:
+                                            </strong>{' '}
+                                            {weapon.penetration || '-'}
+                                          </div>
+                                          <div>
+                                            <strong className="text-muted-foreground">
+                                              {t('dh2.weaponRof')}:
+                                            </strong>{' '}
+                                            {weapon.rof || '-'}
+                                          </div>
+                                          <div>
+                                            <strong className="text-muted-foreground">
+                                              {t('dh2.weaponDamage')}:
+                                            </strong>{' '}
+                                            {weapon.damage || '-'}
+                                          </div>
+                                          <div>
+                                            <strong className="text-muted-foreground">
+                                              {t('dh2.weaponClip')}:
+                                            </strong>{' '}
+                                            {weapon.clip} / {weapon.clipSize}
+                                          </div>
+                                          <div>
+                                            <strong className="text-muted-foreground">
+                                              {t('dh2.weaponReload')}:
+                                            </strong>{' '}
+                                            {weapon.reload || '-'}
+                                          </div>
+                                          <div className="col-span-2">
+                                            <strong className="text-muted-foreground">
+                                              {t('dh2.weaponTraits')}:
+                                            </strong>{' '}
+                                            <span className="break-words">
+                                              {weapon.traits || '-'}
+                                            </span>
+                                          </div>
+                                        </>
+                                      )}
+                                    </div>
+                                    <div className="flex items-center space-x-2 pt-2">
+                                      <Checkbox
+                                        checked={!!weapon.equipped}
+                                        onCheckedChange={(c) =>
+                                          isRangedWeaponsEditing
+                                            ? handleRangedWeaponChange(
+                                                weapon.id,
+                                                'equipped',
+                                                !!c,
+                                              )
+                                            : updateCharacter(character.id, {
                                                 equipment: {
                                                   ...character.equipment,
                                                   weapons: {
@@ -1556,674 +2416,29 @@ export const EquipmentInventorySection = React.forwardRef<
                                                       w.id === weapon.id
                                                         ? {
                                                             ...w,
-                                                            notes:
-                                                              e.target.value,
+                                                            equipped: !!c,
                                                           }
                                                         : w,
                                                     ),
                                                   },
                                                 },
-                                              }),
-                                          })}
-                                      placeholder={t('dh2.addNotesPlaceholder')}
-                                      className="mt-2 min-h-[100px] text-sm"
-                                    />
-                                  </PopoverContent>
-                                </Popover>
-                              )}
-                              {isRangedWeaponsEditing && (
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-7 w-7 max-md:h-10 max-md:w-10"
-                                  onClick={() => removeRangedWeapon(weapon.id)}
-                                >
-                                  <Trash2 className="text-destructive h-4 w-4" />
-                                </Button>
-                              )}
-                            </div>
+                                              })
+                                        }
+                                      />
+                                      <Label className="text-xs">
+                                        {t('dh2.equipped')}
+                                      </Label>
+                                    </div>
+                                  </div>
+                                )}
+                              </SortableItem>
+                            ))}
                           </div>
-                          <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
-                            {isRangedWeaponsEditing ? (
-                              <>
-                                <div className="space-y-1">
-                                  {' '}
-                                  <Label>{t('dh2.weaponType')}</Label>{' '}
-                                  <Input
-                                    defaultValue={weapon.type}
-                                    onChange={(e) =>
-                                      handleRangedWeaponChange(
-                                        weapon.id,
-                                        'type',
-                                        e.target.value,
-                                      )
-                                    }
-                                    className="h-7 text-xs"
-                                  />{' '}
-                                </div>
-                                <div className="space-y-1">
-                                  {' '}
-                                  <Label>{t('dh2.weaponRange')}</Label>{' '}
-                                  <Input
-                                    defaultValue={weapon.range}
-                                    onChange={(e) =>
-                                      handleRangedWeaponChange(
-                                        weapon.id,
-                                        'range',
-                                        e.target.value,
-                                      )
-                                    }
-                                    className="h-7 text-xs"
-                                  />{' '}
-                                </div>
-                                <div className="space-y-1">
-                                  {' '}
-                                  <Label>
-                                    {t('dh2.weaponPenetration')}
-                                  </Label>{' '}
-                                  <Input
-                                    defaultValue={weapon.penetration ?? ''}
-                                    onChange={(e) =>
-                                      handleRangedWeaponChange(
-                                        weapon.id,
-                                        'penetration',
-                                        e.target.value,
-                                      )
-                                    }
-                                    className="h-7 text-xs"
-                                  />{' '}
-                                </div>
-                                <div className="space-y-1">
-                                  {' '}
-                                  <Label>{t('dh2.weaponRof')}</Label>{' '}
-                                  <Input
-                                    defaultValue={weapon.rof}
-                                    onChange={(e) =>
-                                      handleRangedWeaponChange(
-                                        weapon.id,
-                                        'rof',
-                                        e.target.value,
-                                      )
-                                    }
-                                    className="h-7 text-xs"
-                                  />{' '}
-                                </div>
-                                <div className="space-y-1">
-                                  {' '}
-                                  <Label>{t('dh2.weaponDamage')}</Label>{' '}
-                                  <Input
-                                    defaultValue={weapon.damage}
-                                    onChange={(e) =>
-                                      handleRangedWeaponChange(
-                                        weapon.id,
-                                        'damage',
-                                        e.target.value,
-                                      )
-                                    }
-                                    className="h-7 text-xs"
-                                  />{' '}
-                                </div>
-                                <div className="space-y-1">
-                                  {' '}
-                                  <Label>{t('dh2.weaponClip')}</Label>{' '}
-                                  <Input
-                                    type="number"
-                                    defaultValue={
-                                      weapon.clip === 0 ? '' : weapon.clip
-                                    }
-                                    onChange={(e) =>
-                                      handleRangedWeaponChange(
-                                        weapon.id,
-                                        'clip',
-                                        e.target.value,
-                                      )
-                                    }
-                                    className="h-7 text-xs"
-                                  />{' '}
-                                </div>
-                                <div className="space-y-1">
-                                  {' '}
-                                  <Label>{t('dh2.weaponClipSize')}</Label>{' '}
-                                  <Input
-                                    type="number"
-                                    defaultValue={
-                                      weapon.clipSize === 0
-                                        ? ''
-                                        : weapon.clipSize
-                                    }
-                                    onChange={(e) =>
-                                      handleRangedWeaponChange(
-                                        weapon.id,
-                                        'clipSize',
-                                        e.target.value,
-                                      )
-                                    }
-                                    className="h-7 text-xs"
-                                  />{' '}
-                                </div>
-                                <div className="col-span-2 space-y-1">
-                                  {' '}
-                                  <Label>{t('dh2.weaponReload')}</Label>{' '}
-                                  <Input
-                                    defaultValue={weapon.reload}
-                                    onChange={(e) =>
-                                      handleRangedWeaponChange(
-                                        weapon.id,
-                                        'reload',
-                                        e.target.value,
-                                      )
-                                    }
-                                    className="h-7 text-xs"
-                                  />{' '}
-                                </div>
-                                <div className="col-span-2 space-y-1">
-                                  {' '}
-                                  <Label>{t('dh2.weaponTraits')}</Label>{' '}
-                                  <Input
-                                    defaultValue={weapon.traits}
-                                    onChange={(e) =>
-                                      handleRangedWeaponChange(
-                                        weapon.id,
-                                        'traits',
-                                        e.target.value,
-                                      )
-                                    }
-                                    className="h-7 text-xs"
-                                  />{' '}
-                                </div>
-                              </>
-                            ) : (
-                              <>
-                                <div>
-                                  <strong className="text-muted-foreground">
-                                    {t('dh2.weaponType')}:
-                                  </strong>{' '}
-                                  {weapon.type || '-'}
-                                </div>
-                                <div>
-                                  <strong className="text-muted-foreground">
-                                    {t('dh2.weaponRange')}:
-                                  </strong>{' '}
-                                  {weapon.range || '-'}
-                                </div>
-                                <div>
-                                  <strong className="text-muted-foreground">
-                                    {t('dh2.weaponPenetration')}:
-                                  </strong>{' '}
-                                  {weapon.penetration || '-'}
-                                </div>
-                                <div>
-                                  <strong className="text-muted-foreground">
-                                    {t('dh2.weaponRof')}:
-                                  </strong>{' '}
-                                  {weapon.rof || '-'}
-                                </div>
-                                <div>
-                                  <strong className="text-muted-foreground">
-                                    {t('dh2.weaponDamage')}:
-                                  </strong>{' '}
-                                  {weapon.damage || '-'}
-                                </div>
-                                <div>
-                                  <strong className="text-muted-foreground">
-                                    {t('dh2.weaponClip')}:
-                                  </strong>{' '}
-                                  {weapon.clip} / {weapon.clipSize}
-                                </div>
-                                <div>
-                                  <strong className="text-muted-foreground">
-                                    {t('dh2.weaponReload')}:
-                                  </strong>{' '}
-                                  {weapon.reload || '-'}
-                                </div>
-                                <div className="col-span-2">
-                                  <strong className="text-muted-foreground">
-                                    {t('dh2.weaponTraits')}:
-                                  </strong>{' '}
-                                  <span className="break-words">
-                                    {weapon.traits || '-'}
-                                  </span>
-                                </div>
-                              </>
-                            )}
-                          </div>
-                          <div className="flex items-center space-x-2 pt-2">
-                            <Checkbox
-                              checked={!!weapon.equipped}
-                              onCheckedChange={(c) =>
-                                isRangedWeaponsEditing
-                                  ? handleRangedWeaponChange(
-                                      weapon.id,
-                                      'equipped',
-                                      !!c,
-                                    )
-                                  : updateCharacter(character.id, {
-                                      equipment: {
-                                        ...character.equipment,
-                                        weapons: {
-                                          ...character.equipment.weapons,
-                                          ranged: (
-                                            character.equipment.weapons
-                                              .ranged ?? []
-                                          ).map((w) =>
-                                            w.id === weapon.id
-                                              ? { ...w, equipped: !!c }
-                                              : w,
-                                          ),
-                                        },
-                                      },
-                                    })
-                              }
-                            />
-                            <Label className="text-xs">
-                              {t('dh2.equipped')}
-                            </Label>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                        </AccordionContent>
+                      </AccordionItem>
+                    </Accordion>
                   </div>
-                  <Accordion
-                    type="single"
-                    collapsible
-                    className="w-full"
-                    value={
-                      openWeaponSlot === 'ranged' ? 'unequipped-ranged' : ''
-                    }
-                    onValueChange={(value) =>
-                      setOpenWeaponSlot(
-                        value === 'unequipped-ranged' ? 'ranged' : null,
-                      )
-                    }
-                  >
-                    <AccordionItem
-                      value="unequipped-ranged"
-                      className="border-b-0"
-                    >
-                      <AccordionPrimitive.Header className="flex w-full">
-                        <AccordionPrimitive.Trigger
-                          data-testid="unequipped-ranged-trigger"
-                          className="flex flex-1 items-center justify-between py-2 text-sm font-medium [&[data-state=open]>svg]:rotate-180"
-                        >
-                          <span>
-                            {t('dh2.notEquipped')} (
-                            <span className="text-muted-foreground">
-                              {unequippedRangedWeapons.length}
-                            </span>
-                            )
-                          </span>
-                          <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
-                        </AccordionPrimitive.Trigger>
-                      </AccordionPrimitive.Header>
-                      <AccordionContent>
-                        <div className="space-y-2">
-                          {unequippedRangedWeapons.map((weapon) => (
-                            <div
-                              key={weapon.id}
-                              className="bg-background/50 space-y-2 rounded-lg border p-3"
-                            >
-                              <div className="flex items-start justify-between">
-                                {isRangedWeaponsEditing ? (
-                                  <Input
-                                    defaultValue={weapon.name}
-                                    onChange={(e) =>
-                                      handleRangedWeaponChange(
-                                        weapon.id,
-                                        'name',
-                                        e.target.value,
-                                      )
-                                    }
-                                    className="h-8 text-sm font-semibold"
-                                  />
-                                ) : (
-                                  <h5 className="text-sm font-semibold break-words">
-                                    {weapon.name}
-                                  </h5>
-                                )}
-                                <div className="ml-2 flex shrink-0 items-center gap-1">
-                                  {!hideNotes && (
-                                    <Popover>
-                                      <PopoverTrigger asChild>
-                                        <Button
-                                          variant={
-                                            weapon.notes ? 'secondary' : 'ghost'
-                                          }
-                                          size="icon"
-                                          className="h-7 w-7 max-md:h-10 max-md:w-10"
-                                        >
-                                          <InfoIcon className="h-4 w-4" />
-                                        </Button>
-                                      </PopoverTrigger>
-                                      <PopoverContent className="w-64">
-                                        <Label className="mb-2 block text-xs">
-                                          {t('common.notesFor')} {weapon.name}
-                                        </Label>
-                                        <Textarea
-                                          defaultValue={weapon.notes || ''}
-                                          {...(isRangedWeaponsEditing
-                                            ? {
-                                                onChange: (e) =>
-                                                  handleRangedWeaponChange(
-                                                    weapon.id,
-                                                    'notes',
-                                                    e.target.value,
-                                                  ),
-                                              }
-                                            : {
-                                                onBlur: (e) =>
-                                                  updateCharacter(
-                                                    character.id,
-                                                    {
-                                                      equipment: {
-                                                        ...character.equipment,
-                                                        weapons: {
-                                                          ...character.equipment
-                                                            .weapons,
-                                                          ranged: (
-                                                            character.equipment
-                                                              .weapons.ranged ??
-                                                            []
-                                                          ).map((w) =>
-                                                            w.id === weapon.id
-                                                              ? {
-                                                                  ...w,
-                                                                  notes:
-                                                                    e.target
-                                                                      .value,
-                                                                }
-                                                              : w,
-                                                          ),
-                                                        },
-                                                      },
-                                                    },
-                                                  ),
-                                              })}
-                                          placeholder={t(
-                                            'dh2.addNotesPlaceholder',
-                                          )}
-                                          className="mt-2 min-h-[100px] text-sm"
-                                        />
-                                      </PopoverContent>
-                                    </Popover>
-                                  )}
-                                  {isRangedWeaponsEditing && (
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      className="h-7 w-7 max-md:h-10 max-md:w-10"
-                                      onClick={() =>
-                                        removeRangedWeapon(weapon.id)
-                                      }
-                                    >
-                                      <Trash2 className="text-destructive h-4 w-4" />
-                                    </Button>
-                                  )}
-                                </div>
-                              </div>
-                              <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
-                                {isRangedWeaponsEditing ? (
-                                  <>
-                                    <div className="space-y-1">
-                                      {' '}
-                                      <Label>{t('dh2.weaponType')}</Label>{' '}
-                                      <Input
-                                        defaultValue={weapon.type}
-                                        onChange={(e) =>
-                                          handleRangedWeaponChange(
-                                            weapon.id,
-                                            'type',
-                                            e.target.value,
-                                          )
-                                        }
-                                        className="h-7 text-xs"
-                                      />{' '}
-                                    </div>
-                                    <div className="space-y-1">
-                                      {' '}
-                                      <Label>{t('dh2.weaponRange')}</Label>{' '}
-                                      <Input
-                                        defaultValue={weapon.range}
-                                        onChange={(e) =>
-                                          handleRangedWeaponChange(
-                                            weapon.id,
-                                            'range',
-                                            e.target.value,
-                                          )
-                                        }
-                                        className="h-7 text-xs"
-                                      />{' '}
-                                    </div>
-                                    <div className="space-y-1">
-                                      {' '}
-                                      <Label>
-                                        {t('dh2.weaponPenetration')}
-                                      </Label>{' '}
-                                      <Input
-                                        defaultValue={weapon.penetration ?? ''}
-                                        onChange={(e) =>
-                                          handleRangedWeaponChange(
-                                            weapon.id,
-                                            'penetration',
-                                            e.target.value,
-                                          )
-                                        }
-                                        className="h-7 text-xs"
-                                      />{' '}
-                                    </div>
-                                    <div className="space-y-1">
-                                      {' '}
-                                      <Label>{t('dh2.weaponRof')}</Label>{' '}
-                                      <Input
-                                        defaultValue={weapon.rof}
-                                        onChange={(e) =>
-                                          handleRangedWeaponChange(
-                                            weapon.id,
-                                            'rof',
-                                            e.target.value,
-                                          )
-                                        }
-                                        className="h-7 text-xs"
-                                      />{' '}
-                                    </div>
-                                    <div className="space-y-1">
-                                      {' '}
-                                      <Label>
-                                        {t('dh2.weaponDamage')}
-                                      </Label>{' '}
-                                      <Input
-                                        defaultValue={weapon.damage}
-                                        onChange={(e) =>
-                                          handleRangedWeaponChange(
-                                            weapon.id,
-                                            'damage',
-                                            e.target.value,
-                                          )
-                                        }
-                                        className="h-7 text-xs"
-                                      />{' '}
-                                    </div>
-                                    <div className="space-y-1">
-                                      {' '}
-                                      <Label>{t('dh2.weaponClip')}</Label>{' '}
-                                      <Input
-                                        type="number"
-                                        defaultValue={
-                                          weapon.clip === 0 ? '' : weapon.clip
-                                        }
-                                        onChange={(e) =>
-                                          handleRangedWeaponChange(
-                                            weapon.id,
-                                            'clip',
-                                            e.target.value,
-                                          )
-                                        }
-                                        className="h-7 text-xs"
-                                      />{' '}
-                                    </div>
-                                    <div className="space-y-1">
-                                      {' '}
-                                      <Label>
-                                        {t('dh2.weaponClipSize')}
-                                      </Label>{' '}
-                                      <Input
-                                        type="number"
-                                        defaultValue={
-                                          weapon.clipSize === 0
-                                            ? ''
-                                            : weapon.clipSize
-                                        }
-                                        onChange={(e) =>
-                                          handleRangedWeaponChange(
-                                            weapon.id,
-                                            'clipSize',
-                                            e.target.value,
-                                          )
-                                        }
-                                        className="h-7 text-xs"
-                                      />{' '}
-                                    </div>
-                                    <div className="col-span-2 space-y-1">
-                                      {' '}
-                                      <Label>
-                                        {t('dh2.weaponReload')}
-                                      </Label>{' '}
-                                      <Input
-                                        defaultValue={weapon.reload}
-                                        onChange={(e) =>
-                                          handleRangedWeaponChange(
-                                            weapon.id,
-                                            'reload',
-                                            e.target.value,
-                                          )
-                                        }
-                                        className="h-7 text-xs"
-                                      />{' '}
-                                    </div>
-                                    <div className="col-span-2 space-y-1">
-                                      {' '}
-                                      <Label>
-                                        {t('dh2.weaponTraits')}
-                                      </Label>{' '}
-                                      <Input
-                                        defaultValue={weapon.traits}
-                                        onChange={(e) =>
-                                          handleRangedWeaponChange(
-                                            weapon.id,
-                                            'traits',
-                                            e.target.value,
-                                          )
-                                        }
-                                        className="h-7 text-xs"
-                                      />{' '}
-                                    </div>
-                                  </>
-                                ) : (
-                                  <>
-                                    <div>
-                                      <strong className="text-muted-foreground">
-                                        {t('dh2.weaponType')}:
-                                      </strong>{' '}
-                                      {weapon.type || '-'}
-                                    </div>
-                                    <div>
-                                      <strong className="text-muted-foreground">
-                                        {t('dh2.weaponRange')}:
-                                      </strong>{' '}
-                                      {weapon.range || '-'}
-                                    </div>
-                                    <div>
-                                      <strong className="text-muted-foreground">
-                                        {t('dh2.weaponPenetration')}:
-                                      </strong>{' '}
-                                      {weapon.penetration || '-'}
-                                    </div>
-                                    <div>
-                                      <strong className="text-muted-foreground">
-                                        {t('dh2.weaponRof')}:
-                                      </strong>{' '}
-                                      {weapon.rof || '-'}
-                                    </div>
-                                    <div>
-                                      <strong className="text-muted-foreground">
-                                        {t('dh2.weaponDamage')}:
-                                      </strong>{' '}
-                                      {weapon.damage || '-'}
-                                    </div>
-                                    <div>
-                                      <strong className="text-muted-foreground">
-                                        {t('dh2.weaponClip')}:
-                                      </strong>{' '}
-                                      {weapon.clip} / {weapon.clipSize}
-                                    </div>
-                                    <div>
-                                      <strong className="text-muted-foreground">
-                                        {t('dh2.weaponReload')}:
-                                      </strong>{' '}
-                                      {weapon.reload || '-'}
-                                    </div>
-                                    <div className="col-span-2">
-                                      <strong className="text-muted-foreground">
-                                        {t('dh2.weaponTraits')}:
-                                      </strong>{' '}
-                                      <span className="break-words">
-                                        {weapon.traits || '-'}
-                                      </span>
-                                    </div>
-                                  </>
-                                )}
-                              </div>
-                              <div className="flex items-center space-x-2 pt-2">
-                                <Checkbox
-                                  checked={!!weapon.equipped}
-                                  onCheckedChange={(c) =>
-                                    isRangedWeaponsEditing
-                                      ? handleRangedWeaponChange(
-                                          weapon.id,
-                                          'equipped',
-                                          !!c,
-                                        )
-                                      : updateCharacter(character.id, {
-                                          equipment: {
-                                            ...character.equipment,
-                                            weapons: {
-                                              ...character.equipment.weapons,
-                                              ranged: (
-                                                character.equipment.weapons
-                                                  .ranged ?? []
-                                              ).map((w) =>
-                                                w.id === weapon.id
-                                                  ? { ...w, equipped: !!c }
-                                                  : w,
-                                              ),
-                                            },
-                                          },
-                                        })
-                                  }
-                                />
-                                <Label className="text-xs">
-                                  {t('dh2.equipped')}
-                                </Label>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </AccordionContent>
-                    </AccordionItem>
-                  </Accordion>
-                  {isRangedWeaponsEditing && (
-                    <div className="pt-2">
-                      <Button
-                        data-testid="add-ranged-weapon"
-                        onClick={addRangedWeapon}
-                        size="sm"
-                        className="w-full"
-                      >
-                        <Plus className="mr-2 h-4 w-4" /> {t('common.add')}{' '}
-                        {t('dh2.rangedWeapons')}
-                      </Button>
-                    </div>
-                  )}
-                </div>
+                </SortableRows>
               </div>
             </CollapsibleContent>
           </Collapsible>

@@ -134,26 +134,14 @@ export function CustomResourceCounter({
             >
               {isEditing ? (
                 <div className="mr-2 flex flex-1 flex-col gap-1">
-                  <Input
-                    value={res.description}
-                    onChange={(e) =>
-                      handleFieldChange(res.id, 'description', e.target.value)
-                    }
-                    className="h-7 text-xs"
-                    placeholder={t('common.resourceName')}
-                  />
                   <div className="flex items-center gap-1">
-                    <span className="text-muted-foreground shrink-0 text-[9px] font-bold uppercase">
-                      {t('common.max')}
-                    </span>
                     <Input
-                      type="number"
-                      value={res.max === 0 ? '' : res.max}
+                      value={res.description}
                       onChange={(e) =>
-                        handleFieldChange(res.id, 'max', e.target.value)
+                        handleFieldChange(res.id, 'description', e.target.value)
                       }
-                      className="h-7 w-16 text-center text-[10px]"
-                      min={0}
+                      className="h-7 flex-1 text-xs"
+                      placeholder={t('common.resourceName')}
                     />
                     {!hideNotes && (
                       <Popover>
@@ -181,6 +169,20 @@ export function CustomResourceCounter({
                         </PopoverContent>
                       </Popover>
                     )}
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <span className="text-muted-foreground shrink-0 text-[9px] font-bold uppercase">
+                      {t('common.max')}
+                    </span>
+                    <Input
+                      type="number"
+                      value={res.max === 0 ? '' : res.max}
+                      onChange={(e) =>
+                        handleFieldChange(res.id, 'max', e.target.value)
+                      }
+                      className="h-7 w-16 text-center text-[10px]"
+                      min={0}
+                    />
                   </div>
                 </div>
               ) : (
@@ -317,45 +319,101 @@ export function CustomResourceCounter({
               key={res.id}
               className="border-muted/20 bg-muted/10 flex items-center justify-between rounded border p-1.5"
             >
-              <div className="flex min-w-0 flex-1 items-center gap-1">
-                {!hideNotes && (
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant={res.notes ? 'secondary' : 'ghost'}
-                        size="icon"
-                        className="h-4 w-4 shrink-0"
-                      >
-                        <Info className="h-2.5 w-2.5" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-56">
-                      <Label className="mb-2 block text-xs">
-                        {t('common.notes')}: {res.description}
-                      </Label>
-                      <Textarea
-                        defaultValue={res.notes || ''}
-                        onBlur={(e) => {
-                          const next = resources.map((r) =>
-                            r.id === res.id
-                              ? { ...r, notes: e.target.value }
-                              : r,
-                          );
-                          setResources(next);
-                          updateCharacter(character.id, {
-                            customResources: next,
-                          });
-                        }}
-                        placeholder={t('common.notes')}
-                        className="mt-2 min-h-[80px] text-xs"
-                      />
-                    </PopoverContent>
-                  </Popover>
-                )}
-                <span className="flex-1 text-[10px] font-bold break-words">
-                  {res.description}
-                </span>
-              </div>
+              {isEditing ? (
+                <div className="flex min-w-0 flex-1 flex-col gap-1">
+                  <div className="flex items-center gap-1">
+                    <Input
+                      value={res.description}
+                      onChange={(e) =>
+                        handleFieldChange(res.id, 'description', e.target.value)
+                      }
+                      className="h-7 flex-1 text-[10px]"
+                      placeholder={t('common.resourceName')}
+                    />
+                    {!hideNotes && (
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6 shrink-0"
+                            aria-label={`${t('common.notes')}: ${res.description}`}
+                          >
+                            <Info className="h-3 w-3" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-56">
+                          <Label className="mb-2 block text-xs">
+                            {t('common.notes')}: {res.description}
+                          </Label>
+                          <Textarea
+                            defaultValue={res.notes || ''}
+                            onChange={(e) =>
+                              handleFieldChange(res.id, 'notes', e.target.value)
+                            }
+                            placeholder={t('common.notes')}
+                            className="mt-2 min-h-[80px] text-xs"
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <span className="text-muted-foreground shrink-0 text-[9px] font-bold uppercase">
+                      {t('common.max')}
+                    </span>
+                    <Input
+                      type="number"
+                      value={res.max === 0 ? '' : res.max}
+                      onChange={(e) =>
+                        handleFieldChange(res.id, 'max', e.target.value)
+                      }
+                      className="h-6 w-12 text-center text-[10px]"
+                      min={0}
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="flex min-w-0 flex-1 items-center gap-1">
+                  {!hideNotes && (
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant={res.notes ? 'secondary' : 'ghost'}
+                          size="icon"
+                          className="h-4 w-4 shrink-0"
+                        >
+                          <Info className="h-2.5 w-2.5" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-56">
+                        <Label className="mb-2 block text-xs">
+                          {t('common.notes')}: {res.description}
+                        </Label>
+                        <Textarea
+                          defaultValue={res.notes || ''}
+                          onBlur={(e) => {
+                            const next = resources.map((r) =>
+                              r.id === res.id
+                                ? { ...r, notes: e.target.value }
+                                : r,
+                            );
+                            setResources(next);
+                            updateCharacter(character.id, {
+                              customResources: next,
+                            });
+                          }}
+                          placeholder={t('common.notes')}
+                          className="mt-2 min-h-[80px] text-xs"
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  )}
+                  <span className="flex-1 text-[10px] font-bold break-words">
+                    {res.description}
+                  </span>
+                </div>
+              )}
               <div className="flex items-center gap-1">
                 <Button
                   size="icon"
