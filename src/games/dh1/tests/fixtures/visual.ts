@@ -21,7 +21,7 @@ export const dhCharacter: Omit<DH1Character, 'id' | 'userId'> = {
   worldVariant: 'Shrine World',
   careerPath: 'Adept',
   rank: 'Scholar',
-  divination: '',
+  divination: 'sinsHidden',
   divinationEffect: '+3 Corruption Points.',
   quirk: 'Devotional Scar',
   height: '1.82 m',

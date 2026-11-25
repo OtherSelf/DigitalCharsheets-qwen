@@ -174,9 +174,10 @@ test.describe(
         const info = page.locator('#info-section:visible').first();
         await startEditing(info);
 
-        // Фикстура задаёт homeWorld, worldVariant, careerPath, divination и
-        // пол: все пять полей после создания только читаются.
-        await expect(info.getByTestId('creation-lock')).toHaveCount(5);
+        // Фикстура задаёт homeWorld, worldVariant, careerPath и пол: эти
+        // четыре поля после создания только читаются. Пророчество — текст,
+        // его владелец правит в листе.
+        await expect(info.getByTestId('creation-lock')).toHaveCount(4);
         // Подсказки локализованы и доступны скринридеру: у пола своя формулировка
         // (он запирается не только «при создании»), у остальных — общая.
         const hints = await info

@@ -120,7 +120,7 @@ test.describe('история DH: подписи и значения без ко
       await openApp(page, historyUrl(id));
       await expectNoRawI18nKeys(page, 'история DH1');
       await expect(page.getByText('Divination', { exact: true })).toBeVisible();
-      await expect(page.getByText(/Sins hidden in the heart/)).toBeVisible();
+      await expect(page.getByText(/What is hidden rots faster/)).toBeVisible();
       await expect(page.getByText('painOfBullet')).toHaveCount(0);
       await expect(page.getByText('sinsHidden')).toHaveCount(0);
       await expect(
