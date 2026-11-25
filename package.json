@@ -19,6 +19,7 @@
     "eol:fix": "node scripts/check-eol.mjs --fix",
     "format": "npm run eol:fix && prettier --write .",
     "format:check": "npm run eol:check && prettier --check .",
+    "legal:backfill": "node scripts/legal/backfill-divinations.mjs",
     "typecheck": "tsc --noEmit",
     "deadcode:check": "node scripts/quality/check-dead-code.mjs",
     "dedupe:check": "node scripts/quality/check-duplicates.mjs",

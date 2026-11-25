@@ -291,6 +291,25 @@ Take a data-directory backup before a major upgrade. Startup work is best-effort
 and does not block the server if a single profile is broken; check the startup
 log for warnings.
 
+### Freezing divination text (0.22.0)
+
+0.22.0 adds optional `divinationText`/`divinationEffectText` to Dark Heresy
+sheets. Run the backfill **before** upgrading to 0.23.0: it copies the phrase and
+effect a player currently sees into the sheet, in both site languages, so the
+0.23.0 release can drop the book text without changing what players see.
+
+```bash
+npm run legal:backfill -- --dry-run   # counts only, no writes
+npm run legal:backfill -- --backup    # writes, keeps a copy under data/.legal-backup-*
+npm run legal:backfill -- --dry-run   # expected: filled 0
+```
+
+The command reads dictionaries from the running checkout (`--i18n`, default
+`./src/games`) and walks `users/*/{characters,archive,trash}`. Demo sheets are
+skipped. Exit code `2` means some sheets still have an id with no frozen text
+(unknown id or missing `systemId`); check the log. Repeat the run after fixing
+the cause — it is idempotent and never overwrites text that is already frozen.
+
 ## Scaling notes
 
 - **One app instance per data directory.** Reads are cached in process memory
