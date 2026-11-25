@@ -41,7 +41,9 @@ describe('dh2: подсказки создания', () => {
     expect(markdown).toContain('Agri-World');
     expect(markdown).toContain('Mutant');
     expect(markdown).toContain('Fanatic');
-    expect(markdown).toContain('Twisted Flesh');
+    expect(markdown).toContain(
+      'choose to fail any test associated with resisting',
+    );
     expect(markdown).toContain('Hatred against the current foe');
   });
 
