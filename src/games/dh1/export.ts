@@ -40,6 +40,8 @@ export function buildDh1PortableJson(
       rank: character.rank,
       divination: character.divination,
       divinationEffect: character.divinationEffect,
+      divinationText: character.divinationText,
+      divinationEffectText: character.divinationEffectText,
       quirk: character.quirk,
       height: character.height,
       weight: character.weight,

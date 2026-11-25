@@ -82,3 +82,13 @@ export interface Quest {
   locations?: string;
   objectives?: QuestObjective[];
 }
+
+/**
+ * Текст в обеих локалях сайта: замороженное значение листа (бэкфилл 0.22.0).
+ * Хранится в самом листе, чтобы смена языка не подменяла пользовательский
+ * текст образцом.
+ */
+export interface LocalizedText {
+  en?: string;
+  ru?: string;
+}

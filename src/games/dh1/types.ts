@@ -1,4 +1,4 @@
-import type { CharacterBase } from '../shared/types';
+import type { CharacterBase, LocalizedText } from '../shared/types';
 
 /**
  * ─── LANDMARK: DARK_HERESY TYPES (BASE) ────────────────────────────────
@@ -191,6 +191,10 @@ export interface DarkHeresyBase extends CharacterBase {
   divination: string;
   /** Стабильный ID эффекта (`insanity2`), не текст. */
   divinationEffect: string;
+  /** Замороженный текст пророчества (обе локали), бэкфилл 0.22.0. */
+  divinationText?: LocalizedText;
+  /** Замороженный текст эффекта (обе локали), бэкфилл 0.22.0. */
+  divinationEffectText?: LocalizedText;
   quirk: string;
   height: string;
   weight: string;

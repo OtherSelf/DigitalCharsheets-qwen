@@ -85,7 +85,7 @@ describe('пол в создании 2e: замок бэкграунда', () =>
 
 describe('версия схемы и отображение', () => {
   it('DH2 — 5, D&D 5e остаётся 2', () => {
-    expect(DH2_SCHEMA_VERSION).toBe(5);
+    expect(DH2_SCHEMA_VERSION).toBe(6);
     expect(getGameModule('dnd5e')?.schemaVersion).toBe(2);
   });
 

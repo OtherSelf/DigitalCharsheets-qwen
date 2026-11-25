@@ -13,6 +13,7 @@ import {
   migrateDh2V2toV3,
   migrateDh2V3toV4,
   migrateDh2V4toV5,
+  migrateDh2V5toV6,
 } from './migrations';
 import { normalizeDh2 } from './normalize';
 import { dh2CharacterSchema } from './schema';
@@ -39,6 +40,7 @@ export {
   migrateDh2V2toV3,
   migrateDh2V3toV4,
   migrateDh2V4toV5,
+  migrateDh2V5toV6,
 } from './migrations';
 export const createDemo = createDh2Demo;
 
@@ -99,6 +101,7 @@ export const dh2Module: GameModule<DH2Character> = {
     { from: 2, to: 3, migrate: migrateDh2V2toV3 },
     { from: 3, to: 4, migrate: migrateDh2V3toV4 },
     { from: 4, to: 5, migrate: migrateDh2V4toV5 },
+    { from: 5, to: 6, migrate: migrateDh2V5toV6 },
   ],
   history: dh2History,
 };

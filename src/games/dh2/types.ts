@@ -1,4 +1,4 @@
-import type { CharacterBase } from '../shared/types';
+import type { CharacterBase, LocalizedText } from '../shared/types';
 
 /**
  * ─── LANDMARK: DARK_HERESY TYPES (BASE) ────────────────────────────────
@@ -222,6 +222,10 @@ export interface DarkHeresyBase extends CharacterBase {
   startingChoices?: DH2StartingChoices;
   /** Пророчество 2e: id строки таблицы 2-9 (`d100-10`), не текст. */
   divination: string;
+  /** Замороженный текст пророчества (обе локали), бэкфилл 0.22.0. */
+  divinationText?: LocalizedText;
+  /** Замороженный текст эффекта (обе локали), бэкфилл 0.22.0. */
+  divinationEffectText?: LocalizedText;
   /** Пол персонажа каноническим кодом: правила 2e его не ограничивают. */
   gender: GenderCode;
   /** Журнал покупок опыта 2e. */

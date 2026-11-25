@@ -4,4 +4,10 @@
  * сохраняется в `notes`. Отдельного шага миграции нет — версию поднимает
  * `normalizeCharacterRecord`, файл переписывается при следующем сохранении.
  */
-export const DH2_SCHEMA_VERSION = 5 as const;
+export const DH2_SCHEMA_VERSION = 6 as const;
+
+/*
+ * Версия 6 (0.22.0) — замороженный текст пророчества и его эффекта
+ * (`divinationText`/`divinationEffectText`) в обеих локалях: бэкфилл
+ * переносит в лист то, что человек видел, до выреза книжных текстов.
+ */
