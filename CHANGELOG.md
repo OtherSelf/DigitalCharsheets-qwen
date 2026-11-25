@@ -11,6 +11,22 @@ format changes.
 
 ## [Unreleased]
 
+## [0.24.0] - 2026-11-26
+
+The catalog keeps the rules, not the book prose.
+
+### Changed
+
+- DH2 home world and background bonuses (15 + 14) are written as short
+  mechanical statements instead of book wording; ids, numbers and prerequisites
+  are unchanged.
+- D&D 5e epic boon descriptions (22) are short mechanical statements; names and
+  keys are unchanged.
+
+### Plugin versions
+
+- dh2 1.19.0, dnd5e 1.14.0.
+
 ## [0.23.0] - 2026-11-25
 
 Dark Heresy sheets keep the phrase a player saw, while the built-in text
