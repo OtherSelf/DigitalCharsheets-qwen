@@ -11,6 +11,12 @@ format changes.
 
 ## [Unreleased]
 
+### Added
+
+- `npm run legal:scan`: fails when a phrase from a private marker list appears
+  in tracked files; the pre-deploy gate runs it when `DCS_LEGAL_MARKERS` is
+  set and skips it otherwise.
+
 ## [0.24.1] - 2026-11-26
 
 ### Fixed
