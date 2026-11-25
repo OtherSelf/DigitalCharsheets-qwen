@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { FIELD_LIMITS, idString, listOf } from '../shared/limits';
+import { FIELD_LIMITS, idString, listOf, noteString } from '../shared/limits';
 import {
   conditionsSchema,
   darkHeresyBaseFields,
@@ -55,5 +55,11 @@ export const dh1CharacterSchema: z.ZodType<DH1Character> = z.looseObject({
     }),
     1000,
   ).optional(),
+  divinationText: z
+    .looseObject({ en: noteString().optional(), ru: noteString().optional() })
+    .optional(),
+  divinationEffectText: z
+    .looseObject({ en: noteString().optional(), ru: noteString().optional() })
+    .optional(),
   conditions: conditionsSchema.optional(),
 });

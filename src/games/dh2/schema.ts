@@ -42,5 +42,11 @@ export const dh2CharacterSchema: z.ZodType<DH2Character> = z.looseObject({
     })
     .optional(),
   fatigue2nd: fatigueSchema,
+  divinationText: z
+    .looseObject({ en: noteString().optional(), ru: noteString().optional() })
+    .optional(),
+  divinationEffectText: z
+    .looseObject({ en: noteString().optional(), ru: noteString().optional() })
+    .optional(),
   conditions: conditionsSchema.optional(),
 });
