@@ -76,7 +76,16 @@ const CONDITION_KINDS = [
   'corruption',
   'mutation',
   'rudiment',
+  'implant',
+  'blessing',
 ] as const;
+
+/**
+ * Положительные эффекты: бейдж подкрашивается иначе, чтобы список
+ * «Состояний» не читался как сплошной список проблем. Сами типы объявляет
+ * редакция, компонент в ядре только принимает список.
+ */
+const POSITIVE_CONDITION_KINDS = ['implant', 'blessing'] as const;
 
 const CONDITION_SOURCES = ['manual', 'divination', 'legacy'] as const;
 
@@ -298,6 +307,8 @@ export const InfoSection = ({
         corruption: t('dh1.conditions.kind.corruption'),
         mutation: t('dh1.conditions.kind.mutation'),
         rudiment: t('dh1.conditions.kind.rudiment'),
+        implant: t('dh1.conditions.kind.implant'),
+        blessing: t('dh1.conditions.kind.blessing'),
       },
       sourceLabels: {
         manual: t('dh1.conditions.source.manual'),
@@ -586,89 +597,15 @@ export const InfoSection = ({
               />
             </MetaBlock>
 
+            {/* Legacy-поля 1e («черты», элитные наборы, степень/модификатор
+                Безумия, степень/тест Порчи) сюда не выводятся: миграция v6
+                переносит значения во вкладку заметок «Наследие». */}
             <MetaBlock title={t('dh1.condition')}>
-              <DetailField
-                label={t('dh1.traits')}
-                value={formatNames(character.traits)}
-                editing={isInfoEditing}
-                onBlur={(e) =>
-                  updateCharacter(character.id, {
-                    traits: parseNames(e.target.value),
-                  })
-                }
-                isCompactView={isCompactView}
-              />
-              <DetailField
-                label={t('dh1.eliteAdvances')}
-                value={formatNames(character.eliteAdvances)}
-                editing={isInfoEditing}
-                onBlur={(e) =>
-                  updateCharacter(character.id, {
-                    eliteAdvances: parseNames(e.target.value),
-                  })
-                }
-                isCompactView={isCompactView}
-              />
-              <DetailField
-                label={t('dh1.insanityDegree')}
-                value={character.insanityDetails?.degree ?? ''}
-                editing={isInfoEditing}
-                onBlur={(e) =>
-                  updateCharacter(character.id, {
-                    insanityDetails: {
-                      ...character.insanityDetails,
-                      degree: e.target.value,
-                    },
-                  })
-                }
-                isCompactView={isCompactView}
-              />
-              <DetailField
-                label={t('dh1.traumaModifier')}
-                value={character.insanityDetails?.traumaModifier ?? ''}
-                editing={isInfoEditing}
-                onBlur={(e) =>
-                  updateCharacter(character.id, {
-                    insanityDetails: {
-                      ...character.insanityDetails,
-                      traumaModifier: e.target.value,
-                    },
-                  })
-                }
-                isCompactView={isCompactView}
-              />
-              <DetailField
-                label={t('dh1.corruptionDegree')}
-                value={character.corruptionDetails?.degree ?? ''}
-                editing={isInfoEditing}
-                onBlur={(e) =>
-                  updateCharacter(character.id, {
-                    corruptionDetails: {
-                      ...character.corruptionDetails,
-                      degree: e.target.value,
-                    },
-                  })
-                }
-                isCompactView={isCompactView}
-              />
-              <DetailField
-                label={t('dh1.corruptionTest')}
-                value={character.corruptionDetails?.test ?? ''}
-                editing={isInfoEditing}
-                onBlur={(e) =>
-                  updateCharacter(character.id, {
-                    corruptionDetails: {
-                      ...character.corruptionDetails,
-                      test: e.target.value,
-                    },
-                  })
-                }
-                isCompactView={isCompactView}
-              />
               <div className="col-span-2 space-y-2 md:col-span-3">
                 <ConditionsList
                   conditions={character.conditions}
                   kinds={CONDITION_KINDS}
+                  positiveKinds={POSITIVE_CONDITION_KINDS}
                   sources={CONDITION_SOURCES}
                   labels={conditionLabels}
                   editing={isInfoEditing}

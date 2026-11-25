@@ -3,6 +3,8 @@ import { describe, expect, it } from 'vitest';
 import { createDh1Defaults } from '@/games/dh1/defaults';
 import { buildDh1ExcelSections } from '@/games/dh1/excel';
 import { buildDh1PortableJson } from '@/games/dh1/export';
+import dh1En from '@/games/dh1/i18n/en.json';
+import dh1Ru from '@/games/dh1/i18n/ru.json';
 import { normalizeDh1 } from '@/games/dh1/normalize';
 import { dh1CharacterSchema } from '@/games/dh1/schema';
 import { DH1_SCHEMA_VERSION } from '@/games/dh1/schema-version';
@@ -136,6 +138,66 @@ describe('состояния Безумия/Порчи', () => {
     expect(dh1CharacterSchema.parse(character).conditions).toEqual([]);
     // `conditions` появились в версии 4: тест про аддитивность, не про текущую.
     expect(DH1_SCHEMA_VERSION).toBeGreaterThanOrEqual(4);
+  });
+
+  it('DH1: имплант и благословение проходят схему и экспорт', () => {
+    const { character } = normalizeDh1(
+      baseDh1({
+        systemId: 'dh1',
+        name: 'Положительные эффекты',
+        conditions: [
+          {
+            id: 'c1',
+            kind: 'implant',
+            name: 'Кортикальный имплант',
+            source: 'manual',
+          },
+          {
+            id: 'c2',
+            kind: 'blessing',
+            name: 'Благословение Императора',
+            source: 'manual',
+          },
+        ],
+      }),
+      { applyDefaults: true },
+    );
+
+    expect(character.conditions?.map((condition) => condition.kind)).toEqual([
+      'implant',
+      'blessing',
+    ]);
+    expect(dh1CharacterSchema.parse(character).conditions).toHaveLength(2);
+  });
+
+  it('DH1: незнакомый kind не отбрасывается ни нормализацией, ни схемой', () => {
+    const { character } = normalizeDh1(
+      baseDh1({
+        systemId: 'dh1',
+        name: 'Чужой код',
+        conditions: [
+          {
+            id: 'x1',
+            kind: 'possession',
+            name: 'Одержимость',
+            source: 'manual',
+          },
+        ],
+      }),
+      { applyDefaults: true },
+    );
+
+    expect(character.conditions?.[0].kind).toBe('possession');
+    expect(dh1CharacterSchema.parse(character).conditions?.[0].kind).toBe(
+      'possession',
+    );
+  });
+
+  it('DH1: подписи implant/blessing есть в обеих локалях', () => {
+    for (const dictionary of [dh1Ru, dh1En] as Record<string, string>[]) {
+      expect(dictionary['dh1.conditions.kind.implant']).toBeTruthy();
+      expect(dictionary['dh1.conditions.kind.blessing']).toBeTruthy();
+    }
   });
 
   it('DH1: conditions попадают в JSON- и Excel-экспорт', () => {

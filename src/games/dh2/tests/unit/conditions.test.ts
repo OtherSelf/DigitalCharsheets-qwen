@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 
 import { createDh2Defaults } from '@/games/dh2/defaults';
 import { buildDh2PortableJson } from '@/games/dh2/export';
+import dh2En from '@/games/dh2/i18n/en.json';
+import dh2Ru from '@/games/dh2/i18n/ru.json';
 import { normalizeDh2 } from '@/games/dh2/normalize';
 import { dh2CharacterSchema } from '@/games/dh2/schema';
 import { DH2_SCHEMA_VERSION } from '@/games/dh2/schema-version';
@@ -42,6 +44,49 @@ describe('состояния Безумия/Порчи', () => {
     expect(character.conditions).toEqual([]);
     expect(dh2CharacterSchema.parse(character).conditions).toEqual([]);
     expect(DH2_SCHEMA_VERSION).toBeGreaterThanOrEqual(4);
+  });
+
+  it('DH2: имплант и благословение проходят схему', () => {
+    const draft = {
+      ...createDh2Defaults({}),
+      id: 'dh2-positive-conditions',
+      systemId: 'dh2',
+    };
+    const { character } = normalizeDh2(draft, { applyDefaults: true });
+    character.conditions = [
+      { id: 'c1', kind: 'implant', name: 'Имплант', source: 'manual' },
+      { id: 'c2', kind: 'blessing', name: 'Благословение', source: 'manual' },
+    ];
+
+    expect(dh2CharacterSchema.parse(character).conditions).toHaveLength(2);
+  });
+
+  it('DH2: незнакомый kind не отбрасывается схемой', () => {
+    const draft = {
+      ...createDh2Defaults({}),
+      id: 'dh2-foreign-condition',
+      systemId: 'dh2',
+    };
+    const { character } = normalizeDh2(draft, { applyDefaults: true });
+    character.conditions = [
+      {
+        id: 'x1',
+        kind: 'possession' as never,
+        name: 'Одержимость',
+        source: 'manual',
+      },
+    ];
+
+    expect(dh2CharacterSchema.parse(character).conditions?.[0].kind).toBe(
+      'possession',
+    );
+  });
+
+  it('DH2: подписи implant/blessing есть в обеих локалях', () => {
+    for (const dictionary of [dh2Ru, dh2En] as Record<string, string>[]) {
+      expect(dictionary['dh2.conditions.kind.implant']).toBeTruthy();
+      expect(dictionary['dh2.conditions.kind.blessing']).toBeTruthy();
+    }
   });
 
   it('DH2: conditions попадают в JSON-экспорт', () => {

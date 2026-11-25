@@ -98,7 +98,16 @@ const CONDITION_KINDS = [
   'corruption',
   'mutation',
   'rudiment',
+  'implant',
+  'blessing',
 ] as const;
+
+/**
+ * Положительные эффекты: бейдж подкрашивается иначе, чтобы список
+ * «Состояний» не читался как сплошной список проблем. Сами типы объявляет
+ * редакция, компонент в ядре только принимает список.
+ */
+const POSITIVE_CONDITION_KINDS = ['implant', 'blessing'] as const;
 
 const CONDITION_SOURCES = ['manual', 'divination', 'legacy'] as const;
 
@@ -326,6 +335,8 @@ export const InfoSection = ({
         corruption: t('dh2.conditions.kind.corruption'),
         mutation: t('dh2.conditions.kind.mutation'),
         rudiment: t('dh2.conditions.kind.rudiment'),
+        implant: t('dh2.conditions.kind.implant'),
+        blessing: t('dh2.conditions.kind.blessing'),
       },
       sourceLabels: {
         manual: t('dh2.conditions.source.manual'),
@@ -785,6 +796,7 @@ export const InfoSection = ({
                   <ConditionsList
                     conditions={character.conditions}
                     kinds={CONDITION_KINDS}
+                    positiveKinds={POSITIVE_CONDITION_KINDS}
                     sources={CONDITION_SOURCES}
                     labels={conditionLabels}
                     editing={isInfoEditing}

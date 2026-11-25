@@ -129,10 +129,10 @@ Heresy 2e). The file name is the sheet `id`. `GET /api/characters` reads and
 parses every `*.json` in the user's `characters/` directory; a broken file is
 skipped rather than failing the whole list.
 
-`CharacterBase.schemaVersion` is per module: `dnd5e` stays at `2`, Dark Heresy
-modules write `5` (`src/games/dh1/schema-version.ts`,
+`CharacterBase.schemaVersion` is per module: `dnd5e` stays at `2`, `dh1`
+writes `6` and `dh2` writes `5` (`src/games/dh1/schema-version.ts`,
 `src/games/dh2/schema-version.ts`) after the DH1APP, 2e-generation,
-structured-conditions and canonical-gender field sets. Each plugin declares the
+structured-conditions, canonical-gender and legacy-notes field sets. Each plugin declares the
 chain in `plugin.json` and implements the steps in `migrations.ts`, so the
 versions mean the same thing for the code, the migration and the docs:
 
@@ -143,6 +143,7 @@ versions mean the same thing for the code, the migration and the docs:
 | 3 | Edition field sets separated: DH1 drops `influence`/`fatigue2nd` (→ `notes`), DH2 gains `influence` and `fatigue2nd` | `migrateV2toV3` |
 | 4 | Conditions are structured records (`conditions[]`) instead of free text | `migrateV3toV4` |
 | 5 | Gender is a canonical code (`male`/`female`/`unspecified`), old text → `notes` | `migrateV4toV5` |
+| 6 | DH1 legacy fields (`traits`, `eliteAdvances`, insanity degree/trauma modifier, corruption degree/test) move to the «Наследие» notes tab | `migrateDh1V5toV6` |
 
 `dnd5e` has a single step (`1 → 2`): the same edition discriminator, nothing
 else. The steps call the same phase functions as `normalize`, so the chain and
@@ -271,16 +272,38 @@ of the other edition:
   (Influence is the resource). `influence.ts` computes the creation limit and
   the Requisition target from the availability/craftsmanship tables.
 
+`skills: [{ id, name, notes, type, characteristic?, training }]` is a list
+of basic and advanced skills: `type` is `basic`/`advanced`, `training`
+keeps `skilled`/`+10`/`+20`/`+30`, and `characteristic` is the stat code
+the skill rolls against. The field is additive: absent on older sheets, where
+the characteristic lives in the name (`Логика (Инт)`) and is resolved for
+display only. The array order is the display order.
+
 Both editions also carry `conditions: ConditionEntry[]` (added in schema 4): the
-structured list of disorders, defilements, mutations and rudiments
-(`kind`, `name`, optional `severity`/`effect`/`notes`, `source` =
-`manual` | `divination` | `legacy`). The list is additive and has no
-automatic rules. `normalize` keeps it idempotent: DH1 migrates
+structured list of disorders, defilements, mutations, rudiments, implants and
+blessings (`kind`, `name`, optional `severity`/`effect`/`notes`, `source` =
+`manual` | `divination` | `legacy`). `implant` and `blessing` were added without
+a schema bump: the field is a string, so older sheets open unchanged, and an
+unknown kind is kept as-is instead of being dropped. The list is additive and
+has no automatic rules. `normalize` keeps it idempotent: DH1 migrates
 `mutations[]`, `insanityDetails.disorders` and
 `corruptionDetails.defilements` (newline/`;` separated lines) into entries
-with `source: "legacy"`, deduplicated by `kind`+`name`; the original fields and
-`degree`/`traumaModifier`/`test` stay in the file. DH2 has no text migration —
-it gets an empty array. The states go to both JSON and Excel exports.
+with `source: "legacy"`, deduplicated by `kind`+`name`; those text fields stay
+in the file, while `degree`/`traumaModifier`/`test` are moved to notes by the
+v6 migration below. DH2 has no text migration — it gets an empty array. The
+states go to both JSON and Excel exports.
+
+Schema 6 (DH1 only) moves the six legacy fields to a notes tab:
+
+- `traits` and `eliteAdvances` (name lists), `insanityDetails.degree`,
+  `insanityDetails.traumaModifier`, `corruptionDetails.degree`,
+  `corruptionDetails.test`;
+- the values are written line by line (`Черты: …`, `Степень безумия: …`) into a
+  `noteTabs` entry with the stable id `dh1-legacy` and the title «Наследие»;
+- the fields are then removed from the sheet, so the UI and the JSON export no
+  longer show them, while the import still accepts old files. A second run is a
+  no-op; if the sheet already has ten note tabs, the text goes to `notes` so
+  nothing is lost.
 
 Migration rules (`v0/v1 → v2`):
 

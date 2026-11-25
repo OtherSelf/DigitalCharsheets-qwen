@@ -23,7 +23,11 @@ function normalize(raw: any) {
 
 function dhWithStats(overrides: Record<string, unknown> = {}) {
   // Legacy-лист не объявляет `systemId` — его разрешают поля игры.
-  const base = makeCharacter('dh1', { systemId: undefined, ...overrides });
+  const base = makeCharacter('dh1', {
+    systemId: undefined,
+    schemaVersion: 2,
+    ...overrides,
+  });
   return base;
 }
 

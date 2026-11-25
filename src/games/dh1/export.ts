@@ -6,6 +6,21 @@ import type { DH1Character } from './types';
  * JSON-поля Dark Heresy 1-й редакции: только её поле усталости
  * (`fatigue1st`) и её состав характеристик.
  */
+
+/**
+ * Копия legacy-блока без вытесненных ключей. Миграция v6 переносит их во
+ * вкладку заметок «Наследие», поэтому в экспорте их быть не должно; пустой
+ * блок не выводим совсем.
+ */
+function withoutLegacyKeys(
+  value: Record<string, unknown> | undefined,
+  keys: readonly string[],
+): Record<string, unknown> | undefined {
+  if (!value) return undefined;
+  const next = { ...value };
+  for (const key of keys) delete next[key];
+  return Object.keys(next).length > 0 ? next : undefined;
+}
 export function buildDh1PortableJson(
   character: DH1Character,
   config: GameExportConfig,
@@ -50,6 +65,14 @@ export function buildDh1PortableJson(
 
   if (config.includeCombat) {
     const fatigue = character.fatigue1st;
+    const insanityDetails = withoutLegacyKeys(
+      character.insanityDetails as Record<string, unknown> | undefined,
+      ['degree', 'traumaModifier'],
+    );
+    const corruptionDetails = withoutLegacyKeys(
+      character.corruptionDetails as Record<string, unknown> | undefined,
+      ['degree', 'test'],
+    );
     Object.assign(result, {
       wounds: character.wounds,
       fatePoints: character.fatePoints,
@@ -61,13 +84,14 @@ export function buildDh1PortableJson(
       movement: character.movement,
       skills: character.skills,
       talents: character.talents,
-      traits: character.traits,
       mutations: character.mutations,
       conditions: character.conditions,
-      eliteAdvances: character.eliteAdvances,
       psy: character.psy,
-      insanityDetails: character.insanityDetails,
-      corruptionDetails: character.corruptionDetails,
+      // `traits`, `eliteAdvances` и degree/trauma/test Безумия и Порчи —
+      // legacy-поля: миграция v6 переносит их во вкладку заметок «Наследие»,
+      // поэтому в экспорт они не попадают (импорт старых файлов их принимает).
+      ...(insanityDetails ? { insanityDetails } : {}),
+      ...(corruptionDetails ? { corruptionDetails } : {}),
     });
   }
 

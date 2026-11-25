@@ -99,12 +99,25 @@ export interface DH2ExperienceEntry {
   createdAt: string;
 }
 
+/**
+ * Характеристика, к которой относится умение. Код — имя поля в `stats`:
+ * подписи и аббревиатуры лежат в словаре редакции (`dh2.<code>Abbr`), поэтому
+ * ядро и история не перечисляют игровые характеристики.
+ */
+export type CharacteristicCode = DarkHeresyCoreStat | 'influence';
+
 /** Навык DH: тренировки `skilled`/`+10`/`+20`; `+30` использует только dh2. */
 export interface Skill {
   id: string;
   name: string;
   notes: string;
   type: 'basic' | 'advanced';
+  /**
+   * Характеристика умения отдельным полем. У строк, заведённых до появления
+   * поля, значения нет — её выводит из суффикса названия `(Инт)` только UI;
+   * поле заполняется, когда строку правят.
+   */
+  characteristic?: CharacteristicCode;
   training: {
     skilled: boolean;
     plus10: boolean;
@@ -260,8 +273,13 @@ export interface DH2Fatigue {
  *   • в навыках доступна тренировка `+30`;
  *   • `edition` отсутствует: редакция задаётся модулем/`systemId`.
  */
-/** Вид состояния (Безумие/Порча): расстройство, осквернение, мутация, рудимент. */
-export type ConditionKind = 'disorder' | 'corruption' | 'mutation' | 'rudiment';
+/**
+ * Вид состояния. Первые четыре — «плохие» (Безумие/Порча); `implant` и
+ * `blessing` добавлены как положительные эффекты: бумажный лист отдельного
+ * блока имплантов не имеет, но игроку их некуда было записать, кроме заметок.
+ */
+export type ConditionKind =
+  'disorder' | 'corruption' | 'mutation' | 'rudiment' | 'implant' | 'blessing';
 
 /** Источник состояния: игрок, пророчество или миграция старых данных. */
 export type ConditionSource = 'manual' | 'divination' | 'legacy';

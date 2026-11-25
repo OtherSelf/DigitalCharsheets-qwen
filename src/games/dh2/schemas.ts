@@ -12,7 +12,13 @@ import {
   noteTabsSchema,
   questSchema,
 } from '../shared/schemas';
-import { GENDER_CODES, type Skill, type Talent } from './types';
+import {
+  DARK_HERESY_CORE_STATS,
+  GENDER_CODES,
+  type ConditionKind,
+  type Skill,
+  type Talent,
+} from './types';
 
 /**
  * ─── LANDMARK: DARK_HERESY BASE SCHEMAS ───────────────────────────────────
@@ -81,11 +87,26 @@ export const fatigueSchema = z.looseObject({
   notes: noteString().optional(),
 });
 
+/**
+ * Характеристика умения: девять базовых плюс `influence` (ресурс 2e вместо
+ * богатства). Неизвестный код не валит импорт — поле просто не заполнено.
+ */
+const DH2_SKILL_CHARACTERISTICS = [
+  ...DARK_HERESY_CORE_STATS,
+  'influence',
+] as const;
+
+const skillCharacteristicSchema = z
+  .enum(DH2_SKILL_CHARACTERISTICS)
+  .optional()
+  .catch(undefined);
+
 const skillSchema: z.ZodType<Skill> = z.looseObject({
   id: idString(),
   name: z.string().max(FIELD_LIMITS.name),
   notes: noteString(),
   type: z.enum(['basic', 'advanced']),
+  characteristic: skillCharacteristicSchema,
   training: z.looseObject({
     skilled: z.boolean(),
     plus10: z.boolean(),
@@ -279,9 +300,23 @@ export const darkHeresyBaseFields = {
   customResources: listOf(resourceSchema, 100).optional(),
 };
 
+/**
+ * Тип состояния. Известные значения объявляет редакция (`CONDITION_KINDS` в
+ * секции), но незнакомое значение не отбрасываем: лист более новой версии
+ * или другой редакции не должен терять записи при импорте. Подпись для
+ * незнакомого типа — сам код.
+ *
+ * Схема — строка, а не `z.custom`: из неё строится JSON Schema для
+ * `/api/docs`, а custom-тип в JSON Schema не представим.
+ */
+const conditionKindSchema = z
+  .string()
+  .min(1)
+  .max(32) as unknown as z.ZodType<ConditionKind>;
+
 export const conditionEntrySchema = z.looseObject({
   id: idString(),
-  kind: z.enum(['disorder', 'corruption', 'mutation', 'rudiment']),
+  kind: conditionKindSchema,
   name: z.string().max(FIELD_LIMITS.name),
   severity: shortString().optional(),
   effect: noteString().optional(),

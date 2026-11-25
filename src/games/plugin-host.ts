@@ -31,6 +31,11 @@ export {
   ExperienceLogSheet,
   type ExperienceLogRow,
 } from '@/components/sheets/experience-log-sheet';
+export {
+  SortableItem,
+  SortableRow,
+  SortableRows,
+} from '@/components/sheets/sortable-rows';
 
 /**
  * Перевод для плагинов. В отличие от хостового `t`, ключ здесь не типизирован

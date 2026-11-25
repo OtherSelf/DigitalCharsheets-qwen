@@ -184,7 +184,7 @@ Validated by `scripts/plugins/generate.mjs` (Ajv) on every generation/verify.
   "tags": ["warhammer40k", "d100"],
   "author": "Digital Character Sheets",
   "license": "MIT",
-  "schemaVersion": 5,
+  "schemaVersion": 6,
   "game": {
     "id": "darkHeresy",
     "order": 20,
@@ -205,7 +205,8 @@ Validated by `scripts/plugins/generate.mjs` (Ajv) on every generation/verify.
     { "from": 1, "to": 2, "entry": "index.ts#migrateV1toV2" },
     { "from": 2, "to": 3, "entry": "index.ts#migrateV2toV3" },
     { "from": 3, "to": 4, "entry": "index.ts#migrateV3toV4" },
-    { "from": 4, "to": 5, "entry": "index.ts#migrateV4toV5" }
+    { "from": 4, "to": 5, "entry": "index.ts#migrateV4toV5" },
+    { "from": 5, "to": 6, "entry": "index.ts#migrateV5toV6" }
   ],
   "tests": { "conformance": ">=1" }
 }

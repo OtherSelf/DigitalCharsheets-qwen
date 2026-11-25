@@ -112,6 +112,7 @@ describe('exportCharacterToExcel (xlsx)', () => {
         const character = makeCharacter('dh1', {
           systemId: 'dh2',
           edition: '2nd',
+          schemaVersion: 2,
           fatigue1st: { current: 2, notes: 'beaten' },
           fatigue2nd: { current: 1, notes: '' },
           criticalConditions: [{ id: 'c1', name: 'Broken arm', notes: '' }],

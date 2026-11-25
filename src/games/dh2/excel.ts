@@ -13,6 +13,10 @@ import {
   roleLabel,
   talentLabel,
 } from './dh2e-labels';
+import {
+  characteristicLabel,
+  resolveSkillCharacteristic,
+} from './skill-characteristic';
 import type { DarkHeresyStatUpgrade, DH2Character } from './types';
 
 /**
@@ -175,6 +179,7 @@ export function buildDh2ExcelSections(
     w.section('dh2.skills');
     w.tableHeader([
       'dh2.excel.name',
+      'dh2.excel.characteristic',
       'dh2.excel.skillType',
       'dh2.excel.skilled',
       'dh2.excel.plus10',
@@ -182,8 +187,12 @@ export function buildDh2ExcelSections(
       'dh2.excel.plus30',
     ]);
     for (const skill of character.skills ?? []) {
+      // Характеристика — отдельное поле; у старых строк её выводим из
+      // суффикса названия, иначе экспорт потерял бы её после чистого имени.
+      const { name, code, suffix } = resolveSkillCharacteristic(skill);
       w.tableRow([
-        skill.name,
+        name,
+        code ? characteristicLabel(code, t) : (suffix ?? ''),
         skill.type,
         skill.training.skilled,
         skill.training.plus10,

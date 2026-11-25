@@ -13,6 +13,7 @@ export const ruTranslations = {
   'common.allHeroes': 'Все ваши герои и антигерои в одном месте.',
   'common.createNew': 'Создать нового персонажа',
   'common.reorder': 'Перетащить',
+  'common.reorderNamed': 'Перетащить: {name}',
   'common.reorderHint':
     'Пробел — взять карточку, стрелки — переместить, пробел — отпустить, Escape — отмена.',
   'common.reorderPicked': 'Взято: {name}',

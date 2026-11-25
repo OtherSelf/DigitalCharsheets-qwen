@@ -103,7 +103,7 @@ test.describe('Dark Heresy — русская локаль', { tag: '@plugin:dh1
 
       const skills = page.locator('#skills-talents-panel:visible').first();
       await startEditing(skills);
-      await expectInputValue(skills, 'Awareness (Per)');
+      await expectInputValue(skills, 'Awareness');
       await screenshotElement(skills, 'sheet-dh-edit-skills-ru.png');
 
       const equipment = page.locator('#equipment-section:visible').first();

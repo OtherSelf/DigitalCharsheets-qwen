@@ -83,6 +83,7 @@ describe('mergeImportedData', () => {
       const target = makeCharacter('dh1', {
         systemId: 'dh2',
         edition: '2nd',
+        schemaVersion: 2,
       }) as any;
       const imported = {
         metadata: {

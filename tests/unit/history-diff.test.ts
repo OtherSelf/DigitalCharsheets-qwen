@@ -157,6 +157,45 @@ describe('diffCharacterRecords', () => {
     expect(diffCharacterRecords(before, after)).toBeNull();
   });
 
+  /**
+   * Перетаскивание навыков, талантов и квестов меняет только порядок массива.
+   * Diff сравнивает элементы по `id`, поэтому ревизия не создаётся — журнал
+   * изменений не должен заполняться перестановками (D8 в трекере SHEETUX4).
+   */
+  it('перестановка навыков, талантов и квестов ревизию не создаёт', () => {
+    const training = {
+      skilled: true,
+      plus10: false,
+      plus20: false,
+      plus30: false,
+    };
+    const skills = [
+      { id: 's1', name: 'Awareness', notes: '', type: 'basic', training },
+      { id: 's2', name: 'Dodge', notes: '', type: 'basic', training },
+      { id: 's3', name: 'Logic', notes: '', type: 'advanced', training },
+    ];
+    const talents = [
+      { id: 't1', name: 'Toughness', notes: '' },
+      { id: 't2', name: 'Frenzy', notes: '' },
+    ];
+    const quests = [
+      { id: 'q1', title: 'First', createdAt: '2025-01-01T00:00:00.000Z' },
+      { id: 'q2', title: 'Second', createdAt: '2025-01-02T00:00:00.000Z' },
+    ];
+
+    const before = makeBase();
+    before.skills = skills;
+    before.talents = talents;
+    before.questLog = quests;
+
+    const after = clone(before);
+    after.skills = [skills[2], skills[0], skills[1]];
+    after.talents = [talents[1], talents[0]];
+    after.questLog = [quests[1], quests[0]];
+
+    expect(diffCharacterRecords(before, after)).toBeNull();
+  });
+
   it('удаляет элемент keyed-массива целиком', () => {
     const before = makeBase();
     const after = clone(before);

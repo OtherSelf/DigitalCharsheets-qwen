@@ -79,6 +79,12 @@ export interface ConditionsListProps<
   /** Типы состояний и источники: их объявляет редакция, а не ядро. */
   kinds: readonly TEntry['kind'][];
   sources: readonly NonNullable<TEntry['source']>[];
+  /**
+   * Положительные типы (импланты, благословения): бейдж получает спокойный
+   * зелёный акцент, чтобы список не читался как сплошной список проблем.
+   * Какие именно типы положительные, решает редакция.
+   */
+  positiveKinds?: readonly string[];
   /** Добавление и правка доступны только в режиме редактирования секции. */
   editing: boolean;
   isCompactView?: boolean;
@@ -113,6 +119,7 @@ export function ConditionsList<TEntry extends ConditionEntry = ConditionEntry>({
   onChange,
   kinds,
   sources,
+  positiveKinds,
   editing,
   isCompactView,
   labels,
@@ -178,35 +185,46 @@ export function ConditionsList<TEntry extends ConditionEntry = ConditionEntry>({
           <p className="text-muted-foreground text-xs">{labels.empty}</p>
         ) : (
           <ul className="space-y-1.5">
-            {visible.map((condition) => (
-              <li key={condition.id} className="space-y-0.5">
-                <div className="flex flex-wrap items-center gap-2">
-                  <Badge variant="secondary" className="text-[10px]">
-                    {labels.kindLabels[condition.kind]}
-                  </Badge>
-                  <span
-                    className={cn(
-                      'text-sm font-medium break-words',
-                      isCompactView && 'text-xs',
-                    )}
-                  >
-                    {condition.name}
-                  </span>
-                  {condition.severity && (
-                    <span className="text-muted-foreground text-xs">
-                      {condition.severity}
+            {visible.map((condition) => {
+              const positive = positiveKinds?.includes(condition.kind) ?? false;
+              return (
+                <li key={condition.id} className="space-y-0.5">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge
+                      variant={positive ? 'outline' : 'secondary'}
+                      className={cn(
+                        'text-[10px]',
+                        positive &&
+                          'border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300',
+                      )}
+                    >
+                      {/* Незнакомый тип (лист новее нас) показываем кодом. */}
+                      {labels.kindLabels[condition.kind] ?? condition.kind}
+                    </Badge>
+                    <span
+                      className={cn(
+                        'text-sm font-medium break-words',
+                        isCompactView && 'text-xs',
+                      )}
+                    >
+                      {condition.name}
                     </span>
+                    {condition.severity && (
+                      <span className="text-muted-foreground text-xs">
+                        {condition.severity}
+                      </span>
+                    )}
+                  </div>
+                  {(condition.effect || condition.notes) && (
+                    <p className="text-muted-foreground text-xs break-words">
+                      {[condition.effect, condition.notes]
+                        .filter(Boolean)
+                        .join(' · ')}
+                    </p>
                   )}
-                </div>
-                {(condition.effect || condition.notes) && (
-                  <p className="text-muted-foreground text-xs break-words">
-                    {[condition.effect, condition.notes]
-                      .filter(Boolean)
-                      .join(' · ')}
-                  </p>
-                )}
-              </li>
-            ))}
+                </li>
+              );
+            })}
           </ul>
         )
       ) : list.length === 0 ? (

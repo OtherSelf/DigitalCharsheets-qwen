@@ -8,6 +8,7 @@ import {
 } from './dark-heresy-data';
 import { divinationEffectLabel, divinationLabel } from './divination-i18n';
 import { genderLabel } from './gender';
+import { characteristicLabel } from './skill-characteristic';
 
 type Translate = (key: string) => string;
 
@@ -149,6 +150,8 @@ export const dh1History: GameHistoryConfig = {
     'inventory.notes': 'common.notes',
     'inventory.quantity': 'common.quantity',
     skills: 'common.skills',
+    'skills.name': 'common.name',
+    'skills.characteristic': 'dh1.characteristic',
     'skills.notes': 'common.notes',
     talents: 'dh1.talentsAndTraits',
     'talents.notes': 'common.notes',
@@ -304,6 +307,10 @@ export const dh1History: GameHistoryConfig = {
           break;
       }
       return armorEnumLabel(path, value, t);
+    }
+    // Характеристика умения хранится кодом; в истории нужна аббревиатура.
+    if (path === 'skills.characteristic' && typeof value === 'string') {
+      return characteristicLabel(value, t);
     }
     if (path === 'skills.training') return trainingLabel(value, t);
     if (path.startsWith('statUpgrades.')) return statAdvanceLabel(value, t);

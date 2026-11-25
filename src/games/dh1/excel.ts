@@ -2,6 +2,10 @@ import { createExcelSections } from '../shared/excel';
 import type { ExcelSection, ExportTranslate, GameExportConfig } from '../types';
 import { upgradeBonus } from './dh-stats';
 import { genderLabel } from './gender';
+import {
+  characteristicLabel,
+  resolveSkillCharacteristic,
+} from './skill-characteristic';
 import type { DarkHeresyStatUpgrade, DH1Character } from './types';
 
 /**
@@ -158,14 +162,19 @@ export function buildDh1ExcelSections(
     w.section('dh1.excel.skills');
     w.tableHeader([
       'dh1.excel.name',
+      'dh1.excel.characteristic',
       'dh1.excel.skillType',
       'dh1.excel.skilled',
       'dh1.excel.plus10',
       'dh1.excel.plus20',
     ]);
     for (const skill of character.skills ?? []) {
+      // Характеристика — отдельное поле; у старых строк её выводим из
+      // суффикса названия, иначе экспорт потерял бы её после чистого имени.
+      const { name, code, suffix } = resolveSkillCharacteristic(skill);
       w.tableRow([
-        skill.name,
+        name,
+        code ? characteristicLabel(code, t) : (suffix ?? ''),
         skill.type,
         skill.training.skilled,
         skill.training.plus10,

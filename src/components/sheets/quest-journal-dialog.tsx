@@ -2,10 +2,9 @@
 
 import { useState } from 'react';
 
+import { arrayMove } from '@dnd-kit/sortable';
 import {
   CheckCircle2,
-  ChevronDown,
-  ChevronUp,
   Circle,
   Gift,
   MapPin,
@@ -61,6 +60,7 @@ import { cn } from '@/lib/utils';
 
 import { Badge } from '../ui/badge';
 import { ScrollArea } from '../ui/scroll-area';
+import { SortableItem, SortableRows } from './sortable-rows';
 
 interface QuestJournalSheetProps {
   character: Character;
@@ -134,12 +134,18 @@ export function QuestJournalSheet({
     saveLog(questLog.filter((q) => q.id !== questId));
   };
 
-  const moveQuest = (index: number, direction: 'up' | 'down') => {
-    const newIndex = direction === 'up' ? index - 1 : index + 1;
-    if (newIndex < 0 || newIndex >= questLog.length) return;
-    const newLog = [...questLog];
-    [newLog[index], newLog[newIndex]] = [newLog[newIndex], newLog[index]];
-    saveLog(newLog);
+  /**
+   * Перестановка записей журнала. Список на экране может быть отфильтрован
+   * (`активные`/`выполненные`), поэтому переставляем видимую подпоследовательность,
+   * а скрытые записи остаются на своих местах — иначе drag терял бы их порядок.
+   */
+  const reorderQuests = (from: number, to: number) => {
+    const moved = arrayMove(filteredQuests, from, to);
+    const visible = new Set(filteredQuests.map((quest) => quest.id));
+    let index = 0;
+    saveLog(
+      questLog.map((quest) => (visible.has(quest.id) ? moved[index++] : quest)),
+    );
   };
 
   const addObjective = (questId: string) => {
@@ -277,324 +283,340 @@ export function QuestJournalSheet({
 
             {filteredQuests.length > 0 ? (
               <Accordion type="multiple" className="w-full space-y-2">
-                {filteredQuests.map((quest, index) => {
-                  const isCompleted = quest.status === 'completed';
-                  return (
-                    <AccordionItem
-                      key={quest.id}
-                      value={quest.id}
-                      className="bg-background overflow-hidden rounded-lg border shadow-sm"
-                    >
-                      <AccordionTrigger className="hover:bg-muted/50 px-4 py-3 transition-colors hover:no-underline">
-                        <div className="flex w-full items-center justify-between gap-2 pr-2">
-                          <div className="flex min-w-0 flex-1 items-center gap-2">
-                            {getPriorityBadge(quest.priority)}
-                            <span
-                              className={cn(
-                                'truncate text-sm font-semibold',
-                                isCompleted &&
-                                  'text-muted-foreground line-through',
-                              )}
-                            >
-                              {quest.title}
-                            </span>
-                            {getProgressText(quest)}
-                          </div>
-                          <Badge
-                            variant={isCompleted ? 'secondary' : 'default'}
-                            className="h-4 shrink-0 px-1.5 text-[9px]"
+                <SortableRows
+                  ids={filteredQuests.map((quest) => quest.id)}
+                  labelById={Object.fromEntries(
+                    filteredQuests.map((quest) => [quest.id, quest.title]),
+                  )}
+                  onReorder={reorderQuests}
+                >
+                  {filteredQuests.map((quest) => {
+                    const isCompleted = quest.status === 'completed';
+                    return (
+                      <SortableItem
+                        key={quest.id}
+                        id={quest.id}
+                        label={quest.title}
+                        className="relative"
+                      >
+                        {(handle) => (
+                          <AccordionItem
+                            value={quest.id}
+                            className="bg-background overflow-hidden rounded-lg border shadow-sm"
                           >
-                            {isCompleted
-                              ? t('common.questDone')
-                              : t('common.questActive')}
-                          </Badge>
-                        </div>
-                      </AccordionTrigger>
-                      <AccordionContent className="bg-muted/5 space-y-4 border-t px-4 pt-2 pb-4">
-                        {quest.objectives && quest.objectives.length > 0 && (
-                          <div
-                            className="bg-muted h-1.5 w-full overflow-hidden rounded-full"
-                            role="progressbar"
-                            aria-valuemin={0}
-                            aria-valuemax={100}
-                            aria-valuenow={getProgressPercent(quest)}
-                            aria-label={t('common.questProgress')}
-                          >
-                            <div
-                              className="bg-primary h-full transition-[width]"
-                              style={{
-                                width: `${getProgressPercent(quest)}%`,
-                              }}
-                            />
-                          </div>
-                        )}
-                        <div className="flex gap-2">
-                          <Select
-                            value={quest.priority || 'side'}
-                            onValueChange={(v: string) =>
-                              updateQuest(quest.id, {
-                                priority: v as Quest['priority'],
-                              })
-                            }
-                          >
-                            <SelectTrigger className="h-8 w-32 text-xs">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="main">
-                                {t('common.selectMainQuest')}
-                              </SelectItem>
-                              <SelectItem value="side">
-                                {t('common.selectSideQuest')}
-                              </SelectItem>
-                              <SelectItem value="personal">
-                                {t('common.selectPersonalQuest')}
-                              </SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-8 flex-1 text-xs"
-                            onClick={() =>
-                              updateQuest(quest.id, {
-                                status: isCompleted ? 'active' : 'completed',
-                              })
-                            }
-                          >
-                            {isCompleted
-                              ? t('common.markAsActive')
-                              : t('common.markAsCompleted')}
-                          </Button>
-                        </div>
-
-                        <div className="space-y-1">
-                          <Label className="text-muted-foreground flex items-center gap-1 text-[10px] font-bold uppercase">
-                            <ScrollText className="h-3 w-3" />{' '}
-                            {t('common.questDescription')}
-                          </Label>
-                          <Textarea
-                            defaultValue={quest.description}
-                            onBlur={(e) =>
-                              updateQuest(quest.id, {
-                                description: e.target.value,
-                              })
-                            }
-                            placeholder={t(
-                              'common.questDescriptionPlaceholder',
-                            )}
-                            className="min-h-[60px] text-sm"
-                          />
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label className="text-muted-foreground flex items-center gap-1 text-[10px] font-bold uppercase">
-                            <CheckCircle2 className="h-3 w-3" />{' '}
-                            {t('common.questObjectives')}
-                          </Label>
-                          <div className="space-y-1">
-                            {(quest.objectives || []).map((obj) => (
-                              <div
-                                key={obj.id}
-                                className="group flex items-center gap-2"
-                              >
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-6 w-6 shrink-0"
-                                  onClick={() =>
-                                    toggleObjective(quest.id, obj.id)
+                            <div className="flex items-stretch">
+                              {handle}
+                              <AccordionTrigger className="hover:bg-muted/50 flex-1 px-4 py-3 transition-colors hover:no-underline">
+                                <div className="flex w-full items-center justify-between gap-2 pr-2">
+                                  <div className="flex min-w-0 flex-1 items-center gap-2">
+                                    {getPriorityBadge(quest.priority)}
+                                    <span
+                                      className={cn(
+                                        'truncate text-sm font-semibold',
+                                        isCompleted &&
+                                          'text-muted-foreground line-through',
+                                      )}
+                                    >
+                                      {quest.title}
+                                    </span>
+                                    {getProgressText(quest)}
+                                  </div>
+                                  <Badge
+                                    variant={
+                                      isCompleted ? 'secondary' : 'default'
+                                    }
+                                    className="h-4 shrink-0 px-1.5 text-[9px]"
+                                  >
+                                    {isCompleted
+                                      ? t('common.questDone')
+                                      : t('common.questActive')}
+                                  </Badge>
+                                </div>
+                              </AccordionTrigger>
+                            </div>
+                            <AccordionContent className="bg-muted/5 space-y-4 border-t px-4 pt-2 pb-4">
+                              {quest.objectives &&
+                                quest.objectives.length > 0 && (
+                                  <div
+                                    className="bg-muted h-1.5 w-full overflow-hidden rounded-full"
+                                    role="progressbar"
+                                    aria-valuemin={0}
+                                    aria-valuemax={100}
+                                    aria-valuenow={getProgressPercent(quest)}
+                                    aria-label={t('common.questProgress')}
+                                  >
+                                    <div
+                                      className="bg-primary h-full transition-[width]"
+                                      style={{
+                                        width: `${getProgressPercent(quest)}%`,
+                                      }}
+                                    />
+                                  </div>
+                                )}
+                              <div className="flex gap-2">
+                                <Select
+                                  value={quest.priority || 'side'}
+                                  onValueChange={(v: string) =>
+                                    updateQuest(quest.id, {
+                                      priority: v as Quest['priority'],
+                                    })
                                   }
                                 >
-                                  {obj.completed ? (
-                                    <CheckCircle2 className="h-4 w-4 text-green-500" />
-                                  ) : (
-                                    <Circle className="text-muted-foreground h-4 w-4" />
-                                  )}
-                                </Button>
-                                <Input
-                                  defaultValue={obj.text}
-                                  onBlur={(e) => {
-                                    const q = questLog.find(
-                                      (q) => q.id === quest.id,
-                                    );
-                                    const objs = (q?.objectives || []).map(
-                                      (o) =>
-                                        o.id === obj.id
-                                          ? { ...o, text: e.target.value }
-                                          : o,
-                                    );
-                                    updateQuest(quest.id, { objectives: objs });
-                                  }}
-                                  className={cn(
-                                    'h-7 flex-1 text-xs',
-                                    obj.completed &&
-                                      'text-muted-foreground line-through',
-                                  )}
-                                />
+                                  <SelectTrigger className="h-8 w-32 text-xs">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="main">
+                                      {t('common.selectMainQuest')}
+                                    </SelectItem>
+                                    <SelectItem value="side">
+                                      {t('common.selectSideQuest')}
+                                    </SelectItem>
+                                    <SelectItem value="personal">
+                                      {t('common.selectPersonalQuest')}
+                                    </SelectItem>
+                                  </SelectContent>
+                                </Select>
                                 <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="text-destructive/70 hover:text-destructive h-6 w-6 shrink-0 max-md:h-10 max-md:w-10"
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-8 flex-1 text-xs"
                                   onClick={() =>
-                                    deleteObjective(quest.id, obj.id)
+                                    updateQuest(quest.id, {
+                                      status: isCompleted
+                                        ? 'active'
+                                        : 'completed',
+                                    })
                                   }
-                                  title={t('common.deleteObjective')}
-                                  aria-label={t('common.deleteObjective')}
-                                  data-testid={`delete-objective-${obj.id}`}
                                 >
-                                  <Trash2 className="h-3 w-3" />
+                                  {isCompleted
+                                    ? t('common.markAsActive')
+                                    : t('common.markAsCompleted')}
                                 </Button>
                               </div>
-                            ))}
-                          </div>
-                          <div className="flex gap-2">
-                            <Input
-                              placeholder={t('common.addObjectivePlaceholder')}
-                              value={newObjectiveText[quest.id] || ''}
-                              onChange={(e) =>
-                                setNewObjectiveText((prev) => ({
-                                  ...prev,
-                                  [quest.id]: e.target.value,
-                                }))
-                              }
-                              onKeyDown={(e) =>
-                                e.key === 'Enter' && addObjective(quest.id)
-                              }
-                              className="h-7 flex-1 text-xs"
-                            />
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="h-7 px-2"
-                              onClick={() => addObjective(quest.id)}
-                            >
-                              <PlusCircle className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        </div>
 
-                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                          <div className="space-y-1">
-                            <Label className="text-muted-foreground flex items-center gap-1 text-[10px] font-bold uppercase">
-                              <Gift className="h-3 w-3" />{' '}
-                              {t('common.questRewards')}
-                            </Label>
-                            <Input
-                              defaultValue={quest.rewards || ''}
-                              onBlur={(e) =>
-                                updateQuest(quest.id, {
-                                  rewards: e.target.value,
-                                })
-                              }
-                              placeholder={t('common.questRewardsPlaceholder')}
-                              className="h-7 text-xs"
-                            />
-                          </div>
-                          <div className="space-y-1">
-                            <Label className="text-muted-foreground flex items-center gap-1 text-[10px] font-bold uppercase">
-                              <MapPin className="h-3 w-3" />{' '}
-                              {t('common.questLocations')}
-                            </Label>
-                            <Input
-                              defaultValue={quest.locations || ''}
-                              onBlur={(e) =>
-                                updateQuest(quest.id, {
-                                  locations: e.target.value,
-                                })
-                              }
-                              placeholder={t(
-                                'common.questLocationsPlaceholder',
-                              )}
-                              className="h-7 text-xs"
-                            />
-                          </div>
-                          <div className="space-y-1 sm:col-span-2">
-                            <Label className="text-muted-foreground flex items-center gap-1 text-[10px] font-bold uppercase">
-                              <User className="h-3 w-3" />{' '}
-                              {t('common.questNpcs')}
-                            </Label>
-                            <Input
-                              defaultValue={quest.npcs || ''}
-                              onBlur={(e) =>
-                                updateQuest(quest.id, { npcs: e.target.value })
-                              }
-                              placeholder={t('common.questNpcsPlaceholder')}
-                              className="h-7 text-xs"
-                            />
-                          </div>
-                        </div>
+                              <div className="space-y-1">
+                                <Label className="text-muted-foreground flex items-center gap-1 text-[10px] font-bold uppercase">
+                                  <ScrollText className="h-3 w-3" />{' '}
+                                  {t('common.questDescription')}
+                                </Label>
+                                <Textarea
+                                  defaultValue={quest.description}
+                                  onBlur={(e) =>
+                                    updateQuest(quest.id, {
+                                      description: e.target.value,
+                                    })
+                                  }
+                                  placeholder={t(
+                                    'common.questDescriptionPlaceholder',
+                                  )}
+                                  className="min-h-[60px] text-sm"
+                                />
+                              </div>
 
-                        <div className="space-y-1">
-                          <Label className="text-muted-foreground flex items-center gap-1 text-[10px] font-bold uppercase">
-                            <StickyNote className="h-3 w-3" />{' '}
-                            {t('common.questNotes')}
-                          </Label>
-                          <Textarea
-                            defaultValue={quest.notes || ''}
-                            onBlur={(e) =>
-                              updateQuest(quest.id, { notes: e.target.value })
-                            }
-                            placeholder={t('common.questNotesPlaceholder')}
-                            className="min-h-[50px] text-xs"
-                          />
-                        </div>
+                              <div className="space-y-2">
+                                <Label className="text-muted-foreground flex items-center gap-1 text-[10px] font-bold uppercase">
+                                  <CheckCircle2 className="h-3 w-3" />{' '}
+                                  {t('common.questObjectives')}
+                                </Label>
+                                <div className="space-y-1">
+                                  {(quest.objectives || []).map((obj) => (
+                                    <div
+                                      key={obj.id}
+                                      className="group flex items-center gap-2"
+                                    >
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-6 w-6 shrink-0"
+                                        onClick={() =>
+                                          toggleObjective(quest.id, obj.id)
+                                        }
+                                      >
+                                        {obj.completed ? (
+                                          <CheckCircle2 className="h-4 w-4 text-green-500" />
+                                        ) : (
+                                          <Circle className="text-muted-foreground h-4 w-4" />
+                                        )}
+                                      </Button>
+                                      <Input
+                                        defaultValue={obj.text}
+                                        onBlur={(e) => {
+                                          const q = questLog.find(
+                                            (q) => q.id === quest.id,
+                                          );
+                                          const objs = (
+                                            q?.objectives || []
+                                          ).map((o) =>
+                                            o.id === obj.id
+                                              ? { ...o, text: e.target.value }
+                                              : o,
+                                          );
+                                          updateQuest(quest.id, {
+                                            objectives: objs,
+                                          });
+                                        }}
+                                        className={cn(
+                                          'h-7 flex-1 text-xs',
+                                          obj.completed &&
+                                            'text-muted-foreground line-through',
+                                        )}
+                                      />
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="text-destructive/70 hover:text-destructive h-6 w-6 shrink-0 max-md:h-10 max-md:w-10"
+                                        onClick={() =>
+                                          deleteObjective(quest.id, obj.id)
+                                        }
+                                        title={t('common.deleteObjective')}
+                                        aria-label={t('common.deleteObjective')}
+                                        data-testid={`delete-objective-${obj.id}`}
+                                      >
+                                        <Trash2 className="h-3 w-3" />
+                                      </Button>
+                                    </div>
+                                  ))}
+                                </div>
+                                <div className="flex gap-2">
+                                  <Input
+                                    placeholder={t(
+                                      'common.addObjectivePlaceholder',
+                                    )}
+                                    value={newObjectiveText[quest.id] || ''}
+                                    onChange={(e) =>
+                                      setNewObjectiveText((prev) => ({
+                                        ...prev,
+                                        [quest.id]: e.target.value,
+                                      }))
+                                    }
+                                    onKeyDown={(e) =>
+                                      e.key === 'Enter' &&
+                                      addObjective(quest.id)
+                                    }
+                                    className="h-7 flex-1 text-xs"
+                                  />
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="h-7 px-2"
+                                    onClick={() => addObjective(quest.id)}
+                                  >
+                                    <PlusCircle className="h-3 w-3" />
+                                  </Button>
+                                </div>
+                              </div>
 
-                        <div className="flex items-center justify-between border-t pt-2">
-                          <span className="text-muted-foreground text-[10px]">
-                            {t('common.updated')}{' '}
-                            {formatHistoryDate(quest.updatedAt, language, {
-                              month: 'short',
-                              day: 'numeric',
-                              year: 'numeric',
-                            })}
-                          </span>
-                          <div className="flex gap-1">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-6 w-6"
-                              onClick={() =>
-                                moveQuest(
-                                  questLog.findIndex((q) => q.id === quest.id),
-                                  'up',
-                                )
-                              }
-                              disabled={index === 0}
-                            >
-                              <ChevronUp className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-6 w-6"
-                              onClick={() =>
-                                moveQuest(
-                                  questLog.findIndex((q) => q.id === quest.id),
-                                  'down',
-                                )
-                              }
-                              disabled={index === questLog.length - 1}
-                            >
-                              <ChevronDown className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="text-destructive h-6 w-6 max-md:h-10 max-md:w-10"
-                              onClick={() => setQuestToDelete(quest)}
-                              title={t('common.deleteQuest')}
-                              aria-label={t('common.deleteQuest')}
-                              data-testid="delete-quest"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      </AccordionContent>
-                    </AccordionItem>
-                  );
-                })}
+                              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                <div className="space-y-1">
+                                  <Label className="text-muted-foreground flex items-center gap-1 text-[10px] font-bold uppercase">
+                                    <Gift className="h-3 w-3" />{' '}
+                                    {t('common.questRewards')}
+                                  </Label>
+                                  <Input
+                                    defaultValue={quest.rewards || ''}
+                                    onBlur={(e) =>
+                                      updateQuest(quest.id, {
+                                        rewards: e.target.value,
+                                      })
+                                    }
+                                    placeholder={t(
+                                      'common.questRewardsPlaceholder',
+                                    )}
+                                    className="h-7 text-xs"
+                                  />
+                                </div>
+                                <div className="space-y-1">
+                                  <Label className="text-muted-foreground flex items-center gap-1 text-[10px] font-bold uppercase">
+                                    <MapPin className="h-3 w-3" />{' '}
+                                    {t('common.questLocations')}
+                                  </Label>
+                                  <Input
+                                    defaultValue={quest.locations || ''}
+                                    onBlur={(e) =>
+                                      updateQuest(quest.id, {
+                                        locations: e.target.value,
+                                      })
+                                    }
+                                    placeholder={t(
+                                      'common.questLocationsPlaceholder',
+                                    )}
+                                    className="h-7 text-xs"
+                                  />
+                                </div>
+                                <div className="space-y-1 sm:col-span-2">
+                                  <Label className="text-muted-foreground flex items-center gap-1 text-[10px] font-bold uppercase">
+                                    <User className="h-3 w-3" />{' '}
+                                    {t('common.questNpcs')}
+                                  </Label>
+                                  <Input
+                                    defaultValue={quest.npcs || ''}
+                                    onBlur={(e) =>
+                                      updateQuest(quest.id, {
+                                        npcs: e.target.value,
+                                      })
+                                    }
+                                    placeholder={t(
+                                      'common.questNpcsPlaceholder',
+                                    )}
+                                    className="h-7 text-xs"
+                                  />
+                                </div>
+                              </div>
+
+                              <div className="space-y-1">
+                                <Label className="text-muted-foreground flex items-center gap-1 text-[10px] font-bold uppercase">
+                                  <StickyNote className="h-3 w-3" />{' '}
+                                  {t('common.questNotes')}
+                                </Label>
+                                <Textarea
+                                  defaultValue={quest.notes || ''}
+                                  onBlur={(e) =>
+                                    updateQuest(quest.id, {
+                                      notes: e.target.value,
+                                    })
+                                  }
+                                  placeholder={t(
+                                    'common.questNotesPlaceholder',
+                                  )}
+                                  className="min-h-[50px] text-xs"
+                                />
+                              </div>
+
+                              <div className="flex items-center justify-between border-t pt-2">
+                                <span className="text-muted-foreground text-[10px]">
+                                  {t('common.updated')}{' '}
+                                  {formatHistoryDate(
+                                    quest.updatedAt,
+                                    language,
+                                    {
+                                      month: 'short',
+                                      day: 'numeric',
+                                      year: 'numeric',
+                                    },
+                                  )}
+                                </span>
+                                <div className="flex items-center gap-1">
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="text-destructive h-6 w-6 max-md:h-10 max-md:w-10"
+                                    onClick={() => setQuestToDelete(quest)}
+                                    title={t('common.deleteQuest')}
+                                    aria-label={t('common.deleteQuest')}
+                                    data-testid="delete-quest"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </div>
+                            </AccordionContent>
+                          </AccordionItem>
+                        )}
+                      </SortableItem>
+                    );
+                  })}
+                </SortableRows>
               </Accordion>
             ) : (
               <div className="text-muted-foreground flex flex-col items-center justify-center py-12 text-center">

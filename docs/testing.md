@@ -135,7 +135,9 @@ Plugin-specific checks (bulk-editor table columns, custom slots) belong in
 - API route handlers are imported and called as ordinary functions with a
   `Request`; no HTTP server is started.
 - Covered areas: auth and profile updates, account deletion, recovery, file
-  storage/locks/atomic writes, character schema v2 migration, export/import 3.0
+  storage/locks/atomic writes, character schema v2 migration and the DH1
+  `5 → 6` legacy-to-notes step, skill characteristics (field + old-name
+  suffix), condition kinds including `implant`/`blessing`, export/import 3.0
   (JSON and Excel), the game registry/module contract, game catalog visibility
   and module-access matrix, translations parity and hardcoded-UI checks, unused
   dictionary keys per edition,
@@ -503,6 +505,8 @@ Game sheets are hosted by the plugins, not by `tests/visual`:
 | `dnd5e/tests/visual/creation.visual.spec.ts` | D&D 5e creation form → sheet |
 | `dh1/tests/visual/sheets.visual.spec.ts` | Dark Heresy 1e sheet in read mode, tablet top/compact and the notes dialog |
 | `dh1/tests/visual/editing.visual.spec.ts` | DH1 edit mode, creation locks, conditions, free experience |
+| `dh1/tests/visual/reorder.visual.spec.ts` | Drag order with the keyboard in skills, inventory and the quest journal: `PUT` 200, order after reload, no arrows in the journal, axe on reorder handles; restores the original order afterwards |
+| `dh1/tests/visual/conditions.visual.spec.ts` | `implant`/`blessing` conditions render with the positive badge and survive a save |
 | `dh1/tests/visual/creation.visual.spec.ts` | DH1 creation, weapons, XP awards |
 | `dh2/tests/visual/sheets.visual.spec.ts` | DH2 sheet in read mode (own segment `dh2`): desktop elements, RU, mobile sections, edit mode, tablet top/compact, notes and house-rules dialogs |
 | `dh2/tests/visual/creation.visual.spec.ts` | DH2 creation choices, Enemies options, gender/background, guest draft, weapons, XP awards |

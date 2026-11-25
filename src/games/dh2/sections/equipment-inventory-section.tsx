@@ -47,7 +47,13 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
-import { useCharacterContext, useTranslation } from '@/games/plugin-host';
+import {
+  SortableItem,
+  SortableRows,
+  useCharacterContext,
+  useTranslation,
+} from '@/games/plugin-host';
+import { moveItem } from '@/games/shared/collection';
 import { cn } from '@/lib/utils';
 
 import {
@@ -225,6 +231,20 @@ export const EquipmentInventorySection = React.forwardRef<
       updateCharacter(character.id, { inventory: editableInventory });
       setIsInventoryEditing(false);
     }, [character.id, editableInventory, updateCharacter]);
+
+    /**
+     * Порядок предметов — часть листа: в правке копится в `editableInventory`,
+     * в просмотре сразу уходит в очередь сохранений (D7).
+     */
+    const reorderInventory = (from: number, to: number) => {
+      if (isInventoryEditing) {
+        setEditableInventory((prev) => moveItem(prev, from, to));
+        return;
+      }
+      updateCharacter(character.id, {
+        inventory: moveItem(character.inventory ?? [], from, to),
+      });
+    };
     React.useEffect(() => {
       onEditingChange?.(isAnyEditing);
     }, [isAnyEditing, onEditingChange]);
@@ -489,6 +509,10 @@ export const EquipmentInventorySection = React.forwardRef<
     const currentInventory = isInventoryEditing
       ? editableInventory
       : (character.inventory ?? []);
+    const inventoryIds = currentInventory.map((item) => item.id);
+    const inventoryLabels = Object.fromEntries(
+      currentInventory.map((item) => [item.id, item.name]),
+    );
     const inventoryTotal = inventoryTotals(currentInventory);
     const equippedMeleeWeapons = (currentEquipment.weapons?.melee ?? []).filter(
       (w) => w.equipped,
@@ -2258,148 +2282,174 @@ export const EquipmentInventorySection = React.forwardRef<
                   </div>
                   {isInventoryEditing ? (
                     <div className="space-y-2">
-                      {editableInventory.map((item) => (
-                        <div
-                          key={item.id}
-                          className="grid grid-cols-2 gap-2 rounded border p-2"
-                        >
-                          <Input
-                            defaultValue={item.name}
-                            aria-label={t('common.items')}
-                            onChange={(e) =>
-                              setEditableInventory(
-                                editableInventory.map((i) =>
-                                  i.id === item.id
-                                    ? { ...i, name: e.target.value }
-                                    : i,
-                                ),
-                              )
-                            }
-                            className="col-span-2 h-8 text-sm"
-                          />
-                          <div className="space-y-1">
-                            <span className="text-muted-foreground block text-[10px] leading-none">
-                              {t('dh2.inventoryQuantityShort')}
-                            </span>
-                            <Input
-                              type="number"
-                              min={1}
-                              step={1}
-                              defaultValue={item.quantity ?? ''}
-                              placeholder="1"
-                              aria-label={t('common.quantity')}
-                              onChange={(e) =>
-                                setEditableInventory(
-                                  editableInventory.map((i) =>
-                                    i.id === item.id
-                                      ? {
-                                          ...i,
-                                          quantity: parseQuantity(
-                                            e.target.value,
-                                          ),
-                                        }
-                                      : i,
-                                  ),
-                                )
-                              }
-                              className="h-8 text-sm"
-                            />
-                          </div>
-                          <div className="space-y-1">
-                            <span className="text-muted-foreground block text-[10px] leading-none">
-                              {t('dh2.inventoryWeightUnit')}
-                            </span>
-                            <Input
-                              type="number"
-                              min={0}
-                              step={0.1}
-                              defaultValue={item.weight ?? ''}
-                              placeholder="0.0"
-                              aria-label={t('common.weight')}
-                              onChange={(e) =>
-                                setEditableInventory(
-                                  editableInventory.map((i) =>
-                                    i.id === item.id
-                                      ? {
-                                          ...i,
-                                          weight: parseWeight(e.target.value),
-                                        }
-                                      : i,
-                                  ),
-                                )
-                              }
-                              className="h-8 text-sm"
-                            />
-                          </div>
-                          <div className="col-span-2 flex items-center justify-end gap-1">
-                            <Checkbox
-                              checked={readStatus(item) === 'lost'}
-                              aria-label={t('dh2.inventoryLost')}
-                              onCheckedChange={(checked) =>
-                                setEditableInventory(
-                                  editableInventory.map((i) =>
-                                    i.id === item.id
-                                      ? {
-                                          ...i,
-                                          status: checked ? 'lost' : 'default',
-                                        }
-                                      : i,
-                                  ),
-                                )
-                              }
-                            />
-                            <Label className="text-xs">
-                              {t('dh2.inventoryLost')}
-                            </Label>
-                            {!hideNotes && (
-                              <Popover>
-                                <PopoverTrigger asChild>
-                                  <Button
-                                    variant={item.notes ? 'secondary' : 'ghost'}
-                                    size="icon"
-                                    className="h-7 w-7 shrink-0"
-                                  >
-                                    <InfoIcon className="h-4 w-4" />
-                                  </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-64">
-                                  <Label className="mb-2 block text-xs">
-                                    {t('common.notesFor')} {item.name}
-                                  </Label>
-                                  <Textarea
-                                    defaultValue={item.notes || ''}
-                                    onBlur={(e) =>
+                      <SortableRows
+                        ids={inventoryIds}
+                        labelById={inventoryLabels}
+                        onReorder={reorderInventory}
+                      >
+                        {editableInventory.map((item) => (
+                          <SortableItem
+                            key={item.id}
+                            id={item.id}
+                            label={item.name}
+                            className="grid grid-cols-2 gap-2 rounded border p-2"
+                          >
+                            {(handle) => (
+                              <>
+                                <div className="col-span-2 flex items-center gap-2">
+                                  {handle}
+                                  <Input
+                                    defaultValue={item.name}
+                                    aria-label={t('common.items')}
+                                    onChange={(e) =>
                                       setEditableInventory(
                                         editableInventory.map((i) =>
                                           i.id === item.id
-                                            ? { ...i, notes: e.target.value }
+                                            ? { ...i, name: e.target.value }
                                             : i,
                                         ),
                                       )
                                     }
-                                    placeholder={t('dh2.addNotesPlaceholder')}
-                                    className="mt-2 min-h-[100px] text-sm"
+                                    className="h-8 flex-1 text-sm"
                                   />
-                                </PopoverContent>
-                              </Popover>
+                                </div>
+                                <div className="space-y-1">
+                                  <span className="text-muted-foreground block text-[10px] leading-none">
+                                    {t('dh2.inventoryQuantityShort')}
+                                  </span>
+                                  <Input
+                                    type="number"
+                                    min={1}
+                                    step={1}
+                                    defaultValue={item.quantity ?? ''}
+                                    placeholder="1"
+                                    aria-label={t('common.quantity')}
+                                    onChange={(e) =>
+                                      setEditableInventory(
+                                        editableInventory.map((i) =>
+                                          i.id === item.id
+                                            ? {
+                                                ...i,
+                                                quantity: parseQuantity(
+                                                  e.target.value,
+                                                ),
+                                              }
+                                            : i,
+                                        ),
+                                      )
+                                    }
+                                    className="h-8 text-sm"
+                                  />
+                                </div>
+                                <div className="space-y-1">
+                                  <span className="text-muted-foreground block text-[10px] leading-none">
+                                    {t('dh2.inventoryWeightUnit')}
+                                  </span>
+                                  <Input
+                                    type="number"
+                                    min={0}
+                                    step={0.1}
+                                    defaultValue={item.weight ?? ''}
+                                    placeholder="0.0"
+                                    aria-label={t('common.weight')}
+                                    onChange={(e) =>
+                                      setEditableInventory(
+                                        editableInventory.map((i) =>
+                                          i.id === item.id
+                                            ? {
+                                                ...i,
+                                                weight: parseWeight(
+                                                  e.target.value,
+                                                ),
+                                              }
+                                            : i,
+                                        ),
+                                      )
+                                    }
+                                    className="h-8 text-sm"
+                                  />
+                                </div>
+                                <div className="col-span-2 flex items-center justify-end gap-1">
+                                  <Checkbox
+                                    checked={readStatus(item) === 'lost'}
+                                    aria-label={t('dh2.inventoryLost')}
+                                    onCheckedChange={(checked) =>
+                                      setEditableInventory(
+                                        editableInventory.map((i) =>
+                                          i.id === item.id
+                                            ? {
+                                                ...i,
+                                                status: checked
+                                                  ? 'lost'
+                                                  : 'default',
+                                              }
+                                            : i,
+                                        ),
+                                      )
+                                    }
+                                  />
+                                  <Label className="text-xs">
+                                    {t('dh2.inventoryLost')}
+                                  </Label>
+                                  {!hideNotes && (
+                                    <Popover>
+                                      <PopoverTrigger asChild>
+                                        <Button
+                                          variant={
+                                            item.notes ? 'secondary' : 'ghost'
+                                          }
+                                          size="icon"
+                                          className="h-7 w-7 shrink-0"
+                                        >
+                                          <InfoIcon className="h-4 w-4" />
+                                        </Button>
+                                      </PopoverTrigger>
+                                      <PopoverContent className="w-64">
+                                        <Label className="mb-2 block text-xs">
+                                          {t('common.notesFor')} {item.name}
+                                        </Label>
+                                        <Textarea
+                                          defaultValue={item.notes || ''}
+                                          onBlur={(e) =>
+                                            setEditableInventory(
+                                              editableInventory.map((i) =>
+                                                i.id === item.id
+                                                  ? {
+                                                      ...i,
+                                                      notes: e.target.value,
+                                                    }
+                                                  : i,
+                                              ),
+                                            )
+                                          }
+                                          placeholder={t(
+                                            'dh2.addNotesPlaceholder',
+                                          )}
+                                          className="mt-2 min-h-[100px] text-sm"
+                                        />
+                                      </PopoverContent>
+                                    </Popover>
+                                  )}
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-7 w-7 shrink-0"
+                                    onClick={() =>
+                                      setEditableInventory(
+                                        editableInventory.filter(
+                                          (i) => i.id !== item.id,
+                                        ),
+                                      )
+                                    }
+                                  >
+                                    <Trash2 className="text-destructive h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </>
                             )}
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-7 w-7 shrink-0"
-                              onClick={() =>
-                                setEditableInventory(
-                                  editableInventory.filter(
-                                    (i) => i.id !== item.id,
-                                  ),
-                                )
-                              }
-                            >
-                              <Trash2 className="text-destructive h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
+                          </SortableItem>
+                        ))}
+                      </SortableRows>
                       <div className="flex gap-2 pt-2">
                         <Input
                           placeholder={t('dh2.newInventoryItem')}
@@ -2421,69 +2471,32 @@ export const EquipmentInventorySection = React.forwardRef<
                         <span className="text-right">{t('common.weight')}</span>
                       </div>
                       {currentInventory.length > 0 ? (
-                        currentInventory.map((item) => {
-                          const lost = readStatus(item) === 'lost';
-                          return (
-                            <div
-                              key={item.id}
-                              className={cn(
-                                'hover:bg-muted/50 grid grid-cols-2 items-center gap-x-3 gap-y-0.5 rounded p-1.5 text-sm transition-colors md:grid-cols-[minmax(0,1fr)_3rem_3.5rem] md:gap-2',
-                                lost && 'text-muted-foreground',
-                              )}
-                            >
-                              <div className="col-span-2 flex min-w-0 items-center gap-1.5 md:col-span-1">
-                                <Checkbox
-                                  checked={lost}
-                                  aria-label={t('dh2.inventoryLost')}
-                                  title={t('dh2.inventoryLost')}
-                                  onCheckedChange={(checked) =>
-                                    updateCharacter(character.id, {
-                                      inventory: (
-                                        character.inventory ?? []
-                                      ).map((i) =>
-                                        i.id === item.id
-                                          ? {
-                                              ...i,
-                                              status: checked
-                                                ? 'lost'
-                                                : 'default',
-                                            }
-                                          : i,
-                                      ),
-                                    })
-                                  }
-                                />
-                                <span
-                                  title={item.name}
-                                  className={cn(
-                                    'min-w-0 flex-1 truncate font-medium',
-                                    lost
-                                      ? 'text-muted-foreground line-through'
-                                      : 'text-foreground',
-                                  )}
-                                >
-                                  {item.name}
-                                </span>
-                                {!hideNotes && (
-                                  <Popover>
-                                    <PopoverTrigger asChild>
-                                      <Button
-                                        variant={
-                                          item.notes ? 'secondary' : 'ghost'
-                                        }
-                                        size="icon"
-                                        className="h-6 w-6 shrink-0"
-                                      >
-                                        <InfoIcon className="h-3.5 w-3.5" />
-                                      </Button>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-64">
-                                      <Label className="mb-2 block text-xs">
-                                        {t('common.notesFor')} {item.name}
-                                      </Label>
-                                      <Textarea
-                                        defaultValue={item.notes || ''}
-                                        onBlur={(e) =>
+                        <SortableRows
+                          ids={inventoryIds}
+                          labelById={inventoryLabels}
+                          onReorder={reorderInventory}
+                        >
+                          {currentInventory.map((item) => {
+                            const lost = readStatus(item) === 'lost';
+                            return (
+                              <SortableItem
+                                key={item.id}
+                                id={item.id}
+                                label={item.name}
+                                className={cn(
+                                  'hover:bg-muted/50 grid grid-cols-2 items-center gap-x-3 gap-y-0.5 rounded p-1.5 text-sm transition-colors md:grid-cols-[minmax(0,1fr)_3rem_3.5rem] md:gap-2',
+                                  lost && 'text-muted-foreground',
+                                )}
+                              >
+                                {(handle) => (
+                                  <>
+                                    <div className="col-span-2 flex min-w-0 items-center gap-1.5 md:col-span-1">
+                                      {handle}
+                                      <Checkbox
+                                        checked={lost}
+                                        aria-label={t('dh2.inventoryLost')}
+                                        title={t('dh2.inventoryLost')}
+                                        onCheckedChange={(checked) =>
                                           updateCharacter(character.id, {
                                             inventory: (
                                               character.inventory ?? []
@@ -2491,36 +2504,90 @@ export const EquipmentInventorySection = React.forwardRef<
                                               i.id === item.id
                                                 ? {
                                                     ...i,
-                                                    notes: e.target.value,
+                                                    status: checked
+                                                      ? 'lost'
+                                                      : 'default',
                                                   }
                                                 : i,
                                             ),
                                           })
                                         }
-                                        placeholder={t(
-                                          'dh2.addNotesPlaceholder',
-                                        )}
-                                        className="mt-2 min-h-[100px] text-sm"
                                       />
-                                    </PopoverContent>
-                                  </Popover>
+                                      <span
+                                        title={item.name}
+                                        className={cn(
+                                          'min-w-0 flex-1 truncate font-medium',
+                                          lost
+                                            ? 'text-muted-foreground line-through'
+                                            : 'text-foreground',
+                                        )}
+                                      >
+                                        {item.name}
+                                      </span>
+                                      {!hideNotes && (
+                                        <Popover>
+                                          <PopoverTrigger asChild>
+                                            <Button
+                                              variant={
+                                                item.notes
+                                                  ? 'secondary'
+                                                  : 'ghost'
+                                              }
+                                              size="icon"
+                                              className="h-6 w-6 shrink-0"
+                                            >
+                                              <InfoIcon className="h-3.5 w-3.5" />
+                                            </Button>
+                                          </PopoverTrigger>
+                                          <PopoverContent className="w-64">
+                                            <Label className="mb-2 block text-xs">
+                                              {t('common.notesFor')} {item.name}
+                                            </Label>
+                                            <Textarea
+                                              defaultValue={item.notes || ''}
+                                              onBlur={(e) =>
+                                                updateCharacter(character.id, {
+                                                  inventory: (
+                                                    character.inventory ?? []
+                                                  ).map((i) =>
+                                                    i.id === item.id
+                                                      ? {
+                                                          ...i,
+                                                          notes: e.target.value,
+                                                        }
+                                                      : i,
+                                                  ),
+                                                })
+                                              }
+                                              placeholder={t(
+                                                'dh2.addNotesPlaceholder',
+                                              )}
+                                              className="mt-2 min-h-[100px] text-sm"
+                                            />
+                                          </PopoverContent>
+                                        </Popover>
+                                      )}
+                                    </div>
+                                    <div className="flex flex-col items-start leading-tight md:items-end">
+                                      <span className="text-muted-foreground text-[10px] md:hidden">
+                                        {t('common.quantity')}
+                                      </span>
+                                      <span>{readQuantity(item)}</span>
+                                    </div>
+                                    <div className="flex flex-col items-start leading-tight md:items-end">
+                                      <span className="text-muted-foreground text-[10px] md:hidden">
+                                        {t('common.weight')}
+                                      </span>
+                                      <span>
+                                        {formatWeight(readWeight(item))}
+                                      </span>
+                                    </div>
+                                  </>
                                 )}
-                              </div>
-                              <div className="flex flex-col items-start leading-tight md:items-end">
-                                <span className="text-muted-foreground text-[10px] md:hidden">
-                                  {t('common.quantity')}
-                                </span>
-                                <span>{readQuantity(item)}</span>
-                              </div>
-                              <div className="flex flex-col items-start leading-tight md:items-end">
-                                <span className="text-muted-foreground text-[10px] md:hidden">
-                                  {t('common.weight')}
-                                </span>
-                                <span>{formatWeight(readWeight(item))}</span>
-                              </div>
-                            </div>
-                          );
-                        })
+                              </SortableItem>
+                            );
+                          })}
+                        </SortableRows>
                       ) : (
                         <p className="text-muted-foreground rounded-lg border border-dashed p-4 text-center text-sm italic">
                           {t('dh2.noInventoryItems')}

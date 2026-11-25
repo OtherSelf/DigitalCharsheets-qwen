@@ -13,6 +13,7 @@ export const enTranslations = {
   'common.allHeroes': 'All of your heroes and anti-heroes in one place.',
   'common.createNew': 'Create New Character',
   'common.reorder': 'Drag to reorder',
+  'common.reorderNamed': 'Reorder {name}',
   'common.reorderHint':
     'Press space to pick the card up, use the arrow keys to move it, space to drop, Escape to cancel.',
   'common.reorderPicked': 'Picked up {name}',

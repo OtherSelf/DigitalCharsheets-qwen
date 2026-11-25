@@ -48,6 +48,7 @@ src/games/
     types.ts, schemas.ts, schema.ts, schema-version.ts, defaults.ts, demo.ts
     normalize.ts, merge.ts  legacy normalization + import merge (own copies)
     capabilities.ts, stats.ts, dh-stats.ts, field-policy.ts
+    skill-training.ts, skill-characteristic.ts
     export.ts, excel.ts, history.ts, legacy-import.ts
     dark-heresy-data.ts, dark-heresy-ranks.ts, divination-i18n.ts
                             hand-written 1e reference data (own copy, D10)
@@ -215,7 +216,7 @@ Every module folder has a `plugin.json` (`src/games/plugin.schema.json`):
   "tags": ["warhammer40k", "d100"],
   "author": "Digital Character Sheets",
   "license": "MIT",
-  "schemaVersion": 5,
+  "schemaVersion": 6,
   "game": {
     "id": "darkHeresy",
     "order": 20,
@@ -232,7 +233,8 @@ Every module folder has a `plugin.json` (`src/games/plugin.schema.json`):
     { "from": 1, "to": 2, "entry": "index.ts#migrateV1toV2" },
     { "from": 2, "to": 3, "entry": "index.ts#migrateV2toV3" },
     { "from": 3, "to": 4, "entry": "index.ts#migrateV3toV4" },
-    { "from": 4, "to": 5, "entry": "index.ts#migrateV4toV5" }
+    { "from": 4, "to": 5, "entry": "index.ts#migrateV4toV5" },
+    { "from": 5, "to": 6, "entry": "index.ts#migrateV5toV6" }
   ],
   "tests": { "conformance": ">=1" }
 }
@@ -321,7 +323,7 @@ per-game save handlers out of the page.
 | `defaultStatus` | `published` / `test` / `hidden`; runtime override in the game catalog. |
 | `nameKey`, `descriptionKey` | i18n keys; names are never stored in sheets. |
 | `shortCode` | Locale-independent edition code for the admin character list (`dnd5e`, `dh1e`, `dh2e`); declared in `plugin.json#shortCode` and duplicated in the module, not translated, the full game + edition goes to the tooltip (D29). |
-| `schemaVersion` | Sheet format written by the module: `2` for `dnd5e`, `5` for `dh1`/`dh2`; manifests declare it and the migration chain ends here. |
+| `schemaVersion` | Sheet format written by the module: `2` for `dnd5e`, `6` for `dh1`, `5` for `dh2`; manifests declare it and the migration chain ends here. |
 | `schema` | Zod schema; `ZodType<TCharacter>` makes `tsc` check it against the type. |
 | `i18n` | Declared locales (`en`/`ru` plus optional extras), merged by the core with an en↔ru fallback. |
 | `capabilities` | Fixed feature flags of the module (edition, +30, fatigue field). |
@@ -417,6 +419,12 @@ per-game save handlers out of the page.
   has `quantity`/`weight`/`price`, dh2 has `quantity`/`weight`, dnd5e keeps the
   original `{id, name, status, notes}` shape. Missing numeric fields read as
   defaults (`quantity = 1`) and are not written back until the player saves.
+- A skill keeps its characteristic as data, not in the name:
+  `Skill.characteristic` holds a stat code (`agility`, …; dh2 adds
+  `influence`). Sheets written before the field existed carry it in the name
+  (`Акробатика (Лов)`); `skill-characteristic.ts` in each edition resolves it
+  at render time and only the explicit edit moves it into the field. The editor
+  and the Excel export read the same resolver, so the column and the file agree.
 - Export JSON fields and Excel sections are part of the module; the core only
   writes the technical envelope/block.
 - Every module declares `defaultStatus` and `createDemo`; hiding a module in the

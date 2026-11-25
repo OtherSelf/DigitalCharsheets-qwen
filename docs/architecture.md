@@ -41,8 +41,13 @@ See [game-modules.md](game-modules.md).
   mention game ids.
 
 The same rule covers admin summaries (the sheet label comes from the plugin's
-`CardSummary` slot), conditions (the plugin passes its `kinds`/`sources`) and
-Excel labels (they live in plugin dictionaries under `<plugin>.excel.*`).
+`CardSummary` slot), conditions (the plugin passes its `kinds`/`sources`/
+`positiveKinds`) and Excel labels (they live in plugin dictionaries under
+`<plugin>.excel.*`). Row reordering is the same story: `@dnd-kit` sensors,
+keyboard support, announcements and the grip handle live once in
+`src/components/sheets/sortable-rows.tsx`, and plugins receive
+`SortableRows`/`SortableRow`/`SortableItem` through `@/games/plugin-host`; the
+plugin owns only the markup of a row and the array it reorders.
 
 ### Who owns what
 
@@ -53,7 +58,8 @@ Excel labels (they live in plugin dictionaries under `<plugin>.excel.*`).
 | Plugin font | the edition, lazily | `plugin.json#ui.theme.font` → `generatedFontLoaders` |
 | Mechanics that look alike (DH stats, skill training) | each edition separately | `src/games/dh1/…`, `src/games/dh2/…` (parity test) |
 | Data pack generation (dh2 reference) | the edition | `src/games/dh2/scripts/generate.mjs` |
-| Game-agnostic kernel (base fields, quests, Excel writer, import review store) | the core | `src/games/shared/` |
+| Game-agnostic kernel (base fields, quests, Excel writer, import review store, array move) | the core | `src/games/shared/` |
+| Drag-and-drop row wrapper (sensors, keyboard, announcements, handle) | the core, exposed via the plugin host | `src/components/sheets/sortable-rows.tsx` |
 | Theme rendering, gates, registry | the core | `src/lib/game-theme.ts`, `scripts/plugins/*` |
 
 The original prototype was scaffolded in Firebase Studio; the current version is

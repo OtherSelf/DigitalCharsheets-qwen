@@ -51,7 +51,15 @@ describe('DH1: миграция листа v2', () => {
     expect((dh.identity as Record<string, unknown>).gender).toBe('male');
     expect(dh.insanityPoints).toEqual({ total: 3, notes: '' });
     expect(dh.corruptionPoints).toEqual({ total: 1, notes: '' });
-    expect(dh.traits).toHaveLength(1);
+    // Legacy-поля 1e миграция v6 уносит во вкладку заметок «Наследие».
+    expect(dh.traits).toBeUndefined();
+    const legacyTab = (
+      dh.noteTabs as Array<{ title: string; body: string }>
+    )[0];
+    expect(legacyTab.title).toBe('Наследие');
+    expect(legacyTab.body).toContain('Черты: Dark Sight');
+    expect(legacyTab.body).toContain('Степень безумия: 1');
+    expect(legacyTab.body).toContain('Степень порчи: 0');
     expect(dh.fatigue1st).toEqual({ current: 1 });
     // Журнал опыта добавлен аддитивно: старый лист получает пустой массив.
     expect(dh.experienceLog).toEqual([]);

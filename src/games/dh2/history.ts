@@ -11,6 +11,7 @@ import {
   talentLabel,
 } from './dh2e-labels';
 import { genderLabel } from './gender';
+import { characteristicLabel } from './skill-characteristic';
 
 type Translate = (key: string) => string;
 
@@ -125,6 +126,7 @@ export const dh2History: GameHistoryConfig = {
     'inventory.notes': 'common.notes',
     'inventory.quantity': 'common.quantity',
     skills: 'dh2.skills',
+    'skills.characteristic': 'dh2.characteristic',
     'skills.notes': 'common.notes',
     talents: 'dh2.talentsAndTraits',
     'talents.notes': 'common.notes',
@@ -318,6 +320,10 @@ export const dh2History: GameHistoryConfig = {
     }
     if (path === 'startingChoices.talents') {
       return labelList(value, talentLabel, t);
+    }
+    // Характеристика умения хранится кодом; в истории нужна аббревиатура.
+    if (path === 'skills.characteristic' && typeof value === 'string') {
+      return characteristicLabel(value, t);
     }
     if (path === 'skills.training') return trainingLabel(value, t);
     if (path.startsWith('statUpgrades.')) return statAdvanceLabel(value, t);

@@ -20,6 +20,8 @@ not a backup and not a rollback mechanism.
 - Arrays of objects (inventory, spells, quests, companions) are compared by a
   stable key (`id`, `name`, `title`, …), so a change reads as
   “Inventory · Longsword · Notes” instead of an index.
+- A pure reorder inside a keyed array writes no revision: items are matched
+  by key, so dragging rows in the sheet does not spam the log.
 - Long strings and large objects are stored as a truncated preview; full values
   are not kept.
 - History is best-effort: if the log cannot be written, the sheet is still

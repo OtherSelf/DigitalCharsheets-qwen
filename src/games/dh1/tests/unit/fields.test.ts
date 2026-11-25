@@ -222,7 +222,7 @@ const EXPORT_ALL: GameExportConfig = {
 };
 
 describe('DH1: новые блоки в JSON-экспорте', () => {
-  it('экспортирует идентичность, пси, черты, мутации, безумие, порчу и груз', () => {
+  it('экспортирует идентичность, пси, мутации, состояния и груз', () => {
     const character = baseDh1({
       identity: { playerName: 'Анна', gender: 'female', build: 'Сухое' },
       traits: [{ id: 't1', name: 'Железное Нутро' }],
@@ -253,11 +253,12 @@ describe('DH1: новые блоки в JSON-экспорте', () => {
     expect((exported.identity as { gender?: string }).gender).toBe('female');
     expect(exported.identity).not.toHaveProperty('playerName');
     expect((exported.psy as { rating?: number }).rating).toBe(2);
-    expect(Array.isArray(exported.traits)).toBe(true);
-    expect((exported.insanityDetails as { degree?: string }).degree).toBe('1');
-    expect((exported.corruptionDetails as { degree?: string }).degree).toBe(
-      '0',
-    );
+    // Legacy-поля (черты, степень/тест Безумия и Порчи) миграция v6 уносит
+    // во вкладку заметок, поэтому в экспорт они не попадают.
+    expect(exported).not.toHaveProperty('traits');
+    expect(exported).not.toHaveProperty('eliteAdvances');
+    expect(exported).not.toHaveProperty('insanityDetails');
+    expect(exported).not.toHaveProperty('corruptionDetails');
     expect((exported.carry as { push?: string }).push).toBe('108 кг');
     expect((exported.equipment as { armorWeight?: string }).armorWeight).toBe(
       '6 кг',

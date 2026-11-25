@@ -65,8 +65,12 @@ test.describe('редактирование Dark Heresy', { tag: '@plugin:dh1' }
       // Навыки: имена и тренировки открываются в виде полей ввода.
       const skills = page.locator('#skills-talents-panel:visible').first();
       await startEditing(skills);
-      await expectInputValue(skills, 'Awareness (Per)');
-      await expectInputValue(skills, 'Scholastic Lore (Int)');
+      // Правка переносит характеристику из суффикса названия в отдельное поле.
+      await expectInputValue(skills, 'Awareness');
+      await expectInputValue(skills, 'Scholastic Lore');
+      await expect(
+        skills.getByLabel('Characteristic', { exact: true }).first(),
+      ).toHaveValue('perception');
       await screenshotElement(skills, 'sheet-dh-edit-skills-en.png');
 
       // Снаряжение: броня и оружие с заполненными полями.
@@ -138,7 +142,7 @@ test.describe('редактирование Dark Heresy', { tag: '@plugin:dh1' }
       await openMobileSection(page, 'Skills', 'skills-section');
       const skills = page.locator('#skills-talents-content:visible').first();
       await startEditing(skills);
-      await expectInputValue(skills, 'Awareness (Per)');
+      await expectInputValue(skills, 'Awareness');
       await screenshotPage(page, 'sheet-dh-mobile-edit-skills-en.png');
     },
   );
