@@ -11,6 +11,18 @@ format changes.
 
 ## [Unreleased]
 
+## [0.24.1] - 2026-11-26
+
+### Fixed
+
+- Four epic boon descriptions (Fortitude, Irresistible Offense, Skill
+  Proficiency, Truesight) still carried rulebook wording; they are now short
+  mechanical statements like the other boons.
+
+### Plugin versions
+
+- dnd5e 1.15.0.
+
 ## [0.24.0] - 2026-11-26
 
 The catalog keeps the rules, not the book prose.
