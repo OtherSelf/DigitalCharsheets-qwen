@@ -18,7 +18,7 @@
   "tags": ["warhammer40k", "d100", "grimdark"],
   "author": "Digital Character Sheets",
   "license": "MIT",
-  "schemaVersion": 5,
+  "schemaVersion": 6,
   "game": {
     "id": "darkHeresy",
     "order": 20,
@@ -99,6 +99,13 @@
       "to": 5,
       "entry": "index.ts#migrateDh2V4toV5",
       "description": "пол хранится каноническим кодом",
+      "removes": []
+    },
+    {
+      "from": 5,
+      "to": 6,
+      "entry": "index.ts#migrateDh2V5toV6",
+      "description": "замороженный текст пророчества и эффекта (бэкфилл 0.22.0)",
       "removes": []
     }
   ],

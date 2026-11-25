@@ -18,7 +18,7 @@
   "tags": ["warhammer40k", "d100", "grimdark"],
   "author": "Digital Character Sheets",
   "license": "MIT",
-  "schemaVersion": 6,
+  "schemaVersion": 7,
   "game": {
     "id": "darkHeresy",
     "order": 20,
@@ -105,6 +105,13 @@
         "corruptionDetails.degree",
         "corruptionDetails.test"
       ]
+    },
+    {
+      "from": 6,
+      "to": 7,
+      "entry": "index.ts#migrateDh1V6toV7",
+      "description": "замороженный текст пророчества и эффекта (бэкфилл 0.22.0)",
+      "removes": []
     }
   ],
   "tests": {
