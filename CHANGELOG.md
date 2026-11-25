@@ -11,6 +11,33 @@ format changes.
 
 ## [Unreleased]
 
+## [0.22.0] - 2026-11-25
+
+Dark Heresy sheets keep the divination text a player already sees, ahead of
+removing book text from the build.
+
+### Added
+
+- `divinationText` and `divinationEffectText` on Dark Heresy sheets: optional
+  localized (`en`/`ru`) copies of the phrase and effect shown in the sheet. A
+  sheet that has them renders them instead of the dictionary text.
+- `npm run legal:backfill`: freezes the phrase and effect in existing sheets in
+  both locales, skips demo sheets, resolves legacy sheets by manifest aliases
+  and by phrase, supports `--dry-run`, `--backup`, `--explain`. Idempotent.
+- Deployment notes describe the order: run the backfill after 0.22.0 and again
+  right before 0.23.0.
+
+### Changed
+
+- Sheet `schemaVersion`: DH1 6 → 7, DH2 5 → 6. The new migration steps are
+  no-ops; older sheets stay valid and are migrated on first open. The bump keeps
+  a pre-0.22.0 build from stripping the frozen fields on save.
+- Portable JSON export carries the frozen text next to the divination id.
+
+### Plugin versions
+
+- dh1 1.16.0, dh2 1.17.0.
+
 ## [0.21.0] - 2026-11-25
 
 Dark Heresy sheets can be ordered by hand, and the 1e legacy block moves into
