@@ -338,28 +338,30 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
             className="bg-card relative space-y-3 border-b px-4 py-3 shadow-sm"
           >
             <div className="absolute top-2 right-2">
-              <Button
-                data-testid="compact-stats-edit-button"
-                size="icon"
-                variant="ghost"
-                className="h-6 w-6"
-                aria-label={
-                  isStatsEditing ? t('common.save') : t('common.edit')
-                }
-                onClick={() => {
-                  if (isStatsEditing) {
-                    handleSaveStats();
-                  } else {
-                    setIsStatsEditing(true);
+              {(showEditButtons || isStatsEditing) && (
+                <Button
+                  data-testid="compact-stats-edit-button"
+                  size="icon"
+                  variant="ghost"
+                  className="h-6 w-6"
+                  aria-label={
+                    isStatsEditing ? t('common.save') : t('common.edit')
                   }
-                }}
-              >
-                {isStatsEditing ? (
-                  <Save className="h-4 w-4" />
-                ) : (
-                  <Edit className="h-4 w-4" />
-                )}
-              </Button>
+                  onClick={() => {
+                    if (isStatsEditing) {
+                      handleSaveStats();
+                    } else {
+                      setIsStatsEditing(true);
+                    }
+                  }}
+                >
+                  {isStatsEditing ? (
+                    <Save className="h-4 w-4" />
+                  ) : (
+                    <Edit className="h-4 w-4" />
+                  )}
+                </Button>
+              )}
             </div>
             <div className="mt-6 grid grid-cols-6 gap-1">
               {[

@@ -388,11 +388,13 @@ export const Dh2Sheet = React.forwardRef<
                     {t('common.characteristics')}
                   </CardTitle>
                 </div>
-                <EditSaveButton
-                  editing={isCharacteristicsEditing}
-                  onEdit={() => setIsCharacteristicsEditing(true)}
-                  onSave={handleSaveCharacteristics}
-                />
+                {(showEditButtons || isCharacteristicsEditing) && (
+                  <EditSaveButton
+                    editing={isCharacteristicsEditing}
+                    onEdit={() => setIsCharacteristicsEditing(true)}
+                    onSave={handleSaveCharacteristics}
+                  />
+                )}
               </div>
               <div className="mt-2 grid grid-cols-5 gap-0.5">
                 {(
@@ -1048,20 +1050,21 @@ export const Dh2Sheet = React.forwardRef<
             </Card>
           ) : (
             <Card id="skills-talents-panel">
-              <CardHeader className="flex-row items-center justify-between px-6 pt-3 pb-6">
-                <CardTitle className="font-headline">
-                  {t('dh2.skills')}, {t('dh2.talentsAndTraits')},{' '}
-                  {t('dh2.wounds')} &amp; {t('dh2.fate')}
-                </CardTitle>
+              <CardHeader className="flex-row items-center gap-2 px-6 pt-3 pb-6">
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={() => setIsSkillsPanelCollapsed(true)}
                   aria-label={t('dh2.collapsePanel')}
-                  className={cn(isCompactView && 'hidden')}
+                  data-testid="collapse-skills-panel"
+                  className={cn('shrink-0', isCompactView && 'hidden')}
                 >
                   <ChevronLeft className="h-5 w-5" />
                 </Button>
+                <CardTitle className="font-headline">
+                  {t('dh2.skills')}, {t('dh2.talentsAndTraits')},{' '}
+                  {t('dh2.wounds')} &amp; {t('dh2.fate')}
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-8 pt-0">
                 <SkillsTalentsSection
@@ -1381,11 +1384,13 @@ export const Dh2Sheet = React.forwardRef<
                   <CardTitle className="font-headline">
                     {t('common.characteristics')}
                   </CardTitle>
-                  <EditSaveButton
-                    editing={isCharacteristicsEditing}
-                    onEdit={() => setIsCharacteristicsEditing(true)}
-                    onSave={handleSaveCharacteristics}
-                  />
+                  {(showEditButtons || isCharacteristicsEditing) && (
+                    <EditSaveButton
+                      editing={isCharacteristicsEditing}
+                      onEdit={() => setIsCharacteristicsEditing(true)}
+                      onSave={handleSaveCharacteristics}
+                    />
+                  )}
                 </CardHeader>
                 <CardContent className="space-y-4 pt-0">
                   <div className="grid grid-cols-5 gap-1">
@@ -1687,19 +1692,21 @@ export const Dh2Sheet = React.forwardRef<
             </Card>
           ) : (
             <Card>
-              <CardHeader className="flex-row items-center gap-2 px-6 pt-3 pb-6">
+              <CardHeader className="flex-row items-center justify-between gap-2 px-6 pt-3 pb-6">
+                <CardTitle className="font-headline">
+                  {t('dh2.equipment')}, {t('common.inventory')} &amp;{' '}
+                  {t('dh2.corruption')}
+                </CardTitle>
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={() => setIsEquipmentPanelCollapsed(true)}
                   aria-label={t('dh2.collapsePanel')}
+                  data-testid="collapse-equipment-panel"
+                  className="shrink-0"
                 >
                   <ChevronRight className="h-5 w-5" />
                 </Button>
-                <CardTitle className="font-headline">
-                  {t('dh2.equipment')}, {t('common.inventory')} &amp;{' '}
-                  {t('dh2.corruption')}
-                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-8 pt-0">
                 <EquipmentInventorySection

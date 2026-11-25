@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useTranslation } from '@/games/plugin-host';
+import { useCharacterContext, useTranslation } from '@/games/plugin-host';
 import { cn } from '@/lib/utils';
 
 import { abilityModifier } from '../derive';
@@ -213,6 +213,7 @@ export function CompanionSheet({
   onToggleEdit,
 }: CompanionSheetProps) {
   const { t } = useTranslation();
+  const { showEditButtons } = useCharacterContext();
   const narrativeRef = React.useRef<{ saveAll: () => void }>(null);
   const attunementRef = React.useRef<{ saveAll: () => void }>(null);
   const inventoryRef = React.useRef<{ saveAll: () => void }>(null);
@@ -403,22 +404,25 @@ export function CompanionSheet({
           )}
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          <Button
-            data-testid={isEditing ? 'save-button' : 'edit-button'}
-            size="icon"
-            variant={isEditing ? 'default' : 'outline'}
-            onClick={onToggleEdit}
-            className={cn(
-              'h-9 w-9',
-              isEditing && 'bg-green-600 hover:bg-green-700',
-            )}
-          >
-            {isEditing ? (
-              <Save className="h-4 w-4" />
-            ) : (
-              <Edit className="h-4 w-4" />
-            )}
-          </Button>
+          {(showEditButtons || isEditing) && (
+            <Button
+              data-testid={isEditing ? 'save-button' : 'edit-button'}
+              aria-label={isEditing ? t('common.save') : t('common.edit')}
+              size="icon"
+              variant={isEditing ? 'default' : 'outline'}
+              onClick={onToggleEdit}
+              className={cn(
+                'h-9 w-9',
+                isEditing && 'bg-green-600 hover:bg-green-700',
+              )}
+            >
+              {isEditing ? (
+                <Save className="h-4 w-4" />
+              ) : (
+                <Edit className="h-4 w-4" />
+              )}
+            </Button>
+          )}
           <Button
             variant="ghost"
             size="icon"

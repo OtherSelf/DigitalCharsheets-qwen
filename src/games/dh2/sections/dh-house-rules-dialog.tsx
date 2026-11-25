@@ -40,47 +40,38 @@ export function DhHouseRulesDialog({
   const character = getCharacter(characterId) as DH2Character | undefined;
   const isDarkHeresy = character?.gameSystem === 'Dark Heresy';
 
-  const [customRules, setCustomRules] = React.useState<DhCustomRule[]>([]);
   const [newRuleName, setNewRuleName] = React.useState('');
   const [newRuleDesc, setNewRuleDesc] = React.useState('');
 
-  // DH-HOUSE-RULES-RESET-ON-OPEN
+  // Правила пишутся сразу в лист: отдельная кнопка «Сохранить изменения»
+  // заставляла запоминать, что добавление и удаление ещё не применены.
+  const customRules = character?.customHouseRules ?? [];
+
   React.useEffect(() => {
-    if (open && isDarkHeresy) {
-      setCustomRules(character?.customHouseRules ?? []);
+    if (open) {
       setNewRuleName('');
       setNewRuleDesc('');
     }
-  }, [open, isDarkHeresy, character?.customHouseRules]);
+  }, [open]);
+
+  const writeRules = (next: DhCustomRule[]) => {
+    if (!character || !isDarkHeresy) return;
+    updateCharacter(character.id, { customHouseRules: next });
+  };
 
   const handleAddCustomRule = () => {
-    if (newRuleName.trim()) {
-      setCustomRules([
-        ...customRules,
-        { name: newRuleName.trim(), description: newRuleDesc.trim() },
-      ]);
-      setNewRuleName('');
-      setNewRuleDesc('');
-    }
+    const name = newRuleName.trim();
+    if (!name) return;
+    writeRules([...customRules, { name, description: newRuleDesc.trim() }]);
+    setNewRuleName('');
+    setNewRuleDesc('');
   };
 
   const handleDeleteCustomRule = (index: number) => {
-    setCustomRules(customRules.filter((_, i) => i !== index));
-  };
-
-  const handleSave = () => {
-    if (character && isDarkHeresy) {
-      updateCharacter(character.id, {
-        customHouseRules: customRules,
-      });
-    }
-    onOpenChange(false);
+    writeRules(customRules.filter((_, i) => i !== index));
   };
 
   const handleClose = () => {
-    if (character && isDarkHeresy) {
-      setCustomRules(character.customHouseRules ?? []);
-    }
     setNewRuleName('');
     setNewRuleDesc('');
     onOpenChange(false);
@@ -144,6 +135,7 @@ export function DhHouseRulesDialog({
                       <Button
                         variant="ghost"
                         size="icon"
+                        aria-label={t('common.delete')}
                         className="text-destructive hover:text-destructive h-6 w-6 shrink-0"
                         onClick={() => handleDeleteCustomRule(index)}
                       >
@@ -166,7 +158,6 @@ export function DhHouseRulesDialog({
           <Button variant="outline" onClick={handleClose}>
             {t('common.close')}
           </Button>
-          <Button onClick={handleSave}>{t('common.saveChanges')}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

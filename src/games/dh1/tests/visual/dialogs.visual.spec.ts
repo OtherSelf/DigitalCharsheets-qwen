@@ -102,6 +102,70 @@ test.describe('диалоги DH1 — домашние правила', { tag: '
     },
   );
 
+  /**
+   * Правила сохраняются без отдельной кнопки: «Добавить правило» и корзина
+   * пишут в лист сразу. Тест закрывает и заново открывает диалог — так видно,
+   * что это не локальный черновик.
+   */
+  test(
+    'домашние правила: добавление и удаление применяются сразу',
+    { tag: '@desktop' },
+    async ({ page, context }) => {
+      await prepare(context);
+      const id = gameCharacterId('dh');
+      const listResponse = await page.request.get('/api/characters');
+      const all = (await listResponse.json()) as Array<{
+        id: string;
+        customHouseRules?: Array<{ name: string; description: string }>;
+      }>;
+      const original =
+        all.find((entry) => entry.id === id)?.customHouseRules ?? [];
+
+      await openApp(page, sheetPath(id));
+      let dialog = await openDialog(page, 'House Rules', false);
+      await dialog
+        .getByPlaceholder('e.g., Critical Fumbles')
+        .fill('Probe rule');
+      const saved = page.waitForResponse(
+        (response) =>
+          response.url().includes(`/api/characters/${id}`) &&
+          response.request().method() === 'PUT' &&
+          response.status() === 200,
+      );
+      await dialog.getByRole('button', { name: 'Add Custom Rule' }).click();
+      await saved;
+      await expect(dialog.getByText('Probe rule')).toBeVisible();
+
+      await dialog.getByRole('button', { name: 'Close' }).first().click();
+      dialog = await openDialog(page, 'House Rules', false);
+      await expect(
+        dialog.getByText('Probe rule'),
+        'правило сохранено без кнопки «Сохранить»',
+      ).toBeVisible();
+
+      const removed = page.waitForResponse(
+        (response) =>
+          response.url().includes(`/api/characters/${id}`) &&
+          response.request().method() === 'PUT' &&
+          response.status() === 200,
+      );
+      // Удаляем именно наше правило: в фикстуре может быть своё.
+      await dialog
+        .getByText('Probe rule')
+        .locator('xpath=ancestor::div[contains(@class,"rounded-lg")][1]')
+        .getByRole('button', { name: 'Delete' })
+        .click();
+      await removed;
+      await expect(dialog.getByText('Probe rule')).toHaveCount(0);
+      await dialog.getByRole('button', { name: 'Close' }).first().click();
+
+      const restored = await page.request.put(`/api/characters/${id}`, {
+        data: { customHouseRules: original },
+      });
+      expect(restored.status(), 'возврат домашних правил').toBe(200);
+    },
+  );
+
   test(
     'домашние правила — en (mobile)',
     { tag: '@mobile' },

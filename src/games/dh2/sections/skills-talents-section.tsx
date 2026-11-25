@@ -120,6 +120,7 @@ const SkillTable = ({
   onReorder,
 }: SkillTableProps) => {
   const { t } = useTranslation();
+  const { readOnly } = useCharacterContext();
   const skillIds = skills.map((skill) => skill.id);
   const labelsById = Object.fromEntries(
     skills.map((skill) => [skill.id, resolveSkillCharacteristic(skill).name]),
@@ -131,7 +132,7 @@ const SkillTable = ({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-8 p-0" aria-hidden />
+              {!readOnly && <TableHead className="w-8 p-0" aria-hidden />}
               <TableHead className="w-8 p-0" aria-hidden />
               <TableHead
                 className={cn('w-2/5 px-2 text-xs', compact && 'w-[35%] p-1')}
@@ -210,9 +211,11 @@ const SkillTable = ({
                 <SortableRow key={skill.id} id={skill.id} label={displayName}>
                   {(handle) => (
                     <>
-                      <TableCell className={cn('w-8 p-0 text-center')}>
-                        {handle}
-                      </TableCell>
+                      {!readOnly && (
+                        <TableCell className={cn('w-8 p-0 text-center')}>
+                          {handle}
+                        </TableCell>
+                      )}
                       <TableCell className={cn('w-8 p-0 text-center')}>
                         {!hideNotes && (
                           <Popover>

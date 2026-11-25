@@ -22,6 +22,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { GripVertical } from 'lucide-react';
 
 import { TableRow } from '@/components/ui/table';
+import { useCharacterContext } from '@/context/character-context';
 import { useTranslation } from '@/context/language-context';
 import { cn } from '@/lib/utils';
 
@@ -83,9 +84,10 @@ function DragHandle({
       data-testid="reorder-handle"
       // `touch-none` обязателен: иначе на телефоне drag начинается вместе со
       // скроллом страницы. На телефоне цель не меньше 32 px (§9 AGENTS).
-      // Ручка всегда видна и всегда в своей ячейке: скрытая «по наведению»
-      // ручка не читалась как действие, а рамка задаёт границу строки.
-      className="border-border/70 text-muted-foreground/80 hover:border-foreground/30 hover:text-foreground focus-visible:ring-ring flex h-6 w-6 shrink-0 cursor-grab touch-none items-center justify-center rounded-md border bg-transparent transition-colors focus-visible:ring-2 focus-visible:outline-none active:cursor-grabbing max-sm:h-8 max-sm:w-8"
+      // Ручка всегда видна в своей узкой ячейке, но без рамки: обводка
+      // читалась как лишняя «коробочка» вокруг точек. Фон появляется только
+      // на наведении/фокусе.
+      className="text-muted-foreground/70 hover:bg-muted hover:text-foreground focus-visible:ring-ring flex h-6 w-6 shrink-0 cursor-grab touch-none items-center justify-center rounded-md transition-colors focus-visible:ring-2 focus-visible:outline-none active:cursor-grabbing max-sm:h-8 max-sm:w-8"
     >
       <GripVertical aria-hidden className="h-4 w-4" />
     </button>
@@ -180,6 +182,7 @@ export function SortableRow({
     transition,
     isDragging,
   } = useSortable({ id });
+  const { readOnly } = useCharacterContext();
 
   return (
     <TableRow
@@ -189,12 +192,15 @@ export function SortableRow({
       className={cn('group', className)}
     >
       {children(
-        <DragHandle
-          label={label}
-          attributes={attributes}
-          listeners={listeners}
-          setActivatorNodeRef={setActivatorNodeRef}
-        />,
+        // В гостевой ссылке порядок менять некому: ручку не показываем.
+        readOnly ? null : (
+          <DragHandle
+            label={label}
+            attributes={attributes}
+            listeners={listeners}
+            setActivatorNodeRef={setActivatorNodeRef}
+          />
+        ),
       )}
     </TableRow>
   );
@@ -223,6 +229,7 @@ export function SortableItem({
     transition,
     isDragging,
   } = useSortable({ id });
+  const { readOnly } = useCharacterContext();
 
   return React.createElement(
     as,
@@ -233,12 +240,14 @@ export function SortableItem({
       className: cn('group', className),
     },
     children(
-      <DragHandle
-        label={label}
-        attributes={attributes}
-        listeners={listeners}
-        setActivatorNodeRef={setActivatorNodeRef}
-      />,
+      readOnly ? null : (
+        <DragHandle
+          label={label}
+          attributes={attributes}
+          listeners={listeners}
+          setActivatorNodeRef={setActivatorNodeRef}
+        />
+      ),
     ),
   );
 }
