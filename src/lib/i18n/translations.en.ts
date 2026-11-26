@@ -156,7 +156,7 @@ export const enTranslations = {
   'privacy.registry': 'Registry entry',
   'privacy.contactTitle': 'Questions about your data',
   'privacy.contactBody':
-    'The operator answers requests from data subjects within 10 working days. Write from any address you like — the account is not tied to an e-mail address.',
+    'The operator answers requests from data subjects within 10 working days. Name the login: a request from the account session is handled at once, one from another address only after we confirm you own the account.',
   'footer.label': 'Site footer',
   'footer.repository': 'Source code',
   'footer.license': 'MIT license',
@@ -459,7 +459,7 @@ export const enTranslations = {
   'auth.recoveryPhraseLabel': 'Recovery Phrase',
   'auth.recoveryPhrasePlaceholder': 'e.g., french butter',
   'auth.recoveryPhraseHint':
-    'At least 5 characters. Remember it — it is the only way to recover your account.',
+    'At least 6 words or 24 characters. Remember it — it is the only way to recover your account.',
   'auth.yourRecoveryPhrase': 'Your Recovery Phrase',
   'auth.phraseMatchHint':
     'Case does not matter, but every word and its order must match the original phrase.',
@@ -551,7 +551,7 @@ export const enTranslations = {
   'admin.editUser': 'Edit user',
   'admin.editUserDescription': 'Changes are applied immediately.',
   'admin.newPasswordHint':
-    'Leave blank to keep the current password. At least 4 characters.',
+    'Leave blank to keep the current password. At least 12 characters.',
   'admin.save': 'Save',
   'admin.displayNameRequired': 'Display name is required.',
   'admin.loginRequired': 'Login is required.',
@@ -661,7 +661,7 @@ export const enTranslations = {
   'settings.deleteAccountIrreversible':
     'This action cannot be undone. Your account will be permanently deleted.',
   'settings.deleteAccountWarning':
-    'Your profile, every character sheet and the recovery phrase of this account will be erased. The login will become free again, and a new account registered under it will receive a new identifier. Deleted data cannot be restored — not even by an administrator.',
+    'Your profile, every character sheet and the recovery phrase of this account will be erased. The login will become free again, and a new account registered under it will receive a new identifier. Right after deletion the account is gone, while the sheets and the profile go to a service trash for 14 days and are then destroyed. Only the operator can restore the account, and only within those 14 days.',
   'settings.deleteAccountPasswordLabel': 'Confirm your password',
   'settings.deleteAccountPasswordPlaceholder': 'Enter your current password',
   'settings.deleteAccountPasswordHint':

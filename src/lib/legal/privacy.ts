@@ -109,7 +109,9 @@ to you.${postalEn(ctx)}${registryEn(ctx)}
 We do not use analytics or trackers (Google Analytics, Yandex Metrica, pixels), we
 do not show ads, we do not sell or share data with advertising partners, and we do
 not load third-party fonts, CDNs or widgets. Only strictly necessary cookies are
-set. The server makes no outbound calls: your data is not sent anywhere.
+set. The running server makes no outbound calls: your data is not sent anywhere.
+Fonts are downloaded once at build time and served from this server, not from a
+third-party CDN while you browse.
 
 ## What data and why
 
@@ -181,9 +183,18 @@ If you are in the EU, the GDPR additionally gives you the rights of access,
 rectification, erasure, restriction of processing, objection and data
 portability, and the right to complain to your national supervisory authority.
 
+Deadlines: we answer a request within 10 working days, with an extension of up to
+5 working days and a reasoned notice (art. 20 of 152-FZ). Correcting incomplete
+or inaccurate data takes 7 working days, destroying unlawfully obtained data also
+7 (art. 20(3)). Destruction after the purpose is reached or consent is withdrawn
+takes no more than 30 days (art. 21(4), (5)).
+
 A request is enough in free form to ${ctx.contactEmail}: say what you want
-and, if possible, which account it concerns. If you cannot use e-mail, write to
-the postal address above.
+and, if possible, which account it concerns.${postalEn(ctx) ? ' If you cannot use e-mail, write to the postal address above.' : ''}
+We answer a request that comes from the account's own session without further
+checks; a request from another address is answered only after we make sure it is
+you — usually by asking you to confirm from the account or to name the recovery
+phrase hint.
 
 ## Consent
 
@@ -194,6 +205,14 @@ user agreement; it is not a consent to processing under art. 9 of 152-FZ. If we
 ever need consent (for example, for e-mail notifications), we will ask for it
 separately, in a separate document, and will not bundle it with anything else.
 
+## What we ask you not to enter
+
+This service is for game data. Do not put health, religious or political views,
+ethnicity or intimate life into sheets, notes or backstories: the law treats them
+as special categories (art. 10 of 152-FZ) and the operator does not request them.
+In-game madness and corruption are mechanics, not a medical diagnosis. If such
+data ends up in a sheet, delete it; on notice, the operator may delete it too.
+
 ## How we protect the data
 
 - passwords and recovery phrases are stored only as scrypt hashes; we never see
@@ -202,8 +221,8 @@ separately, in a separate document, and will not bundle it with anything else.
 - the service is available over HTTPS only;
 - the data files are readable only by the operator on the server;
 - sign-in, registration and search are rate-limited;
-- there are no outbound calls, so the data does not leak into third-party
-  services.
+- the running server makes no outbound calls, so the data does not leak into
+  third-party services.
 
 ## Age
 
@@ -252,7 +271,9 @@ ${operatorRu(ctx)} Это не компания: инстанс ведёт од�
 Не используем аналитику и трекеры (Google Analytics, Яндекс.Метрику, пиксели), не
 показываем рекламу, не продаём и не передаём данные рекламным партнёрам, не
 подключаем сторонние шрифты, CDN и виджеты. Cookie — только строго необходимые.
-Сервер не делает исходящих запросов: ваши данные никуда не отправляются.
+Работающий сервер не делает исходящих запросов: ваши данные никуда не
+отправляются. Шрифты скачиваются один раз при сборке и отдаются с этого же
+сервера, а не со стороннего CDN во время просмотра.
 
 ## Какие данные и зачем
 
@@ -286,7 +307,10 @@ ${operatorRu(ctx)} Это не компания: инстанс ведёт од�
 ## Кто ещё может их видеть
 
 ${hostingRu(ctx)} Провайдер даёт инфраструктуру и поэтому технически имеет
-доступ к диску; доступ к самим данным есть только у оператора. За рубеж данные не передаются, другим лицам — тоже.
+доступ к диску; доступ к самим данным есть только у оператора. Обработка
+поручена провайдеру на условиях его договора (ч. 3 ст. 6 152-ФЗ) с
+обязанностью сохранять конфиденциальность. Другим лицам данные не передаются,
+за рубеж — тоже.
 
 ## Сколько храним
 
@@ -320,9 +344,17 @@ ${hostingRu(ctx)} Провайдер даёт инфраструктуру и п
 исправление, удаление, ограничение обработки, возражение и переносимость данных, а
 также жалоба в надзорный орган вашей страны.
 
+Сроки: на запрос отвечаем в течение 10 рабочих дней, продление — не более чем
+на 5 рабочих дней с мотивированным уведомлением (ст. 20 152-ФЗ). Уточнение
+неполных или неточных данных — 7 рабочих дней, уничтожение неправомерно
+полученных — тоже 7 (ст. 20 ч. 3). Уничтожение по достижении цели или после
+отзыва — не более 30 дней (ст. 21 ч. 4, 5).
+
 Достаточно письма в свободной форме на ${ctx.contactEmail}: напишите, что
-нужно сделать и, если возможно, о каком аккаунте речь. Если нет доступа к
-электронной почте — пишите на почтовый адрес выше.
+нужно сделать и, если возможно, о каком аккаунте речь.${postalRu(ctx) ? ' Если нет доступа к электронной почте — пишите на почтовый адрес выше.' : ''}
+Запрос из сессии самого аккаунта выполняем без дополнительных проверок; запрос
+с другого адреса — только после того, как убедимся, что пишет владелец
+(обычно просим подтвердить из аккаунта или назвать подсказку к фразе).
 
 ## Согласие
 
@@ -333,6 +365,15 @@ ${hostingRu(ctx)} Провайдер даёт инфраструктуру и п
 152-ФЗ. Если согласие понадобится (например, для уведомлений по почте), мы
 попросим его отдельно, отдельным документом, и не будем объединять с другими.
 
+## Чего просим не вводить
+
+Сервис — для игровых данных. Не вводите в листы, заметки и предыстории
+сведения о состоянии здоровья, религии, политических взглядах, национальности
+и интимной жизни: закон относит их к специальным категориям (ст. 10 152-ФЗ), и
+оператор их не запрашивает. Игровые «безумие» и «порча» — механика, а не
+медицинский диагноз. Если такие сведения попадут в лист, удалите их; заметив
+их, оператор вправе удалить их сам.
+
 ## Как мы защищаем данные
 
 - пароли и фразы восстановления хранятся только как scrypt-хэши; в открытом
@@ -341,7 +382,8 @@ ${hostingRu(ctx)} Провайдер даёт инфраструктуру и п
 - сервис работает только по HTTPS;
 - файлы данных читает только оператор на сервере;
 - вход, регистрация и поиск ограничены по частоте;
-- исходящих запросов нет, поэтому данные не утекают в сторонние сервисы.
+- работающий сервер не делает исходящих запросов, поэтому данные не утекают в
+  сторонние сервисы.
 
 ## Возраст
 
