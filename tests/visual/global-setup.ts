@@ -7,6 +7,7 @@ import { pathToFileURL } from 'node:url';
 import type { FullConfig } from '@playwright/test';
 
 import { PRIVACY_VERSION } from '../../src/lib/legal/privacy';
+import { TERMS_VERSION } from '../../src/lib/legal/terms';
 import { VISUAL_RECOVERY_PHRASE } from './fixtures';
 import {
   STATE_FILE,
@@ -375,6 +376,7 @@ async function seedAccount(
       recoveryPhrase: VISUAL_RECOVERY_PHRASE,
       consent: true,
       privacyVersion: PRIVACY_VERSION,
+      termsVersion: TERMS_VERSION,
     }),
   });
   if (registration.status !== 200 && registration.status !== 409) {
@@ -551,8 +553,16 @@ function ensureFixtureConsents(dataDir: string): void {
     for (const line of fs.readFileSync(file, 'utf8').split('\n')) {
       if (!line.trim()) continue;
       try {
-        const record = JSON.parse(line) as { uid?: string; version?: string };
-        if (record.uid && record.version === PRIVACY_VERSION) {
+        const record = JSON.parse(line) as {
+          uid?: string;
+          version?: string;
+          termsVersion?: string;
+        };
+        if (
+          record.uid &&
+          record.version === PRIVACY_VERSION &&
+          record.termsVersion === TERMS_VERSION
+        ) {
           covered.add(record.uid);
         }
       } catch {
@@ -577,6 +587,7 @@ function ensureFixtureConsents(dataDir: string): void {
       JSON.stringify({
         uid: entry.name,
         version: PRIVACY_VERSION,
+        termsVersion: TERMS_VERSION,
         source: 'register',
         at: '2025-01-01T00:00:00.000Z',
       }),
@@ -637,6 +648,7 @@ async function ensureAdminDemoUser(
         recoveryPhrase: VISUAL_RECOVERY_PHRASE,
         consent: true,
         privacyVersion: PRIVACY_VERSION,
+        termsVersion: TERMS_VERSION,
       }),
     });
     if (registration.status === 200 && registration.body.user) {
@@ -667,6 +679,7 @@ async function ensureAdminDemoUser(
     recoveryPhrase: VISUAL_RECOVERY_PHRASE,
     consent: true,
     privacyVersion: PRIVACY_VERSION,
+    termsVersion: TERMS_VERSION,
   };
   if (spec.isBlocked) next.blockedAt = spec.lastLoginAt;
   else delete next.blockedAt;
@@ -715,6 +728,7 @@ async function ensureSandboxAdmin(
         recoveryPhrase: VISUAL_RECOVERY_PHRASE,
         consent: true,
         privacyVersion: PRIVACY_VERSION,
+        termsVersion: TERMS_VERSION,
       }),
     },
   );

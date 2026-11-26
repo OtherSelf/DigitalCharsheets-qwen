@@ -10,6 +10,7 @@ import {
 import { LANGUAGE_COOKIE, type Language } from '@/lib/language';
 
 import { PRIVACY_VERSION } from '../../src/lib/legal/privacy';
+import { TERMS_VERSION } from '../../src/lib/legal/terms';
 import { VISUAL_RECOVERY_PHRASE } from './fixtures';
 import {
   readAdminState,
@@ -709,6 +710,7 @@ export async function registerAccount(
       recoveryPhrase: VISUAL_RECOVERY_PHRASE,
       consent: true,
       privacyVersion: PRIVACY_VERSION,
+      termsVersion: TERMS_VERSION,
     },
   });
   expect(auth.status(), 'регистрация аккаунта через /api/auth/register').toBe(
@@ -819,6 +821,7 @@ export async function seedTempAccountSheet(
       recoveryPhrase: VISUAL_RECOVERY_PHRASE,
       consent: true,
       privacyVersion: PRIVACY_VERSION,
+      termsVersion: TERMS_VERSION,
     },
   });
   expect([200, 201], 'регистрация аккаунта').toContain(registered.status());

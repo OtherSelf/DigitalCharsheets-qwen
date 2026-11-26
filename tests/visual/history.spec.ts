@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 import { PRIVACY_VERSION } from '../../src/lib/legal/privacy';
+import { TERMS_VERSION } from '../../src/lib/legal/terms';
 import {
   expectNoRawI18nKeys,
   getState,
@@ -87,6 +88,7 @@ async function registerTempAccount(
       recoveryPhrase: 'amber cobalt lantern silver ember frost',
       consent: true,
       privacyVersion: PRIVACY_VERSION,
+      termsVersion: TERMS_VERSION,
     },
   });
   expect([200, 201], 'регистрация аккаунта').toContain(registered.status());

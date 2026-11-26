@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 import { PRIVACY_VERSION } from '../../src/lib/legal/privacy';
+import { TERMS_VERSION } from '../../src/lib/legal/terms';
 import {
   collectPageErrors,
   expectNoHorizontalOverflow,
@@ -698,6 +699,27 @@ test.describe('адаптивность', () => {
   );
 
   test(
+    '/terms: соглашение в каркасе приложения, без логина',
+    { tag: '@mobile' },
+    async ({ page, context }) => {
+      await prepare(context, { authenticated: false });
+      await openApp(page, '/terms');
+
+      await expect(
+        page.getByRole('heading', { name: 'Terms of use', level: 1 }),
+      ).toBeVisible();
+      await expect(page.getByTestId('terms-version')).toContainText(
+        /\d{4}-\d{2}-\d{2}/,
+      );
+      await expect(page.getByTestId('terms-document')).toContainText(
+        'What is not allowed',
+      );
+      await expect(page.getByTestId('site-footer')).toBeVisible();
+      await expectNoHorizontalOverflow(page);
+    },
+  );
+
+  test(
     'футер ядра: версия, репозиторий, лицензия и /about',
     { tag: '@mobile' },
     async ({ page, context }) => {
@@ -723,6 +745,12 @@ test.describe('адаптивность', () => {
         const privacy = footer.getByRole('link', { name: 'Privacy' });
         await expect(privacy).toBeVisible();
         await expect(privacy).toHaveAttribute('href', '/privacy');
+
+        // Соглашение — тоже обязательная ссылка: политика ссылается на него
+        // как на договор.
+        const terms = footer.getByRole('link', { name: 'Terms' });
+        await expect(terms).toBeVisible();
+        await expect(terms).toHaveAttribute('href', '/terms');
 
         const repo = footer.getByRole('link', { name: 'Source code' });
         await expect(repo).toHaveAttribute('target', '_blank');
@@ -1454,6 +1482,7 @@ test(
         recoveryPhrase: 'amber cobalt lantern silver ember frost',
         consent: true,
         privacyVersion: PRIVACY_VERSION,
+        termsVersion: TERMS_VERSION,
       },
     });
     expect([200, 201], 'регистрация аккаунта').toContain(registered.status());
@@ -1595,6 +1624,7 @@ test.describe('вид листа: компактный и обычный', () =>
           recoveryPhrase: 'amber cobalt lantern silver ember frost',
           consent: true,
           privacyVersion: PRIVACY_VERSION,
+          termsVersion: TERMS_VERSION,
         },
       });
       expect([200, 201], 'регистрация аккаунта').toContain(registered.status());
@@ -1687,6 +1717,7 @@ test.describe('синхронизация между вкладками', () => 
         recoveryPhrase: 'amber cobalt lantern silver ember frost',
         consent: true,
         privacyVersion: PRIVACY_VERSION,
+        termsVersion: TERMS_VERSION,
       },
     });
     expect([200, 201], 'регистрация аккаунта').toContain(registered.status());
