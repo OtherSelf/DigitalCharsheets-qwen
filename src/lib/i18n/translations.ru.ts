@@ -146,6 +146,7 @@ export const ruTranslations = {
   'footer.privacy': 'Конфиденциальность',
   'privacy.title': 'Политика конфиденциальности',
   'privacy.version': 'Версия',
+  'privacy.registry': 'Запись в реестре',
   'privacy.back': 'Назад в приложение',
   'footer.label': 'Подвал сайта',
   'footer.repository': 'Исходный код',

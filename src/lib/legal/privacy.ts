@@ -6,6 +6,9 @@
  */
 export const PRIVACY_VERSION = '2026-11-26';
 
+/** Номер записи в реестре операторов РКН. Пусто — строка не показывается. */
+export const OPERATOR_REGISTRY_NUMBER = '';
+
 const EN = `# Privacy policy
 
 Version ${PRIVACY_VERSION}. This policy describes how this instance of Digital

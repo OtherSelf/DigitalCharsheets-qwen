@@ -146,6 +146,7 @@ export const enTranslations = {
   'footer.privacy': 'Privacy',
   'privacy.title': 'Privacy policy',
   'privacy.version': 'Version',
+  'privacy.registry': 'Registry entry',
   'privacy.back': 'Back to the app',
   'footer.label': 'Site footer',
   'footer.repository': 'Source code',

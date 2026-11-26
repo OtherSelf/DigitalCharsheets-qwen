@@ -4,7 +4,11 @@ import Link from 'next/link';
 
 import { NarrativeMarkdown } from '@/components/sheets/narrative-markdown';
 import { useTranslation } from '@/context/language-context';
-import { PRIVACY_POLICY, PRIVACY_VERSION } from '@/lib/legal/privacy';
+import {
+  OPERATOR_REGISTRY_NUMBER,
+  PRIVACY_POLICY,
+  PRIVACY_VERSION,
+} from '@/lib/legal/privacy';
 
 export function PrivacyView() {
   const { language, t } = useTranslation();
@@ -18,6 +22,11 @@ export function PrivacyView() {
         <span data-testid="privacy-version">
           {t('privacy.version')}: {PRIVACY_VERSION}
         </span>
+        {OPERATOR_REGISTRY_NUMBER && (
+          <span data-testid="privacy-registry">
+            {t('privacy.registry')}: {OPERATOR_REGISTRY_NUMBER}
+          </span>
+        )}
       </div>
       <article data-testid="privacy-policy">
         <NarrativeMarkdown value={PRIVACY_POLICY[language]} />
