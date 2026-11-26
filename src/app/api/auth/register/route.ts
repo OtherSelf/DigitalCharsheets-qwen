@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 
 import { jsonError } from '@/lib/api/respond';
+import { getInstanceConfig } from '@/lib/config';
 import { appendConsent } from '@/lib/legal/consents';
 import { PRIVACY_VERSION } from '@/lib/legal/privacy';
 import { passwordPolicyError } from '@/lib/security/password';
@@ -13,6 +14,7 @@ import {
 } from '@/lib/security/rate-limit';
 import { registerUser } from '@/lib/server-auth';
 import { sessionCookieHeader } from '@/lib/session';
+import { readSiteSettingsCached } from '@/lib/site-settings';
 
 /**
  * ─── LANDMARK: REGISTER ─────────────────────────────────────────────────────
@@ -28,6 +30,13 @@ import { sessionCookieHeader } from '@/lib/session';
  */
 export async function POST(request: Request) {
   try {
+    // Админ может закрыть регистрацию на живом сайте: это не «мягкое»
+    // скрытие кнопки, API тоже обязан отказать.
+    const siteSettings = await readSiteSettingsCached();
+    if (!siteSettings.registration.open) {
+      return jsonError(403, 'Registration is closed.', 'registration_closed');
+    }
+
     const parsedBody = await readAuthJson(request);
     if (!parsedBody.ok) {
       return jsonError(parsedBody.status, parsedBody.error, parsedBody.reason);
@@ -52,19 +61,24 @@ export async function POST(request: Request) {
       return jsonError(400, 'Username/Email and password are required.');
     }
 
-    if (consent !== true) {
-      return jsonError(
-        400,
-        'Accept the privacy policy to create an account.',
-        'consent_required',
-      );
-    }
-    if (privacyVersion !== PRIVACY_VERSION) {
-      return jsonError(
-        400,
-        'The privacy policy has changed. Reload the page and try again.',
-        'privacy_version_mismatch',
-      );
+    // Инстанс «для своих» может выключить политику: тогда и чекбокса нет, и
+    // требовать нечего. По умолчанию политика включена.
+    const privacyEnabled = getInstanceConfig().legal.privacy.enabled;
+    if (privacyEnabled) {
+      if (consent !== true) {
+        return jsonError(
+          400,
+          'Accept the privacy policy to create an account.',
+          'consent_required',
+        );
+      }
+      if (privacyVersion !== PRIVACY_VERSION) {
+        return jsonError(
+          400,
+          'The privacy policy has changed. Reload the page and try again.',
+          'privacy_version_mismatch',
+        );
+      }
     }
 
     const limiter = getAuthRateLimiter().check(
@@ -109,14 +123,16 @@ export async function POST(request: Request) {
       );
     }
 
-    try {
-      await appendConsent({
-        uid: result.user.uid,
-        version: privacyVersion,
-        source: 'register',
-      });
-    } catch (error) {
-      console.error('[dcs] consents.jsonl: запись не удалась', error);
+    if (privacyEnabled) {
+      try {
+        await appendConsent({
+          uid: result.user.uid,
+          version: privacyVersion ?? PRIVACY_VERSION,
+          source: 'register',
+        });
+      } catch (error) {
+        console.error('[dcs] consents.jsonl: запись не удалась', error);
+      }
     }
 
     const response = NextResponse.json({

@@ -18,6 +18,7 @@ import {
 
 import { formatAdminDate } from '@/components/admin/admin-helpers';
 import { AdminGamesSection } from '@/components/admin/games-section';
+import { SiteSettingsSection } from '@/components/admin/site-settings-section';
 import { UserBlockDialog } from '@/components/admin/user-block-dialog';
 import { UserCharactersDialog } from '@/components/admin/user-characters-dialog';
 import { UserDeleteDialog } from '@/components/admin/user-delete-dialog';
@@ -293,6 +294,8 @@ export default function AdminPage() {
             );
           })}
         </div>
+
+        <SiteSettingsSection />
 
         <AdminGamesSection />
 

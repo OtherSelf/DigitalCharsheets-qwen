@@ -89,6 +89,7 @@ contract version in [`src/lib/openapi.ts`](../src/lib/openapi.ts)
 | --- | --- | --- | --- |
 | `POST` | `/api/auth` | — | Log in; unknown login and wrong password share one `401` (no account enumeration), blocked → 403, too many attempts → 429. Password length is not checked here. With TOTP enabled, send `totpCode` (6 digits or a backup code); without it the answer is `401 totp_required`, with a wrong one `401 totp_invalid`. |
 | `POST` | `/api/auth/register` | — | Create an account with a recovery phrase and sign in; password policy 12–128 characters, recovery phrase at least 6 words or 24 characters (max 256). |
+| `POST` | `/api/auth/pre-consent` | — | Export (`action: "export"`) or delete (`action: "delete"`) an account that has not accepted the current policy version, using the password (and TOTP) without issuing a session. |
 | `POST` | `/api/auth/exists` | — | Check whether a login is taken (rate limited: 20 / 10 minutes per IP + login). |
 | `GET` | `/api/auth/session` | cookie | Current profile snapshot (role, block state, etc.). |
 | `GET` | `/api/games` | optional cookie | Games/editions visible to the current role, the site-title override, and a role-independent `demo` list (published editions with the demo flag, at most three). |
@@ -213,6 +214,8 @@ role → `403` (`tester` is not an administrator).
 | Method | Path | Purpose |
 | --- | --- | --- |
 | `GET` | `/api/admin/users` | Users, roles, block state, last login, sheet counts, stats. |
+| `GET` | `/api/admin/settings` | Site modes: registration, sign-in for staff only, maintenance. |
+| `PUT` | `/api/admin/settings` | Replace the whole site-modes object; a partial body is rejected. |
 | `GET` | `/api/admin/games` | Game catalog with default/current visibility and site title. |
 | `PUT` | `/api/admin/games` | Set one edition status (`published`/`test`/`hidden`), its `useHostTheme`/`showOnDemo` flags and/or the site title. |
 | `PATCH` | `/api/admin/users/{uid}` | Update fields / password / role / block state. |

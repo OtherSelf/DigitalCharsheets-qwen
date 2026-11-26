@@ -146,6 +146,10 @@ export const ruTranslations = {
   'docs.noResults': 'Ничего не найдено',
   'docs.searchFailed': 'Поиск не удался',
   'docs.skipToContent': 'К содержанию',
+  'maintenance.title': 'Сайт на обслуживании',
+  'maintenance.body':
+    'Сервер обновляется. Загляните через несколько минут — данные и аккаунты на месте.',
+  'maintenance.contact': 'Если это надолго — напишите оператору.',
   'footer.privacy': 'Конфиденциальность',
   'privacy.title': 'Политика конфиденциальности',
   'privacy.revision': 'Редакция',
@@ -431,6 +435,19 @@ export const ruTranslations = {
   'auth.signingIn': 'Вход...',
   'auth.createAccount': 'Создать аккаунт',
   'auth.createAndSignIn': 'Создать аккаунт и войти',
+  'auth.registrationClosed': 'Регистрация новых аккаунтов закрыта.',
+  'auth.registrationClosedHint':
+    'Вход в существующий аккаунт работает как обычно.',
+  'auth.loginRestricted':
+    'Вход временно открыт только администраторам и тестерам.',
+  'auth.preConsentHint':
+    'Принимать редакцию не обязательно: можно забрать свои данные или удалить аккаунт — для этого согласие не нужно.',
+  'auth.preConsentExport': 'Выгрузить мои данные',
+  'auth.preConsentDelete': 'Удалить аккаунт',
+  'auth.preConsentDeleteSure': 'Удалить безвозвратно?',
+  'auth.preConsentDeleted': 'Аккаунт и его данные удалены.',
+  'auth.preConsentFailed':
+    'Не получилось. Проверьте пароль и попробуйте снова.',
   'auth.consentLabel': 'Принимаю',
   'auth.consentLink': 'политику конфиденциальности',
   'auth.consentRequired':
@@ -492,6 +509,21 @@ export const ruTranslations = {
   'admin.gameSystem': 'Игровая система',
   'admin.panel': 'Админка',
   'admin.panelSubtitle': 'Пользователи, роли и доступы.',
+  'admin.settingsTitle': 'Режимы сайта',
+  'admin.settingsDescription':
+    'Действуют сразу после сохранения. Регистрация и вход влияют только на новых посетителей: уже вошедшие продолжают работать.',
+  'admin.settingsLoading': 'Загружаем настройки…',
+  'admin.settingsSaved': 'Настройки сохранены',
+  'admin.settingsSaveFailed': 'Не удалось сохранить настройки',
+  'admin.settingsRegistration': 'Открыта регистрация',
+  'admin.settingsRegistrationHint':
+    'Выключено: API отвечает отказом, на форме входа нет кнопки «Создать аккаунт». Существующие аккаунты входят как обычно.',
+  'admin.settingsLoginRestricted': 'Вход только для админов и тестеров',
+  'admin.settingsLoginRestrictedHint':
+    'Выключено: входят все. Включено: остальным сервер отказывает во входе, уже открытые сессии продолжают жить до истечения.',
+  'admin.settingsMaintenance': 'Режим обслуживания',
+  'admin.settingsMaintenanceHint':
+    'Выключено: сайт работает. Включено: страницы закрыты для всех, кроме администраторов; вход и API авторизации остаются доступны, чтобы админ мог войти.',
   'admin.usersTitle': 'Пользователи',
   'admin.usersDescription': 'Все аккаунты этой установки.',
   'admin.filteredDescription': 'Аккаунты, подходящие под текущий поиск.',

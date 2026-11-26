@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 
 import { jsonError } from '@/lib/api/respond';
+import { getInstanceConfig } from '@/lib/config';
 import { languageCookieHeader } from '@/lib/language';
 import { appendConsent, latestConsentVersion } from '@/lib/legal/consents';
 import { PRIVACY_VERSION } from '@/lib/legal/privacy';
@@ -13,6 +14,7 @@ import {
 } from '@/lib/security/rate-limit';
 import { authenticateUser } from '@/lib/server-auth';
 import { sessionCookieHeader } from '@/lib/session';
+import { readSiteSettingsCached } from '@/lib/site-settings';
 
 /**
  * ─── LANDMARK: LOGIN (только существующие аккаунты) ─────────────────────────
@@ -120,11 +122,28 @@ export async function POST(request: Request) {
       return jsonError(status, result.error || 'Login failed.', result.reason);
     }
 
+    // Вход может быть временно закрыт для всех, кроме админов и тестеров.
+    const siteSettings = await readSiteSettingsCached();
+    if (
+      siteSettings.access.loginRestrictedToStaff &&
+      result.user.role !== 'admin' &&
+      result.user.role !== 'tester'
+    ) {
+      return jsonError(
+        403,
+        'Sign-in is temporarily limited to administrators and testers.',
+        'login_restricted',
+      );
+    }
+
     // Политика могла измениться, пока аккаунт жил: без принятой действующей
     // редакции сессию не выдаём. Аккаунты, созданные до появления лога
     // согласий, не имеют ни одной записи, поэтому проходят тот же путь.
-    const accepted = await latestConsentVersion(result.user.uid);
-    if (accepted !== PRIVACY_VERSION) {
+    const privacyEnabled = getInstanceConfig().legal.privacy.enabled;
+    const accepted = privacyEnabled
+      ? await latestConsentVersion(result.user.uid)
+      : PRIVACY_VERSION;
+    if (privacyEnabled && accepted !== PRIVACY_VERSION) {
       if (consent !== true) {
         return jsonError(
           403,

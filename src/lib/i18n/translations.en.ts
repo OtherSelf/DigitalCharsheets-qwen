@@ -146,6 +146,10 @@ export const enTranslations = {
   'docs.noResults': 'No results found',
   'docs.searchFailed': 'Search failed',
   'docs.skipToContent': 'Skip to content',
+  'maintenance.title': 'Down for maintenance',
+  'maintenance.body':
+    'The server is being updated. Check back in a few minutes — data and accounts are safe.',
+  'maintenance.contact': 'If this takes long, write to the operator.',
   'footer.privacy': 'Privacy',
   'privacy.title': 'Privacy policy',
   'privacy.revision': 'Revision',
@@ -430,6 +434,19 @@ export const enTranslations = {
   'auth.signingIn': 'Signing in...',
   'auth.createAccount': 'Create Account',
   'auth.createAndSignIn': 'Create Account & Sign In',
+  'auth.registrationClosed': 'Registration of new accounts is closed.',
+  'auth.registrationClosedHint':
+    'Signing in to an existing account works as usual.',
+  'auth.loginRestricted':
+    'Sign-in is temporarily limited to administrators and testers.',
+  'auth.preConsentHint':
+    'Accepting the new version is optional: you can download your data or delete the account — neither requires consent.',
+  'auth.preConsentExport': 'Download my data',
+  'auth.preConsentDelete': 'Delete account',
+  'auth.preConsentDeleteSure': 'Delete permanently?',
+  'auth.preConsentDeleted': 'The account and its data are deleted.',
+  'auth.preConsentFailed':
+    'That did not work. Check the password and try again.',
   'auth.consentLabel': 'I accept',
   'auth.consentLink': 'the privacy policy',
   'auth.consentRequired': 'Accept the privacy policy to create an account.',
@@ -488,6 +505,21 @@ export const enTranslations = {
   'admin.gameSystem': 'Game System',
   'admin.panel': 'Administration',
   'admin.panelSubtitle': 'Users, roles and access management.',
+  'admin.settingsTitle': 'Site modes',
+  'admin.settingsDescription':
+    'Applied as soon as you save. Registration and sign-in affect new visitors only: people already signed in keep working.',
+  'admin.settingsLoading': 'Loading settings…',
+  'admin.settingsSaved': 'Settings saved',
+  'admin.settingsSaveFailed': 'Could not save the settings',
+  'admin.settingsRegistration': 'Registration is open',
+  'admin.settingsRegistrationHint':
+    'Off: the API rejects registration and the sign-in form hides “Create Account”. Existing accounts sign in as usual.',
+  'admin.settingsLoginRestricted': 'Sign-in only for admins and testers',
+  'admin.settingsLoginRestrictedHint':
+    'Off: everyone can sign in. On: other accounts are refused, while sessions already open keep working until they expire.',
+  'admin.settingsMaintenance': 'Maintenance mode',
+  'admin.settingsMaintenanceHint':
+    'Off: the site works. On: pages are closed for everyone except administrators; sign-in and the auth API stay available so an admin can get in.',
   'admin.usersTitle': 'Users',
   'admin.usersDescription': 'All accounts in this installation.',
   'admin.filteredDescription': 'Accounts matching the current search.',

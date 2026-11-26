@@ -263,6 +263,57 @@ export const openApiDocument = {
         },
         additionalProperties: true,
       },
+      SiteSettings: {
+        type: 'object',
+        required: ['registration', 'access'],
+        properties: {
+          registration: {
+            type: 'object',
+            required: ['open'],
+            properties: {
+              open: {
+                type: 'boolean',
+                description:
+                  'Public registration. Off: the API answers `403 registration_closed` and the form hides the button.',
+              },
+            },
+            additionalProperties: false,
+          },
+          access: {
+            type: 'object',
+            required: ['loginRestrictedToStaff', 'maintenance'],
+            properties: {
+              loginRestrictedToStaff: {
+                type: 'boolean',
+                description:
+                  'Sign-in for admins and testers only; other accounts get `403 login_restricted`.',
+              },
+              maintenance: {
+                type: 'boolean',
+                description:
+                  'Pages are rewritten to `/maintenance` and the API answers `503` for everyone except admins; `/login` and `/api/auth/*` stay open.',
+              },
+            },
+            additionalProperties: false,
+          },
+        },
+        additionalProperties: false,
+      },
+      PreConsentRequest: {
+        type: 'object',
+        required: ['action', 'username', 'password'],
+        properties: {
+          action: { type: 'string', enum: ['export', 'delete'] },
+          username: { type: 'string' },
+          password: { type: 'string' },
+          totpCode: {
+            type: 'string',
+            description:
+              'Required when the account has two-factor authentication enabled.',
+          },
+        },
+        additionalProperties: false,
+      },
       LoginRequest: {
         type: 'object',
         required: ['username', 'password'],
@@ -1114,6 +1165,35 @@ export const openApiDocument = {
         },
       },
     },
+    '/api/auth/pre-consent': {
+      post: {
+        tags: ['Authentication'],
+        operationId: 'preConsentDataRights',
+        summary: 'Export or delete before accepting the policy',
+        description:
+          'Data-subject rights do not depend on accepting a new policy version. Checks the password (and TOTP when enabled) without issuing a session: `action: "export"` returns a backup file, `action: "delete"` deletes the account. Available only while the account has not accepted the current version — otherwise `409 consent_not_required`.',
+        security: [],
+        requestBody: jsonBody(ref('PreConsentRequest')),
+        responses: {
+          200: {
+            description:
+              'Backup file (`application/json` with `Content-Disposition`) or `{ success, deleted }` for the delete action.',
+            content: {
+              'application/json': {
+                schema: { type: 'object', additionalProperties: true },
+              },
+            },
+          },
+          400: { $ref: '#/components/responses/BadRequest' },
+          401: { $ref: '#/components/responses/Unauthorized' },
+          403: errorResponse('The account is blocked.'),
+          409: errorResponse(
+            'The current policy version is already accepted: use the regular sign-in and export.',
+          ),
+          429: errorResponse('Too many attempts.'),
+        },
+      },
+    },
     '/api/auth/register': {
       post: {
         tags: ['Authentication'],
@@ -1784,6 +1864,34 @@ export const openApiDocument = {
             additionalProperties: true,
           }),
           500: { $ref: '#/components/responses/ServerError' },
+        },
+      },
+    },
+    '/api/admin/settings': {
+      get: {
+        tags: ['Admin'],
+        operationId: 'adminGetSiteSettings',
+        summary: 'Site modes (admin)',
+        description:
+          'Runtime switches stored in `<data-dir>/site-settings.json`: public registration, sign-in limited to admins and testers, maintenance mode. Read on every request by the proxy.',
+        responses: {
+          200: jsonResponse('Current settings.', ref('SiteSettings')),
+          401: { $ref: '#/components/responses/Unauthorized' },
+          403: { $ref: '#/components/responses/Forbidden' },
+        },
+      },
+      put: {
+        tags: ['Admin'],
+        operationId: 'adminUpdateSiteSettings',
+        summary: 'Update site modes (admin)',
+        description:
+          'Replaces the whole settings object: a partial body is rejected instead of silently keeping the old switches.',
+        requestBody: jsonBody(ref('SiteSettings')),
+        responses: {
+          200: jsonResponse('Saved settings.', ref('SiteSettings')),
+          400: { $ref: '#/components/responses/BadRequest' },
+          401: { $ref: '#/components/responses/Unauthorized' },
+          403: { $ref: '#/components/responses/Forbidden' },
         },
       },
     },

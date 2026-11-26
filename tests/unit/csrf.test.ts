@@ -83,7 +83,7 @@ describe('proxy: CSRF на /api/*', () => {
     });
 
   it('мутация с чужим Origin → 403 csrf_origin', async () => {
-    const response = proxy(
+    const response = await proxy(
       request('POST', {
         origin: 'https://evil.example',
         host: 'localhost',
@@ -95,7 +95,7 @@ describe('proxy: CSRF на /api/*', () => {
   });
 
   it('мутация same-origin → пропуск', async () => {
-    const response = proxy(
+    const response = await proxy(
       request('POST', {
         origin: 'http://localhost',
         host: 'localhost',
@@ -106,8 +106,8 @@ describe('proxy: CSRF на /api/*', () => {
     expect(response.headers.get('x-middleware-next')).toBe('1');
   });
 
-  it('GET не проверяется, даже с чужим Origin', () => {
-    const response = proxy(
+  it('GET не проверяется, даже с чужим Origin', async () => {
+    const response = await proxy(
       request('GET', { origin: 'https://evil.example', host: 'localhost' }),
     );
     expect(response.headers.get('x-middleware-next')).toBe('1');
