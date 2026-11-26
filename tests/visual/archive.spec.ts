@@ -1,7 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-import { PRIVACY_VERSION } from '@/lib/legal/privacy';
-
+import { PRIVACY_VERSION } from '../../src/lib/legal/privacy';
 import {
   expectNoRawI18nKeys,
   openApp,

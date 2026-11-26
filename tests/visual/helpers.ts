@@ -8,8 +8,8 @@ import {
 } from '@playwright/test';
 
 import { LANGUAGE_COOKIE, type Language } from '@/lib/language';
-import { PRIVACY_VERSION } from '@/lib/legal/privacy';
 
+import { PRIVACY_VERSION } from '../../src/lib/legal/privacy';
 import { VISUAL_RECOVERY_PHRASE } from './fixtures';
 import {
   readAdminState,
@@ -645,6 +645,7 @@ export async function registerViaUI(
   await page
     .getByLabel('Recovery Phrase', { exact: true })
     .fill(account.recoveryPhrase);
+  await page.getByTestId('register-consent').click();
   await page.getByRole('button', { name: 'Create Account & Sign In' }).click();
   await page.waitForURL((url) => !url.pathname.startsWith('/login'), {
     timeout: 30_000,

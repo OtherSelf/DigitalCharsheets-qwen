@@ -6,8 +6,7 @@ import {
   type Page,
 } from '@playwright/test';
 
-import { PRIVACY_VERSION } from '@/lib/legal/privacy';
-
+import { PRIVACY_VERSION } from '../../src/lib/legal/privacy';
 import { qrSvgDataUrl } from '../../src/lib/qr-svg';
 import {
   collectPageErrors,

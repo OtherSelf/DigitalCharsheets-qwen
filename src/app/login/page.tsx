@@ -526,27 +526,6 @@ export default function LoginPage() {
                     </Button>
                   </div>
 
-                  <div className="flex items-start gap-2 text-sm">
-                    <Checkbox
-                      id="register-consent"
-                      checked={consent}
-                      onCheckedChange={(value) => setConsent(value === true)}
-                      data-testid="register-consent"
-                    />
-                    <label htmlFor="register-consent" className="leading-snug">
-                      {t('auth.consentLabel')}{' '}
-                      <Link
-                        className="underline underline-offset-2"
-                        href="/privacy"
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        {t('footer.privacy')}
-                      </Link>{' '}
-                      ({PRIVACY_VERSION})
-                    </label>
-                  </div>
-
                   <Button
                     type="submit"
                     className="mt-2 h-10 w-full"
@@ -668,6 +647,26 @@ export default function LoginPage() {
                     </p>
                   </div>
 
+                  <div className="flex items-start gap-2 text-sm">
+                    <Checkbox
+                      id="register-consent"
+                      checked={consent}
+                      onCheckedChange={(value) => setConsent(value === true)}
+                      data-testid="register-consent"
+                    />
+                    <label htmlFor="register-consent" className="leading-snug">
+                      {t('auth.consentLabel')}{' '}
+                      <Link
+                        className="underline underline-offset-2"
+                        href="/privacy"
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        {t('footer.privacy')}
+                      </Link>{' '}
+                      ({PRIVACY_VERSION})
+                    </label>
+                  </div>
                   <Button
                     type="submit"
                     className="mt-2 h-10 w-full"

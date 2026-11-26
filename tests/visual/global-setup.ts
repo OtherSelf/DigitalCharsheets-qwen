@@ -6,8 +6,7 @@ import { pathToFileURL } from 'node:url';
 
 import type { FullConfig } from '@playwright/test';
 
-import { PRIVACY_VERSION } from '@/lib/legal/privacy';
-
+import { PRIVACY_VERSION } from '../../src/lib/legal/privacy';
 import { VISUAL_RECOVERY_PHRASE } from './fixtures';
 import {
   STATE_FILE,

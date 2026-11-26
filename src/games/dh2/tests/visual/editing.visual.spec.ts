@@ -7,6 +7,7 @@ import {
   signInViaUI,
   startEditing,
 } from '../../../../../tests/visual/helpers';
+import { PRIVACY_VERSION } from '../../../../lib/legal/privacy';
 
 /**
  * Режим редактирования Dark Heresy 2-й редакции: пустое creation-поле
@@ -40,6 +41,8 @@ test.describe(
             password,
             displayName: 'Policy DH2',
             recoveryPhrase: 'amber cobalt lantern silver ember frost',
+            consent: true,
+            privacyVersion: PRIVACY_VERSION,
           },
         });
         expect([200, 201], 'регистрация аккаунта').toContain(
@@ -119,6 +122,8 @@ test.describe('блок опыта', { tag: '@plugin:dh2' }, () => {
         password,
         displayName: `XP ${systemId}`,
         recoveryPhrase: 'amber cobalt lantern silver ember frost',
+        consent: true,
+        privacyVersion: PRIVACY_VERSION,
       },
     });
     expect([200, 201], 'регистрация аккаунта').toContain(registered.status());
@@ -196,6 +201,8 @@ test.describe('Безумие и Порча: плюс и минус', { tag: '@p
           password,
           displayName: 'Points DH2',
           recoveryPhrase: 'amber cobalt lantern silver ember frost',
+          consent: true,
+          privacyVersion: PRIVACY_VERSION,
         },
       });
       expect([200, 201], 'регистрация аккаунта').toContain(registered.status());
@@ -261,6 +268,8 @@ test.describe('локации попаданий на мобильном', { tag
           password,
           displayName: 'Hits QA',
           recoveryPhrase: 'amber cobalt lantern silver ember frost',
+          consent: true,
+          privacyVersion: PRIVACY_VERSION,
         },
       });
       expect([200, 201], 'регистрация аккаунта').toContain(registered.status());
@@ -302,6 +311,8 @@ test.describe(
             password,
             displayName: 'Resources QA',
             recoveryPhrase: 'amber cobalt lantern silver ember frost',
+            consent: true,
+            privacyVersion: PRIVACY_VERSION,
           },
         });
         expect([200, 201], 'регистрация аккаунта').toContain(

@@ -12,6 +12,7 @@ import {
   signInViaUI,
   startEditing,
 } from '../../../../../tests/visual/helpers';
+import { PRIVACY_VERSION } from '../../../../lib/legal/privacy';
 
 /**
  * Режим редактирования Dark Heresy 1-й редакции: поля открываются
@@ -292,6 +293,8 @@ test.describe('блок опыта', { tag: '@plugin:dh1' }, () => {
         password,
         displayName: `XP ${systemId}`,
         recoveryPhrase: 'amber cobalt lantern silver ember frost',
+        consent: true,
+        privacyVersion: PRIVACY_VERSION,
       },
     });
     expect([200, 201], 'регистрация аккаунта').toContain(registered.status());
@@ -387,6 +390,8 @@ test.describe(
           password,
           displayName: 'Weapon QA',
           recoveryPhrase: 'amber cobalt lantern silver ember frost',
+          consent: true,
+          privacyVersion: PRIVACY_VERSION,
         },
       });
       expect([200, 201], 'регистрация аккаунта').toContain(registered.status());
@@ -627,6 +632,8 @@ test.describe('Безумие и Порча: плюс и минус', { tag: '@p
           password,
           displayName: 'Points QA',
           recoveryPhrase: 'amber cobalt lantern silver ember frost',
+          consent: true,
+          privacyVersion: PRIVACY_VERSION,
         },
       });
       expect([200, 201], 'регистрация аккаунта').toContain(registered.status());
