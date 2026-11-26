@@ -14,7 +14,7 @@ describe('next.config: allowedDevOrigins для стендов за реверс
 
   it('разрешает домены дев- и прод-стенда', () => {
     expect(origins).toEqual(
-      expect.arrayContaining(['dcs-dev.thfree.space', 'dcs.thfree.space']),
+      expect.arrayContaining(['dev.dcsheets.space', 'dcsheets.space']),
     );
   });
 

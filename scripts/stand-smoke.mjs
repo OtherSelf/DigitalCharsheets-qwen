@@ -5,7 +5,7 @@
  * Не входит в `npm run verify`: стенд обновляется вручную, а тест требует
  * сеть и готовую учётную запись. Запуск:
  *
- *   DCS_STAND_URL=https://dcs-dev.thfree.space \
+ *   DCS_STAND_URL=https://dev.dcsheets.space \
  *   DCS_STAND_LOGIN=qa-agent-... \
  *   DCS_STAND_PASSWORD=... \
  *   npm run test:stand

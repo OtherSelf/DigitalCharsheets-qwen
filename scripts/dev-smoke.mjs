@@ -34,7 +34,7 @@ const NEXT_BIN = path.join(
 );
 
 /** Домены, с которых открываются стенды (см. next.config.ts). */
-const EXPECTED_HOSTS = ['dcs-dev.thfree.space', 'dcs.thfree.space'];
+const EXPECTED_HOSTS = ['dev.dcsheets.space', 'dcsheets.space'];
 const BLOCKED_HOST = 'not-allowed.dev-smoke.example';
 const READY_TIMEOUT_MS = 120_000;
 const HYDRATE_TIMEOUT_MS = 20_000;

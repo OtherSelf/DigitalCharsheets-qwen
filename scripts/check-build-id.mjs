@@ -10,8 +10,8 @@
 //
 //  Использование:
 //    node scripts/check-build-id.mjs                        # http://localhost:3000
-//    node scripts/check-build-id.mjs https://dcs.thfree.space
-//    npm run check:build-id -- https://dcs.thfree.space
+//    node scripts/check-build-id.mjs https://dcsheets.space
+//    npm run check:build-id -- https://dcsheets.space
 //
 //  Код возврата: 0 — всё сошлось; 1 — расхождение; 2 — ошибка аргументов или
 //  сети. Отсутствие `data-dpl-id` — не ошибка, а информация: так выглядит

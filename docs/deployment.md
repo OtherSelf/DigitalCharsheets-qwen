@@ -313,12 +313,62 @@ location = /api/auth {
     proxy_set_header X-Forwarded-Proto $scheme;
 }
 ```
+### Domain move (`dcs.thfree.space` → `dcsheets.space`)
+
+The app reads its own host nowhere: no canonical URL, no absolute links in HTML,
+so a domain move is a proxy-and-DNS change. Keep the old names as permanent
+redirects — bookmarks, share links and search results live years longer than a
+migration window.
+
+```nginx
+# Old names: redirect everything, keep path and query.
+server {
+    listen 443 ssl;
+    http2 on;
+    server_name dcs.thfree.space;
+    ssl_certificate     /etc/letsencrypt/live/dcs.thfree.space/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/dcs.thfree.space/privkey.pem;
+
+    return 301 https://dcsheets.space$request_uri;
+}
+
+server {
+    listen 443 ssl;
+    http2 on;
+    server_name dcs-dev.thfree.space;
+    ssl_certificate     /etc/letsencrypt/live/dcs-dev.thfree.space/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/dcs-dev.thfree.space/privkey.pem;
+
+    return 301 https://dev.dcsheets.space$request_uri;
+}
+
+# HTTP on the old names: straight to the new HTTPS host.
+server {
+    listen 80;
+    server_name dcs.thfree.space dcs-dev.thfree.space;
+    return 301 https://dcsheets.space$request_uri;
+}
+```
+
+Rules that make the move boring:
+
+- `return 301` (not a page asking to click) and `$request_uri` — path, query and
+  fragment survive, so `/character/<id>` and guest links keep working;
+- keep the old certificates until the last redirect is removed; `certbot` renews
+  by `server_name`, and removing a name too early breaks renewal silently;
+- HSTS (`Strict-Transport-Security`) set only on the new names: the old ones
+  only redirect, and HSTS on a name you plan to retire pins visitors to it;
+- sessions are cookie-scoped by host, so after the move everyone signs in once
+  on the new domain — acceptable, and the login form returns people to the sheet
+  they opened (`?next=`).
+
  A stale proxy config can look exactly
 like an application crash — check it before suspecting data migrations.
 
 The reference configs live outside this repository (an operator directory)
 (`dcs.conf` for production, `dcs-dev.conf` for the dev bench); update both when
-the proxy setup changes.
+the proxy setup changes. Production serves `dcsheets.space`, the bench serves
+`dev.dcsheets.space`; the old `*.thfree.space` names only redirect.
 
 ### Caching
 
