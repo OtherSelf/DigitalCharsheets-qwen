@@ -145,9 +145,11 @@ export const ruTranslations = {
   'docs.skipToContent': 'К содержанию',
   'footer.privacy': 'Конфиденциальность',
   'privacy.title': 'Политика конфиденциальности',
-  'privacy.version': 'Версия',
+  'privacy.revision': 'Редакция',
   'privacy.registry': 'Запись в реестре',
-  'privacy.back': 'Назад в приложение',
+  'privacy.contactTitle': 'Вопросы о ваших данных',
+  'privacy.contactBody':
+    'Оператор отвечает на обращения субъектов персональных данных в течение 10 рабочих дней. Пишите с того адреса, который вам удобен, — привязки к e-mail в аккаунте нет.',
   'footer.label': 'Подвал сайта',
   'footer.repository': 'Исходный код',
   'footer.license': 'Лицензия MIT',
@@ -426,7 +428,8 @@ export const ruTranslations = {
   'auth.signingIn': 'Вход...',
   'auth.createAccount': 'Создать аккаунт',
   'auth.createAndSignIn': 'Создать аккаунт и войти',
-  'auth.consentLabel': 'Принимаю политику конфиденциальности',
+  'auth.consentLabel': 'Принимаю',
+  'auth.consentLink': 'политику конфиденциальности',
   'auth.consentRequired':
     'Примите политику конфиденциальности, чтобы создать аккаунт.',
   'auth.creatingAccount': 'Создание аккаунта...',

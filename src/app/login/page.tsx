@@ -662,9 +662,13 @@ export default function LoginPage() {
                         target="_blank"
                         rel="noreferrer"
                       >
-                        {t('footer.privacy')}
+                        {t('auth.consentLink')}
                       </Link>{' '}
-                      ({PRIVACY_VERSION})
+                      {/* Версия — одной строкой: перенос внутри даты читался
+                          как опечатка в юридическом тексте. */}
+                      <span className="whitespace-nowrap">
+                        ({PRIVACY_VERSION})
+                      </span>
                     </label>
                   </div>
                   <Button
