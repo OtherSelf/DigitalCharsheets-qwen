@@ -47,6 +47,7 @@ export function SharedCharacterProvider({
       // На телефоне гость получает тот же компактный рейл, что и владелец,
       // но в режиме `shared`: только секции и заметки, без редакторов.
       isCompactView: isSmallScreen,
+      isPhoneView: isSmallScreen,
       isSmallScreen,
       isTabletScreen,
       toggleCompactView: () => undefined,

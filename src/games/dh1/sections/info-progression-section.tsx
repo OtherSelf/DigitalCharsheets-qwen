@@ -291,6 +291,8 @@ const MetaBlock = ({
 interface SectionProps {
   character: DH1Character;
   isCompactView: boolean;
+  /** Телефонная подача: только она прячет соседние секции. */
+  isPhoneView: boolean;
   activeCompactSection?: string;
   onEditingChange?: (val: boolean) => void;
   /** Импортированный лист проверяется: creation-замки временно открыты. */
@@ -300,6 +302,7 @@ interface SectionProps {
 export const InfoSection = ({
   character,
   isCompactView,
+  isPhoneView,
   activeCompactSection,
   onEditingChange,
   creationReview,
@@ -354,7 +357,7 @@ export const InfoSection = ({
     return key ? t(key) : t('dh1.worldVariant');
   }, [character.homeWorld, t]);
 
-  const showInfo = !isCompactView || activeCompactSection === 'info-section';
+  const showInfo = !isPhoneView || activeCompactSection === 'info-section';
   if (!showInfo) return null;
 
   return (
@@ -833,6 +836,7 @@ export const InfoSection = ({
 export const ProgressionSection = ({
   character,
   isCompactView,
+  isPhoneView,
   activeCompactSection,
   onEditingChange,
 }: SectionProps) => {
@@ -1063,7 +1067,7 @@ export const ProgressionSection = ({
   };
 
   const showProgression =
-    !isCompactView || activeCompactSection === 'progression-section';
+    !isPhoneView || activeCompactSection === 'progression-section';
   if (!showProgression) return null;
 
   return (

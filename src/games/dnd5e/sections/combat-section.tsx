@@ -113,6 +113,8 @@ interface CombatSectionProps {
     multiclasses: { class: string; level: number; isDisabled?: boolean }[];
   };
   isCompactView: boolean;
+  /** Телефонная подача: только она прячет соседние секции. */
+  isPhoneView: boolean;
   activeCompactSection: string;
   manualHitDice?: string;
   onManualHitDiceChange?: (value: string) => void;
@@ -135,6 +137,7 @@ export const DndCombatSection = React.forwardRef<
       proficiencyBonus,
       progressionData,
       isCompactView,
+      isPhoneView,
       activeCompactSection,
       idPrefix,
       manualHitDice,
@@ -564,9 +567,7 @@ export const DndCombatSection = React.forwardRef<
         id={`${idp}combat-section`}
         className={cn(
           'space-y-6 md:col-span-4',
-          isCompactView &&
-            activeCompactSection !== 'combat-section' &&
-            'hidden',
+          isPhoneView && activeCompactSection !== 'combat-section' && 'hidden',
         )}
       >
         <Card id={`${idp}combat-stats-card`}>

@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useCharacterContext, useTranslation } from '@/games/plugin-host';
 import type { SheetHandle } from '@/games/types';
+import { cn } from '@/lib/utils';
 
 import styles from './sheet.module.css';
 import type { SandboxCharacter } from './types';
@@ -26,9 +27,10 @@ export const SandboxSheet = React.forwardRef<
   {
     character: SandboxCharacter;
     isCompactView: boolean;
+    isPhoneView: boolean;
     activeCompactSection: string;
   }
->(({ character }, ref) => {
+>(({ character, isCompactView }, ref) => {
   const { updateCharacter, showEditButtons } = useCharacterContext();
   const { t } = useTranslation();
   const [notes, setNotes] = React.useState(character.notes);
@@ -38,7 +40,11 @@ export const SandboxSheet = React.forwardRef<
   }));
 
   return (
-    <div id="info-section" className={styles.sheet} data-testid="sandbox-sheet">
+    <div
+      id="info-section"
+      className={cn(styles.sheet, isCompactView && styles.compact)}
+      data-testid="sandbox-sheet"
+    >
       <Card className="border-primary/30">
         <CardHeader>
           <CardTitle className="font-headline text-primary">
@@ -68,7 +74,10 @@ export const SandboxSheet = React.forwardRef<
                 {t('sandbox.stat.might')}
               </dt>
               <dd
-                className="text-lg font-semibold"
+                className={cn(
+                  'font-semibold',
+                  isCompactView ? 'text-base' : 'text-lg',
+                )}
                 title={`${t('sandbox.stat.might')}: ${character.stats.might}`}
               >
                 {character.stats.might}
@@ -79,7 +88,10 @@ export const SandboxSheet = React.forwardRef<
                 {t('sandbox.stat.wits')}
               </dt>
               <dd
-                className="text-lg font-semibold"
+                className={cn(
+                  'font-semibold',
+                  isCompactView ? 'text-base' : 'text-lg',
+                )}
                 title={`${t('sandbox.stat.wits')}: ${character.stats.wits}`}
               >
                 {character.stats.wits}

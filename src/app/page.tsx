@@ -56,6 +56,7 @@ export default function DashboardPage() {
     loadError,
     retryCharacters,
     isCompactView,
+    isSmallScreen,
     pendingDraft,
     createPendingDraft,
     discardPendingDraft,
@@ -261,14 +262,19 @@ export default function DashboardPage() {
                 >
                   <div
                     className={cn(
-                      'grid gap-4',
-                      isCompactView
-                        ? 'grid-cols-1'
+                      'grid',
+                      isSmallScreen
+                        ? 'grid-cols-1 gap-4'
                         : // Колонок столько, сколько помещается при минимальной
-                          // ширине карточки 18rem (288px): 3 на планшете, 4 на
-                          // 1440, 5 на 1760. Прежняя лестница `lg:3 xl:4` не
-                          // давала пятой и оставляла «мёртвую» полосу 1280–1300.
-                          '[grid-template-columns:repeat(auto-fill,minmax(18rem,1fr))]',
+                          // ширине карточки: 18rem (288px) в обычном виде, 16rem
+                          // в плотном. Плотный вид ещё и ужимает шаг сетки:
+                          // при шаге 16px пятая колонка на 1440 не влезает
+                          // (5×256 + 4×16 больше карточки списка), при 8px —
+                          // влезает. Прежняя лестница `lg:3 xl:4` не давала
+                          // пятой и оставляла «мёртвую» полосу 1280–1300.
+                          isCompactView
+                          ? '[grid-template-columns:repeat(auto-fill,minmax(16rem,1fr))] gap-2'
+                          : '[grid-template-columns:repeat(auto-fill,minmax(18rem,1fr))] gap-4',
                     )}
                   >
                     {characters.map((character) => {
@@ -283,7 +289,7 @@ export default function DashboardPage() {
                         />
                       );
                     })}
-                    {isCompactView ? (
+                    {isSmallScreen ? (
                       <Button
                         variant="outline"
                         asChild
@@ -310,7 +316,7 @@ export default function DashboardPage() {
                         </Link>
                       </Button>
                     )}
-                    <ImportCharacterDialog isCompactView={isCompactView} />
+                    <ImportCharacterDialog isPhoneView={isSmallScreen} />
                   </div>
                 </SortableContext>
               </DndContext>

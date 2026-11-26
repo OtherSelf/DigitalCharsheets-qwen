@@ -20,6 +20,7 @@ export const ExampleSheet = React.forwardRef<
   {
     character: ExampleCharacter;
     isCompactView: boolean;
+    isPhoneView: boolean;
     activeCompactSection: string;
   }
 >(({ character }, ref) => {

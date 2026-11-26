@@ -41,12 +41,11 @@
     transform: none !important;
   }
 
-  .sheet:global(.is-compact) :global(.sheet-info-grid) {
-    grid-template-columns: minmax(0, 1fr) !important;
-  }
-  .sheet:global(.is-compact) :global(.sheet-info-grid) > * {
-    grid-column: 1 / -1 !important;
-  }
+  /*
+    Плотный вид (`.is-compact`) в этой полосе колонки НЕ схлопывает: он про
+    отступы и кегль, а не про навигацию. Одна колонка здесь — признак
+    телефонной подачи, а её включает только ширина < 768.
+  */
 }
 
 /*

@@ -291,7 +291,11 @@ const slots = useGameUiSlots(systemId);
 slots?.HeaderSubtitle?.(character, t);
 slots?.CardSummary?.(character, t);
 {slots?.HeaderActions && (
-  <slots.HeaderActions character={character} isCompactView={isCompactView} />
+  <slots.HeaderActions
+    character={character}
+    isCompactView={isCompactView}
+    isPhoneView={isPhoneView}
+  />
 )}
 ```
 

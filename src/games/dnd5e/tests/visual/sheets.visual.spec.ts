@@ -203,7 +203,7 @@ test.describe('лист D&D — чтение', { tag: '@plugin:dnd5e' }, () => {
  */
 test.describe('лист D&D — планшет', { tag: '@plugin:dnd5e' }, () => {
   test(
-    'tablet 1024x768: верх листа и компактный вид (en)',
+    'tablet 1024x768: верх листа и плотный вид (en)',
     { tag: '@tablet' },
     async ({ page, context }) => {
       await page.setViewportSize({ width: 1024, height: 768 });
@@ -226,30 +226,20 @@ test.describe('лист D&D — планшет', { tag: '@plugin:dnd5e' }, () =>
         .getByRole('button', { name: 'Switch to Compact View', exact: true })
         .click();
       await expect(page.locator('.dnd-sheet.is-compact')).toHaveCount(1);
-      // У D&D в меню больше пунктов, чем у DH — сайдбар не должен обрезаться.
-      const nav = page.getByRole('navigation');
-      await expect(nav).toBeVisible();
-      const navBox = (await nav.boundingBox())!;
-      expect(
-        Math.round(navBox.y + navBox.height),
-        'сайдбар не выходит за нижний край',
-      ).toBeLessThanOrEqual(768 + 1);
-      const navOverflow = await nav.evaluate((el) => ({
-        x: el.scrollWidth - el.clientWidth,
-        y: el.scrollHeight - el.clientHeight,
-      }));
-      expect(navOverflow.x, 'сайдбар не вылезает вбок').toBeLessThanOrEqual(1);
-      expect(
-        navOverflow.y,
-        'пункты меню влезают по высоте',
-      ).toBeLessThanOrEqual(1);
+      // Плотность не включает телефонную подачу: рейла и закреплённой полосы
+      // характеристик нет, сетка остаётся планшетной двухколоночной.
+      await expect(page.getByRole('navigation')).toHaveCount(0);
+      await expect(page.getByTestId('compact-stats-bar')).toHaveCount(0);
+      const columns = await page
+        .locator('.dnd-sheet .sheet-main-grid')
+        .evaluate(
+          (element) =>
+            getComputedStyle(element)
+              .gridTemplateColumns.split(' ')
+              .filter(Boolean).length,
+        );
+      expect(columns, 'плотный вид на планшете — две колонки').toBe(2);
 
-      await page
-        .getByRole('navigation')
-        .getByRole('button', { name: 'Inventory & Attunement', exact: true })
-        .click();
-      await waitForScrollSettled(page);
-      await expect(page.locator('#inventory-box:visible')).toHaveCount(1);
       // Подводим карточку инвентаря к верху: эталон не зависит от скролла.
       await page.evaluate(() => {
         const main = document.querySelector('main');
@@ -262,6 +252,7 @@ test.describe('лист D&D — планшет', { tag: '@plugin:dnd5e' }, () =>
         main.scrollTo({ top });
       });
       await waitForScrollSettled(page);
+      await expect(page.locator('#inventory-box:visible')).toHaveCount(1);
       await expectNoHorizontalOverflow(page);
       await screenshotPage(page, 'sheet-dnd-tablet-compact-en.png');
     },

@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/context/language-context';
+import { cn } from '@/lib/utils';
 
 /**
  * Подтверждение удаления листа. Одинаково для компактной и обычной карточки:
@@ -23,9 +24,12 @@ import { useTranslation } from '@/context/language-context';
 export function DeleteCharacterDialog({
   name,
   onDelete,
+  dense = false,
 }: {
   name: string;
   onDelete: () => void;
+  /** Плотный вид карточки: кнопка ниже 36 px, иначе она не влезает в ряд. */
+  dense?: boolean;
 }) {
   const { t } = useTranslation();
 
@@ -35,7 +39,10 @@ export function DeleteCharacterDialog({
         <Button
           variant="destructive"
           size="icon"
-          className="h-11 w-11 shrink-0 sm:h-9 sm:w-9"
+          className={cn(
+            'h-11 w-11 shrink-0 sm:h-9 sm:w-9',
+            dense && 'sm:h-8 sm:w-8',
+          )}
           title={t('common.delete')}
           aria-label={t('common.delete')}
           data-testid="delete-character"

@@ -23,6 +23,7 @@ export function SandboxHeaderActions({
 }: {
   character: SandboxCharacter;
   isCompactView: boolean;
+  isPhoneView: boolean;
 }) {
   const { updateCharacter } = useCharacterContext();
   const { toast } = useToast();

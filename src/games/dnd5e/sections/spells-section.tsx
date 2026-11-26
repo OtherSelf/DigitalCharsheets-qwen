@@ -100,6 +100,8 @@ interface SpellsSectionProps {
   initialSpells: Spell[];
   initialSpellSlots?: Record<number, { max: number; current: number }>;
   isCompactView: boolean;
+  /** Телефонная подача: только она прячет соседние секции. */
+  isPhoneView: boolean;
   activeCompactSection: string;
   initialSpellcastingEntries?: SpellcastingEntry[];
   stats?: Record<string, number>;
@@ -111,6 +113,7 @@ export function DndSpellsSection({
   initialSpells,
   initialSpellSlots,
   isCompactView,
+  isPhoneView,
   activeCompactSection,
   initialSpellcastingEntries,
   stats,
@@ -442,7 +445,7 @@ export function DndSpellsSection({
       onOpenChange={setIsSpellsOpen}
       className={cn(
         'space-y-6',
-        isCompactView && activeCompactSection !== 'spells-section' && 'hidden',
+        isPhoneView && activeCompactSection !== 'spells-section' && 'hidden',
       )}
     >
       <div className="mb-4 flex items-center justify-center">
@@ -465,7 +468,7 @@ export function DndSpellsSection({
       </div>
 
       <CollapsibleContent className="space-y-6">
-        {isCompactView && (
+        {isPhoneView && (
           <Card className="mb-6">
             <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2">
               <CardTitle className="text-muted-foreground text-[10px] font-bold tracking-tight uppercase">

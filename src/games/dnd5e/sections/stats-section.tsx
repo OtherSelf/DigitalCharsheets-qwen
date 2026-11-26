@@ -200,6 +200,8 @@ interface StatsSectionProps {
   setNewProfItem: React.Dispatch<React.SetStateAction<string>>;
   handleSaveOtherProf: () => void;
   isCompactView: boolean;
+  /** Телефонная подача: только она прячет соседние секции. */
+  isPhoneView: boolean;
   activeCompactSection: string;
   proficiencyBonus: number;
   passivePerception: number;
@@ -221,6 +223,7 @@ export function DndStatsSection({
   setNewProfItem,
   handleSaveOtherProf,
   isCompactView,
+  isPhoneView,
   activeCompactSection,
   proficiencyBonus,
   passivePerception,
@@ -236,10 +239,10 @@ export function DndStatsSection({
     <div
       className={cn(
         'space-y-4 md:col-span-2',
-        isCompactView && activeCompactSection !== 'stats-section' && 'hidden',
+        isPhoneView && activeCompactSection !== 'stats-section' && 'hidden',
       )}
     >
-      {!isCompactView && (
+      {!isPhoneView && (
         <Card id={`${idp}stats-card`}>
           <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2">
             <CardTitle className="text-muted-foreground text-[10px] font-bold tracking-tight uppercase">
@@ -303,7 +306,7 @@ export function DndStatsSection({
         </Card>
       )}
 
-      {!isCompactView && (
+      {!isPhoneView && (
         <Card>
           <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2">
             <CardTitle className="text-muted-foreground text-[10px] font-bold tracking-tight uppercase">

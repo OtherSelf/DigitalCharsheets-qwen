@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   DESKTOP_MIN,
   MOBILE_MAX,
+  resolveSheetPresentation,
   resolveViewport,
   TABLET_MIN,
 } from '@/lib/viewport';
@@ -51,5 +52,47 @@ describe('resolveViewport', () => {
         `ширина ${width}`,
       ).toBe(1);
     }
+  });
+});
+
+/**
+ * ─── LANDMARK: SHEET_PRESENTATION ───────────────────────────────────────────
+ * Две оси раскладки: телефонная подача (рейл, одна секция) и плотность
+ * (отступы, кегль, таблицы). Пока они были одной, тумблер «компактный вид» на
+ * планшете и десктопе включал телефонную подачу — рейл и одну секцию вместо
+ * всех панелей. Тест сторожит именно это разделение: `isPhoneView` следует
+ * только за шириной, `isCompactView` — за шириной или предпочтением.
+ */
+describe('resolveSheetPresentation', () => {
+  it.each([
+    ['телефон без предпочтения', 393, false, true, true],
+    ['телефон с предпочтением', 393, true, true, true],
+    ['дробный телефон под зумом', 767.5, true, true, true],
+    ['планшет без предпочтения', TABLET_MIN, false, false, false],
+    ['планшет с предпочтением', 1024, true, false, true],
+    ['планшет 1280 с предпочтением', 1280, true, false, true],
+    ['десктоп без предпочтения', 1440, false, false, false],
+    ['десктоп с предпочтением', 1440, true, false, true],
+  ])(
+    '%s: %s px',
+    (_label, width, prefersCompact, isPhoneView, isCompactView) => {
+      expect(
+        resolveSheetPresentation(
+          resolveViewport(width).isSmallScreen,
+          prefersCompact,
+        ),
+      ).toEqual({ isPhoneView, isCompactView });
+    },
+  );
+
+  it('на телефоне предпочтение ничего не меняет', () => {
+    expect(
+      resolveSheetPresentation(true, false),
+      'телефон уже плотный',
+    ).toEqual(resolveSheetPresentation(true, true));
+  });
+
+  it('предпочтение не включает телефонную подачу', () => {
+    expect(resolveSheetPresentation(false, true).isPhoneView).toBe(false);
   });
 });

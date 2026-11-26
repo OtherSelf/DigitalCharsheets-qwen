@@ -43,13 +43,13 @@ export function SharedSheetView({
   ownerName?: string;
 }) {
   const { t } = useTranslation();
-  const { isSmallScreen: isCompactView } = useViewportFlags();
+  const { isSmallScreen: isPhoneView } = useViewportFlags();
   const [tab, setTab] = useState<'sheet' | 'history'>('sheet');
   const [activeCompactSection, setActiveCompactSection] =
     useState('info-section');
   const [notesOpen, setNotesOpen] = useState(false);
 
-  useCompactSectionScroll(activeCompactSection, isCompactView);
+  useCompactSectionScroll(activeCompactSection, isPhoneView);
   const systemId = resolveCharacterSystemId(character);
   const gameModule = getCharacterModule(character);
   const uiSlots = useGameUiSlots(systemId);
@@ -104,7 +104,7 @@ export function SharedSheetView({
           authAction: 'login',
         }}
         sidebar={
-          isCompactView ? (
+          isPhoneView ? (
             <CompactSidebar
               character={character}
               activeSection={activeCompactSection}

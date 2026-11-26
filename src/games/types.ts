@@ -234,10 +234,21 @@ export interface CreateFormProps {
 /** Форма создания персонажа модуля. */
 export type CreateFormComponent = ComponentType<CreateFormProps>;
 
-/** Общие пропсы листа, которые передаёт ядро. */
+/**
+ * Общие пропсы листа, которые передаёт ядро.
+ *
+ * Две оси разведены намеренно: `isPhoneView` отвечает за навигацию (рейл, одна
+ * секция, закреплённые полосы), `isCompactView` — только за плотность
+ * (отступы, кегль, таблицы). Плагин, которому нужно спрятать соседние секции,
+ * обязан смотреть на `isPhoneView`: иначе кнопка «компактный вид» на планшете
+ * и десктопе снова превратит лист в телефонный.
+ */
 export interface GameSheetProps<TCharacter extends CharacterRecord> {
   character: TCharacter;
+  /** Плотность: телефон или предпочтение пользователя. */
   isCompactView: boolean;
+  /** Телефонная подача: рейл и одна секция на экран. */
+  isPhoneView: boolean;
   activeCompactSection: string;
   ref?: Ref<SheetHandle>;
 }
@@ -364,6 +375,7 @@ export interface GameUiSlots<
   readonly HeaderActions?: ComponentType<{
     character: TCharacter;
     isCompactView: boolean;
+    isPhoneView: boolean;
   }>;
   readonly HeaderSubtitle?: (
     character: TCharacter,

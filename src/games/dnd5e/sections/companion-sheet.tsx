@@ -534,6 +534,7 @@ export function CompanionSheet({
                 setNewProfItem={setNewProfItem}
                 handleSaveOtherProf={handleSaveOtherProf}
                 isCompactView={false}
+                isPhoneView={false}
                 activeCompactSection=""
                 proficiencyBonus={profBonus}
                 passivePerception={passivePerception}
@@ -557,6 +558,7 @@ export function CompanionSheet({
                 handleSaveSkills={handleSaveSkills}
                 calculatedSkills={calculatedSkills}
                 isCompactView={false}
+                isPhoneView={false}
                 activeCompactSection=""
                 proficiencyBonus={profBonus}
               />
@@ -582,6 +584,7 @@ export function CompanionSheet({
                 proficiencyBonus={profBonus}
                 progressionData={progressionData}
                 isCompactView={false}
+                isPhoneView={false}
                 activeCompactSection=""
                 manualHitDice={companion.hitDice || 'None'}
                 onManualHitDiceChange={(value) => onUpdate({ hitDice: value })}
@@ -643,6 +646,7 @@ export function CompanionSheet({
               stats={stats}
               proficiencyBonus={profBonus}
               isCompactView={false}
+              isPhoneView={false}
               activeCompactSection=""
             />
           )}

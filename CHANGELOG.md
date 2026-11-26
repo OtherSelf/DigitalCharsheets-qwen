@@ -11,6 +11,27 @@ format changes.
 
 ## [Unreleased]
 
+### Changed
+
+- The sheet view toggle is a density control now, not a phone switch. On tablet
+  and desktop it tightens paddings, type and tables but keeps every section and
+  never draws the phone rail; the rail and the one-section-at-a-time
+  presentation follow `isPhoneView` (below 768 px) only. The choice is stored in
+  `localStorage` (`sheet-view-compact`), survives a reload and is undone by the
+  same header button.
+- Dashboard cards get denser in the dense view (`16rem` minimum, so five and
+  six columns fit at 1440 and 1760) instead of collapsing to one column. The
+  demo sheet supports the dense view too.
+- Plugins receive both flags: `isCompactView` (density) and `isPhoneView`
+  (navigation) in `GameSheetProps` and the `HeaderActions` slot.
+
+### Fixed
+
+- The compact toggle used to turn a tablet or desktop window into the phone
+  layout and the choice stuck for the whole tab: the rail appeared, sections
+  were hidden one at a time, and a reload was the only way back. The phone
+  presentation now requires a real phone width.
+
 ## [0.26.1] - 2026-11-27
 
 The policy now has the terms of use it refers to, and "Export my data" works

@@ -29,12 +29,11 @@
     grid-column: span 1 / span 1 !important;
   }
 
-  .sheet:global(.is-compact) :global(.sheet-main-grid) {
-    grid-template-columns: minmax(0, 1fr) !important;
-  }
-  .sheet:global(.is-compact) :global(.sheet-main-grid) > * {
-    grid-column: 1 / -1 !important;
-  }
+  /*
+    Плотный вид (`.is-compact`) в этой полосе сетку не переводит в одну
+    колонку: он про плотность, а не про телефонную подачу. Одну секцию на
+    экран включает только ширина < 768.
+  */
 }
 
 /*

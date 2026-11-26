@@ -54,18 +54,19 @@ export function dh1HeaderSubtitle(
   return `${translatedRank} ${translatedClass} | ${translatedSystem}`;
 }
 
-/** Кнопка домашних правил в шапке (в компактном виде живёт в сайдбаре). */
+/** Кнопка домашних правил в шапке (на телефоне живёт в рейле секций). */
 export function Dh1HeaderActions({
   character,
-  isCompactView,
+  isPhoneView,
 }: {
   character: DH1Character;
   isCompactView: boolean;
+  isPhoneView: boolean;
 }) {
   const { t } = useTranslation();
   const [isHouseRulesOpen, setIsHouseRulesOpen] = React.useState(false);
 
-  if (isCompactView) return null;
+  if (isPhoneView) return null;
 
   return (
     <>

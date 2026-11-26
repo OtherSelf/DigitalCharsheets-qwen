@@ -117,6 +117,7 @@ export function Header({
 }: HeaderProps) {
   const {
     isCompactView,
+    isPhoneView,
     isSmallScreen,
     toggleCompactView,
     getCharacter,
@@ -308,6 +309,7 @@ export function Header({
               <HeaderActions
                 character={displayCharacter}
                 isCompactView={isCompactView}
+                isPhoneView={isPhoneView}
               />
             )}
           </div>
