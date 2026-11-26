@@ -92,10 +92,20 @@ export function useAppVersion(): AppVersionInfo | null {
 }
 
 /** Подпись «v0.5.1 · a077aef» — одна на меню, логин и футер. */
+export function formatVersionNumber(info: AppVersionInfo): string {
+  return `v${info.version}`;
+}
+
+/**
+ * Короткий commit или `null`. `commitShort` приходит из API; запасной
+ * вариант — старый сервер без поля.
+ */
+export function formatVersionCommit(info: AppVersionInfo): string | null {
+  return info.commitShort ?? info.commit?.slice(0, 7).toLowerCase() ?? null;
+}
+
 export function formatVersionLabel(info: AppVersionInfo): string {
-  const version = `v${info.version}`;
-  // commitShort приходит из API; запасной вариант — старый сервер без поля.
-  const short =
-    info.commitShort ?? info.commit?.slice(0, 7).toLowerCase() ?? null;
-  return short ? `${version} · ${short}` : version;
+  const commit = formatVersionCommit(info);
+  const version = formatVersionNumber(info);
+  return commit ? `${version} · ${commit}` : version;
 }

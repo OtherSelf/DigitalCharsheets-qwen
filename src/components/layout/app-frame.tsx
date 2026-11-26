@@ -26,6 +26,24 @@ const MAIN_CLASS = {
 export type AppFrameVariant = keyof typeof MAIN_CLASS;
 
 /**
+ * Отрицательные поля подвала: он живёт внутри `main` (страницы скроллят свой
+ * контейнер, поэтому футер не может быть отдельной полосой под ним), а
+ * `main` несёт горизонтальные отступы варианта. Без компенсации линия футера
+ * обрывалась на отступе, тогда как линия шапки идёт от края до края.
+ */
+const FOOTER_BLEED: Record<AppFrameVariant, string> = {
+  default: '-mx-3 sm:-mx-4 md:-mx-6 lg:-mx-8',
+  wide: '-mx-4 md:-mx-8',
+  compact: '-mx-4',
+  stats: '-mx-4 md:-mx-6 lg:-mx-8',
+  sheet: '-mx-4 md:-mx-6 lg:-mx-8',
+  centered: '',
+  plain: '-mx-4 md:-mx-6',
+  document: '-mx-4 md:-mx-8',
+  demo: '-mx-4',
+};
+
+/**
  * ─── LANDMARK: APP FRAME ────────────────────────────────────────────────────
  * Единый каркас страниц ядра: `h-dvh` + `Header` + `main` + `SiteFooter`.
  * Варианты (`wide`, `compact`, `centered`, `sheet`, `plain`, `document`,
@@ -59,7 +77,6 @@ export function AppFrame({
   const content = (
     <div className="mx-auto flex w-full max-w-[var(--content-max)] flex-1 flex-col [&>*]:w-full [&>*]:min-w-0">
       {children}
-      {footer && <SiteFooter />}
     </div>
   );
   const main = (
@@ -75,7 +92,25 @@ export function AppFrame({
           {footer && <SiteFooter />}
         </>
       ) : (
-        content
+        <>
+          {content}
+          {/*
+            Подвал — вне колонки контента: там он получал `w-full` колонки, и
+            отрицательные поля только сдвигали линию, не растягивая её до края.
+          */}
+          {footer && (
+            <div className="mt-auto shrink-0">
+              {/*
+                Отрицательные поля — на вложенном блоке, а не на самом
+                флекс-элементе: `[&>*]:w-full` у `main` задаёт ширину
+                элементу явно, и на нём поля только сдвигали бы линию.
+              */}
+              <div className={cn(FOOTER_BLEED[variant])}>
+                <SiteFooter />
+              </div>
+            </div>
+          )}
+        </>
       )}
     </main>
   );

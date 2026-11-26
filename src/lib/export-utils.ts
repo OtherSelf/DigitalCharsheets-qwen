@@ -41,7 +41,7 @@ export const DEFAULT_EXPORT_CONFIG: ExportConfig = {
  *
  *   {
  *     "metadata": {
- *       "appName": "DigitalCharsheets-qwen",
+ *       "appName": "Digital Character Sheets",
  *       "format": "dcs-export",
  *       "version": "3.0",              // версия ФОРМАТА, не приложения
  *       "kind": "character" | "backup",
@@ -60,7 +60,13 @@ export const DEFAULT_EXPORT_CONFIG: ExportConfig = {
  * лист, конверт v1 без format/kind) импорт намеренно не принимает — при
  * попытке будет понятная ошибка «переэкспортируйте файл».
  */
-export const EXPORT_APP_NAME = 'DigitalCharsheets-qwen';
+export const EXPORT_APP_NAME = 'Digital Character Sheets';
+/**
+ * Имена, которые писали прошлые версии приложения. Импорт обязан их
+ * принимать: иначе свежий билд отказался бы открывать бэкапы, сделанные до
+ * переименования, — а имя приложения не является частью версии формата.
+ */
+const LEGACY_EXPORT_APP_NAMES = ['DigitalCharsheets-qwen'];
 export const EXPORT_FORMAT = 'dcs-export';
 export const EXPORT_FORMAT_VERSION = '3.0';
 const EXPORT_FORMAT_MAJOR = 3;
@@ -333,7 +339,10 @@ export function parseExportPayload(
       error: `Неизвестный формат${metadata.format ? ` «${metadata.format}»` : ''}: поддерживается только ${EXPORT_FORMAT} v${EXPORT_FORMAT_MAJOR}.`,
     };
   }
-  if (metadata.appName !== EXPORT_APP_NAME) {
+  if (
+    metadata.appName !== EXPORT_APP_NAME &&
+    !LEGACY_EXPORT_APP_NAMES.includes(String(metadata.appName))
+  ) {
     return {
       ok: false,
       reason: 'foreign_app',

@@ -120,7 +120,7 @@ export const enTranslations = {
     'Next.js (App Router) and React with Tailwind CSS. Games are plugins with a manifest: the core knows no rules, it renders sheets and navigation through the plugin registry. Storage is the file system, without a database.',
   'about.privacyTitle': 'Your data',
   'about.privacyBody':
-    'Accounts, sheets, history and sessions live in the data directory of this server. Nothing is sent to third parties: no analytics, no external fonts at runtime, no trackers. A share link is read-only and can be revoked at any time.',
+    'Accounts, sheets, history and sessions live in the data directory of this server: no database, no third-party services, no analytics or trackers. A share link is read-only and can be revoked at any time. What exactly is stored, why, on what basis and for how long is described in the privacy policy.',
   'about.disclaimerTitle': 'Disclaimer',
   'about.disclaimerBody':
     'The project is unofficial and is not affiliated with the publishers of the game systems. Rules text and trademarks belong to their owners. The build ships no rulebook text: labels, numbers and short mechanical statements; example phrases are invented for the demo, and your own text stays in your sheet.',

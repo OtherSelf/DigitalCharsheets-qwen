@@ -75,6 +75,10 @@ export function AboutView() {
             >
               CHANGELOG
             </a>
+            <span aria-hidden>·</span>
+            <Link className="underline underline-offset-2" href="/privacy">
+              {t('footer.privacy')}
+            </Link>
           </CardContent>
         </Card>
 

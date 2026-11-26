@@ -8,6 +8,7 @@ import fs from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import * as XLSX from 'xlsx';
 
+import { generatedPlugins } from '@/games/registry.generated';
 import {
   buildBackupExport,
   buildCharacterExport,
@@ -118,6 +119,38 @@ describe('export format', () => {
       date,
     );
     expect(parsed.ok).toBe(false);
+  });
+
+  it('бэкап со старым именем приложения импортируется', () => {
+    // Имя приложения менялось, и бэкапы прошлых версий не должны из-за этого
+    // перестать открываться: appName не входит в версию формата.
+    // Редакция не важна: проверяется только конверт, поэтому берём первый
+    // зарегистрированный плагин вместо литерала игры.
+    const payload = buildBackupExport(
+      [makeCharacter(generatedPlugins[0].manifest.id, { id: 'a' })],
+      'petya',
+      date,
+    );
+    const legacy = JSON.parse(JSON.stringify(payload));
+    legacy.metadata.appName = 'DigitalCharsheets-qwen';
+
+    const parsed = parseExportPayload(legacy, date);
+    expect(parsed.ok).toBe(true);
+  });
+
+  it('файл чужого приложения отклоняется', () => {
+    const payload = buildBackupExport(
+      [makeCharacter(generatedPlugins[0].manifest.id, { id: 'a' })],
+      'petya',
+      date,
+    );
+    const foreign = JSON.parse(JSON.stringify(payload));
+    foreign.metadata.appName = 'SomeOtherApp';
+
+    const parsed = parseExportPayload(foreign, date);
+    expect(parsed.ok).toBe(false);
+    if (parsed.ok) return;
+    expect(parsed.reason).toBe('foreign_app');
   });
 
   it('round-trip: build → parse возвращает тот же набор', () => {

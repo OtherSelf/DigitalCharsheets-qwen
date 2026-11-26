@@ -4,7 +4,12 @@
 import Link from 'next/link';
 
 import { useTranslation } from '@/context/language-context';
-import { formatVersionLabel, useAppVersion } from '@/lib/use-app-version';
+import {
+  formatVersionCommit,
+  formatVersionLabel,
+  formatVersionNumber,
+  useAppVersion,
+} from '@/lib/use-app-version';
 
 /**
  * ─── LANDMARK: SITE_FOOTER ──────────────────────────────────────────────────
@@ -40,16 +45,24 @@ export function SiteFooter() {
       <footer
         data-testid="site-footer"
         aria-label={t('footer.label')}
-        className="text-muted-foreground border-t px-4 pt-3 pb-4 text-xs"
+        className="text-muted-foreground border-t px-4 pt-3 pb-4 text-[11px] sm:text-xs"
       >
-        <div className="mx-auto flex max-w-3xl flex-wrap items-center justify-center gap-x-3 gap-y-1 text-center">
+        <div className="mx-auto flex max-w-3xl flex-wrap items-center justify-center gap-x-1.5 gap-y-1 text-center sm:gap-x-3">
           {info && (
             <span
               className="font-mono text-[11px] tracking-tight tabular-nums"
               title={details}
               data-testid="site-footer-version"
             >
-              {formatVersionLabel(info)}
+              {formatVersionNumber(info)}
+              {/* На телефоне оставляем только номер: с хешем строка ссылок
+                  уезжает во вторую строку и «Конфиденциальность» теряется. */}
+              {formatVersionCommit(info) && (
+                <span className="hidden sm:inline">
+                  {' '}
+                  · {formatVersionCommit(info)}
+                </span>
+              )}
             </span>
           )}
           {info?.branch && (

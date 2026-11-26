@@ -10,7 +10,7 @@ import path from 'node:path';
 import { afterAll, describe, expect, it } from 'vitest';
 import * as XLSX from 'xlsx';
 
-import { exportCharacterToExcel } from '@/lib/export-utils';
+import { EXPORT_APP_NAME, exportCharacterToExcel } from '@/lib/export-utils';
 import { translations } from '@/lib/i18n';
 
 import { hasPlugin, makeCharacter } from '@tests/support';
@@ -79,7 +79,7 @@ describe('exportCharacterToExcel (xlsx)', () => {
       const rows = readRows(result.filename!);
 
       expect(String(rows[0][0])).toContain('DIGITAL CHARACTER SHEETS');
-      expect(row(rows, 'App')).toEqual(['App', 'DigitalCharsheets-qwen']);
+      expect(row(rows, 'App')).toEqual(['App', EXPORT_APP_NAME]);
       expect(row(rows, 'Format')).toEqual(['Format', 'dcs-export']);
       expect(row(rows, 'Format version')).toEqual(['Format version', '3.0']);
       expect(row(rows, 'Kind')).toEqual(['Kind', 'character']);
