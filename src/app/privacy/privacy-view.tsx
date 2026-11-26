@@ -6,12 +6,6 @@ import { AppFrame } from '@/components/layout/app-frame';
 import { NarrativeMarkdown } from '@/components/sheets/narrative-markdown';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useTranslation } from '@/context/language-context';
-import {
-  OPERATOR_CONTACT_EMAIL,
-  OPERATOR_REGISTRY_NUMBER,
-  PRIVACY_POLICY,
-  PRIVACY_VERSION,
-} from '@/lib/legal/privacy';
 
 /**
  * ─── LANDMARK: PRIVACY PAGE (/privacy) ─────────────────────────────────────
@@ -20,9 +14,20 @@ import {
  *
  * Заголовок и версия — до текста, а не внутри markdown: версия обязана
  * совпадать со строкой в `data/consents.jsonl`, поэтому её печатает страница
- * из той же константы, а не автор текста.
+ * из той же константы, а не автор текста. Текст и реквизиты приходят пропсами
+ * с сервера: конфиг инстанса в браузер не попадает.
  */
-export function PrivacyView() {
+export function PrivacyView({
+  version,
+  registryNumber,
+  contactEmail,
+  policy,
+}: {
+  version: string;
+  registryNumber: string;
+  contactEmail: string;
+  policy: Record<'en' | 'ru', string>;
+}) {
   const { language, t } = useTranslation();
 
   return (
@@ -34,13 +39,13 @@ export function PrivacyView() {
           </h1>
           <p className="text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
             <span data-testid="privacy-version">
-              {t('privacy.revision')}: {PRIVACY_VERSION}
+              {t('privacy.revision')}: {version}
             </span>
-            {OPERATOR_REGISTRY_NUMBER && (
+            {registryNumber && (
               <>
                 <span aria-hidden>·</span>
                 <span data-testid="privacy-registry">
-                  {t('privacy.registry')}: {OPERATOR_REGISTRY_NUMBER}
+                  {t('privacy.registry')}: {registryNumber}
                 </span>
               </>
             )}
@@ -48,10 +53,7 @@ export function PrivacyView() {
         </header>
 
         <article data-testid="privacy-policy">
-          <NarrativeMarkdown
-            variant="document"
-            value={PRIVACY_POLICY[language]}
-          />
+          <NarrativeMarkdown variant="document" value={policy[language]} />
         </article>
 
         <Card data-testid="privacy-contact">
@@ -65,9 +67,9 @@ export function PrivacyView() {
             <p>{t('privacy.contactBody')}</p>
             <a
               className="text-primary inline-flex min-h-8 items-center underline underline-offset-2"
-              href={`mailto:${OPERATOR_CONTACT_EMAIL}`}
+              href={`mailto:${contactEmail}`}
             >
-              {OPERATOR_CONTACT_EMAIL}
+              {contactEmail}
             </a>
           </CardContent>
         </Card>

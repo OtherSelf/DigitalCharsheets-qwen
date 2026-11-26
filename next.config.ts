@@ -2,6 +2,7 @@ import type { NextConfig } from 'next';
 
 import { createMDX } from 'fumadocs-mdx/next';
 
+import { loadInstanceConfig } from './src/lib/config';
 import { readGitCheckoutSync } from './src/lib/git-commit';
 import { buildContentSecurityPolicy } from './src/lib/security/csp';
 
@@ -64,16 +65,11 @@ const nextConfig: NextConfig = {
   deploymentId,
   /*
     Next 16 по умолчанию блокирует cross-origin обращения к dev-ресурсам
-    (/_next/hmr и т.п.). Дев-стенд открывается через nginx по
-    https://dcs-dev.thfree.space, поэтому его хост нужно явно разрешить —
-    иначе клиент не подключается к HMR и страницы не гидратируются.
+    (/_next/hmr и т.п.). Хосты стенда перечислены в `dcs.config.json`
+    (`dev.allowedOrigins`): у каждого инстанса свои, и правка конфига не
+    требует лезть в этот файл.
   */
-  allowedDevOrigins: [
-    'localhost',
-    '127.0.0.1',
-    'dcs-dev.thfree.space',
-    'dcs.thfree.space',
-  ],
+  allowedDevOrigins: loadInstanceConfig().dev.allowedOrigins,
   // `X-Powered-By: Next.js` сообщает стек без пользы для приложения.
   poweredByHeader: false,
   /*

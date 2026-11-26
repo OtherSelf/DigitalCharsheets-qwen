@@ -77,10 +77,53 @@ variant: the deploy path stays Linux with systemd.
 | `DCS_COOKIE_SECURE` | unset | `1` forces the `Secure` flag on the session cookie. It is already on by default in production; this variable is a compatible way to enable it in development. |
 | `DCS_COOKIE_INSECURE` | unset | `1` explicitly disables the `Secure` flag (local plain-HTTP development only). |
 | `DCS_ADMIN_USERNAME` | `admin` | Preferred login for the bootstrap administrator; `admin-2`, … if taken. |
+| `DCS_CONFIG_PATH` | `./dcs.config.json` | Path to the instance config file (see below). |
+| `DCS_CONFIG` | unset | JSON merged over the config file, e.g. `{"legal":{"privacy":{"enabled":false}}}`. Useful for containers where mounting a file is awkward. |
 | `UV_THREADPOOL_SIZE` | `4` (Node default) | libuv pool for async fs and scrypt. `8`–`16` measured better under load (`8` gave 71 rps on login-storm vs 66.8 at the default); set it in the service unit. |
 | `PORT` | `3000` | HTTP port. |
 
 See [data-storage.md](data-storage.md) for the directory layout.
+
+## Instance config
+
+`dcs.config.json` in the repository root holds what differs between instances:
+the public name, the legal texts switches and the operator's details, the
+hosting provider and the dev hosts that Next allows. A missing file means
+defaults, so a self-hosted instance works without one.
+
+```json
+{
+  "legal": {
+    "privacy": { "enabled": true },
+    "terms": { "enabled": false },
+    "operator": {
+      "name": "",
+      "postalAddress": "",
+      "contactEmail": "you@example.org",
+      "registryNumber": ""
+    },
+    "ageMinimum": 16
+  },
+  "hosting": { "provider": "", "country": "RU" },
+  "dev": { "allowedOrigins": ["localhost", "127.0.0.1", "dcs.example.org"] }
+}
+```
+
+Precedence: built-in defaults → the file → `DCS_CONFIG`. Values are validated
+on load; a broken file fails the start instead of silently replacing the
+operator's details with defaults. `allowedOrigins` is read by `next.config.ts`,
+so changing it needs a rebuild.
+
+`legal.privacy.enabled: false` hides `/privacy`, the consent checkbox and the
+consent gate. That is meant for a private instance with no outside users: any
+instance that collects accounts still processes personal data, so hiding the
+policy does not remove the obligation — see
+`docs/operator-kit/` when it lands and the tracker in the workspace.
+
+Runtime switches that an administrator flips on a live site (registration,
+sign-in for staff only, maintenance) live in `<data-dir>/site-settings.json`
+and are edited on `/admin`, not here: the config file is read once per process.
+
 
 ## Health checks
 

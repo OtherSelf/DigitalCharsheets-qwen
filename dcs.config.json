@@ -1,0 +1,33 @@
+{
+  "$comment": "Настройки поведения инстанса. Меняются правкой файла + перезапуском; отдельные ключи переопределяются переменной DCS_CONFIG (JSON поверх файла). Переключатели, которые меняются из админки без рестарта, лежат в data-dir (см. docs/deployment.md).",
+  "instance": {
+    "publicName": "Digital Character Sheets"
+  },
+  "legal": {
+    "privacy": {
+      "enabled": true
+    },
+    "terms": {
+      "enabled": false
+    },
+    "operator": {
+      "name": "",
+      "postalAddress": "",
+      "contactEmail": "ruslan@thfree.ru",
+      "registryNumber": ""
+    },
+    "ageMinimum": 16
+  },
+  "hosting": {
+    "provider": "",
+    "country": "RU"
+  },
+  "dev": {
+    "allowedOrigins": [
+      "localhost",
+      "127.0.0.1",
+      "dcs-dev.thfree.space",
+      "dcs.thfree.space"
+    ]
+  }
+}

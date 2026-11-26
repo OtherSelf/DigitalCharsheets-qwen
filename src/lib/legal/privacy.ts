@@ -4,9 +4,10 @@
  * форме регистрации, а также пишется в `data/consents.jsonl`: правка текста
  * обязана менять версию, иначе согласие нельзя сопоставить с редакцией.
  *
- * Реквизиты оператора живут константами, а не в тексте: их заполняет владелец,
- * а политика подставляет то, что задано. Пустая строка — «предоставляется по
- * запросу», чтобы страница не выглядела сломанной до решения владельца.
+ * Реквизиты оператора, контакт, возраст и включённость страницы берутся из
+ * `dcs.config.json` (`legal.*`, `hosting.*`) — у self-hosted инстанса они
+ * свои. Текст собирается функцией на сервере, а не константой модуля: иначе
+ * конфиг прочитался бы в клиентском бандле.
  *
  * Требования к содержанию: ст. 18.1 ч. 2 152-ФЗ (публикация политики и
  * сведений о защите), ст. 18.1 ч. 1 п. 2 (цели, категории данных и субъектов,
@@ -14,55 +15,83 @@
  */
 export const PRIVACY_VERSION = '2026-11-26';
 
-/** Номер записи в реестре операторов РКН. Пусто — строка не показывается. */
-export const OPERATOR_REGISTRY_NUMBER = '';
+/** Данные оператора и хостинга, подставляемые в текст. */
+export interface PolicyContext {
+  operatorName: string;
+  postalAddress: string;
+  contactEmail: string;
+  registryNumber: string;
+  hostingProvider: string;
+  hostingCountry: string;
+  ageMinimum: number;
+}
 
-/** ФИО оператора. Пусто — в тексте остаётся «предоставляется по запросу». */
-export const OPERATOR_NAME = '';
-
-/** Адрес для корреспонденции. Пусто — «предоставляется по запросу». */
-export const OPERATOR_POSTAL_ADDRESS = '';
-
-/** Контакт для обращений субъектов ПДн и жалоб. */
-export const OPERATOR_CONTACT_EMAIL = 'ruslan@thfree.ru';
-
-const operatorRu = OPERATOR_NAME
-  ? `Оператор инстанса — ${OPERATOR_NAME}, физическое лицо, применяющее налог на
+function operatorRu(ctx: PolicyContext): string {
+  return ctx.operatorName
+    ? `Оператор инстанса — ${ctx.operatorName}, физическое лицо, применяющее налог на
 профессиональный доход (самозанятый).`
-  : `Оператор инстанса — физическое лицо, применяющее налог на профессиональный
+    : `Оператор инстанса — физическое лицо, применяющее налог на профессиональный
 доход (самозанятый). ФИО и адрес для корреспонденции — по запросу на
-${OPERATOR_CONTACT_EMAIL}.`;
+${ctx.contactEmail}.`;
+}
 
-const operatorEn = OPERATOR_NAME
-  ? `The operator of this instance is ${OPERATOR_NAME}, an individual applying the
+function operatorEn(ctx: PolicyContext): string {
+  return ctx.operatorName
+    ? `The operator of this instance is ${ctx.operatorName}, an individual applying the
 Russian professional income tax (self-employed).`
-  : `The operator of this instance is an individual applying the Russian
+    : `The operator of this instance is an individual applying the Russian
 professional income tax (self-employed). The full name and postal address are
-available on request at ${OPERATOR_CONTACT_EMAIL}.`;
+available on request at ${ctx.contactEmail}.`;
+}
 
-const postalRu = OPERATOR_POSTAL_ADDRESS
-  ? `\n\nАдрес для корреспонденции: ${OPERATOR_POSTAL_ADDRESS}.`
-  : '';
+function postalRu(ctx: PolicyContext): string {
+  return ctx.postalAddress
+    ? `\n\nАдрес для корреспонденции: ${ctx.postalAddress}.`
+    : '';
+}
 
-const postalEn = OPERATOR_POSTAL_ADDRESS
-  ? `\n\nPostal address: ${OPERATOR_POSTAL_ADDRESS}.`
-  : '';
+function postalEn(ctx: PolicyContext): string {
+  return ctx.postalAddress ? `\n\nPostal address: ${ctx.postalAddress}.` : '';
+}
 
-const registryRu = OPERATOR_REGISTRY_NUMBER
-  ? `\n\nЗапись в реестре операторов персональных данных: ${OPERATOR_REGISTRY_NUMBER}.`
-  : '';
+function registryRu(ctx: PolicyContext): string {
+  return ctx.registryNumber
+    ? `\n\nЗапись в реестре операторов персональных данных: ${ctx.registryNumber}.`
+    : '';
+}
 
-const registryEn = OPERATOR_REGISTRY_NUMBER
-  ? `\n\nThe operator is entered in the Russian personal data operators register under ${OPERATOR_REGISTRY_NUMBER}.`
-  : '';
+function registryEn(ctx: PolicyContext): string {
+  return ctx.registryNumber
+    ? `\n\nThe operator is entered in the Russian personal data operators register under ${ctx.registryNumber}.`
+    : '';
+}
 
-const EN = `## Who we are
+function hostingRu(ctx: PolicyContext): string {
+  const where =
+    ctx.hostingCountry === 'RU' ? 'в России' : `в ${ctx.hostingCountry}`;
+  const provider = ctx.hostingProvider
+    ? `хостинг-провайдера ${ctx.hostingProvider}`
+    : 'хостинг-провайдера';
+  return `Сервер арендован у ${provider} (${where}).`;
+}
 
-${operatorEn} This is not a company: the instance is run by one person.
+function hostingEn(ctx: PolicyContext): string {
+  const where =
+    ctx.hostingCountry === 'RU' ? 'in Russia' : `in ${ctx.hostingCountry}`;
+  const provider = ctx.hostingProvider
+    ? `the hosting provider ${ctx.hostingProvider}`
+    : 'a hosting provider';
+  return `The server is rented from ${provider} (${where}).`;
+}
 
-Contact for anything about your data: ${OPERATOR_CONTACT_EMAIL}. We answer within
+function policyEn(ctx: PolicyContext): string {
+  return `## Who we are
+
+${operatorEn(ctx)} This is not a company: the instance is run by one person.
+
+Contact for anything about your data: ${ctx.contactEmail}. We answer within
 10 working days; the term may be extended by up to 5 working days with a notice
-to you.${postalEn}${registryEn}
+to you.${postalEn(ctx)}${registryEn(ctx)}
 
 ## In short
 
@@ -113,9 +142,9 @@ consequences by automated processing and we do not profile anyone.
 
 ## Who else can see it
 
-The server is rented from a hosting provider in Russia. The provider supplies
-infrastructure and therefore has technical access to the disk; access to the data
-itself is limited to the operator. There is no transfer abroad and no transfer to
+${hostingEn(ctx)} The provider supplies infrastructure and therefore has
+technical access to the disk; access to the data itself is limited to the
+operator. There is no transfer abroad and no transfer to
 other persons.
 
 ## How long we keep it
@@ -152,7 +181,7 @@ If you are in the EU, the GDPR additionally gives you the rights of access,
 rectification, erasure, restriction of processing, objection and data
 portability, and the right to complain to your national supervisory authority.
 
-A request is enough in free form to ${OPERATOR_CONTACT_EMAIL}: say what you want
+A request is enough in free form to ${ctx.contactEmail}: say what you want
 and, if possible, which account it concerns. If you cannot use e-mail, write to
 the postal address above.
 
@@ -178,7 +207,7 @@ separately, in a separate document, and will not bundle it with anything else.
 
 ## Age
 
-The service is intended for users aged 16 and over. We do not verify age with
+The service is intended for users aged ${ctx.ageMinimum} and over. We do not verify age with
 documents; if we learn that an account belongs to a younger child, we will delete
 it.
 
@@ -196,14 +225,16 @@ where the law requires it.
 The Russian and English versions describe the same processing. If they diverge,
 the Russian version prevails.
 `;
+}
 
-const RU = `## Кто мы
+function policyRu(ctx: PolicyContext): string {
+  return `## Кто мы
 
-${operatorRu} Это не компания: инстанс ведёт один человек.
+${operatorRu(ctx)} Это не компания: инстанс ведёт один человек.
 
-Связаться по любому вопросу о данных: ${OPERATOR_CONTACT_EMAIL}. Отвечаем в
+Связаться по любому вопросу о данных: ${ctx.contactEmail}. Отвечаем в
 течение 10 рабочих дней; срок может быть продлён не более чем на 5 рабочих дней
-с уведомлением.${postalRu}${registryRu}
+с уведомлением.${postalRu(ctx)}${registryRu(ctx)}
 
 ## Коротко
 
@@ -254,9 +285,8 @@ ${operatorRu} Это не компания: инстанс ведёт один �
 
 ## Кто ещё может их видеть
 
-Сервер арендован у хостинг-провайдера в России. Провайдер даёт инфраструктуру и
-поэтому технически имеет доступ к диску; доступ к самим данным есть только у
-оператора. За рубеж данные не передаются, другим лицам — тоже.
+${hostingRu(ctx)} Провайдер даёт инфраструктуру и поэтому технически имеет
+доступ к диску; доступ к самим данным есть только у оператора. За рубеж данные не передаются, другим лицам — тоже.
 
 ## Сколько храним
 
@@ -290,7 +320,7 @@ ${operatorRu} Это не компания: инстанс ведёт один �
 исправление, удаление, ограничение обработки, возражение и переносимость данных, а
 также жалоба в надзорный орган вашей страны.
 
-Достаточно письма в свободной форме на ${OPERATOR_CONTACT_EMAIL}: напишите, что
+Достаточно письма в свободной форме на ${ctx.contactEmail}: напишите, что
 нужно сделать и, если возможно, о каком аккаунте речь. Если нет доступа к
 электронной почте — пишите на почтовый адрес выше.
 
@@ -315,7 +345,7 @@ ${operatorRu} Это не компания: инстанс ведёт один �
 
 ## Возраст
 
-Сервис предназначен для пользователей 16 лет и старше. Документально возраст мы
+Сервис предназначен для пользователей ${ctx.ageMinimum} лет и старше. Документально возраст мы
 не проверяем; если узнаем, что аккаунтом пользуется ребёнок младше, — удалим его.
 
 ## Изменения
@@ -332,5 +362,11 @@ ${operatorRu} Это не компания: инстанс ведёт один �
 Русская и английская редакции описывают одну и ту же обработку. При расхождениях
 приоритет у русской редакции.
 `;
+}
 
-export const PRIVACY_POLICY: Record<'en' | 'ru', string> = { en: EN, ru: RU };
+export function buildPrivacyPolicy(
+  language: 'en' | 'ru',
+  ctx: PolicyContext,
+): string {
+  return language === 'ru' ? policyRu(ctx) : policyEn(ctx);
+}
