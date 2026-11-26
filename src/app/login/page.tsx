@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -35,6 +35,7 @@ import { downloadJSON } from '@/lib/download';
 import type { Language } from '@/lib/language';
 import { PRIVACY_VERSION } from '@/lib/legal/privacy';
 import { PENDING_CHARACTER_KEY } from '@/lib/pending-draft';
+import { safeInternalPath } from '@/lib/routes';
 import { MIN_PASSWORD_LENGTH } from '@/lib/security/password-policy';
 import { phrasePolicyError } from '@/lib/security/phrase-policy';
 
@@ -72,6 +73,10 @@ export default function LoginPage() {
   // Удаление без принятия политики — в два шага: кнопка превращается в
   // подтверждение, а не открывает модалку поверх юридического блока.
   const [deleteConfirm, setDeleteConfirm] = useState(false);
+  // Куда вернуть после входа: `?next=` из ссылки на лист. Читаем из
+  // `window.location`, а не через `useSearchParams`: страница пререндерится,
+  // и хук потребовал бы Suspense-обёртку ради одного параметра.
+  const [returnTo, setReturnTo] = useState<string | null>(null);
   const [preConsentBusy, setPreConsentBusy] = useState(false);
 
   // Восстановление доступа: шаг 1 — проверка фразы, шаг 2 — новые пароль и
@@ -85,6 +90,13 @@ export default function LoginPage() {
   const [newRecoveryPassword, setNewRecoveryPassword] = useState('');
   const [newRecoveryPhrase, setNewRecoveryPhrase] = useState('');
   const [notice, setNotice] = useState('');
+
+  useEffect(() => {
+    const raw = new URLSearchParams(window.location.search).get('next');
+    // Только свой путь: чужой адрес или `/login` превратились бы в редирект
+    // наружу либо в петлю.
+    setReturnTo(safeInternalPath(raw, '') || null);
+  }, []);
 
   const switchMode = (next: AuthMode) => {
     setMode(next);
@@ -118,6 +130,13 @@ export default function LoginPage() {
     */
     if (result.user?.language && result.user.language !== language) {
       setLanguage(result.user.language);
+    }
+
+    // Вернуться туда, откуда человека выкинуло: ссылку на лист он открывал
+    // осознанно, и главная вместо неё выглядит как потеря.
+    if (returnTo) {
+      router.push(returnTo);
+      return;
     }
 
     // Вход в существующий аккаунт: гостевой черновик персонажа НЕ создаётся
@@ -346,7 +365,9 @@ export default function LoginPage() {
         return;
       }
       // Фраза задана при регистрации — модалка setup_phrase не нужна.
-      router.push('/');
+      // Со ссылкой на чужой лист вернём туда: страница сама объяснит, что
+      // листа нет в этом аккаунте.
+      router.push(returnTo ?? '/');
     } else {
       setError(mapRegisterError(result));
       setIsLoading(false);

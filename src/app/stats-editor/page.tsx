@@ -30,6 +30,7 @@ import type {
 import { useAllGameUiSlots } from '@/hooks/use-game-ui-slots';
 import { useViewportFlags } from '@/hooks/use-viewport-flags';
 import { normalizeBulkValues } from '@/lib/bulk-editor-values';
+import { currentPathname, loginPath } from '@/lib/routes';
 import { type Character } from '@/lib/types';
 
 /**
@@ -390,7 +391,7 @@ export default function StatsEditorPage() {
   // первом рендере user ещё null. Без этой проверки прямой заход на
   // /stats-editor (закладка, F5) всегда выкидывал на /login.
   if (!isUserLoading && !user) {
-    router.push('/login');
+    router.push(loginPath(currentPathname()));
     return null;
   }
 

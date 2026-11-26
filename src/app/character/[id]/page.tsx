@@ -28,6 +28,7 @@ import {
 import { UnavailableState } from '@/components/unavailable-state';
 import { useCharacterContext } from '@/context/character-context';
 import { useTranslation } from '@/context/language-context';
+import { useLocalAuth } from '@/context/local-auth-context';
 import {
   getCharacterModule,
   resolveCharacterSystemId,
@@ -36,7 +37,12 @@ import {
 import type { SheetHandle } from '@/games/types';
 import { useCompactSectionScroll } from '@/hooks/use-compact-section-scroll';
 import { useGameUiSlots } from '@/hooks/use-game-ui-slots';
-import { characterPath, historyPath } from '@/lib/routes';
+import {
+  characterPath,
+  currentPathname,
+  historyPath,
+  loginPath,
+} from '@/lib/routes';
 
 export default function CharacterPage() {
   const params = useParams<{ id: string }>();
@@ -52,6 +58,7 @@ export default function CharacterPage() {
     flushSaves,
   } = useCharacterContext();
   const { t } = useTranslation();
+  const { user, isUserLoading } = useLocalAuth();
   const [activeCompactSection, setActiveCompactSection] =
     useState('info-section');
   // Счётчик запросов на прокрутку: повторный тап по уже выбранному пункту
@@ -163,7 +170,17 @@ export default function CharacterPage() {
     sectionScrollRequest,
   );
 
-  if (!isLoaded || hostThemeById === null) {
+  /*
+    Гость по прямой ссылке на лист: раньше он видел «Лист не найден» — и это
+    было враньём, лист существует, просто не ему. Уводим на вход и запоминаем
+    цель, чтобы после входа вернуться сюда (см. `?next=` в /login).
+  */
+  useEffect(() => {
+    if (isUserLoading || user) return;
+    router.replace(loginPath(currentPathname()));
+  }, [isUserLoading, user, router]);
+
+  if (isUserLoading || !user || !isLoaded || hostThemeById === null) {
     return <PageLoader />;
   }
 

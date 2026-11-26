@@ -28,7 +28,7 @@ import { Separator } from '@/components/ui/separator';
 import { useTranslation } from '@/context/language-context';
 import { useLocalAuth } from '@/context/local-auth-context';
 import { useUISettings } from '@/hooks/use-ui-settings';
-import { safeInternalPath } from '@/lib/routes';
+import { currentPathname, loginPath, safeInternalPath } from '@/lib/routes';
 import { MIN_PASSWORD_LENGTH } from '@/lib/security/password-policy';
 import { phrasePolicyError } from '@/lib/security/phrase-policy';
 
@@ -56,7 +56,7 @@ export default function ProfileSettingsPage() {
 
   useEffect(() => {
     if (!isUserLoading && !user) {
-      router.push('/login');
+      router.push(loginPath(currentPathname()));
     } else if (user) {
       setDisplayName(user.displayName || '');
       setUsername(user.username || '');

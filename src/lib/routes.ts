@@ -27,6 +27,23 @@ export function historyPath(characterId: string): string {
   return `${characterPath(characterId)}/history`;
 }
 
+/** Текущий путь вкладки (`pathname` + `search`) — для возврата после входа. */
+export function currentPathname(): string | null {
+  if (typeof window === 'undefined') return null;
+  return `${window.location.pathname}${window.location.search}`;
+}
+
+/**
+ * Вход с возвратом: `/login?next=<путь>`. Гость, открывший ссылку на лист,
+ * после входа попадает обратно на лист, а не на главную. Небезопасный или
+ * ведущий на сам `/login` путь отбрасывается — иначе получился бы цикл.
+ */
+export function loginPath(next?: string | null): string {
+  const target = safeInternalPath(next, '');
+  if (!target || target.startsWith('/login')) return '/login';
+  return `/login?next=${encodeURIComponent(target)}`;
+}
+
 /**
  * Безопасный внутренний путь для `?from=`: только один ведущий `/`, без
  * `//host` и обратных слэшей (браузер может нормализовать их в `/`).

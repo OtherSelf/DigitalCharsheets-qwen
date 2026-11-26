@@ -49,6 +49,7 @@ import type {
   AdminUsersStats,
   AdminUserSummary,
 } from '@/lib/admin-types';
+import { currentPathname, loginPath } from '@/lib/routes';
 
 /**
  * ─── LANDMARK: ADMIN PAGE (/admin) ─────────────────────────────────────────
@@ -101,7 +102,7 @@ export default function AdminPage() {
         const res = await fetch('/api/admin/users', { cache: 'no-store' });
 
         if (res.status === 401) {
-          router.replace('/login');
+          router.replace(loginPath(currentPathname()));
           return;
         }
         if (res.status === 403) {
@@ -133,7 +134,7 @@ export default function AdminPage() {
   useEffect(() => {
     if (isUserLoading) return;
     if (!user) {
-      router.replace('/login');
+      router.replace(loginPath(currentPathname()));
       return;
     }
     if (requestedRef.current) return;

@@ -29,6 +29,7 @@ import { useTranslation } from '@/context/language-context';
 import { useLocalAuth } from '@/context/local-auth-context';
 import { useToast } from '@/hooks/use-toast';
 import type { Language } from '@/lib/language';
+import { currentPathname, loginPath } from '@/lib/routes';
 
 /**
  * ─── LANDMARK: ARCHIVE PAGE (/archive) ──────────────────────────────────────
@@ -83,7 +84,7 @@ export default function ArchivePage() {
 
   useEffect(() => {
     if (!isUserLoading && !user) {
-      router.replace('/login');
+      router.replace(loginPath(currentPathname()));
     }
   }, [isUserLoading, user, router]);
 

@@ -22,7 +22,7 @@ import {
   resolvePendingUpdate,
   type DraftCharacter,
 } from '@/lib/pending-draft';
-import { characterPath } from '@/lib/routes';
+import { characterPath, currentPathname, loginPath } from '@/lib/routes';
 import {
   createSaveQueue,
   type SaveMeta,
@@ -550,7 +550,7 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
             }
             // Сессия истекла или отозвана — локальный профиль недействителен.
             logout();
-            router.push('/login');
+            router.push(loginPath(currentPathname()));
             return null;
           }
           return res.json();
@@ -699,7 +699,7 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
             PENDING_CHARACTER_KEY,
             JSON.stringify(characterData),
           );
-          router.push('/login');
+          router.push(loginPath(currentPathname()));
         }
         return undefined;
       }
@@ -740,7 +740,7 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
             PENDING_UPDATE_KEY,
             JSON.stringify({ id, data }),
           );
-          router.push('/login');
+          router.push(loginPath(currentPathname()));
         }
         return;
       }
