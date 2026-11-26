@@ -9,13 +9,29 @@ Plugin versions are separate from the app version. A release note lists them
 when they change; sheet `schemaVersion` only changes when the stored character
 format changes.
 
-## [Unreleased]
+## [0.25.0] - 2026-11-26
+
+The public instance gets a privacy policy and an explicit consent step.
 
 ### Added
 
+- `/privacy`: versioned privacy policy in RU and EN, linked from the footer.
+- Registration requires an explicit consent checkbox; the accepted policy
+  version is stored in `data/consents.jsonl` (uid, time, version, source).
 - `npm run legal:scan`: fails when a phrase from a private marker list appears
   in tracked files; the pre-deploy gate runs it when `DCS_LEGAL_MARKERS` is
   set and skips it otherwise.
+
+### Changed
+
+- `POST /api/auth/register` rejects a request without consent or with a stale
+  policy version (`consent_required`, `privacy_version_mismatch`).
+
+### Operator
+
+- `data/consents.jsonl` is append-only proof of consent; back it up with the
+  rest of `data/`. Deleting an account does not delete its consent record yet —
+  see `_NEW_PRIVACY_PROMPT.md` stage 2.
 
 ## [0.24.1] - 2026-11-26
 
