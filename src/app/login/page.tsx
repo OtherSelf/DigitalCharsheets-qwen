@@ -625,17 +625,19 @@ export default function LoginPage() {
                           data-testid="login-consent"
                         />
                         <label htmlFor="login-consent" className="leading-snug">
-                          {t('auth.consentLabel')}{' '}
-                          <Link
-                            className="underline underline-offset-2"
-                            href="/privacy"
-                            target="_blank"
-                            rel="noreferrer"
-                          >
-                            {t('auth.consentLink')}
-                          </Link>{' '}
-                          <span className="whitespace-nowrap">
-                            ({PRIVACY_VERSION})
+                          <span className="block">
+                            {t('auth.consentLabel')}{' '}
+                            <Link
+                              className="underline underline-offset-2"
+                              href="/privacy"
+                              target="_blank"
+                              rel="noreferrer"
+                            >
+                              {t('auth.consentLink')}
+                            </Link>
+                          </span>
+                          <span className="text-muted-foreground block text-xs">
+                            {t('privacy.revision')}: {PRIVACY_VERSION}
                           </span>
                         </label>
                       </div>
@@ -841,19 +843,21 @@ export default function LoginPage() {
                         htmlFor="register-consent"
                         className="leading-snug"
                       >
-                        {t('auth.consentLabel')}{' '}
-                        <Link
-                          className="underline underline-offset-2"
-                          href="/privacy"
-                          target="_blank"
-                          rel="noreferrer"
-                        >
-                          {t('auth.consentLink')}
-                        </Link>{' '}
-                        {/* Версия — одной строкой: перенос внутри даты читался
-                          как опечатка в юридическом тексте. */}
-                        <span className="whitespace-nowrap">
-                          ({PRIVACY_VERSION})
+                        <span className="block">
+                          {t('auth.consentLabel')}{' '}
+                          <Link
+                            className="underline underline-offset-2"
+                            href="/privacy"
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            {t('auth.consentLink')}
+                          </Link>
+                        </span>
+                        {/* Версия — отдельной строкой и мелким шрифтом: в одну
+                            строку она переносилась посреди даты. */}
+                        <span className="text-muted-foreground block text-xs">
+                          {t('privacy.revision')}: {PRIVACY_VERSION}
                         </span>
                       </label>
                     </div>

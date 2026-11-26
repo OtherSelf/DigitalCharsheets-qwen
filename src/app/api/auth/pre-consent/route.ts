@@ -4,7 +4,6 @@ import { jsonError } from '@/lib/api/respond';
 import { buildBackupExport, exportFileName } from '@/lib/export-utils';
 import { latestConsentVersion } from '@/lib/legal/consents';
 import { PRIVACY_VERSION } from '@/lib/legal/privacy';
-import { passwordPolicyError } from '@/lib/security/password';
 import { readAuthJson } from '@/lib/security/payload';
 import {
   getAuthRateLimiter,
@@ -115,12 +114,6 @@ export async function POST(request: Request) {
         `${sessionCookieName()}=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax`,
       );
       return response;
-    }
-
-    if (passwordPolicyError(password)) {
-      // Пароль нужен только для проверки личности; политика длины к нему не
-      // применяется, поэтому сюда попадать не должны. Оставляем фолбэк.
-      return jsonError(400, 'Invalid input.', 'invalid_input');
     }
 
     const characters = await getCharactersFromServer(auth.user.uid);
