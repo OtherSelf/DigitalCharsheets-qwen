@@ -129,7 +129,8 @@ how long.
   legitimate interest in protecting the service. Retention: no longer than 60
   minutes.
 - **Proof that you accepted this policy.** Account id, date, policy version.
-  Basis: art. 6(1)(7). Retention: while the account exists.
+  Basis: art. 6(1)(7). Retention: while the account exists, then the bare fact
+  for three years (see “How long we keep it”).
 - **Sessions.** Session cookie and session records. Basis: art. 6(1)(5).
   Retention: 14 days or until you sign out.
 
@@ -159,7 +160,9 @@ other persons.
 - IP address and login in the rate-limit window — up to 60 minutes;
 - IP address in the web server access logs — up to 14 days (diagnostics and
   protection against attacks);
-- the record that you accepted this policy — while the account exists.
+- the record that you accepted this policy — while the account exists. After
+  you delete the account only the fact remains (account id, date, version) for
+  three years, in case a dispute needs it; then it is deleted.
 
 When a retention period ends, the data is deleted from the server.
 
@@ -303,7 +306,7 @@ ${operatorRu(ctx)} Это не компания: инстанс ведёт од�
   интерес в защите сервиса. Срок: не дольше 60 минут.
 - **Доказательство того, что вы приняли эту политику.** Идентификатор аккаунта,
   дата и версия политики. Основание: п. 7 ч. 1 ст. 6. Срок: пока существует
-  аккаунт.
+  аккаунт, затем три года хранится только сам факт (см. «Сколько храним»).
 - **Сессии.** Cookie сессии и записи сессий. Основание: п. 5 ч. 1 ст. 6. Срок:
   14 дней или до выхода.
 
@@ -332,7 +335,9 @@ ${hostingRu(ctx)} Провайдер даёт инфраструктуру и п
 - сессии — 14 дней или до выхода;
 - IP-адрес и логин в окне ограничения — до 60 минут;
 - IP-адрес в журналах веб-сервера — до 14 дней (диагностика и защита от атак);
-- запись о том, что вы приняли политику, — пока существует аккаунт.
+- запись о том, что вы приняли политику, — пока существует аккаунт. После
+  удаления аккаунта остаётся только сам факт (идентификатор, дата, версия) на
+  три года — на случай спора; затем он удаляется.
 
 Когда срок заканчивается, данные удаляются с сервера.
 

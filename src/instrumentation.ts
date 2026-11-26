@@ -37,6 +37,13 @@ function scheduleTrashSweep(): void {
       .catch((error) => {
         console.error('[dcs] очистка корзины не удалась', error);
       });
+    // Тот же такт: строки журнала согласий удалённых аккаунтов живут три
+    // года, потом исчезают — без внешнего cron и без рестарта.
+    void import('./lib/legal/consents')
+      .then(({ pruneErasedConsents }) => pruneErasedConsents())
+      .catch((error) => {
+        console.error('[dcs] чистка журнала согласий не удалась', error);
+      });
   };
 
   const timer = setInterval(sweep, TRASH_SWEEP_INTERVAL_MS);

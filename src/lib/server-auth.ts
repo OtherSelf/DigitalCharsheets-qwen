@@ -5,6 +5,7 @@ import { getUserFile } from './data-dir';
 import { withDataLock } from './data-lock';
 import { defaultDisplayName, isUid, newUid, normalizeLogin } from './ids';
 import type { Language } from './language';
+import { markConsentsErased } from './legal/consents';
 import { LocalUser } from './local-storage';
 import {
   hashPassword,
@@ -875,6 +876,16 @@ export async function deleteUserAccount(
         await revokeSharesForUser(uid);
       } catch (e) {
         console.error('Failed to revoke credentials after deletion:', e);
+      }
+
+      // Журнал принятия редакций: оставляем только след «аккаунт удалён»
+      // (uid + дата + версия) на срок исковой давности, остальное — в
+      // суточную чистку. Стирать молча нельзя: именно эта строка доказывает,
+      // что редакция была доведена и принята, пока аккаунт жил.
+      try {
+        await markConsentsErased(uid);
+      } catch (e) {
+        console.error('Failed to record consent erasure:', e);
       }
     }
     return result;

@@ -4,6 +4,11 @@ import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { POST as registerRoute } from '@/app/api/auth/register/route';
+import {
+  latestConsentVersion,
+  markConsentsErased,
+  pruneErasedConsents,
+} from '@/lib/legal/consents';
 import { PRIVACY_VERSION } from '@/lib/legal/privacy';
 import { resetAuthRateLimits } from '@/lib/security/rate-limit';
 import { resetWriteSeqGuard } from '@/lib/server-storage';
@@ -80,5 +85,50 @@ describe('POST /api/auth/register: согласие', () => {
       source: 'register',
     });
     expect(JSON.parse(lines[0]).at).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+  });
+});
+
+describe('журнал согласий после удаления аккаунта', () => {
+  it('надгробие не считается принятием редакции', async () => {
+    const res = await registerRoute(
+      request({ ...base, consent: true, privacyVersion: PRIVACY_VERSION }),
+    );
+    const { user } = await res.json();
+
+    expect(await latestConsentVersion(user.uid)).toBe(PRIVACY_VERSION);
+    await markConsentsErased(user.uid);
+    expect(await latestConsentVersion(user.uid)).toBe(PRIVACY_VERSION);
+  });
+
+  it('аккаунт без принятий не оставляет пустого надгробия', async () => {
+    const file = path.join(dataDir, 'consents.jsonl');
+    fs.writeFileSync(file, '');
+    await markConsentsErased('00000000-0000-4000-8000-000000000000');
+    expect(fs.readFileSync(file, 'utf8')).toBe('');
+  });
+
+  it('через три года строки удалённого аккаунта исчезают', async () => {
+    const res = await registerRoute(
+      request({ ...base, consent: true, privacyVersion: PRIVACY_VERSION }),
+    );
+    const { user } = await res.json();
+    await markConsentsErased(user.uid);
+
+    const olderThanThreeYears = Date.now() + 4 * 365 * 24 * 60 * 60 * 1000;
+    const removed = await pruneErasedConsents(olderThanThreeYears);
+    expect(removed).toBeGreaterThanOrEqual(2);
+    expect(fs.readFileSync(path.join(dataDir, 'consents.jsonl'), 'utf8')).toBe(
+      '',
+    );
+  });
+
+  it('записи живого аккаунта чистка не трогает', async () => {
+    const res = await registerRoute(
+      request({ ...base, consent: true, privacyVersion: PRIVACY_VERSION }),
+    );
+    const { user } = await res.json();
+
+    await pruneErasedConsents(Date.now() + 10 * 365 * 24 * 60 * 60 * 1000);
+    expect(await latestConsentVersion(user.uid)).toBe(PRIVACY_VERSION);
   });
 });
