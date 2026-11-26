@@ -84,13 +84,23 @@ set. The server makes no outbound calls: your data is not sent anywhere.
 
 ## What data and why
 
-| Purpose | Data | Legal basis (152-FZ) | Retention |
-|---|---|---|---|
-| Account and sign-in | login, display name, password hash (scrypt), recovery phrase hash, TOTP secret and backup codes if you enable two-factor authentication | art. 6(1)(5) — performance of our agreement with you | until the account is deleted |
-| Your sheets | character sheets, notes, change history, guest links | art. 6(1)(5) | until the sheet or the account is deleted |
-| Protection from password guessing and overload | IP address and login in the rate-limit window for sign-in, registration and search | art. 6(1)(7) — our legitimate interest in protecting the service | no longer than 60 minutes |
-| Proof that you accepted this policy | account id, date, policy version | art. 6(1)(7) | while the account exists |
-| Sessions | session cookie and session records | art. 6(1)(5) | 14 days or until you sign out |
+Every entry below reads the same way: what we hold, why, on what basis and for
+how long.
+
+- **Account and sign-in.** Login, display name, password hash (scrypt), recovery
+  phrase hash, TOTP secret and backup codes if you enable two-factor
+  authentication. Basis: art. 6(1)(5), performance of our agreement with you.
+  Retention: until the account is deleted.
+- **Your sheets.** Character sheets, notes, change history, guest links. Basis:
+  art. 6(1)(5). Retention: until the sheet or the account is deleted.
+- **Protection from password guessing and overload.** IP address and login in the
+  rate-limit window of sign-in, registration and search. Basis: art. 6(1)(7), our
+  legitimate interest in protecting the service. Retention: no longer than 60
+  minutes.
+- **Proof that you accepted this policy.** Account id, date, policy version.
+  Basis: art. 6(1)(7). Retention: while the account exists.
+- **Sessions.** Session cookie and session records. Basis: art. 6(1)(5).
+  Retention: 14 days or until you sign out.
 
 ## How we process
 
@@ -215,13 +225,23 @@ ${operatorRu} Это не компания: инстанс ведёт один �
 
 ## Какие данные и зачем
 
-| Цель | Данные | Основание (152-ФЗ) | Срок |
-|---|---|---|---|
-| Аккаунт и вход | логин, отображаемое имя, хэш пароля (scrypt), хэш фразы восстановления, секрет двухфакторной аутентификации и резервные коды — если вы её включили | п. 5 ч. 1 ст. 6 — исполнение соглашения с вами | до удаления аккаунта |
-| Ваши листы | листы персонажей, заметки, история изменений, гостевые ссылки | п. 5 ч. 1 ст. 6 | до удаления листа или аккаунта |
-| Защита от подбора пароля и перегрузки | IP-адрес и логин в окне ограничения попыток входа, регистрации и поиска | п. 7 ч. 1 ст. 6 — законный интерес в защите сервиса | не дольше 60 минут |
-| Доказательство того, что вы приняли эту политику | идентификатор аккаунта, дата и версия политики | п. 7 ч. 1 ст. 6 | пока существует аккаунт |
-| Сессии | cookie сессии и записи сессий | п. 5 ч. 1 ст. 6 | 14 дней или до выхода |
+Каждый пункт читается одинаково: что храним, зачем, на каком основании и
+сколько.
+
+- **Аккаунт и вход.** Логин, отображаемое имя, хэш пароля (scrypt), хэш фразы
+  восстановления, секрет двухфакторной аутентификации и резервные коды — если вы
+  её включили. Основание: п. 5 ч. 1 ст. 6, исполнение соглашения с вами. Срок:
+  до удаления аккаунта.
+- **Ваши листы.** Листы персонажей, заметки, история изменений, гостевые ссылки.
+  Основание: п. 5 ч. 1 ст. 6. Срок: до удаления листа или аккаунта.
+- **Защита от подбора пароля и перегрузки.** IP-адрес и логин в окне ограничения
+  попыток входа, регистрации и поиска. Основание: п. 7 ч. 1 ст. 6, законный
+  интерес в защите сервиса. Срок: не дольше 60 минут.
+- **Доказательство того, что вы приняли эту политику.** Идентификатор аккаунта,
+  дата и версия политики. Основание: п. 7 ч. 1 ст. 6. Срок: пока существует
+  аккаунт.
+- **Сессии.** Cookie сессии и записи сессий. Основание: п. 5 ч. 1 ст. 6. Срок:
+  14 дней или до выхода.
 
 ## Как обрабатываем
 
