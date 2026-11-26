@@ -674,6 +674,30 @@ test.describe('адаптивность', () => {
   );
 
   test(
+    '/privacy: политика в каркасе приложения, без логина',
+    { tag: '@mobile' },
+    async ({ page, context }) => {
+      await prepare(context, { authenticated: false });
+      await openApp(page, '/privacy');
+
+      // Документ живёт в общем каркасе: без него со страницы политики нельзя
+      // ни сменить язык, ни вернуться в приложение, кроме как через браузер.
+      await expect(
+        page.getByRole('heading', { name: 'Privacy policy', level: 1 }),
+      ).toBeVisible();
+      await expect(page.getByTestId('privacy-version')).toContainText(
+        /^\w+: \d{4}-\d{2}-\d{2}$/,
+      );
+      await expect(page.getByTestId('privacy-policy')).toContainText(
+        'What data and why',
+      );
+      await expect(page.getByTestId('privacy-contact')).toBeVisible();
+      await expect(page.getByTestId('site-footer')).toBeVisible();
+      await expectNoHorizontalOverflow(page);
+    },
+  );
+
+  test(
     'футер ядра: версия, репозиторий, лицензия и /about',
     { tag: '@mobile' },
     async ({ page, context }) => {

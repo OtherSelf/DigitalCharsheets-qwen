@@ -39,6 +39,7 @@ const PAGES: {
   { name: 'dashboard', path: '/', account: 'worker' },
   { name: 'demo', path: '/demo', account: 'guest' },
   { name: 'login', path: '/login', account: 'guest' },
+  { name: 'privacy', path: '/privacy', account: 'guest' },
   { name: 'settings', path: '/settings', account: 'worker' },
   { name: 'admin', path: '/admin', account: 'admin' },
   { name: 'docs', path: '/docs', account: 'guest' },
