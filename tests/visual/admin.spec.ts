@@ -92,6 +92,26 @@ test.describe('admin', () => {
     },
   );
 
+  test('admin — режимы сайта: три тумблера и сохранение', async ({
+    page,
+    context,
+  }) => {
+    await prepare(context, { account: 'admin', language: 'en' });
+    await openApp(page, '/admin');
+
+    const card = page.getByTestId('admin-site-settings');
+    await card.scrollIntoViewIfNeeded();
+    await expect(card).toBeVisible();
+    // Тумблеры обязаны быть в состоянии «сайт открыт»: тестовый инстанс
+    // стартует с умолчаний, а не с чужого site-settings.json.
+    await expect(page.getByTestId('settings-registration')).toBeChecked();
+    await expect(
+      page.getByTestId('settings-login-restricted'),
+    ).not.toBeChecked();
+    await expect(page.getByTestId('settings-maintenance')).not.toBeChecked();
+    await expect(page.getByTestId('settings-save')).toBeDisabled();
+  });
+
   test('admin — список пользователей (en)', async ({ page, context }) => {
     await openAdminUsers(page, context, 'en');
 
