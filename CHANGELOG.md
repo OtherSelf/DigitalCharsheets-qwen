@@ -11,6 +11,47 @@ format changes.
 
 ## [Unreleased]
 
+## [0.26.1] - 2026-11-27
+
+The policy now has the terms of use it refers to, and "Export my data" works
+again on every account.
+
+### Added
+
+- Terms of use at `/terms`, in Russian and English: a public offer, free of
+  charge, as-is, with backups kept up to 30 days, content staying with its
+  author, prohibited material, suspension, changes and governing law. The page
+  uses the same frame as `/privacy`, is generated on the server from
+  `dcs.config.json`, and answers `404` when the instance switches it off.
+  Sign-in and registration accept both documents.
+- The consent journal records the terms revision next to the policy revision in
+  `<data-dir>/consents.jsonl` (`termsVersion`), and the tombstone written on
+  account deletion keeps both.
+- `dcs.config.json` ships with `legal.terms.enabled: true`; an instance without
+  a terms text reports `400 terms_version_mismatch` instead of accepting a
+  consent it cannot check.
+- Sign-in and registration show one checkbox for both documents and a line with
+  the current revisions ("Terms … · Policy …").
+- The footer links "Terms" as a separate legal group.
+
+### Changed
+
+- The policy describes hosting as it is: without a configured provider it says
+  the equipment is the operator's own, instead of claiming rented provider
+  hosting.
+- `POST /api/auth/register` takes `consent`, `privacyVersion` and `termsVersion`
+  when a policy or terms are enabled.
+
+### Fixed
+
+- "Export my data" on the consent screen answered `500` on 0.26.0: the route
+  called a client-only module from the server. The backup envelope now lives in
+  a module without `'use client'`, shared with the in-app export, so the format
+  stays one. Account deletion was not affected.
+- A failed export on the consent screen names the reason: the policy is already
+  accepted and the user only needs to sign in, or the server could not build
+  the archive while the data stays intact.
+
 ## [0.26.0] - 2026-11-26
 
 The policy becomes enforceable: an instance config, site modes, and consent that
