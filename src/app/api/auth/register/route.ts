@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 
 import { jsonError } from '@/lib/api/respond';
 import { getInstanceConfig } from '@/lib/config';
+import { requiredDocuments } from '@/lib/legal/consent-gate';
 import { appendConsent } from '@/lib/legal/consents';
 import { PRIVACY_VERSION } from '@/lib/legal/privacy';
 import { passwordPolicyError } from '@/lib/security/password';
@@ -48,6 +49,7 @@ export async function POST(request: Request) {
       recoveryPhrase,
       consent,
       privacyVersion,
+      termsVersion,
     } = parsedBody.body as {
       username?: string;
       password?: string;
@@ -55,6 +57,7 @@ export async function POST(request: Request) {
       recoveryPhrase?: string;
       consent?: boolean;
       privacyVersion?: string;
+      termsVersion?: string;
     };
 
     if (!username || !password) {
@@ -64,6 +67,7 @@ export async function POST(request: Request) {
     // Инстанс «для своих» может выключить политику: тогда и чекбокса нет, и
     // требовать нечего. По умолчанию политика включена.
     const privacyEnabled = getInstanceConfig().legal.privacy.enabled;
+    const required = requiredDocuments();
     if (privacyEnabled) {
       if (consent !== true) {
         return jsonError(
@@ -77,6 +81,13 @@ export async function POST(request: Request) {
           400,
           'The privacy policy has changed. Reload the page and try again.',
           'privacy_version_mismatch',
+        );
+      }
+      if (required.termsVersion && termsVersion !== required.termsVersion) {
+        return jsonError(
+          400,
+          'The terms of use have changed. Reload the page and try again.',
+          'terms_version_mismatch',
         );
       }
     }
@@ -128,6 +139,9 @@ export async function POST(request: Request) {
         await appendConsent({
           uid: result.user.uid,
           version: privacyVersion ?? PRIVACY_VERSION,
+          ...(required.termsVersion
+            ? { termsVersion: required.termsVersion }
+            : {}),
           source: 'register',
         });
       } catch (error) {

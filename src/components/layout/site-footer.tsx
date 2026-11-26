@@ -3,6 +3,7 @@
 
 import Link from 'next/link';
 
+import { useInstanceConfig } from '@/context/instance-config-context';
 import { useTranslation } from '@/context/language-context';
 import {
   formatVersionCommit,
@@ -30,6 +31,7 @@ const linkClass =
 
 export function SiteFooter() {
   const { t } = useTranslation();
+  const instance = useInstanceConfig();
   const info = useAppVersion();
 
   const details = info
@@ -86,12 +88,24 @@ export function SiteFooter() {
           >
             {t('footer.license')}
           </a>
-          <Link className={linkClass} href="/privacy">
-            {t('footer.privacy')}
-          </Link>
-          <Link className={linkClass} href="/about">
-            {t('footer.about')}
-          </Link>
+          {/*
+            Правовые ссылки — отдельной группой: с третьей ссылкой (Terms) одна
+            строка на телефоне перестаёт помещаться, и группа сама уходит на
+            вторую строку целиком, а не рвётся посередине.
+          */}
+          <span className="flex basis-full items-center justify-center gap-x-2 sm:basis-auto sm:gap-x-3">
+            <Link className={linkClass} href="/privacy">
+              {t('footer.privacy')}
+            </Link>
+            {instance.terms.enabled && (
+              <Link className={linkClass} href="/terms">
+                {t('footer.terms')}
+              </Link>
+            )}
+            <Link className={linkClass} href="/about">
+              {t('footer.about')}
+            </Link>
+          </span>
         </div>
       </footer>
     </div>

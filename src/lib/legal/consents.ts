@@ -22,8 +22,17 @@ export const ERASED_CONSENT_RETENTION_DAYS = 3 * 365;
 export interface ConsentRecord {
   uid: string;
   at: string;
+  /** Версия политики конфиденциальности. */
   version: string;
+  /** Версия пользовательского соглашения (если оно включено на инстансе). */
+  termsVersion?: string;
   source: ConsentSource;
+}
+
+/** Что именно принял аккаунт в последний раз. */
+export interface AcceptedDocuments {
+  policyVersion: string;
+  termsVersion: string | null;
 }
 
 function consentsFile(): string {
@@ -33,6 +42,7 @@ function consentsFile(): string {
 export async function appendConsent(record: {
   uid: string;
   version: string;
+  termsVersion?: string;
   source: ConsentSource;
 }): Promise<void> {
   const line = JSON.stringify({
@@ -49,9 +59,9 @@ export async function appendConsent(record: {
  * Версии — даты в формате ISO, поэтому сравнение строк совпадает со
  * сравнением по времени.
  */
-export async function latestConsentVersion(
+export async function latestConsent(
   uid: string,
-): Promise<string | null> {
+): Promise<AcceptedDocuments | null> {
   let raw: string;
   try {
     raw = await fs.readFile(consentsFile(), 'utf8');
@@ -59,22 +69,41 @@ export async function latestConsentVersion(
     return null;
   }
 
-  let latest: string | null = null;
+  let latest: AcceptedDocuments | null = null;
   for (const line of raw.split('\n')) {
     if (!line.trim()) continue;
+    let parsed: Partial<ConsentRecord>;
     try {
-      const parsed = JSON.parse(line) as Partial<ConsentRecord>;
-      if (parsed.uid !== uid || typeof parsed.version !== 'string') continue;
-      // Строка-надгробие говорит «аккаунта больше нет», а не «редакция
-      // принята»: она не должна закрывать гейт повторно.
-      if (parsed.source === 'erasure') continue;
-      if (!parsed.version) continue;
-      if (latest === null || parsed.version > latest) latest = parsed.version;
+      parsed = JSON.parse(line) as Partial<ConsentRecord>;
     } catch {
       // Битая строка не должна ронять вход: остальные записи остаются.
+      continue;
+    }
+    if (parsed.uid !== uid || typeof parsed.version !== 'string') continue;
+    // Строка-надгробие говорит «аккаунта больше нет», а не «редакция
+    // принята»: она не должна закрывать гейт повторно.
+    if (parsed.source === 'erasure') continue;
+    if (!parsed.version) continue;
+    const terms =
+      typeof parsed.termsVersion === 'string' && parsed.termsVersion
+        ? parsed.termsVersion
+        : null;
+    if (latest === null || parsed.version > latest.policyVersion) {
+      latest = { policyVersion: parsed.version, termsVersion: terms };
+    } else if (parsed.version === latest.policyVersion && terms) {
+      // Та же редакция политики могла приниматься до появления соглашения:
+      // версию соглашения берём из более полной записи.
+      latest.termsVersion = terms;
     }
   }
   return latest;
+}
+
+/** Последняя принятая редакция политики (без соглашения). */
+export async function latestConsentVersion(
+  uid: string,
+): Promise<string | null> {
+  return (await latestConsent(uid))?.policyVersion ?? null;
 }
 
 /**
@@ -88,9 +117,14 @@ export async function latestConsentVersion(
  * пишем: удалять нечего.
  */
 export async function markConsentsErased(uid: string): Promise<void> {
-  const version = await latestConsentVersion(uid);
-  if (!version) return;
-  await appendConsent({ uid, version, source: 'erasure' });
+  const accepted = await latestConsent(uid);
+  if (!accepted) return;
+  await appendConsent({
+    uid,
+    version: accepted.policyVersion,
+    ...(accepted.termsVersion ? { termsVersion: accepted.termsVersion } : {}),
+    source: 'erasure',
+  });
 }
 
 /**

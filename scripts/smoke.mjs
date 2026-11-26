@@ -31,6 +31,7 @@ import path from 'node:path';
 
 // ── разбор аргументов ───────────────────────────────────────────────────────
 const PRIVACY_VERSION = '2026-11-26';
+const TERMS_VERSION = '2026-11-26';
 
 const argv = process.argv.slice(2);
 const opts = {
@@ -702,6 +703,7 @@ await check(
         recoveryPhrase: 'amber cobalt lantern silver ember frost',
         consent: true,
         privacyVersion: PRIVACY_VERSION,
+        termsVersion: TERMS_VERSION,
       },
       auth: false,
     });
@@ -806,6 +808,7 @@ await check(
         password,
         consent: true,
         privacyVersion: PRIVACY_VERSION,
+        termsVersion: TERMS_VERSION,
       },
       auth: false,
     });
@@ -836,6 +839,7 @@ await check('POST /api/auth/register → 409 на занятый логин', as
       recoveryPhrase: 'zulu yankee xray whiskey victor uniform',
       consent: true,
       privacyVersion: PRIVACY_VERSION,
+      termsVersion: TERMS_VERSION,
     },
     auth: false,
   });
@@ -907,6 +911,7 @@ await check('POST /api/auth/register → 400 на пароль короче 12',
       recoveryPhrase: 'amber cobalt lantern silver ember frost',
       consent: true,
       privacyVersion: PRIVACY_VERSION,
+      termsVersion: TERMS_VERSION,
     },
     auth: false,
   });
@@ -1784,6 +1789,7 @@ await check('TOTP: setup/enable/вход/backup-код/disable', async () => {
       recoveryPhrase: 'alpha bravo charlie delta echo foxtrot',
       consent: true,
       privacyVersion: PRIVACY_VERSION,
+      termsVersion: TERMS_VERSION,
     },
     auth: false,
   });

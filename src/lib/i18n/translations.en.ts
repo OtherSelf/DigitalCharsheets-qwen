@@ -151,6 +151,10 @@ export const enTranslations = {
     'The server is being updated. Check back in a few minutes — data and accounts are safe.',
   'maintenance.contact': 'If this takes long, write to the operator.',
   'footer.privacy': 'Privacy',
+  'terms.title': 'Terms of use',
+  'terms.contactBody':
+    'Questions about these terms, content complaints and rights notices go to this address. We answer within 10 working days.',
+  'footer.terms': 'Terms',
   'privacy.title': 'Privacy policy',
   'privacy.revision': 'Revision',
   'privacy.registry': 'Registry entry',
@@ -449,6 +453,9 @@ export const enTranslations = {
     'That did not work. Check the password and try again.',
   'auth.consentLabel': 'I accept',
   'auth.consentLink': 'the privacy policy',
+  'auth.consentTermsLink': 'the terms of use',
+  'auth.consentJoin': 'and',
+  'auth.consentRevisions': 'Revisions: terms {terms} · policy {privacy}',
   'auth.consentRequired': 'Accept the privacy policy to create an account.',
   'auth.consentRequiredLogin': 'Accept the current privacy policy to sign in.',
   'auth.consentVersionMismatch':

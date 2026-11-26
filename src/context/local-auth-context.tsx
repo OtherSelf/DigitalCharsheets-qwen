@@ -113,14 +113,14 @@ interface LocalAuthContextType {
     totpCode?: string,
     /** Принятие политики: уходит только при повторной попытке после
      * `privacy_consent_required`, иначе поле просто отсутствует. */
-    privacy?: { consent: boolean; version: string },
+    privacy?: { consent: boolean; version: string; termsVersion?: string },
   ) => Promise<LoginResult>;
   register: (
     username: string,
     password: string,
     displayName: string,
     recoveryPhrase: string,
-    privacy: { consent: boolean; version: string },
+    privacy: { consent: boolean; version: string; termsVersion?: string },
   ) => Promise<LoginResult>;
   accountExists: (username: string) => Promise<AccountExistsResult>;
   /**
@@ -217,7 +217,7 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
       password: string,
       displayName?: string,
       totpCode?: string,
-      privacy?: { consent: boolean; version: string },
+      privacy?: { consent: boolean; version: string; termsVersion?: string },
     ): Promise<LoginResult> => {
       const auth = await postAuth(
         '/api/auth',
@@ -227,7 +227,11 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
           displayName,
           totpCode,
           ...(privacy
-            ? { consent: privacy.consent, privacyVersion: privacy.version }
+            ? {
+                consent: privacy.consent,
+                privacyVersion: privacy.version,
+                termsVersion: privacy.termsVersion,
+              }
             : {}),
         },
         'login',
@@ -255,7 +259,7 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
       password: string,
       displayName: string,
       recoveryPhrase: string,
-      privacy: { consent: boolean; version: string },
+      privacy: { consent: boolean; version: string; termsVersion?: string },
     ): Promise<LoginResult> => {
       const auth = await postAuth(
         '/api/auth/register',
@@ -266,6 +270,9 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
           recoveryPhrase,
           consent: privacy.consent,
           privacyVersion: privacy.version,
+          ...(privacy.termsVersion
+            ? { termsVersion: privacy.termsVersion }
+            : {}),
         },
         'registration',
       );

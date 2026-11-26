@@ -88,7 +88,7 @@ contract version in [`src/lib/openapi.ts`](../src/lib/openapi.ts)
 | Method | Path | Auth | Purpose |
 | --- | --- | --- | --- |
 | `POST` | `/api/auth` | — | Log in; unknown login and wrong password share one `401` (no account enumeration), blocked → 403, too many attempts → 429. Password length is not checked here. With TOTP enabled, send `totpCode` (6 digits or a backup code); without it the answer is `401 totp_required`, with a wrong one `401 totp_invalid`. |
-| `POST` | `/api/auth/register` | — | Create an account with a recovery phrase and sign in; password policy 12–128 characters, recovery phrase at least 6 words or 24 characters (max 256). |
+| `POST` | `/api/auth/register` | — | Create an account with a recovery phrase and sign in; password policy 12–128 characters, recovery phrase at least 6 words or 24 characters (max 256). With a privacy policy or terms of use enabled the body must also carry `consent`, `privacyVersion` and `termsVersion`. |
 | `POST` | `/api/auth/pre-consent` | — | Export (`action: "export"`) or delete (`action: "delete"`) an account that has not accepted the current policy version, using the password (and TOTP) without issuing a session. |
 | `POST` | `/api/auth/exists` | — | Check whether a login is taken (rate limited: 20 / 10 minutes per IP + login). |
 | `GET` | `/api/auth/session` | cookie | Current profile snapshot (role, block state, etc.). |

@@ -12,6 +12,7 @@ import {
   signInViaUI,
 } from '../../../../../tests/visual/helpers';
 import { PRIVACY_VERSION } from '../../../../lib/legal/privacy';
+import { TERMS_VERSION } from '../../../../lib/legal/terms';
 
 /**
  * Диалоги листа Dark Heresy 1e — собственные эталоны игры.
@@ -263,6 +264,7 @@ test.describe('журнал опыта DH1', { tag: '@plugin:dh1' }, () => {
           recoveryPhrase: 'amber cobalt lantern silver ember frost',
           consent: true,
           privacyVersion: PRIVACY_VERSION,
+          termsVersion: TERMS_VERSION,
         },
       });
       expect([200, 201], 'регистрация аккаунта').toContain(registered.status());
@@ -344,6 +346,7 @@ test.describe(
             recoveryPhrase: 'amber cobalt lantern silver ember frost',
             consent: true,
             privacyVersion: PRIVACY_VERSION,
+            termsVersion: TERMS_VERSION,
           },
         });
         expect([200, 201], 'регистрация аккаунта').toContain(

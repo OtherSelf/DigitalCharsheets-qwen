@@ -3,7 +3,8 @@ import { NextResponse } from 'next/server';
 import { jsonError } from '@/lib/api/respond';
 import { getInstanceConfig } from '@/lib/config';
 import { languageCookieHeader } from '@/lib/language';
-import { appendConsent, latestConsentVersion } from '@/lib/legal/consents';
+import { isConsentCurrent, requiredDocuments } from '@/lib/legal/consent-gate';
+import { appendConsent, latestConsent } from '@/lib/legal/consents';
 import { PRIVACY_VERSION } from '@/lib/legal/privacy';
 import { readAuthJson } from '@/lib/security/payload';
 import {
@@ -45,6 +46,7 @@ export async function POST(request: Request) {
       totpCode,
       consent,
       privacyVersion,
+      termsVersion,
     } = parsedBody.body as {
       username?: string;
       password?: string;
@@ -52,6 +54,7 @@ export async function POST(request: Request) {
       totpCode?: string;
       consent?: boolean;
       privacyVersion?: string;
+      termsVersion?: string;
     };
 
     if (!username || !password) {
@@ -140,14 +143,18 @@ export async function POST(request: Request) {
     // редакции сессию не выдаём. Аккаунты, созданные до появления лога
     // согласий, не имеют ни одной записи, поэтому проходят тот же путь.
     const privacyEnabled = getInstanceConfig().legal.privacy.enabled;
+    const required = requiredDocuments();
     const accepted = privacyEnabled
-      ? await latestConsentVersion(result.user.uid)
-      : PRIVACY_VERSION;
-    if (privacyEnabled && accepted !== PRIVACY_VERSION) {
+      ? await latestConsent(result.user.uid)
+      : {
+          policyVersion: required.policyVersion,
+          termsVersion: required.termsVersion,
+        };
+    if (privacyEnabled && !isConsentCurrent(accepted, required)) {
       if (consent !== true) {
         return jsonError(
           403,
-          'Accept the privacy policy to sign in.',
+          'Accept the privacy policy and the terms to sign in.',
           'privacy_consent_required',
         );
       }
@@ -158,10 +165,20 @@ export async function POST(request: Request) {
           'privacy_version_mismatch',
         );
       }
+      if (required.termsVersion && termsVersion !== required.termsVersion) {
+        return jsonError(
+          400,
+          'The terms of use have changed. Reload the page and try again.',
+          'terms_version_mismatch',
+        );
+      }
       try {
         await appendConsent({
           uid: result.user.uid,
           version: privacyVersion,
+          ...(required.termsVersion
+            ? { termsVersion: required.termsVersion }
+            : {}),
           source: 'login',
         });
       } catch (error) {

@@ -14,7 +14,7 @@ import { createContext, useContext, type ReactNode } from 'react';
  */
 export interface PublicInstanceConfig {
   privacy: { enabled: boolean; version: string };
-  terms: { enabled: boolean };
+  terms: { enabled: boolean; version: string };
   registration: { open: boolean };
   access: { loginRestrictedToStaff: boolean };
   ageMinimum: number;
@@ -22,7 +22,7 @@ export interface PublicInstanceConfig {
 
 const FALLBACK: PublicInstanceConfig = {
   privacy: { enabled: true, version: '' },
-  terms: { enabled: false },
+  terms: { enabled: false, version: '' },
   registration: { open: true },
   access: { loginRestrictedToStaff: false },
   ageMinimum: 16,

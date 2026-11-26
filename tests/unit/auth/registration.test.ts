@@ -12,6 +12,7 @@ import { POST as phraseRoute } from '@/app/api/auth/phrase/route';
 import { POST as registerRoute } from '@/app/api/auth/register/route';
 import { isUid } from '@/lib/ids';
 import { PRIVACY_VERSION } from '@/lib/legal/privacy';
+import { TERMS_VERSION } from '@/lib/legal/terms';
 import { verifyPassword } from '@/lib/security/password';
 import { isRecoveryPhraseHash } from '@/lib/security/phrase';
 import { isScryptHash } from '@/lib/security/scrypt';
@@ -128,6 +129,7 @@ describe('авторизация: регистрация и вход', () => {
         recoveryPhrase: 'amber cobalt',
         consent: true,
         privacyVersion: PRIVACY_VERSION,
+        termsVersion: TERMS_VERSION,
       }),
     );
     expect(shortOnRegister.status).toBe(400);

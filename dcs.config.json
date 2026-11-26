@@ -8,7 +8,7 @@
       "enabled": true
     },
     "terms": {
-      "enabled": false
+      "enabled": true
     },
     "operator": {
       "name": "",

@@ -294,7 +294,15 @@ export default function LoginPage() {
       password,
       undefined,
       totpCode.trim() || undefined,
-      consentNeeded ? { consent, version: PRIVACY_VERSION } : undefined,
+      consentNeeded
+        ? {
+            consent,
+            version: PRIVACY_VERSION,
+            termsVersion: instance.terms.enabled
+              ? instance.terms.version
+              : undefined,
+          }
+        : undefined,
     );
 
     if (result.success) {
@@ -351,7 +359,13 @@ export default function LoginPage() {
       password,
       displayName,
       recoveryPhrase,
-      { consent, version: PRIVACY_VERSION },
+      {
+        consent,
+        version: PRIVACY_VERSION,
+        termsVersion: instance.terms.enabled
+          ? instance.terms.version
+          : undefined,
+      },
     );
 
     if (result.success) {
@@ -627,6 +641,19 @@ export default function LoginPage() {
                         <label htmlFor="login-consent" className="leading-snug">
                           <span className="block">
                             {t('auth.consentLabel')}{' '}
+                            {instance.terms.enabled && (
+                              <>
+                                <Link
+                                  className="underline underline-offset-2"
+                                  href="/terms"
+                                  target="_blank"
+                                  rel="noreferrer"
+                                >
+                                  {t('auth.consentTermsLink')}
+                                </Link>{' '}
+                                {t('auth.consentJoin')}{' '}
+                              </>
+                            )}
                             <Link
                               className="underline underline-offset-2"
                               href="/privacy"
@@ -637,7 +664,12 @@ export default function LoginPage() {
                             </Link>
                           </span>
                           <span className="text-muted-foreground block text-xs">
-                            {t('privacy.revision')}: {PRIVACY_VERSION}
+                            {instance.terms.enabled
+                              ? t('auth.consentRevisions', {
+                                  terms: instance.terms.version,
+                                  privacy: PRIVACY_VERSION,
+                                })
+                              : `${t('privacy.revision')}: ${PRIVACY_VERSION}`}
                           </span>
                         </label>
                       </div>
@@ -845,6 +877,19 @@ export default function LoginPage() {
                       >
                         <span className="block">
                           {t('auth.consentLabel')}{' '}
+                          {instance.terms.enabled && (
+                            <>
+                              <Link
+                                className="underline underline-offset-2"
+                                href="/terms"
+                                target="_blank"
+                                rel="noreferrer"
+                              >
+                                {t('auth.consentTermsLink')}
+                              </Link>{' '}
+                              {t('auth.consentJoin')}{' '}
+                            </>
+                          )}
                           <Link
                             className="underline underline-offset-2"
                             href="/privacy"
@@ -854,10 +899,15 @@ export default function LoginPage() {
                             {t('auth.consentLink')}
                           </Link>
                         </span>
-                        {/* Версия — отдельной строкой и мелким шрифтом: в одну
-                            строку она переносилась посреди даты. */}
+                        {/* Редакции — отдельной строкой и мелким шрифтом: в одну
+                            строку дата переносилась посреди себя. */}
                         <span className="text-muted-foreground block text-xs">
-                          {t('privacy.revision')}: {PRIVACY_VERSION}
+                          {instance.terms.enabled
+                            ? t('auth.consentRevisions', {
+                                terms: instance.terms.version,
+                                privacy: PRIVACY_VERSION,
+                              })
+                            : `${t('privacy.revision')}: ${PRIVACY_VERSION}`}
                         </span>
                       </label>
                     </div>

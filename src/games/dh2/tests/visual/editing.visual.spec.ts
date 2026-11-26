@@ -8,6 +8,7 @@ import {
   startEditing,
 } from '../../../../../tests/visual/helpers';
 import { PRIVACY_VERSION } from '../../../../lib/legal/privacy';
+import { TERMS_VERSION } from '../../../../lib/legal/terms';
 
 /**
  * Режим редактирования Dark Heresy 2-й редакции: пустое creation-поле
@@ -43,6 +44,7 @@ test.describe(
             recoveryPhrase: 'amber cobalt lantern silver ember frost',
             consent: true,
             privacyVersion: PRIVACY_VERSION,
+            termsVersion: TERMS_VERSION,
           },
         });
         expect([200, 201], 'регистрация аккаунта').toContain(
@@ -124,6 +126,7 @@ test.describe('блок опыта', { tag: '@plugin:dh2' }, () => {
         recoveryPhrase: 'amber cobalt lantern silver ember frost',
         consent: true,
         privacyVersion: PRIVACY_VERSION,
+        termsVersion: TERMS_VERSION,
       },
     });
     expect([200, 201], 'регистрация аккаунта').toContain(registered.status());
@@ -203,6 +206,7 @@ test.describe('Безумие и Порча: плюс и минус', { tag: '@p
           recoveryPhrase: 'amber cobalt lantern silver ember frost',
           consent: true,
           privacyVersion: PRIVACY_VERSION,
+          termsVersion: TERMS_VERSION,
         },
       });
       expect([200, 201], 'регистрация аккаунта').toContain(registered.status());
@@ -270,6 +274,7 @@ test.describe('локации попаданий на мобильном', { tag
           recoveryPhrase: 'amber cobalt lantern silver ember frost',
           consent: true,
           privacyVersion: PRIVACY_VERSION,
+          termsVersion: TERMS_VERSION,
         },
       });
       expect([200, 201], 'регистрация аккаунта').toContain(registered.status());
@@ -313,6 +318,7 @@ test.describe(
             recoveryPhrase: 'amber cobalt lantern silver ember frost',
             consent: true,
             privacyVersion: PRIVACY_VERSION,
+            termsVersion: TERMS_VERSION,
           },
         });
         expect([200, 201], 'регистрация аккаунта').toContain(

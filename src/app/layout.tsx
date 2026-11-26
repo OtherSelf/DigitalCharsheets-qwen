@@ -23,6 +23,7 @@ import { getAppInfo } from '@/lib/app-info';
 import { getInstanceConfig } from '@/lib/config';
 import { LANGUAGE_COOKIE, resolveLanguage } from '@/lib/language';
 import { PRIVACY_VERSION } from '@/lib/legal/privacy';
+import { TERMS_VERSION } from '@/lib/legal/terms';
 import { readSiteSettingsCached } from '@/lib/site-settings';
 
 /*
@@ -97,7 +98,10 @@ export default async function RootLayout({
       enabled: instanceConfig.legal.privacy.enabled,
       version: PRIVACY_VERSION,
     },
-    terms: { enabled: instanceConfig.legal.terms.enabled },
+    terms: {
+      enabled: instanceConfig.legal.terms.enabled,
+      version: TERMS_VERSION,
+    },
     registration: { open: siteSettings.registration.open },
     access: {
       loginRestrictedToStaff: siteSettings.access.loginRestrictedToStaff,

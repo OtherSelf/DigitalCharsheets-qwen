@@ -10,6 +10,7 @@ import { expect } from 'vitest';
 import { POST as registerRoute } from '@/app/api/auth/register/route';
 import { POST as loginRoute } from '@/app/api/auth/route';
 import { PRIVACY_VERSION } from '@/lib/legal/privacy';
+import { TERMS_VERSION } from '@/lib/legal/terms';
 
 import { json } from './http';
 
@@ -30,6 +31,7 @@ export async function registerAs(
       recoveryPhrase,
       consent: true,
       privacyVersion: PRIVACY_VERSION,
+      termsVersion: TERMS_VERSION,
     }),
   );
   const body = await res.json();

@@ -151,6 +151,10 @@ export const ruTranslations = {
     'Сервер обновляется. Загляните через несколько минут — данные и аккаунты на месте.',
   'maintenance.contact': 'Если это надолго — напишите оператору.',
   'footer.privacy': 'Конфиденциальность',
+  'terms.title': 'Пользовательское соглашение',
+  'terms.contactBody':
+    'Вопросы по соглашению, жалобы на контент и обращения о нарушении прав — на этот адрес. Отвечаем в течение 10 рабочих дней.',
+  'footer.terms': 'Соглашение',
   'privacy.title': 'Политика конфиденциальности',
   'privacy.revision': 'Редакция',
   'privacy.registry': 'Запись в реестре',
@@ -450,6 +454,9 @@ export const ruTranslations = {
     'Не получилось. Проверьте пароль и попробуйте снова.',
   'auth.consentLabel': 'Принимаю',
   'auth.consentLink': 'политику конфиденциальности',
+  'auth.consentTermsLink': 'пользовательское соглашение',
+  'auth.consentJoin': 'и',
+  'auth.consentRevisions': 'Редакции: соглашение {terms} · политика {privacy}',
   'auth.consentRequired':
     'Примите политику конфиденциальности, чтобы создать аккаунт.',
   'auth.consentRequiredLogin':

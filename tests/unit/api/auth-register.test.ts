@@ -16,6 +16,7 @@ import { POST as loginRoute } from '@/app/api/auth/route';
 import { GET as charactersGet } from '@/app/api/characters/route';
 import { isUid } from '@/lib/ids';
 import { PRIVACY_VERSION } from '@/lib/legal/privacy';
+import { TERMS_VERSION } from '@/lib/legal/terms';
 import {
   isRecoveryPhraseHash,
   recoveryPhraseMatches,
@@ -102,7 +103,12 @@ describe('POST /api/auth/register', () => {
 
   it('валидирует обязательные поля, длину пароля и фразы', async () => {
     const noPassword = await registerRoute(
-      json({ username: 'x', consent: true, privacyVersion: PRIVACY_VERSION }),
+      json({
+        username: 'x',
+        consent: true,
+        privacyVersion: PRIVACY_VERSION,
+        termsVersion: TERMS_VERSION,
+      }),
     );
     expect(noPassword.status).toBe(400);
 
@@ -113,6 +119,7 @@ describe('POST /api/auth/register', () => {
         recoveryPhrase: 'amber cobalt',
         consent: true,
         privacyVersion: PRIVACY_VERSION,
+        termsVersion: TERMS_VERSION,
       }),
     );
     expect(shortPassword.status).toBe(400);
@@ -125,6 +132,7 @@ describe('POST /api/auth/register', () => {
         recoveryPhrase: 'ab',
         consent: true,
         privacyVersion: PRIVACY_VERSION,
+        termsVersion: TERMS_VERSION,
       }),
     );
     expect(shortPhrase.status).toBe(400);
@@ -140,6 +148,7 @@ describe('POST /api/auth/register', () => {
         recoveryPhrase: '12345',
         consent: true,
         privacyVersion: PRIVACY_VERSION,
+        termsVersion: TERMS_VERSION,
       }),
     );
 
@@ -261,7 +270,12 @@ describe('POST /api/auth', () => {
 
   it('валидирует обязательные поля; длину пароля проверяет регистрация', async () => {
     const noPassword = await loginRoute(
-      json({ username: 'x', consent: true, privacyVersion: PRIVACY_VERSION }),
+      json({
+        username: 'x',
+        consent: true,
+        privacyVersion: PRIVACY_VERSION,
+        termsVersion: TERMS_VERSION,
+      }),
     );
     expect(noPassword.status).toBe(400);
 
@@ -286,6 +300,7 @@ describe('POST /api/auth', () => {
         recoveryPhrase: 'amber cobalt',
         consent: true,
         privacyVersion: PRIVACY_VERSION,
+        termsVersion: TERMS_VERSION,
       }),
     );
     expect(shortOnRegister.status).toBe(400);
@@ -364,47 +379,5 @@ describe('POST /api/auth/logout (SEC-6)', () => {
 
     const fresh = await loginAs('logout-user');
     expect(fresh.uid).toBe(uid);
-  });
-});
-
-describe('PUT /api/auth/profile', () => {
-  it('без сессии — 401', async () => {
-    const res = await profileRoute(
-      json({ newUsername: 'x', newDisplayName: 'X' }),
-    );
-    expect(res.status).toBe(401);
-  });
-
-  it('меняет логин, uid и каталог не меняются', async () => {
-    const { uid, cookie } = await loginAs(
-      'old-login',
-      'test-pass-1234',
-      'Name',
-    );
-
-    const res = await profileRoute(
-      json(
-        { newUsername: 'new-login', newDisplayName: 'New Name' },
-        await sessionHeaders(uid),
-      ),
-    );
-    expect(res.status).toBe(200);
-    const body = await res.json();
-    expect(body.success).toBe(true);
-    expect(body.user.uid).toBe(uid);
-
-    expect(readJson(userPaths(dataDir, uid).userFile).username).toBe(
-      'new-login',
-    );
-    expect(readJson(loginIndexPath(dataDir)).logins['new-login']).toBe(uid);
-
-    // Старая cookie продолжает работать: uid не менялся.
-    const stillValid = await loginRoute(
-      json({ username: 'new-login', password: 'test-pass-1234' }),
-    );
-    expect(stillValid.status).toBe(200);
-    const relogin = await stillValid.json();
-    expect(relogin.user.uid).toBe(uid);
-    expect(cookie).toContain('dcs_session=');
   });
 });

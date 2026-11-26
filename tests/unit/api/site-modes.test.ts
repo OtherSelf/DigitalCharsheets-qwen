@@ -10,6 +10,7 @@ import {
 import { POST as registerRoute } from '@/app/api/auth/register/route';
 import { POST as loginRoute } from '@/app/api/auth/route';
 import { PRIVACY_VERSION } from '@/lib/legal/privacy';
+import { TERMS_VERSION } from '@/lib/legal/terms';
 import { resetAuthRateLimits } from '@/lib/security/rate-limit';
 import { resetWriteSeqGuard } from '@/lib/server-storage';
 import {
@@ -45,6 +46,7 @@ const registration = (username: string) =>
     recoveryPhrase: 'amber cobalt lantern silver ember frost',
     consent: true,
     privacyVersion: PRIVACY_VERSION,
+    termsVersion: TERMS_VERSION,
   });
 
 const login = (username: string) => json({ username, password: TEST_PASSWORD });

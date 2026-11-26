@@ -346,6 +346,11 @@ export const openApiDocument = {
             description:
               'Version being accepted, compared with the server constant. A stale version answers `400 privacy_version_mismatch`.',
           },
+          termsVersion: {
+            type: 'string',
+            description:
+              'Version of the terms of use being accepted, when the instance has them enabled. A stale or missing version answers `400 terms_version_mismatch`.',
+          },
         },
         additionalProperties: false,
       },

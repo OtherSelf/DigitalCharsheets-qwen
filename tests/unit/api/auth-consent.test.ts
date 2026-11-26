@@ -10,6 +10,7 @@ import {
   pruneErasedConsents,
 } from '@/lib/legal/consents';
 import { PRIVACY_VERSION } from '@/lib/legal/privacy';
+import { TERMS_VERSION } from '@/lib/legal/terms';
 import { resetAuthRateLimits } from '@/lib/security/rate-limit';
 import { resetWriteSeqGuard } from '@/lib/server-storage';
 
@@ -68,7 +69,12 @@ describe('POST /api/auth/register: согласие', () => {
 
   it('согласие пишется в consents.jsonl', async () => {
     const res = await registerRoute(
-      request({ ...base, consent: true, privacyVersion: PRIVACY_VERSION }),
+      request({
+        ...base,
+        consent: true,
+        privacyVersion: PRIVACY_VERSION,
+        termsVersion: TERMS_VERSION,
+      }),
     );
     const body = await res.json();
     expect(res.status).toBe(200);
@@ -91,7 +97,12 @@ describe('POST /api/auth/register: согласие', () => {
 describe('журнал согласий после удаления аккаунта', () => {
   it('надгробие не считается принятием редакции', async () => {
     const res = await registerRoute(
-      request({ ...base, consent: true, privacyVersion: PRIVACY_VERSION }),
+      request({
+        ...base,
+        consent: true,
+        privacyVersion: PRIVACY_VERSION,
+        termsVersion: TERMS_VERSION,
+      }),
     );
     const { user } = await res.json();
 
@@ -109,7 +120,12 @@ describe('журнал согласий после удаления аккаун
 
   it('через три года строки удалённого аккаунта исчезают', async () => {
     const res = await registerRoute(
-      request({ ...base, consent: true, privacyVersion: PRIVACY_VERSION }),
+      request({
+        ...base,
+        consent: true,
+        privacyVersion: PRIVACY_VERSION,
+        termsVersion: TERMS_VERSION,
+      }),
     );
     const { user } = await res.json();
     await markConsentsErased(user.uid);
@@ -124,7 +140,12 @@ describe('журнал согласий после удаления аккаун
 
   it('записи живого аккаунта чистка не трогает', async () => {
     const res = await registerRoute(
-      request({ ...base, consent: true, privacyVersion: PRIVACY_VERSION }),
+      request({
+        ...base,
+        consent: true,
+        privacyVersion: PRIVACY_VERSION,
+        termsVersion: TERMS_VERSION,
+      }),
     );
     const { user } = await res.json();
 

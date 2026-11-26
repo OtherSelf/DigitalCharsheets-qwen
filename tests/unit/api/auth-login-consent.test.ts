@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { POST as registerRoute } from '@/app/api/auth/register/route';
 import { POST as loginRoute } from '@/app/api/auth/route';
 import { PRIVACY_VERSION } from '@/lib/legal/privacy';
+import { TERMS_VERSION } from '@/lib/legal/terms';
 import { resetAuthRateLimits } from '@/lib/security/rate-limit';
 import { resetWriteSeqGuard } from '@/lib/server-storage';
 
@@ -34,7 +35,12 @@ const base = {
 
 const register = () =>
   registerRoute(
-    json({ ...base, consent: true, privacyVersion: PRIVACY_VERSION }),
+    json({
+      ...base,
+      consent: true,
+      privacyVersion: PRIVACY_VERSION,
+      termsVersion: TERMS_VERSION,
+    }),
   );
 
 const login = (body: Record<string, unknown>) =>
@@ -89,7 +95,11 @@ describe('POST /api/auth: политика для существующих ак�
   });
 
   it('принятие в запросе входа пишет журнал и выдаёт сессию', async () => {
-    const res = await login({ consent: true, privacyVersion: PRIVACY_VERSION });
+    const res = await login({
+      consent: true,
+      privacyVersion: PRIVACY_VERSION,
+      termsVersion: TERMS_VERSION,
+    });
     const body = await res.json();
 
     expect(res.status).toBe(200);
@@ -133,6 +143,7 @@ describe('POST /api/auth: политика для существующих ак�
     const accepted = await login({
       consent: true,
       privacyVersion: PRIVACY_VERSION,
+      termsVersion: TERMS_VERSION,
     });
     expect(accepted.status).toBe(200);
   });

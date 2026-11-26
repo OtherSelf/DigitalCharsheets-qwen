@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server';
 
 import { jsonError } from '@/lib/api/respond';
 import { buildBackupExport, exportFileName } from '@/lib/export-utils';
-import { latestConsentVersion } from '@/lib/legal/consents';
+import { isConsentCurrent } from '@/lib/legal/consent-gate';
+import { latestConsent } from '@/lib/legal/consents';
 import { PRIVACY_VERSION } from '@/lib/legal/privacy';
 import { readAuthJson } from '@/lib/security/payload';
 import {
@@ -83,8 +84,8 @@ export async function POST(request: Request) {
 
     // Сессии нет, поэтому состояние согласия проверяем здесь: у аккаунта с
     // принятой редакцией этот путь не нужен и не должен расширять поверхность.
-    const accepted = await latestConsentVersion(auth.user.uid);
-    if (accepted === PRIVACY_VERSION) {
+    const accepted = await latestConsent(auth.user.uid);
+    if (isConsentCurrent(accepted)) {
       return jsonError(
         409,
         'The policy is already accepted.',
