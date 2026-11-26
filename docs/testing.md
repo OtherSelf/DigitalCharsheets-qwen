@@ -293,8 +293,10 @@ theme × language × mode × viewport cross-product:
 - Themes are sampled: dark dashboard (en/ru), dark/warm sheet tops on desktop,
   one mobile dark sheet and one mobile warm sheet; the switcher itself covers
   Light / Dark / Light (Warm).
-- Edit mode is full on desktop EN and sampled on mobile; compact/tablet views
-  stay in their own specs.
+- Edit mode is full on desktop EN and sampled on mobile; the dense (compact)
+  and tablet views stay in their own specs. The dense view is asserted, not only
+  photographed: the tablet scenarios check that the rail is absent, the grid
+  keeps its tablet columns and the pinned phone bands are not rendered.
 - `/` and `/demo`, `/new` and `/new/manual` are checked by assertions but
   share one baseline pair instead of duplicating identical PNGs.
 - Tests that only make sense in one project are tagged `@desktop`/`@mobile`;
@@ -348,6 +350,17 @@ bash scripts/visual.sh --base-url http://127.0.0.1:3000
   that range belong to the plugin (`src/games/<id>/sheet.module.css`); a
   `.dh-sheet`-style selector in `globals.css` is a core-knows-games violation
   caught by `npm run plugins:purity`.
+- One column and the phone presentation are separate flags. `isPhoneView`
+  decides *what* is rendered (rail, one section, pinned bands); `isCompactView`
+  collapses the sheet into one column of full-width panels and leaves type,
+  paddings and tables alone. The header toggle therefore never hides a section
+  and never draws the rail on tablet or desktop; on the dashboard the same
+  preference only tightens the card grid (`16rem` minimum instead of `18rem`),
+  it does not collapse it to one column.
+  `prepare(context, { viewMode: 'compact' })` seeds that preference in
+  `localStorage` (`sheet-view-compact`) for screenshots of the compact sheet.
+  The preference survives a reload and is reset by the same toggle, so a
+  scenario that toggles must not assume a clean default afterwards.
 - Mobile baselines live in two projects: `mobile` (host screens) and
   `mobile-games` (plugin sheets). A screenshot taken in one width is never
   compared in another, so a sheet scenario at 412 px belongs to `mobile-games`

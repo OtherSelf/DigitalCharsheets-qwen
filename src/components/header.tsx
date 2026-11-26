@@ -117,6 +117,7 @@ export function Header({
 }: HeaderProps) {
   const {
     isCompactView,
+    isPhoneView,
     isSmallScreen,
     toggleCompactView,
     getCharacter,
@@ -272,13 +273,13 @@ export function Header({
                 />
                 <div className="flex min-w-0 flex-col gap-0">
                   <h2
-                    className={`font-headline truncate font-bold tracking-tight ${isCompactView ? 'text-sm md:text-base lg:text-lg' : 'text-lg xl:text-xl'}`}
+                    className={`font-headline truncate font-bold tracking-tight ${isPhoneView ? 'text-sm md:text-base lg:text-lg' : 'text-lg xl:text-xl'}`}
                     title={displayCharacter.name}
                   >
                     {displayCharacter.name}
                   </h2>
                   <p
-                    className={`text-muted-foreground truncate ${isCompactView ? 'text-[10px] md:text-xs' : 'text-xs xl:text-sm'}`}
+                    className={`text-muted-foreground truncate ${isPhoneView ? 'text-[10px] md:text-xs' : 'text-xs xl:text-sm'}`}
                   >
                     {characterSubtitle}
                   </p>
@@ -308,6 +309,7 @@ export function Header({
               <HeaderActions
                 character={displayCharacter}
                 isCompactView={isCompactView}
+                isPhoneView={isPhoneView}
               />
             )}
           </div>

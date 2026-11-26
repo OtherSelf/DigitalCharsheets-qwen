@@ -194,7 +194,7 @@ test.describe(
  */
 test.describe('лист Dark Heresy 1e — планшет', { tag: '@plugin:dh1' }, () => {
   test(
-    'tablet 1024x768: верх листа и компактный вид (en)',
+    'tablet 1024x768: верх листа и компактный вид в одну колонку (en)',
     { tag: '@tablet' },
     async ({ page, context }) => {
       await page.setViewportSize({ width: 1024, height: 768 });
@@ -211,25 +211,34 @@ test.describe('лист Dark Heresy 1e — планшет', { tag: '@plugin:dh1'
         .getByTestId('app-header')
         .getByRole('button', { name: 'Switch to Compact View', exact: true })
         .click();
-      await expect(page.getByRole('navigation')).toBeVisible();
       await expect(page.locator('.dh-sheet.is-compact')).toHaveCount(1);
-      await page
-        .getByRole('navigation')
-        .getByRole('button', { name: 'Inventory', exact: true })
-        .click();
+      // Компакт на планшете — одна колонка без рейла: секции не прячутся,
+      // закреплённой полосы нет, шрифт остаётся обычным.
+      await expect(page.getByRole('navigation')).toHaveCount(0);
+      await expect(page.getByTestId('characteristics-compact')).toHaveCount(0);
+      const columns = await page
+        .locator('.dh-sheet .sheet-info-grid')
+        .evaluate(
+          (element) =>
+            getComputedStyle(element)
+              .gridTemplateColumns.split(' ')
+              .filter(Boolean).length,
+        );
+      expect(columns, 'компактный вид на планшете — одна колонка').toBe(1);
+      // Рейла, который открывал секцию, больше нет: подводим её сами.
+      await page.evaluate(() => {
+        const main = document.querySelector('main');
+        const section = document.getElementById('inventory-section');
+        if (!main || !section) return;
+        const top =
+          section.getBoundingClientRect().top -
+          main.getBoundingClientRect().top +
+          main.scrollTop;
+        main.scrollTo({ top });
+      });
       await waitForScrollSettled(page);
       await expect(page.locator('#inventory-section:visible')).toHaveCount(1);
-      await expectNoHorizontalOverflow(page);
       await screenshotPage(page, 'sheet-dh-tablet-compact-en.png');
-      // Галочка внутри 10-пиксельного бокса не влезает и выглядит грязью:
-      // на мобильном и планшете блок характеристик рисует только заливку
-      // (`hideIndicator`). Проверяем структурно — порог пиксельного сравнения
-      // такой мелкий дефект не видит.
-      await expect(
-        page
-          .getByTestId('characteristics-compact')
-          .locator('[role="checkbox"] svg'),
-      ).toHaveCount(0);
     },
   );
 

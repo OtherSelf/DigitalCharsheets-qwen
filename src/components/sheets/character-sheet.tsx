@@ -25,7 +25,7 @@ export const CharacterSheet = forwardRef<
   SheetHandle,
   { character: Character; activeCompactSection: string }
 >(({ character, activeCompactSection }, ref) => {
-  const { isCompactView } = useCharacterContext();
+  const { isCompactView, isPhoneView } = useCharacterContext();
   const systemId = resolveCharacterSystemId(character);
   const gameModule = systemId ? getGameModule(systemId) : undefined;
 
@@ -54,6 +54,7 @@ export const CharacterSheet = forwardRef<
           ref={ref}
           character={character}
           isCompactView={isCompactView}
+          isPhoneView={isPhoneView}
           activeCompactSection={activeCompactSection}
         />
       </Suspense>

@@ -144,6 +144,8 @@ const CharacteristicStat = ({
 interface CharacteristicsSectionProps {
   character: DH2Character;
   isCompactView: boolean;
+  /** Телефонная подача: только она прячет блок перемещения. */
+  isPhoneView: boolean;
   isSkillsPanelCollapsed: boolean;
   isEquipmentPanelCollapsed: boolean;
   onEditingChange?: (val: boolean) => void;
@@ -157,6 +159,7 @@ export const CharacteristicsSection = React.forwardRef<
     {
       character,
       isCompactView,
+      isPhoneView,
       isSkillsPanelCollapsed,
       isEquipmentPanelCollapsed,
       onEditingChange,
@@ -370,7 +373,7 @@ export const CharacteristicsSection = React.forwardRef<
           ))}
         </CardContent>
         {/* Desktop Movement Display */}
-        {!isCompactView && (
+        {!isPhoneView && (
           <CardContent className="pt-0">
             <div
               className={cn(

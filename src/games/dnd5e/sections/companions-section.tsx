@@ -21,6 +21,8 @@ interface CompanionsSectionProps {
   companions: DnDCompanion[];
   setCompanions: React.Dispatch<React.SetStateAction<DnDCompanion[]>>;
   isCompactView: boolean;
+  /** Телефонная подача: только она прячет соседние секции (компакт — нет). */
+  isPhoneView: boolean;
   activeCompactSection: string;
 }
 
@@ -29,6 +31,7 @@ export function DndCompanionsSection({
   companions,
   setCompanions,
   isCompactView,
+  isPhoneView,
   activeCompactSection,
 }: CompanionsSectionProps) {
   const { updateCharacter, showEditButtons } = useCharacterContext();
@@ -106,7 +109,7 @@ export function DndCompanionsSection({
       onOpenChange={setIsCompanionsOpen}
       className={cn(
         'space-y-8',
-        isCompactView &&
+        isPhoneView &&
           activeCompactSection !== 'companions-section' &&
           'hidden',
       )}

@@ -85,6 +85,8 @@ import { EditSaveButton } from './dh-ui-helpers';
 interface SectionProps {
   character: DH2Character;
   isCompactView: boolean;
+  /** Телефонная подача: только она прячет соседние секции (компакт — нет). */
+  isPhoneView: boolean;
   activeCompactSection?: string;
   onEditingChange?: (val: boolean) => void;
   /** Импортированный лист проверяется: creation-замки временно открыты. */
@@ -335,6 +337,7 @@ const MetaBlock = ({
 export const InfoSection = ({
   character,
   isCompactView,
+  isPhoneView,
   activeCompactSection,
   onEditingChange,
   creationReview,
@@ -383,7 +386,7 @@ export const InfoSection = ({
     [t],
   );
 
-  const showInfo = !isCompactView || activeCompactSection === 'info-section';
+  const showInfo = !isPhoneView || activeCompactSection === 'info-section';
   if (!showInfo) return null;
 
   const backgroundEntry = DH2E_BACKGROUNDS.find(
@@ -986,6 +989,7 @@ const EliteRequirementWarnings = ({
 export const ProgressionSection = ({
   character,
   isCompactView,
+  isPhoneView,
   activeCompactSection,
   onEditingChange,
 }: SectionProps) => {
@@ -1119,7 +1123,7 @@ export const ProgressionSection = ({
   };
 
   const showProgression =
-    !isCompactView || activeCompactSection === 'progression-section';
+    !isPhoneView || activeCompactSection === 'progression-section';
   if (!showProgression) return null;
 
   return (

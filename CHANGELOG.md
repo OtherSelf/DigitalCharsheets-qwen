@@ -11,6 +11,28 @@ format changes.
 
 ## [Unreleased]
 
+### Changed
+
+- The sheet view toggle collapses the sheet into one column instead of
+  switching to the phone layout. On tablet and desktop every section stays
+  visible, the icon rail is gone, and type, paddings and tables stay normal; the
+  choice is stored in `localStorage` (`sheet-view-compact`), survives a reload
+  and is undone by the same header button.
+- Dashboard cards get denser in the compact view (`16rem` minimum with a
+  tighter gap, so five columns fit at 1440 and six at 1760) and their footer
+  buttons shrink accordingly. The dashboard is not collapsed to one column: the
+  card list is not a sheet.
+- Plugins receive both flags: `isCompactView` (one-column layout) and
+  `isPhoneView` (phone presentation) in `GameSheetProps` and the
+  `HeaderActions` slot. The demo sheet collapses to one column too.
+
+### Fixed
+
+- The compact toggle used to turn a tablet or desktop window into the phone
+  layout and the choice stuck for the whole tab: the rail appeared, sections
+  were hidden one at a time, and a reload was the only way back. The phone
+  presentation now requires a real phone width.
+
 ## [0.26.1] - 2026-11-27
 
 The policy now has the terms of use it refers to, and "Export my data" works

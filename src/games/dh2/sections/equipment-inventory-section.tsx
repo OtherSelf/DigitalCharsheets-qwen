@@ -160,6 +160,8 @@ function reorderWeaponGroup<T extends WeaponLike>(
 interface EquipmentInventorySectionProps {
   character: DH2Character;
   isCompactView: boolean;
+  /** Телефонная подача: только она прячет соседние секции (компакт — нет). */
+  isPhoneView: boolean;
   activeCompactSection: string;
   onEditingChange?: (val: boolean) => void;
 }
@@ -169,7 +171,13 @@ export const EquipmentInventorySection = React.forwardRef<
   EquipmentInventorySectionProps
 >(
   (
-    { character, isCompactView, activeCompactSection, onEditingChange },
+    {
+      character,
+      isCompactView,
+      isPhoneView,
+      activeCompactSection,
+      onEditingChange,
+    },
     ref,
   ) => {
     const { updateCharacter, hideNotes, showEditButtons } =
@@ -617,7 +625,7 @@ export const EquipmentInventorySection = React.forwardRef<
       <>
         <div
           className={cn(
-            isCompactView &&
+            isPhoneView &&
               activeCompactSection !== 'equipment-section' &&
               'hidden',
           )}
@@ -628,7 +636,7 @@ export const EquipmentInventorySection = React.forwardRef<
             onOpenChange={setIsEquipmentSectionOpen}
             className={cn(
               'overflow-hidden rounded-lg border',
-              isCompactView && 'bg-card',
+              isPhoneView && 'bg-card',
             )}
           >
             <div className="flex items-center border-b pr-4">
@@ -652,21 +660,21 @@ export const EquipmentInventorySection = React.forwardRef<
                 <RequisitionBlock character={character} />
                 <div>
                   <Collapsible
-                    open={!isCompactView || isArmorExpanded}
+                    open={!isPhoneView || isArmorExpanded}
                     onOpenChange={setIsArmorExpanded}
                   >
                     <div className="mb-2 flex items-center justify-between">
-                      <CollapsibleTrigger asChild disabled={!isCompactView}>
+                      <CollapsibleTrigger asChild disabled={!isPhoneView}>
                         <div
                           className={cn(
                             'flex items-center gap-2',
-                            isCompactView && 'cursor-pointer',
+                            isPhoneView && 'cursor-pointer',
                           )}
                         >
                           <h4 className="text-lg font-semibold">
                             {t('dh2.armor')}
                           </h4>
-                          {isCompactView && (
+                          {isPhoneView && (
                             <ChevronDown
                               className={cn(
                                 'h-4 w-4 transition-transform',
@@ -687,9 +695,9 @@ export const EquipmentInventorySection = React.forwardRef<
                       )}
                     </div>
                     <CollapsibleContent
-                      forceMount={!isCompactView ? true : undefined}
+                      forceMount={!isPhoneView ? true : undefined}
                     >
-                      {isCompactView ? (
+                      {isPhoneView ? (
                         <div className="space-y-2">
                           {bodyParts.map((part) => {
                             const armorPiece = currentEquipment.armor[part];
@@ -2445,7 +2453,7 @@ export const EquipmentInventorySection = React.forwardRef<
         </div>
         <div
           className={cn(
-            isCompactView &&
+            isPhoneView &&
               activeCompactSection !== 'inventory-section' &&
               'hidden',
           )}
@@ -2456,7 +2464,7 @@ export const EquipmentInventorySection = React.forwardRef<
             onOpenChange={setIsInventorySectionOpen}
             className={cn(
               'overflow-hidden rounded-lg border',
-              isCompactView && 'bg-card',
+              isPhoneView && 'bg-card',
             )}
           >
             <div className="flex items-center border-b pr-4">

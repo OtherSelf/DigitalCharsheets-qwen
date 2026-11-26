@@ -29,11 +29,11 @@ import { Character } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
 interface ImportCharacterDialogProps {
-  isCompactView: boolean;
+  isPhoneView: boolean;
 }
 
 export function ImportCharacterDialog({
-  isCompactView,
+  isPhoneView,
 }: ImportCharacterDialogProps) {
   const { t, tUnsafe } = useTranslation();
   const { addCharacter } = useCharacterContext();
@@ -148,7 +148,7 @@ export function ImportCharacterDialog({
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        {isCompactView ? (
+        {isPhoneView ? (
           <Button
             variant="outline"
             className="border-muted-foreground/30 text-muted-foreground hover:border-accent hover:bg-accent/10 hover:text-accent-foreground flex h-20 w-full items-center justify-center rounded-lg border-2 border-dashed bg-transparent p-0 transition-colors duration-200"

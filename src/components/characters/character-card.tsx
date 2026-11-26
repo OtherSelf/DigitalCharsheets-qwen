@@ -108,8 +108,17 @@ export function CharacterCard({
   accent = false,
 }: CharacterCardProps) {
   const { t, tUnsafe } = useTranslation();
-  const { archiveCharacter, deleteCharacter, isCompactView, toast } =
-    useCharacterContext();
+  const {
+    archiveCharacter,
+    deleteCharacter,
+    isCompactView,
+    isPhoneView,
+    toast,
+  } = useCharacterContext();
+  // Плотный вид на планшете и десктопе — это обычная карточка, но с более
+  // тесным низом: пять колонок по 16rem не вмещают прежние 44-пиксельные
+  // кнопки, и корзина уезжала за край (карточка режет overflow).
+  const isDense = isCompactView && !isPhoneView;
 
   const gameModule = getCharacterModule(character);
   const gameDefinition = gameModule
@@ -155,7 +164,7 @@ export function CharacterCard({
     }
   };
 
-  if (isCompactView) {
+  if (isPhoneView) {
     return (
       <Card
         className={cn(
@@ -204,7 +213,10 @@ export function CharacterCard({
           <Button
             variant="ghost"
             size="icon"
-            className="h-11 w-11 shrink-0 sm:h-9 sm:w-9"
+            className={cn(
+              'h-11 w-11 shrink-0 sm:h-9 sm:w-9',
+              isDense && 'sm:h-8 sm:w-8',
+            )}
             onClick={() => archiveCharacter(character.id)}
             title={t('common.archiveCharacter')}
             aria-label={t('common.archiveCharacter')}
@@ -215,7 +227,10 @@ export function CharacterCard({
           <Button
             variant="outline"
             size="icon"
-            className="h-11 w-11 shrink-0 sm:h-9 sm:w-9"
+            className={cn(
+              'h-11 w-11 shrink-0 sm:h-9 sm:w-9',
+              isDense && 'sm:h-8 sm:w-8',
+            )}
             onClick={handleExportJSON}
             title={t('io.exportJSON')}
             aria-label={t('io.exportJSON')}
@@ -226,7 +241,10 @@ export function CharacterCard({
           <Button
             variant="outline"
             size="icon"
-            className="h-11 w-11 shrink-0 sm:h-9 sm:w-9"
+            className={cn(
+              'h-11 w-11 shrink-0 sm:h-9 sm:w-9',
+              isDense && 'sm:h-8 sm:w-8',
+            )}
             onClick={handleExportExcel}
             title={t('io.exportSheet')}
             aria-label={t('io.exportSheet')}
@@ -259,7 +277,10 @@ export function CharacterCard({
       <Button
         variant="ghost"
         size="icon"
-        className="absolute top-2 right-2 z-10 h-11 w-11 sm:h-9 sm:w-9"
+        className={cn(
+          'absolute top-2 right-2 z-10 h-11 w-11 sm:h-9 sm:w-9',
+          isDense && 'sm:h-8 sm:w-8',
+        )}
         onClick={() => archiveCharacter(character.id)}
         title={t('common.archiveCharacter')}
         aria-label={t('common.archiveCharacter')}
@@ -283,8 +304,16 @@ export function CharacterCard({
           {summaryText}
         </CardDescription>
       </CardContent>
-      <CardFooter className="flex items-center justify-between gap-2 p-3 pt-0 sm:p-4">
-        <Button asChild className="w-full text-xs sm:text-sm">
+      <CardFooter
+        className={cn(
+          'flex items-center justify-between gap-2 p-3 pt-0 sm:p-4',
+          isDense && 'gap-1 p-2 pt-0',
+        )}
+      >
+        <Button
+          asChild
+          className={cn('w-full text-xs sm:text-sm', isDense && 'px-2')}
+        >
           <Link href={characterPath(character.id)}>
             {t('common.viewSheet')}
           </Link>
@@ -292,7 +321,10 @@ export function CharacterCard({
         <Button
           variant="outline"
           size="icon"
-          className="h-11 w-11 shrink-0 sm:h-9 sm:w-9"
+          className={cn(
+            'h-11 w-11 shrink-0 sm:h-9 sm:w-9',
+            isDense && 'sm:h-8 sm:w-8',
+          )}
           onClick={handleExportJSON}
           title={t('io.exportJSON')}
           aria-label={t('io.exportJSON')}
@@ -303,7 +335,10 @@ export function CharacterCard({
         <Button
           variant="outline"
           size="icon"
-          className="h-11 w-11 shrink-0 sm:h-9 sm:w-9"
+          className={cn(
+            'h-11 w-11 shrink-0 sm:h-9 sm:w-9',
+            isDense && 'sm:h-8 sm:w-8',
+          )}
           onClick={handleExportExcel}
           title={t('io.exportSheet')}
           aria-label={t('io.exportSheet')}
@@ -311,7 +346,11 @@ export function CharacterCard({
         >
           <FileDown className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
         </Button>
-        <DeleteCharacterDialog name={character.name} onDelete={handleDelete} />
+        <DeleteCharacterDialog
+          name={character.name}
+          onDelete={handleDelete}
+          dense={isDense}
+        />
       </CardFooter>
     </Card>
   );

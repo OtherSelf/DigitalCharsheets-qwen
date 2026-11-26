@@ -70,6 +70,34 @@ test.describe('ширина контента и сетка карточек', { 
     }
   });
 
+  /*
+    На дашборде компакт — это плотная сетка, а не одна колонка: минимальная
+    ширина карточки падает с 18rem до 16rem, поэтому на 1440 появляется пятая
+    колонка, на 1760 — шестая. Лист живёт по другому правилу (одна колонка),
+    его проверяют сценарии листа.
+  */
+  test('компактный вид: карточки мельче, колонок больше', async ({
+    page,
+    context,
+  }) => {
+    await prepare(context, { viewMode: 'compact' });
+    await openApp(page, '/');
+
+    for (const entry of [
+      { width: 1440, columns: 5 },
+      { width: 1760, columns: 6 },
+    ]) {
+      await page.setViewportSize({ width: entry.width, height: 900 });
+      await expect
+        .poll(() => columnCount(page), { timeout: 5_000 })
+        .toBe(entry.columns);
+      const shell = await contentWidth(page);
+      expect(shell, `${entry.width}: контейнер ≤ 1760`).toBeLessThanOrEqual(
+        1760,
+      );
+    }
+  });
+
   test('на телефоне карточки в одну колонку', async ({ page, context }) => {
     await prepare(context);
     await openApp(page, '/');

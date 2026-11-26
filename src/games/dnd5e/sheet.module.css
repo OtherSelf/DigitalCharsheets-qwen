@@ -29,11 +29,29 @@
     grid-column: span 1 / span 1 !important;
   }
 
+  /*
+    Компактный вид здесь тоже возможен, но правила для него общие для планшета
+    и десктопа — см. `LANDMARK: COMPACT_ONE_COLUMN` ниже.
+  */
+}
+
+/*
+  ─── LANDMARK: COMPACT_ONE_COLUMN ───
+  Компактный вид — одна колонка: секции друг под другом на всю ширину, без
+  рейла и без спрятанных секций. Работает и на планшете, и на десктопе, поэтому
+  отдельный media-блок. Шрифт и отступы остаются обычными.
+*/
+@media (min-width: 768px) {
   .sheet:global(.is-compact) :global(.sheet-main-grid) {
+    display: grid !important;
     grid-template-columns: minmax(0, 1fr) !important;
   }
   .sheet:global(.is-compact) :global(.sheet-main-grid) > * {
     grid-column: 1 / -1 !important;
+    min-width: 0 !important;
+  }
+  .sheet:global(.is-compact) :global(.sheet-top-row) {
+    flex-direction: column !important;
   }
 }
 

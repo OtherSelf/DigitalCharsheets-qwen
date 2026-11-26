@@ -108,9 +108,10 @@ export const Dh2Sheet = React.forwardRef<
   {
     character: DH2Character;
     isCompactView: boolean;
+    isPhoneView: boolean;
     activeCompactSection: string;
   }
->(({ character, isCompactView, activeCompactSection }, ref) => {
+>(({ character, isCompactView, isPhoneView, activeCompactSection }, ref) => {
   const {
     updateCharacter,
     setHasUnsavedChanges,
@@ -375,7 +376,7 @@ export const Dh2Sheet = React.forwardRef<
         isCompactView && 'is-compact',
       )}
     >
-      {isCompactView && (
+      {isPhoneView && (
         <div
           data-testid="characteristics-compact"
           className="bg-card space-y-3 border-b px-4 py-3 shadow-sm"
@@ -604,7 +605,7 @@ export const Dh2Sheet = React.forwardRef<
                 editing={isPointsEditing}
                 onEdit={() => setIsPointsEditing(true)}
                 onSave={handleSavePoints}
-                isCompactView={isCompactView}
+                isCompactView={isPhoneView}
                 hideNotes={hideNotes}
                 showEditButtons={showEditButtons}
               >
@@ -684,7 +685,7 @@ export const Dh2Sheet = React.forwardRef<
                 editing={isPointsEditing}
                 onEdit={() => setIsPointsEditing(true)}
                 onSave={handleSavePoints}
-                isCompactView={isCompactView}
+                isCompactView={isPhoneView}
                 hideNotes={hideNotes}
                 showEditButtons={showEditButtons}
               >
@@ -759,7 +760,7 @@ export const Dh2Sheet = React.forwardRef<
                 editing={isPointsEditing}
                 onEdit={() => setIsPointsEditing(true)}
                 onSave={handleSavePoints}
-                isCompactView={isCompactView}
+                isCompactView={isPhoneView}
                 hideNotes={hideNotes}
                 showEditButtons={showEditButtons}
               >
@@ -832,7 +833,7 @@ export const Dh2Sheet = React.forwardRef<
                 editing={false}
                 onEdit={() => undefined}
                 onSave={() => undefined}
-                isCompactView={isCompactView}
+                isCompactView={isPhoneView}
                 hideNotes={hideNotes}
                 showEditButtons={false}
               >
@@ -865,7 +866,7 @@ export const Dh2Sheet = React.forwardRef<
                 editing={false}
                 onEdit={() => undefined}
                 onSave={() => undefined}
-                isCompactView={isCompactView}
+                isCompactView={isPhoneView}
                 hideNotes={hideNotes}
                 showEditButtons={false}
               >
@@ -942,7 +943,7 @@ export const Dh2Sheet = React.forwardRef<
       <div
         className={cn(
           'sheet-info-grid grid grid-cols-1 gap-6 lg:grid-cols-12',
-          isCompactView &&
+          isPhoneView &&
             !['info-section', 'progression-section'].includes(
               activeCompactSection,
             ) &&
@@ -953,7 +954,7 @@ export const Dh2Sheet = React.forwardRef<
           id="info-section"
           className={cn(
             'lg:col-span-5',
-            isCompactView &&
+            isPhoneView &&
               activeCompactSection &&
               activeCompactSection !== 'info-section' &&
               'hidden',
@@ -961,12 +962,13 @@ export const Dh2Sheet = React.forwardRef<
         >
           <InfoSection
             character={character}
-            isCompactView={isCompactView}
+            isCompactView={isPhoneView}
+            isPhoneView={isPhoneView}
             activeCompactSection={activeCompactSection}
             creationReview={creationReview}
             onEditingChange={(v: boolean) => reportSectionEditing('info', v)}
           />
-          {isCompactView && (
+          {isPhoneView && (
             <div className="bg-card text-card-foreground mt-6 rounded-lg border p-4">
               <ArmorDisplay character={character} isCompactView embedded />
             </div>
@@ -975,7 +977,7 @@ export const Dh2Sheet = React.forwardRef<
         <div
           className={cn(
             'lg:col-span-4',
-            isCompactView &&
+            isPhoneView &&
               activeCompactSection &&
               activeCompactSection !== 'progression-section' &&
               'hidden',
@@ -983,23 +985,24 @@ export const Dh2Sheet = React.forwardRef<
         >
           <ProgressionSection
             character={character}
-            isCompactView={isCompactView}
+            isCompactView={isPhoneView}
+            isPhoneView={isPhoneView}
             activeCompactSection={activeCompactSection}
             onEditingChange={(v: boolean) =>
               reportSectionEditing('progression', v)
             }
           />
         </div>
-        {!isCompactView && (
+        {!isPhoneView && (
           <div className="overflow-hidden md:col-span-3">
-            <ArmorDisplay character={character} isCompactView={isCompactView} />
+            <ArmorDisplay character={character} isCompactView={isPhoneView} />
           </div>
         )}
       </div>
       <div
         className={cn(
           'sheet-panels flex flex-row items-stretch gap-2 md:gap-6',
-          isCompactView &&
+          isPhoneView &&
             ![
               'skills-section',
               'talents-section',
@@ -1013,7 +1016,7 @@ export const Dh2Sheet = React.forwardRef<
         <div
           className={cn(
             'min-w-0 transition-all duration-300 ease-in-out',
-            isCompactView
+            isPhoneView
               ? activeCompactSection &&
                 !['skills-section', 'talents-section'].includes(
                   activeCompactSection,
@@ -1025,13 +1028,14 @@ export const Dh2Sheet = React.forwardRef<
                 : 'min-w-0 flex-1',
           )}
         >
-          {isCompactView ? (
+          {isPhoneView ? (
             <div className="w-full min-w-0">
               <SkillsTalentsSection
                 ref={skillsTalentsRef}
                 onEditingChange={(v) => reportSectionEditing('skills', v)}
                 character={character}
-                isCompactView={isCompactView}
+                isCompactView={isPhoneView}
+                isPhoneView={isPhoneView}
                 activeCompactSection={activeCompactSection}
               />
             </div>
@@ -1057,7 +1061,7 @@ export const Dh2Sheet = React.forwardRef<
                   onClick={() => setIsSkillsPanelCollapsed(true)}
                   aria-label={t('dh2.collapsePanel')}
                   data-testid="collapse-skills-panel"
-                  className={cn('shrink-0', isCompactView && 'hidden')}
+                  className={cn('shrink-0', isPhoneView && 'hidden')}
                 >
                   <ChevronLeft className="h-5 w-5" />
                 </Button>
@@ -1071,11 +1075,12 @@ export const Dh2Sheet = React.forwardRef<
                   ref={skillsTalentsRef}
                   onEditingChange={(v) => reportSectionEditing('skills', v)}
                   character={character}
-                  isCompactView={isCompactView}
+                  isCompactView={isPhoneView}
+                  isPhoneView={isPhoneView}
                   activeCompactSection={activeCompactSection}
                 />
                 {/* DH-COMPACT-SKILLS-PANEL-END */}
-                {!isCompactView && (
+                {!isPhoneView && (
                   <div className="grid grid-cols-2 gap-4">
                     <MetricBox
                       title={t('dh2.wounds')}
@@ -1091,7 +1096,7 @@ export const Dh2Sheet = React.forwardRef<
                       editing={isPointsEditing}
                       onEdit={() => setIsPointsEditing(true)}
                       onSave={handleSavePoints}
-                      isCompactView={isCompactView}
+                      isCompactView={isPhoneView}
                       hideNotes={hideNotes}
                       showEditButtons={showEditButtons}
                     >
@@ -1166,7 +1171,7 @@ export const Dh2Sheet = React.forwardRef<
                       editing={isPointsEditing}
                       onEdit={() => setIsPointsEditing(true)}
                       onSave={handleSavePoints}
-                      isCompactView={isCompactView}
+                      isCompactView={isPhoneView}
                       hideNotes={hideNotes}
                       showEditButtons={showEditButtons}
                     >
@@ -1232,7 +1237,7 @@ export const Dh2Sheet = React.forwardRef<
                   </div>
                 )}
 
-                {!isCompactView && (
+                {!isPhoneView && (
                   <Card>
                     <CardHeader className="flex-row items-center justify-between px-6 pt-3 pb-2">
                       <CardTitle className="font-headline text-base">
@@ -1251,7 +1256,7 @@ export const Dh2Sheet = React.forwardRef<
                             editing={isPointsEditing}
                             onEdit={() => setIsPointsEditing(true)}
                             onSave={handleSavePoints}
-                            isCompactView={isCompactView}
+                            isCompactView={isPhoneView}
                             hideNotes={hideNotes}
                             showEditButtons={showEditButtons}
                           >
@@ -1369,7 +1374,7 @@ export const Dh2Sheet = React.forwardRef<
           )}
         </div>
         {/* ─── LANDMARK: MIDDLE COLUMN - ORIGINAL WIDTH RESTORED ─── */}
-        {!isCompactView && (
+        {!isPhoneView && (
           <div
             className={cn(
               'shrink-0 transition-all duration-300 ease-in-out',
@@ -1644,7 +1649,8 @@ export const Dh2Sheet = React.forwardRef<
                   reportSectionEditing('characteristics', v)
                 }
                 character={character}
-                isCompactView={isCompactView}
+                isCompactView={isPhoneView}
+                isPhoneView={isPhoneView}
                 isSkillsPanelCollapsed={isSkillsPanelCollapsed}
                 isEquipmentPanelCollapsed={isEquipmentPanelCollapsed}
               />
@@ -1655,7 +1661,7 @@ export const Dh2Sheet = React.forwardRef<
         <div
           className={cn(
             'min-w-0 transition-all duration-300 ease-in-out',
-            isCompactView
+            isPhoneView
               ? activeCompactSection &&
                 !['equipment-section', 'inventory-section'].includes(
                   activeCompactSection,
@@ -1667,13 +1673,14 @@ export const Dh2Sheet = React.forwardRef<
                 : 'min-w-0 flex-1',
           )}
         >
-          {isCompactView ? (
+          {isPhoneView ? (
             <div className="w-full min-w-0">
               <EquipmentInventorySection
                 ref={equipmentInventoryRef}
                 onEditingChange={(v) => reportSectionEditing('equipment', v)}
                 character={character}
-                isCompactView={isCompactView}
+                isCompactView={isPhoneView}
+                isPhoneView={isPhoneView}
                 activeCompactSection={activeCompactSection}
               />
             </div>
@@ -1713,7 +1720,8 @@ export const Dh2Sheet = React.forwardRef<
                   ref={equipmentInventoryRef}
                   onEditingChange={(v) => reportSectionEditing('equipment', v)}
                   character={character}
-                  isCompactView={isCompactView}
+                  isCompactView={isPhoneView}
+                  isPhoneView={isPhoneView}
                   activeCompactSection={activeCompactSection}
                 />
                 <div className="grid grid-cols-2 gap-4">
@@ -1733,7 +1741,7 @@ export const Dh2Sheet = React.forwardRef<
                     editing={false}
                     onEdit={() => undefined}
                     onSave={() => undefined}
-                    isCompactView={isCompactView}
+                    isCompactView={isPhoneView}
                     hideNotes={hideNotes}
                     showEditButtons={false}
                   >
@@ -1769,7 +1777,7 @@ export const Dh2Sheet = React.forwardRef<
                     editing={false}
                     onEdit={() => undefined}
                     onSave={() => undefined}
-                    isCompactView={isCompactView}
+                    isCompactView={isPhoneView}
                     hideNotes={hideNotes}
                     showEditButtons={false}
                   >

@@ -11,6 +11,7 @@ import { LANGUAGE_COOKIE, type Language } from '@/lib/language';
 
 import { PRIVACY_VERSION } from '../../src/lib/legal/privacy';
 import { TERMS_VERSION } from '../../src/lib/legal/terms';
+import { SHEET_VIEW_COMPACT_KEY } from '../../src/lib/sheet-view';
 import { VISUAL_RECOVERY_PHRASE } from './fixtures';
 import {
   readAdminState,
@@ -69,6 +70,16 @@ export interface PrepareOptions {
    *               (появляется только при запуске через scripts/visual.sh).
    */
   account?: 'worker' | 'canonical' | 'admin' | 'sandboxAdmin';
+  /**
+   * `compact` — кладёт в storage предпочтение «плотный вид листа» до загрузки
+   * страницы. Нужен снимкам плотного вида: клик по кнопке оставляет в кадре
+   * всплывающую подсказку, а режим переживает перезагрузку.
+   *
+   * Пишем только `'1'` и никогда `'0'`: иначе init-скрипт стирал бы выбор
+   * пользователя на каждом `reload()` и сценарий «включил и перезагрузил» было
+   * бы невозможно проверить. Пустой context и так означает «обычный вид».
+   */
+  viewMode?: 'default' | 'compact';
 }
 
 /** Аккаунт текущего проекта и воркера: у каждой пары свои персонажи. */
@@ -98,6 +109,7 @@ export async function prepare(
     language = 'en',
     authenticated = true,
     account = 'worker',
+    viewMode = 'default',
   } = options;
   const state =
     account === 'canonical'
@@ -178,10 +190,11 @@ export async function prepare(
   ]);
 
   await context.addInitScript(
-    ({ user, theme, language }) => {
+    ({ user, theme, language, viewKey, compact }) => {
       try {
         localStorage.setItem('theme', theme);
         localStorage.setItem('language', language);
+        if (compact) localStorage.setItem(viewKey, '1');
         if (user) {
           localStorage.setItem('digital_charsheets_user', JSON.stringify(user));
         }
@@ -193,6 +206,8 @@ export async function prepare(
       user: authenticated ? { ...state.user, hasRecoveryPhrase: true } : null,
       theme,
       language,
+      viewKey: SHEET_VIEW_COMPACT_KEY,
+      compact: viewMode === 'compact',
     },
   );
 }

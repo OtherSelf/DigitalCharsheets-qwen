@@ -52,7 +52,7 @@ export default function CharacterPage() {
     isLoaded,
     loadError,
     retryCharacters,
-    isCompactView,
+    isPhoneView,
     hasUnsavedChanges,
     setHasUnsavedChanges,
     flushSaves,
@@ -145,7 +145,7 @@ export default function CharacterPage() {
   };
 
   const handleSectionChange = (id: string) => {
-    if (isCompactView && hasUnsavedChanges) {
+    if (isPhoneView && hasUnsavedChanges) {
       setPendingSectionId(id);
       return;
     }
@@ -166,7 +166,7 @@ export default function CharacterPage() {
 
   useCompactSectionScroll(
     activeCompactSection,
-    isCompactView,
+    isPhoneView,
     sectionScrollRequest,
   );
 
@@ -238,7 +238,7 @@ export default function CharacterPage() {
                 },
           }}
           sidebar={
-            isCompactView && !isReadOnly ? (
+            isPhoneView && !isReadOnly ? (
               <CompactSidebar
                 character={character}
                 activeSection={activeCompactSection}

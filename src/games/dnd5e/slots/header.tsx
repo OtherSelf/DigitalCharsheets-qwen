@@ -62,10 +62,11 @@ export function dnd5eHeaderSubtitle(
 /** Кнопка/счётчик вдохновения + домашние правила. */
 export function DndHeaderActions({
   character,
-  isCompactView,
+  isPhoneView,
 }: {
   character: DnD5eCharacter;
   isCompactView: boolean;
+  isPhoneView: boolean;
 }) {
   const { updateCharacter } = useCharacterContext();
   const { t } = useTranslation();
@@ -113,7 +114,7 @@ export function DndHeaderActions({
             <Plus className="h-3 w-3" />
           </Button>
         </div>
-        {!isCompactView && (
+        {!isPhoneView && (
           <Button
             variant="outline"
             size="sm"

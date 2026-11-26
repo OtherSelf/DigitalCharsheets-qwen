@@ -109,6 +109,8 @@ interface SavesSkillsSectionProps {
   handleSaveSkills: () => void;
   calculatedSkills: DnDSkill[];
   isCompactView: boolean;
+  /** Телефонная подача: только она прячет соседние секции (компакт — нет). */
+  isPhoneView: boolean;
   activeCompactSection: string;
   proficiencyBonus: number;
 }
@@ -128,6 +130,7 @@ export function DndSavesSkillsSection({
   handleSaveSkills,
   calculatedSkills,
   isCompactView,
+  isPhoneView,
   activeCompactSection,
   proficiencyBonus,
   idPrefix,
@@ -144,7 +147,7 @@ export function DndSavesSkillsSection({
     <div
       className={cn(
         'space-y-4 md:col-span-3',
-        isCompactView && activeCompactSection !== 'stats-section' && 'hidden',
+        isPhoneView && activeCompactSection !== 'stats-section' && 'hidden',
       )}
     >
       {/* PROFICIENCY BONUS BOX */}

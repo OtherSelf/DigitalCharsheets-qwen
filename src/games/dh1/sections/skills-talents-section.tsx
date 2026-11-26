@@ -400,6 +400,8 @@ const SkillTable = ({
 interface SkillsTalentsSectionProps {
   character: DH1Character;
   isCompactView: boolean;
+  /** Телефонная подача: только она прячет соседние секции (компакт — нет). */
+  isPhoneView: boolean;
   activeCompactSection: string;
   onEditingChange?: (val: boolean) => void;
 }
@@ -409,7 +411,13 @@ export const SkillsTalentsSection = React.forwardRef<
   SkillsTalentsSectionProps
 >(
   (
-    { character, isCompactView, activeCompactSection, onEditingChange },
+    {
+      character,
+      isCompactView,
+      isPhoneView,
+      activeCompactSection,
+      onEditingChange,
+    },
     ref,
   ) => {
     const { updateCharacter, hideNotes, showEditButtons } =
@@ -653,9 +661,9 @@ export const SkillsTalentsSection = React.forwardRef<
     );
 
     const showSkills =
-      !isCompactView || activeCompactSection === 'skills-section';
+      !isPhoneView || activeCompactSection === 'skills-section';
     const showTalents =
-      !isCompactView || activeCompactSection === 'talents-section';
+      !isPhoneView || activeCompactSection === 'talents-section';
 
     return (
       <div id="skills-talents-content" className="w-full space-y-6">
@@ -810,7 +818,7 @@ export const SkillsTalentsSection = React.forwardRef<
           )}
 
           {showSkills && showTalents && (
-            <Separator className={cn(isCompactView && 'hidden')} />
+            <Separator className={cn(isPhoneView && 'hidden')} />
           )}
 
           {/* ==================== TALENTS & TRAITS SECTION ==================== */}

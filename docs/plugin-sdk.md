@@ -151,7 +151,7 @@ state from a plugin component:
 
 | Hook | Purpose |
 | --- | --- |
-| `useCharacterContext()` | read/update sheets (`getCharacter`, `updateCharacter`, `addCharacter`, `deleteCharacter`, `showEditButtons`, `hideNotes`, `isCompactView`, `toast`, …) |
+| `useCharacterContext()` | read/update sheets (`getCharacter`, `updateCharacter`, `addCharacter`, `deleteCharacter`, `showEditButtons`, `hideNotes`, `isCompactView`, `isPhoneView`, `toast`, …) |
 | `useTranslation()` | `t(key)` for the current language (always full `ns.key`) |
 | `useToast()` | host toasts |
 | `NarrativeSheet` | right-hand Sheet for `notes`/`backstory`: markdown view, smart mode (empty opens in edit), Edit/Save/Cancel inside the Sheet |
@@ -328,7 +328,7 @@ no `if (gameSystem === …)` is needed in the core (D11).
 
 | Slot | Shape | Host place |
 | --- | --- | --- |
-| `HeaderActions` | component `{ character, isCompactView }` | sheet header |
+| `HeaderActions` | component `{ character, isCompactView, isPhoneView }` | sheet header |
 | `HeaderSubtitle` | `(character, t) => string` | header subtitle |
 | `CompactNav` | `(character) => { id, labelKey, icon }[]` | mobile sidebar |
 | `BulkEditor` | `BulkEditorTable[]` (data, see below) | `/stats-editor` |
@@ -370,9 +370,20 @@ across columns for the save patch — the host never inspects game mechanics.
 
 ```tsx
 export const MySheet = React.forwardRef<SheetHandle, GameSheetProps<MyCharacter>>(
-  ({ character, isCompactView, activeCompactSection }, ref) => {
+  ({ character, isCompactView, isPhoneView, activeCompactSection }, ref) => {
     React.useImperativeHandle(ref, () => ({ saveAll }));
-    return <div className={isCompactView ? 'is-compact' : undefined}>…</div>;
+    // `isCompactView` — одна колонка по кнопке в шапке: панели друг под
+    // другом, шрифт и отступы обычные. `isPhoneView` — телефонная подача:
+    // рейл, одна секция, закреплённые полосы. Скрывать соседние секции можно
+    // только по `isPhoneView`, иначе кнопка «компактный вид» на планшете и
+    // десктопе спрячет пол-листа.
+    return (
+      <div className={isCompactView ? 'is-compact' : undefined}>
+        <div hidden={isPhoneView && activeCompactSection !== 'info-section'}>
+          …
+        </div>
+      </div>
+    );
   },
 );
 ```

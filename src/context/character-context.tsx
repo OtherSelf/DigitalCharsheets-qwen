@@ -13,8 +13,8 @@ import {
 import { usePathname, useRouter } from 'next/navigation';
 
 import { getCharacterModule } from '@/games/character-system';
+import { useSheetView } from '@/hooks/use-sheet-view';
 import { useToast } from '@/hooks/use-toast';
-import { useViewportFlags } from '@/hooks/use-viewport-flags';
 import {
   parsePendingCharacter,
   PENDING_CHARACTER_KEY,
@@ -70,7 +70,14 @@ export interface CharacterContextType {
     description: string;
     variant?: 'default' | 'destructive' | null | undefined;
   }) => void;
+  /**
+   * Компактная раскладка: одна колонка, панели друг под другом. На телефоне
+   * включена всегда, на планшете и десктопе — по кнопке в шапке. Секции не
+   * прячет и рейл не рисует — за это отвечает `isPhoneView`.
+   */
   isCompactView: boolean;
+  /** Телефонная подача листа: рейл секций и одна секция на экран. */
+  isPhoneView: boolean;
   isSmallScreen: boolean;
   isTabletScreen: boolean;
   toggleCompactView: () => void;
@@ -187,14 +194,19 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const { user, isUserLoading, lastAuthKind, logout } = useLocalAuth();
   const { t } = useTranslation();
-  const { isSmallScreen, isTabletScreen } = useViewportFlags();
+  const {
+    isSmallScreen,
+    isTabletScreen,
+    isPhoneView,
+    isCompactView,
+    toggleCompactView,
+  } = useSheetView();
 
   const [characters, setCharacters] = useState<Character[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [loadError, setLoadError] = useState(false);
   const [pendingDraft, setPendingDraft] = useState<DraftCharacter | null>(null);
 
-  const [userPrefersCompact, setUserPrefersCompact] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [hideNotes, setHideNotes] = useState(false);
   const [showEditButtons, setShowEditButtons] = useState(true);
@@ -670,9 +682,6 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
     };
   }, [pathname, user, refreshCharacters]);
 
-  const isCompactView = isSmallScreen || userPrefersCompact;
-  const toggleCompactView = () => setUserPrefersCompact((prev) => !prev);
-
   const quotaToast = useCallback(
     async (res: Response): Promise<boolean> => {
       if (res.status !== 409) return false;
@@ -927,6 +936,7 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
     retryCharacters,
     toast,
     isCompactView,
+    isPhoneView,
     isSmallScreen,
     isTabletScreen,
     toggleCompactView,

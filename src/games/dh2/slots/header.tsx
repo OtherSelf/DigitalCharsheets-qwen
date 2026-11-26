@@ -40,18 +40,19 @@ export function dh2HeaderSubtitle(
   return `${parts.length ? `${parts.join(' / ')} | ` : ''}${translatedSystem}`;
 }
 
-/** Кнопка домашних правил в шапке (в компактном виде живёт в сайдбаре). */
+/** Кнопка домашних правил в шапке (на телефоне живёт в рейле секций). */
 export function Dh2HeaderActions({
   character,
-  isCompactView,
+  isPhoneView,
 }: {
   character: DH2Character;
   isCompactView: boolean;
+  isPhoneView: boolean;
 }) {
   const { t } = useTranslation();
   const [isHouseRulesOpen, setIsHouseRulesOpen] = React.useState(false);
 
-  if (isCompactView) return null;
+  if (isPhoneView) return null;
 
   return (
     <>

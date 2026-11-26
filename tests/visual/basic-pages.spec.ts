@@ -513,6 +513,14 @@ test.describe('адаптивность', () => {
       );
     } else {
       await expect(nav).toHaveCount(0);
+      // Компактный вид — это одна колонка, а не телефон: рейл на планшете и
+      // десктопе не появляется даже после клика по тумблеру.
+      await page
+        .getByTestId('app-header')
+        .getByRole('button', { name: 'Switch to Compact View', exact: true })
+        .click();
+      await expect(page.locator('.dnd-sheet.is-compact')).toHaveCount(1);
+      await expect(nav).toHaveCount(0);
     }
   });
 
@@ -1515,6 +1523,12 @@ test(
 );
 
 test.describe('вид листа: компактный и обычный', () => {
+  /*
+    Тумблер в шапке складывает лист в ОДНУ КОЛОНКУ: панели друг под другом
+    на всю ширину, все секции на месте, рейла нет, шрифт обычный. Телефонная
+    подача (рейл и одна секция) включается только шириной < 768, поэтому
+    `navigation` здесь нет ни в одном состоянии.
+  */
   test(
     'переключатель вида: компактный ↔ обычный',
     { tag: ['@fast', '@desktop'] },
@@ -1532,35 +1546,56 @@ test.describe('вид листа: компактный и обычный', () =>
 
       // ── включаем компактный ───────────────────────────────────────────
       await toggle.click();
-      await expect(page.getByRole('navigation')).toBeVisible();
       await expect(page.locator('.dh-sheet.is-compact')).toHaveCount(1);
+      await expect(page.getByRole('navigation')).toHaveCount(0);
       await expect(
         page
           .getByTestId('app-header')
           .getByRole('button', { name: 'Switch to Default View', exact: true }),
       ).toBeVisible();
       await expectNoHorizontalOverflow(page);
+      const columns = await page
+        .locator('.dh-sheet .sheet-info-grid')
+        .evaluate(
+          (element) =>
+            getComputedStyle(element)
+              .gridTemplateColumns.split(' ')
+              .filter(Boolean).length,
+        );
+      expect(columns, 'компакт на десктопе — одна колонка').toBe(1);
 
-      // В компактном виде видна только активная секция.
-      await expect(page.locator('#info-section:visible')).toHaveCount(1);
-      await expect(page.locator('#inventory-section:visible')).toHaveCount(0);
+      // Компактный вид не прячет соседние секции: все панели остаются в DOM.
+      for (const sectionId of [
+        'info-section',
+        'progression-section',
+        'skills-talents-content',
+        'equipment-section',
+        'inventory-section',
+      ]) {
+        await expect(
+          page.locator(`#${sectionId}`),
+          `#${sectionId} в компактном виде`,
+        ).toHaveCount(1);
+      }
 
-      // Переключение секций из левого меню работает и в этом режиме.
-      await page
-        .getByRole('navigation')
-        .getByRole('button', { name: 'Inventory', exact: true })
-        .click();
-      await page.waitForTimeout(500);
-      await expect(page.locator('#inventory-section:visible')).toHaveCount(1);
-      await expect(page.locator('#info-section:visible')).toHaveCount(0);
-      await expectNoHorizontalOverflow(page);
+      // ── предпочтение переживает перезагрузку ───────────────────────────
+      await page.reload();
+      await expect(page.locator('.dh-sheet.is-compact')).toHaveCount(1);
+      await expect(page.getByRole('navigation')).toHaveCount(0);
+      await expect(
+        page
+          .getByTestId('app-header')
+          .getByRole('button', { name: 'Switch to Default View', exact: true }),
+      ).toBeVisible();
 
       // ── возвращаемся в обычный ────────────────────────────────────────
       await page
         .getByTestId('app-header')
         .getByRole('button', { name: 'Switch to Default View', exact: true })
         .click();
+      await expect(page.locator('.dh-sheet.is-compact')).toHaveCount(0);
       await expect(page.getByRole('navigation')).toHaveCount(0);
+      await page.reload();
       await expect(page.locator('.dh-sheet.is-compact')).toHaveCount(0);
       await expect(
         page
@@ -1572,7 +1607,7 @@ test.describe('вид листа: компактный и обычный', () =>
   );
 
   test(
-    'компактный вид на 1024px: без горизонтального скролла',
+    'компактный вид на 1024px: одна колонка без рейла',
     { tag: '@desktop' },
     async ({ page, context }) => {
       await prepare(context);
@@ -1583,22 +1618,26 @@ test.describe('вид листа: компактный и обычный', () =>
         .getByTestId('app-header')
         .getByRole('button', { name: 'Switch to Compact View', exact: true })
         .click();
-      await expect(page.getByRole('navigation')).toBeVisible();
       await expect(page.locator('.dnd-sheet.is-compact')).toHaveCount(1);
+      // Телефонной подачи нет (рейла и закреплённой полосы), зато сетка
+      // складывается в одну колонку.
+      await expect(page.getByRole('navigation')).toHaveCount(0);
+      await expect(page.getByTestId('compact-stats-bar')).toHaveCount(0);
+      const columns = await page
+        .locator('.dnd-sheet .sheet-main-grid')
+        .evaluate(
+          (element) =>
+            getComputedStyle(element)
+              .gridTemplateColumns.split(' ')
+              .filter(Boolean).length,
+        );
+      expect(columns, 'компактный вид на планшете — одна колонка').toBe(1);
       await expectNoHorizontalOverflow(page);
-      const inner = await page.evaluate(() => {
+      const overflow = await page.evaluate(() => {
         const main = document.querySelector('main')!;
-        const nav = document.querySelector('nav')!;
-        return {
-          main: main.scrollWidth - main.clientWidth,
-          nav: nav.scrollWidth - nav.clientWidth,
-        };
+        return main.scrollWidth - main.clientWidth;
       });
-      expect(
-        inner.main,
-        'main не вылезает вбок в компактном виде',
-      ).toBeLessThanOrEqual(1);
-      expect(inner.nav, 'сайдбар не вылезает вбок').toBeLessThanOrEqual(1);
+      expect(overflow, 'main не вылезает вбок').toBeLessThanOrEqual(1);
     },
   );
 

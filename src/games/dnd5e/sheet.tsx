@@ -28,6 +28,7 @@ import { DnD5eCharacter, DnDCompanion, DnDSkill } from './types';
 type DndSheetProps = {
   character: DnD5eCharacter;
   isCompactView: boolean;
+  isPhoneView: boolean;
   activeCompactSection: string;
 };
 
@@ -161,7 +162,7 @@ const DEFAULT_SKILLS: DnDSkill[] = [
 ];
 
 export const DndSheet = React.forwardRef<any, DndSheetProps>(
-  ({ character, isCompactView, activeCompactSection }, ref) => {
+  ({ character, isCompactView, isPhoneView, activeCompactSection }, ref) => {
     const { updateCharacter, showEditButtons, setHasUnsavedChanges } =
       useCharacterContext();
     const { t } = useTranslation();
@@ -328,7 +329,7 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
           isCompactView && 'is-compact',
         )}
       >
-        {isCompactView && (
+        {isPhoneView && (
           <div
             // В компакте характеристики живут в этой закреплённой полосе, а не
             // в пустой обёртке грида, поэтому пункт рейла «Характеристики»
@@ -444,7 +445,7 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
             // В компактном режиме этот блок — экран «Информация», но внутри
             // него живут и божественные дары: у них свой пункт рейла, поэтому
             // скрывать блок при их выборе нельзя.
-            isCompactView &&
+            isPhoneView &&
               activeCompactSection &&
               !['info-section', 'divine-boons-section'].includes(
                 activeCompactSection,
@@ -473,7 +474,7 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
                 ref={boonsRef}
                 characterId={character.id}
                 initialBoons={character.divineBoons || []}
-                isCompactView={isCompactView}
+                isCompactView={isPhoneView}
                 activeCompactSection={activeCompactSection}
               />
             )}
@@ -495,7 +496,7 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
                 notes: character.notes || '',
               }}
             />
-            {isCompactView && (
+            {isPhoneView && (
               <DndNarrativeSection
                 ref={narrativeRef}
                 characterId={character.id}
@@ -530,7 +531,8 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
             newProfItem={newProfItem}
             setNewProfItem={setNewProfItem}
             handleSaveOtherProf={handleSaveOtherProf}
-            isCompactView={isCompactView}
+            isCompactView={isPhoneView}
+            isPhoneView={isPhoneView}
             activeCompactSection={activeCompactSection}
             proficiencyBonus={proficiencyBonus}
             passivePerception={passivePerception}
@@ -549,11 +551,12 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
             setIsSkillsEditing={setIsSkillsEditing}
             handleSaveSkills={handleSaveSkills}
             calculatedSkills={calculatedSkills}
-            isCompactView={isCompactView}
+            isCompactView={isPhoneView}
+            isPhoneView={isPhoneView}
             activeCompactSection={activeCompactSection}
             proficiencyBonus={proficiencyBonus}
           />
-          {isCompactView && (
+          {isPhoneView && (
             <Card>
               <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2">
                 <CardTitle className="text-muted-foreground text-[10px] font-bold tracking-tight uppercase">
@@ -675,7 +678,8 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
             stats={stats}
             proficiencyBonus={proficiencyBonus}
             progressionData={progressionData}
-            isCompactView={isCompactView}
+            isCompactView={isPhoneView}
+            isPhoneView={isPhoneView}
             activeCompactSection={activeCompactSection}
           />
 
@@ -683,13 +687,13 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
             id="inventory-section"
             className={cn(
               'space-y-6 md:col-span-3',
-              isCompactView &&
+              isPhoneView &&
                 activeCompactSection &&
                 activeCompactSection !== 'inventory-section' &&
                 'hidden',
             )}
           >
-            {!isCompactView && (
+            {!isPhoneView && (
               <>
                 <DndNarrativeSection
                   ref={narrativeRef}
@@ -724,7 +728,7 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
                 />
               </>
             )}
-            {isCompactView && (
+            {isPhoneView && (
               <>
                 <DndAttunementSection
                   ref={attunementRef}
@@ -757,7 +761,8 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
             initialSpellcastingEntries={character.spellcastingEntries || []}
             stats={stats}
             proficiencyBonus={proficiencyBonus}
-            isCompactView={isCompactView}
+            isCompactView={isPhoneView}
+            isPhoneView={isPhoneView}
             activeCompactSection={activeCompactSection}
           />
 
@@ -765,7 +770,8 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
             characterId={character.id}
             companions={companions}
             setCompanions={setCompanions}
-            isCompactView={isCompactView}
+            isCompactView={isPhoneView}
+            isPhoneView={isPhoneView}
             activeCompactSection={activeCompactSection}
           />
         </div>

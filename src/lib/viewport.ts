@@ -25,6 +25,35 @@ export interface ViewportFlags {
 }
 
 /**
+ * ─── LANDMARK: SHEET_PRESENTATION ───────────────────────────────────────────
+ * Две независимые оси раскладки листа. Пока они были одной (`isCompactView`),
+ * тумблер «компактный вид» на планшете и десктопе включал телефонную подачу:
+ * рейл и одну секцию вместо всех панелей.
+ *
+ *   • `isPhoneView` — телефонная подача: рейл секций, одна секция на экран,
+ *     закреплённые полосы и якоря в них. Только настоящий телефон;
+ *   • `isCompactView` — компактная раскладка: одна колонка, панели друг под
+ *     другом на всю ширину. На телефоне она включена всегда, на планшете и
+ *     десктопе — по кнопке в шапке, и никогда не прячет секции и не рисует
+ *     рейл.
+ */
+export interface SheetPresentation {
+  isPhoneView: boolean;
+  isCompactView: boolean;
+}
+
+/** Компакт = «одна колонка»: он не следует за плотностью шрифта и отступов. */
+export function resolveSheetPresentation(
+  isSmallScreen: boolean,
+  prefersCompact: boolean,
+): SheetPresentation {
+  return {
+    isPhoneView: isSmallScreen,
+    isCompactView: isSmallScreen || prefersCompact,
+  };
+}
+
+/**
  * Флаги раскладки по ширине вьюпорта в CSS-пикселях.
  *
  * Сравнение идёт с `TABLET_MIN`, а не с `MOBILE_MAX`: под масштабом браузера
