@@ -11,6 +11,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { POST as phraseRoute } from '@/app/api/auth/phrase/route';
 import { POST as registerRoute } from '@/app/api/auth/register/route';
 import { isUid } from '@/lib/ids';
+import { PRIVACY_VERSION } from '@/lib/legal/privacy';
 import { verifyPassword } from '@/lib/security/password';
 import { isRecoveryPhraseHash } from '@/lib/security/phrase';
 import { isScryptHash } from '@/lib/security/scrypt';
@@ -125,6 +126,8 @@ describe('авторизация: регистрация и вход', () => {
         password: '123',
         displayName: 'Short',
         recoveryPhrase: 'amber cobalt',
+        consent: true,
+        privacyVersion: PRIVACY_VERSION,
       }),
     );
     expect(shortOnRegister.status).toBe(400);

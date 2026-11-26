@@ -6,6 +6,8 @@ import {
   type Page,
 } from '@playwright/test';
 
+import { PRIVACY_VERSION } from '@/lib/legal/privacy';
+
 import { qrSvgDataUrl } from '../../src/lib/qr-svg';
 import {
   collectPageErrors,
@@ -203,6 +205,8 @@ test.describe('login: вход, регистрация, восстановлен
       password: 'visual-pass-1234',
       displayName: 'UI Register',
       recoveryPhrase: 'amber cobalt lantern silver ember frost',
+      consent: true,
+      privacyVersion: PRIVACY_VERSION,
     };
 
     await registerViaUI(page, account);
@@ -248,6 +252,8 @@ test.describe('login: вход, регистрация, восстановлен
       password: 'visual-pass-1234',
       displayName: 'Delete Me',
       recoveryPhrase: 'amber cobalt lantern silver ember frost',
+      consent: true,
+      privacyVersion: PRIVACY_VERSION,
     };
 
     await registerViaUI(page, account);
@@ -494,6 +500,8 @@ test.describe('общие страницы', () => {
           password,
           displayName: 'Review',
           recoveryPhrase: 'amber cobalt lantern silver ember frost',
+          consent: true,
+          privacyVersion: PRIVACY_VERSION,
         },
       });
       expect([200, 201], 'регистрация аккаунта').toContain(registered.status());
@@ -626,6 +634,8 @@ test.describe('общие страницы', () => {
           password,
           displayName: 'Review Batch',
           recoveryPhrase: 'amber cobalt lantern silver ember frost',
+          consent: true,
+          privacyVersion: PRIVACY_VERSION,
         },
       });
       expect([200, 201], 'регистрация аккаунта').toContain(registered.status());
@@ -710,6 +720,8 @@ test.describe('общие страницы', () => {
           password,
           displayName: 'Review Mobile',
           recoveryPhrase: 'amber cobalt lantern silver ember frost',
+          consent: true,
+          privacyVersion: PRIVACY_VERSION,
         },
       });
       expect([200, 201], 'регистрация аккаунта').toContain(registered.status());

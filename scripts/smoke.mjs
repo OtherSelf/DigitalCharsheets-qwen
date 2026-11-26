@@ -30,6 +30,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 // ── разбор аргументов ───────────────────────────────────────────────────────
+const PRIVACY_VERSION = '2026-11-26';
+
 const argv = process.argv.slice(2);
 const opts = {
   baseUrl: process.env.BASE_URL || 'http://localhost:3000',
@@ -312,6 +314,19 @@ await check('GET /about → 200 (страница о проекте)', async () 
   assert(
     /text\/html/i.test(res.headers.get('content-type') || ''),
     'GET /about: content-type не text/html',
+  );
+});
+
+await check('GET /privacy → 200 (политика с версией)', async () => {
+  const res = await request('/privacy');
+  assertStatus(res, 200, 'GET /privacy');
+  assert(
+    /text\/html/i.test(res.headers.get('content-type') || ''),
+    'GET /privacy: content-type не text/html',
+  );
+  assert(
+    res.text.includes(PRIVACY_VERSION),
+    'GET /privacy: на странице нет текущей версии политики',
   );
 });
 
@@ -654,6 +669,28 @@ await check(
 );
 
 await check(
+  'POST /api/auth/register без согласия → 400 consent_required',
+  async () => {
+    const res = await api('/auth/register', {
+      method: 'POST',
+      body: {
+        username: `${username}-noconsent`,
+        password,
+        displayName: 'No Consent',
+        recoveryPhrase: 'amber cobalt lantern silver ember frost',
+      },
+      auth: false,
+    });
+    assertStatus(res, 400, 'регистрация без согласия');
+    const body = assertJson(res, 'регистрация без согласия');
+    assert(
+      body.reason === 'consent_required',
+      `без согласия: reason = ${body.reason}`,
+    );
+  },
+);
+
+await check(
   'POST /api/auth/register → регистрация нового аккаунта',
   async () => {
     const res = await api('/auth/register', {
@@ -663,6 +700,8 @@ await check(
         password,
         displayName: 'Smoke Tester',
         recoveryPhrase: 'amber cobalt lantern silver ember frost',
+        consent: true,
+        privacyVersion: PRIVACY_VERSION,
       },
       auth: false,
     });
@@ -718,6 +757,22 @@ await check('GET /api/auth/session → актуальный снимок про�
   );
 });
 
+await check('consents.jsonl: запись согласия с версией', async () => {
+  if (!opts.dataDir) return;
+  const file = path.join(opts.dataDir, 'consents.jsonl');
+  const lines = fs
+    .readFileSync(file, 'utf8')
+    .trim()
+    .split('\n')
+    .map((line) => JSON.parse(line));
+  const record = lines.find((line) => line.uid === userId);
+  assert(record, `в consents.jsonl нет записи для ${userId}`);
+  assert(
+    record.version === PRIVACY_VERSION,
+    `версия согласия ${record.version} ≠ ${PRIVACY_VERSION}`,
+  );
+});
+
 await check('POST /api/auth/register → 409 на занятый логин', async () => {
   const res = await api('/auth/register', {
     method: 'POST',
@@ -726,6 +781,8 @@ await check('POST /api/auth/register → 409 на занятый логин', as
       password: 'another-pass',
       displayName: 'Duplicate',
       recoveryPhrase: 'zulu yankee xray whiskey victor uniform',
+      consent: true,
+      privacyVersion: PRIVACY_VERSION,
     },
     auth: false,
   });
@@ -795,6 +852,8 @@ await check('POST /api/auth/register → 400 на пароль короче 12',
       password: '123',
       displayName: 'Short',
       recoveryPhrase: 'amber cobalt lantern silver ember frost',
+      consent: true,
+      privacyVersion: PRIVACY_VERSION,
     },
     auth: false,
   });
@@ -1670,6 +1729,8 @@ await check('TOTP: setup/enable/вход/backup-код/disable', async () => {
       password: totpPassword,
       displayName: 'Smoke TOTP',
       recoveryPhrase: 'alpha bravo charlie delta echo foxtrot',
+      consent: true,
+      privacyVersion: PRIVACY_VERSION,
     },
     auth: false,
   });

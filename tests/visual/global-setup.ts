@@ -6,6 +6,8 @@ import { pathToFileURL } from 'node:url';
 
 import type { FullConfig } from '@playwright/test';
 
+import { PRIVACY_VERSION } from '@/lib/legal/privacy';
+
 import { VISUAL_RECOVERY_PHRASE } from './fixtures';
 import {
   STATE_FILE,
@@ -372,6 +374,8 @@ async function seedAccount(
       password: PASSWORD,
       displayName: DISPLAY_NAME,
       recoveryPhrase: VISUAL_RECOVERY_PHRASE,
+      consent: true,
+      privacyVersion: PRIVACY_VERSION,
     }),
   });
   if (registration.status !== 200 && registration.status !== 409) {
@@ -581,6 +585,8 @@ async function ensureAdminDemoUser(
         password: PASSWORD,
         displayName: spec.displayName,
         recoveryPhrase: VISUAL_RECOVERY_PHRASE,
+        consent: true,
+        privacyVersion: PRIVACY_VERSION,
       }),
     });
     if (registration.status === 200 && registration.body.user) {
@@ -609,6 +615,8 @@ async function ensureAdminDemoUser(
     updatedAt: spec.createdAt,
     lastLoginAt: spec.lastLoginAt,
     recoveryPhrase: VISUAL_RECOVERY_PHRASE,
+    consent: true,
+    privacyVersion: PRIVACY_VERSION,
   };
   if (spec.isBlocked) next.blockedAt = spec.lastLoginAt;
   else delete next.blockedAt;
@@ -655,6 +663,8 @@ async function ensureSandboxAdmin(
         password: PASSWORD,
         displayName: 'Sandbox Admin',
         recoveryPhrase: VISUAL_RECOVERY_PHRASE,
+        consent: true,
+        privacyVersion: PRIVACY_VERSION,
       }),
     },
   );

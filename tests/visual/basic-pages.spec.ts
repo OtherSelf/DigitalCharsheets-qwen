@@ -1,5 +1,7 @@
 import { expect, test } from '@playwright/test';
 
+import { PRIVACY_VERSION } from '@/lib/legal/privacy';
+
 import {
   collectPageErrors,
   expectNoHorizontalOverflow,
@@ -1397,6 +1399,8 @@ test(
         password,
         displayName: 'Long Name',
         recoveryPhrase: 'amber cobalt lantern silver ember frost',
+        consent: true,
+        privacyVersion: PRIVACY_VERSION,
       },
     });
     expect([200, 201], 'регистрация аккаунта').toContain(registered.status());
@@ -1536,6 +1540,8 @@ test.describe('вид листа: компактный и обычный', () =>
           password,
           displayName: 'Compact Dupes',
           recoveryPhrase: 'amber cobalt lantern silver ember frost',
+          consent: true,
+          privacyVersion: PRIVACY_VERSION,
         },
       });
       expect([200, 201], 'регистрация аккаунта').toContain(registered.status());
@@ -1626,6 +1632,8 @@ test.describe('синхронизация между вкладками', () => 
         password,
         displayName: 'Cross Tab',
         recoveryPhrase: 'amber cobalt lantern silver ember frost',
+        consent: true,
+        privacyVersion: PRIVACY_VERSION,
       },
     });
     expect([200, 201], 'регистрация аккаунта').toContain(registered.status());

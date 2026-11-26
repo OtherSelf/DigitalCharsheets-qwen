@@ -9,6 +9,7 @@ import { expect } from 'vitest';
 
 import { POST as registerRoute } from '@/app/api/auth/register/route';
 import { POST as loginRoute } from '@/app/api/auth/route';
+import { PRIVACY_VERSION } from '@/lib/legal/privacy';
 
 import { json } from './http';
 
@@ -22,7 +23,14 @@ export async function registerAs(
   recoveryPhrase = 'amber cobalt lantern silver ember frost',
 ) {
   const res = await registerRoute(
-    json({ username, password, displayName, recoveryPhrase }),
+    json({
+      username,
+      password,
+      displayName,
+      recoveryPhrase,
+      consent: true,
+      privacyVersion: PRIVACY_VERSION,
+    }),
   );
   const body = await res.json();
   const setCookie = res.headers.get('set-cookie') || '';

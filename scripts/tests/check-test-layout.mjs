@@ -380,6 +380,13 @@ const GAME_MENTION_ALLOWANCE = {
  * уменьшаться. `removeBy` — когда исключение должно исчезнуть.
  */
 const EXCEPTIONS = {
+  'auth-register.test.ts': {
+    max: 410,
+    reason:
+      'auth/register/exists/profile в одном домене: согласие и версия политики ' +
+      'добавили строки; дробление — отдельная задача',
+    removeBy: 'разделить на auth-* до роста файла',
+  },
   'plugins-registry.test.ts': {
     max: 504,
     reason:

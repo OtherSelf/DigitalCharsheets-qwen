@@ -25,11 +25,13 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { PasswordInput } from '@/components/ui/password-input';
 import { useTranslation } from '@/context/language-context';
 import { useLocalAuth } from '@/context/local-auth-context';
 import type { Language } from '@/lib/language';
+import { PRIVACY_VERSION } from '@/lib/legal/privacy';
 import { PENDING_CHARACTER_KEY } from '@/lib/pending-draft';
 import { MIN_PASSWORD_LENGTH } from '@/lib/security/password-policy';
 import { phrasePolicyError } from '@/lib/security/phrase-policy';
@@ -43,6 +45,7 @@ interface AuthFailure {
 
 export default function LoginPage() {
   const { login, register, accountExists } = useLocalAuth();
+  const [consent, setConsent] = useState(false);
   const { language, setLanguage, t } = useTranslation();
   const router = useRouter();
 
@@ -241,6 +244,10 @@ export default function LoginPage() {
       setError(t('auth.phrasePolicy'));
       return;
     }
+    if (!consent) {
+      setError(t('auth.consentRequired'));
+      return;
+    }
 
     setIsLoading(true);
     const result = await register(
@@ -248,6 +255,7 @@ export default function LoginPage() {
       password,
       displayName,
       recoveryPhrase,
+      { consent, version: PRIVACY_VERSION },
     );
 
     if (result.success) {
@@ -516,6 +524,27 @@ export default function LoginPage() {
                     >
                       {t('auth.forgotPassword')}
                     </Button>
+                  </div>
+
+                  <div className="flex items-start gap-2 text-sm">
+                    <Checkbox
+                      id="register-consent"
+                      checked={consent}
+                      onCheckedChange={(value) => setConsent(value === true)}
+                      data-testid="register-consent"
+                    />
+                    <label htmlFor="register-consent" className="leading-snug">
+                      {t('auth.consentLabel')}{' '}
+                      <Link
+                        className="underline underline-offset-2"
+                        href="/privacy"
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        {t('footer.privacy')}
+                      </Link>{' '}
+                      ({PRIVACY_VERSION})
+                    </label>
                   </div>
 
                   <Button

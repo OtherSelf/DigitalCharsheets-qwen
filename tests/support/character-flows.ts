@@ -14,6 +14,7 @@ import {
   GET as charactersGet,
   POST as charactersPost,
 } from '@/app/api/characters/route';
+import { PRIVACY_VERSION } from '@/lib/legal/privacy';
 
 import type { AnyCharacter } from './character-payloads';
 
@@ -74,6 +75,8 @@ export async function register(username: string, displayName?: string) {
       password: PASSWORD,
       displayName,
       recoveryPhrase: RECOVERY_PHRASE,
+      consent: true,
+      privacyVersion: PRIVACY_VERSION,
     }),
   );
   const body = await res.json();

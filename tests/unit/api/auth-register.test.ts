@@ -15,6 +15,7 @@ import { POST as registerRoute } from '@/app/api/auth/register/route';
 import { POST as loginRoute } from '@/app/api/auth/route';
 import { GET as charactersGet } from '@/app/api/characters/route';
 import { isUid } from '@/lib/ids';
+import { PRIVACY_VERSION } from '@/lib/legal/privacy';
 import {
   isRecoveryPhraseHash,
   recoveryPhraseMatches,
@@ -100,17 +101,31 @@ describe('POST /api/auth/register', () => {
   });
 
   it('валидирует обязательные поля, длину пароля и фразы', async () => {
-    const noPassword = await registerRoute(json({ username: 'x' }));
+    const noPassword = await registerRoute(
+      json({ username: 'x', consent: true, privacyVersion: PRIVACY_VERSION }),
+    );
     expect(noPassword.status).toBe(400);
 
     const shortPassword = await registerRoute(
-      json({ username: 'x', password: '123', recoveryPhrase: 'amber cobalt' }),
+      json({
+        username: 'x',
+        password: '123',
+        recoveryPhrase: 'amber cobalt',
+        consent: true,
+        privacyVersion: PRIVACY_VERSION,
+      }),
     );
     expect(shortPassword.status).toBe(400);
     expect((await shortPassword.json()).error).toContain('at least 12');
 
     const shortPhrase = await registerRoute(
-      json({ username: 'x', password: 'test-pass-1234', recoveryPhrase: 'ab' }),
+      json({
+        username: 'x',
+        password: 'test-pass-1234',
+        recoveryPhrase: 'ab',
+        consent: true,
+        privacyVersion: PRIVACY_VERSION,
+      }),
     );
     expect(shortPhrase.status).toBe(400);
     expect((await shortPhrase.json()).error).toContain('Recovery phrase');
@@ -123,6 +138,8 @@ describe('POST /api/auth/register', () => {
         password: 'test-pass-1234',
         displayName: 'Short',
         recoveryPhrase: '12345',
+        consent: true,
+        privacyVersion: PRIVACY_VERSION,
       }),
     );
 
@@ -243,7 +260,9 @@ describe('POST /api/auth', () => {
   });
 
   it('валидирует обязательные поля; длину пароля проверяет регистрация', async () => {
-    const noPassword = await loginRoute(json({ username: 'x' }));
+    const noPassword = await loginRoute(
+      json({ username: 'x', consent: true, privacyVersion: PRIVACY_VERSION }),
+    );
     expect(noPassword.status).toBe(400);
 
     const blankUsername = await loginRoute(
@@ -265,6 +284,8 @@ describe('POST /api/auth', () => {
         password: '123',
         displayName: 'Short',
         recoveryPhrase: 'amber cobalt',
+        consent: true,
+        privacyVersion: PRIVACY_VERSION,
       }),
     );
     expect(shortOnRegister.status).toBe(400);

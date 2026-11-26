@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 
 import { jsonError } from '@/lib/api/respond';
+import { appendConsent } from '@/lib/legal/consents';
+import { PRIVACY_VERSION } from '@/lib/legal/privacy';
 import { passwordPolicyError } from '@/lib/security/password';
 import { readAuthJson } from '@/lib/security/payload';
 import { phrasePolicyError } from '@/lib/security/phrase-policy';
@@ -30,16 +32,39 @@ export async function POST(request: Request) {
     if (!parsedBody.ok) {
       return jsonError(parsedBody.status, parsedBody.error, parsedBody.reason);
     }
-    const { username, password, displayName, recoveryPhrase } =
-      parsedBody.body as {
-        username?: string;
-        password?: string;
-        displayName?: string;
-        recoveryPhrase?: string;
-      };
+    const {
+      username,
+      password,
+      displayName,
+      recoveryPhrase,
+      consent,
+      privacyVersion,
+    } = parsedBody.body as {
+      username?: string;
+      password?: string;
+      displayName?: string;
+      recoveryPhrase?: string;
+      consent?: boolean;
+      privacyVersion?: string;
+    };
 
     if (!username || !password) {
       return jsonError(400, 'Username/Email and password are required.');
+    }
+
+    if (consent !== true) {
+      return jsonError(
+        400,
+        'Accept the privacy policy to create an account.',
+        'consent_required',
+      );
+    }
+    if (privacyVersion !== PRIVACY_VERSION) {
+      return jsonError(
+        400,
+        'The privacy policy has changed. Reload the page and try again.',
+        'privacy_version_mismatch',
+      );
     }
 
     const limiter = getAuthRateLimiter().check(
@@ -82,6 +107,15 @@ export async function POST(request: Request) {
         result.error || 'Registration failed.',
         result.reason,
       );
+    }
+
+    try {
+      await appendConsent({
+        uid: result.user.uid,
+        version: privacyVersion,
+      });
+    } catch (error) {
+      console.error('[dcs] consents.jsonl: запись не удалась', error);
     }
 
     const response = NextResponse.json({

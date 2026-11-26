@@ -73,6 +73,9 @@ export function SiteFooter() {
           >
             {t('footer.license')}
           </a>
+          <Link className={linkClass} href="/privacy">
+            {t('footer.privacy')}
+          </Link>
           <Link className={linkClass} href="/about">
             {t('footer.about')}
           </Link>

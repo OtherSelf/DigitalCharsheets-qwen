@@ -117,6 +117,7 @@ interface LocalAuthContextType {
     password: string,
     displayName: string,
     recoveryPhrase: string,
+    privacy: { consent: boolean; version: string },
   ) => Promise<LoginResult>;
   accountExists: (username: string) => Promise<AccountExistsResult>;
   /**
@@ -242,10 +243,18 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
       password: string,
       displayName: string,
       recoveryPhrase: string,
+      privacy: { consent: boolean; version: string },
     ): Promise<LoginResult> => {
       const auth = await postAuth(
         '/api/auth/register',
-        { username, password, displayName, recoveryPhrase },
+        {
+          username,
+          password,
+          displayName,
+          recoveryPhrase,
+          consent: privacy.consent,
+          privacyVersion: privacy.version,
+        },
         'registration',
       );
       if (!auth.ok) return auth.result;

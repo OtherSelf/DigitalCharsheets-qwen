@@ -8,6 +8,7 @@ import {
 } from '@playwright/test';
 
 import { LANGUAGE_COOKIE, type Language } from '@/lib/language';
+import { PRIVACY_VERSION } from '@/lib/legal/privacy';
 
 import { VISUAL_RECOVERY_PHRASE } from './fixtures';
 import {
@@ -705,6 +706,8 @@ export async function registerAccount(
       password: VISUAL_PASSWORD,
       displayName,
       recoveryPhrase: VISUAL_RECOVERY_PHRASE,
+      consent: true,
+      privacyVersion: PRIVACY_VERSION,
     },
   });
   expect(auth.status(), 'регистрация аккаунта через /api/auth/register').toBe(
@@ -813,6 +816,8 @@ export async function seedTempAccountSheet(
       password,
       displayName: `Temp ${systemId}`,
       recoveryPhrase: VISUAL_RECOVERY_PHRASE,
+      consent: true,
+      privacyVersion: PRIVACY_VERSION,
     },
   });
   expect([200, 201], 'регистрация аккаунта').toContain(registered.status());
