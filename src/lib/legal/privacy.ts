@@ -157,9 +157,18 @@ other persons.
   undone;
 - sessions — 14 days or until you sign out;
 - IP address and login in the rate-limit window — up to 60 minutes;
+- IP address in the web server access logs — up to 14 days (diagnostics and
+  protection against attacks);
 - the record that you accepted this policy — while the account exists.
 
 When a retention period ends, the data is deleted from the server.
+
+## Backups
+
+To survive a disk failure the operator keeps backups of the data directory. A
+backup is kept for no longer than 30 days and is then overwritten. Deleting an
+account or a sheet reaches the backups at the next rotation — that is, no later
+than 30 days after the deletion.
 
 ## Cookies
 
@@ -182,6 +191,8 @@ tracking, advertising or third-party cookies.
 If you are in the EU, the GDPR additionally gives you the rights of access,
 rectification, erasure, restriction of processing, objection and data
 portability, and the right to complain to your national supervisory authority.
+The operator has not appointed an EU representative: this is a small
+non-commercial instance that does not target the EU market.
 
 Deadlines: we answer a request within 10 working days, with an extension of up to
 5 working days and a reasoned notice (art. 20 of 152-FZ). Correcting incomplete
@@ -226,9 +237,10 @@ data ends up in a sheet, delete it; on notice, the operator may delete it too.
 
 ## Age
 
-The service is intended for users aged ${ctx.ageMinimum} and over. We do not verify age with
-documents; if we learn that an account belongs to a younger child, we will delete
-it.
+The service is intended for users aged ${ctx.ageMinimum} and over. If you are under 18,
+use it only with the consent of your legal guardian (parent or guardian). We do not
+verify age with documents; if we learn that an account belongs to a child younger
+than ${ctx.ageMinimum}, we will delete it.
 
 ## Changes
 
@@ -319,9 +331,17 @@ ${hostingRu(ctx)} Провайдер даёт инфраструктуру и п
   ближайшей очистке. Копия нужна, чтобы случайное удаление можно было отменить;
 - сессии — 14 дней или до выхода;
 - IP-адрес и логин в окне ограничения — до 60 минут;
+- IP-адрес в журналах веб-сервера — до 14 дней (диагностика и защита от атак);
 - запись о том, что вы приняли политику, — пока существует аккаунт.
 
 Когда срок заканчивается, данные удаляются с сервера.
+
+## Резервные копии
+
+Чтобы не потерять листы при сбое диска, оператор делает резервные копии
+каталога данных. Копия хранится не дольше 30 дней, затем перезаписывается.
+Удаление аккаунта или листа доходит до копий при очередной ротации — то есть
+не позже 30 дней после удаления.
 
 ## Cookie
 
@@ -342,7 +362,8 @@ ${hostingRu(ctx)} Провайдер даёт инфраструктуру и п
 
 Если вы находитесь в ЕС, дополнительно действуют права по GDPR: доступ,
 исправление, удаление, ограничение обработки, возражение и переносимость данных, а
-также жалоба в надзорный орган вашей страны.
+также жалоба в надзорный орган вашей страны. Представителя в ЕС оператор не
+назначал: это небольшой некоммерческий инстанс, который не адресован рынку ЕС.
 
 Сроки: на запрос отвечаем в течение 10 рабочих дней, продление — не более чем
 на 5 рабочих дней с мотивированным уведомлением (ст. 20 152-ФЗ). Уточнение
@@ -387,8 +408,10 @@ ${hostingRu(ctx)} Провайдер даёт инфраструктуру и п
 
 ## Возраст
 
-Сервис предназначен для пользователей ${ctx.ageMinimum} лет и старше. Документально возраст мы
-не проверяем; если узнаем, что аккаунтом пользуется ребёнок младше, — удалим его.
+Сервис предназначен для пользователей ${ctx.ageMinimum} лет и старше. Если вам нет 18,
+пользуйтесь им только с согласия законного представителя (родителя или опекуна).
+Документально возраст мы не проверяем; если узнаем, что аккаунтом пользуется
+ребёнок младше ${ctx.ageMinimum}, — удалим его.
 
 ## Изменения
 

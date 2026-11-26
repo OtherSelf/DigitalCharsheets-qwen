@@ -84,6 +84,22 @@ variant: the deploy path stays Linux with systemd.
 
 See [data-storage.md](data-storage.md) for the directory layout.
 
+## Retention the policy promises
+
+`/privacy` names concrete periods. Keep the server in line with them:
+
+- **Trash** — 14 days, then destroyed. The app sweeps expired entries on start
+  and once a day from `src/instrumentation.ts`; no external cron is required.
+  If you restart rarely, that daily timer is what keeps the promise.
+- **Web server access logs** — up to 14 days. Set `logrotate` for the nginx
+  access log accordingly, e.g. `daily` + `rotate 14` with `compress`; do the same
+  for the journald retention you actually rely on (`SystemMaxUse`/`MaxRetentionSec`).
+  Anything longer makes the policy wrong, not the logs.
+- **Backups of the data directory** — up to 30 days, overwritten after that.
+  Whichever tool you use (restic, borg, rsync snapshots), set the retention to
+  30 days: deletion of an account must reach the copies within that window.
+- **Rate-limit snapshot** — 60 minutes, enforced by the app itself.
+
 ## Instance config
 
 `dcs.config.json` in the repository root holds what differs between instances:
