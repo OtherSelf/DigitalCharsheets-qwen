@@ -62,6 +62,10 @@ export default function LoginPage() {
   // `totp_required`, и форма показывает поле кода.
   const [totpCode, setTotpCode] = useState('');
   const [totpRequired, setTotpRequired] = useState(false);
+  // Политика могла обновиться после регистрации: сервер отказывает во входе,
+  // пока действующая редакция не принята. Чекбокс показывается только в этот
+  // момент — постоянная галочка при входе раздражала бы тех, кто уже принял.
+  const [consentNeeded, setConsentNeeded] = useState(false);
 
   // Восстановление доступа: шаг 1 — проверка фразы, шаг 2 — новые пароль и
   // фраза. Токен из шага 1 живёт только в состоянии страницы: сессия на
@@ -88,6 +92,7 @@ export default function LoginPage() {
     setRecoveryPhraseInput('');
     setTotpCode('');
     setTotpRequired(false);
+    setConsentNeeded(false);
   };
 
   const isFormLoading = isLoading;
@@ -201,15 +206,29 @@ export default function LoginPage() {
       return;
     }
 
+    if (consentNeeded && !consent) {
+      setError(t('auth.consentRequired'));
+      setIsLoading(false);
+      return;
+    }
+
     const result = await login(
       username,
       password,
       undefined,
       totpCode.trim() || undefined,
+      consentNeeded ? { consent, version: PRIVACY_VERSION } : undefined,
     );
 
     if (result.success) {
       afterSuccessfulLogin(result);
+    } else if (result.reason === 'privacy_consent_required') {
+      setConsentNeeded(true);
+      setError(t('auth.consentRequiredLogin'));
+      setIsLoading(false);
+    } else if (result.reason === 'privacy_version_mismatch') {
+      setError(t('auth.consentVersionMismatch'));
+      setIsLoading(false);
     } else if (result.reason === 'totp_required') {
       setTotpRequired(true);
       setError(t('auth.totpRequired'));
@@ -512,6 +531,35 @@ export default function LoginPage() {
                         required
                         className="h-10"
                       />
+                    </div>
+                  )}
+
+                  {consentNeeded && (
+                    <div className="bg-muted/50 rounded-md border p-3">
+                      <div className="flex items-start gap-2 text-sm">
+                        <Checkbox
+                          id="login-consent"
+                          checked={consent}
+                          onCheckedChange={(value) =>
+                            setConsent(value === true)
+                          }
+                          data-testid="login-consent"
+                        />
+                        <label htmlFor="login-consent" className="leading-snug">
+                          {t('auth.consentLabel')}{' '}
+                          <Link
+                            className="underline underline-offset-2"
+                            href="/privacy"
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            {t('auth.consentLink')}
+                          </Link>{' '}
+                          <span className="whitespace-nowrap">
+                            ({PRIVACY_VERSION})
+                          </span>
+                        </label>
+                      </div>
                     </div>
                   )}
 

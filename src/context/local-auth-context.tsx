@@ -111,6 +111,9 @@ interface LocalAuthContextType {
     password: string,
     displayName?: string,
     totpCode?: string,
+    /** Принятие политики: уходит только при повторной попытке после
+     * `privacy_consent_required`, иначе поле просто отсутствует. */
+    privacy?: { consent: boolean; version: string },
   ) => Promise<LoginResult>;
   register: (
     username: string,
@@ -214,10 +217,19 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
       password: string,
       displayName?: string,
       totpCode?: string,
+      privacy?: { consent: boolean; version: string },
     ): Promise<LoginResult> => {
       const auth = await postAuth(
         '/api/auth',
-        { username, password, displayName, totpCode },
+        {
+          username,
+          password,
+          displayName,
+          totpCode,
+          ...(privacy
+            ? { consent: privacy.consent, privacyVersion: privacy.version }
+            : {}),
+        },
         'login',
       );
       if (!auth.ok) return auth.result;

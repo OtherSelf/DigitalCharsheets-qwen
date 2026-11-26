@@ -536,6 +536,57 @@ function findUidByUsername(dataDir: string, username: string): string | null {
   return null;
 }
 
+/**
+ * Демо-аккаунты, заведённые в обход `/api/auth/register` (стартовый админ из
+ * `.initial-admin.txt`), не имеют строки в журнале согласий, а вход без неё
+ * теперь закрыт. Дописываем им согласие действующей редакции — как если бы
+ * они приняли её при первом входе.
+ */
+function ensureFixtureConsents(dataDir: string): void {
+  const usersDir = path.join(dataDir, 'users');
+  const file = path.join(dataDir, 'consents.jsonl');
+
+  const covered = new Set<string>();
+  try {
+    for (const line of fs.readFileSync(file, 'utf8').split('\n')) {
+      if (!line.trim()) continue;
+      try {
+        const record = JSON.parse(line) as { uid?: string; version?: string };
+        if (record.uid && record.version === PRIVACY_VERSION) {
+          covered.add(record.uid);
+        }
+      } catch {
+        // Битая строка не мешает дописать остальные.
+      }
+    }
+  } catch {
+    // Журнала ещё нет — это нормальный первый прогон.
+  }
+
+  let entries: fs.Dirent[] = [];
+  try {
+    entries = fs.readdirSync(usersDir, { withFileTypes: true });
+  } catch {
+    return;
+  }
+
+  const lines: string[] = [];
+  for (const entry of entries) {
+    if (!entry.isDirectory() || covered.has(entry.name)) continue;
+    lines.push(
+      JSON.stringify({
+        uid: entry.name,
+        version: PRIVACY_VERSION,
+        source: 'register',
+        at: '2025-01-01T00:00:00.000Z',
+      }),
+    );
+  }
+  if (lines.length > 0) {
+    fs.appendFileSync(file, `${lines.join('\n')}\n`, { mode: 0o600 });
+  }
+}
+
 async function signIn(
   baseURL: string,
   username: string,
@@ -737,6 +788,9 @@ async function seedAdminFixtures(
     for (const spec of ADMIN_DEMO_USERS) {
       await ensureAdminDemoUser(baseURL, dataDir, spec, fixtures);
     }
+
+    // Стартовый админ заведён приложением на старте, без регистрации.
+    ensureFixtureConsents(dataDir);
 
     const first = await signIn(
       baseURL,

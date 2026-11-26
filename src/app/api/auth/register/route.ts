@@ -113,6 +113,7 @@ export async function POST(request: Request) {
       await appendConsent({
         uid: result.user.uid,
         version: privacyVersion,
+        source: 'register',
       });
     } catch (error) {
       console.error('[dcs] consents.jsonl: запись не удалась', error);

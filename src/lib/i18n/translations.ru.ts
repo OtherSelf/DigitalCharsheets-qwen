@@ -432,6 +432,10 @@ export const ruTranslations = {
   'auth.consentLink': 'политику конфиденциальности',
   'auth.consentRequired':
     'Примите политику конфиденциальности, чтобы создать аккаунт.',
+  'auth.consentRequiredLogin':
+    'Чтобы войти, примите действующую редакцию политики конфиденциальности.',
+  'auth.consentVersionMismatch':
+    'Политика изменилась, пока страница была открыта. Обновите страницу и попробуйте снова.',
   'auth.creatingAccount': 'Создание аккаунта...',
   'auth.displayName': 'Отображаемое имя',
   'auth.displayNamePlaceholder': 'например, Aria the Bard',

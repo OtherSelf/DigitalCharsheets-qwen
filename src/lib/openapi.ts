@@ -285,6 +285,16 @@ export const openApiDocument = {
             description:
               'TOTP code or one-time backup code. Required when the account has two-factor authentication enabled; a missing code answers `401 totp_required`, a wrong one `401 totp_invalid`.',
           },
+          consent: {
+            type: 'boolean',
+            description:
+              'Acceptance of the current privacy policy. Needed only when the account has not accepted it yet: without it the login answers `403 privacy_consent_required` and no session cookie is set.',
+          },
+          privacyVersion: {
+            type: 'string',
+            description:
+              'Version being accepted, compared with the server constant. A stale version answers `400 privacy_version_mismatch`.',
+          },
         },
         additionalProperties: false,
       },
@@ -1096,7 +1106,9 @@ export const openApiDocument = {
           },
           400: { $ref: '#/components/responses/BadRequest' },
           401: { $ref: '#/components/responses/Unauthorized' },
-          403: errorResponse('Account is blocked by an administrator.'),
+          403: errorResponse(
+            'Account is blocked by an administrator, or the current privacy policy has not been accepted (`reason: privacy_consent_required`); no cookie is set in both cases.',
+          ),
           404: errorResponse('No account with this login.'),
           500: { $ref: '#/components/responses/ServerError' },
         },

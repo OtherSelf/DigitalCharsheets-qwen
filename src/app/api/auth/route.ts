@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 
 import { jsonError } from '@/lib/api/respond';
 import { languageCookieHeader } from '@/lib/language';
+import { appendConsent, latestConsentVersion } from '@/lib/legal/consents';
+import { PRIVACY_VERSION } from '@/lib/legal/privacy';
 import { readAuthJson } from '@/lib/security/payload';
 import {
   accountRateLimitKey,
@@ -21,7 +23,8 @@ import { sessionCookieHeader } from '@/lib/session';
  *
  * Статусы: 400 — не заполнены поля; 401 — «нет такого аккаунта» и «неверный
  * пароль» неразличимы; 403 — аккаунт заблокирован (виден только после верного
- * пароля); 429 — превышен лимит попыток; 200 — сессия в httpOnly-cookie.
+ * пароля) или не принята действующая редакция политики; 429 — превышен лимит
+ * попыток; 200 — сессия в httpOnly-cookie.
  *
  * Длину пароля вход НЕ проверяет: политика (минимум 12) действует в момент
  * установки пароля, иначе аккаунты, созданные раньше, потеряли бы доступ.
@@ -33,11 +36,20 @@ export async function POST(request: Request) {
     if (!parsedBody.ok) {
       return jsonError(parsedBody.status, parsedBody.error, parsedBody.reason);
     }
-    const { username, password, displayName, totpCode } = parsedBody.body as {
+    const {
+      username,
+      password,
+      displayName,
+      totpCode,
+      consent,
+      privacyVersion,
+    } = parsedBody.body as {
       username?: string;
       password?: string;
       displayName?: string;
       totpCode?: string;
+      consent?: boolean;
+      privacyVersion?: string;
     };
 
     if (!username || !password) {
@@ -106,6 +118,36 @@ export async function POST(request: Request) {
               ? 503
               : 401;
       return jsonError(status, result.error || 'Login failed.', result.reason);
+    }
+
+    // Политика могла измениться, пока аккаунт жил: без принятой действующей
+    // редакции сессию не выдаём. Аккаунты, созданные до появления лога
+    // согласий, не имеют ни одной записи, поэтому проходят тот же путь.
+    const accepted = await latestConsentVersion(result.user.uid);
+    if (accepted !== PRIVACY_VERSION) {
+      if (consent !== true) {
+        return jsonError(
+          403,
+          'Accept the privacy policy to sign in.',
+          'privacy_consent_required',
+        );
+      }
+      if (privacyVersion !== PRIVACY_VERSION) {
+        return jsonError(
+          400,
+          'The privacy policy has changed. Reload the page and try again.',
+          'privacy_version_mismatch',
+        );
+      }
+      try {
+        await appendConsent({
+          uid: result.user.uid,
+          version: privacyVersion,
+          source: 'login',
+        });
+      } catch (error) {
+        console.error('[dcs] consents.jsonl: запись не удалась', error);
+      }
     }
 
     // Успешный вход обнуляет счётчик неудач и для пары IP+логин, и для

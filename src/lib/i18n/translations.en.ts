@@ -430,6 +430,9 @@ export const enTranslations = {
   'auth.consentLabel': 'I accept',
   'auth.consentLink': 'the privacy policy',
   'auth.consentRequired': 'Accept the privacy policy to create an account.',
+  'auth.consentRequiredLogin': 'Accept the current privacy policy to sign in.',
+  'auth.consentVersionMismatch':
+    'The policy changed while this page was open. Reload the page and try again.',
   'auth.creatingAccount': 'Creating account...',
   'auth.displayName': 'Display Name',
   'auth.displayNamePlaceholder': 'e.g., Aria the Bard',

@@ -773,6 +773,59 @@ await check('consents.jsonl: запись согласия с версией', a
   );
 });
 
+await check(
+  'POST /api/auth без принятой политики → 403 privacy_consent_required',
+  async () => {
+    if (!opts.dataDir) return;
+    // Журнала нет — так выглядят аккаунты, созданные до появления согласия.
+    fs.rmSync(path.join(opts.dataDir, 'consents.jsonl'), { force: true });
+    const res = await api('/auth', {
+      method: 'POST',
+      body: { username, password },
+      auth: false,
+    });
+    assertStatus(res, 403, 'вход без принятой политики');
+    assert(
+      res.json?.reason === 'privacy_consent_required',
+      `вход без политики: reason = ${res.json?.reason}`,
+    );
+    assert(
+      !res.headers.get('set-cookie'),
+      'вход без принятой политики не должен выдавать cookie',
+    );
+  },
+);
+
+await check(
+  'POST /api/auth с принятием политики → 200 и запись source=login',
+  async () => {
+    const res = await api('/auth', {
+      method: 'POST',
+      body: {
+        username,
+        password,
+        consent: true,
+        privacyVersion: PRIVACY_VERSION,
+      },
+      auth: false,
+    });
+    assertStatus(res, 200, 'вход с принятием политики');
+    if (!opts.dataDir) return;
+    const line = fs
+      .readFileSync(path.join(opts.dataDir, 'consents.jsonl'), 'utf8')
+      .trim()
+      .split('\n')
+      .pop();
+    const record = JSON.parse(line);
+    assert(record.uid === userId, `журнал: uid ${record.uid} ≠ ${userId}`);
+    assert(record.source === 'login', `журнал: источник ${record.source}`);
+    assert(
+      record.version === PRIVACY_VERSION,
+      `журнал: версия ${record.version} ≠ ${PRIVACY_VERSION}`,
+    );
+  },
+);
+
 await check('POST /api/auth/register → 409 на занятый логин', async () => {
   const res = await api('/auth/register', {
     method: 'POST',
