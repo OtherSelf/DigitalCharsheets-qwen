@@ -452,6 +452,10 @@ export const ruTranslations = {
   'auth.preConsentDeleted': 'Аккаунт и его данные удалены.',
   'auth.preConsentFailed':
     'Не получилось. Проверьте пароль и попробуйте снова.',
+  'auth.preConsentAlreadyAccepted':
+    'Политика уже принята — просто войдите обычным способом.',
+  'auth.preConsentServerError':
+    'Сервер не смог собрать выгрузку. Напишите оператору — данные не потеряны.',
   'auth.consentLabel': 'Принимаю',
   'auth.consentLink': 'политику конфиденциальности',
   'auth.consentTermsLink': 'пользовательское соглашение',

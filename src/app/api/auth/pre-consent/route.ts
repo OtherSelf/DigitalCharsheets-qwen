@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 
 import { jsonError } from '@/lib/api/respond';
-import { buildBackupExport, exportFileName } from '@/lib/export-utils';
+import { toPortableCharacter } from '@/lib/character-portable';
+import { buildBackupEnvelope } from '@/lib/export-shared';
 import { isConsentCurrent } from '@/lib/legal/consent-gate';
 import { latestConsent } from '@/lib/legal/consents';
 import { PRIVACY_VERSION } from '@/lib/legal/privacy';
@@ -117,12 +118,17 @@ export async function POST(request: Request) {
       return response;
     }
 
+    // Конверт собирается серверно-безопасным модулем: `export-utils` помечен
+    // `'use client'`, и вызов оттуда падал на «клиентская функция на сервере».
     const characters = await getCharactersFromServer(auth.user.uid);
-    const payload = buildBackupExport(characters, auth.user.username);
-    const filename = exportFileName('backup', {
-      login: auth.user.username ?? auth.user.uid,
-      date: new Date(),
-    });
+    const portable = characters.map((character) =>
+      toPortableCharacter(character as unknown as Record<string, unknown>),
+    );
+    const payload = buildBackupEnvelope(
+      portable as unknown as Array<Partial<Record<string, unknown>>>,
+      auth.user.username,
+    );
+    const filename = `dcs_characters_all_${auth.user.username ?? auth.user.uid}.json`;
 
     return new NextResponse(JSON.stringify(payload), {
       status: 200,

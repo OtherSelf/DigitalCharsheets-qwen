@@ -15,6 +15,13 @@ import type {
 
 import { isNonPortableField, toPortableCharacter } from './character-portable';
 import { normalizeCharacterRecord } from './character-version';
+import {
+  buildBackupEnvelope,
+  EXPORT_APP_NAME,
+  EXPORT_FORMAT,
+  EXPORT_FORMAT_VERSION,
+  LEGACY_EXPORT_APP_NAMES,
+} from './export-shared';
 import { translations } from './i18n';
 import { Character } from './types';
 
@@ -60,15 +67,12 @@ export const DEFAULT_EXPORT_CONFIG: ExportConfig = {
  * лист, конверт v1 без format/kind) импорт намеренно не принимает — при
  * попытке будет понятная ошибка «переэкспортируйте файл».
  */
-export const EXPORT_APP_NAME = 'Digital Character Sheets';
-/**
- * Имена, которые писали прошлые версии приложения. Импорт обязан их
- * принимать: иначе свежий билд отказался бы открывать бэкапы, сделанные до
- * переименования, — а имя приложения не является частью версии формата.
- */
-const LEGACY_EXPORT_APP_NAMES = ['DigitalCharsheets-qwen'];
-export const EXPORT_FORMAT = 'dcs-export';
-export const EXPORT_FORMAT_VERSION = '3.0';
+export {
+  EXPORT_APP_NAME,
+  EXPORT_FORMAT,
+  EXPORT_FORMAT_VERSION,
+  LEGACY_EXPORT_APP_NAMES,
+} from './export-shared';
 const EXPORT_FORMAT_MAJOR = 3;
 /** Версии, которые импорт умеет мигрировать (в старом конверте). */
 const LEGACY_EXPORT_MAJORS = [2];
@@ -245,18 +249,11 @@ export function buildBackupExport(
       ) as unknown as Character,
   );
   assertExportable(portable, { allowUnknownSystem: true });
-  return {
-    metadata: {
-      appName: EXPORT_APP_NAME,
-      format: EXPORT_FORMAT,
-      version: EXPORT_FORMAT_VERSION,
-      kind: 'backup',
-      exportDate: now.toISOString(),
-      characterCount: portable.length,
-      ...(account ? { account } : {}),
-    },
-    characters: portable as unknown as Partial<Character>[],
-  };
+  return buildBackupEnvelope(
+    portable as unknown as Partial<Character>[],
+    account,
+    now,
+  );
 }
 
 /**

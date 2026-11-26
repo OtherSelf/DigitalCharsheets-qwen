@@ -236,7 +236,19 @@ export default function LoginPage() {
       });
 
       if (!response.ok) {
-        setError(t('auth.preConsentFailed'));
+        const failure = (await response.json().catch(() => null)) as {
+          reason?: string;
+        } | null;
+        // Разные причины — разные советы: «принята» значит «просто войдите»,
+        // а не «проверьте пароль».
+        setError(
+          failure?.reason === 'consent_not_required'
+            ? t('auth.preConsentAlreadyAccepted')
+            : failure?.reason === 'invalid_credentials' ||
+                failure?.reason === 'invalid_password'
+              ? t('auth.preConsentFailed')
+              : t('auth.preConsentServerError'),
+        );
         return;
       }
 

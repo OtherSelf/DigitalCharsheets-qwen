@@ -69,19 +69,31 @@ function registryEn(ctx: PolicyContext): string {
 function hostingRu(ctx: PolicyContext): string {
   const where =
     ctx.hostingCountry === 'RU' ? 'в России' : `в ${ctx.hostingCountry}`;
-  const provider = ctx.hostingProvider
-    ? `хостинг-провайдера ${ctx.hostingProvider}`
-    : 'хостинг-провайдера';
-  return `Сервер арендован у ${provider} (${where}).`;
+  if (!ctx.hostingProvider) {
+    // Свой сервер — не «аренда»: описывать несуществующего провайдера нельзя,
+    // иначе политика пересказывает инфраструктуру, которой нет.
+    return `Сервер находится на оборудовании оператора (${where}), а не в
+стороннем облаке. Доступ к данным есть только у оператора.`;
+  }
+  return `Сервер арендован у хостинг-провайдера ${ctx.hostingProvider}
+(${where}). Провайдер даёт инфраструктуру и поэтому технически имеет доступ к
+диску; доступ к самим данным есть только у оператора. Обработка поручена
+провайдеру на условиях его договора (ч. 3 ст. 6 152-ФЗ) с обязанностью
+сохранять конфиденциальность.`;
 }
 
 function hostingEn(ctx: PolicyContext): string {
   const where =
     ctx.hostingCountry === 'RU' ? 'in Russia' : `in ${ctx.hostingCountry}`;
-  const provider = ctx.hostingProvider
-    ? `the hosting provider ${ctx.hostingProvider}`
-    : 'a hosting provider';
-  return `The server is rented from ${provider} (${where}).`;
+  if (!ctx.hostingProvider) {
+    return `The server runs on the operator's own hardware (${where}), not in
+someone else's cloud. Only the operator can access the data.`;
+  }
+  return `The server is rented from the hosting provider ${ctx.hostingProvider}
+(${where}). The provider supplies infrastructure and therefore has technical
+access to the disk; access to the data itself is limited to the operator.
+Processing is entrusted to the provider under its terms of service (art. 6(3) of
+152-FZ), which oblige it to keep the data confidential.`;
 }
 
 function policyEn(ctx: PolicyContext): string {
@@ -145,10 +157,8 @@ consequences by automated processing and we do not profile anyone.
 
 ## Who else can see it
 
-${hostingEn(ctx)} The provider supplies infrastructure and therefore has
-technical access to the disk; access to the data itself is limited to the
-operator. There is no transfer abroad and no transfer to
-other persons.
+${hostingEn(ctx)} No one else receives the data, and nothing is transferred
+abroad.
 
 ## How long we keep it
 
@@ -321,11 +331,7 @@ ${operatorRu(ctx)} Это не компания: инстанс ведёт од�
 
 ## Кто ещё может их видеть
 
-${hostingRu(ctx)} Провайдер даёт инфраструктуру и поэтому технически имеет
-доступ к диску; доступ к самим данным есть только у оператора. Обработка
-поручена провайдеру на условиях его договора (ч. 3 ст. 6 152-ФЗ) с
-обязанностью сохранять конфиденциальность. Другим лицам данные не передаются,
-за рубеж — тоже.
+${hostingRu(ctx)} Другим лицам данные не передаются, за рубеж — тоже.
 
 ## Сколько храним
 

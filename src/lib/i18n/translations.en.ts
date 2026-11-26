@@ -451,6 +451,10 @@ export const enTranslations = {
   'auth.preConsentDeleted': 'The account and its data are deleted.',
   'auth.preConsentFailed':
     'That did not work. Check the password and try again.',
+  'auth.preConsentAlreadyAccepted':
+    'The policy is already accepted — just sign in the usual way.',
+  'auth.preConsentServerError':
+    'The server could not assemble the export. Write to the operator — your data is safe.',
   'auth.consentLabel': 'I accept',
   'auth.consentLink': 'the privacy policy',
   'auth.consentTermsLink': 'the terms of use',

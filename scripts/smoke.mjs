@@ -799,6 +799,32 @@ await check(
 );
 
 await check(
+  'POST /api/auth/pre-consent → файл резервной копии без принятия',
+  async () => {
+    // Здесь журнал уже удалён предыдущей проверкой: аккаунт «до согласия».
+    const res = await api('/auth/pre-consent', {
+      method: 'POST',
+      body: { action: 'export', username, password },
+      auth: false,
+    });
+    assertStatus(res, 200, 'выгрузка до принятия политики');
+    const payload = res.json;
+    assert(
+      payload?.metadata?.kind === 'backup',
+      `pre-consent export: kind = ${payload?.metadata?.kind}`,
+    );
+    assert(
+      Array.isArray(payload?.characters),
+      'pre-consent export: нет массива characters',
+    );
+    assert(
+      res.headers.get('content-disposition')?.includes('attachment'),
+      'pre-consent export: нет Content-Disposition',
+    );
+  },
+);
+
+await check(
   'POST /api/auth с принятием политики → 200 и запись source=login',
   async () => {
     const res = await api('/auth', {
