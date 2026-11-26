@@ -1002,9 +1002,7 @@ test.describe('демо и настройки профиля', () => {
     await expect(
       dialog.getByText(/This action cannot be undone/i),
     ).toBeVisible();
-    await expect(
-      dialog.getByText(/deleted data cannot be restored/i),
-    ).toBeVisible();
+    await expect(dialog.getByText(/service trash for 14 days/i)).toBeVisible();
     await expect(
       dialog.getByLabel('Confirm your password', { exact: true }),
     ).toBeVisible();
@@ -1028,7 +1026,7 @@ test.describe('демо и настройки профиля', () => {
     ).toBeVisible();
     await expect(dialog.getByText(/нельзя отменить/i)).toBeVisible();
     await expect(
-      dialog.getByText(/Восстановить удалённые данные нельзя/i),
+      dialog.getByText(/служебную корзину на 14 дней/i),
     ).toBeVisible();
     await expect(
       dialog.getByLabel('Подтвердите пароль', { exact: true }),
