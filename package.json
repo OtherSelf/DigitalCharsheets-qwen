@@ -3,6 +3,15 @@
   "version": "0.25.0",
   "private": true,
   "license": "MIT",
+  "author": "OtherSelf and Ruslan Komlev (ThFree)",
+  "contributors": [
+    {
+      "name": "OtherSelf"
+    },
+    {
+      "name": "Ruslan Komlev (ThFree)"
+    }
+  ],
   "engines": {
     "node": ">=22.12.0"
   },

@@ -121,6 +121,9 @@ export const enTranslations = {
   'about.privacyTitle': 'Your data',
   'about.privacyBody':
     'Accounts, sheets, history and sessions live in the data directory of this server: no database, no third-party services, no analytics or trackers. A share link is read-only and can be revoked at any time. What exactly is stored, why, on what basis and for how long is described in the privacy policy.',
+  'about.creditsTitle': 'Credits',
+  'about.creditsBody':
+    'Idea and project — OtherSelf; code and infrastructure — Ruslan Komlev (ThFree). The sources are MIT-licensed; no third-party text or artwork ships with them.',
   'about.disclaimerTitle': 'Disclaimer',
   'about.disclaimerBody':
     'The project is unofficial and is not affiliated with the publishers of the game systems. Rules text and trademarks belong to their owners. The build ships no rulebook text: labels, numbers and short mechanical statements; example phrases are invented for the demo, and your own text stays in your sheet.',

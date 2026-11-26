@@ -29,6 +29,7 @@ export function AboutView() {
     { title: t('about.whatTitle'), body: t('about.whatBody') },
     { title: t('about.stackTitle'), body: t('about.stackBody') },
     { title: t('about.privacyTitle'), body: t('about.privacyBody') },
+    { title: t('about.creditsTitle'), body: t('about.creditsBody') },
     { title: t('about.disclaimerTitle'), body: t('about.disclaimerBody') },
   ];
 
