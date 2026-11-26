@@ -9,6 +9,91 @@ Plugin versions are separate from the app version. A release note lists them
 when they change; sheet `schemaVersion` only changes when the stored character
 format changes.
 
+## [Unreleased]
+
+## [0.26.0] - 2026-11-26
+
+The policy becomes enforceable: an instance config, site modes, and consent that
+survives account deletion.
+
+### Added
+
+- `dcs.config.json` — the instance config: public name, legal-text switches, the
+  operator's details (name, postal address, contact e-mail, registry number),
+  age minimum, hosting provider and country, and the dev hosts Next allows.
+  Precedence is defaults → file → `DCS_CONFIG` (JSON), values are validated by a
+  zod schema, and a broken file fails the start with the field name instead of
+  silently replacing the operator's details with defaults. `allowedDevOrigins`
+  in `next.config.ts` now comes from the config.
+- The privacy policy is generated on the server from that config and follows
+  ч. 1 п. 2 ст. 18.1: purposes, data, grounds and periods, processing methods,
+  subject categories, protection measures, rights with 10 + 5 working days. The
+  data map is a list that reads at 390 px, the registry line appears only when a
+  number is set, GDPR is narrowed to the rights it actually grants, there is a
+  "what we ask you not to enter" section (special categories) and an honest
+  backups section (30 days, deletion reaches copies on rotation). The age
+  minimum is 16 with a guardian note below 18.
+- Sign-in requires the current policy version: after a correct password the
+  server compares the accepted version with `PRIVACY_VERSION`; without consent
+  it answers `403 privacy_consent_required` and no cookie, accepting in the same
+  request writes the journal with `source: 'login'`, a foreign version is
+  `400 privacy_version_mismatch`. Accounts created before consent existed can no
+  longer sign in silently.
+- Site modes on `/admin`: open registration, sign-in for staff only,
+  maintenance. They live in `<data-dir>/site-settings.json` (1 s read cache,
+  safe defaults on a broken file) and are changed through
+  `GET/PUT /api/admin/settings` under `requireAdmin`, where a partial body is
+  rejected so an accidental `{}` cannot open registration. Refusals are
+  `403 registration_closed` and `403 login_restricted`; in maintenance the pages
+  are rewritten to `/maintenance` and the API answers `503`, while `/login` and
+  `/api/auth/*` stay open and an administrator passes by role.
+- Subject rights are not gated by consent: `/api/auth/pre-consent` exports and
+  deletes an account that has not accepted the current policy, by password and
+  TOTP, without issuing a session; the consent screen offers both actions in two
+  steps.
+- Sign-in returns where the user left: `loginPath(next)`/`currentPathname()`
+  validate `?next=` with `safeInternalPath`, a guest opening `/character/<id>`
+  lands on the sign-in form instead of "sheet not found", and an expired session
+  returns to the current page after login.
+- Deleting an account writes a consent tombstone (`uid`, `at`, `version`), so
+  the fact that the policy was shown and accepted outlives the profile; the row
+  is not treated as an acceptance and is pruned after three years. The trash is
+  swept once a day from `src/instrumentation.ts`, not only on start, so the
+  14-day promise holds without frequent restarts.
+- Both authors are named in `LICENSE` and `NOTICE` ("OtherSelf and Ruslan Komlev
+  (ThFree)"), `package.json` repeats the same words in `author`/`contributors`,
+  and `/about` gained an "Authors" block.
+
+### Changed
+
+- The footer spans the full width of `main`, its rule now matches the header; on
+  a phone the links fit one line at 11 px, the commit hash moves into `title`
+  below `sm`, and `/about` links to the policy instead of retelling it.
+- `EXPORT_APP_NAME` is "Digital Character Sheets"; the import still accepts the
+  old `DigitalCharsheets-qwen` name, because the app name is not part of the
+  export format version.
+- Deployment docs describe the instance config and its variables, the retention
+  the policy promises (nginx logs 14 days, backups 30, the trash swept by the
+  app, rate-limit snapshot 60 minutes), and the domain move to
+  `dcsheets.space` / `dev.dcsheets.space` with ready nginx `301` redirects that
+  keep path and query, HSTS only on the new names and one re-login after the
+  move.
+- Plugin versions are unchanged (`dh1` 1.17.0, `dh2` 1.19.0, `dnd5e` 1.15.0,
+  `sandbox` 1.5.0) because `src/games` was not touched in this release.
+
+### Fixed
+
+- The pre-consent export rejected a password shorter than 12 characters: the
+  export branch checked `passwordPolicyError`, while sign-in deliberately does
+  not check the length, so a legacy short password could export nothing.
+- The consent label was one line and the version date wrapped mid-token; it is
+  now two lines, with the version in small print.
+- The delete-account dialog claimed the account cannot be restored "even by an
+  administrator" while a service copy lives 14 days — the text now says so. The
+  recovery-phrase hint said "at least 5 characters" and the admin password hint
+  "minimum 4", while the real policies are 6 words or 24 characters and 12
+  characters.
+
 ## [0.25.0] - 2026-11-26
 
 The public instance gets a privacy policy and an explicit consent step.
