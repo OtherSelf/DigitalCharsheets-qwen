@@ -711,9 +711,18 @@ test.describe('адаптивность', () => {
           footer.getByTestId('site-footer-version'),
           `${label}: версия в футере`,
         ).toContainText('0.0.0-test');
-        await expect(footer.getByTestId('site-footer-version')).toContainText(
-          '0000000',
+        // На телефоне хеш коммита скрыт, чтобы строка ссылок осталась одной;
+        // данные сборки при этом по-прежнему в `title`.
+        await expect(footer.getByTestId('site-footer-version')).toHaveAttribute(
+          'title',
+          /0000000/,
         );
+
+        // Политика — обязательная ссылка и на телефоне: раньше она уезжала во
+        // вторую строку и выглядела отсутствующей.
+        const privacy = footer.getByRole('link', { name: 'Privacy' });
+        await expect(privacy).toBeVisible();
+        await expect(privacy).toHaveAttribute('href', '/privacy');
 
         const repo = footer.getByRole('link', { name: 'Source code' });
         await expect(repo).toHaveAttribute('target', '_blank');
@@ -747,9 +756,30 @@ test.describe('адаптивность', () => {
         await expectFooter(path);
       }
 
+      await openApp(page, '/new');
+
+      // Линия подвала идёт от края до края, как у шапки: подвал живёт вне
+      // колонки контента, поэтому отрицательные поля не должны его обрезать.
+      // Сравниваем с `main`, а не с шапкой: подвал внутри скроллящегося
+      // контейнера, и на длинной странице его сужает полоса прокрутки.
+      const widths = await page.evaluate(() => {
+        const main = document.querySelector('main');
+        const footer = document.querySelector('[data-testid="site-footer"]');
+        if (!main || !footer) return null;
+        return {
+          main: main.clientWidth,
+          footer: Math.round(footer.getBoundingClientRect().width),
+          left: Math.round(footer.getBoundingClientRect().left),
+        };
+      });
+      expect(widths, 'геометрия контейнера и подвала').not.toBeNull();
+      expect(widths!.left, 'подвал начинается не от края контейнера').toBe(0);
+      expect(widths!.footer, 'подвал не на всю ширину контейнера').toBe(
+        widths!.main,
+      );
+
       // Короткая страница: футер прижат к низу экрана, под ним нет пустоты,
       // и он не растягивается на свободное место (высота — по контенту).
-      await openApp(page, '/new');
       const geometry = await page.evaluate(() => {
         const main = document.querySelector('main');
         const footer = document.querySelector(
