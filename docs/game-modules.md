@@ -154,10 +154,13 @@ Cleric and «Неофитка» for a Sister of Battle. Drift is caught by
 when the catalog is absent).
 
 The sheet walks the graph with `rankStateForCharacter`
-(`src/games/dh1/rank-graph.ts`): spent XP opens the next node, a chosen
-`advancedPath`/`alternatePath` picks the branch, and a fork without a choice
-returns `pendingFork` plus its options instead of guessing. The legacy path
-tables in `dark-heresy-ranks.ts` still feed the branch dialogs.
+(`src/games/dh1/rank-graph.ts`): spent XP opens the next node, a choice from
+`rankChoices` picks the branch, and a fork without a choice returns `fork` plus
+its options instead of guessing. A mandatory fork opens the dialog by itself and
+keeps the previous rank until the player chooses; an optional alternate only
+adds a button, because the standard path already works. The choice is locked
+after creation — only the import review unlocks it (`creation-review.ts`), and
+the lock is a UI rule, not a server check.
 
 ## Edition differences (dh1 vs dh2)
 
@@ -166,7 +169,7 @@ sheet follows the edition instead of sharing a switch:
 
 | Area | dh1 (1e) | dh2 (2e) |
 | --- | --- | --- |
-| Progression | career path, rank, alternate/advanced paths (`dark-heresy-ranks.ts`); `rank` and `characterClass` are derived from career and spent XP | no ranks or paths; manual XP journal |
+| Progression | career path, rank graph and `rankChoices` (fork → chosen node); `rank` and `characterClass` are derived from career and spent XP | no ranks or paths; manual XP journal |
 | Wealth | throne gelt and monthly income on the sheet; the "Collect salary" button adds the monthly income to the current capital | wealth hidden; Influence is the resource |
 | Requisition | not a rule | Influence + availability/craftsmanship target (`influence.ts`) |
 | Psychic | one discipline plus a power list (`psy.discipline`) | free-text disciplines/powers, psy rating purchase hint, elite advances |
@@ -356,7 +359,7 @@ per-game save handlers out of the page.
 | `defaultStatus` | `published` / `test` / `hidden`; runtime override in the game catalog. |
 | `nameKey`, `descriptionKey` | i18n keys; names are never stored in sheets. |
 | `shortCode` | Locale-independent edition code for the admin character list (`dnd5e`, `dh1e`, `dh2e`); declared in `plugin.json#shortCode` and duplicated in the module, not translated, the full game + edition goes to the tooltip (D29). |
-| `schemaVersion` | Sheet format written by the module: `2` for `dnd5e`, `8` for `dh1`, `6` for `dh2`; manifests declare it and the migration chain ends here. |
+| `schemaVersion` | Sheet format written by the module: `2` for `dnd5e`, `9` for `dh1`, `6` for `dh2`; manifests declare it and the migration chain ends here. |
 | `schema` | Zod schema; `ZodType<TCharacter>` makes `tsc` check it against the type. |
 | `i18n` | Declared locales (`en`/`ru` plus optional extras), merged by the core with an en↔ru fallback. |
 | `capabilities` | Fixed feature flags of the module (edition, +30, fatigue field). |

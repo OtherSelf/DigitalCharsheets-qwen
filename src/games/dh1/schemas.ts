@@ -307,6 +307,9 @@ export const darkHeresyBaseFields = {
   totalExpSpent: z.number().int().min(0).max(FIELD_LIMITS.experience),
   alternatePath: shortString().nullable(),
   advancedPath: shortString().nullable(),
+  // Карта выборов развилок; старые листы без неё валидны и получают поле
+  // миграцией/normalize.
+  rankChoices: z.record(shortString(), shortString()).optional(),
   wounds: z
     .looseObject({
       // Тяжёлые ранения уводят вунды в минус до -max. Границы проверяются

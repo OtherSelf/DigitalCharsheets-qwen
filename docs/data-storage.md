@@ -159,7 +159,7 @@ overwriting existing values (including an existing `tester` role). A profile
 without `passwordHash` is reported but cannot be logged into; an administrator
 can set a password from `/admin`.
 
-## Character sheets (schema v2/v8)
+## Character sheets (schema v2/v9)
 
 One file per sheet: `users/<uid>/characters/<character-id>.json`. The content is
 the `Character` object from `src/lib/types.ts` (D&D 5e, Dark Heresy 1e or Dark
@@ -168,7 +168,7 @@ parses every `*.json` in the user's `characters/` directory; a broken file is
 skipped rather than failing the whole list.
 
 `CharacterBase.schemaVersion` is per module: `dnd5e` stays at `2`, `dh1`
-writes `8` and `dh2` writes `6` (`src/games/dh1/schema-version.ts`,
+writes `9` and `dh2` writes `6` (`src/games/dh1/schema-version.ts`,
 `src/games/dh2/schema-version.ts`) after the DH1APP, 2e-generation,
 structured-conditions, canonical-gender, legacy-notes and derived-rank field
 sets. Each plugin declares the chain in `plugin.json` and implements the steps
@@ -185,6 +185,7 @@ migration and the docs:
 | 6 | DH1 legacy fields (`traits`, `eliteAdvances`, insanity degree/trauma modifier, corruption degree/test) move to the «Наследие» notes tab | `migrateDh1V5toV6` |
 | 7 | DH1 freezes the divination name/effect text in both locales (`divinationText`, `divinationEffectText`); the step itself adds nothing | `migrateDh1V6toV7` |
 | 8 | DH1 `rank` and `characterClass` become derived from career, spent XP and chosen paths; the step touches no data, `derive` recomputes on startup and save | `migrateDh1V7toV8` |
+| 9 | DH1 path choices move to `rankChoices` (fork node id → chosen node id); `advancedPath`/`alternatePath` stay as legacy for old exports | `migrateDh1V8toV9` |
 
 `dnd5e` has a single step (`1 → 2`): the same edition discriminator, nothing
 else. The steps call the same phase functions as `normalize`, so the chain and
@@ -224,9 +225,9 @@ Derivative fields (skill and save values, proficiency bonus, spell save DC,
 Dark Heresy rank and character class) belong to the host, not to the client: on
 every save the server runs the plugin's `derive`
 (`src/lib/character-derive.ts`) before `writeJsonAtomic`, so a sheet written by
-any client is self-consistent. In DH1 `rank` follows career, spent XP and the
-chosen advanced/alternate paths, and `characterClass` is the career; a sheet
-without a known career keeps its stored `rank` (legacy or custom). Sheets saved under an older
+any client is self-consistent. In DH1 `rank` follows career, spent XP and
+the chosen paths from `rankChoices`, and `characterClass` is the career; a
+sheet without a known career keeps its stored `rank` (legacy or custom). Sheets saved under an older
 `schemaVersion` are recomputed on read and persist through the startup scan
 (again with `.bak` and a history marker). `DCS_SERVER_DERIVE=0` disables the
 recalculation as an emergency brake; `npm run plugins:doctor` reports sheets

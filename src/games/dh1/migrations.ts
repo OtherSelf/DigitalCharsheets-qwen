@@ -4,6 +4,7 @@ import {
   ensureExperienceLog,
   migrateGender,
 } from './normalize';
+import { rankChoicesFromLegacy } from './rank-graph';
 
 /**
  * ─── LANDMARK: DH1 MIGRATIONS ──────────────────────────────────────────────
@@ -19,7 +20,9 @@ import {
  *   5 → 6  legacy-поля убраны в заметки «Наследие»;
  *   6 → 7  замороженный текст пророчества (бэкфилл 0.22.0) — без правок данных;
  *   7 → 8  `rank`/`characterClass` производные: данных шаг не трогает,
- *          значения пересчитывает `derive` на старте и при сохранении.
+ *          значения пересчитывает `derive` на старте и при сохранении;
+ *   8 → 9  выборы развилок `advancedPath`/`alternatePath` → `rankChoices`,
+ *          сами legacy-поля остаются для старого экспорта.
  *
  * Все фазы идемпотентны и не теряют значений: вытесненные поля уходят в
  * `notes` с маркером миграции.
@@ -222,4 +225,45 @@ export function migrateDh1V7toV8(
   _warnings: string[],
 ): RawRecord {
   return { ...character };
+}
+
+/**
+ * v8 → v9: выборы развилок переезжают в `rankChoices` (id узла-развилки → id
+ * выбранного узла). Имя ветки из `advancedPath`/`alternatePath` однозначно
+ * находит узел в графе карьеры; `advancedPath`/`alternatePath` остаются в
+ * документе как legacy для старого экспорта.
+ *
+ * Уже записанные `rankChoices` важнее legacy: повторный прогон не перетирает
+ * осознанный выбор, если старые поля почему-то ещё лежат рядом.
+ */
+export function migrateDh1V8toV9(
+  character: Readonly<RawRecord>,
+  warnings: string[],
+): RawRecord {
+  const next: RawRecord = { ...character };
+  const careerPath = typeof next.careerPath === 'string' ? next.careerPath : '';
+  const advancedPath =
+    typeof next.advancedPath === 'string' ? next.advancedPath : null;
+  const alternatePath =
+    typeof next.alternatePath === 'string' ? next.alternatePath : null;
+  const legacy = rankChoicesFromLegacy({
+    careerPath,
+    advancedPath,
+    alternatePath,
+  });
+  const existing = isRawRecord(next.rankChoices) ? next.rankChoices : {};
+
+  const merged: Record<string, string> = {};
+  for (const [forkId, nodeId] of Object.entries(legacy)) {
+    merged[forkId] = nodeId;
+  }
+  for (const [forkId, nodeId] of Object.entries(existing)) {
+    if (typeof nodeId === 'string') merged[forkId] = nodeId;
+  }
+  next.rankChoices = merged;
+
+  if (Object.keys(legacy).length > 0) {
+    warnings.push('dh1: выборы путей перенесены в rankChoices');
+  }
+  return next;
 }

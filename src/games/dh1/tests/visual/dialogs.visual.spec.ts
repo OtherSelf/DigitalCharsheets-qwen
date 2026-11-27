@@ -400,61 +400,174 @@ test.describe(
 );
 
 /**
- * Продвинутый путь DH1: диалог выбора обязан закрываться Esc и кликом мимо,
- * а выбранный путь — оставаться заблокированным. Раньше Radix намеренно
- * отменял оба способа закрытия, и игрок не мог выйти без выбора.
+ * Выборы карьерного пути DH1: развилка показывается при достижении порога,
+ * выбор пишется в `rankChoices` и запирается. Диалог обязан закрываться Esc и
+ * кликом мимо, а импортный review — разрешать смену до фиксации.
  */
-test.describe('DH1: выбор продвинутого пути', { tag: '@plugin:dh1' }, () => {
-  test('Esc и клик мимо закрывают диалог, путь остаётся выбранным', async ({
+test.describe('DH1: выборы карьерного пути', { tag: '@plugin:dh1' }, () => {
+  const SCHOLAR = 'dh1/core/rank/adept-scholar';
+  const SCRIBE = 'dh1/core/rank/adept-scribe';
+  // Развилки разные: 6000 у Scholar, альтернатива Chirurgeon — у Scribe (2000).
+  const CHOICE = `rank-choice-${SCHOLAR}`;
+  const CHOICE_ALT = `rank-choice-${SCRIBE}`;
+
+  async function createAdept(
+    page: import('@playwright/test').Page,
+    data: Record<string, unknown>,
+  ) {
+    const created = await page.request.post('/api/characters', {
+      data: { systemId: 'dh1', careerPath: 'Adept', ...data },
+    });
+    expect([200, 201], 'создание листа').toContain(created.status());
+    return (await created.json()) as { id: string };
+  }
+
+  test('обязательная развилка: Esc, клик мимо, выбор и замок', async ({
     page,
   }) => {
     test.skip(isMobile(), 'Esc/backdrop проверяются в desktop-проекте');
     await prepare(page.context(), { authenticated: false, theme: 'light' });
-    const account = await registerAccount(page, 'dh1-path', 'DH1 Path');
-    const created = await page.request.post('/api/characters', {
-      data: {
-        systemId: 'dh1',
-        name: 'DH1 Path',
-        careerPath: 'Adept',
-        totalExpSpent: 6000,
-      },
+    const account = await registerAccount(page, 'dh1-fork', 'DH1 Fork');
+    const { id } = await createAdept(page, {
+      name: 'DH1 Fork',
+      totalExpSpent: 6000,
     });
-    expect([200, 201], 'создание листа').toContain(created.status());
-    const { id } = (await created.json()) as { id: string };
 
     await signInViaUI(page, account);
     await openApp(page, sheetPath(id));
 
     const progression = page.locator('#progression-section');
-    await expect(progression).toBeVisible();
-    await progression.getByTestId('edit-button').click();
-
-    const select = progression.getByRole('button', {
-      name: 'Select Advanced Path',
-      exact: true,
-    });
-    await expect(select).toBeVisible();
-
-    await select.click();
-    const dialog = page.getByTestId('advanced-path-dialog');
+    const dialog = page.getByTestId('rank-path-dialog');
+    // Обязательная развилка открывается сама: ранг без выбора не растёт.
     await expect(dialog).toBeVisible();
     await page.keyboard.press('Escape');
     await expect(dialog).toHaveCount(0);
 
-    await select.click();
+    const choose = progression.getByRole('button', {
+      name: 'Choose Path',
+      exact: true,
+    });
+    await expect(choose).toBeVisible();
+    await choose.click();
     await expect(dialog).toBeVisible();
     await page.mouse.click(5, 5);
     await expect(dialog).toHaveCount(0);
 
-    // Выбор фиксируется сразу и больше не предлагает «изменить».
-    await select.click();
-    await dialog.getByTestId('choice-Comptroller').click();
+    await choose.click();
+    await dialog
+      .getByTestId(`choice-${'dh1/core/rank/adept-comptroller'}`)
+      .click();
     await expect(dialog).toHaveCount(0);
+    await expect(progression.getByTestId(CHOICE)).toContainText('Comptroller');
     await expect(
-      progression.getByText('Comptroller', { exact: true }),
-    ).toBeVisible();
+      progression.getByRole('button', { name: 'Change', exact: true }),
+    ).toHaveCount(0);
+
+    // Перезагрузка сохраняет выбор: повторно диалог не открывается.
+    await page.reload();
+    await expect(page.getByTestId('rank-path-dialog')).toHaveCount(0);
     await expect(
-      progression.getByRole('button', { name: 'Change Advanced Path' }),
+      page.locator('#progression-section').getByTestId(CHOICE),
+    ).toContainText('Comptroller');
+  });
+
+  test('альтернатива Адепта: кнопка на 2000 и выбор Chirurgeon', async ({
+    page,
+  }) => {
+    test.skip(isMobile(), 'блок опыта на телефоне живёт в отдельной секции');
+    await prepare(page.context(), { authenticated: false, theme: 'light' });
+    const account = await registerAccount(page, 'dh1-alt', 'DH1 Alt');
+    const { id } = await createAdept(page, {
+      name: 'DH1 Alt',
+      totalExpSpent: 2500,
+    });
+
+    await signInViaUI(page, account);
+    await openApp(page, sheetPath(id));
+
+    const progression = page.locator('#progression-section');
+    // Альтернатива не блокирует ранг: диалог сам не открывается, но кнопка
+    // видна без режима правки.
+    await expect(page.getByTestId('rank-path-dialog')).toHaveCount(0);
+    const choose = progression.getByRole('button', {
+      name: 'Choose Path',
+      exact: true,
+    });
+    await expect(choose).toBeVisible();
+    await choose.click();
+    const dialog = page.getByTestId('rank-path-dialog');
+    await expect(dialog).toBeVisible();
+    await dialog.getByTestId('choice-dh1/core/rank/adept-chirurgeon').click();
+    await expect(progression.getByTestId(CHOICE_ALT)).toContainText(
+      'Chirurgeon',
+    );
+  });
+
+  test('импорт: review разрешает смену и снова запирает', async ({ page }) => {
+    test.skip(isMobile(), 'сценарий проверяется в desktop-проекте');
+    await prepare(page.context(), { authenticated: false, theme: 'light' });
+    const account = await registerAccount(page, 'dh1-review', 'DH1 Review');
+    const { id } = await createAdept(page, {
+      name: 'DH1 Review',
+      homeWorld: 'Hive World',
+      totalExpSpent: 7000,
+      rankChoices: { [SCHOLAR]: 'dh1/core/rank/adept-comptroller' },
+    });
+
+    await signInViaUI(page, account);
+    // Отдельного GET одного листа нет; портируемый JSON отдаёт /api/export.
+    const fetched = await page.request.get(`/api/export?characterId=${id}`);
+    const character = (await fetched.json()) as Record<string, unknown>;
+    const envelope = {
+      metadata: {
+        appName: 'DigitalCharsheets-qwen',
+        format: 'dcs-export',
+        version: '3.0',
+        kind: 'character',
+        exportDate: '2026-01-01T00:00:00.000Z',
+        characterCount: 1,
+      },
+      character,
+    };
+
+    await openApp(page, '/');
+    await page.getByRole('button', { name: /Import Character/i }).click();
+    await page
+      .getByRole('dialog')
+      .locator('input[type="file"]')
+      .setInputFiles({
+        name: 'dh1-review.json',
+        mimeType: 'application/json',
+        buffer: Buffer.from(JSON.stringify(envelope)),
+      });
+    await page.waitForURL(/\/character\/[^/]+$/, { timeout: 30_000 });
+
+    const banner = page.getByTestId('creation-review-banner');
+    await expect(banner).toBeVisible();
+    const progression = page.locator('#progression-section');
+    const chip = progression.getByTestId(CHOICE);
+    await expect(chip).toContainText('Comptroller');
+
+    const change = chip.getByRole('button', { name: 'Change', exact: true });
+    await expect(change).toBeVisible();
+    await change.click();
+    const dialog = page.getByTestId('rank-path-dialog');
+    await expect(dialog).toBeVisible();
+    await dialog.getByTestId('choice-dh1/core/rank/adept-lexographer').click();
+    await expect(progression.getByTestId(CHOICE)).toContainText('Lexographer');
+
+    await banner.getByTestId('creation-review-confirm').click();
+    await expect(banner).toHaveCount(0);
+    await expect(
+      progression.getByRole('button', { name: 'Change', exact: true }),
+    ).toHaveCount(0);
+
+    await page.reload();
+    await expect(page.getByTestId('creation-review-banner')).toHaveCount(0);
+    const reloaded = page.locator('#progression-section');
+    await expect(reloaded.getByTestId(CHOICE)).toContainText('Lexographer');
+    await expect(
+      reloaded.getByRole('button', { name: 'Change', exact: true }),
     ).toHaveCount(0);
   });
 });

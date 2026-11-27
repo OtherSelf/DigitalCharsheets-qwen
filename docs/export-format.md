@@ -66,14 +66,16 @@ The user-facing import accepts only the `dcs-export` format and validates
 `appName`, `format`, version, `kind`, character fields and `characterCount`.
 
 Exports always use format **3.0**. Each character has a machine `systemId`
-(`dnd5e`, `dh1`, `dh2`), the module `schemaVersion` (`2` for `dnd5e`, `8` for
+(`dnd5e`, `dh1`, `dh2`), the module `schemaVersion` (`2` for `dnd5e`, `9` for
 `dh1`, `6` for `dh2`), and the legacy `gameSystem` mirror
 that is kept for consumers still being migrated. Dark Heresy divination fields
 are stable IDs (`"divination": "mutationWithout"`,
 `"divinationEffect": "minorMutation"`), and the gender is the canonical code
 (`male`, `female`, `unspecified` or `""`), not the displayed label. DH1 `rank`
 and `characterClass` are computed from the career and spent XP at export time,
-so the JSON cannot carry a stale rank snapshot.
+so the JSON cannot carry a stale rank snapshot; the chosen career paths travel
+in the additive `rankChoices` map next to the legacy
+`advancedPath`/`alternatePath` fields.
 
 Import accepts:
 

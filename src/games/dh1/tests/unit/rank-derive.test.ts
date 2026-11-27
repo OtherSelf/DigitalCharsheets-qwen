@@ -218,11 +218,14 @@ describe('DH1 v7 → v8: ранг стал производным', () => {
     expect(migrateDh1V7toV8(next, [])).toEqual(next);
   });
 
-  it('модуль объявляет версию 8 и шаг 7 → 8', () => {
+  it('модуль объявляет версию 9 и шаги 7 → 8, 8 → 9', () => {
     const gameModule = getGameModule('dh1');
-    expect(gameModule?.schemaVersion).toBe(8);
+    expect(gameModule?.schemaVersion).toBe(9);
     expect(
       gameModule?.migrations?.some((step) => step.from === 7 && step.to === 8),
+    ).toBe(true);
+    expect(
+      gameModule?.migrations?.some((step) => step.from === 8 && step.to === 9),
     ).toBe(true);
   });
 
@@ -256,7 +259,8 @@ describe('DH1 v7 → v8: ранг стал производным', () => {
     expect(report.derived).toBeGreaterThanOrEqual(1);
 
     const stored = JSON.parse(fs.readFileSync(file, 'utf8'));
-    expect(stored.schemaVersion).toBe(8);
+    expect(stored.schemaVersion).toBe(9);
+    expect(stored.rankChoices).toEqual({});
     expect(stored.rank).toBe('Inditor');
     expect(stored.characterClass).toBe('Adept');
     expect(fs.existsSync(`${file}.bak`)).toBe(true);

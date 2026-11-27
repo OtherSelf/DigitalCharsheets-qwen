@@ -12,5 +12,9 @@
  * `deriveDh1` из карьеры, опыта и выбранных путей. Отдельных правок данных у
  * шага нет: версия поднимается, а значения догоняет startup-пересчёт с `.bak`
  * и маркером истории.
+ *
+ * Версия 9 — выборы развилок живут в `rankChoices` (id узла-развилки → id
+ * выбранного узла). `advancedPath`/`alternatePath` остаются legacy-полями и
+ * переносятся в карту миграцией.
  */
-export const DH1_SCHEMA_VERSION = 8 as const;
+export const DH1_SCHEMA_VERSION = 9 as const;

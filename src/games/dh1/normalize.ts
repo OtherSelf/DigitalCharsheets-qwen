@@ -250,6 +250,12 @@ export function ensureExperienceLog(character: RawRecord): void {
   character.experienceLog = [];
 }
 
+/** Карта выборов развилок: у старых листов поля нет — появляется пустой. */
+export function ensureRankChoices(character: RawRecord): void {
+  if (isRecord(character.rankChoices)) return;
+  character.rankChoices = {};
+}
+
 /** Строки legacy-текста состояний: перенос строки или `;`, пустые отброшены. */
 function splitLegacyLines(value: unknown): string[] {
   if (typeof value !== 'string') return [];
@@ -346,6 +352,7 @@ export function normalizeDh1(
   migrateGender(character, warnings);
   enforceDh1Fields(character, warnings);
   ensureExperienceLog(character);
+  ensureRankChoices(character);
   ensureConditions(character);
 
   return {

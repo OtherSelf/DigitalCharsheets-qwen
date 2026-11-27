@@ -206,6 +206,12 @@ export interface DarkHeresyBase extends CharacterBase {
   totalExpSpent: number;
   alternatePath: string | null;
   advancedPath: string | null;
+  /**
+   * Выборы развилок: id узла-развилки → id выбранного узла. Источник истины
+   * для графа; `advancedPath`/`alternatePath` — legacy, переносятся миграцией.
+   * Поле аддитивное: старый лист без него читается через legacy-пути.
+   */
+  rankChoices?: Record<string, string>;
   wounds: { current: number; max: number; notes?: string };
   fatePoints: { current: number; max: number; notes?: string };
   insanityPoints: { total: number; notes?: string };

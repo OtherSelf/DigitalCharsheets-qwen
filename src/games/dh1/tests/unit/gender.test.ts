@@ -112,8 +112,8 @@ describe('схемы: в данных только код', () => {
 });
 
 describe('версия схемы и отображение', () => {
-  it('DH1 — 8, D&D 5e остаётся 2', () => {
-    expect(DH1_SCHEMA_VERSION).toBe(8);
+  it('DH1 — 9, D&D 5e остаётся 2', () => {
+    expect(DH1_SCHEMA_VERSION).toBe(9);
     expect(getGameModule('dnd5e')?.schemaVersion).toBe(2);
   });
 

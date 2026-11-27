@@ -884,5 +884,12 @@
   "dh1.rank.tech-priest-omniprophet": "Омнипророк",
   "dh1.rank.tech-priest-tech-priest": "Техножрец",
   "dh1.rank.tech-priest-technographer": "Технограф",
-  "dh1.rank.tech-priest-technomancer": "Техномант"
+  "dh1.rank.tech-priest-technomancer": "Техномант",
+  "dh1.choosePath": "Выбрать путь",
+  "dh1.choosePathTitle": "Выбор карьерного пути",
+  "dh1.choosePathDesc": "Опыт открыл новый путь. Выбор запирается после создания; изменить его можно только при проверке импортированного листа.",
+  "dh1.changePath": "Изменить",
+  "dh1.rankChoices": "Выбранные пути",
+  "dh1.rankChoiceInactive": "Выбранный путь откроется на",
+  "dh1.expUnit": "ОП"
 }

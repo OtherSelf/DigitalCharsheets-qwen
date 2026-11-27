@@ -3,9 +3,9 @@ import { RANK_GRAPHS } from './rank-graph.generated';
 /**
  * ─── LANDMARK: DH1 RANK GRAPH ─────────────────────────────────────────────
  * Карьерный путь 1-й редакции как граф: узел — ранг, рёбра — переходы.
- * Развилка там, где у узла больше одного `next`; выбор фиксируется в
- * `advancedPath`/`alternatePath` (позже — в `rankChoices`), а граф только
- * объясняет, куда этот выбор ведёт.
+ * Развилка там, где у узла больше одного `next`; выбор игрока лежит в
+ * `rankChoices` (id узла-развилки → id выбранного узла), а граф объясняет,
+ * куда этот выбор ведёт.
  *
  * Отличие от старых таблиц: сходимости и многотировые ветки. У Адепта
  * Chirurgeon возвращается в Scholar, у Сороритас три ветки сойдутся на
@@ -55,14 +55,26 @@ export interface RankInput {
   readonly totalExpSpent?: number | null;
   readonly advancedPath?: string | null;
   readonly alternatePath?: string | null;
+  readonly rankChoices?: Readonly<Record<string, string>> | null;
+}
+
+/** Нерешённая развилка: где выбирать и что предлагается. */
+export interface RankFork {
+  /** Узел, на котором происходит выбор. */
+  readonly nodeId: string;
+  readonly options: readonly RankNode[];
+  /** Нет стандартного варианта: без выбора ранг дальше не идёт. */
+  readonly required: boolean;
 }
 
 export interface RankState {
   /** Текущий узел ранга; `null` — карьеры нет или она неизвестна. */
   readonly node: RankNode | null;
-  /** Узел-развилка, где опыт уже за порогом, а выбора нет; ранг остаётся на нём. */
+  /** Нерешённая развилка (обязательная или альтернативная). */
+  readonly fork: RankFork | null;
+  /** ID обязательной развилки; `null`, если выбор не блокирует ранг. */
   readonly pendingFork: string | null;
-  /** Варианты на нерешённой развилке — их показывает диалог. */
+  /** Варианты на развилке — их показывает диалог. */
   readonly options: readonly RankNode[];
 }
 
@@ -81,73 +93,147 @@ export function rankNode(
   return graph.nodes[nodeId] ?? null;
 }
 
-/**
- * Выбор следующего узла на развилке. Явный выбор игрока важнее стандартного
- * пути; если выбора нет и среди вариантов есть стандартный — идём по нему.
- * `null` означает «выбор обязателен и ещё не сделан».
- */
-function pickNext(
-  candidates: readonly RankNode[],
-  advancedPath: string | null | undefined,
-  alternatePath: string | null | undefined,
+/** Входной узел ветки по её имени: самый ранний из узлов этой ветки. */
+function branchEntry(
+  graph: CareerRankGraph,
+  pathName: string,
+  kind: RankNodeKind,
 ): RankNode | null {
-  if (advancedPath) {
-    const advanced = candidates.find((node) => node.pathName === advancedPath);
-    if (advanced) return advanced;
-  }
-  if (alternatePath) {
-    const alternate = candidates.find(
-      (node) => node.kind === 'alternate' && node.pathName === alternatePath,
+  return (
+    Object.values(graph.nodes)
+      .filter((node) => node.kind === kind && node.pathName === pathName)
+      .sort((a, b) => a.expFrom - b.expFrom)[0] ?? null
+  );
+}
+
+/**
+ * Перенос legacy-выборов в `rankChoices`: `advancedPath`/`alternatePath`
+ * хранят имя ветки, а карта — id узла-развилки и выбранного узла.
+ * Невалидное имя просто игнорируется: угадывать ветку нельзя.
+ */
+export function rankChoicesFromLegacy(character: {
+  readonly careerPath?: string | null;
+  readonly advancedPath?: string | null;
+  readonly alternatePath?: string | null;
+}): Record<string, string> {
+  const graph = careerRankGraph(character.careerPath);
+  if (!graph) return {};
+
+  const choices: Record<string, string> = {};
+  const attach = (pathName: string | null | undefined, kind: RankNodeKind) => {
+    if (!pathName) return;
+    const node = branchEntry(graph, pathName, kind);
+    if (!node) return;
+    const fork = Object.values(graph.nodes).find((candidate) =>
+      candidate.next.includes(node.id),
     );
-    if (alternate) return alternate;
-  }
-  return candidates.find((node) => node.kind === 'standard') ?? null;
+    if (!fork) return;
+    choices[fork.id] = node.id;
+  };
+
+  attach(character.advancedPath, 'branch');
+  attach(character.alternatePath, 'alternate');
+  return choices;
+}
+
+/**
+ * Выборы листа: `rankChoices` — источник истины; лист без поля (старый или
+ * ещё не мигрированный документ) читается через legacy-пути.
+ */
+function choicesOf(character: RankInput): Readonly<Record<string, string>> {
+  if (character.rankChoices) return character.rankChoices;
+  return rankChoicesFromLegacy(character);
 }
 
 /**
  * Пройти граф по опыту и выбранным путям.
  *
  * Останавливаемся на узле, чьи следующие ранги ещё не открыты опытом, либо на
- * развилке без выбора — в обоих случаях ранг остаётся текущим. Циклов в
- * сгенерированных данных нет, счётчик шагов — страховка от испорченного
- * каталога.
+ * обязательной развилке без выбора — в обоих случаях ранг остаётся текущим.
+ * Альтернативная развилка (есть стандартный ответ) не блокирует ранг: она
+ * возвращается в `fork`, чтобы UI предложил выбор, но ранк идёт по стандарту.
+ *
+ * Циклов в сгенерированных данных нет, счётчик шагов — страховка от
+ * испорченного каталога.
  */
 export function rankStateForCharacter(
   character: RankInput | null | undefined,
 ): RankState {
-  const noRank: RankState = { node: null, pendingFork: null, options: [] };
+  const noRank: RankState = {
+    node: null,
+    fork: null,
+    pendingFork: null,
+    options: [],
+  };
   if (!character) return noRank;
   const graph = careerRankGraph(character.careerPath);
   if (!graph) return noRank;
 
   const spent = character.totalExpSpent ?? 0;
-  let current = rankNode(graph, graph.start);
-  if (!current) return noRank;
+  const choices = choicesOf(character);
+  const start = rankNode(graph, graph.start);
+  if (!start) return noRank;
+  let current: RankNode = start;
 
-  for (let step = 0; step < Object.keys(graph.nodes).length + 1; step += 1) {
-    const candidates = current.next
+  let fork: RankFork | null = null;
+
+  for (let step = 0; step <= Object.keys(graph.nodes).length; step += 1) {
+    const from: RankNode = current;
+    const candidates = from.next
       .map((id) => rankNode(graph, id))
       .filter((node): node is RankNode => node !== null)
       .filter((node) => node.expFrom <= spent)
       .sort((a, b) => a.expFrom - b.expFrom);
     if (candidates.length === 0) break;
 
-    if (candidates.length > 1) {
-      const chosen = pickNext(
-        candidates,
-        character.advancedPath,
-        character.alternatePath,
-      );
-      if (!chosen) {
-        // Опыт уже за развилкой, но выбора нет: ранг остаётся на текущем узле.
-        return { node: current, pendingFork: current.id, options: candidates };
+    const chosenId = choices[from.id];
+    if (chosenId) {
+      const chosen = candidates.find((node) => node.id === chosenId);
+      if (chosen) {
+        current = chosen;
+        continue;
       }
-      current = chosen;
+      // Выбор уже сделан, но его узел ещё не открыт опытом: ранг остаётся
+      // прежним и переспрашивать нельзя — иначе падение опыта снова
+      // открывало бы диалог поверх запертого выбора.
+      if (from.next.includes(chosenId)) break;
+    }
+
+    if (candidates.length === 1) {
+      current = candidates[0];
       continue;
     }
 
-    current = candidates[0];
+    const standard = candidates.find((node) => node.kind === 'standard');
+    if (!standard) {
+      const required: RankFork = {
+        nodeId: from.id,
+        options: candidates,
+        required: true,
+      };
+      return {
+        node: from,
+        fork: required,
+        pendingFork: from.id,
+        options: candidates,
+      };
+    }
+
+    // Альтернатива предлагается, пока её диапазон не закрыт; после него
+    // стандартный путь действует молча.
+    if (
+      !fork &&
+      candidates.some((node) => node.kind !== 'standard' && node.expTo >= spent)
+    ) {
+      fork = { nodeId: from.id, options: candidates, required: false };
+    }
+    current = standard;
   }
 
-  return { node: current, pendingFork: null, options: [] };
+  return {
+    node: current,
+    fork,
+    pendingFork: null,
+    options: fork?.options ?? [],
+  };
 }

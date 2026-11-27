@@ -16,10 +16,7 @@ import {
   WORLD_VARIANT_LABELS,
   WORLD_VARIANTS_BY_HOMEWORLD,
 } from '@/games/dh1/dark-heresy-data';
-import {
-  AdvancedPathsByCareer,
-  careerRankGraph,
-} from '@/games/dh1/dark-heresy-ranks';
+import { careerRankGraph } from '@/games/dh1/dark-heresy-ranks';
 import { createDh1Demo } from '@/games/dh1/demo';
 import {
   divinationEffectKey,
@@ -314,11 +311,7 @@ describe('Dark Heresy: справочные данные против базов
       .filter((node) => node.kind === 'branch')
       .sort((a, b) => a.expFrom - b.expFrom);
     expect(branches[0]?.expFrom).toBe(6000);
-    expect(
-      AdvancedPathsByCareer['Tech-Priest']?.pathA.ranks[0].expThreshold,
-    ).toBe(6000);
-    expect(
-      AdvancedPathsByCareer['Tech-Priest']?.pathB.ranks[0].expThreshold,
-    ).toBe(6000);
+    // Две ветки по три ранга: 6000/8000/10000.
+    expect(branches.length).toBe(6);
   });
 });

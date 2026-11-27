@@ -23,6 +23,14 @@ format changes.
   the sheet and appends a `migration` marker to its history. A sheet without a
   known career keeps its legacy rank (`Acolyte`), and the plugin version is
   `1.19.0`.
+- Dark Heresy 1e career path choices are stored in `rankChoices` (`schemaVersion`
+  is now `9`) and locked once chosen: the sheet opens a dialog when experience
+  reaches a mandatory fork, keeps the previous rank until a branch is picked,
+  and offers an “Alternate Rank” button where a standard path already works.
+  The choice survives an experience drop and can be changed only while
+  reviewing an imported sheet. Old `advancedPath`/`alternatePath` values are
+  migrated into the map and stay in the document for old exports. The plugin
+  version is `1.20.0`.
 - Dark Heresy 1e rank names follow the English book: `Savant Warrant`,
   `Preceptor-Savant`, `Shock Trooper` and `Storm Trooper` (Russian labels are
   unchanged). The career ladder is one generated rank graph now, so mandatory

@@ -46,15 +46,15 @@ import {
   DIVINATIONS,
   HOME_WORLD_KEYS,
   QUIRK_KEYS,
-  RANK_KEYS,
   VARIANT_KEYS,
   WORLD_VARIANT_LABELS,
   WORLD_VARIANTS_BY_HOMEWORLD,
 } from '../dark-heresy-data';
 import {
-  ADVANCED_RANK_THRESHOLD,
-  AdvancedPathsByCareer,
+  careerRankGraph,
   rankStateForCharacter,
+  type RankFork,
+  type RankNode,
 } from '../dark-heresy-ranks';
 import {
   divinationEffectLabel,
@@ -837,6 +837,7 @@ export const ProgressionSection = ({
   isPhoneView,
   activeCompactSection,
   onEditingChange,
+  creationReview,
 }: SectionProps) => {
   const { updateCharacter, showEditButtons } = useCharacterContext();
   const { t, language } = useTranslation();
@@ -852,11 +853,11 @@ export const ProgressionSection = ({
   const [editableTotalExpSpent, setEditableTotalExpSpent] = React.useState(
     character.totalExpSpent ?? 0,
   );
-  const [editableAdvancedPath, setEditableAdvancedPath] = React.useState(
-    character.advancedPath ?? null,
-  );
-  const [editableAlternatePath, setEditableAlternatePath] = React.useState(
-    character.alternatePath ?? null,
+  // Выборы развилок живут в rankChoices; диалог открывается сам, когда опыт
+  // открыл развилку, но выбора ещё нет.
+  const [openForkId, setOpenForkId] = React.useState<string | null>(null);
+  const [dismissedForkId, setDismissedForkId] = React.useState<string | null>(
+    null,
   );
   const [isSpendOpen, setIsSpendOpen] = React.useState(false);
   const [isJournalOpen, setIsJournalOpen] = React.useState(false);
@@ -896,55 +897,60 @@ export const ProgressionSection = ({
     setEditableTotalExpSpent(character.totalExpSpent ?? 0);
   }, [character.totalExpSpent]);
 
-  const [isAdvancedPathModalOpen, setIsAdvancedPathModalOpen] =
-    React.useState(false);
-  const [isAlternateRankModalOpen, setIsAlternateRankModalOpen] =
-    React.useState(false);
-
-  // Псайкер выбирает ветвь уже на 2000 ОО (стр. 100: Савант-Милитант /
-  // Схолар Материум). У остальных профессий продвинутые пути — с 6000 ОО.
-  const advancedPathThreshold =
-    character.careerPath === 'Imperial Psyker' ? 2000 : ADVANCED_RANK_THRESHOLD;
-
-  const possibleAdvancedPaths =
-    AdvancedPathsByCareer[
-      character.careerPath as keyof typeof AdvancedPathsByCareer
-    ];
+  const graph = careerRankGraph(character.careerPath);
+  const rankChoices = character.rankChoices ?? {};
   // Ранг считается по графу: он знает сходимости и карьерно-зависимые
-  // подписи, а старые таблицы остаются источником имён веток для диалогов.
-  const currentRankNode = rankStateForCharacter({
+  // подписи, а выборы игрока приходят из rankChoices.
+  const rankState = rankStateForCharacter({
     ...character,
     totalExpSpent: editableTotalExpSpent,
-    advancedPath: editableAdvancedPath ?? character.advancedPath,
-    alternatePath: editableAlternatePath ?? character.alternatePath,
-  }).node;
-  const canChooseAlternateRank =
-    character.careerPath === 'Adept' &&
-    editableTotalExpSpent >= 2000 &&
-    editableTotalExpSpent < 3000;
+    rankChoices,
+  });
+  const currentRankNode = rankState.node;
+  const pendingFork: RankFork | null = rankState.fork;
+
+  // Обязательная развилка открывается сама: ранг без неё дальше не идёт.
+  // Альтернативную (стандарт действует по умолчанию) показываем кнопкой —
+  // модальное окно поверх листа на каждом открытии было бы навязчивым.
+  const forkId = pendingFork?.nodeId ?? null;
+  const forkRequired = pendingFork?.required ?? false;
+  React.useEffect(() => {
+    if (!forkId || !forkRequired || dismissedForkId === forkId) return;
+    setOpenForkId(forkId);
+  }, [forkId, forkRequired, dismissedForkId]);
+
+  const activeFork = openForkId && graph ? graph.nodes[openForkId] : null;
+  const activeForkOptions = activeFork
+    ? activeFork.next
+        .map((id) => graph?.nodes[id])
+        .filter((node): node is RankNode => Boolean(node))
+        .sort((a, b) => a.expFrom - b.expFrom)
+    : [];
+
+  // Выбранные ветки: свои подписи у узлов, поэтому карьерно-зависимые ранги
+  // (Novice) не путаются между карьерами.
+  const chosenPaths = graph
+    ? Object.entries(rankChoices)
+        .map(([chosenForkId, nodeId]) => ({
+          forkId: chosenForkId,
+          node: graph.nodes[nodeId] ?? null,
+        }))
+        .filter(
+          (entry): entry is { forkId: string; node: RankNode } =>
+            entry.node !== null,
+        )
+    : [];
+  const inactivePaths = chosenPaths.filter(
+    ({ node }) => node.expFrom > editableTotalExpSpent,
+  );
 
   const handleTotalExpChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newTotalExp = parseInt(e.target.value, 10) || 0;
-    setEditableTotalExpSpent(newTotalExp);
-    if (newTotalExp < advancedPathThreshold) setEditableAdvancedPath(null);
-    if (
-      newTotalExp < 2000 &&
-      (editableAlternatePath ?? character.alternatePath) === 'Chirurgeon'
-    )
-      setEditableAlternatePath(null);
+    setEditableTotalExpSpent(parseInt(e.target.value, 10) || 0);
   };
 
   const handleSaveTotalExp = () => {
-    if (
-      editableTotalExpSpent !== character.totalExpSpent ||
-      (editableAdvancedPath ?? null) !== (character.advancedPath ?? null) ||
-      (editableAlternatePath ?? null) !== (character.alternatePath ?? null)
-    ) {
-      updateCharacter(character.id, {
-        totalExpSpent: editableTotalExpSpent,
-        advancedPath: editableAdvancedPath ?? null,
-        alternatePath: editableAlternatePath ?? null,
-      });
+    if (editableTotalExpSpent !== character.totalExpSpent) {
+      updateCharacter(character.id, { totalExpSpent: editableTotalExpSpent });
     }
   };
 
@@ -953,7 +959,6 @@ export const ProgressionSection = ({
     const label = spendWhat.trim() || t('dh1.manualPurchase');
     const newTotalExp = editableTotalExpSpent + spendAmount;
     setEditableTotalExpSpent(newTotalExp);
-    if (newTotalExp < advancedPathThreshold) setEditableAdvancedPath(null);
     updateCharacter(character.id, {
       totalExpSpent: newTotalExp,
       experienceLog: [
@@ -965,11 +970,6 @@ export const ProgressionSection = ({
           createdAt: new Date().toISOString(),
         },
       ],
-      advancedPath:
-        newTotalExp < advancedPathThreshold
-          ? (editableAdvancedPath ?? null)
-          : (editableAdvancedPath ?? character.advancedPath ?? null),
-      alternatePath: editableAlternatePath ?? character.alternatePath ?? null,
     });
     setSpendAmount(0);
     setSpendWhat('');
@@ -1038,16 +1038,15 @@ export const ProgressionSection = ({
 
   const availableExp = editableExperience - editableTotalExpSpent;
 
-  const handleSelectAdvancedPath = (pathName: string) => {
-    updateCharacter(character.id, { advancedPath: pathName });
-    setEditableAdvancedPath(pathName);
-    setIsAdvancedPathModalOpen(false);
-  };
-
-  const handleSelectAlternateRank = (pathName: string | null) => {
-    updateCharacter(character.id, { alternatePath: pathName });
-    setEditableAlternatePath(pathName);
-    setIsAlternateRankModalOpen(false);
+  const handleChooseRank = (nodeId: string) => {
+    if (!openForkId) return;
+    updateCharacter(character.id, {
+      rankChoices: { ...(character.rankChoices ?? {}), [openForkId]: nodeId },
+    });
+    // Выбор запирается сразу: тот же диалог откроется только в импортном
+    // review (кнопка «Изменить») или на следующей развилке.
+    setDismissedForkId(openForkId);
+    setOpenForkId(null);
   };
 
   const showProgression =
@@ -1226,107 +1225,74 @@ export const ProgressionSection = ({
                       : t('dh1.unknownRank')}
                   </p>
 
-                  {(editableAdvancedPath ?? character.advancedPath) ? (
-                    <p className="text-sm">
-                      <span className="text-muted-foreground">
-                        {t('dh1.advancedPath')}:{' '}
-                      </span>
-                      {t(
-                        RANK_KEYS[
-                          editableAdvancedPath ?? character.advancedPath!
-                        ] ||
-                          (editableAdvancedPath ?? character.advancedPath!),
+                  {chosenPaths.map(({ forkId: chosenForkId, node }) => (
+                    <span
+                      key={chosenForkId}
+                      data-testid={`rank-choice-${chosenForkId}`}
+                      className="text-muted-foreground inline-flex items-center gap-1 text-sm"
+                    >
+                      <Lock className="h-3 w-3 shrink-0" aria-hidden />
+                      <span>{t(node.labelKey)}</span>
+                      {creationReview && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-6 px-1 text-xs"
+                          onClick={() => setOpenForkId(chosenForkId)}
+                        >
+                          {t('dh1.changePath')}
+                        </Button>
                       )}
-                    </p>
-                  ) : (
-                    isProgressionEditing &&
-                    editableTotalExpSpent >= advancedPathThreshold && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="h-7 px-2 text-xs"
-                        onClick={() => setIsAdvancedPathModalOpen(true)}
-                      >
-                        {t('dh1.selectAdvancedPath')}
-                      </Button>
-                    )
-                  )}
-
-                  {(editableAlternatePath ?? character.alternatePath) && (
-                    <p className="text-sm">
-                      <span className="text-muted-foreground">
-                        {t('dh1.alternatePath')}:{' '}
-                      </span>
-                      {t(
-                        RANK_KEYS[
-                          editableAlternatePath ?? character.alternatePath!
-                        ] ||
-                          (editableAlternatePath ?? character.alternatePath!),
-                      )}
-                    </p>
-                  )}
+                    </span>
+                  ))}
                 </div>
 
-                <div className="mt-1 flex gap-2">
-                  {isProgressionEditing && canChooseAlternateRank && (
+                {pendingFork && openForkId !== pendingFork.nodeId && (
+                  <div className="mt-1">
                     <Button
                       size="sm"
                       variant="outline"
                       className="h-7 text-xs"
-                      onClick={() => setIsAlternateRankModalOpen(true)}
+                      onClick={() => setOpenForkId(pendingFork.nodeId)}
                     >
-                      {(editableAlternatePath ?? character.alternatePath)
-                        ? t('dh1.changeAlternateRank')
-                        : t('dh1.selectAlternateRank')}
+                      {t('dh1.choosePath')}
                     </Button>
-                  )}
-                </div>
+                  </div>
+                )}
+
+                {inactivePaths.map(({ forkId: inactiveForkId, node }) => (
+                  <p
+                    key={inactiveForkId}
+                    className="text-muted-foreground text-xs"
+                  >
+                    {t('dh1.rankChoiceInactive')} {node.expFrom}{' '}
+                    {t('dh1.expUnit')}
+                  </p>
+                ))}
               </div>
             </div>
             {/* ========== RANK DISPLAY SECTION END ========== */}
+
+            <ChoiceDialog
+              open={openForkId !== null}
+              onOpenChange={(open) => {
+                if (open) return;
+                if (openForkId) setDismissedForkId(openForkId);
+                setOpenForkId(null);
+              }}
+              title={t('dh1.choosePathTitle')}
+              description={t('dh1.choosePathDesc')}
+              cancelLabel={t('common.cancel')}
+              testId="rank-path-dialog"
+              options={activeForkOptions.map((node) => ({
+                value: node.id,
+                label: t(node.labelKey),
+              }))}
+              onSelect={handleChooseRank}
+            />
           </div>
         </CardContent>
       </Card>
-
-      <ChoiceDialog
-        open={isAdvancedPathModalOpen}
-        onOpenChange={setIsAdvancedPathModalOpen}
-        title={t('dh1.selectAdvancedPathTitle')}
-        description={t('dh1.selectAdvancedPathDesc')}
-        cancelLabel={t('common.cancel')}
-        testId="advanced-path-dialog"
-        options={
-          possibleAdvancedPaths
-            ? Object.values(possibleAdvancedPaths).map((path) => ({
-                value: path.name,
-                label: `${t('dh1.choose')} ${t(RANK_KEYS[path.name] || path.name)}`,
-              }))
-            : []
-        }
-        onSelect={handleSelectAdvancedPath}
-      />
-
-      <ChoiceDialog
-        open={isAlternateRankModalOpen}
-        onOpenChange={setIsAlternateRankModalOpen}
-        title={t('dh1.selectAlternateRankTitle')}
-        description={t('dh1.selectAlternateRankDesc')}
-        cancelLabel={t('common.cancel')}
-        testId="alternate-rank-dialog"
-        options={[
-          {
-            value: 'Inditor',
-            label: `${t('dh1.choose')} ${t('dh1.rankInditor')}`,
-          },
-          {
-            value: 'Chirurgeon',
-            label: `${t('dh1.choose')} ${t('dh1.rankChirurgeon')}`,
-          },
-        ]}
-        onSelect={(value) =>
-          handleSelectAlternateRank(value === 'Inditor' ? null : value)
-        }
-      />
 
       <Dialog open={isSpendOpen} onOpenChange={setIsSpendOpen}>
         <DialogContent>

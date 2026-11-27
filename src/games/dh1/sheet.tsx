@@ -951,6 +951,7 @@ export const Dh1Sheet = React.forwardRef<
             isCompactView={isPhoneView}
             isPhoneView={isPhoneView}
             activeCompactSection={activeCompactSection}
+            creationReview={creationReview}
             onEditingChange={(v: boolean) =>
               reportSectionEditing('progression', v)
             }

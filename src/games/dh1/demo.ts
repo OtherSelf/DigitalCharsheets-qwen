@@ -35,6 +35,7 @@ export function createDh1Demo(): DH1CharacterDraft {
     totalExpSpent,
     alternatePath: null,
     advancedPath: null,
+    rankChoices: {},
     // Hive World: база 20/20/20/15/20/20/20/20/25 + 2d10, не выше базы +20.
     stats: {
       weaponSkill: 35,

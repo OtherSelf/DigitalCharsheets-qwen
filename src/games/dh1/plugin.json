@@ -4,7 +4,7 @@
   "id": "dh1",
   "gameId": "darkHeresy",
   "shortCode": "dh1e",
-  "version": "1.19.0",
+  "version": "1.20.0",
   "order": 20,
   "defaultStatus": "published",
   "name": {
@@ -18,7 +18,7 @@
   "tags": ["d100", "grimdark"],
   "author": "Digital Character Sheets",
   "license": "MIT",
-  "schemaVersion": 8,
+  "schemaVersion": 9,
   "game": {
     "id": "darkHeresy",
     "order": 20,
@@ -120,6 +120,13 @@
       "to": 8,
       "entry": "index.ts#migrateDh1V7toV8",
       "description": "ранг и класс стали производными: данных шаг не трогает, значения пересчитывает derive",
+      "removes": []
+    },
+    {
+      "from": 8,
+      "to": 9,
+      "entry": "index.ts#migrateDh1V8toV9",
+      "description": "выборы развилок advancedPath/alternatePath перенесены в rankChoices; legacy-поля остаются",
       "removes": []
     }
   ],

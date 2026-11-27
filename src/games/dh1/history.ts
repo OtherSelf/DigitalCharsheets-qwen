@@ -22,6 +22,21 @@ function mappedLabel(
   return key ? t(key) : undefined;
 }
 
+/**
+ * Выбранные пути: в карте лежат id узлов (`dh1/core/rank/adept-scholar`), а
+ * подпись — ключ `dh1.rank.<slug>`, поэтому история показывает ровно тот ранг
+ * карьеры, который выбрал игрок, без общей карты по EN-имени.
+ */
+function rankChoicesLabel(value: unknown, t: Translate): string | undefined {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return undefined;
+  }
+  const labels = Object.values(value)
+    .filter((nodeId): nodeId is string => typeof nodeId === 'string')
+    .map((nodeId) => t(`dh1.rank.${nodeId.split('/').pop()}`));
+  return labels.length > 0 ? labels.join(', ') : undefined;
+}
+
 function conditionLabel(
   prefix: 'dh1' | 'dh2',
   field: 'kind' | 'source',
@@ -100,6 +115,7 @@ export const dh1History: GameHistoryConfig = {
     totalExpSpent: 'dh1.totalExpSpent',
     alternatePath: 'dh1.alternatePath',
     advancedPath: 'dh1.advancedPath',
+    rankChoices: 'dh1.rankChoices',
     wounds: 'dh1.wounds',
     fatePoints: 'dh1.fatePoints',
     insanityPoints: 'dh1.insanity',
@@ -276,6 +292,8 @@ export const dh1History: GameHistoryConfig = {
     },
   },
   formatValue(path, value, t) {
+    // Карта выборов — объект, поэтому проверяется до строковой ветки.
+    if (path === 'rankChoices') return rankChoicesLabel(value, t);
     if (typeof value === 'string') {
       switch (path) {
         case 'homeWorld':

@@ -884,5 +884,12 @@
   "dh1.rank.tech-priest-omniprophet": "Omniprophet",
   "dh1.rank.tech-priest-tech-priest": "Tech-Priest",
   "dh1.rank.tech-priest-technographer": "Technographer",
-  "dh1.rank.tech-priest-technomancer": "Technomancer"
+  "dh1.rank.tech-priest-technomancer": "Technomancer",
+  "dh1.choosePath": "Choose Path",
+  "dh1.choosePathTitle": "Career Path Choice",
+  "dh1.choosePathDesc": "Experience has unlocked a new path. The choice is locked after creation; it can be changed only while reviewing an imported sheet.",
+  "dh1.changePath": "Change",
+  "dh1.rankChoices": "Chosen Paths",
+  "dh1.rankChoiceInactive": "Chosen path opens at",
+  "dh1.expUnit": "XP"
 }

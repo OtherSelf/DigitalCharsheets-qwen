@@ -120,6 +120,8 @@ export function buildDh1PortableJson(
       experienceLog: character.experienceLog,
       alternatePath: character.alternatePath,
       advancedPath: character.advancedPath,
+      // Аддитивное поле: старый экспорт без него читается, новый включает.
+      rankChoices: character.rankChoices ?? {},
     });
   }
 
