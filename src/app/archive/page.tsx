@@ -305,7 +305,7 @@ export default function ArchivePage() {
                       </CardTitle>
                       <CardDescription className="mt-1 flex flex-wrap items-center gap-2 text-xs">
                         {entry.systemId && (
-                          <Badge variant="secondary" className="text-[10px]">
+                          <Badge variant="secondary" className="text-10px">
                             {entry.systemId}
                           </Badge>
                         )}

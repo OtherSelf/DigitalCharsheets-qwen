@@ -79,7 +79,7 @@ const NarrativeListCard = ({
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2">
-        <CardTitle className="text-muted-foreground text-[10px] font-bold uppercase">
+        <CardTitle className="text-muted-foreground text-10px font-bold uppercase">
           {t(titleKey)}
         </CardTitle>
         {(showEditButtons || isEditing) && (
@@ -90,7 +90,7 @@ const NarrativeListCard = ({
         {items.map((it, i) => (
           <div
             key={i}
-            className="bg-muted/10 flex justify-between rounded p-1.5 text-[10px]"
+            className="bg-muted/10 text-10px flex justify-between rounded p-1.5"
           >
             {isEditing ? (
               <Input
@@ -100,7 +100,7 @@ const NarrativeListCard = ({
                   n[i] = e.target.value;
                   onItemsChange(n);
                 }}
-                className="mr-2 h-6 flex-1 text-[10px]"
+                className="text-10px mr-2 h-6 flex-1"
               />
             ) : (
               <span className="font-medium break-words">&bull; {it}</span>
@@ -125,7 +125,7 @@ const NarrativeListCard = ({
               placeholder={t('dnd.newItemPlaceholder')}
               value={newItem}
               onChange={(e) => onNewItemChange(e.target.value)}
-              className="h-7 text-[10px]"
+              className="text-10px h-7"
             />
             <Button
               size="sm"

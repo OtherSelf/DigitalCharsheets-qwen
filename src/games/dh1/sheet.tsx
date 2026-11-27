@@ -473,7 +473,7 @@ export const Dh1Sheet = React.forwardRef<
                           />
                         </PopoverContent>
                       </Popover>
-                      <div className="text-muted-foreground mt-1 text-[8px] font-semibold uppercase">
+                      <div className="text-muted-foreground text-8px mt-1 font-semibold uppercase">
                         {char.label}
                       </div>
                       <div className="mt-1 mb-1 flex flex-col items-center justify-center gap-1">
@@ -590,9 +590,7 @@ export const Dh1Sheet = React.forwardRef<
                         }
                         className="h-6 w-10 px-1 text-center text-xs"
                       />
-                      <span className="text-muted-foreground text-[10px]">
-                        /
-                      </span>
+                      <span className="text-muted-foreground text-10px">/</span>
                       <Input
                         type="number"
                         value={editablePoints.wounds.max}
@@ -627,7 +625,7 @@ export const Dh1Sheet = React.forwardRef<
                       >
                         <Plus className="h-3 w-3" />
                       </Button>
-                      <span className="text-muted-foreground mx-0.5 text-[10px]">
+                      <span className="text-muted-foreground text-10px mx-0.5">
                         /
                       </span>
                       <span className="text-sm">
@@ -670,9 +668,7 @@ export const Dh1Sheet = React.forwardRef<
                         }
                         className="h-6 w-10 px-1 text-center text-xs"
                       />
-                      <span className="text-muted-foreground text-[10px]">
-                        /
-                      </span>
+                      <span className="text-muted-foreground text-10px">/</span>
                       <Input
                         type="number"
                         value={editablePoints.fatePoints.max}
@@ -707,7 +703,7 @@ export const Dh1Sheet = React.forwardRef<
                       >
                         <Plus className="h-3 w-3" />
                       </Button>
-                      <span className="text-muted-foreground mx-0.5 text-[10px]">
+                      <span className="text-muted-foreground text-10px mx-0.5">
                         /
                       </span>
                       <span className="text-sm">
@@ -749,9 +745,7 @@ export const Dh1Sheet = React.forwardRef<
                         }
                         className="h-6 w-10 px-1 text-center text-xs"
                       />
-                      <span className="text-muted-foreground text-[10px]">
-                        /
-                      </span>
+                      <span className="text-muted-foreground text-10px">/</span>
                       <span className="text-sm">{fatigueMax}</span>
                     </>
                   ) : (
@@ -775,7 +769,7 @@ export const Dh1Sheet = React.forwardRef<
                       >
                         <Plus className="h-3 w-3" />
                       </Button>
-                      <span className="text-muted-foreground mx-0.5 text-[10px]">
+                      <span className="text-muted-foreground text-10px mx-0.5">
                         /
                       </span>
                       <span className="text-sm">{fatigueMax}</span>
@@ -866,25 +860,25 @@ export const Dh1Sheet = React.forwardRef<
                 return (
                   <>
                     <div className="bg-background/50 rounded border p-1 text-center">
-                      <div className="text-muted-foreground text-[8px] uppercase">
+                      <div className="text-muted-foreground text-8px uppercase">
                         {t('dh1.halfMove')}
                       </div>
                       <div className="text-xs font-bold">{agMod}</div>
                     </div>
                     <div className="bg-background/50 rounded border p-1 text-center">
-                      <div className="text-muted-foreground text-[8px] uppercase">
+                      <div className="text-muted-foreground text-8px uppercase">
                         {t('dh1.move')}
                       </div>
                       <div className="text-xs font-bold">{agMod * 2}</div>
                     </div>
                     <div className="bg-background/50 rounded border p-1 text-center">
-                      <div className="text-muted-foreground text-[8px] uppercase">
+                      <div className="text-muted-foreground text-8px uppercase">
                         {t('dh1.charge')}
                       </div>
                       <div className="text-xs font-bold">{agMod * 3}</div>
                     </div>
                     <div className="bg-background/50 rounded border p-1 text-center">
-                      <div className="text-muted-foreground text-[8px] uppercase">
+                      <div className="text-muted-foreground text-8px uppercase">
                         {t('dh1.run')}
                       </div>
                       <div className="text-xs font-bold">{agMod * 6}</div>
@@ -1470,7 +1464,7 @@ export const Dh1Sheet = React.forwardRef<
                               />
                             </PopoverContent>
                           </Popover>
-                          <div className="text-muted-foreground mt-1 text-[8px] font-semibold uppercase">
+                          <div className="text-muted-foreground text-8px mt-1 font-semibold uppercase">
                             {char.label}
                           </div>
                           <div className="mt-1 mb-1 flex flex-col items-center justify-center gap-1">
@@ -1570,25 +1564,25 @@ export const Dh1Sheet = React.forwardRef<
                       return (
                         <>
                           <div className="bg-background/50 rounded border p-1 text-center">
-                            <div className="text-muted-foreground text-[8px] uppercase">
+                            <div className="text-muted-foreground text-8px uppercase">
                               {t('dh1.halfMove')}
                             </div>
                             <div className="text-xs font-bold">{agMod}</div>
                           </div>
                           <div className="bg-background/50 rounded border p-1 text-center">
-                            <div className="text-muted-foreground text-[8px] uppercase">
+                            <div className="text-muted-foreground text-8px uppercase">
                               {t('dh1.move')}
                             </div>
                             <div className="text-xs font-bold">{agMod * 2}</div>
                           </div>
                           <div className="bg-background/50 rounded border p-1 text-center">
-                            <div className="text-muted-foreground text-[8px] uppercase">
+                            <div className="text-muted-foreground text-8px uppercase">
                               {t('dh1.charge')}
                             </div>
                             <div className="text-xs font-bold">{agMod * 3}</div>
                           </div>
                           <div className="bg-background/50 rounded border p-1 text-center">
-                            <div className="text-muted-foreground text-[8px] uppercase">
+                            <div className="text-muted-foreground text-8px uppercase">
                               {t('dh1.run')}
                             </div>
                             <div className="text-xs font-bold">{agMod * 6}</div>

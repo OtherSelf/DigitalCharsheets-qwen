@@ -127,7 +127,7 @@ function BulkTableCard({
                   <div className="grid grid-cols-2 gap-2">
                     {table.columns.map((column) => (
                       <label key={column.key} className="space-y-1">
-                        <span className="text-muted-foreground block text-[10px] leading-tight font-semibold uppercase">
+                        <span className="text-muted-foreground text-10px block leading-tight font-semibold uppercase">
                           {tUnsafe(column.labelKey)}
                         </span>
                         <Input

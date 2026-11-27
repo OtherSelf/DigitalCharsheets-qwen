@@ -109,7 +109,7 @@ export const DndDivineBoonsSection = React.forwardRef<
             <Card className="flex h-full flex-col overflow-hidden border-2">
               <CardHeader className="bg-muted/5 flex flex-row items-center justify-between px-4 pt-2 pb-2">
                 <AccordionTrigger className="flex flex-1 items-center justify-between py-0 hover:no-underline">
-                  <Label className="text-muted-foreground text-[10px] font-bold tracking-tight uppercase">
+                  <Label className="text-muted-foreground text-10px font-bold tracking-tight uppercase">
                     {t('dnd.divineBoons')}
                   </Label>
                 </AccordionTrigger>

@@ -90,13 +90,11 @@ function EditionBadge({
           : undefined
       }
     >
-      <span className="text-[11px] font-semibold sm:text-xs">
+      <span className="text-11px font-semibold sm:text-xs">
         {game ?? fallback}
       </span>
       {edition && (
-        <span className="text-[10px] font-normal sm:text-[11px]">
-          {edition}
-        </span>
+        <span className="text-10px sm:text-11px font-normal">{edition}</span>
       )}
     </div>
   );

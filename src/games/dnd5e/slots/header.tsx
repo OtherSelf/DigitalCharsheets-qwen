@@ -88,7 +88,7 @@ export function DndHeaderActions({
       >
         {/* На узком планшете (768..1023) подпись скрывается, чтобы имя
             персонажа не сжималось: смысл «+/-» понятен по иконкам. */}
-        <span className="header-field-label text-primary hidden text-[10px] font-bold tracking-widest uppercase sm:inline">
+        <span className="header-field-label text-primary text-10px hidden font-bold tracking-widest uppercase sm:inline">
           {t('common.inspiration')}
         </span>
         <div className="flex items-center gap-1">

@@ -380,7 +380,7 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
                     key={key}
                     className="bg-background flex min-w-0 flex-col items-center justify-center rounded border py-1"
                   >
-                    <span className="text-muted-foreground w-full truncate px-0.5 text-center text-[8px] font-bold uppercase">
+                    <span className="text-muted-foreground text-8px w-full truncate px-0.5 text-center font-bold uppercase">
                       {t(`common.${key}`).slice(0, 3).toUpperCase()}
                     </span>
                     {isStatsEditing ? (
@@ -402,7 +402,7 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
                         <span className="text-xs font-black">
                           {mod >= 0 ? `+${mod}` : mod}
                         </span>
-                        <span className="text-muted-foreground text-[8px]">
+                        <span className="text-muted-foreground text-8px">
                           {val}
                         </span>
                       </>
@@ -414,7 +414,7 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
             <div className="grid grid-cols-2 gap-2">
               <div className="bg-background flex min-w-0 items-center justify-between rounded border px-2 py-1.5">
                 <span
-                  className="text-muted-foreground mr-1 text-[8px] leading-tight font-bold uppercase"
+                  className="text-muted-foreground text-8px mr-1 leading-tight font-bold uppercase"
                   title={t('dnd.passivePerception')}
                 >
                   {t('dnd.passivePerception')}
@@ -425,7 +425,7 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
               </div>
               <div className="bg-background flex min-w-0 items-center justify-between rounded border px-2 py-1.5">
                 <span
-                  className="text-muted-foreground mr-1 text-[8px] leading-tight font-bold uppercase"
+                  className="text-muted-foreground text-8px mr-1 leading-tight font-bold uppercase"
                   title={t('dnd.proficiencyBonus')}
                 >
                   {t('dnd.proficiencyBonus')}
@@ -559,7 +559,7 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
           {isPhoneView && (
             <Card>
               <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2">
-                <CardTitle className="text-muted-foreground text-[10px] font-bold tracking-tight uppercase">
+                <CardTitle className="text-muted-foreground text-10px font-bold tracking-tight uppercase">
                   {t('dnd.otherProficienciesAndLanguages')}
                 </CardTitle>
                 {(showEditButtons || isOtherProficienciesEditing) && (
@@ -592,7 +592,7 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
                 {otherProficienciesAndLanguages.map((it, i) => (
                   <div
                     key={i}
-                    className="bg-muted/10 flex justify-between rounded p-1.5 text-[10px]"
+                    className="bg-muted/10 text-10px flex justify-between rounded p-1.5"
                   >
                     {isOtherProficienciesEditing ? (
                       <Input
@@ -602,7 +602,7 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
                           n[i] = e.target.value;
                           setOtherProficienciesAndLanguages(n);
                         }}
-                        className="mr-2 h-6 flex-1 text-[10px]"
+                        className="text-10px mr-2 h-6 flex-1"
                       />
                     ) : (
                       <span className="font-medium break-words">
@@ -633,7 +633,7 @@ export const DndSheet = React.forwardRef<any, DndSheetProps>(
                       placeholder={t('dnd.newItemPlaceholder')}
                       value={newProfItem}
                       onChange={(e) => setNewProfItem(e.target.value)}
-                      className="h-7 text-[10px]"
+                      className="text-10px h-7"
                     />
                     <Button
                       size="sm"

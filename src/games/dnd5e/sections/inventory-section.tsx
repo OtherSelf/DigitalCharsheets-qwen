@@ -117,14 +117,14 @@ export const DndInventorySection = React.forwardRef<
   return (
     <Card id={`${idp}inventory-box`}>
       <CardHeader className="px-4 pt-2 pb-2">
-        <CardTitle className="text-muted-foreground text-[10px] font-bold tracking-tight uppercase">
+        <CardTitle className="text-muted-foreground text-10px font-bold tracking-tight uppercase">
           {t('common.inventory')}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6 p-4 pt-0">
         <div className="bg-muted/30 rounded-lg border p-3">
           <div className="mb-3 flex items-center justify-between border-b pb-1">
-            <Label className="text-[10px] font-bold uppercase">
+            <Label className="text-10px font-bold uppercase">
               {t('dnd.money')}
             </Label>
             {(showEditButtons || isMoneyEditing) && (
@@ -138,7 +138,7 @@ export const DndInventorySection = React.forwardRef<
           <div className="grid grid-cols-5 gap-2">
             {['cp', 'sp', 'ep', 'gp', 'pp'].map((c) => (
               <div key={c} className="flex flex-col items-center">
-                <span className="text-[8px] font-bold uppercase">{c}</span>
+                <span className="text-8px font-bold uppercase">{c}</span>
                 {isMoneyEditing ? (
                   <Input
                     type="number"
@@ -150,7 +150,7 @@ export const DndInventorySection = React.forwardRef<
                         [c]: parseInt(e.target.value) || 0,
                       })
                     }
-                    className="h-6 p-0 text-center text-[10px]"
+                    className="text-10px h-6 p-0 text-center"
                   />
                 ) : (
                   <div className="text-sm font-bold">
@@ -163,7 +163,7 @@ export const DndInventorySection = React.forwardRef<
         </div>
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <Label className="text-[10px] font-bold uppercase">
+            <Label className="text-10px font-bold uppercase">
               {t('common.items')}
             </Label>
             {(showEditButtons || isItemsEditing) && (

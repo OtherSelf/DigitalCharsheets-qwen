@@ -126,7 +126,7 @@ export const DndAttunementSection = React.forwardRef<
   return (
     <Card id={`${idp}attunement-card`}>
       <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2">
-        <CardTitle className="text-muted-foreground text-[10px] font-bold tracking-tight uppercase">
+        <CardTitle className="text-muted-foreground text-10px font-bold tracking-tight uppercase">
           {t('dnd.attunement')}
         </CardTitle>
         {(showEditButtons || isAttunementEditing) && (
@@ -141,7 +141,7 @@ export const DndAttunementSection = React.forwardRef<
         {attunementItems.map((it) => (
           <div
             key={it.id}
-            className="group bg-muted/10 flex items-center justify-between rounded p-1.5 text-[10px]"
+            className="group bg-muted/10 text-10px flex items-center justify-between rounded p-1.5"
           >
             <div className="flex flex-1 items-center gap-2">
               <Checkbox
@@ -161,7 +161,7 @@ export const DndAttunementSection = React.forwardRef<
                       ),
                     )
                   }
-                  className="h-6 flex-1 text-[10px]"
+                  className="text-10px h-6 flex-1"
                 />
               ) : (
                 <span
@@ -172,7 +172,7 @@ export const DndAttunementSection = React.forwardRef<
                 >
                   {it.description}
                   {it.attuned && (
-                    <span className="text-primary ml-1 text-[8px] font-black uppercase">
+                    <span className="text-primary text-8px ml-1 font-black uppercase">
                       ({t('dnd.attuned')})
                     </span>
                   )}
@@ -236,7 +236,7 @@ export const DndAttunementSection = React.forwardRef<
               placeholder={t('dnd.newItemPlaceholder')}
               value={newAttunementItem}
               onChange={(e) => setNewAttunementItem(e.target.value)}
-              className="h-7 text-[10px]"
+              className="text-10px h-7"
             />
             <Button
               size="sm"

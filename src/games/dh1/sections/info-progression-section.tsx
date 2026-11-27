@@ -117,7 +117,7 @@ const DetailField = ({
         htmlFor={editing ? id : undefined}
         className={cn(
           'text-muted-foreground text-xs',
-          isCompactView && 'text-[10px]',
+          isCompactView && 'text-10px',
         )}
       >
         {label}
@@ -140,7 +140,7 @@ const DetailField = ({
         >
           {value || '-'}
           {sample && value ? (
-            <span className="text-muted-foreground ml-1 text-[10px] uppercase">
+            <span className="text-muted-foreground text-10px ml-1 uppercase">
               {t('common.sampleBadge')}
             </span>
           ) : null}
@@ -193,7 +193,7 @@ const CreationField = ({
       <Label
         className={cn(
           'text-muted-foreground text-xs',
-          isCompactView && 'text-[10px]',
+          isCompactView && 'text-10px',
         )}
       >
         <span className="inline-flex items-center gap-1">
@@ -224,7 +224,7 @@ const CreationField = ({
         >
           {value || '-'}
           {sample && value ? (
-            <span className="text-muted-foreground ml-1 text-[10px] uppercase">
+            <span className="text-muted-foreground text-10px ml-1 uppercase">
               {t('common.sampleBadge')}
             </span>
           ) : null}

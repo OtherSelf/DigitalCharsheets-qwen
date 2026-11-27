@@ -2720,7 +2720,7 @@ export const EquipmentInventorySection = React.forwardRef<
                                   />
                                 </div>
                                 <div className="space-y-1">
-                                  <span className="text-muted-foreground block text-[10px] leading-none">
+                                  <span className="text-muted-foreground text-10px block leading-none">
                                     {t('dh1.inventoryQuantityShort')}
                                   </span>
                                   <Input
@@ -2748,7 +2748,7 @@ export const EquipmentInventorySection = React.forwardRef<
                                   />
                                 </div>
                                 <div className="space-y-1">
-                                  <span className="text-muted-foreground block text-[10px] leading-none">
+                                  <span className="text-muted-foreground text-10px block leading-none">
                                     {t('dh1.inventoryWeightUnit')}
                                   </span>
                                   <Input
@@ -2776,7 +2776,7 @@ export const EquipmentInventorySection = React.forwardRef<
                                   />
                                 </div>
                                 <div className="space-y-1">
-                                  <span className="text-muted-foreground block text-[10px] leading-none">
+                                  <span className="text-muted-foreground text-10px block leading-none">
                                     {t('dh1.inventoryPriceUnit')}
                                   </span>
                                   <Input
@@ -3008,13 +3008,13 @@ export const EquipmentInventorySection = React.forwardRef<
                                       )}
                                     </div>
                                     <div className="flex flex-col items-start leading-tight md:items-end">
-                                      <span className="text-muted-foreground text-[10px] md:hidden">
+                                      <span className="text-muted-foreground text-10px md:hidden">
                                         {t('common.quantity')}
                                       </span>
                                       <span>{readQuantity(item)}</span>
                                     </div>
                                     <div className="flex flex-col items-start leading-tight md:items-end">
-                                      <span className="text-muted-foreground text-[10px] md:hidden">
+                                      <span className="text-muted-foreground text-10px md:hidden">
                                         {t('common.weight')}
                                       </span>
                                       <span>
@@ -3022,7 +3022,7 @@ export const EquipmentInventorySection = React.forwardRef<
                                       </span>
                                     </div>
                                     <div className="flex flex-col items-start leading-tight md:items-end">
-                                      <span className="text-muted-foreground text-[10px] md:hidden">
+                                      <span className="text-muted-foreground text-10px md:hidden">
                                         {t('dh1.inventoryPrice')}
                                       </span>
                                       <span>

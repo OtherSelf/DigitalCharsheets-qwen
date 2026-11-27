@@ -262,7 +262,7 @@ export function DndProgressionSection({
           <div className="flex w-full items-center justify-between">
             <span>{t(CLASS_TRANSLATION_KEYS[c])}</span>
             {!meetsRequirements && (
-              <span className="text-destructive ml-2 text-[10px] font-semibold">
+              <span className="text-destructive text-10px ml-2 font-semibold">
                 13+
               </span>
             )}
@@ -287,7 +287,7 @@ export function DndProgressionSection({
         >
           <CardHeader className="bg-muted/5 flex flex-row items-center justify-between px-4 pt-2 pb-2">
             <AccordionTrigger className="flex flex-1 items-center justify-between py-0 hover:no-underline">
-              <Label className="text-muted-foreground text-[10px] font-bold tracking-tight uppercase">
+              <Label className="text-muted-foreground text-10px font-bold tracking-tight uppercase">
                 {t('common.progression')}
               </Label>
             </AccordionTrigger>
@@ -303,7 +303,7 @@ export function DndProgressionSection({
             <CardContent className="space-y-4 p-4">
               <div className="grid grid-cols-3 gap-4">
                 <div className="flex flex-col gap-1">
-                  <Label className="text-muted-foreground text-[10px] font-bold uppercase">
+                  <Label className="text-muted-foreground text-10px font-bold uppercase">
                     {t('common.class')}
                   </Label>
                   {isProgressionEditing ? (
@@ -334,7 +334,7 @@ export function DndProgressionSection({
                   )}
                 </div>
                 <div className="flex flex-col gap-1">
-                  <Label className="text-muted-foreground text-[10px] font-bold uppercase">
+                  <Label className="text-muted-foreground text-10px font-bold uppercase">
                     {t('dnd.classLevel')}
                   </Label>
                   <span className="truncate text-base font-bold">
@@ -342,7 +342,7 @@ export function DndProgressionSection({
                   </span>
                 </div>
                 <div className="flex flex-col gap-1">
-                  <Label className="text-muted-foreground text-[10px] font-bold uppercase">
+                  <Label className="text-muted-foreground text-10px font-bold uppercase">
                     {t('dnd.totalLevel')}
                   </Label>
                   <span className="truncate text-base font-bold">
@@ -362,11 +362,11 @@ export function DndProgressionSection({
                     ) : (
                       <ChevronRight className="text-muted-foreground h-4 w-4" />
                     )}
-                    <Label className="cursor-pointer text-[10px] font-bold uppercase select-none">
+                    <Label className="text-10px cursor-pointer font-bold uppercase select-none">
                       {t('dnd.multiclass')}
                       {progressionData.isMulticlass &&
                         progressionData.multiclasses.length > 0 && (
-                          <span className="text-muted-foreground ml-1.5 text-[9px] normal-case">
+                          <span className="text-muted-foreground text-9px ml-1.5 normal-case">
                             (
                             {
                               progressionData.multiclasses.filter(
@@ -486,7 +486,7 @@ export function DndProgressionSection({
                                 ({t('dnd.lvl')} {mc.level})
                               </span>
                               {mc.isDisabled && (
-                                <span className="border-destructive/20 bg-destructive/10 text-destructive rounded border px-1.5 py-0.5 text-[10px] font-semibold">
+                                <span className="border-destructive/20 bg-destructive/10 text-destructive text-10px rounded border px-1.5 py-0.5 font-semibold">
                                   {t('dnd.disabled')}
                                 </span>
                               )}
@@ -499,7 +499,7 @@ export function DndProgressionSection({
                       <Button
                         variant="outline"
                         size="sm"
-                        className="mt-2 h-7 w-full text-[10px]"
+                        className="text-10px mt-2 h-7 w-full"
                         disabled={
                           progressionData.level >= 20 ||
                           progressionData.multiclasses.length >= 12
@@ -539,7 +539,7 @@ export function DndProgressionSection({
 
               <div className="space-y-4 border-t pt-2">
                 <div className="flex flex-col gap-1">
-                  <Label className="text-muted-foreground text-[10px] font-bold uppercase">
+                  <Label className="text-muted-foreground text-10px font-bold uppercase">
                     {t('dnd.experiencePoints')}
                   </Label>
                   {isProgressionEditing ? (
@@ -561,7 +561,7 @@ export function DndProgressionSection({
                   )}
                 </div>
                 <div className="flex flex-col gap-2">
-                  <Label className="text-muted-foreground text-[10px] font-bold uppercase">
+                  <Label className="text-muted-foreground text-10px font-bold uppercase">
                     {t('dnd.expToCount')}
                   </Label>
                   <div className="flex gap-2">

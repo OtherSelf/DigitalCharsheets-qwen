@@ -77,7 +77,7 @@ const CharacteristicStat = ({
   };
   return (
     <div className="bg-background relative flex h-full min-h-[80px] flex-col justify-between rounded-lg border px-0.5 py-1 text-center">
-      <div className="text-muted-foreground px-1 text-[10px] font-semibold tracking-wide uppercase">
+      <div className="text-muted-foreground text-10px px-1 font-semibold tracking-wide uppercase">
         {isCompactView ? label : `${fullName} (${label})`}
       </div>
       {!hideNotes && (
@@ -359,7 +359,7 @@ export const CharacteristicsSection = React.forwardRef<
                 return (
                   <>
                     <div className="bg-background rounded-lg border p-2 text-center">
-                      <Label className="text-muted-foreground text-[10px] font-bold uppercase">
+                      <Label className="text-muted-foreground text-10px font-bold uppercase">
                         {t('dh1.halfMove')}
                       </Label>
                       <div className="text-primary text-lg font-bold">
@@ -367,7 +367,7 @@ export const CharacteristicsSection = React.forwardRef<
                       </div>
                     </div>
                     <div className="bg-background rounded-lg border p-2 text-center">
-                      <Label className="text-muted-foreground text-[10px] font-bold uppercase">
+                      <Label className="text-muted-foreground text-10px font-bold uppercase">
                         {t('dh1.move')}
                       </Label>
                       <div className="text-primary text-lg font-bold">
@@ -375,7 +375,7 @@ export const CharacteristicsSection = React.forwardRef<
                       </div>
                     </div>
                     <div className="bg-background rounded-lg border p-2 text-center">
-                      <Label className="text-muted-foreground text-[10px] font-bold uppercase">
+                      <Label className="text-muted-foreground text-10px font-bold uppercase">
                         {t('dh1.charge')}
                       </Label>
                       <div className="text-primary text-lg font-bold">
@@ -383,7 +383,7 @@ export const CharacteristicsSection = React.forwardRef<
                       </div>
                     </div>
                     <div className="bg-background rounded-lg border p-2 text-center">
-                      <Label className="text-muted-foreground text-[10px] font-bold uppercase">
+                      <Label className="text-muted-foreground text-10px font-bold uppercase">
                         {t('dh1.run')}
                       </Label>
                       <div className="text-primary text-lg font-bold">

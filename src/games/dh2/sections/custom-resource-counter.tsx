@@ -171,7 +171,7 @@ export function CustomResourceCounter({
                     )}
                   </div>
                   <div className="flex items-center gap-1">
-                    <span className="text-muted-foreground shrink-0 text-[9px] font-bold uppercase">
+                    <span className="text-muted-foreground text-9px shrink-0 font-bold uppercase">
                       {t('common.max')}
                     </span>
                     <Input
@@ -180,7 +180,7 @@ export function CustomResourceCounter({
                       onChange={(e) =>
                         handleFieldChange(res.id, 'max', e.target.value)
                       }
-                      className="h-7 w-16 text-center text-[10px]"
+                      className="text-10px h-7 w-16 text-center"
                       min={0}
                     />
                   </div>
@@ -297,7 +297,7 @@ export function CustomResourceCounter({
     <div className="col-span-2 mt-2">
       <Card className="mt-2">
         <CardHeader className="flex flex-row items-center justify-between px-3 py-2">
-          <CardTitle className="text-muted-foreground text-[10px] font-bold tracking-tight uppercase">
+          <CardTitle className="text-muted-foreground text-10px font-bold tracking-tight uppercase">
             {t('dh2.customResources')}
           </CardTitle>
           {(showEditButtons || isEditing) && (
@@ -310,7 +310,7 @@ export function CustomResourceCounter({
         </CardHeader>
         <CardContent className="space-y-2 p-3 pt-0">
           {resources.length === 0 && !isEditing && (
-            <p className="text-muted-foreground rounded border border-dashed py-1 text-center text-[10px] italic">
+            <p className="text-muted-foreground text-10px rounded border border-dashed py-1 text-center italic">
               {t('dh2.noCustomResources')}
             </p>
           )}
@@ -327,7 +327,7 @@ export function CustomResourceCounter({
                       onChange={(e) =>
                         handleFieldChange(res.id, 'description', e.target.value)
                       }
-                      className="h-7 flex-1 text-[10px]"
+                      className="text-10px h-7 flex-1"
                       placeholder={t('common.resourceName')}
                     />
                     {!hideNotes && (
@@ -359,7 +359,7 @@ export function CustomResourceCounter({
                     )}
                   </div>
                   <div className="flex items-center gap-1">
-                    <span className="text-muted-foreground shrink-0 text-[9px] font-bold uppercase">
+                    <span className="text-muted-foreground text-9px shrink-0 font-bold uppercase">
                       {t('common.max')}
                     </span>
                     <Input
@@ -368,7 +368,7 @@ export function CustomResourceCounter({
                       onChange={(e) =>
                         handleFieldChange(res.id, 'max', e.target.value)
                       }
-                      className="h-6 w-12 text-center text-[10px]"
+                      className="text-10px h-6 w-12 text-center"
                       min={0}
                     />
                   </div>
@@ -409,7 +409,7 @@ export function CustomResourceCounter({
                       </PopoverContent>
                     </Popover>
                   )}
-                  <span className="flex-1 text-[10px] font-bold break-words">
+                  <span className="text-10px flex-1 font-bold break-words">
                     {res.description}
                   </span>
                 </div>
@@ -456,13 +456,13 @@ export function CustomResourceCounter({
                 placeholder={t('common.name')}
                 value={newDesc}
                 onChange={(e) => setNewDesc(e.target.value)}
-                className="h-7 flex-1 text-[10px]"
+                className="text-10px h-7 flex-1"
               />
               <Input
                 type="number"
                 value={newMax === 0 ? '' : newMax}
                 onChange={(e) => setNewMax(parseInt(e.target.value) || 1)}
-                className="h-7 w-12 text-center text-[10px]"
+                className="text-10px h-7 w-12 text-center"
                 min={1}
               />
               <Button

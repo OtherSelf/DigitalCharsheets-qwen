@@ -33,7 +33,7 @@ const STYLES = {
     a: 'text-primary underline-offset-2 hover:underline',
   },
   document: {
-    root: 'text-[15px] leading-7 break-words md:text-base md:leading-8',
+    root: 'text-15px leading-7 break-words md:text-base md:leading-8',
     h1: 'mt-8 mb-3 text-2xl font-bold text-balance first:mt-0',
     h2: 'border-border mt-8 mb-3 border-t pt-6 text-xl font-semibold text-balance first:mt-0 first:border-t-0 first:pt-0',
     h3: 'mt-5 mb-2 text-base font-semibold',

@@ -210,12 +210,12 @@ export function DndSpellsSection({
       >
         <CardHeader className="bg-muted/10 flex flex-col border-b px-4 pt-2 pb-2">
           <div className="mb-1 flex w-full flex-row items-center justify-between">
-            <CardTitle className="text-muted-foreground text-[10px] font-bold tracking-tight uppercase">
+            <CardTitle className="text-muted-foreground text-10px font-bold tracking-tight uppercase">
               {title}
             </CardTitle>
             {level > 0 && (
               <div className="flex items-center gap-2">
-                <span className="text-muted-foreground text-[10px] font-bold uppercase">
+                <span className="text-muted-foreground text-10px font-bold uppercase">
                   {t('dnd.slots')}
                 </span>
                 <div className="flex items-center gap-1">
@@ -413,7 +413,7 @@ export function DndSpellsSection({
               />
               <Button
                 size="sm"
-                className="h-7 w-full text-[10px]"
+                className="text-10px h-7 w-full"
                 onClick={() => {
                   if (newSpellName.trim()) {
                     setSpells([
@@ -471,7 +471,7 @@ export function DndSpellsSection({
         {isPhoneView && (
           <Card className="mb-6">
             <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2">
-              <CardTitle className="text-muted-foreground text-[10px] font-bold tracking-tight uppercase">
+              <CardTitle className="text-muted-foreground text-10px font-bold tracking-tight uppercase">
                 {t('dnd.spellcastingStats')}
               </CardTitle>
               {(showEditButtons || isSpellcastingEditing) && (
@@ -528,7 +528,7 @@ export function DndSpellsSection({
                           </PopoverContent>
                         </Popover>
                       )}
-                      <Label className="text-muted-foreground text-[9px] uppercase">
+                      <Label className="text-muted-foreground text-9px uppercase">
                         {t('dnd.ability')}
                       </Label>
                     </div>
@@ -575,7 +575,7 @@ export function DndSpellsSection({
                     )}
                   </div>
                   <div className="col-span-3 w-full">
-                    <Label className="text-muted-foreground mb-1 block text-[9px] uppercase">
+                    <Label className="text-muted-foreground text-9px mb-1 block uppercase">
                       {t('dnd.atkBonus')}
                     </Label>
                     {isSpellcastingEditing ? (
@@ -597,7 +597,7 @@ export function DndSpellsSection({
                     )}
                   </div>
                   <div className="col-span-2 w-full">
-                    <Label className="text-muted-foreground mb-1 block text-[9px] uppercase">
+                    <Label className="text-muted-foreground text-9px mb-1 block uppercase">
                       {t('dnd.spellSaveDC')}
                     </Label>
                     {isSpellcastingEditing ? (
@@ -638,7 +638,7 @@ export function DndSpellsSection({
                 <Button
                   variant="outline"
                   size="sm"
-                  className="mt-2 h-8 w-full text-[10px]"
+                  className="text-10px mt-2 h-8 w-full"
                   onClick={addSpellcastingEntry}
                 >
                   <Plus className="mr-1 h-3 w-3" />{' '}

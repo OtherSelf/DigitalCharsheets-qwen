@@ -47,12 +47,12 @@ export function SiteFooter() {
       <footer
         data-testid="site-footer"
         aria-label={t('footer.label')}
-        className="text-muted-foreground border-t px-4 pt-3 pb-4 text-[11px] sm:text-xs"
+        className="text-muted-foreground text-11px border-t px-4 pt-3 pb-4 sm:text-xs"
       >
         <div className="mx-auto flex max-w-3xl flex-wrap items-center justify-center gap-x-1.5 gap-y-1 text-center sm:gap-x-3">
           {info && (
             <span
-              className="font-mono text-[11px] tracking-tight tabular-nums"
+              className="text-11px font-mono tracking-tight tabular-nums"
               title={details}
               data-testid="site-footer-version"
             >

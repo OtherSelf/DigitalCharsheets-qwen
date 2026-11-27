@@ -211,7 +211,7 @@ const DetailField = ({
   onChange: (val: string) => void;
 }) => (
   <div className="flex flex-col gap-1">
-    <Label className="text-muted-foreground text-[10px] font-bold uppercase">
+    <Label className="text-muted-foreground text-10px font-bold uppercase">
       {label}
     </Label>
     {editing ? (
@@ -245,7 +245,7 @@ const DetailSelectField = ({
   t: (key: string) => string;
 }) => (
   <div className="flex flex-col gap-1">
-    <Label className="text-muted-foreground text-[10px] font-bold uppercase">
+    <Label className="text-muted-foreground text-10px font-bold uppercase">
       {label}
     </Label>
     {editing ? (
@@ -344,7 +344,7 @@ export const DndCharacterInfoSection = React.forwardRef<
         >
           <CardHeader className="bg-muted/5 flex flex-row items-center justify-between px-4 pt-2 pb-2">
             <AccordionTrigger className="flex flex-1 items-center justify-between py-0 hover:no-underline">
-              <Label className="text-muted-foreground text-[10px] font-bold tracking-tight uppercase">
+              <Label className="text-muted-foreground text-10px font-bold tracking-tight uppercase">
                 {t('dnd.characterInfo')}
               </Label>
             </AccordionTrigger>

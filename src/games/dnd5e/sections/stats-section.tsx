@@ -92,8 +92,8 @@ const StatBox = ({
       )}
       <div
         className={cn(
-          'text-muted-foreground text-[10px] font-bold tracking-wider uppercase',
-          isCompactView && 'text-[8px]',
+          'text-muted-foreground text-10px font-bold tracking-wider uppercase',
+          isCompactView && 'text-8px',
         )}
       >
         {label}
@@ -124,7 +124,7 @@ const StatBox = ({
         )}
       </div>
       <div className="mt-2 w-full">
-        <div className="text-muted-foreground mb-0.5 text-[8px] font-bold uppercase">
+        <div className="text-muted-foreground text-8px mb-0.5 font-bold uppercase">
           {t('dnd.mod')}
         </div>
         <div
@@ -245,7 +245,7 @@ export function DndStatsSection({
       {!isPhoneView && (
         <Card id={`${idp}stats-card`}>
           <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2">
-            <CardTitle className="text-muted-foreground text-[10px] font-bold tracking-tight uppercase">
+            <CardTitle className="text-muted-foreground text-10px font-bold tracking-tight uppercase">
               {t('common.characteristics')}
             </CardTitle>
             {(showEditButtons || isStatsEditing) && (
@@ -287,10 +287,10 @@ export function DndStatsSection({
             <div className="mt-3 border-t pt-3">
               <div className="border-primary/20 bg-primary/5 flex items-center justify-between rounded-lg border p-3">
                 <div className="flex flex-col">
-                  <Label className="text-muted-foreground text-[10px] font-bold uppercase">
+                  <Label className="text-muted-foreground text-10px font-bold uppercase">
                     {t('dnd.passivePerception')}
                   </Label>
-                  <span className="text-muted-foreground text-[10px]">
+                  <span className="text-muted-foreground text-10px">
                     10 + {t('dnd.wisdomMod')}{' '}
                     {passivePerception > 10 + wisdomMod
                       ? `+ ${passivePerception - (10 + wisdomMod)}`
@@ -309,7 +309,7 @@ export function DndStatsSection({
       {!isPhoneView && (
         <Card>
           <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2">
-            <CardTitle className="text-muted-foreground text-[10px] font-bold tracking-tight uppercase">
+            <CardTitle className="text-muted-foreground text-10px font-bold tracking-tight uppercase">
               {t('dnd.otherProficienciesAndLanguages')}
             </CardTitle>
             {(showEditButtons || isOtherProficienciesEditing) && (
@@ -324,7 +324,7 @@ export function DndStatsSection({
             {otherProficienciesAndLanguages.map((it, i) => (
               <div
                 key={i}
-                className="bg-muted/10 flex justify-between rounded p-1.5 text-[10px]"
+                className="bg-muted/10 text-10px flex justify-between rounded p-1.5"
               >
                 {isOtherProficienciesEditing ? (
                   <Input
@@ -334,7 +334,7 @@ export function DndStatsSection({
                       n[i] = e.target.value;
                       setOtherProficienciesAndLanguages(n);
                     }}
-                    className="mr-2 h-6 flex-1 text-[10px]"
+                    className="text-10px mr-2 h-6 flex-1"
                   />
                 ) : (
                   <span className="font-medium break-words">&bull; {it}</span>
@@ -363,7 +363,7 @@ export function DndStatsSection({
                   placeholder={t('dnd.newItemPlaceholder')}
                   value={newProfItem}
                   onChange={(e) => setNewProfItem(e.target.value)}
-                  className="h-7 text-[10px]"
+                  className="text-10px h-7"
                 />
                 <Button
                   size="sm"

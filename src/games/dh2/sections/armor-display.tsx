@@ -73,18 +73,16 @@ export const ArmorDisplay = ({
         <h4
           className={cn(
             'w-full truncate px-1 text-center font-bold',
-            isCompactView ? 'text-[10px]' : 'text-xs',
+            isCompactView ? 'text-10px' : 'text-xs',
           )}
         >
           {title}
         </h4>
-        <div className="text-muted-foreground mb-1 text-[10px]">
-          ({location})
-        </div>
+        <div className="text-muted-foreground text-10px mb-1">({location})</div>
         <div
           className={cn(
             'w-full space-y-0.5',
-            isCompactView ? 'text-[9px]' : 'text-center text-[10px]',
+            isCompactView ? 'text-9px' : 'text-10px text-center',
           )}
         >
           <p className="truncate">

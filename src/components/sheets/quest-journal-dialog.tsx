@@ -188,7 +188,7 @@ export function QuestJournalSheet({
     switch (priority) {
       case 'main':
         return (
-          <Badge variant="destructive" className="h-4 px-1.5 text-[9px]">
+          <Badge variant="destructive" className="text-9px h-4 px-1.5">
             {t('common.mainQuest')}
           </Badge>
         );
@@ -196,7 +196,7 @@ export function QuestJournalSheet({
         return (
           <Badge
             variant="secondary"
-            className="h-4 border-yellow-500/50 bg-yellow-500/20 px-1.5 text-[9px] text-yellow-600"
+            className="text-9px h-4 border-yellow-500/50 bg-yellow-500/20 px-1.5 text-yellow-600"
           >
             {t('common.personalQuest')}
           </Badge>
@@ -205,7 +205,7 @@ export function QuestJournalSheet({
         return (
           <Badge
             variant="outline"
-            className="h-4 border-blue-500/50 px-1.5 text-[9px] text-blue-500"
+            className="text-9px h-4 border-blue-500/50 px-1.5 text-blue-500"
           >
             {t('common.sideQuest')}
           </Badge>
@@ -217,7 +217,7 @@ export function QuestJournalSheet({
     if (!quest.objectives || quest.objectives.length === 0) return null;
     const done = quest.objectives.filter((o) => o.completed).length;
     return (
-      <span className="text-muted-foreground ml-2 text-[10px] font-bold">
+      <span className="text-muted-foreground text-10px ml-2 font-bold">
         {done}/{quest.objectives.length}
       </span>
     );
@@ -325,7 +325,7 @@ export function QuestJournalSheet({
                                     variant={
                                       isCompleted ? 'secondary' : 'default'
                                     }
-                                    className="h-4 shrink-0 px-1.5 text-[9px]"
+                                    className="text-9px h-4 shrink-0 px-1.5"
                                   >
                                     {isCompleted
                                       ? t('common.questDone')
@@ -336,7 +336,7 @@ export function QuestJournalSheet({
                             </div>
                             <AccordionContent className="bg-muted/5 space-y-4 border-t px-4 pt-2 pb-4">
                               <div className="space-y-1">
-                                <Label className="text-muted-foreground flex items-center gap-1 text-[10px] font-bold uppercase">
+                                <Label className="text-muted-foreground text-10px flex items-center gap-1 font-bold uppercase">
                                   <ScrollText className="h-3 w-3" />{' '}
                                   {t('common.name')}
                                 </Label>
@@ -417,7 +417,7 @@ export function QuestJournalSheet({
                               </div>
 
                               <div className="space-y-1">
-                                <Label className="text-muted-foreground flex items-center gap-1 text-[10px] font-bold uppercase">
+                                <Label className="text-muted-foreground text-10px flex items-center gap-1 font-bold uppercase">
                                   <ScrollText className="h-3 w-3" />{' '}
                                   {t('common.questDescription')}
                                 </Label>
@@ -436,7 +436,7 @@ export function QuestJournalSheet({
                               </div>
 
                               <div className="space-y-2">
-                                <Label className="text-muted-foreground flex items-center gap-1 text-[10px] font-bold uppercase">
+                                <Label className="text-muted-foreground text-10px flex items-center gap-1 font-bold uppercase">
                                   <CheckCircle2 className="h-3 w-3" />{' '}
                                   {t('common.questObjectives')}
                                 </Label>
@@ -530,7 +530,7 @@ export function QuestJournalSheet({
 
                               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                                 <div className="space-y-1">
-                                  <Label className="text-muted-foreground flex items-center gap-1 text-[10px] font-bold uppercase">
+                                  <Label className="text-muted-foreground text-10px flex items-center gap-1 font-bold uppercase">
                                     <Gift className="h-3 w-3" />{' '}
                                     {t('common.questRewards')}
                                   </Label>
@@ -548,7 +548,7 @@ export function QuestJournalSheet({
                                   />
                                 </div>
                                 <div className="space-y-1">
-                                  <Label className="text-muted-foreground flex items-center gap-1 text-[10px] font-bold uppercase">
+                                  <Label className="text-muted-foreground text-10px flex items-center gap-1 font-bold uppercase">
                                     <MapPin className="h-3 w-3" />{' '}
                                     {t('common.questLocations')}
                                   </Label>
@@ -566,7 +566,7 @@ export function QuestJournalSheet({
                                   />
                                 </div>
                                 <div className="space-y-1 sm:col-span-2">
-                                  <Label className="text-muted-foreground flex items-center gap-1 text-[10px] font-bold uppercase">
+                                  <Label className="text-muted-foreground text-10px flex items-center gap-1 font-bold uppercase">
                                     <User className="h-3 w-3" />{' '}
                                     {t('common.questNpcs')}
                                   </Label>
@@ -586,7 +586,7 @@ export function QuestJournalSheet({
                               </div>
 
                               <div className="space-y-1">
-                                <Label className="text-muted-foreground flex items-center gap-1 text-[10px] font-bold uppercase">
+                                <Label className="text-muted-foreground text-10px flex items-center gap-1 font-bold uppercase">
                                   <StickyNote className="h-3 w-3" />{' '}
                                   {t('common.questNotes')}
                                 </Label>
@@ -607,7 +607,7 @@ export function QuestJournalSheet({
                               </div>
 
                               <div className="flex items-center justify-between border-t pt-2">
-                                <span className="text-muted-foreground text-[10px]">
+                                <span className="text-muted-foreground text-10px">
                                   {t('common.updated')}{' '}
                                   {formatHistoryDate(
                                     quest.updatedAt,

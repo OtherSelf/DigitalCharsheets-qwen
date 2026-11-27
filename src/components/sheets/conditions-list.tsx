@@ -158,7 +158,7 @@ export function ConditionsList<TEntry extends ConditionEntry = ConditionEntry>({
           <h5
             className={cn(
               'text-muted-foreground text-xs font-medium tracking-wide uppercase',
-              isCompactView && 'text-[10px]',
+              isCompactView && 'text-10px',
             )}
           >
             {labels.title}
@@ -193,7 +193,7 @@ export function ConditionsList<TEntry extends ConditionEntry = ConditionEntry>({
                     <Badge
                       variant={positive ? 'outline' : 'secondary'}
                       className={cn(
-                        'text-[10px]',
+                        'text-10px',
                         positive &&
                           'border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300',
                       )}

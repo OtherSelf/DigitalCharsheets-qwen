@@ -81,7 +81,7 @@ function KindBadge({ kind }: { kind: HistoryChange['kind'] }) {
         : 'bg-muted text-muted-foreground';
 
   return (
-    <span className={`rounded px-1.5 py-0.5 text-[11px] font-medium ${tone}`}>
+    <span className={`text-11px rounded px-1.5 py-0.5 font-medium ${tone}`}>
       {label}
     </span>
   );
@@ -108,12 +108,12 @@ function ValueText({
 
   return (
     <div className="min-w-0 space-y-1">
-      <div className="text-muted-foreground text-[11px] uppercase">{label}</div>
+      <div className="text-muted-foreground text-11px uppercase">{label}</div>
       <pre className="bg-muted/60 max-h-48 overflow-auto rounded p-2 text-xs break-words whitespace-pre-wrap">
         {text || '—'}
       </pre>
       {truncated && (
-        <div className="text-muted-foreground text-[11px]">
+        <div className="text-muted-foreground text-11px">
           {t('history.truncatedValue')}
         </div>
       )}
@@ -165,7 +165,7 @@ function TextDiffView({ diff }: { diff: TextDiff }) {
         })}
       </div>
       {diff.truncated && (
-        <p className="text-muted-foreground text-[11px]">
+        <p className="text-muted-foreground text-11px">
           {t('history.diffTruncated')}
         </p>
       )}
@@ -226,7 +226,7 @@ function ChangeRow({
       ) : hideKeyedItemBody ? null : change.kind === 'array-add' ||
         change.kind === 'array-remove' ? (
         <div className="space-y-1">
-          <div className="text-muted-foreground text-[11px] uppercase">
+          <div className="text-muted-foreground text-11px uppercase">
             {change.kind === 'array-add'
               ? t('history.arrayAdded')
               : t('history.arrayRemoved')}

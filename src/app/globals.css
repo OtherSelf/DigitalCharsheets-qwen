@@ -47,6 +47,19 @@
   --text-3xl--line-height: calc(2.25rem * var(--text-scale));
   --text-4xl: calc(2.25rem * var(--text-scale));
   --text-4xl--line-height: calc(2.5rem * var(--text-scale));
+  /*
+    Служебные кегли ниже базовой ступени: в листах много подписей и плотных
+    таблиц на 8–15 px. Раньше это были произвольные `text-[10px]`, которые не
+    реагировали на «Размер шрифта»; теперь те же размеры, но через множитель,
+    как у остальных ступеней. Line-height не задаём: произвольный размер его
+    тоже не задавал, иначе поехала бы высота плотных строк.
+  */
+  --text-8px: calc(0.5rem * var(--text-scale));
+  --text-9px: calc(0.5625rem * var(--text-scale));
+  --text-10px: calc(0.625rem * var(--text-scale));
+  --text-11px: calc(0.6875rem * var(--text-scale));
+  --text-15px: calc(0.9375rem * var(--text-scale));
+
   --text-5xl: calc(3rem * var(--text-scale));
   --text-5xl--line-height: 1;
   --text-6xl: calc(3.75rem * var(--text-scale));

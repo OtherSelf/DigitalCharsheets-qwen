@@ -279,7 +279,7 @@ export function Header({
                     {displayCharacter.name}
                   </h2>
                   <p
-                    className={`text-muted-foreground truncate ${isPhoneView ? 'text-[10px] md:text-xs' : 'text-xs xl:text-sm'}`}
+                    className={`text-muted-foreground truncate ${isPhoneView ? 'text-10px md:text-xs' : 'text-xs xl:text-sm'}`}
                   >
                     {characterSubtitle}
                   </p>

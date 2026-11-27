@@ -153,7 +153,7 @@ export function DndSavesSkillsSection({
       {/* PROFICIENCY BONUS BOX */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2">
-          <CardTitle className="text-muted-foreground text-[10px] font-bold tracking-tight uppercase">
+          <CardTitle className="text-muted-foreground text-10px font-bold tracking-tight uppercase">
             {t('dnd.proficiencyBonus')}
           </CardTitle>
         </CardHeader>
@@ -166,7 +166,7 @@ export function DndSavesSkillsSection({
 
       <Card id={`${idp}saving-throws-card`}>
         <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2">
-          <CardTitle className="text-muted-foreground text-[10px] font-bold tracking-tight uppercase">
+          <CardTitle className="text-muted-foreground text-10px font-bold tracking-tight uppercase">
             {t('dnd.savingThrows')}
           </CardTitle>
           {(showEditButtons || isSavesEditing) && (
@@ -258,7 +258,7 @@ export function DndSavesSkillsSection({
                     </span>
                   )}
                 </div>
-                <span className="flex-1 text-[10px] font-bold uppercase">
+                <span className="text-10px flex-1 font-bold uppercase">
                   {t(getSaveTranslationKey(st.name))}
                 </span>
               </div>
@@ -269,7 +269,7 @@ export function DndSavesSkillsSection({
 
       <Card id={`${idp}skills-card`}>
         <CardHeader className="flex flex-row items-center justify-between px-4 pt-2 pb-2">
-          <CardTitle className="text-muted-foreground text-[10px] font-bold tracking-tight uppercase">
+          <CardTitle className="text-muted-foreground text-10px font-bold tracking-tight uppercase">
             {t('common.skills')}
           </CardTitle>
           {(showEditButtons || isSkillsEditing) && (

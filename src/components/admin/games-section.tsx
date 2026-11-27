@@ -234,7 +234,7 @@ export function AdminGamesSection() {
                       {game.version ? `v${game.version}` : '—'}
                     </Badge>
                   </div>
-                  <p className="text-muted-foreground text-[11px]">
+                  <p className="text-muted-foreground text-11px">
                     {t('admin.schemaColumn')} {game.schemaVersion}
                     {game.conformance ? ` · ${game.conformance}` : ''}
                     {game.dependencies
@@ -331,7 +331,7 @@ export function AdminGamesSection() {
                         <Badge variant="outline">
                           {game.version ? `v${game.version}` : '—'}
                         </Badge>
-                        <span className="text-muted-foreground mt-1 block text-[11px]">
+                        <span className="text-muted-foreground text-11px mt-1 block">
                           {t('admin.schemaColumn')} {game.schemaVersion}
                           {game.conformance ? ` · ${game.conformance}` : ''}
                           {game.dependencies
