@@ -1241,16 +1241,28 @@ test.describe('адаптивность', () => {
 
         const header = page.locator('header.app-header');
         const nav = page.getByRole('navigation');
+        // Масштаб меняет ЭФФЕКТИВНУЮ ширину: при 50% на телефоне лист
+        // перестраивается в планшетный и рейла уже нет. Переход к секции
+        // проверяем тем путём, который в этом режиме доступен.
+        const hasRail = (await nav.count()) > 0;
         const before = {
           header: (await header.boundingBox())!.y,
           headerX: (await header.boundingBox())!.x,
-          nav: (await nav.boundingBox())!.y,
+          nav: hasRail ? (await nav.boundingBox())!.y : null,
         };
 
         // Переход между секциями — именно он вызывал scrollIntoView по корню.
-        await nav
-          .getByRole('button', { name: 'Inventory', exact: true })
-          .click();
+        if (hasRail) {
+          await nav
+            .getByRole('button', { name: 'Inventory', exact: true })
+            .click();
+        } else {
+          await page.evaluate(() => {
+            document
+              .getElementById('inventory-section')
+              ?.scrollIntoView({ block: 'start' });
+          });
+        }
         await page.waitForTimeout(600);
 
         // UIScaleWrapper раскладывается в 1/scale раз больше вьюпорта,
@@ -1273,10 +1285,12 @@ test.describe('адаптивность', () => {
           Math.abs((await header.boundingBox())!.y - before.header),
           `масштаб ${scale}: шапка на месте`,
         ).toBeLessThanOrEqual(1);
-        expect(
-          Math.abs((await nav.boundingBox())!.y - before.nav),
-          `масштаб ${scale}: левое меню на месте`,
-        ).toBeLessThanOrEqual(1);
+        if (hasRail) {
+          expect(
+            Math.abs((await nav.boundingBox())!.y - before.nav!),
+            `масштаб ${scale}: левое меню на месте`,
+          ).toBeLessThanOrEqual(1);
+        }
 
         // `expectNoHorizontalOverflow` здесь не годится: при масштабе ≠ 100%
         // scrollWidth body намеренно больше вьюпорта (обёртка раскладывается
@@ -1638,6 +1652,102 @@ test.describe('вид листа: компактный и обычный', () =>
         return main.scrollWidth - main.clientWidth;
       });
       expect(overflow, 'main не вылезает вбок').toBeLessThanOrEqual(1);
+    },
+  );
+
+  /*
+    «Масштаб интерфейса» — это зум: оболочка раскладывается в 100/scale vw,
+    поэтому места у контента меньше, и лист обязан перестроиться в планшетную
+    полосу, а не сжимать десктопную сетку. До правки при 150% на 1440 получались
+    панели по 260 px и таблицы во внутреннем скролле.
+  */
+  test(
+    'масштаб 150%: лист перестраивается в планшетную полосу',
+    { tag: '@desktop' },
+    async ({ page, context }) => {
+      await prepare(context);
+      await context.addInitScript(() =>
+        localStorage.setItem('ui-scale', '1.5'),
+      );
+      await page.setViewportSize({ width: 1440, height: 900 });
+      await openApp(page, sheetPath(getState().dhId));
+
+      await expect
+        .poll(() =>
+          page.evaluate(() =>
+            getComputedStyle(document.documentElement)
+              .getPropertyValue('--ui-scale')
+              .trim(),
+          ),
+        )
+        .toBe('1.5');
+
+      const columns = await page
+        .locator('.dh-sheet .sheet-info-grid')
+        .evaluate(
+          (element) =>
+            getComputedStyle(element)
+              .gridTemplateColumns.split(' ')
+              .filter(Boolean).length,
+        );
+      expect(columns, 'при 150% работает планшетная полоса').toBe(2);
+
+      const fits = await page.evaluate(() => {
+        const table = document.querySelector<HTMLElement>(
+          '#skills-section table',
+        )!;
+        const main = document.querySelector('main')!;
+        return {
+          table:
+            table.offsetWidth <=
+            (table.parentElement as HTMLElement).offsetWidth + 1,
+          main: main.scrollWidth - main.clientWidth,
+        };
+      });
+      expect(fits.table, 'таблица умений влезает в колонку').toBe(true);
+      expect(fits.main, 'main не вылезает вбок').toBeLessThanOrEqual(1);
+      await expectNoHorizontalOverflow(page);
+    },
+  );
+
+  /*
+    80% — обратный случай: контент не должен упираться в 1760 CSS-пикселей,
+    иначе справа остаётся пустая полоса. Потолок ширины задан в визуальных
+    пикселях: 1760 / 0.8 = 2200 в координатах раскладки.
+  */
+  test(
+    'масштаб 80%: контент заполняет ширину экрана',
+    { tag: '@desktop' },
+    async ({ page, context }) => {
+      await prepare(context);
+      await context.addInitScript(() =>
+        localStorage.setItem('ui-scale', '0.8'),
+      );
+      await page.setViewportSize({ width: 1920, height: 900 });
+      await openApp(page, sheetPath(getState().dhId));
+      await expect
+        .poll(() =>
+          page.evaluate(() =>
+            getComputedStyle(document.documentElement)
+              .getPropertyValue('--ui-scale')
+              .trim(),
+          ),
+        )
+        .toBe('0.8');
+
+      const shell = await page.evaluate(() => {
+        const main = document.querySelector('main');
+        const container = main?.firstElementChild as HTMLElement | undefined;
+        return {
+          layout: container?.offsetWidth ?? 0,
+          visual: Math.round(container?.getBoundingClientRect().width ?? 0),
+        };
+      });
+      // 2200 в координатах раскладки × 0.8 трансформа = 1760 визуальных:
+      // потолок остаётся читаемым, но экран не остаётся с пустой полосой.
+      expect(shell.layout, 'потолок в координатах раскладки').toBe(2200);
+      expect(shell.visual, 'и он же в визуальных пикселях').toBe(1760);
+      await expectNoHorizontalOverflow(page);
     },
   );
 

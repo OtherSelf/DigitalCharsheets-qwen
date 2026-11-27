@@ -57,6 +57,14 @@ export function UIScaleWrapper({ children }: { children: ReactNode }) {
         transformOrigin: 'top left',
         width: '100vw',
         height: '100dvh',
+        /*
+          ─── LANDMARK: SCALE_IS_ZOOM ───
+          Оболочка — контейнер запросов: её inline-size равен ширине раскладки
+          (`100/scale vw`). По нему полосы листа и шапки понимают, сколько
+          места у контента реально есть, — иначе при масштабе 150% медиа-запросы
+          продолжали видеть окно 1440 и включали десктопную сетку в 960 px.
+        */
+        containerType: 'inline-size',
       }}
     >
       {children}

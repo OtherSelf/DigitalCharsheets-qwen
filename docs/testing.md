@@ -361,6 +361,15 @@ bash scripts/visual.sh --base-url http://127.0.0.1:3000
   `localStorage` (`sheet-view-compact`) for screenshots of the compact sheet.
   The preference survives a reload and is reset by the same toggle, so a
   scenario that toggles must not assume a clean default afterwards.
+- UI scale is a zoom, not just geometry: the shell is laid out in `100/scale vw`,
+  so the sheet must reflow by the space it actually has. Flags use
+  `innerWidth / uiScale`; sheet and header bands are container queries on the
+  shell; `--content-max` is expressed in visual pixels. Two scenarios guard the
+  ends: `масштаб 150%` (a 1440 window must switch to the tablet band, tables
+  must fit) and `масштаб 80%` (a 1920 window keeps the 1760 visual cap but fills
+  the screen). Font sizes below the base step are theme tokens
+  (`text-8px`…`text-15px`), so «Размер шрифта» reaches dense sheet labels too;
+  `cn` knows them as font sizes (see `src/lib/utils.ts`).
 - Mobile baselines live in two projects: `mobile` (host screens) and
   `mobile-games` (plugin sheets). A screenshot taken in one width is never
   compared in another, so a sheet scenario at 412 px belongs to `mobile-games`

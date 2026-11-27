@@ -346,7 +346,7 @@ body > div:first-child {
    Tablet  : 768px .. 1299px
    Mobile  : < 768px (handled by React compact view)
 ================================================================ */
-@media (min-width: 768px) and (max-width: 1299px) {
+@container (min-width: 768px) and (max-width: 1299px) {
   /* LANDMARK: HEADER_SINGLE_ROW_ON_TABLET
      Раньше шапка листа персонажа на планшете складывалась в две строки:
      имя + параметры сверху, инструменты листа слева, иконки приложения
@@ -404,7 +404,7 @@ body > div:first-child {
    Узкий планшет (768..1023): убираем второстепенные подписи, чтобы имя
    персонажа не сжималось до пары букв. Значения остаются на месте:
    система видна в листе, эдишн — в селекте, вдохновение — по «+/-». */
-@media (min-width: 768px) and (max-width: 1023px) {
+@container (min-width: 768px) and (max-width: 1023px) {
   .app-header.is-character-sheet .header-identity p,
   .app-header.is-character-sheet .header-identity label,
   .app-header.is-character-sheet .header-field-label {
@@ -439,7 +439,7 @@ body > div:first-child {
     строки становятся нечитаемо длинными, а карточки — «рыхлыми».
     Значение выше всех снимаемых ширин (1440), поэтому эталоны не меняются.
   */
-  --content-max: 1760px;
+  --content-max: calc(1760px / var(--ui-scale));
 }
 
 /* Наследуемый текст масштабируется один раз, на body: без компаундинга. */

@@ -389,8 +389,11 @@ export const MySheet = React.forwardRef<SheetHandle, GameSheetProps<MyCharacter>
 ```
 
 Sections (`sections/*.tsx`) and accordions are ordinary React; use the host UI
-kit (`@/components/ui/*`) and `useTranslation()`. If a section is part of the
-compact navigation, its `id` must match the `CompactNav` item id: the page
+kit (`@/components/ui/*`) and `useTranslation()`. Layout bands in
+`sheet.module.css` must be **container queries** (`@container`), not `@media`:
+the host shell is laid out in `100/scale vw`, and only the container sees how
+much room the sheet actually has at «Масштаб интерфейса» ≠ 100%. If a section is
+part of the compact navigation, its `id` must match the `CompactNav` item id: the page
 scrolls `main` to exactly that element. The rule is enforced, not assumed — the
 mobile scenario `контракт CompactNav` in `tests/visual/basic-pages.spec.ts`
 walks the rail buttons (`data-section-id`), checks that every id resolves to a

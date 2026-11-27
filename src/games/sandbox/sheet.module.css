@@ -20,7 +20,7 @@
   grid-template-columns: repeat(auto-fit, minmax(6rem, 1fr));
 }
 
-@media (min-width: 768px) and (max-width: 1299px) {
+@container (min-width: 768px) and (max-width: 1299px) {
   .sheet {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -32,13 +32,13 @@
   раскладку, а не типографику. На телефоне правило не нужно — там лист и так
   в одну колонку.
 */
-@media (min-width: 768px) {
+@container (min-width: 768px) {
   .sheet.compact {
     grid-template-columns: minmax(0, 1fr);
   }
 }
 
-@media (min-width: 1300px) {
+@container (min-width: 1300px) {
   .sheet {
     grid-template-columns: 2fr minmax(0, 1fr);
   }

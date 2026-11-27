@@ -10,7 +10,7 @@
   хэшем: классы разметки листа — глобальные утилиты Tailwind, их достаём
   через `:global`.
 */
-@media (min-width: 768px) and (max-width: 1299px) {
+@container (min-width: 768px) and (max-width: 1299px) {
   .sheet :global(.sheet-info-grid) {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
@@ -55,7 +55,7 @@
   полосы 768..1299. Шрифт, отступы и таблицы остаются обычными: компакт меняет
   раскладку, а не типографику.
 */
-@media (min-width: 768px) {
+@container (min-width: 768px) {
   .sheet:global(.is-compact) :global(.sheet-info-grid) {
     grid-template-columns: minmax(0, 1fr) !important;
   }
@@ -81,7 +81,7 @@
   режима: рейла секций там нет, поэтому панели складываются в колонку CSS-ом.
   `!important` нужен, потому что разметка несёт `flex-row` утилитами.
 */
-@media (max-width: 767px) {
+@container (max-width: 767px) {
   /* Только некомпактный лист: в компакте панели и так скрыты по одной. */
   .sheet:global(:not(.is-compact)) :global(.sheet-panels) {
     display: flex !important;

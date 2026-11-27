@@ -10,7 +10,7 @@
   Модуль скоупит правила хэшем: классы внутри разметки листа — глобальные
   Tailwind-утилиты и маркер `is-compact`, их достаём через `:global`.
 */
-@media (min-width: 768px) and (max-width: 1299px) {
+@container (min-width: 768px) and (max-width: 1299px) {
   .sheet :global(.sheet-top-row) {
     flex-direction: column !important;
   }
@@ -41,7 +41,7 @@
   рейла и без спрятанных секций. Работает и на планшете, и на десктопе, поэтому
   отдельный media-блок. Шрифт и отступы остаются обычными.
 */
-@media (min-width: 768px) {
+@container (min-width: 768px) {
   .sheet:global(.is-compact) :global(.sheet-main-grid) {
     display: grid !important;
     grid-template-columns: minmax(0, 1fr) !important;

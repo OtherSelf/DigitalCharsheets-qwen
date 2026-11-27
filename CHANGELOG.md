@@ -31,12 +31,31 @@ column, every section, normal type — not the phone layout.
   `isPhoneView` (phone presentation) in `GameSheetProps` and the
   `HeaderActions` slot. The demo sheet collapses to one column too.
 
+### Added
+
+- The skills and talents section follows the width of its **panel**, not the
+  window: the skills tables sit one or two columns depending on the room, and
+  the talents list (read mode) becomes two columns when the neighbouring panel
+  is collapsed or the sheet is in the compact one-column layout. Dragging inside
+  the grid uses the grid-aware sorting strategy.
+- «UI scale» works like browser zoom: layout flags and the effective viewport
+  follow `innerWidth / uiScale`, sheet and header bands are container queries on
+  the app shell, and `--content-max` is expressed in visual pixels. At 80% the
+  content fills the screen instead of leaving a strip; at 150% the sheet reflows
+  to the tablet band instead of squeezing the desktop grid into a narrow box.
+- Dense sheet labels (8–15 px) are theme tokens (`text-8px`…`text-15px`), so
+  «Font size» reaches them too; `cn` registers them as font sizes so class
+  conflicts still resolve to the last override.
+
 ### Fixed
 
 - The compact toggle used to turn a tablet or desktop window into the phone
   layout and the choice stuck for the whole tab: the rail appeared, sections
   were hidden one at a time, and a reload was the only way back. The phone
   presentation now requires a real phone width.
+- Skills tables no longer scroll horizontally inside their own box at 100%: the
+  checkbox columns are 44 px instead of 60, the name field can shrink, and the
+  two tables share the row only when both fit.
 
 ### Plugin versions
 
