@@ -41,6 +41,8 @@ files are served from a process-local cache (see
   tokens.json                   single-use recovery tokens (hashed)
   sessions.json                 live session records (uid per `jti`)
   shares.json                   read-only share links (hashed tokens)
+  consents.jsonl                append-only proof of policy/terms acceptance
+  site-settings.json            runtime switches edited in /admin
   .session-secret               HMAC key for session cookies (0600)
   .totp-key                     TOTP encryption/backup key, if env is unset (0600)
   .lock/                        short-lived directory mutex
@@ -52,6 +54,42 @@ files are served from a process-local cache (see
         meta.json               deletedAt/expiresAt/uid
   .initial-admin.txt            generated bootstrap admin (0600, optional)
 ```
+
+## `consents.jsonl` — proof of acceptance
+
+Append-only JSONL: one line per **event**, never an in-place update. Rewriting the
+file would destroy the very thing it exists for — evidence of *when* and *what*
+the account accepted.
+
+```
+{"uid":"…","version":"2026-11-26","termsVersion":"2026-11-26","source":"login","at":"2026-11-26T21:41:58.176Z"}
+```
+
+| Field | Meaning |
+| --- | --- |
+| `uid` | account id; the only link to the person, and the profile may be gone |
+| `at` | ISO timestamp of the acceptance |
+| `version` | accepted revision of the privacy policy (`PRIVACY_VERSION`) |
+| `termsVersion` | accepted revision of the terms of use (`TERMS_VERSION`); absent for rows written before the terms existed |
+| `source` | `register`, `login` or `erasure` |
+
+Rules the code keeps:
+
+- a row is written only when the accepted documents differ from the current
+  ones; a normal login of an up-to-date account writes nothing, so the file does
+  not grow per visit;
+- revisions are compared, not dates: when either document changes, the next
+  sign-in asks for acceptance once and appends a row with both versions;
+- `source: "erasure"` is a tombstone written when the account is deleted. It
+  carries no new data (same `uid`, `version`, `termsVersion`) and marks that the
+  profile is gone;
+- rows are ignored by the gate when they are tombstones, and the latest
+  non-tombstone row is what the gate compares;
+- after three years a deleted account's rows are removed by the daily sweep
+  (`pruneErasedConsents`), so the file carries history, not memory leaks.
+
+The file is small (about 120 bytes per acceptance) and safe to include in a
+data-directory backup: it contains no passwords, no e-mail and no content.
 
 `<uid>` is a random UUID and never changes. The login is an attribute, so
 renaming an account only rewrites `user.json` and the index entry — the
