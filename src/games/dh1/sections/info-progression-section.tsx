@@ -54,9 +54,7 @@ import {
 import {
   ADVANCED_RANK_THRESHOLD,
   AdvancedPathsByCareer,
-  calculateRank,
-  RanksByCareer,
-  type AdvancedPath,
+  rankStateForCharacter,
 } from '../dark-heresy-ranks';
 import {
   divinationEffectLabel,
@@ -66,7 +64,7 @@ import {
 import { dh1ExperienceRows } from '../experience';
 import { isCreationFieldLocked } from '../field-policy';
 import { genderLabel, genderOptions, toGenderCode } from '../gender';
-import { type DarkHeresyCareerPath, type DH1Character } from '../types';
+import type { DH1Character } from '../types';
 import { EditSaveButton } from './dh-ui-helpers';
 
 // Наборы состояний объявляет редакция: компонент в ядре принимает их
@@ -912,28 +910,14 @@ export const ProgressionSection = ({
     AdvancedPathsByCareer[
       character.careerPath as keyof typeof AdvancedPathsByCareer
     ];
-  const careerProgression = character.careerPath
-    ? RanksByCareer[character.careerPath as DarkHeresyCareerPath]
-    : null;
-  let chosenAdvancedPathData: AdvancedPath | null = null;
-  if (
-    (editableAdvancedPath ?? character.advancedPath) &&
-    possibleAdvancedPaths
-  ) {
-    const paths = Object.values(possibleAdvancedPaths) as AdvancedPath[];
-    chosenAdvancedPathData =
-      paths.find(
-        (p) => p.name === (editableAdvancedPath ?? character.advancedPath),
-      ) || null;
-  }
-  const currentRankName = careerProgression
-    ? calculateRank(
-        careerProgression,
-        editableTotalExpSpent,
-        chosenAdvancedPathData,
-        editableAlternatePath ?? character.alternatePath,
-      )
-    : 'N/A';
+  // Ранг считается по графу: он знает сходимости и карьерно-зависимые
+  // подписи, а старые таблицы остаются источником имён веток для диалогов.
+  const currentRankNode = rankStateForCharacter({
+    ...character,
+    totalExpSpent: editableTotalExpSpent,
+    advancedPath: editableAdvancedPath ?? character.advancedPath,
+    alternatePath: editableAlternatePath ?? character.alternatePath,
+  }).node;
   const canChooseAlternateRank =
     character.careerPath === 'Adept' &&
     editableTotalExpSpent >= 2000 &&
@@ -1237,10 +1221,9 @@ export const ProgressionSection = ({
               <div className="flex flex-col gap-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <p className="text-sm font-medium break-words">
-                    {currentRankName === 'N/A' ||
-                    currentRankName === 'Unknown Rank'
-                      ? t('dh1.unknownRank')
-                      : t(RANK_KEYS[currentRankName] || currentRankName)}
+                    {currentRankNode
+                      ? t(currentRankNode.labelKey)
+                      : t('dh1.unknownRank')}
                   </p>
 
                   {(editableAdvancedPath ?? character.advancedPath) ? (

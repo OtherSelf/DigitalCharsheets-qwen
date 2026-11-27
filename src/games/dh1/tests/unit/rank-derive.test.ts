@@ -4,7 +4,6 @@ import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {
-  advancedPathForCharacter,
   rankForCharacter,
   resolveCharacterClass,
 } from '@/games/dh1/dark-heresy-ranks';
@@ -109,13 +108,28 @@ describe('DH1: актуальный ранг по опыту', () => {
     ).toBe('Scholar');
   });
 
-  it('продвинутый путь ищется по имени, а не по ключу', () => {
-    expect(advancedPathForCharacter('Adept', 'Comptroller')?.name).toBe(
-      'Comptroller',
-    );
-    expect(advancedPathForCharacter('Adept', 'pathA')).toBeNull();
-    expect(advancedPathForCharacter('Scum', 'Comptroller')).toBeNull();
-    expect(advancedPathForCharacter('Adept', null)).toBeNull();
+  it('продвинутый путь ищется по имени ветки, а не по ключу', () => {
+    expect(
+      rankForCharacter({
+        careerPath: 'Imperial Psyker',
+        totalExpSpent: 2500,
+        advancedPath: 'Savant Militant',
+      }),
+    ).toBe('Savant Militant');
+    expect(
+      rankForCharacter({
+        careerPath: 'Imperial Psyker',
+        totalExpSpent: 2500,
+        advancedPath: 'pathA',
+      }),
+    ).toBe('Aspirant');
+    expect(
+      rankForCharacter({
+        careerPath: 'Scum',
+        totalExpSpent: 6500,
+        advancedPath: 'Comptroller',
+      }),
+    ).toBe('Rogue');
   });
 
   it('лист без известной карьеры сохраняет legacy-ранг', () => {

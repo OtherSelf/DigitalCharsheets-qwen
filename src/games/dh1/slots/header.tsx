@@ -7,7 +7,11 @@ import { Scale } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/games/plugin-host';
 
-import { rankForCharacter, resolveCharacterClass } from '../dark-heresy-ranks';
+import {
+  rankForCharacter,
+  rankStateForCharacter,
+  resolveCharacterClass,
+} from '../dark-heresy-ranks';
 import { DhHouseRulesDialog } from '../sections/dh-house-rules-dialog';
 import type { DH1Character } from '../types';
 
@@ -38,14 +42,16 @@ export function dh1HeaderSubtitle(
 ): string {
   // Ранг и класс считаются живьём: `updateCharacter` мержит патч локально, не
   // дожидаясь ответа сервера, и снимок создания отстал бы от опыта.
-  const rank = rankForCharacter(character);
+  const node = rankStateForCharacter(character).node;
   const characterClass = resolveCharacterClass(character);
+  const rank = rankForCharacter(character);
 
-  const translatedRank = translateOr(
-    t,
-    `dh1.rank${stripNonLetters(rank)}`,
-    rank,
-  );
+  // Подпись узла карьерно-зависима (`Novice` у Cleric и Сороритас — разные
+  // слова), поэтому для известного графа ключ берётся у узла, а старая карта
+  // по EN-имени остаётся только для legacy-листов без карьеры.
+  const translatedRank = node
+    ? t(node.labelKey)
+    : translateOr(t, `dh1.rank${stripNonLetters(rank)}`, rank);
   const translatedClass = translateOr(
     t,
     `dh1.career${stripNonLetters(characterClass)}`,

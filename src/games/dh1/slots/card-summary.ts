@@ -1,7 +1,11 @@
 import type { CardSummary } from '@/games/types';
 
 import { CAREER_KEYS, RANK_KEYS } from '../dark-heresy-data';
-import { rankForCharacter, resolveCharacterClass } from '../dark-heresy-ranks';
+import {
+  rankForCharacter,
+  rankStateForCharacter,
+  resolveCharacterClass,
+} from '../dark-heresy-ranks';
 import type { DH1Character } from '../types';
 
 /**
@@ -16,8 +20,11 @@ export function dh1CardSummary(
 ): CardSummary {
   const rank = rankForCharacter(character);
   const characterClass = resolveCharacterClass(character);
+  const node = rankStateForCharacter(character).node;
 
-  const rankText = t(RANK_KEYS[rank] || rank);
+  // Узел графа знает карьерно-зависимую подпись; RANK_KEYS — только для
+  // legacy-листа без известной карьеры.
+  const rankText = node ? t(node.labelKey) : t(RANK_KEYS[rank] || rank);
   const classText = t(CAREER_KEYS[characterClass] || characterClass);
 
   // Новый лист может быть создан только с именем: ранг и карьера ещё не

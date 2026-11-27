@@ -1,12 +1,28 @@
 /**
- * ─── LANDMARK: DH1 DATA PACK ───────────────────────────────────────────────
- * Карьерные пути и пороги опыта редакции Dark Heresy 1, живущие внутри плагина
- * (DH-данные дублируются). Это осознанная копия `src/lib/dark-heresy-ranks.ts`:
- * редакции считаются разными, даже если сейчас содержимое совпадает, —
- * правки dh1 не должны менять dh2, и наоборот.
- * Общего data-плагина нет.
+ * ─── LANDMARK: DH1 DATA PACK ──────────────────────────────────────────────
+ * Ранги 1-й редакции. Актуальный ранг и класс считает граф
+ * (`rank-graph.ts`), данные которого приходят из контент-каталога
+ * (`rank-graph.generated.ts`): развилки, сходимости и альтернативы описаны
+ * узлами и переходами.
+ *
+ * Старые таблицы продвинутых путей остаются здесь для диалогов выбора путей:
+ * они хранят имена веток, которые лист пишет в `advancedPath`. Когда выборы
+ * переедут в `rankChoices`, таблицы уйдут.
  */
-import { DarkHeresyCareerPath } from './types';
+import { rankStateForCharacter, type RankInput } from './rank-graph';
+import type { DarkHeresyCareerPath } from './types';
+
+export { RANK_GRAPHS } from './rank-graph.generated';
+export {
+  careerRankGraph,
+  rankNode,
+  rankStateForCharacter,
+  type CareerRankGraph,
+  type RankInput,
+  type RankNode,
+  type RankNodeKind,
+  type RankState,
+} from './rank-graph';
 
 // Порог опыта, после которого открываются продвинутые карьерные пути.
 export const ADVANCED_RANK_THRESHOLD = 6000;
@@ -20,93 +36,6 @@ export interface AdvancedPath {
   name: string;
   ranks: Rank[];
 }
-
-export interface CareerProgression {
-  standard: Rank[];
-  alternates?: {
-    name: string;
-    ranks: Rank[];
-  }[];
-}
-
-export const RanksByCareer: Record<DarkHeresyCareerPath, CareerProgression> = {
-  Adept: {
-    standard: [
-      { name: 'Archivist', expThreshold: 0 },
-      { name: 'Scrivener', expThreshold: 500 },
-      { name: 'Scribe', expThreshold: 1000 },
-      { name: 'Inditor', expThreshold: 2000 },
-      { name: 'Scholar', expThreshold: 3000 },
-    ],
-    alternates: [
-      {
-        name: 'Chirurgeon',
-        ranks: [{ name: 'Chirurgeon', expThreshold: 2000 }],
-      },
-    ],
-  },
-  Arbitrator: {
-    standard: [
-      { name: 'Trooper', expThreshold: 0 },
-      { name: 'Enforcer', expThreshold: 500 },
-      { name: 'Regulator', expThreshold: 1000 },
-      { name: 'Investigator', expThreshold: 2000 },
-      { name: 'Arbitrator', expThreshold: 3000 },
-    ],
-  },
-  Assassin: {
-    standard: [
-      { name: 'Sell-Steel', expThreshold: 0 },
-      { name: 'Shadesman', expThreshold: 500 },
-      { name: 'Nighthawk', expThreshold: 1000 },
-      { name: 'Secluse', expThreshold: 2000 },
-      { name: 'Assassin', expThreshold: 3000 },
-    ],
-  },
-  Cleric: {
-    standard: [
-      { name: 'Novice', expThreshold: 0 },
-      { name: 'Initiate', expThreshold: 500 },
-      { name: 'Priest', expThreshold: 1000 },
-      { name: 'Preacher', expThreshold: 2000 },
-      { name: 'Cleric', expThreshold: 3000 },
-    ],
-  },
-  Guardsman: {
-    standard: [
-      { name: 'Conscript', expThreshold: 0 },
-      { name: 'Guard', expThreshold: 500 },
-      { name: 'Armsman', expThreshold: 1000 },
-      { name: 'Sergeant', expThreshold: 2000 },
-      { name: 'Veteran', expThreshold: 3000 },
-    ],
-  },
-  'Imperial Psyker': {
-    standard: [
-      { name: 'Sanctionite', expThreshold: 0 },
-      { name: 'Neonate', expThreshold: 500 },
-      { name: 'Aspirant', expThreshold: 1000 },
-    ],
-  },
-  Scum: {
-    standard: [
-      { name: 'Dreg', expThreshold: 0 },
-      { name: 'Outcast', expThreshold: 500 },
-      { name: 'Outlaw', expThreshold: 1000 },
-      { name: 'Renegade', expThreshold: 2000 },
-      { name: 'Rogue', expThreshold: 3000 },
-    ],
-  },
-  'Tech-Priest': {
-    standard: [
-      { name: 'Technographer', expThreshold: 0 },
-      { name: 'Mech-Wright', expThreshold: 500 },
-      { name: 'Electro-Priest', expThreshold: 1000 },
-      { name: 'Engineer', expThreshold: 2000 },
-      { name: 'Tech-Priest', expThreshold: 3000 },
-    ],
-  },
-};
 
 export const AdvancedPathsByCareer: Partial<
   Record<DarkHeresyCareerPath, Record<string, AdvancedPath>>
@@ -269,106 +198,6 @@ export const AdvancedPathsByCareer: Partial<
   },
 };
 
-export function calculateRank(
-  careerProgression: CareerProgression | undefined | null,
-  totalExpSpent: number,
-  advancedPath: AdvancedPath | null,
-  alternatePath: string | null,
-): string {
-  // Без стандартной ветки ранги не посчитать: лучше явная заглушка,
-  // чем «ранг 0» из пустого массива.
-  if (!careerProgression || !careerProgression.standard) {
-    return 'Unknown Rank';
-  }
-
-  // Приоритет 1: выбранный продвинутый путь.
-  if (advancedPath) {
-    const currentAdvancedRank = [...advancedPath.ranks]
-      .reverse()
-      .find((rank) => totalExpSpent >= rank.expThreshold);
-    if (currentAdvancedRank) {
-      return currentAdvancedRank.name;
-    }
-  }
-
-  // Приоритет 2: альтернативная ветка, пока она не упёрлась в порог
-  // возврата к стандартной.
-  if (alternatePath && careerProgression.alternates) {
-    const path = careerProgression.alternates.find(
-      (p) => p.name === alternatePath,
-    );
-    if (path) {
-      const currentAlternateRank = [...path.ranks]
-        .reverse()
-        .find((rank) => totalExpSpent >= rank.expThreshold);
-
-      if (currentAlternateRank) {
-        const alternateRankThresholds = path.ranks.map((r) => r.expThreshold);
-        const replacedStandardRanks = careerProgression.standard.filter((sr) =>
-          alternateRankThresholds.includes(sr.expThreshold),
-        );
-        const firstStandardRankAfterAlternate = careerProgression.standard.find(
-          (sr) =>
-            sr.expThreshold >
-            (replacedStandardRanks[replacedStandardRanks.length - 1]
-              ?.expThreshold ?? -1),
-        );
-
-        const pathEndThreshold =
-          firstStandardRankAfterAlternate?.expThreshold ??
-          ADVANCED_RANK_THRESHOLD;
-
-        if (totalExpSpent < pathEndThreshold) {
-          return currentAlternateRank.name;
-        }
-      }
-    }
-  }
-
-  // Приоритет 3: стандартная ветка.
-  const currentBasicRank = [...careerProgression.standard]
-    .reverse()
-    .find((rank) => totalExpSpent >= rank.expThreshold);
-
-  return currentBasicRank
-    ? currentBasicRank.name
-    : careerProgression.standard[0]?.name || 'Unknown Rank';
-}
-
-/**
- * Поля листа, от которых зависит актуальный ранг. Намеренно структурный тип,
- * а не `DH1Character`: ранг нужен шапке, карточке, экспорту и Excel, и всем им
- * достаточно этих полей.
- */
-export interface RankInput {
-  readonly careerPath?: string | null;
-  readonly characterClass?: string | null;
-  readonly rank?: string | null;
-  readonly totalExpSpent?: number | null;
-  readonly advancedPath?: string | null;
-  readonly alternatePath?: string | null;
-}
-
-function progressionFor(
-  careerPath: string | null | undefined,
-): CareerProgression | null {
-  if (!careerPath || !(careerPath in RanksByCareer)) return null;
-  return RanksByCareer[careerPath as DarkHeresyCareerPath];
-}
-
-/** Продвинутый путь по его имени в листе (`advancedPath` хранит имя, не id). */
-export function advancedPathForCharacter(
-  careerPath: string | null | undefined,
-  advancedPath: string | null | undefined,
-): AdvancedPath | null {
-  if (!careerPath || !advancedPath) return null;
-  const paths = AdvancedPathsByCareer[careerPath as DarkHeresyCareerPath];
-  if (!paths) return null;
-  return (
-    Object.values(paths).find((path) => path.name === advancedPath) ?? null
-  );
-}
-
 /**
  * Актуальный ранг по карьере, опыту и выбранным путям.
  *
@@ -380,15 +209,8 @@ export function advancedPathForCharacter(
 export function rankForCharacter(
   character: RankInput | null | undefined,
 ): string {
-  if (!character) return '';
-  const progression = progressionFor(character.careerPath);
-  if (!progression) return character.rank ?? '';
-  return calculateRank(
-    progression,
-    character.totalExpSpent ?? 0,
-    advancedPathForCharacter(character.careerPath, character.advancedPath),
-    character.alternatePath ?? null,
-  );
+  const state = rankStateForCharacter(character);
+  return state.node?.name ?? character?.rank ?? '';
 }
 
 /**

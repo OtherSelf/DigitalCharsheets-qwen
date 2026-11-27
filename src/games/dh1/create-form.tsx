@@ -53,7 +53,6 @@ import {
   getQuirksForHomeWorld,
   HOME_WORLD_KEYS,
   QUIRK_KEYS,
-  RANK_KEYS,
   STARTING_EXPERIENCE,
   STARTING_WEALTH,
   VARIANT_KEYS,
@@ -63,7 +62,7 @@ import {
   WORLD_VARIANTS_BY_HOMEWORLD,
   woundsRangeFromFormula,
 } from './dark-heresy-data';
-import { RanksByCareer } from './dark-heresy-ranks';
+import { careerRankGraph } from './dark-heresy-ranks';
 import { createDh1Defaults } from './defaults';
 import {
   divinationEffectKey,
@@ -233,10 +232,12 @@ export function DarkHeresyCreateForm({
     () => (watchedProfile ? fateRangeFromText(watchedProfile.fate) : null),
     [watchedProfile],
   );
+  // Стартовый ранг — первый узел графа карьеры; подпись карьерно-зависима.
   const startingRank = React.useMemo(() => {
     if (!watchedCareer) return null;
-    const rank = RanksByCareer[watchedCareer].standard[0]?.name;
-    return rank ? (RANK_KEYS[rank] ?? rank) : null;
+    const graph = careerRankGraph(watchedCareer);
+    const start = graph ? graph.nodes[graph.start] : null;
+    return start ? start.labelKey : null;
   }, [watchedCareer]);
 
   const divinationEffect = React.useMemo(() => {

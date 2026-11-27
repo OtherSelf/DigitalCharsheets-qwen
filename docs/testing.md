@@ -54,6 +54,11 @@ src/games/<id>/tests/
   fixtures/*.json            # legacy/unit data owned by the edition
 ```
 
+A plugin that generates files from an external catalog keeps a freshness test
+next to its other unit tests (`data-pack-freshness.test.ts` in dh2,
+`rank-graph-freshness.test.ts` in dh1); without the catalog it is skipped with
+a reason, so `npm run verify` stays green in CI.
+
 The edition's legacy fixtures live next to its tests, not in the host:
 removing the plugin removes its data too, and the test reads the file by a path
 relative to itself, not to the process working directory.

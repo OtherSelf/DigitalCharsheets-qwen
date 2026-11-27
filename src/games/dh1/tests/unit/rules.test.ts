@@ -18,7 +18,7 @@ import {
 } from '@/games/dh1/dark-heresy-data';
 import {
   AdvancedPathsByCareer,
-  RanksByCareer,
+  careerRankGraph,
 } from '@/games/dh1/dark-heresy-ranks';
 import { createDh1Demo } from '@/games/dh1/demo';
 import {
@@ -292,19 +292,28 @@ describe('Dark Heresy: справочные данные против базов
   });
 
   it('ранг 5 Убийцы начинается с 3000 ОО (как в книге, а не с 3500)', () => {
-    const assassin = RanksByCareer.Assassin.standard.find(
-      (rank) => rank.name === 'Assassin',
+    const graph = careerRankGraph('Assassin');
+    const assassin = Object.values(graph?.nodes ?? {}).find(
+      (node) => node.name === 'Assassin',
     );
-    expect(assassin?.expThreshold).toBe(3000);
+    expect(assassin?.expFrom).toBe(3000);
   });
 
   it('у Техножреца 5-й ранг «Техножрец» уже на 3000 ОО (стр. 114)', () => {
-    const standard = RanksByCareer['Tech-Priest'].standard;
-    expect(standard.map((rank) => rank.expThreshold)).toEqual([
+    const graph = careerRankGraph('Tech-Priest');
+    const nodes = Object.values(graph?.nodes ?? {});
+    const ladder = nodes
+      .filter((node) => node.kind === 'standard')
+      .sort((a, b) => a.expFrom - b.expFrom);
+    expect(ladder.map((node) => node.expFrom)).toEqual([
       0, 500, 1000, 2000, 3000,
     ]);
-    expect(standard.at(-1)?.name).toBe('Tech-Priest');
+    expect(ladder.at(-1)?.name).toBe('Tech-Priest');
     // Продвинутые ветви (Техномант / Технодьякон) начинаются с 6000 ОО.
+    const branches = nodes
+      .filter((node) => node.kind === 'branch')
+      .sort((a, b) => a.expFrom - b.expFrom);
+    expect(branches[0]?.expFrom).toBe(6000);
     expect(
       AdvancedPathsByCareer['Tech-Priest']?.pathA.ranks[0].expThreshold,
     ).toBe(6000);

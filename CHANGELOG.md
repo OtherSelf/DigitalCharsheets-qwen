@@ -23,6 +23,11 @@ format changes.
   the sheet and appends a `migration` marker to its history. A sheet without a
   known career keeps its legacy rank (`Acolyte`), and the plugin version is
   `1.19.0`.
+- Dark Heresy 1e rank names follow the English book: `Savant Warrant`,
+  `Preceptor-Savant`, `Shock Trooper` and `Storm Trooper` (Russian labels are
+  unchanged). The career ladder is one generated rank graph now, so mandatory
+  forks keep the previous rank until a branch is picked and the Adept
+  Chirurgeon alternate returns to Scholar at 3000 XP.
 
 ## [0.26.2] - 2026-11-27
 

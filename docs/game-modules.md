@@ -130,6 +130,35 @@ when the catalog is present, stale generated files fail the unit step; without
 it the test is skipped with a reason.
 Nothing in `scripts/predeploy.sh` or `package.json` mentions the edition.
 
+## First-edition rank graph (dh1)
+
+`src/games/dh1/rank-graph.generated.ts` is a generated file: each career is a
+graph of rank nodes (`expFrom`/`expTo`, `next`, `kind`, `pathName`), and the
+career declares `startRankId`. The source is the external DH1 content catalog,
+so one model covers the eight core careers and the Adepta Sororitas: mandatory
+forks (Guardsman 6000, Psyker 2000), an optional alternate (Adept 2000
+Chirurgeon) and convergence (Chirurgeon returns to Scholar).
+
+Rebuild and check:
+
+```sh
+DCS_CONTENT_DIR=/path/to/content/dh1 node src/games/dh1/scripts/generate.mjs
+DCS_CONTENT_DIR=/path/to/content/dh1 node src/games/dh1/scripts/generate.mjs --check
+```
+
+The generator owns only the `dh1.rank.*` slice of
+`src/games/dh1/i18n/{en,ru}.json`; every other key is hand-written. Labels are
+per node, not per English name, so the same `Novice` can be «Неофит» for a
+Cleric and «Неофитка» for a Sister of Battle. Drift is caught by
+`src/games/dh1/tests/unit/rank-graph-freshness.test.ts` (skipped with a reason
+when the catalog is absent).
+
+The sheet walks the graph with `rankStateForCharacter`
+(`src/games/dh1/rank-graph.ts`): spent XP opens the next node, a chosen
+`advancedPath`/`alternatePath` picks the branch, and a fork without a choice
+returns `pendingFork` plus its options instead of guessing. The legacy path
+tables in `dark-heresy-ranks.ts` still feed the branch dialogs.
+
 ## Edition differences (dh1 vs dh2)
 
 The modules intentionally duplicate code (D10). Where the rules differ, the
