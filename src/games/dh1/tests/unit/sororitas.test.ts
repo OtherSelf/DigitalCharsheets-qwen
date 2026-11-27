@@ -88,7 +88,12 @@ describe('Адепта Сороритас: карьера и данные кни
 
 describe('Адепта Сороритас: граф', () => {
   it('14 рангов и стандартные пороги', () => {
-    expect(nodes()).toHaveLength(14);
+    const base = nodes().filter((item) => !item.gmApproval);
+    expect(base).toHaveLength(14);
+    // Sister Oblatia — по одному узлу на каждую из трёх веток.
+    expect(
+      nodes().filter((item) => item.name === 'Sister Oblatia'),
+    ).toHaveLength(3);
     const ladder = nodes()
       .filter((item) => item.kind === 'standard')
       .sort((a, b) => a.expFrom - b.expFrom);

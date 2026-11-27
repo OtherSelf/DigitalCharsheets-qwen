@@ -33,8 +33,22 @@ function rankChoicesLabel(value: unknown, t: Translate): string | undefined {
   }
   const labels = Object.values(value)
     .filter((nodeId): nodeId is string => typeof nodeId === 'string')
-    .map((nodeId) => t(`dh1.rank.${nodeId.split('/').pop()}`));
+    .map((nodeId) => t(rankLabelKeyForNodeId(nodeId)));
   return labels.length > 0 ? labels.join(', ') : undefined;
+}
+
+/**
+ * Ключ подписи по id узла. У обычного ранга это последний сегмент, у
+ * альтернативного — сегмент `alt-…` перед узлом-хозяином: один и тот же
+ * альтернативный ранг вставлен в несколько карьер и мест.
+ */
+function rankLabelKeyForNodeId(nodeId: string): string {
+  const parts = nodeId.split('/');
+  const last = parts.at(-1) ?? '';
+  if (last.startsWith('alt-')) return `dh1.rank.${last}`;
+  const before = parts.at(-2);
+  if (before?.startsWith('alt-')) return `dh1.rank.${before}`;
+  return `dh1.rank.${last}`;
 }
 
 function conditionLabel(

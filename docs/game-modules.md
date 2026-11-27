@@ -163,6 +163,16 @@ Corruption/Insanity at start, required GM approval) are emitted as
 locked to female, the home world list is filtered, the Corruption/Insanity
 inputs are disabled and the “GM approved” checkbox is not stored in the sheet.
 
+Table 2-3 of the Inquisitor's Handbook adds **15 alternate career ranks**. The
+catalog marks them with `props.alternative`, `props.careerIds` and
+`props.minRank`; the generator inserts a node for every allowed career (and per
+branch, when the rank sits inside a branch) as an optional `next` of the
+previous tier. The standard rank stays the default, the dialog labels the
+option “Requires GM approval”, and the choice goes to `rankChoices` like any
+other fork. After the replaced tier the alternative is no longer offered and
+the normal ladder continues. The book's prerequisites, unique advances and the
+“later than the minimum rank” case are deliberately not modelled.
+
 The sheet walks the graph with `rankStateForCharacter`
 (`src/games/dh1/rank-graph.ts`): spent XP opens the next node, a choice from
 `rankChoices` picks the branch, and a fork without a choice returns `fork` plus

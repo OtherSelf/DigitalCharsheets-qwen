@@ -56,6 +56,17 @@ function nodeByName(career: string, name: string) {
   return node!;
 }
 
+/**
+ * Рёбра без альтернативных рангов из Таблицы 2-3 (у них `gmApproval`);
+ * встроенная альтернатива Adept Chirurgeon остаётся — она часть core-8.
+ */
+function baseNext(node: { next: readonly string[] }, career: string) {
+  const graph = careerRankGraph(career);
+  return node.next
+    .map((id) => graph!.nodes[id])
+    .filter((child) => !child.gmApproval);
+}
+
 describe('DH1: граф рангов core-8', () => {
   it('все восемь карьер и опциональная Сороритас описаны графом', () => {
     expect(Object.keys(RANK_GRAPHS).sort()).toEqual(
@@ -91,7 +102,7 @@ describe('DH1: граф рангов core-8', () => {
 
   it('Adept: на 2000 стандарт Inditor и альтернатива Chirurgeon', () => {
     const scribe = nodeByName('Adept', 'Scribe');
-    const next = scribe.next.map((id) => careerRankGraph('Adept')!.nodes[id]);
+    const next = baseNext(scribe, 'Adept');
     expect(next.map((node) => node.name).sort()).toEqual([
       'Chirurgeon',
       'Inditor',
@@ -109,19 +120,19 @@ describe('DH1: граф рангов core-8', () => {
 
   it('Adept: на 6000 две ветки, Guardsman — три', () => {
     const adept = nodeByName('Adept', 'Scholar');
-    expect(adept.next).toHaveLength(2);
+    expect(baseNext(adept, 'Adept')).toHaveLength(2);
     const guardsman = nodeByName('Guardsman', 'Veteran');
-    expect(guardsman.next).toHaveLength(3);
-    for (const id of guardsman.next) {
-      expect(careerRankGraph('Guardsman')!.nodes[id].expFrom).toBe(6000);
+    expect(baseNext(guardsman, 'Guardsman')).toHaveLength(3);
+    for (const child of baseNext(guardsman, 'Guardsman')) {
+      expect(child.expFrom).toBe(6000);
     }
   });
 
   it('Psyker выбирает ветку уже на 2000 (стр. 100)', () => {
     const aspirant = nodeByName('Imperial Psyker', 'Aspirant');
-    expect(aspirant.next).toHaveLength(2);
-    for (const id of aspirant.next) {
-      expect(careerRankGraph('Imperial Psyker')!.nodes[id].expFrom).toBe(2000);
+    expect(baseNext(aspirant, 'Imperial Psyker')).toHaveLength(2);
+    for (const child of baseNext(aspirant, 'Imperial Psyker')) {
+      expect(child.expFrom).toBe(2000);
     }
   });
 });
@@ -223,7 +234,13 @@ describe('DH1: подписи узлов', () => {
   it('у каждого узла есть ключ и обе локали', () => {
     for (const career of CAREERS) {
       for (const node of nodesOf(career)) {
-        expect(node.labelKey).toBe(`dh1.rank.${node.id.split('/').pop()}`);
+        // У альтернативного ранга id несёт ещё и узел-хозяин, а подпись —
+        // общая для всех его вхождений.
+        const parts = node.id.split('/');
+        const slug = parts.at(-2)?.startsWith('alt-')
+          ? parts.at(-2)
+          : parts.at(-1);
+        expect(node.labelKey).toBe(`dh1.rank.${slug}`);
         for (const lang of ['en', 'ru'] as const) {
           const label = translations[lang][node.labelKey];
           expect(label, `${node.id} (${lang})`).toBeTruthy();

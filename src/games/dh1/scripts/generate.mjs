@@ -50,6 +50,9 @@ const HEADER = `/**
 
 const KINDS = new Set(['standard', 'branch', 'alternate']);
 
+/** Номер ранга → начало его диапазона опыта (книжные ступени 1e). */
+const RANK_TIER_XP = { 1: 0, 2: 500, 3: 1000, 4: 2000, 5: 3000, 6: 6000 };
+
 function readJson(path) {
   return JSON.parse(readFileSync(path, 'utf8'));
 }
@@ -72,6 +75,7 @@ function buildGraph(catalog) {
   const byId = new Map(catalog.entities.map((entity) => [entity.id, entity]));
 
   const graphs = {};
+  const careerKeys = new Map();
   const restrictions = {};
   const i18n = { en: {}, ru: {} };
   const seenLabels = new Set();
@@ -148,9 +152,8 @@ function buildGraph(catalog) {
       i18n.ru[labelKey] = labelOf(rank, 'ru');
     }
 
-    assertReachable(career, startId, nodes);
-
     const careerName = labelOf(career, 'en');
+    careerKeys.set(career.id, careerName);
     if (graphs[careerName]) {
       throw new Error(`карьера «${careerName}» уже есть в графе`);
     }
@@ -160,7 +163,149 @@ function buildGraph(catalog) {
     if (ruleSet) restrictions[careerName] = ruleSet;
   }
 
-  return { graphs, i18n, restrictions, skipped, rankCount: seenLabels.size };
+  const rankCount = seenLabels.size;
+  const alternatives = ranks.filter((rank) => rank.props?.alternative === true);
+  const altCount = attachAlternatives(
+    alternatives,
+    graphs,
+    careerKeys,
+    i18n,
+    seenLabels,
+  );
+
+  for (const [careerName, graph] of Object.entries(graphs)) {
+    assertReachable(
+      { id: graph.careerId, label: { en: careerName } },
+      graph.start,
+      graph.nodes,
+    );
+  }
+
+  return {
+    graphs,
+    i18n,
+    restrictions,
+    skipped,
+    rankCount,
+    altCount,
+  };
+}
+
+/**
+ * Прикрепить альтернативные ранги к графам разрешённых карьер.
+ *
+ * Узел вставляется как необязательный `next` к узлу предыдущей ступени: у
+ * него тот же диапазон опыта, что у заменяемого ранга, а `next` ведёт туда же,
+ * куда шёл заменяемый. Если ступень — развилка (Psyker 2000, Sororitas 3000),
+ * альтернатива встаёт на её место, а следующий выбор ветки переносится на
+ * следующую ступень. Ступень 1 — стартовый узел: альтернатива предлагается
+ * сразу, стандартный ранг остаётся по умолчанию.
+ */
+function attachAlternatives(
+  alternatives,
+  graphs,
+  careerKeys,
+  i18n,
+  seenLabels,
+) {
+  let count = 0;
+  for (const alt of alternatives) {
+    const props = alt.props ?? {};
+    const minRank = props.minRank;
+    if (!Number.isInteger(minRank) || !(minRank in RANK_TIER_XP)) {
+      throw new Error(`${alt.id}: props.minRank должен быть 1…6`);
+    }
+    if (!Array.isArray(props.careerIds) || props.careerIds.length === 0) {
+      throw new Error(`${alt.id}: нет props.careerIds`);
+    }
+    if (props.gmApproval !== true) {
+      throw new Error(
+        `${alt.id}: альтернативный ранг требует props.gmApproval`,
+      );
+    }
+    const slug = slugOf(alt.id);
+    const labelKey = `${I18N_PREFIX}${slug}`;
+    i18n.en[labelKey] = labelOf(alt, 'en');
+    i18n.ru[labelKey] = labelOf(alt, 'ru');
+
+    for (const careerId of props.careerIds) {
+      const careerName = careerKeys.get(careerId);
+      if (!careerName) {
+        throw new Error(`${alt.id}: careerIds ${careerId} не карьера каталога`);
+      }
+      const graph = graphs[careerName];
+      attachToCareer(graph, alt, minRank, labelKey, slug);
+      count += 1;
+    }
+    if (seenLabels.has(slug)) {
+      throw new Error(`${alt.id}: slug «${slug}» уже занят`);
+    }
+    seenLabels.add(slug);
+  }
+  return count;
+}
+
+function attachToCareer(graph, alt, minRank, labelKey, slug) {
+  const nodes = graph.nodes;
+  const tierXp = RANK_TIER_XP[minRank];
+
+  if (minRank === 1) {
+    const start = nodes[graph.start];
+    const altId = `${alt.id}/${slugOf(start.id)}`;
+    const nextIds = [...start.next];
+    nodes[altId] = {
+      id: altId,
+      careerId: graph.careerId,
+      labelKey,
+      name: labelOf(alt, 'en'),
+      expFrom: 0,
+      expTo: 499,
+      next: nextIds,
+      kind: 'alternate',
+      pathName: labelOf(alt, 'en'),
+      gmApproval: true,
+    };
+    start.next = [...nextIds, altId];
+    return;
+  }
+
+  const entries = Object.values(nodes).filter(
+    (node) => node.expFrom === tierXp && node.kind !== 'alternate',
+  );
+  if (entries.length === 0) {
+    throw new Error(`${alt.id}: у ${graph.careerId} нет ступени ${minRank}`);
+  }
+
+  const parents = Object.values(nodes).filter(
+    (node) =>
+      node.kind !== 'alternate' &&
+      node.next.some((id) => entries.some((e) => e.id === id)),
+  );
+  if (parents.length === 0) {
+    throw new Error(
+      `${alt.id}: у ${graph.careerId} нет узла перед ступенью ${minRank}`,
+    );
+  }
+
+  for (const parent of parents) {
+    const children = entries.filter((entry) => parent.next.includes(entry.id));
+    if (children.length === 0) continue;
+    const altId = `${alt.id}/${slugOf(parent.id)}`;
+    const nextIds = [...new Set(children.flatMap((child) => child.next))];
+    nodes[altId] = {
+      id: altId,
+      careerId: graph.careerId,
+      labelKey,
+      name: labelOf(alt, 'en'),
+      expFrom: Math.min(...children.map((child) => child.expFrom)),
+      expTo: Math.max(...children.map((child) => child.expTo)),
+      next: nextIds,
+      kind: 'alternate',
+      pathName: labelOf(alt, 'en'),
+      gmApproval: true,
+    };
+    parent.next = [...parent.next, altId];
+  }
 }
 
 /**
@@ -250,7 +395,7 @@ async function main() {
   }
 
   const catalog = readJson(catalogPath);
-  const { graphs, i18n, restrictions, skipped, rankCount } =
+  const { graphs, i18n, restrictions, skipped, rankCount, altCount } =
     buildGraph(catalog);
 
   const sortedGraphs = {};
@@ -305,7 +450,7 @@ export const CAREER_RESTRICTIONS: Readonly<
     if (await emit(path, source)) dirty += 1;
   }
 
-  const counts = `карьер ${Object.keys(sortedGraphs).length}, рангов ${rankCount}, ограничений ${Object.keys(restrictions).length}`;
+  const counts = `карьер ${Object.keys(sortedGraphs).length}, рангов ${rankCount}, альтернатив ${altCount}, ограничений ${Object.keys(restrictions).length}`;
   const skipNote =
     skipped.length > 0 ? `; без рангов: ${skipped.join(', ')}` : '';
 

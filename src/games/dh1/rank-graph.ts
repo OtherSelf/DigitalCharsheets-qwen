@@ -200,11 +200,32 @@ export function rankStateForCharacter(
     }
 
     if (candidates.length === 1) {
-      current = candidates[0];
+      const only = candidates[0];
+      // Альтернатива первого ранга стоит на месте старта: стандартный ранг
+      // действует по умолчанию, а выбор предлагается кнопкой.
+      if (only.kind === 'alternate') {
+        if (!fork) {
+          fork = { nodeId: from.id, options: candidates, required: false };
+        }
+        break;
+      }
+      current = only;
       continue;
     }
 
-    const standard = candidates.find((node) => node.kind === 'standard');
+    // Стандарт — узел `standard`; внутри выбранной ветки продолжение тоже
+    // идёт по умолчанию, если оно одно. Несколько branch без standard — это
+    // обязательная развилка (Guardsman 6000, Sororitas 2000).
+    const branches = candidates.filter((node) => node.kind === 'branch');
+    const standard =
+      candidates.find((node) => node.kind === 'standard') ??
+      (branches.length === 1 ? branches[0] : undefined);
+    if (!standard && candidates.every((node) => node.kind === 'alternate')) {
+      if (!fork) {
+        fork = { nodeId: from.id, options: candidates, required: false };
+      }
+      break;
+    }
     if (!standard) {
       const required: RankFork = {
         nodeId: from.id,

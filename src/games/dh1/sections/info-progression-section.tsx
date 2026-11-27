@@ -1232,6 +1232,11 @@ export const ProgressionSection = ({
                     >
                       <Lock className="h-3 w-3 shrink-0" aria-hidden />
                       <span>{t(node.labelKey)}</span>
+                      {node.gmApproval && (
+                        <span className="text-[10px] font-semibold uppercase">
+                          {t('dh1.gmApprovalShort')}
+                        </span>
+                      )}
                       {creationReview && (
                         <Button
                           size="sm"
@@ -1286,6 +1291,9 @@ export const ProgressionSection = ({
               options={activeForkOptions.map((node) => ({
                 value: node.id,
                 label: t(node.labelKey),
+                ...(node.gmApproval
+                  ? { description: t('dh1.gmApprovalRequired') }
+                  : {}),
               }))}
               onSelect={handleChooseRank}
             />

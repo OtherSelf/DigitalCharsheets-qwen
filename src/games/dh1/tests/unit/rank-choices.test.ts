@@ -193,10 +193,14 @@ describe('DH1: выбор развилки в rankChoices', () => {
       options: expect.any(Array),
       required: false,
     });
-    expect(state.fork?.options.map((node) => node.name).sort()).toEqual([
-      'Chirurgeon',
-      'Inditor',
-    ]);
+    // Встроенная альтернатива Chirurgeon — часть core-8; альтернативы из
+    // Таблицы 2-3 проверяет alternatives.test.ts.
+    expect(
+      state.fork?.options
+        .filter((node) => !node.gmApproval)
+        .map((node) => node.name)
+        .sort(),
+    ).toEqual(['Chirurgeon', 'Inditor']);
   });
 
   it('после диапазона альтернатива не предлагается', () => {
@@ -206,7 +210,11 @@ describe('DH1: выбор развилки в rankChoices', () => {
     });
 
     expect(state.node?.name).toBe('Scholar');
-    expect(state.fork).toBeNull();
+    // Chirurgeon больше не предлагается; развилки других альтернатив живут
+    // на своих рангах и к этомуAssertion не относятся.
+    expect(state.fork?.options.some((node) => node.name === 'Chirurgeon')).toBe(
+      false,
+    );
   });
 
   it('обязательная развилка без выбора блокирует ранг', () => {
@@ -245,8 +253,9 @@ describe('DH1: выбор развилки в rankChoices', () => {
     const state = rankStateForCharacter(character);
 
     expect(state.node?.name).toBe('Veteran');
-    // Выбор сделан: диалог не должен открываться снова, пока опыта мало.
-    expect(state.fork).toBeNull();
+    // Выбранный Scout неактивен по опыту и не переспрашивается; развилка на
+    // 5000 — это альтернативы ранга 5, не Scout.
+    expect(state.options.some((node) => node.name === 'Scout')).toBe(false);
     expect(state.pendingFork).toBeNull();
     expect(character.rankChoices).toEqual({ [VETERAN]: SCOUT });
   });
@@ -274,5 +283,19 @@ describe('DH1: экспорт и история выборов', () => {
     );
 
     expect(label).toBe('Comptroller, Chirurgeon');
+  });
+
+  it('история подписывает и альтернативный ранг по id узла', () => {
+    const t = (key: string) => translations.en[key] ?? key;
+    const label = dh1History.formatValue?.(
+      'rankChoices',
+      {
+        'dh1/core/rank/guardsman-guard':
+          'dh1/ih/rank/alt-feral-warrior/guardsman-guard',
+      },
+      t,
+    );
+
+    expect(label).toBe('Feral Warrior');
   });
 });

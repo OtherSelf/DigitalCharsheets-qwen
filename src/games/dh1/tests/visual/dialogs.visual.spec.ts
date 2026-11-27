@@ -503,6 +503,63 @@ test.describe('DH1: выборы карьерного пути', { tag: '@plugin
     );
   });
 
+  test('альтернативный ранг: ГМ-пометка и выбор Feral Warrior', async ({
+    page,
+  }) => {
+    test.skip(isMobile(), 'блок опыта на телефоне живёт в отдельной секции');
+    await prepare(page.context(), { authenticated: false, theme: 'light' });
+    const account = await registerAccount(page, 'dh1-altrank', 'DH1 Alt Rank');
+    const created = await page.request.post('/api/characters', {
+      data: {
+        systemId: 'dh1',
+        name: 'DH1 Alt Rank',
+        careerPath: 'Guardsman',
+        totalExpSpent: 1500,
+      },
+    });
+    expect([200, 201], 'создание листа').toContain(created.status());
+    const { id } = (await created.json()) as { id: string };
+
+    await signInViaUI(page, account);
+    await openApp(page, sheetPath(id));
+
+    const progression = page.locator('#progression-section');
+    const choose = progression.getByRole('button', {
+      name: 'Choose Path',
+      exact: true,
+    });
+    await expect(choose).toBeVisible();
+    await choose.click();
+
+    const dialog = page.getByTestId('rank-path-dialog');
+    await expect(dialog).toBeVisible();
+    // Две альтернативы ранга 3 требуют разрешения Мастера.
+    await expect(dialog.getByText('Requires GM approval')).toHaveCount(2);
+
+    const saved = page.waitForResponse(
+      (response) =>
+        response.url().includes(`/api/characters/${id}`) &&
+        response.request().method() === 'PUT',
+    );
+    await dialog
+      .getByTestId('choice-dh1/ih/rank/alt-feral-warrior/guardsman-guard')
+      .click();
+    await saved;
+
+    const chip = progression.getByTestId(
+      'rank-choice-dh1/core/rank/guardsman-guard',
+    );
+    await expect(chip).toContainText('Feral Warrior');
+    await expect(chip).toContainText('GM');
+
+    await page.reload();
+    await expect(
+      page
+        .locator('#progression-section')
+        .getByTestId('rank-choice-dh1/core/rank/guardsman-guard'),
+    ).toContainText('Feral Warrior');
+  });
+
   test('импорт: review разрешает смену и снова запирает', async ({ page }) => {
     test.skip(isMobile(), 'сценарий проверяется в desktop-проекте');
     await prepare(page.context(), { authenticated: false, theme: 'light' });

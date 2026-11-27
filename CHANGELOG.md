@@ -31,6 +31,16 @@ format changes.
   reviewing an imported sheet. Old `advancedPath`/`alternatePath` values are
   migrated into the map and stay in the document for old exports. The plugin
   version is `1.20.0`.
+- Dark Heresy 1e gets the 15 alternate career ranks from the Inquisitor's
+  Handbook (Table 2-3): Black Priest of Maccabeus, Bonded Emissary, Calixian
+  Xeno-Arcanist, Chaliced Commissariat, Feral Warrior, Legate Investigator,
+  Malfian Bloodsworn, Metallican Gunslinger, Mechanicus Sectutor, Moritat
+  Reaper, Reclaimator, Sister Oblatia, Templar Calix, Tyrantine Shadow Agent
+  and Warden/Divisio Immoralis. Each is offered where the book allows it, at
+  its minimum rank, with a “Requires GM approval” mark; the standard rank stays
+  the default and the choice is locked like any other career path. Later ranks,
+  structured prerequisites and unique advances are intentionally not modelled.
+  The plugin version is `1.22.0`.
 - The Adepta Sororitas is available as a ninth, optional Dark Heresy 1e
   career (Inquisitor's Handbook): `Novice` through `Legatine`, three branches
   at 2000 XP and convergence at `Superior` 8000, with the starting package,
