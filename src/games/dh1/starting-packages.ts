@@ -266,4 +266,36 @@ export const STARTING_PACKAGES: Record<string, CareerStartingPackage> = {
     ],
     traits: [['dh1.startItemMechanicusImplants']],
   },
+  // Инквизиторский справочник, с. 42: опциональная карьера с разрешения
+  // Мастера. Набор — из книги, подписи общие с другими карьерами.
+  'Adepta Sororitas': {
+    skills: [
+      ['dh1.startItemCommonLoreImperialCreedInt'],
+      ['dh1.startItemLiteracyInt'],
+      ['dh1.startItemPerformerSingerFel'],
+      ['dh1.startItemSpeakLanguageLowGothicInt'],
+      ['dh1.startItemTradeCopyistInt'],
+    ],
+    talents: [
+      ['dh1.startItemBasicWeaponTrainingPrimitive'],
+      ['dh1.startItemMeleeWeaponTrainingPrimitive'],
+      ['dh1.startItemPistolTrainingLas'],
+      ['dh1.startItemPureFaith'],
+    ],
+    gear: [
+      ['dh1.startItemClub', 'dh1.startItemFlail', 'dh1.startItemStaff'],
+      ['dh1.startItemLasPistolAnd1ChargePack'],
+      [
+        'dh1.startItemCarapaceChestPlateAndMeshCowl',
+        'dh1.startItemFeudalPlate',
+      ],
+      ['dh1.startItemAquilaNecklace'],
+      ['dh1.startItemChapletEcclesiasticus'],
+      ['dh1.startItemVestmentsGoodQualityClothing'],
+      ['dh1.startItem4Candles'],
+      ['dh1.startItemWritingKit'],
+      ['dh1.startItemRuleOfTheSororitas'],
+      ['dh1.startItemRingOfSuffrage'],
+    ],
+  },
 };

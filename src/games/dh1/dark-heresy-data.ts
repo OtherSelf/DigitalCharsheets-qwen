@@ -6,17 +6,6 @@
  * dh2, и наоборот. Источник этих данных — здесь;
  * общего data-плагина нет.
  */
-export const DarkHeresyCareerPaths = [
-  'Adept',
-  'Arbitrator',
-  'Assassin',
-  'Cleric',
-  'Guardsman',
-  'Imperial Psyker',
-  'Scum',
-  'Tech-Priest',
-] as const;
-
 export const DIVINATIONS = [
   {
     id: 'mutationWithout',
@@ -750,6 +739,7 @@ export const CAREER_KEYS: Record<string, string> = {
   'Imperial Psyker': 'dh1.careerImperialPsyker',
   Scum: 'dh1.careerScum',
   'Tech-Priest': 'dh1.careerTechPriest',
+  'Adepta Sororitas': 'dh1.careerAdeptaSororitas',
 };
 
 export const RANK_KEYS: Record<string, string> = {
@@ -1050,4 +1040,5 @@ export const STARTING_WEALTH: Record<string, string> = {
   'Imperial Psyker': '50+1d5',
   Scum: '10+1d5',
   'Tech-Priest': '150+1d10',
+  'Adepta Sororitas': '70+2d10',
 };

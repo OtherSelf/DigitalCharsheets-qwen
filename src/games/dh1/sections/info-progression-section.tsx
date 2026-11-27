@@ -42,7 +42,6 @@ import { cn } from '@/lib/utils';
 
 import {
   CAREER_KEYS,
-  DarkHeresyCareerPaths,
   DIVINATIONS,
   HOME_WORLD_KEYS,
   QUIRK_KEYS,
@@ -64,7 +63,7 @@ import {
 import { dh1ExperienceRows } from '../experience';
 import { isCreationFieldLocked } from '../field-policy';
 import { genderLabel, genderOptions, toGenderCode } from '../gender';
-import type { DH1Character } from '../types';
+import { DarkHeresyCareerPaths, type DH1Character } from '../types';
 import { EditSaveButton } from './dh-ui-helpers';
 
 // Наборы состояний объявляет редакция: компонент в ядре принимает их

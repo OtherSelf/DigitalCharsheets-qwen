@@ -31,6 +31,14 @@ format changes.
   reviewing an imported sheet. Old `advancedPath`/`alternatePath` values are
   migrated into the map and stay in the document for old exports. The plugin
   version is `1.20.0`.
+- The Adepta Sororitas is available as a ninth, optional Dark Heresy 1e
+  career (Inquisitor's Handbook): `Novice` through `Legatine`, three branches
+  at 2000 XP and convergence at `Superior` 8000, with the starting package,
+  `70+2d10` starting wealth and the book's creation rules. The creation form
+  allows only women, four native worlds (Feral, Imperial, Schola Progenium,
+  Noble Born), zero Corruption and Insanity at the start and requires a
+  “GM approved” checkbox that is not written to the sheet. The plugin version
+  is `1.21.0`.
 - Dark Heresy 1e rank names follow the English book: `Savant Warrant`,
   `Preceptor-Savant`, `Shock Trooper` and `Storm Trooper` (Russian labels are
   unchanged). The career ladder is one generated rank graph now, so mandatory

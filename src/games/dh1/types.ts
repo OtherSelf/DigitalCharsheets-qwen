@@ -28,6 +28,9 @@ export const DarkHeresyCareerPaths = [
   'Imperial Psyker',
   'Scum',
   'Tech-Priest',
+  // Опциональная карьера Инквизиторского справочника: доступна только с
+  // разрешения Мастера, ограничения проверяет форма создания.
+  'Adepta Sororitas',
 ] as const;
 export type DarkHeresyCareerPath = (typeof DarkHeresyCareerPaths)[number];
 

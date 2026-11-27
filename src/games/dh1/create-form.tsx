@@ -62,7 +62,7 @@ import {
   WORLD_VARIANTS_BY_HOMEWORLD,
   woundsRangeFromFormula,
 } from './dark-heresy-data';
-import { careerRankGraph } from './dark-heresy-ranks';
+import { CAREER_RESTRICTIONS, careerRankGraph } from './dark-heresy-ranks';
 import { createDh1Defaults } from './defaults';
 import {
   divinationEffectKey,
@@ -114,63 +114,113 @@ export function DarkHeresyCreateForm({
 
   // Схема зависит от языка: тексты ошибок берутся из словаря, поэтому она
   // собирается внутри компонента, а не один раз на уровне модуля.
-  const formSchema = z.object({
-    name: z
-      .string()
-      .min(2, t('common.nameMinLength'))
-      .max(FIELD_LIMITS.name, t('common.fieldTooLong')),
-    // Как и в dh2, обязательно только имя: мир, карьеру и пророчество можно
-    // выбрать позже на листе (пустые creation-поля остаются редактируемыми).
-    homeWorld: z.string().max(FIELD_LIMITS.short).optional(),
-    worldVariant: z.string().max(FIELD_LIMITS.short).optional(),
-    careerPath: z.string().max(FIELD_LIMITS.short).optional(),
-    backstory: z.string().max(FIELD_LIMITS.long).optional(),
-    divination: z.string().max(FIELD_LIMITS.short).optional(),
-    quirk: z.string().max(FIELD_LIMITS.short).optional(),
-    height: z.string().max(FIELD_LIMITS.short).optional(),
-    weight: z.string().max(FIELD_LIMITS.short).optional(),
-    age: z.string().max(FIELD_LIMITS.short).optional(),
-    skinColor: z.string().max(FIELD_LIMITS.short).optional(),
-    hairColor: z.string().max(FIELD_LIMITS.short).optional(),
-    eyeColor: z.string().max(FIELD_LIMITS.short).optional(),
-    experience: z.coerce
-      .number()
-      .int()
-      .min(0)
-      .max(FIELD_LIMITS.experience)
-      .optional(),
-    totalExpSpent: z.coerce
-      .number()
-      .int()
-      .min(0)
-      .max(FIELD_LIMITS.experience)
-      .optional(),
-    weaponSkill: z.coerce.number().int().min(0).max(FIELD_LIMITS.stat),
-    ballisticSkill: z.coerce.number().int().min(0).max(FIELD_LIMITS.stat),
-    strength: z.coerce.number().int().min(0).max(FIELD_LIMITS.stat),
-    toughness: z.coerce.number().int().min(0).max(FIELD_LIMITS.stat),
-    agility: z.coerce.number().int().min(0).max(FIELD_LIMITS.stat),
-    intelligence: z.coerce.number().int().min(0).max(FIELD_LIMITS.stat),
-    perception: z.coerce.number().int().min(0).max(FIELD_LIMITS.stat),
-    willpower: z.coerce.number().int().min(0).max(FIELD_LIMITS.stat),
-    fellowship: z.coerce.number().int().min(0).max(FIELD_LIMITS.stat),
-    wounds: z.coerce.number().int().min(0).max(FIELD_LIMITS.pool),
-    fatePoints: z.coerce.number().int().min(0).max(FIELD_LIMITS.pool),
-    insanity: z.coerce.number().int().min(0).max(FIELD_LIMITS.pool).optional(),
-    corruption: z.coerce
-      .number()
-      .int()
-      .min(0)
-      .max(FIELD_LIMITS.pool)
-      .optional(),
-    gender: z.enum(GENDER_CODES).optional(),
-    throneGelt: z.coerce
-      .number()
-      .int()
-      .min(0)
-      .max(FIELD_LIMITS.money)
-      .optional(),
-  });
+  const formSchema = z
+    .object({
+      name: z
+        .string()
+        .min(2, t('common.nameMinLength'))
+        .max(FIELD_LIMITS.name, t('common.fieldTooLong')),
+      // Как и в dh2, обязательно только имя: мир, карьеру и пророчество можно
+      // выбрать позже на листе (пустые creation-поля остаются редактируемыми).
+      homeWorld: z.string().max(FIELD_LIMITS.short).optional(),
+      worldVariant: z.string().max(FIELD_LIMITS.short).optional(),
+      careerPath: z.string().max(FIELD_LIMITS.short).optional(),
+      backstory: z.string().max(FIELD_LIMITS.long).optional(),
+      divination: z.string().max(FIELD_LIMITS.short).optional(),
+      quirk: z.string().max(FIELD_LIMITS.short).optional(),
+      height: z.string().max(FIELD_LIMITS.short).optional(),
+      weight: z.string().max(FIELD_LIMITS.short).optional(),
+      age: z.string().max(FIELD_LIMITS.short).optional(),
+      skinColor: z.string().max(FIELD_LIMITS.short).optional(),
+      hairColor: z.string().max(FIELD_LIMITS.short).optional(),
+      eyeColor: z.string().max(FIELD_LIMITS.short).optional(),
+      experience: z.coerce
+        .number()
+        .int()
+        .min(0)
+        .max(FIELD_LIMITS.experience)
+        .optional(),
+      totalExpSpent: z.coerce
+        .number()
+        .int()
+        .min(0)
+        .max(FIELD_LIMITS.experience)
+        .optional(),
+      weaponSkill: z.coerce.number().int().min(0).max(FIELD_LIMITS.stat),
+      ballisticSkill: z.coerce.number().int().min(0).max(FIELD_LIMITS.stat),
+      strength: z.coerce.number().int().min(0).max(FIELD_LIMITS.stat),
+      toughness: z.coerce.number().int().min(0).max(FIELD_LIMITS.stat),
+      agility: z.coerce.number().int().min(0).max(FIELD_LIMITS.stat),
+      intelligence: z.coerce.number().int().min(0).max(FIELD_LIMITS.stat),
+      perception: z.coerce.number().int().min(0).max(FIELD_LIMITS.stat),
+      willpower: z.coerce.number().int().min(0).max(FIELD_LIMITS.stat),
+      fellowship: z.coerce.number().int().min(0).max(FIELD_LIMITS.stat),
+      wounds: z.coerce.number().int().min(0).max(FIELD_LIMITS.pool),
+      fatePoints: z.coerce.number().int().min(0).max(FIELD_LIMITS.pool),
+      insanity: z.coerce
+        .number()
+        .int()
+        .min(0)
+        .max(FIELD_LIMITS.pool)
+        .optional(),
+      corruption: z.coerce
+        .number()
+        .int()
+        .min(0)
+        .max(FIELD_LIMITS.pool)
+        .optional(),
+      gender: z.enum(GENDER_CODES).optional(),
+      throneGelt: z.coerce
+        .number()
+        .int()
+        .min(0)
+        .max(FIELD_LIMITS.money)
+        .optional(),
+      // Только для формы: галочка «Мастер разрешил» в лист не пишется.
+      gmApproved: z.boolean().optional(),
+    })
+    .superRefine((values, ctx) => {
+      // Ограничения опциональной карьеры: пол, родные миры, нулевые Безумие и
+      // Порча, разрешение Мастера. Проверка в схеме, а не только в UI, чтобы
+      // submit не проходил мимо скрытых полей.
+      const rules = CAREER_RESTRICTIONS[values.careerPath ?? ''];
+      if (!rules) return;
+      if (rules.gender && values.gender !== rules.gender) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['gender'],
+          message: t('dh1.sororitasFemaleOnly'),
+        });
+      }
+      if (!rules.homeWorlds.includes(values.homeWorld ?? '')) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['homeWorld'],
+          message: t('dh1.sororitasWorldsHint'),
+        });
+      }
+      if (rules.zeroInsanity && (values.insanity ?? 0) !== 0) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['insanity'],
+          message: t('dh1.sororitasZeroCorruption'),
+        });
+      }
+      if (rules.zeroCorruption && (values.corruption ?? 0) !== 0) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['corruption'],
+          message: t('dh1.sororitasZeroCorruption'),
+        });
+      }
+      if (rules.gmApproval && values.gmApproved !== true) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['gmApproved'],
+          message: t('dh1.sororitasGmRequired'),
+        });
+      }
+    });
 
   // zod 4 разделяет типы входа и выхода (z.input/z.output, например из-за
   // z.coerce.number()). zodResolver возвращает разобранные данные, поэтому
@@ -199,6 +249,7 @@ export function DarkHeresyCreateForm({
       fatePoints: 1,
       insanity: 0,
       corruption: 0,
+      gmApproved: false,
       gender: '',
       throneGelt: 0,
       divination: '',
@@ -217,6 +268,9 @@ export function DarkHeresyCreateForm({
   const watchedDivination = form.watch('divination');
   const watchedHomeWorld = form.watch('homeWorld') as
     DarkHeresyHomeWorld | undefined;
+  const watchedCareerRaw = form.watch('careerPath');
+  const careerRules = CAREER_RESTRICTIONS[watchedCareerRaw ?? ''] ?? null;
+  const isSororitas = careerRules !== null;
   const watchedCareer = form.watch('careerPath') as
     DarkHeresyCareerPath | undefined;
   const watchedProfile = React.useMemo(
@@ -239,6 +293,23 @@ export function DarkHeresyCreateForm({
     const start = graph ? graph.nodes[graph.start] : null;
     return start ? start.labelKey : null;
   }, [watchedCareer]);
+
+  // Ограничения опциональной карьеры: пол фиксируется книгой, Безумие и
+  // Порча на старте нулевые, чужой родной мир сбрасывается.
+  React.useEffect(() => {
+    if (!careerRules) return;
+    if (careerRules.gender) form.setValue('gender', careerRules.gender);
+    if (careerRules.zeroInsanity) form.setValue('insanity', 0);
+    if (careerRules.zeroCorruption) form.setValue('corruption', 0);
+  }, [careerRules, form]);
+
+  React.useEffect(() => {
+    if (!careerRules || !watchedHomeWorld) return;
+    if (!careerRules.homeWorlds.includes(watchedHomeWorld)) {
+      form.setValue('homeWorld', '');
+      form.setValue('worldVariant', '');
+    }
+  }, [careerRules, watchedHomeWorld, form]);
 
   const divinationEffect = React.useMemo(() => {
     return effectIdForDivination(watchedDivination ?? '');
@@ -364,13 +435,22 @@ export function DarkHeresyCreateForm({
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {DarkHeresyHomeWorlds.map((world) => (
+                          {DarkHeresyHomeWorlds.filter(
+                            (world) =>
+                              !careerRules ||
+                              careerRules.homeWorlds.includes(world),
+                          ).map((world) => (
                             <SelectItem key={world} value={world}>
                               {t(HOME_WORLD_KEYS[world] || world)}
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
+                      {isSororitas && (
+                        <p className="text-muted-foreground text-xs">
+                          {t('dh1.sororitasWorldsHint')}
+                        </p>
+                      )}
                       <FormMessage />
                     </FormItem>
                   )}
@@ -438,10 +518,38 @@ export function DarkHeresyCreateForm({
                           ))}
                         </SelectContent>
                       </Select>
+                      {careerRules && (
+                        <p className="text-muted-foreground text-xs">
+                          {t('dh1.sororitasGmRequired')}.{' '}
+                          {t('dh1.sororitasWorldsHint')}.
+                        </p>
+                      )}
                       <FormMessage />
                     </FormItem>
                   )}
                 />
+                {careerRules?.gmApproval && (
+                  <FormField
+                    control={form.control}
+                    name="gmApproved"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-start gap-2 md:col-span-2">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value === true}
+                            onCheckedChange={(checked) =>
+                              field.onChange(checked === true)
+                            }
+                          />
+                        </FormControl>
+                        <div className="space-y-1">
+                          <FormLabel>{t('dh1.gmApproval')}</FormLabel>
+                          <FormMessage />
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+                )}
               </div>
             </div>
 
@@ -672,6 +780,7 @@ export function DarkHeresyCreateForm({
                       <Select
                         onValueChange={field.onChange}
                         value={field.value ?? ''}
+                        disabled={isSororitas}
                       >
                         <FormControl>
                           <SelectTrigger>
@@ -686,6 +795,11 @@ export function DarkHeresyCreateForm({
                           ))}
                         </SelectContent>
                       </Select>
+                      {isSororitas && (
+                        <p className="text-muted-foreground text-xs">
+                          {t('dh1.sororitasFemaleOnly')}
+                        </p>
+                      )}
                       <FormMessage />
                     </FormItem>
                   )}
@@ -1054,7 +1168,13 @@ export function DarkHeresyCreateForm({
                     <FormItem>
                       <FormLabel>{t('dh1.insanity')}</FormLabel>
                       <FormControl>
-                        <Input type="number" min={0} step={1} {...field} />
+                        <Input
+                          type="number"
+                          min={0}
+                          step={1}
+                          {...field}
+                          disabled={isSororitas}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -1067,8 +1187,19 @@ export function DarkHeresyCreateForm({
                     <FormItem>
                       <FormLabel>{t('dh1.corruption')}</FormLabel>
                       <FormControl>
-                        <Input type="number" min={0} step={1} {...field} />
+                        <Input
+                          type="number"
+                          min={0}
+                          step={1}
+                          {...field}
+                          disabled={isSororitas}
+                        />
                       </FormControl>
+                      {isSororitas && (
+                        <p className="text-muted-foreground text-xs">
+                          {t('dh1.sororitasZeroCorruption')}
+                        </p>
+                      )}
                       <FormMessage />
                     </FormItem>
                   )}

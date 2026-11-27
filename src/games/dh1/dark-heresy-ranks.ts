@@ -1,6 +1,6 @@
 import { rankStateForCharacter, type RankInput } from './rank-graph';
 
-export { RANK_GRAPHS } from './rank-graph.generated';
+export { CAREER_RESTRICTIONS, RANK_GRAPHS } from './rank-graph.generated';
 export {
   careerRankGraph,
   rankChoicesFromLegacy,

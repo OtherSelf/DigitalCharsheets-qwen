@@ -153,6 +153,16 @@ Cleric and «Неофитка» for a Sister of Battle. Drift is caught by
 `src/games/dh1/tests/unit/rank-graph-freshness.test.ts` (skipped with a reason
 when the catalog is absent).
 
+The same graph covers the optional **Adepta Sororitas** career from the
+Inquisitor's Handbook: `Novice → Cantus → Constantia`, three branches at 2000
+(`Diologous`, `Hospitaller`, `Militant`), a second rank in each branch at 3000,
+a third at 6000, convergence at `Superior` 8000 and `Legatine` 10000. The
+career's catalog `props.restrictions` (gender, four native worlds, zero
+Corruption/Insanity at start, required GM approval) are emitted as
+`CAREER_RESTRICTIONS`, and `create-form.tsx` enforces them: the gender is
+locked to female, the home world list is filtered, the Corruption/Insanity
+inputs are disabled and the “GM approved” checkbox is not stored in the sheet.
+
 The sheet walks the graph with `rankStateForCharacter`
 (`src/games/dh1/rank-graph.ts`): spent XP opens the next node, a choice from
 `rankChoices` picks the branch, and a fork without a choice returns `fork` plus

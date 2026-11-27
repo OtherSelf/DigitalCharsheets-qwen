@@ -72,6 +72,7 @@ function buildGraph(catalog) {
   const byId = new Map(catalog.entities.map((entity) => [entity.id, entity]));
 
   const graphs = {};
+  const restrictions = {};
   const i18n = { en: {}, ru: {} };
   const seenLabels = new Set();
   const skipped = [];
@@ -154,9 +155,48 @@ function buildGraph(catalog) {
       throw new Error(`карьера «${careerName}» уже есть в графе`);
     }
     graphs[careerName] = { careerId: career.id, start: startId, nodes };
+
+    const ruleSet = restrictionsOf(career, byId);
+    if (ruleSet) restrictions[careerName] = ruleSet;
   }
 
-  return { graphs, i18n, skipped, rankCount: seenLabels.size };
+  return { graphs, i18n, restrictions, skipped, rankCount: seenLabels.size };
+}
+
+/**
+ * Ограничения создания из каталога (`props.restrictions`): пол, родные миры
+ * (их EN-имена, как в `DarkHeresyHomeWorlds`), нулевые Безумие/Порча и
+ * обязательное разрешение Мастера.
+ */
+function restrictionsOf(career, byId) {
+  const rules = career.props?.restrictions;
+  if (!rules) return null;
+  const gender = rules.gender;
+  if (gender !== undefined && gender !== 'female' && gender !== 'male') {
+    throw new Error(`${career.id}: неизвестный restrictions.gender`);
+  }
+  const originIds = rules.originIds ?? [];
+  if (!Array.isArray(originIds) || originIds.length === 0) {
+    throw new Error(
+      `${career.id}: restrictions.originIds должен быть непустым`,
+    );
+  }
+  const homeWorlds = originIds.map((originId) => {
+    const origin = byId.get(originId);
+    if (!origin || origin.kind !== 'origin') {
+      throw new Error(
+        `${career.id}: restrictions.originIds ${originId} не origin`,
+      );
+    }
+    return labelOf(origin, 'en');
+  });
+  return {
+    ...(gender ? { gender } : {}),
+    homeWorlds,
+    zeroInsanity: rules.zeroInsanity === true,
+    zeroCorruption: rules.zeroCorruption === true,
+    gmApproval: rules.gmApproval === true,
+  };
 }
 
 /** Все узлы обязаны быть достижимы из старта: иначе ребро забыто. */
@@ -210,7 +250,8 @@ async function main() {
   }
 
   const catalog = readJson(catalogPath);
-  const { graphs, i18n, skipped, rankCount } = buildGraph(catalog);
+  const { graphs, i18n, restrictions, skipped, rankCount } =
+    buildGraph(catalog);
 
   const sortedGraphs = {};
   for (const [career, graph] of Object.entries(graphs).sort(([a], [b]) =>
@@ -233,6 +274,20 @@ export const RANK_GRAPHS: Readonly<Record<string, CareerRankGraph>> = ${JSON.str
     null,
     2,
   )};
+
+/** Ограничения создания карьер, у которых они есть в каталоге. */
+export const CAREER_RESTRICTIONS: Readonly<
+  Record<
+    string,
+    {
+      readonly gender?: 'male' | 'female';
+      readonly homeWorlds: readonly string[];
+      readonly zeroInsanity: boolean;
+      readonly zeroCorruption: boolean;
+      readonly gmApproval: boolean;
+    }
+  >
+> = ${JSON.stringify(restrictions, null, 2)};
 `;
 
   const enPath = join(MODULE_DIR, 'i18n/en.json');
@@ -250,7 +305,7 @@ export const RANK_GRAPHS: Readonly<Record<string, CareerRankGraph>> = ${JSON.str
     if (await emit(path, source)) dirty += 1;
   }
 
-  const counts = `карьер ${Object.keys(sortedGraphs).length}, рангов ${rankCount}`;
+  const counts = `карьер ${Object.keys(sortedGraphs).length}, рангов ${rankCount}, ограничений ${Object.keys(restrictions).length}`;
   const skipNote =
     skipped.length > 0 ? `; без рангов: ${skipped.join(', ')}` : '';
 

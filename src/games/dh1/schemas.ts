@@ -14,6 +14,7 @@ import {
 } from '../shared/schemas';
 import {
   DARK_HERESY_CORE_STATS,
+  DarkHeresyCareerPaths,
   GENDER_CODES,
   type ConditionKind,
   type DarkHeresyCoreStatNotes,
@@ -42,17 +43,10 @@ const homeWorldSchema = z.union([
   ]),
   z.literal(''),
 ]);
+// Список карьер — из типа редакции: опциональная Сороритас не должна
+// требовать правки схемы отдельно от `DarkHeresyCareerPaths`.
 const careerPathSchema = z.union([
-  z.enum([
-    'Adept',
-    'Arbitrator',
-    'Assassin',
-    'Cleric',
-    'Guardsman',
-    'Imperial Psyker',
-    'Scum',
-    'Tech-Priest',
-  ]),
+  z.enum(DarkHeresyCareerPaths),
   z.literal(''),
 ]);
 

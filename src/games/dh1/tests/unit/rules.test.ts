@@ -89,8 +89,10 @@ describe('Dark Heresy: справочные данные против базов
     );
   });
 
-  it('содержит все восемь профессий стандартной генерации (Таблица 2-1)', () => {
-    expect([...DarkHeresyCareerPaths].sort()).toEqual([...CORE_CAREERS].sort());
+  it('содержит восемь профессий Таблицы 2-1 и опциональную Сороритас', () => {
+    expect([...DarkHeresyCareerPaths].sort()).toEqual(
+      [...CORE_CAREERS, 'Adepta Sororitas'].sort(),
+    );
   });
 
   it('у каждого родного мира есть ключ и перевод', () => {
@@ -172,7 +174,7 @@ describe('Dark Heresy: справочные данные против базов
     }
   });
 
-  it('стартовые пакеты: 8 профессий, пакеты непустые, ключи переведены', () => {
+  it('стартовые пакеты: 9 профессий, пакеты непустые, ключи переведены', () => {
     expect(Object.keys(STARTING_PACKAGES).sort()).toEqual(
       [...DarkHeresyCareerPaths].sort(),
     );
@@ -206,7 +208,7 @@ describe('Dark Heresy: справочные данные против базов
     expect(demo.stats.toughness).toBeLessThanOrEqual(base + 20);
   });
 
-  it('стартовые таблицы: профиль 8 миров, богатство 8 профессий, опыт 400', () => {
+  it('стартовые таблицы: профиль 8 миров, богатство 9 профессий, опыт 400', () => {
     expect(STARTING_EXPERIENCE).toBe(400);
     expect(Object.keys(STARTING_WEALTH).sort()).toEqual(
       [...DarkHeresyCareerPaths].sort(),

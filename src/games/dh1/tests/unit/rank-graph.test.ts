@@ -57,8 +57,10 @@ function nodeByName(career: string, name: string) {
 }
 
 describe('DH1: граф рангов core-8', () => {
-  it('все восемь карьер описаны графом', () => {
-    expect(Object.keys(RANK_GRAPHS).sort()).toEqual([...CAREERS].sort());
+  it('все восемь карьер и опциональная Сороритас описаны графом', () => {
+    expect(Object.keys(RANK_GRAPHS).sort()).toEqual(
+      [...CAREERS, 'Adepta Sororitas'].sort(),
+    );
   });
 
   it.each(CAREERS)('%s: старт и стандартные пороги как в книге', (career) => {
