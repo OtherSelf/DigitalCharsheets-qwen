@@ -3,7 +3,10 @@ import path from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-import { dh2ExperienceRows } from '@/games/dh2/experience';
+import {
+  dh2ExperienceRows,
+  removeDh2ExperienceEntry,
+} from '@/games/dh2/experience';
 import dh2En from '@/games/dh2/i18n/en.json';
 import dh2Ru from '@/games/dh2/i18n/ru.json';
 
@@ -49,6 +52,51 @@ describe('журнал опыта: адаптеры редакций', () => {
     expect(rows.map((row) => row.label)).toEqual(['Dodge', 'Talent']);
     expect(rows.map((row) => row.kind)).toEqual(['Skill advance', 'Talent']);
     expect(rows.map((row) => row.cost)).toEqual([100, 200]);
+  });
+});
+
+describe('журнал опыта: удаление строки', () => {
+  const award = {
+    id: 'award:1',
+    kind: 'award' as const,
+    ref: 'Award',
+    cost: 100,
+    createdAt: '2026-01-02T10:00:00.000Z',
+  };
+  const purchase = {
+    id: 'manual:1',
+    kind: 'other' as const,
+    ref: 'Dodge',
+    cost: 100,
+    createdAt: '2026-01-02T10:00:00.000Z',
+  };
+
+  it('начисление после ручной правки опыта не уводит опыт ниже нуля', () => {
+    expect(
+      removeDh2ExperienceEntry(
+        {
+          experience: 50,
+          totalExpSpent: 0,
+          experienceLog: [award],
+          eliteAdvances: [],
+        },
+        award.id,
+      ),
+    ).toEqual({ experience: 0, experienceLog: [] });
+  });
+
+  it('покупка после ручной правки потраченного опыта не уходит в минус', () => {
+    expect(
+      removeDh2ExperienceEntry(
+        {
+          experience: 0,
+          totalExpSpent: 30,
+          experienceLog: [purchase],
+          eliteAdvances: [],
+        },
+        purchase.id,
+      ),
+    ).toEqual({ totalExpSpent: 0, experienceLog: [] });
   });
 });
 

@@ -60,7 +60,7 @@ import {
   divinationKey,
   divinationLabel,
 } from '../divination-i18n';
-import { dh1ExperienceRows } from '../experience';
+import { dh1ExperienceRows, removeDh1ExperienceEntry } from '../experience';
 import { isCreationFieldLocked } from '../field-policy';
 import { genderLabel, genderOptions, toGenderCode } from '../gender';
 import { DarkHeresyCareerPaths, type DH1Character } from '../types';
@@ -998,29 +998,18 @@ export const ProgressionSection = ({
   };
 
   const handleDeleteExperience = (entryId: string) => {
-    const entry = (character.experienceLog ?? []).find(
-      (item) => item.id === entryId,
+    const removal = removeDh1ExperienceEntry(
+      { ...character, totalExpSpent: editableTotalExpSpent },
+      entryId,
     );
-    if (!entry) return;
-    if (entry.kind === 'award') {
-      // Удаление начисления снимает ровно добавленное (штраф вернётся со
-      // знаком: cost < 0 → experience += |cost|).
-      updateCharacter(character.id, {
-        experience: (character.experience ?? 0) - entry.cost,
-        experienceLog: (character.experienceLog ?? []).filter(
-          (item) => item.id !== entryId,
-        ),
-      });
-      return;
+    if (!removal) return;
+    if (removal.totalExpSpent !== undefined) {
+      setEditableTotalExpSpent(removal.totalExpSpent);
     }
-    const newTotalExp = Math.max(0, editableTotalExpSpent - entry.cost);
-    setEditableTotalExpSpent(newTotalExp);
-    updateCharacter(character.id, {
-      totalExpSpent: newTotalExp,
-      experienceLog: (character.experienceLog ?? []).filter(
-        (item) => item.id !== entryId,
-      ),
-    });
+    if (removal.experience !== undefined) {
+      setEditableExperience(removal.experience);
+    }
+    updateCharacter(character.id, { ...removal });
   };
 
   // ─── LANDMARK: CURRENT_EXP_AUTOSAVE ───

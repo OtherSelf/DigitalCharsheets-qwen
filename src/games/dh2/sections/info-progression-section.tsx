@@ -67,9 +67,8 @@ import {
   eliteById,
   eliteRequirementIssues,
   removeEliteAdvance,
-  removeEliteJournalEntry,
 } from '../elite';
-import { dh2ExperienceRows } from '../experience';
+import { dh2ExperienceRows, removeDh2ExperienceEntry } from '../experience';
 import { isCreationFieldLocked } from '../field-policy';
 import { genderLabel, genderOptions, toGenderCode } from '../gender';
 import {
@@ -1037,32 +1036,8 @@ export const ProgressionSection = ({
   };
 
   const handleDeleteExperience = (entryId: string) => {
-    const entry = character.experienceLog.find((item) => item.id === entryId);
-    if (!entry) return;
-    if (entry.kind === 'award') {
-      // Удаление начисления снимает ровно добавленное (штраф вернётся со
-      // знаком: cost < 0 → experience += |cost|).
-      updateCharacter(character.id, {
-        experience: (character.experience ?? 0) - entry.cost,
-        experienceLog: character.experienceLog.filter(
-          (item) => item.id !== entryId,
-        ),
-      });
-      return;
-    }
-    if (entry.kind === 'elite-advance') {
-      // Второй путь удаления элитного: без снятия id профиль и журнал
-      // разошлись бы.
-      const removal = removeEliteJournalEntry(character, entryId);
-      if (removal) updateCharacter(character.id, removal);
-      return;
-    }
-    updateCharacter(character.id, {
-      totalExpSpent: Math.max(0, character.totalExpSpent - entry.cost),
-      experienceLog: character.experienceLog.filter(
-        (item) => item.id !== entryId,
-      ),
-    });
+    const removal = removeDh2ExperienceEntry(character, entryId);
+    if (removal) updateCharacter(character.id, { ...removal });
   };
 
   const handleSpend = () => {

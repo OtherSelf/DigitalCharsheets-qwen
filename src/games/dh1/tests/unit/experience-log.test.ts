@@ -3,7 +3,10 @@ import path from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-import { dh1ExperienceRows } from '@/games/dh1/experience';
+import {
+  dh1ExperienceRows,
+  removeDh1ExperienceEntry,
+} from '@/games/dh1/experience';
 import dh1En from '@/games/dh1/i18n/en.json';
 import dh1Ru from '@/games/dh1/i18n/ru.json';
 
@@ -37,6 +40,48 @@ describe('журнал опыта: адаптеры редакций', () => {
       },
     ]);
     expect(dh1ExperienceRows(undefined)).toEqual([]);
+  });
+});
+
+describe('журнал опыта: удаление строки', () => {
+  const award = {
+    id: 'xp-award:1',
+    label: 'Award',
+    cost: 100,
+    createdAt: '2026-01-02T10:00:00.000Z',
+    kind: 'award' as const,
+  };
+  const purchase = {
+    id: 'xp:1',
+    label: 'Dodge',
+    cost: 100,
+    createdAt: '2026-01-02T10:00:00.000Z',
+  };
+
+  it('начисление после ручной правки опыта не уводит опыт ниже нуля', () => {
+    expect(
+      removeDh1ExperienceEntry(
+        {
+          experience: 50,
+          totalExpSpent: 0,
+          experienceLog: [award],
+        },
+        award.id,
+      ),
+    ).toEqual({ experience: 0, experienceLog: [] });
+  });
+
+  it('покупка после ручной правки потраченного опыта не уходит в минус', () => {
+    expect(
+      removeDh1ExperienceEntry(
+        {
+          experience: 0,
+          totalExpSpent: 30,
+          experienceLog: [purchase],
+        },
+        purchase.id,
+      ),
+    ).toEqual({ totalExpSpent: 0, experienceLog: [] });
   });
 });
 
