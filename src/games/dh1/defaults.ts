@@ -4,7 +4,7 @@ import {
   WORLD_STARTING_PROFILE,
   woundsRangeFromFormula,
 } from './dark-heresy-data';
-import { calculateRank, RanksByCareer } from './dark-heresy-ranks';
+import { rankForCharacter } from './dark-heresy-ranks';
 import { statBonus } from './dh-stats';
 import { effectIdForDivination } from './divination-i18n';
 import { resolveGender } from './gender';
@@ -57,10 +57,16 @@ export function createDarkHeresyBaseDefaults(
   input: DefaultsInput = {},
 ): DarkHeresyBaseDraft {
   const careerPath = readCareerPath(input);
-  const careerRanks = careerPath ? RanksByCareer[careerPath] : null;
   const totalExpSpent = readNumber(input, 'totalExpSpent', 0);
-  const rank = careerRanks
-    ? calculateRank(careerRanks, totalExpSpent, null, null)
+  const alternatePath = readNullableString(input, 'alternatePath');
+  const advancedPath = readNullableString(input, 'advancedPath');
+  const rank = careerPath
+    ? rankForCharacter({
+        careerPath,
+        totalExpSpent,
+        advancedPath,
+        alternatePath,
+      })
     : readString(input, 'rank', '');
   const divination = readString(input, 'divination', '');
   const agility = readNumber(input, 'agility', 30);
@@ -105,8 +111,8 @@ export function createDarkHeresyBaseDefaults(
     eyeColor: readString(input, 'eyeColor', ''),
     experience: readNumber(input, 'experience', 0),
     totalExpSpent,
-    alternatePath: readNullableString(input, 'alternatePath'),
-    advancedPath: readNullableString(input, 'advancedPath'),
+    alternatePath,
+    advancedPath,
     notes: readString(input, 'notes', ''),
     questLog: [],
     wounds: { current: wounds, max: wounds },

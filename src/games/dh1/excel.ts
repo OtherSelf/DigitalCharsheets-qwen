@@ -1,5 +1,6 @@
 import { createExcelSections } from '../shared/excel';
 import type { ExcelSection, ExportTranslate, GameExportConfig } from '../types';
+import { rankForCharacter, resolveCharacterClass } from './dark-heresy-ranks';
 import { upgradeBonus } from './dh-stats';
 import { genderLabel } from './gender';
 import {
@@ -42,8 +43,8 @@ export function buildDh1ExcelSections(
   if (config.includeBasicInfo) {
     w.section('dh1.excel.basicInformation');
     w.row('dh1.excel.name', character.name);
-    w.row('dh1.excel.classCareer', character.characterClass);
-    w.row('dh1.rank', character.rank);
+    w.row('dh1.excel.classCareer', resolveCharacterClass(character));
+    w.row('dh1.rank', rankForCharacter(character));
     w.row('dh1.homeWorld', character.homeWorld);
     w.row('dh1.worldVariant', character.worldVariant);
     w.row('dh1.careerPath', character.careerPath);

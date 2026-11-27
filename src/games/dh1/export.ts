@@ -1,4 +1,5 @@
 import type { GameExportConfig } from '../types';
+import { rankForCharacter, resolveCharacterClass } from './dark-heresy-ranks';
 import type { DH1Character } from './types';
 
 /**
@@ -33,11 +34,11 @@ export function buildDh1PortableJson(
     const identity = character.identity;
     Object.assign(result, {
       name: character.name,
-      characterClass: character.characterClass,
+      characterClass: resolveCharacterClass(character),
       homeWorld: character.homeWorld,
       worldVariant: character.worldVariant,
       careerPath: character.careerPath,
-      rank: character.rank,
+      rank: rankForCharacter(character),
       divination: character.divination,
       divinationEffect: character.divinationEffect,
       divinationText: character.divinationText,

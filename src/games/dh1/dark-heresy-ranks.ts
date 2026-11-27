@@ -334,3 +334,70 @@ export function calculateRank(
     ? currentBasicRank.name
     : careerProgression.standard[0]?.name || 'Unknown Rank';
 }
+
+/**
+ * Поля листа, от которых зависит актуальный ранг. Намеренно структурный тип,
+ * а не `DH1Character`: ранг нужен шапке, карточке, экспорту и Excel, и всем им
+ * достаточно этих полей.
+ */
+export interface RankInput {
+  readonly careerPath?: string | null;
+  readonly characterClass?: string | null;
+  readonly rank?: string | null;
+  readonly totalExpSpent?: number | null;
+  readonly advancedPath?: string | null;
+  readonly alternatePath?: string | null;
+}
+
+function progressionFor(
+  careerPath: string | null | undefined,
+): CareerProgression | null {
+  if (!careerPath || !(careerPath in RanksByCareer)) return null;
+  return RanksByCareer[careerPath as DarkHeresyCareerPath];
+}
+
+/** Продвинутый путь по его имени в листе (`advancedPath` хранит имя, не id). */
+export function advancedPathForCharacter(
+  careerPath: string | null | undefined,
+  advancedPath: string | null | undefined,
+): AdvancedPath | null {
+  if (!careerPath || !advancedPath) return null;
+  const paths = AdvancedPathsByCareer[careerPath as DarkHeresyCareerPath];
+  if (!paths) return null;
+  return (
+    Object.values(paths).find((path) => path.name === advancedPath) ?? null
+  );
+}
+
+/**
+ * Актуальный ранг по карьере, опыту и выбранным путям.
+ *
+ * Сохранённый `rank` — снимок момента создания листа: без пересчёта шапка,
+ * карточка, экспорт и Excel отстают от потраченного опыта. Лист без известной
+ * карьеры сохраняет своё значение: угадывать её нельзя, а legacy-ранг
+ * («Acolyte») — единственное, что у него есть.
+ */
+export function rankForCharacter(
+  character: RankInput | null | undefined,
+): string {
+  if (!character) return '';
+  const progression = progressionFor(character.careerPath);
+  if (!progression) return character.rank ?? '';
+  return calculateRank(
+    progression,
+    character.totalExpSpent ?? 0,
+    advancedPathForCharacter(character.careerPath, character.advancedPath),
+    character.alternatePath ?? null,
+  );
+}
+
+/**
+ * Класс персонажа — это карьера. Старый `characterClass` остаётся у листов без
+ * карьеры (legacy/импорт), где он и есть единственный источник подписи.
+ */
+export function resolveCharacterClass(
+  character: RankInput | null | undefined,
+): string {
+  const careerPath = character?.careerPath;
+  return careerPath ? careerPath : (character?.characterClass ?? '');
+}

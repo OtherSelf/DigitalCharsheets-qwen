@@ -83,10 +83,10 @@ describe('DH1 v6 → v7: замороженный текст пророчест�
     expect(json.divinationEffectText).toEqual(FROZEN);
   });
 
-  it('модуль объявляет версию 7 и шаг 6 → 7', () => {
+  it('модуль объявляет шаг 6 → 7 в цепочке до версии 8', () => {
     const gameModule = getGameModule('dh1');
 
-    expect(gameModule?.schemaVersion).toBe(7);
+    expect(gameModule?.schemaVersion).toBe(8);
     expect(
       gameModule?.migrations?.some((step) => step.from === 6 && step.to === 7),
     ).toBe(true);

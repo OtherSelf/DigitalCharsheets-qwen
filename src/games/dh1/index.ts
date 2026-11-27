@@ -20,6 +20,7 @@ import {
   migrateDh1V4toV5,
   migrateDh1V5toV6,
   migrateDh1V6toV7,
+  migrateDh1V7toV8,
 } from './migrations';
 import { normalizeDh1 } from './normalize';
 import { dh1CharacterSchema } from './schema';
@@ -58,6 +59,7 @@ export {
   migrateDh1V4toV5,
   migrateDh1V5toV6,
   migrateDh1V6toV7,
+  migrateDh1V7toV8,
 } from './migrations';
 export const createDemo = createDh1Demo;
 
@@ -120,6 +122,7 @@ export const dh1Module: GameModule<DH1Character> = {
     { from: 4, to: 5, migrate: migrateDh1V4toV5 },
     { from: 5, to: 6, migrate: migrateDh1V5toV6 },
     { from: 6, to: 7, migrate: migrateDh1V6toV7 },
+    { from: 7, to: 8, migrate: migrateDh1V7toV8 },
   ],
   history: dh1History,
   matchesLegacyImport: dh1MatchesLegacyImport,

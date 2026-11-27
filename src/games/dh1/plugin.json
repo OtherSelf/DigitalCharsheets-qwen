@@ -4,7 +4,7 @@
   "id": "dh1",
   "gameId": "darkHeresy",
   "shortCode": "dh1e",
-  "version": "1.18.0",
+  "version": "1.19.0",
   "order": 20,
   "defaultStatus": "published",
   "name": {
@@ -18,7 +18,7 @@
   "tags": ["d100", "grimdark"],
   "author": "Digital Character Sheets",
   "license": "MIT",
-  "schemaVersion": 7,
+  "schemaVersion": 8,
   "game": {
     "id": "darkHeresy",
     "order": 20,
@@ -58,6 +58,8 @@
     "entry": "index.ts#deriveCharacter"
   },
   "derived": [
+    "rank",
+    "characterClass",
     "skills[].training.skilled",
     "skills[].training.plus10",
     "skills[].training.plus20",
@@ -111,6 +113,13 @@
       "to": 7,
       "entry": "index.ts#migrateDh1V6toV7",
       "description": "замороженный текст пророчества и эффекта (бэкфилл 0.22.0)",
+      "removes": []
+    },
+    {
+      "from": 7,
+      "to": 8,
+      "entry": "index.ts#migrateDh1V7toV8",
+      "description": "ранг и класс стали производными: данных шаг не трогает, значения пересчитывает derive",
       "removes": []
     }
   ],

@@ -54,6 +54,7 @@ into the plugin contract and recompute on the server. The last one was chosen.
   (unless the sheet shape changes too) — the recalculation is not a migration.
 - Rolling out recalculation changes stored values, so it shipped behind
   `DCS_SERVER_DERIVE` (default on, `=0` is the emergency brake).
-- Dark Heresy has almost no persisted derived numbers: its `derive` enforces the
-  cumulative training tiers (`+10` implies `skilled`, and so on), which the UI
-  previously handled alone.
+- Dark Heresy 1e has few persisted derived numbers, but they are real: its
+  `derive` enforces the cumulative training tiers (`+10` implies `skilled`, and
+  so on) and recomputes `rank`/`characterClass` from the career, spent XP and
+  the chosen paths, so the header, card, export and the file agree.

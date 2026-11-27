@@ -7,6 +7,7 @@ import { Scale } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/games/plugin-host';
 
+import { rankForCharacter, resolveCharacterClass } from '../dark-heresy-ranks';
 import { DhHouseRulesDialog } from '../sections/dh-house-rules-dialog';
 import type { DH1Character } from '../types';
 
@@ -35,8 +36,10 @@ export function dh1HeaderSubtitle(
   character: DH1Character,
   t: (key: string) => string,
 ): string {
-  const rank = character.rank || '';
-  const characterClass = character.characterClass || '';
+  // Ранг и класс считаются живьём: `updateCharacter` мержит патч локально, не
+  // дожидаясь ответа сервера, и снимок создания отстал бы от опыта.
+  const rank = rankForCharacter(character);
+  const characterClass = resolveCharacterClass(character);
 
   const translatedRank = translateOr(
     t,

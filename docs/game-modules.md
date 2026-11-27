@@ -137,7 +137,7 @@ sheet follows the edition instead of sharing a switch:
 
 | Area | dh1 (1e) | dh2 (2e) |
 | --- | --- | --- |
-| Progression | career path, rank, alternate/advanced paths (`dark-heresy-ranks.ts`) | no ranks or paths; manual XP journal |
+| Progression | career path, rank, alternate/advanced paths (`dark-heresy-ranks.ts`); `rank` and `characterClass` are derived from career and spent XP | no ranks or paths; manual XP journal |
 | Wealth | throne gelt and monthly income on the sheet; the "Collect salary" button adds the monthly income to the current capital | wealth hidden; Influence is the resource |
 | Requisition | not a rule | Influence + availability/craftsmanship target (`influence.ts`) |
 | Psychic | one discipline plus a power list (`psy.discipline`) | free-text disciplines/powers, psy rating purchase hint, elite advances |
@@ -327,7 +327,7 @@ per-game save handlers out of the page.
 | `defaultStatus` | `published` / `test` / `hidden`; runtime override in the game catalog. |
 | `nameKey`, `descriptionKey` | i18n keys; names are never stored in sheets. |
 | `shortCode` | Locale-independent edition code for the admin character list (`dnd5e`, `dh1e`, `dh2e`); declared in `plugin.json#shortCode` and duplicated in the module, not translated, the full game + edition goes to the tooltip (D29). |
-| `schemaVersion` | Sheet format written by the module: `2` for `dnd5e`, `6` for `dh1`, `5` for `dh2`; manifests declare it and the migration chain ends here. |
+| `schemaVersion` | Sheet format written by the module: `2` for `dnd5e`, `8` for `dh1`, `6` for `dh2`; manifests declare it and the migration chain ends here. |
 | `schema` | Zod schema; `ZodType<TCharacter>` makes `tsc` check it against the type. |
 | `i18n` | Declared locales (`en`/`ru` plus optional extras), merged by the core with an en↔ru fallback. |
 | `capabilities` | Fixed feature flags of the module (edition, +30, fatigue field). |

@@ -1,4 +1,4 @@
-import { calculateRank, RanksByCareer } from './dark-heresy-ranks';
+import { rankForCharacter } from './dark-heresy-ranks';
 import type { DH1CharacterDraft } from './defaults';
 
 /**
@@ -7,9 +7,10 @@ import type { DH1CharacterDraft } from './defaults';
  */
 export function createDh1Demo(): DH1CharacterDraft {
   const totalExpSpent = 500;
+  const careerPath = 'Guardsman';
   return {
     name: 'Inquisitor Vane',
-    characterClass: 'Acolyte',
+    characterClass: careerPath,
     systemId: 'dh1',
     gameSystem: 'Dark Heresy',
     backstory:
@@ -18,8 +19,8 @@ export function createDh1Demo(): DH1CharacterDraft {
     questLog: [],
     homeWorld: 'Hive World',
     worldVariant: 'Middle Hive',
-    careerPath: 'Guardsman',
-    rank: calculateRank(RanksByCareer.Guardsman, totalExpSpent, null, null),
+    careerPath,
+    rank: rankForCharacter({ careerPath, totalExpSpent }),
     divination: 'painOfBullet',
     divinationEffect: 'toughness1',
     quirk: 'Pallid',

@@ -11,6 +11,19 @@ format changes.
 
 ## [Unreleased]
 
+### Changed
+
+- Dark Heresy 1e shows the current rank everywhere: the header, the dashboard
+  card, the JSON/Excel export and the sheet compute `rank` and
+  `characterClass` from the career, spent XP and the chosen advanced/alternate
+  paths instead of using the snapshot stored at creation. The experience block
+  and the header can no longer disagree (`Adept` with 2200 XP used to show
+  `Scholar` in the header and `Inditor` in the block). Sheet `schemaVersion`
+  is now `8`: the startup pass recomputes stale values, leaves a `.bak` next to
+  the sheet and appends a `migration` marker to its history. A sheet without a
+  known career keeps its legacy rank (`Acolyte`), and the plugin version is
+  `1.19.0`.
+
 ## [0.26.2] - 2026-11-27
 
 The sheet view toggle does what its name says on a tablet and a desktop: one
