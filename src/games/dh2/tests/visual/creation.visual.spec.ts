@@ -35,6 +35,8 @@ test.describe(
       await signInViaUI(page, account);
 
       await openCreationForm(page, 'darkHeresy', 'dh2');
+      // Потраченный опыт — поле листа, а не выбор создания.
+      await expect(page.locator('[name="totalExpSpent"]')).toHaveCount(0);
 
       const name = 'E2E Assassin';
       await page.getByLabel('Character Name', { exact: true }).fill(name);

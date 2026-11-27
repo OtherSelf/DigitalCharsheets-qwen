@@ -158,10 +158,13 @@ Inquisitor's Handbook: `Novice → Cantus → Constantia`, three branches at 200
 (`Diologous`, `Hospitaller`, `Militant`), a second rank in each branch at 3000,
 a third at 6000, convergence at `Superior` 8000 and `Legatine` 10000. The
 career's catalog `props.restrictions` (gender, four native worlds, zero
-Corruption/Insanity at start, required GM approval) are emitted as
-`CAREER_RESTRICTIONS`, and `create-form.tsx` enforces them: the gender is
-locked to female, the home world list is filtered, the Corruption/Insanity
-inputs are disabled and the “GM approved” checkbox is not stored in the sheet.
+Corruption, GM approval) are emitted as `CAREER_RESTRICTIONS`. Only the
+gender and the home-world list are hard rules in the creation form: the gender
+is locked to female and the world select is filtered. The book's ban on
+Corruption and the GM permission are shown as small hints; they are not
+checkboxes and do not disable the inputs, because the table may allow an
+exception. Insanity is not restricted by the book and is not modelled as a
+restriction.
 
 Table 2-3 of the Inquisitor's Handbook adds **15 alternate career ranks**. The
 catalog marks them with `props.alternative`, `props.careerIds` and

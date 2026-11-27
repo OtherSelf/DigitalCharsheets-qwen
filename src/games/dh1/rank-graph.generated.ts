@@ -1752,7 +1752,6 @@ export const CAREER_RESTRICTIONS: Readonly<
     {
       readonly gender?: 'male' | 'female';
       readonly homeWorlds: readonly string[];
-      readonly zeroInsanity: boolean;
       readonly zeroCorruption: boolean;
       readonly gmApproval: boolean;
     }
@@ -1766,7 +1765,6 @@ export const CAREER_RESTRICTIONS: Readonly<
       'Schola Progenium',
       'Noble Born',
     ],
-    zeroInsanity: true,
     zeroCorruption: true,
     gmApproval: true,
   },

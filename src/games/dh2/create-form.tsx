@@ -156,12 +156,6 @@ export function DarkHeresyCreateForm({ onCreated }: CreateFormProps) {
       .min(0)
       .max(FIELD_LIMITS.experience)
       .optional(),
-    totalExpSpent: z.coerce
-      .number()
-      .int()
-      .min(0)
-      .max(FIELD_LIMITS.experience)
-      .optional(),
     weaponSkill: z.coerce.number().int().min(0).max(FIELD_LIMITS.stat),
     ballisticSkill: z.coerce.number().int().min(0).max(FIELD_LIMITS.stat),
     strength: z.coerce.number().int().min(0).max(FIELD_LIMITS.stat),
@@ -216,7 +210,6 @@ export function DarkHeresyCreateForm({ onCreated }: CreateFormProps) {
       hairColor: '',
       eyeColor: '',
       experience: 1000,
-      totalExpSpent: 0,
     },
   });
 
@@ -920,7 +913,6 @@ export function DarkHeresyCreateForm({ onCreated }: CreateFormProps) {
                     ['insanity', 'dh2.insanity'],
                     ['corruption', 'dh2.corruption'],
                     ['experience', 'dh2.experience'],
-                    ['totalExpSpent', 'dh2.totalExpSpent'],
                   ] as const
                 ).map(([key, labelKey]) => (
                   <FormField

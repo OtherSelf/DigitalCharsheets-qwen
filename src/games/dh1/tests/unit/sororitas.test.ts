@@ -73,7 +73,6 @@ describe('Адепта Сороритас: карьера и данные кни
         'Schola Progenium',
         'Noble Born',
       ],
-      zeroInsanity: true,
       zeroCorruption: true,
       gmApproval: true,
     });

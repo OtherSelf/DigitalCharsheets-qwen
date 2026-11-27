@@ -338,7 +338,6 @@ function restrictionsOf(career, byId) {
   return {
     ...(gender ? { gender } : {}),
     homeWorlds,
-    zeroInsanity: rules.zeroInsanity === true,
     zeroCorruption: rules.zeroCorruption === true,
     gmApproval: rules.gmApproval === true,
   };
@@ -427,7 +426,6 @@ export const CAREER_RESTRICTIONS: Readonly<
     {
       readonly gender?: 'male' | 'female';
       readonly homeWorlds: readonly string[];
-      readonly zeroInsanity: boolean;
       readonly zeroCorruption: boolean;
       readonly gmApproval: boolean;
     }

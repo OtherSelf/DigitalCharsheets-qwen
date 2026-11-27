@@ -75,15 +75,15 @@ test.describe('DH1: форма создания', { tag: '@plugin:dh1' }, () => 
 });
 
 /**
- * Адепта Сороритас: опциональная карьера с ограничениями книги — только
- * женщины, четыре родных мира, нулевые Порча/Безумие и обязательное
- * разрешение Мастера (в лист не пишется).
+ * Адепта Сороритас: опциональная карьера с книжными ограничениями. Жёстко
+ * проверяются только пол и список родных миров; Порча и разрешение ГМ —
+ * подсказки, чтобы стол мог отступить от книги.
  */
 test.describe(
   'DH1: Адепта Сороритас в создании',
   { tag: '@plugin:dh1' },
   () => {
-    test('ограничения карьеры и создание с галочкой Мастера (en)', async ({
+    test('ограничения карьеры: пол и миры жёстко, Порча и ГМ — подсказки (en)', async ({
       page,
       context,
     }) => {
@@ -124,20 +124,26 @@ test.describe(
         .getByRole('option', { name: 'Schola Progenium', exact: true })
         .click();
 
-      // Безумие и Порча на старте нулевые.
-      await expect(page.locator('[name="insanity"]')).toBeDisabled();
-      await expect(page.locator('[name="corruption"]')).toBeDisabled();
-
-      // Без разрешения Мастера лист не создаётся.
-      await page.getByRole('button', { name: /Create Character/i }).click();
-      await expect(page).toHaveURL(/\/new/);
+      // Порча и Безумие остаются ручными: книга запрещает Порчу, но стол может
+      // отступить; Безумие книгой не ограничено вовсе.
+      await expect(page.locator('[name="insanity"]')).toBeEnabled();
+      await expect(page.locator('[name="corruption"]')).toBeEnabled();
+      await expect(
+        page.getByText(
+          'By the book: no mutations or Corruption Points at the start',
+        ),
+      ).toBeVisible();
+      await expect(page.getByText('With GM permission')).toBeVisible();
+      await expect(
+        page.getByRole('checkbox', {
+          name: 'The GM approved this character',
+        }),
+      ).toHaveCount(0);
+      await expect(page.locator('[name="totalExpSpent"]')).toHaveCount(0);
 
       await page.locator('form').first().scrollIntoViewIfNeeded();
       await screenshotPage(page, 'create-form-dh1-sororitas-en.png');
 
-      await page
-        .getByRole('checkbox', { name: 'The GM approved this character' })
-        .check();
       await page.getByRole('button', { name: /Create Character/i }).click();
       await page.waitForURL(/\/character\/[^/]+$/, { timeout: 30_000 });
       const header = page.getByTestId('app-header');

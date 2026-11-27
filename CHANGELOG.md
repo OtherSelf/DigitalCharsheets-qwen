@@ -45,10 +45,15 @@ format changes.
   career (Inquisitor's Handbook): `Novice` through `Legatine`, three branches
   at 2000 XP and convergence at `Superior` 8000, with the starting package,
   `70+2d10` starting wealth and the book's creation rules. The creation form
-  allows only women, four native worlds (Feral, Imperial, Schola Progenium,
-  Noble Born), zero Corruption and Insanity at the start and requires a
-  “GM approved” checkbox that is not written to the sheet. The plugin version
-  is `1.21.0`.
+  hard-locks only the gender (female) and filters the four native worlds
+  (Feral, Imperial, Schola Progenium, Noble Born); the book's ban on Corruption
+  and the GM permission are small hints, not a checkbox or a blocked submit,
+  because the table may allow an exception. Insanity is not restricted by the
+  book. The plugin version is `1.21.0`.
+- Character creation in both editions no longer asks for “XP spent”: a new
+  sheet starts at 0 and the field remains on the sheet, in the API and in
+  imported sheets, where it belongs to progression rather than to the starting
+  character.
 - Dark Heresy 1e rank names follow the English book: `Savant Warrant`,
   `Preceptor-Savant`, `Shock Trooper` and `Storm Trooper` (Russian labels are
   unchanged). The career ladder is one generated rank graph now, so mandatory

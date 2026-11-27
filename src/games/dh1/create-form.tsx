@@ -140,12 +140,6 @@ export function DarkHeresyCreateForm({
         .min(0)
         .max(FIELD_LIMITS.experience)
         .optional(),
-      totalExpSpent: z.coerce
-        .number()
-        .int()
-        .min(0)
-        .max(FIELD_LIMITS.experience)
-        .optional(),
       weaponSkill: z.coerce.number().int().min(0).max(FIELD_LIMITS.stat),
       ballisticSkill: z.coerce.number().int().min(0).max(FIELD_LIMITS.stat),
       strength: z.coerce.number().int().min(0).max(FIELD_LIMITS.stat),
@@ -176,13 +170,12 @@ export function DarkHeresyCreateForm({
         .min(0)
         .max(FIELD_LIMITS.money)
         .optional(),
-      // Только для формы: галочка «Мастер разрешил» в лист не пишется.
-      gmApproved: z.boolean().optional(),
     })
     .superRefine((values, ctx) => {
-      // Ограничения опциональной карьеры: пол, родные миры, нулевые Безумие и
-      // Порча, разрешение Мастера. Проверка в схеме, а не только в UI, чтобы
-      // submit не проходил мимо скрытых полей.
+      // Жёстко проверяем только книжные ограничения, которые нельзя обойти
+      // вводом: пол и разрешённые родные миры. Порча и разрешение ГМ остаются
+      // подсказками — Мастер может отступить от книги, а приложение не решает
+      // за стол.
       const rules = CAREER_RESTRICTIONS[values.careerPath ?? ''];
       if (!rules) return;
       if (rules.gender && values.gender !== rules.gender) {
@@ -197,27 +190,6 @@ export function DarkHeresyCreateForm({
           code: 'custom',
           path: ['homeWorld'],
           message: t('dh1.sororitasWorldsHint'),
-        });
-      }
-      if (rules.zeroInsanity && (values.insanity ?? 0) !== 0) {
-        ctx.addIssue({
-          code: 'custom',
-          path: ['insanity'],
-          message: t('dh1.sororitasZeroCorruption'),
-        });
-      }
-      if (rules.zeroCorruption && (values.corruption ?? 0) !== 0) {
-        ctx.addIssue({
-          code: 'custom',
-          path: ['corruption'],
-          message: t('dh1.sororitasZeroCorruption'),
-        });
-      }
-      if (rules.gmApproval && values.gmApproved !== true) {
-        ctx.addIssue({
-          code: 'custom',
-          path: ['gmApproved'],
-          message: t('dh1.sororitasGmRequired'),
         });
       }
     });
@@ -249,7 +221,6 @@ export function DarkHeresyCreateForm({
       fatePoints: 1,
       insanity: 0,
       corruption: 0,
-      gmApproved: false,
       gender: '',
       throneGelt: 0,
       divination: '',
@@ -261,7 +232,6 @@ export function DarkHeresyCreateForm({
       hairColor: '',
       eyeColor: '',
       experience: STARTING_EXPERIENCE,
-      totalExpSpent: 0,
     },
   });
 
@@ -294,13 +264,11 @@ export function DarkHeresyCreateForm({
     return start ? start.labelKey : null;
   }, [watchedCareer]);
 
-  // Ограничения опциональной карьеры: пол фиксируется книгой, Безумие и
-  // Порча на старте нулевые, чужой родной мир сбрасывается.
+  // Пол фиксируется книгой; Порчу и разрешение ГМ показываем подсказками и
+  // не трогаем ввод — Мастер может отступить от книги.
   React.useEffect(() => {
     if (!careerRules) return;
     if (careerRules.gender) form.setValue('gender', careerRules.gender);
-    if (careerRules.zeroInsanity) form.setValue('insanity', 0);
-    if (careerRules.zeroCorruption) form.setValue('corruption', 0);
   }, [careerRules, form]);
 
   React.useEffect(() => {
@@ -518,38 +486,15 @@ export function DarkHeresyCreateForm({
                           ))}
                         </SelectContent>
                       </Select>
-                      {careerRules && (
+                      {careerRules?.gmApproval && (
                         <p className="text-muted-foreground text-xs">
-                          {t('dh1.sororitasGmRequired')}.{' '}
-                          {t('dh1.sororitasWorldsHint')}.
+                          {t('dh1.sororitasGmRequired')}
                         </p>
                       )}
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                {careerRules?.gmApproval && (
-                  <FormField
-                    control={form.control}
-                    name="gmApproved"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-start gap-2 md:col-span-2">
-                        <FormControl>
-                          <Checkbox
-                            checked={field.value === true}
-                            onCheckedChange={(checked) =>
-                              field.onChange(checked === true)
-                            }
-                          />
-                        </FormControl>
-                        <div className="space-y-1">
-                          <FormLabel>{t('dh1.gmApproval')}</FormLabel>
-                          <FormMessage />
-                        </div>
-                      </FormItem>
-                    )}
-                  />
-                )}
               </div>
             </div>
 
@@ -923,34 +868,19 @@ export function DarkHeresyCreateForm({
 
             <div className="space-y-2">
               <h3 className="text-base font-medium">{t('dh1.experience')}</h3>
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <FormField
-                  control={form.control}
-                  name="experience"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t('dh1.experience')}</FormLabel>
-                      <FormControl>
-                        <Input type="number" min={0} step={1} {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="totalExpSpent"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t('dh1.totalExpSpent')}</FormLabel>
-                      <FormControl>
-                        <Input type="number" min={0} step={1} {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+              <FormField
+                control={form.control}
+                name="experience"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('dh1.experience')}</FormLabel>
+                    <FormControl>
+                      <Input type="number" min={0} step={1} {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
 
             <div className="space-y-2">
@@ -1168,13 +1098,7 @@ export function DarkHeresyCreateForm({
                     <FormItem>
                       <FormLabel>{t('dh1.insanity')}</FormLabel>
                       <FormControl>
-                        <Input
-                          type="number"
-                          min={0}
-                          step={1}
-                          {...field}
-                          disabled={isSororitas}
-                        />
+                        <Input type="number" min={0} step={1} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -1187,13 +1111,7 @@ export function DarkHeresyCreateForm({
                     <FormItem>
                       <FormLabel>{t('dh1.corruption')}</FormLabel>
                       <FormControl>
-                        <Input
-                          type="number"
-                          min={0}
-                          step={1}
-                          {...field}
-                          disabled={isSororitas}
-                        />
+                        <Input type="number" min={0} step={1} {...field} />
                       </FormControl>
                       {isSororitas && (
                         <p className="text-muted-foreground text-xs">
