@@ -150,7 +150,7 @@ test.describe(
       // На мобильном лист компактный: сначала открываем секцию прогрессии.
       if ((await page.locator('#progression-section').count()) === 0) {
         await page
-          .getByRole('button', { name: 'Progression', exact: true })
+          .getByRole('button', { name: 'Experience', exact: true })
           .click();
       }
       const progression = page.locator('#progression-section');
@@ -340,7 +340,7 @@ test.describe(
       await expect(page.locator('#info-section')).toBeVisible();
       if ((await page.locator('#progression-section').count()) === 0) {
         await page
-          .getByRole('button', { name: 'Progression', exact: true })
+          .getByRole('button', { name: 'Experience', exact: true })
           .click();
       }
       const progression = page.locator('#progression-section');
@@ -698,7 +698,7 @@ test.describe('добавление оружия на листе DH', { tag: '@p
 
 /**
  * ─── LANDMARK: XP AWARD ───────────────────────────────────────────────────
- * Кнопка «Добавить ОП» рядом со «Spend EXP»: положительное число — награда,
+ * Кнопка «Добавить ОП» рядом со «Spend XP»: положительное число — награда,
  * отрицательное — штраф. Начисление пишется в журнал опыта и увеличивает
  * `experience`; удаление записи из журнала отменяет начисление ровно на её
  * стоимость.
@@ -708,7 +708,7 @@ test.describe('начисление опыта на листе DH', { tag: '@plu
     const progression = page.locator('#progression-section');
     if (!(await progression.isVisible().catch(() => false))) {
       await page
-        .getByRole('button', { name: 'Progression', exact: true })
+        .getByRole('button', { name: 'Experience', exact: true })
         .click();
     }
     await expect(progression).toBeVisible();

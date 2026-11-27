@@ -1,6 +1,6 @@
 {
   "dh1.addCriticalCondition": "Add critical condition...",
-  "dh1.addExperience": "Add EXP",
+  "dh1.addExperience": "Add XP",
   "dh1.addExperienceConfirm": "Add",
   "dh1.addExperienceHint": "Positive numbers are awards, negative are penalties. The entry goes to the XP journal; deleting it reverts the change.",
   "dh1.addExperienceWhat": "What was it for",
@@ -562,7 +562,7 @@
   "dh1.skinColor": "Skin Color",
   "dh1.spendAmount": "XP amount",
   "dh1.spendConfirm": "Spend",
-  "dh1.spendExp": "Spend EXP",
+  "dh1.spendExp": "Spend XP",
   "dh1.spendHint": "The price is entered by the player: the app does not check legality.",
   "dh1.spendWhat": "What was bought",
   "dh1.startItem10ThrowingKnives": "10 throwing knives",

@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 
-import { BookOpen, Lock, Trash2 } from 'lucide-react';
+import { BookOpen, Lock, Minus, Plus, ScrollText, Trash2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -1142,43 +1142,70 @@ export const ProgressionSection = ({
         >
           {t('dh2.experience')}
         </CardTitle>
-        <div className="flex flex-wrap items-center justify-end gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              setAwardAmount('100');
-              setAwardWhat('');
-              setIsAwardOpen(true);
-            }}
-          >
-            {t('dh2.addExperience')}
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => setIsSpendOpen(true)}
-          >
-            {t('dh2.spendExp')}
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => setIsJournalOpen(true)}
-          >
-            {t('dh2.experienceLog')}
-          </Button>
-          {(showEditButtons || isProgressionEditing) && (
-            <EditSaveButton
-              editing={isProgressionEditing}
-              onEdit={() => setIsProgressionEditing(true)}
-              onSave={() => setIsProgressionEditing(false)}
-            />
-          )}
-        </div>
+        <TooltipProvider delayDuration={0}>
+          <div className="flex items-center justify-end gap-1.5">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="h-8 w-8 shrink-0"
+                  aria-label={t('dh2.addExperience')}
+                  onClick={() => {
+                    setAwardAmount('100');
+                    setAwardWhat('');
+                    setIsAwardOpen(true);
+                  }}
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">
+                {t('dh2.addExperience')}
+              </TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="h-8 w-8 shrink-0"
+                  aria-label={t('dh2.spendExp')}
+                  onClick={() => setIsSpendOpen(true)}
+                >
+                  <Minus className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">{t('dh2.spendExp')}</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="h-8 w-8 shrink-0"
+                  aria-label={t('dh2.experienceLog')}
+                  onClick={() => setIsJournalOpen(true)}
+                >
+                  <ScrollText className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">
+                {t('dh2.experienceLog')}
+              </TooltipContent>
+            </Tooltip>
+            {(showEditButtons || isProgressionEditing) && (
+              <EditSaveButton
+                editing={isProgressionEditing}
+                onEdit={() => setIsProgressionEditing(true)}
+                onSave={() => setIsProgressionEditing(false)}
+              />
+            )}
+          </div>
+        </TooltipProvider>
       </CardHeader>
       <CardContent className="space-y-4 pt-0">
         <div className="grid grid-cols-2 gap-4">

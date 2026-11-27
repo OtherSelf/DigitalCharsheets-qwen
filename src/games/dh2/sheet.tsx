@@ -465,49 +465,52 @@ export const Dh2Sheet = React.forwardRef<
                         key={char.key}
                         className="bg-background relative flex min-h-[60px] flex-col justify-between rounded-md border px-0.5 py-1 text-center"
                       >
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <Button
-                              variant={notes ? 'secondary' : 'ghost'}
-                              size="icon"
-                              className="absolute top-0.5 right-0.5 h-4 w-4"
+                        {!hideNotes && (
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button
+                                variant={notes ? 'secondary' : 'ghost'}
+                                size="icon"
+                                aria-label={`${char.label} - ${t('common.notes')}`}
+                                className="absolute top-0.5 right-0.5 h-4 w-4"
+                              >
+                                <Info className="h-2.5 w-2.5" />
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent
+                              className="w-64 p-3"
+                              side="top"
+                              align="center"
                             >
-                              <Info className="h-2.5 w-2.5" />
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent
-                            className="w-64 p-3"
-                            side="top"
-                            align="center"
-                          >
-                            <Label className="mb-2 block text-xs font-semibold">
-                              {char.label} - {t('common.notes')}
-                            </Label>
-                            <Textarea
-                              defaultValue={notes}
-                              onBlur={(e) => {
-                                const nextNotes = {
-                                  ...statRecord<string>(
-                                    character,
-                                    'statNotes',
-                                    '',
-                                  ),
-                                  [char.key]: e.target.value,
-                                };
-                                updateCharacter(character.id, {
-                                  statNotes: pickAllowedStats(
-                                    nextNotes,
-                                    capabilities.influence,
-                                  ),
-                                } as Partial<Character>);
-                              }}
-                              placeholder={t(
-                                'dh2.addNotesCharacteristicPlaceholder',
-                              )}
-                              className="min-h-[80px] text-xs"
-                            />
-                          </PopoverContent>
-                        </Popover>
+                              <Label className="mb-2 block text-xs font-semibold">
+                                {char.label} - {t('common.notes')}
+                              </Label>
+                              <Textarea
+                                defaultValue={notes}
+                                onBlur={(e) => {
+                                  const nextNotes = {
+                                    ...statRecord<string>(
+                                      character,
+                                      'statNotes',
+                                      '',
+                                    ),
+                                    [char.key]: e.target.value,
+                                  };
+                                  updateCharacter(character.id, {
+                                    statNotes: pickAllowedStats(
+                                      nextNotes,
+                                      capabilities.influence,
+                                    ),
+                                  } as Partial<Character>);
+                                }}
+                                placeholder={t(
+                                  'dh2.addNotesCharacteristicPlaceholder',
+                                )}
+                                className="min-h-[80px] text-xs"
+                              />
+                            </PopoverContent>
+                          </Popover>
+                        )}
                         <div className="text-muted-foreground text-8px mt-1 font-semibold uppercase">
                           {char.label}
                         </div>
@@ -1378,7 +1381,7 @@ export const Dh2Sheet = React.forwardRef<
             )}
           >
             {isTabletScreen ? (
-              <Card>
+              <Card id="characteristics-card">
                 <CardHeader className="flex-row items-center justify-between px-6 pt-3 pb-6">
                   <CardTitle className="font-headline">
                     {t('common.characteristics')}
@@ -1466,49 +1469,52 @@ export const Dh2Sheet = React.forwardRef<
                             key={char.key}
                             className="bg-background relative flex min-h-[60px] flex-col justify-between rounded-md border px-0.5 py-1 text-center"
                           >
-                            <Popover>
-                              <PopoverTrigger asChild>
-                                <Button
-                                  variant={notes ? 'secondary' : 'ghost'}
-                                  size="icon"
-                                  className="absolute top-0.5 right-0.5 h-4 w-4"
+                            {!hideNotes && (
+                              <Popover>
+                                <PopoverTrigger asChild>
+                                  <Button
+                                    variant={notes ? 'secondary' : 'ghost'}
+                                    size="icon"
+                                    aria-label={`${char.label} - ${t('common.notes')}`}
+                                    className="absolute top-0.5 right-0.5 h-4 w-4"
+                                  >
+                                    <Info className="h-2.5 w-2.5" />
+                                  </Button>
+                                </PopoverTrigger>
+                                <PopoverContent
+                                  className="w-64 p-3"
+                                  side="top"
+                                  align="center"
                                 >
-                                  <Info className="h-2.5 w-2.5" />
-                                </Button>
-                              </PopoverTrigger>
-                              <PopoverContent
-                                className="w-64 p-3"
-                                side="top"
-                                align="center"
-                              >
-                                <Label className="mb-2 block text-xs font-semibold">
-                                  {char.label} - {t('common.notes')}
-                                </Label>
-                                <Textarea
-                                  defaultValue={notes}
-                                  onBlur={(e) => {
-                                    const nextNotes = {
-                                      ...statRecord<string>(
-                                        character,
-                                        'statNotes',
-                                        '',
-                                      ),
-                                      [char.key]: e.target.value,
-                                    };
-                                    updateCharacter(character.id, {
-                                      statNotes: pickAllowedStats(
-                                        nextNotes,
-                                        capabilities.influence,
-                                      ),
-                                    } as Partial<Character>);
-                                  }}
-                                  placeholder={t(
-                                    'dh2.addNotesCharacteristicPlaceholder',
-                                  )}
-                                  className="min-h-[80px] text-xs"
-                                />
-                              </PopoverContent>
-                            </Popover>
+                                  <Label className="mb-2 block text-xs font-semibold">
+                                    {char.label} - {t('common.notes')}
+                                  </Label>
+                                  <Textarea
+                                    defaultValue={notes}
+                                    onBlur={(e) => {
+                                      const nextNotes = {
+                                        ...statRecord<string>(
+                                          character,
+                                          'statNotes',
+                                          '',
+                                        ),
+                                        [char.key]: e.target.value,
+                                      };
+                                      updateCharacter(character.id, {
+                                        statNotes: pickAllowedStats(
+                                          nextNotes,
+                                          capabilities.influence,
+                                        ),
+                                      } as Partial<Character>);
+                                    }}
+                                    placeholder={t(
+                                      'dh2.addNotesCharacteristicPlaceholder',
+                                    )}
+                                    className="min-h-[80px] text-xs"
+                                  />
+                                </PopoverContent>
+                              </Popover>
+                            )}
                             <div className="text-muted-foreground text-8px mt-1 font-semibold uppercase">
                               {char.label}
                             </div>

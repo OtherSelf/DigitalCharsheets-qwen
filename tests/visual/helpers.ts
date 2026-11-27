@@ -926,9 +926,7 @@ export async function expectInputValue(
 export async function openProgressionSection(page: Page): Promise<Locator> {
   const progression = page.locator('#progression-section');
   if (!(await progression.isVisible().catch(() => false))) {
-    await page
-      .getByRole('button', { name: 'Progression', exact: true })
-      .click();
+    await page.getByRole('button', { name: 'Experience', exact: true }).click();
   }
   await expect(progression).toBeVisible();
   return progression;

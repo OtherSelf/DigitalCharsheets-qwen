@@ -62,6 +62,7 @@ const CharacteristicStat = ({
   notesForText: string;
   addNotesText: string;
 }) => {
+  const { t } = useTranslation();
   const currentUpgrades = (
     Array.isArray(upgrades)
       ? [...upgrades, ...Array(4 - upgrades.length).fill(false)]
@@ -86,6 +87,7 @@ const CharacteristicStat = ({
             <Button
               variant={notes ? 'secondary' : 'ghost'}
               size="icon"
+              aria-label={`${label} - ${t('common.notes')}`}
               className="absolute top-0.5 right-0.5 h-5 w-5"
             >
               <Info className="h-3 w-3" />

@@ -29,7 +29,7 @@ export function dh2CompactNav(
       icon: <Info className="h-5 w-5" />,
     },
     {
-      labelKey: 'common.progression',
+      labelKey: 'dh2.experience',
       id: 'progression-section',
       icon: <TrendingUp className="h-5 w-5" />,
     },

@@ -88,7 +88,7 @@ test.describe('лист Dark Heresy — чтение', { tag: '@plugin:dh1' }, (
 
       await screenshotPage(page, 'sheet-dh-mobile-info-en.png');
 
-      await openMobileSection(page, 'Progression', 'progression-section');
+      await openMobileSection(page, 'Experience', 'progression-section');
       await screenshotPage(page, 'sheet-dh-mobile-progression-en.png');
 
       await openMobileSection(page, 'Skills', 'skills-section');
@@ -379,6 +379,85 @@ test.describe('DH1: сетка умений и талантов', { tag: '@plugi
     },
   );
 });
+
+/**
+ * ─── LANDMARK: DH1 XP ACTIONS ──────────────────────────────────────────────
+ * Действия над опытом — иконки в одну строку: раньше три текстовые кнопки
+ * переносились в 2–3 ряда в узкой панели и на планшете, выдавливая заголовок.
+ * Отдельно проверяем, что тумблер «скрыть заметки» убирает иконки заметок у
+ * характеристик и в карточке, и в компактной полосе: там проверки не было.
+ */
+test.describe(
+  'DH1: опыт и заметки характеристик',
+  { tag: '@plugin:dh1' },
+  () => {
+    test(
+      'кнопки опыта — в один ряд (desktop)',
+      { tag: '@desktop' },
+      async ({ page, context }) => {
+        await prepare(context);
+        await openApp(page, sheetPath(gameCharacterId('dh')));
+
+        const buttons = ['Add XP', 'Spend XP', 'XP log'].map((name) =>
+          page.getByRole('button', { name, exact: true }),
+        );
+        for (const button of buttons) await expect(button).toBeVisible();
+
+        const tops = await Promise.all(
+          buttons.map(async (button) =>
+            Math.round((await button.boundingBox())!.y),
+          ),
+        );
+        expect(new Set(tops).size, 'кнопки опыта в один ряд').toBe(1);
+
+        const headerHeight = await page.evaluate(() => {
+          const card = document.querySelector('#progression-section');
+          const header = card?.firstElementChild;
+          return header ? Math.round(header.getBoundingClientRect().height) : 0;
+        });
+        expect(headerHeight, 'шапка опыта в одну строку').toBeLessThan(90);
+      },
+    );
+
+    test(
+      'скрыть заметки убирает иконки в карточке характеристик (desktop)',
+      { tag: '@desktop' },
+      async ({ page, context }) => {
+        await prepare(context);
+        await openApp(page, sheetPath(gameCharacterId('dh')));
+
+        const card = page.locator('#characteristics-card');
+        const noteButtons = card.getByRole('button', { name: /- Notes$/ });
+        await expect(noteButtons.first()).toBeVisible();
+
+        await page
+          .getByTestId('app-header')
+          .getByRole('button', { name: 'Hide Notes', exact: true })
+          .click();
+        await expect(noteButtons).toHaveCount(0);
+      },
+    );
+
+    test(
+      'скрыть заметки убирает иконки в компактной полосе (mobile)',
+      { tag: '@mobile' },
+      async ({ page, context }) => {
+        await prepare(context);
+        await openApp(page, sheetPath(gameCharacterId('dh')));
+
+        const band = page.getByTestId('characteristics-compact');
+        const noteButtons = band.getByRole('button', { name: /- Notes$/ });
+        await expect(noteButtons.first()).toBeVisible();
+
+        await page
+          .getByRole('navigation')
+          .getByRole('button', { name: 'Hide Notes', exact: true })
+          .click();
+        await expect(noteButtons).toHaveCount(0);
+      },
+    );
+  },
+);
 
 test.describe('DH1: зарплата', { tag: '@plugin:dh1' }, () => {
   test(

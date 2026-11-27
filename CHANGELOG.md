@@ -47,6 +47,18 @@ column, every section, normal type — not the phone layout.
   «Font size» reaches them too; `cn` registers them as font sizes so class
   conflicts still resolve to the last override.
 
+### Changed
+
+- The experience block is called «Опыт»/«Experience» in both Dark Heresy
+  editions and in the compact rail (Dark Heresy 1e used to say «Прогресс»), and
+  its three actions are icon buttons with tooltips, so they stay on one row in a
+  narrow panel instead of wrapping into two or three lines. English labels use
+  XP consistently («Add XP», «Spend XP»); Russian skill columns read
+  «Базовые»/«Продвинутые».
+- «Hide notes» now hides the note buttons of characteristics everywhere: the
+  phone band and the tablet/desktop card ignored the flag (only the third code
+  path checked it). The buttons also got accessible names.
+
 ### Fixed
 
 - The compact toggle used to turn a tablet or desktop window into the phone

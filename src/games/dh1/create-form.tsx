@@ -807,9 +807,7 @@ export function DarkHeresyCreateForm({
             />
 
             <div className="space-y-2">
-              <h3 className="text-base font-medium">
-                {t('common.progression')}
-              </h3>
+              <h3 className="text-base font-medium">{t('dh1.experience')}</h3>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <FormField
                   control={form.control}

@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 
-import { BookOpen, Lock } from 'lucide-react';
+import { BookOpen, Lock, Minus, Plus, ScrollText } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -1085,48 +1085,77 @@ export const ProgressionSection = ({
               isCompactView ? 'text-lg' : 'text-2xl',
             )}
           >
-            {t('common.progression')}
+            {t('dh1.experience')}
           </CardTitle>
-          <div className="flex flex-wrap items-center justify-end gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                setAwardAmount('100');
-                setAwardWhat('');
-                setIsAwardOpen(true);
-              }}
-            >
-              {t('dh1.addExperience')}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setIsSpendOpen(true)}
-            >
-              {t('dh1.spendExp')}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setIsJournalOpen(true)}
-            >
-              {t('dh1.experienceLog')}
-            </Button>
-            {(showEditButtons || isProgressionEditing) && (
-              <EditSaveButton
-                editing={isProgressionEditing}
-                onEdit={() => setIsProgressionEditing(true)}
-                onSave={() => {
-                  handleSaveTotalExp();
-                  setIsProgressionEditing(false);
-                }}
-              />
-            )}
-          </div>
+          <TooltipProvider delayDuration={0}>
+            <div className="flex items-center justify-end gap-1.5">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8 shrink-0"
+                    aria-label={t('dh1.addExperience')}
+                    onClick={() => {
+                      setAwardAmount('100');
+                      setAwardWhat('');
+                      setIsAwardOpen(true);
+                    }}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">
+                  {t('dh1.addExperience')}
+                </TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8 shrink-0"
+                    aria-label={t('dh1.spendExp')}
+                    onClick={() => setIsSpendOpen(true)}
+                  >
+                    <Minus className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">
+                  {t('dh1.spendExp')}
+                </TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8 shrink-0"
+                    aria-label={t('dh1.experienceLog')}
+                    onClick={() => setIsJournalOpen(true)}
+                  >
+                    <ScrollText className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">
+                  {t('dh1.experienceLog')}
+                </TooltipContent>
+              </Tooltip>
+              {(showEditButtons || isProgressionEditing) && (
+                <EditSaveButton
+                  editing={isProgressionEditing}
+                  onEdit={() => setIsProgressionEditing(true)}
+                  onSave={() => {
+                    handleSaveTotalExp();
+                    setIsProgressionEditing(false);
+                  }}
+                />
+              )}
+            </div>
+          </TooltipProvider>
         </CardHeader>
         <CardContent className="pt-0">
           <div className="flex flex-col space-y-4">

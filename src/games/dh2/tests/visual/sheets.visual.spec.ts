@@ -107,7 +107,7 @@ test.describe('лист Dark Heresy 2e — чтение', { tag: '@plugin:dh2' }
 
       await screenshotPage(page, 'sheet-dh2-mobile-info-en.png');
 
-      await openMobileSection(page, 'Progression', 'progression-section');
+      await openMobileSection(page, 'Experience', 'progression-section');
       await screenshotPage(page, 'sheet-dh2-mobile-progression-en.png');
 
       await openMobileSection(page, 'Skills', 'skills-section');

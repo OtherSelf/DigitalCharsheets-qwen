@@ -205,7 +205,7 @@ test.describe('добавление оружия на листе DH', { tag: '@p
 
 /**
  * ─── LANDMARK: XP AWARD ───────────────────────────────────────────────────
- * Кнопка «Добавить ОП» рядом со «Spend EXP»: положительное число — награда,
+ * Кнопка «Добавить ОП» рядом со «Spend XP»: положительное число — награда,
  * отрицательное — штраф. Начисление пишется в журнал опыта и увеличивает
  * `experience`; удаление записи из журнала отменяет начисление ровно на её
  * стоимость.
@@ -215,7 +215,7 @@ test.describe('начисление опыта на листе DH', { tag: '@plu
     const progression = page.locator('#progression-section');
     if (!(await progression.isVisible().catch(() => false))) {
       await page
-        .getByRole('button', { name: 'Progression', exact: true })
+        .getByRole('button', { name: 'Experience', exact: true })
         .click();
     }
     await expect(progression).toBeVisible();
@@ -263,7 +263,7 @@ test.describe('начисление опыта на листе DH', { tag: '@plu
     const progression = await openProgression(page);
 
     const labels = {
-      button: 'Add EXP',
+      button: 'Add XP',
       amount: 'XP amount',
       what: 'What was it for',
       confirm: 'Add',

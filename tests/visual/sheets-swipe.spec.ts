@@ -134,7 +134,7 @@ test.describe('правые шторки — свайп', { tag: '@mobile' }, ()
   test('журнал опыта закрывается свайпом', async ({ page, context }) => {
     await prepare(context);
     await openApp(page, sheetPath(getState().dhId));
-    await openMobileSection(page, 'Progression', 'progression-section');
+    await openMobileSection(page, 'Experience', 'progression-section');
 
     await page.getByRole('button', { name: 'XP log' }).click();
     const dialog = page.getByRole('dialog');
