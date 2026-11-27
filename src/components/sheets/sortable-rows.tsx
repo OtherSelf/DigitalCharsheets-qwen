@@ -13,6 +13,7 @@ import {
   type DragEndEvent,
 } from '@dnd-kit/core';
 import {
+  rectSortingStrategy,
   SortableContext,
   sortableKeyboardCoordinates,
   useSortable,
@@ -101,6 +102,12 @@ export interface SortableRowsProps {
   labelById: Readonly<Record<string, string | undefined>>;
   onReorder: (from: number, to: number) => void;
   children: React.ReactNode;
+  /**
+   * Раскладка списка: `vertical` — одна колонка, `grid` — несколько колонок.
+   * Нужна потому, что dnd-kit считает пересечения по-разному: вертикальная
+   * стратегия на сетке даёт «прыжки» и неверные цели.
+   */
+  layout?: 'vertical' | 'grid';
 }
 
 /**
@@ -112,6 +119,7 @@ export function SortableRows({
   labelById,
   onReorder,
   children,
+  layout = 'vertical',
 }: SortableRowsProps) {
   const { t } = useTranslation();
   const sensors = useSensors(
@@ -154,7 +162,12 @@ export function SortableRows({
         },
       }}
     >
-      <SortableContext items={items} strategy={verticalListSortingStrategy}>
+      <SortableContext
+        items={items}
+        strategy={
+          layout === 'grid' ? rectSortingStrategy : verticalListSortingStrategy
+        }
+      >
         {children}
       </SortableContext>
     </DndContext>

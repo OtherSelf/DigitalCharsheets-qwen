@@ -318,6 +318,68 @@ test(
   },
 );
 
+/**
+ * ─── LANDMARK: DH1 TALENTS_GRID ────────────────────────────────────────────
+ * Секция «Умения и таланты» живёт в панели, ширина которой меняется: рядом
+ * стоит снаряжение, которое можно свернуть, а в компактном виде листа панель
+ * занимает всю ширину. Сетка обязана идти по ширине ПАНЕЛИ (контейнерные
+ * запросы), а не окна: иначе на планшете и в компакте карточки талантов
+ * остаются одной узкой колонкой с пустотой справа.
+ */
+test.describe('DH1: сетка умений и талантов', { tag: '@plugin:dh1' }, () => {
+  test(
+    'узкая панель — одна колонка, свёрнутое снаряжение — две',
+    { tag: '@desktop' },
+    async ({ page, context }) => {
+      await prepare(context);
+      await openApp(page, sheetPath(gameCharacterId('dh')));
+
+      const talents = page.locator('#talents-section [class*="talents"]');
+      await expect(talents).toHaveCount(1);
+      const columnCount = () =>
+        talents.evaluate(
+          (element) =>
+            getComputedStyle(element)
+              .gridTemplateColumns.split(' ')
+              .filter(Boolean).length,
+        );
+
+      expect(await columnCount(), 'узкая панель — одна колонка').toBe(1);
+
+      // Таблица умений не должна уезжать в горизонтальный скролл внутри себя.
+      const tableFits = await page.evaluate(() => {
+        const table = document.querySelector<HTMLElement>(
+          '#skills-section table',
+        )!;
+        return (
+          table.offsetWidth <=
+          (table.parentElement as HTMLElement).offsetWidth + 1
+        );
+      });
+      expect(tableFits, 'таблица умений влезает в колонку').toBe(true);
+
+      await page.getByTestId('collapse-equipment-panel').click();
+      await expect.poll(columnCount, { timeout: 5_000 }).toBe(2);
+
+      // Кадр — именно про таланты: подводим секцию к верху, иначе снимок
+      // показывает верх листа и ничего не говорит о второй колонке.
+      await page.evaluate(() => {
+        const main = document.querySelector('main');
+        const section = document.getElementById('talents-section');
+        if (!main || !section) return;
+        const top =
+          section.getBoundingClientRect().top -
+          main.getBoundingClientRect().top +
+          main.scrollTop;
+        main.scrollTo({ top });
+      });
+      await waitForScrollSettled(page);
+      await screenshotPage(page, 'sheet-dh-talents-wide-en.png');
+      await expectNoHorizontalOverflow(page);
+    },
+  );
+});
+
 test.describe('DH1: зарплата', { tag: '@plugin:dh1' }, () => {
   test(
     'кнопка прибавляет месячный доход к капиталу',

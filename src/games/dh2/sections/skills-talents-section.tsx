@@ -60,6 +60,7 @@ import {
   type Skill,
 } from '../types';
 import { EditSaveButton } from './dh-ui-helpers';
+import styles from './skills-talents.module.css';
 
 /**
  * Перестановка внутри одной категории умений (базовые/продвинутые): таблицы
@@ -141,8 +142,8 @@ const SkillTable = ({
               </TableHead>
               <TableHead
                 className={cn(
-                  'w-[52px] px-1 text-center',
-                  compact && 'w-6 p-0 text-[10px]',
+                  'w-11 px-1 text-center',
+                  compact && 'text-10px w-6 p-0',
                 )}
                 title={t('dh2.characteristic')}
               >
@@ -150,8 +151,8 @@ const SkillTable = ({
               </TableHead>
               <TableHead
                 className={cn(
-                  'w-[60px] px-1 text-center',
-                  compact && 'w-6 p-0 text-[10px]',
+                  'w-11 px-1 text-center',
+                  compact && 'text-10px w-6 p-0',
                 )}
                 // На телефоне слово «Умелый» шире самой галочки и съедает
                 // колонку названия: подпись остаётся для скринридера.
@@ -165,16 +166,16 @@ const SkillTable = ({
               </TableHead>
               <TableHead
                 className={cn(
-                  'w-[60px] px-1 text-center',
-                  compact && 'w-6 p-0 text-[10px]',
+                  'w-11 px-1 text-center',
+                  compact && 'text-10px w-6 p-0',
                 )}
               >
                 +10
               </TableHead>
               <TableHead
                 className={cn(
-                  'w-[60px] px-1 text-center',
-                  compact && 'w-6 p-0 text-[10px]',
+                  'w-11 px-1 text-center',
+                  compact && 'text-10px w-6 p-0',
                 )}
               >
                 +20
@@ -182,8 +183,8 @@ const SkillTable = ({
               {showPlus30 && (
                 <TableHead
                   className={cn(
-                    'w-[60px] px-1 text-center',
-                    compact && 'w-6 p-0 text-[10px]',
+                    'w-11 px-1 text-center',
+                    compact && 'text-10px w-6 p-0',
                   )}
                 >
                   +30
@@ -256,7 +257,7 @@ const SkillTable = ({
                               onNameChange(skill.id, e.target.value)
                             }
                             aria-label={t('common.name')}
-                            className="h-8 min-w-[120px] text-xs"
+                            className="h-8 min-w-0 text-xs"
                           />
                         ) : (
                           <p
@@ -284,7 +285,7 @@ const SkillTable = ({
                             aria-label={t('dh2.characteristic')}
                             className={cn(
                               'border-input bg-background focus-visible:ring-ring h-8 rounded-md border px-1 text-xs shadow-sm transition-colors focus-visible:ring-1 focus-visible:outline-none',
-                              compact ? 'w-9' : 'w-[52px]',
+                              compact ? 'w-9' : 'w-11',
                             )}
                           >
                             <option value="">—</option>
@@ -666,7 +667,10 @@ export const SkillsTalentsSection = React.forwardRef<
       !isPhoneView || activeCompactSection === 'talents-section';
 
     return (
-      <div id="skills-talents-content" className="w-full space-y-6">
+      <div
+        id="skills-talents-content"
+        className={cn('w-full space-y-6', styles.section)}
+      >
         <div
           className={cn(
             'bg-card space-y-6 rounded-lg border',
@@ -702,7 +706,7 @@ export const SkillsTalentsSection = React.forwardRef<
               </div>
 
               <CollapsibleContent className="w-full">
-                <div className="grid grid-cols-1 gap-x-8 gap-y-6 md:grid-cols-2">
+                <div className={styles.skills}>
                   {/* BASIC SKILLS */}
                   <div>
                     <h4 className="text-muted-foreground mb-2 font-semibold">
@@ -982,12 +986,13 @@ export const SkillsTalentsSection = React.forwardRef<
                     </div>
                   </div>
                 ) : (
-                  <div className="space-y-3">
+                  <div className={styles.talents}>
                     {(character.talents ?? []).length > 0 ? (
                       <SortableRows
                         ids={talentIds}
                         labelById={talentLabels}
                         onReorder={reorderTalents}
+                        layout="grid"
                       >
                         {character.talents.map((talent) => (
                           <SortableItem

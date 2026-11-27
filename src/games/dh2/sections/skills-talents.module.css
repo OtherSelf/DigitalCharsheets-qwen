@@ -1,0 +1,49 @@
+/*
+  Раскладка секции «Умения и таланты» зависит от ширины ПАНЕЛИ, а не окна:
+  та же секция стоит то в узкой панели рядом со снаряжением, то во всю ширину
+  (соседняя панель свёрнута, компактный вид листа). Медиа-запросы окна об этом
+  не знают, поэтому контейнер — корень секции, а таланты переходят в две
+  колонки только когда места действительно хватает.
+*/
+.section {
+  container-type: inline-size;
+}
+
+.talents {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+}
+
+.talents > * {
+  min-width: 0;
+}
+
+/*
+  Сетка умений тоже живёт по контейнеру: две таблицы рядом только когда каждой
+  хватает места (таблица с колонками-галочками ниже ~22rem начинает скроллиться
+  внутри себя).
+*/
+.skills {
+  display: grid;
+  gap: 1.5rem 2rem;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.skills > * {
+  min-width: 0;
+}
+
+@container (min-width: 47rem) {
+  .skills {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* 44rem — примерно три карточки таланта в ряд по минимальной ширине. */
+@container (min-width: 44rem) {
+  .talents {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
