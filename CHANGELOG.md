@@ -23,28 +23,10 @@ of the app release and remain in the history below.
 No core changes yet. Game plugin changes are listed in the edition changelogs
 above.
 
-## [0.26.2] - 2026-11-27
+## [0.27.0] - 2026-11-28
 
-The sheet view toggle does what its name says on a tablet and a desktop: one
-column, every section, normal type — not the phone layout.
-
-### Changed
-
-- The sheet view toggle collapses the sheet into one column instead of
-  switching to the phone layout. On tablet and desktop every section stays
-  visible, the icon rail is gone, and type, paddings and tables stay normal; the
-  choice is stored in `localStorage` (`sheet-view-compact`), survives a reload
-  and is undone by the same header button.
-- Dashboard cards get denser in the compact view (`16rem` minimum with a
-  tighter gap, so five columns fit at 1440 and six at 1760) and their footer
-  buttons shrink accordingly. The dashboard is not collapsed to one column: the
-  card list is not a sheet.
-- Plugins receive both flags: `isCompactView` (one-column layout) and
-  `isPhoneView` (phone presentation) in `GameSheetProps` and the
-  `HeaderActions` slot. The demo sheet collapses to one column too.
-- «Hide notes» now hides the note buttons of characteristics everywhere: the
-  phone band and the tablet/desktop card ignored the flag (only the third code
-  path checked it). The buttons also got accessible names.
+The interface scale becomes a real zoom and the sheet sections lay themselves
+out by the room they actually have.
 
 ### Added
 
@@ -64,13 +46,39 @@ column, every section, normal type — not the phone layout.
 
 ### Fixed
 
+- «Hide notes» now hides the note buttons of characteristics everywhere: the
+  phone band and the tablet/desktop card ignored the flag (only the third code
+  path checked it). The buttons also got accessible names.
+- Skills tables no longer scroll horizontally inside their own box at 100%: the
+  checkbox columns are 44 px instead of 60, the name field can shrink, and the
+  two tables share the row only when both fit.
+
+## [0.26.2] - 2026-11-27
+
+The sheet view toggle does what its name says on a tablet and a desktop: one
+column, every section, normal type — not the phone layout.
+
+### Changed
+
+- The sheet view toggle collapses the sheet into one column instead of
+  switching to the phone layout. On tablet and desktop every section stays
+  visible, the icon rail is gone, and type, paddings and tables stay normal; the
+  choice is stored in `localStorage` (`sheet-view-compact`), survives a reload
+  and is undone by the same header button.
+- Dashboard cards get denser in the compact view (`16rem` minimum with a
+  tighter gap, so five columns fit at 1440 and six at 1760) and their footer
+  buttons shrink accordingly. The dashboard is not collapsed to one column: the
+  card list is not a sheet.
+- Plugins receive both flags: `isCompactView` (one-column layout) and
+  `isPhoneView` (phone presentation) in `GameSheetProps` and the
+  `HeaderActions` slot. The demo sheet collapses to one column too.
+
+### Fixed
+
 - The compact toggle used to turn a tablet or desktop window into the phone
   layout and the choice stuck for the whole tab: the rail appeared, sections
   were hidden one at a time, and a reload was the only way back. The phone
   presentation now requires a real phone width.
-- Skills tables no longer scroll horizontally inside their own box at 100%: the
-  checkbox columns are 44 px instead of 60, the name field can shrink, and the
-  two tables share the row only when both fit.
 
 ## [0.26.1] - 2026-11-27
 

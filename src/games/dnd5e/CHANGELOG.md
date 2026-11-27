@@ -9,6 +9,17 @@ plugin. The format follows
 when the stored character format changes, and the migration is listed with the
 release that introduced it.
 
+## [Unreleased]
+
+## [1.17.0] - 2026-11-28
+
+### Changed
+
+- The sheet's layout bands are container queries on the app shell instead of
+  media queries, so «UI scale» no longer leaves the desktop grid in a narrower
+  box: at 150% the sheet reflows to the tablet band. Dense labels use the shared
+  `text-8px`…`text-15px` theme tokens, so «Font size» reaches them.
+
 ## [1.16.0] - 2026-11-27
 
 ### Changed
