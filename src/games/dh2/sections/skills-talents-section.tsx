@@ -328,7 +328,6 @@ const SkillTable = ({
                       >
                         <Checkbox
                           checked={training.skilled}
-                          disabled={!editing}
                           aria-label={`${displayName}: ${t('dh2.skilled')}`}
                           onCheckedChange={(c) =>
                             onTrainingChange(skill.id, 'skilled', !!c)
@@ -340,7 +339,7 @@ const SkillTable = ({
                       >
                         <Checkbox
                           checked={training.plus10}
-                          disabled={!editing || !training.skilled}
+                          disabled={!training.skilled}
                           aria-label={`${displayName}: +10`}
                           onCheckedChange={(c) =>
                             onTrainingChange(skill.id, 'plus10', !!c)
@@ -352,7 +351,7 @@ const SkillTable = ({
                       >
                         <Checkbox
                           checked={training.plus20}
-                          disabled={!editing || !training.plus10}
+                          disabled={!training.plus10}
                           aria-label={`${displayName}: +20`}
                           onCheckedChange={(c) =>
                             onTrainingChange(skill.id, 'plus20', !!c)
@@ -365,7 +364,7 @@ const SkillTable = ({
                         >
                           <Checkbox
                             checked={!!training.plus30}
-                            disabled={!editing || !training.plus20}
+                            disabled={!training.plus20}
                             aria-label={`${displayName}: +30`}
                             onCheckedChange={(c) =>
                               onTrainingChange(skill.id, 'plus30', !!c)

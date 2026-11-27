@@ -459,6 +459,45 @@ test.describe(
   },
 );
 
+/*
+    Чекбоксы умений — быстрая отметка, как точки характеристик: работают в
+    просмотре и сохраняются сразу, без режима правки. Кумулятивность остаётся:
+    +10 доступен только после «Умелый».
+  */
+test(
+  'умения: чекбоксы работают без режима правки',
+  { tag: '@desktop' },
+  async ({ page, context }) => {
+    await prepare(context);
+    await openApp(page, sheetPath(gameCharacterId('dh')));
+
+    const row = page.locator('#skills-section tbody tr').first();
+    const skilled = row.getByRole('checkbox').first();
+    const plus10 = row.getByRole('checkbox').nth(1);
+    await expect(skilled).toBeEnabled();
+
+    const before = (await skilled.getAttribute('aria-checked')) === 'true';
+    await skilled.click();
+    await expect(skilled).toHaveAttribute(
+      'aria-checked',
+      before ? 'false' : 'true',
+    );
+    if (before) {
+      await expect(plus10, '+10 ждёт «Умелый»').toBeDisabled();
+    }
+
+    // Отметка сохраняется сразу: после перезагрузки состояние то же.
+    await page.reload();
+    await expect(
+      page
+        .locator('#skills-section tbody tr')
+        .first()
+        .getByRole('checkbox')
+        .first(),
+    ).toHaveAttribute('aria-checked', before ? 'false' : 'true');
+  },
+);
+
 test.describe('DH1: зарплата', { tag: '@plugin:dh1' }, () => {
   test(
     'кнопка прибавляет месячный доход к капиталу',

@@ -49,6 +49,11 @@ column, every section, normal type — not the phone layout.
 
 ### Changed
 
+- Skill training checkboxes («Умелый», +10, +20, +30) work without edit mode,
+  like the characteristic dots: a click saves immediately. Unchecking a level
+  now clears it together with every higher level instead of doing nothing —
+  the closure used to restore the lower flags from the highest one, so the
+  click looked broken.
 - The experience block is called «Опыт»/«Experience» in both Dark Heresy
   editions and in the compact rail (Dark Heresy 1e used to say «Прогресс»), and
   its three actions are icon buttons with tooltips, so they stay on one row in a

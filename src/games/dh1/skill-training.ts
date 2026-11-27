@@ -44,11 +44,22 @@ export function closeTraining(
   };
 }
 
-/** Переключить один уровень тренировки, сохранив кумулятивность. */
+/**
+ * Переключить один уровень тренировки, сохранив кумулятивность.
+ *
+ * Снятие уровня гасит и все последующие: иначе `closeTraining` поднимает
+ * нижние флаги обратно по самому высокому, и клик по «Умелый» при отмеченном
+ * «+10» не делал бы ничего — кнопка выглядела бы сломанной.
+ */
 export function toggleTraining(
   training: Partial<SkillTraining> | undefined,
   key: keyof SkillTraining,
   value: boolean,
 ): SkillTraining {
-  return closeTraining({ ...training, [key]: value });
+  if (value) return closeTraining({ ...training, [key]: true });
+  const next = { ...training };
+  for (const level of TRAINING_KEYS.slice(TRAINING_KEYS.indexOf(key))) {
+    next[level] = false;
+  }
+  return closeTraining(next);
 }
