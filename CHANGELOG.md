@@ -11,6 +11,11 @@ format changes.
 
 ## [Unreleased]
 
+## [0.26.2] - 2026-11-27
+
+The sheet view toggle does what its name says on a tablet and a desktop: one
+column, every section, normal type — not the phone layout.
+
 ### Changed
 
 - The sheet view toggle collapses the sheet into one column instead of
@@ -32,6 +37,11 @@ format changes.
   layout and the choice stuck for the whole tab: the rail appeared, sections
   were hidden one at a time, and a reload was the only way back. The phone
   presentation now requires a real phone width.
+
+### Plugin versions
+
+- dh1 1.18.0, dh2 1.20.0, dnd5e 1.16.0, sandbox 1.6.0: every sheet reads the
+  two flags separately.
 
 ## [0.26.1] - 2026-11-27
 
