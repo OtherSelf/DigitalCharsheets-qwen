@@ -1230,7 +1230,13 @@ export const ProgressionSection = ({
                       data-testid={`rank-choice-${chosenForkId}`}
                       className="text-muted-foreground inline-flex items-center gap-1 text-sm"
                     >
-                      <Lock className="h-3 w-3 shrink-0" aria-hidden />
+                      {!creationReview && (
+                        <Lock
+                          className="h-3 w-3 shrink-0"
+                          aria-hidden
+                          data-testid="rank-choice-lock"
+                        />
+                      )}
                       <span>{t(node.labelKey)}</span>
                       {node.gmApproval && (
                         <span className="text-[10px] font-semibold uppercase">

@@ -60,6 +60,14 @@ format changes.
   forks keep the previous rank until a branch is picked and the Adept
   Chirurgeon alternate returns to Scholar at 3000 XP.
 
+### Fixed
+
+- The chosen career-path chip no longer shows a lock icon while an imported
+  sheet is being reviewed: the choice is editable then, so the chip shows the
+  “Change” action without the lock, and the lock returns after the review is
+  confirmed. The icon used to be static and made the sheet look locked even
+  when it was editable.
+
 ## [0.26.2] - 2026-11-27
 
 The sheet view toggle does what its name says on a tablet and a desktop: one

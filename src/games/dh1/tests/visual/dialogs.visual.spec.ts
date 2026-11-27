@@ -604,6 +604,8 @@ test.describe('DH1: выборы карьерного пути', { tag: '@plugin
     const progression = page.locator('#progression-section');
     const chip = progression.getByTestId(CHOICE);
     await expect(chip).toContainText('Comptroller');
+    // Импортный review разблокирован: замок на чипе не показывается, есть Change.
+    await expect(chip.getByTestId('rank-choice-lock')).toHaveCount(0);
 
     const change = chip.getByRole('button', { name: 'Change', exact: true });
     await expect(change).toBeVisible();
@@ -618,11 +620,13 @@ test.describe('DH1: выборы карьерного пути', { tag: '@plugin
     await expect(
       progression.getByRole('button', { name: 'Change', exact: true }),
     ).toHaveCount(0);
+    await expect(chip.getByTestId('rank-choice-lock')).toHaveCount(1);
 
     await page.reload();
     await expect(page.getByTestId('creation-review-banner')).toHaveCount(0);
     const reloaded = page.locator('#progression-section');
     await expect(reloaded.getByTestId(CHOICE)).toContainText('Lexographer');
+    await expect(reloaded.getByTestId('rank-choice-lock')).toHaveCount(1);
     await expect(
       reloaded.getByRole('button', { name: 'Change', exact: true }),
     ).toHaveCount(0);
