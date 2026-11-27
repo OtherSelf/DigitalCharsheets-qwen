@@ -227,9 +227,19 @@ the index back to LF.
 
 ## Versions and changelog
 
-[`CHANGELOG.md`](../CHANGELOG.md) follows Keep a Changelog 1.1 and Semantic
-Versioning. `Unreleased` collects changes until a release; the release commit
-moves them to a dated version heading and bumps `package.json`/lockfile.
+There are two changelog levels, and they do not mix:
+
+| File | Scope |
+|---|---|
+| [`CHANGELOG.md`](../CHANGELOG.md) | Core app, HTTP API, storage, security, administration, build, documentation and the plugin SDK. |
+| `src/games/<id>/CHANGELOG.md` | One game plugin: its sheet, rules, data, schema and UI. |
+
+Both follow Keep a Changelog 1.1 and Semantic Versioning. `Unreleased`
+collects changes until a release; the release commit moves them to a dated
+version heading and bumps the corresponding version — `package.json` and the
+lockfile for the app, `plugin.json` for a game. Changelog text is not a test
+target: `npm run verify` still runs for the release, but no check parses these
+files.
 
 The app version follows the owner's rules, not "features vs fixes":
 
@@ -245,17 +255,32 @@ The app version follows the owner's rules, not "features vs fixes":
 
 Versions are independent:
 
-| Axis | Source | When to bump |
-|---|---|---|
-| App | `package.json#version` | By the MAJOR/MINOR/PATCH rules above; MAJOR and MINOR only with the owner. |
-| Game edition (plugin) | `plugin.json#version` | Any change inside `src/games/<id>/`; one minor per release, even if several books are added. |
-| Sheet format | `plugin.json#schemaVersion` and `schema-version.ts` | Only when the stored character format changes; migrations must follow. |
-| Plugin API | `PLUGIN_API_VERSION` in `scripts/plugins/generate.mjs` | Additive SDK change → minor (1.2.0); breaking runtime contract → major. |
-| Manifest format | `PLUGIN_MANIFEST_VERSION` + `plugin.schema.json` | Breaking manifest schema (e.g. a new required field) → next integer (2). |
+| Axis | Source | Changelog | When to bump |
+|---|---|---|---|
+| App | `package.json#version` | root `CHANGELOG.md` | By the MAJOR/MINOR/PATCH rules above; MAJOR and MINOR only with the owner. |
+| Game edition (plugin) | `plugin.json#version` | `src/games/<id>/CHANGELOG.md` | Any change inside `src/games/<id>/`; one minor per release, even if several books are added. |
+| Sheet format | `plugin.json#schemaVersion` and `schema-version.ts` | that plugin's `CHANGELOG.md` | Only when the stored character format changes; migrations must follow. Describe the migration in the same section. |
+| Plugin API | `PLUGIN_API_VERSION` in `scripts/plugins/generate.mjs` | root `CHANGELOG.md` | Additive SDK change → minor (1.2.0); breaking runtime contract → major. |
+| Manifest format | `PLUGIN_MANIFEST_VERSION` + `plugin.schema.json` | root `CHANGELOG.md` | Breaking manifest schema (e.g. a new required field) → next integer (2). |
 
-Game families have no separate version: their id/order/name/description come
-from the `game` block of the manifests and are regenerated. A release with
-`CHANGELOG.md` changes is verified with `npm run verify` and the visual suite.
+What belongs where:
+
+- A change inside `src/games/<id>/` — sheet, section, game data, game
+  dictionary, plugin test — is described in that plugin's changelog. It does
+  not appear in the root file.
+- A core change — auth, API, storage, security, admin, build, docs, shared UI,
+  plugin SDK — is described in the root file. When it changes what plugins
+  must do, the root entry owns the host contract; a plugin that adapts its own
+  code gets a short entry in its own changelog and a version bump.
+- A release that changed only games keeps its app version heading in the root
+  file with a pointer to the game changelog and no game details.
+- Do not list `plugin.json` versions in the root file. Do not copy core, API
+  or security changes into a game changelog.
+- A game changelog starts at the first `plugin.json#version` of that plugin.
+  Earlier game work was part of the app release and remains in the root
+  history.
+- Game families have no separate version: their id/order/name/description come
+  from the `game` block of the manifests and are regenerated.
 
 ## Related
 

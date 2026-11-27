@@ -19,6 +19,7 @@ The standard is enforced by `npm run plugins:layout` (a step of
 ```text
 src/games/<id>/
   plugin.json              manifest: metadata, entry points, slots, theme
+  CHANGELOG.md             plugin history, version = plugin.json#version
   index.ts                 GameModule + named entry points from the manifest
   types.ts                 sheet type, extends CharacterRecord
   schema.ts                zod schema (loose top level, bounded domains)
@@ -48,12 +49,18 @@ src/games/<id>/
 ```
 
 Every path in the tree above is required by the gate except `sections/`,
-`slots/`, the visual trio (which becomes required as a set as soon as one
-of its files exists) and `tests/fixtures/*.json`, which is optional data for
-the edition's own unit tests. `tests/unit/module.test.ts` and
+`slots/`, `CHANGELOG.md` (documentation, not gated), the visual trio (which
+becomes required as a set as soon as one of its files exists) and
+`tests/fixtures/*.json`, which is optional data for the edition's own unit
+tests. `tests/unit/module.test.ts` and
 `tests/unit/contract.test.ts` are required once the plugin is visible
 (`defaultStatus` is not `hidden`) or reaches version 1.0; a hidden `0.x`
 scaffold may start without them.
+
+Each visible plugin keeps a `CHANGELOG.md` scoped to that plugin and versioned
+by `plugin.json#version`; the root `CHANGELOG.md` covers the app and the Plugin
+SDK. See [development.md](development.md#versions-and-changelog) for what
+belongs where.
 
 ## Required files and why
 

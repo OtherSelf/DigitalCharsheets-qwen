@@ -1,72 +1,27 @@
 # Changelog
 
-All notable player-facing and operator-facing changes to Digital Character
-Sheets. The format follows [Keep a Changelog 1.1](https://keepachangelog.com/en/1.1.0/),
-versions follow [Semantic Versioning](https://semver.org/), and the released
-version is the `version` field in `package.json`.
+All notable player-facing and operator-facing changes to the Digital Character
+Sheets core: the app, HTTP API, storage, security, administration, build,
+documentation and the plugin SDK. The format follows
+[Keep a Changelog 1.1](https://keepachangelog.com/en/1.1.0/), versions follow
+[Semantic Versioning](https://semver.org/), and the released version is the
+`version` field in `package.json`.
 
-Plugin versions are separate from the app version. A release note lists them
-when they change; sheet `schemaVersion` only changes when the stored character
-format changes.
+Game plugins have their own versions and changelogs:
+
+- [Dark Heresy 1st Edition](src/games/dh1/CHANGELOG.md) — `dh1`
+- [Dark Heresy 2nd Edition](src/games/dh2/CHANGELOG.md) — `dh2`
+- [Dungeons & Dragons 5th Edition](src/games/dnd5e/CHANGELOG.md) — `dnd5e`
+- [Sandbox](src/games/sandbox/CHANGELOG.md) — `sandbox`
+
+This file does not list plugin versions or game-specific changes after 0.7.0.
+Before 0.7.0, when plugins had no versions of their own, game changes were part
+of the app release and remain in the history below.
 
 ## [Unreleased]
 
-### Changed
-
-- Dark Heresy 1e shows the current rank everywhere: the header, the dashboard
-  card, the JSON/Excel export and the sheet compute `rank` and
-  `characterClass` from the career, spent XP and the chosen advanced/alternate
-  paths instead of using the snapshot stored at creation. The experience block
-  and the header can no longer disagree (`Adept` with 2200 XP used to show
-  `Scholar` in the header and `Inditor` in the block). Sheet `schemaVersion`
-  is now `8`: the startup pass recomputes stale values, leaves a `.bak` next to
-  the sheet and appends a `migration` marker to its history. A sheet without a
-  known career keeps its legacy rank (`Acolyte`), and the plugin version is
-  `1.19.0`.
-- Dark Heresy 1e career path choices are stored in `rankChoices` (`schemaVersion`
-  is now `9`) and locked once chosen: the sheet opens a dialog when experience
-  reaches a mandatory fork, keeps the previous rank until a branch is picked,
-  and offers an “Alternate Rank” button where a standard path already works.
-  The choice survives an experience drop and can be changed only while
-  reviewing an imported sheet. Old `advancedPath`/`alternatePath` values are
-  migrated into the map and stay in the document for old exports. The plugin
-  version is `1.20.0`.
-- Dark Heresy 1e gets the 15 alternate career ranks from the Inquisitor's
-  Handbook (Table 2-3): Black Priest of Maccabeus, Bonded Emissary, Calixian
-  Xeno-Arcanist, Chaliced Commissariat, Feral Warrior, Legate Investigator,
-  Malfian Bloodsworn, Metallican Gunslinger, Mechanicus Sectutor, Moritat
-  Reaper, Reclaimator, Sister Oblatia, Templar Calix, Tyrantine Shadow Agent
-  and Warden/Divisio Immoralis. Each is offered where the book allows it, at
-  its minimum rank, with a “Requires GM approval” mark; the standard rank stays
-  the default and the choice is locked like any other career path. Later ranks,
-  structured prerequisites and unique advances are intentionally not modelled.
-  The plugin version is `1.22.0`.
-- The Adepta Sororitas is available as a ninth, optional Dark Heresy 1e
-  career (Inquisitor's Handbook): `Novice` through `Legatine`, three branches
-  at 2000 XP and convergence at `Superior` 8000, with the starting package,
-  `70+2d10` starting wealth and the book's creation rules. The creation form
-  hard-locks only the gender (female) and filters the four native worlds
-  (Feral, Imperial, Schola Progenium, Noble Born); the book's ban on Corruption
-  and the GM permission are small hints, not a checkbox or a blocked submit,
-  because the table may allow an exception. Insanity is not restricted by the
-  book. The plugin version is `1.21.0`.
-- Character creation in both editions no longer asks for “XP spent”: a new
-  sheet starts at 0 and the field remains on the sheet, in the API and in
-  imported sheets, where it belongs to progression rather than to the starting
-  character.
-- Dark Heresy 1e rank names follow the English book: `Savant Warrant`,
-  `Preceptor-Savant`, `Shock Trooper` and `Storm Trooper` (Russian labels are
-  unchanged). The career ladder is one generated rank graph now, so mandatory
-  forks keep the previous rank until a branch is picked and the Adept
-  Chirurgeon alternate returns to Scholar at 3000 XP.
-
-### Fixed
-
-- The chosen career-path chip no longer shows a lock icon while an imported
-  sheet is being reviewed: the choice is editable then, so the chip shows the
-  “Change” action without the lock, and the lock returns after the review is
-  confirmed. The icon used to be static and made the sheet look locked even
-  when it was editable.
+No core changes yet. Game plugin changes are listed in the edition changelogs
+above.
 
 ## [0.26.2] - 2026-11-27
 
@@ -87,6 +42,9 @@ column, every section, normal type — not the phone layout.
 - Plugins receive both flags: `isCompactView` (one-column layout) and
   `isPhoneView` (phone presentation) in `GameSheetProps` and the
   `HeaderActions` slot. The demo sheet collapses to one column too.
+- «Hide notes» now hides the note buttons of characteristics everywhere: the
+  phone band and the tablet/desktop card ignored the flag (only the third code
+  path checked it). The buttons also got accessible names.
 
 ### Added
 
@@ -104,23 +62,6 @@ column, every section, normal type — not the phone layout.
   «Font size» reaches them too; `cn` registers them as font sizes so class
   conflicts still resolve to the last override.
 
-### Changed
-
-- Skill training checkboxes («Умелый», +10, +20, +30) work without edit mode,
-  like the characteristic dots: a click saves immediately. Unchecking a level
-  now clears it together with every higher level instead of doing nothing —
-  the closure used to restore the lower flags from the highest one, so the
-  click looked broken.
-- The experience block is called «Опыт»/«Experience» in both Dark Heresy
-  editions and in the compact rail (Dark Heresy 1e used to say «Прогресс»), and
-  its three actions are icon buttons with tooltips, so they stay on one row in a
-  narrow panel instead of wrapping into two or three lines. English labels use
-  XP consistently («Add XP», «Spend XP»); Russian skill columns read
-  «Базовые»/«Продвинутые».
-- «Hide notes» now hides the note buttons of characteristics everywhere: the
-  phone band and the tablet/desktop card ignored the flag (only the third code
-  path checked it). The buttons also got accessible names.
-
 ### Fixed
 
 - The compact toggle used to turn a tablet or desktop window into the phone
@@ -130,11 +71,6 @@ column, every section, normal type — not the phone layout.
 - Skills tables no longer scroll horizontally inside their own box at 100%: the
   checkbox columns are 44 px instead of 60, the name field can shrink, and the
   two tables share the row only when both fit.
-
-### Plugin versions
-
-- dh1 1.18.0, dh2 1.20.0, dnd5e 1.16.0, sandbox 1.6.0: every sheet reads the
-  two flags separately.
 
 ## [0.26.1] - 2026-11-27
 
@@ -244,8 +180,6 @@ survives account deletion.
   `dcsheets.space` / `dev.dcsheets.space` with ready nginx `301` redirects that
   keep path and query, HSTS only on the new names and one re-login after the
   move.
-- Plugin versions are unchanged (`dh1` 1.17.0, `dh2` 1.19.0, `dnd5e` 1.15.0,
-  `sandbox` 1.5.0) because `src/games` was not touched in this release.
 
 ### Fixed
 
@@ -286,106 +220,49 @@ The public instance gets a privacy policy and an explicit consent step.
 
 ## [0.24.1] - 2026-11-26
 
-### Fixed
-
-- Four epic boon descriptions (Fortitude, Irresistible Offense, Skill
-  Proficiency, Truesight) still carried rulebook wording; they are now short
-  mechanical statements like the other boons.
-
-### Plugin versions
-
-- dnd5e 1.15.0.
+No core changes. The D&D 5e plugin changed; see
+[`dnd5e`](src/games/dnd5e/CHANGELOG.md).
 
 ## [0.24.0] - 2026-11-26
 
-The catalog keeps the rules, not the book prose.
-
-### Changed
-
-- DH2 home world and background bonuses (15 + 14) are written as short
-  mechanical statements instead of book wording; ids, numbers and prerequisites
-  are unchanged.
-- D&D 5e epic boon descriptions (22) are short mechanical statements; names and
-  keys are unchanged.
-
-### Plugin versions
-
-- dh2 1.19.0, dnd5e 1.14.0.
+No core changes. The Dark Heresy 2e and D&D 5e plugins changed; see
+[`dh2`](src/games/dh2/CHANGELOG.md) and [`dnd5e`](src/games/dnd5e/CHANGELOG.md).
 
 ## [0.23.0] - 2026-11-25
 
-Dark Heresy sheets keep the phrase a player saw, while the built-in text
-becomes an example.
-
-### Changed
-
-- DH1/DH2 divination and role texts are replaced with invented examples. A
-  sheet shows `divinationText`/`divinationEffectText` (both locales) when the
-  0.22.0 backfill filled them, otherwise the example with a "Sample" badge.
-- Divination is edited as text in the sheet; the row picker stays for creation
-  and import review and resets the frozen text when the row changes.
-- Divination options show the d100 range (`02–03 · …`); DH1 ranges come from
-  table 1-18.
-- Startup logs a warning when a pre-0.23.0 sheet still has a divination id
-  without frozen text.
+The API allowlist keeps optional frozen-text fields when a sheet is saved.
 
 ### Fixed
 
 - `divinationText`/`divinationEffectText` were dropped by the API allowlist on
   save; the zod schemas now include them.
 
-### Plugin versions
-
-- dh1 1.17.0, dh2 1.18.0.
-
 ## [0.22.0] - 2026-11-25
 
-Dark Heresy sheets keep the divination text a player already sees, ahead of
+A backfill script can freeze the game text a player already sees, ahead of
 removing book text from the build.
 
 ### Added
 
-- `divinationText` and `divinationEffectText` on Dark Heresy sheets: optional
-  localized (`en`/`ru`) copies of the phrase and effect shown in the sheet. A
-  sheet that has them renders them instead of the dictionary text.
 - `npm run legal:backfill`: freezes the phrase and effect in existing sheets in
   both locales, skips demo sheets, resolves legacy sheets by manifest aliases
   and by phrase, supports `--dry-run`, `--backup`, `--explain`. Idempotent.
 - Deployment notes describe the order: run the backfill after 0.22.0 and again
   right before 0.23.0.
 
-### Changed
-
-- Sheet `schemaVersion`: DH1 6 → 7, DH2 5 → 6. The new migration steps are
-  no-ops; older sheets stay valid and are migrated on first open. The bump keeps
-  a pre-0.22.0 build from stripping the frozen fields on save.
-- Portable JSON export carries the frozen text next to the divination id.
-
-### Plugin versions
-
-- dh1 1.16.0, dh2 1.17.0.
-
 ## [0.21.0] - 2026-11-25
 
-Dark Heresy sheets can be ordered by hand, and the 1e legacy block moves into
-the notes.
+Sheets can be ordered by hand, and panels collapse toward the edge they will
+occupy.
 
 ### Added
 
-- A skill characteristic: `Skill.characteristic` (a code from `stats`) replaces
-  the `(Инт)` suffix in the name, the DH1/DH2 skill table gained a "Хар."
-  column, notes became an icon next to the name, the Excel export carries the
-  characteristic and history shows its code. An old suffix is parsed for display
-  only and moved into the field by the next edit.
 - Reordering where it matters: skills (basic and advanced lists separately),
   talents, inventory and quest journal rows drag with a shared `sortable-rows`
   helper — pointer with an 8 px threshold, keyboard sensor, screen-reader
   announcements, a 24×24 handle on the desktop and 32 px on the phone. The order
   is saved as an ordinary sheet update, and the journal's up/down arrows are
   gone.
-- Weapons reorder by dragging: melee and ranged are one visible list, dropping
-  onto the other group moves the weapon and flips "Equipped", and the array
-  stays grouped. In edit mode "Add weapon" now sits above the list.
 - Conditions have their own Edit/Save button independent of "Info", and `kind`
   gained `implant`/`blessing` with a positive badge driven by a prop, so the core
   does not name games.
@@ -396,11 +273,6 @@ the notes.
 
 ### Changed
 
-- The DH1 sheet format is now `schemaVersion` 6: `migrateDh1V5toV6` moves
-  `traits`, `eliteAdvances`, Insanity degree/modifier and Corruption degree/test
-  into a "Наследие" notes tab (`noteTabs`, id `dh1-legacy`) and removes them
-  from the sheet, the UI and the JSON export; importing an older file still
-  accepts them.
 - Panels collapse towards the edge they will occupy, so the cursor does not
   travel across the screen; house rules write to the sheet immediately and lost
   their "Save changes" button; the sort handle is a narrow cell without a box
@@ -409,8 +281,6 @@ the notes.
 - "Hide notes" and "Hide edit buttons" now also cover the DH characteristics in
   the middle panel and the compact bar, the D&D compact bar and the companion
   sheet.
-- Plugin versions: `dh1` 1.15.0, `dh2` 1.16.0, `dnd5e` 1.13.0 (`sandbox` stays
-  1.5.0). `PLUGIN_API_VERSION` (`1.4.0`) is unchanged.
 
 ### Fixed
 
@@ -475,14 +345,9 @@ becomes a workspace.
   accent respects the admin "core styles" flag.
 - The header's home icon is a house instead of a shield; the shield stays for the
   admin entry in the profile menu.
-- Dark Heresy armour type reads `Flak` and a legacy `Flack` value is translated;
-  D&D alignment wraps to two lines instead of being cut.
 - Repository links point to `https://github.com/digitalcharsheets/digital-character-sheets`.
 - New dependencies: `@dnd-kit/core`, `@dnd-kit/sortable`, `@dnd-kit/utilities`
   (runtime) and `@axe-core/playwright` (dev).
-- Plugin versions: `dh1` 1.14.0, `dh2` 1.15.0, `dnd5e` 1.12.0, `sandbox` 1.5.0.
-  Sheet `schemaVersion` (Dark Heresy `5`, D&D 5e `2`, sandbox `3`) and
-  `PLUGIN_API_VERSION` (`1.4.0`) are unchanged.
 
 ### Fixed
 
@@ -542,19 +407,13 @@ Two-factor sign-in, an archive with a 14-day trash, and a security pass.
   residual risk is written down in `docs/security.md`.
 - The phone `/share` page uses the same read-only compact rail as the owner
   instead of a full desktop sheet.
+- The quest journal has a visible delete-target action, quest confirmation and
+  a progress bar; the creation wizard has one header per step and “Back”
+  outside the card; a session's history changes are listed newest first with a
+  line-by-line diff for text values.
 - The import dialog has a localized drop zone instead of a native file input, so
   no Russian browser strings leak into the English UI; confirmation dialogs are
   `role="alertdialog"`, and Esc or a click outside closes them.
-- Dark Heresy wounds accept negative values down to `-max`; DH1 Rank is readable
-  and asks for the advanced path once in a dialog; DH2 ranged weapons carry
-  armour penetration in the type, schema, cards, Excel and demo; the quest
-  journal has a visible delete-target action, quest confirmation and a progress
-  bar; the creation wizard has one header per step and "Back" outside the card;
-  a session's history changes are listed newest first with a line-by-line diff
-  for text values.
-- Plugin versions: `dh1` 1.13.0, `dh2` 1.14.0, `dnd5e` 1.11.0, `sandbox` 1.4.0.
-  Sheet `schemaVersion` (Dark Heresy `5`, D&D 5e `2`, sandbox `3`) and
-  `PLUGIN_API_VERSION` (`1.4.0`) are unchanged.
 
 ### Fixed
 
@@ -590,20 +449,9 @@ Two-factor sign-in, an archive with a 14-day trash, and a security pass.
   `src/games/dh{1,2}/tests/fixtures/`, `makeCharacter` builds a sheet through the
   plugin's `createDefaults`, and the per-edition factories
   `makeDndCharacter`/`makeDhCharacter` are gone.
-- Plugin versions: `dh1` 1.12.0, `dh2` 1.13.0, `dnd5e` 1.10.0, `sandbox` 1.3.0.
-  Sheet `schemaVersion` (Dark Heresy `5`, D&D 5e `2`, sandbox `3`) and
-  `PLUGIN_API_VERSION` (`1.4.0`) are unchanged.
 
 ### Fixed
 
-- DH1 rejected a negative experience cost: the UI stores a penalty as a negative
-  `cost`, but the schema required `>= 0`, so the write failed and the experience
-  did not change. The field now accepts down to `-10 000 000`, and the visual
-  scenario for an award plus a penalty starts from 100 XP.
-- The sandbox sheet on a phone: `#info-section` now exists, so the
-  compact-navigation item lands on the section instead of a `console.warn`;
-  rank and notes are read-only outside edit mode like the real editions, the
-  rank field has a label, and stat values carry hover titles.
 - The notes preview no longer pushes Save/Cancel off the screen: the header and
   the bottom bar keep their size and the scroll area may shrink, so a long
   markdown document leaves both buttons in the viewport at 412×500.
@@ -629,17 +477,11 @@ Two-factor sign-in, an archive with a 14-day trash, and a security pass.
 - API routes use shared `jsonError` and `withOwnedCharacter`/`withOwner`
   helpers: 56 inline `success: false` envelopes across 14 routes went through
   them, with response shapes and `Retry-After` unchanged.
-- The DH2 data pack is decoupled from a local checkout: `generate.mjs` reads
-  only `DCS_CONTENT_DIR` (default `./content/dh2`), the freshness test skips
-  without it, and the regenerated `dh2e-*` files no longer mention a workspace.
 - Duplicated helpers are now single: password/secret verification shares one
   hash parser and constant-time compare, `derive` apply and heal share one
   scenario, history diff and session share `deepEqual`, the delete dialog,
   share actions and `postAuth` have one implementation each, and the scripts
   share `common.sh`, `wait-http.sh`, `self-copy.sh` and one source scanner.
-- Plugin versions: `dh2` 1.12.0 (regenerated data pack); `dh1` 1.11.0,
-  `dnd5e` 1.9.0 and `sandbox` 1.2.0 are unchanged. Sheet `schemaVersion` and
-  `PLUGIN_API_VERSION` (`1.4.0`) are unchanged.
 
 ### Fixed
 
@@ -676,17 +518,10 @@ Two-factor sign-in, an archive with a 14-day trash, and a security pass.
 
 ## [0.18.0] - 2026-11-22
 
-A one-click salary, a branded page for every error status, and a sandbox that
-shows the whole SDK.
+Branded error pages, shared field limits and a plugin layout gate.
 
 ### Added
 
-- Dark Heresy 1e: a **Collect salary** button adds the monthly income to the
-  character's thrones in one operation and stays hidden while the income is
-  zero. The payout is additive and clamped to whole non-negative thrones below
-  the field ceiling; the capital and income inputs clamp too, and the edit
-  snapshot is taken from the current sheet so a save cannot roll the payout
-  back. No new fields, `schemaVersion` stays `5`.
 - Branded error pages for every status the app can answer — 400, 401, 403, 404,
   409, 413, 429, 500 and 503 — each with an explanation, the code and a sensible
   action (`src/lib/error-pages.ts`, `error-screen.tsx`). An unknown route gets a
@@ -702,24 +537,12 @@ shows the whole SDK.
   `400 invalid_payload` with issues, and the create forms carry the same limits
   (`min`/`max`/`step`/`maxLength`, `noValidate`), so the player sees the
   localized message instead of the browser bubble.
-- The sandbox is now the full SDK reference: `schemaVersion` 3 with a 2→3
-  migration, `import`/`derive`/`derived`, all six UI slots, the complete theme
-  token set, a derived total, a nested companion entity, history, a legacy
-  import, a house-rules dialog and `CreateFormCompletion.openNotes` — one small
-  game that exercises every optional branch of the contract.
 - `npm run plugins:layout`, a gate over the canonical skeleton documented in the
   new `docs/plugin-layout.md`: required files, test names without the edition
   prefix, visual fixtures and a favicon. It runs in `npm run verify`, and the
   three shipped editions were aligned to it — D&D 5e gained `schema-version.ts`,
   DH tests dropped the `dh1-`/`dh2-` prefixes, `slots.tsx` became
   `slots/index.tsx`.
-
-### Changed
-
-- Plugin versions: `dh1` 1.11.0, `dh2` 1.11.0, `dnd5e` 1.9.0, `sandbox` 1.2.0 —
-  the sandbox also moved its `schemaVersion` from 2 to 3 with a migration. The
-  Dark Heresy (`5`) and D&D 5e (`2`) sheet formats and `PLUGIN_API_VERSION`
-  (`1.4.0`) are unchanged.
 
 ## [0.17.0] - 2026-11-22
 
@@ -764,14 +587,10 @@ origin.
   second React or Next). `next.config.ts` wraps the existing config with
   `createMDX()`, and the generated `.source/` types are ignored by git,
   Prettier and ESLint.
-- Plugin versions are unchanged (`dh1` 1.10.0, `dh2` 1.10.0, `dnd5e` 1.8.0,
-  `sandbox` 1.1.0) because `src/games` was not touched. The sheet `schemaVersion`
-  (Dark Heresy `5`, D&D 5e `2`) and `PLUGIN_API_VERSION` (`1.4.0`) are
-  unchanged too.
 
 ## [0.16.2] - 2026-11-22
 
-A dead-code gate, a lighter repository and three phone fixes.
+A dead-code gate and a lighter repository.
 
 ### Added
 
@@ -783,10 +602,6 @@ A dead-code gate, a lighter repository and three phone fixes.
   shadcn kit are exempt; `test-only` has a ceiling (81) so a new test-only
   symbol is a deliberate change. At the moment of the release 5 exports remain
   dead and all of them are the allowlisted public `plugin-api` surface.
-- A D&D 5e dictionary guard: every `dnd.*`/`dnd5e.*` key must be used somewhere
-  in the code (literals, template prefixes, the `…Desc` family by rule). Nine
-  unused keys were removed, including `dnd.neutralGood`, whose Russian value
-  carried a typo.
 
 ### Changed
 
@@ -801,9 +616,6 @@ A dead-code gate, a lighter repository and three phone fixes.
   from the pre-server era, unused schemas and export types, DH2 aptitude and
   divination helper exports, and `use-host-theme.ts`. The test-only
   server-storage factories moved to `tests/support/server-storage.ts`.
-- Plugin versions: `dh1` 1.10.0, `dh2` 1.10.0, `dnd5e` 1.8.0 (`sandbox` stays
-  1.1.0). The sheet `schemaVersion` (Dark Heresy `5`, D&D 5e `2`) and
-  `PLUGIN_API_VERSION` (`1.4.0`) are unchanged.
 
 ### Fixed
 
@@ -818,10 +630,6 @@ A dead-code gate, a lighter repository and three phone fixes.
   `SheetContent` mounted, so the drag offset and the dismissing state outlived
   the gesture and the panel opened off-screen; both are reset after the close
   and on `onOpenAutoFocus`.
-- On the phone the Dark Heresy hit-location block is its own full-width card in
-  the Information column instead of being squeezed inside the Info card, where
-  its heading dropped to 9 px and wrapped. The compact-navigation anchor still
-  points at the column, so scrolling to "Info" includes the locations.
 
 ## [0.16.1] - 2026-11-22
 
@@ -893,10 +701,6 @@ re-downloading.
   the read cache only knows this process's writes and per-sheet locks are
   in-process, so `pm2 cluster`, several systemd instances or workers on one
   data dir are unsupported.
-- Plugin versions are unchanged: `dh1` 1.9.0, `dh2` 1.9.0, `dnd5e` 1.7.0,
-  `sandbox` 1.1.0 — only their unit and visual tests were touched. The sheet
-  `schemaVersion` (Dark Heresy `5`, D&D 5e `2`) and `PLUGIN_API_VERSION`
-  (`1.4.0`) are unchanged.
 
 ### Fixed
 
@@ -938,9 +742,6 @@ A public about page and a core footer, and the phone gets layouts that fit.
   `use-mobile.tsx` (a second copy of 768) were removed, and the manual
   `viewport`/`title` tags in the root layout gave way to the `metadata` and
   `viewport` exports.
-- Plugin versions: `dh1` 1.9.0, `dh2` 1.9.0, `dnd5e` 1.7.0 (`sandbox` stays
-  1.1.0). The sheet `schemaVersion` is unchanged (Dark Heresy `5`, D&D 5e `2`),
-  and `PLUGIN_API_VERSION` stays `1.4.0`.
 
 ### Fixed
 
@@ -960,10 +761,6 @@ A public about page and a core footer, and the phone gets layouts that fit.
   icons are 40×40, the D&D inspiration `±` and the rail buttons are at least
   32×32 with accessible names, and the DH characteristic dots keep their 12 px
   look inside a 24×24 hit area, so a tap 10 px off centre still counts.
-- D&D "Add Companion" no longer covers the "Companions" heading and stays on its
-  own line when the width is short; the inspiration pill is a labelled group;
-  captions that were clipped ("FATE POIN…", "Passive Wisdom (Perception)",
-  "Proficiency Bonus") wrap or get a hover title.
 - The demo buttons on the landing wrap their captions, so the Russian
   "Dungeons & Dragons · 5-я редакция" no longer pushes the grid 8 px past
   `main`.
@@ -973,20 +770,10 @@ A public about page and a core footer, and the phone gets layouts that fit.
 
 ## [0.14.0] - 2026-11-21
 
-Every shipped game gets its own typeface, and right sheets close with a swipe.
+Right sheets close with a swipe, and plugins can opt into their own theme font.
 
 ### Added
 
-- Dark Heresy 1e gets its own theme: a gold accent palette for both modes, a
-  matching border and focus ring, and a smaller radius. It was the last shipped
-  game still drawn in the host indigo.
-- Theme fonts in the shipped games: Cormorant Garamond (DH1), Cormorant SC
-  (DH2), Forum (D&D 5e and the sandbox). Each plugin keeps two `woff2` subsets
-  and the `OFL.txt` licence in `assets/`, declares `@font-face` with a Cyrillic
-  `unicode-range` in its sheet CSS module and opts in through `ui.theme.font`,
-  so the files load with the sheet chunk instead of every page. The theme wrapper
-  exposes `data-font-expected` and `data-font-ready`, and a screenshot waits for
-  both plus `document.fonts.ready`, so a baseline never catches the host face.
 - A plugin may import `next/font/local` (exact match; the rest of `next/*` stays
   forbidden) when it prefers that route. `@font-face` in the game's CSS module
   remains the recommendation: Turbopack hoists the CSS and preload links of a
@@ -1002,16 +789,6 @@ Every shipped game gets its own typeface, and right sheets close with a swipe.
   fields, selects and contenteditable areas are exempt, and vertical scrolling
   stays with the browser; the close button, Escape and the overlay still work.
 
-### Changed
-
-- Plugin versions: `dh1` 1.8.0, `dh2` 1.8.0, `dnd5e` 1.6.0, `sandbox` 1.1.0.
-  The sheet `schemaVersion` is unchanged (Dark Heresy `5`, D&D 5e `2`), and
-  `PLUGIN_API_VERSION` stays `1.4.0`.
-- DH1 and DH2 inventory totals multiply a row's weight (and, for DH1, its price)
-  by the row's quantity: the stored numbers are per unit. There is no migration
-  — a row without a quantity reads as 1, so only rows already at 2 or more
-  change their totals.
-
 ### Fixed
 
 - A guest share link is interactive again. The sheet is no longer `inert`:
@@ -1019,13 +796,10 @@ Every shipped game gets its own typeface, and right sheets close with a swipe.
   the narrative and experience log stay in view mode, so collapsing a section,
   opening info popovers and switching the history tab work again. Server-side
   write protection and the no-op mutations are unchanged.
-- The inventory edit fields are labelled "Qty / Weight, kg / Price, thrones"
-  (DH1) and "Qty / Weight, kg" (DH2) instead of three bare numbers that differed
-  only by their order.
 
 ## [0.13.0] - 2026-11-20
 
-Each game gets its own palette, and the sandbox game ships.
+Plugins can theme their own sheet, and the core stops importing game folders.
 
 ### Added
 
@@ -1034,28 +808,29 @@ Each game gets its own palette, and the sandbox game ships.
   sheet page applies them for that game only. Plugin API is now 1.4.0, and a
   plugin may ship a theme font that is loaded lazily (a failed chunk keeps the
   host fonts).
-- Dark Heresy 2e (terracotta on parchment), D&D 5e (deep carmine with pink
-  frames and a matching focus ring) and the sandbox game (green) no longer use
-  the host indigo palette on their sheets; cards stay as they were and the
-  radius comes from the token set.
-- The permanent test game "Sandbox" (`defaultStatus: test`): a real plugin in
-  the shipped build with its own schema, defaults, demo, export/Excel, migration,
-  dictionaries, UI slots, scoped theme and favicon. Testers and admins see it,
-  regular users do not by default, and its visibility is managed like any game.
 - Two core-purity gates: the core may not import a game folder
   (`check-core-imports.mjs`), and core CSS or string literals may not name a
   game (`check-core-purity.mjs`, with a ratchet for the current debt).
 
 ### Changed
 
-- Plugin versions: `dh1` 1.7.0, `dh2` 1.7.0, `dnd5e` 1.5.0 (`sandbox` ships at
-  1.0.0). The sheet `schemaVersion` is unchanged (Dark Heresy `5`, D&D 5e `2`).
 - Games are independent copies: Dark Heresy family rules live inside each
-  edition instead of `src/games/shared`, sheet styles are CSS modules per game,
-  and the 2e data generator moved to `src/games/dh2/scripts` — no game scripts
-  or game paths remain in the repo root or in `predeploy.sh`.
+  edition instead of `src/games/shared`, sheet styles are CSS modules per game
+  (`dnd5e/sheet.module.css`, `dh1/…`, `dh2/…`) instead of `globals.css`, and
+  the 2e data generator moved to `src/games/dh2/scripts` — no game scripts or
+  game paths remain in the repo root or in `predeploy.sh`. Two dead CSS rules
+  were removed with the move.
 - Visual specs and baselines moved into the plugin folders; the host specs check
   only geometry, so the host test suite stays green without any stock edition.
+- Alike Dark Heresy mechanics (stat arithmetic, cumulative skill training, the
+  import-review banner) are copies inside each edition instead of a shared
+  layer; a parity test compares their behaviour and skips when one edition is
+  absent.
+- Host unit tests no longer require a specific edition: the game catalog,
+  slots, translations, admin badge and password helpers read the registry and
+  files, and edition scenarios are guarded with `it.runIf(hasPlugin(id))`.
+  Removing `src/games/dh2` now leaves `npm run verify` green (build and a
+  temporary-server smoke test included).
 
 ### Fixed
 
@@ -1065,59 +840,13 @@ Each game gets its own palette, and the sandbox game ships.
   sessionStorage), so an imported sheet keeps its review banner after the
   segment reloads.
 
-### Added
-
-- Games can theme their own sheet (`plugin.json#ui.theme`): a fixed list of
-  host tokens for the light and dark modes, rendered as CSS variables on the
-  sheet page only. No selectors or arbitrary CSS — the rest of the site and the
-  other games stay untouched. An optional plugin font (1.4) is loaded lazily
-  and applied to the same scope without entering the shared bundle. `pluginApi`
-  is now 1.4; the reference fixture and the DH2 demo theme exercise the
-  contract.
-
-### Changed
-
-- Each shipped game now has its own restrained sheet palette through
-  `plugin.json#ui.theme`: Dark Heresy 2e is terracotta on parchment, D&D 5e is
-  crimson with rose frames, the sandbox is green. Only accents, frames and (for
-  2e) card tint change; the rest of the site and the other games keep the host
-  palette.
-- The sheet layout of every game now lives in its own CSS module inside the
-  plugin folder (`dnd5e/sheet.module.css`, `dh1/…`, `dh2/…`) instead of
-  `globals.css`; the core keeps a gate that fails on game selectors in core
-  CSS. Two dead rules (`.dcs-info-grid`, `.dnd-stretch-card`) were removed with
-  it.
-- Alike Dark Heresy mechanics (stat arithmetic, cumulative skill training, the
-  import-review banner) are copies inside each edition instead of a shared
-  layer; a parity test compares their behaviour and skips when one edition is
-  absent. The DH2 data-pack generator moved into `src/games/dh2/scripts/` and
-  the game-specific `dh2e:*` npm scripts are gone.
-- Host unit tests no longer require a specific edition: the game catalog,
-  slots, translations, admin badge and password helpers read the registry and
-  files, and edition scenarios are guarded with `it.runIf(hasPlugin(id))`.
-  Removing `src/games/dh2` now leaves `npm run verify` green (build and a
-  temporary-server smoke test included).
-
-### Fixed
-
-- An imported sheet keeps its choice-review mode when the transition to the
-  sheet page ends up as a full document load (Next.js hard-navigation
-  fallback). The flag now lives in the tab's `sessionStorage` instead of module
-  memory, so the creation locks open and the review banner appears again; the
-  unit test reproduces the module reload.
-
 ## [0.12.0] - 2026-11-20
 
-Inventory with quantities and totals, hit locations on the phone.
+Custom resources, immediate Madness/Corruption steppers and a stable Equipped
+toggle.
 
 ### Added
 
-- DH1/DH2 inventory rows show quantity, weight and (DH1 only) price, with
-  totals under the columns, a "Lost" checkbox that greys the row out, a compact
-  grid on mobile and numeric fields in edit mode. A sheet from an older version
-  is not rewritten: quantity defaults to 1, weight and price read as "not set".
-- Hit locations and AP are visible on mobile: the armor scheme is its own
-  section and, in compact view, is also rendered at the end of the "Info" card.
 - Custom resources sit inside "Items" with their own plus/minus; the schema and
   `customResources` are unchanged.
 - Madness and Corruption are edited with `−`/`+` buttons around the value
@@ -1126,23 +855,15 @@ Inventory with quantities and totals, hit locations on the phone.
 
 ### Changed
 
-- Plugin versions: `dh1` 1.6.0, `dh2` 1.6.0, `dnd5e` 1.4.0. The sheet
-  `schemaVersion` is unchanged (Dark Heresy `5`, D&D 5e `2`).
 - The inventory model is split per game: `InventoryItem` no longer lives in the
   shared types — DH1 has quantity/weight/price, DH2 quantity/weight, D&D 5e
   keeps its previous shape — and the core no longer re-exports the item type.
-- The armor scheme returns to the bottom of "Info" (no separate compact tab,
-  the sidebar is back to six tabs); body-part labels wrap instead of being
-  clipped.
 
 ### Fixed
 
 - Toggling "Equipped" in read mode no longer rolls back when a neighbouring
   section saves: the equipment list is read from the current sheet and saved as
   one patch.
-- DH1 shows armour-piercing for the unequipped ranged weapon too, and weapon
-  `weight` is gone from the types and forms (a legacy value is cleaned up on the
-  next save).
 
 ## [0.11.0] - 2026-11-19
 
@@ -1163,8 +884,6 @@ Stale tabs notice a new build, error screens stop reloading silently.
 
 ### Changed
 
-- Plugin versions: `dh1` 1.5.0, `dh2` 1.5.0, `dnd5e` 1.3.0. The sheet
-  `schemaVersion` is unchanged (Dark Heresy `5`, D&D 5e `2`).
 - Error screens (`app/error.tsx`, the sheet error boundary) offer "Retry" and
   "Reload page" buttons instead of reloading on their own; a chunk-loading
   failure is recognised by its text and ends in that banner or screen instead of
@@ -1179,8 +898,6 @@ Stale tabs notice a new build, error screens stop reloading silently.
 - The tab no longer reloads itself on forms: the creation wizard, the stats
   editor and any focused input count as unsaved state and only get the banner,
   so the player does not lose input mid-edit.
-- D&D 5e takes the experience label from its own dictionary, and DH1/DH2 drop
-  leftover edition-split rudiments.
 
 ## [0.10.1] - 2026-11-19
 
@@ -1235,8 +952,6 @@ Server-side derived values, declared migration chains and an honest API schema.
 
 ### Changed
 
-- Plugin versions: `dh1` 1.4.0, `dh2` 1.4.0, `dnd5e` 1.2.0. The sheet
-  `schemaVersion` is unchanged (Dark Heresy `5`, D&D 5e `2`).
 - `openapi.json` derives `Sheet_<systemId>` and `SheetInput_<systemId>` from the
   registry zod schemas, so the documented `required` fields match what the API
   really accepts; `Character` is an `anyOf` over editions and the component
@@ -1278,7 +993,7 @@ Plugin lifecycle guard and sheet access for a removed game.
 
 ## [0.9.0] - 2026-11-18
 
-Import review mode, partial plugin locales and a cleaner creation flow.
+Import review mode, partial plugin locales and per-game favicons.
 
 ### Added
 
@@ -1293,111 +1008,48 @@ Import review mode, partial plugin locales and a cleaner creation flow.
 - Every game ships its own favicon in `src/games/<id>/assets/`, so the tab icon
   follows the open sheet; the shared `public/favicon-dh*` / `favicon-dnd*`
   files are gone.
-- DH1 creation requires only the character name: home world, career and
-  divination can be chosen later on the sheet.
 
 ### Changed
 
-- Plugin versions: `dh1` 1.3.0, `dh2` 1.3.0, `dnd5e` 1.1.0; Plugin API 1.3.0.
-  The sheet `schemaVersion` is unchanged (Dark Heresy `5`, D&D 5e `2`).
-- DH2 creation no longer highlights empty required choices in red — the form
-  validation reports them on submit — and the starting-package hint lists the
-  variants without the "Choose…" placeholder.
-- DH1 "Current/Spent XP" are editable only in Edit mode (like DH2), and a
-  negative free XP is highlighted in both editions.
 - Dashboard cards show the full "game · edition" name again; the short code
   stays in the admin list only.
 - Character history labels values from the game dictionaries: no raw codes or
   JSON paths in the timeline, boolean characteristic-advance lists render as
   `0/4 → 1/4`, and the shared history fields are an explicit allowlist.
 
-### Fixed
-
-- Deleting a DH2 elite advance also removes its journal line and its cost from
-  spent XP, so the two delete paths stay symmetric.
-
 ## [0.8.0] - 2026-11-17
 
-Canonical gender, locked creation choices, elite requirements and sheet UX
-polish.
+A show/hide password toggle and dialogs that open in place.
 
 ### Added
 
-- Dark Heresy 1e/2e store the gender as a canonical code (`male`, `female`,
-  `unspecified` or empty for "not chosen") instead of a localized label. Old
-  labels in RU/EN are migrated on read; an unrecognized value becomes
-  `unspecified` and the original text is kept in the notes as a
-  `[gender migration] …` line.
-- DH2 elite advances carry structured requirements (characteristic minimum,
-  background, gender, another elite). The sheet shows the conflicts in red
-  with the reason, while the purchase stays possible for GM exceptions.
-- DH2 aptitude choices are locked once made: the ones chosen at creation and
-  the ones filled on the sheet are read-only and marked with a lock; the
-  aptitude profile is rebuilt from them.
 - Password fields have a show/hide toggle on the login, registration,
   recovery, settings, admin edit and account deletion forms.
 
 ### Changed
 
-- Plugin versions: `dh1` 1.2.0, `dh2` 1.2.0; `dnd5e` stays 1.0.0. Dark Heresy
-  sheet `schemaVersion` is now `5` (D&D 5e stays `2`).
-- DH2 creation shows the Adepta Sororitas background as a gender lock: the
-  gender becomes Female and the select is disabled until the background
-  changes.
-- DH1 creation moves the gender select into the Details block; after creation
-  the gender is read-only in both editions.
 - `Dialog`/`AlertDialog` open in place with fade+zoom instead of sliding in
   from the top-left corner, are capped at the viewport height with internal
   scrolling, and keep a 1rem gutter on mobile. The right-side sheet is
   unchanged.
-- The DH Info "Backstory" button uses a book icon instead of an eye.
-- Character history labels gender values from the dictionaries instead of
-  showing raw codes.
-
-### Fixed
-
-- The gender no longer changes meaning when the sheet language changes, and
-  rule checks (Sister of Battle) compare a code instead of a translated
-  string.
-- Excel exports show the localized gender label, while the portable JSON keeps
-  the code.
 
 ## [0.7.0] - 2026-11-17
 
-Dark Heresy 2e supplements, creation hints in notes and share-page ownership.
+Plugin SDK 1.2, creation hints in notes and the owner name on share pages.
 
 ### Added
 
-- Dark Heresy 2e: options from *Enemies Within*, *Enemies Without* and
-  *Enemies Beyond* — 15 home worlds, 13 backgrounds and 12 roles, with
-  aptitudes, skills, talents and full EN/RU bonus texts.
-- Elite advances for DH2: Sister of Battle (750 XP) and Astropath (300 XP).
 - Creation hints are written to the character's notes as markdown; the Notes
   sheet opens once after creation so the player can copy them (any game may
   request this via the Plugin SDK).
 - Guest share sheets show the owner's display name.
-- DH1/DH2: history entries for structured conditions are labelled instead of
-  showing raw `conditions.0.*` paths.
 
 ### Changed
 
 - Plugin SDK 1.2: `manifestVersion` 2 (`game.description` is now required),
   `CreateFormCompletion` for post-creation panels, and game families generated
   from plugin manifests instead of a hand-written core list.
-- Plugin versions: `dh1` 1.1.0, `dh2` 1.1.0; `dnd5e` stays 1.0.0. Sheet
-  `schemaVersion` is unchanged (DH1/DH2 4, D&D 5e 2).
 - Login and landing copy no longer name specific games.
-- DH Info section no longer duplicates the Notes entry; Notes are opened from
-  the header icon or compact navigation.
-- Insanity and Corruption cards show their values without −/+ steppers; edit
-  stays in the card's edit button. Characteristic checkboxes use a filled
-  state without an overflowing tick.
-
-### Fixed
-
-- DH2 generated data drift is now caught by `npm run verify`
-  (`dh2e:check`), so supplements cannot silently diverge from the catalog.
-- Characteristic checkbox ticks no longer look broken on mobile and desktop.
 
 ## [0.6.9] - 2026-11-16
 

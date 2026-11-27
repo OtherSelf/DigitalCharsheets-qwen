@@ -621,4 +621,6 @@ and that the schema token list matches the types.
 - `version` — the plugin's own semver, shown in admin. It is a plugin axis:
   any change inside the plugin folder bumps it by one minor per release, even
   when `schemaVersion` does not change (and vice versa: a sheet-format bump
-  alone is still a plugin change).
+  alone is still a plugin change). Keep the plugin's own `CHANGELOG.md` next
+  to `plugin.json`; the root changelog is for the app and the Plugin SDK. See
+  [development.md](development.md#versions-and-changelog).

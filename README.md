@@ -81,7 +81,10 @@ rules for adding documentation. The same pages are rendered by the app at
 - [Administration](docs/admin.md) — `/admin`, roles, first administrator.
 - [Export format](docs/export-format.md) — portable JSON/Excel envelope.
 - [Development](docs/development.md) — setup, scripts, code style, release versions.
-- [Changelog](CHANGELOG.md) — released app, plugin and SDK versions.
+- [Changelog](CHANGELOG.md) — released app and plugin SDK versions. Game
+  plugins have their own: [DH1](src/games/dh1/CHANGELOG.md),
+  [DH2](src/games/dh2/CHANGELOG.md), [D&D 5e](src/games/dnd5e/CHANGELOG.md),
+  [sandbox](src/games/sandbox/CHANGELOG.md).
 - [Testing](docs/testing.md) — unit, smoke, visual and pre-deploy checks.
 - [Deployment](docs/deployment.md) — production start, env vars, backups.
 - [Security policy](SECURITY.md) — reporting a vulnerability, scope, secure
